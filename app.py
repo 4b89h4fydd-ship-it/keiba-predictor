@@ -18,7 +18,7 @@ from typing import Iterable, Iterator
 
 app = FastAPI(title="競馬展開AI", version="3.4-production-v16-race-click")
 
-INDEX = '<!doctype html>\n<html lang="ja">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n  <meta name="theme-color" content="#0f172a">\n  <meta name="apple-mobile-web-app-capable" content="yes">\n  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n  <meta name="apple-mobile-web-app-title" content="競馬展開AI">\n  <link rel="manifest" href="/manifest.webmanifest?v=15">\n  <link rel="stylesheet" href="/styles.css?v=15">\n  <title>競馬展開AI</title>\n</head>\n<body>\n  <div id="app"><div class="boot">競馬展開AIを起動中…</div></div>\n  <script defer src="/app.js?v=15"></script>\n</body>\n</html>'
+INDEX = '<!doctype html>\n<html lang="ja">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n  <meta name="theme-color" content="#0f172a">\n  <meta name="apple-mobile-web-app-capable" content="yes">\n  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n  <meta name="apple-mobile-web-app-title" content="競馬展開AI">\n  <link rel="manifest" href="/manifest.webmanifest?v=19">\n  <link rel="stylesheet" href="/styles.css?v=19">\n  <title>競馬展開AI</title>\n</head>\n<body>\n  <div id="app"><div class="boot">競馬展開AIを起動中…</div></div>\n  <script defer src="/app.js?v=19"></script>\n</body>\n</html>'
 CSS = '\n:root{--bg:#f4f5f8;--card:#fff;--text:#111827;--muted:#667085;--line:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans",sans-serif;color:var(--text);background:var(--bg);font-weight:400}\n*{box-sizing:border-box}body{margin:0;background:var(--bg);font-weight:400;-webkit-text-size-adjust:100%}button,input,textarea{font:inherit;font-weight:400}.boot{padding:32px;text-align:center;color:#64748b}.shell{max-width:760px;margin:auto;padding-bottom:calc(24px + env(safe-area-inset-bottom))}.header{position:sticky;top:0;z-index:50;background:rgba(15,23,42,.98);color:#fff;padding:calc(7px + env(safe-area-inset-top)) 10px 8px;box-shadow:0 2px 8px rgba(0,0,0,.14)}.header-row{display:flex;align-items:center;gap:8px}.header-title{min-width:0;flex:1}.header h1{margin:0;font-size:18px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header small{display:block;color:#cbd5e1;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.back,.reload{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:7px 10px}.main{padding:8px;display:grid;gap:8px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px}.card h2,.section-title{margin:0 0 8px;font-size:18px;font-weight:400}.muted{color:var(--muted)}.setup{display:grid;grid-template-columns:1fr;gap:10px}.label{font-size:11px;color:var(--muted);margin-bottom:4px}.date{display:block;width:100%;height:40px;border:1px solid var(--line);border-radius:10px;padding:6px 9px;background:#fff;font-size:15px}.segment{display:grid;grid-template-columns:1fr 1fr;gap:6px}.segment button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 4px}.segment button.active{background:#111827;color:#fff}.row{display:flex;align-items:center;gap:8px}.between{justify-content:space-between}.pill{background:#eef2f7;border-radius:999px;padding:4px 8px;font-size:10px}.venue-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.venue{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;text-align:left}.venue .name{font-size:17px}.venue .count{font-size:11px;color:var(--muted)}.race-list{display:grid;gap:7px}.race{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px}.race.disabled{opacity:.42}.race-result{font-size:11px;color:#2563eb}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.metric{background:#f8fafc;border-radius:9px;padding:8px 2px;text-align:center}.metric b{display:block;font-size:13px;font-weight:400}.metric span{font-size:9px;color:var(--muted)}.big-number{font-size:31px}.style-list{display:grid;gap:6px}.style-row{border:1px solid var(--line);border-radius:11px;padding:8px;background:#fff}.style-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:6px}.horse-name,.result-name{font-weight:700!important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.score{font-size:13px;font-variant-numeric:tabular-nums}.expected{font-size:10px;color:#475569;background:#f1f5f9;border-radius:999px;padding:3px 6px;white-space:nowrap}.rates{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:6px}.rate{background:#f8fafc;border-radius:7px;text-align:center;padding:5px 2px;font-size:11px}.rate small{display:block;color:var(--muted);font-size:8px}.stage{padding:11px 0;border-bottom:1px solid var(--line)}.stage:last-child{border-bottom:0}.stage-title{font-size:12px;color:var(--muted);margin-bottom:7px}.stage-line{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:20px;line-height:1.65}.queue-group{display:inline-flex;align-items:center;gap:4px}.arrow{color:#94a3b8;font-size:20px}.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.scenario{background:#f8fafc;border-radius:11px;padding:10px 5px;min-height:116px;text-align:center}.scenario-title{font-size:13px}.prob{font-size:28px;margin:5px 0}.scenario-horses{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}.marks{display:grid;grid-template-columns:1fr 1fr;gap:5px}.mark{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:5px;background:#f8fafc;border-radius:10px;padding:9px}.mark-symbol{font-size:19px}.horse-card{border:1px solid var(--line);border-radius:11px;padding:10px;margin-top:7px}.horse-card summary{display:flex;align-items:center;gap:7px;font-size:16px;list-style:none}.horse-detail{padding-top:9px;display:grid;gap:8px;font-size:15px;line-height:1.45}.recent{border-top:1px dashed var(--line);padding-top:8px}.notice{background:#fff7ed;color:#9a3412;border-radius:10px;padding:10px;font-size:12px}.empty{text-align:center;color:var(--muted);padding:18px 8px;font-size:12px}.frame-badge{display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:6px;border:1px solid rgba(0,0,0,.18);font-size:14px;font-weight:400;flex:0 0 auto}.frame1{background:#fff;color:#111}.frame2{background:#222;color:#fff}.frame3{background:#e53935;color:#fff}.frame4{background:#1e66d0;color:#fff}.frame5{background:#f5d547;color:#111}.frame6{background:#3a9b56;color:#fff}.frame7{background:#f28c28;color:#111}.frame8{background:#e894b7;color:#111}.queue-badge{width:35px;height:35px;font-size:17px}.source-tag{font-size:9px;color:#64748b;margin-top:3px}.result-list{display:grid;gap:7px}.result-row{display:grid;grid-template-columns:30px auto minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--line)}.result-row:last-child{border-bottom:0}.finish-pos{font-size:19px}.result-time{font-size:13px;color:#475569}.review-box{margin-top:10px;background:#f8fafc;border-radius:11px;padding:9px}.review-title{font-size:14px;margin-bottom:6px}.diff-list{display:grid;gap:5px;font-size:13px}.diff-item{padding:6px 7px;background:#fff;border-radius:8px}.review-meta{font-size:10px;color:#64748b;margin-top:6px}.review-text{width:100%;min-height:78px;resize:vertical;border:1px solid var(--line);border-radius:9px;padding:8px;margin-top:8px;background:#fff;font-size:14px}.save-review{margin-top:6px;border:0;background:#111827;color:#fff;border-radius:9px;padding:8px 12px}.save-status{font-size:11px;color:#16a34a;margin-left:8px}\n@media(max-width:390px){.main{padding:6px}.card{padding:9px}.style-top{grid-template-columns:auto minmax(0,1fr) auto}.expected{grid-column:2/4;justify-self:start}.scenario-grid{gap:3px}.scenario{padding:8px 3px}.frame-badge{width:27px;height:27px}.queue-badge{width:34px;height:34px}}\n'
 JS = '\n(function(){\n"use strict";\nvar CENTRAL=["札幌","函館","福島","新潟","東京","中山","中京","京都","阪神","小倉"];\nvar LOCAL=["帯広","門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"];\nvar app=document.getElementById("app");\nvar state={circuit:"地方",date:todayJst(),races:[],selectedTrack:null,selectedRace:null,loading:false,error:null,retries:0};\nfunction todayJst(){var d=new Date(Date.now()+9*3600000);return d.toISOString().slice(0,10)}\nfunction esc(v){return String(v==null?"":v).replace(/[&<>\\"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",\'\\"\':"&quot;"}[c]})}\nfunction circled(n){n=Number(n);return n>=1&&n<=20?String.fromCodePoint(0x245f+n):String(n)}\nfunction pct(v){v=Number(v);return isFinite(v)?Math.round(v*100)+"%":"0%"}\nfunction money(n){try{return new Intl.NumberFormat("ja-JP").format(Number(n)||0)}catch(e){return String(n||0)}}\nfunction season(iso){var m=Number(String(iso||"").split("-")[1]);if(m>=3&&m<=5)return"春";if(m>=6&&m<=8)return"夏";if(m>=9&&m<=11)return"秋";return"冬"}\nfunction fmtTime(s){s=Number(s);if(!isFinite(s)||s<=0)return"—";if(s<60)return s.toFixed(1);var m=Math.floor(s/60),r=(s-m*60).toFixed(1);if(Number(r)<10)r="0"+r;return m+":"+r}\nfunction badge(h,extra){var f=Math.max(1,Math.min(8,Number(h&&h.frameNumber)||Number(h&&h.horseNumber)||1));return \'<span class="frame-badge frame\'+f+(extra?\' \'+extra:\'\')+\'">\'+esc(h&&h.horseNumber)+\'</span>\'}\nfunction horseByNo(r,n){var hs=r.horses||[];for(var i=0;i<hs.length;i++)if(Number(hs[i].horseNumber)===Number(n))return hs[i];return null}\nfunction styleRates(h){var c={front:0,stalk:0,mid:0,close:0},t=0,rs=(h&&h.recentRaces)||[];for(var i=0;i<rs.length;i++){var p=rs[i].cornerPositions||[],x=Number(p[0]);if(!isFinite(x))continue;t++;if(x===1)c.front++;else if(x<=4)c.stalk++;else if(x<=7)c.mid++;else c.close++}var d=t||1;return{front:c.front/d,stalk:c.stalk/d,mid:c.mid/d,close:c.close/d}}\nfunction fadeRate(h){var rs=(h&&h.recentRaces)||[],eligible=[],i;for(i=0;i<rs.length;i++){var p=rs[i].cornerPositions||[];if(Number(p[0])<=4)eligible.push(rs[i])}if(!eligible.length)return 0;var faded=0;for(i=0;i<eligible.length;i++){var r=eligible[i],cp=r.cornerPositions||[],first=Number(cp[0]),last=Number(cp[cp.length-1]),fin=Number(r.finish);if((isFinite(last)&&last>=first+2)||(isFinite(fin)&&fin>=first+3))faded++}return faded/eligible.length}\nfunction styleScore(h){var r=styleRates(h);return r.front+2*r.stalk+3*r.mid+4*r.close}\nfunction expected(s){if(s<1.6)return"逃げ";if(s<2.35)return"先行";if(s<3.1)return"好位〜差し";return"後方"}\nfunction styleMap(horses){var out=[];for(var i=0;i<horses.length;i++){var h=horses[i],r=styleRates(h),s=styleScore(h);out.push({horse:h,score:s,front:r.front,stalk:r.stalk,mid:r.mid,close:r.close,fade:fadeRate(h),expected:expected(s)})}out.sort(function(a,b){return Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});return out}\nfunction paceRows(rows){return rows.slice().sort(function(a,b){return a.score-b.score||Number(a.horse.horseNumber)-Number(b.horse.horseNumber)})}\nfunction occupancy(horses){var early=[],moved=[];for(var i=0;i<horses.length;i++){var rr=(horses[i].recentRaces||[])[0],p=rr&&rr.cornerPositions||[];if(!p.length)continue;var any=false;for(var j=0;j<p.length;j++)if(Number(p[j])<=3)any=true;if(!any)continue;if(Number(p[0])<=3)early.push(horses[i].horseNumber);else moved.push(horses[i].horseNumber)}var nums=early.concat(moved).sort(function(a,b){return a-b});return{rate:horses.length?nums.length/horses.length:0,nums:nums,early:early,moved:moved}}\nfunction groupsFor(rows,late){var o=paceRows(rows),n=o.length,f=Math.max(1,Math.ceil(n*.25)),s=Math.max(f+1,Math.ceil(n*.55)),a=o.slice(0,f),b=o.slice(f,s),c=o.slice(s);if(late&&c.length){var mv=c.slice(0,2).reverse();return[a,b,mv.concat(c.slice(2))]}return[a,b,c]}\nfunction buildStages(rows){return[["スタート〜100m",groupsFor(rows,false)],["最初のコーナー",groupsFor(rows,false)],["向正面",groupsFor(rows,true)],["3〜4角",groupsFor(rows,true)],["直線",groupsFor(rows,true)]]}\nfunction scenarios(rows,occ){var ordered=paceRows(rows),front=ordered.filter(function(r){return r.score<2.35}),high=front.filter(function(r){return r.fade>=.5}).length,a=40,c=20;if(front.length<=2){a+=10;c-=5}if(high>=2){c+=10;a-=5}if(occ.rate>=.6){c+=5;a-=5}a=Math.max(15,Math.min(60,a));c=Math.max(10,Math.min(45,c));var b=100-a-c;return[{code:"A",title:"前残り",prob:a,horses:ordered.filter(function(r){return r.score<2.8}).slice(0,4).map(function(r){return r.horse})},{code:"B",title:"平均",prob:b,horses:ordered.slice(0,5).map(function(r){return r.horse})},{code:"C",title:"前崩れ",prob:c,horses:ordered.slice().sort(function(x,y){return y.score-x.score}).slice(0,4).map(function(r){return r.horse})}]}\nfunction clamp01(v){return Math.max(0,Math.min(1,Number(v)||0))}\nfunction winRate(s){if(!s||!s.starts)return 0;return (s.wins||0)/s.starts}\nfunction placeRate(s){if(!s||!s.starts)return 0;return ((s.wins||0)+(s.seconds||0)+(s.thirds||0))/s.starts}\nfunction statsStrength(s){return clamp01(placeRate(s)*.7+winRate(s)*.3)}\nfunction finishQuality(f){f=Number(f);if(!isFinite(f)||f<=0)return .35;return clamp01(1-(f-1)/11)}\nfunction wetGroup(c){c=String(c||"");if(c.indexOf("不良")>=0||c.indexOf("重")>=0)return 2;if(c.indexOf("稍")>=0)return 1;return 0}\nfunction conditionSimilarity(a,b){if(!a&&!b)return .5;if(String(a||"")===String(b||""))return 1;return wetGroup(a)===wetGroup(b)?.65:.15}\nfunction recentFormScore(h){var rs=(h.recentRaces||[]).slice(0,5),weights=[1,.88,.76,.66,.56],sum=0,w=0;for(var i=0;i<rs.length;i++){sum+=finishQuality(rs[i].finish)*weights[i];w+=weights[i]}return w?sum/w:.4}\nfunction eligibleSpeedRuns(h,race){var rs=h.recentRaces||[],out=[],target=Number(race.distance)||0;for(var i=0;i<rs.length;i++){var d=Number(rs[i].distance)||0,t=Number(rs[i].timeSeconds)||0;if(!d||!t)continue;var diff=target?Math.abs(d-target)/target:0;if(diff<=.25)out.push(d/t)}return out}\nfunction speedScores(race){var hs=race.horses||[],raw={},vals=[];for(var i=0;i<hs.length;i++){var a=eligibleSpeedRuns(hs[i],race);if(a.length){var best=Math.max.apply(null,a);raw[String(hs[i].horseNumber)]=best;vals.push(best)}}if(vals.length<2){var neutral={};for(i=0;i<hs.length;i++)neutral[String(hs[i].horseNumber)]=.5;return neutral}var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals),out={};for(i=0;i<hs.length;i++){var k=String(hs[i].horseNumber),v=raw[k];out[k]=isFinite(v)&&hi>lo?clamp01((v-lo)/(hi-lo)):.45}return out}\nfunction conditionFit(h,race){var rs=(h.recentRaces||[]).slice(0,5),target=Number(race.distance)||0,sum=0,w=0;for(var i=0;i<rs.length;i++){var rr=rs[i],d=Number(rr.distance)||0,dist=target&&d?clamp01(1-Math.abs(d-target)/Math.max(300,target*.3)):.35,tr=String(rr.track||"")===String(race.track||"")?1:.2,cond=conditionSimilarity(rr.condition,race.condition),wea=String(rr.weather||"")===String(race.weather||"")?1:.35,sea=season(rr.date)===season(race.date)?1:.45,match=.36*dist+.24*tr+.20*cond+.10*wea+.10*sea,rec=.95-i*.1;sum+=finishQuality(rr.finish)*match*rec;w+=match*rec}return w?clamp01(sum/w):.4}\nfunction prizeScores(hs){var logs=[],i;for(i=0;i<hs.length;i++)logs.push(Math.log1p(Math.max(0,Number(hs[i].prizeMoneyAtRace)||0)));var lo=Math.min.apply(null,logs),hi=Math.max.apply(null,logs),out={};for(i=0;i<hs.length;i++)out[String(hs[i].horseNumber)]=hi>lo?clamp01((logs[i]-lo)/(hi-lo)):.5;return out}\nfunction profileWeightScores(hs){var all=[],groups={},i;for(i=0;i<hs.length;i++){var w=Number(hs[i].carriedWeight);if(isFinite(w))all.push(w);var g=String(hs[i].sex||"")+"/"+String(hs[i].age||"");if(!groups[g])groups[g]=[];if(isFinite(w))groups[g].push(w)}var avg=all.length?all.reduce(function(a,b){return a+b},0)/all.length:55,out={};for(i=0;i<hs.length;i++){var h=hs[i],ww=Number(h.carriedWeight),gg=String(h.sex||"")+"/"+String(h.age||""),ga=groups[gg]&&groups[gg].length?groups[gg].reduce(function(a,b){return a+b},0)/groups[gg].length:avg;if(!isFinite(ww)){out[String(h.horseNumber)]=.5;continue}out[String(h.horseNumber)]=.65*clamp01(.5+(avg-ww)/8)+.35*clamp01(.5+(ga-ww)/6)}return out}\nfunction scenarioFitFor(row,scs){var s=row.score,fade=row.fade,front=clamp01((3.15-s)/2.15)*(1-.45*fade),balanced=clamp01(1-Math.abs(s-2.45)/1.7)*(1-.18*fade),close=clamp01((s-1.65)/2.35)*(.75+.25*(1-fade)),a=0,b=0,c=0;for(var i=0;i<scs.length;i++){if(scs[i].code==="A")a=scs[i].prob/100;else if(scs[i].code==="B")b=scs[i].prob/100;else if(scs[i].code==="C")c=scs[i].prob/100}return clamp01(front*a+balanced*b+close*c)}\nfunction marks(race,rows,scs){var hs=race.horses||[],pScores=prizeScores(hs),wScores=profileWeightScores(hs),spd=speedScores(race),rowBy={},i;for(i=0;i<rows.length;i++)rowBy[String(rows[i].horse.horseNumber)]=rows[i];var arr=[];for(i=0;i<hs.length;i++){var h=hs[i],k=String(h.horseNumber),row=rowBy[k]||{score:styleScore(h),fade:fadeRate(h)},scenario=scenarioFitFor(row,scs),form=recentFormScore(h),speed=spd[k]==null?.45:spd[k],cond=conditionFit(h,race),prize=pScores[k]==null?.5:pScores[k],jockey=statsStrength(h.jockeyStats),trainer=statsStrength(h.trainerStats),survive=clamp01(1-fadeRate(h)),profile=wScores[k]==null?.5:wScores[k];var total=30*scenario+12*form+8*speed+12*cond+10*prize+8*jockey+6*trainer+8*survive+6*profile;arr.push({h:h,score:total})}arr.sort(function(a,b){return b.score-a.score||Number(a.h.horseNumber)-Number(b.h.horseNumber)});var sy=["◎","○","▲","☆","△","注"],out=[];for(i=0;i<sy.length&&i<arr.length;i++)out.push([sy[i],arr[i].h]);return out}\nfunction predict(r){var rows=styleMap(r.horses||[]),occ=occupancy(r.horses||[]),scs=scenarios(rows,occ);return{rows:rows,occ:occ,stages:buildStages(rows),scenarios:scs,marks:marks(r,rows,scs)}}\nfunction isFinal(r){return !!(r&&r.result&&r.result.status==="確定"&&(r.result.finishers||[]).length)}\nfunction snapshotKey(r){return "keiba-prediction:"+r.id}\nfunction reviewKey(r){return "keiba-review:"+r.id}\nfunction makeSnapshot(r,p){var ordered=paceRows(p.rows),markRows=p.marks.map(function(m){return{symbol:m[0],horseNumber:Number(m[1].horseNumber),name:m[1].name}}),scenarioRows=p.scenarios.map(function(s){return{code:s.code,title:s.title,prob:s.prob}}),exp={};for(var i=0;i<p.rows.length;i++)exp[String(p.rows[i].horse.horseNumber)]=p.rows[i].expected;return{savedAt:new Date().toISOString(),marks:markRows,scenarios:scenarioRows,predictedLead:ordered.length?Number(ordered[0].horse.horseNumber):null,expected:exp}}\nfunction storedJSON(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}\nfunction setStored(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}\nfunction predictionForReview(r,p){var k=snapshotKey(r),old=storedJSON(k);if(!isFinal(r)){var cur=makeSnapshot(r,p);setStored(k,cur);return{snapshot:cur,source:"事前保存"}}if(old)return{snapshot:old,source:"事前保存"};return{snapshot:makeSnapshot(r,p),source:"結果後の再計算"}}\nfunction actualScenario(r){var fs=(r.result&&r.result.finishers)||[],top=fs.slice(0,3),field=Math.max(1,(r.horses||[]).length),line=Math.max(3,Math.ceil(field*.35)),front=0,wpos=null;for(var i=0;i<top.length;i++){var cp=top[i].cornerPositions||[],x=Number(cp[0]);if(isFinite(x)&&x<=line)front++;if(i===0)wpos=x}if(front>=2&&isFinite(wpos)&&wpos<=line)return"A";if(front<=1)return"C";return"B"}\nfunction actualLeader(r){var fs=(r.result&&r.result.finishers)||[],best=null,bp=999;for(var i=0;i<fs.length;i++){var cp=fs[i].cornerPositions||[],x=Number(cp[0]);if(isFinite(x)&&x<bp){bp=x;best=Number(fs[i].horseNumber)}}return best}\nfunction resultDiff(r,p,info){var fs=(r.result&&r.result.finishers)||[],top=fs.slice(0,3),snap=info.snapshot||{},map={},issues=[];for(var i=0;i<(snap.marks||[]).length;i++)map[String(snap.marks[i].horseNumber)]=snap.marks[i].symbol;var winner=top[0],second=top[1],third=top[2],predWin=snap.marks&&snap.marks[0];if(winner&&(!predWin||Number(predWin.horseNumber)!==Number(winner.horseNumber)))issues.push("1着適性：◎"+(predWin?circled(predWin.horseNumber)+predWin.name:"—")+" → 実1着 "+circled(winner.horseNumber)+winner.name+"（"+(map[String(winner.horseNumber)]||"無印")+"）");var ps=(snap.scenarios||[]).slice().sort(function(a,b){return b.prob-a.prob})[0],as=actualScenario(r);if(ps&&ps.code!==as)issues.push("展開：予測 "+ps.code+" → 実際 "+as);var pl=snap.predictedLead,al=actualLeader(r);if(pl&&al&&Number(pl)!==Number(al))issues.push("ハナ：予測 "+circled(pl)+" → 実際 "+circled(al));if(second){var sm=map[String(second.horseNumber)];if(!sm||["○","▲","☆"].indexOf(sm)<0)issues.push("2着適性：実2着 "+circled(second.horseNumber)+second.name+"（"+(sm||"無印")+"）を上位2着候補に置けず")}if(third&&!map[String(third.horseNumber)])issues.push("3着取りこぼし："+circled(third.horseNumber)+third.name+"が無印");if(!issues.length)issues.push("大きなズレなし");return issues}\nfunction header(title,back,sub){return \'<header class="header"><div class="header-row">\'+(back?\'<button class="back" data-action="back">‹</button>\':\'\')+\'<div class="header-title"><h1>\'+esc(title)+\'</h1><small>\'+esc(sub||"競馬展開AI")+\'</small></div><button class="reload" data-action="reload">↻</button></div></header>\'}\nfunction renderHome(){var all=state.circuit==="中央"?CENTRAL:LOCAL,venues=[];for(var i=0;i<all.length;i++){var t=all[i],n=state.races.filter(function(r){return r.circuit===state.circuit&&r.track===t}).length;if(n)venues.push([t,n])}var empty=state.circuit==="中央"?\'中央本番データ源が未接続、またはこの日の開催データがありません\':\'この日の取得データはありません\';return \'<div class="shell">\'+header("レース選択",false)+\'<main class="main"><section class="card"><div class="setup"><div><div class="label">日付</div><input id="date" class="date" type="date" value="\'+esc(state.date)+\'"></div><div><div class="label">区分</div><div class="segment"><button data-circuit="中央" class="\'+(state.circuit===\'中央\'?\'active\':\'\')+\'">中央</button><button data-circuit="地方" class="\'+(state.circuit===\'地方\'?\'active\':\'\')+\'">地方</button></div></div></div></section><section class="card"><div class="row between"><h2>開催場</h2><span class="pill">\'+state.races.filter(function(r){return r.circuit===state.circuit}).length+\'R</span></div>\'+(state.loading?\'<div class="empty">読込中…</div>\':state.error?\'<div class="notice">\'+esc(state.error)+\'</div>\':venues.length?\'<div class="venue-grid">\'+venues.map(function(v){return \'<button class="venue" data-track="\'+esc(v[0])+\'"><div class="name">\'+esc(v[0])+\'</div><div class="count">\'+v[1]+\'レース</div></button>\'}).join(\'\')+\'</div>\':\'<div class="empty">\'+empty+\'</div>\')+\'</section></main></div>\'}\nfunction resultShort(r){if(!isFinal(r))return\'\';var f=(r.result.finishers||[]).slice(0,3);return \'<span class="race-result">確定 \'+f.map(function(x){return x.horseNumber}).join(\'-\')+\'</span>\'}\nfunction renderVenue(){var rs=state.races.filter(function(r){return r.circuit===state.circuit&&r.track===state.selectedTrack}).sort(function(a,b){return a.raceNumber-b.raceNumber}),by={};for(var i=0;i<rs.length;i++)by[rs[i].raceNumber]=rs[i];var list=\'\';for(i=1;i<=12;i++){var r=by[i];list+=r?\'<button class="race" data-race="\'+esc(r.id)+\'"><span>\'+i+\'R \'+esc(r.title)+\'</span><span>\'+(resultShort(r)||\'›\')+\'</span></button>\':\'<button class="race disabled" disabled>\'+i+\'R\u3000未取得</button>\'}return \'<div class="shell">\'+header(state.selectedTrack,true,state.date+\'・\'+state.circuit)+\'<main class="main"><section class="card"><div class="race-list">\'+list+\'</div></section></main></div>\'}\nfunction queueHtml(groups){var html=[];for(var i=0;i<groups.length;i++){var g=groups[i];if(!g.length)continue;html.push(\'<span class="queue-group">\'+g.map(function(x){return badge(x.horse,\'queue-badge\')}).join(\'\')+\'</span>\')}return html.join(\'<span class="arrow">→</span>\')}\nfunction renderResult(r,p){if(!isFinal(r))return\'\';var fs=(r.result.finishers||[]).slice(0,3),info=predictionForReview(r,p),diff=resultDiff(r,p,info),memo=\'\';try{memo=localStorage.getItem(reviewKey(r))||\'\'}catch(e){}var rows=fs.map(function(x){var h=horseByNo(r,x.horseNumber)||x;return \'<div class="result-row"><span class="finish-pos">\'+x.finish+\'着</span>\'+badge(h)+\'<span class="result-name">\'+esc(x.name||h.name||\'\')+\'</span><span class="result-time">\'+fmtTime(x.timeSeconds)+\'</span></div>\'}).join(\'\');return \'<section class="card"><div class="section-title">結果</div><div class="result-list">\'+rows+\'</div><div class="review-box"><div class="review-title">結果とのズレ</div><div class="diff-list">\'+diff.map(function(x){return \'<div class="diff-item">\'+esc(x)+\'</div>\'}).join(\'\')+\'</div><div class="review-meta">比較元：\'+esc(info.source)+\'</div><textarea id="review-memo" class="review-text" placeholder="回顧メモを残す">\'+esc(memo)+\'</textarea><button id="review-save" class="save-review">メモ保存</button><span id="review-status" class="save-status"></span></div></section>\'}\nfunction renderRace(){var r=state.selectedRace,p=predict(r);predictionForReview(r,p);var rows=p.rows.slice().sort(function(a,b){return Number(a.horse.horseNumber)-Number(b.horse.horseNumber)}),early=p.occ.early.map(circled).join(\' \'),moved=p.occ.moved.map(circled).join(\' \');var style=rows.map(function(x){var h=x.horse;return \'<div class="style-row"><div class="style-top">\'+badge(h)+\'<span class="horse-name">\'+esc(h.name)+\'</span><span class="score">点 \'+x.score.toFixed(2)+\'</span><span class="expected">\'+esc(x.expected)+\'</span></div><div class="rates"><span class="rate"><small>逃</small>\'+pct(x.front)+\'</span><span class="rate"><small>先</small>\'+pct(x.stalk)+\'</span><span class="rate"><small>差</small>\'+pct(x.mid)+\'</span><span class="rate"><small>追</small>\'+pct(x.close)+\'</span><span class="rate"><small>下</small>\'+pct(x.fade)+\'</span></div></div>\'}).join(\'\');var stages=p.stages.map(function(s){return \'<div class="stage"><div class="stage-title">\'+esc(s[0])+\'</div><div class="stage-line">\'+queueHtml(s[1])+\'</div></div>\'}).join(\'\');var sc=p.scenarios.map(function(s){return \'<div class="scenario"><div class="scenario-title">\'+s.code+\' \'+esc(s.title)+\'</div><div class="prob">\'+s.prob+\'%</div><div class="scenario-horses">\'+s.horses.map(function(h){return badge(h)}).join(\'\')+\'</div></div>\'}).join(\'\');var mk=p.marks.map(function(m){return \'<div class="mark"><span class="mark-symbol">\'+m[0]+\'</span>\'+badge(m[1])+\'<span class="horse-name">\'+esc(m[1].name)+\'</span></div>\'}).join(\'\');var data=(r.horses||[]).slice().sort(function(a,b){return a.horseNumber-b.horseNumber}).map(function(h){var rec=(h.recentRaces||[]).map(function(rr){return \'<div class="recent">\'+esc(rr.date)+\' \'+esc(rr.track)+\' \'+esc(rr.distance)+\'m\u3000\'+esc(rr.finish)+\'着 / \'+fmtTime(rr.timeSeconds)+\'<br><span class="muted">\'+esc(rr.condition)+\'・\'+esc(rr.weather||\'不明\')+\'・\'+season(rr.date)+\'・通過 \'+esc((rr.cornerPositions||[]).join(\'-\')||\'—\')+\'</span></div>\'}).join(\'\');return \'<details class="horse-card"><summary>\'+badge(h)+\'<span class="horse-name">\'+esc(h.name)+\'</span><span>\'+esc(h.sex)+esc(h.age)+\' \'+esc(h.carriedWeight)+\'kg</span></summary><div class="horse-detail"><div>騎手：\'+esc(h.jockey)+\'\u3000\'+(h.jockeyStats&&h.jockeyStats.starts?h.jockeyStats.starts+\'戦 \'+h.jockeyStats.wins+\'勝 / 複勝率 \'+pct(placeRate(h.jockeyStats)):\'成績データなし\')+\'</div><div>調教師：\'+esc(h.trainer)+\'\u3000\'+(h.trainerStats&&h.trainerStats.starts?h.trainerStats.starts+\'戦 \'+h.trainerStats.wins+\'勝 / 複勝率 \'+pct(placeRate(h.trainerStats)):\'成績データなし\')+\'</div><div>このレース時点の獲得賞金：\'+money(h.prizeMoneyAtRace)+\'円</div>\'+rec+\'</div></details>\'}).join(\'\');return \'<div class="shell">\'+header(r.track+\' \'+r.raceNumber+\'R\',true,r.title+\'｜\'+r.distance+\'m・\'+r.condition+\'・\'+(r.weather||\'不明\'))+\'<main class="main"><section class="card"><div class="metrics"><div class="metric"><b>\'+r.distance+\'m</b><span>距離</span></div><div class="metric"><b>\'+esc(r.condition)+\'</b><span>馬場</span></div><div class="metric"><b>\'+esc(r.weather||\'不明\')+\'</b><span>天候</span></div><div class="metric"><b>\'+season(r.date)+\'</b><span>季節</span></div><div class="metric"><b>\'+r.horses.length+\'頭</b><span>頭数</span></div></div><div class="source-tag">\'+esc(r.source||\'\')+\'</div></section><section class="card"><div class="section-title">1\u3000先行馬占有率</div><div class="big-number">\'+pct(p.occ.rate)+\'</div><div class="muted">対象：\'+(p.occ.nums.map(circled).join(\' \')||\'—\')+\'</div><div class="muted">最初から前：\'+(early||\'—\')+\'\u3000途中進出：\'+(moved||\'—\')+\'</div></section><section class="card"><div class="section-title">2\u3000脚質マップ</div><div class="style-list">\'+style+\'</div></section><section class="card"><div class="section-title">3\u3000隊列</div>\'+stages+\'</section><section class="card"><div class="section-title">4\u3000ABC</div><div class="scenario-grid">\'+sc+\'</div></section><section class="card"><div class="section-title">5\u3000印</div><div class="marks">\'+mk+\'</div></section>\'+renderResult(r,p)+\'<section class="card"><h2>出馬データ</h2>\'+data+\'</section></main></div>\'}\nfunction render(){try{if(state.selectedRace)app.innerHTML=renderRace();else if(state.selectedTrack)app.innerHTML=renderVenue();else app.innerHTML=renderHome();bind()}catch(e){app.innerHTML=\'<div class="notice" style="margin:20px">表示エラー：\'+esc(e&&e.message||e)+\'<br><button onclick="location.reload()">再読み込み</button></div>\'}}\nfunction bind(){var els=document.querySelectorAll(\'[data-circuit]\'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.circuit=this.getAttribute(\'data-circuit\');state.selectedTrack=null;state.selectedRace=null;render()};var d=document.getElementById(\'date\');if(d)d.onchange=function(){state.date=this.value;state.selectedTrack=null;state.selectedRace=null;loadRaces()};els=document.querySelectorAll(\'[data-track]\');for(i=0;i<els.length;i++)els[i].onclick=function(){state.selectedTrack=this.getAttribute(\'data-track\');render()};els=document.querySelectorAll(\'[data-race]\');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute(\'data-race\');state.selectedRace=state.races.find(function(r){return String(r.id)===String(id)});render()};els=document.querySelectorAll(\'[data-action="back"]\');for(i=0;i<els.length;i++)els[i].onclick=function(){if(state.selectedRace)state.selectedRace=null;else state.selectedTrack=null;render()};els=document.querySelectorAll(\'[data-action="reload"]\');for(i=0;i<els.length;i++)els[i].onclick=loadRaces;var save=document.getElementById(\'review-save\');if(save)save.onclick=function(){var ta=document.getElementById(\'review-memo\'),st=document.getElementById(\'review-status\');try{localStorage.setItem(reviewKey(state.selectedRace),ta?ta.value:\'\');if(st)st.textContent=\'保存した\'}catch(e){if(st)st.textContent=\'保存できませんでした\'}}}\nfunction loadRaces(){state.loading=true;state.error=null;render();var ctrl=window.AbortController?new AbortController():null,timer=ctrl?setTimeout(function(){ctrl.abort()},14000):null;fetch(\'/api/v1/races?date=\'+encodeURIComponent(state.date),{cache:\'no-store\',signal:ctrl?ctrl.signal:undefined}).then(function(res){if(timer)clearTimeout(timer);if(!res.ok)throw new Error(\'API \'+res.status);return res.json()}).then(function(body){state.races=Array.isArray(body)?body:(body.races||[]);state.loading=false;state.error=null;state.retries=0;render();if(state.circuit===\'地方\'&&!state.races.some(function(r){return r.circuit===\'地方\'})&&state.retries<3){state.retries++;setTimeout(loadRaces,5000)}}).catch(function(e){if(timer)clearTimeout(timer);state.loading=false;state.error=\'データ取得待機中。↻で再読込できます\';render()})}\nwindow.onerror=function(msg){if(app)app.innerHTML=\'<div class="notice" style="margin:20px">表示エラー：\'+esc(msg)+\'<br><button onclick="location.reload()">再読み込み</button></div>\';return false};\nrender();setTimeout(loadRaces,0);\n})();\n'
 
@@ -257,7 +257,7 @@ renderHome=function(){
     '<main class="main">'+
       '<section class="card home-setup"><div class="home-heading">日付・区分</div><div class="setup-grid"><div><div class="label">日付</div><input id="date" class="date" type="date" value="'+esc(state.date)+'"></div><div><div class="label">区分</div><div class="segment"><button data-circuit="中央" class="'+(state.circuit==='中央'?'active':'')+'">中央</button><button data-circuit="地方" class="'+(state.circuit==='地方'?'active':'')+'">地方</button></div></div></div></section>'+
       '<section class="card live-section"><div class="row between"><h2>リアルタイムのレース</h2><span class="live-dot">LIVE</span></div>'+liveHtml+'</section>'+
-      '<section class="card v18-ai-card"><div class="v18-ai-head"><div><div class="v18-ai-label">AI展開予想</div><div class="v18-ai-subtitle">スタート → 4コーナー → 直線</div></div><span class="v18-ai-icon">AI</span></div>'+aiHtml+'</section>'+
+      '<section class="card v18-ai-card"><div class="v18-ai-head"><div><div class="v18-ai-label">AI展開予想</div><div class="v18-ai-subtitle">展開 → 着順適性 → 印｜スタート → 4コーナー → 直線</div></div><span class="v18-ai-icon">AI</span></div>'+aiHtml+'</section>'+
       '<section class="card"><div class="row between"><h2>開催場</h2><span class="pill">'+state.races.filter(function(r){return r.circuit===state.circuit}).length+'R</span></div>'+
         (state.loading?'<div class="empty">読込中…</div>':state.error?'<div class="notice">'+esc(state.error)+'</div>':venues.length?'<div class="venue-grid">'+venues.map(function(v){return '<button class="venue" data-track="'+esc(v[0])+'"><div class="name">'+esc(v[0])+'</div><div class="count">'+v[1]+'レース</div></button>'}).join('')+'</div>':'<div class="empty">'+empty+'</div>')+
       '</section>'+
@@ -367,6 +367,323 @@ bind=function(){
 
 '''
 JS = JS.replace('render();setTimeout(loadRaces,0);\n})();', PACE3_JS + '\nrender();setTimeout(loadRaces,0);\n})();')
+
+V19_JS = r'''
+// v19: rebuilt prediction engine — pace -> scenario -> finish suitability -> marks
+// The UI stays the same; every prediction surface now comes from one model.
+(function(){
+  var V19_REC=[1.00,.86,.72,.60,.50];
+  function v19num(v,d){v=Number(v);return isFinite(v)?v:(d==null?0:d)}
+  function v19mean(a){if(!a.length)return 0;var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s/a.length}
+  function v19norm(v,lo,hi){return hi>lo?clamp01((v-lo)/(hi-lo)):.5}
+  function v19rankNorm(rank,n){return n<=1?1:clamp01(1-rank/(n-1))}
+  function v19recent(h){return ((h&&h.recentRaces)||[]).slice(0,5)}
+  function v19first(rr){var p=rr&&rr.cornerPositions||[],x=Number(p[0]);return isFinite(x)?x:null}
+  function v19lastCorner(rr){var p=rr&&rr.cornerPositions||[],x=Number(p[p.length-1]);return isFinite(x)?x:null}
+
+  styleRates=function(h){
+    var rs=v19recent(h),c={front:0,stalk:0,mid:0,close:0},den=0;
+    for(var i=0;i<rs.length;i++){
+      var x=v19first(rs[i]);if(x==null)continue;
+      var w=V19_REC[i]||.45;den+=w;
+      if(x===1)c.front+=w;
+      else if(x<=4)c.stalk+=w;
+      else if(x<=8)c.mid+=w;
+      else c.close+=w;
+    }
+    if(!den)return{front:0,stalk:0,mid:0,close:0,known:false};
+    return{front:c.front/den,stalk:c.stalk/den,mid:c.mid/den,close:c.close/den,known:true};
+  };
+  fadeRate=function(h){
+    var rs=v19recent(h),bad=0,den=0;
+    for(var i=0;i<rs.length;i++){
+      var rr=rs[i],first=v19first(rr);if(first==null||first>4)continue;
+      var w=V19_REC[i]||.45,last=v19lastCorner(rr),fin=Number(rr.finish),faded=false;
+      if(last!=null&&last>=first+2)faded=true;
+      if(isFinite(fin)&&fin>=first+3)faded=true;
+      den+=w;if(faded)bad+=w;
+    }
+    return den?bad/den:0;
+  };
+  function v19MoveUp(h){
+    var rs=v19recent(h),good=0,den=0;
+    for(var i=0;i<rs.length;i++){
+      var rr=rs[i],first=v19first(rr);if(first==null)continue;
+      var w=V19_REC[i]||.45,last=v19lastCorner(rr),fin=Number(rr.finish),up=false;
+      if(last!=null&&last<=first-2)up=true;
+      if(isFinite(fin)&&fin<=first-3)up=true;
+      den+=w;if(up)good+=w;
+    }
+    return den?good/den:0;
+  }
+  function v19RecentLead(h){
+    var rs=v19recent(h),s=0,d=0;
+    for(var i=0;i<rs.length;i++){var x=v19first(rs[i]);if(x==null)continue;var w=V19_REC[i]||.45;d+=w;if(x===1)s+=w}
+    return d?s/d:0;
+  }
+  function v19AvgDistance(h){
+    var rs=v19recent(h),s=0,d=0;
+    for(var i=0;i<rs.length;i++){var x=Number(rs[i].distance);if(!isFinite(x)||x<=0)continue;var w=V19_REC[i]||.45;s+=x*w;d+=w}
+    return d?s/d:0;
+  }
+  function v19FrontTrend(h){
+    var rs=v19recent(h),vals=[];
+    for(var i=0;i<rs.length;i++){var x=v19first(rs[i]);if(x!=null)vals.push(x)}
+    if(vals.length<2)return 0;
+    var recent=vals[0],older=v19mean(vals.slice(1));
+    return clamp01(.5+(older-recent)/8);
+  }
+  styleScore=function(h){
+    var r=styleRates(h);if(!r.known)return 2.5;
+    return r.front+2*r.stalk+3*r.mid+4*r.close;
+  };
+  expected=function(s){if(s<1.55)return"逃げ候補";if(s<2.2)return"先行";if(s<2.8)return"好位";if(s<3.35)return"中団";return"後方"};
+
+  function v19FirstCornerFactor(race){
+    var m=Number(race&& (race.firstCornerMeters||race.firstTurnDistance||race.firstCornerDistance));
+    if(!isFinite(m)||m<=0)return .5;
+    if(m<220)return .9;
+    if(m<320)return .7;
+    if(m>500)return .2;
+    if(m>400)return .35;
+    return .5;
+  }
+  function v19BuildRows(race){
+    var hs=(race&&race.horses)||[],n=Math.max(1,hs.length),rows=[],target=Number(race&&race.distance)||0,fc=v19FirstCornerFactor(race);
+    for(var i=0;i<hs.length;i++){
+      var h=hs[i],rates=styleRates(h),sp=styleScore(h),fade=fadeRate(h),move=v19MoveUp(h),avgD=v19AvgDistance(h),shorten=0,extend=0;
+      if(target&&avgD){var dd=(avgD-target)/target;shorten=clamp01((dd-.03)/.25);extend=clamp01((-dd-.03)/.25)}
+      var frontBase=.58*rates.front+.30*rates.stalk+.08*(1-clamp01((sp-1)/3))+.04*v19FrontTrend(h);
+      var shortLead=(rates.front+.65*rates.stalk)*shorten;
+      var naturalExtend=(rates.mid+.5*rates.close)*extend*.08;
+      var early=frontBase+.16*shortLead+.05*naturalExtend;
+      var outness=n>1?(Number(h.horseNumber)-1)/(n-1):0;
+      var leadDesire=clamp01(.70*early+.25*rates.front+.05*v19RecentLead(h));
+      rows.push({horse:h,score:sp,front:rates.front,stalk:rates.stalk,mid:rates.mid,close:rates.close,fade:fade,move:move,shorten:shorten,extend:extend,shortLead:shortLead,earlyBase:clamp01(early),earlyScore:clamp01(early),leadDesire:leadDesire,outness:outness,pressure:0,sandwich:false,canYield:clamp01(.65*rates.stalk+.25*rates.mid+.10*(1-rates.front)),firstCornerFactor:fc,expected:expected(sp)});
+    }
+    var byNo={};for(i=0;i<rows.length;i++)byNo[Number(rows[i].horse.horseNumber)]=rows[i];
+    for(i=0;i<rows.length;i++){
+      var row=rows[i],no=Number(row.horse.horseNumber),left=byNo[no-1],right=byNo[no+1],lp=left?left.earlyBase:0,rp=right?right.earlyBase:0;
+      row.sandwich=lp>.56&&rp>.56;
+      row.pressure=clamp01((lp>.56?.16:0)+(rp>.56?.16:0)+(row.sandwich?.16:0));
+      var inner=0,innerN=0;
+      for(var j=0;j<rows.length;j++){if(Number(rows[j].horse.horseNumber)<no){inner+=rows[j].earlyBase;innerN++}}
+      inner=innerN?inner/innerN:0;
+      if(row.outness>.62&&inner>.52)row.earlyScore-=.10*fc+.05*(inner-.52);
+      if(no===n&&inner<.43)row.earlyScore+=.06;
+      row.earlyScore=clamp01(row.earlyScore-row.pressure*.10);
+    }
+    var byLead=rows.slice().sort(function(a,b){return b.leadDesire-a.leadDesire||b.earlyScore-a.earlyScore||Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
+    if(byLead.length){
+      var top=byLead[0],second=byLead[1],gap=second?top.leadDesire-second.leadDesire:1;
+      if(second&&gap<.10){
+        if(top.canYield>second.canYield+.12){top.earlyScore-=.07;second.earlyScore+=.08}
+        else if(second.canYield>top.canYield+.12){top.earlyScore+=.08;second.earlyScore-=.07}
+        else{top.earlyScore+=.04;second.earlyScore+=.03;top.pressure=clamp01(top.pressure+.08);second.pressure=clamp01(second.pressure+.08)}
+      }else top.earlyScore+=.10;
+    }
+    var start=rows.slice().sort(function(a,b){return b.earlyScore-a.earlyScore||b.leadDesire-a.leadDesire||Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
+    for(i=0;i<start.length;i++){
+      start[i].startRank=i;
+      var cut1=Math.max(1,Math.ceil(n*.14)),cut2=Math.max(cut1+1,Math.ceil(n*.34)),cut3=Math.max(cut2+1,Math.ceil(n*.55)),cut4=Math.max(cut3+1,Math.ceil(n*.78));
+      start[i].expected=i<cut1?"逃げ候補":i<cut2?"先行":i<cut3?"好位":i<cut4?"中団":"後方";
+    }
+    rows.sort(function(a,b){return Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
+    return rows;
+  }
+  styleMap=function(horses){return v19BuildRows({horses:horses||[],distance:0})};
+  paceRows=function(rows){return rows.slice().sort(function(a,b){return v19num(a.startRank,999)-v19num(b.startRank,999)||b.earlyScore-a.earlyScore||Number(a.horse.horseNumber)-Number(b.horse.horseNumber)})};
+
+  occupancy=function(horses){
+    var early=[],moved=[];
+    for(var i=0;i<horses.length;i++){
+      var rr=(horses[i].recentRaces||[])[0],p=rr&&rr.cornerPositions||[];if(!p.length)continue;
+      var any=false;for(var j=0;j<p.length;j++)if(Number(p[j])<=3){any=true;break}
+      if(!any)continue;
+      if(Number(p[0])<=3)early.push(horses[i].horseNumber);else moved.push(horses[i].horseNumber);
+    }
+    var nums=early.concat(moved).sort(function(a,b){return a-b});
+    return{rate:horses.length?nums.length/horses.length:0,nums:nums,early:early,moved:moved};
+  };
+
+  function v19RecentForm(h){
+    var rs=v19recent(h),s=0,d=0;
+    for(var i=0;i<rs.length;i++){var w=V19_REC[i]||.45;s+=finishQuality(rs[i].finish)*w;d+=w}
+    return d?s/d:.5;
+  }
+  function v19Peak(h,race){
+    var rs=v19recent(h),best=.45,target=Number(race.distance)||0;
+    for(var i=0;i<rs.length;i++){
+      var rr=rs[i],dist=Number(rr.distance)||0,sim=target&&dist?clamp01(1-Math.abs(dist-target)/Math.max(350,target*.35)):.5;
+      var track=String(rr.track||'')===String(race.track||'')?1:.45,cond=conditionSimilarity(rr.condition,race.condition),q=finishQuality(rr.finish);
+      best=Math.max(best,.52*q+.22*sim+.14*track+.12*cond);
+    }
+    return clamp01(best);
+  }
+  function v19Consistency(h){
+    var rs=v19recent(h),a=[];for(var i=0;i<rs.length;i++)a.push(finishQuality(rs[i].finish));
+    if(a.length<2)return .5;var m=v19mean(a),v=0;for(i=0;i<a.length;i++)v+=(a[i]-m)*(a[i]-m);v/=a.length;
+    return clamp01(1-Math.sqrt(v)*2.2);
+  }
+  function v19SpeedScores(race){
+    var hs=race.horses||[],raw={},vals=[],target=Number(race.distance)||0;
+    for(var i=0;i<hs.length;i++){
+      var rs=v19recent(hs[i]),best=null;
+      for(var j=0;j<rs.length;j++){
+        var rr=rs[j],d=Number(rr.distance)||0,t=Number(rr.timeSeconds)||0;if(!d||!t)continue;
+        var diff=target?Math.abs(d-target)/target:0;if(diff>.28)continue;
+        var sim=clamp01(1-diff/.28),track=String(rr.track||'')===String(race.track||'')?1:.72,cond=.8+.2*conditionSimilarity(rr.condition,race.condition),rec=.96-j*.07;
+        var val=(d/t)*sim*track*cond*rec;
+        if(best==null||val>best)best=val;
+      }
+      if(best!=null){raw[String(hs[i].horseNumber)]=best;vals.push(best)}
+    }
+    var out={};if(vals.length<2){for(i=0;i<hs.length;i++)out[String(hs[i].horseNumber)]=.5;return out}
+    var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);
+    for(i=0;i<hs.length;i++){var k=String(hs[i].horseNumber);out[k]=raw[k]==null?.5:v19norm(raw[k],lo,hi)}
+    return out;
+  }
+  function v19Ability(race,rows){
+    var hs=race.horses||[],spd=v19SpeedScores(race),pr=prizeScores(hs),wt=profileWeightScores(hs),out={};
+    for(var i=0;i<hs.length;i++){
+      var h=hs[i],k=String(h.horseNumber),form=v19RecentForm(h),speed=spd[k],cond=conditionFit(h,race),prize=pr[k],j=statsStrength(h.jockeyStats),tr=statsStrength(h.trainerStats),weight=wt[k],peak=v19Peak(h,race),cons=v19Consistency(h);
+      var base=.24*form+.18*speed+.15*cond+.07*prize+.08*j+.06*tr+.05*weight+.11*peak+.06*cons;
+      out[k]={base:clamp01(base),form:form,speed:speed,cond:cond,prize:prize,jockey:j,trainer:tr,weight:weight,peak:peak,consistency:cons};
+    }
+    return out;
+  }
+
+  function v19ScenarioProbs(race,rows){
+    var start=paceRows(rows),n=start.length,lead=start[0],second=start[1],leadGap=lead&&second?Math.abs(lead.leadDesire-second.leadDesire):1;
+    var contest=lead&&second?clamp01((.16-leadGap)/.16):0;
+    if(lead&&second&&lead.canYield>.72&&second.canYield>.72)contest*=.60;
+    var sandwich=lead&&lead.sandwich?1:(lead?lead.pressure:.0);
+    var top=Math.min(4,start.length),fade=0,cluster=0,pairs=0;
+    for(var i=0;i<top;i++)fade+=start[i].fade*(.40-i*.07);
+    fade=top?clamp01(fade/Math.max(.1,.40*top-.07*top*(top-1)/2)):0;
+    var byNo=rows.slice().sort(function(a,b){return Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
+    for(i=0;i<byNo.length-1;i++){if(byNo[i].earlyScore>.55&&byNo[i+1].earlyScore>.55)cluster++;pairs++}
+    cluster=pairs?cluster/pairs:0;
+    var control=lead?clamp01(.55*lead.leadDesire+.25*(1-contest)+.20*(1-lead.pressure)):0;
+    if(lead&&lead.shortLead>.35)control=clamp01(control+.08);
+    var small=n<=7?1:0,shortRace=(Number(race.distance)||0)<=1400?1:0;
+    var aRaw=.75+1.15*control+.55*(1-fade)+.22*small+.12*shortRace+.20*(lead?lead.shortLead:0)-.70*contest-.55*sandwich;
+    var cRaw=.62+1.10*contest+.85*sandwich+.88*fade+.48*cluster-.48*control-.12*small;
+    var bRaw=1.15+.35*(1-contest)+.24*(1-sandwich)+.18*(1-Math.abs(fade-.45));
+    aRaw=Math.max(.20,aRaw);bRaw=Math.max(.30,bRaw);cRaw=Math.max(.20,cRaw);
+    var sum=aRaw+bRaw+cRaw,a=Math.round(100*aRaw/sum),c=Math.round(100*cRaw/sum),b=100-a-c;
+    if(b<10){var need=10-b,b=10;if(a>c)a-=need;else c-=need}
+    return{A:a,B:b,C:c,meta:{contest:contest,sandwich:sandwich,fade:fade,cluster:cluster,control:control}};
+  }
+  function v19ScenarioScore(code,row,ability,n,highFadeFront){
+    var base=ability.base,start=v19rankNorm(row.startRank,n),survive=1-row.fade,rear=clamp01((row.score-1)/3),vers=clamp01(1-Math.abs(row.score-2.45)/1.75),pressure=row.pressure*row.earlyScore;
+    if(code==='A')return clamp01(.53*base+.18*row.earlyScore+.14*survive+.08*start+.09*row.shortLead-.08*pressure);
+    if(code==='C')return clamp01(.57*base+.17*row.move+.10*rear+.08*survive+.08*vers+(highFadeFront>=2?.05*rear:0)-.12*row.fade*row.earlyScore);
+    return clamp01(.59*base+.10*start+.10*survive+.09*row.move+.07*vers+.05*row.shortLead-.04*pressure);
+  }
+  function v19ScenarioObjects(race,rows,abilities,probs){
+    var n=rows.length,start=paceRows(rows),highFade=0;
+    for(var i=0;i<Math.min(4,start.length);i++)if(start[i].fade>=.5)highFade++;
+    var codes=[['A','前残り'],['B','平均'],['C','前崩れ・差し届く']],out=[];
+    for(var c=0;c<codes.length;c++){
+      var code=codes[c][0],arr=[];
+      for(i=0;i<rows.length;i++){
+        var row=rows[i],k=String(row.horse.horseNumber),score=v19ScenarioScore(code,row,abilities[k],n,highFade);
+        arr.push({row:row,score:score});
+      }
+      arr.sort(function(a,b){return b.score-a.score||Number(a.row.horse.horseNumber)-Number(b.row.horse.horseNumber)});
+      for(i=0;i<arr.length;i++)arr[i].rank=i;
+      out.push({code:code,title:codes[c][1],prob:probs[code],horses:arr.slice(0,4).map(function(x){return x.row.horse}),ranking:arr});
+    }
+    return out;
+  }
+  function v19Suitability(rows,scs){
+    var out={},n=Math.max(1,rows.length),i,j;
+    for(i=0;i<rows.length;i++)out[String(rows[i].horse.horseNumber)]={win:0,place:0,show:0,robust:0,upside:0,scenario:{}};
+    for(i=0;i<scs.length;i++){
+      var sc=scs[i],p=sc.prob/100,vals=sc.ranking.map(function(x){return x.score}),lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);
+      for(j=0;j<sc.ranking.length;j++){
+        var it=sc.ranking[j],k=String(it.row.horse.horseNumber),norm=v19norm(it.score,lo,hi),rn=v19rankNorm(j,n),s=out[k];
+        s.scenario[sc.code]={score:it.score,rank:j,norm:norm};
+        s.win+=p*(.72*norm+.28*rn*rn);
+        s.place+=p*(.58*norm+.42*rn);
+        s.show+=p*(.48*norm+.52*Math.sqrt(rn));
+        s.upside=Math.max(s.upside,norm);
+      }
+    }
+    for(var k in out){
+      var ss=out[k],vs=[];for(var q in ss.scenario)vs.push(ss.scenario[q].norm);
+      var m=v19mean(vs),v=0;for(i=0;i<vs.length;i++)v+=(vs[i]-m)*(vs[i]-m);v=vs.length?v/vs.length:0;
+      ss.robust=clamp01(1-Math.sqrt(v)*1.6);
+      ss.total=.50*ss.win+.29*ss.place+.16*ss.show+.05*ss.robust;
+    }
+    return out;
+  }
+  function v19Marks(race,rows,scs,suit){
+    var pool=rows.map(function(r){var s=suit[String(r.horse.horseNumber)];return{row:r,s:s}}),used={},out=[];
+    function take(symbol,fn){var best=null,bv=-1e9;for(var i=0;i<pool.length;i++){var x=pool[i],k=String(x.row.horse.horseNumber);if(used[k])continue;var v=fn(x.s,x.row);if(v>bv){bv=v;best=x}}if(best){used[String(best.row.horse.horseNumber)]=1;out.push([symbol,best.row.horse])}}
+    take('◎',function(s,r){return .72*s.win+.18*s.robust+.10*s.total});
+    take('○',function(s,r){return .57*s.place+.25*s.win+.18*s.robust});
+    take('▲',function(s,r){return .46*s.win+.38*s.place+.16*s.show});
+    take('☆',function(s,r){return .46*s.upside+.30*s.win+.24*(1-s.robust)});
+    take('△',function(s,r){return .56*s.show+.28*s.place+.16*s.robust});
+    take('注',function(s,r){return .44*s.show+.32*s.upside+.24*s.total});
+    return out;
+  }
+  function v19FinalOrder(rows,marks,suit){
+    var used={},out=[];
+    for(var i=0;i<marks.length;i++){var h=marks[i][1],k=String(h.horseNumber);if(!used[k]){used[k]=1;out.push(h)}}
+    var rest=rows.slice().sort(function(a,b){var aa=suit[String(a.horse.horseNumber)].total,bb=suit[String(b.horse.horseNumber)].total;return bb-aa||Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
+    for(i=0;i<rest.length;i++){k=String(rest[i].horse.horseNumber);if(!used[k]){used[k]=1;out.push(rest[i].horse)}}
+    return out;
+  }
+  function v19CornerOrder(rows,scs,abilities){
+    var main=scs.slice().sort(function(a,b){return b.prob-a.prob})[0],code=main?main.code:'B',n=rows.length,arr=[];
+    for(var i=0;i<rows.length;i++){
+      var row=rows[i],ab=abilities[String(row.horse.horseNumber)],start=v19rankNorm(row.startRank,n),rear=clamp01((row.score-1)/3),score;
+      if(code==='A')score=.48*start+.28*ab.base+.18*(1-row.fade)+.06*row.shortLead-.08*row.pressure;
+      else if(code==='C')score=.18*start+.39*ab.base+.25*row.move+.12*rear+.06*(1-row.fade)-.08*row.fade*row.earlyScore;
+      else score=.32*start+.38*ab.base+.15*row.move+.11*(1-row.fade)+.04*row.shortLead-.05*row.pressure;
+      arr.push({h:row.horse,score:score});
+    }
+    arr.sort(function(a,b){return b.score-a.score||Number(a.h.horseNumber)-Number(b.h.horseNumber)});
+    return arr.map(function(x){return x.h});
+  }
+  function v19Groups(order,nGroups){
+    var groups=[],n=order.length,cut1=Math.max(1,Math.ceil(n*.24)),cut2=Math.max(cut1+1,Math.ceil(n*.55));
+    groups.push(order.slice(0,cut1).map(function(h){return{horse:h}}));
+    groups.push(order.slice(cut1,cut2).map(function(h){return{horse:h}}));
+    groups.push(order.slice(cut2).map(function(h){return{horse:h}}));
+    return groups;
+  }
+  buildStages=function(rows){var s=paceRows(rows).map(function(x){return x.horse});return[["スタート〜100m",v19Groups(s)],["最初のコーナー",v19Groups(s)],["向正面",v19Groups(s)],["3〜4角",v19Groups(s)],["直線",v19Groups(s)]]};
+
+  predict=function(race){
+    var rows=v19BuildRows(race),occ=occupancy(race.horses||[]),abilities=v19Ability(race,rows),probs=v19ScenarioProbs(race,rows),scs=v19ScenarioObjects(race,rows,abilities,probs),suit=v19Suitability(rows,scs),marks=v19Marks(race,rows,scs,suit);
+    var start=paceRows(rows).map(function(x){return x.horse}),corner=v19CornerOrder(rows,scs,abilities),straight=v19FinalOrder(rows,marks,suit);
+    var stages=[["スタート〜100m",v19Groups(start)],["最初のコーナー",v19Groups(start)],["向正面",v19Groups(corner)],["3〜4角",v19Groups(corner)],["直線",v19Groups(straight)]];
+    return{rows:rows,occ:occ,stages:stages,scenarios:scs,marks:marks,abilities:abilities,suitability:suit,plan:{start:start,corner:corner,straight:straight},engine:"v19"};
+  };
+  marks=function(race,rows,scs){return predict(race).marks};
+  scenarios=function(rows,occ){return[]};
+
+  // The animation consumes the exact same plan that generated ABC and marks.
+  v18StartOrder=function(p){return p&&p.plan&&p.plan.start?p.plan.start:paceRows(p.rows||[]).map(function(x){return x.horse})};
+  v18CornerOrder=function(r,p){return p&&p.plan&&p.plan.corner?p.plan.corner:v18StartOrder(p)};
+  v18MarkOrder=function(r,p){return p&&p.plan&&p.plan.straight?p.plan.straight:(p.marks||[]).map(function(x){return x[1]})};
+  v18UnifiedPlan=function(r,p){return p&&p.plan?p.plan:{start:v18StartOrder(p),corner:v18CornerOrder(r,p),straight:v18MarkOrder(r,p)}};
+  v18TopScenario=function(p){var a=(p.scenarios||[]).slice().sort(function(x,y){return y.prob-x.prob});return a.length?a[0].code:'B'};
+
+  makeSnapshot=function(r,p){
+    var markRows=p.marks.map(function(m){return{symbol:m[0],horseNumber:Number(m[1].horseNumber),name:m[1].name}}),scenarioRows=p.scenarios.map(function(s){return{code:s.code,title:s.title,prob:s.prob}}),exp={};
+    for(var i=0;i<p.rows.length;i++)exp[String(p.rows[i].horse.horseNumber)]=p.rows[i].expected;
+    var lead=p.plan&&p.plan.start&&p.plan.start.length?p.plan.start[0]:null;
+    return{savedAt:new Date().toISOString(),marks:markRows,scenarios:scenarioRows,predictedLead:lead?Number(lead.horseNumber):null,expected:exp,engine:'v19'};
+  };
+})();
+'''
+JS = JS.replace('render();setTimeout(loadRaces,0);\n})();', V19_JS + '\nrender();setTimeout(loadRaces,0);\n})();')
+
 
 
 
