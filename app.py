@@ -148,9 +148,9 @@ function coursePathD(p){if(p.shape==="straight")return "M18 92 L182 92";if(p.sha
 function normFrac(x){x=x%1;return x<0?x+1:x}
 function courseStageFrac(r,st){var p=courseProfile(r);if(p.shape==="straight")return st===0?.05:(st===1?.67:.92);var laps=Math.max(.1,n(r.distance,1200)/p.lap),start=normFrac(.965-p.dir*(laps%1)),prog=st===0?.015:(st===1?.81:.965);return normFrac(start+p.dir*laps*prog)}
 var app=document.getElementById("app");
-var state={date:today(),circuit:"地方",races:[],track:null,race:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0};
+var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0};
 
-function cacheKey(d){return "keiba:v29:races:"+d}
+function cacheKey(d){return "keiba:v31:races:"+d}
 function loadRaceCache(d){try{var raw=localStorage.getItem(cacheKey(d));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(Date.now()-n(x.ts)>6*3600000)return null;return x.rows}catch(e){return null}}
 function saveRaceCache(d,rows){try{localStorage.setItem(cacheKey(d),JSON.stringify({ts:Date.now(),rows:rows}))}catch(e){}}
 function clearOldPwa(){try{if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(function(rs){for(var i=0;i<rs.length;i++)rs[i].unregister()}).catch(function(){});if(window.caches)caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).catch(function(){})}catch(e){}}
@@ -272,9 +272,12 @@ function runnerStyleSection(r,p){var rows=p.rows.slice().sort(function(a,b){retu
 function simPct(v){return Math.round(clamp(n(v),0,1)*100)+"%"}
 function renderPaceProbability(p){var sim=p.simulation,pod=sim.podium||[],cards=pod.map(function(z,i){var lab=i===0?"1着候補":(i===1?"2着候補":"3着候補"),rate=i===0?z.winRate:(i===1?z.secondRate:z.thirdRate);return'<div class="sim-podium-card"><small>'+lab+'</small><div>'+badge(z.horse)+'<b>'+esc(z.horse.name)+'</b></div><strong>'+simPct(rate)+'</strong></div>'}).join("");return'<section class="card pace-prob-card"><div class="section-title">'+esc(sim.count)+'回シミュレーション結果</div><div class="sim-podium-grid">'+cards+'</div><div class="sim-confidence"><span>本線3頭が3着内に揃う</span><b>'+simPct(sim.setRate)+'</b></div><div class="sim-confidence"><span>本線1→2→3の完全一致</span><b>'+simPct(sim.exactRate)+'</b></div><div class="sim-rate-list">'+sim.summary.slice(0,6).map(function(z){return'<div class="sim-rate-row">'+badge(z.horse)+'<span class="sim-rate-name">'+esc(z.horse.name)+'</span><span>1着 '+simPct(z.winRate)+'</span><span>2着 '+simPct(z.secondRate)+'</span><span>3着 '+simPct(z.thirdRate)+'</span></div>'}).join("")+'</div><div class="muted">選択回数の深掘りシミュレーション集計。スタート反応、先行争い、1角までの距離、外を回るロス、道中の消耗、被され・詰まり、3〜4角の進出、直線の伸びまで各馬別に変化させて集計</div></section>'}
 function paceBoard(r,p){var hs=(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}),cp=courseProfile(r),d=coursePathD(cp),straight=cp.shape==="straight",target=n(state.simTarget,20);return '<section class="card pace-card"><div class="pace-head"><div class="section-title" style="margin:0">展開シミュレーション</div><span id="sim-status" class="pace-stage">'+target+'回シミュレーション</span></div><div id="pace-board" class="course-wrap sim-board"><div class="course-meta">'+esc(r.track)+'　'+esc(r.distance)+'m　'+esc(cp.turn)+(straight?'':'回り')+'</div><svg class="course-svg" viewBox="0 0 200 180" preserveAspectRatio="none" aria-hidden="true">'+(straight?'<path d="M18 92 L182 92" class="course-track-under"></path><path id="course-path" d="M18 92 L182 92" class="course-track"></path><path d="M18 92 L182 92" class="course-rail"></path>':'<path d="'+d+'" class="course-track-under"></path><path id="course-path" d="'+d+'" class="course-track"></path><path d="'+d+'" class="course-rail"></path>')+'<circle id="course-start-dot" class="course-start" cx="20" cy="90" r="3"></circle><line id="course-finish-line" class="course-finish" x1="174" y1="77" x2="174" y2="103"></line><text id="course-start-label" class="course-start-label" x="23" y="83">START</text><text class="course-finish-label" x="162" y="72">GOAL</text></svg>'+hs.map(function(h){var ms=markSymbol(p,h.horseNumber);return '<div class="course-runner sim-runner" data-horse="'+esc(h.horseNumber)+'" style="left:10%;top:50%">'+(ms?'<span class="course-mark">'+ms+'</span>':'')+badge(h)+'</div>'}).join("")+'<div id="sim-live-podium" class="sim-live-podium">'+target+'回から選んで再生できます</div><div id="course-order" class="course-order">待機中</div></div><div class="sim-count-picker" aria-label="シミュレーション回数">'+[10,20,30,40,50].map(function(v){return '<button data-sim-count="'+v+'" class="'+(v===target?'active':'')+'">'+v+'回</button>'}).join('')+'</div><div class="sim-controls"><div class="sim-actions"><button class="sim-action primary" data-action="sim-run">▶ 開始</button><button class="sim-action pause" data-action="sim-pause" disabled>⏸ 一時停止</button><button class="sim-action stop" data-action="sim-stop" disabled>■ 停止</button></div><div class="sim-speed" aria-label="再生速度"><button data-speed="1">×1</button><button data-speed="2">×2</button><button data-speed="5" class="active">×5</button><button data-speed="10">×10</button></div></div><div class="sim-progress"><div><span id="sim-count">0 / '+target+'</span><span id="sim-elapsed">待機</span></div><div class="sim-progress-track"><span id="sim-progress-bar" style="width:0%"></span></div></div><div class="sim-depth"><span>スタート反応</span><span>ハナ争い</span><span>1角負荷</span><span>道中消耗</span><span>3〜4角進出</span><span>進路ロス</span><span>直線伸び</span></div><div class="sim-note">馬群を一塊にせず、各馬の先頭との差・レーン・消耗を別々に計算。外を回るロスや被され、詰まりも各回で変化します。</div></section>'}
+function renderRaceLoading(){return '<div class="shell">'+header("レース読込中",true,"出走馬・近走データを準備中")+'<main class="main"><section class="card"><div class="empty">このレースだけ詳しいデータを読み込んでいます…</div></section></main></div>'}
+function openRace(id){if(!id||state.raceLoading)return;state.raceLoading=String(id);state.race=null;state.error=null;state.picker=false;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?v=31',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.race=body;render()}).catch(function(e){if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';render()})}
+function reloadCurrent(){if(state.race&&state.race.id){var id=state.race.id;state.race=null;openRace(id)}else load()}
 function renderRace(){var r=state.race,p=predict(r);state.pred=p;return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main">'+renderResult(r)+renderResultGap(r,p)+renderActualFlow(r)+'<section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span></div><div class="metrics"><div class="metric"><b>'+esc(r.distance)+'m</b><span>距離</span></div><div class="metric"><b>'+esc(r.condition||'不明')+'</b><span>馬場</span></div><div class="metric"><b>'+esc(r.weather||'不明')+'</b><span>天候</span></div><div class="metric"><b>'+season(r.date)+'</b><span>季節</span></div><div class="metric"><b>'+esc((r.horses||[]).length)+'頭</b><span>頭数</span></div></div><div class="data-depth"><span>近走 最大12走</span><span>地方履歴 最大18か月</span><span>欠損データは中立</span></div></section>'+runnerStyleSection(r,p)+paceBoard(r,p)+renderPaceProbability(p)+'<section class="card"><div class="section-title">予想印</div><div class="marks">'+p.marks.map(function(m){return'<div class="mark"><span class="mark-symbol">'+m[0]+'</span>'+badge(m[1])+'<strong>'+esc(m[1].name)+'</strong></div>'}).join("")+'</div></section></main></div>'}
-function render(){stopTimer();try{if(state.race)app.innerHTML=renderRace();else if(state.picker)app.innerHTML=renderPicker();else if(state.track)app.innerHTML=renderVenue();else app.innerHTML=renderHome();bind();if(state.race)initSimulationBoard()}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
-function bind(){var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.circuit=this.getAttribute('data-circuit');state.track=null;state.race=null;state.picker=false;render()};var d=document.getElementById('date');if(d)d.onchange=function(){state.date=this.value;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.track=this.getAttribute('data-track');render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),j;for(j=0;j<state.races.length;j++)if(String(state.races[j].id)===String(id)){state.race=state.races[j];break}state.picker=false;render()};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=function(){if(state.race)state.race=null;else if(state.picker)state.picker=false;else state.track=null;render()};var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=load;var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){state.race=x;render()}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.picker=true;state.track=null;render()};var sr=document.querySelector('[data-action="sim-run"]');if(sr)sr.onclick=startSimulation;var sp=document.querySelector('[data-action="sim-pause"]');if(sp)sp.onclick=togglePauseSimulation;var ss=document.querySelector('[data-action="sim-stop"]');if(ss)ss.onclick=stopSimulation;els=document.querySelectorAll('[data-sim-count]');for(i=0;i<els.length;i++)els[i].onclick=function(){if(state.simRunning||state.simPaused)stopSimulation();state.simTarget=n(this.getAttribute('data-sim-count'),20);render()};els=document.querySelectorAll('[data-speed]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.simSpeed=n(this.getAttribute('data-speed'),5);var bs=document.querySelectorAll('[data-speed]'),j;for(j=0;j<bs.length;j++)bs[j].className=n(bs[j].getAttribute('data-speed'))===state.simSpeed?'active':''}}
+function render(){stopTimer();try{if(state.raceLoading)app.innerHTML=renderRaceLoading();else if(state.race)app.innerHTML=renderRace();else if(state.picker)app.innerHTML=renderPicker();else if(state.track)app.innerHTML=renderVenue();else app.innerHTML=renderHome();bind();if(state.race)initSimulationBoard()}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
+function bind(){var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.circuit=this.getAttribute('data-circuit');state.track=null;state.race=null;state.picker=false;render()};var d=document.getElementById('date');if(d)d.onchange=function(){state.date=this.value;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.track=this.getAttribute('data-track');render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){openRace(this.getAttribute('data-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=function(){if(state.raceLoading){state.raceLoading=null}else if(state.race)state.race=null;else if(state.picker)state.picker=false;else state.track=null;render()};var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.picker=true;state.track=null;render()};var sr=document.querySelector('[data-action="sim-run"]');if(sr)sr.onclick=startSimulation;var sp=document.querySelector('[data-action="sim-pause"]');if(sp)sp.onclick=togglePauseSimulation;var ss=document.querySelector('[data-action="sim-stop"]');if(ss)ss.onclick=stopSimulation;els=document.querySelectorAll('[data-sim-count]');for(i=0;i<els.length;i++)els[i].onclick=function(){if(state.simRunning||state.simPaused)stopSimulation();state.simTarget=n(this.getAttribute('data-sim-count'),20);render()};els=document.querySelectorAll('[data-speed]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.simSpeed=n(this.getAttribute('data-speed'),5);var bs=document.querySelectorAll('[data-speed]'),j;for(j=0;j<bs.length;j++)bs[j].className=n(bs[j].getAttribute('data-speed'))===state.simSpeed?'active':''}}
 function stopTimer(){if(state.timer){clearTimeout(state.timer);state.timer=null}if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}state.simRunning=false}
 function resetSimCounts(){var o={},hs=state.race&&state.race.horses||[],i;for(i=0;i<hs.length;i++)o[n(hs[i].horseNumber)]={w:0,s:0,t:0};state.simCounts=o;state.simDone=0;state.simCurrentT=0;state.simIndex=0}
 function setSimButtons(){var p=document.querySelector('[data-action="sim-pause"]'),s=document.querySelector('[data-action="sim-stop"]'),r=document.querySelector('[data-action="sim-run"]');if(p){p.disabled=!(state.simRunning||state.simPaused);p.textContent=state.simPaused?'▶ 再開':'⏸ 一時停止'}if(s)s.disabled=!(state.simRunning||state.simPaused||state.simDone>0);if(r)r.textContent=state.simDone>0&&!state.simRunning&&!state.simPaused?'↻ 最初から':'▶ 開始'}
@@ -285,7 +288,7 @@ function startSimulation(){if(!state.race||!state.pred)return;stopTimer();state.
 function togglePauseSimulation(){if(state.simRunning){if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}if(state.timer){clearTimeout(state.timer);state.timer=null}state.simRunning=false;state.simPaused=true;updateSimHud(state.simIndex,null);return}if(state.simPaused){state.simPaused=false;state.simRunning=true;setSimButtons();animateOneRun(state.simIndex,state.simCurrentT)}}
 function stopSimulation(){if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}if(state.timer){clearTimeout(state.timer);state.timer=null}state.simRunning=false;state.simPaused=false;state.simStopped=true;updateSimHud(state.simIndex,null)}
 function initSimulationBoard(){if(!state.pred||!state.pred.simulation||!state.pred.simulation.runs.length)return;resetSimCounts();state.simPaused=false;state.simStopped=false;var board=document.getElementById('pace-board'),path=document.getElementById('course-path');if(board&&path){var sf=courseStageFrac(state.race,0),total=path.getTotalLength(),sp=path.getPointAtLength(sf*total),sd=document.getElementById('course-start-dot'),sl=document.getElementById('course-start-label');if(sd){sd.setAttribute('cx',sp.x);sd.setAttribute('cy',sp.y)}if(sl){sl.setAttribute('x',Math.min(176,sp.x+4));sl.setAttribute('y',Math.max(10,sp.y-5))}}drawSimulationRun(state.pred.simulation.runs[0],0);updateSimHud(0,null)}
-function load(){var d=state.date,seq=++state.requestSeq,cached=loadRaceCache(d);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render()}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&v=30',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,rows);state.loading=false;state.error=null;render()}).catch(function(){if(seq!==state.requestSeq||state.date!==d)return;if(attempts<3){setTimeout(request,700*attempts);return}state.loading=false;state.error=null;render()})}request()}
+function load(){var d=state.date,seq=++state.requestSeq,cached=loadRaceCache(d);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render()}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&v=31',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,rows);state.loading=false;state.error=null;render()}).catch(function(){if(seq!==state.requestSeq||state.date!==d)return;if(attempts<3){setTimeout(request,700*attempts);return}state.loading=false;state.error=null;render()})}request()}
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
 clearOldPwa();render();setTimeout(load,0);
 })();
@@ -1142,11 +1145,24 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v30-fast-quiet", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v31-stable-lazy", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")),
         "narHistoryMonths": max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "18")))),
     }
+
+@app.post("/api/v1/history-backfill-one")
+def history_backfill_one(months_ago: int = Query(1, ge=1, le=24)):
+    target=datetime.now().date().replace(day=1)
+    y,m=target.year,target.month
+    for _ in range(months_ago):
+        m-=1
+        if m==0:y-=1;m=12
+    def worker():
+        try:NarSync().sync_month(y,m,force=False)
+        except Exception as exc:print(f"manual history backfill failed: {exc}")
+    threading.Thread(target=worker,daemon=True).start()
+    return {"status":"started","year":y,"month":m}
 
 @app.get("/api/v1/history-status")
 def history_status():
@@ -1194,7 +1210,7 @@ def _schedule_live_refresh(iso_date: str):
     key = f"live:{iso_date}"
     now = int(time.time())
     with _live_refresh_lock:
-        if key in _live_refresh_running or now - _live_refresh_last.get(key, 0) < 45:
+        if key in _live_refresh_running or now - _live_refresh_last.get(key, 0) < 180:
             return
         _live_refresh_running.add(key)
     def worker():
@@ -1202,11 +1218,8 @@ def _schedule_live_refresh(iso_date: str):
             try:
                 target = datetime.strptime(iso_date, "%Y-%m-%d").date()
                 sync = NarSync()
-                # Live request is intentionally light. Deep history is handled by ensure_history_async().
-                try:
-                    sync.sync_month(target.year, target.month, force=False)
-                except Exception as exc:
-                    print(f"NAR target month skipped: {exc}")
+                # UI stability first: never start a monthly archive import from a page request.
+                # Daily sync is much smaller and only runs for today.
                 if iso_date == _today_iso():
                     try:
                         sync.sync_daily(force=False)
@@ -1227,36 +1240,169 @@ def _schedule_live_refresh(iso_date: str):
                 _live_refresh_last[key] = int(time.time())
     threading.Thread(target=worker, daemon=True).start()
 
+
+def _new_conn(path: Path):
+    conn = sqlite3.connect(path, timeout=1.5)
+    conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA query_only=ON")
+        conn.execute("PRAGMA busy_timeout=1200")
+    except Exception:
+        pass
+    return conn
+
+
+def nar_race_summaries(iso_date: str) -> list[dict]:
+    if not DB_PATH.exists():
+        return []
+    conn = _new_conn(DB_PATH)
+    try:
+        rows = conn.execute(
+            """
+            SELECT r.*,
+                   COUNT(e.horse_no) AS entry_count,
+                   SUM(CASE WHEN e.finish=1 THEN 1 ELSE 0 END) AS f1,
+                   SUM(CASE WHEN e.finish=2 THEN 1 ELSE 0 END) AS f2,
+                   SUM(CASE WHEN e.finish=3 THEN 1 ELSE 0 END) AS f3
+            FROM races r
+            LEFT JOIN entries e ON e.track=r.track AND e.date=r.date AND e.race_no=r.race_no
+            WHERE r.date=?
+            GROUP BY r.track,r.date,r.race_no
+            ORDER BY r.track,r.race_no
+            """,
+            (iso_date,),
+        ).fetchall()
+        out=[]
+        for r in rows:
+            count=int(r["entry_count"] or r["field_size"] or 0)
+            finalized=count>0 and int(r["f1"] or 0)>0 and int(r["f2"] or 0)>0 and (count<3 or int(r["f3"] or 0)>0)
+            out.append({
+                "id":f"nar-{iso_date}-{r['track']}-{int(r['race_no']):02d}",
+                "circuit":"地方","date":iso_date,"track":r["track"],"raceNumber":int(r["race_no"]),
+                "title":r["title"] or f"{int(r['race_no'])}R","distance":int(r["distance"] or 0),
+                "condition":r["condition"] or "不明","weather":r["weather"] or "不明",
+                "fieldSize":count,"racePrize1":int(r["prize1"] or 0),"surface":"",
+                "startTime":r["start_time"] or "","scheduledStartTime":r["scheduled_start_time"] or r["start_time"] or "",
+                "startTimeChanged":bool((r["scheduled_start_time"] or "") and (r["start_time"] or "") and r["scheduled_start_time"]!=r["start_time"]),
+                "horses":[],"result":{"status":"確定","finishers":[{"finish":1}]} if finalized else None,"source":"NAR公式"
+            })
+        return out
+    finally:
+        conn.close()
+
+
+def central_race_summaries(iso_date: str) -> list[dict]:
+    if not CENTRAL_DB_PATH.exists():
+        return []
+    conn=_new_conn(CENTRAL_DB_PATH)
+    try:
+        rows=conn.execute("SELECT payload FROM central_races WHERE date=? ORDER BY track,race_no",(iso_date,)).fetchall()
+        out=[]
+        for x in rows:
+            try:r=json.loads(x["payload"])
+            except Exception:continue
+            hs=r.get("horses") if isinstance(r.get("horses"),list) else []
+            q=dict(r);q["fieldSize"]=int(q.get("fieldSize") or len(hs));q["horses"]=[]
+            # Keep only status/minimal result on the list page.
+            res=q.get("result") if isinstance(q.get("result"),dict) else None
+            if res:q["result"]={"status":res.get("status") or "確定","finishers":[{"finish":1}]} if (res.get("finishers") or res.get("status")=="確定") else None
+            out.append(q)
+        return out
+    finally:
+        conn.close()
+
+
+def nar_race_detail(race_id: str) -> dict | None:
+    m=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-(.+)-(\d{2})$",race_id)
+    if not m:return None
+    iso_date,track,race_no=m.group(1),m.group(2),int(m.group(3))
+    store=NarStore()
+    try:
+        race=store.conn.execute("SELECT * FROM races WHERE track=? AND date=? AND race_no=?",(track,iso_date,race_no)).fetchone()
+        if not race:return None
+        entries=store.conn.execute("SELECT * FROM entries WHERE track=? AND date=? AND race_no=? ORDER BY horse_no",(track,iso_date,race_no)).fetchall()
+        horses=[]
+        for e in entries:
+            horses.append({
+                "id":_stable_id(iso_date,track,race_no,e["horse_no"],e["name"]),"horseNumber":int(e["horse_no"]),
+                "frameNumber":int(e["frame_no"] or 0),"name":e["name"],"age":int(e["age"] or 0),"sex":e["sex"] or "牡",
+                "carriedWeight":float(e["carried_weight"] or 0),"jockey":e["jockey"] or "","trainer":e["trainer"] or "",
+                "jockeyStats":store.stats("jockey",e["jockey"],iso_date),"trainerStats":store.stats("trainer",e["trainer"],iso_date),
+                "jockeyProfile":store.role_profile("jockey",e["jockey"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
+                "trainerProfile":store.role_profile("trainer",e["trainer"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
+                "prizeMoneyAtRace":store.prize_before(e["name"],iso_date),"recentRaces":store.recent_races(e["name"],iso_date,12),
+            })
+        finishers=[]
+        for e in entries:
+            fin=int(e["finish"] or 0)
+            if fin>0:
+                try:cp=json.loads(e["corner_positions_json"] or "[]")
+                except Exception:cp=[]
+                finishers.append({"finish":fin,"horseNumber":int(e["horse_no"]),"frameNumber":int(e["frame_no"] or 0),"name":e["name"],"timeSeconds":float(e["time_seconds"] or 0),"cornerPositions":cp})
+        finishers.sort(key=lambda x:(x["finish"],x["horseNumber"]))
+        need=min(3,len(entries)); ranks={x["finish"] for x in finishers}; finalized=need>0 and all(i in ranks for i in range(1,need+1))
+        return {"id":race_id,"circuit":"地方","date":iso_date,"track":track,"raceNumber":race_no,
+                "title":race["title"] or f"{race_no}R","distance":int(race["distance"] or 0),"condition":race["condition"] or "不明",
+                "weather":race["weather"] or "不明","fieldSize":int(race["field_size"] or len(entries)),"racePrize1":int(race["prize1"] or 0),
+                "surface":"","startTime":race["start_time"] or "","scheduledStartTime":race["scheduled_start_time"] or race["start_time"] or "",
+                "startTimeChanged":bool((race["scheduled_start_time"] or "") and (race["start_time"] or "") and race["scheduled_start_time"]!=race["start_time"]),
+                "horses":horses,"result":{"status":"確定","finishers":finishers} if finalized else None,"source":"NAR公式"}
+    finally:
+        try:store.conn.close()
+        except Exception:pass
+
+
+def central_race_detail(race_id: str) -> dict | None:
+    if not CENTRAL_DB_PATH.exists():return None
+    conn=_new_conn(CENTRAL_DB_PATH)
+    try:
+        row=conn.execute("SELECT payload FROM central_races WHERE id=?",(race_id,)).fetchone()
+        return json.loads(row["payload"]) if row else None
+    finally:conn.close()
+
+_detail_cache_lock=threading.Lock()
+_detail_cache:dict[str,tuple[float,dict]]={}
+
 _race_list_cache_lock = threading.Lock()
 _race_list_cache: dict[str, tuple[float, list[dict]]] = {}
 
 @app.get("/api/v1/races")
 def races(date: str = Query(...)):
-    now = time.time()
+    now=time.time()
     with _race_list_cache_lock:
-        hit = _race_list_cache.get(date)
-        if hit and now - hit[0] < 8:
+        hit=_race_list_cache.get(date)
+        if hit and now-hit[0]<10:
             return hit[1]
-    ensure_history_async()
-    try:
-        live_local = NarStore().races_json(date)
+    try: live_local=nar_race_summaries(date)
     except Exception as exc:
-        print(f"NAR cache read failed: {exc}")
-        live_local = []
-    try:
-        central_rows = CentralStore().races_json(date)
+        print(f"NAR summary read failed: {exc}"); live_local=[]
+    try: central_rows=central_race_summaries(date)
     except Exception as exc:
-        print(f"Central cache read failed: {exc}")
-        central_rows = []
-    rows = live_local + central_rows
+        print(f"Central summary read failed: {exc}"); central_rows=[]
+    rows=live_local+central_rows
     with _race_list_cache_lock:
-        _race_list_cache[date] = (now, rows)
-        if len(_race_list_cache) > 12:
-            oldest = min(_race_list_cache.items(), key=lambda kv: kv[1][0])[0]
-            _race_list_cache.pop(oldest, None)
+        _race_list_cache[date]=(now,rows)
+        if len(_race_list_cache)>12:
+            oldest=min(_race_list_cache.items(),key=lambda kv:kv[1][0])[0]; _race_list_cache.pop(oldest,None)
+    # Never start the 18-month bulk backfill from a screen request.
     _schedule_live_refresh(date)
-    # Never block the screen on external network I/O.
     return rows
+
+@app.get("/api/v1/race/{race_id}")
+def race_detail(race_id: str):
+    now=time.time()
+    with _detail_cache_lock:
+        hit=_detail_cache.get(race_id)
+        if hit and now-hit[0]<90:
+            return hit[1]
+    detail=nar_race_detail(race_id) if race_id.startswith("nar-") else central_race_detail(race_id)
+    if not detail:
+        raise HTTPException(status_code=404,detail="race not found")
+    with _detail_cache_lock:
+        _detail_cache[race_id]=(now,detail)
+        if len(_detail_cache)>24:
+            oldest=min(_detail_cache.items(),key=lambda kv:kv[1][0])[0]; _detail_cache.pop(oldest,None)
+    return detail
 
 @app.get("/", response_class=HTMLResponse)
 def home():
