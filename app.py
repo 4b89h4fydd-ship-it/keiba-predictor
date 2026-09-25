@@ -17,7 +17,7 @@ from datetime import date as dt_date, datetime
 from pathlib import Path
 from typing import Iterable, Iterator
 
-app = FastAPI(title="競馬展開AI", version="4.9-production-v30-fast-quiet")
+app = FastAPI(title="競馬展開AI", version="5.0-production-v32-runtime-fix")
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -28,13 +28,13 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="競馬展開AI">
-<link rel="manifest" href="/manifest.webmanifest?v=29">
-<link rel="stylesheet" href="/styles.css?v=29">
+<link rel="manifest" href="/manifest.webmanifest?v=32">
+<link rel="stylesheet" href="/styles.css?v=32">
 <title>競馬展開AI</title>
 </head>
 <body>
 <div id="app"><div class="boot">競馬展開AIを起動中…</div></div>
-<script src="/app.js?v=29"></script>
+<script src="/app.js?v=32"></script>
 </body>
 </html>"""
 
@@ -150,7 +150,7 @@ function courseStageFrac(r,st){var p=courseProfile(r);if(p.shape==="straight")re
 var app=document.getElementById("app");
 var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0};
 
-function cacheKey(d){return "keiba:v31:races:"+d}
+function cacheKey(d){return "keiba:v32:races:"+d}
 function loadRaceCache(d){try{var raw=localStorage.getItem(cacheKey(d));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(Date.now()-n(x.ts)>6*3600000)return null;return x.rows}catch(e){return null}}
 function saveRaceCache(d,rows){try{localStorage.setItem(cacheKey(d),JSON.stringify({ts:Date.now(),rows:rows}))}catch(e){}}
 function clearOldPwa(){try{if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(function(rs){for(var i=0;i<rs.length;i++)rs[i].unregister()}).catch(function(){});if(window.caches)caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).catch(function(){})}catch(e){}}
@@ -283,12 +283,18 @@ function resetSimCounts(){var o={},hs=state.race&&state.race.horses||[],i;for(i=
 function setSimButtons(){var p=document.querySelector('[data-action="sim-pause"]'),s=document.querySelector('[data-action="sim-stop"]'),r=document.querySelector('[data-action="sim-run"]');if(p){p.disabled=!(state.simRunning||state.simPaused);p.textContent=state.simPaused?'▶ 再開':'⏸ 一時停止'}if(s)s.disabled=!(state.simRunning||state.simPaused||state.simDone>0);if(r)r.textContent=state.simDone>0&&!state.simRunning&&!state.simPaused?'↻ 最初から':'▶ 開始'}
 function updateSimHud(runIndex,run){var target=Math.max(10,n(state.simTarget,20)),c=document.getElementById('sim-count'),b=document.getElementById('sim-progress-bar'),e=document.getElementById('sim-elapsed'),st=document.getElementById('sim-status');if(c)c.textContent=state.simDone+' / '+target;if(b)b.style.width=(state.simDone/target*100)+'%';if(e)e.textContent=state.simPaused?'一時停止中':(state.simRunning?'×'+state.simSpeed+' 再生中':(state.simDone>=target?'完了':(state.simDone?'停止':'待機')));if(st)st.textContent=state.simDone>=target?target+'回 完了':'シミュレーション '+Math.min(target,runIndex+1)+'/'+target;if(run&&state.simDone>0){var live=document.getElementById('sim-live-podium'),p=run.podium;if(live)live.innerHTML=p.map(function(no,i){var h=horseByNo(state.race,no);return'<b>'+(i+1)+'着 '+esc(no)+' '+esc(h?h.name:'')+'</b>'+(i<2?'<i> / </i>':'')}).join('')}setSimButtons()}
 function finishOneRun(run){var p=run.podium||[],i,z;for(i=0;i<p.length;i++){z=state.simCounts[p[i]];if(!z)continue;if(i===0)z.w++;if(i===1)z.s++;if(i===2)z.t++}state.simDone++;state.simCurrentT=0;updateSimHud(state.simIndex,run)}
+
+function simStageLabel(t){if(t<.08)return"スタート";if(t<.22)return"ハナ争い";if(t<.38)return"1角";if(t<.55)return"向正面";if(t<.70)return"3角";if(t<.82)return"4角";if(t<.94)return"直線";return"ゴール"}
+function simInterpState(run,no,t){var maps=run&&run.maps||[],last=Math.max(0,maps.length-1);if(!maps.length)return{gap:0,lane:0};var u=clamp(t,0,1)*last,i=Math.min(last-1,Math.floor(u)),f=u-i;if(last===0){i=0;f=0}var a=(maps[i]&&maps[i][no])||{gap:0,lane:0},b=(maps[Math.min(last,i+1)]&&maps[Math.min(last,i+1)][no])||a;return{gap:n(a.gap)+(n(b.gap)-n(a.gap))*f,lane:n(a.lane)+(n(b.lane)-n(a.lane))*f}}
+function placeSimRunner(chip,path,board,frac,lane){if(!chip||!path||!board)return;var total=path.getTotalLength();if(!total)return;frac=normFrac(frac);var len=frac*total,p=path.getPointAtLength(len),p0=path.getPointAtLength(Math.max(0,len-1)),p1=path.getPointAtLength(Math.min(total,len+1)),dx=p1.x-p0.x,dy=p1.y-p0.y,mag=Math.sqrt(dx*dx+dy*dy)||1,nx=-dy/mag,ny=dx/mag,off=n(lane)*3.2,x=p.x+nx*off,y=p.y+ny*off;chip.style.left=clamp(x/200*100,2,98)+'%';chip.style.top=clamp(y/180*100,7,93)+'%'}
+function drawSimulationRun(run,t){if(!run||!state.race)return;var r=state.race,board=document.getElementById('pace-board'),path=document.getElementById('course-path');if(!board||!path)return;var cp=courseProfile(r),rows=state.pred&&state.pred.rows||[],start=courseStageFrac(r,0),laps=Math.max(.1,n(r.distance,1200)/cp.lap),baseFrac;if(cp.shape==='straight'){var end=.92;baseFrac=start+(end-start)*clamp(t,0,1)}else{baseFrac=normFrac(start+cp.dir*laps*clamp(t,0,1))}var order=[],i,row,no,pos,frac,chip;for(i=0;i<rows.length;i++){row=rows[i];no=n(row.horse.horseNumber);pos=simInterpState(run,no,t);if(cp.shape==='straight')frac=clamp(baseFrac-pos.gap*.45,.025,.975);else frac=normFrac(baseFrac-cp.dir*pos.gap);chip=board.querySelector('[data-horse="'+no+'"]');placeSimRunner(chip,path,board,frac,pos.lane);order.push({no:no,gap:pos.gap,lane:pos.lane})}order.sort(function(a,b){return a.gap-b.gap||Math.abs(a.lane)-Math.abs(b.lane)||a.no-b.no});var top=order.slice(0,3),live=document.getElementById('sim-live-podium');if(live)live.innerHTML=top.map(function(z,j){var h=horseByNo(r,z.no);return'<b>'+(j+1)+'番手 '+esc(z.no)+' '+esc(h?h.name:'')+'</b>'+(j<top.length-1?'<i> / </i>':'')}).join('');var ob=document.getElementById('course-order');if(ob)ob.innerHTML='<b>'+simStageLabel(t)+'</b>　'+order.slice(0,8).map(function(z){var h=horseByNo(r,z.no);return esc(z.no)+(h?' '+esc(h.name):'')}).join(' → ')}
+
 function animateOneRun(idx,fromT){if(!state.simRunning||!state.pred||!state.pred.simulation)return;var target=Math.max(10,n(state.simTarget,20)),run=state.pred.simulation.runs[idx];if(!run||idx>=target){state.simRunning=false;state.simPaused=false;updateSimHud(Math.max(0,target-1),null);return}fromT=clamp(n(fromT,0),0,1);var fullMs=2500/Math.max(1,state.simSpeed),remainMs=Math.max(35,fullMs*(1-fromT)),started=performance.now();function step(now){if(!state.simRunning)return;var t=clamp(fromT+(now-started)/remainMs*(1-fromT),0,1);state.simCurrentT=t;drawSimulationRun(run,t);if(t<1){state.anim=requestAnimationFrame(step)}else{finishOneRun(run);state.simIndex=idx+1;if(state.simIndex<target){state.timer=setTimeout(function(){if(state.simRunning)animateOneRun(state.simIndex,0)},Math.max(12,80/state.simSpeed))}else{state.simRunning=false;state.simPaused=false;updateSimHud(target-1,run)}}}state.anim=requestAnimationFrame(step)}
 function startSimulation(){if(!state.race||!state.pred)return;stopTimer();state.simPaused=false;state.simStopped=false;resetSimCounts();state.simRunning=true;setSimButtons();animateOneRun(0,0)}
 function togglePauseSimulation(){if(state.simRunning){if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}if(state.timer){clearTimeout(state.timer);state.timer=null}state.simRunning=false;state.simPaused=true;updateSimHud(state.simIndex,null);return}if(state.simPaused){state.simPaused=false;state.simRunning=true;setSimButtons();animateOneRun(state.simIndex,state.simCurrentT)}}
 function stopSimulation(){if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}if(state.timer){clearTimeout(state.timer);state.timer=null}state.simRunning=false;state.simPaused=false;state.simStopped=true;updateSimHud(state.simIndex,null)}
 function initSimulationBoard(){if(!state.pred||!state.pred.simulation||!state.pred.simulation.runs.length)return;resetSimCounts();state.simPaused=false;state.simStopped=false;var board=document.getElementById('pace-board'),path=document.getElementById('course-path');if(board&&path){var sf=courseStageFrac(state.race,0),total=path.getTotalLength(),sp=path.getPointAtLength(sf*total),sd=document.getElementById('course-start-dot'),sl=document.getElementById('course-start-label');if(sd){sd.setAttribute('cx',sp.x);sd.setAttribute('cy',sp.y)}if(sl){sl.setAttribute('x',Math.min(176,sp.x+4));sl.setAttribute('y',Math.max(10,sp.y-5))}}drawSimulationRun(state.pred.simulation.runs[0],0);updateSimHud(0,null)}
-function load(){var d=state.date,seq=++state.requestSeq,cached=loadRaceCache(d);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render()}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&v=31',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,rows);state.loading=false;state.error=null;render()}).catch(function(){if(seq!==state.requestSeq||state.date!==d)return;if(attempts<3){setTimeout(request,700*attempts);return}state.loading=false;state.error=null;render()})}request()}
+function load(){var d=state.date,seq=++state.requestSeq,cached=loadRaceCache(d);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render()}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&v=32',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,rows);state.loading=false;state.error=null;render()}).catch(function(){if(seq!==state.requestSeq||state.date!==d)return;if(attempts<3){setTimeout(request,700*attempts);return}state.loading=false;state.error=null;render()})}request()}
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
 clearOldPwa();render();setTimeout(load,0);
 })();
@@ -1145,7 +1151,7 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v31-stable-lazy", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v32-runtime-fix", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")),
         "narHistoryMonths": max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "18")))),
