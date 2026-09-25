@@ -11,15 +11,13 @@ import sqlite3
 import threading
 import time
 import urllib.request
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import zipfile
 from dataclasses import dataclass
 from datetime import date as dt_date, datetime
 from pathlib import Path
 from typing import Iterable, Iterator
-from zoneinfo import ZoneInfo
 
-app = FastAPI(title="競馬展開AI", version="5.0-production-v28-fast-multisource")
+app = FastAPI(title="競馬展開AI", version="4.9-production-v29-safe-fast")
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -30,19 +28,19 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="競馬展開AI">
-<link rel="manifest" href="/manifest.webmanifest?v=28">
-<link rel="stylesheet" href="/styles.css?v=28">
+<link rel="manifest" href="/manifest.webmanifest?v=29">
+<link rel="stylesheet" href="/styles.css?v=29">
 <title>競馬展開AI</title>
 </head>
 <body>
 <div id="app"><div class="boot">競馬展開AIを起動中…</div></div>
-<script src="/app.js?v=28"></script>
+<script src="/app.js?v=29"></script>
 </body>
 </html>"""
 
 CSS = r"""
 :root{--bg:#f3f5f9;--card:#fff;--text:#101828;--muted:#667085;--line:#e4e7ec;--navy:#0b1220;--blue:#2563eb;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Yu Gothic",sans-serif}
-*{box-sizing:border-box}button,[role="button"],a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-weight:400;-webkit-text-size-adjust:100%}button,input{font:inherit;font-weight:400}.boot{padding:42px 16px;text-align:center;color:#64748b}.shell{max-width:760px;margin:0 auto;padding-bottom:calc(30px + env(safe-area-inset-bottom))}.header{position:sticky;top:0;z-index:20;background:rgba(11,18,32,.98);color:#fff;padding:calc(8px + env(safe-area-inset-top)) 10px 9px;box-shadow:0 1px 8px rgba(0,0,0,.14)}.header-row{display:flex;align-items:center;gap:8px}.header-title{min-width:0;flex:1}.header h1{font-size:18px;margin:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header small{display:block;color:#cbd5e1;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header button{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:7px 10px}.main{padding:8px;display:grid;gap:8px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:11px;box-shadow:0 1px 2px rgba(16,24,40,.03)}.section-title,.card h2{margin:0 0 8px;font-size:17px;font-weight:500}.muted{color:var(--muted)}.row{display:flex;align-items:center;gap:8px}.between{justify-content:space-between}.label{font-size:11px;color:var(--muted);margin-bottom:4px}.setup-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:8px}.date{width:100%;height:40px;border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:#fff}.segment{display:grid;grid-template-columns:1fr 1fr;gap:5px}.segment button{height:40px;border:1px solid var(--line);background:#fff;border-radius:10px}.segment button.active{background:var(--navy);color:#fff;border-color:var(--navy)}.home-heading{font-size:14px;font-weight:500;margin-bottom:8px}.pill{font-size:10px;background:#eef2f6;border-radius:999px;padding:4px 8px}.live-dot{font-size:9px;background:#fee2e2;color:#b42318;border-radius:999px;padding:4px 7px}.live-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.live-race{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px;text-align:left;min-width:0}.live-top{display:flex;justify-content:space-between;gap:5px;align-items:center}.live-track{font-size:13px}.live-title{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:4px 0}.live-time{font-size:20px}.live-tag{font-size:9px;border-radius:999px;padding:3px 5px;background:#eff6ff;color:#1d4ed8}.live-tag.now{background:#fff1f2;color:#be123c}.live-tag.running{background:#ecfdf3;color:#027a48}.empty{padding:16px 6px;text-align:center;color:var(--muted);font-size:12px}.notice{background:#fff7ed;color:#9a3412;border-radius:10px;padding:10px;font-size:12px}.ai-card{overflow:hidden;position:relative;background:linear-gradient(135deg,#0b1220,#172554 68%,#1d4ed8);color:#fff;border:0}.ai-card:after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;right:-80px;top:-80px;background:rgba(59,130,246,.25)}.ai-kicker{font-size:10px;letter-spacing:.12em;color:#93c5fd}.ai-title{font-size:22px;font-weight:600;margin:4px 0}.ai-next{font-size:13px;color:#dbeafe;margin:7px 0 10px}.ai-actions{display:grid;grid-template-columns:1fr auto;gap:7px;position:relative;z-index:1}.ai-primary,.ai-secondary{border:0;border-radius:11px;padding:10px 12px}.ai-primary{background:#fff;color:#111827}.ai-secondary{background:rgba(255,255,255,.13);color:#fff;border:1px solid rgba(255,255,255,.2)}.venue-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.venue{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px;text-align:left}.venue .name{font-size:17px}.venue .count{font-size:11px;color:var(--muted);margin-top:2px}.race-list{display:grid;gap:7px}.race{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:8px}.race.final{background:#f0fdf4;border-color:#a7f3d0}.race-main{min-width:0}.race-top{display:flex;gap:7px;align-items:baseline;min-width:0}.race-no{font-size:17px}.race-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}.race-time{font-size:12px;color:#475467;margin-top:3px}.final-badge{font-size:11px;color:#067647;border:1px solid #75e0a7;background:#fff;border-radius:6px;padding:3px 7px}.picker-list{display:grid;gap:6px}.picker-item{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px;display:flex;justify-content:space-between;align-items:center;text-align:left}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:9px}.metric{background:#f8fafc;border-radius:9px;padding:7px 2px;text-align:center}.metric b{display:block;font-size:12px;font-weight:400}.metric span{font-size:8px;color:var(--muted)}.occupancy{font-size:32px;margin:2px 0 4px}.style-list{display:grid;gap:6px}.style-row{border:1px solid var(--line);border-radius:11px;padding:8px}.style-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center}.horse-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.score{font-size:12px}.expected{font-size:9px;background:#f1f5f9;border-radius:999px;padding:3px 6px}.rates{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:6px}.rate{background:#f8fafc;border-radius:7px;text-align:center;padding:5px 1px;font-size:11px}.rate small{display:block;font-size:8px;color:var(--muted)}.frame-badge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid rgba(0,0,0,.16);font-size:13px;flex:0 0 auto}.frame1{background:#fff;color:#111}.frame2{background:#222;color:#fff}.frame3{background:#e53935;color:#fff}.frame4{background:#1e66d0;color:#fff}.frame5{background:#f5d547;color:#111}.frame6{background:#3a9b56;color:#fff}.frame7{background:#f28c28;color:#111}.frame8{background:#e894b7;color:#111}.pace-card{overflow:hidden}.pace-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.pace-stage{font-size:13px;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:4px 8px}.pace-board{position:relative;height:290px;border-radius:13px;overflow:hidden;background:linear-gradient(90deg,#e7f6e8 0 14%,#f3ead8 14% 88%,#e7f6e8 88%);border:1px solid #d0d5dd}.pace-board:before,.pace-board:after{content:"";position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.75)}.pace-board:before{left:14%}.pace-board:after{right:12%}.pace-chip{position:absolute;height:25px;display:flex;align-items:center;gap:4px;transition:left 1.25s ease,top 1.25s ease;white-space:nowrap;max-width:118px}.pace-chip .frame-badge{width:24px;height:24px;font-size:11px;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.2)}.pace-name{background:rgba(255,255,255,.93);border:1px solid rgba(0,0,0,.08);border-radius:6px;padding:3px 5px;font-size:9px;overflow:hidden;text-overflow:ellipsis;max-width:78px}.pace-legend{display:flex;gap:5px;margin-top:7px}.pace-legend button{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 2px;font-size:11px}.pace-legend button.active{background:#111827;color:#fff}.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.scenario{background:#f8fafc;border-radius:11px;padding:9px 4px;text-align:center}.scenario .prob{font-size:24px;margin:4px 0}.scenario-horses{display:flex;justify-content:center;gap:3px;flex-wrap:wrap}.scenario-horses .frame-badge{width:24px;height:24px;font-size:11px}.marks{display:grid;grid-template-columns:1fr 1fr;gap:5px}.mark{display:grid;grid-template-columns:30px 28px minmax(0,1fr);gap:5px;align-items:center;background:#f8fafc;border-radius:10px;padding:8px}.mark-symbol{font-size:18px}.mark strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.horse-card{border:1px solid var(--line);border-radius:11px;padding:9px;margin-top:6px}.horse-card summary{list-style:none;display:flex;align-items:center;gap:7px}.horse-card summary::-webkit-details-marker{display:none}.horse-detail{padding-top:8px;font-size:12px;line-height:1.5}.recent{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}.result-row{display:grid;grid-template-columns:34px 28px minmax(0,1fr) auto;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.result-row:last-child{border-bottom:0}.result-name{font-weight:700}.time-old{text-decoration:line-through;color:#98a2b3;margin-right:4px}.time-changed{color:#d92d20}.backline{font-size:11px;color:var(--muted);margin-top:4px}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-weight:400;-webkit-text-size-adjust:100%}button,input{font:inherit;font-weight:400}.boot{padding:42px 16px;text-align:center;color:#64748b}.shell{max-width:760px;margin:0 auto;padding-bottom:calc(30px + env(safe-area-inset-bottom))}.header{position:sticky;top:0;z-index:20;background:rgba(11,18,32,.98);color:#fff;padding:calc(8px + env(safe-area-inset-top)) 10px 9px;box-shadow:0 1px 8px rgba(0,0,0,.14)}.header-row{display:flex;align-items:center;gap:8px}.header-title{min-width:0;flex:1}.header h1{font-size:18px;margin:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header small{display:block;color:#cbd5e1;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header button{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:7px 10px}.main{padding:8px;display:grid;gap:8px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:11px;box-shadow:0 1px 2px rgba(16,24,40,.03)}.section-title,.card h2{margin:0 0 8px;font-size:17px;font-weight:500}.muted{color:var(--muted)}.row{display:flex;align-items:center;gap:8px}.between{justify-content:space-between}.label{font-size:11px;color:var(--muted);margin-bottom:4px}.setup-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:8px}.date{width:100%;height:40px;border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:#fff}.segment{display:grid;grid-template-columns:1fr 1fr;gap:5px}.segment button{height:40px;border:1px solid var(--line);background:#fff;border-radius:10px}.segment button.active{background:var(--navy);color:#fff;border-color:var(--navy)}.home-heading{font-size:14px;font-weight:500;margin-bottom:8px}.pill{font-size:10px;background:#eef2f6;border-radius:999px;padding:4px 8px}.live-dot{font-size:9px;background:#fee2e2;color:#b42318;border-radius:999px;padding:4px 7px}.live-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.live-race{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px;text-align:left;min-width:0}.live-top{display:flex;justify-content:space-between;gap:5px;align-items:center}.live-track{font-size:13px}.live-title{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:4px 0}.live-time{font-size:20px}.live-tag{font-size:9px;border-radius:999px;padding:3px 5px;background:#eff6ff;color:#1d4ed8}.live-tag.now{background:#fff1f2;color:#be123c}.live-tag.running{background:#ecfdf3;color:#027a48}.empty{padding:16px 6px;text-align:center;color:var(--muted);font-size:12px}.notice{background:#fff7ed;color:#9a3412;border-radius:10px;padding:10px;font-size:12px}.ai-card{overflow:hidden;position:relative;background:linear-gradient(135deg,#0b1220,#172554 68%,#1d4ed8);color:#fff;border:0}.ai-card:after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;right:-80px;top:-80px;background:rgba(59,130,246,.25)}.ai-kicker{font-size:10px;letter-spacing:.12em;color:#93c5fd}.ai-title{font-size:22px;font-weight:600;margin:4px 0}.ai-next{font-size:13px;color:#dbeafe;margin:7px 0 10px}.ai-actions{display:grid;grid-template-columns:1fr auto;gap:7px;position:relative;z-index:1}.ai-primary,.ai-secondary{border:0;border-radius:11px;padding:10px 12px}.ai-primary{background:#fff;color:#111827}.ai-secondary{background:rgba(255,255,255,.13);color:#fff;border:1px solid rgba(255,255,255,.2)}.venue-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.venue{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px;text-align:left}.venue .name{font-size:17px}.venue .count{font-size:11px;color:var(--muted);margin-top:2px}.race-list{display:grid;gap:7px}.race{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:8px}.race.final{background:#f0fdf4;border-color:#a7f3d0}.race-main{min-width:0}.race-top{display:flex;gap:7px;align-items:baseline;min-width:0}.race-no{font-size:17px}.race-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}.race-time{font-size:12px;color:#475467;margin-top:3px}.final-badge{font-size:11px;color:#067647;border:1px solid #75e0a7;background:#fff;border-radius:6px;padding:3px 7px}.picker-list{display:grid;gap:6px}.picker-item{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px;display:flex;justify-content:space-between;align-items:center;text-align:left}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:9px}.metric{background:#f8fafc;border-radius:9px;padding:7px 2px;text-align:center}.metric b{display:block;font-size:12px;font-weight:400}.metric span{font-size:8px;color:var(--muted)}.occupancy{font-size:32px;margin:2px 0 4px}.style-list{display:grid;gap:6px}.style-row{border:1px solid var(--line);border-radius:11px;padding:8px}.style-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center}.horse-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.score{font-size:12px}.expected{font-size:9px;background:#f1f5f9;border-radius:999px;padding:3px 6px}.rates{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:6px}.rate{background:#f8fafc;border-radius:7px;text-align:center;padding:5px 1px;font-size:11px}.rate small{display:block;font-size:8px;color:var(--muted)}.frame-badge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid rgba(0,0,0,.16);font-size:13px;flex:0 0 auto}.frame1{background:#fff;color:#111}.frame2{background:#222;color:#fff}.frame3{background:#e53935;color:#fff}.frame4{background:#1e66d0;color:#fff}.frame5{background:#f5d547;color:#111}.frame6{background:#3a9b56;color:#fff}.frame7{background:#f28c28;color:#111}.frame8{background:#e894b7;color:#111}.pace-card{overflow:hidden}.pace-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.pace-stage{font-size:13px;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:4px 8px}.pace-board{position:relative;height:290px;border-radius:13px;overflow:hidden;background:linear-gradient(90deg,#e7f6e8 0 14%,#f3ead8 14% 88%,#e7f6e8 88%);border:1px solid #d0d5dd}.pace-board:before,.pace-board:after{content:"";position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.75)}.pace-board:before{left:14%}.pace-board:after{right:12%}.pace-chip{position:absolute;height:25px;display:flex;align-items:center;gap:4px;transition:left 1.25s ease,top 1.25s ease;white-space:nowrap;max-width:118px}.pace-chip .frame-badge{width:24px;height:24px;font-size:11px;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.2)}.pace-name{background:rgba(255,255,255,.93);border:1px solid rgba(0,0,0,.08);border-radius:6px;padding:3px 5px;font-size:9px;overflow:hidden;text-overflow:ellipsis;max-width:78px}.pace-legend{display:flex;gap:5px;margin-top:7px}.pace-legend button{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 2px;font-size:11px}.pace-legend button.active{background:#111827;color:#fff}.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.scenario{background:#f8fafc;border-radius:11px;padding:9px 4px;text-align:center}.scenario .prob{font-size:24px;margin:4px 0}.scenario-horses{display:flex;justify-content:center;gap:3px;flex-wrap:wrap}.scenario-horses .frame-badge{width:24px;height:24px;font-size:11px}.marks{display:grid;grid-template-columns:1fr 1fr;gap:5px}.mark{display:grid;grid-template-columns:30px 28px minmax(0,1fr);gap:5px;align-items:center;background:#f8fafc;border-radius:10px;padding:8px}.mark-symbol{font-size:18px}.mark strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.horse-card{border:1px solid var(--line);border-radius:11px;padding:9px;margin-top:6px}.horse-card summary{list-style:none;display:flex;align-items:center;gap:7px}.horse-card summary::-webkit-details-marker{display:none}.horse-detail{padding-top:8px;font-size:12px;line-height:1.5}.recent{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}.result-row{display:grid;grid-template-columns:34px 28px minmax(0,1fr) auto;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.result-row:last-child{border-bottom:0}.result-name{font-weight:700}.time-old{text-decoration:line-through;color:#98a2b3;margin-right:4px}.time-changed{color:#d92d20}.backline{font-size:11px;color:var(--muted);margin-top:4px}
 @media(max-width:390px){.main{padding:6px}.card{padding:9px}.live-grid{grid-template-columns:1fr 1fr}.style-top{grid-template-columns:auto minmax(0,1fr) auto}.expected{grid-column:2/4;justify-self:start}.marks{grid-template-columns:1fr}.pace-board{height:280px}}
 
 /* v22 home: lightweight neon/glass top, no heavy images */
@@ -150,12 +148,12 @@ function coursePathD(p){if(p.shape==="straight")return "M18 92 L182 92";if(p.sha
 function normFrac(x){x=x%1;return x<0?x+1:x}
 function courseStageFrac(r,st){var p=courseProfile(r);if(p.shape==="straight")return st===0?.05:(st===1?.67:.92);var laps=Math.max(.1,n(r.distance,1200)/p.lap),start=normFrac(.965-p.dir*(laps%1)),prog=st===0?.015:(st===1?.81:.965);return normFrac(start+p.dir*laps*prog)}
 var app=document.getElementById("app");
-var state={date:today(),circuit:"地方",races:[],track:null,race:null,picker:false,loading:false,error:null,timer:null,anim:null,refreshTimer:null,requestSeq:0,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null};
-var predictionCache={};
-function raceSig(r){var hs=r&&r.horses||[];return [r&&r.id,r&&r.date,r&&r.track,r&&r.raceNumber,r&&r.distance,hs.length,r&&r.result&&r.result.status||""].join("|")}
-function cachedRacesKey(d,c){return "keiba:races:v28:"+String(c||"all")+":"+d}
-function loadCachedRaces(d,c){try{var raw=localStorage.getItem(cachedRacesKey(d,c));if(!raw)return null;var o=JSON.parse(raw);if(!o||!Array.isArray(o.races))return null;return o.races}catch(e){return null}}
-function saveCachedRaces(d,c,rows){try{localStorage.setItem(cachedRacesKey(d,c),JSON.stringify({ts:Date.now(),races:rows}))}catch(e){}}
+var state={date:today(),circuit:"地方",races:[],track:null,race:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0};
+
+function cacheKey(d){return "keiba:v29:races:"+d}
+function loadRaceCache(d){try{var raw=localStorage.getItem(cacheKey(d));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(Date.now()-n(x.ts)>6*3600000)return null;return x.rows}catch(e){return null}}
+function saveRaceCache(d,rows){try{localStorage.setItem(cacheKey(d),JSON.stringify({ts:Date.now(),rows:rows}))}catch(e){}}
+function clearOldPwa(){try{if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(function(rs){for(var i=0;i<rs.length;i++)rs[i].unregister()}).catch(function(){});if(window.caches)caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).catch(function(){})}catch(e){}}
 function today(){var d=new Date(Date.now()+9*3600000);return d.toISOString().slice(0,10)}
 function esc(v){return String(v==null?"":v).replace(/[&<>\"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]})}
 function n(v,d){var x=Number(v);return isFinite(x)?x:(d||0)}
@@ -179,16 +177,16 @@ function weightedRate(vals,weights,def){var s=0,w=0,i;for(i=0;i<vals.length;i++)
 function raceField(rr){return Math.max(4,n(rr&&rr.fieldSize,12))}
 function firstCornerNorm(rr){var p=rr&&rr.cornerPositions||[],x=n(p[0],0);if(!x)return null;return clamp(1-(x-1)/Math.max(1,raceField(rr)-1),0,1)}
 function lastCornerNorm(rr){var p=rr&&rr.cornerPositions||[],x=n(p[p.length-1],0);if(!x)return null;return clamp(1-(x-1)/Math.max(1,raceField(rr)-1),0,1)}
-function styleRates(h){var rs=(h.recentRaces||[]).slice(0,16),w=recencyWeights(rs.length),c=[0,0,0,0],den=0,i,p,x,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];x=n(p[0],0);if(!x)continue;ww=w[i];den+=ww;if(x===1)c[0]+=ww;else if(x<=4)c[1]+=ww;else if(x<=7)c[2]+=ww;else c[3]+=ww}if(!den)return{front:.05,stalk:.25,mid:.45,close:.25};return{front:c[0]/den,stalk:c[1]/den,mid:c[2]/den,close:c[3]/den}}
-function fadeRate(h){var rs=(h.recentRaces||[]).slice(0,16),w=recencyWeights(rs.length),e=0,f=0,i,p,first,last,fin,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];first=n(p[0]);if(!first||first>4)continue;ww=w[i];e+=ww;last=n(p[p.length-1]);fin=n(rs[i].finish);if((last&&last>=first+2)||(fin&&fin>=first+3))f+=ww}return e?f/e:.25}
-function moveRate(h){var rs=(h.recentRaces||[]).slice(0,16),w=recencyWeights(rs.length),e=0,g=0,i,p,a,b,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(p.length<2)continue;a=n(p[0]);b=n(p[p.length-1]);if(!a||!b)continue;ww=w[i];e+=ww;if(b<=a-2)g+=ww}return e?g/e:.2}
-function holdRate(h){var rs=(h.recentRaces||[]).slice(0,16),w=recencyWeights(rs.length),e=0,g=0,i,p,a,b,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);b=n(p[p.length-1]);if(!a||a>4)continue;ww=w[i];e+=ww;if((b&&b<=4)||n(rs[i].finish)<=4)g+=ww}return e?g/e:.5}
-function yieldFlex(h){var rs=(h.recentRaces||[]).slice(0,16),w=recencyWeights(rs.length),e=0,g=0,i,p,a,fin,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);fin=n(rs[i].finish);if(!a||a===1||a>5)continue;ww=w[i];e+=ww;if(fin>0&&fin<=4)g+=ww}return e?g/e:.45}
+function styleRates(h){var rs=(h.recentRaces||[]).slice(0,12),w=recencyWeights(rs.length),c=[0,0,0,0],den=0,i,p,x,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];x=n(p[0],0);if(!x)continue;ww=w[i];den+=ww;if(x===1)c[0]+=ww;else if(x<=4)c[1]+=ww;else if(x<=7)c[2]+=ww;else c[3]+=ww}if(!den)return{front:.05,stalk:.25,mid:.45,close:.25};return{front:c[0]/den,stalk:c[1]/den,mid:c[2]/den,close:c[3]/den}}
+function fadeRate(h){var rs=(h.recentRaces||[]).slice(0,12),w=recencyWeights(rs.length),e=0,f=0,i,p,first,last,fin,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];first=n(p[0]);if(!first||first>4)continue;ww=w[i];e+=ww;last=n(p[p.length-1]);fin=n(rs[i].finish);if((last&&last>=first+2)||(fin&&fin>=first+3))f+=ww}return e?f/e:.25}
+function moveRate(h){var rs=(h.recentRaces||[]).slice(0,12),w=recencyWeights(rs.length),e=0,g=0,i,p,a,b,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(p.length<2)continue;a=n(p[0]);b=n(p[p.length-1]);if(!a||!b)continue;ww=w[i];e+=ww;if(b<=a-2)g+=ww}return e?g/e:.2}
+function holdRate(h){var rs=(h.recentRaces||[]).slice(0,12),w=recencyWeights(rs.length),e=0,g=0,i,p,a,b,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);b=n(p[p.length-1]);if(!a||a>4)continue;ww=w[i];e+=ww;if((b&&b<=4)||n(rs[i].finish)<=4)g+=ww}return e?g/e:.5}
+function yieldFlex(h){var rs=(h.recentRaces||[]).slice(0,12),w=recencyWeights(rs.length),e=0,g=0,i,p,a,fin,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);fin=n(rs[i].finish);if(!a||a===1||a>5)continue;ww=w[i];e+=ww;if(fin>0&&fin<=4)g+=ww}return e?g/e:.45}
 
-function breakReliability(h){var rs=(h.recentRaces||[]).slice(0,16),w=recencyWeights(rs.length),v=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);v.push(clamp(1-(n(p[0])-1)/Math.max(3,fs-1),0,1))}return weightedRate(v,w,.5)}
-function lateGainScore(h){var rs=(h.recentRaces||[]).slice(0,16),w=recencyWeights(rs.length),v=[],i,p,a,b,fin,fs,g;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!p.length)continue;a=n(p[p.length-1]);fin=n(rs[i].finish);fs=raceField(rs[i]);if(!a||!fin)continue;g=(a-fin)/Math.max(3,fs-1);v.push(clamp(.5+g*1.8,0,1))}return weightedRate(v,w,.5)}
-function positionConsistency(h){var rs=(h.recentRaces||[]).slice(0,16),vals=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);vals.push((n(p[0])-1)/Math.max(3,fs-1))}if(vals.length<2)return.5;var m=mean(vals),vv=0;for(i=0;i<vals.length;i++)vv+=(vals[i]-m)*(vals[i]-m);vv/=vals.length;return clamp(1-Math.sqrt(vv)*2.1,0,1)}
-function earlyCollapseSeverity(h){var rs=(h.recentRaces||[]).slice(0,16),w=recencyWeights(rs.length),vals=[],ws=[],i,p,a,fin,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);fin=n(rs[i].finish);fs=raceField(rs[i]);if(!a||a>4||!fin)continue;vals.push(clamp((fin-a)/Math.max(3,fs-1),0,1));ws.push(w[i])}return weightedRate(vals,ws,.18)}
+function breakReliability(h){var rs=(h.recentRaces||[]).slice(0,12),w=recencyWeights(rs.length),v=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);v.push(clamp(1-(n(p[0])-1)/Math.max(3,fs-1),0,1))}return weightedRate(v,w,.5)}
+function lateGainScore(h){var rs=(h.recentRaces||[]).slice(0,12),w=recencyWeights(rs.length),v=[],i,p,a,b,fin,fs,g;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!p.length)continue;a=n(p[p.length-1]);fin=n(rs[i].finish);fs=raceField(rs[i]);if(!a||!fin)continue;g=(a-fin)/Math.max(3,fs-1);v.push(clamp(.5+g*1.8,0,1))}return weightedRate(v,w,.5)}
+function positionConsistency(h){var rs=(h.recentRaces||[]).slice(0,12),vals=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);vals.push((n(p[0])-1)/Math.max(3,fs-1))}if(vals.length<2)return.5;var m=mean(vals),vv=0;for(i=0;i<vals.length;i++)vv+=(vals[i]-m)*(vals[i]-m);vv/=vals.length;return clamp(1-Math.sqrt(vv)*2.1,0,1)}
+function earlyCollapseSeverity(h){var rs=(h.recentRaces||[]).slice(0,12),w=recencyWeights(rs.length),vals=[],ws=[],i,p,a,fin,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);fin=n(rs[i].finish);fs=raceField(rs[i]);if(!a||a>4||!fin)continue;vals.push(clamp((fin-a)/Math.max(3,fs-1),0,1));ws.push(w[i])}return weightedRate(vals,ws,.18)}
 function stylePoint(rt){return rt.front+2*rt.stalk+3*rt.mid+4*rt.close}
 function styleName(pt){if(pt<1.65)return"逃げ";if(pt<2.35)return"先行";if(pt<3.15)return"差し";return"追込"}
 function earlyOcc(r){var hs=r.horses||[],nums=[],early=[],moved=[],i,rr,p,j,hit;for(i=0;i<hs.length;i++){rr=(hs[i].recentRaces||[])[0];if(!rr)continue;p=rr.cornerPositions||[];hit=false;for(j=0;j<p.length;j++)if(n(p[j])>0&&n(p[j])<=3){hit=true;break}if(hit){nums.push(n(hs[i].horseNumber));if(n(p[0])<=3)early.push(n(hs[i].horseNumber));else moved.push(n(hs[i].horseNumber))}}return{nums:nums,early:early,moved:moved,rate:hs.length?nums.length/hs.length:0}}
@@ -196,11 +194,11 @@ function recentDistance(h){var rr=(h.recentRaces||[])[0];return rr?n(rr.distance
 function recentFirst(h){var rr=(h.recentRaces||[])[0],p=rr&&rr.cornerPositions||[];return n(p[0],99)}
 function targetSeason(r){return season(r.date)}
 function sameCondition(a,b){a=String(a||"");b=String(b||"");return a&&b&&a!=="不明"&&b!=="不明"&&a===b}
-function contextualRuns(h,r){var rs=(h.recentRaces||[]).slice(0,16),tw=targetSeason(r),out={track:[],distance:[],condition:[],weather:[],season:[],surface:[],level:[]},i,rr,delta;for(i=0;i<rs.length;i++){rr=rs[i];delta=Math.abs(n(rr.distance)-n(r.distance));if(rr.track===r.track)out.track.push(rr);if(delta<=100||(n(r.distance)>=1800&&delta<=200))out.distance.push(rr);if(sameCondition(rr.condition,r.condition))out.condition.push(rr);if(String(rr.weather||"")===String(r.weather||"")&&r.weather&&r.weather!=="不明")out.weather.push(rr);if(season(rr.date)===tw)out.season.push(rr);if(n(r.racePrize1)>0&&n(rr.racePrize1)>=n(r.racePrize1)*.8)out.level.push(rr)}return out}
+function contextualRuns(h,r){var rs=(h.recentRaces||[]).slice(0,12),tw=targetSeason(r),out={track:[],distance:[],condition:[],weather:[],season:[],surface:[],level:[]},i,rr,delta;for(i=0;i<rs.length;i++){rr=rs[i];delta=Math.abs(n(rr.distance)-n(r.distance));if(rr.track===r.track)out.track.push(rr);if(delta<=100||(n(r.distance)>=1800&&delta<=200))out.distance.push(rr);if(sameCondition(rr.condition,r.condition))out.condition.push(rr);if(String(rr.weather||"")===String(r.weather||"")&&r.weather&&r.weather!=="不明")out.weather.push(rr);if(season(rr.date)===tw)out.season.push(rr);if(n(r.racePrize1)>0&&n(rr.racePrize1)>=n(r.racePrize1)*.8)out.level.push(rr)}return out}
 function runFinishQuality(rr){var f=n(rr.finish,0),fs=raceField(rr);if(!f)return.45;return clamp(1-(f-1)/Math.max(3,fs-1),0,1)}
 function runTimeIndex(rr,targetDist){var t=n(rr.timeSeconds),d=n(rr.distance);if(!t||!d)return null;var speed=d/t,distPenalty=1-Math.min(.28,Math.abs(d-targetDist)/Math.max(600,targetDist)*.55),cond=String(rr.condition||"");var surfaceAdj=1;if(cond.indexOf("重")>=0||cond.indexOf("不")>=0)surfaceAdj=.985;else if(cond.indexOf("稍")>=0)surfaceAdj=.993;return speed*distPenalty/surfaceAdj}
-function recentFinishScore(h){var rs=(h.recentRaces||[]).slice(0,12),w=recencyWeights(rs.length),v=[],i;for(i=0;i<rs.length;i++)v.push(runFinishQuality(rs[i]));return weightedRate(v,w,.45)}
-function speedRaw(h,dist){var rs=(h.recentRaces||[]).slice(0,16),w=recencyWeights(rs.length),vals=[],ws=[],i,x;for(i=0;i<rs.length;i++){x=runTimeIndex(rs[i],dist);if(x!=null){vals.push(x);ws.push(w[i])}}if(!vals.length)return 0;var best=Math.max.apply(null,vals),avg=weightedRate(vals,ws,0);return best*.55+avg*.45}
+function recentFinishScore(h){var rs=(h.recentRaces||[]).slice(0,10),w=recencyWeights(rs.length),v=[],i;for(i=0;i<rs.length;i++)v.push(runFinishQuality(rs[i]));return weightedRate(v,w,.45)}
+function speedRaw(h,dist){var rs=(h.recentRaces||[]).slice(0,12),w=recencyWeights(rs.length),vals=[],ws=[],i,x;for(i=0;i<rs.length;i++){x=runTimeIndex(rs[i],dist);if(x!=null){vals.push(x);ws.push(w[i])}}if(!vals.length)return 0;var best=Math.max.apply(null,vals),avg=weightedRate(vals,ws,0);return best*.55+avg*.45}
 function normalize(vals,x){var v=vals.filter(function(z){return isFinite(z)&&z>0});if(!v.length||!isFinite(x)||x<=0)return.5;var lo=Math.min.apply(null,v),hi=Math.max.apply(null,v);return hi===lo?.5:clamp((x-lo)/(hi-lo),0,1)}
 function listQuality(list,targetDist){if(!list||!list.length)return.5;var w=recencyWeights(list.length),v=[],i,q,t;for(i=0;i<list.length;i++){q=runFinishQuality(list[i]);t=runTimeIndex(list[i],targetDist);v.push(q*.72+(t?clamp(t/18,0,1)*.28:.14))}return weightedRate(v,w,.5)}
 function roleProfileScore(p){p=p||{};var starts=n(p.starts);if(!starts)return.5;var sample=clamp(starts/40,0,1);var q=n(p.overall,.5)*.30+n(p.track,.5)*.28+n(p.distance,.5)*.24+n(p.condition,.5)*.18;return .5*(1-sample)+q*sample}
@@ -243,17 +241,17 @@ var packs=[packStage(r,rows,S0,L0,0),packStage(r,rows,S1,L1,1),packStage(r,rows,
 function generateSimulations(r,rows,sc,suit,count){var runs=[],stats={},scenarioCount={A:0,B:0,C:0},combo={},i,j,no,run,key;for(i=0;i<rows.length;i++){no=n(rows[i].horse.horseNumber);stats[no]={horse:rows[i].horse,win:0,second:0,third:0,top3:0,startRank:0,cornerRank:0,finishRank:0}}var base=seedHash([r.id,r.date,r.track,r.raceNumber,r.distance,(r.horses||[]).length].join("|"));for(i=0;i<count;i++){run=simulateOne(r,rows,sc,suit,(base+Math.imul(i+1,2654435761))>>>0);runs.push(run);scenarioCount[run.scenario]=(scenarioCount[run.scenario]||0)+1;key=run.podium.join("-");combo[key]=(combo[key]||0)+1;for(j=0;j<run.start.length;j++)stats[run.start[j].no].startRank+=j+1;for(j=0;j<run.corner.length;j++)stats[run.corner[j].no].cornerRank+=j+1;for(j=0;j<run.finish.length;j++)stats[run.finish[j].no].finishRank+=j+1;if(run.podium[0]){stats[run.podium[0]].win++;stats[run.podium[0]].top3++}if(run.podium[1]){stats[run.podium[1]].second++;stats[run.podium[1]].top3++}if(run.podium[2]){stats[run.podium[2]].third++;stats[run.podium[2]].top3++}}var summary=Object.keys(stats).map(function(k){var z=stats[k];z.no=n(k);z.winRate=z.win/count;z.secondRate=z.second/count;z.thirdRate=z.third/count;z.top3Rate=z.top3/count;z.avgStart=z.startRank/count;z.avgCorner=z.cornerRank/count;z.avgFinish=z.finishRank/count;z.markScore=z.winRate*.53+z.secondRate*.24+z.thirdRate*.13+z.top3Rate*.10;return z}).sort(function(a,b){return b.markScore-a.markScore||a.avgFinish-b.avgFinish});var first=summary[0]||null,rest=summary.slice(1),second=rest.slice().sort(function(a,b){return b.secondRate-a.secondRate||b.top3Rate-a.top3Rate})[0]||summary[1]||null,thirdPool=summary.filter(function(z){return(!first||z.no!==first.no)&&(!second||z.no!==second.no)}),third=thirdPool.slice().sort(function(a,b){return b.thirdRate-a.thirdRate||b.top3Rate-a.top3Rate})[0]||summary[2]||null,podium=[first,second,third].filter(Boolean),exact=0,setHit=0,target=podium.map(function(z){return z.no}),targetKey=target.join("-");exact=combo[targetKey]||0;for(i=0;i<runs.length;i++){var a=runs[i].podium.slice().sort(function(a,b){return a-b}),b=target.slice().sort(function(a,b){return a-b});if(a.length===b.length&&a.join("-")===b.join("-"))setHit++}return{count:count,runs:runs,summary:summary,podium:podium,exactRate:exact/count,setRate:setHit/count,scenarioCount:scenarioCount}}
 function simMarks(sim){var syms=["◎","○","▲","☆","△","注"],out=[],i;for(i=0;i<Math.min(syms.length,sim.summary.length);i++)out.push([syms[i],sim.summary[i].horse]);return out}
 function avgOrder(rows,sim,key){var prop=key==="start"?"avgStart":(key==="corner"?"avgCorner":"avgFinish"),sm={};for(var i=0;i<sim.summary.length;i++)sm[sim.summary[i].no]=sim.summary[i][prop];return rows.slice().sort(function(a,b){return sm[n(a.horse.horseNumber)]-sm[n(b.horse.horseNumber)]})}
-function predict(r){var key=raceSig(r),hit=predictionCache[key];if(hit)return hit;var rows=buildRows(r),occ=earlyOcc(r),sc=scenarioModel(r,rows),suit=suitability(rows,sc),sim=generateSimulations(r,rows,sc,suit,50),marks=simMarks(sim),start=avgOrder(rows,sim,"start"),corner=avgOrder(rows,sim,"corner"),straight=avgOrder(rows,sim,"finish"),pressure=pressureInfo(rows),i;for(i=0;i<sc.length;i++){sc[i].prob=(sim.scenarioCount[sc[i].code]||0)/sim.count;var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse})}var cov=mean(rows.map(function(x){return x.coverage}));hit={rows:rows,occ:occ,scenarios:sc,marks:marks,plan:{start:start,corner:corner,straight:straight},suit:suit,coverage:cov,pressure:pressure,simulation:sim};predictionCache[key]=hit;return hit}
+function predict(r){var rows=buildRows(r),occ=earlyOcc(r),sc=scenarioModel(r,rows),suit=suitability(rows,sc),sim=generateSimulations(r,rows,sc,suit,Math.max(10,Math.min(50,n(state.simTarget,20)))),marks=simMarks(sim),start=avgOrder(rows,sim,"start"),corner=avgOrder(rows,sim,"corner"),straight=avgOrder(rows,sim,"finish"),pressure=pressureInfo(rows),i;for(i=0;i<sc.length;i++){sc[i].prob=(sim.scenarioCount[sc[i].code]||0)/sim.count;var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse})}var cov=mean(rows.map(function(x){return x.coverage}));return{rows:rows,occ:occ,scenarios:sc,marks:marks,plan:{start:start,corner:corner,straight:straight},suit:suit,coverage:cov,pressure:pressure,simulation:sim}}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
 function homeVenueMark(track){var t=String(track||"?");return '<span class="venue-mark">'+esc(t.slice(0,1))+'</span>'}
-function miniPacePreview(r){return '<div class="home-ai-preview-photo"><img src="/pace-preview.webp?v=28" alt="AI展開シミュレーションプレビュー"><span class="home-ai-preview-overlay"></span></div>'}
+function miniPacePreview(r){return '<div class="home-ai-preview-photo"><img src="/pace-preview.webp?v=27" alt="AI展開シミュレーションプレビュー"><span class="home-ai-preview-overlay"></span></div>'}
 function renderHome(){var all=state.circuit==="中央"?CENTRAL:LOCAL,venues=[],i,t,c;for(i=0;i<all.length;i++){t=all[i];c=state.races.filter(function(r){return r.circuit===state.circuit&&r.track===t}).length;if(c)venues.push([t,c])}
 var live=liveRaces(),liveHtml="";if(state.loading)liveHtml='<div class="home-empty">読込中…</div>';else if(state.date!==today())liveHtml='<div class="home-empty">当日を選ぶとリアルタイム表示します</div>';else if(live.length)liveHtml='<div class="home-live-grid">'+live.map(function(r){var tag=liveTag(r),urgent=tag.indexOf('running')>=0?' urgent':'';return '<button class="home-live-race'+urgent+'" data-race="'+esc(r.id)+'"><div class="live-top">'+tag+'<span class="home-arrow">›</span></div><div class="home-race-line"><span class="home-track">'+esc(r.track)+'</span><span class="home-rno">'+esc(r.raceNumber)+'R</span></div><div class="home-rtitle">'+esc(r.title||"")+'</div><div class="home-rtime">'+timeHtml(r)+'</div></button>'}).join("")+'</div>';else liveHtml='<div class="home-empty">直近の未確定レースはありません</div>';
 var vh=venues.length?'<div class="home-venue-grid">'+venues.slice(0,4).map(function(v){return '<button class="home-venue" data-track="'+esc(v[0])+'">'+homeVenueMark(v[0])+'<span class="home-venue-name">'+esc(v[0])+'</span><span class="home-venue-count">'+v[1]+'レース</span><span class="home-arrow">›</span></button>'}).join("")+'</div>':'<div class="home-empty">'+(state.error?esc(state.error):(state.circuit==="中央"?"中央データ源未接続、または開催データなし":"この日の取得データはありません"))+'</div>';
 var nx=nextRace(),aiButtons=nx?'<div class="home-ai-actions"><button class="home-ai-select" data-action="pace-pick">選択</button><button class="home-ai-go" data-action="pace-next">シミュレーション ›</button></div>':'<div class="home-ai-actions"><button class="home-ai-select" data-action="pace-pick">選択</button></div>';
-return '<div class="home-shell"><div class="home-hero"><img class="hero-horse" src="/hero-horse.webp?v=28" alt=""><div class="brand-wrap"><div class="brand-main">競馬展開<span class="ai">AI</span></div><div class="brand-sub">Race Intelligence</div></div><button class="hero-refresh" data-action="reload"><span class="refresh-icon">↻</span><small>更新</small></button></div><main class="home-main">'+
+return '<div class="home-shell"><div class="home-hero"><img class="hero-horse" src="/hero-horse.webp?v=26" alt=""><div class="brand-wrap"><div class="brand-main">競馬展開<span class="ai">AI</span></div><div class="brand-sub">Race Intelligence</div></div><button class="hero-refresh" data-action="reload"><span class="refresh-icon">↻</span><small>更新</small></button></div><main class="home-main">'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">▣</span>日付・開催区分</div></div><div class="home-date-row"><div class="home-date-wrap"><input id="date" class="home-date" type="date" value="'+esc(state.date)+'"></div><div class="home-segment"><button data-circuit="中央" class="'+(state.circuit==="中央"?"active":"")+'">中央</button><button data-circuit="地方" class="'+(state.circuit==="地方"?"active":"")+'">地方</button></div></div></section>'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">◉</span>リアルタイムのレース</div><span class="home-link">すべて見る</span></div>'+liveHtml+'</section>'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">●</span>開催場</div><span class="home-link">すべて見る</span></div>'+vh+'</section>'+
@@ -275,8 +273,8 @@ function simPct(v){return Math.round(clamp(n(v),0,1)*100)+"%"}
 function renderPaceProbability(p){var sim=p.simulation,pod=sim.podium||[],cards=pod.map(function(z,i){var lab=i===0?"1着候補":(i===1?"2着候補":"3着候補"),rate=i===0?z.winRate:(i===1?z.secondRate:z.thirdRate);return'<div class="sim-podium-card"><small>'+lab+'</small><div>'+badge(z.horse)+'<b>'+esc(z.horse.name)+'</b></div><strong>'+simPct(rate)+'</strong></div>'}).join("");return'<section class="card pace-prob-card"><div class="section-title">'+esc(sim.count)+'回シミュレーション結果</div><div class="sim-podium-grid">'+cards+'</div><div class="sim-confidence"><span>本線3頭が3着内に揃う</span><b>'+simPct(sim.setRate)+'</b></div><div class="sim-confidence"><span>本線1→2→3の完全一致</span><b>'+simPct(sim.exactRate)+'</b></div><div class="sim-rate-list">'+sim.summary.slice(0,6).map(function(z){return'<div class="sim-rate-row">'+badge(z.horse)+'<span class="sim-rate-name">'+esc(z.horse.name)+'</span><span>1着 '+simPct(z.winRate)+'</span><span>2着 '+simPct(z.secondRate)+'</span><span>3着 '+simPct(z.thirdRate)+'</span></div>'}).join("")+'</div><div class="muted">選択回数の深掘りシミュレーション集計。スタート反応、先行争い、1角までの距離、外を回るロス、道中の消耗、被され・詰まり、3〜4角の進出、直線の伸びまで各馬別に変化させて集計</div></section>'}
 function paceBoard(r,p){var hs=(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}),cp=courseProfile(r),d=coursePathD(cp),straight=cp.shape==="straight",target=n(state.simTarget,20);return '<section class="card pace-card"><div class="pace-head"><div class="section-title" style="margin:0">展開シミュレーション</div><span id="sim-status" class="pace-stage">'+target+'回シミュレーション</span></div><div id="pace-board" class="course-wrap sim-board"><div class="course-meta">'+esc(r.track)+'　'+esc(r.distance)+'m　'+esc(cp.turn)+(straight?'':'回り')+'</div><svg class="course-svg" viewBox="0 0 200 180" preserveAspectRatio="none" aria-hidden="true">'+(straight?'<path d="M18 92 L182 92" class="course-track-under"></path><path id="course-path" d="M18 92 L182 92" class="course-track"></path><path d="M18 92 L182 92" class="course-rail"></path>':'<path d="'+d+'" class="course-track-under"></path><path id="course-path" d="'+d+'" class="course-track"></path><path d="'+d+'" class="course-rail"></path>')+'<circle id="course-start-dot" class="course-start" cx="20" cy="90" r="3"></circle><line id="course-finish-line" class="course-finish" x1="174" y1="77" x2="174" y2="103"></line><text id="course-start-label" class="course-start-label" x="23" y="83">START</text><text class="course-finish-label" x="162" y="72">GOAL</text></svg>'+hs.map(function(h){var ms=markSymbol(p,h.horseNumber);return '<div class="course-runner sim-runner" data-horse="'+esc(h.horseNumber)+'" style="left:10%;top:50%">'+(ms?'<span class="course-mark">'+ms+'</span>':'')+badge(h)+'</div>'}).join("")+'<div id="sim-live-podium" class="sim-live-podium">'+target+'回から選んで再生できます</div><div id="course-order" class="course-order">待機中</div></div><div class="sim-count-picker" aria-label="シミュレーション回数">'+[10,20,30,40,50].map(function(v){return '<button data-sim-count="'+v+'" class="'+(v===target?'active':'')+'">'+v+'回</button>'}).join('')+'</div><div class="sim-controls"><div class="sim-actions"><button class="sim-action primary" data-action="sim-run">▶ 開始</button><button class="sim-action pause" data-action="sim-pause" disabled>⏸ 一時停止</button><button class="sim-action stop" data-action="sim-stop" disabled>■ 停止</button></div><div class="sim-speed" aria-label="再生速度"><button data-speed="1">×1</button><button data-speed="2">×2</button><button data-speed="5" class="active">×5</button><button data-speed="10">×10</button></div></div><div class="sim-progress"><div><span id="sim-count">0 / '+target+'</span><span id="sim-elapsed">待機</span></div><div class="sim-progress-track"><span id="sim-progress-bar" style="width:0%"></span></div></div><div class="sim-depth"><span>スタート反応</span><span>ハナ争い</span><span>1角負荷</span><span>道中消耗</span><span>3〜4角進出</span><span>進路ロス</span><span>直線伸び</span></div><div class="sim-note">馬群を一塊にせず、各馬の先頭との差・レーン・消耗を別々に計算。外を回るロスや被され、詰まりも各回で変化します。</div></section>'}
 function renderRace(){var r=state.race,p=predict(r);state.pred=p;return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main">'+renderResult(r)+renderResultGap(r,p)+renderActualFlow(r)+'<section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span></div><div class="metrics"><div class="metric"><b>'+esc(r.distance)+'m</b><span>距離</span></div><div class="metric"><b>'+esc(r.condition||'不明')+'</b><span>馬場</span></div><div class="metric"><b>'+esc(r.weather||'不明')+'</b><span>天候</span></div><div class="metric"><b>'+season(r.date)+'</b><span>季節</span></div><div class="metric"><b>'+esc((r.horses||[]).length)+'頭</b><span>頭数</span></div></div><div class="data-depth"><span>近走 最大12走</span><span>地方履歴 最大18か月</span><span>欠損データは中立</span></div></section>'+runnerStyleSection(r,p)+paceBoard(r,p)+renderPaceProbability(p)+'<section class="card"><div class="section-title">予想印</div><div class="marks">'+p.marks.map(function(m){return'<div class="mark"><span class="mark-symbol">'+m[0]+'</span>'+badge(m[1])+'<strong>'+esc(m[1].name)+'</strong></div>'}).join("")+'</div></section></main></div>'}
-function render(){stopTimer();try{if(state.race)app.innerHTML=renderRace();else if(state.picker)app.innerHTML=renderPicker();else if(state.track)app.innerHTML=renderVenue();else app.innerHTML=renderHome();bind();if(state.race)initSimulationBoard();else scheduleAutoRefresh()}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
-function bind(){var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){var next=this.getAttribute('data-circuit');if(state.circuit===next)return;state.circuit=next;state.track=null;state.race=null;state.picker=false;state.races=[];load(false)};var d=document.getElementById('date');if(d)d.onchange=function(){state.date=this.value;state.track=null;state.race=null;state.picker=false;state.races=[];load(false)};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.track=this.getAttribute('data-track');render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),j;for(j=0;j<state.races.length;j++)if(String(state.races[j].id)===String(id)){state.race=state.races[j];break}state.picker=false;render()};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=function(){if(state.race)state.race=null;else if(state.picker)state.picker=false;else state.track=null;render()};var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=function(){load(false)};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){state.race=x;render()}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.picker=true;state.track=null;render()};var sr=document.querySelector('[data-action="sim-run"]');if(sr)sr.onclick=startSimulation;var sp=document.querySelector('[data-action="sim-pause"]');if(sp)sp.onclick=togglePauseSimulation;var ss=document.querySelector('[data-action="sim-stop"]');if(ss)ss.onclick=stopSimulation;els=document.querySelectorAll('[data-sim-count]');for(i=0;i<els.length;i++)els[i].onclick=function(){if(state.simRunning||state.simPaused)stopSimulation();state.simTarget=n(this.getAttribute('data-sim-count'),20);render()};els=document.querySelectorAll('[data-speed]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.simSpeed=n(this.getAttribute('data-speed'),5);var bs=document.querySelectorAll('[data-speed]'),j;for(j=0;j<bs.length;j++)bs[j].className=n(bs[j].getAttribute('data-speed'))===state.simSpeed?'active':''}}
+function render(){stopTimer();try{if(state.race)app.innerHTML=renderRace();else if(state.picker)app.innerHTML=renderPicker();else if(state.track)app.innerHTML=renderVenue();else app.innerHTML=renderHome();bind();if(state.race)initSimulationBoard()}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
+function bind(){var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.circuit=this.getAttribute('data-circuit');state.track=null;state.race=null;state.picker=false;render()};var d=document.getElementById('date');if(d)d.onchange=function(){state.date=this.value;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.track=this.getAttribute('data-track');render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),j;for(j=0;j<state.races.length;j++)if(String(state.races[j].id)===String(id)){state.race=state.races[j];break}state.picker=false;render()};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=function(){if(state.race)state.race=null;else if(state.picker)state.picker=false;else state.track=null;render()};var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=load;var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){state.race=x;render()}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.picker=true;state.track=null;render()};var sr=document.querySelector('[data-action="sim-run"]');if(sr)sr.onclick=startSimulation;var sp=document.querySelector('[data-action="sim-pause"]');if(sp)sp.onclick=togglePauseSimulation;var ss=document.querySelector('[data-action="sim-stop"]');if(ss)ss.onclick=stopSimulation;els=document.querySelectorAll('[data-sim-count]');for(i=0;i<els.length;i++)els[i].onclick=function(){if(state.simRunning||state.simPaused)stopSimulation();state.simTarget=n(this.getAttribute('data-sim-count'),20);render()};els=document.querySelectorAll('[data-speed]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.simSpeed=n(this.getAttribute('data-speed'),5);var bs=document.querySelectorAll('[data-speed]'),j;for(j=0;j<bs.length;j++)bs[j].className=n(bs[j].getAttribute('data-speed'))===state.simSpeed?'active':''}}
 function stopTimer(){if(state.timer){clearTimeout(state.timer);state.timer=null}if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}state.simRunning=false}
 function resetSimCounts(){var o={},hs=state.race&&state.race.horses||[],i;for(i=0;i<hs.length;i++)o[n(hs[i].horseNumber)]={w:0,s:0,t:0};state.simCounts=o;state.simDone=0;state.simCurrentT=0;state.simIndex=0}
 function setSimButtons(){var p=document.querySelector('[data-action="sim-pause"]'),s=document.querySelector('[data-action="sim-stop"]'),r=document.querySelector('[data-action="sim-run"]');if(p){p.disabled=!(state.simRunning||state.simPaused);p.textContent=state.simPaused?'▶ 再開':'⏸ 一時停止'}if(s)s.disabled=!(state.simRunning||state.simPaused||state.simDone>0);if(r)r.textContent=state.simDone>0&&!state.simRunning&&!state.simPaused?'↻ 最初から':'▶ 開始'}
@@ -287,12 +285,9 @@ function startSimulation(){if(!state.race||!state.pred)return;stopTimer();state.
 function togglePauseSimulation(){if(state.simRunning){if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}if(state.timer){clearTimeout(state.timer);state.timer=null}state.simRunning=false;state.simPaused=true;updateSimHud(state.simIndex,null);return}if(state.simPaused){state.simPaused=false;state.simRunning=true;setSimButtons();animateOneRun(state.simIndex,state.simCurrentT)}}
 function stopSimulation(){if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}if(state.timer){clearTimeout(state.timer);state.timer=null}state.simRunning=false;state.simPaused=false;state.simStopped=true;updateSimHud(state.simIndex,null)}
 function initSimulationBoard(){if(!state.pred||!state.pred.simulation||!state.pred.simulation.runs.length)return;resetSimCounts();state.simPaused=false;state.simStopped=false;var board=document.getElementById('pace-board'),path=document.getElementById('course-path');if(board&&path){var sf=courseStageFrac(state.race,0),total=path.getTotalLength(),sp=path.getPointAtLength(sf*total),sd=document.getElementById('course-start-dot'),sl=document.getElementById('course-start-label');if(sd){sd.setAttribute('cx',sp.x);sd.setAttribute('cy',sp.y)}if(sl){sl.setAttribute('x',Math.min(176,sp.x+4));sl.setAttribute('y',Math.max(10,sp.y-5))}}drawSimulationRun(state.pred.simulation.runs[0],0);updateSimHud(0,null)}
-function clearRefreshTimer(){if(state.refreshTimer){clearTimeout(state.refreshTimer);state.refreshTimer=null}}
-function scheduleAutoRefresh(delay){clearRefreshTimer();if(state.race||state.date!==today())return;state.refreshTimer=setTimeout(function(){if(!state.race)load(true)},delay||5000)}
-function applyRacePayload(rows){var rid=state.race&&String(state.race.id||''),i;state.races=rows;if(rid){for(i=0;i<rows.length;i++)if(String(rows[i].id)===rid){state.race=rows[i];break}}}
-function load(silent){silent=!!silent;var d=state.date,c=state.circuit,seq=++state.requestSeq,cached=loadCachedRaces(d,c);state.error=null;if(!silent){if(!state.races.length&&cached&&cached.length){state.races=cached;state.loading=false;render()}else{state.loading=!state.races.length;render()}}var ctl=typeof AbortController!=='undefined'?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort()},4500),url='/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(c);fetch(url,{cache:'no-store',signal:ctl?ctl.signal:void 0}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){clearTimeout(tm);if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;var rows=Array.isArray(body)?body:(body.races||[]);applyRacePayload(rows);saveCachedRaces(d,c,rows);predictionCache={};state.loading=false;state.error=null;render();scheduleAutoRefresh(c==='地方'?3500:8000)}).catch(function(){clearTimeout(tm);if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;state.loading=false;if(!silent&&!state.races.length)state.error='データ取得待機中。↻で再読込できます';render();scheduleAutoRefresh(4000)})}
+function load(){var d=state.date,seq=++state.requestSeq,cached=loadRaceCache(d);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render()}else{state.loading=true;render()}var ctl=typeof AbortController!=="undefined"?new AbortController():null;var tm=setTimeout(function(){if(ctl)ctl.abort()},2800);fetch('/api/v1/races?date='+encodeURIComponent(d),{cache:'no-store',signal:ctl?ctl.signal:void 0}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){clearTimeout(tm);if(seq!==state.requestSeq||state.date!==d)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,rows);state.loading=false;state.error=null;render()}).catch(function(){clearTimeout(tm);if(seq!==state.requestSeq||state.date!==d)return;state.loading=false;if(!state.races.length)state.error='通信が遅いため端末キャッシュで待機中。↻で再読込できます';render()})}
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
-render();setTimeout(function(){load(false)},0);
+clearOldPwa();render();setTimeout(load,0);
 })();
 """
 
@@ -300,7 +295,7 @@ MANIFEST = r'''{
   "name":"競馬展開AI",
   "short_name":"競馬展開AI",
   "description":"競馬の脚質・展開シミュレーション・印を確認するPWA",
-  "start_url":"/?v=28",
+  "start_url":"/?v=27",
   "scope":"/",
   "display":"standalone",
   "background_color":"#041126",
@@ -952,7 +947,7 @@ class NarSync:
     def sync_daily(self, force: bool = False) -> dict:
         cache_key = "daily"
         synced = self.store.synced_at(cache_key)
-        ttl = int(os.getenv("NAR_DAILY_TTL_SECONDS", "20"))
+        ttl = int(os.getenv("NAR_DAILY_TTL_SECONDS", "120"))
         if not force and synced and int(time.time()) - synced < ttl:
             return {"status": "cached", "cacheKey": cache_key}
         dest = ARCHIVE_DIR / "daily_race.zip"
@@ -967,7 +962,7 @@ class NarSync:
         synced = self.store.synced_at(cache_key)
         today = datetime.now().date()
         is_current_month = (year == today.year and month == today.month)
-        current_ttl = int(os.getenv("NAR_CURRENT_MONTH_TTL_SECONDS", "120"))
+        current_ttl = int(os.getenv("NAR_CURRENT_MONTH_TTL_SECONDS", "300"))
         if not force and synced:
             age = int(time.time()) - synced
             if (not is_current_month) or age < current_ttl:
@@ -987,155 +982,12 @@ class NarSync:
 
 CENTRAL_DB_PATH = DATA_ROOT / "central" / "central.sqlite3"
 
-
-def _nonempty(v):
-    if v is None:
-        return False
-    if isinstance(v, str):
-        return bool(v.strip()) and v.strip() not in {"不明", "0"}
-    if isinstance(v, (list, dict, tuple)):
-        return bool(v)
-    if isinstance(v, (int, float)):
-        return v != 0
-    return True
-
-
-def _merge_dict(old: dict, new: dict) -> dict:
-    out = dict(old or {})
-    for k, v in (new or {}).items():
-        if isinstance(v, dict) and isinstance(out.get(k), dict):
-            out[k] = _merge_dict(out[k], v)
-        elif _nonempty(v) or not _nonempty(out.get(k)):
-            out[k] = v
-    return out
-
-
-def _race_identity(rr: dict) -> tuple:
-    return (
-        _clean(str(rr.get("date") or "")),
-        _clean(str(rr.get("track") or "")),
-        _int(str(rr.get("raceNumber") or rr.get("race_no") or 0)),
-        _int(str(rr.get("distance") or 0)),
-    )
-
-
-def _merge_recent(old_rows, new_rows, limit: int = 20):
-    merged = {}
-    order = []
-    for rr in list(old_rows or []) + list(new_rows or []):
-        if not isinstance(rr, dict):
-            continue
-        key = _race_identity(rr)
-        if key not in merged:
-            merged[key] = dict(rr)
-            order.append(key)
-        else:
-            merged[key] = _merge_dict(merged[key], rr)
-    rows = [merged[k] for k in order]
-    rows.sort(key=lambda x: _clean(str(x.get("date") or "")), reverse=True)
-    return rows[:limit]
-
-
-def _merge_horses(old_horses, new_horses):
-    by_key = {}
-    order = []
-    def key_of(h):
-        no = _int(str(h.get("horseNumber") or h.get("horse_no") or 0))
-        name = _clean(str(h.get("name") or ""))
-        return (no, name)
-    for h in list(old_horses or []) + list(new_horses or []):
-        if not isinstance(h, dict):
-            continue
-        key = key_of(h)
-        if key not in by_key:
-            by_key[key] = dict(h)
-            order.append(key)
-        else:
-            prev = by_key[key]
-            recent = _merge_recent(prev.get("recentRaces"), h.get("recentRaces"), 20)
-            by_key[key] = _merge_dict(prev, h)
-            if recent:
-                by_key[key]["recentRaces"] = recent
-    return [by_key[k] for k in order]
-
-
-def merge_central_race(old: dict | None, new: dict) -> dict:
-    if not old:
-        out = dict(new)
-    else:
-        out = _merge_dict(old, new)
-        out["horses"] = _merge_horses(old.get("horses"), new.get("horses"))
-    srcs = []
-    for obj in (old or {}, new or {}):
-        for x in obj.get("sources", []) if isinstance(obj.get("sources"), list) else []:
-            if x and x not in srcs:
-                srcs.append(x)
-        one = _clean(str(obj.get("source") or ""))
-        if one and one not in srcs:
-            srcs.append(one)
-    if srcs:
-        out["sources"] = srcs
-        out["source"] = " + ".join(srcs[:4])
-    return out
-
-
-def central_feed_configs() -> list[dict]:
-    configs = []
-    raw_json = _clean(os.getenv("CENTRAL_FEEDS_JSON", ""))
-    if raw_json:
-        try:
-            data = json.loads(raw_json)
-            if isinstance(data, list):
-                for i, item in enumerate(data):
-                    if isinstance(item, dict) and _clean(str(item.get("url") or "")):
-                        configs.append({
-                            "name": _clean(str(item.get("name") or f"feed-{i+1}")),
-                            "url": _clean(str(item.get("url"))),
-                            "token": _clean(str(item.get("token") or "")),
-                        })
-        except Exception as exc:
-            print(f"CENTRAL_FEEDS_JSON parse failed: {exc}")
-    many = _clean(os.getenv("CENTRAL_FEED_URLS", ""))
-    if many:
-        for i, url in enumerate(re.split(r"[;\n]+", many)):
-            url = _clean(url)
-            if url:
-                configs.append({"name": f"feed-{i+1}", "url": url, "token": ""})
-    named_envs = [
-        ("JRA", "JRA_FEED_URL", "JRA_FEED_TOKEN"),
-        ("JRDB", "JRDB_FEED_URL", "JRDB_FEED_TOKEN"),
-        ("JBIS", "JBIS_FEED_URL", "JBIS_FEED_TOKEN"),
-        ("netkeiba", "NETKEIBA_FEED_URL", "NETKEIBA_FEED_TOKEN"),
-    ]
-    for name, url_key, token_key in named_envs:
-        url = _clean(os.getenv(url_key, ""))
-        if url:
-            configs.append({"name": name, "url": url, "token": _clean(os.getenv(token_key, ""))})
-    old = _clean(os.getenv("CENTRAL_FEED_URL", ""))
-    if old:
-        configs.append({
-            "name": _clean(os.getenv("CENTRAL_FEED_NAME", "main-feed")) or "main-feed",
-            "url": old,
-            "token": _clean(os.getenv("CENTRAL_FEED_TOKEN", "")),
-        })
-    seen = set()
-    out = []
-    for c in configs:
-        if c["url"] in seen:
-            continue
-        seen.add(c["url"])
-        out.append(c)
-    return out[:8]
-
 class CentralStore:
     def __init__(self, path: Path = CENTRAL_DB_PATH):
         self.path = path
         path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(path, timeout=5)
+        self.conn = sqlite3.connect(path)
         self.conn.row_factory = sqlite3.Row
-        self.conn.execute("PRAGMA journal_mode=WAL")
-        self.conn.execute("PRAGMA synchronous=NORMAL")
-        self.conn.execute("PRAGMA busy_timeout=5000")
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS central_races(
               id TEXT PRIMARY KEY,
@@ -1156,14 +1008,6 @@ class CentralStore:
                 r = normalize_central_race(raw)
                 if not r:
                     continue
-                old_row = self.conn.execute("SELECT payload FROM central_races WHERE id=?", (r["id"],)).fetchone()
-                old_payload = None
-                if old_row:
-                    try:
-                        old_payload = json.loads(old_row["payload"])
-                    except Exception:
-                        old_payload = None
-                r = merge_central_race(old_payload, r)
                 self.conn.execute(
                     """INSERT INTO central_races(id,date,track,race_no,payload,updated_at)
                        VALUES(?,?,?,?,?,?)
@@ -1209,126 +1053,23 @@ def normalize_central_race(raw: dict) -> dict | None:
     return out
 
 
-def fetch_central_feed_one(iso_date: str, config: dict) -> tuple[str, list[dict]]:
-    base = _clean(str(config.get("url") or ""))
-    name = _clean(str(config.get("name") or "feed")) or "feed"
+def fetch_central_feed(iso_date: str) -> list[dict]:
+    base = _clean(os.getenv("CENTRAL_FEED_URL", ""))
     if not base:
-        return name, []
+        return []
     if "{date}" in base:
         url = base.replace("{date}", iso_date)
     else:
         url = base + ("&" if "?" in base else "?") + "date=" + iso_date
-    headers = {"User-Agent": "KeibaPredictor/5.0", "Accept": "application/json"}
-    token = _clean(str(config.get("token") or ""))
+    headers = {"User-Agent": "KeibaPredictor/3.0", "Accept": "application/json"}
+    token = _clean(os.getenv("CENTRAL_FEED_TOKEN", ""))
     if token:
         headers["Authorization"] = "Bearer " + token
     req = urllib.request.Request(url, headers=headers)
-    timeout = max(2.0, min(8.0, float(os.getenv("CENTRAL_FEED_TIMEOUT_SECONDS", "4.0"))))
-    with urllib.request.urlopen(req, timeout=timeout) as response:
+    with urllib.request.urlopen(req, timeout=10) as response:
         body = json.loads(response.read().decode("utf-8"))
     rows = body if isinstance(body, list) else body.get("races", [])
-    out = []
-    for raw in rows:
-        if not isinstance(raw, dict):
-            continue
-        x = dict(raw)
-        x.setdefault("source", name)
-        r = normalize_central_race(x)
-        if r:
-            out.append(r)
-    return name, out
-
-
-def fetch_central_feeds(iso_date: str) -> tuple[list[dict], dict]:
-    configs = central_feed_configs()
-    if not configs:
-        return [], {}
-    all_rows = []
-    status = {}
-    workers = min(4, len(configs))
-    with ThreadPoolExecutor(max_workers=workers) as ex:
-        futs = {ex.submit(fetch_central_feed_one, iso_date, c): c for c in configs}
-        for fut in as_completed(futs):
-            c = futs[fut]
-            name = c.get("name") or "feed"
-            try:
-                src, rows = fut.result()
-                all_rows.extend(rows)
-                status[src] = {"ok": True, "count": len(rows)}
-            except Exception as exc:
-                status[name] = {"ok": False, "error": str(exc)[:160]}
-    return all_rows, status
-
-
-_central_refresh_lock = threading.Lock()
-_central_refresh_state: dict[str, dict] = {}
-_combined_cache_lock = threading.Lock()
-_combined_cache: dict[str, tuple[float, list[dict]]] = {}
-_nar_refresh_lock = threading.Lock()
-_nar_refresh_at: dict[str, float] = {}
-
-
-def _invalidate_combined(date: str):
-    with _combined_cache_lock:
-        _combined_cache.pop(date, None)
-
-
-def schedule_central_refresh(iso_date: str, force: bool = False):
-    configs = central_feed_configs()
-    if not configs:
-        return
-    now = time.time()
-    ttl = int(os.getenv("CENTRAL_REFRESH_TTL_SECONDS", "90" if iso_date == _today_iso() else "900"))
-    with _central_refresh_lock:
-        st = _central_refresh_state.setdefault(iso_date, {"inflight": False, "last": 0.0, "lastSuccess": 0.0, "status": {}})
-        if st["inflight"]:
-            return
-        if not force and now - float(st.get("last") or 0) < ttl:
-            return
-        st["inflight"] = True
-        st["last"] = now
-    def worker():
-        try:
-            rows, status = fetch_central_feeds(iso_date)
-            if rows:
-                CentralStore().upsert(rows)
-                _invalidate_combined(iso_date)
-            with _central_refresh_lock:
-                st = _central_refresh_state.setdefault(iso_date, {})
-                st["status"] = status
-                if rows:
-                    st["lastSuccess"] = time.time()
-        except Exception as exc:
-            with _central_refresh_lock:
-                _central_refresh_state.setdefault(iso_date, {})["error"] = str(exc)[:200]
-        finally:
-            with _central_refresh_lock:
-                _central_refresh_state.setdefault(iso_date, {})["inflight"] = False
-    threading.Thread(target=worker, daemon=True).start()
-
-
-def schedule_nar_refresh(iso_date: str):
-    now = time.time()
-    ttl = 90 if iso_date == _today_iso() else 900
-    with _nar_refresh_lock:
-        if now - _nar_refresh_at.get(iso_date, 0) < ttl:
-            return
-        _nar_refresh_at[iso_date] = now
-    def worker():
-        try:
-            target = datetime.strptime(iso_date, "%Y-%m-%d").date()
-            sync = NarSync()
-            # Fast path first: requested month. Historical depth is filled progressively elsewhere.
-            sync.sync_month(target.year, target.month, force=False)
-            if iso_date == _today_iso():
-                try:
-                    sync.sync_daily(force=False)
-                except Exception as exc:
-                    print(f"NAR daily skipped: {exc}")
-            _invalidate_combined(iso_date)
-        except Exception as exc:
-            print(f"NAR background sync failed: {exc}")
-    threading.Thread(target=worker, daemon=True).start()
+    return [r for r in (normalize_central_race(x) for x in rows) if r]
 
 def iter_months_back(target: dt_date, count: int) -> Iterator[tuple[int, int]]:
     year, month = target.year, target.month
@@ -1359,8 +1100,8 @@ def _history_worker(months_back: int | None = None):
     sync = NarSync()
     today = datetime.now().date()
     if months_back is None:
-        months_back = max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "24"))))
-    jobs = list(iter_months_back(today, months_back))
+        months_back = max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "18"))))
+    jobs = [(today.year, today.month)] + list(iter_months_back(today, months_back))
     errors = []
     for y, m in jobs:
         try:
@@ -1379,7 +1120,7 @@ def ensure_history_async():
         threading.Thread(target=_history_worker, daemon=True).start()
 
 def _today_iso():
-    return datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
+    return datetime.now().astimezone().strftime("%Y-%m-%d")
 
 @app.get("/health")
 def health():
@@ -1392,11 +1133,10 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v28-fast-multisource", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v29-safe-fast", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
-        "centralCoverage":central_coverage, "centralFeedConfigured":bool(central_feed_configs()),
-        "centralFeedCount":len(central_feed_configs()),
-        "narHistoryMonths": max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "24")))),
+        "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")),
+        "narHistoryMonths": max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "18")))),
     }
 
 @app.get("/api/v1/history-status")
@@ -1405,31 +1145,10 @@ def history_status():
 
 @app.get("/api/v1/central-status")
 def central_status():
-    configs = central_feed_configs()
-    with _central_refresh_lock:
-        refresh = {k: dict(v) for k, v in _central_refresh_state.items()}
     return {
-        "feedConfigured": bool(configs),
-        "feedCount": len(configs),
-        "feeds": [{"name": c.get("name"), "urlConfigured": bool(c.get("url"))} for c in configs],
+        "feedConfigured": bool(os.getenv("CENTRAL_FEED_URL")),
         "ingestEnabled": bool(os.getenv("CENTRAL_INGEST_TOKEN")),
         "coverage": CentralStore().coverage(),
-        "refresh": refresh,
-    }
-
-@app.get("/api/v1/data-sources")
-def data_sources():
-    configs = central_feed_configs()
-    return {
-        "local": {"name": "NAR公式", "historyMonths": max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "24"))))},
-        "central": {
-            "feedCount": len(configs),
-            "feeds": [c.get("name") for c in configs],
-            "mergeMode": "race/horse field merge + recent-race dedupe",
-            "recentRaceDepth": 16,
-            "backgroundRefresh": True,
-        },
-        "performance": {"browserCache": True, "predictionMemo": True, "networkRefresh": "background"},
     }
 
 @app.post("/api/v1/central-ingest")
@@ -1444,18 +1163,8 @@ async def central_ingest(request: Request):
     rows = body if isinstance(body, list) else body.get("races", [])
     if not isinstance(rows, list):
         raise HTTPException(status_code=400, detail="races must be a list")
-    source_name = _clean(request.headers.get("X-Data-Source", "manual-ingest")) or "manual-ingest"
-    tagged = []
-    for raw in rows:
-        if isinstance(raw, dict):
-            x = dict(raw)
-            x.setdefault("source", source_name)
-            tagged.append(x)
-    count = CentralStore().upsert(tagged)
-    for x in tagged:
-        if x.get("date"):
-            _invalidate_combined(str(x.get("date")))
-    return {"status":"ok","stored":count,"source":source_name}
+    count = CentralStore().upsert(rows)
+    return {"status":"ok","stored":count}
 
 @app.get("/api/v1/central-schema")
 def central_schema():
@@ -1463,98 +1172,68 @@ def central_schema():
       "description":"中央本番フィードの正規化JSON。JRA-VAN等のライセンス済みデータをこの形式へ変換して送信します。",
       "requiredRaceFields":["date","track","raceNumber","distance","horses"],
       "horseFields":["horseNumber","frameNumber","name","age","sex","carriedWeight","jockey","trainer","jockeyStats","trainerStats","prizeMoneyAtRace","recentRaces"],
-      "recommendedRecentRaceDepth":16,
-      "recommendedPastFields":["date","track","distance","condition","weather","fieldSize","finish","timeSeconds","cornerPositions","carriedWeight","racePrize1","final3F","bodyWeight","popularity","classLevel","surface","sectionals"],
+      "recommendedRecentRaceDepth":12,
+      "recommendedPastFields":["date","track","distance","condition","weather","fieldSize","finish","timeSeconds","cornerPositions","carriedWeight","racePrize1"],
       "optionalResult":{"status":"確定","finishers":[{"finish":1,"horseNumber":1,"name":"馬名","timeSeconds":92.3,"cornerPositions":[2,2,1]}]},
     }
 
 _live_refresh_lock = threading.Lock()
-_live_refresh_running: set[str] = set()
 _live_refresh_last: dict[str, int] = {}
+_live_refresh_running: set[str] = set()
 
-def _claim_refresh(key: str, min_interval: int = 3) -> bool:
+def _schedule_live_refresh(iso_date: str):
+    key = f"live:{iso_date}"
     now = int(time.time())
     with _live_refresh_lock:
-        if key in _live_refresh_running:
-            return False
-        if now - _live_refresh_last.get(key, 0) < min_interval:
-            return False
+        if key in _live_refresh_running or now - _live_refresh_last.get(key, 0) < 45:
+            return
         _live_refresh_running.add(key)
-        return True
-
-def _finish_refresh(key: str):
-    with _live_refresh_lock:
-        _live_refresh_running.discard(key)
-        _live_refresh_last[key] = int(time.time())
-
-def trigger_nar_refresh(iso_date: str):
-    key = f"nar:{iso_date}"
-    if not _claim_refresh(key):
-        return
     def worker():
         try:
-            target = datetime.strptime(iso_date, "%Y-%m-%d").date()
-            sync = NarSync()
-            # Today's daily ZIP is the fastest path to current venues/races.
-            # Do this BEFORE any monthly history work.
-            if iso_date == _today_iso():
-                try:
-                    sync.sync_daily(force=False)
-                except Exception as exc:
-                    print(f"NAR daily refresh skipped: {exc}")
-                # Current-month archive is only a fallback/complement, never a blocker.
+            try:
+                target = datetime.strptime(iso_date, "%Y-%m-%d").date()
+                sync = NarSync()
+                # Live request is intentionally light. Deep history is handled by ensure_history_async().
                 try:
                     sync.sync_month(target.year, target.month, force=False)
                 except Exception as exc:
-                    print(f"NAR current month refresh skipped: {exc}")
-            else:
+                    print(f"NAR target month skipped: {exc}")
+                if iso_date == _today_iso():
+                    try:
+                        sync.sync_daily(force=False)
+                    except Exception as exc:
+                        print(f"NAR daily skipped: {exc}")
+            except Exception as exc:
+                print(f"NAR background sync failed: {exc}")
+            if os.getenv("CENTRAL_FEED_URL"):
                 try:
-                    sync.sync_month(target.year, target.month, force=False)
+                    fresh = fetch_central_feed(iso_date)
+                    if fresh:
+                        CentralStore().upsert(fresh)
                 except Exception as exc:
-                    print(f"NAR target month refresh skipped: {exc}")
+                    print(f"Central background refresh failed: {exc}")
         finally:
-            _finish_refresh(key)
+            with _live_refresh_lock:
+                _live_refresh_running.discard(key)
+                _live_refresh_last[key] = int(time.time())
     threading.Thread(target=worker, daemon=True).start()
 
-_central_refresh_lock = threading.Lock()
-_central_refresh_running: set[str] = set()
-_central_refresh_last: dict[str, int] = {}
-
-def trigger_central_refresh(iso_date: str):
-    schedule_central_refresh(iso_date)
-
-@app.on_event("startup")
-def warm_live_cache():
-    # Never delay app startup. Warm today's local cache in the background.
-    trigger_nar_refresh(_today_iso())
-
 @app.get("/api/v1/races")
-def races(date: str = Query(...), circuit: str | None = Query(None)):
-    circuit = _clean(circuit or "")
-    want_local = circuit in ("", "地方")
-    want_central = circuit in ("", "中央")
-
-    local_rows: list[dict] = []
-    central_rows: list[dict] = []
-
-    # Read cache first so the UI responds immediately. Refresh happens after response.
-    if want_local:
-        try:
-            local_rows = NarStore().races_json(date)
-        except Exception as exc:
-            print(f"NAR cache read failed: {exc}")
-        trigger_nar_refresh(date)
-
-    if want_central:
-        try:
-            central_rows = CentralStore().races_json(date)
-        except Exception as exc:
-            print(f"Central cache read failed: {exc}")
-        trigger_central_refresh(date)
-
-    # Historical enrichment remains asynchronous and never blocks venue display.
+def races(date: str = Query(...)):
     ensure_history_async()
-    return local_rows + central_rows
+    try:
+        live_local = NarStore().races_json(date)
+    except Exception as exc:
+        print(f"NAR cache read failed: {exc}")
+        live_local = []
+    try:
+        central_rows = CentralStore().races_json(date)
+    except Exception as exc:
+        print(f"Central cache read failed: {exc}")
+        central_rows = []
+    _schedule_live_refresh(date)
+    # Never block the screen on external network I/O.
+    return live_local + central_rows
 
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -1582,4 +1261,4 @@ def manifest():
 
 @app.get("/sw.js")
 def service_worker():
-    return Response(SW, media_type="application/javascript", headers={"Service-Worker-Allowed":"/"})
+    return Response(SW, media_type="application/javascript", headers={"Service-Worker-Allowed":"/", "Cache-Control":"no-store, max-age=0"})
