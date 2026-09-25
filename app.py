@@ -16,7 +16,7 @@ from datetime import date as dt_date, datetime
 from pathlib import Path
 from typing import Iterable, Iterator
 
-app = FastAPI(title="競馬展開AI", version="3.3-production-v15-3stage-board")
+app = FastAPI(title="競馬展開AI", version="3.4-production-v16-race-click")
 
 INDEX = '<!doctype html>\n<html lang="ja">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n  <meta name="theme-color" content="#0f172a">\n  <meta name="apple-mobile-web-app-capable" content="yes">\n  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n  <meta name="apple-mobile-web-app-title" content="競馬展開AI">\n  <link rel="manifest" href="/manifest.webmanifest?v=15">\n  <link rel="stylesheet" href="/styles.css?v=15">\n  <title>競馬展開AI</title>\n</head>\n<body>\n  <div id="app"><div class="boot">競馬展開AIを起動中…</div></div>\n  <script defer src="/app.js?v=15"></script>\n</body>\n</html>'
 CSS = '\n:root{--bg:#f4f5f8;--card:#fff;--text:#111827;--muted:#667085;--line:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans",sans-serif;color:var(--text);background:var(--bg);font-weight:400}\n*{box-sizing:border-box}body{margin:0;background:var(--bg);font-weight:400;-webkit-text-size-adjust:100%}button,input,textarea{font:inherit;font-weight:400}.boot{padding:32px;text-align:center;color:#64748b}.shell{max-width:760px;margin:auto;padding-bottom:calc(24px + env(safe-area-inset-bottom))}.header{position:sticky;top:0;z-index:50;background:rgba(15,23,42,.98);color:#fff;padding:calc(7px + env(safe-area-inset-top)) 10px 8px;box-shadow:0 2px 8px rgba(0,0,0,.14)}.header-row{display:flex;align-items:center;gap:8px}.header-title{min-width:0;flex:1}.header h1{margin:0;font-size:18px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header small{display:block;color:#cbd5e1;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.back,.reload{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:7px 10px}.main{padding:8px;display:grid;gap:8px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px}.card h2,.section-title{margin:0 0 8px;font-size:18px;font-weight:400}.muted{color:var(--muted)}.setup{display:grid;grid-template-columns:1fr;gap:10px}.label{font-size:11px;color:var(--muted);margin-bottom:4px}.date{display:block;width:100%;height:40px;border:1px solid var(--line);border-radius:10px;padding:6px 9px;background:#fff;font-size:15px}.segment{display:grid;grid-template-columns:1fr 1fr;gap:6px}.segment button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 4px}.segment button.active{background:#111827;color:#fff}.row{display:flex;align-items:center;gap:8px}.between{justify-content:space-between}.pill{background:#eef2f7;border-radius:999px;padding:4px 8px;font-size:10px}.venue-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.venue{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;text-align:left}.venue .name{font-size:17px}.venue .count{font-size:11px;color:var(--muted)}.race-list{display:grid;gap:7px}.race{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px}.race.disabled{opacity:.42}.race-result{font-size:11px;color:#2563eb}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.metric{background:#f8fafc;border-radius:9px;padding:8px 2px;text-align:center}.metric b{display:block;font-size:13px;font-weight:400}.metric span{font-size:9px;color:var(--muted)}.big-number{font-size:31px}.style-list{display:grid;gap:6px}.style-row{border:1px solid var(--line);border-radius:11px;padding:8px;background:#fff}.style-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:6px}.horse-name,.result-name{font-weight:700!important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.score{font-size:13px;font-variant-numeric:tabular-nums}.expected{font-size:10px;color:#475569;background:#f1f5f9;border-radius:999px;padding:3px 6px;white-space:nowrap}.rates{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:6px}.rate{background:#f8fafc;border-radius:7px;text-align:center;padding:5px 2px;font-size:11px}.rate small{display:block;color:var(--muted);font-size:8px}.stage{padding:11px 0;border-bottom:1px solid var(--line)}.stage:last-child{border-bottom:0}.stage-title{font-size:12px;color:var(--muted);margin-bottom:7px}.stage-line{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:20px;line-height:1.65}.queue-group{display:inline-flex;align-items:center;gap:4px}.arrow{color:#94a3b8;font-size:20px}.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.scenario{background:#f8fafc;border-radius:11px;padding:10px 5px;min-height:116px;text-align:center}.scenario-title{font-size:13px}.prob{font-size:28px;margin:5px 0}.scenario-horses{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}.marks{display:grid;grid-template-columns:1fr 1fr;gap:5px}.mark{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:5px;background:#f8fafc;border-radius:10px;padding:9px}.mark-symbol{font-size:19px}.horse-card{border:1px solid var(--line);border-radius:11px;padding:10px;margin-top:7px}.horse-card summary{display:flex;align-items:center;gap:7px;font-size:16px;list-style:none}.horse-detail{padding-top:9px;display:grid;gap:8px;font-size:15px;line-height:1.45}.recent{border-top:1px dashed var(--line);padding-top:8px}.notice{background:#fff7ed;color:#9a3412;border-radius:10px;padding:10px;font-size:12px}.empty{text-align:center;color:var(--muted);padding:18px 8px;font-size:12px}.frame-badge{display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:6px;border:1px solid rgba(0,0,0,.18);font-size:14px;font-weight:400;flex:0 0 auto}.frame1{background:#fff;color:#111}.frame2{background:#222;color:#fff}.frame3{background:#e53935;color:#fff}.frame4{background:#1e66d0;color:#fff}.frame5{background:#f5d547;color:#111}.frame6{background:#3a9b56;color:#fff}.frame7{background:#f28c28;color:#111}.frame8{background:#e894b7;color:#111}.queue-badge{width:35px;height:35px;font-size:17px}.source-tag{font-size:9px;color:#64748b;margin-top:3px}.result-list{display:grid;gap:7px}.result-row{display:grid;grid-template-columns:30px auto minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--line)}.result-row:last-child{border-bottom:0}.finish-pos{font-size:19px}.result-time{font-size:13px;color:#475569}.review-box{margin-top:10px;background:#f8fafc;border-radius:11px;padding:9px}.review-title{font-size:14px;margin-bottom:6px}.diff-list{display:grid;gap:5px;font-size:13px}.diff-item{padding:6px 7px;background:#fff;border-radius:8px}.review-meta{font-size:10px;color:#64748b;margin-top:6px}.review-text{width:100%;min-height:78px;resize:vertical;border:1px solid var(--line);border-radius:9px;padding:8px;margin-top:8px;background:#fff;font-size:14px}.save-review{margin-top:6px;border:0;background:#111827;color:#fff;border-radius:9px;padding:8px 12px}.save-status{font-size:11px;color:#16a34a;margin-left:8px}\n@media(max-width:390px){.main{padding:6px}.card{padding:9px}.style-top{grid-template-columns:auto minmax(0,1fr) auto}.expected{grid-column:2/4;justify-self:start}.scenario-grid{gap:3px}.scenario{padding:8px 3px}.frame-badge{width:27px;height:27px}.queue-badge{width:34px;height:34px}}\n'
@@ -213,137 +213,102 @@ SAMPLES = json.loads('[\n  {\n    "id": "demo-local-sonoda-20260925-01",\n    "d
 
 
 PACE3_JS = r'''
-// v15 3-stage lightweight board (inserted inside the stable IIFE)
-var pace3Stage="start";
-function pace3Key(r){return "keiba-pace3:"+String(r&&r.id||"")}
-function pace3StageInfo(p,key){
+// v17: automatic 3-stage pace animation (no drag)
+var paceAutoTimer=null;
+var paceAutoStageIndex=0;
+var paceAutoKeys=["start","corner","straight"];
+var paceAutoLabels={start:"スタート",corner:"4コーナー",straight:"直線"};
+function paceAutoStageInfo(p,key){
   var idx=key==="start"?0:(key==="corner"?3:4);
-  var labels={start:"スタート",corner:"4コーナー",straight:"直線"};
-  var st=(p.stages&&p.stages[idx])?p.stages[idx]:[labels[key],groupsFor(p.rows,key!=="start")];
-  return {label:labels[key],groups:st[1]||[]};
+  var st=(p.stages&&p.stages[idx])?p.stages[idx]:[paceAutoLabels[key],groupsFor(p.rows,key!=="start")];
+  return {label:paceAutoLabels[key],groups:st[1]||[]};
 }
-function pace3Defaults(p,key){
-  var info=pace3StageInfo(p,key), groups=info.groups, out={}, ys=[16,49,82];
+function paceAutoPositions(p,key){
+  var info=paceAutoStageInfo(p,key), groups=info.groups, out={}, laneY=[22,50,78];
   for(var gi=0;gi<groups.length;gi++){
     var g=groups[gi]||[], n=g.length;
     for(var j=0;j<n;j++){
-      var row=g[j], h=row&&row.horse, no=h&&h.horseNumber;
+      var row=g[j],h=row&&row.horse,no=h&&h.horseNumber;
       if(no==null)continue;
-      var x=n===1?50:(14+(72*(j/(n-1))));
-      out[String(no)]={x:x,y:ys[Math.min(gi,2)]};
+      // horizontal spread inside each rank band; later stages naturally re-shuffle
+      var x=n===1?52:(18+(68*(j/Math.max(1,n-1))));
+      // tiny deterministic horse-number offset prevents exact overlap
+      x=Math.max(10,Math.min(90,x+((Number(no)%3)-1)*2));
+      out[String(no)]={x:x,y:laneY[Math.min(gi,2)]};
     }
   }
-  // safety: any horse not represented gets a back-row slot
   var all=p.rows||[], missing=[];
   for(var k=0;k<all.length;k++){var hn=String(all[k].horse.horseNumber);if(!out[hn])missing.push(all[k].horse)}
-  for(var m=0;m<missing.length;m++){out[String(missing[m].horseNumber)]={x:16+(68*(m/Math.max(1,missing.length-1))),y:88}}
+  for(var m=0;m<missing.length;m++)out[String(missing[m].horseNumber)]={x:16+(68*(m/Math.max(1,missing.length-1))),y:84};
   return out;
 }
-function pace3Load(r,p,key){
-  var base=pace3Defaults(p,key), saved=null;
-  try{saved=JSON.parse(localStorage.getItem(pace3Key(r))||"null")}catch(e){saved=null}
-  var src=saved&&saved[key]?saved[key]:{};
-  for(var no in base){if(src[no]&&isFinite(src[no].x)&&isFinite(src[no].y))base[no]={x:Number(src[no].x),y:Number(src[no].y)}}
-  return base;
-}
-function pace3Save(r,key,no,x,y){
-  try{
-    var k=pace3Key(r), all=JSON.parse(localStorage.getItem(k)||"{}")||{};
-    if(!all[key])all[key]={};
-    all[key][String(no)]={x:x,y:y};
-    localStorage.setItem(k,JSON.stringify(all));
-  }catch(e){}
-}
-function pace3Badge(h){return badge(h)}
-function pace3PanelHtml(r,p,key){
-  var pos=pace3Load(r,p,key), hs=(r.horses||[]).slice().sort(function(a,b){return Number(a.horseNumber)-Number(b.horseNumber)}), chips="";
+function paceAutoHtml(r,p){
+  var hs=(r.horses||[]).slice().sort(function(a,b){return Number(a.horseNumber)-Number(b.horseNumber)});
+  var start=paceAutoPositions(p,"start"),chips="",tabs="";
   for(var i=0;i<hs.length;i++){
-    var h=hs[i], q=pos[String(h.horseNumber)]||{x:50,y:85};
-    chips+='<div class="pace3-horse" data-pace3-horse="'+esc(h.horseNumber)+'" style="left:'+q.x.toFixed(2)+'%;top:'+q.y.toFixed(2)+'%">'+pace3Badge(h)+'<span class="pace3-name">'+esc(h.name)+'</span></div>';
+    var h=hs[i],q=start[String(h.horseNumber)]||{x:50,y:84};
+    chips+='<div class="paceauto-horse" data-paceauto-horse="'+esc(h.horseNumber)+'" style="left:'+q.x.toFixed(2)+'%;top:'+q.y.toFixed(2)+'%">'+badge(h)+'<span class="paceauto-name">'+esc(h.name)+'</span></div>';
   }
-  return '<div class="pace3-panel '+(pace3Stage===key?'active':'')+'" data-pace3-panel="'+key+'"><div class="pace3-board" data-pace3-board="'+key+'"><span class="pace3-label front">先頭</span><span class="pace3-label back">後方</span>'+chips+'</div></div>';
+  for(var t=0;t<paceAutoKeys.length;t++){var k=paceAutoKeys[t];tabs+='<span class="paceauto-tab '+(t===0?'active':'')+'" data-paceauto-tab="'+k+'">'+paceAutoLabels[k]+'</span>'}
+  return '<div class="paceauto-wrap"><div class="paceauto-head"><div class="paceauto-tabs">'+tabs+'</div><button type="button" class="paceauto-replay" data-paceauto-replay="1">↻ 再生</button></div><div class="paceauto-board"><div class="paceauto-trackline"></div><span class="paceauto-front">前</span><span class="paceauto-back">後</span>'+chips+'</div><div class="paceauto-caption" data-paceauto-caption="1">スタート予測</div></div>';
 }
-function pace3Html(r,p){
-  var keys=["start","corner","straight"], labels={start:"スタート",corner:"4コーナー",straight:"直線"}, tabs="", panels="";
-  for(var i=0;i<keys.length;i++){var k=keys[i];tabs+='<button type="button" class="pace3-tab '+(pace3Stage===k?'active':'')+'" data-pace3-stage="'+k+'">'+labels[k]+'</button>';panels+=pace3PanelHtml(r,p,k)}
-  return '<div class="pace3-wrap"><div class="pace3-help">馬を指で動かせます。配置はこの端末に保存されます。</div><div class="pace3-tabs">'+tabs+'</div>'+panels+'<div class="pace3-actions"><button type="button" class="pace3-reset" data-pace3-reset="1">AI配置に戻す</button></div></div>';
-}
-function pace3Bind(){
+function paceAutoApply(key,instant){
   if(!state.selectedRace)return;
-  var tabs=document.querySelectorAll("[data-pace3-stage]"),i;
-  for(i=0;i<tabs.length;i++)tabs[i].onclick=function(){
-    pace3Stage=this.getAttribute("data-pace3-stage")||"start";
-    var ts=document.querySelectorAll("[data-pace3-stage]"),ps=document.querySelectorAll("[data-pace3-panel]"),j;
-    for(j=0;j<ts.length;j++)ts[j].classList.toggle("active",ts[j].getAttribute("data-pace3-stage")===pace3Stage);
-    for(j=0;j<ps.length;j++)ps[j].classList.toggle("active",ps[j].getAttribute("data-pace3-panel")===pace3Stage);
+  var p=predict(state.selectedRace),pos=paceAutoPositions(p,key),els=document.querySelectorAll('[data-paceauto-horse]');
+  for(var i=0;i<els.length;i++){
+    var el=els[i],q=pos[String(el.getAttribute('data-paceauto-horse'))];
+    if(!q)continue;
+    if(instant)el.classList.add('noanim');else el.classList.remove('noanim');
+    el.style.left=q.x+'%';el.style.top=q.y+'%';
+  }
+  var tabs=document.querySelectorAll('[data-paceauto-tab]');
+  for(var j=0;j<tabs.length;j++)tabs[j].classList.toggle('active',tabs[j].getAttribute('data-paceauto-tab')===key);
+  var cap=document.querySelector('[data-paceauto-caption]');if(cap)cap.textContent=paceAutoLabels[key]+'予測';
+}
+function paceAutoStop(){if(paceAutoTimer){clearTimeout(paceAutoTimer);paceAutoTimer=null}}
+function paceAutoRun(fromStart){
+  paceAutoStop();
+  if(!state.selectedRace||!document.querySelector('.paceauto-board'))return;
+  if(fromStart!==false){paceAutoStageIndex=0;paceAutoApply('start',true)}
+  function next(){
+    if(!state.selectedRace||!document.querySelector('.paceauto-board')){paceAutoStop();return}
+    paceAutoStageIndex=(paceAutoStageIndex+1)%paceAutoKeys.length;
+    paceAutoApply(paceAutoKeys[paceAutoStageIndex],false);
+    var delay=paceAutoStageIndex===2?3200:2500;
+    paceAutoTimer=setTimeout(next,delay);
+  }
+  paceAutoTimer=setTimeout(next,1800);
+}
+function paceAutoBind(){
+  paceAutoStop();
+  var replay=document.querySelector('[data-paceauto-replay]');
+  if(replay)replay.onclick=function(){paceAutoRun(true)};
+  // stage labels can jump for inspection, but horses themselves are never draggable
+  var tabs=document.querySelectorAll('[data-paceauto-tab]');
+  for(var i=0;i<tabs.length;i++)tabs[i].onclick=function(){
+    var k=this.getAttribute('data-paceauto-tab')||'start';paceAutoStageIndex=paceAutoKeys.indexOf(k);if(paceAutoStageIndex<0)paceAutoStageIndex=0;paceAutoApply(k,false);paceAutoRun(false)
   };
-  var reset=document.querySelector("[data-pace3-reset]");
-  if(reset)reset.onclick=function(){try{localStorage.removeItem(pace3Key(state.selectedRace))}catch(e){} render()};
-  var chips=document.querySelectorAll(".pace3-horse");
-  for(i=0;i<chips.length;i++)pace3AttachDrag(chips[i]);
+  paceAutoRun(true);
 }
-function pace3AttachDrag(el){
-  var dragging=false, board=null, stage=null, no=el.getAttribute("data-pace3-horse"), pid=null;
-  function move(clientX,clientY){
-    if(!dragging||!board)return;
-    var rect=board.getBoundingClientRect(); if(!rect.width||!rect.height)return;
-    var x=Math.max(5,Math.min(95,(clientX-rect.left)/rect.width*100));
-    var y=Math.max(6,Math.min(94,(clientY-rect.top)/rect.height*100));
-    el.style.left=x+"%";el.style.top=y+"%";el._pace3x=x;el._pace3y=y;
-  }
-  function done(){
-    if(!dragging)return;dragging=false;el.classList.remove("dragging");
-    var x=Number(el._pace3x),y=Number(el._pace3y);if(isFinite(x)&&isFinite(y))pace3Save(state.selectedRace,stage,no,x,y);
-  }
-  if(window.PointerEvent){
-    el.addEventListener("pointerdown",function(e){dragging=true;board=el.closest("[data-pace3-board]");stage=board?board.getAttribute("data-pace3-board"):pace3Stage;pid=e.pointerId;el.classList.add("dragging");try{el.setPointerCapture(pid)}catch(_e){}e.preventDefault()});
-    el.addEventListener("pointermove",function(e){if(dragging){move(e.clientX,e.clientY);e.preventDefault()}});
-    el.addEventListener("pointerup",function(e){done();try{el.releasePointerCapture(pid)}catch(_e){}});
-    el.addEventListener("pointercancel",done);
-  }else{
-    el.addEventListener("touchstart",function(e){var t=e.touches&&e.touches[0];if(!t)return;dragging=true;board=el.closest("[data-pace3-board]");stage=board?board.getAttribute("data-pace3-board"):pace3Stage;el.classList.add("dragging");e.preventDefault()},{passive:false});
-    el.addEventListener("touchmove",function(e){var t=e.touches&&e.touches[0];if(t&&dragging){move(t.clientX,t.clientY);e.preventDefault()}},{passive:false});
-    el.addEventListener("touchend",done);
-    el.addEventListener("touchcancel",done);
-  }
-}
-var pace3BaseRenderRace=renderRace;
+var paceAutoBaseRenderRace=renderRace;
 renderRace=function(){
-  var r=state.selectedRace,p=predict(r),html=pace3BaseRenderRace();
+  var r=state.selectedRace,p=predict(r),html=paceAutoBaseRenderRace();
   var open='<section class="card"><div class="section-title">3　隊列</div>';
   var next='<section class="card"><div class="section-title">4　ABC</div>';
   var a=html.indexOf(open),b=a>=0?html.indexOf(next,a):-1;
-  if(a>=0&&b>a)html=html.slice(0,a)+open+pace3Html(r,p)+'</section>'+html.slice(b);
+  if(a>=0&&b>a)html=html.slice(0,a)+open+paceAutoHtml(r,p)+'</section>'+html.slice(b);
   return html;
 };
-var pace3BaseBind=bind;
-bind=function(){pace3BaseBind();pace3Bind()};
+var paceAutoBaseBind=bind;
+bind=function(){paceAutoBaseBind();if(state.selectedRace)paceAutoBind();else paceAutoStop()};
 '''
 JS = JS.replace('render();setTimeout(loadRaces,0);\n})();', PACE3_JS + '\nrender();setTimeout(loadRaces,0);\n})();')
 
 
 
-# v15: lightweight interactive 3-stage pace board
+# v17: lightweight automatic 3-stage pace board
 CSS += r"""
-.pace3-wrap{margin-top:2px}
-.pace3-help{font-size:11px;color:#64748b;margin:0 0 8px}
-.pace3-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px}
-.pace3-tab{border:1px solid #dbe1e8;background:#f8fafc;color:#475569;border-radius:9px;padding:8px 3px;font-size:13px}
-.pace3-tab.active{background:#111827;color:#fff;border-color:#111827}
-.pace3-panel{display:none}
-.pace3-panel.active{display:block}
-.pace3-board{position:relative;height:330px;border:1px solid #dbe1e8;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);touch-action:pan-y}
-.pace3-board:before,.pace3-board:after{content:"";position:absolute;left:10px;right:10px;border-top:1px dashed #cbd5e1;pointer-events:none}
-.pace3-board:before{top:33.333%}.pace3-board:after{top:66.666%}
-.pace3-label{position:absolute;left:7px;font-size:9px;color:#94a3b8;pointer-events:none;z-index:1}
-.pace3-label.front{top:5px}.pace3-label.back{bottom:5px}
-.pace3-horse{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px;max-width:112px;padding:4px 6px 4px 4px;border-radius:10px;background:rgba(255,255,255,.97);border:1px solid #cbd5e1;box-shadow:0 2px 5px rgba(15,23,42,.13);touch-action:none;user-select:none;-webkit-user-select:none;z-index:5}
-.pace3-horse.dragging{z-index:20;box-shadow:0 5px 14px rgba(15,23,42,.25);transform:translate(-50%,-50%) scale(1.06)}
-.pace3-horse .frame-badge{width:25px;height:25px;font-size:12px;flex:0 0 25px}
-.pace3-name{font-size:10px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.pace3-actions{display:flex;justify-content:flex-end;margin-top:7px}
-.pace3-reset{border:1px solid #dbe1e8;background:#fff;color:#475569;border-radius:8px;padding:6px 9px;font-size:11px}
-@media(max-width:390px){.pace3-board{height:310px}.pace3-horse{max-width:100px;padding-right:5px}.pace3-name{font-size:9px}}
+.paceauto-wrap{margin-top:2px}.paceauto-head{display:flex;align-items:center;gap:7px;margin-bottom:8px}.paceauto-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;flex:1}.paceauto-tab{display:block;text-align:center;border:1px solid #dbe1e8;background:#f8fafc;color:#64748b;border-radius:999px;padding:6px 3px;font-size:12px;transition:.25s}.paceauto-tab.active{background:#111827;color:#fff;border-color:#111827}.paceauto-replay{border:1px solid #dbe1e8;background:#fff;color:#475569;border-radius:9px;padding:6px 8px;font-size:11px;white-space:nowrap}.paceauto-board{position:relative;height:300px;border:1px solid #d8e0e8;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#dff5ff 0 24%,#e8d59b 24% 100%)}.paceauto-board:before{content:"";position:absolute;left:0;right:0;top:24%;height:4px;background:#fff;border-top:1px solid rgba(15,23,42,.12);border-bottom:1px solid rgba(15,23,42,.12)}.paceauto-trackline{position:absolute;left:8%;right:8%;top:15%;border-top:3px dotted rgba(37,99,235,.45)}.paceauto-front,.paceauto-back{position:absolute;left:7px;font-size:9px;color:#64748b;z-index:2}.paceauto-front{top:29%}.paceauto-back{bottom:6px}.paceauto-horse{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px;max-width:108px;padding:4px 6px 4px 4px;border-radius:10px;background:rgba(255,255,255,.96);border:1px solid rgba(100,116,139,.32);box-shadow:0 2px 6px rgba(15,23,42,.15);z-index:5;transition:left 1.55s cubic-bezier(.22,.7,.2,1),top 1.55s cubic-bezier(.22,.7,.2,1)}.paceauto-horse.noanim{transition:none}.paceauto-horse .frame-badge{width:25px;height:25px;font-size:12px;flex:0 0 25px}.paceauto-name{font-size:9px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.paceauto-caption{text-align:center;color:#475569;font-size:11px;margin-top:6px}@media(max-width:390px){.paceauto-board{height:280px}.paceauto-horse{max-width:94px;padding-right:4px}.paceauto-name{font-size:8px}.paceauto-tab{font-size:11px}.paceauto-replay{font-size:10px}}
 """
 
 # --- NAR official live data connector ---------------------------------
@@ -1105,7 +1070,7 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v15-3stage-board", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v16-race-click", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")),
     }
