@@ -17,7 +17,7 @@ from datetime import date as dt_date, datetime
 from pathlib import Path
 from typing import Iterable, Iterator
 
-app = FastAPI(title="競馬展開AI", version="4.9-production-v29-safe-fast")
+app = FastAPI(title="競馬展開AI", version="4.9-production-v30-fast-quiet")
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -285,7 +285,7 @@ function startSimulation(){if(!state.race||!state.pred)return;stopTimer();state.
 function togglePauseSimulation(){if(state.simRunning){if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}if(state.timer){clearTimeout(state.timer);state.timer=null}state.simRunning=false;state.simPaused=true;updateSimHud(state.simIndex,null);return}if(state.simPaused){state.simPaused=false;state.simRunning=true;setSimButtons();animateOneRun(state.simIndex,state.simCurrentT)}}
 function stopSimulation(){if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}if(state.timer){clearTimeout(state.timer);state.timer=null}state.simRunning=false;state.simPaused=false;state.simStopped=true;updateSimHud(state.simIndex,null)}
 function initSimulationBoard(){if(!state.pred||!state.pred.simulation||!state.pred.simulation.runs.length)return;resetSimCounts();state.simPaused=false;state.simStopped=false;var board=document.getElementById('pace-board'),path=document.getElementById('course-path');if(board&&path){var sf=courseStageFrac(state.race,0),total=path.getTotalLength(),sp=path.getPointAtLength(sf*total),sd=document.getElementById('course-start-dot'),sl=document.getElementById('course-start-label');if(sd){sd.setAttribute('cx',sp.x);sd.setAttribute('cy',sp.y)}if(sl){sl.setAttribute('x',Math.min(176,sp.x+4));sl.setAttribute('y',Math.max(10,sp.y-5))}}drawSimulationRun(state.pred.simulation.runs[0],0);updateSimHud(0,null)}
-function load(){var d=state.date,seq=++state.requestSeq,cached=loadRaceCache(d);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render()}else{state.loading=true;render()}var ctl=typeof AbortController!=="undefined"?new AbortController():null;var tm=setTimeout(function(){if(ctl)ctl.abort()},2800);fetch('/api/v1/races?date='+encodeURIComponent(d),{cache:'no-store',signal:ctl?ctl.signal:void 0}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){clearTimeout(tm);if(seq!==state.requestSeq||state.date!==d)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,rows);state.loading=false;state.error=null;render()}).catch(function(){clearTimeout(tm);if(seq!==state.requestSeq||state.date!==d)return;state.loading=false;if(!state.races.length)state.error='通信が遅いため端末キャッシュで待機中。↻で再読込できます';render()})}
+function load(){var d=state.date,seq=++state.requestSeq,cached=loadRaceCache(d);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render()}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&v=30',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,rows);state.loading=false;state.error=null;render()}).catch(function(){if(seq!==state.requestSeq||state.date!==d)return;if(attempts<3){setTimeout(request,700*attempts);return}state.loading=false;state.error=null;render()})}request()}
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
 clearOldPwa();render();setTimeout(load,0);
 })();
@@ -1097,17 +1097,26 @@ _history_error = ""
 
 def _history_worker(months_back: int | None = None):
     global _history_ready, _history_error
+    # UI first: let the first screen and race list settle before deep history I/O starts.
+    time.sleep(float(os.getenv("HISTORY_START_DELAY_SEC", "10")))
     sync = NarSync()
     today = datetime.now().date()
     if months_back is None:
         months_back = max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "18"))))
-    jobs = [(today.year, today.month)] + list(iter_months_back(today, months_back))
+    seen = set()
+    jobs = []
+    for y, m in [(today.year, today.month)] + list(iter_months_back(today, months_back)):
+        if (y, m) not in seen:
+            jobs.append((y, m)); seen.add((y, m))
     errors = []
-    for y, m in jobs:
+    for idx, (y, m) in enumerate(jobs):
         try:
             sync.sync_month(y, m)
         except Exception as exc:
             errors.append(f"{y:04d}-{m:02d}:{exc}")
+        # Yield between monthly jobs so Safari/API requests stay responsive.
+        if idx + 1 < len(jobs):
+            time.sleep(float(os.getenv("HISTORY_JOB_GAP_SEC", "0.7")))
     _history_error = " | ".join(errors)
     _history_ready = True
 
@@ -1133,7 +1142,7 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v29-safe-fast", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v30-fast-quiet", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")),
         "narHistoryMonths": max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "18")))),
@@ -1218,8 +1227,16 @@ def _schedule_live_refresh(iso_date: str):
                 _live_refresh_last[key] = int(time.time())
     threading.Thread(target=worker, daemon=True).start()
 
+_race_list_cache_lock = threading.Lock()
+_race_list_cache: dict[str, tuple[float, list[dict]]] = {}
+
 @app.get("/api/v1/races")
 def races(date: str = Query(...)):
+    now = time.time()
+    with _race_list_cache_lock:
+        hit = _race_list_cache.get(date)
+        if hit and now - hit[0] < 8:
+            return hit[1]
     ensure_history_async()
     try:
         live_local = NarStore().races_json(date)
@@ -1231,9 +1248,15 @@ def races(date: str = Query(...)):
     except Exception as exc:
         print(f"Central cache read failed: {exc}")
         central_rows = []
+    rows = live_local + central_rows
+    with _race_list_cache_lock:
+        _race_list_cache[date] = (now, rows)
+        if len(_race_list_cache) > 12:
+            oldest = min(_race_list_cache.items(), key=lambda kv: kv[1][0])[0]
+            _race_list_cache.pop(oldest, None)
     _schedule_live_refresh(date)
     # Never block the screen on external network I/O.
-    return live_local + central_rows
+    return rows
 
 @app.get("/", response_class=HTMLResponse)
 def home():
