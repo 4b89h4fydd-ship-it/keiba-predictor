@@ -12,14 +12,16 @@ import sqlite3
 import threading
 import time
 import urllib.request
+import urllib.parse
 import zipfile
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date as dt_date, datetime
 from pathlib import Path
 from typing import Iterable, Iterator
+from bs4 import BeautifulSoup
 
-app = FastAPI(title="競馬展開AI", version="6.1-production-v45-grade-plus-marks")
+app = FastAPI(title="競馬展開AI", version="6.2-production-v46-jra-official-central")
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -30,13 +32,13 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="競馬展開AI">
-<link rel="manifest" href="/manifest-v45.webmanifest">
-<link rel="stylesheet" href="/styles-v45.css">
+<link rel="manifest" href="/manifest-v46.webmanifest">
+<link rel="stylesheet" href="/styles-v46.css">
 <title>競馬展開AI</title>
 </head>
 <body>
 <div id="app"><div class="boot">競馬展開AIを起動中…</div></div>
-<script src="/app-v45.js"></script>
+<script src="/app-v46.js"></script>
 </body>
 </html>"""
 
@@ -253,7 +255,7 @@ function courseStageFrac(r,st){var p=courseProfile(r);if(p.shape==="straight")re
 var app=document.getElementById("app");
 var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,historyTimer:null,raceStack:[],historyPrefetch:{}};
 
-function cacheKey(d){return "keiba:v45:races:"+d}
+function cacheKey(d){return "keiba:v46:races:"+d}
 function loadRaceCache(d){try{var raw=localStorage.getItem(cacheKey(d));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(Date.now()-n(x.ts)>6*3600000)return null;return x.rows}catch(e){return null}}
 function saveRaceCache(d,rows){try{localStorage.setItem(cacheKey(d),JSON.stringify({ts:Date.now(),rows:rows}))}catch(e){}}
 function clearOldPwa(){try{if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(function(rs){for(var i=0;i<rs.length;i++)rs[i].unregister()}).catch(function(){});if(window.caches)caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).catch(function(){})}catch(e){}}
@@ -274,7 +276,7 @@ function isFinal(r){return !!(r&&r.result&&(r.result.status==="確定"||(r.resul
 function mins(t){var m=String(t||"").match(/^(\d{1,2}):(\d{2})/);return m?n(m[1])*60+n(m[2]):9999}
 function nowMins(){var d=new Date(Date.now()+9*3600000);return d.getUTCHours()*60+d.getUTCMinutes()}
 function timeHtml(r){var a=String(r.startTime||"—"),o=String(r.scheduledStartTime||a),c=!!r.startTimeChanged||(a!==o&&a!=="—"&&o!=="—");return c?'<span class="time-old">'+esc(o)+'</span><span class="time-changed">'+esc(a)+' 修正</span>':esc(a)}
-function header(title,back,sub){return '<header class="header"><div class="header-row">'+(back?'<button data-action="back">‹</button>':'')+'<div class="header-title"><h1>'+esc(title)+'</h1>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div><span class="build-badge">v45</span><button data-action="reload">↻</button></div></header>'}
+function header(title,back,sub){return '<header class="header"><div class="header-row">'+(back?'<button data-action="back">‹</button>':'')+'<div class="header-title"><h1>'+esc(title)+'</h1>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div><span class="build-badge">v46</span><button data-action="reload">↻</button></div></header>'}
 function recencyWeights(len){var a=[],i;for(i=0;i<len;i++)a.push(Math.pow(.82,i));return a}
 function weightedRate(vals,weights,def){var s=0,w=0,i;for(i=0;i<vals.length;i++){if(vals[i]==null)continue;var q=weights&&weights[i]!=null?weights[i]:1;s+=n(vals[i])*q;w+=q}return w?s/w:(def==null?.5:def)}
 function raceField(rr){return Math.max(4,n(rr&&rr.fieldSize,12))}
@@ -360,7 +362,7 @@ function renderHome(){var all=state.circuit==="中央"?CENTRAL:LOCAL,venues=[],i
 var live=liveRaces(),liveHtml="";if(state.loading)liveHtml='<div class="home-empty">読込中…</div>';else if(state.date!==today())liveHtml='<div class="home-empty">当日を選ぶとリアルタイム表示します</div>';else if(live.length)liveHtml='<div class="home-live-grid">'+live.map(function(r){var tag=liveTag(r),urgent=tag.indexOf('running')>=0?' urgent':'';return '<button class="home-live-race'+urgent+'" data-race="'+esc(r.id)+'"><div class="live-top">'+tag+'<span class="home-arrow">›</span></div><div class="home-race-line"><span class="home-track">'+esc(r.track)+'</span><span class="home-rno">'+esc(r.raceNumber)+'R</span></div><div class="home-rtitle">'+esc(r.title||"")+'</div><div class="home-rtime">'+timeHtml(r)+'</div></button>'}).join("")+'</div>';else liveHtml='<div class="home-empty">直近の未確定レースはありません</div>';
 var vh=venues.length?'<div class="home-venue-grid">'+venues.slice(0,4).map(function(v){return '<button class="home-venue" data-track="'+esc(v[0])+'">'+homeVenueMark(v[0])+'<span class="home-venue-name">'+esc(v[0])+'</span><span class="home-venue-count">'+v[1]+'レース</span><span class="home-arrow">›</span></button>'}).join("")+'</div>':'<div class="home-empty">'+(state.error?esc(state.error):(state.circuit==="中央"?"中央データ源未接続、または開催データなし":"この日の取得データはありません"))+'</div>';
 var nx=nextRace(),aiButtons=nx?'<div class="home-ai-actions"><button class="home-ai-select" data-action="pace-pick">選択</button><button class="home-ai-go" data-action="pace-next">展開を見る ›</button></div>':'<div class="home-ai-actions"><button class="home-ai-select" data-action="pace-pick">選択</button></div>';
-return '<div class="home-shell"><div class="home-hero"><img class="hero-horse" src="/hero-horse.webp?v=45" alt=""><div class="brand-wrap"><div class="brand-main">競馬展開<span class="ai">AI</span></div><div class="brand-sub">Race Intelligence · v45</div></div><button class="hero-refresh" data-action="reload"><span class="refresh-icon">↻</span><small>更新</small></button></div><main class="home-main">'+
+return '<div class="home-shell"><div class="home-hero"><img class="hero-horse" src="/hero-horse.webp?v=46" alt=""><div class="brand-wrap"><div class="brand-main">競馬展開<span class="ai">AI</span></div><div class="brand-sub">Race Intelligence · v46</div></div><button class="hero-refresh" data-action="reload"><span class="refresh-icon">↻</span><small>更新</small></button></div><main class="home-main">'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">▣</span>日付・開催区分</div></div><div class="home-date-row"><div class="home-date-wrap"><input id="date" class="home-date" type="date" value="'+esc(state.date)+'"></div><div class="home-segment"><button data-circuit="中央" class="'+(state.circuit==="中央"?"active":"")+'">中央</button><button data-circuit="地方" class="'+(state.circuit==="地方"?"active":"")+'">地方</button></div></div></section>'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">◉</span>リアルタイムのレース</div><span class="home-link">すべて見る</span></div>'+liveHtml+'</section>'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">●</span>開催場</div><span class="home-link">すべて見る</span></div>'+vh+'</section>'+
@@ -393,7 +395,7 @@ function prefetchNextHistory(){var a=state.races.filter(function(r){return r.cir
 function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(!keepStack)state.raceStack=[];if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;state.error=null;state.picker=false;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?v=43'+(skipHistory?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.race=body;render();if(!skipHistory&&body.historySearch&&body.historySearch.status==='running')scheduleHistoryPoll(id)}).catch(function(e){if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
 function reloadCurrent(){if(state.race&&state.race.id){var id=state.race.id,isPast=state.raceStack.length>0;state.race=null;openRace(id,true,isPast)}else load()}
-function renderRace(){var r=state.race,hs=r.historySearch||{};if(hs.status==='running'){state.pred=null;return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main"><section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span></div></section>'+historySearchSection(r)+'</main></div>'}var p=predict(r);state.pred=p;var sourceNote=hs.status==='done'?'<div class="data-source-note">【v45】過去走検索：'+n(hs.monthsDone)+'か月確認 / '+n((hs.coverage||{}).totalRuns)+'走取得 / '+esc(hs.source||'履歴データ')+'</div>':(hs.status==='error'?'<div class="notice">過去走の追加取得に失敗。取得済みデータだけで表示します。</div>':'');return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main">'+renderResult(r)+renderResultGap(r,p)+renderActualFlow(r)+'<section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span>'+(state.raceStack.length?'<span class="past-race-badge">過去レース</span>':'')+'</div><div class="metrics"><div class="metric"><b>'+esc(r.distance)+'m</b><span>距離</span></div><div class="metric"><b>'+esc(r.condition||'不明')+'</b><span>馬場</span></div><div class="metric"><b>'+esc(r.weather||'不明')+'</b><span>天候</span></div><div class="metric"><b>'+season(r.date)+'</b><span>季節</span></div><div class="metric"><b>'+esc((r.horses||[]).length)+'頭</b><span>頭数</span></div></div><div class="data-depth"><span>近走 5走</span><span>'+(r.circuit==='中央'?'中央 直近5走を自動検索':'NAR公式 直近5走を自動検索')+'</span><span>0走は推定値を表示しない</span></div>'+sourceNote+'</section>'+runnerStyleSection(r,p)+scenarioProbabilitySection(p)+paceBoard(r,p)+'</main></div>'}
+function renderRace(){var r=state.race,hs=r.historySearch||{};if(hs.status==='running'){state.pred=null;return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main"><section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span></div></section>'+historySearchSection(r)+'</main></div>'}var p=predict(r);state.pred=p;var sourceNote=hs.status==='done'?'<div class="data-source-note">【v46】過去走検索：'+n(hs.monthsDone)+'か月確認 / '+n((hs.coverage||{}).totalRuns)+'走取得 / '+esc(hs.source||'履歴データ')+'</div>':(hs.status==='error'?'<div class="notice">過去走の追加取得に失敗。取得済みデータだけで表示します。</div>':'');return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main">'+renderResult(r)+renderResultGap(r,p)+renderActualFlow(r)+'<section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span>'+(state.raceStack.length?'<span class="past-race-badge">過去レース</span>':'')+'</div><div class="metrics"><div class="metric"><b>'+esc(r.distance)+'m</b><span>距離</span></div><div class="metric"><b>'+esc(r.condition||'不明')+'</b><span>馬場</span></div><div class="metric"><b>'+esc(r.weather||'不明')+'</b><span>天候</span></div><div class="metric"><b>'+season(r.date)+'</b><span>季節</span></div><div class="metric"><b>'+esc((r.horses||[]).length)+'頭</b><span>頭数</span></div></div><div class="data-depth"><span>近走 5走</span><span>'+(r.circuit==='中央'?'中央 直近5走を自動検索':'NAR公式 直近5走を自動検索')+'</span><span>0走は推定値を表示しない</span></div>'+sourceNote+'</section>'+runnerStyleSection(r,p)+scenarioProbabilitySection(p)+paceBoard(r,p)+'</main></div>'}
 function render(){stopTimer();try{if(state.raceLoading)app.innerHTML=renderRaceLoading();else if(state.race)app.innerHTML=renderRace();else if(state.picker)app.innerHTML=renderPicker();else if(state.track)app.innerHTML=renderVenue();else app.innerHTML=renderHome();bind();if(state.race)initPaceBoard()}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
 function bind(){var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];state.circuit=this.getAttribute('data-circuit');state.track=null;state.race=null;state.picker=false;render()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];state.date=this.value;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];state.track=this.getAttribute('data-track');render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){openRace(this.getAttribute('data-race'),false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=function(){if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}if(state.raceLoading){state.raceLoading=null;if(state.raceStack.length)state.race=state.raceStack.pop()}else if(state.race){if(state.raceStack.length)state.race=state.raceStack.pop();else state.race=null}else if(state.picker)state.picker=false;else state.track=null;render()};var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(){drawPaceStage(n(this.getAttribute('data-pace-stage'),0))}}
 function stopTimer(){if(state.timer){clearTimeout(state.timer);state.timer=null}if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}state.simRunning=false}
@@ -1185,18 +1187,309 @@ def normalize_central_race(raw: dict) -> dict | None:
     return out
 
 
+JRA_TRACK_CODES = {"01":"札幌","02":"函館","03":"福島","04":"新潟","05":"東京","06":"中山","07":"中京","08":"京都","09":"阪神","10":"小倉"}
+JRA_CNAME_RE = re.compile(r"pw01dde(?:01|10)\d{20}/[0-9A-Fa-f]{2}")
+JRA_HORSE_CNAME_RE = re.compile(r"pw01dud\d{12,}/[0-9A-Fa-f]{2}")
+JRA_RESULT_CNAME_RE = re.compile(r"pw01sde(?:01|10)\d{20}/[0-9A-Fa-f]{2}")
+_jra_cache_lock = threading.Lock()
+_jra_text_cache: dict[str, tuple[float,str]] = {}
+
+def _jra_decode(raw: bytes) -> str:
+    for enc in ("utf-8","cp932","shift_jis"):
+        try:
+            return raw.decode(enc)
+        except Exception:
+            pass
+    return raw.decode("utf-8","ignore")
+
+def _jra_request(url: str, cname: str | None = None, cache_sec: int = 1800) -> str:
+    key=url+"|"+(cname or "")
+    now=time.time()
+    with _jra_cache_lock:
+        hit=_jra_text_cache.get(key)
+        if hit and now-hit[0] < cache_sec:
+            return hit[1]
+    headers={"User-Agent":"Mozilla/5.0 (compatible; KeibaPredictor/6.2; +https://www.jra.go.jp/)","Accept-Language":"ja,en;q=0.8"}
+    data=None
+    if cname:
+        data=urllib.parse.urlencode({"cname":cname}).encode("ascii")
+        headers["Content-Type"]="application/x-www-form-urlencoded"
+    req=urllib.request.Request(url,data=data,headers=headers)
+    with urllib.request.urlopen(req,timeout=float(os.getenv("JRA_OFFICIAL_TIMEOUT_SEC","12"))) as res:
+        text=_jra_decode(res.read())
+    with _jra_cache_lock:
+        _jra_text_cache[key]=(now,text)
+    return text
+
+def _jra_attr_cname(tag, pattern) -> str:
+    if not tag: return ""
+    blob=" ".join(str(v) for v in tag.attrs.values())+" "+str(tag)
+    m=pattern.search(blob)
+    return m.group(0) if m else ""
+
+def _jra_text(tag) -> str:
+    return re.sub(r"\s+"," ",tag.get_text(" ",strip=True) if tag else "").strip()
+
+def _jra_iso_date(y:int,m:int,d:int)->str:
+    return f"{y:04d}-{m:02d}-{d:02d}"
+
+def _jra_date_from_cname(cname:str)->str:
+    m=re.search(r"(20\d{6})/[0-9A-Fa-f]{2}$",cname or "")
+    if not m:return ""
+    x=m.group(1);return f"{x[:4]}-{x[4:6]}-{x[6:8]}"
+
+def _jra_race_no_from_cname(cname:str)->int:
+    m=re.search(r"pw01dde(?:01|10)\d{2}\d{4}\d{4}(\d{2})20\d{6}/",cname or "")
+    return int(m.group(1)) if m else 0
+
+def _jra_track_from_cname(cname:str)->str:
+    m=re.search(r"pw01dde(?:01|10)(\d{2})",cname or "")
+    return JRA_TRACK_CODES.get(m.group(1),"") if m else ""
+
+def _jra_parse_time_seconds(txt:str)->float:
+    m=re.search(r"(?<!\d)(\d{1,2}):(\d{2}\.\d)(?!\d)",txt or "")
+    if not m:return 0.0
+    return int(m.group(1))*60+float(m.group(2))
+
+def _jra_parse_past_cell(cell, cutoff:str) -> dict | None:
+    txt=_jra_text(cell)
+    dm=re.search(r"(20\d{2})年(\d{1,2})月(\d{1,2})日",txt)
+    if not dm:return None
+    iso=_jra_iso_date(int(dm.group(1)),int(dm.group(2)),int(dm.group(3)))
+    if cutoff and iso>=cutoff:return None
+    track=""
+    for t in list(JRA_TRACK_CODES.values())+["門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"]:
+        if re.search(r"(?:日|\s)"+re.escape(t)+r"(?:\s|$)",txt): track=t;break
+    finish=0
+    fm=re.search(r"(?:^|\s)(\d{1,2})着(?:\s|$)",txt)
+    if fm: finish=int(fm.group(1))
+    field=0
+    fsm=re.search(r"(\d{1,2})頭",txt)
+    if fsm: field=int(fsm.group(1))
+    dist=0; surface=""
+    dsm=re.search(r"(\d{3,4})(芝|ダ|障)",txt)
+    if dsm: dist=int(dsm.group(1)); surface=dsm.group(2)
+    cond="不明"
+    for c in ["不良","稍重","重","良"]:
+        if c in txt: cond=c;break
+    weight=0.0
+    wm=re.search(r"(\d{2}(?:\.\d)?)\s*kg",txt)
+    if wm: weight=float(wm.group(1))
+    corners=[]
+    for li in cell.find_all("li"):
+        z=_jra_text(li)
+        if re.fullmatch(r"\d{1,2}",z): corners.append(int(z))
+    result_cname=_jra_attr_cname(cell,JRA_RESULT_CNAME_RE)
+    rid=("jraresult-"+base64.urlsafe_b64encode(result_cname.encode()).decode().rstrip("=")) if result_cname else ""
+    # title is best-effort: text between track and class/finish data
+    title=""
+    if track:
+        after=txt.split(track,1)[1].strip()
+        after=re.split(r"\s+(?:\d{1,2}着|\d{1,2}頭|\d+番)",after,1)[0]
+        title=after[:60].strip()
+    tm=_jra_parse_time_seconds(txt)
+    return {"date":iso,"track":track,"title":title,"distance":dist,"surface":surface,"condition":cond,"weather":"不明","fieldSize":field,"finish":finish,"timeSeconds":tm,"cornerPositions":corners,"carriedWeight":weight,"raceId":rid,"source":"JRA公式"}
+
+def _jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
+    if not cname:return []
+    try: html=_jra_request("https://www.jra.go.jp/JRADB/accessU.html",cname,86400)
+    except Exception:return []
+    soup=BeautifulSoup(html,"html.parser")
+    out=[]
+    for table in soup.find_all("table"):
+        head=_jra_text(table.find("thead") or table.find("tr"))
+        if "年月日" not in head or "レース名" not in head: continue
+        for tr in table.find_all("tr"):
+            cells=tr.find_all(["th","td"])
+            if len(cells)<8: continue
+            vals=[_jra_text(c) for c in cells]
+            dm=re.search(r"(20\d{2})年(\d{1,2})月(\d{1,2})日",vals[0])
+            if not dm:continue
+            iso=_jra_iso_date(int(dm.group(1)),int(dm.group(2)),int(dm.group(3)))
+            if cutoff and iso>=cutoff:continue
+            track=vals[1]
+            title=vals[2]
+            disttxt=vals[3]
+            dsm=re.search(r"(芝|ダ|障)(\d{3,4})",disttxt)
+            surface=dsm.group(1) if dsm else ""; dist=int(dsm.group(2)) if dsm else 0
+            cond=vals[4] if len(vals)>4 else "不明"
+            field=_int(vals[5]) if len(vals)>5 else 0
+            finish=_int(vals[7]) if len(vals)>7 else 0
+            jockey=vals[8] if len(vals)>8 else ""
+            cw=float(re.sub(r"[^0-9.]","",vals[9]) or 0) if len(vals)>9 else 0
+            tm=_jra_parse_time_seconds(vals[11] if len(vals)>11 else "")
+            rc=_jra_attr_cname(tr,JRA_RESULT_CNAME_RE)
+            rid=("jraresult-"+base64.urlsafe_b64encode(rc.encode()).decode().rstrip("=")) if rc else ""
+            out.append({"date":iso,"track":track,"title":title,"distance":dist,"surface":surface,"condition":cond or "不明","weather":"不明","fieldSize":field,"finish":finish,"timeSeconds":tm,"cornerPositions":[],"carriedWeight":cw,"jockey":jockey,"raceId":rid,"source":"JRA公式競走馬情報"})
+            if len(out)>=limit:return out
+    return out
+
+def _jra_merge_runs(a:list[dict],b:list[dict],limit:int=5)->list[dict]:
+    allr=[];seen=set()
+    for r in list(a or [])+list(b or []):
+        if not isinstance(r,dict):continue
+        key=(str(r.get("date") or ""),str(r.get("track") or ""),str(r.get("title") or ""),int(r.get("distance") or 0))
+        if key in seen:continue
+        seen.add(key);allr.append(r)
+    allr.sort(key=lambda r:str(r.get("date") or ""),reverse=True)
+    return allr[:limit]
+
+def _jra_parse_race(cname:str)->dict|None:
+    try: html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,600)
+    except Exception:return None
+    soup=BeautifulSoup(html,"html.parser")
+    full=_jra_text(soup)
+    date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
+    if not date or not track or not race_no:return None
+    sm=re.search(r"発走時刻[：:]\s*(\d{1,2})時(\d{2})分",full)
+    start=f"{int(sm.group(1)):02d}:{sm.group(2)}" if sm else ""
+    dm=re.search(r"コース[：:]\s*([\d,]+)メートル（([^）]+)）",full)
+    distance=int(dm.group(1).replace(",","")) if dm else 0
+    course_desc=dm.group(2) if dm else ""
+    surface="芝" if "芝" in course_desc else ("ダート" if "ダート" in course_desc else ("障害" if "障" in course_desc else ""))
+    weather="不明"; condition="不明"
+    wm=re.search(r"天候\s*([^\s]+)",full)
+    if wm:weather=wm.group(1)[:4]
+    cm=re.search(r"(?:芝|ダート)\s*(良|稍重|重|不良)",full)
+    if cm:condition=cm.group(1)
+    title=""
+    for node in soup.find_all(["h1","h2","h3","span"]):
+        cl=" ".join(node.get("class") or [])
+        tx=_jra_text(node)
+        if ("race_name" in cl or (node.name in ("h2","h3") and tx)) and "出馬表" not in tx and len(tx)<80:
+            if not re.match(r"^\d+レース$",tx): title=tx;break
+    if not title:title=f"{race_no}R"
+    prize1=0
+    pm=re.search(r"1着\s*([\d,.]+)",full)
+    if pm:
+        try:prize1=int(float(pm.group(1).replace(",",""))*10000)
+        except:pass
+    horses=[]
+    target_table=None
+    for table in soup.find_all("table"):
+        tx=_jra_text(table.find("thead") or table)
+        if "馬番" in tx and "前走" in tx:
+            target_table=table;break
+    if not target_table:return None
+    for tr in target_table.find_all("tr"):
+        cells=tr.find_all(["th","td"])
+        if len(cells)<4:continue
+        # horse number among first 3 cells
+        no=0; noidx=-1
+        for ci,c in enumerate(cells[:3]):
+            mt=re.fullmatch(r"\s*(\d{1,2})\s*",_jra_text(c))
+            if mt and 1<=int(mt.group(1))<=18:
+                no=int(mt.group(1));noidx=ci;break
+        if not no:continue
+        frame_no=0
+        fm=re.search(r"枠\s*(\d)",_jra_text(cells[0])+" "+str(cells[0]))
+        if fm:frame_no=int(fm.group(1))
+        # identify horse info and profile cells
+        info=None; profile=None; horse_cname=""
+        for c in cells:
+            hc=_jra_attr_cname(c,JRA_HORSE_CNAME_RE)
+            if hc:
+                info=c;horse_cname=hc;break
+        if info is None:
+            info=cells[min(len(cells)-1,noidx+1)]
+        info_i=cells.index(info)
+        profile=cells[info_i+1] if info_i+1<len(cells) else None
+        # horse name from horse profile link or first plausible link/text
+        name=""
+        for a in info.find_all("a"):
+            if _jra_attr_cname(a,JRA_HORSE_CNAME_RE):
+                name=_jra_text(a);break
+        if not name:
+            name=re.split(r"\d+(?:\.\d+)?\(?",_jra_text(info),1)[0].strip()[:40]
+        if not name:continue
+        infot=_jra_text(info); prot=_jra_text(profile)
+        sex="";age=0
+        sx=re.search(r"(牡|牝|せん)(\d+)",prot)
+        if sx:sex=sx.group(1);age=int(sx.group(2))
+        cw=0.0
+        cwm=re.search(r"(\d{2}(?:\.\d)?)\s*kg",prot)
+        if cwm:cw=float(cwm.group(1))
+        jockey=""
+        links=[_jra_text(a) for a in profile.find_all("a")] if profile else []
+        if links:jockey=links[-1]
+        if not jockey and cwm:
+            jockey=prot[cwm.end():].strip().split(" ")[0:3]
+            jockey=" ".join(jockey).strip()
+        trainer=""
+        tm=re.search(r"([^\s]+(?:\s[^\s]+)?)\((?:美浦|栗東|本会外)\)",infot)
+        if tm:trainer=tm.group(1).strip()
+        prize=0
+        prm=re.search(r"([\d,.]+)万円",infot)
+        if prm:
+            try:prize=int(float(prm.group(1).replace(",",""))*10000)
+            except:pass
+        past=[]
+        for c in cells[info_i+2:]:
+            rr=_jra_parse_past_cell(c,date)
+            if rr:past.append(rr)
+            if len(past)>=4:break
+        horses.append({"horseNumber":no,"frameNumber":frame_no or no,"name":name,"age":age,"sex":sex,"carriedWeight":cw,"jockey":jockey,"trainer":trainer,"prizeMoneyAtRace":prize,"recentRaces":past,"_jraHorseCname":horse_cname,"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{}})
+    if not horses:return None
+    # supplement to five runs from each horse's official JRA profile, in parallel
+    def supplement(h):
+        if len(h.get("recentRaces") or [])>=5:return h
+        extra=_jra_profile_runs(h.get("_jraHorseCname") or "",date,5)
+        h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],extra,5)
+        return h
+    workers=max(2,min(8,int(os.getenv("JRA_PROFILE_WORKERS","6"))))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        horses=list(pool.map(supplement,horses))
+    rid=f"jra-{date}-{track}-{race_no:02d}"
+    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":len(horses),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"horses":horses,"source":"JRA公式","jraCname":cname})
+
+def fetch_jra_official(iso_date:str)->list[dict]:
+    token=iso_date.replace("-","")
+    try: home=_jra_request("https://www.jra.go.jp/",None,120)
+    except Exception:return []
+    seeds=[]
+    for c in JRA_CNAME_RE.findall(home):
+        if token in c and c not in seeds:seeds.append(c)
+    if not seeds:return []
+    all_cnames=[]
+    # each featured race page contains the race-selector cnames for that venue/day
+    for seed in seeds:
+        try: html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",seed,180)
+        except Exception:continue
+        track=_jra_track_from_cname(seed)
+        for c in JRA_CNAME_RE.findall(html):
+            if token in c and _jra_track_from_cname(c)==track and c not in all_cnames:
+                all_cnames.append(c)
+        if seed not in all_cnames:all_cnames.append(seed)
+    # prefer the 01 detail variant; de-duplicate by track/race
+    chosen={}
+    for c in all_cnames:
+        key=(_jra_track_from_cname(c),_jra_race_no_from_cname(c))
+        if not key[0] or not key[1]:continue
+        if key not in chosen or c.startswith("pw01dde01"):
+            chosen[key]=c
+    def one(c):
+        try:return _jra_parse_race(c)
+        except Exception as exc:
+            print("JRA official race parse failed",c,exc);return None
+    workers=max(2,min(8,int(os.getenv("JRA_RACE_WORKERS","6"))))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        races=[x for x in pool.map(one,chosen.values()) if x]
+    races.sort(key=lambda r:(r.get("track") or "",int(r.get("raceNumber") or 0)))
+    return races
+
 def fetch_central_feed(iso_date: str, history: bool = False) -> list[dict]:
-    # History can use a dedicated provider endpoint. If it is not set, reuse the live feed.
+    # Prefer a licensed feed when configured. Otherwise use the official JRA website.
     base = _clean(os.getenv("CENTRAL_HISTORY_FEED_URL", "")) if history else ""
     if not base:
         base = _clean(os.getenv("CENTRAL_FEED_URL", ""))
     if not base:
-        return []
+        # JRA official fallback is intended for current/near-current racecards.
+        return fetch_jra_official(iso_date)
     if "{date}" in base:
         url = base.replace("{date}", iso_date)
     else:
         url = base + ("&" if "?" in base else "?") + "date=" + iso_date
-    headers = {"User-Agent": "KeibaPredictor/4.2", "Accept": "application/json"}
+    headers = {"User-Agent": "KeibaPredictor/6.2", "Accept": "application/json"}
     token = _clean(os.getenv("CENTRAL_HISTORY_FEED_TOKEN", "")) if history else ""
     if not token:
         token = _clean(os.getenv("CENTRAL_FEED_TOKEN", ""))
@@ -1284,7 +1577,7 @@ def health():
     return {
         "status":"ok", "mode":"production-v44-horse-order-ui-fix", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
-        "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")),
+        "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")), "jraOfficialFallback":True,
         "centralHistoryFeedConfigured":bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
         "narHistoryMonths": max(2, min(8, int(os.getenv("NAR_HISTORY_WARM_MONTHS", "4")))),
     }
@@ -1315,7 +1608,7 @@ def central_status():
         store.conn.close()
     return {
         "feedConfigured": bool(os.getenv("CENTRAL_FEED_URL")),
-        "historyFeedConfigured": bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
+        "historyFeedConfigured": bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")), "jraOfficialFallback": True,
         "historyUsesLiveFeedFallback": bool(not os.getenv("CENTRAL_HISTORY_FEED_URL") and os.getenv("CENTRAL_FEED_URL")),
         "ingestEnabled": bool(os.getenv("CENTRAL_INGEST_TOKEN")),
         "coverage": coverage,
@@ -1940,7 +2233,7 @@ def races(date: str = Query(...)):
         print(f"NAR summary read failed: {exc}"); live_local=[]
     try:
         central_rows=central_race_summaries(date)
-        if not central_rows and os.getenv("CENTRAL_FEED_URL"):
+        if not central_rows:
             try:
                 fresh_central = fetch_central_feed(date)
                 if fresh_central:
@@ -2009,7 +2302,7 @@ def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1)):
 
 @app.get("/build")
 def build_info():
-    return {"build":"v45","appVersion":"6.1-production-v45-grade-plus-marks","recentRuns":5,"marks":True,"grade":"S/A/B/C + ◎○▲☆△注","history":"NAR + central auto-search","pastRaceOpen":True,"historySpeed":"parallel+prefetch","narWorkers":int(os.getenv("NAR_HISTORY_WORKERS","4")),"centralWorkers":int(os.getenv("CENTRAL_HISTORY_WORKERS","6"))}
+    return {"build":"v46","appVersion":"6.2-production-v46-jra-official-central","recentRuns":5,"marks":True,"grade":"S/A/B/C + ◎○▲☆△注","history":"NAR + JRA公式/central feed auto-search","pastRaceOpen":True,"historySpeed":"parallel+prefetch","narWorkers":int(os.getenv("NAR_HISTORY_WORKERS","4")),"centralWorkers":int(os.getenv("CENTRAL_HISTORY_WORKERS","6"))}
 
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -2023,15 +2316,15 @@ def hero_horse():
 def pace_preview():
     return Response(PACE_PREVIEW_WEBP, media_type="image/webp", headers={"Cache-Control":"public, max-age=86400"})
 
-@app.get("/styles-v45.css")
+@app.get("/styles-v46.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"no-store, max-age=0"})
 
-@app.get("/app-v45.js")
+@app.get("/app-v46.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"no-store, max-age=0"})
 
-@app.get("/manifest-v45.webmanifest")
+@app.get("/manifest-v46.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"no-store, max-age=0"})
 
