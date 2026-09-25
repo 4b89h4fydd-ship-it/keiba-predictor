@@ -2,6 +2,7 @@ from fastapi import FastAPI, Query, Request, HTTPException
 from fastapi.responses import HTMLResponse, Response, JSONResponse
 import json
 import base64
+import calendar
 import csv
 import hashlib
 import io
@@ -13,11 +14,12 @@ import time
 import urllib.request
 import zipfile
 from dataclasses import dataclass
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date as dt_date, datetime
 from pathlib import Path
 from typing import Iterable, Iterator
 
-app = FastAPI(title="競馬展開AI", version="5.7-production-v41-github-root-five-race-grade-only")
+app = FastAPI(title="競馬展開AI", version="6.1-production-v45-grade-plus-marks")
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -28,19 +30,19 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="競馬展開AI">
-<link rel="manifest" href="/manifest-v41.webmanifest">
-<link rel="stylesheet" href="/styles-v41.css">
+<link rel="manifest" href="/manifest-v45.webmanifest">
+<link rel="stylesheet" href="/styles-v45.css">
 <title>競馬展開AI</title>
 </head>
 <body>
 <div id="app"><div class="boot">競馬展開AIを起動中…</div></div>
-<script src="/app-v41.js"></script>
+<script src="/app-v45.js"></script>
 </body>
 </html>"""
 
 CSS = r"""
 :root{--bg:#f3f5f9;--card:#fff;--text:#101828;--muted:#667085;--line:#e4e7ec;--navy:#0b1220;--blue:#2563eb;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Yu Gothic",sans-serif}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-weight:400;-webkit-text-size-adjust:100%}button,input{font:inherit;font-weight:400}.boot{padding:42px 16px;text-align:center;color:#64748b}.shell{max-width:760px;margin:0 auto;padding-bottom:calc(30px + env(safe-area-inset-bottom))}.header{position:sticky;top:0;z-index:20;background:rgba(11,18,32,.98);color:#fff;padding:calc(8px + env(safe-area-inset-top)) 10px 9px;box-shadow:0 1px 8px rgba(0,0,0,.14)}.header-row{display:flex;align-items:center;gap:8px}.header-title{min-width:0;flex:1}.header h1{font-size:18px;margin:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header small{display:block;color:#cbd5e1;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header button{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:7px 10px}.main{padding:8px;display:grid;gap:8px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:11px;box-shadow:0 1px 2px rgba(16,24,40,.03)}.section-title,.card h2{margin:0 0 8px;font-size:17px;font-weight:500}.muted{color:var(--muted)}.row{display:flex;align-items:center;gap:8px}.between{justify-content:space-between}.label{font-size:11px;color:var(--muted);margin-bottom:4px}.setup-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:8px}.date{width:100%;height:40px;border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:#fff}.segment{display:grid;grid-template-columns:1fr 1fr;gap:5px}.segment button{height:40px;border:1px solid var(--line);background:#fff;border-radius:10px}.segment button.active{background:var(--navy);color:#fff;border-color:var(--navy)}.home-heading{font-size:14px;font-weight:500;margin-bottom:8px}.pill{font-size:10px;background:#eef2f6;border-radius:999px;padding:4px 8px}.live-dot{font-size:9px;background:#fee2e2;color:#b42318;border-radius:999px;padding:4px 7px}.live-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.live-race{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px;text-align:left;min-width:0}.live-top{display:flex;justify-content:space-between;gap:5px;align-items:center}.live-track{font-size:13px}.live-title{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:4px 0}.live-time{font-size:20px}.live-tag{font-size:9px;border-radius:999px;padding:3px 5px;background:#eff6ff;color:#1d4ed8}.live-tag.now{background:#fff1f2;color:#be123c}.live-tag.running{background:#ecfdf3;color:#027a48}.empty{padding:16px 6px;text-align:center;color:var(--muted);font-size:12px}.notice{background:#fff7ed;color:#9a3412;border-radius:10px;padding:10px;font-size:12px}.ai-card{overflow:hidden;position:relative;background:linear-gradient(135deg,#0b1220,#172554 68%,#1d4ed8);color:#fff;border:0}.ai-card:after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;right:-80px;top:-80px;background:rgba(59,130,246,.25)}.ai-kicker{font-size:10px;letter-spacing:.12em;color:#93c5fd}.ai-title{font-size:22px;font-weight:600;margin:4px 0}.ai-next{font-size:13px;color:#dbeafe;margin:7px 0 10px}.ai-actions{display:grid;grid-template-columns:1fr auto;gap:7px;position:relative;z-index:1}.ai-primary,.ai-secondary{border:0;border-radius:11px;padding:10px 12px}.ai-primary{background:#fff;color:#111827}.ai-secondary{background:rgba(255,255,255,.13);color:#fff;border:1px solid rgba(255,255,255,.2)}.venue-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.venue{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px;text-align:left}.venue .name{font-size:17px}.venue .count{font-size:11px;color:var(--muted);margin-top:2px}.race-list{display:grid;gap:7px}.race{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:8px}.race.final{background:#f0fdf4;border-color:#a7f3d0}.race-main{min-width:0}.race-top{display:flex;gap:7px;align-items:baseline;min-width:0}.race-no{font-size:17px}.race-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}.race-time{font-size:12px;color:#475467;margin-top:3px}.final-badge{font-size:11px;color:#067647;border:1px solid #75e0a7;background:#fff;border-radius:6px;padding:3px 7px}.picker-list{display:grid;gap:6px}.picker-item{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px;display:flex;justify-content:space-between;align-items:center;text-align:left}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:9px}.metric{background:#f8fafc;border-radius:9px;padding:7px 2px;text-align:center}.metric b{display:block;font-size:12px;font-weight:400}.metric span{font-size:8px;color:var(--muted)}.occupancy{font-size:32px;margin:2px 0 4px}.style-list{display:grid;gap:6px}.style-row{border:1px solid var(--line);border-radius:11px;padding:8px}.style-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center}.horse-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.score{font-size:12px}.expected{font-size:9px;background:#f1f5f9;border-radius:999px;padding:3px 6px}.rates{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:6px}.rate{background:#f8fafc;border-radius:7px;text-align:center;padding:5px 1px;font-size:11px}.rate small{display:block;font-size:8px;color:var(--muted)}.frame-badge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid rgba(0,0,0,.16);font-size:13px;flex:0 0 auto}.frame1{background:#fff;color:#111}.frame2{background:#222;color:#fff}.frame3{background:#e53935;color:#fff}.frame4{background:#1e66d0;color:#fff}.frame5{background:#f5d547;color:#111}.frame6{background:#3a9b56;color:#fff}.frame7{background:#f28c28;color:#111}.frame8{background:#e894b7;color:#111}.pace-card{overflow:hidden}.pace-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.pace-stage{font-size:13px;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:4px 8px}.pace-board{position:relative;height:290px;border-radius:13px;overflow:hidden;background:linear-gradient(90deg,#e7f6e8 0 14%,#f3ead8 14% 88%,#e7f6e8 88%);border:1px solid #d0d5dd}.pace-board:before,.pace-board:after{content:"";position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.75)}.pace-board:before{left:14%}.pace-board:after{right:12%}.pace-chip{position:absolute;height:25px;display:flex;align-items:center;gap:4px;transition:left 1.25s ease,top 1.25s ease;white-space:nowrap;max-width:118px}.pace-chip .frame-badge{width:24px;height:24px;font-size:11px;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.2)}.pace-name{background:rgba(255,255,255,.93);border:1px solid rgba(0,0,0,.08);border-radius:6px;padding:3px 5px;font-size:9px;overflow:hidden;text-overflow:ellipsis;max-width:78px}.pace-legend{display:flex;gap:5px;margin-top:7px}.pace-legend button{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 2px;font-size:11px}.pace-legend button.active{background:#111827;color:#fff}.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.scenario{background:#f8fafc;border-radius:11px;padding:9px 4px;text-align:center}.scenario .prob{font-size:24px;margin:4px 0}.scenario-horses{display:flex;justify-content:center;gap:3px;flex-wrap:wrap}.scenario-horses .frame-badge{width:24px;height:24px;font-size:11px}.marks{display:grid;grid-template-columns:1fr 1fr;gap:5px}.mark{display:grid;grid-template-columns:30px 28px minmax(0,1fr);gap:5px;align-items:center;background:#f8fafc;border-radius:10px;padding:8px}.mark-symbol{font-size:18px}.mark strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.horse-card{border:1px solid var(--line);border-radius:11px;padding:9px;margin-top:6px}.horse-card summary{list-style:none;display:flex;align-items:center;gap:7px}.horse-card summary::-webkit-details-marker{display:none}.horse-detail{padding-top:8px;font-size:12px;line-height:1.5}.recent{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}.result-row{display:grid;grid-template-columns:34px 28px minmax(0,1fr) auto;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.result-row:last-child{border-bottom:0}.result-name{font-weight:700}.time-old{text-decoration:line-through;color:#98a2b3;margin-right:4px}.time-changed{color:#d92d20}.backline{font-size:11px;color:var(--muted);margin-top:4px}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-weight:400;-webkit-text-size-adjust:100%}button,input{font:inherit;font-weight:400}.boot{padding:42px 16px;text-align:center;color:#64748b}.shell{max-width:760px;margin:0 auto;padding-bottom:calc(30px + env(safe-area-inset-bottom))}.header{position:sticky;top:0;z-index:20;background:rgba(11,18,32,.98);color:#fff;padding:calc(8px + env(safe-area-inset-top)) 10px 9px;box-shadow:0 1px 8px rgba(0,0,0,.14)}.header-row{display:flex;align-items:center;gap:8px}.header-title{min-width:0;flex:1}.header h1{font-size:18px;margin:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header small{display:block;color:#cbd5e1;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header button{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:7px 10px}.main{padding:8px;display:grid;gap:8px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:11px;box-shadow:0 1px 2px rgba(16,24,40,.03)}.section-title,.card h2{margin:0 0 8px;font-size:17px;font-weight:500}.muted{color:var(--muted)}.row{display:flex;align-items:center;gap:8px}.between{justify-content:space-between}.label{font-size:11px;color:var(--muted);margin-bottom:4px}.setup-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:8px}.date{width:100%;height:40px;border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:#fff}.segment{display:grid;grid-template-columns:1fr 1fr;gap:5px}.segment button{height:40px;border:1px solid var(--line);background:#fff;border-radius:10px}.segment button.active{background:var(--navy);color:#fff;border-color:var(--navy)}.home-heading{font-size:14px;font-weight:500;margin-bottom:8px}.pill{font-size:10px;background:#eef2f6;border-radius:999px;padding:4px 8px}.live-dot{font-size:9px;background:#fee2e2;color:#b42318;border-radius:999px;padding:4px 7px}.live-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.live-race{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px;text-align:left;min-width:0}.live-top{display:flex;justify-content:space-between;gap:5px;align-items:center}.live-track{font-size:13px}.live-title{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:4px 0}.live-time{font-size:20px}.live-tag{font-size:9px;border-radius:999px;padding:3px 5px;background:#eff6ff;color:#1d4ed8}.live-tag.now{background:#fff1f2;color:#be123c}.live-tag.running{background:#ecfdf3;color:#027a48}.empty{padding:16px 6px;text-align:center;color:var(--muted);font-size:12px}.notice{background:#fff7ed;color:#9a3412;border-radius:10px;padding:10px;font-size:12px}.ai-card{overflow:hidden;position:relative;background:linear-gradient(135deg,#0b1220,#172554 68%,#1d4ed8);color:#fff;border:0}.ai-card:after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;right:-80px;top:-80px;background:rgba(59,130,246,.25)}.ai-kicker{font-size:10px;letter-spacing:.12em;color:#93c5fd}.ai-title{font-size:22px;font-weight:600;margin:4px 0}.ai-next{font-size:13px;color:#dbeafe;margin:7px 0 10px}.ai-actions{display:grid;grid-template-columns:1fr auto;gap:7px;position:relative;z-index:1}.ai-primary,.ai-secondary{border:0;border-radius:11px;padding:10px 12px}.ai-primary{background:#fff;color:#111827}.ai-secondary{background:rgba(255,255,255,.13);color:#fff;border:1px solid rgba(255,255,255,.2)}.venue-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.venue{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px;text-align:left}.venue .name{font-size:17px}.venue .count{font-size:11px;color:var(--muted);margin-top:2px}.race-list{display:grid;gap:7px}.race{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:8px}.race.final{background:#f0fdf4;border-color:#a7f3d0}.race-main{min-width:0}.race-top{display:flex;gap:7px;align-items:baseline;min-width:0}.race-no{font-size:17px}.race-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}.race-time{font-size:12px;color:#475467;margin-top:3px}.final-badge{font-size:11px;color:#067647;border:1px solid #75e0a7;background:#fff;border-radius:6px;padding:3px 7px}.picker-list{display:grid;gap:6px}.picker-item{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px;display:flex;justify-content:space-between;align-items:center;text-align:left}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:9px}.metric{background:#f8fafc;border-radius:9px;padding:7px 2px;text-align:center}.metric b{display:block;font-size:12px;font-weight:400}.metric span{font-size:8px;color:var(--muted)}.occupancy{font-size:32px;margin:2px 0 4px}.style-list{display:grid;gap:6px}.style-row{border:1px solid var(--line);border-radius:11px;padding:8px}.style-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center}.horse-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.score{font-size:12px}.expected{font-size:9px;background:#f1f5f9;border-radius:999px;padding:3px 6px}.rates{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:6px}.rate{background:#f8fafc;border-radius:7px;text-align:center;padding:5px 1px;font-size:11px}.rate small{display:block;font-size:8px;color:var(--muted)}.frame-badge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid rgba(0,0,0,.16);font-size:13px;flex:0 0 auto}.frame1{background:#fff;color:#111}.frame2{background:#222;color:#fff}.frame3{background:#e53935;color:#fff}.frame4{background:#1e66d0;color:#fff}.frame5{background:#f5d547;color:#111}.frame6{background:#3a9b56;color:#fff}.frame7{background:#f28c28;color:#111}.frame8{background:#e894b7;color:#111}.pace-card{overflow:hidden}.pace-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.pace-stage{font-size:13px;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:4px 8px}.pace-board{position:relative;height:290px;border-radius:13px;overflow:hidden;background:linear-gradient(90deg,#e7f6e8 0 14%,#f3ead8 14% 88%,#e7f6e8 88%);border:1px solid #d0d5dd}.pace-board:before,.pace-board:after{content:"";position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.75)}.pace-board:before{left:14%}.pace-board:after{right:12%}.pace-chip,.ai-race-runner{position:absolute;height:28px;display:flex;align-items:center;justify-content:center;transition:left 1.25s ease,top 1.25s ease;white-space:nowrap;z-index:2}.pace-chip .frame-badge,.ai-race-runner .frame-badge{width:28px;height:28px;font-size:12px;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.28)}.pace-name{display:none}.runner-grade-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px}.summary-chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 8px;font-size:10px;border:1px solid var(--line);background:#f8fafc;color:#344054}.summary-chip.grade{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}.summary-chip.mark{background:#fff7ed;border-color:#fed7aa;color:#9a3412;font-weight:800;font-size:12px}.summary-chip.expected{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}.runner-subline{display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;color:var(--muted);font-size:11px}.runner-detail-top{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:8px 0}.runner-style-head{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:8px}.runner-mini-score{background:#f8fafc;border-radius:10px;padding:8px;text-align:center}.runner-mini-score small{display:block;font-size:10px;color:var(--muted)}.runner-mini-score b{font-size:14px;font-weight:600}.pace-legend{display:flex;gap:5px;margin-top:7px}.pace-legend button{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 2px;font-size:11px}.pace-legend button.active{background:#111827;color:#fff}.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.scenario{background:#f8fafc;border-radius:11px;padding:9px 4px;text-align:center}.scenario .prob{font-size:24px;margin:4px 0}.scenario-horses{display:flex;justify-content:center;gap:3px;flex-wrap:wrap}.scenario-horses .frame-badge{width:24px;height:24px;font-size:11px}.marks{display:grid;grid-template-columns:1fr 1fr;gap:5px}.mark{display:grid;grid-template-columns:30px 28px minmax(0,1fr);gap:5px;align-items:center;background:#f8fafc;border-radius:10px;padding:8px}.mark-symbol{font-size:18px}.mark strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.horse-card{border:1px solid var(--line);border-radius:11px;padding:9px;margin-top:6px}.horse-card summary{list-style:none;display:flex;align-items:center;gap:7px}.horse-card summary::-webkit-details-marker{display:none}.horse-detail{padding-top:8px;font-size:12px;line-height:1.5}.recent{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}.result-row{display:grid;grid-template-columns:34px 28px minmax(0,1fr) auto;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.result-row:last-child{border-bottom:0}.result-name{font-weight:700}.time-old{text-decoration:line-through;color:#98a2b3;margin-right:4px}.time-changed{color:#d92d20}.backline{font-size:11px;color:var(--muted);margin-top:4px}
 .build-badge{font-size:9px;font-weight:800;letter-spacing:.04em;color:#67e8f9;border:1px solid rgba(103,232,249,.45);background:rgba(8,47,73,.55);border-radius:999px;padding:4px 6px;white-space:nowrap}
 @media(max-width:390px){.main{padding:6px}.card{padding:9px}.live-grid{grid-template-columns:1fr 1fr}.style-top{grid-template-columns:auto minmax(0,1fr) auto}.expected{grid-column:2/4;justify-self:start}.marks{grid-template-columns:1fr}.pace-board{height:280px}}
 
@@ -179,7 +181,7 @@ html,body{overflow-x:hidden}
 .ai-flow-card{padding:0!important;overflow:hidden;background:linear-gradient(180deg,#082750,#061b3d);border:1px solid rgba(61,145,225,.55);color:#fff;box-shadow:0 8px 24px rgba(2,20,48,.16)}
 .ai-flow-head{display:flex;align-items:flex-start;gap:9px;padding:13px 13px 9px}.ai-flow-bars{display:flex;align-items:end;gap:3px;width:29px;height:28px;flex:0 0 29px}.ai-flow-bars i{display:block;width:6px;border-radius:3px;background:#54edff;box-shadow:0 0 10px rgba(84,237,255,.32)}.ai-flow-bars i:nth-child(1){height:10px}.ai-flow-bars i:nth-child(2){height:19px}.ai-flow-bars i:nth-child(3){height:27px}.ai-flow-copy{min-width:0;flex:1}.ai-flow-title{font-size:20px;font-weight:720;line-height:1.15}.ai-flow-sub{font-size:10px;color:#b8cbe2;margin-top:3px;line-height:1.45}.ai-flow-scenario{font-size:9px;color:#dff8ff;border:1px solid rgba(88,210,255,.5);background:rgba(12,51,92,.64);border-radius:999px;padding:5px 7px;white-space:nowrap}
 .ai-stage-tabs{display:flex;gap:5px;overflow-x:auto;padding:0 10px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}.ai-stage-tabs::-webkit-scrollbar{display:none}.ai-stage-tabs button{flex:0 0 auto;border:1px solid rgba(108,169,226,.48);background:rgba(4,25,56,.62);color:#c9dbef;border-radius:999px;padding:7px 12px;font-size:10px;white-space:nowrap}.ai-stage-tabs button.active{background:linear-gradient(135deg,#156ee9,#6948ed);border-color:#57e5ff;color:#fff;box-shadow:0 0 14px rgba(54,161,255,.22)}
-.ai-race-visual{position:relative;height:275px;margin:0 10px 10px;border-radius:15px;overflow:hidden;border:1px solid rgba(83,191,240,.55);background-image:linear-gradient(180deg,rgba(4,19,41,.10),rgba(4,19,41,.02)),url('/pace-preview.webp?v=40');background-size:cover;background-position:center;box-shadow:inset 0 0 34px rgba(1,16,40,.26)}.ai-race-visual:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(2,17,39,.25),transparent 18%,transparent 82%,rgba(2,17,39,.18));pointer-events:none}.ai-race-meta{position:absolute;left:9px;top:9px;z-index:8;border:1px solid rgba(143,204,248,.48);background:rgba(2,22,50,.72);border-radius:999px;padding:5px 8px;color:#e9f7ff;font-size:9px;backdrop-filter:blur(5px)}
+.ai-race-visual{position:relative;height:275px;margin:0 10px 10px;border-radius:15px;overflow:hidden;border:1px solid rgba(83,191,240,.55);background-image:linear-gradient(180deg,rgba(4,19,41,.10),rgba(4,19,41,.02)),url('/pace-preview.webp?v=43');background-size:cover;background-position:center;box-shadow:inset 0 0 34px rgba(1,16,40,.26)}.ai-race-visual:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(2,17,39,.25),transparent 18%,transparent 82%,rgba(2,17,39,.18));pointer-events:none}.ai-race-meta{position:absolute;left:9px;top:9px;z-index:8;border:1px solid rgba(143,204,248,.48);background:rgba(2,22,50,.72);border-radius:999px;padding:5px 8px;color:#e9f7ff;font-size:9px;backdrop-filter:blur(5px)}
 .ai-race-runner{position:absolute;z-index:6;transform:translate(-50%,-50%);display:flex;align-items:center;gap:3px;transition:left .62s cubic-bezier(.2,.8,.2,1),top .62s cubic-bezier(.2,.8,.2,1);will-change:left,top;filter:drop-shadow(0 2px 2px rgba(0,0,0,.28))}.ai-race-runner .frame-badge{width:29px;height:29px;border-radius:50%;font-size:11px;border-width:2px}.ai-race-runner .pace-name{font-size:8px;max-width:70px;padding:2px 4px;background:rgba(255,255,255,.90)}.ai-race-runner .course-mark{position:absolute;left:-6px;top:-10px;background:#071a35;color:#fff;border:1px solid rgba(255,255,255,.22);border-radius:999px;font-size:9px;padding:1px 4px}.ai-race-order{position:absolute;left:8px;right:8px;bottom:8px;z-index:9;background:rgba(3,22,50,.78);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;padding:7px 8px;font-size:9px;line-height:1.45;backdrop-filter:blur(5px)}.ai-race-order b{color:#58ebff;margin-right:6px}.ai-race-order span{white-space:normal}.ai-race-note{padding:0 12px 12px;font-size:9px;color:#abc2dd;line-height:1.45}
 .scenario-diagnostics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:7px}.scenario-diagnostic{background:#f8fafc;border-radius:8px;padding:6px 4px;text-align:center}.scenario-diagnostic small{display:block;font-size:8px;color:#667085}.scenario-diagnostic b{display:block;font-size:11px;margin-top:2px;font-weight:600}.scenario-warning{margin-top:7px;padding:7px 8px;border-radius:9px;background:#fff7ed;color:#9a3412;font-size:9px;line-height:1.45}
 .front-battle-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.front-battle-box{border:1px solid #dbe3ee;background:#f8fafc;border-radius:10px;padding:8px;min-width:0}.front-battle-box small{display:block;color:#667085;font-size:8px;margin-bottom:4px}.front-battle-box b{display:block;font-size:11px;line-height:1.4}.front-battle-note{margin-top:7px;font-size:9px;line-height:1.5;color:#475467}.front-battle-alert{margin-top:6px;border-radius:9px;background:#fff7ed;color:#9a3412;padding:7px 8px;font-size:9px;line-height:1.45}
@@ -202,7 +204,7 @@ html,body{overflow-x:hidden}
 .recent{position:relative}.recent-open{margin-top:6px;width:100%;border:1px solid #bfdbfe;background:#eff6ff;color:#175cd3;border-radius:8px;padding:7px 8px;text-align:left;font-size:10px;font-weight:600}.recent-open:after{content:"›";float:right;font-size:16px;line-height:10px}.past-race-badge{font-size:9px;border-radius:999px;padding:4px 7px;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
 @media(max-width:390px){.overall-grade{min-width:22px;height:22px;font-size:11px}.overall-grade.grade-hold{min-width:32px;font-size:8px}.ai-race-axis{top:39px}.ai-race-axis span{font-size:9px;padding:4px 6px}.ai-race-axis:before{left:54px;right:68px}}
 
-/* v41 clean home pace preview — no photo */
+/* v42 clean home pace preview — no photo */
 .mini-flow-demo{background:linear-gradient(180deg,#0b2a52,#0a2344)!important;position:relative}
 .mini-flow-axis{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;align-items:center;color:#dff5ff;font-size:9px;z-index:3}.mini-flow-axis b{font-size:10px;color:#67e8f9}
 .mini-flow-line{position:absolute;left:9%;right:9%;top:58%;height:4px;border-radius:99px;background:linear-gradient(90deg,rgba(103,232,249,.12),rgba(103,232,249,.7));box-shadow:0 0 18px rgba(56,189,248,.18)}
@@ -249,13 +251,13 @@ function coursePathD(p){if(p.shape==="straight")return "M18 92 L182 92";if(p.sha
 function normFrac(x){x=x%1;return x<0?x+1:x}
 function courseStageFrac(r,st){var p=courseProfile(r);if(p.shape==="straight")return st===0?.05:(st===1?.67:.92);var laps=Math.max(.1,n(r.distance,1200)/p.lap),start=normFrac(.965-p.dir*(laps%1)),prog=st===0?.015:(st===1?.81:.965);return normFrac(start+p.dir*laps*prog)}
 var app=document.getElementById("app");
-var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,historyTimer:null,raceStack:[]};
+var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,historyTimer:null,raceStack:[],historyPrefetch:{}};
 
-function cacheKey(d){return "keiba:v41:races:"+d}
+function cacheKey(d){return "keiba:v45:races:"+d}
 function loadRaceCache(d){try{var raw=localStorage.getItem(cacheKey(d));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(Date.now()-n(x.ts)>6*3600000)return null;return x.rows}catch(e){return null}}
 function saveRaceCache(d,rows){try{localStorage.setItem(cacheKey(d),JSON.stringify({ts:Date.now(),rows:rows}))}catch(e){}}
 function clearOldPwa(){try{if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(function(rs){for(var i=0;i<rs.length;i++)rs[i].unregister()}).catch(function(){});if(window.caches)caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).catch(function(){})}catch(e){}}
-function today(){var d=new Date(Date.now()+9*3600000);return d.toISOString().slice(0,5)}
+function today(){var d=new Date(Date.now()+9*3600000);return d.toISOString().slice(0,10)}
 function esc(v){return String(v==null?"":v).replace(/[&<>\"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]})}
 function n(v,d){var x=Number(v);return isFinite(x)?x:(d||0)}
 function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
@@ -272,7 +274,7 @@ function isFinal(r){return !!(r&&r.result&&(r.result.status==="確定"||(r.resul
 function mins(t){var m=String(t||"").match(/^(\d{1,2}):(\d{2})/);return m?n(m[1])*60+n(m[2]):9999}
 function nowMins(){var d=new Date(Date.now()+9*3600000);return d.getUTCHours()*60+d.getUTCMinutes()}
 function timeHtml(r){var a=String(r.startTime||"—"),o=String(r.scheduledStartTime||a),c=!!r.startTimeChanged||(a!==o&&a!=="—"&&o!=="—");return c?'<span class="time-old">'+esc(o)+'</span><span class="time-changed">'+esc(a)+' 修正</span>':esc(a)}
-function header(title,back,sub){return '<header class="header"><div class="header-row">'+(back?'<button data-action="back">‹</button>':'')+'<div class="header-title"><h1>'+esc(title)+'</h1>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div><span class="build-badge">v41</span><button data-action="reload">↻</button></div></header>'}
+function header(title,back,sub){return '<header class="header"><div class="header-row">'+(back?'<button data-action="back">‹</button>':'')+'<div class="header-title"><h1>'+esc(title)+'</h1>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div><span class="build-badge">v45</span><button data-action="reload">↻</button></div></header>'}
 function recencyWeights(len){var a=[],i;for(i=0;i<len;i++)a.push(Math.pow(.82,i));return a}
 function weightedRate(vals,weights,def){var s=0,w=0,i;for(i=0;i<vals.length;i++){if(vals[i]==null)continue;var q=weights&&weights[i]!=null?weights[i]:1;s+=n(vals[i])*q;w+=q}return w?s/w:(def==null?.5:def)}
 function raceField(rr){return Math.max(4,n(rr&&rr.fieldSize,12))}
@@ -347,7 +349,8 @@ function rowsFromPack(rows,pack){var map={};for(var i=0;i<rows.length;i++)map[n(
 function scenarioPlan(r,rows,sc,suit){var scenario=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],code=scenario.code,p=pressureInfo(rows),ct=courseTraits(r),S=[{},{},{},{},{},{}],L=[{},{},{},{},{},{}],i,x,no,q,scfit,markScore={},leadLoad;for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);q=p[no]||{};leadLoad=x.goProb*(.045+.055*x.needLead)+x.frontCost*.13;S[0][no]=x.breakSkill*.26+x.ten*.26+x.goProb*.27+x.needLead*.08+x.jockeyFront*.05+(q.freeOuter||0)*.06-x.frontCost*.10;L[0][no]=clamp(Math.round((x.draw-.5)*5),-3,3);S[1][no]=S[0][no]*.40+x.goProb*.17+x.holdFront*.13+x.turnSkill*.11+x.flexibility*.06+x.ability*.08-x.frontCost*.09-x.outerStress*.05;L[1][no]=clamp(L[0][no]+(x.edge&&x.goProb>.55?-1:0)+(q.sandwich&&x.flexibility<.45?1:0),-3,3);scfit=scenarioSuit(x,code,p);S[2][no]=S[1][no]*.31+x.ability*.16+x.holdFront*.15+x.stamina*.13+x.stalk*.07+x.mid*.04+scfit*.11-(code==='C'?leadLoad*.12:leadLoad*.05)+(code==='A'?x.goProb*.06:0);L[2][no]=clamp(L[1][no]+(x.move>.52&&x.goProb<.46?1:0),-3,3);S[3][no]=S[2][no]*.27+x.ability*.16+x.move*.16+x.turnSkill*.11+scfit*.14+x.latePower*.09+x.holdFront*.04-(x.fade*x.goProb)*(code==='C'?.09:.04);L[3][no]=clamp(L[2][no]+(x.move>.56?1:0),-3,3);S[4][no]=S[3][no]*.24+scfit*.20+x.ability*.18+x.holdFront*.11+x.move*.10+x.latePower*.10+(1-x.fade)*.05-(q.sandwich||0)*.025;L[4][no]=clamp(L[3][no]+(x.latePower>.61?1:0),-3,3);var su=suit[no]||{rankScore:.5};markScore[no]=S[4][no]*.31+su.rankScore*.42+x.ability*.10+x.latePower*.08+x.stamina*.05+x.coverage*.02+(1-x.fade)*.02;if(code==='A')markScore[no]+=x.frontStay*.045;if(code==='C')markScore[no]+=x.comeFromBehind*.045;S[5][no]=markScore[no];L[5][no]=L[4][no]}var labels=['スタート','1コーナー','向正面','3コーナー','4コーナー','直線'],packs=[],stages=[];for(i=0;i<6;i++){packs[i]=packScenarioStage(r,rows,S[i],L[i],i);stages.push({key:['start','first','back','turn3','turn4','straight'][i],label:labels[i],pack:packs[i]})}return{scenario:scenario,stages:stages,start:rowsFromPack(rows,packs[0]),corner:rowsFromPack(rows,packs[4]),straight:rowsFromPack(rows,packs[5]),markScore:markScore}}
 function gradeClass(g){return g==='S'?'grade-s':(g==='A'?'grade-a':(g==='B'?'grade-b':(g==='C'?'grade-c':'grade-hold')))}
 function assignOverallGrades(rows,suit,sc,pressure){var eligible=[],i,x,no,su,cnt,fitVals,fitScore,raw;for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);su=suit[no]||{overall:.5};cnt=x.fit&&x.fit.counts||{};fitVals=[];if(n(cnt.distance))fitVals.push(confidenceBlend(x.fit.distance,cnt.distance));if(n(cnt.track))fitVals.push(confidenceBlend(x.fit.track,cnt.track));if(n(cnt.condition))fitVals.push(confidenceBlend(x.fit.condition,cnt.condition));fitScore=fitVals.length?mean(fitVals):.5;raw=x.ability*.29+n(su.overall,.5)*.27+Math.max(x.frontStay,x.comeFromBehind)*.13+fitScore*.10+x.stamina*.06+(1-x.fade)*.05+x.posCons*.04+x.coverage*.06;raw=clamp(raw,0,1);x.overallRaw=raw;x.overallReasons=[];if((x.horse.recentRaces||[]).length<2||x.styleSamples<2){x.overallGrade='保留';x.overallScore=null;x.overallReasons=['実データ不足'];continue}if(x.ability>=.62)x.overallReasons.push('能力評価高め');if(n(su.overall)>=.62)x.overallReasons.push('展開適性高め');if(x.frontStay>=.64)x.overallReasons.push('前残り力');if(x.comeFromBehind>=.64)x.overallReasons.push('差し込み力');if(x.fade<=.25)x.overallReasons.push('下がり率低め');if(fitVals.length&&fitScore>=.58)x.overallReasons.push('今回条件に実績');if(x.frontCost>=.12)x.overallReasons.push('隣接圧力注意');if(x.fade>=.50)x.overallReasons.push('下がり率注意');if(x.coverage<.45)x.overallReasons.push('データ量少なめ');eligible.push(x)}if(!eligible.length)return;var lo=Math.min.apply(null,eligible.map(function(z){return z.overallRaw})),hi=Math.max.apply(null,eligible.map(function(z){return z.overallRaw}));eligible.forEach(function(z){var rel=hi===lo?.5:(z.overallRaw-lo)/(hi-lo);z.overallScore=Math.round(clamp(z.overallRaw*.78+(.45+.55*rel)*.22,0,1)*100)});eligible.sort(function(a,b){return b.overallScore-a.overallScore||b.ability-a.ability||n(a.horse.horseNumber)-n(b.horse.horseNumber)});var m=eligible.length;eligible.forEach(function(z,rank){var pct=(rank+1)/m,score=z.overallScore;if((score>=82)||(pct<=.12&&score>=70))z.overallGrade='S';else if((score>=72)||(pct<=.35&&score>=64))z.overallGrade='A';else if((score>=60)||(pct<=.70))z.overallGrade='B';else z.overallGrade='C';if(!z.overallReasons.length)z.overallReasons.push('総合バランス型')})}
-function predict(r){var rows=buildRows(r),occ=earlyOcc(r),sc=scenarioModel(r,rows),suit=suitability(rows,sc),pressure=pressureInfo(rows),plan=scenarioPlan(r,rows,sc,suit),i;assignOverallGrades(rows,suit,sc,pressure);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse})}var cov=mean(rows.map(function(x){return x.coverage}));return{rows:rows,occ:occ,scenarios:sc,plan:plan,suit:suit,coverage:cov,pressure:pressure}}
+function assignPredictionMarks(rows){var syms=["◎","○","▲","☆","△","注"],eligible=rows.filter(function(x){return x.overallScore!=null&&x.overallGrade!=="保留"}).slice().sort(function(a,b){return n(b.overallScore)-n(a.overallScore)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});rows.forEach(function(x){x.predMark=""});eligible.slice(0,syms.length).forEach(function(x,i){x.predMark=syms[i]})}
+function predict(r){var rows=buildRows(r),occ=earlyOcc(r),sc=scenarioModel(r,rows),suit=suitability(rows,sc),pressure=pressureInfo(rows),plan=scenarioPlan(r,rows,sc,suit),i;assignOverallGrades(rows,suit,sc,pressure);assignPredictionMarks(rows);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse})}var cov=mean(rows.map(function(x){return x.coverage}));return{rows:rows,occ:occ,scenarios:sc,plan:plan,suit:suit,coverage:cov,pressure:pressure}}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -357,7 +360,7 @@ function renderHome(){var all=state.circuit==="中央"?CENTRAL:LOCAL,venues=[],i
 var live=liveRaces(),liveHtml="";if(state.loading)liveHtml='<div class="home-empty">読込中…</div>';else if(state.date!==today())liveHtml='<div class="home-empty">当日を選ぶとリアルタイム表示します</div>';else if(live.length)liveHtml='<div class="home-live-grid">'+live.map(function(r){var tag=liveTag(r),urgent=tag.indexOf('running')>=0?' urgent':'';return '<button class="home-live-race'+urgent+'" data-race="'+esc(r.id)+'"><div class="live-top">'+tag+'<span class="home-arrow">›</span></div><div class="home-race-line"><span class="home-track">'+esc(r.track)+'</span><span class="home-rno">'+esc(r.raceNumber)+'R</span></div><div class="home-rtitle">'+esc(r.title||"")+'</div><div class="home-rtime">'+timeHtml(r)+'</div></button>'}).join("")+'</div>';else liveHtml='<div class="home-empty">直近の未確定レースはありません</div>';
 var vh=venues.length?'<div class="home-venue-grid">'+venues.slice(0,4).map(function(v){return '<button class="home-venue" data-track="'+esc(v[0])+'">'+homeVenueMark(v[0])+'<span class="home-venue-name">'+esc(v[0])+'</span><span class="home-venue-count">'+v[1]+'レース</span><span class="home-arrow">›</span></button>'}).join("")+'</div>':'<div class="home-empty">'+(state.error?esc(state.error):(state.circuit==="中央"?"中央データ源未接続、または開催データなし":"この日の取得データはありません"))+'</div>';
 var nx=nextRace(),aiButtons=nx?'<div class="home-ai-actions"><button class="home-ai-select" data-action="pace-pick">選択</button><button class="home-ai-go" data-action="pace-next">展開を見る ›</button></div>':'<div class="home-ai-actions"><button class="home-ai-select" data-action="pace-pick">選択</button></div>';
-return '<div class="home-shell"><div class="home-hero"><img class="hero-horse" src="/hero-horse.webp?v=40" alt=""><div class="brand-wrap"><div class="brand-main">競馬展開<span class="ai">AI</span></div><div class="brand-sub">Race Intelligence · v41</div></div><button class="hero-refresh" data-action="reload"><span class="refresh-icon">↻</span><small>更新</small></button></div><main class="home-main">'+
+return '<div class="home-shell"><div class="home-hero"><img class="hero-horse" src="/hero-horse.webp?v=45" alt=""><div class="brand-wrap"><div class="brand-main">競馬展開<span class="ai">AI</span></div><div class="brand-sub">Race Intelligence · v45</div></div><button class="hero-refresh" data-action="reload"><span class="refresh-icon">↻</span><small>更新</small></button></div><main class="home-main">'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">▣</span>日付・開催区分</div></div><div class="home-date-row"><div class="home-date-wrap"><input id="date" class="home-date" type="date" value="'+esc(state.date)+'"></div><div class="home-segment"><button data-circuit="中央" class="'+(state.circuit==="中央"?"active":"")+'">中央</button><button data-circuit="地方" class="'+(state.circuit==="地方"?"active":"")+'">地方</button></div></div></section>'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">◉</span>リアルタイムのレース</div><span class="home-link">すべて見る</span></div>'+liveHtml+'</section>'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">●</span>開催場</div><span class="home-link">すべて見る</span></div>'+vh+'</section>'+
@@ -379,20 +382,18 @@ function styleDisplayPcts(x){if(!x||!n(x.styleSamples))return[null,null,null,nul
 function styleCell(label,val,active,cls){var unk=val==null||!isFinite(Number(val));return '<div class="style-rate '+cls+(active?' dominant':'')+(unk?' unknown':'')+'"><div class="style-rate-head"><span>'+label+'</span><b>'+(unk?'—':val+'%')+'</b></div><div class="style-bar"><i style="width:'+(unk?0:Math.max(2,val))+'%"></i></div></div>'}
 function positionBucket(x){if(x.expected==="逃げ候補")return"逃げ候補";if(x.expected==="先行")return"先行";if(x.expected==="好位")return"好位";if(x.expected==="後方")return"後方";if(x.expected==="不明")return"不明";return"中団"}
 function stylePositionMap(r,p){var rows=p.rows||[],labels=['逃げ候補','先行','好位','中団','後方','不明'],field=Math.max(1,(r.horses||[]).length),html='<div class="style-position-map"><div class="style-map-axis"><span>内枠</span><b>今回の枠順 × 想定位置</b><span>外枠</span></div>';for(var j=0;j<labels.length;j++){var lab=labels[j];html+='<div class="style-lane"><div class="style-lane-label">'+lab+'</div><div class="style-lane-track">';for(var i=0;i<rows.length;i++){var x=rows[i],h=x.horse;if(positionBucket(x)!==lab)continue;var left=field<=1?50:6+(n(h.horseNumber)-1)/Math.max(1,field-1)*88,shift=x.pastStyle!==x.expected&&!(x.pastStyle==='先行'&&x.expected==='好位');html+='<span class="style-map-horse'+(shift?' shifted':'')+'" style="left:'+left+'%" title="'+esc(h.name)+'｜過去 '+esc(x.pastStyle)+' → 今回 '+esc(x.expected)+'">'+badge(h)+'</span>'}html+='</div></div>'}html+='<div class="style-map-note"><b>水色縁</b>＝過去脚質から今回条件で位置想定が動いた馬。馬番位置は内→外の枠順を維持。</div></div>';return html}
-function runnerStyleSection(r,p){var rows=p.rows.slice().sort(function(a,b){return a.score-b.score||n(a.horse.horseNumber)-n(b.horse.horseNumber)});return'<section class="card runner-map-card"><div class="section-title-row"><div><div class="section-title">出走馬表 × 脚質マップ</div><div class="section-sub">脚質点昇順。過去脚質と今回の枠順・テン・隣接圧力を分離して表示</div></div><span class="map-hint">逃 / 先 / 差 / 追 / 下</span></div>'+stylePositionMap(r,p)+'<div class="runner-style-list">'+rows.map(function(x){var h=x.horse,fit=x.fit||{},cnt=fit.counts||{},j=h.jockeyProfile||{},t=h.trainerProfile||{},ps=styleDisplayPcts(x),mx=Math.max.apply(null,ps),fade=x.styleSamples?Math.round(x.fade*100):null,q=p.pressure&&p.pressure[n(h.horseNumber)]||{};function fitVal(k){return Math.round(confidenceBlend(fit[k],cnt[k])*100)}function fitText(k){return n(cnt[k])?fitVal(k)+' / '+n(cnt[k])+'走':'— / 0走'}var recent=(h.recentRaces||[]).slice(0,5),distTxt=x.shorten?'短縮 '+Math.abs(x.distanceChange)+'m':(x.lengthen?'延長 '+Math.abs(x.distanceChange)+'m':'同距離帯'),pressureTxt=(q.sandwich?'逃げハサミ警戒':((q.leftHot||q.rightHot)?'逃げ横あり':'隣接圧力弱め'));return'<details class="runner-style"><summary><div class="runner-line"><div class="runner-id">'+badge(h)+'</div><div class="runner-copy"><div class="runner-name-line">'+'<span class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'保留')+'</span><span class="horse-name">'+esc(h.name)+'</span><span class="expected">'+esc(x.expected)+'</span></div><div class="runner-subline"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span>'+esc(h.carriedWeight||'—')+'kg</span><span>'+esc(h.jockey||'騎手不明')+'</span></div></div><span class="open-caret">⌄</span></div><div class="style-rate-grid five-rates">'+styleCell('逃',ps[0],ps[0]===mx,'front')+styleCell('先',ps[1],ps[1]===mx,'stalk')+styleCell('差',ps[2],ps[2]===mx,'mid')+styleCell('追',ps[3],ps[3]===mx,'close')+styleCell('下',fade,fade!=null&&fade>=55,'fade')+'</div><div class="runner-score-row"><div class="runner-score-chip"><small>脚質点</small><b>'+(x.styleSamples?x.score.toFixed(2):'—')+'</b></div><div class="runner-score-chip"><small>前へ行く</small><b>'+(x.styleSamples?Math.round(x.goProb*100)+'%':'—')+'</b></div><div class="runner-score-chip"><small>テン</small><b>'+(x.styleSamples?Math.round(x.ten*100):'—')+'</b></div><div class="runner-score-chip"><small>前残り力</small><b>'+(x.styleSamples?Math.round(x.frontStay*100):'—')+'</b></div></div></summary><div class="horse-detail"><div class="overall-summary"><div class="overall-summary-head"><b>AI総合評価</b><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'保留')+'</strong><span>'+(x.overallScore==null?'判定保留':('総合 '+x.overallScore))+'</span></div><div class="overall-reasons">'+(x.overallReasons||[]).map(function(z){var warn=String(z).indexOf('注意')>=0||String(z).indexOf('不足')>=0;return'<i class="'+(warn?'warn':'good')+'">'+esc(z)+'</i>'}).join('')+'</div></div><div class="detail-heading">基本情報</div><div class="horse-info-grid"><div class="horse-info-cell"><small>馬番 / 枠</small><b>'+esc(h.horseNumber)+'番 / '+esc(h.frameNumber||frame(h))+'枠</b></div><div class="horse-info-cell"><small>性齢 / 斤量</small><b>'+esc(h.sex||'—')+esc(h.age||'—')+' / '+esc(h.carriedWeight||'—')+'kg</b></div><div class="horse-info-cell"><small>騎手</small><b>'+esc(h.jockey||'—')+'</b></div><div class="horse-info-cell"><small>調教師</small><b>'+esc(h.trainer||'—')+'</b></div><div class="horse-info-cell"><small>当時獲得賞金</small><b>'+((h.recentRaces||[]).length||n(h.prizeMoneyAtRace)>0?fmtMoney(h.prizeMoneyAtRace)+'円':'—')+'</b></div><div class="horse-info-cell"><small>今回の位置想定</small><b>'+esc(x.pastStyle)+' → '+esc(x.expected)+'</b></div><div class="horse-info-cell"><small>距離変更</small><b>'+esc(distTxt)+'</b></div><div class="horse-info-cell"><small>前走の前進区分</small><b>'+esc(firstThreeType(h))+'</b></div></div><div class="detail-heading">今回の位置取り診断</div><div class="pressure-grid"><div class="pressure-chip '+(q.leftHot?'danger':'safe')+'"><small>内隣圧力</small><b>'+Math.round(n(q.left)*100)+'%</b></div><div class="pressure-chip '+(q.rightHot?'danger':'safe')+'"><small>外隣圧力</small><b>'+Math.round(n(q.right)*100)+'%</b></div><div class="pressure-chip '+(q.sandwich?'danger':'')+'"><small>逃げハサミ</small><b>'+(q.sandwich?'成立警戒':'なし')+'</b></div><div class="pressure-chip"><small>判定</small><b>'+esc(pressureTxt)+'</b></div><div class="pressure-chip"><small>最初から3番手内</small><b>'+(x.styleSamples?Math.round(x.early3*100)+'%':'—')+'</b></div><div class="pressure-chip"><small>途中から3番手内</small><b>'+(x.styleSamples?Math.round(x.moved3*100)+'%':'—')+'</b></div><div class="pressure-chip"><small>差し上げ力</small><b>'+Math.round(x.comeFromBehind*100)+'</b></div><div class="pressure-chip"><small>下がり率</small><b>'+(fade==null?'—':fade+'%')+'</b></div></div><div class="detail-heading">今回条件への適性</div><div class="fit-grid"><div class="fit-chip"><small>距離</small><b>'+fitText('distance')+'</b></div><div class="fit-chip"><small>競馬場</small><b>'+fitText('track')+'</b></div><div class="fit-chip"><small>馬場</small><b>'+fitText('condition')+'</b></div><div class="fit-chip"><small>天候</small><b>'+fitText('weather')+'</b></div><div class="fit-chip"><small>季節</small><b>'+fitText('season')+'</b></div><div class="fit-chip"><small>相手レベル</small><b>'+fitText('level')+'</b></div></div>'+roleDetail('騎手成績',h.jockeyStats,j)+roleDetail('調教師成績',h.trainerStats,t)+'<div class="recent-list-title">近走データ（直近5走）</div>'+(recent.length?recent.map(function(rr){var rid=rr.raceId||((r.circuit==='地方'&&rr.date&&rr.track&&n(rr.raceNumber))?('nar-'+rr.date+'-'+rr.track+'-'+String(n(rr.raceNumber)).padStart(2,'0')):'');return'<div class="recent"><div class="recent-head"><b>'+esc(rr.date)+' '+esc(rr.track)+' '+(n(rr.raceNumber)?esc(rr.raceNumber)+'R ':'')+esc(rr.distance)+'m</b><strong>'+esc(rr.finish||'—')+'着</strong></div><div>'+fmtTime(rr.timeSeconds)+'　'+esc(rr.condition||'不明')+' / '+esc(rr.weather||'不明')+'</div><div class="muted">'+(rr.title?esc(rr.title)+'　':'')+'通過 '+esc((rr.cornerPositions||[]).join('-')||'—')+'　頭数 '+esc(rr.fieldSize||'—')+(n(rr.carriedWeight)>0?'　斤量 '+esc(rr.carriedWeight)+'kg':'')+(n(rr.racePrize1)>0?'　1着賞金 '+fmtMoney(rr.racePrize1):'')+(rr.jockey?'　騎手 '+esc(rr.jockey):'')+(rr.trainer?'　調教師 '+esc(rr.trainer):'')+'</div>'+(rid?'<button type="button" class="recent-open" data-past-race="'+esc(rid)+'">この過去レースを見る</button>':'')+'</div>'}).join(''):'<div class="empty compact">過去データを確認できませんでした</div>')+'</div></details>'}).join('')+'</div></section>'}
-function scenarioProbabilitySection(p){var top=p.scenarios.slice().sort(function(a,b){return b.prob-a.prob})[0],front=p.rows.filter(function(x){return x.goProb>=.52}),sand=front.filter(function(x){return x.sandwichRisk}).length,highFade=front.filter(function(x){return x.fade>=.50}).length,occ=p.occ||{rate:0,early:[],moved:[]},warn=[];if(sand)warn.push('逃げハサミ警戒 '+sand+'頭');if(highFade>=2)warn.push('前へ行く馬の高下がり率 '+highFade+'頭 → 差し馬を再検査');if(!warn.length)warn.push('単純な先行頭数ではなく、枠順・隣接圧力・残り性能から展開判定');return'<section class="card pace-card"><div class="section-title">展開シナリオ</div><div class="scenario-prob-grid">'+p.scenarios.map(function(s){return'<div class="scenario-prob-card '+(s.code===top.code?'active':'')+'"><small>'+s.code+'</small><b>'+esc(s.title)+'</b><strong>'+Math.round(s.prob*100)+'%</strong></div>'}).join('')+'</div><div class="scenario-main-note"><span>本線シナリオ</span><b>'+esc(top.code)+' '+esc(top.title)+'　'+Math.round(top.prob*100)+'%</b></div><div class="scenario-diagnostics"><div class="scenario-diagnostic"><small>先行馬占有率</small><b>'+Math.round(occ.rate*100)+'%</b></div><div class="scenario-diagnostic"><small>最初から前</small><b>'+occ.early.length+'頭</b></div><div class="scenario-diagnostic"><small>途中から上昇</small><b>'+occ.moved.length+'頭</b></div><div class="scenario-diagnostic"><small>今回前候補</small><b>'+front.length+'頭</b></div></div><div class="scenario-warning">'+warn.map(esc).join(' / ')+'</div></section>'}
-function rowName(x){return x&&x.horse?(x.horse.horseNumber+' '+x.horse.name):'—'}
-function frontBattleData(p){var rows=p.rows||[],front=rows.filter(function(x){return x.goProb>=.45}).slice(),leader=front.slice().sort(function(a,b){function z(x){return x.goProb*.38+x.ten*.27+x.needLead*.20+x.front*.10-x.frontCost*.16}return z(b)-z(a)}),second=front.slice().sort(function(a,b){return (b.goProb*.26+b.stalk*.28+b.flexibility*.20+b.holdFront*.16)-(a.goProb*.26+a.stalk*.28+a.flexibility*.20+a.holdFront*.16)}),good=rows.filter(function(x){return x.expected==='好位'||x.expected==='先行'}).slice().sort(function(a,b){return (b.ability*.35+b.holdFront*.25+b.trafficTol*.20+b.goProb*.20)-(a.ability*.35+a.holdFront*.25+a.trafficTol*.20+a.goProb*.20)}),nums=front.map(function(x){return n(x.horse.horseNumber)}).sort(function(a,b){return a-b}),adj=0,i;for(i=1;i<nums.length;i++)if(nums[i]-nums[i-1]===1)adj++;var pattern=front.length<2?'単独寄り':(adj>=Math.max(1,front.length-2)?'先行列が連続':(adj===0?'先行馬が飛び飛び':'一部で先行馬が連続')),sand=front.filter(function(x){return x.sandwichRisk}),fade=front.filter(function(x){return x.fade>=.50});return{leader:leader,second:second,good:good,front:front,pattern:pattern,sand:sand,fade:fade}}
-function frontBattleSection(p){var d=frontBattleData(p),hana=d.leader.slice(0,3).map(rowName).join(' / ')||'—',second=d.second.filter(function(x){return !d.leader.length||x.horse.horseNumber!==d.leader[0].horse.horseNumber}).slice(0,3).map(rowName).join(' / ')||'—',good=d.good.slice(0,3).map(rowName).join(' / ')||'—',alerts=[];if(d.sand.length)alerts.push('逃げハサミ: '+d.sand.map(rowName).join('・'));if(d.fade.length>=2)alerts.push('前候補の高下がり率: '+d.fade.map(rowName).join('・'));return'<section class="card"><div class="section-title">今回、本当に前へ行く馬</div><div class="front-battle-grid"><div class="front-battle-box"><small>ハナ候補</small><b>'+esc(hana)+'</b></div><div class="front-battle-box"><small>2番手候補</small><b>'+esc(second)+'</b></div><div class="front-battle-box"><small>好位候補</small><b>'+esc(good)+'</b></div></div><div class="front-battle-note"><b>先行列:</b> '+esc(d.pattern)+'　/　今回前候補 '+d.front.length+'頭。頭数だけで前崩れ判定はしません。</div>'+(alerts.length?'<div class="front-battle-alert">'+alerts.map(esc).join(' / ')+'</div>':'')+'</section>'}
+function runnerStyleSection(r,p){var rows=p.rows.slice().sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)});return'<section class="card runner-map-card"><div class="section-title-row"><div><div class="section-title">出走馬表 × 脚質マップ</div><div class="section-sub">馬番順。名前の下に総合評価、脚質点などの詳細はタップで表示</div></div><span class="map-hint">逃 / 先 / 差 / 追 / 下</span></div>'+stylePositionMap(r,p)+'<div class="runner-style-list">'+rows.map(function(x){var h=x.horse,fit=x.fit||{},cnt=fit.counts||{},j=h.jockeyProfile||{},t=h.trainerProfile||{},ps=styleDisplayPcts(x),mx=Math.max.apply(null,ps),fade=x.styleSamples?Math.round(x.fade*100):null,q=p.pressure&&p.pressure[n(h.horseNumber)]||{};function fitVal(k){return Math.round(confidenceBlend(fit[k],cnt[k])*100)}function fitText(k){return n(cnt[k])?fitVal(k)+' / '+n(cnt[k])+'走':'— / 0走'}var recent=(h.recentRaces||[]).slice(0,5),distTxt=x.shorten?'短縮 '+Math.abs(x.distanceChange)+'m':(x.lengthen?'延長 '+Math.abs(x.distanceChange)+'m':'同距離帯'),pressureTxt=(q.sandwich?'逃げハサミ警戒':((q.leftHot||q.rightHot)?'逃げ横あり':'隣接圧力弱め'));return'<details class="runner-style"><summary><div class="runner-line"><div class="runner-id">'+badge(h)+'</div><div class="runner-copy"><div class="runner-name-line"><span class="horse-name">'+esc(h.name)+'</span></div><div class="runner-grade-line"><span class="summary-chip grade">総合評価 '+esc(x.overallGrade||'保留')+'</span>'+(x.predMark?'<span class="summary-chip mark">印 '+esc(x.predMark)+'</span>':'')+'<span class="summary-chip expected">位置想定 '+esc(x.expected)+'</span>'+(x.overallScore==null?'':'<span class="summary-chip">総合 '+x.overallScore+'</span>')+'</div><div class="runner-subline"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span>'+esc(h.carriedWeight||'—')+'kg</span><span>'+esc(h.jockey||'騎手不明')+'</span></div></div><span class="open-caret">⌄</span></div></summary><div class="horse-detail"><div class="overall-summary"><div class="overall-summary-head"><b>AI総合評価</b><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'保留')+'</strong><span>'+(x.overallScore==null?'判定保留':('総合 '+x.overallScore))+'</span></div><div class="overall-reasons">'+(x.overallReasons||[]).map(function(z){var warn=String(z).indexOf('注意')>=0||String(z).indexOf('不足')>=0;return'<i class="'+(warn?'warn':'good')+'">'+esc(z)+'</i>'}).join('')+'</div></div><div class="detail-heading">脚質・位置取り指標</div><div class="runner-style-head">'+styleCell('逃',ps[0],ps[0]===mx,'front')+styleCell('先',ps[1],ps[1]===mx,'stalk')+styleCell('差',ps[2],ps[2]===mx,'mid')+styleCell('追',ps[3],ps[3]===mx,'close')+styleCell('下',fade,fade!=null&&fade>=55,'fade')+'</div><div class="runner-detail-top"><div class="runner-mini-score"><small>脚質点</small><b>'+(x.styleSamples?x.score.toFixed(2):'—')+'</b></div><div class="runner-mini-score"><small>前へ行く</small><b>'+(x.styleSamples?Math.round(x.goProb*100)+'%':'—')+'</b></div><div class="runner-mini-score"><small>テン</small><b>'+(x.styleSamples?Math.round(x.ten*100):'—')+'</b></div><div class="runner-mini-score"><small>前残り力</small><b>'+(x.styleSamples?Math.round(x.frontStay*100):'—')+'</b></div></div><div class="detail-heading">基本情報</div><div class="horse-info-grid"><div class="horse-info-cell"><small>馬番 / 枠</small><b>'+esc(h.horseNumber)+'番 / '+esc(h.frameNumber||frame(h))+'枠</b></div><div class="horse-info-cell"><small>性齢 / 斤量</small><b>'+esc(h.sex||'—')+esc(h.age||'—')+' / '+esc(h.carriedWeight||'—')+'kg</b></div><div class="horse-info-cell"><small>騎手</small><b>'+esc(h.jockey||'—')+'</b></div><div class="horse-info-cell"><small>調教師</small><b>'+esc(h.trainer||'—')+'</b></div><div class="horse-info-cell"><small>当時獲得賞金</small><b>'+((h.recentRaces||[]).length||n(h.prizeMoneyAtRace)>0?fmtMoney(h.prizeMoneyAtRace)+'円':'—')+'</b></div><div class="horse-info-cell"><small>今回の位置想定</small><b>'+esc(x.pastStyle)+' → '+esc(x.expected)+'</b></div><div class="horse-info-cell"><small>距離変更</small><b>'+esc(distTxt)+'</b></div><div class="horse-info-cell"><small>前走の前進区分</small><b>'+esc(firstThreeType(h))+'</b></div></div><div class="detail-heading">今回の位置取り診断</div><div class="pressure-grid"><div class="pressure-chip '+(q.leftHot?'danger':'safe')+'"><small>内隣圧力</small><b>'+Math.round(n(q.left)*100)+'%</b></div><div class="pressure-chip '+(q.rightHot?'danger':'safe')+'"><small>外隣圧力</small><b>'+Math.round(n(q.right)*100)+'%</b></div><div class="pressure-chip '+(q.sandwich?'danger':'')+'"><small>逃げハサミ</small><b>'+(q.sandwich?'成立警戒':'なし')+'</b></div><div class="pressure-chip"><small>判定</small><b>'+esc(pressureTxt)+'</b></div><div class="pressure-chip"><small>最初から3番手内</small><b>'+(x.styleSamples?Math.round(x.early3*100)+'%':'—')+'</b></div><div class="pressure-chip"><small>途中から3番手内</small><b>'+(x.styleSamples?Math.round(x.moved3*100)+'%':'—')+'</b></div><div class="pressure-chip"><small>差し上げ力</small><b>'+Math.round(x.comeFromBehind*100)+'</b></div><div class="pressure-chip"><small>下がり率</small><b>'+(fade==null?'—':fade+'%')+'</b></div></div><div class="detail-heading">今回条件への適性</div><div class="fit-grid"><div class="fit-chip"><small>距離</small><b>'+fitText('distance')+'</b></div><div class="fit-chip"><small>競馬場</small><b>'+fitText('track')+'</b></div><div class="fit-chip"><small>馬場</small><b>'+fitText('condition')+'</b></div><div class="fit-chip"><small>天候</small><b>'+fitText('weather')+'</b></div><div class="fit-chip"><small>季節</small><b>'+fitText('season')+'</b></div><div class="fit-chip"><small>相手レベル</small><b>'+fitText('level')+'</b></div></div>'+roleDetail('騎手成績',h.jockeyStats,j)+roleDetail('調教師成績',h.trainerStats,t)+'<div class="recent-list-title">近走データ（直近5走）</div>'+(recent.length?recent.map(function(rr){var rid=rr.raceId||((r.circuit==='地方'&&rr.date&&rr.track&&n(rr.raceNumber))?('nar-'+rr.date+'-'+rr.track+'-'+String(n(rr.raceNumber)).padStart(2,'0')):'');return'<div class="recent"><div class="recent-head"><b>'+esc(rr.date)+' '+esc(rr.track)+' '+(n(rr.raceNumber)?esc(rr.raceNumber)+'R ':'')+esc(rr.distance)+'m</b><strong>'+esc(rr.finish||'—')+'着</strong></div><div>'+fmtTime(rr.timeSeconds)+'　'+esc(rr.condition||'不明')+' / '+esc(rr.weather||'不明')+'</div><div class="muted">'+(rr.title?esc(rr.title)+'　':'')+'通過 '+esc((rr.cornerPositions||[]).join('-')||'—')+'　頭数 '+esc(rr.fieldSize||'—')+(n(rr.carriedWeight)>0?'　斤量 '+esc(rr.carriedWeight)+'kg':'')+(n(rr.racePrize1)>0?'　1着賞金 '+fmtMoney(rr.racePrize1):'')+(rr.jockey?'　騎手 '+esc(rr.jockey):'')+(rr.trainer?'　調教師 '+esc(rr.trainer):'')+'</div>'+(rid?'<button type="button" class="recent-open" data-past-race="'+esc(rid)+'">この過去レースを見る</button>':'')+'</div>'}).join(''):'<div class="empty compact">過去データを確認できませんでした</div>')+'</div></details>'}).join('')+'</div></section>'}
+function frontBattleSection(p){return ""}
 function stageNarrative(p,idx){var rows=p.rows||[],st=p.plan&&p.plan.stages&&p.plan.stages[idx],pack=st&&st.pack||[],by={};for(var i=0;i<rows.length;i++)by[n(rows[i].horse.horseNumber)]=rows[i];var lead=pack.length?by[n(pack[0].no)]:null,front=rows.filter(function(x){return x.goProb>=.48}),sand=front.filter(function(x){return x.sandwichRisk}),wide=front.filter(function(x){return x.outerStress>=.18}),fade=front.filter(function(x){return x.fade>=.50}),movers=rows.filter(function(x){return x.move>=.40&&x.goProb<.50}).sort(function(a,b){return b.comeFromBehind-a.comeFromBehind}),closers=rows.slice().sort(function(a,b){return b.comeFromBehind-a.comeFromBehind}),bits=[];if(lead)bits.push('<b>先頭想定 '+esc(rowName(lead))+'</b>');if(idx===0){var h=front.slice().sort(function(a,b){return b.goProb-a.goProb}).slice(0,4);if(h.length)bits.push('前へ '+h.map(function(x){return esc(rowName(x))}).join('・'))}else if(idx===1){if(sand.length)bits.push('<span class="event-warn">被され/控え警戒 '+sand.map(function(x){return esc(rowName(x))}).join('・')+'</span>');if(wide.length)bits.push('外枠テン負荷 '+wide.map(function(x){return esc(rowName(x))}).join('・'))}else if(idx===2){var lowHold=front.filter(function(x){return x.holdFront<.52});if(lowHold.length)bits.push('前で維持力注意 '+lowHold.slice(0,3).map(function(x){return esc(rowName(x))}).join('・'))}else if(idx===3||idx===4){if(movers.length)bits.push('<span class="event-good">位置を上げる候補 '+movers.slice(0,3).map(function(x){return esc(rowName(x))}).join('・')+'</span>');if(fade.length)bits.push('<span class="event-warn">下がり警戒 '+fade.slice(0,3).map(function(x){return esc(rowName(x))}).join('・')+'</span>');if(fade.length&&closers.length)bits.push('下がった前の後ろで得 '+closers.slice(0,2).map(function(x){return esc(rowName(x))}).join('・'))}else if(idx===5){var stay=rows.slice().sort(function(a,b){return b.frontStay-a.frontStay}).slice(0,2);bits.push('前残り適性 '+stay.map(function(x){return esc(rowName(x))}).join('・'));bits.push('差し込み適性 '+closers.slice(0,2).map(function(x){return esc(rowName(x))}).join('・'))}return bits.join('　｜　')}
-function paceBoard(r,p){var hs=(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}),stages=p.plan.stages||[],cp=courseProfile(r);return'<section class="card ai-flow-card"><div class="ai-flow-head"><span class="ai-flow-bars"><i></i><i></i><i></i></span><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div><div class="ai-flow-sub">過去走・脚質・枠順・テン・隣接圧力から局面ごとの隊列を表示</div></div><span class="ai-flow-scenario">'+esc(p.plan.scenario.code)+' '+esc(p.plan.scenario.title)+'</span></div><div class="ai-stage-tabs">'+stages.map(function(s,i){return'<button data-pace-stage="'+i+'" class="'+(i===0?'active':'')+'">'+esc(s.label)+'</button>'}).join('')+'</div><div id="pace-board" class="ai-race-visual"><div class="ai-race-meta">'+esc(r.track)+'　'+esc(r.distance)+'m　'+esc(cp.turn)+(cp.shape==='straight'?'':'回り')+'</div><div class="ai-race-axis"><span class="back">← 後方</span><span class="front">前方・先頭 →</span></div>'+hs.map(function(h){return'<div class="ai-race-runner" data-horse="'+esc(h.horseNumber)+'" style="left:10%;top:50%">'+badge(h)+'<span class="pace-name">'+esc(h.name)+'</span></div>'}).join('')+'<div id="course-order" class="ai-race-order">隊列を準備中</div></div><div id="pace-event" class="ai-stage-event">展開イベントを準備中</div><div class="ai-race-note">背景画像は使わず、前後差が読みやすい隊列図に変更。右が先頭、左が後方です。</div></section>'}
+function paceBoard(r,p){var hs=(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}),stages=p.plan.stages||[],cp=courseProfile(r);return'<section class="card ai-flow-card"><div class="ai-flow-head"><span class="ai-flow-bars"><i></i><i></i><i></i></span><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div><div class="ai-flow-sub">過去走・脚質・枠順・テン・隣接圧力から局面ごとの隊列を表示</div></div><span class="ai-flow-scenario">'+esc(p.plan.scenario.code)+' '+esc(p.plan.scenario.title)+'</span></div><div class="ai-stage-tabs">'+stages.map(function(s,i){return'<button data-pace-stage="'+i+'" class="'+(i===0?'active':'')+'">'+esc(s.label)+'</button>'}).join('')+'</div><div id="pace-board" class="ai-race-visual"><div class="ai-race-meta">'+esc(r.track)+'　'+esc(r.distance)+'m　'+esc(cp.turn)+(cp.shape==='straight'?'':'回り')+'</div><div class="ai-race-axis"><span class="back">← 後方</span><span class="front">前方・先頭 →</span></div>'+hs.map(function(h){return'<div class="ai-race-runner" data-horse="'+esc(h.horseNumber)+'" style="left:10%;top:50%">'+badge(h)+'</div>'}).join('')+'<div id="course-order" class="ai-race-order">隊列を準備中</div></div><div id="pace-event" class="ai-stage-event">展開イベントを準備中</div><div class="ai-race-note">馬番が見やすいように、隊列図の上では馬名ラベルを外しました。右が先頭、左が後方です。</div></section>'}
 function renderRaceLoading(){return '<div class="shell">'+header("レース読込中",true,"出走馬・近走データを準備中")+'<main class="main"><section class="card"><div class="empty">このレースだけ詳しいデータを読み込んでいます…</div></section></main></div>'}
-function historySearchSection(r){var hs=r.historySearch||{},cv=hs.coverage||{},months=n(hs.monthsDone),max=n(hs.maxMonths,60),progress=max?clamp(months/max*100,4,96):8,counts=cv.counts||{},horseHtml=(r.horses||[]).map(function(h){var c=n(counts[h.name]);return'<span>'+badge(h)+esc(h.name||'')+' <b>'+Math.min(5,c)+'/5</b></span>'}).join('');return'<section class="card history-search-card"><div class="history-search-head"><span class="history-spinner"></span><div><div class="history-search-title">直近5走を取得中</div><div class="history-search-sub">全頭についてNAR公式履歴を過去へさかのぼり、5走そろうまで検索します。5走未満の馬も検索範囲を最後まで確認してから、実在する全キャリア分だけを使います。固定値では埋めません。</div></div></div><div class="history-progress"><i style="width:'+progress+'%"></i></div><div class="history-stats"><span>検索 '+months+' / '+max+'か月</span><span>5走取得 '+n(cv.horsesWith5Plus)+' / '+n(cv.totalHorses,(r.horses||[]).length)+'頭</span><span>履歴あり '+n(cv.horsesWithHistory)+'頭</span><span>取得 '+n(cv.totalRuns)+'走</span></div><div class="history-horses">'+horseHtml+'</div></section>'}
-function scheduleHistoryPoll(id){if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.historyTimer=setTimeout(function(){fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&v=40',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(!state.race||String(state.race.id)!==String(id))return;state.race=body;render();if(body.historySearch&&body.historySearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(state.race&&String(state.race.id)===String(id))scheduleHistoryPoll(id)})},1300)}
-function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(!keepStack)state.raceStack=[];if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;state.error=null;state.picker=false;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?v=40'+(skipHistory?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.race=body;render();if(!skipHistory&&body.historySearch&&body.historySearch.status==='running')scheduleHistoryPoll(id)}).catch(function(e){if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
+function historySearchSection(r){var hs=r.historySearch||{},cv=hs.coverage||{},months=n(hs.monthsDone),max=n(hs.maxMonths,60),progress=max?clamp(months/max*100,4,96):8,counts=cv.counts||{},isCentral=r.circuit==='中央',horseHtml=(r.horses||[]).map(function(h){var c=n(counts[h.name]);return'<span>'+badge(h)+esc(h.name||'')+' <b>'+Math.min(5,c)+'/5</b></span>'}).join(''),src=isCentral?'中央データを過去へさかのぼり':'NAR公式履歴を過去へさかのぼり';return'<section class="card history-search-card"><div class="history-search-head"><span class="history-spinner"></span><div><div class="history-search-title">直近5走を取得中</div><div class="history-search-sub">全頭について'+src+'、5走そろうまで検索します。5走未満の馬は確認できた実在レースだけを使い、固定値では埋めません。取得した過去レースは詳細画面から開けます。</div></div></div><div class="history-progress"><i style="width:'+progress+'%"></i></div><div class="history-stats"><span>検索 '+months+' / '+max+'か月</span><span>5走取得 '+n(cv.horsesWith5Plus)+' / '+n(cv.totalHorses,(r.horses||[]).length)+'頭</span><span>履歴あり '+n(cv.horsesWithHistory)+'頭</span><span>取得 '+n(cv.totalRuns)+'走</span></div><div class="history-horses">'+horseHtml+'</div></section>'}
+function scheduleHistoryPoll(id){if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.historyTimer=setTimeout(function(){fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&v=43',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(!state.race||String(state.race.id)!==String(id))return;state.race=body;render();if(body.historySearch&&body.historySearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(state.race&&String(state.race.id)===String(id))scheduleHistoryPoll(id)})},550)}
+function prefetchNextHistory(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.id}),now=nowMins();a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});var x=a[0];if(!x||state.historyPrefetch[x.id])return;state.historyPrefetch[x.id]=1;fetch('/api/v1/race/'+encodeURIComponent(x.id)+'?v=43',{cache:'no-store'}).catch(function(){delete state.historyPrefetch[x.id]})}
+function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(!keepStack)state.raceStack=[];if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;state.error=null;state.picker=false;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?v=43'+(skipHistory?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.race=body;render();if(!skipHistory&&body.historySearch&&body.historySearch.status==='running')scheduleHistoryPoll(id)}).catch(function(e){if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
 function reloadCurrent(){if(state.race&&state.race.id){var id=state.race.id,isPast=state.raceStack.length>0;state.race=null;openRace(id,true,isPast)}else load()}
-function renderRace(){var r=state.race,hs=r.historySearch||{};if(hs.status==='running'){state.pred=null;return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main"><section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span></div></section>'+historySearchSection(r)+'</main></div>'}var p=predict(r);state.pred=p;var sourceNote=hs.status==='done'?'<div class="data-source-note">【v41】過去走検索：'+n(hs.monthsDone)+'か月確認 / '+n((hs.coverage||{}).totalRuns)+'走取得</div>':(hs.status==='error'?'<div class="notice">過去走の追加取得に失敗。取得済みデータだけで表示します。</div>':'');return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main">'+renderResult(r)+renderResultGap(r,p)+renderActualFlow(r)+'<section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span>'+(state.raceStack.length?'<span class="past-race-badge">過去レース</span>':'')+'</div><div class="metrics"><div class="metric"><b>'+esc(r.distance)+'m</b><span>距離</span></div><div class="metric"><b>'+esc(r.condition||'不明')+'</b><span>馬場</span></div><div class="metric"><b>'+esc(r.weather||'不明')+'</b><span>天候</span></div><div class="metric"><b>'+season(r.date)+'</b><span>季節</span></div><div class="metric"><b>'+esc((r.horses||[]).length)+'頭</b><span>頭数</span></div></div><div class="data-depth"><span>近走 5走</span><span>NAR公式 直近5走を自動検索</span><span>0走は推定値を表示しない</span></div>'+sourceNote+'</section>'+runnerStyleSection(r,p)+scenarioProbabilitySection(p)+frontBattleSection(p)+paceBoard(r,p)+'</main></div>'}
+function renderRace(){var r=state.race,hs=r.historySearch||{};if(hs.status==='running'){state.pred=null;return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main"><section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span></div></section>'+historySearchSection(r)+'</main></div>'}var p=predict(r);state.pred=p;var sourceNote=hs.status==='done'?'<div class="data-source-note">【v45】過去走検索：'+n(hs.monthsDone)+'か月確認 / '+n((hs.coverage||{}).totalRuns)+'走取得 / '+esc(hs.source||'履歴データ')+'</div>':(hs.status==='error'?'<div class="notice">過去走の追加取得に失敗。取得済みデータだけで表示します。</div>':'');return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main">'+renderResult(r)+renderResultGap(r,p)+renderActualFlow(r)+'<section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span>'+(state.raceStack.length?'<span class="past-race-badge">過去レース</span>':'')+'</div><div class="metrics"><div class="metric"><b>'+esc(r.distance)+'m</b><span>距離</span></div><div class="metric"><b>'+esc(r.condition||'不明')+'</b><span>馬場</span></div><div class="metric"><b>'+esc(r.weather||'不明')+'</b><span>天候</span></div><div class="metric"><b>'+season(r.date)+'</b><span>季節</span></div><div class="metric"><b>'+esc((r.horses||[]).length)+'頭</b><span>頭数</span></div></div><div class="data-depth"><span>近走 5走</span><span>'+(r.circuit==='中央'?'中央 直近5走を自動検索':'NAR公式 直近5走を自動検索')+'</span><span>0走は推定値を表示しない</span></div>'+sourceNote+'</section>'+runnerStyleSection(r,p)+scenarioProbabilitySection(p)+paceBoard(r,p)+'</main></div>'}
 function render(){stopTimer();try{if(state.raceLoading)app.innerHTML=renderRaceLoading();else if(state.race)app.innerHTML=renderRace();else if(state.picker)app.innerHTML=renderPicker();else if(state.track)app.innerHTML=renderVenue();else app.innerHTML=renderHome();bind();if(state.race)initPaceBoard()}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
 function bind(){var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];state.circuit=this.getAttribute('data-circuit');state.track=null;state.race=null;state.picker=false;render()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];state.date=this.value;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];state.track=this.getAttribute('data-track');render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){openRace(this.getAttribute('data-race'),false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=function(){if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}if(state.raceLoading){state.raceLoading=null;if(state.raceStack.length)state.race=state.raceStack.pop()}else if(state.race){if(state.raceStack.length)state.race=state.raceStack.pop();else state.race=null}else if(state.picker)state.picker=false;else state.track=null;render()};var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(){drawPaceStage(n(this.getAttribute('data-pace-stage'),0))}}
 function stopTimer(){if(state.timer){clearTimeout(state.timer);state.timer=null}if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}state.simRunning=false}
@@ -413,7 +414,7 @@ function stopSimulation(){if(state.anim){cancelAnimationFrame(state.anim);state.
 function paceBaseFrac(r,idx){var cp=courseProfile(r),prog=[.02,.18,.44,.66,.80,.94][idx]||.02,start=courseStageFrac(r,0),laps=Math.max(.1,n(r.distance,1200)/cp.lap);if(cp.shape==='straight')return .05+(.90-.05)*prog;return normFrac(start+cp.dir*laps*prog)}
 function drawPaceStage(idx){if(!state.race||!state.pred||!state.pred.plan||!state.pred.plan.stages)return;var stages=state.pred.plan.stages,st=stages[clamp(idx,0,stages.length-1)],r=state.race,board=document.getElementById('pace-board');if(!st||!board)return;var order=[],i,z,chip,left,top,rank;for(i=0;i<st.pack.length;i++){z=st.pack[i];rank=i;chip=board.querySelector('[data-horse="'+z.no+'"]');if(!chip)continue;left=clamp(91-rank*5.7-n(z.gap)*65,7,92);top=clamp(27+(rank%3)*20+n(z.lane)*2.8,18,82);chip.style.left=left+'%';chip.style.top=top+'%';order.push(z.no)}var ob=document.getElementById('course-order');if(ob)ob.innerHTML='<b>'+esc(st.label)+'</b><span>'+order.map(function(no){var h=horseByNo(r,no);return esc(no)+(h?' '+esc(h.name):'')}).join(' → ')+'</span>';var ev=document.getElementById('pace-event');if(ev)ev.innerHTML=stageNarrative(state.pred,idx);var bs=document.querySelectorAll('[data-pace-stage]');for(i=0;i<bs.length;i++)bs[i].className=n(bs[i].getAttribute('data-pace-stage'))===idx?'active':''}
 function initPaceBoard(){if(!state.pred||!state.pred.plan||!state.pred.plan.stages)return;drawPaceStage(0)}
-function load(){var d=state.date,seq=++state.requestSeq,cached=loadRaceCache(d);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render()}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&v=40',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,rows);state.loading=false;state.error=null;render()}).catch(function(){if(seq!==state.requestSeq||state.date!==d)return;if(attempts<3){setTimeout(request,700*attempts);return}state.loading=false;state.error=null;render()})}request()}
+function load(){var d=state.date,seq=++state.requestSeq,cached=loadRaceCache(d);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render();setTimeout(prefetchNextHistory,120)}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&v=43',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,rows);state.loading=false;state.error=null;render();setTimeout(prefetchNextHistory,120)}).catch(function(){if(seq!==state.requestSeq||state.date!==d)return;if(attempts<3){setTimeout(request,700*attempts);return}state.loading=false;state.error=null;render()})}request()}
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
 clearOldPwa();render();setTimeout(load,0);
 })();
@@ -422,8 +423,8 @@ clearOldPwa();render();setTimeout(load,0);
 MANIFEST = r'''{
   "name":"競馬展開AI",
   "short_name":"競馬展開AI",
-  "description":"競馬の脚質・展開シミュレーション・印を確認するPWA",
-  "start_url":"/?v=40",
+  "description":"競馬の脚質・展開シミュレーション・S/A/B/C総合評価を確認するPWA",
+  "start_url":"/?v=43",
   "scope":"/",
   "display":"standalone",
   "background_color":"#041126",
@@ -1184,20 +1185,25 @@ def normalize_central_race(raw: dict) -> dict | None:
     return out
 
 
-def fetch_central_feed(iso_date: str) -> list[dict]:
-    base = _clean(os.getenv("CENTRAL_FEED_URL", ""))
+def fetch_central_feed(iso_date: str, history: bool = False) -> list[dict]:
+    # History can use a dedicated provider endpoint. If it is not set, reuse the live feed.
+    base = _clean(os.getenv("CENTRAL_HISTORY_FEED_URL", "")) if history else ""
+    if not base:
+        base = _clean(os.getenv("CENTRAL_FEED_URL", ""))
     if not base:
         return []
     if "{date}" in base:
         url = base.replace("{date}", iso_date)
     else:
         url = base + ("&" if "?" in base else "?") + "date=" + iso_date
-    headers = {"User-Agent": "KeibaPredictor/3.0", "Accept": "application/json"}
-    token = _clean(os.getenv("CENTRAL_FEED_TOKEN", ""))
+    headers = {"User-Agent": "KeibaPredictor/4.2", "Accept": "application/json"}
+    token = _clean(os.getenv("CENTRAL_HISTORY_FEED_TOKEN", "")) if history else ""
+    if not token:
+        token = _clean(os.getenv("CENTRAL_FEED_TOKEN", ""))
     if token:
         headers["Authorization"] = "Bearer " + token
     req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req, timeout=10) as response:
+    with urllib.request.urlopen(req, timeout=float(os.getenv("CENTRAL_FEED_TIMEOUT_SEC", "12"))) as response:
         body = json.loads(response.read().decode("utf-8"))
     rows = body if isinstance(body, list) else body.get("races", [])
     return [r for r in (normalize_central_race(x) for x in rows) if r]
@@ -1229,28 +1235,22 @@ _history_error = ""
 
 def _history_worker(months_back: int | None = None):
     global _history_ready, _history_error
-    # UI first: let the first screen and race list settle before deep history I/O starts.
-    time.sleep(float(os.getenv("HISTORY_START_DELAY_SEC", "0.5")))
-    sync = NarSync()
+    # v43: do not block on-demand history behind an 18-month serial startup crawl.
+    # Warm only the latest few months, in parallel. Deeper history is fetched only when needed.
+    time.sleep(float(os.getenv("HISTORY_START_DELAY_SEC", "0.15")))
     today = datetime.now().date()
     if months_back is None:
-        months_back = max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "18"))))
+        months_back = max(2, min(8, int(os.getenv("NAR_HISTORY_WARM_MONTHS", "4"))))
     seen = set()
     jobs = []
-    for y, m in [(today.year, today.month)] + list(iter_months_back(today, months_back)):
+    for y, m in [(today.year, today.month)] + list(iter_months_back(today, months_back - 1)):
         if (y, m) not in seen:
             jobs.append((y, m)); seen.add((y, m))
-    errors = []
-    for idx, (y, m) in enumerate(jobs):
-        try:
-            with _nar_sync_io_lock:
-                sync.sync_month(y, m)
-        except Exception as exc:
-            errors.append(f"{y:04d}-{m:02d}:{exc}")
-        # Yield between monthly jobs so Safari/API requests stay responsive.
-        if idx + 1 < len(jobs):
-            time.sleep(float(os.getenv("HISTORY_JOB_GAP_SEC", "0.7")))
-    _history_error = " | ".join(errors)
+    try:
+        _, errors = _sync_nar_month_wave(jobs)
+        _history_error = " | ".join(errors)
+    except Exception as exc:
+        _history_error = str(exc)
     _history_ready = True
 
 def ensure_history_async():
@@ -1267,7 +1267,9 @@ def _today_iso():
 
 @app.on_event("startup")
 def _startup_history_backfill():
-    ensure_history_async()
+    # v43: targeted race prefetch is faster than a competing global crawl.
+    if str(os.getenv("NAR_BACKGROUND_WARM", "0")).lower() in {"1","true","yes","on"}:
+        ensure_history_async()
 
 @app.get("/health")
 def health():
@@ -1280,10 +1282,11 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v41-hard-deploy-five-race-grade-only", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v44-horse-order-ui-fix", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")),
-        "narHistoryMonths": max(6, min(24, int(os.getenv("NAR_HISTORY_MONTHS", "18")))),
+        "centralHistoryFeedConfigured":bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
+        "narHistoryMonths": max(2, min(8, int(os.getenv("NAR_HISTORY_WARM_MONTHS", "4")))),
     }
 
 @app.post("/api/v1/history-backfill-one")
@@ -1305,10 +1308,18 @@ def history_status():
 
 @app.get("/api/v1/central-status")
 def central_status():
+    store = CentralStore()
+    try:
+        coverage = store.coverage()
+    finally:
+        store.conn.close()
     return {
         "feedConfigured": bool(os.getenv("CENTRAL_FEED_URL")),
+        "historyFeedConfigured": bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
+        "historyUsesLiveFeedFallback": bool(not os.getenv("CENTRAL_HISTORY_FEED_URL") and os.getenv("CENTRAL_FEED_URL")),
         "ingestEnabled": bool(os.getenv("CENTRAL_INGEST_TOKEN")),
-        "coverage": CentralStore().coverage(),
+        "coverage": coverage,
+        "recentRuns": 5,
     }
 
 @app.post("/api/v1/central-ingest")
@@ -1378,6 +1389,80 @@ def _schedule_live_refresh(iso_date: str):
 
 
 
+def _nar_month_needs_fetch(year: int, month: int) -> bool:
+    cache_key = f"month-{year:04d}-{month:02d}"
+    store = NarStore()
+    try:
+        synced = store.synced_at(cache_key)
+    finally:
+        try: store.conn.close()
+        except Exception: pass
+    if not synced:
+        return True
+    today = datetime.now().date()
+    if year == today.year and month == today.month:
+        return int(time.time()) - synced >= int(os.getenv("NAR_CURRENT_MONTH_TTL_SECONDS", "300"))
+    return False
+
+
+def _download_nar_month_only(year: int, month: int) -> tuple[int, int, bytes, Path]:
+    dest = ARCHIVE_DIR / f"{year:04d}{month:02d}_race.zip"
+    url = NAR_MONTHLY_RACE_URL.format(year=year, month=month)
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
+            "Accept": "application/zip,application/octet-stream,*/*",
+            "Referer": "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/TodayRaceInfoTop",
+            "Accept-Language": "ja-JP,ja;q=0.9",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=float(os.getenv("NAR_FAST_TIMEOUT_SEC", "22"))) as response:
+        data = response.read()
+    if not zipfile.is_zipfile(io.BytesIO(data)):
+        raise RuntimeError(f"NAR {year:04d}-{month:02d} was not ZIP")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+    return year, month, data, dest
+
+
+def _sync_nar_month_wave(months: list[tuple[int, int]]) -> tuple[list[dict], list[str]]:
+    # Download network-bound monthly ZIPs concurrently, then import sequentially into SQLite.
+    # This keeps DB writes safe while removing the largest source of wait time.
+    unique = list(dict.fromkeys(months))
+    need = [(y, m) for y, m in unique if _nar_month_needs_fetch(y, m)]
+    results: dict[tuple[int, int], tuple[int, int, bytes, Path]] = {}
+    errors: list[str] = []
+    workers = max(2, min(6, int(os.getenv("NAR_HISTORY_WORKERS", "4"))))
+    if need:
+        with ThreadPoolExecutor(max_workers=min(workers, len(need))) as pool:
+            future_map = {pool.submit(_download_nar_month_only, y, m):(y, m) for y, m in need}
+            for fut in as_completed(future_map):
+                y, m = future_map[fut]
+                try:
+                    results[(y, m)] = fut.result()
+                except Exception as exc:
+                    errors.append(f"{y:04d}-{m:02d}:{exc}")
+    sync = NarSync()
+    out = []
+    try:
+        for y, m in unique:
+            if (y, m) not in results:
+                out.append({"status":"cached","cacheKey":f"month-{y:04d}-{m:02d}"})
+                continue
+            _, _, data, dest = results[(y, m)]
+            try:
+                with _nar_sync_io_lock:
+                    info = sync.import_zip_bytes(data, f"month-{y:04d}-{m:02d}", dest)
+                out.append({"status":"synced", **info})
+            except Exception as exc:
+                errors.append(f"{y:04d}-{m:02d}:import:{exc}")
+    finally:
+        try: sync.store.conn.close()
+        except Exception: pass
+    return out, errors
+
+
 _race_history_lock = threading.Lock()
 _race_history_jobs: dict[str, dict] = {}
 
@@ -1441,35 +1526,32 @@ def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[st
         _race_history_jobs[race_id] = job
 
     def worker():
-        sync = NarSync()
         errors = []
         months_done = 0
+        months = list(_months_from_race_date(iso_date, max_months))
+        wave = max(2, min(6, int(os.getenv("NAR_ON_DEMAND_WAVE_MONTHS", "4"))))
         try:
-            for y, m in _months_from_race_date(iso_date, max_months):
-                try:
-                    with _nar_sync_io_lock:
-                        sync.sync_month(y, m, force=False)
-                except Exception as exc:
-                    errors.append(f"{y:04d}-{m:02d}:{exc}")
-                months_done += 1
+            for pos in range(0, len(months), wave):
+                batch = months[pos:pos+wave]
+                _, errs = _sync_nar_month_wave(batch)
+                errors.extend(errs)
+                months_done += len(batch)
                 cov_now = _history_counts(horse_names, iso_date)
                 with _race_history_lock:
-                    _race_history_jobs[race_id] = {"status":"running","monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-3:]),"source":"NAR公式月次レースデータ"}
+                    _race_history_jobs[race_id] = {"status":"running","monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-3:]),"source":"NAR公式 高速並列履歴"}
                 if _history_is_enough(cov_now, months_done):
                     break
-                time.sleep(float(os.getenv("NAR_ON_DEMAND_GAP_SEC", "0.15")))
             cov_now = _history_counts(horse_names, iso_date)
             status = "done" if cov_now.get("horsesWithHistory",0) > 0 else ("error" if errors else "done")
             with _race_history_lock:
-                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":"NAR公式月次レースデータ"}
-            try:
-                with _detail_cache_lock:
-                    _detail_cache.pop(race_id, None)
-            except Exception:
-                pass
-        finally:
-            try: sync.store.conn.close()
-            except Exception: pass
+                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":"NAR公式 高速並列履歴"}
+            with _detail_cache_lock:
+                _detail_cache.pop(race_id, None)
+        except Exception as exc:
+            errors.append(str(exc))
+            cov_now = _history_counts(horse_names, iso_date)
+            with _race_history_lock:
+                _race_history_jobs[race_id] = {"status":"error","monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":"NAR公式 高速並列履歴"}
     threading.Thread(target=worker, daemon=True).start()
     return dict(job)
 
@@ -1589,6 +1671,239 @@ def nar_race_detail(race_id: str) -> dict | None:
         except Exception:pass
 
 
+
+def _horse_key(value: str) -> str:
+    return re.sub(r"[\s\u3000]+", "", _clean(str(value or "")))
+
+
+def _central_find_horse(race: dict, horse_name: str) -> tuple[dict | None, dict | None]:
+    key = _horse_key(horse_name)
+    horse = None
+    for h in race.get("horses", []) or []:
+        if _horse_key(h.get("name")) == key:
+            horse = h
+            break
+    finisher = None
+    result = race.get("result") if isinstance(race.get("result"), dict) else {}
+    finishers = result.get("finishers") if isinstance(result.get("finishers"), list) else []
+    for f in finishers:
+        same_no = horse is not None and int(f.get("horseNumber") or 0) == int(horse.get("horseNumber") or 0)
+        same_name = _horse_key(f.get("name")) == key
+        if same_no or same_name:
+            finisher = f
+            break
+    return horse, finisher
+
+
+def _central_run_from_race(race: dict, horse_name: str) -> dict | None:
+    horse, fin = _central_find_horse(race, horse_name)
+    if horse is None and fin is None:
+        return None
+    horse = horse or {}
+    fin = fin or {}
+    finish = int(fin.get("finish") or horse.get("finish") or 0)
+    corners = fin.get("cornerPositions") or horse.get("cornerPositions") or []
+    if not isinstance(corners, list):
+        corners = []
+    return {
+        "raceId": race.get("id") or "",
+        "date": race.get("date") or "",
+        "track": race.get("track") or "",
+        "raceNumber": int(race.get("raceNumber") or 0),
+        "title": race.get("title") or "",
+        "distance": int(race.get("distance") or 0),
+        "condition": race.get("condition") or "不明",
+        "weather": race.get("weather") or "不明",
+        "surface": race.get("surface") or "",
+        "fieldSize": int(race.get("fieldSize") or len(race.get("horses") or [])),
+        "finish": finish,
+        "timeSeconds": float(fin.get("timeSeconds") or horse.get("timeSeconds") or 0),
+        "cornerPositions": [int(x) for x in corners if str(x).strip().isdigit()],
+        "carriedWeight": float(horse.get("carriedWeight") or fin.get("carriedWeight") or 0),
+        "racePrize1": int(race.get("racePrize1") or 0),
+        "jockey": horse.get("jockey") or fin.get("jockey") or "",
+        "trainer": horse.get("trainer") or fin.get("trainer") or "",
+        "source": race.get("source") or "中央フィード",
+    }
+
+
+def _central_resolve_race_id(run: dict) -> str:
+    if run.get("raceId"):
+        return str(run.get("raceId"))
+    d = _clean(str(run.get("date") or ""))
+    tr = _clean(str(run.get("track") or ""))
+    rn = int(run.get("raceNumber") or 0)
+    if not d or not tr or rn <= 0 or not CENTRAL_DB_PATH.exists():
+        return ""
+    conn = _new_conn(CENTRAL_DB_PATH)
+    try:
+        row = conn.execute(
+            "SELECT id FROM central_races WHERE date=? AND track=? AND race_no=? LIMIT 1",
+            (d, tr, rn),
+        ).fetchone()
+        return str(row["id"]) if row else ""
+    finally:
+        conn.close()
+
+
+def _central_recent_from_store(horse_name: str, cutoff: str, limit: int = 5) -> list[dict]:
+    if not CENTRAL_DB_PATH.exists() or not horse_name:
+        return []
+    conn = _new_conn(CENTRAL_DB_PATH)
+    try:
+        # Pull newest races first. We stop as soon as this horse has five actual starts.
+        rows = conn.execute(
+            "SELECT payload FROM central_races WHERE date<? ORDER BY date DESC,track DESC,race_no DESC LIMIT 4000",
+            (cutoff,),
+        ).fetchall()
+        out = []
+        seen = set()
+        for row in rows:
+            try:
+                race = json.loads(row["payload"])
+            except Exception:
+                continue
+            run = _central_run_from_race(race, horse_name)
+            if not run:
+                continue
+            key = (run.get("date"), run.get("track"), int(run.get("raceNumber") or 0))
+            if key in seen:
+                continue
+            seen.add(key)
+            # A finish can be missing in a future-entry payload. Keep the race only when
+            # the historical payload contains an actual result or explicit run result data.
+            if int(run.get("finish") or 0) <= 0 and not run.get("cornerPositions") and not float(run.get("timeSeconds") or 0):
+                continue
+            out.append(run)
+            if len(out) >= limit:
+                break
+        return out
+    finally:
+        conn.close()
+
+
+def _merge_central_recent(existing: list[dict], stored: list[dict], cutoff: str, limit: int = 5) -> list[dict]:
+    all_runs = []
+    seen = set()
+    for src in (existing or []) + (stored or []):
+        if not isinstance(src, dict):
+            continue
+        run = dict(src)
+        if cutoff and run.get("date") and str(run.get("date")) >= cutoff:
+            continue
+        rid = _central_resolve_race_id(run)
+        if rid:
+            run["raceId"] = rid
+        key = run.get("raceId") or (str(run.get("date") or "") + "|" + str(run.get("track") or "") + "|" + str(int(run.get("raceNumber") or 0)))
+        if key in seen:
+            continue
+        seen.add(key)
+        all_runs.append(run)
+    all_runs.sort(key=lambda x: (str(x.get("date") or ""), int(x.get("raceNumber") or 0)), reverse=True)
+    return all_runs[:limit]
+
+
+def _central_detail_coverage(detail: dict) -> dict:
+    horses = detail.get("horses", []) or []
+    counts = {str(h.get("name") or ""): min(5, len(h.get("recentRaces") or [])) for h in horses if h.get("name")}
+    vals = list(counts.values())
+    return {
+        "totalHorses": len(counts),
+        "horsesWithHistory": sum(1 for v in vals if v > 0),
+        "horsesWith4Plus": sum(1 for v in vals if v >= 4),
+        "horsesWith5Plus": sum(1 for v in vals if v >= 5),
+        "horsesWith6Plus": 0,
+        "totalRuns": sum(vals),
+        "counts": counts,
+        "underFive": [name for name, v in counts.items() if v < 5],
+    }
+
+
+def _central_month_dates(year: int, month: int, cutoff: str) -> list[str]:
+    last = calendar.monthrange(year, month)[1]
+    cutoff_date = datetime.strptime(cutoff, "%Y-%m-%d").date()
+    dates = []
+    # JRA standard meetings are Sat/Sun and holiday Mondays. Searching these days first
+    # avoids hundreds of empty requests while still covering ordinary and holiday meetings.
+    for day in range(last, 0, -1):
+        d = dt_date(year, month, day)
+        if d >= cutoff_date:
+            continue
+        if d.weekday() in (0, 5, 6):
+            dates.append(d.isoformat())
+    return dates
+
+
+def _fetch_central_days_parallel(days: list[str]) -> tuple[list[dict], list[str]]:
+    if not days:
+        return [], []
+    workers = max(2, min(10, int(os.getenv("CENTRAL_HISTORY_WORKERS", "6"))))
+    rows: list[dict] = []
+    errors: list[str] = []
+    with ThreadPoolExecutor(max_workers=min(workers, len(days))) as pool:
+        future_map = {pool.submit(fetch_central_feed, day, True):day for day in days}
+        for fut in as_completed(future_map):
+            day = future_map[fut]
+            try:
+                rows.extend(fut.result() or [])
+            except Exception as exc:
+                errors.append(f"{day}:{exc}")
+    return rows, errors
+
+
+def _start_central_history_search(race_id: str, iso_date: str, force: bool = False) -> dict:
+    max_months = max(12, min(60, int(os.getenv("CENTRAL_ON_DEMAND_HISTORY_MONTHS", "36"))))
+    detail = central_race_detail(race_id)
+    cov = _central_detail_coverage(detail or {})
+    with _race_history_lock:
+        existing = _race_history_jobs.get(race_id)
+        if existing and not force:
+            return dict(existing)
+        if not (_clean(os.getenv("CENTRAL_HISTORY_FEED_URL", "")) or _clean(os.getenv("CENTRAL_FEED_URL", ""))):
+            job = {"status":"error","monthsDone":0,"maxMonths":max_months,"coverage":cov,
+                   "error":"中央フィード未設定: CENTRAL_FEED_URL または CENTRAL_HISTORY_FEED_URL が必要です",
+                   "source":"中央フィード"}
+            _race_history_jobs[race_id] = job
+            return dict(job)
+        job = {"status":"running","monthsDone":0,"maxMonths":max_months,"coverage":cov,"error":"","source":"中央フィード高速並列検索"}
+        _race_history_jobs[race_id] = job
+
+    def worker():
+        errors = []
+        months_done = 0
+        store = CentralStore()
+        try:
+            for y, m in _months_from_race_date(iso_date, max_months):
+                days = _central_month_dates(y, m, iso_date)
+                fresh_rows, errs = _fetch_central_days_parallel(days)
+                errors.extend(errs)
+                if fresh_rows:
+                    store.upsert(fresh_rows)
+                months_done += 1
+                fresh_detail = central_race_detail(race_id) or {}
+                cov_now = _central_detail_coverage(fresh_detail)
+                with _race_history_lock:
+                    _race_history_jobs[race_id] = {"status":"running","monthsDone":months_done,"maxMonths":max_months,
+                                                   "coverage":cov_now,"error":" | ".join(errors[-3:]),"source":"中央フィード高速並列検索"}
+                if _history_is_enough(cov_now, months_done):
+                    break
+            fresh_detail = central_race_detail(race_id) or {}
+            cov_now = _central_detail_coverage(fresh_detail)
+            status = "done" if cov_now.get("horsesWithHistory", 0) > 0 else ("error" if errors else "done")
+            with _race_history_lock:
+                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,
+                                               "coverage":cov_now,"error":" | ".join(errors[-5:]),"source":"中央フィード高速並列検索"}
+            with _detail_cache_lock:
+                _detail_cache.pop(race_id, None)
+        finally:
+            try:
+                store.conn.close()
+            except Exception:
+                pass
+    threading.Thread(target=worker, daemon=True).start()
+    return dict(job)
+
+
 def central_race_detail(race_id: str) -> dict | None:
     if not CENTRAL_DB_PATH.exists():return None
     conn=_new_conn(CENTRAL_DB_PATH)
@@ -1597,10 +1912,13 @@ def central_race_detail(race_id: str) -> dict | None:
         if not row:
             return None
         detail=json.loads(row["payload"])
-        for h in detail.get("horses",[]) or []:
-            h["recentRaces"]=(h.get("recentRaces") or [])[:5]
-        return detail
-    finally:conn.close()
+    finally:
+        conn.close()
+    cutoff = str(detail.get("date") or "9999-12-31")
+    for h in detail.get("horses",[]) or []:
+        stored = _central_recent_from_store(str(h.get("name") or ""), cutoff, 5)
+        h["recentRaces"] = _merge_central_recent(h.get("recentRaces") or [], stored, cutoff, 5)
+    return detail
 
 _detail_cache_lock=threading.Lock()
 _detail_cache:dict[str,tuple[float,dict]]={}
@@ -1610,7 +1928,8 @@ _race_list_cache: dict[str, tuple[float, list[dict]]] = {}
 
 @app.get("/api/v1/races")
 def races(date: str = Query(...)):
-    ensure_history_async()
+    if str(os.getenv("NAR_BACKGROUND_WARM", "0")).lower() in {"1","true","yes","on"}:
+        ensure_history_async()
     now=time.time()
     with _race_list_cache_lock:
         hit=_race_list_cache.get(date)
@@ -1619,7 +1938,16 @@ def races(date: str = Query(...)):
     try: live_local=nar_race_summaries(date)
     except Exception as exc:
         print(f"NAR summary read failed: {exc}"); live_local=[]
-    try: central_rows=central_race_summaries(date)
+    try:
+        central_rows=central_race_summaries(date)
+        if not central_rows and os.getenv("CENTRAL_FEED_URL"):
+            try:
+                fresh_central = fetch_central_feed(date)
+                if fresh_central:
+                    cs = CentralStore(); cs.upsert(fresh_central); cs.conn.close()
+                    central_rows = central_race_summaries(date)
+            except Exception as exc:
+                print(f"Central live fetch failed: {exc}")
     except Exception as exc:
         print(f"Central summary read failed: {exc}"); central_rows=[]
     rows=live_local+central_rows
@@ -1654,9 +1982,20 @@ def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1)):
         elif hs is None:
             hs={"status":"done","monthsDone":0,"maxMonths":0,"coverage":cov,"error":"","source":"NAR公式ローカル履歴"}
         detail["historySearch"]=hs
-        # Rebuild after each background-import step so recentRaces/stats are fresh.
         if refresh and hs and hs.get("status") in {"running","done","error"}:
             fresh=nar_race_detail(race_id)
+            if fresh:
+                detail=fresh; detail["historySearch"]=_race_history_status(race_id) or hs
+    elif history:
+        cov=_central_detail_coverage(detail)
+        hs=_race_history_status(race_id)
+        if hs is None and not _history_is_enough(cov, 0):
+            hs=_start_central_history_search(race_id, detail.get("date") or _today_iso())
+        elif hs is None:
+            hs={"status":"done","monthsDone":0,"maxMonths":0,"coverage":cov,"error":"","source":"中央フィード履歴"}
+        detail["historySearch"]=hs
+        if refresh and hs and hs.get("status") in {"running","done","error"}:
+            fresh=central_race_detail(race_id)
             if fresh:
                 detail=fresh; detail["historySearch"]=_race_history_status(race_id) or hs
     else:
@@ -1670,7 +2009,7 @@ def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1)):
 
 @app.get("/build")
 def build_info():
-    return {"build":"v41","appVersion":"5.7-production-v41-github-root-five-race-grade-only","recentRuns":5,"marks":False,"grade":"S/A/B/C","history":"NAR official auto-search"}
+    return {"build":"v45","appVersion":"6.1-production-v45-grade-plus-marks","recentRuns":5,"marks":True,"grade":"S/A/B/C + ◎○▲☆△注","history":"NAR + central auto-search","pastRaceOpen":True,"historySpeed":"parallel+prefetch","narWorkers":int(os.getenv("NAR_HISTORY_WORKERS","4")),"centralWorkers":int(os.getenv("CENTRAL_HISTORY_WORKERS","6"))}
 
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -1684,15 +2023,15 @@ def hero_horse():
 def pace_preview():
     return Response(PACE_PREVIEW_WEBP, media_type="image/webp", headers={"Cache-Control":"public, max-age=86400"})
 
-@app.get("/styles-v41.css")
+@app.get("/styles-v45.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"no-store, max-age=0"})
 
-@app.get("/app-v41.js")
+@app.get("/app-v45.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"no-store, max-age=0"})
 
-@app.get("/manifest-v41.webmanifest")
+@app.get("/manifest-v45.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"no-store, max-age=0"})
 
