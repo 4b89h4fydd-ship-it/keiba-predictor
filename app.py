@@ -346,7 +346,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="9.6-aligned-entry-v96")
+app = FastAPI(title="KRAIZ", version="9.7-entry-tuned-v97")
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -639,11 +639,7 @@ CSS += r"""
 .entry-odds.odds-single{color:#ff5c66!important}
 
 .racecard-table{width:100%;border:1px solid #d7dee8;border-radius:10px;overflow:hidden;background:#fff;margin-top:8px}
-.racecard-head,.racecard-row{display:grid;grid-template-columns:42px 68px minmax(0,1fr) 82px;width:100%;align-items:stretch}
-.racecard-head{min-height:50px;background:#eef1f5;color:#566274;border:0;border-bottom:1px solid #cfd7e3;font-size:10px;font-weight:800;text-align:center}
-.racecard-head>div{display:flex;align-items:center;justify-content:center;padding:5px 3px;border-right:1px solid #d7dee8;line-height:1.15}
-.racecard-head>div:last-child{border-right:0}
-
+.racecard-row{display:grid;grid-template-columns:42px 62px minmax(0,1fr) 82px;width:100%;align-items:stretch}
 .racecard-row{
   appearance:none;-webkit-appearance:none;
   display:grid;width:100%;min-height:84px;margin:0;padding:0;
@@ -657,18 +653,18 @@ CSS += r"""
 .rc-number{display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;padding:0!important}
 .rc-number.frame1{background:#fff;color:#111}.rc-number.frame2{background:#202225;color:#fff}.rc-number.frame3{background:#d94843;color:#fff}.rc-number.frame4{background:#3459aa;color:#fff}.rc-number.frame5{background:#e4cf4f;color:#fff}.rc-number.frame6{background:#67aa55;color:#fff}.rc-number.frame7{background:#d88b32;color:#fff}.rc-number.frame8{background:#d68daf;color:#fff}
 
-.rc-pred{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;padding:6px 3px}
-.rc-pred-mark{display:flex;align-items:center;justify-content:center;width:46px;height:38px;border:1px solid #b8c0cc;border-radius:11px;background:#fff;font-size:24px;font-weight:950;line-height:1}
+.rc-pred{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;padding:6px 2px}
+.rc-pred-mark{display:flex;align-items:center;justify-content:center;width:38px;height:32px;border:1px solid #b8c0cc;border-radius:10px;background:#fff;font-size:20px;font-weight:950;line-height:1}
 .rc-pred-mark[data-ai-mark="◎"]{color:#e14954;border-color:#e14954}.rc-pred-mark[data-ai-mark="○"]{color:#168eb0;border-color:#5abbd2}.rc-pred-mark[data-ai-mark="▲"]{color:#d09a00;border-color:#e3c45d}.rc-pred-mark[data-ai-mark="☆"]{color:#9a5cc6;border-color:#c59be0}.rc-pred-mark[data-ai-mark="△"]{color:#60758f}.rc-pred-mark[data-ai-mark="注"]{color:#d2742d}
-.rc-eval{font-size:10px;font-weight:800;color:#6c7788;white-space:nowrap}
+.rc-eval{font-size:14px;font-weight:900;color:#516073;white-space:nowrap;line-height:1}
 
 .rc-horse{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:8px 10px}
 .rc-horse-top{display:flex;align-items:center;gap:8px;min-width:0}
 .rc-horse-name{min-width:0;flex:1;font-size:17px;line-height:1.2;font-weight:850;color:#0f4c9a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rc-bodyweight{flex:0 0 auto;font-size:11px;font-weight:700;color:#667085;white-space:nowrap}
-.rc-horse-meta{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:7px;margin-top:7px;min-width:0;font-size:11px;color:#667085;white-space:nowrap}
-.rc-horse-meta .jockey{min-width:0;color:#175da5;font-size:12px;text-align:right;overflow:hidden;text-overflow:ellipsis}
-.rc-horse-meta .carry{text-align:right}
+.rc-bodyweight{flex:0 0 auto;font-size:12px;font-weight:800;color:#667085;white-space:nowrap}
+.rc-horse-meta{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;margin-top:7px;min-width:0;font-size:13px;color:#667085;white-space:nowrap}
+.rc-horse-meta .jockey{min-width:0;color:#175da5;font-size:14px;text-align:right;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.rc-horse-meta .carry{text-align:right;font-size:14px;font-weight:700;color:#4b5565}
 
 .rc-odds{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:5px 2px;font-weight:850}
 .rc-odds .odd{font-size:18px;line-height:1.1;color:#344054}
@@ -676,25 +672,27 @@ CSS += r"""
 .rc-odds .pop{font-size:12px;color:#667085;margin-top:5px}
 
 @media(max-width:430px){
-  .racecard-head,.racecard-row{grid-template-columns:34px 58px minmax(0,1fr) 70px}
-  .racecard-head{font-size:9px;min-height:48px}
+  .racecard-row{grid-template-columns:34px 54px minmax(0,1fr) 70px}
   .racecard-row{min-height:82px}
   .rc-number{font-size:18px}
-  .rc-pred-mark{width:42px;height:35px;font-size:22px}
-  .rc-eval{font-size:9px}
+  .rc-pred-mark{width:34px;height:30px;font-size:18px}
+  .rc-eval{font-size:13px}
   .rc-horse{padding:7px 8px}
   .rc-horse-name{font-size:16px}
-  .rc-bodyweight{font-size:10px}
-  .rc-horse-meta{font-size:10px;gap:5px}
-  .rc-horse-meta .jockey{font-size:11px}
+  .rc-bodyweight{font-size:11px}
+  .rc-horse-meta{font-size:12px;gap:6px}
+  .rc-horse-meta .jockey{font-size:13px}
+  .rc-horse-meta .carry{font-size:13px}
   .rc-odds .odd{font-size:17px}
   .rc-odds .pop{font-size:11px}
 }
 @media(max-width:360px){
-  .racecard-head,.racecard-row{grid-template-columns:32px 54px minmax(0,1fr) 64px}
+  .racecard-row{grid-template-columns:32px 50px minmax(0,1fr) 64px}
   .rc-horse-name{font-size:15px}
-  .rc-bodyweight{font-size:9px}
-  .rc-horse-meta .jockey{font-size:10px}
+  .rc-bodyweight{font-size:10px}
+  .rc-horse-meta{font-size:11px}
+  .rc-horse-meta .jockey{font-size:12px}
+  .rc-horse-meta .carry{font-size:12px}
 }
 
   .rc-horse-meta .jockey{font-size:10px}
@@ -934,7 +932,6 @@ function runnerStyleSection(r,p){
   return '<section class="card"><h2>出走表</h2><button data-action="odds-update">オッズ更新</button><span id="odds-status" role="status"></span>'
     +(partial?'<div class="muted" style="margin:7px 0">AI全頭診断をバックグラウンド更新中。完了後に予想印を自動更新します。</div>':'')
     +'<div class="racecard-table">'
-    +'<div class="racecard-head"><div>馬番</div><div>予想印</div><div>馬名<br>年齢 騎手 斤量</div><div>予想<br>オッズ</div></div>'
     +sortedHorseRows(p.rows).map(function(x){
       var h=x.horse,mark=x.predMark||'—',grade=x.overallGrade||'C',score=x.overallScore==null?'—':x.overallScore;
       var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=bodyWeightInline(h);
@@ -5414,7 +5411,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v96.css")
+@app.get("/styles-kraiz-v97.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"no-store, max-age=0"})
@@ -5422,7 +5419,7 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v96.js")
+@app.get("/app-v97.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"no-store, max-age=0"})
