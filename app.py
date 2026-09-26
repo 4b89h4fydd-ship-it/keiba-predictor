@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="競馬展開AI", version="8.20-production-v81-prepared-cache")
+app = FastAPI(title="競馬展開AI", version="8.21-production-v82-history-collect-fix")
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -34,13 +34,13 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="競馬展開AI">
-<link rel="manifest" href="/manifest-v81.webmanifest">
-<link rel="stylesheet" href="/styles-v81.css">
+<link rel="manifest" href="/manifest-v82.webmanifest">
+<link rel="stylesheet" href="/styles-v82.css">
 <title>競馬展開AI</title>
 </head>
 <body>
 <div id="app"><div class="boot">競馬展開AIを起動中…</div></div>
-<script src="/app-v81.js"></script>
+<script src="/app-v82.js"></script>
 </body>
 </html>"""
 
@@ -316,7 +316,7 @@ function courseStageFrac(r,st){var p=courseProfile(r);if(p.shape==="straight")re
 var app=document.getElementById("app");
 var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,historyTimer:null,raceStack:[],historyPrefetch:{},paceStage:0,horseModalNo:null,collectingHorse:null,collectTimer:null,scenarioCode:null};
 
-function cacheKey(d,c){return "keiba:v81:races:"+d+":"+(c||state.circuit||"")}
+function cacheKey(d,c){return "keiba:v82:races:"+d+":"+(c||state.circuit||"")}
 function loadRaceCache(d,c){try{var raw=localStorage.getItem(cacheKey(d,c));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(Date.now()-n(x.ts)>90*60000)return null;return x.rows}catch(e){return null}}
 function saveRaceCache(d,c,rows){try{localStorage.setItem(cacheKey(d,c),JSON.stringify({ts:Date.now(),rows:rows}))}catch(e){}}
 function clearOldPwa(){try{if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(function(rs){for(var i=0;i<rs.length;i++)rs[i].unregister()}).catch(function(){});if(window.caches)caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).catch(function(){})}catch(e){}}
@@ -344,7 +344,7 @@ function isFinal(r){return !!(r&&r.result&&(r.result.status==="確定"||(r.resul
 function mins(t){var m=String(t||"").match(/^(\d{1,2}):(\d{2})/);return m?n(m[1])*60+n(m[2]):9999}
 function nowMins(){var d=new Date(Date.now()+9*3600000);return d.getUTCHours()*60+d.getUTCMinutes()}
 function timeHtml(r){var a=String(r.startTime||"—"),o=String(r.scheduledStartTime||a),c=!!r.startTimeChanged||(a!==o&&a!=="—"&&o!=="—");return c?'<span class="time-old">'+esc(o)+'</span><span class="time-changed">'+esc(a)+' 修正</span>':esc(a)}
-function header(title,back,sub){return '<header class="header"><div class="header-row">'+(back?'<button data-action="back">‹</button>':'')+'<div class="header-title"><h1>'+esc(title)+'</h1>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div><span class="build-badge">v81</span><button data-action="reload">↻</button></div></header>'}
+function header(title,back,sub){return '<header class="header"><div class="header-row">'+(back?'<button data-action="back">‹</button>':'')+'<div class="header-title"><h1>'+esc(title)+'</h1>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div><span class="build-badge">v82</span><button data-action="reload">↻</button></div></header>'}
 function recencyWeights(len){var a=[],i;for(i=0;i<len;i++)a.push(Math.pow(.82,i));return a}
 function weightedRate(vals,weights,def){var s=0,w=0,i;for(i=0;i<vals.length;i++){if(vals[i]==null)continue;var q=weights&&weights[i]!=null?weights[i]:1;s+=n(vals[i])*q;w+=q}return w?s/w:(def==null?.5:def)}
 function raceField(rr){return Math.max(4,n(rr&&rr.fieldSize,12))}
@@ -440,7 +440,7 @@ function renderHome(){var all=state.circuit==="中央"?CENTRAL:LOCAL,venues=[],i
 var live=liveRaces(),liveHtml="";if(state.loading)liveHtml='<div class="home-empty">読込中…</div>';else if(state.date!==today())liveHtml='<div class="home-empty">当日を選ぶとリアルタイム表示します</div>';else if(live.length)liveHtml='<div class="home-live-grid">'+live.map(function(r){var tag=liveTag(r),urgent=tag.indexOf('running')>=0?' urgent':'';return '<button class="home-live-race'+urgent+'" data-race="'+esc(r.id)+'"><div class="live-top">'+tag+'<span class="home-arrow">›</span></div><div class="home-race-line"><span class="home-track">'+esc(r.track)+'</span><span class="home-rno">'+esc(r.raceNumber)+'R</span></div><div class="home-rtitle">'+esc(r.title||"")+'</div><div class="home-rtime">'+timeHtml(r)+'</div></button>'}).join("")+'</div>';else liveHtml='<div class="home-empty">直近の未確定レースはありません</div>';
 var showVenues=venues,vh=showVenues.length?'<div class="home-venue-grid">'+showVenues.map(function(v){return '<button class="home-venue" data-track="'+esc(v[0])+'">'+homeVenueMark(v[0])+'<span class="home-venue-name">'+esc(v[0])+'</span><span class="home-venue-count">'+v[1]+'レース</span><span class="home-arrow">›</span></button>'}).join("")+'</div>':'<div class="home-empty">'+(state.error?esc(state.error):(state.circuit==="中央"?"中央データ取得中、または開催データなし":"この日の取得データはありません"))+'</div>';
 var nx=nextRace(),aiButtons=nx?'<div class="home-ai-actions"><button class="home-ai-select" data-action="pace-pick">選択</button><button class="home-ai-go" data-action="pace-next">展開を見る ›</button></div>':'<div class="home-ai-actions"><button class="home-ai-select" data-action="pace-pick">選択</button></div>';
-return '<div class="home-shell"><div class="home-hero"><img class="hero-horse" src="/hero-horse.webp?v=81" alt=""><div class="brand-wrap"><div class="brand-main">競馬展開<span class="ai">AI</span></div><div class="brand-sub">Race Intelligence · v81</div></div><button class="hero-refresh '+(state.loading?'is-loading':'')+'" data-action="reload"><span class="refresh-icon">↻</span><small>'+(state.loading?'更新中':'更新')+'</small></button></div><main class="home-main">'+
+return '<div class="home-shell"><div class="home-hero"><img class="hero-horse" src="/hero-horse.webp?v=82" alt=""><div class="brand-wrap"><div class="brand-main">競馬展開<span class="ai">AI</span></div><div class="brand-sub">Race Intelligence · v82</div></div><button class="hero-refresh '+(state.loading?'is-loading':'')+'" data-action="reload"><span class="refresh-icon">↻</span><small>'+(state.loading?'更新中':'更新')+'</small></button></div><main class="home-main">'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">▣</span>日付・開催区分</div></div><div class="home-date-row"><div class="home-date-wrap"><input id="date" class="home-date" type="date" value="'+esc(state.date)+'"></div><div class="home-segment"><button data-circuit="中央" class="'+(state.circuit==="中央"?"active":"")+'">中央</button><button data-circuit="地方" class="'+(state.circuit==="地方"?"active":"")+'">地方</button></div></div></section>'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">◉</span>リアルタイムのレース</div><button type="button" class="home-link" data-action="all-races">すべて見る</button></div>'+liveHtml+'</section>'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">●</span>開催場</div></div>'+vh+'</section>'+
@@ -479,11 +479,11 @@ function reloadCurrent(){if(state.loading)return;if(state.race&&state.race.id){v
 function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}
 function refreshRaceAfterCollect(id,attempt){attempt=n(attempt,0);if(!id)return;fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&v=81',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(!state.race||String(state.race.id)!==String(id))return;state.race=body;state.collectingHorse=null;render();if(((body.enrichmentSearch&&body.enrichmentSearch.status==='running')||(body.historySearch&&body.historySearch.status==='running'))&&attempt<8){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,attempt+1)},500)}}).catch(function(){if(!state.race||String(state.race.id)!==String(id))return;if(attempt<5){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,attempt+1)},650);return}state.collectingHorse=null;render()})}
 function collectRaceInfo(no){if(!state.race||!state.race.id)return;var id=state.race.id;state.collectingHorse=no||'all';render();var u='/api/v1/race/'+encodeURIComponent(id)+'/collect?force=1'+(no?'&horse_no='+encodeURIComponent(no):'');fetch(u,{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,0)},250)}).catch(function(){state.collectingHorse=null;render()})}
-function renderRace(){var r=state.race,hs=r.historySearch||{},es=r.enrichmentSearch||{},historyInline='',enrichmentInline=es.status==='running'?'<div class="enrichment-inline"><span><b>情報を自動取得中</b><br><small>公式 / netkeiba / 利用可能な補助ソースを確認</small></span><span>表示は待ちません</span></div>':'';if(hs.status==='running'){var cv=hs.coverage||{},done=n(r.circuit==='中央'?(cv.horsesResolved||cv.horsesWith5Plus):cv.horsesWith5Plus),total=n(cv.totalHorses,(r.horses||[]).length),runs=n(cv.totalRuns);historyInline='<div class="history-inline"><span><b>近走を裏で取得中</b><br><small>取得済み '+runs+'走・確定 '+done+'/'+total+'頭</small></span><span>表示は待ちません</span></div>'}var p=predict(r);state.pred=p;var scenarioTop=p.scenarios.slice().sort(function(a,b){return b.prob-a.prob})[0];if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=scenarioTop?scenarioTop.code:null;var sourceNote=hs.status==='done'?'<div class="data-source-note">【v81】過去走検索：'+n(hs.monthsDone)+'か月確認 / '+n((hs.coverage||{}).totalRuns)+'走取得 / '+esc(hs.source||'履歴データ')+'</div>':(hs.status==='running'?'<div class="data-source-note">【v81】近走データは取得済み分から即表示し、残りをバックグラウンド更新中</div>':(hs.status==='error'?'<div class="notice">過去走の追加取得に失敗。取得済みデータだけで表示します。</div>':''));return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main">'+historyInline+enrichmentInline+renderResult(r)+renderResultGap(r,p)+renderActualFlow(r)+'<section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span>'+(state.raceStack.length?'<span class="past-race-badge">過去レース</span>':'')+'</div><div class="metrics"><div class="metric"><b>'+esc(r.distance)+'m</b><span>距離</span></div><div class="metric"><b>'+esc(r.condition||'不明')+'</b><span>馬場</span></div><div class="metric"><b>'+esc(r.weather||'不明')+'</b><span>天候</span></div><div class="metric"><b>'+season(r.date)+'</b><span>季節</span></div><div class="metric"><b>'+esc((r.horses||[]).length)+'頭</b><span>頭数</span></div></div><div class="data-depth"><span>近走 5走</span><span>'+(r.circuit==='中央'?'中央 直近5走を自動検索':'NAR公式 直近5走を自動検索')+'</span><span>0走は推定値を表示しない</span></div>'+sourceNote+raceSourceStrip(r)+'<div class="manual-fetch-bar"><div><b>全馬情報取得</b><small>JRA/NAR公式を優先し、出馬表・結果・馬場・天候・近走を再確認します。</small></div><button type="button" data-action="fetch-all-info">'+(state.collectingHorse==='all'?'取得中…':'全馬情報取得')+'</button></div></section>'+runnerStyleSection(r,p)+scenarioProbabilitySection(p)+paceBoard(r,p)+'</main>'+horseModal(r,p)+'</div>'}
+function renderRace(){var r=state.race,hs=r.historySearch||{},es=r.enrichmentSearch||{},historyInline='',enrichmentInline=es.status==='running'?'<div class="enrichment-inline"><span><b>情報を自動取得中</b><br><small>公式 / netkeiba / 利用可能な補助ソースを確認</small></span><span>表示は待ちません</span></div>':'';if(hs.status==='running'){var cv=hs.coverage||{},done=n(r.circuit==='中央'?(cv.horsesResolved||cv.horsesWith5Plus):cv.horsesWith5Plus),total=n(cv.totalHorses,(r.horses||[]).length),runs=n(cv.totalRuns);historyInline='<div class="history-inline"><span><b>近走を裏で取得中</b><br><small>取得済み '+runs+'走・確定 '+done+'/'+total+'頭</small></span><span>表示は待ちません</span></div>'}var p=predict(r);state.pred=p;var scenarioTop=p.scenarios.slice().sort(function(a,b){return b.prob-a.prob})[0];if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=scenarioTop?scenarioTop.code:null;var sourceNote=hs.status==='done'?'<div class="data-source-note">【v82】過去走検索：'+n(hs.monthsDone)+'か月確認 / '+n((hs.coverage||{}).totalRuns)+'走取得 / '+esc(hs.source||'履歴データ')+'</div>':(hs.status==='running'?'<div class="data-source-note">【v82】近走データは取得済み分から即表示し、残りをバックグラウンド更新中</div>':(hs.status==='error'?'<div class="notice">過去走の追加取得に失敗。取得済みデータだけで表示します。 <button type="button" class="horse-fetch-btn" data-action="retry-history">再取得</button></div>':''));return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main">'+historyInline+enrichmentInline+renderResult(r)+renderResultGap(r,p)+renderActualFlow(r)+'<section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span>'+(state.raceStack.length?'<span class="past-race-badge">過去レース</span>':'')+'</div><div class="metrics"><div class="metric"><b>'+esc(r.distance)+'m</b><span>距離</span></div><div class="metric"><b>'+esc(r.condition||'不明')+'</b><span>馬場</span></div><div class="metric"><b>'+esc(r.weather||'不明')+'</b><span>天候</span></div><div class="metric"><b>'+season(r.date)+'</b><span>季節</span></div><div class="metric"><b>'+esc((r.horses||[]).length)+'頭</b><span>頭数</span></div></div><div class="data-depth"><span>近走 5走</span><span>'+(r.circuit==='中央'?'中央 直近5走を自動検索':'NAR公式 直近5走を自動検索')+'</span><span>0走は推定値を表示しない</span></div>'+sourceNote+raceSourceStrip(r)+'<div class="manual-fetch-bar"><div><b>全馬情報取得</b><small>JRA/NAR公式を優先し、出馬表・結果・馬場・天候・近走を再確認します。</small></div><button type="button" data-action="fetch-all-info">'+(state.collectingHorse==='all'?'取得中…':'全馬情報取得')+'</button></div></section>'+runnerStyleSection(r,p)+scenarioProbabilitySection(p)+paceBoard(r,p)+'</main>'+horseModal(r,p)+'</div>'}
 function stopTimer(){if(state.timer){clearTimeout(state.timer);state.timer=null}if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}state.simRunning=false}
 function drawPaceStage(idx){if(!state.race||!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;var stages=plan.stages,st=stages[clamp(idx,0,stages.length-1)],r=state.race,board=document.getElementById('pace-board');if(!st||!board)return;state.paceStage=clamp(idx,0,stages.length-1);var order=[],i,z,chip,left,top,rank,rowIdx;for(i=0;i<st.pack.length;i++){z=st.pack[i];rank=i;rowIdx=rank%4;chip=board.querySelector('[data-horse="'+z.no+'"]');if(!chip)continue;left=clamp(90-rank*5.9-n(z.gap)*58,8,92);top=clamp(16+rowIdx*20+n(z.lane)*2.4,12,88);chip.style.left=left+'%';chip.style.top=top+'%';order.push(z.no)}var ob=document.getElementById('course-order');if(ob)ob.innerHTML='<b>'+esc(st.label)+'</b><span>'+order.map(function(no){var h=horseByNo(r,no);return esc(no)+(h?' '+esc(h.name):'')}).join(' → ')+'</span>';var ev=document.getElementById('pace-event');if(ev)ev.innerHTML=stageNarrative(state.pred,idx);var bs=document.querySelectorAll('[data-pace-stage]');for(i=0;i<bs.length;i++)bs[i].className=n(bs[i].getAttribute('data-pace-stage'))===idx?'active':''}
 function render(){stopTimer();try{if(state.raceLoading)app.innerHTML=renderRaceLoading();else if(state.race)app.innerHTML=renderRace();else if(state.picker)app.innerHTML=renderPicker();else if(state.track)app.innerHTML=renderVenue();else app.innerHTML=renderHome();bind();if(state.race){initPaceBoard()}}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
-function bind(){var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];state.circuit=this.getAttribute('data-circuit');state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];state.date=this.value;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];state.track=this.getAttribute('data-track');render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){openRace(this.getAttribute('data-race'),false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=function(){if(state.horseModalNo){state.horseModalNo=null;render();return}if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}if(state.raceLoading){state.raceLoading=null;if(state.raceStack.length)state.race=state.raceStack.pop()}else if(state.race){if(state.raceStack.length)state.race=state.raceStack.pop();else state.race=null}else if(state.picker)state.picker=false;else state.track=null;render()};var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
+function bind(){var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];state.circuit=this.getAttribute('data-circuit');state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];state.date=this.value;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];state.track=this.getAttribute('data-track');render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){openRace(this.getAttribute('data-race'),false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=function(){if(state.horseModalNo){state.horseModalNo=null;render();return}if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}if(state.raceLoading){state.raceLoading=null;if(state.raceStack.length)state.race=state.raceStack.pop()}else if(state.race){if(state.raceStack.length)state.race=state.raceStack.pop();else state.race=null}else if(state.picker)state.picker=false;else state.track=null;render()};var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
 function initPaceBoard(){if(!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;drawPaceStage(clamp(state.paceStage,0,plan.stages.length-1))}
 function load(force){var d=state.date,c=state.circuit,seq=++state.requestSeq,cached=force?null:loadRaceCache(d,c);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render();setTimeout(prefetchNextHistory,120)}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(c)+(force?'&force=1':'')+'&v=81',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,c,rows);state.loading=false;state.error=null;render();setTimeout(prefetchNextHistory,120);var hasWanted=rows.some(function(z){return z.circuit===c});if(!hasWanted&&attempts<8){setTimeout(request,650)}}).catch(function(){if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;if(attempts<3){setTimeout(request,450*attempts);return}state.loading=false;state.error='取得に失敗しました。更新を押して再試行できます。';render()})}request()}
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
@@ -2742,8 +2742,13 @@ def _start_central_history_search(race_id: str, iso_date: str, force: bool = Fal
                 store.upsert([current])
                 fresh_detail=central_race_detail(race_id) or current
                 cov_now=_central_detail_coverage(fresh_detail)
+                total_now=int(cov_now.get("totalHorses") or 0)
+                resolved_now=int(cov_now.get("horsesResolved") or cov_now.get("horsesWith5Plus") or 0)
+                # A debut/young horse can legitimately have 0 prior runs. If JRA says the
+                # inspected career is complete, treat it as resolved instead of a fetch error.
+                central_done=(total_now == 0) or (resolved_now >= total_now) or bool(cov_now.get("horsesWithHistory",0))
                 with _race_history_lock:
-                    _race_history_jobs[race_id]={"status":"done" if cov_now.get("horsesWithHistory",0)>0 else "error",
+                    _race_history_jobs[race_id]={"status":"done" if central_done else ("error" if errors else "done"),
                         "monthsDone":0,"maxMonths":0,"coverage":cov_now,"error":" | ".join(errors[-5:]),
                         "source":"JRA公式 競走馬情報5走補完"}
                 with _detail_cache_lock:
@@ -3330,7 +3335,7 @@ def _apply_enrichment(race_id:str,detail:dict)->dict:
     detail["enrichmentSearch"]=_enrichment_status(race_id);return detail
 
 
-# --- v81 prepared-race cache -------------------------------------------
+# --- v82 prepared-race cache -------------------------------------------
 # Race pages should not rebuild every horse's history/stat profile at tap time.
 # We prepare complete display JSON in the background and serve that snapshot first.
 
@@ -3378,7 +3383,7 @@ class PreparedRaceStore:
         now = int(time.time())
         detail.setdefault("preparedMeta", {})
         detail["preparedMeta"].update({
-            "build": "v81",
+            "build": "v82",
             "prepared": True,
             "preparedAtEpoch": now,
             "metricsPrecomputed": True,
@@ -3753,7 +3758,83 @@ def prewarm_status(date: str = Query(""), circuit: str = Query("")):
     with _prewarm_lock:
         state=dict(_prewarm_state.get(key) or {}) if key else {k:dict(v) for k,v in _prewarm_state.items()}
     db=PREPARED_STORE.status(date,_clean(circuit))
-    return {"build":"v81","state":state,"prepared":db}
+    return {"build":"v82","state":state,"prepared":db}
+
+
+@app.get("/api/v1/race/{race_id}/collect")
+def collect_race_info(
+    race_id: str,
+    force: int = Query(1),
+    horse_no: int | None = Query(None, ge=1, le=99),
+):
+    """Retry enrichment + prior-race collection for the selected race.
+
+    The previous UI already called this URL, but the server route was missing, so the
+    request always returned 404 and the app showed the history-fetch failure.
+    Keep the work asynchronous so the button returns immediately and the
+    existing polling UI can refresh the completed data.
+    """
+    detail = nar_race_detail(race_id) if race_id.startswith("nar-") else central_race_detail(race_id)
+    if not detail:
+        raise HTTPException(status_code=404, detail="race not found")
+
+    force_flag = bool(force)
+
+    # Re-run supplemental sources (netkeiba / configured extras) without blocking.
+    try:
+        enrich = _start_enrichment(race_id, detail, force=force_flag, horse_no=horse_no)
+    except Exception as exc:
+        print("collect enrichment start failed", race_id, exc)
+        enrich = {"status":"unavailable","sources":[],"error":str(exc)}
+
+    # Re-run official history only when it is actually incomplete. Avoid launching
+    # a duplicate worker while the same race is already running.
+    history = _race_history_status(race_id)
+    try:
+        if race_id.startswith("nar-"):
+            names = [str(h.get("name") or "") for h in detail.get("horses", []) if h.get("name")]
+            cov = _history_counts(names, detail.get("date") or "9999-12-31")
+            if _history_is_enough(cov, int((history or {}).get("monthsDone") or 0)):
+                history = {"status":"done","monthsDone":int((history or {}).get("monthsDone") or 0),
+                           "maxMonths":int((history or {}).get("maxMonths") or 0),"coverage":cov,"error":"",
+                           "source":(history or {}).get("source") or "NAR公式ローカル履歴"}
+            elif not history or history.get("status") != "running":
+                history = _start_race_history_search(
+                    race_id, detail.get("date") or _today_iso(), names,
+                    force=force_flag or bool(history and history.get("status") == "error")
+                )
+        else:
+            cov = _central_detail_coverage(detail)
+            total = int(cov.get("totalHorses") or 0)
+            resolved = int(cov.get("horsesResolved") or cov.get("horsesWith5Plus") or 0)
+            if total == 0 or resolved >= total:
+                history = {"status":"done","monthsDone":int((history or {}).get("monthsDone") or 0),
+                           "maxMonths":int((history or {}).get("maxMonths") or 0),"coverage":cov,"error":"",
+                           "source":(history or {}).get("source") or "JRA公式 競走馬情報5走補完"}
+            elif not history or history.get("status") != "running":
+                history = _start_central_history_search(
+                    race_id, detail.get("date") or _today_iso(),
+                    force=force_flag or bool(history and history.get("status") == "error")
+                )
+    except Exception as exc:
+        print("collect history start failed", race_id, exc)
+        history = history or {"status":"error","monthsDone":0,"maxMonths":0,"coverage":{},"error":str(exc),"source":""}
+
+    # Drop stale display snapshots so the next poll can see newly collected runs.
+    try:
+        PREPARED_STORE.delete(race_id)
+    except Exception:
+        pass
+    with _detail_cache_lock:
+        _detail_cache.pop(race_id, None)
+
+    return {
+        "status":"started",
+        "raceId":race_id,
+        "horseNumber":horse_no,
+        "historySearch":history or {"status":"done","coverage":{}},
+        "enrichmentSearch":enrich,
+    }
 
 
 @app.get("/api/v1/odds-refresh/{race_id}")
@@ -3805,7 +3886,7 @@ def enrichment_schema():
 
 @app.get("/build")
 def build_info():
-    return {"build":"v81","appVersion":"8.20-production-v81-prepared-cache","recentRuns":5,"allCentralVenues":True,"deterministicCentralDetailId":True,"centralResults":True,"jraOfficialResultPrimary":True,"weatherGoingPrimary":"JRA公式結果","oddsUi":False,"centralLiveOddsApi":False,"scenarioABCSelectable":True,"scenarioHorseNumbers":True,"stickyVenueHeader":True,"venueMoreButton":False,"allVenuesAlwaysVisible":True,"circuitSpecificFetch":True,"manualCollect":True,"preparedRaceCache":True,"prewarmOnList":True,"serverHorseMetricPrecompute":True,"preparedTodayTtlSec":int(os.getenv("PREPARED_TODAY_TTL_SEC","45")),"builtInSources":["JRA公式","NAR公式","netkeiba"],"smartRcDirectLink":False,"multiSource":True,"nonBlocking":True,"grade":"S/A/B/C + ◎○▲☆△注"}
+    return {"build":"v82","appVersion":"8.21-production-v82-history-collect-fix","recentRuns":5,"allCentralVenues":True,"deterministicCentralDetailId":True,"centralResults":True,"jraOfficialResultPrimary":True,"weatherGoingPrimary":"JRA公式結果","oddsUi":False,"centralLiveOddsApi":False,"scenarioABCSelectable":True,"scenarioHorseNumbers":True,"stickyVenueHeader":True,"venueMoreButton":False,"allVenuesAlwaysVisible":True,"circuitSpecificFetch":True,"manualCollect":True,"preparedRaceCache":True,"prewarmOnList":True,"serverHorseMetricPrecompute":True,"preparedTodayTtlSec":int(os.getenv("PREPARED_TODAY_TTL_SEC","45")),"builtInSources":["JRA公式","NAR公式","netkeiba"],"smartRcDirectLink":False,"multiSource":True,"nonBlocking":True,"grade":"S/A/B/C + ◎○▲☆△注"}
 
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -3819,15 +3900,15 @@ def hero_horse():
 def pace_preview():
     return Response(PACE_PREVIEW_WEBP, media_type="image/webp", headers={"Cache-Control":"public, max-age=86400"})
 
-@app.get("/styles-v81.css")
+@app.get("/styles-v82.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"no-store, max-age=0"})
 
-@app.get("/app-v81.js")
+@app.get("/app-v82.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"no-store, max-age=0"})
 
-@app.get("/manifest-v81.webmanifest")
+@app.get("/manifest-v82.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"no-store, max-age=0"})
 
