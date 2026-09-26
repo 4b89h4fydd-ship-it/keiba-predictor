@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="競馬展開AI", version="8.21-production-v82-history-collect-fix")
+app = FastAPI(title="競馬展開AI", version="8.60-production-v86-racedb-core")
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -34,13 +34,13 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="競馬展開AI">
-<link rel="manifest" href="/manifest-v82.webmanifest">
-<link rel="stylesheet" href="/styles-v82.css">
+<link rel="manifest" href="/manifest-v86.webmanifest">
+<link rel="stylesheet" href="/styles-v86.css">
 <title>競馬展開AI</title>
 </head>
 <body>
 <div id="app"><div class="boot">競馬展開AIを起動中…</div></div>
-<script src="/app-v82.js"></script>
+<script src="/app-v86.js"></script>
 </body>
 </html>"""
 
@@ -187,7 +187,7 @@ html,body{overflow-x:hidden}
 .ai-flow-card{padding:0!important;overflow:hidden;background:linear-gradient(180deg,#082750,#061b3d);border:1px solid rgba(61,145,225,.55);color:#fff;box-shadow:0 8px 24px rgba(2,20,48,.16)}
 .ai-flow-head{display:flex;align-items:flex-start;gap:9px;padding:13px 13px 9px}.ai-flow-bars{display:flex;align-items:end;gap:3px;width:29px;height:28px;flex:0 0 29px}.ai-flow-bars i{display:block;width:6px;border-radius:3px;background:#54edff;box-shadow:0 0 10px rgba(84,237,255,.32)}.ai-flow-bars i:nth-child(1){height:10px}.ai-flow-bars i:nth-child(2){height:19px}.ai-flow-bars i:nth-child(3){height:27px}.ai-flow-copy{min-width:0;flex:1}.ai-flow-title{font-size:20px;font-weight:720;line-height:1.15}.ai-flow-sub{font-size:10px;color:#b8cbe2;margin-top:3px;line-height:1.45}.ai-flow-scenario{font-size:9px;color:#dff8ff;border:1px solid rgba(88,210,255,.5);background:rgba(12,51,92,.64);border-radius:999px;padding:5px 7px;white-space:nowrap}
 .ai-stage-tabs{display:flex;gap:5px;overflow-x:auto;padding:0 10px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}.ai-stage-tabs::-webkit-scrollbar{display:none}.ai-stage-tabs button{flex:0 0 auto;border:1px solid rgba(108,169,226,.48);background:rgba(4,25,56,.62);color:#c9dbef;border-radius:999px;padding:7px 12px;font-size:10px;white-space:nowrap}.ai-stage-tabs button.active{background:linear-gradient(135deg,#156ee9,#6948ed);border-color:#57e5ff;color:#fff;box-shadow:0 0 14px rgba(54,161,255,.22)}
-.ai-race-visual{position:relative;height:275px;margin:0 10px 10px;border-radius:15px;overflow:hidden;border:1px solid rgba(83,191,240,.55);background-image:linear-gradient(180deg,rgba(4,19,41,.10),rgba(4,19,41,.02)),url('/pace-preview.webp?v=81');background-size:cover;background-position:center;box-shadow:inset 0 0 34px rgba(1,16,40,.26)}.ai-race-visual:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(2,17,39,.25),transparent 18%,transparent 82%,rgba(2,17,39,.18));pointer-events:none}.ai-race-meta{position:absolute;left:9px;top:9px;z-index:8;border:1px solid rgba(143,204,248,.48);background:rgba(2,22,50,.72);border-radius:999px;padding:5px 8px;color:#e9f7ff;font-size:9px;backdrop-filter:blur(5px)}
+.ai-race-visual{position:relative;height:275px;margin:0 10px 10px;border-radius:15px;overflow:hidden;border:1px solid rgba(83,191,240,.55);background-image:linear-gradient(180deg,rgba(4,19,41,.10),rgba(4,19,41,.02)),url('/pace-preview.webp?v=84');background-size:cover;background-position:center;box-shadow:inset 0 0 34px rgba(1,16,40,.26)}.ai-race-visual:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(2,17,39,.25),transparent 18%,transparent 82%,rgba(2,17,39,.18));pointer-events:none}.ai-race-meta{position:absolute;left:9px;top:9px;z-index:8;border:1px solid rgba(143,204,248,.48);background:rgba(2,22,50,.72);border-radius:999px;padding:5px 8px;color:#e9f7ff;font-size:9px;backdrop-filter:blur(5px)}
 .ai-race-runner{position:absolute;z-index:6;transform:translate(-50%,-50%);display:flex;align-items:center;gap:3px;transition:left .62s cubic-bezier(.2,.8,.2,1),top .62s cubic-bezier(.2,.8,.2,1);will-change:left,top;filter:drop-shadow(0 2px 2px rgba(0,0,0,.28))}.ai-race-runner .frame-badge{width:29px;height:29px;border-radius:50%;font-size:11px;border-width:2px}.ai-race-runner .pace-name{font-size:8px;max-width:70px;padding:2px 4px;background:rgba(255,255,255,.90)}.ai-race-runner .course-mark{position:absolute;left:-6px;top:-10px;background:#071a35;color:#fff;border:1px solid rgba(255,255,255,.22);border-radius:999px;font-size:9px;padding:1px 4px}.ai-race-order{position:absolute;left:8px;right:8px;bottom:8px;z-index:9;background:rgba(3,22,50,.78);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;padding:7px 8px;font-size:9px;line-height:1.45;backdrop-filter:blur(5px)}.ai-race-order b{color:#58ebff;margin-right:6px}.ai-race-order span{white-space:normal}.ai-race-note{padding:0 12px 12px;font-size:9px;color:#abc2dd;line-height:1.45}
 .scenario-diagnostics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:7px}.scenario-diagnostic{background:#f8fafc;border-radius:8px;padding:6px 4px;text-align:center}.scenario-diagnostic small{display:block;font-size:8px;color:#667085}.scenario-diagnostic b{display:block;font-size:11px;margin-top:2px;font-weight:600}.scenario-warning{margin-top:7px;padding:7px 8px;border-radius:9px;background:#fff7ed;color:#9a3412;font-size:9px;line-height:1.45}
 .front-battle-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.front-battle-box{border:1px solid #dbe3ee;background:#f8fafc;border-radius:10px;padding:8px;min-width:0}.front-battle-box small{display:block;color:#667085;font-size:8px;margin-bottom:4px}.front-battle-box b{display:block;font-size:11px;line-height:1.4}.front-battle-note{margin-top:7px;font-size:9px;line-height:1.5;color:#475467}.front-battle-alert{margin-top:6px;border-radius:9px;background:#fff7ed;color:#9a3412;padding:7px 8px;font-size:9px;line-height:1.45}
@@ -314,11 +314,14 @@ function coursePathD(p){if(p.shape==="straight")return "M18 92 L182 92";if(p.sha
 function normFrac(x){x=x%1;return x<0?x+1:x}
 function courseStageFrac(r,st){var p=courseProfile(r);if(p.shape==="straight")return st===0?.05:(st===1?.67:.92);var laps=Math.max(.1,n(r.distance,1200)/p.lap),start=normFrac(.965-p.dir*(laps%1)),prog=st===0?.015:(st===1?.81:.965);return normFrac(start+p.dir*laps*prog)}
 var app=document.getElementById("app");
-var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,historyTimer:null,raceStack:[],historyPrefetch:{},paceStage:0,horseModalNo:null,collectingHorse:null,collectTimer:null,scenarioCode:null};
+var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,historyTimer:null,raceStack:[],historyPrefetch:{},paceStage:0,horseModalNo:null,collectingHorse:null,collectTimer:null,scenarioCode:null,analysisSaved:{}};
 
-function cacheKey(d,c){return "keiba:v82:races:"+d+":"+(c||state.circuit||"")}
+function cacheKey(d,c){return "keiba:v86:races:"+d+":"+(c||state.circuit||"")}
 function loadRaceCache(d,c){try{var raw=localStorage.getItem(cacheKey(d,c));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(Date.now()-n(x.ts)>90*60000)return null;return x.rows}catch(e){return null}}
 function saveRaceCache(d,c,rows){try{localStorage.setItem(cacheKey(d,c),JSON.stringify({ts:Date.now(),rows:rows}))}catch(e){}}
+function detailCacheKey(id){return "keiba:v86:detail:"+String(id||"")}
+function loadDetailCache(id){try{var raw=localStorage.getItem(detailCacheKey(id));if(!raw)return null;var x=JSON.parse(raw);if(!x||!x.row)return null;var age=Date.now()-n(x.ts);if(age>6*3600000)return null;var r=x.row,hs=r&&r.horses||[];if(r&&r.circuit==="中央"&&n(r.fieldSize)>0&&!hs.length&&!isFinal(r))return null;return r}catch(e){return null}}
+function saveDetailCache(id,row){try{if(!id||!row)return;var hs=row.horses||[];if(row.circuit==="中央"&&n(row.fieldSize)>0&&!hs.length&&!isFinal(row))return;localStorage.setItem(detailCacheKey(id),JSON.stringify({ts:Date.now(),row:row}))}catch(e){}}
 function clearOldPwa(){try{if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(function(rs){for(var i=0;i<rs.length;i++)rs[i].unregister()}).catch(function(){});if(window.caches)caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).catch(function(){})}catch(e){}}
 function today(){var d=new Date(Date.now()+9*3600000);return d.toISOString().slice(0,10)}
 function esc(v){return String(v==null?"":v).replace(/[&<>\"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]})}
@@ -337,14 +340,14 @@ function badge(h){return '<span class="frame-badge frame'+frame(h)+'">'+esc(h&&h
 function winOddsText(h){var v=h&&h.winOdds;if(v==null||v===''||Number(v)<=0)return'—';var x=Number(v);return isFinite(x)?(Math.round(x*10)/10).toFixed(1):String(v)}
 function popularityText(h){var p=n(h&&h.popularity,0);return p>0?p+'人気':'—'}
 function smartVal(v){if(v==null||v==='')return'—';var x=Number(v);if(isFinite(x))return (Math.round(x*10)/10).toString();return String(v)}
-function sourceCollectionSection(h,r){var src=r.dataSources||[],es=r.enrichmentSearch||{},txt=es.status==='running'?'取得中':(es.status==='done'?'取得済':'未取得');return'<div class="detail-heading">情報取得</div><button type="button" class="horse-fetch-btn" data-horse-fetch="'+esc(h.horseNumber)+'">この馬の情報取得</button><div class="horse-fetch-note">公式・netkeiba・利用可能な補助ソースを再確認。取得できない項目は「—」のままにします。</div><div class="source-strip"><span class="source-chip '+(es.status==='running'?'busy':'neutral')+'">'+esc(txt)+'</span>'+src.map(function(z){return'<span class="source-chip good">'+esc(z)+'</span>'}).join('')+'</div>'}
+function sourceCollectionSection(h,r){var src=(r.dataSources||[]).slice(),es=r.enrichmentSearch||{},ped=h&&h.pedigree||{},sm=h&&h.smartRc||{},busy=es.status==='running',hasBase=!!(h&&(h.name||h.jockey||h.trainer)),hasRich=!!(h&&((h.recentRaces||[]).length||ped.sire||ped.dam||ped.damsire||Object.keys(sm).length||h.owner||h.producer||h.debutNoHistory||Object.keys(h.extraSources||{}).length)),txt=busy?'取得中':(hasRich||es.status==='done'?'取得済':(es.status==='error'?'再取得可':(hasBase?'基本情報取得済':'未取得')));return'<div class="detail-heading">情報取得</div><button type="button" class="horse-fetch-btn" data-horse-fetch="'+esc(h.horseNumber)+'">'+(busy?'取得中…':'この馬の情報取得')+'</button><div class="horse-fetch-note">JRA/NAR公式を優先し、netkeiba・SmartRc・設定済み補助ソースを横断。新馬は過去走0件でも正常、障害は障害実績を優先します。</div><div class="source-strip"><span class="source-chip '+(busy?'busy':(hasRich||es.status==='done'?'good':'neutral'))+'">'+esc(txt)+'</span>'+src.map(function(z){return'<span class="source-chip good">'+esc(z)+'</span>'}).join('')+'</div>'+(es.error?'<div class="muted">'+esc(es.error)+'</div>':'')}
 function raceSourceStrip(r){var src=r.dataSources||[],es=r.enrichmentSearch||{},chips=[];for(var i=0;i<src.length;i++)chips.push('<span class="source-chip good">'+esc(src[i])+'</span>');if(!chips.length)chips.push('<span class="source-chip neutral">自動取得待ち</span>');if(es.status==='running')chips.unshift('<span class="source-chip busy">情報取得中</span>');return'<div class="source-strip">'+chips.join('')+'</div>'}
 function horseByNo(r,no){var hs=r.horses||[],i;for(i=0;i<hs.length;i++)if(n(hs[i].horseNumber)===n(no))return hs[i];return null}
 function isFinal(r){return !!(r&&r.result&&(r.result.status==="確定"||(r.result.finishers||[]).length))}
 function mins(t){var m=String(t||"").match(/^(\d{1,2}):(\d{2})/);return m?n(m[1])*60+n(m[2]):9999}
 function nowMins(){var d=new Date(Date.now()+9*3600000);return d.getUTCHours()*60+d.getUTCMinutes()}
 function timeHtml(r){var a=String(r.startTime||"—"),o=String(r.scheduledStartTime||a),c=!!r.startTimeChanged||(a!==o&&a!=="—"&&o!=="—");return c?'<span class="time-old">'+esc(o)+'</span><span class="time-changed">'+esc(a)+' 修正</span>':esc(a)}
-function header(title,back,sub){return '<header class="header"><div class="header-row">'+(back?'<button data-action="back">‹</button>':'')+'<div class="header-title"><h1>'+esc(title)+'</h1>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div><span class="build-badge">v82</span><button data-action="reload">↻</button></div></header>'}
+function header(title,back,sub){return '<header class="header"><div class="header-row">'+(back?'<button data-action="back">‹</button>':'')+'<div class="header-title"><h1>'+esc(title)+'</h1>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div><span class="build-badge">v86</span><button data-action="reload">↻</button></div></header>'}
 function recencyWeights(len){var a=[],i;for(i=0;i<len;i++)a.push(Math.pow(.82,i));return a}
 function weightedRate(vals,weights,def){var s=0,w=0,i;for(i=0;i<vals.length;i++){if(vals[i]==null)continue;var q=weights&&weights[i]!=null?weights[i]:1;s+=n(vals[i])*q;w+=q}return w?s/w:(def==null?.5:def)}
 function raceField(rr){return Math.max(4,n(rr&&rr.fieldSize,12))}
@@ -420,6 +423,7 @@ function scenarioPlan(r,rows,sc,suit){var scenario=sc.slice().sort(function(a,b)
 function gradeClass(g){return g==='S'?'grade-s':(g==='A'?'grade-a':(g==='B'?'grade-b':(g==='C'?'grade-c':'grade-hold')))}
 function assignOverallGrades(rows,suit,sc,pressure){var eligible=[],i,x,no,su,cnt,fitVals,fitScore,raw;for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);su=suit[no]||{overall:.5};cnt=x.fit&&x.fit.counts||{};fitVals=[];if(n(cnt.distance))fitVals.push(confidenceBlend(x.fit.distance,cnt.distance));if(n(cnt.track))fitVals.push(confidenceBlend(x.fit.track,cnt.track));if(n(cnt.condition))fitVals.push(confidenceBlend(x.fit.condition,cnt.condition));fitScore=fitVals.length?mean(fitVals):.5;raw=x.ability*.29+n(su.overall,.5)*.27+Math.max(x.frontStay,x.comeFromBehind)*.13+fitScore*.10+x.stamina*.06+(1-x.fade)*.05+x.posCons*.04+x.coverage*.06;raw=clamp(raw,0,1);x.overallRaw=raw;x.overallReasons=[];if((x.horse.recentRaces||[]).length<2||x.styleSamples<2){x.overallGrade='保留';x.overallScore=null;x.overallReasons=['実データ不足'];continue}if(x.ability>=.62)x.overallReasons.push('能力評価高め');if(n(su.overall)>=.62)x.overallReasons.push('展開適性高め');if(x.frontStay>=.64)x.overallReasons.push('前残り力');if(x.comeFromBehind>=.64)x.overallReasons.push('差し込み力');if(x.fade<=.25)x.overallReasons.push('下がり率低め');if(fitVals.length&&fitScore>=.58)x.overallReasons.push('今回条件に実績');if(x.frontCost>=.12)x.overallReasons.push('隣接圧力注意');if(x.fade>=.50)x.overallReasons.push('下がり率注意');if(x.coverage<.45)x.overallReasons.push('データ量少なめ');eligible.push(x)}if(!eligible.length)return;var lo=Math.min.apply(null,eligible.map(function(z){return z.overallRaw})),hi=Math.max.apply(null,eligible.map(function(z){return z.overallRaw}));eligible.forEach(function(z){var rel=hi===lo?.5:(z.overallRaw-lo)/(hi-lo);z.overallScore=Math.round(clamp(z.overallRaw*.78+(.45+.55*rel)*.22,0,1)*100)});eligible.sort(function(a,b){return b.overallScore-a.overallScore||b.ability-a.ability||n(a.horse.horseNumber)-n(b.horse.horseNumber)});var m=eligible.length;eligible.forEach(function(z,rank){var pct=(rank+1)/m,score=z.overallScore;if((score>=82)||(pct<=.12&&score>=70))z.overallGrade='S';else if((score>=72)||(pct<=.35&&score>=64))z.overallGrade='A';else if((score>=60)||(pct<=.70))z.overallGrade='B';else z.overallGrade='C';if(!z.overallReasons.length)z.overallReasons.push('総合バランス型')})}
 function assignPredictionMarks(rows){var syms=["◎","○","▲","☆","△","注"],eligible=rows.filter(function(x){return x.overallScore!=null&&x.overallGrade!=="保留"}).slice().sort(function(a,b){return n(b.overallScore)-n(a.overallScore)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});rows.forEach(function(x){x.predMark=""});eligible.slice(0,syms.length).forEach(function(x,i){x.predMark=syms[i]})}
+function saveRaceAnalysis(r,p){try{if(!r||!r.id||!p)return;var meta=r.preparedMeta||{},key=String(r.id)+'|'+String(meta.preparedAtEpoch||0)+'|'+String((r.horses||[]).length);if(state.analysisSaved[key])return;state.analysisSaved[key]=1;var sc=(p.scenarios||[]).map(function(z){return{code:z.code,prob:z.prob,horses:(z.horses||[]).map(function(h){return n(h.horseNumber)})}}),hs=(p.rows||[]).map(function(x){var h=x.horse||{},fit=x.fit||{};return{horseNumber:n(h.horseNumber),name:h.name||'',mark:x.predMark||'',grade:x.overallGrade||'',score:x.overallScore,expectedStyle:x.expected||'',pastStyle:x.pastStyle||'',stylePoint:x.score,fadeRate:x.fade,goProb:x.goProb,ten:x.ten,frontStay:x.frontStay,fit:fit,analysisMode:raceMode(r)}});fetch('/api/v1/racedb/analysis/'+encodeURIComponent(r.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({generatedAt:new Date().toISOString(),mode:raceMode(r),scenarios:sc,horses:hs})}).catch(function(){delete state.analysisSaved[key]})}catch(e){}}
 function predict(r){var rows=buildRows(r),occ=earlyOcc(r),sc=scenarioModel(r,rows),suit=suitability(rows,sc),pressure=pressureInfo(rows),plans={},i;assignOverallGrades(rows,suit,sc,pressure);assignPredictionMarks(rows);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit),cov=mean(rows.map(function(x){return x.coverage}));return{rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure}}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
@@ -440,7 +444,7 @@ function renderHome(){var all=state.circuit==="中央"?CENTRAL:LOCAL,venues=[],i
 var live=liveRaces(),liveHtml="";if(state.loading)liveHtml='<div class="home-empty">読込中…</div>';else if(state.date!==today())liveHtml='<div class="home-empty">当日を選ぶとリアルタイム表示します</div>';else if(live.length)liveHtml='<div class="home-live-grid">'+live.map(function(r){var tag=liveTag(r),urgent=tag.indexOf('running')>=0?' urgent':'';return '<button class="home-live-race'+urgent+'" data-race="'+esc(r.id)+'"><div class="live-top">'+tag+'<span class="home-arrow">›</span></div><div class="home-race-line"><span class="home-track">'+esc(r.track)+'</span><span class="home-rno">'+esc(r.raceNumber)+'R</span></div><div class="home-rtitle">'+esc(r.title||"")+'</div><div class="home-rtime">'+timeHtml(r)+'</div></button>'}).join("")+'</div>';else liveHtml='<div class="home-empty">直近の未確定レースはありません</div>';
 var showVenues=venues,vh=showVenues.length?'<div class="home-venue-grid">'+showVenues.map(function(v){return '<button class="home-venue" data-track="'+esc(v[0])+'">'+homeVenueMark(v[0])+'<span class="home-venue-name">'+esc(v[0])+'</span><span class="home-venue-count">'+v[1]+'レース</span><span class="home-arrow">›</span></button>'}).join("")+'</div>':'<div class="home-empty">'+(state.error?esc(state.error):(state.circuit==="中央"?"中央データ取得中、または開催データなし":"この日の取得データはありません"))+'</div>';
 var nx=nextRace(),aiButtons=nx?'<div class="home-ai-actions"><button class="home-ai-select" data-action="pace-pick">選択</button><button class="home-ai-go" data-action="pace-next">展開を見る ›</button></div>':'<div class="home-ai-actions"><button class="home-ai-select" data-action="pace-pick">選択</button></div>';
-return '<div class="home-shell"><div class="home-hero"><img class="hero-horse" src="/hero-horse.webp?v=82" alt=""><div class="brand-wrap"><div class="brand-main">競馬展開<span class="ai">AI</span></div><div class="brand-sub">Race Intelligence · v82</div></div><button class="hero-refresh '+(state.loading?'is-loading':'')+'" data-action="reload"><span class="refresh-icon">↻</span><small>'+(state.loading?'更新中':'更新')+'</small></button></div><main class="home-main">'+
+return '<div class="home-shell"><div class="home-hero"><img class="hero-horse" src="/hero-horse.webp?v=86" alt=""><div class="brand-wrap"><div class="brand-main">競馬展開<span class="ai">AI</span></div><div class="brand-sub">Race Intelligence · v86</div></div><button class="hero-refresh '+(state.loading?'is-loading':'')+'" data-action="reload"><span class="refresh-icon">↻</span><small>'+(state.loading?'更新中':'更新')+'</small></button></div><main class="home-main">'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">▣</span>日付・開催区分</div></div><div class="home-date-row"><div class="home-date-wrap"><input id="date" class="home-date" type="date" value="'+esc(state.date)+'"></div><div class="home-segment"><button data-circuit="中央" class="'+(state.circuit==="中央"?"active":"")+'">中央</button><button data-circuit="地方" class="'+(state.circuit==="地方"?"active":"")+'">地方</button></div></div></section>'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">◉</span>リアルタイムのレース</div><button type="button" class="home-link" data-action="all-races">すべて見る</button></div>'+liveHtml+'</section>'+
 '<section class="home-card"><div class="home-section-head"><div class="home-section-title"><span class="home-section-icon">●</span>開催場</div></div>'+vh+'</section>'+
@@ -471,21 +475,21 @@ function scenarioProbabilitySection(p){var top=p.scenarios.slice().sort(function
 function paceBoard(r,p){var hs=(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}),plan=activeScenarioPlan(p)||p.plan,stages=plan.stages||[],cp=courseProfile(r);return'<section class="card ai-flow-card"><div class="ai-flow-head"><span class="ai-flow-bars"><i></i><i></i><i></i></span><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div><div class="ai-flow-sub">過去走・脚質・枠順・テン・隣接圧力から局面ごとの隊列を表示</div></div><span class="ai-flow-scenario">'+esc(plan.scenario.code)+' '+esc(plan.scenario.title)+'</span></div><div class="ai-stage-tabs">'+stages.map(function(s,i){return'<button data-pace-stage="'+i+'" class="'+(i===0?'active':'')+'">'+esc(s.label)+'</button>'}).join('')+'</div><div class="ai-race-swipe-hint">図の左半分タップ＝前の局面　／　右半分タップ＝次の局面</div><div class="ai-race-topline"><div class="ai-race-meta-chip">'+esc(r.track)+'　'+esc(r.distance)+'m　'+esc(cp.turn)+(cp.shape==='straight'?'':'回り')+'</div><div class="ai-race-axis-strip"><span>← 後方</span><span>前方・先頭 →</span></div></div><div class="ai-race-board-wrap"><div id="pace-board" class="ai-race-visual">'+hs.map(function(h){return'<div class="ai-race-runner" data-horse="'+esc(h.horseNumber)+'" style="left:10%;top:50%">'+badge(h)+'</div>'}).join('')+'</div></div><div id="course-order" class="ai-race-order-panel">隊列を準備中</div><div id="pace-event" class="ai-stage-event">展開イベントを準備中</div><div class="ai-race-note">赤枠内は馬番のみ表示。説明文は下に分離し、右が先頭、左が後方です。</div></section>'}
 function renderRaceLoading(){return '<div class="shell">'+header("レース読込中",true,"出走馬・近走データを準備中")+'<main class="main"><section class="card"><div class="empty">このレースだけ詳しいデータを読み込んでいます…</div></section></main></div>'}
 function historySearchSection(r){var hs=r.historySearch||{},cv=hs.coverage||{},months=n(hs.monthsDone),max=n(hs.maxMonths,60),progress=max?clamp(months/max*100,4,96):8,counts=cv.counts||{},isCentral=r.circuit==='中央',horseHtml=(r.horses||[]).map(function(h){var c=n(counts[h.name]);return'<span>'+badge(h)+esc(h.name||'')+' <b>'+Math.min(5,c)+'/5</b></span>'}).join(''),src=isCentral?'中央データを過去へさかのぼり':'NAR公式履歴を過去へさかのぼり';return'<section class="card history-search-card"><div class="history-search-head"><span class="history-spinner"></span><div><div class="history-search-title">直近5走を取得中</div><div class="history-search-sub">全頭について'+src+'、直近最大5走を確認します。キャリア5走未満の馬は存在する全走を取得した時点で確定し、固定値では埋めません。取得した過去レースは詳細画面から開けます。</div></div></div><div class="history-progress"><i style="width:'+progress+'%"></i></div><div class="history-stats"><span>検索 '+months+' / '+max+'か月</span><span>'+(isCentral?'履歴確定 ':'5走取得 ')+n(isCentral?(cv.horsesResolved||cv.horsesWith5Plus):cv.horsesWith5Plus)+' / '+n(cv.totalHorses,(r.horses||[]).length)+'頭</span><span>履歴あり '+n(cv.horsesWithHistory)+'頭</span><span>取得 '+n(cv.totalRuns)+'走</span></div><div class="history-horses">'+horseHtml+'</div></section>'}
-function scheduleHistoryPoll(id){if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.historyTimer=setTimeout(function(){fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&v=81',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(!state.race||String(state.race.id)!==String(id))return;state.race=body;render();if((body.historySearch&&body.historySearch.status==='running')||(body.enrichmentSearch&&body.enrichmentSearch.status==='running'))scheduleHistoryPoll(id)}).catch(function(){if(state.race&&String(state.race.id)===String(id))scheduleHistoryPoll(id)})},1000)}
-function prefetchNextHistory(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.id}),now=nowMins();a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});a.slice(0,2).forEach(function(x,idx){if(!x||state.historyPrefetch[x.id])return;state.historyPrefetch[x.id]=1;setTimeout(function(){fetch('/api/v1/race/'+encodeURIComponent(x.id)+'?history=0&prepared=1&v=81',{cache:'no-store'}).catch(function(){delete state.historyPrefetch[x.id]})},idx*260)})}
-function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(!keepStack)state.raceStack=[];if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&v=81'+(skipHistory?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.race=body;render();if((!skipHistory&&((body.historySearch&&body.historySearch.status==='running')||(body.preparedMeta&&body.preparedMeta.prepared)))||(body.enrichmentSearch&&body.enrichmentSearch.status==='running'))scheduleHistoryPoll(id)}).catch(function(e){if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
+function scheduleHistoryPoll(id){if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.historyTimer=setTimeout(function(){fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&v=84',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(!state.race||String(state.race.id)!==String(id))return;state.race=body;saveDetailCache(id,body);render();if((body.historySearch&&body.historySearch.status==='running')||(body.enrichmentSearch&&body.enrichmentSearch.status==='running'))scheduleHistoryPoll(id)}).catch(function(){if(state.race&&String(state.race.id)===String(id))scheduleHistoryPoll(id)})},900)}
+function prefetchNextHistory(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.id}),now=nowMins();a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});a.slice(0,6).forEach(function(x,idx){if(!x||state.historyPrefetch[x.id])return;var cached=loadDetailCache(x.id);if(cached&&(cached.horses||[]).length){state.historyPrefetch[x.id]=1;return}state.historyPrefetch[x.id]=1;setTimeout(function(){fetch('/api/v1/race/'+encodeURIComponent(x.id)+'?history=0&prepared=1&v=84',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){saveDetailCache(x.id,body)}).catch(function(){delete state.historyPrefetch[x.id]})},idx*180)})}
+function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(!keepStack)state.raceStack=[];if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=cached;render()}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&v=84'+(skipHistory?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(state.raceLoading&&String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if((!skipHistory&&((body.historySearch&&body.historySearch.status==='running')||(body.preparedMeta&&body.preparedMeta.prepared)))||(body.enrichmentSearch&&body.enrichmentSearch.status==='running'))scheduleHistoryPoll(id)}).catch(function(){if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
-function reloadCurrent(){if(state.loading)return;if(state.race&&state.race.id){var id=state.race.id,isPast=state.raceStack.length>0;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&v=81'+(isPast?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){state.raceLoading=null;state.race=body;render();if((body.historySearch&&body.historySearch.status==='running')||(body.enrichmentSearch&&body.enrichmentSearch.status==='running'))scheduleHistoryPoll(id)}).catch(function(){state.raceLoading=null;state.error='更新に失敗しました';render()});return}try{localStorage.removeItem(cacheKey(state.date,state.circuit))}catch(e){}state.races=[];load(true)}
+function reloadCurrent(){if(state.loading)return;if(state.race&&state.race.id){var id=state.race.id,isPast=state.raceStack.length>0;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&v=84'+(isPast?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if((body.historySearch&&body.historySearch.status==='running')||(body.enrichmentSearch&&body.enrichmentSearch.status==='running'))scheduleHistoryPoll(id)}).catch(function(){state.raceLoading=null;state.error='更新に失敗しました';render()});return}try{localStorage.removeItem(cacheKey(state.date,state.circuit))}catch(e){}state.races=[];load(true)}
 function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}
-function refreshRaceAfterCollect(id,attempt){attempt=n(attempt,0);if(!id)return;fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&v=81',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(!state.race||String(state.race.id)!==String(id))return;state.race=body;state.collectingHorse=null;render();if(((body.enrichmentSearch&&body.enrichmentSearch.status==='running')||(body.historySearch&&body.historySearch.status==='running'))&&attempt<8){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,attempt+1)},500)}}).catch(function(){if(!state.race||String(state.race.id)!==String(id))return;if(attempt<5){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,attempt+1)},650);return}state.collectingHorse=null;render()})}
+function refreshRaceAfterCollect(id,attempt){attempt=n(attempt,0);if(!id)return;fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&v=84',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(!state.race||String(state.race.id)!==String(id))return;state.race=body;saveDetailCache(id,body);state.collectingHorse=null;render();if(((body.enrichmentSearch&&body.enrichmentSearch.status==='running')||(body.historySearch&&body.historySearch.status==='running'))&&attempt<8){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,attempt+1)},500)}}).catch(function(){if(!state.race||String(state.race.id)!==String(id))return;if(attempt<5){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,attempt+1)},650);return}state.collectingHorse=null;render()})}
 function collectRaceInfo(no){if(!state.race||!state.race.id)return;var id=state.race.id;state.collectingHorse=no||'all';render();var u='/api/v1/race/'+encodeURIComponent(id)+'/collect?force=1'+(no?'&horse_no='+encodeURIComponent(no):'');fetch(u,{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,0)},250)}).catch(function(){state.collectingHorse=null;render()})}
-function renderRace(){var r=state.race,hs=r.historySearch||{},es=r.enrichmentSearch||{},historyInline='',enrichmentInline=es.status==='running'?'<div class="enrichment-inline"><span><b>情報を自動取得中</b><br><small>公式 / netkeiba / 利用可能な補助ソースを確認</small></span><span>表示は待ちません</span></div>':'';if(hs.status==='running'){var cv=hs.coverage||{},done=n(r.circuit==='中央'?(cv.horsesResolved||cv.horsesWith5Plus):cv.horsesWith5Plus),total=n(cv.totalHorses,(r.horses||[]).length),runs=n(cv.totalRuns);historyInline='<div class="history-inline"><span><b>近走を裏で取得中</b><br><small>取得済み '+runs+'走・確定 '+done+'/'+total+'頭</small></span><span>表示は待ちません</span></div>'}var p=predict(r);state.pred=p;var scenarioTop=p.scenarios.slice().sort(function(a,b){return b.prob-a.prob})[0];if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=scenarioTop?scenarioTop.code:null;var sourceNote=hs.status==='done'?'<div class="data-source-note">【v82】過去走検索：'+n(hs.monthsDone)+'か月確認 / '+n((hs.coverage||{}).totalRuns)+'走取得 / '+esc(hs.source||'履歴データ')+'</div>':(hs.status==='running'?'<div class="data-source-note">【v82】近走データは取得済み分から即表示し、残りをバックグラウンド更新中</div>':(hs.status==='error'?'<div class="notice">過去走の追加取得に失敗。取得済みデータだけで表示します。 <button type="button" class="horse-fetch-btn" data-action="retry-history">再取得</button></div>':''));return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main">'+historyInline+enrichmentInline+renderResult(r)+renderResultGap(r,p)+renderActualFlow(r)+'<section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span>'+(state.raceStack.length?'<span class="past-race-badge">過去レース</span>':'')+'</div><div class="metrics"><div class="metric"><b>'+esc(r.distance)+'m</b><span>距離</span></div><div class="metric"><b>'+esc(r.condition||'不明')+'</b><span>馬場</span></div><div class="metric"><b>'+esc(r.weather||'不明')+'</b><span>天候</span></div><div class="metric"><b>'+season(r.date)+'</b><span>季節</span></div><div class="metric"><b>'+esc((r.horses||[]).length)+'頭</b><span>頭数</span></div></div><div class="data-depth"><span>近走 5走</span><span>'+(r.circuit==='中央'?'中央 直近5走を自動検索':'NAR公式 直近5走を自動検索')+'</span><span>0走は推定値を表示しない</span></div>'+sourceNote+raceSourceStrip(r)+'<div class="manual-fetch-bar"><div><b>全馬情報取得</b><small>JRA/NAR公式を優先し、出馬表・結果・馬場・天候・近走を再確認します。</small></div><button type="button" data-action="fetch-all-info">'+(state.collectingHorse==='all'?'取得中…':'全馬情報取得')+'</button></div></section>'+runnerStyleSection(r,p)+scenarioProbabilitySection(p)+paceBoard(r,p)+'</main>'+horseModal(r,p)+'</div>'}
+function renderRace(){var r=state.race,hs=r.historySearch||{},es=r.enrichmentSearch||{},historyInline='',enrichmentInline=es.status==='running'?'<div class="enrichment-inline"><span><b>情報を自動取得中</b><br><small>公式 / netkeiba / SmartRc / 利用可能な補助ソースを確認</small></span><span>表示は待ちません</span></div>':'';if(hs.status==='running'){var cv=hs.coverage||{},done=n(r.circuit==='中央'?(cv.horsesResolved||cv.horsesWith5Plus):cv.horsesWith5Plus),total=n(cv.totalHorses,(r.horses||[]).length),runs=n(cv.totalRuns);historyInline='<div class="history-inline"><span><b>近走を裏で取得中</b><br><small>取得済み '+runs+'走・確定 '+done+'/'+total+'頭</small></span><span>表示は待ちません</span></div>'}var p=predict(r);state.pred=p;saveRaceAnalysis(r,p);var scenarioTop=p.scenarios.slice().sort(function(a,b){return b.prob-a.prob})[0];if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=scenarioTop?scenarioTop.code:null;var sourceNote=hs.status==='done'?'<div class="data-source-note">【v86】過去走検索：'+n(hs.monthsDone)+'か月確認 / '+n((hs.coverage||{}).totalRuns)+'走取得 / '+esc(hs.source||'履歴データ')+'</div>':(hs.status==='running'?'<div class="data-source-note">【v86】近走データは取得済み分から即表示し、残りをバックグラウンド更新中</div>':(hs.status==='error'?'<div class="notice">過去走の追加取得に失敗。取得済みデータだけで表示します。 <button type="button" class="horse-fetch-btn" data-action="retry-history">再取得</button></div>':''));return'<div class="shell">'+header(r.track+' '+r.raceNumber+'R',true,(r.title||'')+'｜'+r.distance+'m・'+r.condition)+'<main class="main">'+historyInline+enrichmentInline+renderResult(r)+renderResultGap(r,p)+renderActualFlow(r)+'<section class="card race-title-card"><div class="row between"><div><h2>'+esc(r.title||"")+'</h2><div class="muted">'+esc(r.date)+' '+timeHtml(r)+'</div></div><span class="pill">'+esc(r.circuit)+'</span>'+(state.raceStack.length?'<span class="past-race-badge">過去レース</span>':'')+'</div><div class="metrics"><div class="metric"><b>'+esc(r.distance)+'m</b><span>距離</span></div><div class="metric"><b>'+esc(r.condition||'不明')+'</b><span>馬場</span></div><div class="metric"><b>'+esc(r.weather||'不明')+'</b><span>天候</span></div><div class="metric"><b>'+season(r.date)+'</b><span>季節</span></div><div class="metric"><b>'+esc((r.horses||[]).length)+'頭</b><span>頭数</span></div></div><div class="data-depth"><span>分析 '+esc(raceMode(r))+'</span><span>近走 5走</span><span>'+(raceMode(r)==='新馬'?'過去走0は正常・血統/厩舎/騎手/補助情報を使用':(raceMode(r)==='障害'?'障害実績・完走・距離・騎手を優先':(r.circuit==='中央'?'中央 直近5走を自動検索':'NAR公式 直近5走を自動検索')))+'</span></div>'+sourceNote+raceSourceStrip(r)+'<div class="manual-fetch-bar"><div><b>全馬情報取得</b><small>JRA/NAR公式を優先し、netkeiba・SmartRc・設定済み補助ソースも横断して再確認します。</small></div><button type="button" data-action="fetch-all-info">'+(state.collectingHorse==='all'?'取得中…':'全馬情報取得')+'</button></div></section>'+runnerStyleSection(r,p)+scenarioProbabilitySection(p)+paceBoard(r,p)+'</main>'+horseModal(r,p)+'</div>'}
 function stopTimer(){if(state.timer){clearTimeout(state.timer);state.timer=null}if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}state.simRunning=false}
 function drawPaceStage(idx){if(!state.race||!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;var stages=plan.stages,st=stages[clamp(idx,0,stages.length-1)],r=state.race,board=document.getElementById('pace-board');if(!st||!board)return;state.paceStage=clamp(idx,0,stages.length-1);var order=[],i,z,chip,left,top,rank,rowIdx;for(i=0;i<st.pack.length;i++){z=st.pack[i];rank=i;rowIdx=rank%4;chip=board.querySelector('[data-horse="'+z.no+'"]');if(!chip)continue;left=clamp(90-rank*5.9-n(z.gap)*58,8,92);top=clamp(16+rowIdx*20+n(z.lane)*2.4,12,88);chip.style.left=left+'%';chip.style.top=top+'%';order.push(z.no)}var ob=document.getElementById('course-order');if(ob)ob.innerHTML='<b>'+esc(st.label)+'</b><span>'+order.map(function(no){var h=horseByNo(r,no);return esc(no)+(h?' '+esc(h.name):'')}).join(' → ')+'</span>';var ev=document.getElementById('pace-event');if(ev)ev.innerHTML=stageNarrative(state.pred,idx);var bs=document.querySelectorAll('[data-pace-stage]');for(i=0;i<bs.length;i++)bs[i].className=n(bs[i].getAttribute('data-pace-stage'))===idx?'active':''}
 function render(){stopTimer();try{if(state.raceLoading)app.innerHTML=renderRaceLoading();else if(state.race)app.innerHTML=renderRace();else if(state.picker)app.innerHTML=renderPicker();else if(state.track)app.innerHTML=renderVenue();else app.innerHTML=renderHome();bind();if(state.race){initPaceBoard()}}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
 function bind(){var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];state.circuit=this.getAttribute('data-circuit');state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];state.date=this.value;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];state.track=this.getAttribute('data-track');render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){openRace(this.getAttribute('data-race'),false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=function(){if(state.horseModalNo){state.horseModalNo=null;render();return}if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}if(state.raceLoading){state.raceLoading=null;if(state.raceStack.length)state.race=state.raceStack.pop()}else if(state.race){if(state.raceStack.length)state.race=state.raceStack.pop();else state.race=null}else if(state.picker)state.picker=false;else state.track=null;render()};var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
 function initPaceBoard(){if(!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;drawPaceStage(clamp(state.paceStage,0,plan.stages.length-1))}
-function load(force){var d=state.date,c=state.circuit,seq=++state.requestSeq,cached=force?null:loadRaceCache(d,c);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render();setTimeout(prefetchNextHistory,120)}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(c)+(force?'&force=1':'')+'&v=81',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,c,rows);state.loading=false;state.error=null;render();setTimeout(prefetchNextHistory,120);var hasWanted=rows.some(function(z){return z.circuit===c});if(!hasWanted&&attempts<8){setTimeout(request,650)}}).catch(function(){if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;if(attempts<3){setTimeout(request,450*attempts);return}state.loading=false;state.error='取得に失敗しました。更新を押して再試行できます。';render()})}request()}
+function load(force){var d=state.date,c=state.circuit,seq=++state.requestSeq,cached=force?null:loadRaceCache(d,c);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render();setTimeout(prefetchNextHistory,120)}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(c)+(force?'&force=1':'')+'&v=84',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,c,rows);state.loading=false;state.error=null;render();setTimeout(prefetchNextHistory,120);var hasWanted=rows.some(function(z){return z.circuit===c});if(!hasWanted&&attempts<8){setTimeout(request,650)}}).catch(function(){if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;if(attempts<3){setTimeout(request,450*attempts);return}state.loading=false;state.error='取得に失敗しました。更新を押して再試行できます。';render()})}request()}
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
 clearOldPwa();render();setTimeout(load,0);
 })();
@@ -495,7 +499,7 @@ MANIFEST = r'''{
   "name":"競馬展開AI",
   "short_name":"競馬展開AI",
   "description":"競馬の脚質・展開シミュレーション・S/A/B/C総合評価を確認するPWA",
-  "start_url":"/?v=81",
+  "start_url":"/?v=84",
   "scope":"/",
   "display":"standalone",
   "background_color":"#041126",
@@ -505,7 +509,7 @@ MANIFEST = r'''{
 SW = 'self.addEventListener("install",function(){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(self.registration.unregister())});'
 
 HERO_HORSE_WEBP = base64.b64decode('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')
-PACE_PREVIEW_WEBP = base64.b64decode('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')
+PACE_PREVIEW_WEBP = base64.b64decode('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')
 
 # --- NAR official live data connector ---------------------------------
 NAR_DAILY_RACE_URL = "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=daily"
@@ -518,6 +522,7 @@ DATA_ROOT = Path(os.getenv("KEIBA_DATA_DIR", "/tmp/keiba_data"))
 ARCHIVE_DIR = DATA_ROOT / "nar" / "archives"
 DB_PATH = DATA_ROOT / "nar" / "nar.sqlite3"
 PREPARED_DB_PATH = DATA_ROOT / "prepared" / "prepared.sqlite3"
+RACEDB_PATH = Path(os.getenv("RACEDB_PATH", str(DATA_ROOT / "racedb" / "racedb.sqlite3")))
 
 # Official CSV fixed-column indexes, based on NAR's published data specification.
 RACE_IDX = {
@@ -3186,7 +3191,7 @@ def _smart_normalize_row(x:dict)->dict|None:
     if not isinstance(x,dict):return None
     no=_safe_int(_pick(x,"horseNumber","horse_no","uno","number","馬番")); name=str(_pick(x,"name","hname","horseName","馬名") or "").strip()
     if not no and not name:return None
-    smart={"ten1f":_pick(x,"ten1f","ten1f_best","h1_ten1f","テン1F"),"ten":_pick(x,"ten","ten_pat","ten_has","テン"),"agari":_pick(x,"agari","agari3f","furlong3","agari_pat","agari_has","上がり"),"cr":_pick(x,"cr","cr_value","CR"),"share":_pick(x,"share","f_dirt_share","f_1400_share","シェア"),"estimatedPopularity":_pick(x,"estimatedPopularity","est_pop","推人","推定人気")}
+    smart={"ten1f":_pick(x,"ten1f","ten1f_best","h1_ten1f","テン1F"),"ten":_pick(x,"ten","ten_pat","ten_has","テン"),"agari":_pick(x,"agari","agari3f","furlong3","agari_pat","agari_has","上がり"),"estimatedPopularity":_pick(x,"estimatedPopularity","est_pop","推人","推定人気")}
     out={"horseNumber":no,"name":name,"smartRc":smart}
     rr=_pick(x,"recentRaces","recent_races")
     if isinstance(rr,list):out["recentRaces"]=[z for z in rr if isinstance(z,dict)][:5]
@@ -3267,12 +3272,23 @@ def _fetch_extra_sources(detail:dict)->list[dict]:
 
 def _merge_enrichment(detail:dict,data:dict)->dict:
     hs=detail.get("horses") or [];by_no={int(h.get("horseNumber") or 0):h for h in hs if h.get("horseNumber")};by_name={str(h.get("name") or "").strip():h for h in hs if h.get("name")};sources=[]
+    for row in data.get("smartRows") or []:
+        h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
+        if not h:continue
+        if "SmartRc" not in sources:sources.append("SmartRc")
+        if row.get("smartRc"):h["smartRc"]={**(h.get("smartRc") or {}),**row.get("smartRc")}
+        if row.get("pedigree"):h["pedigree"]={**(h.get("pedigree") or {}),**row.get("pedigree")}
+        for k in ("owner","producer","birthday"):
+            if h.get(k) in (None,"") and row.get(k) not in (None,""):h[k]=row.get(k)
+        if row.get("recentRaces"):h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],row.get("recentRaces") or [],5)
     for row in data.get("netkeibaRows") or []:
         h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
         if not h:continue
         sources.append("netkeiba") if "netkeiba" not in sources else None
-        for k in ("sex","age","carriedWeight","jockey","trainer","bodyWeight","bodyWeightChange"):
+        for k in ("sex","age","carriedWeight","jockey","trainer","bodyWeight","bodyWeightChange","owner","producer"):
             if (h.get(k) in (None,"",0)) and row.get(k) not in (None,""):h[k]=row.get(k)
+        if row.get("pedigree"):h["pedigree"]={**(h.get("pedigree") or {}),**row.get("pedigree")}
+        if row.get("_netkeibaHorseId"):h["_netkeibaHorseId"]=row.get("_netkeibaHorseId")
         if row.get("recentRaces") and len(h.get("recentRaces") or [])<5:
             existing=list(h.get("recentRaces") or []);existing.extend(row.get("recentRaces") or []);h["recentRaces"]=[z for z in existing if isinstance(z,dict)][:5]
     for b in data.get("extra") or []:
@@ -3299,40 +3315,65 @@ def _start_enrichment(race_id:str,detail:dict,force:bool=False,horse_no:int|None
         _enrich_jobs[race_id]={"status":"running","sources":[],"error":"","startedAt":now,"horseNumber":horse_no}
     snap=json.loads(json.dumps(detail,ensure_ascii=False,default=str))
     def worker():
-        errs=[];sources=[];netkeibaRows=[];extra=[]
+        errs=[];sources=[];netkeibaRows=[];smartRows=[];extra=[]
         def get_netkeiba():
             if snap.get("circuit")!="中央":return []
             try:return _netkeiba_detail_rows(snap)
             except Exception as exc:errs.append("netkeiba: "+str(exc));return []
+        def get_smart():
+            try:return (_fetch_smartrc(snap) or {}).get("rows") or []
+            except Exception as exc:errs.append("SmartRc: "+str(exc));return []
         def get_extra():
             try:return _fetch_extra_sources(snap)
             except Exception as exc:errs.append("補助: "+str(exc));return []
         try:
-            with ThreadPoolExecutor(max_workers=2) as pool:
-                f_net=pool.submit(get_netkeiba);f_extra=pool.submit(get_extra)
-                netkeibaRows=f_net.result() or [];extra=f_extra.result() or []
+            with ThreadPoolExecutor(max_workers=3) as pool:
+                f_net=pool.submit(get_netkeiba);f_smart=pool.submit(get_smart);f_extra=pool.submit(get_extra)
+                netkeibaRows=f_net.result() or [];smartRows=f_smart.result() or [];extra=f_extra.result() or []
             if netkeibaRows:sources.append("netkeiba")
+            if smartRows:sources.append("SmartRc")
             for b in extra:
                 if b.get("source") not in sources:sources.append(b.get("source"))
         except Exception as exc:errs.append("情報取得: "+str(exc))
         if horse_no:
             netkeibaRows=[x for x in netkeibaRows if int(x.get("horseNumber") or 0)==int(horse_no)]
+            smartRows=[x for x in smartRows if int(x.get("horseNumber") or 0)==int(horse_no)]
         with _enrich_data_lock:
-            olddata=_enrich_data.get(race_id) or {}; merged_rows=[]
-            bykey={}
+            olddata=_enrich_data.get(race_id) or {}
+            nk={}
             for rr in (olddata.get("netkeibaRows") or [])+netkeibaRows:
                 key=int(rr.get("horseNumber") or 0) or str(rr.get("name") or "")
-                bykey[key]=rr
-            merged_rows=list(bykey.values())
-            _enrich_data[race_id]={"netkeibaRows":merged_rows,"extra":extra or olddata.get("extra") or []}
+                nk[key]=rr
+            sk={}
+            for rr in (olddata.get("smartRows") or [])+smartRows:
+                key=int(rr.get("horseNumber") or 0) or str(rr.get("name") or "")
+                sk[key]=rr
+            _enrich_data[race_id]={"netkeibaRows":list(nk.values()),"smartRows":list(sk.values()),"extra":extra or olddata.get("extra") or []}
         with _enrich_jobs_lock:_enrich_jobs[race_id]={"status":"done" if sources else "unavailable","sources":sources,"error":" | ".join(errs[-3:]),"finishedAt":time.time(),"horseNumber":horse_no}
+        try:
+            enriched=json.loads(json.dumps(snap,ensure_ascii=False,default=str))
+            with _enrich_data_lock:
+                saved_data=_enrich_data.get(race_id) or {}
+            enriched=_merge_enrichment(enriched,saved_data)
+            enriched["enrichmentSearch"]=_enrichment_status(race_id)
+            RACEDB.upsert_race(enriched)
+        except Exception as exc:print("RaceDB enrichment save failed",race_id,exc)
+        try:PREPARED_STORE.delete(race_id)
+        except Exception:pass
         with _detail_cache_lock:_detail_cache.pop(race_id,None)
     threading.Thread(target=worker,daemon=True).start();return _enrichment_status(race_id)
 
 def _apply_enrichment(race_id:str,detail:dict)->dict:
     with _enrich_data_lock:data=_enrich_data.get(race_id)
     if data:_merge_enrichment(detail,data)
-    detail["enrichmentSearch"]=_enrichment_status(race_id);return detail
+    detail["enrichmentSearch"]=_enrichment_status(race_id)
+    title=str(detail.get("title") or "");surface=str(detail.get("surface") or "")
+    mode="障害" if (surface=="障害" or "障害" in title or re.search(r"(?:J[･・.]?G[ⅠⅡⅢ123]|\\bJS\\b|ジャンプ)",title,re.I)) else ("新馬" if re.search(r"(?:新馬|メイクデビュー)",title) else "平地")
+    detail["analysisMode"]=mode
+    if mode=="新馬":
+        for h in detail.get("horses",[]) or []:
+            if not (h.get("recentRaces") or []):h["debutNoHistory"]=True
+    return detail
 
 
 # --- v82 prepared-race cache -------------------------------------------
@@ -3383,7 +3424,7 @@ class PreparedRaceStore:
         now = int(time.time())
         detail.setdefault("preparedMeta", {})
         detail["preparedMeta"].update({
-            "build": "v82",
+            "build": "v86",
             "prepared": True,
             "preparedAtEpoch": now,
             "metricsPrecomputed": True,
@@ -3430,6 +3471,413 @@ class PreparedRaceStore:
             return {"count":int(row["cnt"] or 0),"last":int(row["last"] or 0)}
         finally:
             conn.close()
+
+
+# --- v86 RaceDB ---------------------------------------------------------
+# Normalized local data bank.  The UI can return a saved race immediately while
+# official/public sources refresh in the background.  RACEDB_PATH can point at a
+# persistent disk.  With the default /tmp path it still works as a fast cache but
+# will be rebuilt after an ephemeral host restart.
+class RaceDataBank:
+    def __init__(self, path: Path = RACEDB_PATH):
+        self.path = path
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(self.path, timeout=5)
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA synchronous=NORMAL")
+            conn.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS race_snapshots (
+                    race_id TEXT PRIMARY KEY,
+                    race_date TEXT NOT NULL DEFAULT '',
+                    circuit TEXT NOT NULL DEFAULT '',
+                    track TEXT NOT NULL DEFAULT '',
+                    race_no INTEGER NOT NULL DEFAULT 0,
+                    title TEXT NOT NULL DEFAULT '',
+                    surface TEXT NOT NULL DEFAULT '',
+                    distance INTEGER NOT NULL DEFAULT 0,
+                    condition TEXT NOT NULL DEFAULT '',
+                    weather TEXT NOT NULL DEFAULT '',
+                    start_time TEXT NOT NULL DEFAULT '',
+                    updated_at INTEGER NOT NULL,
+                    payload TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_racedb_races_date ON race_snapshots(race_date,circuit,track,race_no);
+
+                CREATE TABLE IF NOT EXISTS horse_master (
+                    horse_key TEXT PRIMARY KEY,
+                    name TEXT NOT NULL DEFAULT '',
+                    horse_external_id TEXT NOT NULL DEFAULT '',
+                    sex TEXT NOT NULL DEFAULT '',
+                    age INTEGER NOT NULL DEFAULT 0,
+                    birthday TEXT NOT NULL DEFAULT '',
+                    sire TEXT NOT NULL DEFAULT '',
+                    dam TEXT NOT NULL DEFAULT '',
+                    damsire TEXT NOT NULL DEFAULT '',
+                    trainer TEXT NOT NULL DEFAULT '',
+                    owner TEXT NOT NULL DEFAULT '',
+                    producer TEXT NOT NULL DEFAULT '',
+                    updated_at INTEGER NOT NULL,
+                    raw_json TEXT NOT NULL DEFAULT '{}'
+                );
+                CREATE INDEX IF NOT EXISTS idx_racedb_horse_name ON horse_master(name);
+
+                CREATE TABLE IF NOT EXISTS horse_entries (
+                    race_id TEXT NOT NULL,
+                    horse_no INTEGER NOT NULL,
+                    horse_key TEXT NOT NULL DEFAULT '',
+                    frame_no INTEGER NOT NULL DEFAULT 0,
+                    name TEXT NOT NULL DEFAULT '',
+                    jockey TEXT NOT NULL DEFAULT '',
+                    trainer TEXT NOT NULL DEFAULT '',
+                    carried_weight REAL,
+                    body_weight INTEGER,
+                    body_weight_change INTEGER,
+                    prize_money INTEGER NOT NULL DEFAULT 0,
+                    ten1f TEXT,
+                    ten TEXT,
+                    agari TEXT,
+                    estimated_popularity TEXT,
+                    pedigree_json TEXT NOT NULL DEFAULT '{}',
+                    style_json TEXT NOT NULL DEFAULT '{}',
+                    fit_json TEXT NOT NULL DEFAULT '{}',
+                    debut_json TEXT NOT NULL DEFAULT '{}',
+                    jump_json TEXT NOT NULL DEFAULT '{}',
+                    representative_json TEXT NOT NULL DEFAULT '{}',
+                    opponent_level REAL,
+                    metrics_json TEXT NOT NULL DEFAULT '{}',
+                    sources_json TEXT NOT NULL DEFAULT '[]',
+                    updated_at INTEGER NOT NULL,
+                    raw_json TEXT NOT NULL DEFAULT '{}',
+                    PRIMARY KEY(race_id,horse_no)
+                );
+                CREATE INDEX IF NOT EXISTS idx_racedb_entries_horse ON horse_entries(horse_key);
+
+                CREATE TABLE IF NOT EXISTS past_runs (
+                    horse_key TEXT NOT NULL,
+                    run_key TEXT NOT NULL,
+                    race_date TEXT NOT NULL DEFAULT '',
+                    track TEXT NOT NULL DEFAULT '',
+                    title TEXT NOT NULL DEFAULT '',
+                    distance INTEGER NOT NULL DEFAULT 0,
+                    surface TEXT NOT NULL DEFAULT '',
+                    condition TEXT NOT NULL DEFAULT '',
+                    weather TEXT NOT NULL DEFAULT '',
+                    finish INTEGER NOT NULL DEFAULT 0,
+                    time_seconds REAL,
+                    agari3f REAL,
+                    agari_rank INTEGER,
+                    frame_no INTEGER NOT NULL DEFAULT 0,
+                    horse_no INTEGER NOT NULL DEFAULT 0,
+                    carried_weight REAL,
+                    jockey TEXT NOT NULL DEFAULT '',
+                    corner_json TEXT NOT NULL DEFAULT '[]',
+                    opponent_level REAL,
+                    representative INTEGER NOT NULL DEFAULT 0,
+                    source TEXT NOT NULL DEFAULT '',
+                    updated_at INTEGER NOT NULL,
+                    raw_json TEXT NOT NULL DEFAULT '{}',
+                    PRIMARY KEY(horse_key,run_key)
+                );
+                CREATE INDEX IF NOT EXISTS idx_racedb_runs_date ON past_runs(horse_key,race_date DESC);
+
+                CREATE TABLE IF NOT EXISTS odds_history (
+                    race_id TEXT NOT NULL,
+                    horse_no INTEGER NOT NULL,
+                    captured_at INTEGER NOT NULL,
+                    win_odds REAL,
+                    popularity INTEGER,
+                    source TEXT NOT NULL DEFAULT '',
+                    raw_json TEXT NOT NULL DEFAULT '{}',
+                    PRIMARY KEY(race_id,horse_no,captured_at)
+                );
+                CREATE INDEX IF NOT EXISTS idx_racedb_odds_race ON odds_history(race_id,captured_at DESC);
+
+                CREATE TABLE IF NOT EXISTS race_analysis (
+                    race_id TEXT PRIMARY KEY,
+                    updated_at INTEGER NOT NULL,
+                    scenario_json TEXT NOT NULL DEFAULT '{}',
+                    horse_diagnosis_json TEXT NOT NULL DEFAULT '[]',
+                    raw_json TEXT NOT NULL DEFAULT '{}'
+                );
+
+                CREATE TABLE IF NOT EXISTS source_state (
+                    source_key TEXT PRIMARY KEY,
+                    updated_at INTEGER NOT NULL,
+                    status TEXT NOT NULL DEFAULT '',
+                    note TEXT NOT NULL DEFAULT ''
+                );
+                """
+            )
+            # v86 forward-compatible migration for an existing RaceDB.
+            # CR/share from v85 are intentionally no longer read or written.
+            def ensure_column(table: str, column: str, ddl: str) -> None:
+                cols={str(r[1]) for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+                if column not in cols:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
+            for col,ddl in (
+                ("style_json","TEXT NOT NULL DEFAULT '{}'"),("fit_json","TEXT NOT NULL DEFAULT '{}'"),
+                ("debut_json","TEXT NOT NULL DEFAULT '{}'"),("jump_json","TEXT NOT NULL DEFAULT '{}'"),
+                ("representative_json","TEXT NOT NULL DEFAULT '{}'"),("opponent_level","REAL")
+            ): ensure_column("horse_entries",col,ddl)
+            for col,ddl in (
+                ("agari3f","REAL"),("agari_rank","INTEGER"),("frame_no","INTEGER NOT NULL DEFAULT 0"),
+                ("horse_no","INTEGER NOT NULL DEFAULT 0"),("opponent_level","REAL"),("representative","INTEGER NOT NULL DEFAULT 0")
+            ): ensure_column("past_runs",col,ddl)
+            conn.commit()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def _horse_key(h: dict) -> str:
+        ext=str(h.get("_jraHorseCname") or h.get("_netkeibaHorseId") or h.get("horseId") or "").strip()
+        if ext:return "id:"+ext
+        name=str(h.get("name") or "").strip()
+        return "name:"+name if name else ""
+
+    @staticmethod
+    def _run_key(rr: dict) -> str:
+        base="|".join(str(rr.get(k) or "") for k in ("raceId","date","track","title","distance","finish","timeSeconds"))
+        return hashlib.sha1(base.encode("utf-8","ignore")).hexdigest()
+
+    def upsert_race(self, detail: dict) -> None:
+        if not isinstance(detail,dict):return
+        race_id=str(detail.get("id") or "").strip()
+        if not race_id:return
+        now=int(time.time())
+        payload=json.dumps(detail,ensure_ascii=False,separators=(",",":"),default=str)
+        conn=sqlite3.connect(self.path,timeout=5)
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute(
+                """INSERT INTO race_snapshots(race_id,race_date,circuit,track,race_no,title,surface,distance,condition,weather,start_time,updated_at,payload)
+                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+                   ON CONFLICT(race_id) DO UPDATE SET race_date=excluded.race_date,circuit=excluded.circuit,track=excluded.track,
+                   race_no=excluded.race_no,title=excluded.title,surface=excluded.surface,distance=excluded.distance,condition=excluded.condition,
+                   weather=excluded.weather,start_time=excluded.start_time,updated_at=excluded.updated_at,payload=excluded.payload""",
+                (race_id,str(detail.get("date") or ""),str(detail.get("circuit") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0),
+                 str(detail.get("title") or ""),str(detail.get("surface") or ""),int(detail.get("distance") or 0),str(detail.get("condition") or ""),
+                 str(detail.get("weather") or ""),str(detail.get("startTime") or ""),now,payload)
+            )
+            for h in detail.get("horses",[]) or []:
+                if not isinstance(h,dict):continue
+                no=int(h.get("horseNumber") or 0)
+                if no<=0:continue
+                hk=self._horse_key(h)
+                ped=h.get("pedigree") if isinstance(h.get("pedigree"),dict) else {}
+                smart=h.get("smartRc") if isinstance(h.get("smartRc"),dict) else {}
+                ext=str(h.get("_jraHorseCname") or h.get("_netkeibaHorseId") or h.get("horseId") or "")
+                conn.execute(
+                    """INSERT INTO horse_master(horse_key,name,horse_external_id,sex,age,birthday,sire,dam,damsire,trainer,owner,producer,updated_at,raw_json)
+                       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                       ON CONFLICT(horse_key) DO UPDATE SET name=excluded.name,horse_external_id=CASE WHEN excluded.horse_external_id<>'' THEN excluded.horse_external_id ELSE horse_master.horse_external_id END,
+                       sex=CASE WHEN excluded.sex<>'' THEN excluded.sex ELSE horse_master.sex END,age=CASE WHEN excluded.age>0 THEN excluded.age ELSE horse_master.age END,
+                       birthday=CASE WHEN excluded.birthday<>'' THEN excluded.birthday ELSE horse_master.birthday END,sire=CASE WHEN excluded.sire<>'' THEN excluded.sire ELSE horse_master.sire END,
+                       dam=CASE WHEN excluded.dam<>'' THEN excluded.dam ELSE horse_master.dam END,damsire=CASE WHEN excluded.damsire<>'' THEN excluded.damsire ELSE horse_master.damsire END,
+                       trainer=CASE WHEN excluded.trainer<>'' THEN excluded.trainer ELSE horse_master.trainer END,owner=CASE WHEN excluded.owner<>'' THEN excluded.owner ELSE horse_master.owner END,
+                       producer=CASE WHEN excluded.producer<>'' THEN excluded.producer ELSE horse_master.producer END,updated_at=excluded.updated_at,raw_json=excluded.raw_json""",
+                    (hk,str(h.get("name") or ""),ext,str(h.get("sex") or ""),int(h.get("age") or 0),str(h.get("birthday") or ""),
+                     str(ped.get("sire") or ""),str(ped.get("dam") or ""),str(ped.get("damsire") or ped.get("damSire") or ""),str(h.get("trainer") or ""),
+                     str(h.get("owner") or ""),str(h.get("producer") or ""),now,json.dumps(h,ensure_ascii=False,separators=(",",":"),default=str))
+                )
+                conn.execute(
+                    """INSERT INTO horse_entries(race_id,horse_no,horse_key,frame_no,name,jockey,trainer,carried_weight,body_weight,body_weight_change,prize_money,
+                       ten1f,ten,agari,estimated_popularity,pedigree_json,style_json,fit_json,debut_json,jump_json,representative_json,opponent_level,metrics_json,sources_json,updated_at,raw_json)
+                       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                       ON CONFLICT(race_id,horse_no) DO UPDATE SET horse_key=excluded.horse_key,frame_no=excluded.frame_no,name=excluded.name,jockey=excluded.jockey,
+                       trainer=excluded.trainer,carried_weight=excluded.carried_weight,body_weight=excluded.body_weight,body_weight_change=excluded.body_weight_change,
+                       prize_money=excluded.prize_money,ten1f=COALESCE(excluded.ten1f,horse_entries.ten1f),ten=COALESCE(excluded.ten,horse_entries.ten),
+                       agari=COALESCE(excluded.agari,horse_entries.agari),estimated_popularity=COALESCE(excluded.estimated_popularity,horse_entries.estimated_popularity),
+                       pedigree_json=excluded.pedigree_json,style_json=excluded.style_json,fit_json=excluded.fit_json,debut_json=excluded.debut_json,
+                       jump_json=excluded.jump_json,representative_json=excluded.representative_json,opponent_level=excluded.opponent_level,
+                       metrics_json=excluded.metrics_json,sources_json=excluded.sources_json,updated_at=excluded.updated_at,raw_json=excluded.raw_json""",
+                    (race_id,no,hk,int(h.get("frameNumber") or 0),str(h.get("name") or ""),str(h.get("jockey") or ""),str(h.get("trainer") or ""),
+                     h.get("carriedWeight"),h.get("bodyWeight"),h.get("bodyWeightChange"),int(h.get("prizeMoneyAtRace") or 0),
+                     None if smart.get("ten1f") in (None,"") else str(smart.get("ten1f")),None if smart.get("ten") in (None,"") else str(smart.get("ten")),
+                     None if smart.get("agari") in (None,"") else str(smart.get("agari")),None if smart.get("estimatedPopularity") in (None,"") else str(smart.get("estimatedPopularity")),
+                     json.dumps(ped,ensure_ascii=False,separators=(",",":"),default=str),
+                     json.dumps((h.get("precomputedMetrics") or {}).get("style") or {},ensure_ascii=False,separators=(",",":"),default=str),
+                     json.dumps((h.get("precomputedMetrics") or {}).get("fit") or {},ensure_ascii=False,separators=(",",":"),default=str),
+                     json.dumps({"isDebut":bool(h.get("debutNoHistory")),"analysisMode":detail.get("analysisMode")},ensure_ascii=False,separators=(",",":")),
+                     json.dumps(h.get("jumpStats") or h.get("obstacleStats") or {},ensure_ascii=False,separators=(",",":"),default=str),
+                     json.dumps(h.get("representativeRun") or {},ensure_ascii=False,separators=(",",":"),default=str),
+                     (h.get("precomputedMetrics") or {}).get("fit",{}).get("level"),
+                     json.dumps(h.get("precomputedMetrics") or {},ensure_ascii=False,separators=(",",":"),default=str),
+                     json.dumps(detail.get("dataSources") or [],ensure_ascii=False,separators=(",",":"),default=str),now,json.dumps(h,ensure_ascii=False,separators=(",",":"),default=str))
+                )
+                for rr in h.get("recentRaces",[]) or []:
+                    if not isinstance(rr,dict):continue
+                    rk=self._run_key(rr)
+                    conn.execute(
+                        """INSERT INTO past_runs(horse_key,run_key,race_date,track,title,distance,surface,condition,weather,finish,time_seconds,agari3f,agari_rank,frame_no,horse_no,carried_weight,jockey,corner_json,opponent_level,representative,source,updated_at,raw_json)
+                           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                           ON CONFLICT(horse_key,run_key) DO UPDATE SET updated_at=excluded.updated_at,raw_json=excluded.raw_json,
+                           agari3f=COALESCE(excluded.agari3f,past_runs.agari3f),agari_rank=COALESCE(excluded.agari_rank,past_runs.agari_rank),
+                           opponent_level=COALESCE(excluded.opponent_level,past_runs.opponent_level),representative=MAX(past_runs.representative,excluded.representative)""",
+                        (hk,rk,str(rr.get("date") or ""),str(rr.get("track") or ""),str(rr.get("title") or ""),int(rr.get("distance") or 0),str(rr.get("surface") or ""),
+                         str(rr.get("condition") or ""),str(rr.get("weather") or ""),int(rr.get("finish") or 0),rr.get("timeSeconds"),rr.get("agari3f") or rr.get("agari"),
+                         rr.get("agariRank") or rr.get("agari_rank"),int(rr.get("frameNumber") or 0),int(rr.get("horseNumber") or 0),rr.get("carriedWeight"),str(rr.get("jockey") or ""),
+                         json.dumps(rr.get("cornerPositions") or [],ensure_ascii=False,separators=(",",":")),rr.get("opponentLevel"),1 if rr.get("representative") else 0,
+                         str(rr.get("source") or ""),now,json.dumps(rr,ensure_ascii=False,separators=(",",":"),default=str))
+                    )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_race(self, race_id: str) -> tuple[dict | None,int]:
+        conn=sqlite3.connect(self.path,timeout=2);conn.row_factory=sqlite3.Row
+        try:
+            row=conn.execute("SELECT updated_at,payload FROM race_snapshots WHERE race_id=?",(race_id,)).fetchone()
+            if not row:return None,0
+            try:return json.loads(row["payload"]),int(row["updated_at"] or 0)
+            except Exception:return None,0
+        finally:conn.close()
+
+    def upsert_past_runs(self, horse: dict, runs: list[dict]) -> int:
+        if not isinstance(horse,dict) or not runs:return 0
+        hk=self._horse_key(horse)
+        if not hk:return 0
+        now=int(time.time());count=0
+        conn=sqlite3.connect(self.path,timeout=5)
+        try:
+            for rr in runs:
+                if not isinstance(rr,dict):continue
+                rk=self._run_key(rr)
+                conn.execute(
+                    """INSERT INTO past_runs(horse_key,run_key,race_date,track,title,distance,surface,condition,weather,finish,time_seconds,agari3f,agari_rank,frame_no,horse_no,carried_weight,jockey,corner_json,opponent_level,representative,source,updated_at,raw_json)
+                       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                       ON CONFLICT(horse_key,run_key) DO UPDATE SET updated_at=excluded.updated_at,raw_json=excluded.raw_json,
+                       agari3f=COALESCE(excluded.agari3f,past_runs.agari3f),agari_rank=COALESCE(excluded.agari_rank,past_runs.agari_rank),
+                       opponent_level=COALESCE(excluded.opponent_level,past_runs.opponent_level),representative=MAX(past_runs.representative,excluded.representative)""",
+                    (hk,rk,str(rr.get("date") or ""),str(rr.get("track") or ""),str(rr.get("title") or ""),int(rr.get("distance") or 0),str(rr.get("surface") or ""),
+                     str(rr.get("condition") or ""),str(rr.get("weather") or ""),int(rr.get("finish") or 0),rr.get("timeSeconds"),rr.get("agari3f") or rr.get("agari"),
+                     rr.get("agariRank") or rr.get("agari_rank"),int(rr.get("frameNumber") or 0),int(rr.get("horseNumber") or 0),rr.get("carriedWeight"),str(rr.get("jockey") or ""),
+                     json.dumps(rr.get("cornerPositions") or [],ensure_ascii=False,separators=(",",":")),rr.get("opponentLevel"),1 if rr.get("representative") else 0,
+                     str(rr.get("source") or ""),now,json.dumps(rr,ensure_ascii=False,separators=(",",":"),default=str)))
+                count+=1
+            conn.commit();return count
+        finally:conn.close()
+
+    def source_updated(self, source_key: str) -> int:
+        conn=sqlite3.connect(self.path,timeout=2);conn.row_factory=sqlite3.Row
+        try:
+            row=conn.execute("SELECT updated_at FROM source_state WHERE source_key=?",(source_key,)).fetchone()
+            return int(row["updated_at"] or 0) if row else 0
+        finally:conn.close()
+
+    def mark_source(self, source_key: str, status: str = "done", note: str = "") -> None:
+        conn=sqlite3.connect(self.path,timeout=2)
+        try:
+            conn.execute("INSERT INTO source_state(source_key,updated_at,status,note) VALUES(?,?,?,?) ON CONFLICT(source_key) DO UPDATE SET updated_at=excluded.updated_at,status=excluded.status,note=excluded.note",
+                         (source_key,int(time.time()),status,note[:500]))
+            conn.commit()
+        finally:conn.close()
+
+    def save_odds(self, race_id: str, rows: list[dict], source: str = "", captured_at: int | None = None) -> int:
+        if not rows:return 0
+        # Round to 15 seconds so a polling burst cannot create pointless duplicates.
+        ts=int(captured_at or time.time());ts=ts-(ts%15)
+        conn=sqlite3.connect(self.path,timeout=3);count=0
+        try:
+            for z in rows:
+                try:no=int(z.get("horseNumber") or 0)
+                except Exception:no=0
+                if no<=0:continue
+                try:wo=float(z.get("winOdds")) if z.get("winOdds") not in (None,"") else None
+                except Exception:wo=None
+                try:pop=int(z.get("popularity")) if z.get("popularity") not in (None,"") else None
+                except Exception:pop=None
+                conn.execute("INSERT OR REPLACE INTO odds_history(race_id,horse_no,captured_at,win_odds,popularity,source,raw_json) VALUES(?,?,?,?,?,?,?)",
+                             (race_id,no,ts,wo,pop,str(source or z.get("oddsSource") or ""),json.dumps(z,ensure_ascii=False,separators=(",",":"),default=str)))
+                count+=1
+            conn.commit();return count
+        finally:conn.close()
+
+    def odds_latest(self, race_id: str) -> list[dict]:
+        conn=sqlite3.connect(self.path,timeout=2);conn.row_factory=sqlite3.Row
+        try:
+            rows=conn.execute("""SELECT o.* FROM odds_history o JOIN (SELECT horse_no,MAX(captured_at) t FROM odds_history WHERE race_id=? GROUP BY horse_no) x
+                                 ON o.horse_no=x.horse_no AND o.captured_at=x.t WHERE o.race_id=? ORDER BY o.horse_no""",(race_id,race_id)).fetchall()
+            return [{"horseNumber":int(r["horse_no"]),"winOdds":r["win_odds"],"popularity":r["popularity"],"oddsSource":r["source"],"capturedAt":int(r["captured_at"])} for r in rows]
+        finally:conn.close()
+
+    def save_analysis(self, race_id: str, payload: dict) -> None:
+        if not race_id or not isinstance(payload,dict):return
+        scenarios=payload.get("scenarios") or {}
+        horses=payload.get("horses") or []
+        now=int(time.time())
+        conn=sqlite3.connect(self.path,timeout=3)
+        try:
+            conn.execute("INSERT INTO race_analysis(race_id,updated_at,scenario_json,horse_diagnosis_json,raw_json) VALUES(?,?,?,?,?) ON CONFLICT(race_id) DO UPDATE SET updated_at=excluded.updated_at,scenario_json=excluded.scenario_json,horse_diagnosis_json=excluded.horse_diagnosis_json,raw_json=excluded.raw_json",
+                         (race_id,now,json.dumps(scenarios,ensure_ascii=False,separators=(",",":"),default=str),json.dumps(horses,ensure_ascii=False,separators=(",",":"),default=str),json.dumps(payload,ensure_ascii=False,separators=(",",":"),default=str)))
+            conn.commit()
+        finally:conn.close()
+
+    def get_analysis(self, race_id: str) -> dict | None:
+        conn=sqlite3.connect(self.path,timeout=2);conn.row_factory=sqlite3.Row
+        try:
+            row=conn.execute("SELECT raw_json FROM race_analysis WHERE race_id=?",(race_id,)).fetchone()
+            return json.loads(row["raw_json"]) if row else None
+        except Exception:return None
+        finally:conn.close()
+
+    def status(self, race_date: str = "", circuit: str = "") -> dict:
+        conn=sqlite3.connect(self.path,timeout=2);conn.row_factory=sqlite3.Row
+        try:
+            where=[];args=[]
+            if race_date:where.append("race_date=?");args.append(race_date)
+            if circuit:where.append("circuit=?");args.append(circuit)
+            sql="SELECT COUNT(*) cnt,MAX(updated_at) last FROM race_snapshots"+(" WHERE "+" AND ".join(where) if where else "")
+            rr=conn.execute(sql,args).fetchone();hm=conn.execute("SELECT COUNT(*) c FROM horse_master").fetchone();pr=conn.execute("SELECT COUNT(*) c FROM past_runs").fetchone();od=conn.execute("SELECT COUNT(*) c FROM odds_history").fetchone();an=conn.execute("SELECT COUNT(*) c FROM race_analysis").fetchone()
+            return {"races":int(rr["cnt"] or 0),"last":int(rr["last"] or 0),"horses":int(hm["c"] or 0),"pastRuns":int(pr["c"] or 0),"oddsPoints":int(od["c"] or 0),"analyses":int(an["c"] or 0),"path":str(self.path)}
+        finally:conn.close()
+
+RACEDB = RaceDataBank()
+
+_full_history_lock=threading.Lock()
+_full_history_running:set[str]=set()
+
+def _schedule_full_history_harvest(detail: dict) -> None:
+    """Persist every career run exposed by the currently available official source without blocking the race screen."""
+    if not bool(int(os.getenv("RACEDB_FULL_HISTORY","1"))) or not isinstance(detail,dict):return
+    race_id=str(detail.get("id") or "");horses=[h for h in (detail.get("horses") or []) if isinstance(h,dict) and h.get("name")]
+    if not race_id or not horses:return
+    with _full_history_lock:
+        if race_id in _full_history_running:return
+        _full_history_running.add(race_id)
+    def worker():
+        ttl=max(1800,int(os.getenv("RACEDB_FULL_HISTORY_TTL_SEC","21600")));cutoff=str(detail.get("date") or _today_iso());circuit=str(detail.get("circuit") or "")
+        try:
+            if circuit=="地方":
+                store=NarStore()
+                try:
+                    for h in horses:
+                        key="fullhist:nar:"+RACEDB._horse_key(h);last=RACEDB.source_updated(key)
+                        if last and int(time.time())-last<ttl:continue
+                        try:
+                            runs=store.recent_races(str(h.get("name") or ""),cutoff,1000)
+                            n=RACEDB.upsert_past_runs(h,runs);RACEDB.mark_source(key,"done",f"{n} runs")
+                        except Exception as exc:RACEDB.mark_source(key,"error",str(exc))
+                finally:
+                    try:store.conn.close()
+                    except Exception:pass
+            else:
+                def one(h):
+                    key="fullhist:jra:"+RACEDB._horse_key(h);last=RACEDB.source_updated(key)
+                    if last and int(time.time())-last<ttl:return
+                    cname=str(h.get("_jraHorseCname") or "")
+                    if not cname:
+                        RACEDB.mark_source(key,"unavailable","JRA horse id unavailable");return
+                    try:
+                        runs=_jra_profile_runs(cname,cutoff,200)
+                        n=RACEDB.upsert_past_runs(h,runs);RACEDB.mark_source(key,"done",f"{n} runs")
+                    except Exception as exc:RACEDB.mark_source(key,"error",str(exc))
+                workers=max(1,min(4,int(os.getenv("RACEDB_FULL_HISTORY_WORKERS","3"))))
+                with ThreadPoolExecutor(max_workers=min(workers,max(1,len(horses)))) as pool:list(pool.map(one,horses))
+        finally:
+            with _full_history_lock:_full_history_running.discard(race_id)
+    threading.Thread(target=worker,daemon=True).start()
 
 PREPARED_STORE = PreparedRaceStore()
 _prewarm_lock = threading.Lock()
@@ -3559,8 +4007,15 @@ def _prepared_ttl(detail: dict) -> int:
 def _prepared_get_fresh(race_id: str) -> dict | None:
     detail,updated=PREPARED_STORE.get(race_id)
     if not detail or not updated:return None
+    meta=detail.get("preparedMeta") or {}
+    if meta.get("build")!="v86":return None
+    horses=detail.get("horses") if isinstance(detail.get("horses"),list) else []
+    if detail.get("circuit")=="中央" and int(detail.get("fieldSize") or 0)>0 and not horses and not detail.get("result"):
+        return None
     if int(time.time())-updated > _prepared_ttl(detail):return None
     detail.setdefault("preparedMeta",{})["cacheAgeSec"]=max(0,int(time.time())-updated)
+    detail=_apply_enrichment(race_id,detail)
+    detail=_precompute_detail_metrics(detail)
     return detail
 
 
@@ -3570,11 +4025,18 @@ def _prepare_race_snapshot(race_id: str, force: bool = False) -> dict | None:
         if hit:return hit
     detail=nar_race_detail(race_id) if race_id.startswith("nar-") else central_race_detail(race_id)
     if not detail:return None
+    horses=detail.get("horses") if isinstance(detail.get("horses"),list) else []
+    if not race_id.startswith("nar-") and int(detail.get("fieldSize") or 0)>0 and not horses and not detail.get("result"):
+        return None
     detail=_apply_enrichment(race_id,detail)
     detail=_precompute_detail_metrics(detail)
     # Snapshot creation never blocks on network history. Existing DB/feed history is included.
     detail.setdefault("historySearch",{"status":"prepared","monthsDone":0,"maxMonths":0,"coverage":{"totalHorses":len(detail.get("horses",[])),"totalRuns":sum(len(h.get("recentRaces") or []) for h in detail.get("horses",[]))},"error":"","source":detail.get("source") or "prepared"})
     PREPARED_STORE.put(detail)
+    try:
+        RACEDB.upsert_race(detail)
+        _schedule_full_history_harvest(detail)
+    except Exception as exc:print("RaceDB snapshot write failed",race_id,exc)
     return detail
 
 
@@ -3591,26 +4053,37 @@ def _prewarm_sort_key(row: dict, date: str) -> tuple:
 
 
 def _schedule_prewarm(rows: list[dict], date: str, circuit: str = "") -> None:
-    ids=[str(r.get("id") or "") for r in sorted(rows,key=lambda x:_prewarm_sort_key(x,date)) if r.get("id") and (not circuit or r.get("circuit")==circuit)]
+    ordered=[r for r in sorted(rows,key=lambda x:_prewarm_sort_key(x,date)) if r.get("id") and (not circuit or r.get("circuit")==circuit)]
     max_races=max(1,int(os.getenv("PREWARM_MAX_RACES","36")))
-    ids=ids[:max_races]
-    if not ids:return
+    ordered=ordered[:max_races]
+    if not ordered:return
     key=f"{date}|{circuit or 'all'}"
     with _prewarm_lock:
         if key in _prewarm_running:return
-        _prewarm_running.add(key);_prewarm_state[key]={"running":True,"done":0,"total":len(ids),"last":int(time.time()),"errors":0}
+        _prewarm_running.add(key);_prewarm_state[key]={"running":True,"done":0,"total":len(ordered),"last":int(time.time()),"errors":0}
     def worker():
         done=errs=0
+        workers=max(1,min(int(os.getenv("PREWARM_WORKERS","4")),len(ordered)))
+        deep=max(0,int(os.getenv("PREWARM_DEEP_RACES","6")))
+        def one(ix_row):
+            ix,row=ix_row;rid=str(row.get("id") or "")
+            detail=_prepare_race_snapshot(rid,False)
+            if detail and ix<deep:_ensure_detail_background_jobs(rid,detail)
+            return rid,detail
         try:
-            for race_id in ids:
-                try:
-                    if _prepare_race_snapshot(race_id,False):done+=1
-                except Exception as exc:
-                    errs+=1;print("prewarm failed",race_id,exc)
-                with _prewarm_lock:_prewarm_state[key]={"running":True,"done":done,"total":len(ids),"last":int(time.time()),"errors":errs}
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                futures=[pool.submit(one,x) for x in enumerate(ordered)]
+                for fut in as_completed(futures):
+                    try:
+                        _,detail=fut.result()
+                        if detail:done+=1
+                        else:errs+=1
+                    except Exception as exc:
+                        errs+=1;print("prewarm failed",exc)
+                    with _prewarm_lock:_prewarm_state[key]={"running":True,"done":done,"total":len(ordered),"last":int(time.time()),"errors":errs}
         finally:
             with _prewarm_lock:
-                _prewarm_running.discard(key);_prewarm_state[key]={"running":False,"done":done,"total":len(ids),"last":int(time.time()),"errors":errs}
+                _prewarm_running.discard(key);_prewarm_state[key]={"running":False,"done":done,"total":len(ordered),"last":int(time.time()),"errors":errs}
     threading.Thread(target=worker,daemon=True).start()
 
 
@@ -3634,6 +4107,42 @@ def _ensure_detail_background_jobs(race_id: str, detail: dict) -> None:
 
 def _schedule_detail_background_jobs(race_id: str, detail: dict) -> None:
     threading.Thread(target=_ensure_detail_background_jobs,args=(race_id,detail),daemon=True).start()
+
+
+_racedb_refresh_lock=threading.Lock()
+_racedb_refresh_running:set[str]=set()
+
+def _racedb_snapshot_usable(detail:dict)->bool:
+    if not isinstance(detail,dict):return False
+    hs=detail.get("horses") if isinstance(detail.get("horses"),list) else []
+    if detail.get("circuit")=="中央" and int(detail.get("fieldSize") or 0)>0 and not hs and not detail.get("result"):return False
+    return bool(hs or detail.get("result") or int(detail.get("fieldSize") or 0)==0)
+
+def _schedule_racedb_snapshot_refresh(race_id:str)->None:
+    with _racedb_refresh_lock:
+        if race_id in _racedb_refresh_running:return
+        _racedb_refresh_running.add(race_id)
+    def worker():
+        try:
+            fresh=_prepare_race_snapshot(race_id,True)
+            if fresh:_ensure_detail_background_jobs(race_id,fresh)
+        except Exception as exc:print("RaceDB refresh failed",race_id,exc)
+        finally:
+            with _racedb_refresh_lock:_racedb_refresh_running.discard(race_id)
+    threading.Thread(target=worker,daemon=True).start()
+
+def _racedb_get_fast(race_id:str)->dict|None:
+    try:detail,updated=RACEDB.get_race(race_id)
+    except Exception:return None
+    if not detail or not _racedb_snapshot_usable(detail):return None
+    age=max(0,int(time.time())-int(updated or 0))
+    detail.setdefault("raceDbMeta",{}).update({"hit":True,"ageSec":age,"backgroundRefresh":True,"build":"v86"})
+    detail=_apply_enrichment(race_id,detail)
+    detail=_precompute_detail_metrics(detail)
+    # RaceDB is deliberately stale-while-revalidate: return immediately then refresh.
+    ttl=int(os.getenv("RACEDB_TODAY_STALE_SEC","30")) if str(detail.get("date") or "")==_today_iso() else int(os.getenv("RACEDB_ARCHIVE_STALE_SEC","21600"))
+    if age>ttl:_schedule_racedb_snapshot_refresh(race_id)
+    return detail
 
 _detail_cache_lock=threading.Lock()
 _detail_cache:dict[str,tuple[float,dict]]={}
@@ -3698,6 +4207,10 @@ def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), 
         if fast:
             if history:_schedule_detail_background_jobs(race_id,fast)
             return fast
+        bank=_racedb_get_fast(race_id)
+        if bank:
+            if history:_schedule_detail_background_jobs(race_id,bank)
+            return bank
     if not refresh and history:
         with _detail_cache_lock:
             hit=_detail_cache.get(race_id)
@@ -3744,6 +4257,10 @@ def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), 
     detail=_precompute_detail_metrics(detail)
     try:PREPARED_STORE.put(detail)
     except Exception as exc:print("prepared cache write failed",race_id,exc)
+    try:
+        RACEDB.upsert_race(detail)
+        _schedule_full_history_harvest(detail)
+    except Exception as exc:print("RaceDB detail write failed",race_id,exc)
     if history:
         with _detail_cache_lock:
             _detail_cache[race_id]=(now,detail)
@@ -3758,7 +4275,7 @@ def prewarm_status(date: str = Query(""), circuit: str = Query("")):
     with _prewarm_lock:
         state=dict(_prewarm_state.get(key) or {}) if key else {k:dict(v) for k,v in _prewarm_state.items()}
     db=PREPARED_STORE.status(date,_clean(circuit))
-    return {"build":"v82","state":state,"prepared":db}
+    return {"build": "v86","state":state,"prepared":db}
 
 
 @app.get("/api/v1/race/{race_id}/collect")
@@ -3872,9 +4389,78 @@ def odds_refresh(race_id:str):
             for no,z in sorted(merged.items()):horses.append({"horseNumber":no,**z})
             if not source and horses:source="netkeiba"
     if horses:
+        try:RACEDB.save_odds(race_id,horses,source)
+        except Exception as exc:print("RaceDB odds save failed",race_id,exc)
         try:PREPARED_STORE.delete(race_id)
         except Exception:pass
-    return {"raceId":race_id,"horses":horses,"oddsSource":source,"oddsUpdatedAt":_now_jst().strftime("%H:%M:%S")}
+    return {"raceId":race_id,"horses":horses,"oddsSource":source,"oddsUpdatedAt":_now_jst().strftime("%H:%M:%S"),"storedInRaceDB":bool(horses)}
+
+
+@app.post("/api/v1/racedb/analysis/{race_id}")
+async def racedb_save_analysis(race_id: str, request: Request):
+    try:
+        payload=await request.json()
+        if not isinstance(payload,dict):raise ValueError("invalid analysis payload")
+        payload["raceId"]=race_id
+        RACEDB.save_analysis(race_id,payload)
+        return {"ok":True,"raceId":race_id,"stored":True}
+    except Exception as exc:
+        raise HTTPException(status_code=400,detail=str(exc))
+
+@app.get("/api/v1/racedb/analysis/{race_id}")
+def racedb_get_analysis(race_id: str):
+    return {"raceId":race_id,"analysis":RACEDB.get_analysis(race_id)}
+
+@app.get("/api/v1/racedb-status")
+def racedb_status(date: str = Query(""), circuit: str = Query("")):
+    return {"build":"v86","status":RACEDB.status(date,_clean(circuit)),"continuousUpdater":bool(int(os.getenv("RACEDB_AUTO_UPDATE","1"))),"note":"サーバー稼働中は自動更新。永続保存はRACEDB_PATHを永続ディスクへ向けると再起動後も維持。"}
+
+@app.get("/api/v1/racedb-race/{race_id}")
+def racedb_race(race_id:str):
+    detail,updated=RACEDB.get_race(race_id)
+    if not detail:raise HTTPException(status_code=404,detail="RaceDB snapshot not found")
+    return {"updatedAt":updated,"detail":detail,"oddsLatest":RACEDB.odds_latest(race_id)}
+
+_racedb_daemon_started=False
+_racedb_daemon_lock=threading.Lock()
+
+def _racedb_live_cycle()->None:
+    today=_today_iso();rows=[]
+    try:rows.extend(nar_race_summaries(today))
+    except Exception as exc:print("RaceDB NAR list failed",exc)
+    try:rows.extend(central_race_summaries(today,allow_network=True,force=False))
+    except Exception as exc:print("RaceDB JRA list failed",exc)
+    if rows:_schedule_prewarm(rows,today,"")
+    # Odds are much more volatile than past runs.  Only poll a few upcoming races.
+    if not bool(int(os.getenv("RACEDB_AUTO_ODDS","1"))):return
+    nowm=_now_jst().hour*60+_now_jst().minute;window=int(os.getenv("RACEDB_ODDS_WINDOW_MIN","90"));limit=max(1,int(os.getenv("RACEDB_ODDS_MAX_RACES","4")))
+    upcoming=[]
+    for r in rows:
+        if r.get("result"):continue
+        t=str(r.get("startTime") or "")
+        m=re.match(r"^(\d{1,2}):(\d{2})",t)
+        if not m:continue
+        rm=int(m.group(1))*60+int(m.group(2));delta=rm-nowm
+        if -5<=delta<=window:upcoming.append((delta,r))
+    upcoming.sort(key=lambda x:x[0])
+    for _,r in upcoming[:limit]:
+        try:odds_refresh(str(r.get("id") or ""))
+        except Exception as exc:print("RaceDB automatic odds failed",r.get("id"),exc)
+
+def _start_racedb_daemon()->None:
+    global _racedb_daemon_started
+    if not bool(int(os.getenv("RACEDB_AUTO_UPDATE","1"))):return
+    with _racedb_daemon_lock:
+        if _racedb_daemon_started:return
+        _racedb_daemon_started=True
+    def worker():
+        # Short initial delay lets app import/route registration finish.
+        time.sleep(float(os.getenv("RACEDB_START_DELAY_SEC","2")))
+        while True:
+            try:_racedb_live_cycle()
+            except Exception as exc:print("RaceDB live cycle failed",exc)
+            time.sleep(max(30,int(os.getenv("RACEDB_UPDATE_SEC","120"))))
+    threading.Thread(target=worker,daemon=True,name="RaceDB-live-updater").start()
 
 @app.get("/api/v1/enrichment-status/{race_id}")
 def enrichment_status(race_id:str):
@@ -3886,7 +4472,7 @@ def enrichment_schema():
 
 @app.get("/build")
 def build_info():
-    return {"build":"v82","appVersion":"8.21-production-v82-history-collect-fix","recentRuns":5,"allCentralVenues":True,"deterministicCentralDetailId":True,"centralResults":True,"jraOfficialResultPrimary":True,"weatherGoingPrimary":"JRA公式結果","oddsUi":False,"centralLiveOddsApi":False,"scenarioABCSelectable":True,"scenarioHorseNumbers":True,"stickyVenueHeader":True,"venueMoreButton":False,"allVenuesAlwaysVisible":True,"circuitSpecificFetch":True,"manualCollect":True,"preparedRaceCache":True,"prewarmOnList":True,"serverHorseMetricPrecompute":True,"preparedTodayTtlSec":int(os.getenv("PREPARED_TODAY_TTL_SEC","45")),"builtInSources":["JRA公式","NAR公式","netkeiba"],"smartRcDirectLink":False,"multiSource":True,"nonBlocking":True,"grade":"S/A/B/C + ◎○▲☆△注"}
+    return {"build": "v86","appVersion":"8.60-production-v86-racedb-core","recentRuns":5,"allCentralVenues":True,"deterministicCentralDetailId":True,"centralResults":True,"jraOfficialResultPrimary":True,"weatherGoingPrimary":"JRA公式結果","oddsUi":False,"centralLiveOddsApi":True,"scenarioABCSelectable":True,"scenarioHorseNumbers":True,"stickyVenueHeader":True,"venueMoreButton":False,"allVenuesAlwaysVisible":True,"circuitSpecificFetch":True,"manualCollect":True,"preparedRaceCache":True,"prewarmOnList":True,"parallelPrewarm":True,"browserDetailCache":True,"staleWhileRevalidate":True,"raceDataBank":True,"raceDataBankAutoUpdate":True,"raceDataBankOddsHistory":True,"raceDataBankPastRuns":True,"raceDataBankFullCareerBackground":True,"raceDataBankPedigree":True,"raceDataBankSmartMetrics":["ten1f","ten","agari"],"emptyCentralPreparedRejected":True,"smartRcEnrichment":True,"serverHorseMetricPrecompute":True,"preparedTodayTtlSec":int(os.getenv("PREPARED_TODAY_TTL_SEC","45")),"builtInSources":["JRA公式","NAR公式","netkeiba","SmartRc(フィード設定時)"],"smartRcDirectLink":False,"multiSource":True,"nonBlocking":True,"grade":"S/A/B/C + ◎○▲☆△注"}
 
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -3900,18 +4486,22 @@ def hero_horse():
 def pace_preview():
     return Response(PACE_PREVIEW_WEBP, media_type="image/webp", headers={"Cache-Control":"public, max-age=86400"})
 
-@app.get("/styles-v82.css")
+@app.get("/styles-v86.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"no-store, max-age=0"})
 
-@app.get("/app-v82.js")
+@app.get("/app-v86.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"no-store, max-age=0"})
 
-@app.get("/manifest-v82.webmanifest")
+@app.get("/manifest-v86.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"no-store, max-age=0"})
 
 @app.get("/sw.js")
 def service_worker():
     return Response(SW, media_type="application/javascript", headers={"Service-Worker-Allowed":"/", "Cache-Control":"no-store, max-age=0"})
+
+
+# Start the v86 RaceDB updater after module initialization.
+_start_racedb_daemon()
