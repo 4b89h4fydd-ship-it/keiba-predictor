@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="9.1-accordion-odds-v91")
+app = FastAPI(title="KRAIZ", version="9.2-fastdetail-payout-v92")
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -2963,7 +2963,7 @@ def _merge_result_fields(detail:dict,result:dict)->dict:
 
 def _parse_payouts(soup) -> list[dict]:
     """Read only labelled payout rows; never infer a dividend from odds."""
-    aliases={"単勝":"単勝","複勝":"複勝","枠連":"枠連","枠複":"枠連","馬連":"馬連","馬複":"馬連","ワイド":"ワイド","馬単":"馬単","3連複":"3連複","三連複":"3連複","３連複":"3連複","3連単":"3連単","三連単":"3連単","３連単":"3連単"}
+    aliases={"単勝":"単勝","複勝":"複勝","枠連":"枠連","枠複":"枠連","枠連複":"枠連","馬連":"馬連","馬複":"馬連","馬連複":"馬連","ワイド":"ワイド","馬単":"馬単","馬連単":"馬単","3連複":"3連複","三連複":"3連複","３連複":"3連複","3連単":"3連単","三連単":"3連単","３連単":"3連単"}
     out=[];seen=set()
     for table in soup.find_all("table"):
         current=""
@@ -2998,12 +2998,16 @@ def _attach_nar_payouts(detail: dict) -> dict:
     code=NAR_BABA_CODES.get(detail.get("track"))
     if not code:return detail
     query=urllib.parse.urlencode({"k_babaCode":code,"k_raceDate":str(detail.get("date") or "").replace("-","/"),"k_raceNo":detail.get("raceNumber")})
-    url="https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/RaceMarkTable?"+query
+    url="https://www.keiba.go.jp/KeibaWebSP/TodayRaceInfo/S_RefundMoneyList?"+query
     try:
         request=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0"})
-        with urllib.request.urlopen(request,timeout=5) as response:html=_jra_decode(response.read())
-        result["payouts"]=_parse_payouts(BeautifulSoup(html,"html.parser"))
+        with urllib.request.urlopen(request,timeout=float(os.getenv("NAR_PAYOUT_TIMEOUT_SEC","2.5"))) as response:
+            html=_jra_decode(response.read())
+        payouts=_parse_payouts(BeautifulSoup(html,"html.parser"))
+        result["payouts"]=payouts
         result["payoutSource"]="NAR公式";result["payoutUrl"]=url
+        if payouts:result.pop("payoutError",None)
+        else:result["payoutError"]="払い戻し未取得"
     except Exception as exc:
         result["payoutError"]="払い戻し未取得";print("NAR payout fetch failed",detail.get("id"),exc)
     return detail
@@ -3601,7 +3605,12 @@ class PreparedRaceStore:
             old=conn.execute("SELECT payload FROM prepared_races WHERE race_id=?",(race_id,)).fetchone()
             if old:
                 previous=json.loads(old[0])
-                if _racedb_snapshot_usable(previous) and (_snapshot_final(previous) or str(previous.get("date") or "")<_today_iso()):
+                prev_meta=previous.get("preparedMeta") or {}
+                prev_payouts=((previous.get("result") or {}).get("payouts") or [])
+                new_payouts=((detail.get("result") or {}).get("payouts") or [])
+                frozen=_snapshot_final(previous) or str(previous.get("date") or "")<_today_iso()
+                can_upgrade=bool(force or prev_meta.get("fastPartial") or (not prev_payouts and new_payouts))
+                if _racedb_snapshot_usable(previous) and frozen and not can_upgrade:
                     detail.clear();detail.update(previous)
                     return
             conn.execute(
@@ -4389,6 +4398,7 @@ def _snapshot_final(detail: dict) -> bool:
 def _prepared_get_fresh(race_id: str) -> dict | None:
     detail,updated=PREPARED_STORE.get(race_id)
     if not detail or not updated or not _racedb_snapshot_usable(detail):return None
+    if (detail.get("preparedMeta") or {}).get("fastPartial"):return detail
     if (detail.get("aiEvaluation") or {}).get("version")!="evidence-v90":
         detail=_precompute_detail_metrics(_strip_excluded(detail))
     return detail
@@ -4396,7 +4406,7 @@ def _prepared_get_fresh(race_id: str) -> dict | None:
 
 def _prepare_race_snapshot(race_id: str, force: bool = False, manual: bool = False) -> dict | None:
     hit=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
-    if hit and (str(hit.get("date") or "")<_today_iso() or _snapshot_final(hit)):return hit
+    if hit and (str(hit.get("date") or "")<_today_iso() or _snapshot_final(hit)) and not force:return hit
     if hit and not force:return hit
     if manual and race_id.startswith("nar-"):
         match=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-",race_id)
@@ -4418,9 +4428,10 @@ def _prepare_race_snapshot(race_id: str, force: bool = False, manual: bool = Fal
     detail=_strip_excluded(_apply_enrichment(race_id,detail))
     detail=_attach_stored_career(detail)
     detail=_precompute_detail_metrics(_attach_evaluation_context(detail))
+    detail.setdefault("preparedMeta",{}).pop("fastPartial",None)
     # Snapshot creation never blocks on network history. Existing DB/feed history is included.
     detail.setdefault("historySearch",{"status":"prepared","monthsDone":0,"maxMonths":0,"coverage":{"totalHorses":len(detail.get("horses",[])),"totalRuns":sum(len(h.get("recentRaces") or []) for h in detail.get("horses",[]))},"error":"","source":detail.get("source") or "prepared"})
-    PREPARED_STORE.put(detail,force=manual)
+    PREPARED_STORE.put(detail,force=bool(manual or force))
     try:
         RACEDB.upsert_race(detail)
         _schedule_full_history_harvest(detail)
@@ -4452,13 +4463,15 @@ def _schedule_prewarm(rows: list[dict], date: str, circuit: str = "") -> None:
         _prewarm_running.add(key);_prewarm_state[key]={"running":True,"done":0,"total":len(ordered),"last":int(time.time()),"errors":0}
     def worker():
         done=errs=0
-        workers=max(1,min(int(os.getenv("PREWARM_WORKERS","4")),len(ordered)))
-        deep=max(0,int(os.getenv("PREWARM_DEEP_RACES","6")))
+        workers=max(1,min(int(os.getenv("PREWARM_WORKERS","2")),len(ordered)))
+        deep=max(0,int(os.getenv("PREWARM_DEEP_RACES","3")))
         def one(ix_row):
             ix,row=ix_row;rid=str(row.get("id") or "")
-            existing=_prepared_get_fresh(rid) or _racedb_get_fast(rid)
-            detail=existing if existing and (date!=_today_iso() or _snapshot_final(existing)) else _prepare_race_snapshot(rid,date==_today_iso())
-            if detail and ix<deep:_ensure_detail_background_jobs(rid,detail)
+            detail=_prepared_get_fresh(rid) or _racedb_get_fast(rid)
+            if not detail:
+                detail=_fast_local_race_detail(rid)
+                if detail:_store_fast_snapshot(detail)
+            if detail and ix<deep:_schedule_racedb_snapshot_refresh(rid)
             return rid,detail
         try:
             with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -4510,6 +4523,86 @@ def _racedb_snapshot_usable(detail:dict)->bool:
     return all(isinstance(h,dict) and h.get("name") and int(h.get("horseNumber") or 0)>0 for h in horses)
 
 
+
+def _fast_local_race_detail(race_id:str)->dict|None:
+    """First paint from local DB only. Never wait on web/history/profile lookups."""
+    now=int(time.time())
+    if race_id.startswith("nar-"):
+        m=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-(.+)-(\d{2})$",race_id)
+        if not m or not DB_PATH.exists():return None
+        iso_date,track,race_no=m.group(1),m.group(2),int(m.group(3))
+        conn=_new_conn(DB_PATH)
+        try:
+            race=conn.execute("SELECT * FROM races WHERE track=? AND date=? AND race_no=?",(track,iso_date,race_no)).fetchone()
+            if not race:return None
+            entries=conn.execute("SELECT * FROM entries WHERE track=? AND date=? AND race_no=? ORDER BY horse_no",(track,iso_date,race_no)).fetchall()
+        finally:conn.close()
+        if not entries:return None
+        horses=[];finishers=[]
+        for e in entries:
+            horses.append({"id":_stable_id(iso_date,track,race_no,e["horse_no"],e["name"]),
+                "horseNumber":int(e["horse_no"]),"frameNumber":int(e["frame_no"] or 0),"name":e["name"],
+                "age":int(e["age"] or 0),"sex":e["sex"] or "牡","carriedWeight":float(e["carried_weight"] or 0),
+                "jockey":e["jockey"] or "","trainer":e["trainer"] or "","recentRaces":[],
+                "jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{},
+                "collectionState":{"status":"basic","history":"loading","pastRunCount":0}})
+            fin=int(e["finish"] or 0)
+            if fin>0:
+                try:cp=json.loads(e["corner_positions_json"] or "[]")
+                except Exception:cp=[]
+                finishers.append({"finish":fin,"horseNumber":int(e["horse_no"]),"frameNumber":int(e["frame_no"] or 0),
+                                  "name":e["name"],"timeSeconds":float(e["time_seconds"] or 0),"cornerPositions":cp})
+        finishers.sort(key=lambda x:(x["finish"],x["horseNumber"]))
+        need=min(3,len(entries));ranks={x["finish"] for x in finishers}
+        finalized=need>0 and all(i in ranks for i in range(1,need+1))
+        detail={"id":race_id,"circuit":"地方","date":iso_date,"track":track,"raceNumber":race_no,
+                "title":race["title"] or f"{race_no}R","distance":int(race["distance"] or 0),
+                "condition":race["condition"] or "不明","weather":race["weather"] or "不明",
+                "fieldSize":int(race["field_size"] or len(entries)),"racePrize1":int(race["prize1"] or 0),
+                "surface":"","startTime":race["start_time"] or "",
+                "scheduledStartTime":race["scheduled_start_time"] or race["start_time"] or "",
+                "horses":horses,"result":{"status":"確定","finishers":finishers} if finalized else None,
+                "source":"NAR公式・高速Snapshot"}
+    else:
+        if not CENTRAL_DB_PATH.exists():return None
+        conn=_new_conn(CENTRAL_DB_PATH)
+        try:row=conn.execute("SELECT payload FROM central_races WHERE id=?",(race_id,)).fetchone()
+        finally:conn.close()
+        if not row:return None
+        try:detail=json.loads(row["payload"])
+        except Exception:return None
+        if not isinstance(detail,dict) or not (detail.get("horses") or []):return None
+        detail=dict(detail);detail["id"]=race_id
+        for h in detail.get("horses",[]) or []:
+            if not isinstance(h,dict):continue
+            runs=list(h.get("recentRaces") or h.get("allPastRuns") or [])[:5]
+            h["recentRaces"]=runs;h.pop("allPastRuns",None)
+            h.setdefault("jockeyStats",{});h.setdefault("trainerStats",{})
+            h.setdefault("jockeyProfile",{});h.setdefault("trainerProfile",{})
+            h["collectionState"]={"status":"complete" if runs else "basic",
+                                  "history":"available" if runs else "loading","pastRunCount":len(runs)}
+        detail["source"]=str(detail.get("source") or "JRA")+"・高速Snapshot"
+    try:
+        latest=RACEDB.odds_latest(race_id);by={int(x.get("horseNumber") or 0):x for x in latest}
+        for h in detail.get("horses",[]) or []:
+            z=by.get(int(h.get("horseNumber") or 0))
+            if z:
+                if z.get("winOdds") is not None:h["winOdds"]=z["winOdds"]
+                if z.get("popularity") is not None:h["popularity"]=z["popularity"]
+    except Exception:pass
+    title=str(detail.get("title") or "");surface=str(detail.get("surface") or "")
+    detail["analysisMode"]="障害" if (surface=="障害" or "障害" in title or "ジャンプ" in title) else ("新馬" if re.search(r"(?:新馬|メイクデビュー)",title) else "平地")
+    detail["preparedMeta"]={"prepared":True,"fastPartial":True,"preparedAtEpoch":now,"build":"v92-fast"}
+    return detail
+
+def _store_fast_snapshot(detail:dict)->None:
+    if not detail or not _racedb_snapshot_usable(detail):return
+    try:PREPARED_STORE.put(detail,force=True)
+    except Exception as exc:print("fast prepared save failed",detail.get("id"),exc)
+    try:RACEDB.upsert_race(detail)
+    except Exception as exc:print("fast RaceDB save failed",detail.get("id"),exc)
+
+
 def _schedule_racedb_snapshot_refresh(race_id:str)->None:
     with _racedb_refresh_lock:
         if race_id in _racedb_refresh_running:return
@@ -4527,6 +4620,7 @@ def _racedb_get_fast(race_id:str)->dict|None:
     try:detail,updated=RACEDB.get_race(race_id)
     except Exception:return None
     if not detail or not _racedb_snapshot_usable(detail):return None
+    if (detail.get("preparedMeta") or {}).get("fastPartial"):return detail
     if (detail.get("aiEvaluation") or {}).get("version")!="evidence-v90":
         detail=_precompute_detail_metrics(_strip_excluded(detail))
     return detail
@@ -4589,9 +4683,17 @@ def central_refresh_status(date: str = Query(...)):
 def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), prepared: int = Query(1)):
     cached=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
     if cached:
-        if cached.get("date")==_today_iso() and not _snapshot_final(cached):
+        payouts=((cached.get("result") or {}).get("payouts") or [])
+        needs_full=bool((cached.get("preparedMeta") or {}).get("fastPartial"))
+        needs_payout=bool(_snapshot_final(cached) and not payouts)
+        if needs_full or needs_payout or (cached.get("date")==_today_iso() and not _snapshot_final(cached)):
             _schedule_racedb_snapshot_refresh(race_id)
         return cached
+    quick=_fast_local_race_detail(race_id)
+    if quick:
+        _store_fast_snapshot(quick)
+        _schedule_racedb_snapshot_refresh(race_id)
+        return quick
     detail=_prepare_race_snapshot(race_id,bool(refresh),manual=bool(refresh))
     if not detail:raise HTTPException(status_code=404,detail="race not found")
     return detail
@@ -4875,7 +4977,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v90.css")
+@app.get("/styles-kraiz-v92.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"no-store, max-age=0"})
@@ -4883,7 +4985,7 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v90.js")
+@app.get("/app-v92.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"no-store, max-age=0"})
