@@ -346,7 +346,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="9.7-entry-tuned-v97")
+app = FastAPI(title="KRAIZ", version="9.9-realfix-v99")
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -703,6 +703,73 @@ CSS += r"""
 @media(max-width:460px){.accordion-tabs{position:relative;top:auto;overflow-x:auto!important;scrollbar-width:none}.accordion-tabs::-webkit-scrollbar{display:none}.accordion-tabs button{flex:0 0 auto!important;min-width:104px!important}.accordion-idle{margin:0 2px}.entry-main,.entry-odds{font-size:18px!important}}
 """
 
+
+CSS += r"""
+/* v98 — five race-detail controls must be perfectly equal */
+.cinema-tabs.accordion-tabs{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:6px!important;
+  width:100%!important;
+  overflow:visible!important;
+  padding:7px!important;
+}
+.cinema-tabs.accordion-tabs button,
+.cinema-tabs.accordion-tabs .result-tab{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  margin:0!important;
+  flex:none!important;
+  padding:8px 2px!important;
+  min-height:46px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:2px!important;
+  font-size:10px!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+}
+.cinema-tabs.accordion-tabs .panel-caret{
+  margin:0!important;
+  padding:0!important;
+  font-size:13px!important;
+  flex:0 0 auto!important;
+  background:transparent!important;
+}
+@media(max-width:390px){
+  .cinema-tabs.accordion-tabs{gap:4px!important;padding:6px 4px!important}
+  .cinema-tabs.accordion-tabs button,
+  .cinema-tabs.accordion-tabs .result-tab{
+    font-size:9px!important;
+    padding:7px 1px!important;
+    min-height:44px!important;
+  }
+  .cinema-tabs.accordion-tabs .panel-caret{font-size:12px!important}
+}
+.diagnosis-refresh-note{
+  display:flex;align-items:center;gap:7px;margin:0 0 9px;padding:7px 9px;
+  border:1px solid #29537a;border-radius:8px;background:#091f35;color:#a9c8e6;
+  font-size:11px;
+}
+.diagnosis-refresh-note.busy{color:#72dcff;border-color:#238eb6}
+"""
+
+
+CSS += r"""
+/* v99 final tab override */
+.cinema-tabs.accordion-tabs .result-tab,
+.cinema-tabs.accordion-tabs button{
+  min-width:0!important;
+  max-width:none!important;
+  width:100%!important;
+  margin-left:0!important;
+  flex:none!important;
+}
+.cinema-tabs.accordion-tabs{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+"""
+
 JS = r"""
 (function(){
 "use strict";
@@ -847,12 +914,72 @@ function packScenarioStage(r,rows,scoreMap,laneMap,stage){var a=rows.slice().sor
 function rowsFromPack(rows,pack){var map={};for(var i=0;i<rows.length;i++)map[n(rows[i].horse.horseNumber)]=rows[i];return pack.map(function(z){return map[n(z.no)]}).filter(Boolean)}
 function scenarioPlan(r,rows,sc,suit){var scenario=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],code=scenario.code,p=pressureInfo(rows),ct=courseTraits(r),S=[{},{},{},{},{},{}],L=[{},{},{},{},{},{}],i,x,no,q,scfit,markScore={},leadLoad;for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);q=p[no]||{};leadLoad=x.goProb*(.045+.055*x.needLead)+x.frontCost*.13;S[0][no]=x.breakSkill*.26+x.ten*.26+x.goProb*.27+x.needLead*.08+x.jockeyFront*.05+(q.freeOuter||0)*.06-x.frontCost*.10;L[0][no]=clamp(Math.round((x.draw-.5)*5),-3,3);S[1][no]=S[0][no]*.40+x.goProb*.17+x.holdFront*.13+x.turnSkill*.11+x.flexibility*.06+x.ability*.08-x.frontCost*.09-x.outerStress*.05;L[1][no]=clamp(L[0][no]+(x.edge&&x.goProb>.55?-1:0)+(q.sandwich&&x.flexibility<.45?1:0),-3,3);scfit=scenarioSuit(x,code,p);S[2][no]=S[1][no]*.31+x.ability*.16+x.holdFront*.15+x.stamina*.13+x.stalk*.07+x.mid*.04+scfit*.11-(code==='C'?leadLoad*.12:leadLoad*.05)+(code==='A'?x.goProb*.06:0);L[2][no]=clamp(L[1][no]+(x.move>.52&&x.goProb<.46?1:0),-3,3);S[3][no]=S[2][no]*.27+x.ability*.16+x.move*.16+x.turnSkill*.11+scfit*.14+x.latePower*.09+x.holdFront*.04-(x.fade*x.goProb)*(code==='C'?.09:.04);L[3][no]=clamp(L[2][no]+(x.move>.56?1:0),-3,3);S[4][no]=S[3][no]*.24+scfit*.20+x.ability*.18+x.holdFront*.11+x.move*.10+x.latePower*.10+(1-x.fade)*.05-(q.sandwich||0)*.025;L[4][no]=clamp(L[3][no]+(x.latePower>.61?1:0),-3,3);var su=suit[no]||{rankScore:.5};markScore[no]=S[4][no]*.31+su.rankScore*.42+x.ability*.10+x.latePower*.08+x.stamina*.05+x.coverage*.02+(1-x.fade)*.02;if(code==='A')markScore[no]+=x.frontStay*.045;if(code==='C')markScore[no]+=x.comeFromBehind*.045;S[5][no]=markScore[no];L[5][no]=L[4][no]}var labels=['スタート','1コーナー','向正面','3コーナー','4コーナー','直線'],packs=[],stages=[];for(i=0;i<6;i++){packs[i]=packScenarioStage(r,rows,S[i],L[i],i);stages.push({key:['start','first','back','turn3','turn4','straight'][i],label:labels[i],pack:packs[i]})}return{scenario:scenario,stages:stages,start:rowsFromPack(rows,packs[0]),corner:rowsFromPack(rows,packs[4]),straight:rowsFromPack(rows,packs[5]),markScore:markScore}}
 function gradeClass(g){return g==='S'?'grade-s':(g==='A'?'grade-a':(g==='B'?'grade-b':'grade-c'))}
-function assignOverallGrades(rows){rows.forEach(function(x){x.overallGrade='C';x.overallScore=50;x.overallReasons=[]})}
+function assignOverallGrades(rows,suit,sc,pressure){
+  var eligible=[],i,x,no,su,cnt,fitVals,fitScore,raw;
+  for(i=0;i<rows.length;i++){
+    x=rows[i];no=n(x.horse.horseNumber);su=suit[no]||{overall:.5};cnt=x.fit&&x.fit.counts||{};fitVals=[];
+    if(n(cnt.distance))fitVals.push(confidenceBlend(x.fit.distance,cnt.distance));
+    if(n(cnt.track))fitVals.push(confidenceBlend(x.fit.track,cnt.track));
+    if(n(cnt.condition))fitVals.push(confidenceBlend(x.fit.condition,cnt.condition));
+    fitScore=fitVals.length?mean(fitVals):.5;
+    raw=x.ability*.29+n(su.overall,.5)*.27+Math.max(x.frontStay,x.comeFromBehind)*.13+fitScore*.10+x.stamina*.06+(1-x.fade)*.05+x.posCons*.04+x.coverage*.06;
+    raw=clamp(raw,0,1);x.overallRaw=raw;x.overallReasons=[];
+    if(x.ability>=.62)x.overallReasons.push('能力評価高め');
+    if(n(su.overall)>=.62)x.overallReasons.push('展開適性高め');
+    if(x.frontStay>=.64)x.overallReasons.push('前残り力');
+    if(x.comeFromBehind>=.64)x.overallReasons.push('差し込み力');
+    if(x.fade<=.25)x.overallReasons.push('下がり率低め');
+    if(fitVals.length&&fitScore>=.58)x.overallReasons.push('今回条件に実績');
+    if(x.frontCost>=.12)x.overallReasons.push('隣接圧力注意');
+    if(x.fade>=.50)x.overallReasons.push('下がり率注意');
+    if(x.coverage<.45)x.overallReasons.push('データ量少なめ・基礎評価');
+    if((x.horse.recentRaces||[]).length<2||x.styleSamples<2)x.overallReasons.push('限定データ評価');
+    eligible.push(x);
+  }
+  if(!eligible.length)return;
+  var lo=Math.min.apply(null,eligible.map(function(z){return z.overallRaw})),
+      hi=Math.max.apply(null,eligible.map(function(z){return z.overallRaw}));
+  eligible.forEach(function(z){
+    var rel=hi===lo?.5:(z.overallRaw-lo)/(hi-lo);
+    z.overallScore=Math.round(clamp(z.overallRaw*.78+(.45+.55*rel)*.22,0,1)*100)
+  });
+  eligible.sort(function(a,b){return b.overallScore-a.overallScore||b.ability-a.ability||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
+  var m=eligible.length;
+  eligible.forEach(function(z,rank){
+    var pct=(rank+1)/m,score=z.overallScore;
+    if((score>=82)||(pct<=.12&&score>=70))z.overallGrade='S';
+    else if((score>=72)||(pct<=.35&&score>=64))z.overallGrade='A';
+    else if((score>=60)||(pct<=.70))z.overallGrade='B';
+    else z.overallGrade='C';
+    if(!z.overallReasons.length)z.overallReasons.push('総合バランス型')
+  })
+}
 function assignPredictionMarks(rows){var syms=['◎','○','▲','☆','△','注'];rows.slice().sort(function(a,b){return b.overallScore-a.overallScore||n(a.horse.horseNumber)-n(b.horse.horseNumber)}).forEach(function(x,i){x.predMark=syms[Math.min(i,5)];x.predRank=i+1})}
 function raceMode(r){r=r||{};if(['平地','新馬','障害'].indexOf(r.analysisMode)>=0)return r.analysisMode;var title=String(r.title||'');if(r.surface==='障害'||/障害|J[･・.]?G[ⅠⅡⅢ123]|\bJS\b|ジャンプ/i.test(title))return '障害';return /新馬|メイクデビュー/.test(title)?'新馬':'平地'}
 function saveRaceAnalysis(r,p){if(r.date!==today()||isFinal(r))return;try{if(!r||!r.id||!p)return;var meta=r.preparedMeta||{},key=String(r.id)+'|'+String(meta.preparedAtEpoch||0)+'|'+String((r.horses||[]).length);if(state.analysisSaved[key])return;state.analysisSaved[key]=1;var sc=(p.scenarios||[]).map(function(z){return{code:z.code,prob:z.prob,horses:(z.horses||[]).map(function(h){return n(h.horseNumber)})}}),hs=(p.rows||[]).map(function(x){var h=x.horse||{},fit=x.fit||{};return{horseNumber:n(h.horseNumber),name:h.name||'',mark:x.predMark||'',grade:x.overallGrade||'',score:x.overallScore,expectedStyle:x.expected||'',pastStyle:x.pastStyle||'',stylePoint:x.score,fadeRate:x.fade,goProb:x.goProb,ten:x.ten,frontStay:x.frontStay,fit:fit,analysisMode:raceMode(r)}});fetch('/api/v1/racedb/analysis/'+encodeURIComponent(r.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({generatedAt:new Date().toISOString(),mode:raceMode(r),scenarios:sc,horses:hs})}).catch(function(){delete state.analysisSaved[key]})}catch(e){}}
 function analysisRace(r){return Object.assign({},r,{horses:(r.horses||[]).map(function(h){var runs=h.allPastRuns||h.recentRaces||[];if(raceMode(r)==='障害')runs=runs.filter(function(z){return /障害|ジャンプ|J[・･.]?G|\bJS\b/i.test((z.surface||'')+(z.title||''))});return Object.assign({},h,{recentRaces:runs,allPastRuns:runs})})})}
-function integratedGrades(r,rows){var server=((r.aiEvaluation||{}).horses||[]),saved=((r.analysis||{}).horses||[]);rows.forEach(function(x){var h=horseByNo(r,x.horse.horseNumber)||x.horse,no=n(h.horseNumber),e=h.integratedEvaluation||{},i,z;if(e.score==null){for(i=0;i<server.length;i++){z=server[i]||{};if(n(z.horseNumber)===no){e=z;break}}}if(e.score==null){for(i=0;i<saved.length;i++){z=saved[i]||{};if(n(z.horseNumber)===no){e={score:z.score,grade:z.grade,reasons:['RaceDB保存済みAI全頭診断'],confidence:z.confidence||'保存済み'};break}}}x.evaluation=e;x.overallScore=e.score==null?50:e.score;x.overallGrade=e.grade||'C';x.overallReasons=e.reasons||['基礎データ評価：取得済み情報のみ'];x.horse=h})}
+function integratedGrades(r,rows){
+  var server=((r.aiEvaluation||{}).horses||[]);
+  rows.forEach(function(x){
+    var h=horseByNo(r,x.horse.horseNumber)||x.horse,no=n(h.horseNumber),e=h.integratedEvaluation||{},i,z;
+    if(e.score==null){
+      for(i=0;i<server.length;i++){
+        z=server[i]||{};
+        if(n(z.horseNumber)===no){e=z;break}
+      }
+    }
+    var hasEvidence=!!(e&&e.score!=null&&!e.neutralPrior&&((e.components&&Object.keys(e.components).length)||n(e.samples)>0));
+    if(hasEvidence){
+      x.evaluation=e;
+      x.overallScore=Math.round(n(e.score,x.overallScore));
+      x.overallGrade=e.grade||x.overallGrade||'C';
+      x.overallReasons=(e.reasons&&e.reasons.length)?e.reasons:x.overallReasons;
+    }else{
+      x.evaluation={score:x.overallScore,grade:x.overallGrade,reasons:x.overallReasons,confidence:'低',tier:'基礎データ評価'};
+    }
+    x.horse=h
+  })
+}
 function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),rows=buildRows(modelRace),occ=earlyOcc(modelRace),sc=scenarioModel(r,rows),suit=suitability(rows,sc),pressure=pressureInfo(rows),plans={},i;assignOverallGrades(rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
@@ -876,7 +1003,7 @@ function oddsClass(h){var o=n(h&&h.winOdds,0);return o>0&&o<10?'odds-single':''}
 function openFirstRace(){if(state.race||state.raceLoading)return;var ctx=cinematicContext(null);state.track=ctx.track;var first=ctx.races.find(function(r){return n(r.raceNumber)===1})||ctx.races[0];if(first)openRace(first.id,false,false)}
 function oddsRefreshCadence(r){var start=mins(r&&r.startTime),now=nowMins();if(start>=9999)return 60000;var remain=start-now;if(remain<=0)return 0;return remain<=30?30000:60000}
 function refreshOddsOnly(force){var r=state.race;if(!r||r.date!==today()||isFinal(r)||state.horseModalNo||state.oddsBusy)return;var cadence=oddsRefreshCadence(r);if(!cadence)return;var now=Date.now();if(!force&&state.lastOddsRefreshAt&&now-state.lastOddsRefreshAt<cadence-1000)return;state.lastOddsRefreshAt=now;state.oddsBusy=true;var status=document.getElementById('odds-status');if(status)status.textContent=' 自動更新中…';fetch('/api/v1/odds-refresh/'+encodeURIComponent(r.id),{cache:'no-store'}).then(function(res){if(!res.ok)throw Error('odds');return res.json()}).then(function(body){if(state.race!==r)return;(body.horses||[]).forEach(function(update){var h=horseByNo(r,update.horseNumber);if(!h)return;['winOdds','popularity'].forEach(function(k){if(update[k]!=null)h[k]=update[k]});var cell=document.querySelector('[data-odds-no="'+n(update.horseNumber)+'"]');if(cell){var o=n(h.winOdds,0),pop=n(h.popularity,0),os=o>0?(Math.round(o*10)/10).toFixed(1):'--.-';cell.innerHTML='<span class="odd '+(o>0&&o<10?'single':'')+'">'+esc(os)+'</span><span class="pop">'+(pop>0?esc(pop)+'人気':'--人気')+'</span>'}});if(body.oddsUpdatedAt)r.oddsUpdatedAt=body.oddsUpdatedAt;if(body.oddsSource)r.oddsSource=body.oddsSource;saveDetailCache(r.id,r);if(status)status.textContent=body.horses&&body.horses.length?' 自動更新 '+(body.oddsUpdatedAt||''):' オッズ待ち'}).catch(function(){if(status)status.textContent=' オッズ更新失敗'}).finally(function(){state.oddsBusy=false})}
-function diagnosisPanel(r,p){return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><p class="muted">評価点は比較用のモデル値です。的中確率ではありません。データ不足でも取得済み情報で必ず評価します。</p>'+p.rows.slice().sort(function(a,b){return a.predRank-b.predRank}).map(function(x){return '<article class="horse-card"><button data-horse-open="'+esc(x.horse.horseNumber)+'"><b>'+x.predRank+'位 '+esc(x.predMark)+' '+esc(x.horse.name)+'　'+esc(x.overallGrade)+' '+x.overallScore+'</b></button><p>'+evaluationText(x)+'</p><p>'+esc((x.overallReasons||[]).join(' / '))+'</p></article>'}).join('')+'</section>'}
+function diagnosisPanel(r,p){var busy=!!state.diagnosisBusy;return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><div class="diagnosis-refresh-note '+(busy?'busy':'')+'">'+(busy?'最新データで全頭診断を更新中…':'最新の全頭診断')+'</div><p class="muted">評価点は比較用のモデル値です。的中確率ではありません。データ不足でも取得済み情報で必ず評価します。</p>'+p.rows.slice().sort(function(a,b){return a.predRank-b.predRank}).map(function(x){return '<article class="horse-card"><button data-horse-open="'+esc(x.horse.horseNumber)+'"><b>'+x.predRank+'位 '+esc(x.predMark)+' '+esc(x.horse.name)+'　'+esc(x.overallGrade)+' '+x.overallScore+'</b></button><p>'+evaluationText(x)+'</p><p>'+esc((x.overallReasons||[]).join(' / '))+'</p></article>'}).join('')+'</section>'}
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=(h.allPastRuns||h.recentRaces||[]).slice(0,5);return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：過去走0（正常）':'過去走0件：基礎情報で評価済み')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){return '<section id="section-pace" class="card"><h2>展開AI</h2><p class="muted">A/B/Cシナリオと隊列予想。利用できるデータ量に応じて評価信頼度を調整します。</p>'+scenarioProbabilitySection(p)+paceBoard(r,p)+'</section>'}
 function resultPanel(r){return '<section id="section-result" class="card"><h2>レース結果</h2>'+(isFinal(r)?renderResult(r)+renderPayouts(r)+renderActualFlow(r):'<div class="muted">結果はまだ確定していません。</div>')+'</section>'}
@@ -890,7 +1017,17 @@ function dateStrip(){var center=new Date(state.date+'T12:00:00'),out='';for(var 
 function cinematicVenues(ctx){return '<nav class="cinema-venues">'+ctx.venues.map(function(v){return '<button class="cinema-venue '+(ctx.track===v.track?'active':'')+'" data-track="'+esc(v.track)+'"><strong>'+esc(v.track)+'</strong><small>全'+v.count+'R</small></button>'}).join('')+'</nav>'}
 function cinematicNumbers(ctx){return '<nav class="cinema-numbers" aria-label="レース番号">'+Array.from({length:12},function(_,i){var row=ctx.races.find(function(x){return n(x.raceNumber)===i+1});if(!row&&ctx.featured&&n(ctx.featured.raceNumber)===i+1)row=ctx.featured;return '<button '+(row?'data-race="'+esc(row.id)+'"':'disabled')+' class="'+(ctx.featured&&n(ctx.featured.raceNumber)===i+1?'active':'')+'">'+(i+1)+'R</button>'}).join('')+'</nav>'}
 function cinematicGrade(r){var g=r.grade||r.gradeLabel||'',match=String(r.title||'').match(/(?:J[・･.]?)?G[ⅠⅡⅢ123]/i);if(!g&&match)g=match[0];return g?'<span class="cinema-grade">'+esc(g)+'</span>':''}
-function cinematicTabs(r){return '<nav class="cinema-tabs accordion-tabs">'+[['出走表','entry'],['全頭診断','diagnosis'],['過去走','history'],['展開AI','pace'],['レース結果','result']].map(function(t){var active=state.openPanel===t[1];return '<button data-panel="'+t[1]+'" aria-expanded="'+active+'" class="'+(active?'active ':'')+(t[1]==='result'?'result-tab':'')+'">'+t[0]+'<span class="panel-caret">'+(active?'−':'＋')+'</span></button>'}).join('')+'</nav>'}
+function cinematicTabs(r){
+  var navStyle='display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:5px!important;width:100%!important;overflow:visible!important;padding:7px!important;';
+  var btnStyle='width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;flex:none!important;padding:8px 1px!important;box-sizing:border-box!important;';
+  return '<nav class="cinema-tabs accordion-tabs" style="'+navStyle+'">'+
+    [['出走表','entry'],['全頭診断','diagnosis'],['過去走','history'],['展開AI','pace'],['レース結果','result']]
+      .map(function(t){
+        var active=state.openPanel===t[1];
+        return '<button style="'+btnStyle+'" data-panel="'+t[1]+'" aria-expanded="'+active+'" class="'+(active?'active':'')+'">'+t[0]+'<span class="panel-caret">'+(active?'−':'＋')+'</span></button>'
+      }).join('')+
+    '</nav>'
+}
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
 function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING</small></footer>'}
@@ -1014,7 +1151,57 @@ function installEdgeBack(){
     document.addEventListener('touchcancel',function(){gesture=null},{passive:true});
     document.addEventListener('click',function(e){if(Date.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation()}},true);
 }
-function bind(){document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel');state.openPanel=state.openPanel===key?null:key;render()}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');state.openPanel=null;state.detailTab='出走表';openFirstRace()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){openRace(this.getAttribute('data-race'),false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
+
+function refreshDiagnosisNow(id){
+    if(!id||!state.race)return;
+    state.diagnosisBusy=true;
+    try{delete state.race._prediction}catch(e){}
+    state.pred=null;
+    render();
+    fetch('/api/v1/race/'+encodeURIComponent(id)+'/diagnosis-refresh',{method:'POST',cache:'no-store'})
+      .catch(function(){})
+      .finally(function(){pollDiagnosisRefresh(id,0)});
+}
+function pollDiagnosisRefresh(id,attempt){
+    if(!state.race||String(state.race.id)!==String(id))return;
+    var wait=attempt<8?700:1500;
+    setTimeout(function(){
+        if(!state.race||String(state.race.id)!==String(id))return;
+        fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=99&t='+Date.now(),{cache:'no-store'})
+          .then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()})
+          .then(function(body){
+              if(!state.race||String(state.race.id)!==String(id))return;
+              var changed=JSON.stringify(state.race)!==JSON.stringify(body),
+                  hs=body.historySearch||{},
+                  enrich=(body.enrichmentSearch||{}).status||'',
+                  partial=!!(body.preparedMeta&&body.preparedMeta.fastPartial);
+              if(changed){
+                  state.race=body;
+                  try{delete state.race._prediction}catch(e){}
+                  state.pred=null;
+                  saveDetailCache(id,body);
+                  render();
+              }
+              var historyDone=!hs.status||hs.status==='done'||hs.status==='error';
+              var enrichDone=enrich!=='running';
+              if((!partial&&historyDone&&enrichDone)||attempt>=80){
+                  state.diagnosisBusy=false;
+                  if(state.race&&String(state.race.id)===String(id)){
+                    try{delete state.race._prediction}catch(e){}
+                    state.pred=null;
+                    render()
+                  }
+                  return;
+              }
+              pollDiagnosisRefresh(id,attempt+1);
+          })
+          .catch(function(){
+              if(attempt<80)pollDiagnosisRefresh(id,attempt+1);
+              else{state.diagnosisBusy=false;if(state.race)render()}
+          });
+    },wait);
+}
+function bind(){document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;state.openPanel=opening?key:null;render();if(opening&&key==='diagnosis'&&state.race)refreshDiagnosisNow(state.race.id)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');state.openPanel=null;state.detailTab='出走表';openFirstRace()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){openRace(this.getAttribute('data-race'),false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
 function initPaceBoard(){if(!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;drawPaceStage(clamp(state.paceStage,0,plan.stages.length-1))}
 function load(force){var d=state.date,c=state.circuit,seq=++state.requestSeq,cached=force?null:loadRaceCache(d,c);state.error=null;if(cached&&cached.length){state.races=cached;state.loading=false;render();openFirstRace();setTimeout(prefetchNextHistory,120)}else{state.loading=true;render()}var attempts=0;function request(){attempts+=1;fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(c)+(force?'&force=1':'')+'&v=84',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;var rows=Array.isArray(body)?body:(body.races||[]);state.races=rows;saveRaceCache(d,c,rows);state.loading=false;state.error=null;render();openFirstRace();setTimeout(prefetchNextHistory,120);var hasWanted=rows.some(function(z){return z.circuit===c});if(!hasWanted&&attempts<8){setTimeout(request,650)}}).catch(function(){if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;if(attempts<3){setTimeout(request,450*attempts);return}state.loading=false;state.error='取得に失敗しました。更新を押して再試行できます。';render()})}request()}
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
@@ -5133,6 +5320,83 @@ def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), 
     return detail
 
 
+
+@app.post("/api/v1/race/{race_id}/diagnosis-refresh")
+def diagnosis_refresh(race_id: str):
+    """Refresh history + enrichment + evaluation asynchronously."""
+    cached=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
+    if not cached:
+        cached=_fast_local_race_detail(race_id)
+        if cached:_store_fast_snapshot(cached)
+    if not cached:
+        raise HTTPException(status_code=404,detail="race not found")
+
+    try:
+        _start_enrichment(race_id,cached,force=False,horse_no=None)
+    except Exception as exc:
+        print("diagnosis enrichment start failed",race_id,exc)
+
+    try:
+        if str(cached.get("circuit") or "")=="地方":
+            names=[str(h.get("name") or "") for h in cached.get("horses",[]) if h.get("name")]
+            cov=_history_counts(names,str(cached.get("date") or _today_iso()))
+            if names and not _history_is_enough(cov,int((_race_history_status(race_id) or {}).get("monthsDone") or 0)):
+                _start_race_history_search(race_id,str(cached.get("date") or _today_iso()),names,force=False)
+        else:
+            cov=_central_detail_coverage(cached)
+            total=int(cov.get("totalHorses") or 0)
+            resolved=int(cov.get("horsesResolved") or cov.get("horsesWith5Plus") or 0)
+            if total and resolved<total:
+                _start_central_history_search(race_id,str(cached.get("date") or _today_iso()),force=False)
+    except Exception as exc:
+        print("diagnosis history start failed",race_id,exc)
+
+    # Immediately rebuild once from everything already present.
+    _schedule_racedb_snapshot_refresh(race_id)
+
+    # As official history arrives in waves, rebuild the prepared snapshot.
+    def monitor():
+        last_sig=""
+        for _ in range(120):
+            try:
+                hs=_race_history_status(race_id) or {}
+                cov=hs.get("coverage") or {}
+                sig=json.dumps({
+                    "status":hs.get("status"),
+                    "runs":cov.get("totalRuns"),
+                    "withHistory":cov.get("horsesWithHistory"),
+                    "five":cov.get("horsesWith5Plus"),
+                    "resolved":cov.get("horsesResolved"),
+                },sort_keys=True,ensure_ascii=False)
+                if sig!=last_sig:
+                    fresh=_prepare_race_snapshot(race_id,True)
+                    if fresh:
+                        fresh["historySearch"]=hs or fresh.get("historySearch") or {}
+                        PREPARED_STORE.put(fresh,force=True)
+                        try:RACEDB.upsert_race(fresh)
+                        except Exception:pass
+                    last_sig=sig
+                if hs.get("status") in {"done","error"}:
+                    fresh=_prepare_race_snapshot(race_id,True)
+                    if fresh:
+                        fresh["historySearch"]=hs
+                        PREPARED_STORE.put(fresh,force=True)
+                        try:RACEDB.upsert_race(fresh)
+                        except Exception:pass
+                    break
+            except Exception as exc:
+                print("diagnosis monitor failed",race_id,exc)
+            time.sleep(1.0)
+    threading.Thread(target=monitor,daemon=True,name="diagnosis-"+race_id[-20:]).start()
+
+    return {
+        "status":"started",
+        "raceId":race_id,
+        "historySearch":_race_history_status(race_id) or {},
+        "enrichmentSearch":_enrichment_status(race_id),
+    }
+
+
 @app.get("/api/v1/race/{race_id}/version")
 def snapshot_version(race_id: str):
     conn=sqlite3.connect(PREPARED_STORE.path,timeout=2)
@@ -5411,7 +5675,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v97.css")
+@app.get("/styles-kraiz-v99.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"no-store, max-age=0"})
@@ -5419,7 +5683,7 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v97.js")
+@app.get("/app-v99.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"no-store, max-age=0"})
