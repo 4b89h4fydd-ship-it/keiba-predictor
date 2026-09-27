@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="12.0-volatility-label-v120")
+app = FastAPI(title="KRAIZ", version="12.1-instant-volatility-v121")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "kraiz-commercial-2026.09-v9"
@@ -371,15 +371,15 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KRAIZ">
-<link rel="manifest" href="/manifest-kraiz-v120.webmanifest">
-<link rel="stylesheet" href="/styles-kraiz-v120.css">
+<link rel="manifest" href="/manifest-kraiz-v121.webmanifest">
+<link rel="stylesheet" href="/styles-kraiz-v121.css">
 <title>KRAIZ | TACTICAL RACING</title>
 <link rel="icon" type="image/png" href="/kraiz-icon-192.png">
 <link rel="apple-touch-icon" href="/kraiz-icon-192.png">
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v120.js"></script>
+<script src="/app-v121.js"></script>
 </body>
 </html>"""
 
@@ -2122,26 +2122,26 @@ function oddsClass(h){var o=n(h&&h.winOdds,0);return o>0&&o<10?'odds-single':''}
 
 var trackPackBusy={};
 function warmTrackLocal(track,attempt){
-  track=track||state.track;
-  attempt=n(attempt,0);
+  track=track||state.track;attempt=n(attempt,0);
   if(!track)return Promise.resolve(0);
   var key=[state.date,state.circuit,track].join('|');
   if(trackPackBusy[key])return trackPackBusy[key];
-  trackPackBusy[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=120',
+
+  trackPackBusy[key]=fetch('/api/v1/volatility-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=121&t='+Date.now(),
       {cache:'no-store'})
-    .then(function(res){if(!res.ok)throw new Error('track-pack');return res.json()})
+    .then(function(res){if(!res.ok)throw new Error('volatility-pack');return res.json()})
     .then(function(body){
-      var rows=body.races||[],changed=mergeTrackPack(rows),
-          targetRows=state.races.filter(function(x){return x.circuit===state.circuit&&x.track===track}),
-          ready=targetRows.filter(function(x){return x.volatility&&x.volatility.ready}).length;
+      var rows=body.races||[],changed=mergeVolatilityPack(rows),
+          target=state.races.filter(function(x){return x.circuit===state.circuit&&x.track===track}),
+          ready=target.filter(function(x){return x.volatility&&x.volatility.ready}).length;
       if(changed&&state.track===track&&!state.race)render();
-      if(state.track===track&&!state.race&&ready<targetRows.length&&attempt<5){
-        setTimeout(function(){warmTrackLocal(track,attempt+1)},800+attempt*650)
+      if(state.track===track&&!state.race&&ready<target.length&&attempt<3){
+        setTimeout(function(){warmTrackLocal(track,attempt+1)},650+attempt*700)
       }
       return rows.length
     })
     .catch(function(){
-      if(state.track===track&&!state.race&&attempt<3)setTimeout(function(){warmTrackLocal(track,attempt+1)},1100+attempt*700);
+      if(state.track===track&&!state.race&&attempt<2)setTimeout(function(){warmTrackLocal(track,attempt+1)},900);
       return 0
     })
     .finally(function(){delete trackPackBusy[key]});
@@ -2244,7 +2244,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span>'+volatilityBadge(x)+'<span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v120</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v121</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean">'+
     (back?'<button class="smart-back" data-action="back" aria-label="戻る">‹</button>':'<span class="smart-back-space"></span>')+
@@ -2320,6 +2320,39 @@ function volatilityBadge(r){
       title=ready?('荒れ度 '+n(v.score)+'/18'+((v.reasons||[]).length?'・'+(v.reasons||[]).join(' / '):'')):'荒れ度を内部計算中';
   return '<span class="race-vol-badge'+cls+'" title="'+esc(title)+'"><small>荒れ度</small><b>'+esc(label)+'</b></span>'
 }
+
+function persistRaceSummaryCache(){
+  try{
+    var hasCentral=state.races.some(function(x){return x.circuit==='中央'}),
+        hasLocal=state.races.some(function(x){return x.circuit==='地方'});
+    if(hasCentral&&hasLocal)saveRaceCache(state.date,'__ALL__',state.races);
+    else saveRaceCache(state.date,state.circuit,state.races)
+  }catch(e){}
+}
+function mergeCachedVolatilityForTrack(track){
+  var changed=false;
+  state.races.forEach(function(r){
+    if(r.circuit!==state.circuit||r.track!==track||!r.id)return;
+    var d=loadDetailCache(r.id),v=d&&d.volatility;
+    if(v&&v.version==='kraiz-volatility-v1'){
+      if(JSON.stringify(r.volatility||null)!==JSON.stringify(v)){r.volatility=v;changed=true}
+    }
+  });
+  if(changed)persistRaceSummaryCache();
+  return changed
+}
+function mergeVolatilityPack(rows){
+  var changed=false,map={};
+  (rows||[]).forEach(function(x){if(x&&x.id)map[String(x.id)]=x.volatility||null});
+  state.races.forEach(function(r){
+    var v=map[String(r.id)];
+    if(v&&JSON.stringify(r.volatility||null)!==JSON.stringify(v)){r.volatility=v;changed=true}
+  });
+  if(changed)persistRaceSummaryCache();
+  return changed
+}
+
+
 function mergeTrackPack(rows){
   var changed=false;
   (rows||[]).forEach(function(d){
@@ -2670,7 +2703,7 @@ function refreshDiagnosisNow(id){
 }
 function pollDiagnosisRefresh(id,attempt){return}
 
-function bind(){document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;state.openPanel=opening?key:null;render();if(opening&&key==='diagnosis'&&state.race)refreshDiagnosisNow(state.race.id);if(opening&&key==='history'&&state.race)warmPastPack(state.race);if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.detailTab='出走表';window.scrollTo(0,0);render();warmTrackLocal(state.track);prewarmSelectedTrack(state.track,1)};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)});if(row)state.track=row.track;prepareRacePriority(id);window.scrollTo(0,0);openRace(id,false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
+function bind(){document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;state.openPanel=opening?key:null;render();if(opening&&key==='diagnosis'&&state.race)refreshDiagnosisNow(state.race.id);if(opening&&key==='history'&&state.race)warmPastPack(state.race);if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);window.scrollTo(0,0);render();warmTrackLocal(state.track);prewarmSelectedTrack(state.track,1)};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)});if(row)state.track=row.track;prepareRacePriority(id);window.scrollTo(0,0);openRace(id,false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
 function initPaceBoard(){if(!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;drawPaceStage(clamp(state.paceStage,0,plan.stages.length-1))}
 function load(force){
   var d=state.date,c=state.circuit,topMode=!state.track&&!state.race,
@@ -2688,12 +2721,18 @@ function load(force){
   var attempts=0;
   function request(){
     attempts+=1;
-    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(requestCircuit)+(force?'&force=1':'')+'&bundle=1&v=118',{cache:'no-store'})
+    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(requestCircuit)+(force?'&force=1':'')+'&bundle=1&v=121',{cache:'no-store'})
       .then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()})
       .then(function(body){
         if(seq!==state.requestSeq||state.date!==d)return;
-        var rows=Array.isArray(body)?body:(body.races||[]),prepared=(body&&body.prepared)||[];
-        for(var pi=0;pi<prepared.length;pi++)if(prepared[pi]&&prepared[pi].id)saveDetailCache(prepared[pi].id,prepared[pi]);
+        var rows=Array.isArray(body)?body:(body.races||[]),prepared=(body&&body.prepared)||[],pvol={};
+        for(var pi=0;pi<prepared.length;pi++){
+          if(prepared[pi]&&prepared[pi].id){
+            saveDetailCache(prepared[pi].id,prepared[pi]);
+            if(prepared[pi].volatility)pvol[String(prepared[pi].id)]=prepared[pi].volatility
+          }
+        }
+        rows.forEach(function(r){var v=pvol[String(r.id)];if(v&&!r.volatility)r.volatility=v});
         if(rows.length){
           state.races=rows;saveRaceCache(d,cacheCircuit,rows);state.loading=false;state.error=null;render();openFirstRace();
           if(topMode){
@@ -2735,12 +2774,12 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v120";
+SW = r'''const CACHE="kraiz-shell-v121";
 const SHELL=[
   "/",
-  "/styles-kraiz-v120.css",
-  "/app-v120.js",
-  "/manifest-kraiz-v120.webmanifest",
+  "/styles-kraiz-v121.css",
+  "/app-v121.js",
+  "/manifest-kraiz-v121.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
@@ -4380,7 +4419,7 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v120","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v121","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
         "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,
         "racedb":RACEDB.status(),
@@ -7577,6 +7616,146 @@ def _local_starter_bundle(rows:list[dict], limit:int=3)->list[dict]:
             out.append(_compact_display_snapshot(d))
     return out
 
+
+_volatility_pack_lock=threading.Lock()
+_volatility_pack_cache:dict[str,tuple[float,list[dict]]]={}
+
+def _local_volatility_map(race_ids:list[str])->dict[str,dict]:
+    ids=[str(x) for x in race_ids if x]
+    if not ids:return {}
+    out={}
+    # PreparedStore first.
+    if PREPARED_DB_PATH.exists():
+        conn=sqlite3.connect(PREPARED_DB_PATH,timeout=.25)
+        conn.row_factory=sqlite3.Row
+        try:
+            for start in range(0,len(ids),200):
+                chunk=ids[start:start+200]
+                ph=",".join("?" for _ in chunk)
+                rows=conn.execute(
+                    f"SELECT race_id,payload FROM prepared_races WHERE race_id IN ({ph})",
+                    chunk
+                ).fetchall()
+                for row in rows:
+                    try:d=json.loads(row["payload"])
+                    except Exception:continue
+                    d=_ensure_race_volatility(d)
+                    v=d.get("volatility") or {}
+                    if v.get("version")==VOLATILITY_ENGINE_VERSION:
+                        out[str(row["race_id"])]=v
+        except sqlite3.Error:
+            pass
+        finally:
+            conn.close()
+
+    missing=[rid for rid in ids if rid not in out]
+    if missing and RACEDB_PATH.exists():
+        conn=sqlite3.connect(RACEDB_PATH,timeout=.25)
+        conn.row_factory=sqlite3.Row
+        try:
+            for start in range(0,len(missing),200):
+                chunk=missing[start:start+200]
+                ph=",".join("?" for _ in chunk)
+                rows=conn.execute(
+                    f"SELECT race_id,payload FROM race_snapshots WHERE race_id IN ({ph})",
+                    chunk
+                ).fetchall()
+                for row in rows:
+                    try:d=json.loads(row["payload"])
+                    except Exception:continue
+                    d=_ensure_race_volatility(d)
+                    v=d.get("volatility") or {}
+                    if v.get("version")==VOLATILITY_ENGINE_VERSION:
+                        out[str(row["race_id"])]=v
+        except sqlite3.Error:
+            pass
+        finally:
+            conn.close()
+    return out
+
+
+def _attach_local_volatility_to_summaries(rows:list[dict])->list[dict]:
+    if not rows:return rows
+    vm=_local_volatility_map([str(r.get("id") or "") for r in rows])
+    if not vm:return rows
+    out=[]
+    for r in rows:
+        z=dict(r)
+        v=vm.get(str(z.get("id") or ""))
+        if v:z["volatility"]=v
+        out.append(z)
+    return out
+
+
+def _compute_local_volatility_for_race(race_id:str)->dict|None:
+    # Strictly local: no public-site wait. Used by the selected venue's 12-row pack.
+    d=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
+    if d:
+        d=_ensure_race_volatility(d)
+        v=d.get("volatility") or {}
+        if v.get("ready"):return v
+
+    d=_fast_local_race_detail(race_id)
+    if not d:return v if 'v' in locals() and v else None
+    try:
+        if race_id.startswith("nar-"):d=_nar_attach_recent_batch(d,5)
+        d=_attach_stored_career(d)
+        d=_precompute_detail_metrics(d)
+        v=d.get("volatility") or {}
+        # Save so the next page/open is zero-wait.
+        try:
+            PREPARED_STORE.put(d,force=True)
+            RACEDB.upsert_race(d)
+        except Exception:
+            pass
+        return v if v.get("version")==VOLATILITY_ENGINE_VERSION else None
+    except Exception as exc:
+        print("local volatility compute failed",race_id,exc)
+        return None
+
+
+@app.get("/api/v1/volatility-pack")
+def volatility_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...)):
+    """All 1R-12R upset labels from local DB only. Designed for sub-second venue paint."""
+    key=f"{date}|{circuit}|{track}"
+    now=time.time()
+    with _volatility_pack_lock:
+        hit=_volatility_pack_cache.get(key)
+        if hit and now-hit[0]<8:
+            return {"date":date,"circuit":circuit,"track":track,"races":hit[1],"cached":True}
+
+    try:
+        summaries=nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False)
+    except Exception:
+        summaries=[]
+    targets=[r for r in summaries if str(r.get("track") or "")==str(track) and r.get("id")]
+    targets.sort(key=lambda r:int(r.get("raceNumber") or 0))
+
+    existing=_local_volatility_map([str(r.get("id") or "") for r in targets])
+    items=[]
+    for r in targets:
+        rid=str(r.get("id") or "")
+        v=existing.get(rid)
+        if not v or not v.get("ready"):
+            v=_compute_local_volatility_for_race(rid) or v
+        items.append({
+            "id":rid,
+            "raceNumber":int(r.get("raceNumber") or 0),
+            "volatility":v or {
+                "version":VOLATILITY_ENGINE_VERSION,"ready":False,
+                "score":None,"label":"…","method":"pre-race/no-odds",
+                "oddsUsed":False,"reasons":["評価材料を収集中"]
+            }
+        })
+
+    with _volatility_pack_lock:
+        _volatility_pack_cache[key]=(now,items)
+        if len(_volatility_pack_cache)>40:
+            oldest=min(_volatility_pack_cache.items(),key=lambda kv:kv[1][0])[0]
+            _volatility_pack_cache.pop(oldest,None)
+    return {"date":date,"circuit":circuit,"track":track,"races":items,"cached":False}
+
+
 @app.get("/api/v1/races")
 def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0), bundle: int = Query(0)):
     circuit=_clean(circuit)
@@ -7584,7 +7763,7 @@ def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0
     with _race_list_cache_lock:
         hit=_race_list_cache.get(ck)
         if hit and not force and ((hit[1] and date<_today_iso()) or now-hit[0]<15):
-            cached_rows=hit[1] or []
+            cached_rows=_attach_local_volatility_to_summaries(hit[1] or [])
             if circuit:
                 return {"races":cached_rows,"prepared":_local_starter_bundle(cached_rows)} if bundle else cached_rows
             has_central=any(str(x.get("circuit") or "")=="中央" for x in cached_rows)
@@ -7608,6 +7787,7 @@ def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0
         rows.extend(crows)
         if force or not crows:_schedule_central_refresh(date,force=bool(force))
     rows=[x for x in rows if str(x.get("track") or "")!="帯広"]
+    rows=_attach_local_volatility_to_summaries(rows)
     with _race_list_cache_lock:
         _race_list_cache[ck]=(now,rows)
         if len(_race_list_cache)>24:
@@ -8113,7 +8293,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v120","appVersion":"12.0-volatility-label-v120",
+        "build":"v121","appVersion":"12.1-instant-volatility-v121",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -8157,7 +8337,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v120.css")
+@app.get("/styles-kraiz-v121.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"public, max-age=31536000, immutable"})
@@ -8165,13 +8345,13 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v120.js")
+@app.get("/app-v121.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"public, max-age=31536000, immutable"})
 
 @app.get("/manifest-v86.webmanifest")
-@app.get("/manifest-kraiz-v120.webmanifest")
+@app.get("/manifest-kraiz-v121.webmanifest")
 @app.get("/manifest-kraiz-v88.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
