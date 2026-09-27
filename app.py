@@ -347,10 +347,11 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="11.8-verified-pipeline-v118")
+app = FastAPI(title="KRAIZ", version="12.0-volatility-label-v120")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "kraiz-commercial-2026.09-v9"
+VOLATILITY_ENGINE_VERSION = "kraiz-volatility-v1"
 
 
 @app.middleware("http")
@@ -370,15 +371,15 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KRAIZ">
-<link rel="manifest" href="/manifest-kraiz-v118.webmanifest">
-<link rel="stylesheet" href="/styles-kraiz-v118.css">
+<link rel="manifest" href="/manifest-kraiz-v120.webmanifest">
+<link rel="stylesheet" href="/styles-kraiz-v120.css">
 <title>KRAIZ | TACTICAL RACING</title>
 <link rel="icon" type="image/png" href="/kraiz-icon-192.png">
 <link rel="apple-touch-icon" href="/kraiz-icon-192.png">
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v118.js"></script>
+<script src="/app-v120.js"></script>
 </body>
 </html>"""
 
@@ -1606,6 +1607,69 @@ html,body{background:#101416!important;color:var(--v118-text)!important}
 .smart-home-script-logo{color:#c3b6a4!important}.smart-home-brand-sub{color:#aeb9bd!important}
 """
 
+
+CSS += r"""
+/* v120 race-list volatility label — explicit right-side "荒れ度" block */
+.smart-race-row{
+  grid-template-columns:40px 46px minmax(0,1fr) 58px 16px!important;
+}
+.race-vol-badge{
+  width:58px;
+  min-width:58px;
+  height:40px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  border-radius:8px;
+  border:1px solid #59666d;
+  background:#252e33;
+  line-height:1;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.race-vol-badge small{
+  display:block;
+  font-size:8px;
+  font-weight:700;
+  letter-spacing:.06em;
+  color:#aeb9be;
+}
+.race-vol-badge b{
+  display:block;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:.02em;
+  color:#e8e2d8;
+}
+.race-vol-badge.vol-hard{background:#21333b;border-color:#64828e}
+.race-vol-badge.vol-hard b{color:#c9e8f1}
+.race-vol-badge.vol-standard{background:#30363a;border-color:#697176}
+.race-vol-badge.vol-standard b{color:#eee7dc}
+.race-vol-badge.vol-rough{background:#443627;border-color:#9b7c56}
+.race-vol-badge.vol-rough b{color:#f0cf9c}
+.race-vol-badge.vol-wild{background:#4a292b;border-color:#a05f63}
+.race-vol-badge.vol-wild b{color:#f2b5b8}
+.race-vol-badge.vol-pending{background:#20282c;border-color:#455159}
+.race-vol-badge.vol-pending b{color:#93a0a6}
+.picker-side{display:flex;align-items:center;gap:8px}.picker-side strong{white-space:nowrap}
+.cinema-other-row .race-vol-badge{
+  width:48px;min-width:48px;height:32px
+}
+.cinema-other-row .race-vol-badge small{font-size:7px}
+.cinema-other-row .race-vol-badge b{font-size:11px}
+@media(max-width:420px){
+  .smart-race-row{
+    grid-template-columns:38px 44px minmax(0,1fr) 54px 14px!important;
+    gap:6px!important;
+  }
+  .race-vol-badge{width:54px;min-width:54px;height:38px}
+  .race-vol-badge small{font-size:8px}
+  .race-vol-badge b{font-size:13px}
+}
+"""
+
 JS = r"""
 (function(){
 "use strict";
@@ -2057,20 +2121,29 @@ function oddsClass(h){var o=n(h&&h.winOdds,0);return o>0&&o<10?'odds-single':''}
 
 
 var trackPackBusy={};
-function warmTrackLocal(track){
+function warmTrackLocal(track,attempt){
   track=track||state.track;
+  attempt=n(attempt,0);
   if(!track)return Promise.resolve(0);
   var key=[state.date,state.circuit,track].join('|');
   if(trackPackBusy[key])return trackPackBusy[key];
-  trackPackBusy[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=118',
+  trackPackBusy[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=120',
       {cache:'no-store'})
     .then(function(res){if(!res.ok)throw new Error('track-pack');return res.json()})
     .then(function(body){
-      var rows=body.races||[];
-      for(var i=0;i<rows.length;i++)if(rows[i]&&rows[i].id)saveDetailCache(rows[i].id,rows[i]);
+      var rows=body.races||[],changed=mergeTrackPack(rows),
+          targetRows=state.races.filter(function(x){return x.circuit===state.circuit&&x.track===track}),
+          ready=targetRows.filter(function(x){return x.volatility&&x.volatility.ready}).length;
+      if(changed&&state.track===track&&!state.race)render();
+      if(state.track===track&&!state.race&&ready<targetRows.length&&attempt<5){
+        setTimeout(function(){warmTrackLocal(track,attempt+1)},800+attempt*650)
+      }
       return rows.length
     })
-    .catch(function(){return 0})
+    .catch(function(){
+      if(state.track===track&&!state.race&&attempt<3)setTimeout(function(){warmTrackLocal(track,attempt+1)},1100+attempt*700);
+      return 0
+    })
     .finally(function(){delete trackPackBusy[key]});
   return trackPackBusy[key]
 }
@@ -2149,7 +2222,7 @@ function historyPanel(r){return '<section id="section-history" class="card"><h2>
 function pacePanel(r,p){return '<section id="section-pace" class="card"><h2>展開AI</h2><p class="muted">A/B/Cシナリオと隊列予想。利用できるデータ量に応じて評価信頼度を調整します。</p>'+scenarioProbabilitySection(p)+paceBoard(r,p)+'</section>'}
 function resultPanel(r){return '<section id="section-result" class="card"><h2>レース結果</h2>'+(isFinal(r)?renderResult(r)+renderPayouts(r)+renderActualFlow(r):'<div class="muted">結果はまだ確定していません。</div>')+'</section>'}
 function detailTabs(r,p){var key=state.openPanel;if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='diagnosis')return '<div class="accordion-panel">'+diagnosisPanel(r,p)+'</div>';if(key==='history')return '<div class="accordion-panel">'+historyPanel(r)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・全頭診断・過去走・展開AI・レース結果から見たい項目を押してください。</div>'}
-function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><strong>'+(isFinal(r)?'確定':timeHtml(r))+'</strong></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
+function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side">'+volatilityBadge(r)+'<strong>'+(isFinal(r)?'確定':timeHtml(r))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
 function cinematicHero(){return '<header class="cinema-hero"><img class="cinema-hero-image" src="/kraiz-racing-hero.webp" alt="" fetchpriority="high"><div class="cinema-brand"><div class="cinema-wordmark" aria-label="KRAIZ">KRAI<span class="logo-z">Z</span></div><div class="cinema-subtitle">TACTICAL RACING</div></div><div class="cinema-tools"><time>'+esc(state.date.replace(/-/g,'.'))+'</time><button data-action="reload" aria-label="更新" title="更新">↻</button></div></header>'}
@@ -2170,8 +2243,8 @@ function cinematicTabs(r){
     '</nav>'
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
-function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v118</small></footer>'}
+function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span>'+volatilityBadge(x)+'<span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
+function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v120</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean">'+
     (back?'<button class="smart-back" data-action="back" aria-label="戻る">‹</button>':'<span class="smart-back-space"></span>')+
@@ -2240,6 +2313,28 @@ function renderHome(){
     cinematicFooter()+
   '</div>'
 }
+
+function volatilityBadge(r){
+  var v=r&&r.volatility||{},ready=v.ready===true&&n(v.score)>0,label=ready?String(v.label||'標'):'…',
+      cls=ready?(' vol-'+(label==='硬'?'hard':label==='標'?'standard':label==='荒'?'rough':'wild')):' vol-pending',
+      title=ready?('荒れ度 '+n(v.score)+'/18'+((v.reasons||[]).length?'・'+(v.reasons||[]).join(' / '):'')):'荒れ度を内部計算中';
+  return '<span class="race-vol-badge'+cls+'" title="'+esc(title)+'"><small>荒れ度</small><b>'+esc(label)+'</b></span>'
+}
+function mergeTrackPack(rows){
+  var changed=false;
+  (rows||[]).forEach(function(d){
+    if(!d||!d.id)return;
+    saveDetailCache(d.id,d);
+    var r=state.races.find(function(x){return String(x.id)===String(d.id)});
+    if(r&&d.volatility){
+      var before=JSON.stringify(r.volatility||null),after=JSON.stringify(d.volatility);
+      if(before!==after){r.volatility=d.volatility;changed=true}
+    }
+  });
+  return changed
+}
+
+
 function venueRaceRows(){
   var rows=state.races.filter(function(x){return x.circuit===state.circuit&&x.track===state.track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)});
   return '<section class="smart-section smart-race-section">'+
@@ -2247,11 +2342,12 @@ function venueRaceRows(){
     '<div class="smart-race-list">'+
       Array.from({length:12},function(_,idx){
         var no=idx+1,r=rows.find(function(x){return n(x.raceNumber)===no});
-        if(!r)return '<div class="smart-race-row disabled"><strong>'+no+'R</strong><span class="smart-race-time">--:--</span><span class="smart-race-title">レース情報待ち</span><span></span></div>';
+        if(!r)return '<div class="smart-race-row disabled"><strong>'+no+'R</strong><span class="smart-race-time">--:--</span><span class="smart-race-title">レース情報待ち</span><span class="race-vol-badge vol-pending"><small>荒れ度</small><b>…</b></span><span></span></div>';
         return '<button class="smart-race-row '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'">'+
           '<strong>'+no+'R</strong>'+
           '<span class="smart-race-time">'+(isFinal(r)?'確定':timeHtml(r))+'</span>'+
           '<span class="smart-race-title"><b>'+esc(r.title||no+'R')+'</b><small>'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.condition||'')+'</small></span>'+
+          volatilityBadge(r)+
           '<span class="smart-chevron">›</span>'+
         '</button>'
       }).join('')+
@@ -2639,12 +2735,12 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v118";
+SW = r'''const CACHE="kraiz-shell-v120";
 const SHELL=[
   "/",
-  "/styles-kraiz-v118.css",
-  "/app-v118.js",
-  "/manifest-kraiz-v118.webmanifest",
+  "/styles-kraiz-v120.css",
+  "/app-v120.js",
+  "/manifest-kraiz-v120.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
@@ -4284,7 +4380,7 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v118","engine":PREDICTION_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v120","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
         "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,
         "racedb":RACEDB.status(),
@@ -6759,6 +6855,110 @@ def _attach_stored_career(detail: dict) -> dict:
     return detail
 
 
+
+def _vol_clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
+    try:value=float(value)
+    except Exception:return lo
+    return lo if value<lo else hi if value>hi else value
+
+
+def _race_volatility(detail: dict) -> dict:
+    """Pre-race upset model. Odds, popularity and race result are never inputs."""
+    horses=list(detail.get("horses") or [])
+    field=max(int(detail.get("fieldSize") or 0),len(horses))
+    if field < 2:
+        return {"version":VOLATILITY_ENGINE_VERSION,"ready":False,"score":None,"label":"…",
+                "method":"pre-race/no-odds","reasons":["出走データ待ち"],"oddsUsed":False}
+
+    evaluated=[];style_rows=[];low_conf=0
+    for h in horses:
+        e=h.get("integratedEvaluation") or {}
+        score=_evaluation_number(e.get("score"))
+        evidence=not bool(e.get("neutralPrior")) and (
+            int(e.get("samples") or 0)>0 or bool(e.get("components"))
+        )
+        if score is not None and evidence:
+            evaluated.append(float(score))
+            if str(e.get("confidence") or "")=="低":low_conf+=1
+        st=((h.get("precomputedMetrics") or {}).get("style") or {})
+        if int(st.get("samples") or 0)>0:
+            vals=[float(st.get(k) or 0) for k in ("front","stalk","mid","close")]
+            style_rows.append({
+                "front":vals[0],"stalk":vals[1],"mid":vals[2],"close":vals[3],
+                "early3":float(st.get("early3") or 0),
+                "ambiguity":1-max(vals) if vals else 0,
+            })
+
+    min_evidence=max(3,math.ceil(field*.45))
+    debut=str(detail.get("analysisMode") or "")=="新馬" or "新馬" in str(detail.get("title") or "")
+    ready=len(evaluated)>=min_evidence or (debut and len(evaluated)>=max(3,math.ceil(field*.35)))
+    if not ready:
+        return {
+            "version":VOLATILITY_ENGINE_VERSION,"ready":False,"score":None,"label":"…",
+            "method":"pre-race/no-odds","oddsUsed":False,
+            "coverage":{"evaluated":len(evaluated),"field":field,"styles":len(style_rows)},
+            "reasons":["評価材料を収集中"]
+        }
+
+    ranked=sorted(evaluated,reverse=True)
+    top=ranked[0];second=ranked[1] if len(ranked)>1 else top;fifth=ranked[min(4,len(ranked)-1)]
+    top2_gap=max(0.0,top-second);top5_gap=max(0.0,top-fifth)
+    parity=1-_vol_clamp(top5_gap/24.0)
+    dominance=_vol_clamp(top2_gap/12.0)
+    close_count=sum(1 for s in ranked if s>=top-8.0)
+    depth=_vol_clamp(close_count/max(2,min(field,8)))
+
+    front_count=0;closer_count=0;ambiguities=[]
+    for st in style_rows:
+        if st["early3"]>=.48 or st["front"]>=.30 or st["stalk"]>=.45:front_count+=1
+        if st["mid"]+st["close"]>=.58:closer_count+=1
+        ambiguities.append(_vol_clamp(st["ambiguity"]))
+    pressure=_vol_clamp((front_count-1)/4.0)
+    split=_vol_clamp(min(front_count,closer_count)/3.0)
+    ambiguity=sum(ambiguities)/len(ambiguities) if ambiguities else .35
+    field_factor=_vol_clamp((field-6)/10.0)
+
+    evidence_ratio=_vol_clamp(len(evaluated)/max(1,field))
+    low_ratio=low_conf/max(1,len(evaluated))
+    uncertainty=_vol_clamp(low_ratio*.70+(1-evidence_ratio)*.30)
+    if debut:uncertainty=max(uncertainty,.58)
+
+    raw=_vol_clamp(
+        .28*parity + .18*depth + .17*pressure + .12*field_factor +
+        .08*ambiguity + .07*split + .10*uncertainty - .18*dominance
+    )
+    score=max(1,min(18,1+round(raw*17)))
+    label="硬" if score<=5 else "標" if score<=10 else "荒" if score<=14 else "大荒"
+
+    signals=[
+        (parity,"上位拮抗"),(depth,"相手候補多い"),(pressure,"先行競合"),
+        (field_factor,"多頭数"),(split,"前後分断"),(uncertainty,"不確定要素")
+    ]
+    reasons=[name for value,name in sorted(signals,reverse=True) if value>=.38][:3]
+    if dominance>=.58:reasons=["上位1頭優勢"]+reasons[:2]
+    if not reasons:reasons=["標準的な構造"]
+
+    return {
+        "version":VOLATILITY_ENGINE_VERSION,"ready":True,"score":int(score),"label":label,
+        "method":"pre-race/no-odds","oddsUsed":False,"reasons":reasons[:3],
+        "coverage":{"evaluated":len(evaluated),"field":field,"styles":len(style_rows)},
+        "components":{
+            "parity":round(parity,3),"depth":round(depth,3),"frontPressure":round(pressure,3),
+            "fieldSize":round(field_factor,3),"styleAmbiguity":round(ambiguity,3),
+            "frontBackSplit":round(split,3),"uncertainty":round(uncertainty,3),
+            "topDominance":round(dominance,3)
+        }
+    }
+
+
+def _ensure_race_volatility(detail: dict) -> dict:
+    if not isinstance(detail,dict):return detail
+    v=detail.get("volatility") or {}
+    if v.get("version")!=VOLATILITY_ENGINE_VERSION:
+        detail["volatility"]=_race_volatility(detail)
+    return detail
+
+
 def _precompute_detail_metrics(detail: dict) -> dict:
     if not isinstance(detail,dict):return detail
     detail=_apply_enrichment(str(detail.get("id") or ""),detail)
@@ -6774,6 +6974,7 @@ def _precompute_detail_metrics(detail: dict) -> dict:
             horse.setdefault("precomputedMetrics",{})
     _rank_evaluations(detail)
     detail["aiEvaluation"]={"version":"evidence-v118","horses":[{"horseNumber":h.get("horseNumber"),"name":h.get("name"),**h.get("integratedEvaluation",{})} for h in detail.get("horses",[])]}
+    detail["volatility"]=_race_volatility(detail)
     detail.setdefault("preparedMeta",{})["metricsPrecomputed"]=True
     return detail
 
@@ -6794,6 +6995,7 @@ def _prepared_get_fresh(race_id: str) -> dict | None:
     if (detail.get("preparedMeta") or {}).get("fastPartial"):return detail
     if (detail.get("aiEvaluation") or {}).get("version")!="evidence-v118":
         detail=_precompute_detail_metrics(_strip_excluded(detail))
+    detail=_ensure_race_volatility(detail)
     return detail
 
 
@@ -7349,6 +7551,7 @@ def _racedb_get_fast(race_id:str)->dict|None:
     if (detail.get("preparedMeta") or {}).get("fastPartial"):return detail
     if (detail.get("aiEvaluation") or {}).get("version")!="evidence-v118":
         detail=_precompute_detail_metrics(_strip_excluded(detail))
+    detail=_ensure_race_volatility(detail)
     return detail
 
 _detail_cache_lock=threading.Lock()
@@ -7434,7 +7637,7 @@ def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Q
                 if not (d.get("horses") or []):continue
                 rid=str(d.get("id") or row["race_id"] or "")
                 if not rid or rid in seen:continue
-                seen.add(rid);out.append(_compact_display_snapshot(d))
+                d=_ensure_race_volatility(d);seen.add(rid);out.append(_compact_display_snapshot(d))
         finally:
             conn.close()
 
@@ -7444,16 +7647,16 @@ def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Q
         conn.row_factory=sqlite3.Row
         try:
             rows=conn.execute(
-                "SELECT id,payload FROM races WHERE date=? AND circuit=? AND track=? ORDER BY race_no",
+                "SELECT race_id,payload FROM race_snapshots WHERE race_date=? AND circuit=? AND track=? ORDER BY race_no",
                 (date,circuit,track),
             ).fetchall()
             for row in rows:
-                rid=str(row["id"] or "")
+                rid=str(row["race_id"] or "")
                 if not rid or rid in seen:continue
                 try:d=json.loads(row["payload"])
                 except Exception:continue
                 if not (d.get("horses") or []):continue
-                seen.add(rid);out.append(_compact_display_snapshot(d))
+                d=_ensure_race_volatility(d);seen.add(rid);out.append(_compact_display_snapshot(d))
         except sqlite3.OperationalError:
             pass
         finally:
@@ -7499,19 +7702,22 @@ def prewarm_track(date: str = Query(...), circuit: str = Query(...), track: str 
     rows=[]
     try:rows=(nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False))
     except Exception:rows=[]
-    targets=sorted(
+    all_targets=sorted(
         [r for r in rows if str(r.get("track") or "")==str(track) and r.get("id")],
         key=lambda r:abs(int(r.get("raceNumber") or 0)-int(race_no))
-    )[:3]
+    )
+    near=all_targets[:3];rest=all_targets[3:]
     queued=0
-    for idx,r in enumerate(targets):
+    for idx,r in enumerate(near+rest):
         rid=str(r["id"])
         local=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
         pm=(local or {}).get("preparedMeta") or {}
-        current=pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION and pm.get("diagnosisReady")
+        v=(local or {}).get("volatility") or {}
+        current=pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION and pm.get("diagnosisReady") and v.get("version")==VOLATILITY_ENGINE_VERSION
         if not local or not current:
-            _schedule_fast_card_refresh(rid,10+idx*10);queued+=1
-    return {"status":"started","count":len(targets),"queued":queued,"mode":"nearest-3"}
+            priority=(10+idx*10) if idx<3 else (90+idx)
+            _schedule_fast_card_refresh(rid,priority);queued+=1
+    return {"status":"started","count":len(all_targets),"queued":queued,"mode":"nearest-3-plus-background"}
 
 
 @app.get("/api/v1/local-refresh-status")
@@ -7907,12 +8113,12 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v118","appVersion":"11.8-verified-pipeline-v118",
+        "build":"v120","appVersion":"12.0-volatility-label-v120",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
         "commercialCollector":True,"duplicateUpdaterDisabled":True,
-        "autoDiagnosis":True,"autoOdds":True,"oddsUsedInPrediction":False,
+        "autoDiagnosis":True,"autoOdds":True,"oddsUsedInPrediction":False,"raceVolatility":"硬/標/荒/大荒・pre-race no-odds",
         "narHydration":"sync_daily/sync_month","history":"JRA one-page / NAR month cache",
         "raceDataBank":True,"browserDetailCache":True,"gzip":True,
     }
@@ -7951,7 +8157,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v118.css")
+@app.get("/styles-kraiz-v120.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"public, max-age=31536000, immutable"})
@@ -7959,13 +8165,13 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v118.js")
+@app.get("/app-v120.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"public, max-age=31536000, immutable"})
 
 @app.get("/manifest-v86.webmanifest")
-@app.get("/manifest-kraiz-v118.webmanifest")
+@app.get("/manifest-kraiz-v120.webmanifest")
 @app.get("/manifest-kraiz-v88.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
