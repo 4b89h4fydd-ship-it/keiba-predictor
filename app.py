@@ -347,10 +347,19 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="11.7-priority-pipeline-v117")
+app = FastAPI(title="KRAIZ", version="11.8-verified-pipeline-v118")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "kraiz-commercial-2026.09-v8"
+PREDICTION_ENGINE_VERSION = "kraiz-commercial-2026.09-v9"
+
+
+@app.middleware("http")
+async def _kraiz_timing(request: Request, call_next):
+    started=time.perf_counter()
+    response=await call_next(request)
+    try:response.headers["X-KRAIZ-ms"]=f"{(time.perf_counter()-started)*1000:.1f}"
+    except Exception:pass
+    return response
 
 INDEX = r"""<!doctype html>
 <html lang="ja">
@@ -361,15 +370,15 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KRAIZ">
-<link rel="manifest" href="/manifest-kraiz-v117.webmanifest">
-<link rel="stylesheet" href="/styles-kraiz-v117.css">
+<link rel="manifest" href="/manifest-kraiz-v118.webmanifest">
+<link rel="stylesheet" href="/styles-kraiz-v118.css">
 <title>KRAIZ | TACTICAL RACING</title>
 <link rel="icon" type="image/png" href="/kraiz-icon-192.png">
 <link rel="apple-touch-icon" href="/kraiz-icon-192.png">
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v117.js"></script>
+<script src="/app-v118.js"></script>
 </body>
 </html>"""
 
@@ -1544,11 +1553,64 @@ html,body{background:#111619!important;color:var(--smart-text)!important}
 .diagnosis-refresh-note.busy{color:#e1d6c6!important;border-color:#85735e!important}
 """
 
+
+CSS += r"""
+/* v118 readable smoked-metal palette */
+:root{
+  --v118-bg:#151a1d;
+  --v118-panel:#242b2f;
+  --v118-row:#2d353a;
+  --v118-row2:#323b40;
+  --v118-line:#59656c;
+  --v118-text:#f4f0e8;
+  --v118-sub:#c7cdd0;
+  --v118-steel:#b2d1dc;
+  --v118-bronze:#c0aa8b;
+}
+html,body{background:#101416!important;color:var(--v118-text)!important}
+.smart-shell{background:linear-gradient(180deg,#141a1e,#1b2125 38%,#121719)!important;color:var(--v118-text)!important}
+.smart-topbar-clean{background:#171d21!important;border-bottom:1px solid #5a666d!important}
+.smart-head-copy-clean strong{color:#f4eee4!important;font-weight:850!important}
+.smart-head-copy-clean small{color:#bdc6ca!important}
+.smart-back,.smart-reload{color:#ede7dd!important}
+.smart-reload{background:#242c31!important;border-color:#65727a!important}
+.smart-controls,.smart-section,.smart-venue-tools,.smart-race-head,
+.smart-race-content .card,.smart-race-content .accordion-idle,.smart-loading{
+  background:var(--v118-panel)!important;border-color:var(--v118-line)!important;color:var(--v118-text)!important
+}
+.smart-section-title{background:#1e2529!important;border-color:#4e5a61!important}
+.smart-section-title b,.smart-group-title>div>b{color:#f0e9dd!important}
+.smart-section-title span,.smart-group-title>div>small{color:#b7c0c4!important}
+.smart-venue-grid{background:#515d64!important}
+.smart-venue-card,.smart-race-row,.racecard-row{background:var(--v118-row)!important;color:#f2ede4!important;border-color:#505c63!important}
+.smart-venue-card:nth-child(even),.smart-race-row:nth-child(even),.racecard-row:nth-child(even){background:var(--v118-row2)!important}
+.smart-venue-card:active,.smart-race-row:active{background:#3b464c!important}
+.smart-venue-mark{background:#18252b!important;color:#c2e0e9!important;border-color:#60727c!important}
+.smart-venue-name b,.smart-race-title b,.rc-horse-name,.horse-card b{color:#f6f1e8!important}
+.smart-venue-name small,.smart-race-title small,.smart-venue-times,.smart-race-meta,.rc-horse-meta,.rc-bodyweight,.muted{color:#c2c9cc!important}
+.smart-chevron{color:#a0adb3!important}.smart-race-row>strong{color:#b8dce8!important}.smart-race-time{color:#d4dadd!important}
+.smart-date-controls .date-strip button,.smart-date-controls .date-strip .date-pill{background:#20282d!important;color:#d1d7da!important;border-color:#526068!important}
+.smart-date-controls .date-strip button.active,.smart-date-controls .date-strip .date-pill.active{background:#3a454b!important;color:#fffaf0!important;border-color:#84949d!important;box-shadow:inset 0 -3px 0 var(--v118-bronze)!important}
+.smart-calendar{background:#20282d!important;border-color:#526068!important;color:#c2cbd0!important}
+.smart-circuit-chip{background:#30383d!important;border-color:#67737a!important;color:#ded4c5!important}
+.cinema-tabs.accordion-tabs{background:#1c2327!important;border-color:#536068!important}
+.cinema-tabs.accordion-tabs button{background:#293136!important;color:#d1d7da!important;border-color:#505c63!important}
+.cinema-tabs.accordion-tabs button.active{background:#414b51!important;color:#fff8ec!important;border-color:#8d7d68!important;box-shadow:inset 0 -3px 0 var(--v118-bronze)!important}
+.racecard-table,.horse-card,.recent,.horse-info-cell,.fit-item,.runner-overall-box,.source-chip,.scenario-prob-card,.scenario-diagnostic{background:#293136!important;color:#f1ece4!important;border-color:#536068!important}
+.rc-pred-mark{background:#1d2529!important;border-color:#68757c!important}.rc-eval{color:#d2c4b2!important}
+.diagnosis-refresh-note{background:#21292e!important;border-color:#5f6d75!important;color:#d1d8db!important}
+.diagnosis-refresh-note.busy{color:#eadfce!important;border-color:#927d62!important}
+.entry-odds{color:#eef2f3!important}.entry-odds .pop{color:#c0c8cc!important}.entry-odds.odds-single,.odd.single{color:#ff8588!important}
+.rc-odds .odd{color:#f3eee5!important}.rc-odds .odd.single{color:#ff8588!important}.rc-odds .pop{color:#c4ccd0!important}
+[data-action="odds-update"]{background:#303940!important;color:#eee8de!important;border-color:#5c6971!important}
+.smart-home-script-logo{color:#c3b6a4!important}.smart-home-brand-sub{color:#aeb9bd!important}
+"""
+
 JS = r"""
 (function(){
 "use strict";
 var CENTRAL=["札幌","函館","福島","新潟","東京","中山","中京","京都","阪神","小倉"];
-var LOCAL=["帯広","門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"];
+var LOCAL=["門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"];
 var COURSE={
 "帯広":{lap:200,straight:200,dir:1,shape:"straight",turn:"直線",firstTurn:999},
 "門別":{lap:1600,straight:330,dir:-1,shape:"wide",turn:"右",firstTurn:350},
@@ -1859,7 +1921,7 @@ function assignOverallGrades(r,rows,suit,sc,pressure){
   return assignOverallGradesCentral(r,rows,suit,pressure)
 }
 
-function assignPredictionMarks(rows){
+function assignPredictionMarks(rows,r){
   var sorted=rows.slice().sort(function(a,b){
     return n(b.overallScore)-n(a.overallScore)||
            n(b.ability)-n(a.ability)||
@@ -1872,7 +1934,13 @@ function assignPredictionMarks(rows){
   var base=['◎','○','▲','☆','△'],i,x,fifth=sorted.length>=5?n(sorted[4].overallScore):0,candidates=[];
   var hi=sorted.length?n(sorted[0].overallScore):0,
       lo=sorted.length?n(sorted[sorted.length-1].overallScore):0,
-      avgCoverage=sorted.length?mean(sorted.map(function(z){return n(z.coverage)})):0;
+      avgCoverage=sorted.length?mean(sorted.map(function(z){return n(z.coverage)})):0,
+      styleEvidence=sorted.filter(function(z){return n(z.styleSamples)>0}).length,
+      debut=predictionProfile(r||{}).code==='DEBUT';
+  if(!debut&&sorted.length&&avgCoverage<.25&&styleEvidence<Math.max(2,Math.ceil(sorted.length*.35))){
+    for(i=0;i<sorted.length;i++){sorted[i].predRank=i+1;sorted[i].predMark='';sorted[i].attentionReason=''}
+    return
+  }
   if(sorted.length&&(hi-lo)<2&&avgCoverage<.40){
     for(i=0;i<sorted.length;i++){sorted[i].predRank=i+1;sorted[i].predMark='';sorted[i].attentionReason=''}
     return
@@ -1902,7 +1970,7 @@ function assignPredictionMarks(rows){
     if(n(x.styleSamples)>=2&&n(x.fade)<=.28){strengths++;reasons.push('下がり率低')}
     if((x.overallReasons||[]).some(function(z){return String(z).indexOf('今回条件に実績')>=0})){strengths++;reasons.push('条件実績')}
 
-    var closeToTop=(gap<=4&&strengths>=1);
+    var closeToTop=(score>=55&&fifth>=55&&gap<=4&&strengths>=1);
     var hiddenStrength=(gap<=10&&score>=55&&strengths>=2);
     if(evidence&&(closeToTop||hiddenStrength)){
       var attentionScore=score+strengths*2.5+n(x.coverage)*3-gap*.35;
@@ -1966,7 +2034,7 @@ function integratedGrades(r,rows){
     x.horse=h
   })
 }
-function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),sc=scenarioModel(r,rows),suit=suitability(rows,sc),pressure=pressureInfo(rows),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,profile:profile,engineVersion:'kraiz-commercial-2026.09-v2'};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
+function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),sc=scenarioModel(r,rows),suit=suitability(rows,sc),pressure=pressureInfo(rows),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,profile:profile,engineVersion:'kraiz-commercial-2026.09-v2'};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -1994,7 +2062,7 @@ function warmTrackLocal(track){
   if(!track)return Promise.resolve(0);
   var key=[state.date,state.circuit,track].join('|');
   if(trackPackBusy[key])return trackPackBusy[key];
-  trackPackBusy[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=117',
+  trackPackBusy[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=118',
       {cache:'no-store'})
     .then(function(res){if(!res.ok)throw new Error('track-pack');return res.json()})
     .then(function(body){
@@ -2015,6 +2083,13 @@ function prewarmSelectedTrack(track,raceNo){
 }
 
 function openFirstRace(){return}
+function archivedCacheComplete(r){
+  if(!r)return false;
+  var hs=r.horses||[],withHist=hs.filter(function(h){return (h.recentRaces||[]).length>0}).length,
+      historyOk=r.analysisMode==='新馬'||!hs.length||withHist>=Math.max(2,Math.ceil(hs.length*.5)),
+      oddsOk=raceHasOdds(r),diagOk=diagnosisCurrent(r);
+  return historyOk&&diagOk&&oddsOk
+}
 function oddsRefreshCadence(r){var start=mins(r&&r.startTime),now=nowMins();if(start>=9999)return 60000;var remain=start-now;if(remain<=0)return 0;return remain<=30?30000:60000}
 function raceHasOdds(r){return !!(r&&(r.horses||[]).some(function(h){return n(h.winOdds)>0}))}
 function refreshOddsOnly(force){
@@ -2062,14 +2137,14 @@ function ensureAutoOdds(r){
   if(!r)return;
   if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}
   var archived=r.date!==today()||isFinal(r),
-      delay=diagnosisCurrent(r)?280:1400;
+      delay=420;
   if(!raceHasOdds(r)||!archived){
     state.oddsTimer=setTimeout(function(){
       if(state.race&&String(state.race.id)===String(r.id))refreshOddsOnly(false)
     },delay)
   }
 }
-function diagnosisPanel(r,p){var busy=!!state.diagnosisBusy||!!state.autoDiagnosisBusy,ready=diagnosisCurrent(r);return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><div class="diagnosis-refresh-note '+(busy||!ready?'busy':'')+'">'+((busy||!ready)?'全頭診断を自動計算中…':'最新の全頭診断')+'</div><p class="muted">評価点は比較用のモデル値です。的中確率ではありません。データ不足でも取得済み情報で必ず評価します。</p>'+p.rows.slice().sort(function(a,b){return a.predRank-b.predRank}).map(function(x){return '<article class="horse-card"><button data-horse-open="'+esc(x.horse.horseNumber)+'"><b>'+x.predRank+'位 '+esc(x.predMark)+' '+esc(x.horse.name)+'　'+esc(x.overallGrade)+' '+x.overallScore+'</b></button><p>'+evaluationText(x)+'</p><p>'+esc((x.overallReasons||[]).join(' / ')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:''))+'</p></article>'}).join('')+'</section>'}
+function diagnosisPanel(r,p){var busy=!!state.diagnosisBusy||!!state.autoDiagnosisBusy,ready=diagnosisCurrent(r);return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><div class="diagnosis-refresh-note '+(busy||!ready?'busy':'')+'">'+((busy||!ready)?'全頭診断を自動計算中…':'最新の全頭診断')+'</div><p class="muted">評価点は比較用のモデル値です。的中確率ではありません。</p>'+p.rows.slice().sort(function(a,b){return a.predRank-b.predRank}).map(function(x){var head=ready?(x.predRank+'位 '+esc(x.predMark)+' '+esc(x.horse.name)+'　'+esc(x.overallGrade)+' '+x.overallScore):('— '+esc(x.horse.name)+'　診断準備中');return '<article class="horse-card"><button data-horse-open="'+esc(x.horse.horseNumber)+'"><b>'+head+'</b></button><p>'+(ready?evaluationText(x):'過去走・条件データを確認中')+'</p>'+(ready?'<p>'+esc((x.overallReasons||[]).join(' / ')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:''))+'</p>':'')+'</article>'}).join('')+'</section>'}
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=(h.allPastRuns||h.recentRaces||[]).slice(0,5);return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：過去走0（正常）':'過去走0件：基礎情報で評価済み')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){return '<section id="section-pace" class="card"><h2>展開AI</h2><p class="muted">A/B/Cシナリオと隊列予想。利用できるデータ量に応じて評価信頼度を調整します。</p>'+scenarioProbabilitySection(p)+paceBoard(r,p)+'</section>'}
 function resultPanel(r){return '<section id="section-result" class="card"><h2>レース結果</h2>'+(isFinal(r)?renderResult(r)+renderPayouts(r)+renderActualFlow(r):'<div class="muted">結果はまだ確定していません。</div>')+'</section>'}
@@ -2096,7 +2171,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v117</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v118</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean">'+
     (back?'<button class="smart-back" data-action="back" aria-label="戻る">‹</button>':'<span class="smart-back-space"></span>')+
@@ -2217,8 +2292,8 @@ function renderRace(){
   state.pred=p;
   if(!state.openPanel)state.openPanel='entry';
   setTimeout(function(){try{ensureAutoDiagnosis(r.id)}catch(e){}},0);
-  if(diagnosisCurrent(r))setTimeout(function(){try{ensureAutoOdds(r)}catch(e){}},280);
-  idleTask(function(){if(state.race&&String(state.race.id)===String(r.id))warmPastPack(r)},2200);
+  setTimeout(function(){try{ensureAutoOdds(r)}catch(e){}},420);
+  idleTask(function(){if(state.race&&String(state.race.id)===String(r.id))warmPastPack(r)},1800);
   setTimeout(function(){try{if(diagnosisCurrent(r))saveRaceAnalysis(r,p)}catch(e){}},0);
   var top=p.scenarios.slice().sort(function(a,b){return b.prob-a.prob})[0];
   if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=top?top.code:null;
@@ -2296,7 +2371,7 @@ function waitForRaceReady(id,seq,attempt){
   if(seq!==state.detailSeq)return;
   setTimeout(function(){
     if(seq!==state.detailSeq)return;
-    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=117&t='+Date.now(),{cache:'no-store'})
+    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=118&t='+Date.now(),{cache:'no-store'})
       .then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})})
       .then(function(x){
         if(seq!==state.detailSeq)return;
@@ -2361,7 +2436,7 @@ function idleTask(fn,delay){
 
 function diagnosisCurrent(r){
   var pm=r&&r.preparedMeta||{};
-  return pm.diagnosisReady===true&&pm.diagnosisVersion==='kraiz-commercial-2026.09-v8'
+  return pm.diagnosisReady===true&&pm.diagnosisVersion==='kraiz-commercial-2026.09-v9'
 }
 function ensureAutoDiagnosis(id){
   if(!id||!state.race||String(state.race.id)!==String(id))return;
@@ -2372,7 +2447,7 @@ function ensureAutoDiagnosis(id){
   autoDiagnosisJobs[id]=1;
   state.autoDiagnosisBusy=true;
 
-  fetch('/api/v1/race/'+encodeURIComponent(id)+'/diagnosis-refresh?v=117&t='+Date.now(),{
+  fetch('/api/v1/race/'+encodeURIComponent(id)+'/diagnosis-refresh?v=118&t='+Date.now(),{
     method:'POST',cache:'no-store'
   })
     .then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})})
@@ -2395,10 +2470,6 @@ function ensureAutoDiagnosis(id){
         if(a<=7)setTimeout(function(){ensureAutoDiagnosis(id)},650+Math.min(a,4)*250)
       }else{
         autoDiagnosisAttempts[id]=0;
-        // Once marks are ready, odds can use the network without fighting diagnosis.
-        setTimeout(function(){
-          if(state.race&&String(state.race.id)===String(id))ensureAutoOdds(state.race)
-        },250)
       }
     })
 }
@@ -2417,7 +2488,7 @@ function warmPastPack(r){
     .finally(function(){delete pastPackJobs[r.id]})
 }
 
-function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=cached;render();if(cached.date<today()||isFinal(cached))return;checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=117',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=x.body;state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
+function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=cached;render();if(cached.date<today()||isFinal(cached)){if(!archivedCacheComplete(cached))prepareRacePriority(id);return}checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=118',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=x.body;state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
 function reloadCurrent(){if(state.loading)return;if(state.race&&(state.race.date!==today()||isFinal(state.race))){render();return;}if(state.race&&state.race.id){var previous=state.race,seq=++state.detailSeq,id=state.race.id,isPast=state.raceStack.length>0;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&prepared=1&history=0&v=88'+(isPast?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.detailSeq)return;state.raceLoading=null;if(!state.horseModalNo&&JSON.stringify(state.race)!==JSON.stringify(body)){state.race=body;saveDetailCache(id,body);render()}if(body.date===today()&&!isFinal(body))scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;state.raceLoading=null;state.race=previous;state.error='更新に失敗しました';render()});return}try{localStorage.removeItem(cacheKey(state.date,state.circuit))}catch(e){}state.races=[];load(true)}
 function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}
@@ -2481,7 +2552,7 @@ function refreshDiagnosisNow(id){
   state.analysisSaved={};
   try{delete state.race._prediction}catch(e){}
   state.pred=null;render();
-  fetch('/api/v1/race/'+encodeURIComponent(id)+'/diagnosis-refresh?v=117&t='+Date.now(),{method:'POST',cache:'no-store'})
+  fetch('/api/v1/race/'+encodeURIComponent(id)+'/diagnosis-refresh?v=118&t='+Date.now(),{method:'POST',cache:'no-store'})
     .then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})})
     .then(function(x){
       if(!state.race||String(state.race.id)!==String(id))return;
@@ -2521,7 +2592,7 @@ function load(force){
   var attempts=0;
   function request(){
     attempts+=1;
-    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(requestCircuit)+(force?'&force=1':'')+'&bundle=1&v=117',{cache:'no-store'})
+    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(requestCircuit)+(force?'&force=1':'')+'&bundle=1&v=118',{cache:'no-store'})
       .then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()})
       .then(function(body){
         if(seq!==state.requestSeq||state.date!==d)return;
@@ -2551,7 +2622,7 @@ function load(force){
 }
 
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
-installNavigation();installEdgeBack();installPwaCache();restoreLocation();setTimeout(load,0);setInterval(function(){refreshOddsOnly(false)},15000);
+installNavigation();installEdgeBack();installPwaCache();restoreLocation();setTimeout(load,0);
 })();
 """
 
@@ -2568,12 +2639,12 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v117";
+SW = r'''const CACHE="kraiz-shell-v118";
 const SHELL=[
   "/",
-  "/styles-kraiz-v117.css",
-  "/app-v117.js",
-  "/manifest-kraiz-v117.webmanifest",
+  "/styles-kraiz-v118.css",
+  "/app-v118.js",
+  "/manifest-kraiz-v118.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
@@ -4158,13 +4229,13 @@ def _commercial_collect_once():
     with _commercial_collector_lock:
         if _commercial_collector_state["running"]:return
         _commercial_collector_state.update({"running":True,"lastStart":started,"lastError":"","hydrated":0,"diagnosed":0})
-    hydrated=0;diagnosed=0;errs=[]
+    queued=ready=0;errs=[]
     try:
         today=_today_iso()
-        # Refresh race lists first. This is background-only, never a UI request.
         _schedule_live_refresh(today,False)
         _schedule_central_refresh(today,False)
-        time.sleep(float(os.getenv("COMMERCIAL_LIST_SETTLE_SEC","3.0")))
+        # Short settle only; the next cycle catches anything still downloading.
+        time.sleep(float(os.getenv("COMMERCIAL_LIST_SETTLE_SEC","1.2")))
         rows=[]
         try:rows.extend(nar_race_summaries(today))
         except Exception as exc:errs.append("NAR list: "+str(exc))
@@ -4175,35 +4246,26 @@ def _commercial_collect_once():
         for idx,r in enumerate(targets):
             rid=str(r.get("id") or "")
             if not rid:continue
-            detail=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
-            if not detail:
-                try:_hydrate_fast_card_now(rid)
-                except Exception as exc:errs.append(rid+": "+str(exc))
-                detail=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
-            if detail:
-                hydrated+=1
-                try:
-                    _build_fast_diagnosis_snapshot(rid,allow_network=True);diagnosed+=1
-                except Exception as exc:errs.append("diag "+rid+": "+str(exc))
-                # Only nearest two races per venue get supplemental source enrichment.
-                if idx<min(8,max(2,len(targets)//6)):
-                    try:_start_enrichment(rid,detail,force=False,horse_no=None)
-                    except Exception as exc:errs.append("enrich "+rid+": "+str(exc))
-        with _race_list_cache_lock:
-            _race_list_cache.clear()
-    except Exception as exc:
-        errs.append(str(exc))
+            d=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
+            pm=(d or {}).get("preparedMeta") or {}
+            if d and pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION and pm.get("diagnosisReady"):
+                ready+=1;continue
+            # Upcoming races first, but all jobs share the same two-worker queue.
+            priority=20+idx
+            _schedule_fast_card_refresh(rid,priority);queued+=1
+        with _race_list_cache_lock:_race_list_cache.clear()
+    except Exception as exc:errs.append(str(exc))
     finally:
         finished=time.time()
         with _commercial_collector_lock:
             _commercial_collector_state.update({
                 "running":False,"lastFinish":finished,"lastError":" | ".join(errs[-6:]),
-                "hydrated":hydrated,"diagnosed":diagnosed,"cycleSec":round(finished-started,2),
+                "hydrated":ready,"diagnosed":ready,"queued":queued,"cycleSec":round(finished-started,2),
             })
 
 def _commercial_collector_loop():
     first_delay=float(os.getenv("COMMERCIAL_COLLECTOR_START_DELAY_SEC","1.0"))
-    interval=max(120,int(os.getenv("COMMERCIAL_COLLECTOR_INTERVAL_SEC","300")))
+    interval=max(120,int(os.getenv("COMMERCIAL_COLLECTOR_INTERVAL_SEC","180")))
     time.sleep(first_delay)
     while True:
         try:_commercial_collect_once()
@@ -4215,6 +4277,18 @@ def _start_commercial_collector():
     enabled=str(os.getenv("KRAIZ_COMMERCIAL_COLLECTOR","1")).lower() in {"1","true","yes","on"}
     if enabled:
         threading.Thread(target=_commercial_collector_loop,daemon=True,name="kraiz-commercial-collector").start()
+
+@app.get("/api/v1/runtime-status")
+def runtime_status():
+    with _fast_card_cv:
+        queued=len(_fast_card_queue);running=len(_fast_card_running)
+    with _commercial_collector_lock:collector=dict(_commercial_collector_state)
+    return {
+        "build":"v118","engine":PREDICTION_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
+        "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,
+        "racedb":RACEDB.status(),
+    }
 
 @app.get("/api/v1/collector-status")
 def collector_status():
@@ -4352,7 +4426,7 @@ def _history_is_enough(cov: dict, months_done: int) -> bool:
     return five >= total
 
 def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[str], force: bool = False) -> dict:
-    max_months = max(12, min(84, int(os.getenv("NAR_ON_DEMAND_HISTORY_MONTHS", "60"))))
+    max_months = max(6, min(36, int(os.getenv("NAR_ON_DEMAND_HISTORY_MONTHS", "12"))))
     with _race_history_lock:
         existing = _race_history_jobs.get(race_id)
         if existing and not force:
@@ -4365,7 +4439,7 @@ def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[st
         errors = []
         months_done = 0
         months = list(_months_from_race_date(iso_date, max_months))
-        wave = max(2, min(6, int(os.getenv("NAR_ON_DEMAND_WAVE_MONTHS", "6"))))
+        wave = max(2, min(4, int(os.getenv("NAR_ON_DEMAND_WAVE_MONTHS", "3"))))
         try:
             for pos in range(0, len(months), wave):
                 batch = months[pos:pos+wave]
@@ -4383,6 +4457,8 @@ def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[st
                 _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":"NAR公式 高速並列履歴"}
             with _detail_cache_lock:
                 _detail_cache.pop(race_id, None)
+            try:_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=True)
+            except Exception as exc:print("NAR history diagnosis rebuild failed",race_id,exc)
         except Exception as exc:
             errors.append(str(exc))
             cov_now = _history_counts(horse_names, iso_date)
@@ -6046,6 +6122,8 @@ class RaceDataBank:
                 CREATE INDEX IF NOT EXISTS idx_racedb_runs_date ON past_runs(horse_key,race_date DESC);
                 CREATE INDEX IF NOT EXISTS idx_racedb_runs_cutoff ON past_runs(race_date,jockey);
                 CREATE INDEX IF NOT EXISTS idx_racedb_runs_jockey ON past_runs(jockey,race_date);
+                CREATE INDEX IF NOT EXISTS idx_racedb_horse_sire ON horse_master(sire);
+                CREATE INDEX IF NOT EXISTS idx_racedb_runs_track_date ON past_runs(track,race_date);
 
                 CREATE TABLE IF NOT EXISTS odds_history (
                     race_id TEXT NOT NULL,
@@ -6568,7 +6646,7 @@ def _integrated_evaluation(horse: dict, race: dict) -> dict:
     if jump: reasons.append('障害成績・完走・専用騎手厩舎を優先。平地実績は補助のみ')
     if gap>=180: reasons.append(str(gap)+'日ぶり：信頼度を調整')
     if transfer: reasons.append('転入：条件間の比較に不確実性あり')
-    return {'version':'evidence-v117','score':round(score,1),'mode':mode,'tier':tier,
+    return {'version':'evidence-v118','score':round(score,1),'mode':mode,'tier':tier,
             'dataCompleteness':fullness,'confidence':confidence,'samples':len(runs),'allRunCount':len(all_runs),
             'components':components,'weights':weights,'sampleCounts':counts,'coverage':coverage,
             'missing':[k for k,v in coverage.items() if not v], 'neutralPrior':not bool(components),
@@ -6581,19 +6659,20 @@ def _rank_evaluations(detail):
         detail.get('horses') or [],
         key=lambda h:(-float((h.get('integratedEvaluation') or {}).get('score') or 0),int(h.get('horseNumber') or 0))
     )
+    evidence_count=sum(1 for h in horses if not (h.get('integratedEvaluation') or {}).get('neutralPrior') and (int((h.get('integratedEvaluation') or {}).get('samples') or 0)>0 or bool((h.get('integratedEvaluation') or {}).get('components'))))
+    mark_ready=(not horses) or evidence_count>=max(2,(len(horses)+2)//3)
     base_symbols=['◎','○','▲','☆','△']
     for i,horse in enumerate(horses):
         e=horse.get('integratedEvaluation') or {}
         score=float(e.get('score') or 0)
         e.update({
             'rank':i+1,
-            'mark':base_symbols[i] if i < len(base_symbols) else '',
+            'mark':base_symbols[i] if mark_ready and i < len(base_symbols) else '',
             'grade':'S' if score>=80 else 'A' if score>=70 else 'B' if score>=55 else 'C',
             'tied':sum(float((h.get('integratedEvaluation') or {}).get('score') or 0)==score for h in horses)>1,
         })
 
-    # Server-side 注 is selective too. Never mark every horse from 6th down.
-    if len(horses)>5:
+    if mark_ready and len(horses)>5:
         fifth=float((horses[4].get('integratedEvaluation') or {}).get('score') or 0)
         candidates=[]
         for horse in horses[5:]:
@@ -6608,11 +6687,10 @@ def _rank_evaluations(detail):
                 val=components.get(key)
                 if isinstance(val,(int,float)) and val>=.62:strengths+=1
             evidence=sum(1 for v in coverage.values() if v) if isinstance(coverage,dict) else 0
-            if (samples>=2 or evidence>=5) and ((gap<=4 and strengths>=1) or (gap<=9 and strengths>=2)):
+            if score>=55 and fifth>=55 and (samples>=2 or evidence>=5) and ((gap<=4 and strengths>=1) or (gap<=9 and strengths>=2)):
                 candidates.append((score+strengths*2-gap*.4,horse))
         candidates.sort(key=lambda z:(-z[0],int(z[1].get('horseNumber') or 0)))
-        for _,horse in candidates[:2]:
-            horse['integratedEvaluation']['mark']='注'
+        for _,horse in candidates[:2]:horse['integratedEvaluation']['mark']='注'
     return detail
 
 
@@ -6695,7 +6773,7 @@ def _precompute_detail_metrics(detail: dict) -> dict:
         except Exception:
             horse.setdefault("precomputedMetrics",{})
     _rank_evaluations(detail)
-    detail["aiEvaluation"]={"version":"evidence-v117","horses":[{"horseNumber":h.get("horseNumber"),"name":h.get("name"),**h.get("integratedEvaluation",{})} for h in detail.get("horses",[])]}
+    detail["aiEvaluation"]={"version":"evidence-v118","horses":[{"horseNumber":h.get("horseNumber"),"name":h.get("name"),**h.get("integratedEvaluation",{})} for h in detail.get("horses",[])]}
     detail.setdefault("preparedMeta",{})["metricsPrecomputed"]=True
     return detail
 
@@ -6714,7 +6792,7 @@ def _prepared_get_fresh(race_id: str) -> dict | None:
     detail,updated=PREPARED_STORE.get(race_id)
     if not detail or not updated or not _racedb_snapshot_usable(detail):return None
     if (detail.get("preparedMeta") or {}).get("fastPartial"):return detail
-    if (detail.get("aiEvaluation") or {}).get("version")!="evidence-v117":
+    if (detail.get("aiEvaluation") or {}).get("version")!="evidence-v118":
         detail=_precompute_detail_metrics(_strip_excluded(detail))
     return detail
 
@@ -6916,7 +6994,7 @@ def _fast_local_race_detail(race_id:str)->dict|None:
     return detail
 
 
-def _build_fast_diagnosis_snapshot(race_id:str, allow_network:bool=False)->dict|None:
+def _build_fast_diagnosis_snapshot(race_id:str, allow_network:bool=False, deep_context:bool=False)->dict|None:
     """Recalculate all-horse diagnosis from local data only. Target: sub-second."""
     detail=_fast_local_race_detail(race_id)
     if not detail:
@@ -6942,7 +7020,8 @@ def _build_fast_diagnosis_snapshot(race_id:str, allow_network:bool=False)->dict|
         quality=_diagnosis_history_quality(detail)
 
     detail=_strip_excluded(detail)
-    detail=_precompute_detail_metrics(_attach_evaluation_context(detail))
+    if deep_context:detail=_attach_evaluation_context(detail)
+    detail=_precompute_detail_metrics(detail)
     quality=_diagnosis_history_quality(detail)
 
     pm=detail.setdefault("preparedMeta",{})
@@ -7009,12 +7088,13 @@ def _fast_card_worker():
     while True:
         with _fast_card_cv:
             while not _fast_card_queue:_fast_card_cv.wait()
-            _,_,race_id=_fast_card_queue.pop(0)
+            priority,_,race_id=_fast_card_queue.pop(0)
             _fast_card_pending.discard(race_id)
             _fast_card_running.add(race_id)
         try:
-            _hydrate_fast_card_now(race_id)
-            try:_build_fast_diagnosis_snapshot(race_id,allow_network=False)
+            deep=priority<=10
+            _hydrate_fast_card_now(race_id,deep_history=deep)
+            try:_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=deep)
             except Exception as exc:print("fast diagnosis after card failed",race_id,exc)
         except Exception as exc:
             print("fast card worker failed",race_id,exc)
@@ -7171,15 +7251,34 @@ def _diagnosis_history_quality(detail:dict)->dict:
     return {"ready":ready,"total":total,"withHistory":with_history,"runs":runs,"need":need}
 
 
-def _hydrate_fast_card_now(race_id:str)->None:
-    # NAR: one daily sync populates all local cards. Do not start 12 parallel downloads.
+def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
+    # NAR: hydrate the date once. v117 called a non-existent sync_day(), so selected
+    # local races could stay empty until another background job happened to fill the DB.
     if race_id.startswith("nar-"):
-        m=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-",race_id)
-        if m:
-            try:NarSync().sync_day(m.group(1),force=False)
-            except Exception as exc:print("fast NAR day hydrate failed",race_id,exc)
-            q=_fast_local_race_detail(race_id)
-            if q:_store_fast_snapshot(q)
+        m=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-(.+)-(\d{2})$",race_id)
+        if not m:return
+        iso_date,track,race_no=m.group(1),m.group(2),int(m.group(3))
+        sync=None
+        try:
+            target=datetime.strptime(iso_date,"%Y-%m-%d").date()
+            sync=NarSync()
+            with _nar_sync_io_lock:
+                if iso_date==_today_iso():sync.sync_daily(force=False)
+                else:sync.sync_month(target.year,target.month,force=False)
+        except Exception as exc:
+            print("fast NAR date hydrate failed",race_id,exc)
+        finally:
+            try:
+                if sync:sync.store.conn.close()
+            except Exception:pass
+        q=_fast_local_race_detail(race_id)
+        if q:
+            _store_fast_snapshot(q)
+            if deep_history:
+                names=[str(h.get("name") or "") for h in q.get("horses",[]) if h.get("name")]
+                cov=_history_counts(names,iso_date)
+                if names and not _history_is_enough(cov,0):
+                    _start_race_history_search(race_id,iso_date,names,force=False)
         return
 
     m=re.match(r"^jra-(20\d{2}-\d{2}-\d{2})-([^\-]+)-(\d{2})$",race_id)
@@ -7248,7 +7347,7 @@ def _racedb_get_fast(race_id:str)->dict|None:
     except Exception:return None
     if not detail or not _racedb_snapshot_usable(detail):return None
     if (detail.get("preparedMeta") or {}).get("fastPartial"):return detail
-    if (detail.get("aiEvaluation") or {}).get("version")!="evidence-v117":
+    if (detail.get("aiEvaluation") or {}).get("version")!="evidence-v118":
         detail=_precompute_detail_metrics(_strip_excluded(detail))
     return detail
 
@@ -7305,6 +7404,7 @@ def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0
             print(f"Central summary read failed: {exc}");crows=[]
         rows.extend(crows)
         if force or not crows:_schedule_central_refresh(date,force=bool(force))
+    rows=[x for x in rows if str(x.get("track") or "")!="帯広"]
     with _race_list_cache_lock:
         _race_list_cache[ck]=(now,rows)
         if len(_race_list_cache)>24:
@@ -7397,18 +7497,21 @@ def prepare_race(race_id:str):
 @app.post("/api/v1/prewarm-track")
 def prewarm_track(date: str = Query(...), circuit: str = Query(...), track: str = Query(...), race_no: int = Query(1)):
     rows=[]
-    try:
-        rows=(nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False))
+    try:rows=(nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False))
     except Exception:rows=[]
     targets=sorted(
         [r for r in rows if str(r.get("track") or "")==str(track) and r.get("id")],
         key=lambda r:abs(int(r.get("raceNumber") or 0)-int(race_no))
     )[:3]
+    queued=0
     for idx,r in enumerate(targets):
         rid=str(r["id"])
-        if not (_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)):
-            _schedule_fast_card_refresh(rid,10+idx*10)
-    return {"status":"started","count":len(targets),"mode":"nearest-3"}
+        local=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
+        pm=(local or {}).get("preparedMeta") or {}
+        current=pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION and pm.get("diagnosisReady")
+        if not local or not current:
+            _schedule_fast_card_refresh(rid,10+idx*10);queued+=1
+    return {"status":"started","count":len(targets),"queued":queued,"mode":"nearest-3"}
 
 
 @app.get("/api/v1/local-refresh-status")
@@ -7779,6 +7882,7 @@ def _racedb_live_cycle()->None:
 
 def _start_racedb_daemon()->None:
     global _racedb_daemon_started
+    if str(os.getenv("KRAIZ_COMMERCIAL_COLLECTOR","1")).lower() in {"1","true","yes","on"}:return
     if not bool(int(os.getenv("RACEDB_AUTO_UPDATE","1"))):return
     with _racedb_daemon_lock:
         if _racedb_daemon_started:return
@@ -7802,7 +7906,17 @@ def enrichment_schema():
 
 @app.get("/build")
 def build_info():
-    return {"build": "v86","appVersion":"10.7-smartflow-v107","recentRuns":5,"allCentralVenues":True,"deterministicCentralDetailId":True,"centralResults":True,"jraOfficialResultPrimary":True,"weatherGoingPrimary":"JRA公式結果","oddsUi":True,"oddsAutoRefresh":True,"oddsAutoRefreshSec":{"normal":60,"nearPost":30},"accordionPanels":True,"centralLiveOddsApi":True,"scenarioABCSelectable":True,"scenarioHorseNumbers":True,"stickyVenueHeader":True,"venueMoreButton":False,"allVenuesAlwaysVisible":True,"circuitSpecificFetch":True,"manualCollect":True,"preparedRaceCache":True,"prewarmOnList":False,"parallelPrewarm":False,"browserDetailCache":True,"staleWhileRevalidate":True,"raceDataBank":True,"raceDataBankAutoUpdate":True,"raceDataBankOddsHistory":True,"raceDataBankPastRuns":True,"raceDataBankFullCareerBackground":True,"raceDataBankPedigree":True,"raceDataBankSmartMetrics":["ten1f","ten","agari"],"emptyCentralPreparedRejected":True,"smartRcEnrichment":True,"serverHorseMetricPrecompute":True,"preparedTodayTtlSec":int(os.getenv("PREPARED_TODAY_TTL_SEC","45")),"builtInSources":["JRA公式","NAR公式","netkeiba","SmartRc(フィード設定時)"],"smartRcDirectLink":False,"multiSource":True,"nonBlocking":True,"grade":"S/A/B/C + ◎○▲☆△注"}
+    return {
+        "build":"v118","appVersion":"11.8-verified-pipeline-v118",
+        "predictionEngine":PREDICTION_ENGINE_VERSION,
+        "navigation":"top-venue-race","recentRuns":5,
+        "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
+        "commercialCollector":True,"duplicateUpdaterDisabled":True,
+        "autoDiagnosis":True,"autoOdds":True,"oddsUsedInPrediction":False,
+        "narHydration":"sync_daily/sync_month","history":"JRA one-page / NAR month cache",
+        "raceDataBank":True,"browserDetailCache":True,"gzip":True,
+    }
+
 
 @app.get("/", response_class=HTMLResponse)
 @app.get("/venue", response_class=HTMLResponse)
@@ -7837,7 +7951,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v117.css")
+@app.get("/styles-kraiz-v118.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"public, max-age=31536000, immutable"})
@@ -7845,13 +7959,13 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v117.js")
+@app.get("/app-v118.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"public, max-age=31536000, immutable"})
 
 @app.get("/manifest-v86.webmanifest")
-@app.get("/manifest-kraiz-v117.webmanifest")
+@app.get("/manifest-kraiz-v118.webmanifest")
 @app.get("/manifest-kraiz-v88.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
