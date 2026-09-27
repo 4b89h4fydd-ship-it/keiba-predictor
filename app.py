@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="10.8-deployfix-smartflow-v108")
+app = FastAPI(title="KRAIZ", version="10.9-hero-local-v109")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "kraiz-commercial-2026.09-v2"
@@ -361,15 +361,15 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KRAIZ">
-<link rel="manifest" href="/manifest-kraiz-v108.webmanifest">
-<link rel="stylesheet" href="/styles-kraiz-v108.css">
+<link rel="manifest" href="/manifest-kraiz-v109.webmanifest">
+<link rel="stylesheet" href="/styles-kraiz-v109.css">
 <title>KRAIZ | TACTICAL RACING</title>
 <link rel="icon" type="image/png" href="/kraiz-icon-192.png">
 <link rel="apple-touch-icon" href="/kraiz-icon-192.png">
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v108.js"></script>
+<script src="/app-v109.js"></script>
 </body>
 </html>"""
 
@@ -879,6 +879,64 @@ CSS += r"""
 }
 """
 
+
+CSS += r"""
+/* v109: KRAIZ hero restored + central/local switch always visible */
+.smart-home .cinema-hero{
+  display:block!important;
+  max-width:920px;
+  margin:0 auto;
+  min-height:250px;
+  border-radius:0 0 16px 16px;
+  overflow:hidden;
+}
+.smart-home .cinema-hero-image{
+  display:block!important;
+  width:100%!important;
+  height:250px!important;
+  object-fit:cover!important;
+}
+.smart-home .cinema-brand,
+.smart-home .cinema-tools{display:flex!important}
+.smart-home-main{padding-top:10px}
+.smart-controls{
+  background:#fff;border:1px solid #d8e0e8;border-radius:10px;padding:9px;margin-bottom:10px
+}
+.smart-circuit-switch{
+  display:grid!important;grid-template-columns:1fr 1fr;gap:0;width:100%;min-height:44px;
+  border:1px solid #168fc8;border-radius:9px;overflow:hidden;background:#081f33
+}
+.smart-circuit-switch button{
+  appearance:none;border:0;background:#081f33;color:#b6c9d8;font:inherit;
+  font-size:15px;font-weight:900;min-height:44px
+}
+.smart-circuit-switch button+button{border-left:1px solid #168fc8}
+.smart-circuit-switch button.active{
+  color:#fff;background:linear-gradient(180deg,#168fd7,#0875bd);
+  box-shadow:inset 0 0 0 1px rgba(110,220,255,.45)
+}
+.smart-date-controls{
+  display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:7px;align-items:center;margin-top:8px
+}
+.smart-date-controls .date-strip{min-width:0;overflow-x:auto;margin:0!important}
+.smart-calendar{
+  position:relative;width:40px;height:40px;border:1px solid #cbd5df;border-radius:8px;background:#fff;
+  display:flex;align-items:center;justify-content:center;color:#546373;overflow:hidden
+}
+.smart-calendar input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+.smart-venue-tools{display:flex!important;flex-direction:column;gap:7px}
+.smart-venue-tools .smart-date-controls{margin-top:0}
+.smart-circuit-chip{
+  display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:24px;padding:0 7px;
+  border-radius:6px;background:#e9f6fc;border:1px solid #9cd6ef;color:#0879ae;font-size:11px;font-weight:900
+}
+@media(max-width:560px){
+  .smart-home .cinema-hero{min-height:210px}
+  .smart-home .cinema-hero-image{height:210px!important}
+  .smart-circuit-switch button{font-size:14px}
+}
+"""
+
 JS = r"""
 (function(){
 "use strict";
@@ -1289,7 +1347,7 @@ function warmTrackLocal(track){
   if(!track)return Promise.resolve(0);
   var key=[state.date,state.circuit,track].join('|');
   if(trackPackBusy[key])return trackPackBusy[key];
-  trackPackBusy[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=108',
+  trackPackBusy[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=109',
       {cache:'no-store'})
     .then(function(res){if(!res.ok)throw new Error('track-pack');return res.json()})
     .then(function(body){
@@ -1339,7 +1397,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v108</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v109</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar">'+
     (back?'<button class="smart-back" data-action="back" aria-label="戻る">‹</button>':'<span class="smart-back-space"></span>')+
@@ -1348,8 +1406,19 @@ function smartTopBar(back,title,sub){
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+
   '</header>'
 }
+function smartCircuitSwitch(){
+  return '<div class="smart-circuit-switch" aria-label="開催区分">'+
+    '<button data-circuit="中央" class="'+(state.circuit==='中央'?'active':'')+'">中央</button>'+
+    '<button data-circuit="地方" class="'+(state.circuit==='地方'?'active':'')+'">地方</button>'+
+  '</div>'
+}
 function smartPageControls(){
-  return '<div class="smart-controls">'+cinematicControls(state.circuit)+'</div>'
+  return '<div class="smart-controls">'+
+    smartCircuitSwitch()+
+    '<div class="smart-date-controls">'+dateStrip()+
+      '<label class="smart-calendar" title="日付を選択"><span aria-hidden="true">▦</span><input id="date" type="date" value="'+esc(state.date)+'" aria-label="開催日"></label>'+
+    '</div>'+
+  '</div>'
 }
 function smartVenueCards(){
   var ctx=cinematicContext(null),venues=ctx.venues;
@@ -1370,9 +1439,13 @@ function smartVenueCards(){
   '</section>'
 }
 function renderHome(){
-  return '<div class="smart-shell">'+
-    smartTopBar(false,'開催場選択',state.date+'・'+state.circuit)+
-    '<main class="smart-main">'+smartPageControls()+(state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+smartVenueCards()+'</main>'+
+  return '<div class="smart-shell smart-home">'+
+    cinematicHero()+
+    '<main class="smart-main smart-home-main">'+
+      smartPageControls()+
+      (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
+      smartVenueCards()+
+    '</main>'+
     cinematicFooter()+
   '</div>'
 }
@@ -1398,7 +1471,7 @@ function renderVenue(){
   return '<div class="smart-shell">'+
     smartTopBar(true,state.track||'開催場',state.date+'・'+state.circuit)+
     '<main class="smart-main">'+
-      '<div class="smart-venue-tools">'+dateStrip()+'</div>'+
+      '<div class="smart-venue-tools">'+smartCircuitSwitch()+'<div class="smart-date-controls">'+dateStrip()+'</div></div>'+
       (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
       venueRaceRows()+
     '</main>'+
@@ -1408,7 +1481,7 @@ function renderVenue(){
 function smartRaceHead(r){
   var count=n(r.fieldSize,(r.horses||[]).length);
   return '<section class="smart-race-head">'+
-    '<div class="smart-race-headline"><strong>'+esc(r.track)+' '+esc(r.raceNumber)+'R</strong>'+cinematicGrade(r)+'<time>'+timeHtml(r)+' 発走</time></div>'+
+    '<div class="smart-race-headline"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span><strong>'+esc(r.track)+' '+esc(r.raceNumber)+'R</strong>'+cinematicGrade(r)+'<time>'+timeHtml(r)+' 発走</time></div>'+
     '<h1>'+esc(r.title||'レース詳細')+'</h1>'+
     '<div class="smart-race-meta">'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'')+' '+esc(r.condition||'')+'　'+count+'頭</div>'+
   '</section>'
@@ -1503,7 +1576,7 @@ function waitForRaceReady(id,seq,attempt){
   if(seq!==state.detailSeq)return;
   setTimeout(function(){
     if(seq!==state.detailSeq)return;
-    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=108&t='+Date.now(),{cache:'no-store'})
+    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=109&t='+Date.now(),{cache:'no-store'})
       .then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})})
       .then(function(x){
         if(seq!==state.detailSeq)return;
@@ -1552,7 +1625,7 @@ function refreshPayoutsOnly(attempt){
 }
 
 function checkSnapshotVersion(id,cached,seq){fetch('/api/v1/race/'+encodeURIComponent(id)+'/version',{cache:'no-store'}).then(function(res){if(!res.ok)throw Error('version');return res.json()}).then(function(v){if(seq!==state.detailSeq||v.revision===(cached.preparedMeta||{}).revision)return null;return fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0',{cache:'no-store'}).then(function(res){if(!res.ok)throw Error('snapshot');return res.json()})}).then(function(body){if(body&&seq===state.detailSeq){state.race=body;saveDetailCache(id,body);render()}}).catch(function(){})}
-function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=cached;render();if(cached.date<today()||isFinal(cached))return;checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=108',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=x.body;state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
+function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=cached;render();if(cached.date<today()||isFinal(cached))return;checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=109',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=x.body;state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
 function reloadCurrent(){if(state.loading)return;if(state.race&&(state.race.date!==today()||isFinal(state.race))){render();return;}if(state.race&&state.race.id){var previous=state.race,seq=++state.detailSeq,id=state.race.id,isPast=state.raceStack.length>0;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&prepared=1&history=0&v=88'+(isPast?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.detailSeq)return;state.raceLoading=null;if(!state.horseModalNo&&JSON.stringify(state.race)!==JSON.stringify(body)){state.race=body;saveDetailCache(id,body);render()}if(body.date===today()&&!isFinal(body))scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;state.raceLoading=null;state.race=previous;state.error='更新に失敗しました';render()});return}try{localStorage.removeItem(cacheKey(state.date,state.circuit))}catch(e){}state.races=[];load(true)}
 function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}
@@ -1625,7 +1698,7 @@ function pollDiagnosisRefresh(id,attempt){
   if(!state.race||String(state.race.id)!==String(id))return;
   setTimeout(function(){
     if(!state.race||String(state.race.id)!==String(id))return;
-    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=108&t='+Date.now(),{cache:'no-store'})
+    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=109&t='+Date.now(),{cache:'no-store'})
       .then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})})
       .then(function(x){
         if(!state.race||String(state.race.id)!==String(id))return;
@@ -1667,7 +1740,7 @@ function load(force){
   var attempts=0;
   function request(){
     attempts+=1;
-    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(c)+(force?'&force=1':'')+'&bundle=1&v=108',{cache:'no-store'})
+    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(c)+(force?'&force=1':'')+'&bundle=1&v=109',{cache:'no-store'})
       .then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()})
       .then(function(body){
         if(seq!==state.requestSeq||state.date!==d||state.circuit!==c)return;
@@ -1706,12 +1779,12 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v108";
+SW = r'''const CACHE="kraiz-shell-v109";
 const SHELL=[
   "/",
-  "/styles-kraiz-v108.css",
-  "/app-v108.js",
-  "/manifest-kraiz-v108.webmanifest",
+  "/styles-kraiz-v109.css",
+  "/app-v109.js",
+  "/manifest-kraiz-v109.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
@@ -6721,7 +6794,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v108.css")
+@app.get("/styles-kraiz-v109.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"public, max-age=31536000, immutable"})
@@ -6729,13 +6802,13 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v108.js")
+@app.get("/app-v109.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"public, max-age=31536000, immutable"})
 
 @app.get("/manifest-v86.webmanifest")
-@app.get("/manifest-kraiz-v108.webmanifest")
+@app.get("/manifest-kraiz-v109.webmanifest")
 @app.get("/manifest-kraiz-v88.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
