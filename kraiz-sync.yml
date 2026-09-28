@@ -1,0 +1,128 @@
+name: KRAIZ Production Sync
+
+"on":
+  workflow_dispatch:
+  schedule:
+    # JST 07:00-08:59 (UTC 22:00-23:59, previous UTC day)
+    - cron: "*/20 22-23 * * *"
+    # JST 09:00-23:59 (UTC 00:00-14:59)
+    - cron: "*/20 0-14 * * *"
+
+concurrency:
+  group: kraiz-production-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      CLOUDFLARE_SYNC_URL: https://kraiz-api.4b89h4fydd.workers.dev/api/sync
+      KEIBA_DATA_DIR: ${{ github.workspace }}/.kraiz-data
+      KRAIZ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" beautifulsoup4==4.12.3
+
+      - name: Set date
+        run: |
+          echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
+
+      - name: Start KRAIZ locally
+        run: |
+          nohup uvicorn app:app \
+            --host 127.0.0.1 \
+            --port 8000 \
+            > /tmp/kraiz.log 2>&1 &
+
+          for i in $(seq 1 40)
+          do
+            if curl -fsS http://127.0.0.1:8000/health > /dev/null; then
+              echo "Local KRAIZ started"
+              exit 0
+            fi
+            sleep 2
+          done
+
+          cat /tmp/kraiz.log || true
+          exit 1
+
+      - name: Start local preparation
+        run: |
+          curl -fsS \
+            --max-time 120 \
+            "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE&force=1" \
+            -o bundle.json
+
+      - name: Wait for complete local bundle
+        run: |
+          for i in $(seq 1 24)
+          do
+            curl -fsS \
+              --max-time 120 \
+              "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
+              -o bundle.json
+
+            RACES=$(jq '.races // [] | length' bundle.json)
+            DETAILS=$(jq '.details // [] | length' bundle.json)
+            COMPLETE=$(jq -r '.displayComplete // .complete // false' bundle.json)
+
+            echo "Attempt $i: races=$RACES details=$DETAILS complete=$COMPLETE"
+
+            if [ "$RACES" -gt 0 ] && \
+               [ "$DETAILS" -gt 0 ] && \
+               [ "$COMPLETE" = "true" ]; then
+              exit 0
+            fi
+
+            sleep 15
+          done
+
+          echo "Local bundle did not become complete"
+          tail -n 250 /tmp/kraiz.log || true
+          exit 1
+
+      - name: Build D1 payload
+        run: |
+          jq '{
+            summaries: (.races // []),
+            details: (.details // []),
+            meta: {
+              source: "github-actions-direct",
+              sync_date: (.date // ""),
+              race_count: ((.races // []) | length),
+              detail_count: ((.details // []) | length),
+              display_complete: (.displayComplete // .complete // false)
+            }
+          }' bundle.json > payload.json
+
+          echo "Races: $(jq '.summaries | length' payload.json)"
+          echo "Details: $(jq '.details | length' payload.json)"
+
+      - name: Sync directly to Cloudflare D1
+        run: |
+          curl --fail-with-body \
+            -X POST \
+            "$CLOUDFLARE_SYNC_URL" \
+            -H "content-type: application/json" \
+            -H "x-sync-token: $SYNC_TOKEN" \
+            --data-binary @payload.json
+
+      - name: Show local log on failure
+        if: failure()
+        run: |
+          tail -n 300 /tmp/kraiz.log || true
