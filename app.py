@@ -3022,10 +3022,33 @@ function load(force){
   }
 
   // 2) Race summaries are a tiny request. They are never gated by full diagnosis.
-  function requestList(attempt){
-    attempt=n(attempt,0);
-    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit=&bundle=0&v=130&t='+Date.now(),{cache:'no-store'})
-      .then(function(res){if(!res.ok)throw Error('list');return res.json()})
+  fetch(
+  'https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='
+  +encodeURIComponent(d)
+  +'&details=0&t='
+  +Date.now(),
+  {cache:'no-store'}
+)
+.then(function(res){
+  if(res.ok)return res;
+
+  return fetch(
+    '/api/v1/races?date='
+    +encodeURIComponent(d)
+    +'&circuit=&bundle=0&v=130&t='
+    +Date.now(),
+    {cache:'no-store'}
+  )
+})
+.catch(function(){
+  return fetch(
+    '/api/v1/races?date='
+    +encodeURIComponent(d)
+    +'&circuit=&bundle=0&v=130&t='
+    +Date.now(),
+    {cache:'no-store'}
+  )
+})
       .then(function(rows){
         if(seq!==state.requestSeq||state.date!==d)return;
         rows=Array.isArray(rows)?rows:(rows.races||[]);
