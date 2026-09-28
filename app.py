@@ -3077,7 +3077,35 @@ function load(force){
   // 3) Details arrive separately and never block the home/venue list.
   function requestDetails(attempt){
     attempt=n(attempt,0);
-    fetch('/api/v1/site-bootstrap?date='+encodeURIComponent(d)+(force?'&force=1':'')+'&wait=0&v=130&t='+Date.now(),{cache:'no-store'})
+    fetch(
+  'https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='
+  +encodeURIComponent(d)
+  +'&details=1&t='
+  +Date.now(),
+  {cache:'no-store'}
+)
+.then(function(res){
+  if(res.ok)return res;
+
+  return fetch(
+    '/api/v1/site-bootstrap?date='
+    +encodeURIComponent(d)
+    +(force?'&force=1':'')
+    +'&wait=0&v=130&t='
+    +Date.now(),
+    {cache:'no-store'}
+  )
+})
+.catch(function(){
+  return fetch(
+    '/api/v1/site-bootstrap?date='
+    +encodeURIComponent(d)
+    +(force?'&force=1':'')
+    +'&wait=0&v=130&t='
+    +Date.now(),
+    {cache:'no-store'}
+  )
+})
       .then(function(res){if(!res.ok)throw Error('bundle');return res.json()})
       .then(function(body){
         if(seq!==state.requestSeq||state.date!==d)return;
