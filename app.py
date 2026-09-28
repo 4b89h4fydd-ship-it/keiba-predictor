@@ -380,7 +380,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v130.js"></script>
+<script src="/app-v131.js"></script>
 </body>
 </html>"""
 
@@ -1811,8 +1811,8 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(sessionStorage.getItem("kraiz-sw-reload")!=="v130"){
-          sessionStorage.setItem("kraiz-sw-reload","v130");
+        if(sessionStorage.getItem("kraiz-sw-reload")!=="v131-edge"){
+          sessionStorage.setItem("kraiz-sw-reload","v131-edge");
           location.reload()
         }
       }catch(e){}
@@ -2868,7 +2868,92 @@ function warmPastPack(r){
     .finally(function(){delete pastPackJobs[r.id]})
 }
 
-function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}state.oddsBusy=false;if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=instantTrackDetails[String(id)]||loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=applySummaryEnvironment(cached);render();if(cached.date<today()||isFinal(cached)){if(!state.bootstrapReady&&!archivedCacheComplete(cached))prepareRacePriority(id);return}if(!state.bootstrapReady)checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=130',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=applySummaryEnvironment(x.body);state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
+function openRace(id,keepStack,skipHistory){
+  if(!id||state.raceLoading)return;
+  if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}
+  state.oddsBusy=false;
+  if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}
+  state.openPanel='entry';
+  var seq=++state.detailSeq;
+  if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}
+  state.horseModalNo=null;
+  if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}
+  state.error=null;
+  state.picker=false;
+  state.scenarioCode=null;
+  state.paceStage=0;
+
+  var cached=instantTrackDetails[String(id)]||loadDetailCache(id);
+  var hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));
+
+  if(hasCached){
+    state.raceLoading=null;
+    state.race=applySummaryEnvironment(cached);
+    render();
+    return
+  }
+
+  state.raceLoading=String(id);
+  state.race=null;
+  render();
+
+  var edgeUrl=
+    'https://kraiz-api.4b89h4fydd.workers.dev/api/race/'
+    +encodeURIComponent(id)
+    +'?t='+Date.now();
+
+  fetch(edgeUrl,{cache:'no-store'})
+    .then(function(res){
+      if(!res.ok)throw Error('edge '+res.status);
+      return res.json()
+    })
+    .then(function(x){
+      if(seq!==state.detailSeq)return;
+      var body=x&&x.detail?x.detail:null;
+      if(!body||!((body.horses||[]).length||isFinal(body)))throw Error('edge detail missing');
+      body=applySummaryEnvironment(body);
+      state.raceLoading=null;
+      state.race=body;
+      instantTrackDetails[String(id)]=body;
+      saveDetailCache(id,body);
+      render()
+    })
+    .catch(function(){
+      if(seq!==state.detailSeq)return;
+      return fetch(
+        '/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=131',
+        {cache:'no-store'}
+      )
+      .then(function(res){
+        return res.json().then(function(body){
+          return {status:res.status,body:body}
+        })
+      })
+      .then(function(x){
+        if(seq!==state.detailSeq)return;
+        if(x.status===202||x.body.status==='preparing'){
+          waitForRaceReady(id,seq,0);
+          return
+        }
+        var body=applySummaryEnvironment(x.body);
+        state.raceLoading=null;
+        state.race=body;
+        saveDetailCache(id,body);
+        render();
+        if(body.enrichmentSearch&&body.enrichmentSearch.status==='running'){
+          scheduleHistoryPoll(id)
+        }
+      })
+      .catch(function(){
+        if(seq!==state.detailSeq)return;
+        if(String(state.raceLoading)!==String(id))return;
+        state.raceLoading=null;
+        state.error='レース詳細の取得に失敗しました';
+        if(state.raceStack.length)state.race=state.raceStack.pop();
+        render()
+      })
+    })
+}
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
 function reloadCurrent(){if(state.loading)return;if(state.race&&(state.race.date!==today()||isFinal(state.race))){render();return;}if(state.race&&state.race.id){var previous=state.race,seq=++state.detailSeq,id=state.race.id,isPast=state.raceStack.length>0;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&prepared=1&history=0&v=88'+(isPast?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.detailSeq)return;state.raceLoading=null;if(!state.horseModalNo&&JSON.stringify(state.race)!==JSON.stringify(body)){state.race=body;saveDetailCache(id,body);render()}if(body.date===today()&&!isFinal(body))scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;state.raceLoading=null;state.race=previous;state.error='更新に失敗しました';render()});return}try{localStorage.removeItem(cacheKey(state.date,state.circuit))}catch(e){}state.races=[];load(true)}
 function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}
@@ -3021,117 +3106,80 @@ function load(force){
     render()
   }
 
-  // 2) Race summaries are a tiny request. They are never gated by full diagnosis.
-  fetch(
-  'https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='
-  +encodeURIComponent(d)
-  +'&details=0&t='
-  +Date.now(),
-  {cache:'no-store'}
-)
-.then(function(res){
-  if(res.ok)return res;
+  // 2) Race summaries: Cloudflare/D1 first, Render only as fallback.
+  function requestList(attempt){
+    attempt=n(attempt,0);
 
-  return fetch(
-    '/api/v1/races?date='
-    +encodeURIComponent(d)
-    +'&circuit=&bundle=0&v=130&t='
-    +Date.now(),
-    {cache:'no-store'}
-  )
-})
-.catch(function(){
-  return fetch(
-    '/api/v1/races?date='
-    +encodeURIComponent(d)
-    +'&circuit=&bundle=0&v=130&t='
-    +Date.now(),
-    {cache:'no-store'}
-  )
-})
-      .then(function(rows){
-        if(seq!==state.requestSeq||state.date!==d)return;
-        rows=Array.isArray(rows)?rows:(rows.races||[]);
-        if(rows.length){
-          // Preserve richer fields already merged from detail snapshots.
-          var old={};state.races.forEach(function(r){if(r&&r.id)old[String(r.id)]=r});
-          rows.forEach(function(r){
-            var z=old[String(r.id)];if(!z)return;
-            ['volatility','weather','condition','oddsUpdatedAt','environmentMeta'].forEach(function(k){
+    fetch(
+      'https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='
+      +encodeURIComponent(d)
+      +'&details=0&t='+Date.now(),
+      {cache:'no-store'}
+    )
+    .then(function(res){
+      if(!res.ok)throw Error('cloudflare-list '+res.status);
+      return res.json()
+    })
+    .then(function(body){
+      var rows=Array.isArray(body)?body:(body.races||[]);
+      if(!rows.length)throw Error('cloudflare-list-empty');
+      if(seq!==state.requestSeq||state.date!==d)return null;
+      state.bootstrapReady=true;
+      return rows
+    })
+    .catch(function(){
+      return fetch(
+        '/api/v1/races?date='+encodeURIComponent(d)
+        +'&circuit=&bundle=0&v=131&t='+Date.now(),
+        {cache:'no-store'}
+      )
+      .then(function(res){
+        if(!res.ok)throw Error('render-list '+res.status);
+        return res.json()
+      })
+      .then(function(body){
+        return Array.isArray(body)?body:(body.races||[])
+      })
+    })
+    .then(function(rows){
+      if(rows==null)return;
+      if(seq!==state.requestSeq||state.date!==d)return;
+
+      if(rows.length){
+        var old={};
+        state.races.forEach(function(r){
+          if(r&&r.id)old[String(r.id)]=r
+        });
+
+        rows.forEach(function(r){
+          var z=old[String(r.id)];
+          if(!z)return;
+          ['volatility','weather','condition','oddsUpdatedAt','environmentMeta']
+            .forEach(function(k){
               if(z[k]!=null&&z[k]!==''&&z[k]!=='不明')r[k]=z[k]
             })
-          });
-          state.races=rows;saveRaceCache(d,'__ALL__',rows);
-          state.loading=false;render()
-        }else if(!state.races.length&&attempt<20){
-          state.loading=true;render();
-          setTimeout(function(){requestList(attempt+1)},450+Math.min(attempt,6)*180)
-        }
-      })
-      .catch(function(){
-        if(seq!==state.requestSeq||state.date!==d)return;
-        if(!state.races.length&&attempt<20)setTimeout(function(){requestList(attempt+1)},600+Math.min(attempt,6)*220)
-      })
+        });
+
+        state.races=rows;
+        saveRaceCache(d,'__ALL__',rows);
+        state.loading=false;
+        render()
+      }else if(!state.races.length&&attempt<8){
+        setTimeout(function(){requestList(attempt+1)},700)
+      }
+    })
+    .catch(function(){
+      if(seq!==state.requestSeq||state.date!==d)return;
+      if(!state.races.length&&attempt<8){
+        setTimeout(function(){requestList(attempt+1)},900)
+      }
+    })
   }
 
   // 3) Details arrive separately and never block the home/venue list.
-  function requestDetails(attempt){
-    attempt=n(attempt,0);
-    fetch(
-  'https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='
-  +encodeURIComponent(d)
-  +'&details=1&t='
-  +Date.now(),
-  {cache:'no-store'}
-)
-.then(function(res){
-  if(res.ok)return res;
+  function requestDetails(attempt){return}
 
-  return fetch(
-    '/api/v1/site-bootstrap?date='
-    +encodeURIComponent(d)
-    +(force?'&force=1':'')
-    +'&wait=0&v=130&t='
-    +Date.now(),
-    {cache:'no-store'}
-  )
-})
-.catch(function(){
-  return fetch(
-    '/api/v1/site-bootstrap?date='
-    +encodeURIComponent(d)
-    +(force?'&force=1':'')
-    +'&wait=0&v=130&t='
-    +Date.now(),
-    {cache:'no-store'}
-  )
-})
-      .then(function(res){if(!res.ok)throw Error('bundle');return res.json()})
-      .then(function(body){
-        if(seq!==state.requestSeq||state.date!==d)return;
-        state.bootstrapProgress={ready:n(body.detailCount),total:n(body.raceCount),analysis:n(body.analysisCount),missing:(body.missing||[]).length};
-        if((body.races||[]).length){
-          var rows=mergeBootstrap(body);
-          state.races=rows;
-          saveRaceCache(d,'__ALL__',rows);
-          state.loading=false;
-          state.bootstrapReady=!!body.displayComplete||!!body.complete;
-          if(state.bootstrapReady)saveFullBundle(d,Object.assign({},body,{complete:true}));
-          window.__KRAIZ_BOOTSTRAP__=body;
-          render()
-        }
-        if(!(body.displayComplete||body.complete)&&attempt<60){
-          setTimeout(function(){requestDetails(attempt+1)},700+Math.min(attempt,8)*170)
-        }
-      })
-      .catch(function(){
-        if(seq!==state.requestSeq||state.date!==d)return;
-        if(attempt<60)setTimeout(function(){requestDetails(attempt+1)},900+Math.min(attempt,8)*190)
-      })
-  }
-
-  requestList(0);
-  requestDetails(0)
+  requestList(0)
 }
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
 installNavigation();installEdgeBack();installPwaCache();restoreLocation();setTimeout(load,0);
@@ -3151,16 +3199,16 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v130";
+SW = r'''const CACHE="kraiz-shell-v131-edge";
 const STATIC=[
   "/styles-kraiz-v130.css",
-  "/app-v130.js",
+  "/app-v131.js",
   "/manifest-kraiz-v130.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
 ];
-const LAST_PAGE="/__kraiz_last_page_v130__";
+const LAST_PAGE="/__kraiz_last_page_v131_edge__";
 
 self.addEventListener("install",event=>{
   event.waitUntil(
@@ -9599,7 +9647,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v130","appVersion":"13.0-nonblocking-boot-v130",
+        "build":"v131","appVersion":"13.1-cloudflare-edge-v131",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -9614,22 +9662,13 @@ def build_info():
 @app.get("/venue", response_class=HTMLResponse)
 @app.get("/race", response_class=HTMLResponse)
 def home():
-    bundle=None
-    try:
-        bundle=DAY_BUNDLES.get(_today_iso(),complete_only=True)
-        if not bundle:
-            bundle=_assemble_day_bundle(_today_iso(),allow_network_fill=False)
-    except Exception:
-        bundle=None
-    payload="null"
-    if bundle and (bundle.get("races") or []):
-        try:
-            payload=json.dumps(bundle,ensure_ascii=False,separators=(",",":"),default=str)
-            payload=payload.replace("</","<\\/")
-        except Exception:
-            payload="null"
-    boot='<script>window.__KRAIZ_BOOTSTRAP__='+payload+';</script>'
-    html=INDEX.replace('<script src="/app-v130.js"></script>',boot+'\n<script src="/app-v130.js"></script>')
+    # Keep first paint light. Race list/detail data is loaded from Cloudflare/D1
+    # by the browser; Render remains the fallback for live/manual refreshes.
+    boot='<script>window.__KRAIZ_BOOTSTRAP__=null;</script>'
+    html=INDEX.replace(
+        '<script src="/app-v131.js"></script>',
+        boot+'\n<script src="/app-v131.js"></script>'
+    )
     return HTMLResponse(html, headers={
         "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
         "Pragma":"no-cache","Expires":"0"
@@ -9670,6 +9709,7 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
+@app.get("/app-v131.js")
 @app.get("/app-v130.js")
 @app.get("/app-v91.js")
 def appjs():
