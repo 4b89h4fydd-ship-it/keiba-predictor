@@ -67,7 +67,7 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-js = strings["JS"].replace("BUILD v130", "BUILD v134")
+js = strings["JS"].replace("BUILD v130", "BUILD v135")
 
 # v133 browsing is Cloudflare/D1 first. Remove two old manual-only
 # same-origin Render fallbacks from the static deployment as well.
@@ -110,7 +110,7 @@ for route in ("venue", "race"):
     (DIST / route / "index.html").write_text(index_html, encoding="utf-8")
 (DIST / "_redirects").write_text("/venue /index.html 200\n/race /index.html 200\n", encoding="utf-8")
 (DIST / "styles-kraiz-v130.css").write_text(strings["CSS"], encoding="utf-8")
-(DIST / "app-v133.js").write_text(js, encoding="utf-8")
+(DIST / "app-v135.js").write_text(js, encoding="utf-8")
 (DIST / "manifest-kraiz-v130.webmanifest").write_text(strings["MANIFEST"], encoding="utf-8")
 sw = strings["SW"].replace(
     'const CACHE="kraiz-shell-v133-edge-only";',
