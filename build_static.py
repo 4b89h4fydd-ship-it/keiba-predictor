@@ -54,7 +54,7 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-js = strings["JS"]
+js = strings["JS"].replace("BUILD v130", "BUILD v133")
 
 # v133 browsing is Cloudflare/D1 first. Remove two old manual-only
 # same-origin Render fallbacks from the static deployment as well.
@@ -86,12 +86,23 @@ if remaining:
         "Render API fetch remains in static build:\n" + "\n".join(remaining[:20])
     )
 
-(DIST / "index.html").write_text(strings["INDEX"], encoding="utf-8")
-(DIST / "404.html").write_text(strings["INDEX"], encoding="utf-8")
+index_html = strings["INDEX"].replace(
+    '<link rel="stylesheet" href="/styles-kraiz-v130.css">',
+    '<style>' + strings["CSS"] + '</style>'
+)
+(DIST / "index.html").write_text(index_html, encoding="utf-8")
+(DIST / "404.html").write_text(index_html, encoding="utf-8")
 (DIST / "styles-kraiz-v130.css").write_text(strings["CSS"], encoding="utf-8")
 (DIST / "app-v133.js").write_text(js, encoding="utf-8")
 (DIST / "manifest-kraiz-v130.webmanifest").write_text(strings["MANIFEST"], encoding="utf-8")
-(DIST / "sw.js").write_text(strings["SW"], encoding="utf-8")
+sw = strings["SW"].replace(
+    'const CACHE="kraiz-shell-v133-edge-only";',
+    'const CACHE="kraiz-shell-v133-inlinecss";'
+).replace(
+    '  "/styles-kraiz-v130.css",\n',
+    ''
+)
+(DIST / "sw.js").write_text(sw, encoding="utf-8")
 
 
 (DIST / "_headers").write_text(
