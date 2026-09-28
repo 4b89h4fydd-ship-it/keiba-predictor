@@ -20,35 +20,48 @@ icons = None
 binary_b64 = {}
 
 for node in tree.body:
-    if not isinstance(node, ast.Assign) or len(node.targets) != 1:
-        continue
-    target = node.targets[0]
-    if not isinstance(target, ast.Name):
-        continue
+    # Normal assignments such as CSS = r"""..."""
+    if isinstance(node, ast.Assign) and len(node.targets) == 1:
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
 
-    name = target.id
-    value = node.value
+        name = target.id
+        value = node.value
 
-    if isinstance(value, ast.Constant) and isinstance(value.value, str):
-        strings[name] = value.value
-        continue
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            strings[name] = value.value
+            continue
 
-    if name == "KRAIZ_ICONS" and isinstance(value, ast.Dict):
-        icons = ast.literal_eval(value)
-        continue
+        if name == "KRAIZ_ICONS" and isinstance(value, ast.Dict):
+            icons = ast.literal_eval(value)
+            continue
 
-    if isinstance(value, ast.Call):
-        fn = value.func
-        if (
-            isinstance(fn, ast.Attribute)
-            and isinstance(fn.value, ast.Name)
-            and fn.value.id == "base64"
-            and fn.attr == "b64decode"
-            and value.args
-            and isinstance(value.args[0], ast.Constant)
-            and isinstance(value.args[0].value, str)
-        ):
-            binary_b64[name] = value.args[0].value
+        if isinstance(value, ast.Call):
+            fn = value.func
+            if (
+                isinstance(fn, ast.Attribute)
+                and isinstance(fn.value, ast.Name)
+                and fn.value.id == "base64"
+                and fn.attr == "b64decode"
+                and value.args
+                and isinstance(value.args[0], ast.Constant)
+                and isinstance(value.args[0].value, str)
+            ):
+                binary_b64[name] = value.args[0].value
+            continue
+
+    # app.py extends CSS many times with CSS += r"""...""".
+    # The static build must reproduce those additions in source order.
+    if (
+        isinstance(node, ast.AugAssign)
+        and isinstance(node.target, ast.Name)
+        and isinstance(node.op, ast.Add)
+        and isinstance(node.value, ast.Constant)
+        and isinstance(node.value.value, str)
+    ):
+        name = node.target.id
+        strings[name] = strings.get(name, "") + node.value.value
 
 for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
