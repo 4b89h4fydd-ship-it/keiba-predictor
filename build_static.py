@@ -93,12 +93,6 @@ if remaining:
 (DIST / "manifest-kraiz-v130.webmanifest").write_text(strings["MANIFEST"], encoding="utf-8")
 (DIST / "sw.js").write_text(strings["SW"], encoding="utf-8")
 
-(DIST / "_redirects").write_text(
-    "/race /index.html 200\n"
-    "/venue /index.html 200\n"
-    "/* /index.html 200\n",
-    encoding="utf-8",
-)
 
 (DIST / "_headers").write_text(
     "/\n"
