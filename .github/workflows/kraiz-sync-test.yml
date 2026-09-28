@@ -10,6 +10,9 @@ jobs:
   sync-test:
     runs-on: ubuntu-latest
 
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+
     steps:
       - name: Test Cloudflare sync
         run: |
@@ -17,5 +20,5 @@ jobs:
             -X POST \
             "https://kraiz-api.4b89h4fydd.workers.dev/api/sync" \
             -H "content-type: application/json" \
-            -H "x-sync-token: ${{ secrets.SYNC_TOKEN }}" \
+            -H "x-sync-token: $SYNC_TOKEN" \
             --data '{"meta":{"github_sync_test":"ok"}}'
