@@ -1811,8 +1811,8 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(sessionStorage.getItem("kraiz-sw-reload")!=="v133-edge-only"){
-          sessionStorage.setItem("kraiz-sw-reload","v133-edge-only");
+        if(sessionStorage.getItem("kraiz-sw-reload")!=="v134-venue-pwa"){
+          sessionStorage.setItem("kraiz-sw-reload","v134-venue-pwa");
           location.reload()
         }
       }catch(e){}
@@ -2241,10 +2241,10 @@ function edgeRaceUrl(id){
     +'?t='+Date.now()
 }
 
-function fetchEdgeRace(id){
+function fetchEdgeRace(id,force){
   if(!id)return Promise.resolve(null);
   var cached=instantTrackDetails[String(id)]||loadDetailCache(id);
-  if(cached&&((cached.horses||[]).length||isFinal(cached))){
+  if(!force&&cached&&((cached.horses||[]).length||isFinal(cached))){
     instantTrackDetails[String(id)]=cached;
     return Promise.resolve(cached)
   }
@@ -2268,7 +2268,8 @@ function warmTrackSnapshots(track,high){
   track=track||state.track;
   if(!track)return Promise.resolve(0);
 
-  var key=[state.date,state.circuit,track].join('|');
+  var requestedDate=state.date,requestedCircuit=state.circuit;
+  var key=[requestedDate,requestedCircuit,track].join('|');
   if(trackSnapshotJobs[key])return trackSnapshotJobs[key];
 
   var targets=(state.races||[])
@@ -2289,8 +2290,12 @@ function warmTrackSnapshots(track,high){
   function worker(){
     if(cursor>=targets.length)return Promise.resolve();
     var row=targets[cursor++];
-    return fetchEdgeRace(row.id)
-      .then(function(d){if(d)count++})
+    return fetchEdgeRace(row.id,!(row.volatility&&row.volatility.ready))
+      .then(function(d){
+        if(!d)return;count++;
+        if(state.date!==requestedDate||state.circuit!==requestedCircuit)return;
+        if(mergeTrackPack([d])){persistRaceSummaryCache();if(state.track===track&&!state.race&&!state.raceLoading)render()}
+      })
       .then(worker)
   }
 
@@ -2586,11 +2591,16 @@ function venueRaceRows(){
     '</div>'+
   '</section>'
 }
+function venueSwitch(){
+  var tracks=[];
+  state.races.forEach(function(r){if(r.circuit===state.circuit&&r.track&&tracks.indexOf(r.track)<0)tracks.push(r.track)});
+  return '<div class="date-strip">'+tracks.map(function(t){return '<button data-track="'+esc(t)+'" class="date-pill '+(t===state.track?'active':'')+'">'+esc(t)+'</button>'}).join('')+'</div>'
+}
 function renderVenue(){
   return '<div class="smart-shell">'+
     smartTopBar(true,state.track||'開催場',state.date+'・'+state.circuit)+
     '<main class="smart-main">'+
-      '<div class="smart-venue-tools"><div class="smart-venue-circuit-bar"><span class="smart-circuit-chip">'+esc(state.circuit)+'</span></div><div class="smart-date-controls">'+dateStrip()+'</div></div>'+
+      '<div class="smart-venue-tools"><div class="smart-venue-circuit-bar"><span class="smart-circuit-chip">'+esc(state.circuit)+'</span></div><div class="smart-date-controls">'+venueSwitch()+'</div></div>'+
       (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
       venueRaceRows()+
     '</main>'+
@@ -2996,20 +3006,6 @@ function load(force){
       state.bootstrapReady=true;
       return rows
     })
-    .catch(function(){
-      return fetch(
-        '/api/v1/races?date='+encodeURIComponent(d)
-        +'&circuit=&bundle=0&v=131&t='+Date.now(),
-        {cache:'no-store'}
-      )
-      .then(function(res){
-        if(!res.ok)throw Error('render-list '+res.status);
-        return res.json()
-      })
-      .then(function(body){
-        return Array.isArray(body)?body:(body.races||[])
-      })
-    })
     .then(function(rows){
       if(rows==null)return;
       if(seq!==state.requestSeq||state.date!==d)return;
@@ -3025,23 +3021,22 @@ function load(force){
           if(!z)return;
           ['volatility','weather','condition','oddsUpdatedAt','environmentMeta']
             .forEach(function(k){
-              if(z[k]!=null&&z[k]!==''&&z[k]!=='不明')r[k]=z[k]
+              if((r[k]==null||r[k]===''||r[k]==='不明'||(k==='volatility'&&!r[k].ready))&&z[k]!=null&&z[k]!==''&&z[k]!=='不明')r[k]=z[k]
             })
         });
 
         state.races=rows;
         saveRaceCache(d,'__ALL__',rows);
         state.loading=false;
-        render()
+        render();
+        if(state.track)warmTrackSnapshots(state.track,true)
       }else if(!state.races.length&&attempt<8){
         setTimeout(function(){requestList(attempt+1)},700)
       }
     })
     .catch(function(){
       if(seq!==state.requestSeq||state.date!==d)return;
-      if(!state.races.length&&attempt<8){
-        setTimeout(function(){requestList(attempt+1)},900)
-      }
+      if(!state.races.length&&attempt<2){setTimeout(function(){requestList(attempt+1)},900)}else{state.loading=false;state.error='データを取得できません。通信状態を確認して更新してください。';render()}
     })
   }
 
@@ -3068,8 +3063,9 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v133-edge-only";
+SW = r'''const CACHE="kraiz-shell-v134-venue-pwa";
 const STATIC=[
+  "/index.html",
   "/styles-kraiz-v130.css",
   "/app-v133.js",
   "/manifest-kraiz-v130.webmanifest",
@@ -3094,10 +3090,7 @@ self.addEventListener("activate",event=>{
     caches.keys()
       .then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
       .then(()=>self.clients.claim())
-      .then(()=>self.clients.matchAll({type:"window",includeUncontrolled:true}))
-      .then(clients=>Promise.all(clients.map(client=>{
-        try{return client.navigate(client.url)}catch(e){return null}
-      })))
+
   )
 });
 
@@ -3111,11 +3104,14 @@ self.addEventListener("fetch",event=>{
   if(req.mode==="navigate"){
     event.respondWith(
       fetch(req,{cache:"no-store"})
-        .then(r=>{
-          if(r&&r.ok)caches.open(CACHE).then(c=>c.put(LAST_PAGE,r.clone()));
-          return r
+        .then(async r=>{
+          if(!r||!r.ok)throw Error("navigation "+(r&&r.status));
+          const cache=await caches.open(CACHE);await cache.put(LAST_PAGE,r.clone());return r
         })
-        .catch(()=>caches.match(LAST_PAGE))
+        .catch(async ()=>{
+          const cache=await caches.open(CACHE);
+          return (await cache.match(LAST_PAGE))||(await cache.match("/index.html"))||new Response("通信状態を確認して再読み込みしてください",{status:503,headers:{"Content-Type":"text/plain; charset=utf-8"}})
+        })
     );
     return
   }
