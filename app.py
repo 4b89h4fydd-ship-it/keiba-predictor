@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="12.5-odds-fix-v125")
+app = FastAPI(title="KRAIZ", version="12.7-full-bootstrap-v127")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "kraiz-commercial-2026.09-v9"
@@ -371,15 +371,15 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KRAIZ">
-<link rel="manifest" href="/manifest-kraiz-v125.webmanifest">
-<link rel="stylesheet" href="/styles-kraiz-v125.css">
+<link rel="manifest" href="/manifest-kraiz-v127.webmanifest">
+<link rel="stylesheet" href="/styles-kraiz-v127.css">
 <title>KRAIZ | TACTICAL RACING</title>
 <link rel="icon" type="image/png" href="/kraiz-icon-192.png">
 <link rel="apple-touch-icon" href="/kraiz-icon-192.png">
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v125.js"></script>
+<script src="/app-v127.js"></script>
 </body>
 </html>"""
 
@@ -1697,6 +1697,37 @@ CSS += r"""
 }
 """
 
+
+CSS += r"""
+/* v126: scratched / withdrawn runner */
+.racecard-row.scratched,
+.racecard-row.scratched:nth-child(even){
+  opacity:.38!important;
+  filter:grayscale(.92)!important;
+  cursor:not-allowed!important;
+  pointer-events:none!important;
+  background:#242a2d!important;
+}
+.racecard-row.scratched .rc-horse-name,
+.racecard-row.scratched .rc-pred-mark,
+.racecard-row.scratched .rc-eval,
+.racecard-row.scratched .rc-odds{
+  color:#8b9397!important;
+}
+.rc-scratch{
+  display:inline-flex!important;
+  align-items:center;
+  height:20px;
+  padding:0 7px;
+  border:1px solid #6d7377;
+  border-radius:999px;
+  color:#c2c5c7!important;
+  background:#34393c;
+  font-size:10px!important;
+  font-weight:800!important;
+}
+"""
+
 JS = r"""
 (function(){
 "use strict";
@@ -2077,7 +2108,15 @@ function assignPredictionMarks(rows,r){
 }
 function raceMode(r){r=r||{};if(['平地','新馬','障害'].indexOf(r.analysisMode)>=0)return r.analysisMode;var title=String(r.title||'');if(r.surface==='障害'||/障害|J[･・.]?G[ⅠⅡⅢ123]|\bJS\b|ジャンプ/i.test(title))return '障害';return /新馬|メイクデビュー/.test(title)?'新馬':'平地'}
 function saveRaceAnalysis(r,p){if(r.date!==today()||isFinal(r))return;try{if(!r||!r.id||!p)return;var meta=r.preparedMeta||{},key=String(r.id)+'|'+String(meta.preparedAtEpoch||0)+'|'+String((r.horses||[]).length);if(state.analysisSaved[key])return;state.analysisSaved[key]=1;var sc=(p.scenarios||[]).map(function(z){return{code:z.code,prob:z.prob,horses:(z.horses||[]).map(function(h){return n(h.horseNumber)})}}),hs=(p.rows||[]).map(function(x){var h=x.horse||{},fit=x.fit||{};return{horseNumber:n(h.horseNumber),name:h.name||'',mark:x.predMark||'',grade:x.overallGrade||'',score:x.overallScore,expectedStyle:x.expected||'',pastStyle:x.pastStyle||'',stylePoint:x.score,fadeRate:x.fade,goProb:x.goProb,ten:x.ten,frontStay:x.frontStay,fit:fit,analysisMode:raceMode(r)}});fetch('/api/v1/racedb/analysis/'+encodeURIComponent(r.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({generatedAt:new Date().toISOString(),mode:raceMode(r),engineVersion:(p.engineVersion||'kraiz-commercial-2026.09-v2'),profile:(p.profile||predictionProfile(r)),scenarios:sc,horses:hs})}).catch(function(){delete state.analysisSaved[key]})}catch(e){}}
-function analysisRace(r){return Object.assign({},r,{horses:(r.horses||[]).map(function(h){var runs=h.allPastRuns||h.recentRaces||[];if(raceMode(r)==='障害')runs=runs.filter(function(z){return /障害|ジャンプ|J[・･.]?G|\bJS\b/i.test((z.surface||'')+(z.title||''))});return Object.assign({},h,{recentRaces:runs,allPastRuns:runs})})})}
+function isScratchHorse(h){var s=String(h&&h.status||'');return !!(h&&(h.scratched===true||h.withdrawn===true||/欠場|取消|除外/.test(s)))}
+function analysisRace(r){
+  var active=(r.horses||[]).filter(function(h){return !isScratchHorse(h)}).map(function(h){
+    var runs=h.allPastRuns||h.recentRaces||[];
+    if(raceMode(r)==='障害')runs=runs.filter(function(z){return /障害|ジャンプ|J[・･.]?G|\bJS\b/i.test((z.surface||'')+(z.title||''))});
+    return Object.assign({},h,{recentRaces:runs,allPastRuns:runs})
+  });
+  return Object.assign({},r,{horses:active,fieldSize:active.length||n(r.fieldSize)})
+}
 function integratedGrades(r,rows){
   var server=((r.aiEvaluation||{}).horses||[]);
   rows.forEach(function(x){
@@ -2147,6 +2186,58 @@ function oddsText(h){var ok=h&&h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0,p
 function oddsClass(h){var o=n(h&&h.winOdds,0);return o>0&&o<10?'odds-single':''}
 
 
+
+var instantTrackDetails={},trackSnapshotJobs={};
+function warmTrackSnapshots(track,high){
+  track=track||state.track;if(!track)return Promise.resolve(0);
+  var key=[state.date,state.circuit,track].join('|');
+  if(trackSnapshotJobs[key])return trackSnapshotJobs[key];
+  trackSnapshotJobs[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&fill=1&v=127&t='+Date.now(),{cache:'no-store'})
+    .then(function(res){if(!res.ok)throw Error('track-pack');return res.json()})
+    .then(function(body){
+      var rows=body.races||[];
+      rows.forEach(function(d){
+        if(!d||!d.id)return;
+        instantTrackDetails[String(d.id)]=d;
+        saveDetailCache(d.id,d)
+      });
+      return rows.length
+    })
+    .catch(function(){return 0})
+    .finally(function(){delete trackSnapshotJobs[key]});
+  return trackSnapshotJobs[key]
+}
+function prewarmVisibleTrackSnapshots(rows){
+  var seen={},list=[];
+  (rows||state.races||[]).forEach(function(r){
+    if(!r||!r.track||!r.circuit)return;
+    var k=r.circuit+'|'+r.track;
+    if(seen[k])return;
+    seen[k]=1;
+    list.push({circuit:r.circuit,track:r.track})
+  });
+  list.forEach(function(x,idx){
+    setTimeout(function(){
+      var key=[state.date,x.circuit,x.track].join('|');
+      if(trackSnapshotJobs[key])return;
+      trackSnapshotJobs[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(x.circuit)+'&track='+encodeURIComponent(x.track)+'&fill=1&v=127&t='+Date.now(),{cache:'no-store'})
+        .then(function(res){if(!res.ok)throw Error('track-pack');return res.json()})
+        .then(function(body){
+          (body.races||[]).forEach(function(d){
+            if(d&&d.id){
+              instantTrackDetails[String(d.id)]=d;
+              saveDetailCache(d.id,d)
+            }
+          });
+          return (body.races||[]).length
+        })
+        .catch(function(){return 0})
+        .finally(function(){delete trackSnapshotJobs[key]})
+    },100+idx*180)
+  })
+}
+
+
 var trackPackBusy={};
 function warmTrackLocal(track,attempt){
   track=track||state.track;attempt=n(attempt,0);
@@ -2154,7 +2245,7 @@ function warmTrackLocal(track,attempt){
   var key=[state.date,state.circuit,track].join('|');
   if(trackPackBusy[key])return trackPackBusy[key];
 
-  trackPackBusy[key]=fetch('/api/v1/volatility-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=125&t='+Date.now(),
+  trackPackBusy[key]=fetch('/api/v1/volatility-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=127&t='+Date.now(),
       {cache:'no-store'})
     .then(function(res){if(!res.ok)throw new Error('volatility-pack');return res.json()})
     .then(function(body){
@@ -2210,13 +2301,16 @@ function refreshOddsOnly(force){
   var status=document.getElementById('odds-status');
   if(status)status.textContent=' オッズ取得中…';
 
-  fetch('/api/v1/odds-refresh/'+encodeURIComponent(r.id)+'?v=125&t='+Date.now(),{cache:'no-store'})
+  fetch('/api/v1/odds-refresh/'+encodeURIComponent(r.id)+'?force='+(force?1:0)+'&v=127&t='+Date.now(),{cache:'no-store'})
     .then(function(res){if(!res.ok)throw Error('odds');return res.json()})
     .then(function(body){
       if(!state.race||String(state.race.id)!==String(r.id))return;
+      var scratchChanged=false;
       (body.horses||[]).forEach(function(update){
         var h=horseByNo(state.race,update.horseNumber);if(!h)return;
-        ['winOdds','popularity','bodyWeight','bodyWeightChange'].forEach(function(k){if(update[k]!=null)h[k]=update[k]});
+        ['winOdds','popularity','bodyWeight','bodyWeightChange','status','scratched'].forEach(function(k){
+          if(update[k]!=null&&h[k]!==update[k]){h[k]=update[k];if(k==='status'||k==='scratched')scratchChanged=true}
+        });
         var cell=document.querySelector('[data-odds-no="'+n(update.horseNumber)+'"]');
         if(cell){
           var o=n(h.winOdds,0),pop=n(h.popularity,0),os=o>0?(Math.round(o*10)/10).toFixed(1):'--.-';
@@ -2226,6 +2320,7 @@ function refreshOddsOnly(force){
       if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;
       if(body.oddsSource)state.race.oddsSource=body.oddsSource;
       saveDetailCache(state.race.id,state.race);
+      if(scratchChanged){try{delete state.race._prediction}catch(e){}state.pred=null;render()}
       if(status)status.textContent=body.horses&&body.horses.some(function(h){return n(h.winOdds)>0})?' '+esc(body.oddsSource||'オッズ')+' '+(body.oddsUpdatedAt||''):' オッズ待ち'
     })
     .catch(function(){if(status)status.textContent=' オッズ取得失敗'})
@@ -2275,7 +2370,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span>'+volatilityBadge(x)+'<span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v125</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v127</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean">'+
     (back?'<button class="smart-back" data-action="back" aria-label="戻る">‹</button>':'<span class="smart-back-space"></span>')+
@@ -2432,7 +2527,7 @@ function refreshEnvironmentLocal(track,attempt){
   track=track||state.track;attempt=n(attempt,0);
   if(!track||state.environmentBusy)return;
   state.environmentBusy=true;
-  fetch('/api/v1/environment-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=125&t='+Date.now(),{cache:'no-store'})
+  fetch('/api/v1/environment-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=127&t='+Date.now(),{cache:'no-store'})
     .then(function(res){if(!res.ok)throw Error('environment');return res.json()})
     .then(function(body){
       if(state.track!==track&&!(state.race&&state.race.track===track))return;
@@ -2570,17 +2665,21 @@ function runnerStyleSection(r,p){
     return '<span class="odd '+(o>0&&o<10?'single':'')+'">'+esc(os)+'</span><span class="pop">'+(pop>0?esc(pop)+'人気':'--人気')+'</span>';
   }
   var diagnosisReady=diagnosisCurrent(r);
-  return '<section class="card"><h2>出走表</h2><button data-action="odds-update">オッズ更新</button><span id="odds-status" role="status"></span>'
+  var cadenceText=oddsRefreshCadence(r)===30000?'自動30秒':'自動60秒';
+  return '<section class="card"><h2>出走表</h2><button data-action="odds-update">オッズ手動更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
     +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI全頭診断を自動計算中… 完了後に印を自動表示します。</div>':'')
     +'<div class="racecard-table">'
-    +sortedHorseRows(p.rows).map(function(x){
-      var h=x.horse,mark=diagnosisReady?(x.predMark||'—'):'…',grade=diagnosisReady?(x.overallGrade||'C'):'—',score=diagnosisReady?(x.overallScore==null?'—':x.overallScore):'—';
-      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=bodyWeightInline(h);
-      return '<button class="racecard-row" data-horse-open="'+esc(h.horseNumber)+'">'
+    +(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
+      var scratch=isScratchHorse(h),x=(p.rows||[]).find(function(z){return n(z.horse.horseNumber)===n(h.horseNumber)}),
+          mark=scratch?'—':(diagnosisReady&&x?(x.predMark||'—'):'…'),
+          grade=scratch?'—':(diagnosisReady&&x?(x.overallGrade||'C'):'—'),
+          score=scratch?'—':(diagnosisReady&&x?(x.overallScore==null?'—':x.overallScore):'—');
+      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=bodyWeightInline(h),st=String(h.status||'欠場');
+      return '<button class="racecard-row'+(scratch?' scratched':'')+'" '+(scratch?'disabled aria-disabled="true"':'data-horse-open="'+esc(h.horseNumber)+'"')+'>'
         +'<span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span>'
         +'<span class="rc-pred"><b class="rc-pred-mark" data-ai-mark="'+esc(mark)+'">'+esc(mark)+'</b><small class="rc-eval">'+esc(grade)+' '+esc(score)+'</small></span>'
         +'<span class="rc-horse">'
-          +'<span class="rc-horse-top"><b class="rc-horse-name">'+esc(h.name)+'</b>'+(bw?'<small class="rc-bodyweight">'+bw+'kg</small>':'')+'</span>'
+          +'<span class="rc-horse-top"><b class="rc-horse-name">'+esc(h.name)+'</b>'+(scratch?'<small class="rc-scratch">'+esc(st)+'</small>':(bw?'<small class="rc-bodyweight">'+bw+'kg</small>':''))+'</span>'
           +'<span class="rc-horse-meta"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">'+esc(h.carriedWeight||'—')+'</span></span>'
         +'</span>'
         +'<span class="rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</span>'
@@ -2603,7 +2702,7 @@ function waitForRaceReady(id,seq,attempt){
   if(seq!==state.detailSeq)return;
   setTimeout(function(){
     if(seq!==state.detailSeq)return;
-    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=118&t='+Date.now(),{cache:'no-store'})
+    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=127&t='+Date.now(),{cache:'no-store'})
       .then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})})
       .then(function(x){
         if(seq!==state.detailSeq)return;
@@ -2720,7 +2819,7 @@ function warmPastPack(r){
     .finally(function(){delete pastPackJobs[r.id]})
 }
 
-function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}state.oddsBusy=false;if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=applySummaryEnvironment(cached);render();if(cached.date<today()||isFinal(cached)){if(!archivedCacheComplete(cached))prepareRacePriority(id);return}checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=118',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=applySummaryEnvironment(x.body);state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
+function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}state.oddsBusy=false;if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=instantTrackDetails[String(id)]||loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=applySummaryEnvironment(cached);render();if(cached.date<today()||isFinal(cached)){if(!archivedCacheComplete(cached))prepareRacePriority(id);return}checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=127',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=applySummaryEnvironment(x.body);state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
 function reloadCurrent(){if(state.loading)return;if(state.race&&(state.race.date!==today()||isFinal(state.race))){render();return;}if(state.race&&state.race.id){var previous=state.race,seq=++state.detailSeq,id=state.race.id,isPast=state.raceStack.length>0;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&prepared=1&history=0&v=88'+(isPast?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.detailSeq)return;state.raceLoading=null;if(!state.horseModalNo&&JSON.stringify(state.race)!==JSON.stringify(body)){state.race=body;saveDetailCache(id,body);render()}if(body.date===today()&&!isFinal(body))scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;state.raceLoading=null;state.race=previous;state.error='更新に失敗しました';render()});return}try{localStorage.removeItem(cacheKey(state.date,state.circuit))}catch(e){}state.races=[];load(true)}
 function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}
@@ -2806,57 +2905,91 @@ function refreshDiagnosisNow(id){
 }
 function pollDiagnosisRefresh(id,attempt){return}
 
-function bind(){document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;state.openPanel=opening?key:null;render();if(opening&&key==='diagnosis'&&state.race)refreshDiagnosisNow(state.race.id);if(opening&&key==='history'&&state.race)warmPastPack(state.race);if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);window.scrollTo(0,0);render();refreshEnvironmentLocal(state.track,0);warmTrackLocal(state.track);prewarmSelectedTrack(state.track,1)};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)});if(row)state.track=row.track;if(row)refreshEnvironmentLocal(row.track,0);prepareRacePriority(id);window.scrollTo(0,0);openRace(id,false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
+function bind(){document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;state.openPanel=opening?key:null;render();if(opening&&key==='diagnosis'&&state.race)refreshDiagnosisNow(state.race.id);if(opening&&key==='history'&&state.race)warmPastPack(state.race);if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);warmTrackSnapshots(state.track,true);window.scrollTo(0,0);render();refreshEnvironmentLocal(state.track,0);warmTrackLocal(state.track);prewarmSelectedTrack(state.track,1)};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)});if(row)state.track=row.track;if(row)refreshEnvironmentLocal(row.track,0);prepareRacePriority(id);window.scrollTo(0,0);openRace(id,false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
 function initPaceBoard(){if(!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;drawPaceStage(clamp(state.paceStage,0,plan.stages.length-1))}
+
+function hydrateInstantFromDevice(rows){
+  var count=0;
+  (rows||[]).forEach(function(r){
+    if(!r||!r.id)return;
+    var d=loadDetailCache(r.id);
+    if(d){instantTrackDetails[String(r.id)]=d;count++}
+  });
+  return count
+}
+function mergeBootstrap(body){
+  var rows=(body&&body.races)||[],details=(body&&body.details)||[],pvol={};
+  details.forEach(function(d){
+    if(!d||!d.id)return;
+    instantTrackDetails[String(d.id)]=d;
+    saveDetailCache(d.id,d);
+    if(d.volatility)pvol[String(d.id)]=d.volatility
+  });
+  rows.forEach(function(r){
+    var d=instantTrackDetails[String(r.id)];
+    if(d){
+      if(d.volatility)r.volatility=d.volatility;
+      if(d.weather&&d.weather!=='不明')r.weather=d.weather;
+      if(d.condition&&d.condition!=='不明')r.condition=d.condition;
+      if(d.oddsUpdatedAt)r.oddsUpdatedAt=d.oddsUpdatedAt
+    }else if(pvol[String(r.id)]){
+      r.volatility=pvol[String(r.id)]
+    }
+  });
+  return rows
+}
+
+
 function load(force){
   var d=state.date,c=state.circuit,topMode=!state.track&&!state.race,
-      requestCircuit=topMode?'':c,
       cacheCircuit=topMode?'__ALL__':c,
       seq=++state.requestSeq,
       cached=force?null:loadRaceCache(d,cacheCircuit);
   state.error=null;
+
   var hasCache=!!(cached&&cached.length);
   if(hasCache){
-    state.races=cached;state.loading=false;render();openFirstRace()
+    state.races=cached;
+    hydrateInstantFromDevice(cached);
+    state.loading=false;
+    render();
   }else{
-    state.loading=true;render()
+    state.loading=true;
+    render()
   }
+
   var attempts=0;
-  function request(){
+  function requestBootstrap(){
     attempts+=1;
-    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(requestCircuit)+(force?'&force=1':'')+'&bundle=1&v=125',{cache:'no-store'})
+    fetch('/api/v1/site-bootstrap?date='+encodeURIComponent(d)+(force?'&force=1':'')+'&v=127&t='+Date.now(),{cache:'no-store'})
       .then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()})
       .then(function(body){
         if(seq!==state.requestSeq||state.date!==d)return;
-        var rows=Array.isArray(body)?body:(body.races||[]),prepared=(body&&body.prepared)||[],pvol={};
-        for(var pi=0;pi<prepared.length;pi++){
-          if(prepared[pi]&&prepared[pi].id){
-            saveDetailCache(prepared[pi].id,prepared[pi]);
-            if(prepared[pi].volatility)pvol[String(prepared[pi].id)]=prepared[pi].volatility
-          }
-        }
-        rows.forEach(function(r){var v=pvol[String(r.id)];if(v&&!r.volatility)r.volatility=v});
+        var rows=mergeBootstrap(body);
         if(rows.length){
-          state.races=rows;saveRaceCache(d,cacheCircuit,rows);state.loading=false;state.error=null;render();openFirstRace();
-          if(topMode){
-            var hasCentral=rows.some(function(z){return z.circuit==='中央'}),
-                hasLocal=rows.some(function(z){return z.circuit==='地方'});
-            if((!hasCentral||!hasLocal)&&attempts<12){
-              setTimeout(request,700);
-            }
+          state.races=rows;
+          saveRaceCache(d,'__ALL__',rows);
+          state.loading=false;state.error=null;
+          render();
+
+          // Everything local is now in memory. Missing source rows continue to prepare invisibly.
+          if(!body.complete&&attempts<4){
+            setTimeout(requestBootstrap,650+attempts*450)
           }
           return
         }
-        if(attempts<12){setTimeout(request,600);return}
+        if(attempts<5){setTimeout(requestBootstrap,500+attempts*350);return}
         state.loading=false;render()
       })
       .catch(function(){
         if(seq!==state.requestSeq||state.date!==d)return;
-        if(attempts<5){setTimeout(request,650*attempts);return}
+        if(attempts<4){setTimeout(requestBootstrap,550*attempts);return}
         if(!hasCache){state.loading=false;state.error='取得に失敗しました。更新を押して再試行できます。';render()}
       })
   }
-  if(hasCache&&!force)setTimeout(request,2500);else request()
+
+  // Never wait 2.5s behind local cache. Show cache immediately, refresh full site immediately.
+  requestBootstrap()
 }
 
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
@@ -2877,12 +3010,12 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v125";
+SW = r'''const CACHE="kraiz-shell-v127";
 const SHELL=[
   "/",
-  "/styles-kraiz-v125.css",
-  "/app-v125.js",
-  "/manifest-kraiz-v125.webmanifest",
+  "/styles-kraiz-v127.css",
+  "/app-v127.js",
+  "/manifest-kraiz-v127.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
@@ -3056,6 +3189,16 @@ def _normalize_sex(value: str) -> str:
     if s.startswith("牝"):
         return "牝"
     return "牡"
+
+
+
+def _scratch_status(value: str) -> str:
+    s=_clean(value)
+    if not s:return ""
+    if "競走除外" in s or "除外" in s:return "除外"
+    if "出走取消" in s or "取消" in s:return "取消"
+    if "欠場" in s:return "欠場"
+    return ""
 
 
 def _normalize_weather(value: str) -> str:
@@ -3283,6 +3426,7 @@ class NarStore:
                 carried_weight REAL NOT NULL DEFAULT 0,
                 jockey TEXT NOT NULL DEFAULT '',
                 trainer TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT '',
                 finish INTEGER NOT NULL DEFAULT 0,
                 time_seconds REAL NOT NULL DEFAULT 0,
                 corner_positions_json TEXT NOT NULL DEFAULT '[]',
@@ -3301,6 +3445,9 @@ class NarStore:
         race_cols = {row[1] for row in self.conn.execute("PRAGMA table_info(races)").fetchall()}
         if "scheduled_start_time" not in race_cols:
             self.conn.execute("ALTER TABLE races ADD COLUMN scheduled_start_time TEXT NOT NULL DEFAULT ''")
+        entry_cols = {row[1] for row in self.conn.execute("PRAGMA table_info(entries)").fetchall()}
+        if "status" not in entry_cols:
+            self.conn.execute("ALTER TABLE entries ADD COLUMN status TEXT NOT NULL DEFAULT ''")
         self.conn.execute("UPDATE races SET scheduled_start_time=start_time WHERE scheduled_start_time=''")
         self.conn.commit()
 
@@ -3338,17 +3485,18 @@ class NarStore:
                 self.conn.execute(
                     """
                     INSERT INTO entries(track,date,race_no,frame_no,horse_no,name,sex,age,carried_weight,
-                                        jockey,trainer,finish,time_seconds,corner_positions_json)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                                        jockey,trainer,status,finish,time_seconds,corner_positions_json)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                     ON CONFLICT(track,date,race_no,horse_no) DO UPDATE SET
                       frame_no=excluded.frame_no,name=excluded.name,sex=excluded.sex,age=excluded.age,
                       carried_weight=excluded.carried_weight,jockey=excluded.jockey,trainer=excluded.trainer,
+                      status=CASE WHEN entries.status<>'' THEN entries.status ELSE excluded.status END,
                       finish=excluded.finish,time_seconds=excluded.time_seconds,
                       corner_positions_json=excluded.corner_positions_json
                     """,
                     (
                         e.track, e.date, e.race_no, e.frame_no, e.horse_no, e.name, e.sex, e.age,
-                        e.carried_weight, e.jockey, e.trainer, e.finish, e.time_seconds,
+                        e.carried_weight, e.jockey, e.trainer, "", e.finish, e.time_seconds,
                         json.dumps(corners, ensure_ascii=False),
                     ),
                 )
@@ -4083,7 +4231,8 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
         elif re.search(r"(\d{3})\s*kg",infot):
             try: body_weight=int(re.search(r"(\d{3})\s*kg",infot).group(1))
             except: pass
-        horses.append({"horseNumber":no,"frameNumber":frame_no,"name":name,"age":age,"sex":sex,"carriedWeight":cw,"jockey":jockey,"trainer":trainer,"prizeMoneyAtRace":prize,"recentRaces":past,"winOdds":win_odds or None,"popularity":popularity or None,"bodyWeight":body_weight or None,"bodyWeightChange":body_change,"oddsSource":"JRA公式" if win_odds else "","_jraHorseCname":horse_cname,"_jraCareerComplete":career_complete,"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{}})
+        scratch_status=_scratch_status(_jra_text(tr))
+        horses.append({"horseNumber":no,"frameNumber":frame_no,"name":name,"age":age,"sex":sex,"carriedWeight":cw,"jockey":jockey,"trainer":trainer,"prizeMoneyAtRace":prize,"recentRaces":past,"winOdds":win_odds or None,"popularity":popularity or None,"bodyWeight":body_weight or None,"bodyWeightChange":body_change,"oddsSource":"JRA公式" if win_odds else "","status":scratch_status,"scratched":bool(scratch_status),"_jraHorseCname":horse_cname,"_jraCareerComplete":career_complete,"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{}})
     if not horses:return None
     program=_jra_program_lookup(date,track,race_no)
     if program:title=program.get("title") or title;distance=int(program.get("distance") or distance);surface=program.get("surface") or surface;start=program.get("startTime") or start
@@ -4551,9 +4700,9 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v125","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v127","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
-        "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,
+        "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,"siteBootstrap":True,"autoOdds":True,
         "racedb":RACEDB.status(),
     }
 
@@ -4922,7 +5071,8 @@ def _netkeiba_detail_rows(detail:dict)->list[dict]:
                 try:odds=float(mo.group())
                 except Exception:pass
             if mp:pop=int(mp.group())
-            rows[no or name]={"horseNumber":no,"name":name,"sex":sex,"age":age,"carriedWeight":cw,"jockey":jockey,"trainer":trainer,"bodyWeight":bw,"bodyWeightChange":chg,"winOdds":odds,"popularity":pop,"recentRaces":[],"source":"netkeiba"}
+            scratch_status=_scratch_status(_clean(tr.get_text(" ",strip=True)))
+            rows[no or name]={"horseNumber":no,"name":name,"sex":sex,"age":age,"carriedWeight":cw,"jockey":jockey,"trainer":trainer,"bodyWeight":bw,"bodyWeightChange":chg,"winOdds":odds,"popularity":pop,"status":scratch_status,"scratched":bool(scratch_status),"recentRaces":[],"source":"netkeiba"}
     if past_html:
         soup=BeautifulSoup(past_html,"html.parser")
         for tr in soup.select("tr.HorseList"):
@@ -5032,7 +5182,8 @@ def _parse_nar_live_odds_html(html:str)->dict:
             no=int(mn.group(1))
             om=re.search(r"(?<!\d)(\d+(?:\.\d+)?)(?!\d)",vals[iodd])
             odds=float(om.group(1)) if om else 0.0
-            if odds<=0:continue
+            scratch_status=_scratch_status(vals[iodd])
+            if odds<=0 and not scratch_status:continue
             pop=0
             if ipop>=0 and ipop<len(vals):
                 pm=re.search(r"\d+",vals[ipop]);pop=int(pm.group()) if pm else 0
@@ -5041,8 +5192,9 @@ def _parse_nar_live_odds_html(html:str)->dict:
                 bm=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",vals[ibw])
                 if bm:
                     bw=int(bm.group(1));chg=int(bm.group(2)) if bm.group(2) is not None else None
-            out[no]={"winOdds":odds,"popularity":pop or None,"bodyWeight":bw or None,
-                     "bodyWeightChange":chg,"oddsSource":"NAR公式"}
+            out[no]={"winOdds":odds or None,"popularity":pop or None,"bodyWeight":bw or None,
+                     "bodyWeightChange":chg,"oddsSource":"NAR公式" if odds else "",
+                     "status":scratch_status,"scratched":bool(scratch_status)}
 
     # Current official layout fallback:
     # 枠 | 馬番 | 馬名 | 単勝 | 複勝下限 | 複勝上限 | 性齢 | 馬体重 ...
@@ -5054,17 +5206,19 @@ def _parse_nar_live_odds_html(html:str)->dict:
                 m0=re.fullmatch(r"\d{1,2}",vals[0])
                 m1=re.fullmatch(r"\d{1,2}",vals[1]) if len(vals)>1 else None
                 oddm=re.fullmatch(r"\d+(?:\.\d+)?",vals[3]) if len(vals)>3 else None
-                if not (m0 and m1 and oddm):continue
-                no=int(m1.group());odds=float(oddm.group())
-                if no<=0 or odds<=0:continue
+                scratch_status=_scratch_status(vals[3] if len(vals)>3 else "")
+                if not (m0 and m1 and (oddm or scratch_status)):continue
+                no=int(m1.group());odds=float(oddm.group()) if oddm else 0.0
+                if no<=0 or (odds<=0 and not scratch_status):continue
                 bw=0;chg=None
                 for cell in vals[6:10]:
                     bm=re.search(r"(\d{3})\s*(?:[（(]\s*([+\-]?\d+)\s*[）)])?",cell)
                     if bm:
                         bw=int(bm.group(1));chg=int(bm.group(2)) if bm.group(2) is not None else None
                         break
-                out[no]={"winOdds":odds,"popularity":None,"bodyWeight":bw or None,
-                         "bodyWeightChange":chg,"oddsSource":"NAR公式"}
+                out[no]={"winOdds":odds or None,"popularity":None,"bodyWeight":bw or None,
+                         "bodyWeightChange":chg,"oddsSource":"NAR公式" if odds else "",
+                         "status":scratch_status,"scratched":bool(scratch_status)}
 
     ranked=sorted((float(v["winOdds"]),no) for no,v in out.items() if v.get("winOdds"))
     rank=0;last=None
@@ -5075,15 +5229,15 @@ def _parse_nar_live_odds_html(html:str)->dict:
     return out
 
 
-def _nar_live_odds(track:str,iso_date:str,race_no:int)->dict:
+def _nar_live_odds(track:str,iso_date:str,race_no:int,force:bool=False)->dict:
     code=NAR_BABA_CODES.get(str(track or "").strip())
     if not code:return {}
     key=f"{code}|{iso_date}|{race_no}";now=time.time();ttl=int(os.getenv("NAR_LIVE_ODDS_CACHE_SEC","20"))
     with _nar_odds_cache_lock:
         hit=_nar_odds_cache.get(key)
-        if hit and now-hit[0]<ttl:return hit[1]
+        if hit and not force and now-hit[0]<ttl:return hit[1]
 
-    q=urllib.parse.urlencode({"k_babaCode":code,"k_raceDate":iso_date.replace("-","/"),"k_raceNo":int(race_no)})
+    q=urllib.parse.urlencode({"k_babaCode":code,"k_raceDate":iso_date.replace("-","/"),"k_raceNo":int(race_no),"t":int(time.time()*1000) if force else ""})
     urls=[
         "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/OddsTanFuku?"+q,
         "https://www.keiba.go.jp/KeibaWeb_IPAT/TodayRaceInfo/OddsTanFuku_ipat?"+q,
@@ -5134,6 +5288,8 @@ def nar_race_detail(race_id: str) -> dict | None:
                 "id":_stable_id(iso_date,track,race_no,e["horse_no"],e["name"]),"horseNumber":int(e["horse_no"]),
                 "frameNumber":int(e["frame_no"] or 0),"name":e["name"],"age":int(e["age"] or 0),"sex":e["sex"] or "牡",
                 "carriedWeight":float(e["carried_weight"] or 0),"jockey":e["jockey"] or "","trainer":e["trainer"] or "",
+                "status":str(e["status"] or "") if "status" in e.keys() else "",
+                "scratched":bool(_scratch_status(str(e["status"] or ""))) if "status" in e.keys() else False,
                 "jockeyStats":store.stats("jockey",e["jockey"],iso_date),"trainerStats":store.stats("trainer",e["trainer"],iso_date),
                 "jockeyProfile":store.role_profile("jockey",e["jockey"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
                 "trainerProfile":store.role_profile("trainer",e["trainer"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
@@ -5513,18 +5669,19 @@ def _parse_netkeiba_win_odds_payload(raw:str)->dict:
     return out
 
 
-def _netkeiba_live_win_odds(detail:dict)->dict:
+def _netkeiba_live_win_odds(detail:dict,force:bool=False)->dict:
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
         str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0)
     )
     if not rid:return {}
     base="https://race.netkeiba.com/api/api_get_jra_odds.html"
+    nonce=f"&t={int(time.time()*1000)}" if force else ""
     common=f"pid=api_get_jra_odds&race_id={urllib.parse.quote(rid)}&type=1&sort=odds&compress=0&output=json"
-    urls=[f"{base}?{common}&action=update",f"{base}?{common}&action=init"]
+    urls=[f"{base}?{common}&action=update{nonce}",f"{base}?{common}&action=init{nonce}"]
     for url in urls:
         try:
             raw=_netkeiba_get(url,float(os.getenv("NETKEIBA_ODDS_TIMEOUT_SEC","3.0")),
-                              int(os.getenv("NETKEIBA_ODDS_CACHE_SEC","8")))
+                              0 if force else int(os.getenv("NETKEIBA_ODDS_CACHE_SEC","8")))
             out=_parse_netkeiba_win_odds_payload(raw)
             if out:return out
         except Exception as exc:
@@ -6241,9 +6398,22 @@ def _parse_nar_environment_html(html:str)->dict:
     full=re.sub(r"\s+"," ",soup.get_text(" ",strip=True))
     wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
     cm=re.search(r"馬場(?:状態)?\s*[：:]?\s*(不良|稍重|重|良)",full)
-    out={}
+    out={"scratchMap":{}}
     if wm:out["weather"]=_env_clean_weather(wm.group(1))
     if cm:out["condition"]=_env_clean_condition(cm.group(1))
+    for tr in soup.find_all("tr"):
+        tx=_clean(tr.get_text(" ",strip=True))
+        st=_scratch_status(tx)
+        if not st:continue
+        nums=[]
+        for c in tr.find_all(["th","td"])[:4]:
+            m=re.fullmatch(r"\D*(\d{1,2})\D*",_clean(c.get_text(" ",strip=True)))
+            if m:
+                v=int(m.group(1))
+                if 1<=v<=18:nums.append(v)
+        if nums:
+            no=nums[1] if len(nums)>=2 else nums[0]
+            out["scratchMap"][no]=st
     return out
 
 def _parse_jra_environment_html(html:str, surface:str="")->dict:
@@ -6296,9 +6466,10 @@ def _nar_fetch_environment(track:str, iso_date:str, race_no:int)->dict:
             print("NAR environment fetch failed",track,iso_date,race_no,exc);continue
         for k in ("weather","condition"):
             if parsed.get(k) not in (None,"","不明"):out[k]=parsed[k]
-        if out.get("weather") and out.get("condition"):break
+        if parsed.get("scratchMap"):out["scratchMap"]=parsed["scratchMap"]
+        if out.get("weather") and out.get("condition") and "scratchMap" in out:break
     if out:
-        out.update({"source":"NAR公式","updatedAtEpoch":int(time.time())})
+        out.update({"source":"NAR公式","updatedAtEpoch":int(time.time()),"raceNo":int(race_no)})
     return out
 
 def _jra_fetch_environment(row:dict)->dict:
@@ -6358,10 +6529,17 @@ def _patch_nar_environment(date:str, track:str, rows:list[dict], env:dict)->list
                     sets.append("weather=?");args.append(env["weather"])
                 if env.get("condition") not in (None,"","不明"):
                     sets.append("condition=?");args.append(env["condition"])
-                if not sets:continue
-                args.extend([track,date,no])
-                conn.execute("UPDATE races SET "+",".join(sets)+" WHERE track=? AND date=? AND race_no=?",args)
-                affected.append(str(r.get("id") or f"nar-{date}-{track}-{no:02d}"))
+                if sets:
+                    args.extend([track,date,no])
+                    conn.execute("UPDATE races SET "+",".join(sets)+" WHERE track=? AND date=? AND race_no=?",args)
+                    affected.append(str(r.get("id") or f"nar-{date}-{track}-{no:02d}"))
+                scratch_map=env.get("scratchMap") or {}
+                if scratch_map and int(env.get("raceNo") or 0)==no:
+                    for horse_no,status in scratch_map.items():
+                        conn.execute("UPDATE entries SET status=? WHERE track=? AND date=? AND race_no=? AND horse_no=?",
+                                     (str(status),track,date,no,int(horse_no)))
+                    rid=str(r.get("id") or f"nar-{date}-{track}-{no:02d}")
+                    if rid not in affected:affected.append(rid)
     finally:conn.close()
     return affected
 
@@ -7691,7 +7869,10 @@ def _fast_local_race_detail(race_id:str)->dict|None:
             horses.append({"id":_stable_id(iso_date,track,race_no,e["horse_no"],e["name"]),
                 "horseNumber":int(e["horse_no"]),"frameNumber":int(e["frame_no"] or 0),"name":e["name"],
                 "age":int(e["age"] or 0),"sex":e["sex"] or "牡","carriedWeight":float(e["carried_weight"] or 0),
-                "jockey":e["jockey"] or "","trainer":e["trainer"] or "","recentRaces":[],
+                "jockey":e["jockey"] or "","trainer":e["trainer"] or "",
+                "status":str(e["status"] or "") if "status" in e.keys() else "",
+                "scratched":bool(_scratch_status(str(e["status"] or ""))) if "status" in e.keys() else False,
+                "recentRaces":[],
                 "jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{},
                 "collectionState":{"status":"basic","history":"loading","pastRunCount":0}})
             fin=int(e["finish"] or 0)
@@ -7826,7 +8007,7 @@ def _ensure_fast_card_workers():
     with _fast_card_cv:
         if _fast_card_workers_started:return
         _fast_card_workers_started=True
-        workers=max(1,min(2,int(os.getenv("FAST_CARD_WORKERS","2"))))
+        workers=max(1,min(6,int(os.getenv("FAST_CARD_WORKERS","4"))))
         for idx in range(workers):
             threading.Thread(target=_fast_card_worker,daemon=True,name=f"fast-card-worker-{idx+1}").start()
 
@@ -7901,6 +8082,8 @@ def _netkeiba_card_rows_fast(detail:dict)->list[dict]:
             "bodyWeight":int(bm.group(1)) if bm else None,
             "bodyWeightChange":int(bm.group(2)) if bm and bm.group(2) is not None else None,
             "winOdds":odd,"popularity":pop,
+            "status":_scratch_status(_clean(tr.get_text(" ",strip=True))),
+            "scratched":bool(_scratch_status(_clean(tr.get_text(" ",strip=True)))),
             "recentRaces":[],"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{},
             "source":"netkeiba高速出走表",
         })
@@ -8346,8 +8529,8 @@ def environment_pack(date: str = Query(...), circuit: str = Query(...), track: s
 
 
 @app.get("/api/v1/track-pack")
-def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...)):
-    """Return already-prepared race snapshots only. Never calls an external website."""
+def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...), fill: int = Query(1)):
+    """Return venue snapshots from local DB only; fill local-only gaps for instant taps."""
     out=[]
     seen=set()
 
@@ -8367,7 +8550,7 @@ def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Q
                 if not (d.get("horses") or []):continue
                 rid=str(d.get("id") or row["race_id"] or "")
                 if not rid or rid in seen:continue
-                d=_ensure_race_volatility(d);seen.add(rid);out.append(_compact_display_snapshot(d))
+                d=_restore_saved_odds(_ensure_race_volatility(d));seen.add(rid);out.append(_compact_display_snapshot(d))
         finally:
             conn.close()
 
@@ -8386,15 +8569,128 @@ def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Q
                 try:d=json.loads(row["payload"])
                 except Exception:continue
                 if not (d.get("horses") or []):continue
-                d=_ensure_race_volatility(d);seen.add(rid);out.append(_compact_display_snapshot(d))
+                d=_restore_saved_odds(_ensure_race_volatility(d));seen.add(rid);out.append(_compact_display_snapshot(d))
         except sqlite3.OperationalError:
             pass
         finally:
             conn.close()
 
+    # Fill missing races from local stores only. This path never waits on public sites.
+    if fill:
+        try:
+            summaries=nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False)
+        except Exception:
+            summaries=[]
+        targets=[r for r in summaries if str(r.get("track") or "")==str(track) and r.get("id")]
+        missing=[str(r.get("id") or "") for r in targets if str(r.get("id") or "") not in seen]
+        def build_local(rid):
+            try:
+                d=_fast_local_race_detail(rid)
+                if not d:
+                    _schedule_fast_card_refresh(rid,25)
+                    return None
+                d=_restore_saved_odds(d)
+                d=_ensure_race_volatility(d)
+                return _compact_display_snapshot(d)
+            except Exception as exc:
+                print("track-pack local fill failed",rid,exc)
+                return None
+        workers=max(1,min(4,len(missing))) if missing else 0
+        if workers:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                for d in pool.map(build_local,missing):
+                    if d and d.get("id"):
+                        rid=str(d.get("id"))
+                        if rid not in seen:
+                            seen.add(rid)
+                            out.append(d)
+                            _schedule_fast_card_refresh(rid,35+int(d.get("raceNumber") or 0))
     out.sort(key=lambda d:int(d.get("raceNumber") or 0))
-    return {"track":track,"date":date,"circuit":circuit,"races":out,"count":len(out),"source":"local-only"}
+    return {"track":track,"date":date,"circuit":circuit,"races":out,"count":len(out),"source":"local-only","filled":bool(fill)}
 
+
+
+
+_site_bootstrap_lock=threading.Lock()
+_site_bootstrap_cache:dict[str,tuple[float,dict]]={}
+
+def _bootstrap_detail_local(race_id:str)->dict|None:
+    """Build one complete display snapshot from local stores only."""
+    d=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
+    pm=(d or {}).get("preparedMeta") or {}
+    current=bool(d and pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION and pm.get("diagnosisReady"))
+    if not current:
+        try:
+            built=_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=False)
+            if built:d=built
+        except Exception as exc:
+            print("bootstrap diagnosis failed",race_id,exc)
+    if not d:
+        try:d=_fast_local_race_detail(race_id)
+        except Exception:d=None
+    if not d:return None
+    d=_restore_saved_odds(d)
+    d=_ensure_race_volatility(d)
+    return _compact_display_snapshot(d)
+
+def _site_bootstrap_payload(date:str,force:bool=False)->dict:
+    now=time.time()
+    with _site_bootstrap_lock:
+        hit=_site_bootstrap_cache.get(date)
+        if hit and not force and now-hit[0]<8:
+            cached=dict(hit[1]);cached["cached"]=True
+            return cached
+
+    raw=races(date,"",1 if force else 0,0)
+    rows=raw.get("races",[]) if isinstance(raw,dict) else list(raw or [])
+    rows=[r for r in rows if r.get("id")]
+    details=[]
+    if rows:
+        workers=max(1,min(8,int(os.getenv("BOOTSTRAP_WORKERS","6")),len(rows)))
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures={pool.submit(_bootstrap_detail_local,str(r.get("id"))):str(r.get("id")) for r in rows}
+            for fut in as_completed(futures):
+                try:d=fut.result()
+                except Exception as exc:
+                    print("bootstrap race failed",futures[fut],exc);d=None
+                if d and d.get("id"):details.append(d)
+
+    details.sort(key=lambda d:(str(d.get("circuit") or ""),str(d.get("track") or ""),int(d.get("raceNumber") or 0)))
+    ready_ids={str(d.get("id") or "") for d in details}
+    missing=[str(r.get("id") or "") for r in rows if str(r.get("id") or "") not in ready_ids]
+    for rid in missing:_schedule_fast_card_refresh(rid,15)
+
+    payload={
+        "date":date,"races":rows,"details":details,
+        "raceCount":len(rows),"detailCount":len(details),"missing":missing,
+        "complete":len(rows)>0 and len(details)>=len(rows),
+        "cached":False,"generatedAtEpoch":int(time.time()),
+        "source":"local-first-full-bootstrap"
+    }
+    with _site_bootstrap_lock:
+        _site_bootstrap_cache[date]=(time.time(),payload)
+        if len(_site_bootstrap_cache)>6:
+            oldest=min(_site_bootstrap_cache.items(),key=lambda kv:kv[1][0])[0]
+            _site_bootstrap_cache.pop(oldest,None)
+    return payload
+
+@app.get("/api/v1/site-bootstrap")
+def site_bootstrap(date: str = Query(...), force: int = Query(0)):
+    """One request for the whole day: race list + every locally available race detail."""
+    return _site_bootstrap_payload(date,bool(force))
+
+def _site_bootstrap_warm_loop():
+    time.sleep(float(os.getenv("BOOTSTRAP_START_DELAY_SEC","0.2")))
+    while True:
+        try:_site_bootstrap_payload(_today_iso(),False)
+        except Exception as exc:print("bootstrap warm failed",exc)
+        time.sleep(max(8,int(os.getenv("BOOTSTRAP_REFRESH_SEC","15"))))
+
+@app.on_event("startup")
+def _start_site_bootstrap_warmer():
+    enabled=str(os.getenv("KRAIZ_BOOTSTRAP_WARM","1")).lower() in {"1","true","yes","on"}
+    if enabled:
+        threading.Thread(target=_site_bootstrap_warm_loop,daemon=True,name="kraiz-bootstrap").start()
 
 
 @app.get("/api/v1/past-pack/{race_id}")
@@ -8672,7 +8968,7 @@ def payout_refresh(race_id:str):
     return {"raceId":race_id,"payouts":payouts,"source":source,"cached":False,"error":error[:240]}
 
 @app.get("/api/v1/odds-refresh/{race_id}")
-def odds_refresh(race_id:str):
+def odds_refresh(race_id:str, force: int = Query(0)):
     saved=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
     saved_has_odds=bool(saved and any((h.get("winOdds") not in (None,"") and float(h.get("winOdds") or 0)>0) for h in (saved.get("horses") or [])))
     if saved and (saved.get("date")!=_today_iso() or _snapshot_final(saved)) and saved_has_odds:
@@ -8681,7 +8977,7 @@ def odds_refresh(race_id:str):
     if race_id.startswith("nar-"):
         m=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-(.+)-(\d{2})$",race_id)
         if m:
-            odds=_nar_live_odds(m.group(2),m.group(1),int(m.group(3)))
+            odds=_nar_live_odds(m.group(2),m.group(1),int(m.group(3)),bool(force))
             for no,z in sorted(odds.items()):
                 horses.append({"horseNumber":int(no),**{k:v for k,v in z.items() if v is not None}})
             source="NAR公式" if horses else ""
@@ -8693,7 +8989,7 @@ def odds_refresh(race_id:str):
             detail["netkeibaRaceId"]=detail.get("netkeibaRaceId") or _netkeiba_program_race_id(mm.group(1),mm.group(2),int(mm.group(3)))
             merged={}
             try:
-                for no,z in (_netkeiba_live_win_odds(detail) or {}).items(): merged[int(no)]=dict(z)
+                for no,z in (_netkeiba_live_win_odds(detail,bool(force)) or {}).items(): merged[int(no)]=dict(z)
             except Exception as exc: print("fast odds netkeiba failed",race_id,exc)
             try:
                 cname=_jra_find_cname(mm.group(1),mm.group(2),int(mm.group(3)))
@@ -8703,7 +8999,7 @@ def odds_refresh(race_id:str):
                         no=int(h.get("horseNumber") or 0)
                         if not no:continue
                         z=merged.setdefault(no,{})
-                        for k in ("winOdds","popularity","bodyWeight","bodyWeightChange"):
+                        for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched"):
                             if h.get(k) not in (None,""):z[k]=h.get(k)
                     if any((h.get("winOdds") not in (None,"")) for h in (jr.get("horses") or [])):source="JRA公式"
             except Exception as exc: print("fast odds JRA failed",race_id,exc)
@@ -8716,7 +9012,7 @@ def odds_refresh(race_id:str):
                         no=int(h.get("horseNumber") or 0)
                         if not no:continue
                         z=merged.setdefault(no,{})
-                        for k in ("winOdds","popularity","bodyWeight","bodyWeightChange"):
+                        for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched"):
                             if h.get(k) not in (None,""):z[k]=h.get(k)
                     if any(float((z or {}).get("winOdds") or 0)>0 for z in merged.values()):source="netkeiba出馬表"
                 except Exception as exc:print("fast odds card scrape failed",race_id,exc)
@@ -8746,7 +9042,7 @@ def odds_refresh(race_id:str):
                 by_no={int(h.get("horseNumber") or 0):h for h in horses}
                 for h in snapshot.get("horses",[]):
                     update=by_no.get(int(h.get("horseNumber") or 0),{})
-                    for key in ("winOdds","popularity","bodyWeight","bodyWeightChange"):
+                    for key in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched"):
                         if update.get(key) is not None:h[key]=update[key]
                 snapshot["oddsSource"]=source
                 snapshot["oddsUpdatedAt"]=_now_jst().strftime("%H:%M:%S")
@@ -8754,6 +9050,9 @@ def odds_refresh(race_id:str):
                 try:RACEDB.upsert_race(snapshot)
                 except Exception:pass
         except Exception as exc:print("odds snapshot update failed",exc)
+        try:
+            with _site_bootstrap_lock:_site_bootstrap_cache.pop(_today_iso(),None)
+        except Exception:pass
     if not horses:
         try:
             stored=RACEDB.odds_latest(race_id) or []
@@ -8762,6 +9061,84 @@ def odds_refresh(race_id:str):
                 source=next((str(x.get("oddsSource") or "") for x in stored if x.get("oddsSource")),"保存済み")
         except Exception:pass
     return {"raceId":race_id,"horses":horses,"oddsSource":source,"oddsUpdatedAt":_now_jst().strftime("%H:%M:%S"),"storedInRaceDB":bool(horses)}
+
+
+_auto_odds_lock=threading.Lock()
+_auto_odds_last:dict[str,float]={}
+_auto_odds_state={"running":False,"lastStart":0,"lastFinish":0,"checked":0,"updated":0,"error":""}
+
+def _auto_odds_targets()->list[dict]:
+    date=_today_iso();rows=[]
+    try:rows.extend(nar_race_summaries(date))
+    except Exception:pass
+    try:rows.extend(central_race_summaries(date,allow_network=False))
+    except Exception:pass
+    nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
+    out=[]
+    for r in rows:
+        if not r.get("id") or _snapshot_final(r):continue
+        start=_race_minutes_server(r)
+        if start>=9999:
+            out.append(r);continue
+        remain=start-nowm
+        if remain < -8:continue
+        out.append(r)
+    out.sort(key=lambda r:_race_minutes_server(r))
+    return out
+
+def _auto_odds_cycle():
+    global _auto_odds_state
+    with _auto_odds_lock:
+        if _auto_odds_state.get("running"):return
+        _auto_odds_state.update({"running":True,"lastStart":int(time.time()),"checked":0,"updated":0,"error":""})
+    checked=updated=0;errors=[]
+    try:
+        now=time.time();targets=[]
+        nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
+        for r in _auto_odds_targets():
+            rid=str(r.get("id") or "");start=_race_minutes_server(r)
+            remain=(start-nowm) if start<9999 else 9999
+            cadence=30 if remain<=30 else 60 if remain<=180 else 180
+            last=float(_auto_odds_last.get(rid,0))
+            if now-last<cadence:continue
+            _auto_odds_last[rid]=now;targets.append(r)
+        def one(r):
+            rid=str(r.get("id") or "")
+            try:
+                body=odds_refresh(rid,0)
+                return rid,bool((body or {}).get("horses"))
+            except Exception as exc:
+                return rid,exc
+        workers=max(1,min(4,int(os.getenv("AUTO_ODDS_WORKERS","3")),len(targets))) if targets else 0
+        if workers:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                for rid,res in pool.map(one,targets):
+                    checked+=1
+                    if res is True:updated+=1
+                    elif isinstance(res,Exception):errors.append(rid+": "+str(res))
+    finally:
+        with _auto_odds_lock:
+            _auto_odds_state.update({
+                "running":False,"lastFinish":int(time.time()),"checked":checked,
+                "updated":updated,"error":" | ".join(errors[-5:])
+            })
+
+def _auto_odds_loop():
+    time.sleep(float(os.getenv("AUTO_ODDS_START_DELAY_SEC","0.7")))
+    while True:
+        try:_auto_odds_cycle()
+        except Exception as exc:print("auto odds cycle failed",exc)
+        time.sleep(max(15,int(os.getenv("AUTO_ODDS_LOOP_SEC","20"))))
+
+@app.on_event("startup")
+def _start_auto_odds_collector():
+    enabled=str(os.getenv("KRAIZ_AUTO_ODDS","1")).lower() in {"1","true","yes","on"}
+    if enabled:
+        threading.Thread(target=_auto_odds_loop,daemon=True,name="kraiz-auto-odds").start()
+
+@app.get("/api/v1/odds-auto-status")
+def odds_auto_status():
+    with _auto_odds_lock:return dict(_auto_odds_state)
 
 
 @app.post("/api/v1/racedb/analysis/{race_id}")
@@ -8850,7 +9227,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v125","appVersion":"12.5-odds-fix-v125",
+        "build":"v127","appVersion":"12.7-full-bootstrap-v127",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -8894,7 +9271,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v125.css")
+@app.get("/styles-kraiz-v127.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"public, max-age=31536000, immutable"})
@@ -8902,13 +9279,13 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v125.js")
+@app.get("/app-v127.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"public, max-age=31536000, immutable"})
 
 @app.get("/manifest-v86.webmanifest")
-@app.get("/manifest-kraiz-v125.webmanifest")
+@app.get("/manifest-kraiz-v127.webmanifest")
 @app.get("/manifest-kraiz-v88.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
