@@ -380,7 +380,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v132.js"></script>
+<script src="/app-v133.js"></script>
 </body>
 </html>"""
 
@@ -1811,8 +1811,8 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(sessionStorage.getItem("kraiz-sw-reload")!=="v132-fast"){
-          sessionStorage.setItem("kraiz-sw-reload","v132-fast");
+        if(sessionStorage.getItem("kraiz-sw-reload")!=="v133-edge-only"){
+          sessionStorage.setItem("kraiz-sw-reload","v133-edge-only");
           location.reload()
         }
       }catch(e){}
@@ -2153,7 +2153,7 @@ function assignPredictionMarks(rows,r){
   })
 }
 function raceMode(r){r=r||{};if(['平地','新馬','障害'].indexOf(r.analysisMode)>=0)return r.analysisMode;var title=String(r.title||'');if(r.surface==='障害'||/障害|J[･・.]?G[ⅠⅡⅢ123]|\bJS\b|ジャンプ/i.test(title))return '障害';return /新馬|メイクデビュー/.test(title)?'新馬':'平地'}
-function saveRaceAnalysis(r,p){if(r.date!==today()||isFinal(r))return;try{if(!r||!r.id||!p)return;var meta=r.preparedMeta||{},key=String(r.id)+'|'+String(meta.preparedAtEpoch||0)+'|'+String((r.horses||[]).length);if(state.analysisSaved[key])return;state.analysisSaved[key]=1;var sc=(p.scenarios||[]).map(function(z){return{code:z.code,prob:z.prob,horses:(z.horses||[]).map(function(h){return n(h.horseNumber)})}}),hs=(p.rows||[]).map(function(x){var h=x.horse||{},fit=x.fit||{};return{horseNumber:n(h.horseNumber),name:h.name||'',mark:x.predMark||'',grade:x.overallGrade||'',score:x.overallScore,expectedStyle:x.expected||'',pastStyle:x.pastStyle||'',stylePoint:x.score,fadeRate:x.fade,goProb:x.goProb,ten:x.ten,frontStay:x.frontStay,fit:fit,analysisMode:raceMode(r)}});fetch('/api/v1/racedb/analysis/'+encodeURIComponent(r.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({generatedAt:new Date().toISOString(),mode:raceMode(r),engineVersion:(p.engineVersion||'kraiz-commercial-2026.09-v2'),profile:(p.profile||predictionProfile(r)),scenarios:sc,horses:hs})}).catch(function(){delete state.analysisSaved[key]})}catch(e){}}
+function saveRaceAnalysis(r,p){return}
 function isScratchHorse(h){var s=String(h&&h.status||'');return !!(h&&(h.scratched===true||h.withdrawn===true||/欠場|取消|除外/.test(s)))}
 function analysisRace(r){
   var active=(r.horses||[]).filter(function(h){return !isScratchHorse(h)}).map(function(h){
@@ -2312,39 +2312,9 @@ function prewarmVisibleTrackSnapshots(rows){
 
 
 var trackPackBusy={};
-function warmTrackLocal(track,attempt){
-  track=track||state.track;attempt=n(attempt,0);
-  if(!track)return Promise.resolve(0);
-  var key=[state.date,state.circuit,track].join('|');
-  if(trackPackBusy[key])return trackPackBusy[key];
+function warmTrackLocal(track,attempt){return Promise.resolve(0)}
 
-  trackPackBusy[key]=fetch('/api/v1/volatility-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=130&t='+Date.now(),
-      {cache:'no-store'})
-    .then(function(res){if(!res.ok)throw new Error('volatility-pack');return res.json()})
-    .then(function(body){
-      var rows=body.races||[],changed=mergeVolatilityPack(rows),
-          target=state.races.filter(function(x){return x.circuit===state.circuit&&x.track===track}),
-          ready=target.filter(function(x){return x.volatility&&x.volatility.ready}).length;
-      if(changed&&state.track===track&&!state.race)render();
-      if(state.track===track&&!state.race&&ready<target.length&&attempt<3){
-        setTimeout(function(){warmTrackLocal(track,attempt+1)},650+attempt*700)
-      }
-      return rows.length
-    })
-    .catch(function(){
-      if(state.track===track&&!state.race&&attempt<2)setTimeout(function(){warmTrackLocal(track,attempt+1)},900);
-      return 0
-    })
-    .finally(function(){delete trackPackBusy[key]});
-  return trackPackBusy[key]
-}
-
-function prewarmSelectedTrack(track,raceNo){
-  track=track||state.track;if(!track)return;
-  raceNo=n(raceNo,1)||1;
-  fetch('/api/v1/prewarm-track?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&race_no='+encodeURIComponent(raceNo),
-        {method:'POST',cache:'no-store'}).catch(function(){})
-}
+function prewarmSelectedTrack(track,raceNo){return}
 
 function openFirstRace(){return}
 function archivedCacheComplete(r){
@@ -2360,52 +2330,7 @@ function raceOddsComplete(r){
   var hs=(r&&r.horses||[]).filter(function(h){return n(h.horseNumber)>0}),got=hs.filter(function(h){return n(h.winOdds)>0}).length;
   return !!hs.length&&got>=Math.max(1,Math.ceil(hs.length*.75))
 }
-function refreshOddsOnly(force){
-  if(!force)return;
-  var r=state.race;
-  if(!r||state.horseModalNo||state.oddsBusy)return;
-  var archived=r.date!==today()||isFinal(r),
-      cadence=archived?0:oddsRefreshCadence(r),
-      now=Date.now(),oddsKey=String(r.id||''),last=n(state.oddsRefreshAt[oddsKey],0);
-
-  if(archived&&!force&&raceOddsComplete(r))return;
-  if(!archived&&!force&&raceHasOdds(r)&&last&&cadence&&now-last<cadence-1000)return;
-
-  state.oddsRefreshAt[oddsKey]=now;state.oddsBusy=true;
-  var status=document.getElementById('odds-status');
-  if(status)status.textContent=' オッズ取得中…';
-
-  fetch('/api/v1/odds-refresh/'+encodeURIComponent(r.id)+'?force='+(force?1:0)+'&v=130&t='+Date.now(),{cache:'no-store'})
-    .then(function(res){if(!res.ok)throw Error('odds');return res.json()})
-    .then(function(body){
-      if(!state.race||String(state.race.id)!==String(r.id))return;
-      var scratchChanged=false;
-      (body.horses||[]).forEach(function(update){
-        var h=horseByNo(state.race,update.horseNumber);if(!h)return;
-        ['winOdds','popularity','bodyWeight','bodyWeightChange','status','scratched'].forEach(function(k){
-          if(update[k]!=null&&h[k]!==update[k]){h[k]=update[k];if(k==='status'||k==='scratched')scratchChanged=true}
-        });
-        var cell=document.querySelector('[data-odds-no="'+n(update.horseNumber)+'"]');
-        if(cell){
-          var o=n(h.winOdds,0),pop=n(h.popularity,0),os=o>0?(Math.round(o*10)/10).toFixed(1):'--.-';
-          cell.innerHTML='<span class="odd '+(o>0&&o<10?'single':'')+'">'+esc(os)+'</span><span class="pop">'+(pop>0?esc(pop)+'人気':'--人気')+'</span>'
-        }
-      });
-      if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;
-      if(body.oddsSource)state.race.oddsSource=body.oddsSource;
-      saveDetailCache(state.race.id,state.race);
-      if(scratchChanged){try{delete state.race._prediction}catch(e){}state.pred=null;render()}
-      if(status)status.textContent=body.horses&&body.horses.some(function(h){return n(h.winOdds)>0})?' '+esc(body.oddsSource||'オッズ')+' '+(body.oddsUpdatedAt||''):' オッズ待ち'
-    })
-    .catch(function(){if(status)status.textContent=' オッズ取得失敗'})
-    .finally(function(){
-      state.oddsBusy=false;
-      if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}
-      if(state.race===r&&!archived&&cadence){
-        state.oddsTimer=setTimeout(function(){refreshOddsOnly(false)},cadence)
-      }
-    })
-}
+function refreshOddsOnly(force){return}
 function ensureAutoOdds(r){
   if(!r)return;
   if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}
@@ -2417,7 +2342,7 @@ function ensureAutoOdds(r){
     },delay)
   }
 }
-function diagnosisPanel(r,p){var busy=!!state.diagnosisBusy||!!state.autoDiagnosisBusy,ready=diagnosisCurrent(r);return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><div class="diagnosis-refresh-note '+(busy||!ready?'busy':'')+'">'+((busy||!ready)?'全頭診断を自動計算中…':'最新の全頭診断')+'</div><p class="muted">評価点は比較用のモデル値です。的中確率ではありません。</p>'+p.rows.slice().sort(function(a,b){return a.predRank-b.predRank}).map(function(x){var head=ready?(x.predRank+'位 '+esc(x.predMark)+' '+esc(x.horse.name)+'　'+esc(x.overallGrade)+' '+x.overallScore):('— '+esc(x.horse.name)+'　診断準備中');return '<article class="horse-card"><button data-horse-open="'+esc(x.horse.horseNumber)+'"><b>'+head+'</b></button><p>'+(ready?evaluationText(x):'過去走・条件データを確認中')+'</p>'+(ready?'<p>'+esc((x.overallReasons||[]).join(' / ')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:''))+'</p>':'')+'</article>'}).join('')+'</section>'}
+function diagnosisPanel(r,p){var busy=false,ready=!!p;return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><div class="diagnosis-refresh-note '+(busy||!ready?'busy':'')+'">'+((busy||!ready)?'全頭診断を自動計算中…':'最新の全頭診断')+'</div><p class="muted">評価点は比較用のモデル値です。的中確率ではありません。</p>'+p.rows.slice().sort(function(a,b){return a.predRank-b.predRank}).map(function(x){var head=ready?(x.predRank+'位 '+esc(x.predMark)+' '+esc(x.horse.name)+'　'+esc(x.overallGrade)+' '+x.overallScore):('— '+esc(x.horse.name)+'　診断準備中');return '<article class="horse-card"><button data-horse-open="'+esc(x.horse.horseNumber)+'"><b>'+head+'</b></button><p>'+(ready?evaluationText(x):'過去走・条件データを確認中')+'</p>'+(ready?'<p>'+esc((x.overallReasons||[]).join(' / ')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:''))+'</p>':'')+'</article>'}).join('')+'</section>'}
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=(h.allPastRuns||h.recentRaces||[]).slice(0,5);return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：過去走0（正常）':'過去走0件：基礎情報で評価済み')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){return '<section id="section-pace" class="card"><h2>展開AI</h2><p class="muted">A/B/Cシナリオと隊列予想。利用できるデータ量に応じて評価信頼度を調整します。</p>'+scenarioProbabilitySection(p)+paceBoard(r,p)+'</section>'}
 function resultPanel(r){return '<section id="section-result" class="card"><h2>レース結果</h2>'+(isFinal(r)?renderResult(r)+renderPayouts(r)+renderActualFlow(r):'<div class="muted">結果はまだ確定していません。</div>')+'</section>'}
@@ -2601,30 +2526,29 @@ function mergeEnvironmentPack(rows){
   return changed
 }
 function refreshEnvironmentLocal(track,attempt){
-  track=track||state.track;attempt=n(attempt,0);
+  track=track||state.track;
   if(!track||state.environmentBusy)return;
   state.environmentBusy=true;
-  fetch('/api/v1/environment-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=130&t='+Date.now(),{cache:'no-store'})
-    .then(function(res){if(!res.ok)throw Error('environment');return res.json()})
+  fetch(
+    'https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='
+    +encodeURIComponent(state.date)
+    +'&details=0&t='+Date.now(),
+    {cache:'no-store'}
+  )
+    .then(function(res){
+      if(!res.ok)throw Error('edge-environment '+res.status);
+      return res.json()
+    })
     .then(function(body){
-      if(state.track!==track&&!(state.race&&state.race.track===track))return;
-      var changed=mergeEnvironmentPack(body.races||[]);
-      if(changed)render();
-      var unresolved=(body.races||[]).some(function(x){return !validEnvironmentValue(x.weather)||!validEnvironmentValue(x.condition)});
-      if(state.date===today()&&unresolved&&attempt<4){
-        setTimeout(function(){refreshEnvironmentLocal(track,attempt+1)},650+attempt*550)
-      }
+      var rows=(body&&body.races)||[];
+      rows=rows.filter(function(x){
+        return String(x.track||'')===String(track)
+          &&String(x.circuit||'')===String(state.circuit||'')
+      });
+      if(mergeEnvironmentPack(rows))render()
     })
-    .catch(function(){
-      if(state.date===today()&&attempt<2)setTimeout(function(){refreshEnvironmentLocal(track,attempt+1)},900)
-    })
-    .finally(function(){
-      state.environmentBusy=false;
-      if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}
-      if(state.date===today()&&(state.track===track||(state.race&&state.race.track===track))){
-        state.environmentTimer=setTimeout(function(){refreshEnvironmentLocal(track,0)},30000)
-      }
-    })
+    .catch(function(){})
+    .finally(function(){state.environmentBusy=false})
 }
 
 
@@ -2695,10 +2619,6 @@ function renderRace(){
   var r=applySummaryEnvironment(state.race),p=predict(r);
   state.race=r;state.pred=p;
   if(!state.openPanel)state.openPanel='entry';
-  if(!diagnosisCurrent(r))setTimeout(function(){try{ensureAutoDiagnosis(r.id)}catch(e){}},0);
-  setTimeout(function(){try{ensureAutoOdds(r)}catch(e){}},0);
-  idleTask(function(){if(state.race&&String(state.race.id)===String(r.id))warmPastPack(r)},1800);
-  setTimeout(function(){try{if(diagnosisCurrent(r))saveRaceAnalysis(r,p)}catch(e){}},0);
   var top=p.scenarios.slice().sort(function(a,b){return b.prob-a.prob})[0];
   if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=top?top.code:null;
   return '<div class="smart-shell">'+
@@ -2771,7 +2691,7 @@ function activeScenarioPlan(p){if(!p)return null;var code=state.scenarioCode||''
 function scenarioProbabilitySection(p){var top=p.scenarios.slice().sort(function(a,b){return b.prob-a.prob})[0],active=(state.scenarioCode&&p.plans&&p.plans[state.scenarioCode])?state.scenarioCode:top.code,front=p.rows.filter(function(x){return x.goProb>=.52}),sand=front.filter(function(x){return x.sandwichRisk}),highFade=front.filter(function(x){return x.fade>=.50}),occ=p.occ||{rate:0,early:[],moved:[]},activeScenario=p.scenarios.filter(function(s){return s.code===active})[0]||top;return'<section class="card pace-card"><div class="section-title">展開シナリオ</div><div class="scenario-prob-grid">'+p.scenarios.map(function(s){return'<button type="button" data-scenario-code="'+esc(s.code)+'" class="scenario-prob-card '+(s.code===active?'active':'')+'"><small>'+s.code+'</small><b>'+esc(s.title)+'</b><strong>'+Math.round(s.prob*100)+'%</strong>'+horseBadgeList(s.horses)+'</button>'}).join('')+'</div><div class="scenario-main-note"><span>表示中シナリオ</span><b>'+esc(activeScenario.code)+' '+esc(activeScenario.title)+'　'+Math.round(activeScenario.prob*100)+'%</b>'+horseBadgeList(activeScenario.horses)+'</div><div class="scenario-diagnostics"><div class="scenario-diagnostic"><small>先行馬占有率</small><b>'+Math.round(occ.rate*100)+'%</b></div><div class="scenario-diagnostic"><small>最初から前</small>'+horseBadgeList(occ.early)+'</div><div class="scenario-diagnostic"><small>途中から上昇</small>'+horseBadgeList(occ.moved)+'</div><div class="scenario-diagnostic"><small>今回前候補</small>'+horseBadgeList(front)+'</div></div><div class="scenario-warning">'+(sand.length?'逃げハサミ警戒 '+horseBadgeList(sand):'')+(highFade.length>=2?'　高下がり率 '+horseBadgeList(highFade):'')+'</div></section>'}
 function paceBoard(r,p){var hs=(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}),plan=activeScenarioPlan(p)||p.plan,stages=plan.stages||[],cp=courseProfile(r);return'<section class="card ai-flow-card"><div class="ai-flow-head"><span class="ai-flow-bars"><i></i><i></i><i></i></span><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div><div class="ai-flow-sub">過去走・脚質・枠順・テン・隣接圧力から局面ごとの隊列を表示</div></div><span class="ai-flow-scenario">'+esc(plan.scenario.code)+' '+esc(plan.scenario.title)+'</span></div><div class="ai-stage-tabs">'+stages.map(function(s,i){return'<button data-pace-stage="'+i+'" class="'+(i===0?'active':'')+'">'+esc(s.label)+'</button>'}).join('')+'</div><div class="ai-race-swipe-hint">図の左半分タップ＝前の局面　／　右半分タップ＝次の局面</div><div class="ai-race-topline"><div class="ai-race-meta-chip">'+esc(r.track)+'　'+esc(r.distance)+'m　'+esc(cp.turn)+(cp.shape==='straight'?'':'回り')+'</div><div class="ai-race-axis-strip"><span>← 後方</span><span>前方・先頭 →</span></div></div><div class="ai-race-board-wrap"><div id="pace-board" class="ai-race-visual">'+hs.map(function(h){return'<div class="ai-race-runner" data-horse="'+esc(h.horseNumber)+'" style="left:10%;top:50%">'+badge(h)+'</div>'}).join('')+'</div></div><div id="course-order" class="ai-race-order-panel">隊列を準備中</div><div id="pace-event" class="ai-stage-event">展開イベントを準備中</div><div class="ai-race-note">赤枠内は馬番のみ表示。説明文は下に分離し、右が先頭、左が後方です。</div></section>'}
 function historySearchSection(r){var hs=r.historySearch||{},cv=hs.coverage||{},months=n(hs.monthsDone),max=n(hs.maxMonths,60),progress=max?clamp(months/max*100,4,96):8,counts=cv.counts||{},isCentral=r.circuit==='中央',horseHtml=(r.horses||[]).map(function(h){var c=n(counts[h.name]);return'<span>'+badge(h)+esc(h.name||'')+' <b>'+Math.min(5,c)+'/5</b></span>'}).join(''),src=isCentral?'中央データを過去へさかのぼり':'NAR公式履歴を過去へさかのぼり';return'<section class="card history-search-card"><div class="history-search-head"><span class="history-spinner"></span><div><div class="history-search-title">直近5走を取得中</div><div class="history-search-sub">全頭について'+src+'、直近最大5走を確認します。キャリア5走未満の馬は存在する全走を取得した時点で確定し、固定値では埋めません。取得した過去レースは詳細画面から開けます。</div></div></div><div class="history-progress"><i style="width:'+progress+'%"></i></div><div class="history-stats"><span>検索 '+months+' / '+max+'か月</span><span>'+(isCentral?'履歴確定 ':'5走取得 ')+n(isCentral?(cv.horsesResolved||cv.horsesWith5Plus):cv.horsesWith5Plus)+' / '+n(cv.totalHorses,(r.horses||[]).length)+'頭</span><span>履歴あり '+n(cv.horsesWithHistory)+'頭</span><span>取得 '+n(cv.totalRuns)+'走</span></div><div class="history-horses">'+horseHtml+'</div></section>'}
-function scheduleHistoryPoll(id){if(state.horseModalNo||!state.race)return;var partial=!!(state.race.preparedMeta&&state.race.preparedMeta.fastPartial);if(!partial&&(state.race.date!==today()||isFinal(state.race)))return;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}var delay=partial?900:15000;state.historyTimer=setTimeout(function(){fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=93',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(!state.race||String(state.race.id)!==String(id))return;var changed=JSON.stringify(state.race)!==JSON.stringify(body);if(!state.horseModalNo&&changed){state.race=body;saveDetailCache(id,body);render()}var stillPartial=!!(body.preparedMeta&&body.preparedMeta.fastPartial);if(stillPartial||(body.date===today()&&!isFinal(body)))scheduleHistoryPoll(id)}).catch(function(){if(state.race&&String(state.race.id)===String(id))scheduleHistoryPoll(id)})},delay)}
+function scheduleHistoryPoll(id){return}
 function prefetchNextHistory(){return;var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.id}),now=nowMins();a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});a.slice(0,6).forEach(function(x,idx){if(!x||state.historyPrefetch[x.id])return;var cached=loadDetailCache(x.id);if(cached&&(cached.horses||[]).length){state.historyPrefetch[x.id]=1;return}state.historyPrefetch[x.id]=1;setTimeout(function(){fetch('/api/v1/race/'+encodeURIComponent(x.id)+'?history=0&prepared=1&v=84',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){saveDetailCache(x.id,body)}).catch(function(){delete state.historyPrefetch[x.id]})},idx*90)})}
 
 function waitForRaceReady(id,seq,attempt){
@@ -2779,62 +2699,42 @@ function waitForRaceReady(id,seq,attempt){
   if(seq!==state.detailSeq)return;
   setTimeout(function(){
     if(seq!==state.detailSeq)return;
-    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=130&t='+Date.now(),{cache:'no-store'})
-      .then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})})
-      .then(function(x){
-        if(seq!==state.detailSeq)return;
-        if(x.status===202||x.body.status==='preparing'){
-          if(attempt<50){waitForRaceReady(id,seq,attempt+1);return}
-          throw new Error('preparing timeout')
-        }
-        var body=x.body;
-        state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();
-        if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)
-      })
-      .catch(function(){
-        if(seq!==state.detailSeq)return;
-        if(attempt<50){waitForRaceReady(id,seq,attempt+1);return}
-        state.raceLoading=null;state.error='レース詳細を準備中です。もう一度押してください。';render()
-      })
-  },attempt<4?400:700)
+    fetchEdgeRace(id).then(function(body){
+      if(seq!==state.detailSeq)return;
+      if(body){
+        state.raceLoading=null;
+        state.race=applySummaryEnvironment(body);
+        render();
+        return
+      }
+      if(attempt<4){
+        waitForRaceReady(id,seq,attempt+1);
+        return
+      }
+      state.raceLoading=null;
+      state.error='Cloudflare同期待ちです。少し後でもう一度更新してください。';
+      render()
+    })
+  },500+attempt*350)
 }
 function refreshPayoutsOnly(attempt){
-  attempt=n(attempt,0);
-  var r=state.race;if(!r||!r.id||!isFinal(r)||state.payoutBusy)return;
-  if(((r.result||{}).payouts||[]).length)return;
-  state.payoutBusy=true;render();
-  fetch('/api/v1/payouts/'+encodeURIComponent(r.id)+'?t='+Date.now(),{cache:'no-store'})
-    .then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()})
+  var r=state.race;
+  if(!r||!r.id||state.payoutBusy)return;
+  state.payoutBusy=true;
+  fetchEdgeRace(r.id)
     .then(function(body){
-      if(!state.race||String(state.race.id)!==String(r.id))return;
-      state.race.result=state.race.result||{};
-      if((body.payouts||[]).length){
-        state.race.result.payouts=body.payouts;
-        state.race.result.payoutSource=body.source||'';
-        state.race.result.payoutError='';
-        saveDetailCache(r.id,state.race)
-      }else{
-        state.race.result.payoutError=body.error||'払い戻し未取得'
-      }
+      if(!body||!state.race||String(state.race.id)!==String(r.id))return;
+      state.race=applySummaryEnvironment(body);
+      saveDetailCache(r.id,state.race);
+      render()
     })
-    .catch(function(){if(state.race&&String(state.race.id)===String(r.id))state.race.result.payoutError='払い戻し取得に失敗'})
-    .finally(function(){
-      state.payoutBusy=false;
-      if(state.race&&String(state.race.id)===String(r.id)){
-        render();
-        if(!((state.race.result||{}).payouts||[]).length&&attempt<2)setTimeout(function(){refreshPayoutsOnly(attempt+1)},1200)
-      }
-    })
+    .catch(function(){})
+    .finally(function(){state.payoutBusy=false})
 }
 
 
 
-function prepareRacePriority(id){
-  if(!id)return;
-  fetch('/api/v1/prepare-race/'+encodeURIComponent(id)+'?v=117&t='+Date.now(),{
-    method:'POST',cache:'no-store'
-  }).catch(function(){})
-}
+function prepareRacePriority(id){return}
 function idleTask(fn,delay){
   delay=n(delay,1200);
   if(window.requestIdleCallback){
@@ -2846,55 +2746,11 @@ function diagnosisCurrent(r){
   var pm=r&&r.preparedMeta||{};
   return pm.diagnosisReady===true&&pm.diagnosisVersion==='kraiz-commercial-2026.09-v9'
 }
-function ensureAutoDiagnosis(id){
-  if(!id||!state.race||String(state.race.id)!==String(id))return;
-  if(diagnosisCurrent(state.race)){autoDiagnosisAttempts[id]=0;return}
-  if(autoDiagnosisJobs[id])return;
-
-  prepareRacePriority(id);
-  autoDiagnosisJobs[id]=1;
-  state.autoDiagnosisBusy=true;
-
-  fetch('/api/v1/race/'+encodeURIComponent(id)+'/diagnosis-refresh?v=118&t='+Date.now(),{
-    method:'POST',cache:'no-store'
-  })
-    .then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})})
-    .then(function(x){
-      if(!state.race||String(state.race.id)!==String(id))return;
-      if(x.body&&x.body.race){
-        state.race=x.body.race;
-        try{delete state.race._prediction}catch(e){}
-        state.pred=null;state.analysisSaved={};
-        saveDetailCache(id,state.race);render()
-      }
-    })
-    .catch(function(){})
-    .finally(function(){
-      delete autoDiagnosisJobs[id];
-      state.autoDiagnosisBusy=false;
-      if(!state.race||String(state.race.id)!==String(id))return;
-      if(!diagnosisCurrent(state.race)){
-        var a=(autoDiagnosisAttempts[id]||0)+1;autoDiagnosisAttempts[id]=a;
-        if(a<=7)setTimeout(function(){ensureAutoDiagnosis(id)},650+Math.min(a,4)*250)
-      }else{
-        autoDiagnosisAttempts[id]=0;
-      }
-    })
-}
-function checkSnapshotVersion(id,cached,seq){fetch('/api/v1/race/'+encodeURIComponent(id)+'/version',{cache:'no-store'}).then(function(res){if(!res.ok)throw Error('version');return res.json()}).then(function(v){if(seq!==state.detailSeq||v.revision===(cached.preparedMeta||{}).revision)return null;return fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0',{cache:'no-store'}).then(function(res){if(!res.ok)throw Error('snapshot');return res.json()})}).then(function(body){if(body&&seq===state.detailSeq){state.race=body;saveDetailCache(id,body);render()}}).catch(function(){})}
+function ensureAutoDiagnosis(id){return}
+function checkSnapshotVersion(id,cached,seq){return}
 
 var pastPackJobs={};
-function warmPastPack(r){
-  if(!r||!r.id||pastPackJobs[r.id])return;
-  pastPackJobs[r.id]=1;
-  fetch('/api/v1/past-pack/'+encodeURIComponent(r.id)+'?v=116',{cache:'no-store'})
-    .then(function(res){if(!res.ok)throw Error('past-pack');return res.json()})
-    .then(function(body){
-      (body.races||[]).forEach(function(x){if(x&&x.id)saveDetailCache(x.id,x)})
-    })
-    .catch(function(){})
-    .finally(function(){delete pastPackJobs[r.id]})
-}
+function warmPastPack(r){return}
 
 function openRace(id,keepStack,skipHistory){
   if(!id||state.raceLoading)return;
@@ -2925,62 +2781,68 @@ function openRace(id,keepStack,skipHistory){
   state.race=null;
   render();
 
-  var edgeUrl=edgeRaceUrl(id);
-
-  fetch(edgeUrl,{cache:'no-store'})
-    .then(function(res){
-      if(!res.ok)throw Error('edge '+res.status);
-      return res.json()
-    })
-    .then(function(x){
+  fetchEdgeRace(id)
+    .then(function(body){
       if(seq!==state.detailSeq)return;
-      var body=x&&x.detail?x.detail:null;
-      if(!body||!((body.horses||[]).length||isFinal(body)))throw Error('edge detail missing');
-      body=applySummaryEnvironment(body);
+      if(!body)throw Error('edge detail missing');
       state.raceLoading=null;
-      state.race=body;
-      instantTrackDetails[String(id)]=body;
-      saveDetailCache(id,body);
+      state.race=applySummaryEnvironment(body);
+      instantTrackDetails[String(id)]=state.race;
+      saveDetailCache(id,state.race);
       render()
     })
     .catch(function(){
       if(seq!==state.detailSeq)return;
-      return fetch(
-        '/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=131',
-        {cache:'no-store'}
-      )
-      .then(function(res){
-        return res.json().then(function(body){
-          return {status:res.status,body:body}
-        })
-      })
-      .then(function(x){
-        if(seq!==state.detailSeq)return;
-        if(x.status===202||x.body.status==='preparing'){
-          waitForRaceReady(id,seq,0);
-          return
-        }
-        var body=applySummaryEnvironment(x.body);
-        state.raceLoading=null;
-        state.race=body;
-        saveDetailCache(id,body);
+      state.raceLoading=null;
+      var fallback=instantTrackDetails[String(id)]||loadDetailCache(id);
+      if(fallback){
+        state.race=applySummaryEnvironment(fallback);
         render();
-        if(body.enrichmentSearch&&body.enrichmentSearch.status==='running'){
-          scheduleHistoryPoll(id)
-        }
-      })
-      .catch(function(){
-        if(seq!==state.detailSeq)return;
-        if(String(state.raceLoading)!==String(id))return;
-        state.raceLoading=null;
-        state.error='レース詳細の取得に失敗しました';
-        if(state.raceStack.length)state.race=state.raceStack.pop();
-        render()
-      })
+        return
+      }
+      state.error='Cloudflareにこのレース詳細がまだありません。次回同期後に更新してください。';
+      if(state.raceStack.length)state.race=state.raceStack.pop();
+      render()
     })
 }
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
-function reloadCurrent(){if(state.loading)return;if(state.race&&(state.race.date!==today()||isFinal(state.race))){render();return;}if(state.race&&state.race.id){var previous=state.race,seq=++state.detailSeq,id=state.race.id,isPast=state.raceStack.length>0;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&prepared=1&history=0&v=88'+(isPast?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.detailSeq)return;state.raceLoading=null;if(!state.horseModalNo&&JSON.stringify(state.race)!==JSON.stringify(body)){state.race=body;saveDetailCache(id,body);render()}if(body.date===today()&&!isFinal(body))scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;state.raceLoading=null;state.race=previous;state.error='更新に失敗しました';render()});return}try{localStorage.removeItem(cacheKey(state.date,state.circuit))}catch(e){}state.races=[];load(true)}
+function reloadCurrent(){
+  if(state.loading)return;
+
+  if(state.race&&state.race.id){
+    var id=state.race.id,previous=state.race,seq=++state.detailSeq;
+    state.raceLoading=String(id);
+    state.race=null;
+    render();
+
+    fetchEdgeRace(id)
+      .then(function(body){
+        if(seq!==state.detailSeq)return;
+        state.raceLoading=null;
+        if(body){
+          state.race=applySummaryEnvironment(body);
+          instantTrackDetails[String(id)]=state.race;
+          saveDetailCache(id,state.race);
+        }else{
+          state.race=previous;
+          state.error='Cloudflare同期待ちです。'
+        }
+        render()
+      })
+      .catch(function(){
+        if(seq!==state.detailSeq)return;
+        state.raceLoading=null;
+        state.race=previous;
+        state.error='更新に失敗しました';
+        render()
+      });
+    return
+  }
+
+  try{localStorage.removeItem(cacheKey(state.date,state.circuit))}catch(e){}
+  state.races=[];
+  load(true)
+}
 function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}
 function refreshRaceAfterCollect(id,attempt){attempt=n(attempt,0);if(!id)return;fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=87',{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(!state.race||String(state.race.id)!==String(id))return;state.race=body;saveDetailCache(id,body);state.collectingHorse=null;render();if(((body.enrichmentSearch&&body.enrichmentSearch.status==='running')||(body.historySearch&&body.historySearch.status==='running'))&&attempt<8){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,attempt+1)},500)}}).catch(function(){if(!state.race||String(state.race.id)!==String(id))return;if(attempt<5){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,attempt+1)},650);return}state.collectingHorse=null;render()})}
 function collectRaceInfo(no){if(state.race&&(state.race.date!==today()||isFinal(state.race)))return;if(!state.race||!state.race.id)return;var id=state.race.id;state.collectingHorse=no||'all';render();var u='/api/v1/race/'+encodeURIComponent(id)+'/collect?force=1'+(no?'&horse_no='+encodeURIComponent(no):'');fetch(u,{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,0)},250)}).catch(function(){state.collectingHorse=null;render()})}
@@ -3038,33 +2900,15 @@ function installEdgeBack(){
 
 function refreshDiagnosisNow(id){
   if(!id||!state.race)return;
-  state.diagnosisBusy=true;
+  state.diagnosisBusy=false;
   state.analysisSaved={};
   try{delete state.race._prediction}catch(e){}
-  state.pred=null;render();
-  fetch('/api/v1/race/'+encodeURIComponent(id)+'/diagnosis-refresh?v=118&t='+Date.now(),{method:'POST',cache:'no-store'})
-    .then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})})
-    .then(function(x){
-      if(!state.race||String(state.race.id)!==String(id))return;
-      if(x.status===200&&x.body&&x.body.race){
-        state.race=x.body.race;
-        try{delete state.race._prediction}catch(e){}
-        state.pred=null;
-        saveDetailCache(id,state.race);
-      }
-    })
-    .catch(function(){})
-    .finally(function(){
-      state.diagnosisBusy=false;
-      if(state.race&&String(state.race.id)===String(id)){
-        try{delete state.race._prediction}catch(e){}
-        state.pred=null;render()
-      }
-    })
+  state.pred=null;
+  render()
 }
 function pollDiagnosisRefresh(id,attempt){return}
 
-function bind(){document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;state.openPanel=opening?key:null;render();if(opening&&key==='diagnosis'&&state.race&&!diagnosisCurrent(state.race))refreshDiagnosisNow(state.race.id);if(opening&&key==='history'&&state.race)warmPastPack(state.race);if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);window.scrollTo(0,0);render();warmTrackSnapshots(state.track,true)};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)});if(row)state.track=row.track;window.scrollTo(0,0);openRace(id,false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
+function bind(){document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;state.openPanel=opening?key:null;render();if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);window.scrollTo(0,0);render();warmTrackSnapshots(state.track,true)};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)});if(row)state.track=row.track;window.scrollTo(0,0);openRace(id,false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
 function initPaceBoard(){if(!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;drawPaceStage(clamp(state.paceStage,0,plan.stages.length-1))}
 
 function hydrateInstantFromDevice(rows){
@@ -3224,16 +3068,16 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v132-fast";
+SW = r'''const CACHE="kraiz-shell-v133-edge-only";
 const STATIC=[
   "/styles-kraiz-v130.css",
-  "/app-v132.js",
+  "/app-v133.js",
   "/manifest-kraiz-v130.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
 ];
-const LAST_PAGE="/__kraiz_last_page_v132_fast__";
+const LAST_PAGE="/__kraiz_last_page_v133_edge_only__";
 
 self.addEventListener("install",event=>{
   event.waitUntil(
@@ -9672,7 +9516,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v132","appVersion":"13.2-edge-prefetch-v132",
+        "build":"v133","appVersion":"13.3-edge-only-browse-v133",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -9691,8 +9535,8 @@ def home():
     # by the browser; Render remains the fallback for live/manual refreshes.
     boot='<script>window.__KRAIZ_BOOTSTRAP__=null;</script>'
     html=INDEX.replace(
-        '<script src="/app-v132.js"></script>',
-        boot+'\n<script src="/app-v132.js"></script>'
+        '<script src="/app-v133.js"></script>',
+        boot+'\n<script src="/app-v133.js"></script>'
     )
     return HTMLResponse(html, headers={
         "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
@@ -9734,6 +9578,7 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
+@app.get("/app-v133.js")
 @app.get("/app-v132.js")
 @app.get("/app-v131.js")
 @app.get("/app-v130.js")
