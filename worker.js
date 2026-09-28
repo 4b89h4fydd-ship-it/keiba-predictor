@@ -1,23 +1,18 @@
-function authorized(request, env) {
-  const expected = String(env.SYNC_TOKEN || "").trim();
+if (!authorized(request, env)) {
+  const expectedLength =
+    String(env.SYNC_TOKEN || "").trim().length;
 
-  const headerToken = String(
-    request.headers.get("x-sync-token") || ""
-  ).trim();
+  const headerLength =
+    String(
+      request.headers.get("x-sync-token") || ""
+    ).trim().length;
 
-  const auth = String(
-    request.headers.get("authorization") || ""
-  );
-
-  const bearerToken = auth.startsWith("Bearer ")
-    ? auth.slice(7).trim()
-    : "";
-
-  return (
-    expected.length > 0 &&
-    (
-      headerToken === expected ||
-      bearerToken === expected
-    )
-  );
+  return json({
+    ok: false,
+    error: "unauthorized",
+    debug: {
+      cloudflare_token_length: expectedLength,
+      github_token_length: headerLength
+    }
+  }, 401);
 }
