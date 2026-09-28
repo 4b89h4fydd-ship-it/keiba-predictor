@@ -2,5 +2,12 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "kraiz-api",
   "main": "worker.js",
-  "compatibility_date": "2026-09-28"
+  "compatibility_date": "2026-09-28",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kraiz-prod",
+      "database_id": "c68ca1ac-357a-4c1f-81ce-0b6337716809"
+    }
+  ]
 }
