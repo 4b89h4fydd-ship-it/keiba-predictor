@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="12.2-sticky-home-v122")
+app = FastAPI(title="KRAIZ", version="12.3-live-environment-v123")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "kraiz-commercial-2026.09-v9"
@@ -371,15 +371,15 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KRAIZ">
-<link rel="manifest" href="/manifest-kraiz-v122.webmanifest">
-<link rel="stylesheet" href="/styles-kraiz-v122.css">
+<link rel="manifest" href="/manifest-kraiz-v123.webmanifest">
+<link rel="stylesheet" href="/styles-kraiz-v123.css">
 <title>KRAIZ | TACTICAL RACING</title>
 <link rel="icon" type="image/png" href="/kraiz-icon-192.png">
 <link rel="apple-touch-icon" href="/kraiz-icon-192.png">
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v122.js"></script>
+<script src="/app-v123.js"></script>
 </body>
 </html>"""
 
@@ -1725,7 +1725,7 @@ function coursePathD(p){if(p.shape==="straight")return "M18 92 L182 92";if(p.sha
 function normFrac(x){x=x%1;return x<0?x+1:x}
 function courseStageFrac(r,st){var p=courseProfile(r);if(p.shape==="straight")return st===0?.05:(st===1?.67:.92);var laps=Math.max(.1,n(r.distance,1200)/p.lap),start=normFrac(.965-p.dir*(laps%1)),prog=st===0?.015:(st===1?.81:.965);return normFrac(start+p.dir*laps*prog)}
 var app=document.getElementById("app");
-var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,detailSeq:0,raceReturnPicker:false,historyTimer:null,raceStack:[],historyPrefetch:{},paceStage:0,horseModalNo:null,collectingHorse:null,collectTimer:null,scenarioCode:null,analysisSaved:{},openPanel:null,oddsBusy:false,lastOddsRefreshAt:0,oddsTimer:null};
+var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,detailSeq:0,raceReturnPicker:false,historyTimer:null,raceStack:[],historyPrefetch:{},paceStage:0,horseModalNo:null,collectingHorse:null,collectTimer:null,scenarioCode:null,analysisSaved:{},openPanel:null,oddsBusy:false,lastOddsRefreshAt:0,oddsTimer:null,environmentTimer:null,environmentBusy:false};
 var autoDiagnosisJobs={},autoDiagnosisAttempts={};
 
 
@@ -2145,7 +2145,7 @@ function warmTrackLocal(track,attempt){
   var key=[state.date,state.circuit,track].join('|');
   if(trackPackBusy[key])return trackPackBusy[key];
 
-  trackPackBusy[key]=fetch('/api/v1/volatility-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=122&t='+Date.now(),
+  trackPackBusy[key]=fetch('/api/v1/volatility-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=123&t='+Date.now(),
       {cache:'no-store'})
     .then(function(res){if(!res.ok)throw new Error('volatility-pack');return res.json()})
     .then(function(body){
@@ -2262,7 +2262,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span>'+volatilityBadge(x)+'<span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v122</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v123</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean">'+
     (back?'<button class="smart-back" data-action="back" aria-label="戻る">‹</button>':'<span class="smart-back-space"></span>')+
@@ -2371,6 +2371,78 @@ function mergeVolatilityPack(rows){
 }
 
 
+
+function validEnvironmentValue(v){return !!(v&&v!=='不明'&&v!=='—')}
+function applySummaryEnvironment(detail){
+  if(!detail||!detail.id)return detail;
+  var row=state.races.find(function(x){return String(x.id)===String(detail.id)});
+  if(!row)return detail;
+  var changed=false;
+  ['weather','condition'].forEach(function(k){
+    if(validEnvironmentValue(row[k])&&detail[k]!==row[k]){detail[k]=row[k];changed=true}
+  });
+  if(row.environmentMeta)detail.environmentMeta=row.environmentMeta;
+  if(changed){
+    try{delete detail._prediction}catch(e){}
+    state.pred=null
+  }
+  return detail
+}
+function mergeEnvironmentPack(rows){
+  var map={},changed=false;
+  (rows||[]).forEach(function(x){if(x&&x.id)map[String(x.id)]=x});
+  state.races.forEach(function(r){
+    var z=map[String(r.id)];if(!z)return;
+    ['weather','condition'].forEach(function(k){
+      if(validEnvironmentValue(z[k])&&r[k]!==z[k]){r[k]=z[k];changed=true}
+    });
+    if(z.environmentMeta)r.environmentMeta=z.environmentMeta
+  });
+  if(state.race){
+    var z=map[String(state.race.id)];
+    if(z){
+      var raceChanged=false;
+      ['weather','condition'].forEach(function(k){
+        if(validEnvironmentValue(z[k])&&state.race[k]!==z[k]){state.race[k]=z[k];raceChanged=true;changed=true}
+      });
+      if(z.environmentMeta)state.race.environmentMeta=z.environmentMeta;
+      if(raceChanged){
+        try{delete state.race._prediction}catch(e){}
+        state.pred=null;state.analysisSaved={};saveDetailCache(state.race.id,state.race)
+      }
+    }
+  }
+  if(changed)persistRaceSummaryCache();
+  return changed
+}
+function refreshEnvironmentLocal(track,attempt){
+  track=track||state.track;attempt=n(attempt,0);
+  if(!track||state.environmentBusy)return;
+  state.environmentBusy=true;
+  fetch('/api/v1/environment-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=123&t='+Date.now(),{cache:'no-store'})
+    .then(function(res){if(!res.ok)throw Error('environment');return res.json()})
+    .then(function(body){
+      if(state.track!==track&&!(state.race&&state.race.track===track))return;
+      var changed=mergeEnvironmentPack(body.races||[]);
+      if(changed)render();
+      var unresolved=(body.races||[]).some(function(x){return !validEnvironmentValue(x.weather)||!validEnvironmentValue(x.condition)});
+      if(state.date===today()&&unresolved&&attempt<4){
+        setTimeout(function(){refreshEnvironmentLocal(track,attempt+1)},650+attempt*550)
+      }
+    })
+    .catch(function(){
+      if(state.date===today()&&attempt<2)setTimeout(function(){refreshEnvironmentLocal(track,attempt+1)},900)
+    })
+    .finally(function(){
+      state.environmentBusy=false;
+      if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}
+      if(state.date===today()&&(state.track===track||(state.race&&state.race.track===track))){
+        state.environmentTimer=setTimeout(function(){refreshEnvironmentLocal(track,0)},30000)
+      }
+    })
+}
+
+
 function mergeTrackPack(rows){
   var changed=false;
   (rows||[]).forEach(function(d){
@@ -2397,7 +2469,7 @@ function venueRaceRows(){
         return '<button class="smart-race-row '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'">'+
           '<strong>'+no+'R</strong>'+
           '<span class="smart-race-time">'+(isFinal(r)?'確定':timeHtml(r))+'</span>'+
-          '<span class="smart-race-title"><b>'+esc(r.title||no+'R')+'</b><small>'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.condition||'')+'</small></span>'+
+          '<span class="smart-race-title"><b>'+esc(r.title||no+'R')+'</b><small>'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'不明')+' / '+esc(r.condition||'不明')+'</small></span>'+
           volatilityBadge(r)+
           '<span class="smart-chevron">›</span>'+
         '</button>'
@@ -2435,8 +2507,8 @@ function renderRaceLoading(){
   '</div>'
 }
 function renderRace(){
-  var r=state.race,p=predict(r);
-  state.pred=p;
+  var r=applySummaryEnvironment(state.race),p=predict(r);
+  state.race=r;state.pred=p;
   if(!state.openPanel)state.openPanel='entry';
   setTimeout(function(){try{ensureAutoDiagnosis(r.id)}catch(e){}},0);
   setTimeout(function(){try{ensureAutoOdds(r)}catch(e){}},420);
@@ -2635,7 +2707,7 @@ function warmPastPack(r){
     .finally(function(){delete pastPackJobs[r.id]})
 }
 
-function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=cached;render();if(cached.date<today()||isFinal(cached)){if(!archivedCacheComplete(cached))prepareRacePriority(id);return}checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=118',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=x.body;state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
+function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=applySummaryEnvironment(cached);render();if(cached.date<today()||isFinal(cached)){if(!archivedCacheComplete(cached))prepareRacePriority(id);return}checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=118',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=applySummaryEnvironment(x.body);state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
 function reloadCurrent(){if(state.loading)return;if(state.race&&(state.race.date!==today()||isFinal(state.race))){render();return;}if(state.race&&state.race.id){var previous=state.race,seq=++state.detailSeq,id=state.race.id,isPast=state.raceStack.length>0;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&prepared=1&history=0&v=88'+(isPast?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.detailSeq)return;state.raceLoading=null;if(!state.horseModalNo&&JSON.stringify(state.race)!==JSON.stringify(body)){state.race=body;saveDetailCache(id,body);render()}if(body.date===today()&&!isFinal(body))scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;state.raceLoading=null;state.race=previous;state.error='更新に失敗しました';render()});return}try{localStorage.removeItem(cacheKey(state.date,state.circuit))}catch(e){}state.races=[];load(true)}
 function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}
@@ -2721,7 +2793,7 @@ function refreshDiagnosisNow(id){
 }
 function pollDiagnosisRefresh(id,attempt){return}
 
-function bind(){document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;state.openPanel=opening?key:null;render();if(opening&&key==='diagnosis'&&state.race)refreshDiagnosisNow(state.race.id);if(opening&&key==='history'&&state.race)warmPastPack(state.race);if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);window.scrollTo(0,0);render();warmTrackLocal(state.track);prewarmSelectedTrack(state.track,1)};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)});if(row)state.track=row.track;prepareRacePriority(id);window.scrollTo(0,0);openRace(id,false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
+function bind(){document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;state.openPanel=opening?key:null;render();if(opening&&key==='diagnosis'&&state.race)refreshDiagnosisNow(state.race.id);if(opening&&key==='history'&&state.race)warmPastPack(state.race);if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);window.scrollTo(0,0);render();refreshEnvironmentLocal(state.track,0);warmTrackLocal(state.track);prewarmSelectedTrack(state.track,1)};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)});if(row)state.track=row.track;if(row)refreshEnvironmentLocal(row.track,0);prepareRacePriority(id);window.scrollTo(0,0);openRace(id,false,false)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
 function initPaceBoard(){if(!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;drawPaceStage(clamp(state.paceStage,0,plan.stages.length-1))}
 function load(force){
   var d=state.date,c=state.circuit,topMode=!state.track&&!state.race,
@@ -2739,7 +2811,7 @@ function load(force){
   var attempts=0;
   function request(){
     attempts+=1;
-    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(requestCircuit)+(force?'&force=1':'')+'&bundle=1&v=122',{cache:'no-store'})
+    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(requestCircuit)+(force?'&force=1':'')+'&bundle=1&v=123',{cache:'no-store'})
       .then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()})
       .then(function(body){
         if(seq!==state.requestSeq||state.date!==d)return;
@@ -2792,12 +2864,12 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v122";
+SW = r'''const CACHE="kraiz-shell-v123";
 const SHELL=[
   "/",
-  "/styles-kraiz-v122.css",
-  "/app-v122.js",
-  "/manifest-kraiz-v122.webmanifest",
+  "/styles-kraiz-v123.css",
+  "/app-v123.js",
+  "/manifest-kraiz-v123.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
@@ -3231,7 +3303,9 @@ class NarStore:
                     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                     ON CONFLICT(track,date,race_no) DO UPDATE SET
                       start_time=excluded.start_time,title=excluded.title,distance=excluded.distance,
-                      weather=excluded.weather,condition=excluded.condition,field_size=excluded.field_size,
+                      weather=CASE WHEN excluded.weather NOT IN ('','不明') THEN excluded.weather ELSE races.weather END,
+                      condition=CASE WHEN excluded.condition NOT IN ('','不明') THEN excluded.condition ELSE races.condition END,
+                      field_size=excluded.field_size,
                       prize1=excluded.prize1,prize2=excluded.prize2,prize3=excluded.prize3,
                       prize4=excluded.prize4,prize5=excluded.prize5,corners_json=excluded.corners_json
                     """,
@@ -3562,9 +3636,36 @@ class CentralStore:
         n = 0
         with self.conn:
             for raw in rows:
-                r = normalize_central_race(raw)
-                if not r:
+                incoming = normalize_central_race(raw)
+                if not incoming:
                     continue
+                old_row=self.conn.execute("SELECT payload FROM central_races WHERE id=?",(incoming["id"],)).fetchone()
+                if old_row:
+                    try:old=json.loads(old_row["payload"])
+                    except Exception:old={}
+                    merged=dict(old) if isinstance(old,dict) else {}
+                    # Lightweight schedule rows must never erase a prepared card/result.
+                    for k,v in incoming.items():
+                        if k=="horses":
+                            if isinstance(v,list) and v:merged[k]=v
+                            continue
+                        if k=="result":
+                            if isinstance(v,dict) and v:merged[k]=v
+                            continue
+                        if k in {"weather","condition"}:
+                            if v not in (None,"","不明"):merged[k]=v
+                            elif k not in merged:merged[k]="不明"
+                            continue
+                        if k=="fieldSize":
+                            if int(v or 0)>0:merged[k]=int(v)
+                            continue
+                        if v not in (None,"",0,[]):
+                            merged[k]=v
+                        elif k not in merged:
+                            merged[k]=v
+                    r=normalize_central_race(merged) or incoming
+                else:
+                    r=incoming
                 self.conn.execute(
                     """INSERT INTO central_races(id,date,track,race_no,payload,updated_at)
                        VALUES(?,?,?,?,?,?)
@@ -4437,7 +4538,7 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v122","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v123","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
         "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,
         "racedb":RACEDB.status(),
@@ -6024,6 +6125,270 @@ def _apply_enrichment(race_id:str,detail:dict)->dict:
     return detail
 
 
+
+# --- v123 live weather / going -----------------------------------------
+_environment_lock=threading.Lock()
+_environment_running:set[str]=set()
+_environment_state:dict[str,dict]={}
+_environment_http_lock=threading.Lock()
+_environment_http_cache:dict[str,tuple[float,dict]]={}
+
+def _env_clean_weather(v:str)->str:
+    s=_clean(v)
+    for x in ("小雨","小雪","晴","曇","雨","雪"):
+        if x in s:return x
+    return "不明"
+
+def _env_clean_condition(v:str)->str:
+    s=_clean(v)
+    for x in ("不良","稍重","重","良"):
+        if x in s:return x
+    return "不明"
+
+def _parse_nar_environment_html(html:str)->dict:
+    if not html:return {}
+    soup=BeautifulSoup(html,"html.parser")
+    full=re.sub(r"\s+"," ",soup.get_text(" ",strip=True))
+    wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
+    cm=re.search(r"馬場(?:状態)?\s*[：:]?\s*(不良|稍重|重|良)",full)
+    out={}
+    if wm:out["weather"]=_env_clean_weather(wm.group(1))
+    if cm:out["condition"]=_env_clean_condition(cm.group(1))
+    return out
+
+def _parse_jra_environment_html(html:str, surface:str="")->dict:
+    if not html:return {}
+    soup=BeautifulSoup(html,"html.parser")
+    full=_jra_text(soup)
+    out={"surfaceConditions":{}}
+    wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
+    if wm:out["weather"]=_env_clean_weather(wm.group(1))
+    for surf,label in (("芝","芝"),("ダート","ダート")):
+        cm=re.search(re.escape(label)+r"\s*[：:]?\s*(不良|稍重|重|良)",full)
+        if cm:out["surfaceConditions"][surf]=_env_clean_condition(cm.group(1))
+    if surface=="障害":
+        c=out["surfaceConditions"].get("芝") or out["surfaceConditions"].get("ダート")
+    else:
+        c=out["surfaceConditions"].get(surface)
+    if c:out["condition"]=c
+    return out
+
+def _environment_http_get(url:str, ttl:int=30)->str:
+    now=time.time()
+    with _environment_http_lock:
+        hit=_environment_http_cache.get(url)
+        if hit and now-hit[0]<ttl:return str(hit[1].get("html") or "")
+    req=urllib.request.Request(url,headers={
+        "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
+        "Accept-Language":"ja-JP,ja;q=0.9",
+    })
+    with urllib.request.urlopen(req,timeout=float(os.getenv("RACE_ENV_TIMEOUT_SEC","2.8"))) as res:
+        html=_jra_decode(res.read())
+    with _environment_http_lock:
+        _environment_http_cache[url]=(now,{"html":html})
+        if len(_environment_http_cache)>80:
+            oldest=min(_environment_http_cache.items(),key=lambda kv:kv[1][0])[0]
+            _environment_http_cache.pop(oldest,None)
+    return html
+
+def _nar_fetch_environment(track:str, iso_date:str, race_no:int)->dict:
+    code=NAR_BABA_CODES.get(str(track or "").strip())
+    if not code or not race_no:return {}
+    q=urllib.parse.urlencode({"k_babaCode":code,"k_raceDate":iso_date.replace("-","/"),"k_raceNo":int(race_no)})
+    urls=[
+        "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/DebaTableSmall?"+q,
+        "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/RaceMarkTable?"+q,
+    ]
+    out={}
+    for url in urls:
+        try:parsed=_parse_nar_environment_html(_environment_http_get(url,25 if iso_date==_today_iso() else 86400))
+        except Exception as exc:
+            print("NAR environment fetch failed",track,iso_date,race_no,exc);continue
+        for k in ("weather","condition"):
+            if parsed.get(k) not in (None,"","不明"):out[k]=parsed[k]
+        if out.get("weather") and out.get("condition"):break
+    if out:
+        out.update({"source":"NAR公式","updatedAtEpoch":int(time.time())})
+    return out
+
+def _jra_fetch_environment(row:dict)->dict:
+    date=str(row.get("date") or "")
+    track=str(row.get("track") or "")
+    race_no=int(row.get("raceNumber") or 0)
+    surface=str(row.get("surface") or "")
+    cname=str(row.get("jraCname") or "")
+    if not cname:
+        try:cname=_jra_find_cname(date,track,race_no)
+        except Exception:cname=""
+    out={}
+    if cname:
+        try:
+            html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,20 if date==_today_iso() else 86400)
+            out=_parse_jra_environment_html(html,surface)
+        except Exception as exc:
+            print("JRA environment official failed",date,track,race_no,exc)
+    # Secondary source only fills a field the official page did not provide.
+    if out.get("weather") in (None,"","不明") or out.get("condition") in (None,"","不明"):
+        try:
+            meta=_netkeiba_race_meta(row)
+            if out.get("weather") in (None,"","不明") and meta.get("weather") not in (None,"","不明"):
+                out["weather"]=_env_clean_weather(meta.get("weather"))
+            if out.get("condition") in (None,"","不明") and meta.get("condition") not in (None,"","不明"):
+                out["condition"]=_env_clean_condition(meta.get("condition"))
+        except Exception as exc:
+            print("JRA environment secondary failed",date,track,race_no,exc)
+    if out.get("weather") not in (None,"","不明") or out.get("condition") not in (None,"","不明"):
+        out.update({"source":"JRA公式優先","updatedAtEpoch":int(time.time())})
+    return out
+
+def _race_minutes_server(row:dict)->int:
+    m=re.match(r"^(\d{1,2}):(\d{2})",str(row.get("startTime") or row.get("scheduledStartTime") or ""))
+    return int(m.group(1))*60+int(m.group(2)) if m else 9999
+
+def _upcoming_rows(rows:list[dict])->list[dict]:
+    if not rows:return []
+    if str(rows[0].get("date") or "")!=_today_iso():return rows
+    nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
+    future=[r for r in rows if _race_minutes_server(r)>=nowm-12 and not _snapshot_final(r)]
+    return future or [r for r in rows if not _snapshot_final(r)] or rows[-1:]
+
+def _patch_nar_environment(date:str, track:str, rows:list[dict], env:dict)->list[str]:
+    if not env:return []
+    affected=[]
+    upcoming=_upcoming_rows(rows)
+    if not upcoming:return affected
+    conn=_new_conn(DB_PATH)
+    try:
+        with conn:
+            for r in upcoming:
+                no=int(r.get("raceNumber") or 0)
+                if not no:continue
+                sets=[];args=[]
+                if env.get("weather") not in (None,"","不明"):
+                    sets.append("weather=?");args.append(env["weather"])
+                if env.get("condition") not in (None,"","不明"):
+                    sets.append("condition=?");args.append(env["condition"])
+                if not sets:continue
+                args.extend([track,date,no])
+                conn.execute("UPDATE races SET "+",".join(sets)+" WHERE track=? AND date=? AND race_no=?",args)
+                affected.append(str(r.get("id") or f"nar-{date}-{track}-{no:02d}"))
+    finally:conn.close()
+    return affected
+
+def _patch_central_environment(rows:list[dict], env_by_surface:dict, weather:str)->list[str]:
+    if not rows:return []
+    upcoming=_upcoming_rows(rows)
+    st=CentralStore();affected=[]
+    try:
+        for r in upcoming:
+            z=dict(r)
+            changed=False
+            if weather not in (None,"","不明") and z.get("weather")!=weather:
+                z["weather"]=weather;changed=True
+            surf=str(z.get("surface") or "")
+            cond=env_by_surface.get(surf) or (env_by_surface.get("芝") if surf=="障害" else None)
+            if cond not in (None,"","不明") and z.get("condition")!=cond:
+                z["condition"]=cond;changed=True
+            if changed:
+                z["environmentMeta"]={"source":"JRA公式優先","updatedAtEpoch":int(time.time())}
+                st.upsert([z]);affected.append(str(z.get("id") or ""))
+    finally:
+        st.conn.close()
+    return [x for x in affected if x]
+
+def _refresh_track_environment(date:str,circuit:str,track:str,force:bool=False)->dict:
+    key=f"{date}|{circuit}|{track}"
+    with _environment_lock:
+        state=_environment_state.get(key) or {}
+        if state.get("running"):return dict(state)
+        if not force and int(time.time())-int(state.get("updatedAtEpoch") or 0)<25:
+            return dict(state)
+        _environment_state[key]={"running":True,"updatedAtEpoch":int(state.get("updatedAtEpoch") or 0),"changed":0,"error":""}
+    affected=[];error=""
+    try:
+        rows=nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False)
+        rows=[r for r in rows if str(r.get("track") or "")==str(track)]
+        if not rows:return {"running":False,"changed":0}
+        if circuit=="地方":
+            reps=_upcoming_rows(rows)
+            rep=reps[0] if reps else rows[0]
+            env=_nar_fetch_environment(track,date,int(rep.get("raceNumber") or 0))
+            if env:
+                affected=_patch_nar_environment(date,track,rows,env)
+        else:
+            reps=_upcoming_rows(rows)
+            by_surface={}
+            weather="不明"
+            for surf in ("芝","ダート","障害"):
+                cand=next((r for r in reps if str(r.get("surface") or "")==surf),None)
+                if not cand:continue
+                env=_jra_fetch_environment(cand)
+                if env.get("weather") not in (None,"","不明"):weather=env["weather"]
+                if env.get("condition") not in (None,"","不明"):
+                    by_surface[surf]=env["condition"]
+                for k,v in (env.get("surfaceConditions") or {}).items():
+                    if v not in (None,"","不明"):by_surface[k]=v
+            affected=_patch_central_environment(rows,by_surface,weather)
+
+        if affected:
+            with _race_list_cache_lock:
+                [_race_list_cache.pop(k,None) for k in list(_race_list_cache) if k.startswith(date+"|")]
+            # Only recalc races whose live environment actually changed.
+            for rid in affected:
+                try:_build_fast_diagnosis_snapshot(rid,allow_network=False,deep_context=False)
+                except Exception as exc:print("environment diagnosis rebuild failed",rid,exc)
+    except Exception as exc:
+        error=str(exc);print("track environment refresh failed",date,circuit,track,exc)
+    finally:
+        with _environment_lock:
+            _environment_state[key]={
+                "running":False,"updatedAtEpoch":int(time.time()),"changed":len(affected),"error":error
+            }
+    return dict(_environment_state.get(key) or {})
+
+def _schedule_track_environment(date:str,circuit:str,track:str,force:bool=False)->None:
+    key=f"{date}|{circuit}|{track}"
+    with _environment_lock:
+        if key in _environment_running:return
+        state=_environment_state.get(key) or {}
+        if not force and int(time.time())-int(state.get("updatedAtEpoch") or 0)<25:return
+        _environment_running.add(key)
+    def worker():
+        try:_refresh_track_environment(date,circuit,track,force)
+        finally:
+            with _environment_lock:_environment_running.discard(key)
+    threading.Thread(target=worker,daemon=True,name="env-"+track).start()
+
+def _environment_cycle():
+    date=_today_iso()
+    rows=[]
+    try:rows.extend(nar_race_summaries(date))
+    except Exception:pass
+    try:rows.extend(central_race_summaries(date,allow_network=False))
+    except Exception:pass
+    groups=[]
+    seen=set()
+    for r in rows:
+        key=(str(r.get("circuit") or ""),str(r.get("track") or ""))
+        if not key[0] or not key[1] or key[1]=="帯広" or key in seen:continue
+        seen.add(key);groups.append(key)
+    for circuit,track in groups:
+        _schedule_track_environment(date,circuit,track,False)
+
+def _environment_loop():
+    time.sleep(float(os.getenv("ENVIRONMENT_START_DELAY_SEC","0.8")))
+    while True:
+        try:_environment_cycle()
+        except Exception as exc:print("environment cycle failed",exc)
+        time.sleep(max(30,int(os.getenv("ENVIRONMENT_REFRESH_SEC","45"))))
+
+@app.on_event("startup")
+def _start_environment_collector():
+    enabled=str(os.getenv("KRAIZ_ENVIRONMENT_COLLECTOR","1")).lower() in {"1","true","yes","on"}
+    if enabled:
+        threading.Thread(target=_environment_loop,daemon=True,name="kraiz-environment").start()
+
+
 # --- v82 prepared-race cache -------------------------------------------
 # Race pages should not rebuild every horse's history/stat profile at tap time.
 # We prepare complete display JSON in the background and serve that snapshot first.
@@ -7561,6 +7926,15 @@ def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
     if rows:
         base=_merge_card_rows_preserve(base,rows)
         base["id"]=race_id;base["circuit"]="中央"
+        # Weather/going is a separate lightweight feed; do not let the fast
+        # horse-card path leave the race at "不明".
+        if date==_today_iso() and (base.get("weather") in (None,"","不明") or base.get("condition") in (None,"","不明")):
+            try:
+                env=_jra_fetch_environment(base)
+                if env.get("weather") not in (None,"","不明"):base["weather"]=env["weather"]
+                if env.get("condition") not in (None,"","不明"):base["condition"]=env["condition"]
+                if env:base["environmentMeta"]={"source":env.get("source","JRA公式優先"),"updatedAtEpoch":env.get("updatedAtEpoch",int(time.time()))}
+            except Exception as exc:print("fast JRA environment failed",race_id,exc)
         # One past page hydrates all starters; collector does this before the customer taps.
         if not _diagnosis_history_quality(base).get("ready"):
             base=_merge_fast_history(base,_netkeiba_past_rows_fast(base))
@@ -7806,11 +8180,36 @@ def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0
         if force or not crows:_schedule_central_refresh(date,force=bool(force))
     rows=[x for x in rows if str(x.get("track") or "")!="帯広"]
     rows=_attach_local_volatility_to_summaries(rows)
+    if date==_today_iso():
+        for circuit_name in ("中央","地方"):
+            for track_name in sorted({str(x.get("track") or "") for x in rows if str(x.get("circuit") or "")==circuit_name}):
+                if not track_name:continue
+                subset=[x for x in rows if str(x.get("circuit") or "")==circuit_name and str(x.get("track") or "")==track_name]
+                if any(str(x.get("weather") or "不明")=="不明" or str(x.get("condition") or "不明")=="不明" for x in subset):
+                    _schedule_track_environment(date,circuit_name,track_name,False)
     with _race_list_cache_lock:
         _race_list_cache[ck]=(now,rows)
         if len(_race_list_cache)>24:
             oldest=min(_race_list_cache.items(),key=lambda kv:kv[1][0])[0];_race_list_cache.pop(oldest,None)
     return {"races":rows,"prepared":_local_starter_bundle(rows)} if bundle else rows
+
+
+
+@app.get("/api/v1/environment-pack")
+def environment_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...)):
+    rows=nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False)
+    rows=[r for r in rows if str(r.get("track") or "")==str(track)]
+    out=[{
+        "id":str(r.get("id") or ""),
+        "raceNumber":int(r.get("raceNumber") or 0),
+        "weather":str(r.get("weather") or "不明"),
+        "condition":str(r.get("condition") or "不明"),
+        "environmentMeta":r.get("environmentMeta") or {},
+    } for r in rows if r.get("id")]
+    # If today's environment is still missing, start background refresh but return immediately.
+    if date==_today_iso() and any(x["weather"]=="不明" or x["condition"]=="不明" for x in out):
+        _schedule_track_environment(date,circuit,track,False)
+    return {"date":date,"circuit":circuit,"track":track,"races":out,"count":len(out),"source":"local-only"}
 
 
 @app.get("/api/v1/track-pack")
@@ -8311,14 +8710,14 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v122","appVersion":"12.2-sticky-home-v122",
+        "build":"v123","appVersion":"12.3-live-environment-v123",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
         "commercialCollector":True,"duplicateUpdaterDisabled":True,
         "autoDiagnosis":True,"autoOdds":True,"oddsUsedInPrediction":False,"raceVolatility":"硬/標/荒/大荒・pre-race no-odds",
         "narHydration":"sync_daily/sync_month","history":"JRA one-page / NAR month cache",
-        "raceDataBank":True,"browserDetailCache":True,"gzip":True,
+        "raceDataBank":True,"browserDetailCache":True,"gzip":True,"liveEnvironment":True,"environmentRefreshSec":45,
     }
 
 
@@ -8355,7 +8754,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v122.css")
+@app.get("/styles-kraiz-v123.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"public, max-age=31536000, immutable"})
@@ -8363,13 +8762,13 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v122.js")
+@app.get("/app-v123.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"public, max-age=31536000, immutable"})
 
 @app.get("/manifest-v86.webmanifest")
-@app.get("/manifest-kraiz-v122.webmanifest")
+@app.get("/manifest-kraiz-v123.webmanifest")
 @app.get("/manifest-kraiz-v88.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
