@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="12.9-pwa-launch-fix-v129")
+app = FastAPI(title="KRAIZ", version="13.0-nonblocking-boot-v130")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "kraiz-commercial-2026.09-v9"
@@ -372,15 +372,15 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="KRAIZ">
-<link rel="manifest" href="/manifest-kraiz-v129.webmanifest">
-<link rel="stylesheet" href="/styles-kraiz-v129.css">
+<link rel="manifest" href="/manifest-kraiz-v130.webmanifest">
+<link rel="stylesheet" href="/styles-kraiz-v130.css">
 <title>KRAIZ | TACTICAL RACING</title>
 <link rel="icon" type="image/png" href="/kraiz-icon-192.png">
 <link rel="apple-touch-icon" href="/kraiz-icon-192.png">
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v129.js"></script>
+<script src="/app-v130.js"></script>
 </body>
 </html>"""
 
@@ -1811,8 +1811,8 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(sessionStorage.getItem("kraiz-sw-reload")!=="v129"){
-          sessionStorage.setItem("kraiz-sw-reload","v129");
+        if(sessionStorage.getItem("kraiz-sw-reload")!=="v130"){
+          sessionStorage.setItem("kraiz-sw-reload","v130");
           location.reload()
         }
       }catch(e){}
@@ -2238,7 +2238,7 @@ function warmTrackSnapshots(track,high){
   track=track||state.track;if(!track)return Promise.resolve(0);
   var key=[state.date,state.circuit,track].join('|');
   if(trackSnapshotJobs[key])return trackSnapshotJobs[key];
-  trackSnapshotJobs[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&fill=1&v=129&t='+Date.now(),{cache:'no-store'})
+  trackSnapshotJobs[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&fill=1&v=130&t='+Date.now(),{cache:'no-store'})
     .then(function(res){if(!res.ok)throw Error('track-pack');return res.json()})
     .then(function(body){
       var rows=body.races||[];
@@ -2266,7 +2266,7 @@ function prewarmVisibleTrackSnapshots(rows){
     setTimeout(function(){
       var key=[state.date,x.circuit,x.track].join('|');
       if(trackSnapshotJobs[key])return;
-      trackSnapshotJobs[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(x.circuit)+'&track='+encodeURIComponent(x.track)+'&fill=1&v=129&t='+Date.now(),{cache:'no-store'})
+      trackSnapshotJobs[key]=fetch('/api/v1/track-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(x.circuit)+'&track='+encodeURIComponent(x.track)+'&fill=1&v=130&t='+Date.now(),{cache:'no-store'})
         .then(function(res){if(!res.ok)throw Error('track-pack');return res.json()})
         .then(function(body){
           (body.races||[]).forEach(function(d){
@@ -2291,7 +2291,7 @@ function warmTrackLocal(track,attempt){
   var key=[state.date,state.circuit,track].join('|');
   if(trackPackBusy[key])return trackPackBusy[key];
 
-  trackPackBusy[key]=fetch('/api/v1/volatility-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=129&t='+Date.now(),
+  trackPackBusy[key]=fetch('/api/v1/volatility-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=130&t='+Date.now(),
       {cache:'no-store'})
     .then(function(res){if(!res.ok)throw new Error('volatility-pack');return res.json()})
     .then(function(body){
@@ -2347,7 +2347,7 @@ function refreshOddsOnly(force){
   var status=document.getElementById('odds-status');
   if(status)status.textContent=' オッズ取得中…';
 
-  fetch('/api/v1/odds-refresh/'+encodeURIComponent(r.id)+'?force='+(force?1:0)+'&v=129&t='+Date.now(),{cache:'no-store'})
+  fetch('/api/v1/odds-refresh/'+encodeURIComponent(r.id)+'?force='+(force?1:0)+'&v=130&t='+Date.now(),{cache:'no-store'})
     .then(function(res){if(!res.ok)throw Error('odds');return res.json()})
     .then(function(body){
       if(!state.race||String(state.race.id)!==String(r.id))return;
@@ -2416,7 +2416,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span>'+volatilityBadge(x)+'<span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v129</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v130</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean">'+
     (back?'<button class="smart-back" data-action="back" aria-label="戻る">‹</button>':'<span class="smart-back-space"></span>')+
@@ -2433,7 +2433,7 @@ function smartPageControls(){
 }
 function smartVenueGroup(circuit,label){
   var rows=state.races.filter(function(x){return x.circuit===circuit}),
-      tracks=[],seen={},waiting=!rows.length&&state.loading&&!state.bootstrapReady,
+      tracks=[],seen={},waiting=!rows.length&&state.loading,
       countText=waiting?'準備中':rows.length+'レース';
   rows.forEach(function(r){
     var t=String(r.track||'');
@@ -2576,7 +2576,7 @@ function refreshEnvironmentLocal(track,attempt){
   track=track||state.track;attempt=n(attempt,0);
   if(!track||state.environmentBusy)return;
   state.environmentBusy=true;
-  fetch('/api/v1/environment-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=129&t='+Date.now(),{cache:'no-store'})
+  fetch('/api/v1/environment-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=130&t='+Date.now(),{cache:'no-store'})
     .then(function(res){if(!res.ok)throw Error('environment');return res.json()})
     .then(function(body){
       if(state.track!==track&&!(state.race&&state.race.track===track))return;
@@ -2751,7 +2751,7 @@ function waitForRaceReady(id,seq,attempt){
   if(seq!==state.detailSeq)return;
   setTimeout(function(){
     if(seq!==state.detailSeq)return;
-    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=129&t='+Date.now(),{cache:'no-store'})
+    fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=130&t='+Date.now(),{cache:'no-store'})
       .then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})})
       .then(function(x){
         if(seq!==state.detailSeq)return;
@@ -2868,7 +2868,7 @@ function warmPastPack(r){
     .finally(function(){delete pastPackJobs[r.id]})
 }
 
-function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}state.oddsBusy=false;if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=instantTrackDetails[String(id)]||loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=applySummaryEnvironment(cached);render();if(cached.date<today()||isFinal(cached)){if(!state.bootstrapReady&&!archivedCacheComplete(cached))prepareRacePriority(id);return}if(!state.bootstrapReady)checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=129',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=applySummaryEnvironment(x.body);state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
+function openRace(id,keepStack,skipHistory){if(!id||state.raceLoading)return;if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}state.oddsBusy=false;if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}state.openPanel='entry';var seq=++state.detailSeq;if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}state.horseModalNo=null;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.error=null;state.picker=false;state.scenarioCode=null;state.paceStage=0;var cached=instantTrackDetails[String(id)]||loadDetailCache(id),hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));if(hasCached){state.raceLoading=null;state.race=applySummaryEnvironment(cached);render();if(cached.date<today()||isFinal(cached)){if(!state.bootstrapReady&&!archivedCacheComplete(cached))prepareRacePriority(id);return}if(!state.bootstrapReady)checkSnapshotVersion(id,cached,seq);return}else{state.raceLoading=String(id);state.race=null;render()}fetch('/api/v1/race/'+encodeURIComponent(id)+'?prepared=1&history=0&v=130',{cache:'no-store'}).then(function(res){return res.json().then(function(body){return{status:res.status,body:body}})}).then(function(x){if(seq!==state.detailSeq)return;if(x.status===202||x.body.status==='preparing'){waitForRaceReady(id,seq,0);return}var body=applySummaryEnvironment(x.body);state.raceLoading=null;state.race=body;saveDetailCache(id,body);render();if(body.enrichmentSearch&&body.enrichmentSearch.status==='running')scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;if(hasCached){state.raceLoading=null;state.race=cached;render();return}if(String(state.raceLoading)!==String(id))return;state.raceLoading=null;state.error='レース詳細の取得に失敗しました';if(state.raceStack.length)state.race=state.raceStack.pop();render()})}
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
 function reloadCurrent(){if(state.loading)return;if(state.race&&(state.race.date!==today()||isFinal(state.race))){render();return;}if(state.race&&state.race.id){var previous=state.race,seq=++state.detailSeq,id=state.race.id,isPast=state.raceStack.length>0;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.raceLoading=String(id);state.race=null;render();fetch('/api/v1/race/'+encodeURIComponent(id)+'?refresh=1&prepared=1&history=0&v=88'+(isPast?'&history=0':''),{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(body){if(seq!==state.detailSeq)return;state.raceLoading=null;if(!state.horseModalNo&&JSON.stringify(state.race)!==JSON.stringify(body)){state.race=body;saveDetailCache(id,body);render()}if(body.date===today()&&!isFinal(body))scheduleHistoryPoll(id)}).catch(function(){if(seq!==state.detailSeq)return;state.raceLoading=null;state.race=previous;state.error='更新に失敗しました';render()});return}try{localStorage.removeItem(cacheKey(state.date,state.circuit))}catch(e){}state.races=[];load(true)}
 function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}
@@ -2992,22 +2992,28 @@ function mergeBootstrap(body){
 
 function load(force){
   var d=state.date,seq=++state.requestSeq,
-      serverBundle=(!force&&window.__KRAIZ_BOOTSTRAP__&&window.__KRAIZ_BOOTSTRAP__.date===d&&window.__KRAIZ_BOOTSTRAP__.complete===true)?window.__KRAIZ_BOOTSTRAP__:null,
-      device=force?null:loadFullBundle(d);
+      embedded=(!force&&window.__KRAIZ_BOOTSTRAP__&&window.__KRAIZ_BOOTSTRAP__.date===d)?window.__KRAIZ_BOOTSTRAP__:null,
+      full=force?null:loadFullBundle(d),
+      listCache=force?null:loadRaceCache(d,'__ALL__');
   state.error=null;state.bootstrapReady=false;state.bootstrapProgress=null;
 
-  if(serverBundle){
-    state.races=mergeBootstrap(serverBundle);
+  // 1) Paint anything we already have immediately.
+  if(embedded&&(embedded.races||[]).length){
+    state.races=mergeBootstrap(embedded);
     saveRaceCache(d,'__ALL__',state.races);
-    saveFullBundle(d,serverBundle);
-    state.loading=false;state.bootstrapReady=true;
-    render();
-    device=serverBundle
-  }else if(device&&device.complete===true){
-    state.races=mergeBootstrap(device);
+    state.loading=false;
+    state.bootstrapReady=!!embedded.displayComplete||!!embedded.complete;
+    render()
+  }else if(full&&(full.races||[]).length){
+    state.races=mergeBootstrap(full);
     saveRaceCache(d,'__ALL__',state.races);
-    state.loading=false;state.bootstrapReady=true;
-    render();
+    state.loading=false;state.bootstrapReady=!!full.displayComplete||!!full.complete;
+    render()
+  }else if(listCache&&listCache.length){
+    state.races=listCache;
+    hydrateInstantFromDevice(listCache);
+    state.loading=false;
+    render()
   }else{
     state.races=[];
     instantTrackDetails={};
@@ -3015,55 +3021,66 @@ function load(force){
     render()
   }
 
-  var attempts=0;
-  function requestBundle(){
-    attempts+=1;
-    fetch('/api/v1/site-bootstrap?date='+encodeURIComponent(d)+(force?'&force=1':'')+'&wait=1&v=129&t='+Date.now(),{cache:'no-store'})
-      .then(function(res){if(!res.ok)throw Error('API '+res.status);return res.json()})
-      .then(function(body){
+  // 2) Race summaries are a tiny request. They are never gated by full diagnosis.
+  function requestList(attempt){
+    attempt=n(attempt,0);
+    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit=&bundle=0&v=130&t='+Date.now(),{cache:'no-store'})
+      .then(function(res){if(!res.ok)throw Error('list');return res.json()})
+      .then(function(rows){
         if(seq!==state.requestSeq||state.date!==d)return;
-        state.bootstrapProgress={ready:n(body.detailCount),total:n(body.raceCount),missing:(body.missing||[]).length};
-
-        if(body.complete===true&&(body.races||[]).length){
-          var rows=mergeBootstrap(body);
-          state.races=rows;
-          saveRaceCache(d,'__ALL__',rows);
-          saveFullBundle(d,body);
-          window.__KRAIZ_BOOTSTRAP__=body;
-          state.loading=false;state.bootstrapReady=true;state.error=null;
-          render();
-          return
-        }
-
-        if(device&&device.complete===true){
-          state.loading=false;state.bootstrapReady=true;
-          if(attempts<8)setTimeout(requestBundle,800+attempts*250);
-          return
-        }
-
-        state.loading=true;state.bootstrapReady=false;
-        render();
-        if(attempts<20){
-          setTimeout(requestBundle,650+Math.min(attempts,6)*250)
-        }else{
-          state.error='全レース準備中です。準備完了まで自動で再確認します。';
-          render();
-          setTimeout(requestBundle,2500)
+        rows=Array.isArray(rows)?rows:(rows.races||[]);
+        if(rows.length){
+          // Preserve richer fields already merged from detail snapshots.
+          var old={};state.races.forEach(function(r){if(r&&r.id)old[String(r.id)]=r});
+          rows.forEach(function(r){
+            var z=old[String(r.id)];if(!z)return;
+            ['volatility','weather','condition','oddsUpdatedAt','environmentMeta'].forEach(function(k){
+              if(z[k]!=null&&z[k]!==''&&z[k]!=='不明')r[k]=z[k]
+            })
+          });
+          state.races=rows;saveRaceCache(d,'__ALL__',rows);
+          state.loading=false;render()
+        }else if(!state.races.length&&attempt<20){
+          state.loading=true;render();
+          setTimeout(function(){requestList(attempt+1)},450+Math.min(attempt,6)*180)
         }
       })
       .catch(function(){
         if(seq!==state.requestSeq||state.date!==d)return;
-        if(device&&device.complete===true){
-          state.loading=false;state.bootstrapReady=true;render()
-        }else{
-          state.loading=true;state.bootstrapReady=false;
-          if(attempts>=4){state.error='全レースデータを準備中です';render()}
-        }
-        setTimeout(requestBundle,Math.min(3000,700+attempts*350))
+        if(!state.races.length&&attempt<20)setTimeout(function(){requestList(attempt+1)},600+Math.min(attempt,6)*220)
       })
   }
 
-  requestBundle()
+  // 3) Details arrive separately and never block the home/venue list.
+  function requestDetails(attempt){
+    attempt=n(attempt,0);
+    fetch('/api/v1/site-bootstrap?date='+encodeURIComponent(d)+(force?'&force=1':'')+'&wait=0&v=130&t='+Date.now(),{cache:'no-store'})
+      .then(function(res){if(!res.ok)throw Error('bundle');return res.json()})
+      .then(function(body){
+        if(seq!==state.requestSeq||state.date!==d)return;
+        state.bootstrapProgress={ready:n(body.detailCount),total:n(body.raceCount),analysis:n(body.analysisCount),missing:(body.missing||[]).length};
+        if((body.races||[]).length){
+          var rows=mergeBootstrap(body);
+          state.races=rows;
+          saveRaceCache(d,'__ALL__',rows);
+          state.loading=false;
+          state.bootstrapReady=!!body.displayComplete||!!body.complete;
+          if(state.bootstrapReady)saveFullBundle(d,Object.assign({},body,{complete:true}));
+          window.__KRAIZ_BOOTSTRAP__=body;
+          render()
+        }
+        if(!(body.displayComplete||body.complete)&&attempt<60){
+          setTimeout(function(){requestDetails(attempt+1)},700+Math.min(attempt,8)*170)
+        }
+      })
+      .catch(function(){
+        if(seq!==state.requestSeq||state.date!==d)return;
+        if(attempt<60)setTimeout(function(){requestDetails(attempt+1)},900+Math.min(attempt,8)*190)
+      })
+  }
+
+  requestList(0);
+  requestDetails(0)
 }
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
 installNavigation();installEdgeBack();installPwaCache();restoreLocation();setTimeout(load,0);
@@ -3083,16 +3100,16 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v129";
+SW = r'''const CACHE="kraiz-shell-v130";
 const STATIC=[
-  "/styles-kraiz-v129.css",
-  "/app-v129.js",
-  "/manifest-kraiz-v129.webmanifest",
+  "/styles-kraiz-v130.css",
+  "/app-v130.js",
+  "/manifest-kraiz-v130.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
 ];
-const LAST_PAGE="/__kraiz_last_page_v129__";
+const LAST_PAGE="/__kraiz_last_page_v130__";
 
 self.addEventListener("install",event=>{
   event.waitUntil(
@@ -4783,9 +4800,9 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v129","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v130","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
-        "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,"siteBootstrap":True,"persistentDayBundle":True,"autoOdds":True,
+        "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,"siteBootstrap":True,"persistentDayBundle":True,"nonBlockingBootstrap":True,"autoOdds":True,
         "racedb":RACEDB.status(),
     }
 
@@ -8767,24 +8784,33 @@ def _bootstrap_sources_running(date:str)->bool:
     running=False
     try:
         with _live_refresh_lock:
-            running=running or (date in _live_refresh_running)
+            running=running or (f"live:{date}" in _live_refresh_running)
     except Exception:pass
     try:
         running=running or bool(_central_refresh_status(date).get("running"))
     except Exception:pass
     return bool(running)
 
-def _bootstrap_detail_ready(d:dict|None)->bool:
+def _bootstrap_display_ready(d:dict|None)->bool:
+    """Enough data to open/render the race immediately."""
     if not isinstance(d,dict):return False
-    if not ((d.get("horses") or []) or d.get("result")):return False
+    return bool((d.get("horses") or []) or d.get("result"))
+
+def _bootstrap_analysis_ready(d:dict|None)->bool:
+    """Diagnosis readiness is tracked separately and must never block site display."""
+    if not _bootstrap_display_ready(d):return False
     if _snapshot_final(d):return True
     pm=d.get("preparedMeta") or {}
     return bool(pm.get("diagnosisReady") and pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION)
 
+# Compatibility for older internal callers: "ready" now means display-ready.
+def _bootstrap_detail_ready(d:dict|None)->bool:
+    return _bootstrap_display_ready(d)
+
 def _bootstrap_detail_local(race_id:str,force_hydrate:bool=False)->dict|None:
     """Return a customer-ready snapshot. External hydration is allowed only in the background builder."""
     d=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
-    if _bootstrap_detail_ready(d):
+    if _bootstrap_display_ready(d):
         d=_restore_saved_odds(d)
         d=_ensure_race_volatility(d)
         return _compact_display_snapshot(d)
@@ -8824,18 +8850,23 @@ def _assemble_day_bundle(date:str,allow_network_fill:bool=False)->dict:
                 if d and d.get("id"):details.append(d)
 
     details.sort(key=lambda d:(str(d.get("circuit") or ""),str(d.get("track") or ""),int(d.get("raceNumber") or 0)))
-    ready_ids={str(d.get("id") or "") for d in details if _bootstrap_detail_ready(d)}
-    missing=[str(r.get("id") or "") for r in rows if str(r.get("id") or "") not in ready_ids]
+    display_ids={str(d.get("id") or "") for d in details if _bootstrap_display_ready(d)}
+    analysis_ids={str(d.get("id") or "") for d in details if _bootstrap_analysis_ready(d)}
+    missing=[str(r.get("id") or "") for r in rows if str(r.get("id") or "") not in display_ids]
     source_running=_bootstrap_sources_running(date)
-    complete=bool(rows) and not missing and not source_running
+    display_complete=bool(rows) and not missing and not source_running
 
     return {
         "date":date,"races":rows,"details":details,
-        "raceCount":len(rows),"detailCount":len(ready_ids),
-        "missing":missing,"complete":complete,
+        "raceCount":len(rows),"detailCount":len(display_ids),
+        "analysisCount":len(analysis_ids),
+        "missing":missing,
+        "complete":display_complete,
+        "displayComplete":display_complete,
+        "analysisComplete":bool(rows) and len(analysis_ids)>=len(rows),
         "sourceRunning":source_running,
         "generatedAtEpoch":int(time.time()),
-        "source":"persistent-guaranteed-day-bundle"
+        "source":"nonblocking-day-bundle"
     }
 
 def _refresh_day_bundle(date:str,force_sources:bool=False,wait_for_complete:bool=False,timeout_sec:float=25.0)->dict:
@@ -8858,7 +8889,7 @@ def _refresh_day_bundle(date:str,force_sources:bool=False,wait_for_complete:bool
             if date==_today_iso() and _bootstrap_sources_running(date):
                 time.sleep(.25)
 
-            payload=_assemble_day_bundle(date,allow_network_fill=(date==_today_iso()))
+            payload=_assemble_day_bundle(date,allow_network_fill=False)
             ids=tuple(str(r.get("id") or "") for r in payload.get("races",[]))
             if ids and ids==stable_ids:stable_hits+=1
             else:stable_hits=0;stable_ids=ids
@@ -8919,41 +8950,48 @@ def _schedule_day_bundle_refresh(date:str,force_sources:bool=False)->None:
     threading.Thread(target=worker,daemon=True,name="day-bundle-"+date).start()
 
 def _site_bootstrap_payload(date:str,force:bool=False,wait:bool=False)->dict:
-    # 1. A complete persisted bundle is always the fastest path.
+    """
+    Customer path is strictly non-blocking.
+    Return the best local bundle immediately, then continue full preparation in background.
+    """
     stored=DAY_BUNDLES.get(date,complete_only=True)
     if stored and not force:
-        # Refresh invisibly for today, but never make the customer wait.
         if date==_today_iso() and int(time.time())-int(stored.get("updatedAtEpoch") or 0)>20:
             _schedule_day_bundle_refresh(date,False)
-        out=dict(stored);out["cached"]=True;out["servedFrom"]="persistent-complete"
+        out=dict(stored)
+        out["cached"]=True
+        out["servedFrom"]="persistent-display-complete"
         return out
 
-    # 2. No complete bundle exists yet. Build it now; first deployment may wait once.
-    built=_refresh_day_bundle(
-        date,force_sources=bool(force),
-        wait_for_complete=bool(wait),
-        timeout_sec=float(os.getenv("SITE_BOOTSTRAP_WAIT_SEC","28"))
-    )
-    if built.get("complete"):
-        built["cached"]=False;built["servedFrom"]="fresh-complete"
-        return built
+    # Local-only assembly: no external fetch and no waiting for the builder lock.
+    try:
+        current=_assemble_day_bundle(date,allow_network_fill=False)
+    except Exception as exc:
+        print("nonblocking bootstrap assemble failed",date,exc)
+        current={"date":date,"races":[],"details":[],"raceCount":0,"detailCount":0,
+                 "analysisCount":0,"missing":[],"complete":False,
+                 "displayComplete":False,"analysisComplete":False,
+                 "sourceRunning":False,"generatedAtEpoch":int(time.time()),
+                 "source":"nonblocking-day-bundle"}
 
-    # 3. If a previous complete bundle appeared during the build, use it.
-    stored=DAY_BUNDLES.get(date,complete_only=True)
-    if stored:
-        out=dict(stored);out["cached"]=True;out["servedFrom"]="persistent-complete"
-        return out
+    # Persist a complete display bundle; analysis may still improve later.
+    if current.get("displayComplete"):
+        try:DAY_BUNDLES.put(date,current,True)
+        except Exception:pass
 
-    built["cached"]=False;built["servedFrom"]="incomplete"
-    return built
+    # Always kick the expensive work into background.
+    _schedule_day_bundle_refresh(date,bool(force))
+
+    current["cached"]=False
+    current["servedFrom"]="local-immediate"
+    return current
 
 @app.get("/api/v1/site-bootstrap")
-def site_bootstrap(date: str = Query(...), force: int = Query(0), wait: int = Query(1)):
-    """Return only a complete full-day bundle when available; otherwise report explicit incomplete state."""
-    return _site_bootstrap_payload(date,bool(force),bool(wait))
+def site_bootstrap(date: str = Query(...), force: int = Query(0), wait: int = Query(0)):
+    """Immediate local race list/details. Never waits on public sites or full diagnosis."""
+    return _site_bootstrap_payload(date,bool(force),False)
 
 def _site_bootstrap_warm_loop():
-    # Wait until the normal source collectors have had time to seed the day's race list.
     time.sleep(float(os.getenv("BOOTSTRAP_START_DELAY_SEC","2.5")))
     while True:
         try:_schedule_day_bundle_refresh(_today_iso(),False)
@@ -8965,6 +9003,7 @@ def _start_site_bootstrap_warmer():
     enabled=str(os.getenv("KRAIZ_BOOTSTRAP_WARM","1")).lower() in {"1","true","yes","on"}
     if enabled:
         threading.Thread(target=_site_bootstrap_warm_loop,daemon=True,name="kraiz-bootstrap").start()
+
 
 @app.get("/api/v1/site-bootstrap-status")
 def site_bootstrap_status(date: str = Query(...)):
@@ -9509,7 +9548,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v129","appVersion":"12.9-pwa-launch-fix-v129",
+        "build":"v130","appVersion":"13.0-nonblocking-boot-v130",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -9525,17 +9564,21 @@ def build_info():
 @app.get("/race", response_class=HTMLResponse)
 def home():
     bundle=None
-    try:bundle=DAY_BUNDLES.get(_today_iso(),complete_only=True)
-    except Exception:bundle=None
+    try:
+        bundle=DAY_BUNDLES.get(_today_iso(),complete_only=True)
+        if not bundle:
+            bundle=_assemble_day_bundle(_today_iso(),allow_network_fill=False)
+    except Exception:
+        bundle=None
     payload="null"
-    if bundle and bundle.get("complete"):
+    if bundle and (bundle.get("races") or []):
         try:
             payload=json.dumps(bundle,ensure_ascii=False,separators=(",",":"),default=str)
             payload=payload.replace("</","<\\/")
         except Exception:
             payload="null"
     boot='<script>window.__KRAIZ_BOOTSTRAP__='+payload+';</script>'
-    html=INDEX.replace('<script src="/app-v129.js"></script>',boot+'\n<script src="/app-v129.js"></script>')
+    html=INDEX.replace('<script src="/app-v130.js"></script>',boot+'\n<script src="/app-v130.js"></script>')
     return HTMLResponse(html, headers={
         "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
         "Pragma":"no-cache","Expires":"0"
@@ -9568,7 +9611,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v129.css")
+@app.get("/styles-kraiz-v130.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"public, max-age=31536000, immutable"})
@@ -9576,13 +9619,13 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v129.js")
+@app.get("/app-v130.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"public, max-age=31536000, immutable"})
 
 @app.get("/manifest-v86.webmanifest")
-@app.get("/manifest-kraiz-v129.webmanifest")
+@app.get("/manifest-kraiz-v130.webmanifest")
 @app.get("/manifest-kraiz-v88.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
