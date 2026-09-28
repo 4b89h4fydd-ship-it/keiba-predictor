@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="KRAIZ", version="12.1-instant-volatility-v121")
+app = FastAPI(title="KRAIZ", version="12.2-sticky-home-v122")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "kraiz-commercial-2026.09-v9"
@@ -371,15 +371,15 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KRAIZ">
-<link rel="manifest" href="/manifest-kraiz-v121.webmanifest">
-<link rel="stylesheet" href="/styles-kraiz-v121.css">
+<link rel="manifest" href="/manifest-kraiz-v122.webmanifest">
+<link rel="stylesheet" href="/styles-kraiz-v122.css">
 <title>KRAIZ | TACTICAL RACING</title>
 <link rel="icon" type="image/png" href="/kraiz-icon-192.png">
 <link rel="apple-touch-icon" href="/kraiz-icon-192.png">
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v121.js"></script>
+<script src="/app-v122.js"></script>
 </body>
 </html>"""
 
@@ -1670,6 +1670,24 @@ CSS += r"""
 }
 """
 
+
+CSS += r"""
+/* v122: keep the home hero fixed at the top while the home page scrolls */
+.smart-home .smart-home-hero{
+  position:sticky!important;
+  top:0!important;
+  z-index:80!important;
+  margin-top:0!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.32)!important;
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+}
+.smart-home .smart-home-main{
+  position:relative;
+  z-index:1;
+}
+"""
+
 JS = r"""
 (function(){
 "use strict";
@@ -2127,7 +2145,7 @@ function warmTrackLocal(track,attempt){
   var key=[state.date,state.circuit,track].join('|');
   if(trackPackBusy[key])return trackPackBusy[key];
 
-  trackPackBusy[key]=fetch('/api/v1/volatility-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=121&t='+Date.now(),
+  trackPackBusy[key]=fetch('/api/v1/volatility-pack?date='+encodeURIComponent(state.date)+'&circuit='+encodeURIComponent(state.circuit)+'&track='+encodeURIComponent(track)+'&v=122&t='+Date.now(),
       {cache:'no-store'})
     .then(function(res){if(!res.ok)throw new Error('volatility-pack');return res.json()})
     .then(function(body){
@@ -2244,7 +2262,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span>'+volatilityBadge(x)+'<span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v121</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v122</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean">'+
     (back?'<button class="smart-back" data-action="back" aria-label="戻る">‹</button>':'<span class="smart-back-space"></span>')+
@@ -2721,7 +2739,7 @@ function load(force){
   var attempts=0;
   function request(){
     attempts+=1;
-    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(requestCircuit)+(force?'&force=1':'')+'&bundle=1&v=121',{cache:'no-store'})
+    fetch('/api/v1/races?date='+encodeURIComponent(d)+'&circuit='+encodeURIComponent(requestCircuit)+(force?'&force=1':'')+'&bundle=1&v=122',{cache:'no-store'})
       .then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()})
       .then(function(body){
         if(seq!==state.requestSeq||state.date!==d)return;
@@ -2774,12 +2792,12 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v121";
+SW = r'''const CACHE="kraiz-shell-v122";
 const SHELL=[
   "/",
-  "/styles-kraiz-v121.css",
-  "/app-v121.js",
-  "/manifest-kraiz-v121.webmanifest",
+  "/styles-kraiz-v122.css",
+  "/app-v122.js",
+  "/manifest-kraiz-v122.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
@@ -4419,7 +4437,7 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v121","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v122","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
         "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,
         "racedb":RACEDB.status(),
@@ -8293,7 +8311,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v121","appVersion":"12.1-instant-volatility-v121",
+        "build":"v122","appVersion":"12.2-sticky-home-v122",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -8337,7 +8355,7 @@ def pace_preview():
 
 @app.get("/styles-kraiz-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-kraiz-v121.css")
+@app.get("/styles-kraiz-v122.css")
 @app.get("/styles-kraiz-v91.css")
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"public, max-age=31536000, immutable"})
@@ -8345,13 +8363,13 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v121.js")
+@app.get("/app-v122.js")
 @app.get("/app-v91.js")
 def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"public, max-age=31536000, immutable"})
 
 @app.get("/manifest-v86.webmanifest")
-@app.get("/manifest-kraiz-v121.webmanifest")
+@app.get("/manifest-kraiz-v122.webmanifest")
 @app.get("/manifest-kraiz-v88.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
