@@ -168,7 +168,120 @@ export default {
           races: result.results || []
         });
       }
+if (path === "/api/day") {
+  const date = url.searchParams.get("date");
+  const includeDetails =
+    url.searchParams.get("details") !== "0";
 
+  if (!date) {
+    return json({
+      ok: false,
+      error: "date is required"
+    }, 400);
+  }
+
+  const summaryResult = await env.DB.prepare(`
+    SELECT *
+    FROM race_summaries
+    WHERE race_date = ?
+    ORDER BY circuit, track, race_no
+  `)
+    .bind(date)
+    .all();
+
+  const races = (summaryResult.results || []).map(
+    r => ({
+      id: r.race_id,
+      date: r.race_date,
+      circuit: r.circuit,
+      track: r.track,
+      raceNumber: r.race_no,
+      startTime: r.start_time,
+      scheduledStartTime: r.start_time,
+      title: r.title,
+      surface: r.surface,
+      distance: r.distance,
+      weather: r.weather,
+      condition: r.condition,
+      volatility: {
+        label: r.volatility_label || "",
+        score: r.volatility_score
+      },
+      raceStatus: r.race_status || "",
+      updatedAtEpoch: r.updated_at
+    })
+  );
+
+  if (!includeDetails) {
+    return json({
+      ok: true,
+      date,
+      races,
+      details: [],
+      raceCount: races.length,
+      detailCount: 0,
+      analysisCount: 0,
+      missing: [],
+      complete: races.length > 0,
+      displayComplete: races.length > 0,
+      source: "cloudflare-d1"
+    });
+  }
+
+  const detailResult = await env.DB.prepare(`
+    SELECT
+      race_id,
+      payload,
+      analysis_ready,
+      updated_at
+    FROM race_details
+    WHERE race_date = ?
+    ORDER BY race_id
+  `)
+    .bind(date)
+    .all();
+
+  const detailRows = detailResult.results || [];
+
+  const details = detailRows
+    .map(r => safeJson(r.payload))
+    .filter(Boolean);
+
+  const detailIds = new Set(
+    details.map(d =>
+      String(d.id || d.race_id || d.raceId || "")
+    )
+  );
+
+  const missing = races
+    .map(r => String(r.id || ""))
+    .filter(id => id && !detailIds.has(id));
+
+  const analysisCount = detailRows.filter(
+    r => Number(r.analysis_ready || 0) === 1
+  ).length;
+
+  const complete =
+    races.length > 0 &&
+    missing.length === 0;
+
+  return json({
+    ok: true,
+    date,
+    races,
+    details,
+    raceCount: races.length,
+    detailCount: details.length,
+    analysisCount,
+    missing,
+    complete,
+    displayComplete: complete,
+    analysisComplete:
+      complete &&
+      analysisCount >= races.length,
+    source: "cloudflare-d1"
+  });
+}
       if (path.startsWith("/api/race/")) {
         const raceId = decodeURIComponent(
           path.substring("/api/race/".length)
