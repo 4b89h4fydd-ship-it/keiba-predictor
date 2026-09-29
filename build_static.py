@@ -67,8 +67,119 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v138"
+BUILD_VERSION = "v141"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
+
+# Cloudflare summary rows carry raceStatus rather than a nested result object.
+# Venue/home rows must still switch to "確定" immediately.
+js = js.replace(
+    'function isFinal(r){return !!(r&&r.result&&(r.result.status==="確定"||(r.result.finishers||[]).length))}',
+    'function isFinal(r){return !!(r&&((r.result&&(r.result.status==="確定"||(r.result.finishers||[]).length))||r.raceStatus==="確定"))}'
+)
+
+# When a venue refresh receives a final detail, propagate the result back into
+# the summary row so the list changes to 確定 without reopening the whole day.
+js = js.replace(
+    "if(r&&d.volatility){\n"
+    "      var before=JSON.stringify(r.volatility||null),after=JSON.stringify(d.volatility);\n"
+    "      if(before!==after){r.volatility=d.volatility;changed=true}\n"
+    "    }",
+    "if(r&&d.volatility){\n"
+    "      var before=JSON.stringify(r.volatility||null),after=JSON.stringify(d.volatility);\n"
+    "      if(before!==after){r.volatility=d.volatility;changed=true}\n"
+    "    }\n"
+    "    if(r&&d.result&&((d.result.finishers||[]).length||d.result.status==='確定')){\n"
+    "      r.result=d.result;r.raceStatus='確定';changed=true\n"
+    "    }"
+)
+
+# On today's venue screen keep checking races that have already started but
+# are not yet marked final, even when volatility/diagnosis is already complete.
+js = js.replace(
+    "var pending=state.races.some(function(x){return x.track===state.track&&x.circuit===state.circuit&&!(x.volatility&&x.volatility.ready)});",
+    "var pending=state.races.some(function(x){return x.track===state.track&&x.circuit===state.circuit&&"
+    "(!(x.volatility&&x.volatility.ready)||(state.date===today()&&mins(x.startTime)<=nowMins()-3&&!isFinal(x)))});"
+)
+
+
+
+# Keep roughly one week of dates directly reachable without opening the calendar.
+js = js.replace(
+    "function dateStrip(){var center=new Date(state.date+'T12:00:00'),out='';for(var i=-1;i<=3;i++){",
+    "function dateStrip(){var center=new Date(state.date+'T12:00:00'),out='';for(var i=-7;i<=2;i++){",
+)
+
+# Keep frontend prediction metadata aligned with the current server diagnosis engine.
+js = js.replace(
+    "engineVersion:'kraiz-commercial-2026.09-v2'",
+    "engineVersion:'kraiz-commercial-2026.09-v9'",
+)
+
+# If a race has started but the venue row is not final yet, bypass the in-memory
+# snapshot so the list actually sees the newest D1 result instead of looping on stale cache.
+js = js.replace(
+    "return fetchEdgeRace(row.id,!(row.volatility&&row.volatility.ready))",
+    "var needLiveResult=requestedDate===today()&&mins(row.startTime)<=nowMins()-3&&!isFinal(row);\n"
+    "    return fetchEdgeRace(row.id,needLiveResult||!(row.volatility&&row.volatility.ready))",
+)
+js = js.replace(
+    "return fetchEdgeRace(row.id)\n      .then(function(d){",
+    "var needLiveResult=requestedDate===today()&&mins(row.startTime)<=nowMins()-3&&!isFinal(row);\n"
+    "    return fetchEdgeRace(row.id,needLiveResult)\n      .then(function(d){",
+)
+
+# v141 × navigation hierarchy:
+# TOP venue list -> selected venue all races -> race detail.
+# × always moves exactly one level back.
+js = js.replace(
+    'class="smart-back" data-action="home"',
+    'class="smart-back" data-action="back"',
+)
+
+gb_start = js.find("function goBack(){")
+gb_end = js.find("\n}\nvar navigationRestoring", gb_start)
+if gb_start < 0 or gb_end < 0:
+    raise RuntimeError("goBack block not found in app JS")
+gb_end += 2
+
+new_go_back = """function goBack(){
+    if(!canGoBack())return;
+    if(state.horseModalNo){closeHorseModal();return}
+    ++state.detailSeq;
+    if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}
+    if(state.collectTimer){clearTimeout(state.collectTimer);state.collectTimer=null}
+    state.collectingHorse=null;state.error=null;state.pred=null;state.scenarioCode=null;state.paceStage=0;
+
+    if(state.raceLoading||state.race){
+        if(state.raceStack.length){
+            // A past-race detail returns to the race detail that opened it.
+            state.raceLoading=null;
+            state.race=state.raceStack.pop();
+            state.picker=false;
+            if(state.race&&state.race.track)state.track=state.race.track
+        }else{
+            // A normal race detail returns to this venue's full race list.
+            var keepTrack=state.track||(state.race&&state.race.track)||"";
+            state.raceLoading=null;
+            state.race=null;
+            state.picker=false;
+            state.track=keepTrack||null
+        }
+    }else if(state.picker){
+        state.picker=false;
+        state.track=null
+    }else if(state.track){
+        // Venue full race list returns to the top venue list.
+        state.track=null;
+        state.picker=false
+    }
+
+    // Do not use browser history for the × button; keep app hierarchy deterministic.
+    routeKey=null;
+    render();
+    window.scrollTo(0,0)
+}"""
+js = js[:gb_start] + new_go_back + js[gb_end:]
 
 # Cloudflare/D1 first. Remove old same-origin Render/manual fallbacks.
 js = re.sub(
@@ -155,7 +266,7 @@ index_html = index_html.replace(
 )
 
 # Every route must point at the current immutable JS name.
-for old in ("/app-v133.js", "/app-v136.js", "/app-v137.js"):
+for old in ("/app-v133.js", "/app-v136.js", "/app-v137.js", "/app-v138.js", "/app-v139.js", "/app-v140.js"):
     index_html = index_html.replace(old, f"/app-{BUILD_VERSION}.js")
 
 (DIST / "index.html").write_text(index_html, encoding="utf-8")
@@ -174,31 +285,103 @@ for route in ("venue", "race"):
 
 # Compatibility copies are intentional.
 # A stale home-screen HTML/SW that asks for v137/v136/v133 still receives JS,
-# not an SPA HTML fallback, while v138 takes control.
-for compat in ("v137", "v136", "v133"):
+# not an SPA HTML fallback, while v141 takes control.
+for compat in ("v140", "v139", "v138", "v137", "v136", "v133"):
     (DIST / f"app-{compat}.js").write_text(js, encoding="utf-8")
 
 manifest = strings["MANIFEST"].replace('"start_url":"/?pwa=1"', '"start_url":"/"')
 (DIST / "manifest-kraiz-v130.webmanifest").write_text(manifest, encoding="utf-8")
 
-sw = strings["SW"]
-for old_cache in (
-    'const CACHE="kraiz-shell-v133-edge-only";',
-    'const CACHE="kraiz-shell-v133-inlinecss";',
-    'const CACHE="kraiz-shell-v136-instant-diagnosis";',
-    'const CACHE="kraiz-shell-v137-inlinecss";',
-):
-    sw = sw.replace(
-        old_cache,
-        f'const CACHE="kraiz-shell-{BUILD_VERSION}-pwa-safe";'
-    )
+# iOS/Safari rejects a redirected Response when it is returned by a Service
+# Worker navigation handler ("Response served by service worker has redirections").
+# Always fetch /index.html directly and clone it into a fresh Response, which
+# strips redirect metadata before it is returned to the browser.
+sw = f'''const CACHE="kraiz-shell-{BUILD_VERSION}-safe-navigation";
+const STATIC=[
+  "/index.html",
+  "/app-{BUILD_VERSION}.js",
+  "/manifest-kraiz-v130.webmanifest",
+  "/kraiz-icon-192.png",
+  "/kraiz-icon-512.png",
+  "/kraiz-racing-hero.webp"
+];
 
-for old in ("/app-v133.js", "/app-v136.js", "/app-v137.js"):
-    sw = sw.replace(old, f"/app-{BUILD_VERSION}.js")
+async function cleanResponse(r){{
+  const body=await r.arrayBuffer();
+  return new Response(body,{{
+    status:r.status,
+    statusText:r.statusText,
+    headers:new Headers(r.headers)
+  }});
+}}
 
-# CSS is inlined into generated HTML, so SW does not need a separately cached CSS.
-sw = sw.replace('  "/styles-kraiz-v130.css",\n', '')
+self.addEventListener("install",event=>{{
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(async cache=>{{
+        for(const url of STATIC){{
+          try{{
+            const r=await fetch(url,{{cache:"reload",redirect:"follow"}});
+            if(r&&r.ok)await cache.put(url,await cleanResponse(r));
+          }}catch(_e){{}}
+        }}
+      }})
+      .then(()=>self.skipWaiting())
+  );
+}});
 
+self.addEventListener("activate",event=>{{
+  event.waitUntil(
+    caches.keys()
+      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+      .then(()=>self.clients.claim())
+  );
+}});
+
+self.addEventListener("fetch",event=>{{
+  const req=event.request;
+  if(req.method!=="GET")return;
+  const url=new URL(req.url);
+  if(url.origin!==self.location.origin)return;
+  if(url.pathname.startsWith("/api/"))return;
+
+  if(req.mode==="navigate"){{
+    event.respondWith((async()=>{{
+      const cache=await caches.open(CACHE);
+      try{{
+        const r=await fetch("/index.html?sw="+Date.now(),{{
+          cache:"no-store",
+          redirect:"follow"
+        }});
+        if(!r||!r.ok)throw new Error("navigation "+(r&&r.status));
+        const clean=await cleanResponse(r);
+        await cache.put("/index.html",clean.clone());
+        return clean;
+      }}catch(_e){{
+        return (await cache.match("/index.html")) ||
+          new Response("通信状態を確認して再読み込みしてください",{{
+            status:503,
+            headers:{{"Content-Type":"text/plain; charset=utf-8"}}
+          }});
+      }}
+    }})());
+    return;
+  }}
+
+  if(STATIC.includes(url.pathname)){{
+    event.respondWith((async()=>{{
+      const cache=await caches.open(CACHE);
+      const cached=await cache.match(url.pathname);
+      if(cached)return cached;
+      const r=await fetch(req,{{cache:"reload",redirect:"follow"}});
+      if(!r||!r.ok)return r;
+      const clean=await cleanResponse(r);
+      await cache.put(url.pathname,clean.clone());
+      return clean;
+    }})());
+  }}
+}});
+'''
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
 
 (DIST / "_headers").write_text(
@@ -207,6 +390,12 @@ sw = sw.replace('  "/styles-kraiz-v130.css",\n', '')
     "/index.html\n"
     "  Cache-Control: no-store\n"
     "/404.html\n"
+    "  Cache-Control: no-store\n"
+    f"/app-{BUILD_VERSION}.js\n"
+    "  Cache-Control: no-store\n"
+    "/app-v140.js\n"
+    "  Cache-Control: no-store\n"
+    "/app-v139.js\n"
     "  Cache-Control: no-store\n"
     "/app-v138.js\n"
     "  Cache-Control: no-store\n"
