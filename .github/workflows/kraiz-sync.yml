@@ -121,7 +121,7 @@ jobs:
             ],
             details: (.details // []),
             meta: {
-              source: "github-actions-provisional-v142",
+              source: "github-actions-provisional-v143",
               sync_date: (.date // ""),
               race_count: ((.races // []) | length),
               detail_count: ((.details // []) | length),
@@ -273,7 +273,7 @@ jobs:
               "summaries": summaries,
               "details": list(detail_map.values()),
               "meta": {
-                  "source": "github-actions-results-first-v142",
+                  "source": "github-actions-results-first-v143",
                   "sync_date": bundle.get("date") or "",
                   "race_count": len(summaries),
                   "detail_count": len(detail_map),
@@ -290,15 +290,33 @@ jobs:
             -H "x-sync-token: $SYNC_TOKEN" \
             --data-binary @results-payload.json
 
-      - name: Queue diagnosis and odds with upcoming races first
+      - name: Queue diagnosis and odds for active races only
         run: |
           python - <<'PY'
           import json, time, urllib.parse, urllib.request
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
           BASE = "http://127.0.0.1:8000"
-          with open("bundle.json", encoding="utf-8") as f:
-              bundle = json.load(f)
+
+          def read(path, fallback):
+              try:
+                  with open(path, encoding="utf-8") as f:
+                      return json.load(f)
+              except Exception:
+                  return fallback
+
+          bundle = read("bundle.json", {})
+          result_details = read("result-details.json", [])
+
+          def final_result(d):
+              r = (d or {}).get("result") or {}
+              return bool(r.get("status") == "確定" or r.get("finishers"))
+
+          final_ids = {
+              str(d.get("id") or "")
+              for d in result_details
+              if d.get("id") and final_result(d)
+          }
 
           rows = list(bundle.get("races") or [])
           now = time.strftime("%H:%M", time.localtime(time.time() + 9 * 3600))
@@ -320,8 +338,12 @@ jobs:
               if rid and rid not in race_ids:
                   race_ids.append(rid)
 
+          diagnosis_ids = [rid for rid in race_ids if rid not in final_ids]
+
           with open("race_ids.json", "w", encoding="utf-8") as f:
               json.dump(race_ids, f, ensure_ascii=False)
+          with open("diagnosis_ids.json", "w", encoding="utf-8") as f:
+              json.dump(diagnosis_ids, f, ensure_ascii=False)
 
           def call(method, path, timeout=15):
               req = urllib.request.Request(BASE + path, method=method)
@@ -331,7 +353,9 @@ jobs:
               except Exception:
                   return 0
 
-          for rid in race_ids:
+          # Never create a prediction after the result is already known.
+          # Final races keep any diagnosis that was produced before the result.
+          for rid in diagnosis_ids:
               enc = urllib.parse.quote(rid, safe="")
               call("POST", f"/api/v1/prepare-race/{enc}", 8)
 
@@ -340,13 +364,15 @@ jobs:
               return call("GET", f"/api/v1/odds-refresh/{enc}?force=1", 20)
 
           with ThreadPoolExecutor(max_workers=6) as ex:
-              for fut in as_completed([ex.submit(odds, rid) for rid in race_ids]):
+              for fut in as_completed([ex.submit(odds, rid) for rid in diagnosis_ids]):
                   try:
                       fut.result()
                   except Exception:
                       pass
 
-          print("Queued races:", len(race_ids))
+          print("All current races:", len(race_ids))
+          print("Active diagnosis targets:", len(diagnosis_ids))
+          print("Final races skipped from new diagnosis:", len(final_ids))
           PY
 
       - name: Finish diagnosis and preserve ready snapshots
@@ -356,16 +382,40 @@ jobs:
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
           BASE = "http://127.0.0.1:8000"
-          with open("race_ids.json", encoding="utf-8") as f:
-              race_ids = json.load(f)
-          with open("bundle.json", encoding="utf-8") as f:
-              bundle = json.load(f)
+
+          def read(path, fallback):
+              try:
+                  with open(path, encoding="utf-8") as f:
+                      return json.load(f)
+              except Exception:
+                  return fallback
+
+          race_ids = read("race_ids.json", [])
+          diagnosis_ids = read("diagnosis_ids.json", race_ids)
+          bundle = read("bundle.json", {})
+          result_details = read("result-details.json", [])
 
           labels = {
               str(r.get("id") or ""): f"{r.get('circuit') or ''} {r.get('track') or ''} {int(r.get('raceNumber') or 0)}R"
               for r in bundle.get("races") or []
               if r.get("id")
           }
+
+          def ready(d):
+              pm = (d or {}).get("preparedMeta") or {}
+              return bool(pm.get("diagnosisReady"))
+
+          def final_result(d):
+              r = (d or {}).get("result") or {}
+              return bool(r.get("status") == "確定" or r.get("finishers"))
+
+          # Seed with every already-completed diagnosis from the bundle, including
+          # finished races. This preserves genuine pre-race predictions.
+          best = {}
+          for d in bundle.get("details") or []:
+              rid = str((d or {}).get("id") or "")
+              if rid and ready(d):
+                  best[rid] = d
 
           def refresh_one(rid):
               enc = urllib.parse.quote(rid, safe="")
@@ -380,13 +430,16 @@ jobs:
               except Exception as exc:
                   return {"status":"error","raceId":rid,"error":str(exc)}
 
-          best = {}
-          pending = list(race_ids)
-          for attempt in range(1, 7):
+          pending = [rid for rid in diagnosis_ids if rid not in best]
+          target_count = len(diagnosis_ids)
+
+          # Usually all active races are already ready on pass 1. Retries are only
+          # for genuinely in-progress history work, never for races already final.
+          for attempt in range(1, 5):
               if not pending:
                   break
               if attempt > 1:
-                  time.sleep(6)
+                  time.sleep(5)
 
               next_pending = []
               with ThreadPoolExecutor(max_workers=8) as ex:
@@ -398,25 +451,41 @@ jobs:
                       except Exception as exc:
                           data = {"status":"error","raceId":rid,"error":str(exc)}
                       race = data.get("race") if isinstance(data, dict) else None
-                      ready = bool(
+                      is_ready = bool(
                           isinstance(race, dict)
                           and (race.get("preparedMeta") or {}).get("diagnosisReady") is True
                       )
-                      if data.get("status") == "done" and ready:
+                      if data.get("status") == "done" and is_ready:
                           best[rid] = race
                       else:
                           next_pending.append(rid)
 
               pending = next_pending
-              print(f"Diagnosis pass {attempt}: {len(best)}/{len(race_ids)} preserved, pending={len(pending)}")
+              active_ready = sum(1 for rid in diagnosis_ids if rid in best)
+              print(f"Diagnosis pass {attempt}: active {active_ready}/{target_count}, pending={len(pending)}")
 
+          # Keep only current-race ready snapshots. Final ready snapshots are kept;
+          # final non-ready snapshots are intentionally not manufactured post-race.
+          current_set = set(race_ids)
+          kept = [d for rid, d in best.items() if rid in current_set and ready(d)]
           with open("diagnosis-details.json", "w", encoding="utf-8") as f:
-              json.dump(list(best.values()), f, ensure_ascii=False)
+              json.dump(kept, f, ensure_ascii=False)
 
           if pending:
-              print("Diagnosis still missing:")
+              print("Active diagnosis still missing:")
               for rid in pending:
                   print(" -", labels.get(rid, rid), rid)
+          else:
+              print("All active races diagnosis-ready.")
+
+          final_ids = {
+              str(d.get("id") or "")
+              for d in result_details
+              if d.get("id") and final_result(d)
+          }
+          final_ready = sum(1 for rid in final_ids if rid in best)
+          print("Final races excluded from blocking:", len(final_ids),
+                "with preserved pre-race diagnosis:", final_ready)
           PY
 
       - name: Collect latest current race details
@@ -666,12 +735,22 @@ jobs:
           nar_current_missing = [rid for rid in missing_current_ids if rid.startswith("nar-")]
           jra_current_missing = [rid for rid in missing_current_ids if not rid.startswith("nar-")]
           analysis_count = sum(1 for d in current_details if ready(d))
+          final_ids = {
+              rid for rid in current_ids
+              if final_result(detail_map.get(rid))
+          }
+          active_analysis_ids = current_ids - final_ids
+          active_ready_ids = {
+              rid for rid in active_analysis_ids
+              if ready(detail_map.get(rid))
+          }
+          active_missing_ids = sorted(active_analysis_ids - active_ready_ids)
 
           payload = {
               "summaries": summaries,
               "details": list(detail_map.values()),
               "meta": {
-                  "source": "github-actions-final-v142",
+                  "source": "github-actions-final-v143",
                   "sync_date": bundle.get("date") or "",
                   "race_count": len(summaries),
                   "detail_count": len(current_details),
@@ -680,7 +759,11 @@ jobs:
                   "nar_missing_detail_count": len(nar_current_missing),
                   "jra_missing_detail_count": len(jra_current_missing),
                   "analysis_count": analysis_count,
-                  "analysis_complete": bool(summaries) and analysis_count >= len(summaries),
+                  "analysis_target_count": len(active_analysis_ids),
+                  "analysis_ready_active_count": len(active_ready_ids),
+                  "analysis_missing_active_count": len(active_missing_ids),
+                  "analysis_final_excluded_count": len(final_ids),
+                  "analysis_complete": len(active_missing_ids) == 0,
                   "past_detail_count": len(past),
                   "display_complete": bool(bundle.get("displayComplete") or bundle.get("complete")),
               },
@@ -694,7 +777,11 @@ jobs:
           print("Past details:", len(past))
           print("Current missing details:", len(missing_current_ids),
                 "NAR=", len(nar_current_missing), "JRA=", len(jra_current_missing))
-          print("Diagnosis preserved:", analysis_count)
+          print("Diagnosis preserved total:", analysis_count)
+          print("Active diagnosis:", len(active_ready_ids), "/", len(active_analysis_ids),
+                "missing=", len(active_missing_ids), "final excluded=", len(final_ids))
+          if active_missing_ids:
+              print("Active diagnosis missing IDs:", ", ".join(active_missing_ids))
           PY
 
           curl --fail-with-body -X POST "$CLOUDFLARE_SYNC_URL" \
@@ -848,7 +935,7 @@ jobs:
               "summaries": summaries,
               "details": payload_details,
               "meta": {
-                  "source": "github-actions-history-v142",
+                  "source": "github-actions-history-v143",
                   "sync_date": bundle.get("date") or "",
                   "history_window_days": 7,
                   "race_count": len(summaries),
