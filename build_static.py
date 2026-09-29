@@ -67,10 +67,15 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v147"
+BUILD_VERSION = "v148"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 js = re.sub(r'(kraiz-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
 js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
+# v148: the SW script URL itself changes, forcing Safari/PWA to check a new worker.
+js = js.replace('navigator.serviceWorker.register("/sw.js",{scope:"/"})',
+                f'navigator.serviceWorker.register("/sw-{BUILD_VERSION}.js",{{scope:"/"}})')
+# Expose the running build without changing normal UI.
+js = f'window.KRAIZ_BUILD="{BUILD_VERSION}";\n' + js
 
 # Cloudflare summary rows carry raceStatus rather than a nested result object.
 # Venue/home rows must still switch to "確定" immediately.
@@ -267,9 +272,11 @@ index_html = index_html.replace(
     'if(s)document.documentElement.classList.add("pwa-standalone")}catch(e){}</script>'
 )
 
-# Every route must point at the current immutable JS name.
-for old in ("/app-v133.js", "/app-v136.js", "/app-v137.js", "/app-v138.js", "/app-v139.js", "/app-v140.js", "/app-v141.js"):
-    index_html = index_html.replace(old, f"/app-{BUILD_VERSION}.js")
+# v148: use a brand-new asset path so an old iPhone/PWA service worker cannot
+# answer with a cached app-v146/app-v147 bundle. Regex catches every historical
+# app-vNNN.js reference without maintaining a fragile hand-written list.
+JS_ASSET = f"/kraiz-app-{BUILD_VERSION}.js"
+index_html = re.sub(r'/app-v\d+(?:-[^"\']+)?\.js', JS_ASSET, index_html)
 
 (DIST / "index.html").write_text(index_html, encoding="utf-8")
 (DIST / "404.html").write_text(index_html, encoding="utf-8")
@@ -277,18 +284,22 @@ for route in ("venue", "race"):
     (DIST / route).mkdir()
     (DIST / route / "index.html").write_text(index_html, encoding="utf-8")
 
+(DIST / "build-version.txt").write_text(BUILD_VERSION+"\n", encoding="utf-8")
+
 (DIST / "_redirects").write_text(
     "/venue /index.html 200\n/race /index.html 200\n",
     encoding="utf-8",
 )
 
 (DIST / "styles-kraiz-v130.css").write_text(strings["CSS"], encoding="utf-8")
+(DIST / f"kraiz-app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
+# Keep the conventional filename too for direct/debug access.
 (DIST / f"app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
 
 # Compatibility copies are intentional.
 # A stale home-screen HTML/SW that asks for v137/v136/v133 still receives JS,
 # not an SPA HTML fallback, while v146 takes control.
-for compat in ("v146", "v145", "v141", "v140", "v139", "v138", "v137", "v136", "v133"):
+for compat in ("v147", "v146", "v145", "v141", "v140", "v139", "v138", "v137", "v136", "v133"):
     (DIST / f"app-{compat}.js").write_text(js, encoding="utf-8")
 
 manifest = strings["MANIFEST"].replace('"start_url":"/?pwa=1"', '"start_url":"/"')
@@ -301,7 +312,7 @@ manifest = strings["MANIFEST"].replace('"start_url":"/?pwa=1"', '"start_url":"/"
 sw = f'''const CACHE="kraiz-shell-{BUILD_VERSION}-safe-navigation";
 const STATIC=[
   "/index.html",
-  "/app-{BUILD_VERSION}.js",
+  "/kraiz-app-{BUILD_VERSION}.js",
   "/manifest-kraiz-v130.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
@@ -385,6 +396,7 @@ self.addEventListener("fetch",event=>{{
 }});
 '''
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
+(DIST / f"sw-{BUILD_VERSION}.js").write_text(sw, encoding="utf-8")
 
 (DIST / "_headers").write_text(
     "/\n"
@@ -393,7 +405,7 @@ self.addEventListener("fetch",event=>{{
     "  Cache-Control: no-store\n"
     "/404.html\n"
     "  Cache-Control: no-store\n"
-    f"/app-{BUILD_VERSION}.js\n"
+    f"/kraiz-app-{BUILD_VERSION}.js\n"
     "  Cache-Control: no-store\n"
     "/app-v145.js\n"
     "  Cache-Control: no-store\n"
@@ -412,6 +424,9 @@ self.addEventListener("fetch",event=>{{
     "/manifest-kraiz-v130.webmanifest\n"
     "  Cache-Control: no-store\n"
     "/sw.js\n"
+    "  Cache-Control: no-store\n"
+    "  Service-Worker-Allowed: /\n"
+    f"/sw-{BUILD_VERSION}.js\n"
     "  Cache-Control: no-store\n"
     "  Service-Worker-Allowed: /\n",
     encoding="utf-8",
