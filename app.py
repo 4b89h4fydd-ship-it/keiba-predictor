@@ -2089,10 +2089,13 @@ function gradeRowsRelative(rows){
     var rel=hi===lo?.5:(z.overallRaw-lo)/(hi-lo);
     z.overallScore=Math.round(clamp(z.overallRaw*.80+(.44+.56*rel)*.20,0,1)*100)
   });
-  rows.sort(function(a,b){return b.overallScore-a.overallScore||b.ability-a.ability||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
+  // v155: rank by the unrounded model value first. The UI and marks reuse this rank,
+  // so horses tied at e.g. 76 points can no longer show the S horse in 3rd place.
+  rows.sort(function(a,b){return n(b.overallRaw)-n(a.overallRaw)||n(b.overallScore)-n(a.overallScore)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
   var m=rows.length;
   rows.forEach(function(z,rank){
     var pct=(rank+1)/m,score=z.overallScore;
+    z.overallRank=rank+1;
     if((score>=83)||(pct<=.12&&score>=72))z.overallGrade='S';
     else if((score>=73)||(pct<=.35&&score>=65))z.overallGrade='A';
     else if((score>=60)||(pct<=.70))z.overallGrade='B';
@@ -2112,7 +2115,7 @@ function baseGradeReasons(x,su,fitScore){
   if(x.bodyWeightKnown&&x.bodyWeightSuit<=.45)x.overallReasons.push('馬体重変動注意');
   if(x.frontCost>=.12)x.overallReasons.push('隣接圧力注意');
   if(x.fade>=.50)x.overallReasons.push('下がり率注意');
-  if(x.coverage<.45)x.overallReasons.push('データ量少なめ・基礎評価');
+  if(x.coverage<.45)x.overallReasons.push('データ補完中・複数ソース確認');
   if((x.horse.recentRaces||[]).length<2||x.styleSamples<2)x.overallReasons.push('限定データ評価')
 }
 function assignOverallGradesCentral(r,rows,suit,pressure){
@@ -2251,7 +2254,9 @@ function assignOverallGrades(r,rows,suit,sc,pressure){
 
 function assignPredictionMarks(rows,r){
   var sorted=rows.slice().sort(function(a,b){
-    return n(b.overallScore)-n(a.overallScore)||
+    return n(a.overallRank,999)-n(b.overallRank,999)||
+           n(b.overallRaw)-n(a.overallRaw)||
+           n(b.overallScore)-n(a.overallScore)||
            n(b.ability)-n(a.ability)||
            Math.max(n(b.frontStay),n(b.comeFromBehind))-Math.max(n(a.frontStay),n(a.comeFromBehind))||
            n(b.posCons)-n(a.posCons)||
@@ -2492,8 +2497,8 @@ function aiMarksPanel(r,p){
   return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">ここはAIの固定予想印です。出走表の印は自由に変更できます。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||'取得中';return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>'+esc(x.overallGrade||'C')+' '+esc(x.overallScore==null?'—':x.overallScore)+'　馬体重 '+esc(bw)+'</small></span><span class="ai-mark-rank">'+esc(x.predRank)+'位</span></button>'}).join('')+'</div></section>'
 }
 function diagnosisPanel(r,p){
-  var rows=(p.rows||[]).slice().sort(function(a,b){return n(b.overallScore)-n(a.overallScore)||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),ready=!!p;
-  var overview='<div class="diagnosis-overview"><div class="diagnosis-overview-title">総合評価一覧</div>'+rows.map(function(x,i){var h=x.horse,bw=horseBodyWeightText(h)||'取得中';return '<button data-horse-open="'+esc(h.horseNumber)+'" class="diagnosis-overview-row"><span class="diag-rank">'+(i+1)+'位</span>'+badge(h)+'<span class="diag-name">'+esc(h.name)+'</span><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><b>'+esc(x.overallScore==null?'—':x.overallScore)+'</b><small>AI '+esc(x.predMark||'—')+' / '+esc(bw)+'</small></button>'}).join('')+'</div>';
+  var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.overallRank,999)-n(b.overallRank,999)||n(b.overallRaw)-n(a.overallRaw)||n(b.overallScore)-n(a.overallScore)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),ready=!!p;
+  var overview='<div class="diagnosis-overview"><div class="diagnosis-overview-title">総合評価一覧</div>'+rows.map(function(x,i){var h=x.horse,bw=horseBodyWeightText(h)||'取得中',rank=n(x.overallRank,i+1);return '<button data-horse-open="'+esc(h.horseNumber)+'" class="diagnosis-overview-row"><span class="diag-rank">'+rank+'位</span>'+badge(h)+'<span class="diag-name">'+esc(h.name)+'</span><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><b>'+esc(x.overallScore==null?'—':x.overallScore)+'</b><small>AI '+esc(x.predMark||'—')+' / '+esc(bw)+'</small></button>'}).join('')+'</div>';
   var details='<div class="diagnosis-detail-title">各馬の診断</div>'+rows.map(function(x){var h=x.horse,e=x.evaluation||{},confidence=esc(e.confidence||'低'),reason=(x.overallReasons||[]).join(' / ')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:'');return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'"><b>'+badge(h)+' '+esc(h.name)+'</b></button><div class="diag-confidence">データ信頼度 <strong>'+confidence+'</strong></div><p class="diag-explain">'+esc(reason||'総合バランス型')+'</p></article>'}).join('');
   return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2>'+overview+details+'</section>'
 }
@@ -5150,7 +5155,7 @@ def _history_is_enough(cov: dict, months_done: int) -> bool:
     return five >= total
 
 def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[str], force: bool = False) -> dict:
-    max_months = max(6, min(36, int(os.getenv("NAR_ON_DEMAND_HISTORY_MONTHS", "12"))))
+    max_months = max(6, min(36, int(os.getenv("NAR_ON_DEMAND_HISTORY_MONTHS", "36"))))
     with _race_history_lock:
         existing = _race_history_jobs.get(race_id)
         if existing and not force:
@@ -5176,9 +5181,17 @@ def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[st
                 if _history_is_enough(cov_now, months_done):
                     break
             cov_now = _history_counts(horse_names, iso_date)
-            status = "done" if cov_now.get("horsesWithHistory",0) > 0 else ("error" if errors else "done")
+            # v155: if official NAR history is still under five starts, search a second
+            # career source. This is especially important for JRA/NAR transfers.
+            supplemented=0
+            under=list(cov_now.get("underFive") or [])
+            if under:
+                try:supplemented=_supplement_sparse_nar_history(race_id,under,iso_date)
+                except Exception as exc:errors.append("netkeiba DB補完:"+str(exc))
+            status = "done" if (cov_now.get("horsesWithHistory",0) > 0 or supplemented>0) else ("error" if errors else "done")
+            source="NAR公式 高速並列履歴"+(" + netkeiba DB補完" if supplemented else "")
             with _race_history_lock:
-                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":"NAR公式 高速並列履歴"}
+                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":source,"supplementedHorses":supplemented}
             with _detail_cache_lock:
                 _detail_cache.pop(race_id, None)
             try:_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=True)
@@ -5268,6 +5281,125 @@ def _netkeiba_get(url:str,timeout:float=4.0,cache_sec:int=45)->str:
         if len(_netkeiba_cache)>80:
             k=min(_netkeiba_cache.items(),key=lambda kv:kv[1][0])[0];_netkeiba_cache.pop(k,None)
     return txt
+
+def _netkeiba_db_horse_history(name:str, cutoff:str, limit:int=5)->dict:
+    """Fallback career lookup by horse name for sparse NAR histories.
+
+    Uses netkeiba DB only as a supplement after NAR official history has been searched.
+    The result page contains both central and local starts, which is useful for transfers.
+    """
+    name=_clean(name)
+    if not name:return {"name":"","recentRaces":[]}
+    try:
+        q=urllib.parse.urlencode({"pid":"horse_list","word":name})
+        html=_netkeiba_get("https://db.netkeiba.com/?"+q,float(os.getenv("NETKEIBA_DB_SEARCH_TIMEOUT_SEC","4.0")),86400)
+    except Exception as exc:
+        print("netkeiba DB horse search failed",name,exc);return {"name":name,"recentRaces":[]}
+    soup=BeautifulSoup(html,"html.parser")
+    candidates=[]
+    for a in soup.find_all("a",href=re.compile(r"^/horse/(?:result/)?\d+/?$")):
+        label=_clean(a.get_text(" ",strip=True));href=str(a.get("href") or "")
+        if label!=name:continue
+        m=re.search(r"/horse/(?:result/)?(\d+)/?",href)
+        if m and m.group(1) not in candidates:candidates.append(m.group(1))
+    # Some search responses jump straight to the horse page.
+    if not candidates:
+        m=re.search(r"/horse/(?:result/)?(\d{8,})/?",html)
+        if m:candidates.append(m.group(1))
+    best={"name":name,"recentRaces":[]};best_score=-1
+    for hid in candidates[:4]:
+        try:
+            page=_netkeiba_get(f"https://db.netkeiba.com/horse/result/{hid}/",float(os.getenv("NETKEIBA_DB_RESULT_TIMEOUT_SEC","4.0")),86400)
+        except Exception as exc:
+            print("netkeiba DB horse result failed",name,hid,exc);continue
+        ps=BeautifulSoup(page,"html.parser");runs=[]
+        for table in ps.find_all("table"):
+            trs=table.find_all("tr")
+            if not trs:continue
+            header_cells=trs[0].find_all(["th","td"])
+            headers=[_clean(c.get_text(" ",strip=True)) for c in header_cells]
+            joined="|".join(headers)
+            if "日付" not in joined or "着順" not in joined or "距離" not in joined:continue
+            def hidx(*keys):
+                for i,h in enumerate(headers):
+                    hh=re.sub(r"\s+","",h)
+                    if any(k in hh for k in keys):return i
+                return -1
+            i_date=hidx("日付");i_track=hidx("開催");i_title=hidx("レース名");i_field=hidx("頭数")
+            i_fin=hidx("着順");i_jockey=hidx("騎手");i_cw=hidx("斤量");i_dist=hidx("距離")
+            i_cond=hidx("馬場");i_time=hidx("タイム");i_corner=hidx("通過");i_bw=hidx("馬体重")
+            for tr in trs[1:]:
+                cells=tr.find_all(["th","td"])
+                vals=[_clean(c.get_text(" ",strip=True)) for c in cells]
+                def val(i):return vals[i] if i>=0 and i<len(vals) else ""
+                dm=re.search(r"(20\d{2})[./](\d{1,2})[./](\d{1,2})",val(i_date))
+                if not dm:continue
+                date=f"{int(dm.group(1)):04d}-{int(dm.group(2)):02d}-{int(dm.group(3)):02d}"
+                if cutoff and date>=cutoff:continue
+                fm=re.match(r"\s*(\d+)",val(i_fin))
+                if not fm:continue
+                dist_txt=val(i_dist);dst=re.search(r"(芝|ダ|障)[^0-9]*(\d{3,4})",dist_txt)
+                if not dst:continue
+                track=re.sub(r"^\d+|\d+$","",val(i_track)).strip()
+                field=_safe_int(val(i_field));corn=[]
+                cm=re.search(r"\d{1,2}(?:-\d{1,2})+",val(i_corner))
+                if cm:corn=[int(x) for x in cm.group(0).split("-")]
+                tm=0.0;mt=re.search(r"(?:(\d+):)?(\d{1,2})\.(\d)",val(i_time))
+                if mt:tm=int(mt.group(1) or 0)*60+int(mt.group(2))+int(mt.group(3))/10
+                bwm=re.search(r"(\d{3,4})(?:\s*\(\s*([+\-]?\d+)\s*\))?",val(i_bw))
+                runs.append({
+                    "date":date,"track":track,"title":val(i_title),"distance":int(dst.group(2)),
+                    "surface":"障害" if dst.group(1)=="障" else ("芝" if dst.group(1)=="芝" else "ダート"),
+                    "condition":val(i_cond) or "不明","weather":"不明","fieldSize":field,
+                    "finish":int(fm.group(1)),"timeSeconds":tm,"cornerPositions":corn,
+                    "carriedWeight":float(re.search(r"\d+(?:\.\d+)?",val(i_cw)).group()) if re.search(r"\d+(?:\.\d+)?",val(i_cw)) else 0.0,
+                    "bodyWeight":int(bwm.group(1)) if bwm else None,
+                    "bodyWeightChange":int(bwm.group(2)) if bwm and bwm.group(2) is not None else None,
+                    "jockey":val(i_jockey),"source":"netkeiba DB補完",
+                })
+                if len(runs)>=limit:break
+            if runs:break
+        runs=sorted(runs,key=lambda z:str(z.get("date") or ""),reverse=True)[:limit]
+        score=len(runs)*100 + (int(runs[0]["date"].replace("-","")) if runs else 0)
+        if score>best_score:
+            best_score=score;best={"name":name,"_netkeibaHorseId":hid,"recentRaces":runs,"source":"netkeiba DB補完"}
+    return best
+
+
+def _supplement_sparse_nar_history(race_id:str, names:list[str], cutoff:str)->int:
+    if not names:return 0
+    unique=list(dict.fromkeys([_clean(x) for x in names if _clean(x)]))
+    workers=max(2,min(4,int(os.getenv("NETKEIBA_DB_HISTORY_WORKERS","4"))))
+    rows=[]
+    with ThreadPoolExecutor(max_workers=min(workers,len(unique))) as pool:
+        futs={pool.submit(_netkeiba_db_horse_history,name,cutoff,5):name for name in unique}
+        for fut in as_completed(futs):
+            try:
+                z=fut.result() or {}
+                if z.get("recentRaces"):rows.append(z)
+            except Exception as exc:print("sparse NAR history supplement failed",futs[fut],exc)
+    if not rows:return 0
+    try:
+        with _enrich_data_lock:
+            olddata=_enrich_data.get(race_id) or {}
+            merged={}
+            for rr in (olddata.get("netkeibaRows") or [])+rows:
+                key=int(rr.get("horseNumber") or 0) or str(rr.get("name") or "")
+                if key:merged[key]=rr
+            _enrich_data[race_id]={
+                "netkeibaRows":list(merged.values()),
+                "smartRows":olddata.get("smartRows") or [],
+                "extra":olddata.get("extra") or [],
+            }
+        with _enrich_jobs_lock:
+            prev=_enrich_jobs.get(race_id) or {}
+            src=list(prev.get("sources") or [])
+            if "netkeiba DB補完" not in src:src.append("netkeiba DB補完")
+            _enrich_jobs[race_id]={**prev,"status":"done","sources":src,"finishedAt":time.time()}
+    except Exception as exc:
+        print("sparse NAR enrichment cache failed",race_id,exc);return 0
+    return len(rows)
+
 
 def _netkeiba_race_summaries(iso_date:str)->list[dict]:
     token=iso_date.replace("-","");url=f"https://race.netkeiba.com/top/race_list_sub.html?kaisai_date={token}"
@@ -8344,6 +8476,81 @@ def _fast_card_worker():
         finally:
             with _fast_card_cv:_fast_card_running.discard(race_id)
 
+def _nar_official_card_rows_fast(detail:dict)->list[dict]:
+    """Fetch today's NAR official race card, including current body weight/change."""
+    code=NAR_BABA_CODES.get(str(detail.get("track") or ""))
+    if not code:return []
+    date=str(detail.get("date") or "")
+    race_no=int(detail.get("raceNumber") or 0)
+    if not date or not race_no:return []
+    q=urllib.parse.urlencode({
+        "k_babaCode":code,
+        "k_raceDate":date.replace("-","/"),
+        "k_raceNo":race_no,
+    })
+    urls=[
+        "https://www.keiba.go.jp/KeibaWebSP/TodayRaceInfo/S_DebaTable?"+q,
+        "https://sp.keiba.go.jp/KeibaWebSP/TodayRaceInfo/S_DebaTable?"+q,
+    ]
+    html=""
+    for url in urls:
+        try:
+            req=urllib.request.Request(url,headers={
+                "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
+                "Accept-Language":"ja-JP,ja;q=0.9",
+                "Referer":"https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/TodayRaceInfoTop",
+            })
+            with urllib.request.urlopen(req,timeout=float(os.getenv("NAR_CARD_TIMEOUT_SEC","3.0"))) as res:
+                html=_jra_decode(res.read())
+            if html:break
+        except Exception as exc:
+            print("NAR official card failed",detail.get("id"),exc)
+    if not html:return []
+    soup=BeautifulSoup(html,"html.parser");out=[];seen=set()
+    for tr in soup.find_all("tr"):
+        cells=tr.find_all(["th","td"],recursive=False)
+        if not cells:continue
+        vals=[_clean(c.get_text(" ",strip=True)) for c in cells]
+        rowtxt=" ".join(vals)
+        wm=re.search(r"(?<!\d)(\d{3,4})\s*(?:\[\s*([+\-]?\d+)\s*\]|[（(]\s*([+\-]?\d+)\s*[）)])",rowtxt)
+        if not wm:continue
+        nums=[]
+        for c in vals[:4]:
+            m=re.fullmatch(r"\D*(\d{1,2})\D*",c)
+            if m:
+                v=int(m.group(1))
+                if 1<=v<=18:nums.append(v)
+        # With frame rowspan, rows can contain only horse number; otherwise the
+        # second small integer is normally the horse number (first is frame).
+        no=(nums[-1] if nums else 0)
+        if not no or no in seen:continue
+        seen.add(no)
+        chg=wm.group(2) if wm.group(2) is not None else wm.group(3)
+        out.append({
+            "horseNumber":no,
+            "bodyWeight":int(wm.group(1)),
+            "bodyWeightChange":int(chg) if chg not in (None,"") else None,
+            "source":"NAR公式出馬表",
+        })
+    return out
+
+
+def _merge_current_card_fields(detail:dict, rows:list[dict])->dict:
+    if not rows:return detail
+    by={int(x.get("horseNumber") or 0):x for x in rows if int(x.get("horseNumber") or 0)>0}
+    changed=False
+    for h in detail.get("horses",[]) or []:
+        z=by.get(int(h.get("horseNumber") or 0))
+        if not z:continue
+        for k in ("bodyWeight","bodyWeightChange","status","scratched"):
+            if z.get(k) not in (None,"") and h.get(k)!=z.get(k):
+                h[k]=z.get(k);changed=True
+    if changed:
+        detail["bodyWeightSource"]="NAR公式出馬表"
+        detail["bodyWeightUpdatedAt"]=_now_jst().strftime("%H:%M:%S")
+    return detail
+
+
 def _netkeiba_card_rows_fast(detail:dict)->list[dict]:
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
         str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0)
@@ -8518,6 +8725,10 @@ def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
             except Exception:pass
         q=_fast_local_race_detail(race_id)
         if q:
+            # v155: body weight is on the NAR official DebaTable, not reliably on the odds table.
+            # Merge it before the prediction snapshot so weight is visible and can affect the model.
+            try:q=_merge_current_card_fields(q,_nar_official_card_rows_fast(q))
+            except Exception as exc:print("fast NAR official body weight failed",race_id,exc)
             _store_fast_snapshot(q)
             if deep_history:
                 names=[str(h.get("name") or "") for h in q.get("horses",[]) if h.get("name")]
@@ -9506,23 +9717,22 @@ def odds_refresh(race_id:str, force: int = Query(0)):
         if m:
             odds=_nar_live_odds(m.group(2),m.group(1),int(m.group(3)),bool(force))
             merged={int(no):dict(z or {}) for no,z in odds.items()}
-            # NAR official is first choice. If the official odds table has not exposed
-            # body weight yet (or its layout changed), use the race card only for the
-            # missing current weight fields. SmartRc tempo/agari metrics are not used.
+            # NAR current body weight is published on the official DebaTable.
+            # Pull it directly instead of trying to resolve a JRA-style netkeiba race id.
             if not merged or any(not (z or {}).get("bodyWeight") for z in merged.values()):
                 try:
                     detail={"id":race_id,"date":m.group(1),"track":m.group(2),"raceNumber":int(m.group(3))}
-                    for h in _netkeiba_card_rows_fast(detail):
+                    for h in _nar_official_card_rows_fast(detail):
                         no=int(h.get("horseNumber") or 0)
                         if not no:continue
                         z=merged.setdefault(no,{})
                         for k in ("bodyWeight","bodyWeightChange","status","scratched"):
                             if z.get(k) in (None,"") and h.get(k) not in (None,""):z[k]=h.get(k)
-                    if merged and not odds:source="netkeiba馬体重補完"
-                except Exception as exc:print("NAR body weight fallback failed",race_id,exc)
+                    if merged and not odds:source="NAR公式出馬表"
+                except Exception as exc:print("NAR official body weight fallback failed",race_id,exc)
             for no,z in sorted(merged.items()):
                 horses.append({"horseNumber":int(no),**{k:v for k,v in z.items() if v is not None}})
-            if not source:source="NAR公式" if odds else ("netkeiba馬体重補完" if horses else "")
+            if not source:source="NAR公式" if odds else ("NAR公式出馬表" if horses else "")
     else:
         mm=re.match(r"^jra-(20\d{2}-\d{2}-\d{2})-([^\-]+)-(\d{2})$",race_id)
         detail={}
