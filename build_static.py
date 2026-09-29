@@ -67,8 +67,10 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v141"
+BUILD_VERSION = "v145"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
+js = re.sub(r'(kraiz-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
+js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
 
 # Cloudflare summary rows carry raceStatus rather than a nested result object.
 # Venue/home rows must still switch to "確定" immediately.
@@ -266,7 +268,7 @@ index_html = index_html.replace(
 )
 
 # Every route must point at the current immutable JS name.
-for old in ("/app-v133.js", "/app-v136.js", "/app-v137.js", "/app-v138.js", "/app-v139.js", "/app-v140.js"):
+for old in ("/app-v133.js", "/app-v136.js", "/app-v137.js", "/app-v138.js", "/app-v139.js", "/app-v140.js", "/app-v141.js"):
     index_html = index_html.replace(old, f"/app-{BUILD_VERSION}.js")
 
 (DIST / "index.html").write_text(index_html, encoding="utf-8")
@@ -285,8 +287,8 @@ for route in ("venue", "race"):
 
 # Compatibility copies are intentional.
 # A stale home-screen HTML/SW that asks for v137/v136/v133 still receives JS,
-# not an SPA HTML fallback, while v141 takes control.
-for compat in ("v140", "v139", "v138", "v137", "v136", "v133"):
+# not an SPA HTML fallback, while v145 takes control.
+for compat in ("v141", "v140", "v139", "v138", "v137", "v136", "v133"):
     (DIST / f"app-{compat}.js").write_text(js, encoding="utf-8")
 
 manifest = strings["MANIFEST"].replace('"start_url":"/?pwa=1"', '"start_url":"/"')
