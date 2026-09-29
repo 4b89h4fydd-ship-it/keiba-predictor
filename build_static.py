@@ -67,11 +67,10 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v137"
+BUILD_VERSION = "v138"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 
-# v133 browsing is Cloudflare/D1 first. Remove two old manual-only
-# same-origin Render fallbacks from the static deployment as well.
+# Cloudflare/D1 first. Remove old same-origin Render/manual fallbacks.
 js = re.sub(
     r"function prefetchNextHistory\(\)\{return;.*?\}\n\nfunction waitForRaceReady",
     "function prefetchNextHistory(){return}\n\nfunction waitForRaceReady",
@@ -90,6 +89,48 @@ js = re.sub(
     flags=re.S,
 )
 
+# Old installed iPhone PWAs may still launch with ?pwa=1.
+# Remove it from the browser history URL once the UI state is restored.
+js = js.replace(
+    "if(view.picker)u.searchParams.set('picker','1');else u.searchParams.delete('picker');var prior=window.history.state||{}",
+    "if(view.picker)u.searchParams.set('picker','1');else u.searchParams.delete('picker');"
+    "u.searchParams.delete('pwa');var prior=window.history.state||{}",
+)
+
+# Do not let a generic Safari 'Script error.' wipe a screen that already rendered.
+old_error = (
+    "window.onerror=function(msg){if(app)app.innerHTML='<div class=\"notice\" "
+    "style=\"margin:20px\">表示エラー：'+esc(msg)+'<br><button onclick=\"location.reload()\">"
+    "再読み込み</button></div>';return false};"
+)
+new_error = (
+    "var kraizBootPainted=false;"
+    "window.onerror=function(msg,src,line,col,err){"
+    "try{console.error('KRAIZ runtime error',msg,src,line,col,err||'')}catch(_e){};"
+    "try{if(app&&!kraizBootPainted&&app.querySelector&&app.querySelector('.boot')){"
+    "var where=(src?String(src).split('/').pop():'')+(line?':'+line:'');"
+    "app.innerHTML='<div class=\"notice\" style=\"margin:20px\">起動エラー：'+"
+    "esc(msg||'不明なエラー')+(where?'<br><small>'+esc(where)+'</small>':'')+"
+    "'<br><button onclick=\"location.reload()\">再読み込み</button></div>'}}catch(_e){};"
+    "return false};"
+)
+if old_error in js:
+    js = js.replace(old_error, new_error, 1)
+
+old_boot = (
+    "installNavigation();installEdgeBack();installPwaCache();restoreLocation();setTimeout(load,0);"
+)
+new_boot = (
+    "try{installNavigation()}catch(e){try{console.error(e)}catch(_e){}};"
+    "try{installEdgeBack()}catch(e){try{console.error(e)}catch(_e){}};"
+    "try{installPwaCache()}catch(e){try{console.error(e)}catch(_e){}};"
+    "try{restoreLocation()}catch(e){try{console.error(e)}catch(_e){}};"
+    "setTimeout(function(){try{load();kraizBootPainted=true}catch(e){try{console.error(e)}catch(_e){}}},0);"
+    "setTimeout(function(){kraizBootPainted=true},3000);"
+)
+if old_boot in js:
+    js = js.replace(old_boot, new_boot, 1)
+
 remaining = [
     line.strip()
     for line in js.splitlines()
@@ -104,46 +145,78 @@ index_html = strings["INDEX"].replace(
     '<link rel="stylesheet" href="/styles-kraiz-v130.css">',
     '<style>' + strings["CSS"] + '</style>'
 )
-# Keep every generated HTML route on the same immutable JS filename.  This is
-# deliberately rewritten even when app.py still contains an older route
-# template, so a stale Service Worker cannot keep serving the previous build.
-index_html = index_html.replace("/app-v133.js", f"/app-{BUILD_VERSION}.js")
-index_html = index_html.replace("/app-v136.js", f"/app-{BUILD_VERSION}.js")
+
+# More reliable standalone detection on iPhone and other installed PWAs.
+index_html = index_html.replace(
+    '<script>try{if(window.navigator.standalone===true)document.documentElement.classList.add("pwa-standalone")}catch(e){}</script>',
+    '<script>try{var s=window.navigator.standalone===true||'
+    '(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches);'
+    'if(s)document.documentElement.classList.add("pwa-standalone")}catch(e){}</script>'
+)
+
+# Every route must point at the current immutable JS name.
+for old in ("/app-v133.js", "/app-v136.js", "/app-v137.js"):
+    index_html = index_html.replace(old, f"/app-{BUILD_VERSION}.js")
+
 (DIST / "index.html").write_text(index_html, encoding="utf-8")
 (DIST / "404.html").write_text(index_html, encoding="utf-8")
 for route in ("venue", "race"):
     (DIST / route).mkdir()
     (DIST / route / "index.html").write_text(index_html, encoding="utf-8")
-(DIST / "_redirects").write_text("/venue /index.html 200\n/race /index.html 200\n", encoding="utf-8")
+
+(DIST / "_redirects").write_text(
+    "/venue /index.html 200\n/race /index.html 200\n",
+    encoding="utf-8",
+)
+
 (DIST / "styles-kraiz-v130.css").write_text(strings["CSS"], encoding="utf-8")
 (DIST / f"app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
-(DIST / "manifest-kraiz-v130.webmanifest").write_text(strings["MANIFEST"], encoding="utf-8")
-sw = strings["SW"].replace(
-    'const CACHE="kraiz-shell-v133-edge-only";',
-    f'const CACHE="kraiz-shell-{BUILD_VERSION}-inlinecss";'
-).replace(
-    'const CACHE="kraiz-shell-v133-inlinecss";',
-    f'const CACHE="kraiz-shell-{BUILD_VERSION}-inlinecss";'
-).replace(
-    'const CACHE="kraiz-shell-v136-instant-diagnosis";',
-    f'const CACHE="kraiz-shell-{BUILD_VERSION}-inlinecss";'
-).replace(
-    "/app-v133.js",
-    f"/app-{BUILD_VERSION}.js",
-).replace(
-    "/app-v136.js",
-    f"/app-{BUILD_VERSION}.js",
-).replace(
-    '  "/styles-kraiz-v130.css",\n',
-    ''
-)
-(DIST / "sw.js").write_text(sw, encoding="utf-8")
 
+# Compatibility copies are intentional.
+# A stale home-screen HTML/SW that asks for v137/v136/v133 still receives JS,
+# not an SPA HTML fallback, while v138 takes control.
+for compat in ("v137", "v136", "v133"):
+    (DIST / f"app-{compat}.js").write_text(js, encoding="utf-8")
+
+manifest = strings["MANIFEST"].replace('"start_url":"/?pwa=1"', '"start_url":"/"')
+(DIST / "manifest-kraiz-v130.webmanifest").write_text(manifest, encoding="utf-8")
+
+sw = strings["SW"]
+for old_cache in (
+    'const CACHE="kraiz-shell-v133-edge-only";',
+    'const CACHE="kraiz-shell-v133-inlinecss";',
+    'const CACHE="kraiz-shell-v136-instant-diagnosis";',
+    'const CACHE="kraiz-shell-v137-inlinecss";',
+):
+    sw = sw.replace(
+        old_cache,
+        f'const CACHE="kraiz-shell-{BUILD_VERSION}-pwa-safe";'
+    )
+
+for old in ("/app-v133.js", "/app-v136.js", "/app-v137.js"):
+    sw = sw.replace(old, f"/app-{BUILD_VERSION}.js")
+
+# CSS is inlined into generated HTML, so SW does not need a separately cached CSS.
+sw = sw.replace('  "/styles-kraiz-v130.css",\n', '')
+
+(DIST / "sw.js").write_text(sw, encoding="utf-8")
 
 (DIST / "_headers").write_text(
     "/\n"
     "  Cache-Control: no-store\n"
     "/index.html\n"
+    "  Cache-Control: no-store\n"
+    "/404.html\n"
+    "  Cache-Control: no-store\n"
+    "/app-v138.js\n"
+    "  Cache-Control: no-store\n"
+    "/app-v137.js\n"
+    "  Cache-Control: no-store\n"
+    "/app-v136.js\n"
+    "  Cache-Control: no-store\n"
+    "/app-v133.js\n"
+    "  Cache-Control: no-store\n"
+    "/manifest-kraiz-v130.webmanifest\n"
     "  Cache-Control: no-store\n"
     "/sw.js\n"
     "  Cache-Control: no-store\n"
@@ -170,4 +243,5 @@ for variable, filename in assets.items():
     (DIST / filename).write_bytes(base64.b64decode(binary_b64[variable]))
 
 print(f"KRAIZ static build complete: {DIST}")
-print(f"Files: {len(list(DIST.iterdir()))}")
+print(f"BUILD: {BUILD_VERSION}")
+print(f"Files: {len(list(DIST.rglob('*')))}")
