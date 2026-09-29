@@ -3,9 +3,7 @@ name: KRAIZ Production Sync
 "on":
   workflow_dispatch:
   schedule:
-    # JST 07:00-08:59 (UTC 22:00-23:59, previous UTC day)
     - cron: "*/5 22-23 * * *"
-    # JST 09:00-23:59 (UTC 00:00-14:59)
     - cron: "*/5 0-14 * * *"
 
 concurrency:
@@ -43,8 +41,6 @@ jobs:
         run: |
           echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
 
-      # Keep locally collected race/history DBs between scheduled runs.
-      # A unique key is saved each run; restore-keys picks the newest previous cache.
       - name: Restore KRAIZ data cache
         uses: actions/cache@v4
         with:
@@ -74,21 +70,17 @@ jobs:
           cat /tmp/kraiz.log || true
           exit 1
 
-      - name: Start background collection
+      - name: Start source refresh
         run: |
-          curl -fsS \
-            --max-time 120 \
+          curl -fsS --max-time 120 \
             "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE&force=1" \
             -o bundle.json || true
 
-      # Do NOT wait for full diagnosis here.
-      # As soon as a usable race list + details exist, push them to D1.
       - name: Wait only for usable provisional bundle
         run: |
           for i in $(seq 1 24)
           do
-            curl -fsS \
-              --max-time 120 \
+            curl -fsS --max-time 120 \
               "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
               -o bundle.json || true
 
@@ -111,10 +103,20 @@ jobs:
       - name: Sync provisional data to Cloudflare D1 immediately
         run: |
           jq '{
-            summaries: (.races // []),
+            summaries: [
+              (.races // [])[] |
+              . + {
+                raceStatus: (
+                  if ((.result // {}).status // "") == "確定"
+                  then "確定"
+                  else (.raceStatus // "")
+                  end
+                )
+              }
+            ],
             details: (.details // []),
             meta: {
-              source: "github-actions-provisional-v138",
+              source: "github-actions-provisional-v139",
               sync_date: (.date // ""),
               race_count: ((.races // []) | length),
               detail_count: ((.details // []) | length),
@@ -124,16 +126,148 @@ jobs:
             }
           }' bundle.json > provisional-payload.json
 
-          curl --fail-with-body \
-            -X POST \
-            "$CLOUDFLARE_SYNC_URL" \
+          curl --fail-with-body -X POST "$CLOUDFLARE_SYNC_URL" \
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
             --data-binary @provisional-payload.json
 
-      # Queue every race, but in start-time order so upcoming races are worked first.
-      # prepare-race priority=0 starts the deep-history path in app.py.
-      - name: Queue full diagnosis with upcoming races first
+      - name: Wait briefly for live source refresh
+        run: |
+          for i in $(seq 1 12)
+          do
+            L=$(curl -fsS \
+              "http://127.0.0.1:8000/api/v1/local-refresh-status?date=$SYNC_DATE" \
+              | jq -r '.running // false' || echo false)
+            C=$(curl -fsS \
+              "http://127.0.0.1:8000/api/v1/central-refresh-status?date=$SYNC_DATE" \
+              | jq -r '.running // false' || echo false)
+
+            echo "source refresh: local=$L central=$C"
+            if [ "$L" = "false" ] && [ "$C" = "false" ]; then
+              break
+            fi
+            sleep 3
+          done
+
+      - name: Refresh finished race results first
+        run: |
+          python - <<'PY'
+          import json
+          from datetime import datetime, timedelta, timezone
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+          import app
+
+          JST = timezone(timedelta(hours=9))
+          now = datetime.now(JST)
+          today = now.strftime("%Y-%m-%d")
+          now_min = now.hour * 60 + now.minute
+
+          with open("bundle.json", encoding="utf-8") as f:
+              bundle = json.load(f)
+
+          targets = []
+          for r in bundle.get("races") or []:
+              rid = str(r.get("id") or "")
+              date = str(r.get("date") or today)
+              st = str(r.get("startTime") or "")
+              if not rid:
+                  continue
+
+              should = date < today
+              if date == today and ":" in st:
+                  try:
+                      h, m = st.split(":", 1)
+                      should = now_min >= int(h) * 60 + int(m[:2]) + 3
+                  except Exception:
+                      pass
+
+              if should:
+                  targets.append(rid)
+
+          def refresh(rid):
+              try:
+                  d = app._prepare_race_snapshot(rid, force=True, manual=False)
+                  if isinstance(d, dict) and (d.get("horses") or d.get("result")):
+                      return d
+              except Exception as exc:
+                  print("result refresh failed", rid, exc)
+              return None
+
+          out = []
+          with ThreadPoolExecutor(max_workers=4) as ex:
+              futures = [ex.submit(refresh, rid) for rid in targets]
+              for fut in as_completed(futures):
+                  d = fut.result()
+                  if d:
+                      out.append(d)
+
+          out.sort(key=lambda d: (
+              str(d.get("circuit") or ""),
+              str(d.get("track") or ""),
+              int(d.get("raceNumber") or 0),
+          ))
+
+          with open("result-details.json", "w", encoding="utf-8") as f:
+              json.dump(out, f, ensure_ascii=False)
+
+          finals = sum(
+              1 for d in out
+              if ((d.get("result") or {}).get("status") == "確定")
+              or bool((d.get("result") or {}).get("finishers"))
+          )
+          print("Finished targets:", len(targets), "fresh snapshots:", len(out), "final:", finals)
+          PY
+
+      - name: Fast sync finished results to D1
+        run: |
+          python - <<'PY'
+          import json
+
+          with open("bundle.json", encoding="utf-8") as f:
+              bundle = json.load(f)
+          with open("result-details.json", encoding="utf-8") as f:
+              result_details = json.load(f)
+
+          detail_map = {
+              str(d.get("id") or ""): d
+              for d in (bundle.get("details") or [])
+              if d.get("id")
+          }
+          for d in result_details:
+              if d.get("id"):
+                  detail_map[str(d["id"])] = d
+
+          summaries = []
+          for r in bundle.get("races") or []:
+              z = dict(r)
+              d = detail_map.get(str(z.get("id") or ""))
+              result = (d or {}).get("result") or z.get("result") or {}
+              if result.get("status") == "確定" or result.get("finishers"):
+                  z["raceStatus"] = "確定"
+              summaries.append(z)
+
+          payload = {
+              "summaries": summaries,
+              "details": list(detail_map.values()),
+              "meta": {
+                  "source": "github-actions-results-first-v139",
+                  "sync_date": bundle.get("date") or "",
+                  "race_count": len(summaries),
+                  "detail_count": len(detail_map),
+                  "display_complete": bool(bundle.get("displayComplete") or bundle.get("complete")),
+              },
+          }
+
+          with open("results-payload.json", "w", encoding="utf-8") as f:
+              json.dump(payload, f, ensure_ascii=False)
+          PY
+
+          curl --fail-with-body -X POST "$CLOUDFLARE_SYNC_URL" \
+            -H "content-type: application/json" \
+            -H "x-sync-token: $SYNC_TOKEN" \
+            --data-binary @results-payload.json
+
+      - name: Queue diagnosis and odds with upcoming races first
         run: |
           python - <<'PY'
           import json, time, urllib.parse, urllib.request
@@ -148,7 +282,13 @@ jobs:
 
           def order_key(r):
               st = str(r.get("startTime") or "99:99")
-              return (0 if st >= now else 1, st, str(r.get("circuit") or ""), str(r.get("track") or ""), int(r.get("raceNumber") or 0))
+              return (
+                  0 if st >= now else 1,
+                  st,
+                  str(r.get("circuit") or ""),
+                  str(r.get("track") or ""),
+                  int(r.get("raceNumber") or 0),
+              )
 
           rows.sort(key=order_key)
           race_ids = []
@@ -161,27 +301,23 @@ jobs:
               json.dump(race_ids, f, ensure_ascii=False)
 
           def call(method, path, timeout=15):
-              url = BASE + path
-              req = urllib.request.Request(url, method=method)
+              req = urllib.request.Request(BASE + path, method=method)
               try:
                   with urllib.request.urlopen(req, timeout=timeout) as res:
-                      return res.status, res.read()
-              except Exception as e:
-                  return 0, str(e).encode()
+                      return res.status
+              except Exception:
+                  return 0
 
-          # Queue deep history in the desired order. These calls return immediately.
           for rid in race_ids:
               enc = urllib.parse.quote(rid, safe="")
               call("POST", f"/api/v1/prepare-race/{enc}", 8)
 
-          # Refresh current odds concurrently; failures never block diagnosis.
           def odds(rid):
               enc = urllib.parse.quote(rid, safe="")
               return call("GET", f"/api/v1/odds-refresh/{enc}?force=1", 20)
 
           with ThreadPoolExecutor(max_workers=6) as ex:
-              futures = [ex.submit(odds, rid) for rid in race_ids]
-              for fut in as_completed(futures):
+              for fut in as_completed([ex.submit(odds, rid) for rid in race_ids]):
                   try:
                       fut.result()
                   except Exception:
@@ -190,8 +326,6 @@ jobs:
           print("Queued races:", len(race_ids))
           PY
 
-      # While deep-history workers run, rebuild diagnosis from whatever data is ready.
-      # We stop early if all races become diagnosis-ready.
       - name: Let diagnosis enrich in background
         run: |
           python - <<'PY'
@@ -215,17 +349,16 @@ jobs:
                   return {"status": "error", "raceId": rid}
 
           total = len(race_ids)
-          for attempt in range(1, 11):
+          for attempt in range(1, 7):
               if attempt > 1:
-                  time.sleep(10)
+                  time.sleep(8)
 
               done = 0
               with ThreadPoolExecutor(max_workers=8) as ex:
                   futures = [ex.submit(refresh_one, rid) for rid in race_ids]
                   for fut in as_completed(futures):
                       try:
-                          data = fut.result()
-                          if data.get("status") == "done":
+                          if fut.result().get("status") == "done":
                               done += 1
                       except Exception:
                           pass
@@ -235,9 +368,7 @@ jobs:
                   break
           PY
 
-      # Pull the latest per-race snapshots directly. This avoids serving an older
-      # day-bundle copy after diagnosis has improved.
-      - name: Collect latest race details
+      - name: Collect latest current race details
         run: |
           python - <<'PY'
           import json, urllib.parse, urllib.request
@@ -262,14 +393,16 @@ jobs:
           with ThreadPoolExecutor(max_workers=8) as ex:
               futures = [ex.submit(get_one, rid) for rid in race_ids]
               for fut in as_completed(futures):
-                  try:
-                      d = fut.result()
-                      if d:
-                          out.append(d)
-                  except Exception:
-                      pass
+                  d = fut.result()
+                  if d:
+                      out.append(d)
 
-          out.sort(key=lambda d: (str(d.get("circuit") or ""), str(d.get("track") or ""), int(d.get("raceNumber") or 0)))
+          out.sort(key=lambda d: (
+              str(d.get("circuit") or ""),
+              str(d.get("track") or ""),
+              int(d.get("raceNumber") or 0),
+          ))
+
           with open("latest-details.json", "w", encoding="utf-8") as f:
               json.dump(out, f, ensure_ascii=False)
 
@@ -277,49 +410,136 @@ jobs:
               1 for d in out
               if bool((d.get("preparedMeta") or {}).get("diagnosisReady"))
           )
-          print("Latest details:", len(out), "diagnosis ready:", ready)
+          finals = sum(
+              1 for d in out
+              if ((d.get("result") or {}).get("status") == "確定")
+              or bool((d.get("result") or {}).get("finishers"))
+          )
+          print("Latest:", len(out), "diagnosis ready:", ready, "final:", finals)
           PY
 
-      - name: Sync enriched data to Cloudflare D1
+      - name: Materialize recent past races
         run: |
-          jq --slurpfile latest latest-details.json '
-            . as $bundle
-            | (
-                reduce (
-                  (($bundle.details // []) + ($latest[0] // []))[]
-                ) as $d (
-                  {};
-                  if ($d.id // "") != "" then .[$d.id] = $d else . end
-                )
-                | [.[]]
-              ) as $details
-            | {
-                summaries: ($bundle.races // []),
-                details: $details,
-                meta: {
-                  source: "github-actions-enriched-v138",
-                  sync_date: ($bundle.date // ""),
-                  race_count: (($bundle.races // []) | length),
-                  detail_count: ($details | length),
-                  analysis_count: ([$details[] | select(.preparedMeta.diagnosisReady == true)] | length),
-                  analysis_complete: (
-                    (($bundle.races // []) | length) > 0
-                    and
-                    ([$details[] | select(.preparedMeta.diagnosisReady == true)] | length)
-                      >= (($bundle.races // []) | length)
-                  ),
-                  display_complete: (($bundle.displayComplete // $bundle.complete // false))
-                }
-              }
-          ' bundle.json > payload.json
+          python - <<'PY'
+          import json
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+          import app
 
-          echo "Final races: $(jq '.summaries | length' payload.json)"
-          echo "Final details: $(jq '.details | length' payload.json)"
-          echo "Final diagnosis ready: $(jq '.meta.analysis_count' payload.json)"
+          with open("latest-details.json", encoding="utf-8") as f:
+              current = json.load(f)
 
-          curl --fail-with-body \
-            -X POST \
-            "$CLOUDFLARE_SYNC_URL" \
+          current_ids = {str(d.get("id") or "") for d in current}
+          candidates = {}
+
+          for d in current:
+              for h in d.get("horses") or []:
+                  for rr in (h.get("allPastRuns") or h.get("recentRaces") or [])[:5]:
+                      rid = str(rr.get("raceId") or "")
+                      if not rid or rid in current_ids:
+                          continue
+                      date = str(rr.get("date") or "")
+                      old = candidates.get(rid)
+                      if old is None or date > old:
+                          candidates[rid] = date
+
+          ids = [
+              rid for rid, _ in sorted(
+                  candidates.items(),
+                  key=lambda kv: kv[1],
+                  reverse=True,
+              )[:24]
+          ]
+
+          def build(rid):
+              try:
+                  d = app._prepare_race_snapshot(rid, force=False, manual=False)
+                  if isinstance(d, dict) and d.get("id") and (d.get("horses") or d.get("result")):
+                      return d
+              except Exception as exc:
+                  print("past snapshot failed", rid, exc)
+              return None
+
+          out = []
+          with ThreadPoolExecutor(max_workers=4) as ex:
+              futures = [ex.submit(build, rid) for rid in ids]
+              for fut in as_completed(futures):
+                  d = fut.result()
+                  if d:
+                      out.append(d)
+
+          with open("past-details.json", "w", encoding="utf-8") as f:
+              json.dump(out, f, ensure_ascii=False)
+
+          print("Past candidates:", len(ids), "materialized:", len(out))
+          PY
+
+      - name: Final sync current plus past races to Cloudflare D1
+        run: |
+          python - <<'PY'
+          import json
+
+          def read(path, fallback):
+              try:
+                  with open(path, encoding="utf-8") as f:
+                      return json.load(f)
+              except Exception:
+                  return fallback
+
+          bundle = read("bundle.json", {})
+          latest = read("latest-details.json", [])
+          past = read("past-details.json", [])
+
+          detail_map = {}
+          for d in (bundle.get("details") or []) + latest + past:
+              rid = str(d.get("id") or "")
+              if rid:
+                  detail_map[rid] = d
+
+          summaries = []
+          for r in bundle.get("races") or []:
+              z = dict(r)
+              d = detail_map.get(str(z.get("id") or ""))
+              result = (d or {}).get("result") or z.get("result") or {}
+              if result.get("status") == "確定" or result.get("finishers"):
+                  z["raceStatus"] = "確定"
+              summaries.append(z)
+
+          current_ids = {str(r.get("id") or "") for r in summaries}
+          current_details = [
+              d for rid, d in detail_map.items()
+              if rid in current_ids
+          ]
+
+          analysis_count = sum(
+              1 for d in current_details
+              if bool((d.get("preparedMeta") or {}).get("diagnosisReady"))
+          )
+
+          payload = {
+              "summaries": summaries,
+              "details": list(detail_map.values()),
+              "meta": {
+                  "source": "github-actions-final-v139",
+                  "sync_date": bundle.get("date") or "",
+                  "race_count": len(summaries),
+                  "detail_count": len(current_details),
+                  "analysis_count": analysis_count,
+                  "analysis_complete": bool(summaries) and analysis_count >= len(summaries),
+                  "past_detail_count": len(past),
+                  "display_complete": bool(bundle.get("displayComplete") or bundle.get("complete")),
+              },
+          }
+
+          with open("payload.json", "w", encoding="utf-8") as f:
+              json.dump(payload, f, ensure_ascii=False)
+
+          print("Final races:", len(summaries))
+          print("Current details:", len(current_details))
+          print("Past details:", len(past))
+          print("Diagnosis ready:", analysis_count)
+          PY
+
+          curl --fail-with-body -X POST "$CLOUDFLARE_SYNC_URL" \
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
             --data-binary @payload.json
