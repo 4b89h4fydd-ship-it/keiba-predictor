@@ -2239,64 +2239,105 @@ function assignOverallGrades(r,rows,suit,sc,pressure){
   return assignOverallGradesCentral(r,rows,suit,pressure)
 }
 
+function recentPeakScore(h,r){
+  var runs=(h&&h.recentRaces)||[],best=.34,i,z,finish,field,sameTrack,sameDist,score;
+  for(i=0;i<Math.min(5,runs.length);i++){
+    z=runs[i]||{};finish=n(z.finish||z.finishPosition,99);field=Math.max(6,n(z.fieldSize,12));
+    sameTrack=String(z.track||'')===String(r.track||'')?1:0;
+    sameDist=Math.abs(n(z.distance)-n(r.distance))<=150?1:0;
+    score=.28;
+    if(finish<99)score+=clamp((field-finish)/Math.max(1,field-1),0,1)*.42;
+    if(finish<=3)score+=.10;
+    score+=sameTrack*.10+sameDist*.08;
+    if(score>best)best=score
+  }
+  return clamp(best,0,1)
+}
+function assignUpsetScores(r,rows,sc,pressure){
+  pressure=pressure||{};sc=sc||[];
+  var collapse=0,front=0,i,x,q,pop,odds,market,hidden,position,fit,peak,stay,late,evidence,score,reasons;
+  sc.forEach(function(z){if(z.code==='C')collapse=n(z.prob);if(z.code==='A')front=n(z.prob)});
+  for(i=0;i<rows.length;i++){
+    x=rows[i];q=pressure[n(x.horse.horseNumber)]||{};pop=n(x.horse.popularity,0);odds=Number(x.horse.winOdds||0)||0;
+    fit=clamp(n(x.distFit,.5)*.42+n(x.trackFit,.5)*.36+n(x.condFit,.5)*.22,0,1);
+    peak=recentPeakScore(x.horse,r);
+    stay=clamp(n(x.frontStay)*.58+(1-n(x.fade))*.22+n(x.holdFront)*.20,0,1);
+    late=clamp(n(x.comeFromBehind)*.58+n(x.latePower)*.27+n(x.move)*.15,0,1);
+    position=Math.max(
+      clamp(n(x.goProb)*.38+stay*.34+n(x.breakSkill)*.14+(1-clamp(n(q.conflict),0,1))*.14,0,1),
+      clamp(late*.62+n(x.trafficTol)*.18+n(x.turnSkill)*.10+(1-n(x.goProb))*.10,0,1)
+    );
+    market=0;
+    if(pop>=10)market=.16;else if(pop>=7)market=.12;else if(pop>=5)market=.08;else if(pop>=4)market=.04;
+    if(odds>=50)market=Math.max(market,.17);else if(odds>=25)market=Math.max(market,.13);else if(odds>=12)market=Math.max(market,.08);
+    hidden=clamp((n(x.overallRank,rows.length)-3)/Math.max(3,rows.length-3),0,1);
+    evidence=clamp(n(x.coverage)*.58+clamp(n(x.styleSamples)/4,0,1)*.22+clamp(((x.horse.recentRaces||[]).length)/5,0,1)*.20,0,1);
+    score=(
+      n(x.ability)*.13+
+      fit*.16+
+      n(x.representativeScore,.5)*.14+
+      peak*.12+
+      position*.18+
+      Math.max(stay,late)*.11+
+      (1-n(x.fade))*.05+
+      evidence*.04+
+      hidden*.03+
+      market*.04
+    );
+    if(n(x.goProb)>=.58&&stay>=.58){score+=.055;if(front>=.32)score+=.018}
+    if(late>=.64&&collapse>=.30)score+=.045;
+    if(fit>=.62&&peak>=.62)score+=.030;
+    if(n(x.frontCost)>=.14&&n(x.needLead)>=.55)score-=.045;
+    if(n(x.fade)>=.58&&n(x.goProb)>=.52)score-=.040;
+    if(evidence<.26)score-=.030;
+    x.upsetScore=Math.round(clamp(score,0,1)*100);
+    reasons=[];
+    if(n(x.goProb)>=.58&&stay>=.58)reasons.push('前を取って残せる');
+    if(late>=.64&&collapse>=.30)reasons.push('差し展開で浮上');
+    if(fit>=.62)reasons.push('今回条件向き');
+    if(peak>=.64)reasons.push('近5走に高いピーク');
+    if(n(x.representativeScore)>=.64)reasons.push('代表走が強い');
+    if(pop>=6||odds>=15)reasons.push('人気とのズレ');
+    if(n(q.lineEndRelief)>=.05||n(q.freeOuter)>=.05)reasons.push('隊列の自由度');
+    if(n(x.fade)<=.28&&n(x.goProb)>=.50)reasons.push('前で下がりにくい');
+    x.upsetReasons=reasons.slice(0,4)
+  }
+}
+function raceTargetProfile(r,p){
+  var rows=(p&&p.rows)||[],holes=rows.filter(function(x){return n(x.overallRank)>=4&&n(x.upsetScore)>=58}).sort(function(a,b){return n(b.upsetScore)-n(a.upsetScore)}),
+      h1=holes[0]?n(holes[0].upsetScore):0,h2=holes[1]?n(holes[1].upsetScore):0,
+      vol=n(r&&r.volatility&&r.volatility.score,0),volNorm=clamp(vol/18,0,1),
+      sc=(p&&p.scenarios)||[],uncertainty=0,cov=n(p&&p.coverage,0);
+  if(sc.length){var probs=sc.map(function(z){return n(z.prob)}).sort(function(a,b){return b-a});uncertainty=clamp(1-((probs[0]||0)-(probs[1]||0)),0,1)}
+  var score=Math.round(clamp((h1/100)*.54+(h2/100)*.12+volNorm*.13+uncertainty*.09+cov*.12,0,1)*100),grade='C',label='本線寄り';
+  if(score>=78){grade='S';label='穴を頭まで検討'}
+  else if(score>=68){grade='A';label='穴を2・3着以上へ'}
+  else if(score>=57){grade='B';label='相手穴を拾う'}
+  return{score:score,grade:grade,label:label,holes:holes.slice(0,3)}
+}
+
 function assignPredictionMarks(rows,r){
   var sorted=rows.slice().sort(function(a,b){
-    return n(a.overallRank,999)-n(b.overallRank,999)||
-           n(b.overallRaw)-n(a.overallRaw)||
-           n(b.overallScore)-n(a.overallScore)||
-           n(b.ability)-n(a.ability)||
-           Math.max(n(b.frontStay),n(b.comeFromBehind))-Math.max(n(a.frontStay),n(a.comeFromBehind))||
-           n(b.posCons)-n(a.posCons)||
-           n(b.coverage)-n(a.coverage)||
-           n(b.styleSamples)-n(a.styleSamples)||
-           n(a.horse.horseNumber)-n(b.horse.horseNumber)
+    return n(a.overallRank,999)-n(b.overallRank,999)||n(b.overallRaw)-n(a.overallRaw)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)
+  }),i,x,selected=[],attention=[];
+  rows.forEach(function(z){z.predMark='';z.predRank=999;z.attentionReason=''});
+  function take(row,mark){if(!row||selected.indexOf(row)>=0)return;row.predMark=mark;selected.push(row)}
+  take(sorted[0],'◎');take(sorted[1],'○');take(sorted[2],'▲');
+  var starPool=sorted.slice(3).filter(function(z){return n(z.upsetScore)>=62&&(n(z.coverage)>=.28||n(z.styleSamples)>=2||((z.horse.recentRaces||[]).length>=2))});
+  starPool.sort(function(a,b){return n(b.upsetScore)-n(a.upsetScore)||n(a.overallRank)-n(b.overallRank)});
+  var star=starPool[0]||sorted[3];
+  take(star,'☆');
+  var delta=sorted.filter(function(z){return selected.indexOf(z)<0})[0];
+  take(delta,'△');
+  sorted.forEach(function(z){
+    if(selected.indexOf(z)>=0)return;
+    if(n(z.upsetScore)>=68&&(n(z.coverage)>=.28||n(z.styleSamples)>=2||((z.horse.recentRaces||[]).length>=2)))attention.push(z)
   });
-  var base=['◎','○','▲','☆','△'],i,x,fifth=sorted.length>=5?n(sorted[4].overallScore):0,candidates=[];
-  var hi=sorted.length?n(sorted[0].overallScore):0,
-      lo=sorted.length?n(sorted[sorted.length-1].overallScore):0,
-      avgCoverage=sorted.length?mean(sorted.map(function(z){return n(z.coverage)})):0,
-      styleEvidence=sorted.filter(function(z){return n(z.styleSamples)>0}).length,
-      debut=predictionProfile(r||{}).code==='DEBUT';
-  // v147: always show the best available pre-race marks.
-  // Low data volume lowers confidence/tier, but must not hide ◎○▲☆△ from the race card.
-
-  // まず上位5頭だけ通常印。6位以下を自動で「注」にしない。
-  for(i=0;i<sorted.length;i++){
-    x=sorted[i];
-    x.predRank=i+1;
-    x.predMark=i<5?base[i]:'';
-    x.attentionReason='';
-  }
-
-  // 「注」は本当に拾う根拠がある馬だけ。0頭でもよい。最大2頭。
-  for(i=5;i<sorted.length;i++){
-    x=sorted[i];
-    var score=n(x.overallScore),
-        gap=Math.max(0,fifth-score),
-        strengths=0,
-        reasons=[],
-        evidence=(n(x.coverage)>=.30)||(n(x.styleSamples)>=2)||((x.horse.recentRaces||[]).length>=2);
-
-    if(n(x.ability)>=.62){strengths++;reasons.push('能力')}
-    if(n(x.frontStay)>=.64){strengths++;reasons.push('前残り力')}
-    if(n(x.comeFromBehind)>=.64){strengths++;reasons.push('差し込み力')}
-    if(n(x.goProb)>=.60){strengths++;reasons.push('先行力')}
-    if(n(x.styleSamples)>=2&&n(x.fade)<=.28){strengths++;reasons.push('下がり率低')}
-    if((x.overallReasons||[]).some(function(z){return String(z).indexOf('今回条件に実績')>=0})){strengths++;reasons.push('条件実績')}
-
-    var closeToTop=(score>=55&&fifth>=55&&gap<=4&&strengths>=1);
-    var hiddenStrength=(gap<=10&&score>=55&&strengths>=2);
-    if(evidence&&(closeToTop||hiddenStrength)){
-      var attentionScore=score+strengths*2.5+n(x.coverage)*3-gap*.35;
-      candidates.push({row:x,score:attentionScore,reasons:reasons})
-    }
-  }
-
-  candidates.sort(function(a,b){return b.score-a.score||n(a.row.horse.horseNumber)-n(b.row.horse.horseNumber)});
-  candidates.slice(0,2).forEach(function(z){
-    z.row.predMark='注';
-    z.row.attentionReason=z.reasons.slice(0,3).join('・')
-  })
+  attention.sort(function(a,b){return n(b.upsetScore)-n(a.upsetScore)||n(a.overallRank)-n(b.overallRank)});
+  attention.slice(0,2).forEach(function(z){z.predMark='注';z.attentionReason=(z.upsetReasons||[]).slice(0,3).join('・')});
+  var order={'◎':1,'○':2,'▲':3,'☆':4,'△':5,'注':6};
+  rows.slice().sort(function(a,b){return n(order[a.predMark],99)-n(order[b.predMark],99)||n(b.upsetScore)-n(a.upsetScore)||n(a.overallRank)-n(b.overallRank)}).forEach(function(z,idx){z.predRank=idx+1});
+  if(star&&star.predMark==='☆')star.attentionReason=(star.upsetReasons||[]).slice(0,3).join('・')
 }
 function raceMode(r){r=r||{};if(['平地','新馬','障害'].indexOf(r.analysisMode)>=0)return r.analysisMode;var title=String(r.title||'');if(r.surface==='障害'||/障害|J[･・.]?G[ⅠⅡⅢ123]|\bJS\b|ジャンプ/i.test(title))return '障害';return /新馬|メイクデビュー/.test(title)?'新馬':'平地'}
 function saveRaceAnalysis(r,p){return}
@@ -2327,7 +2368,7 @@ function integratedGrades(r,rows){
   })
 }
 
-function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'kraiz-commercial-2026.09-v4-official-history'};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
+function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignUpsetScores(modelRace,rows,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'kraiz-commercial-2026.09-v5-upset-targeting'};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -2485,13 +2526,14 @@ function ensureAutoOdds(r){
 
 function overallScoreText(x){var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
 function aiMarksPanel(r,p){
-  var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">ここはAIの固定予想印です。出走表の印は自由に変更できます。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中');return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small></span><span class="ai-mark-rank">'+esc(x.predRank)+'位</span></button>'}).join('')+'</div></section>'
+  var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)}),target=raceTargetProfile(r,p),holes=target.holes||[];
+  var targetHtml='<div class="ai-target-card target-'+String(target.grade||'C').toLowerCase()+'"><div><small>KRAIZ 狙いレース判定</small><strong>狙い度 '+esc(target.grade)+'</strong><span>'+esc(target.label)+'　'+esc(target.score)+'/100</span></div>'+(holes.length?'<div class="ai-target-holes">'+holes.map(function(z){return badge(z.horse)+'<b>'+esc(z.horse.name)+'</b><em>穴'+esc(z.upsetScore)+'</em>'}).join('')+'</div>':'<div class="ai-target-holes muted">強い穴候補はまだなし</div>')+'</div>';
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲は総合力中心、☆は今回だけ跳ねる穴本命、注は大穴候補。人気順ではなく能力・適性・実績と今回の隊列のズレを見ます。</p>'+targetHtml+'<div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),up=n(x.upsetScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・'));return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(up>=55?'<small class="upset-line">穴激走 '+esc(up)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">総合'+esc(x.overallRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function diagnosisPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.overallRank,999)-n(b.overallRank,999)||n(b.overallRaw)-n(a.overallRaw)||n(b.overallScore)-n(a.overallScore)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),ready=!!p;
   var overview='<div class="diagnosis-overview"><div class="diagnosis-overview-title">総合評価一覧</div>'+rows.map(function(x,i){var h=x.horse,bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),rank=n(x.overallRank,i+1);return '<button data-horse-open="'+esc(h.horseNumber)+'" class="diagnosis-overview-row"><span class="diag-rank">'+rank+'位</span>'+badge(h)+'<span class="diag-name">'+esc(h.name)+'</span><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><b>'+esc(overallScoreText(x))+'</b><small>AI '+esc(x.predMark||'—')+' / '+esc(bw)+'</small></button>'}).join('')+'</div>';
-  var details='<div class="diagnosis-detail-title">各馬の診断</div>'+rows.map(function(x){var h=x.horse,e=x.evaluation||{},confidence=esc(e.confidence||'低'),reason=(x.overallReasons||[]).join(' / ')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:'');return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'"><b>'+badge(h)+' '+esc(h.name)+'</b></button><div class="diag-confidence">データ信頼度 <strong>'+confidence+'</strong></div><p class="diag-explain">'+esc(reason||'総合バランス型')+'</p></article>'}).join('');
+  var details='<div class="diagnosis-detail-title">各馬の診断</div>'+rows.map(function(x){var h=x.horse,e=x.evaluation||{},confidence=esc(e.confidence||'低'),reason=(x.overallReasons||[]).join(' / ')+(n(x.upsetScore)>=65?' / 穴激走 '+n(x.upsetScore)+' '+(x.upsetReasons||[]).slice(0,2).join('・'):'')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:'');return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'"><b>'+badge(h)+' '+esc(h.name)+'</b></button><div class="diag-confidence">データ信頼度 <strong>'+confidence+'</strong></div><p class="diag-explain">'+esc(reason||'総合バランス型')+'</p></article>'}).join('');
   return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2>'+overview+details+'</section>'
 }
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=(h.allPastRuns||h.recentRaces||[]).slice(0,5);return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：過去走0（正常）':'過去走0件：基礎情報で評価済み')+'</p>')+'</article>'}).join('')+'</section>'}
@@ -10304,4 +10346,10 @@ CSS += r"""
   .race-state-pill{font-size:8px;height:18px;padding:0 6px}
   .smart-next-summary{font-size:10px!important}
 }
+"""
+
+
+# v158 upset targeting / race selection
+CSS += r"""
+.ai-target-card{margin:12px 0 14px;padding:13px;border:1px solid #596b74;border-radius:14px;background:#243038;display:grid;gap:10px}.ai-target-card>div:first-child{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;align-items:end}.ai-target-card small{grid-column:1/3;color:#b7c3c8;font-size:11px}.ai-target-card strong{font-size:22px;color:#f3dfaa}.ai-target-card span{justify-self:end;color:#d5dbde;font-size:12px}.ai-target-card.target-s{border-color:#d7a84c;box-shadow:inset 0 0 0 1px rgba(215,168,76,.18)}.ai-target-card.target-a{border-color:#b98d56}.ai-target-holes{display:flex;gap:8px;align-items:center;overflow-x:auto;padding-bottom:2px}.ai-target-holes .horse-badge{flex:0 0 auto}.ai-target-holes b{font-size:12px;white-space:nowrap}.ai-target-holes em{font-style:normal;font-weight:900;color:#f0c879;background:#342d22;border:1px solid #765f38;border-radius:999px;padding:3px 7px;white-space:nowrap}.upset-line{color:#f0c879!important;font-weight:800}.ai-mark-row:has(.upset-line){border-color:#625c4b!important}@media(max-width:430px){.ai-target-card>div:first-child{grid-template-columns:1fr auto}.ai-target-card strong{font-size:20px}.ai-target-card span{font-size:11px}.ai-target-holes{gap:6px}.upset-line{font-size:10px!important}}
 """
