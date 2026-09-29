@@ -67,7 +67,7 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v145"
+BUILD_VERSION = "v146"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 js = re.sub(r'(kraiz-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
 js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
@@ -287,8 +287,8 @@ for route in ("venue", "race"):
 
 # Compatibility copies are intentional.
 # A stale home-screen HTML/SW that asks for v137/v136/v133 still receives JS,
-# not an SPA HTML fallback, while v145 takes control.
-for compat in ("v141", "v140", "v139", "v138", "v137", "v136", "v133"):
+# not an SPA HTML fallback, while v146 takes control.
+for compat in ("v145", "v141", "v140", "v139", "v138", "v137", "v136", "v133"):
     (DIST / f"app-{compat}.js").write_text(js, encoding="utf-8")
 
 manifest = strings["MANIFEST"].replace('"start_url":"/?pwa=1"', '"start_url":"/"')
@@ -394,6 +394,8 @@ self.addEventListener("fetch",event=>{{
     "/404.html\n"
     "  Cache-Control: no-store\n"
     f"/app-{BUILD_VERSION}.js\n"
+    "  Cache-Control: no-store\n"
+    "/app-v145.js\n"
     "  Cache-Control: no-store\n"
     "/app-v140.js\n"
     "  Cache-Control: no-store\n"
