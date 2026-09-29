@@ -1821,6 +1821,64 @@ CSS += r"""
 @media(max-width:360px){.smart-live-grid{gap:5px}.smart-live-card{padding:8px 4px}.smart-live-card strong{font-size:18px}.smart-live-card b{font-size:10px}}
 """
 
+CSS += r"""
+/* v154 — clearer venue summary + swipeable live cards + sticky venue header */
+.smart-venue-name small{
+  font-size:14px!important;
+  font-weight:800!important;
+  color:#d7dde0!important;
+  margin-top:4px!important;
+}
+.smart-venue-times{
+  font-size:15px!important;
+  font-weight:850!important;
+  color:#f1ece3!important;
+  gap:7px!important;
+}
+.smart-venue-times small{font-size:15px!important;font-weight:850!important;color:#f1ece3!important}
+.smart-venue-times i{font-size:13px!important;color:#94a1a8!important}
+.smart-live-circuit{margin-top:9px}
+.smart-live-circuit:first-of-type{margin-top:0}
+.smart-live-circuit-head{display:flex;align-items:center;justify-content:space-between;margin:0 2px 6px}
+.smart-live-circuit-head b{font-size:14px;color:#ece7de;letter-spacing:.04em}
+.smart-live-circuit-head small{font-size:10px;color:#aab4b9}
+.smart-live-strip{
+  display:flex!important;
+  grid-template-columns:none!important;
+  gap:7px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:0 1px 5px!important;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.smart-live-strip::-webkit-scrollbar{display:none}
+.smart-live-strip .smart-live-card{
+  flex:0 0 calc((100% - 14px)/3)!important;
+  min-width:0!important;
+  scroll-snap-align:start;
+}
+.smart-race-section>.smart-section-title{
+  position:sticky!important;
+  top:58px!important;
+  z-index:45!important;
+  box-shadow:0 5px 12px rgba(0,0,0,.22)!important;
+}
+@supports(padding:max(0px)){
+  .smart-race-section>.smart-section-title{top:calc(58px + env(safe-area-inset-top))!important}
+}
+@media(max-width:560px){
+  .smart-race-section>.smart-section-title{top:calc(64px + env(safe-area-inset-top))!important}
+  .smart-venue-card{grid-template-columns:38px minmax(0,1fr) auto 16px!important}
+}
+@media(max-width:360px){
+  .smart-live-strip .smart-live-card{flex-basis:calc((100% - 10px)/3)!important}
+  .smart-venue-times,.smart-venue-times small{font-size:14px!important}
+}
+"""
+
+
 JS = r"""
 (function(){
 "use strict";
@@ -2517,33 +2575,41 @@ function smartRaceDayHeading(){
   var sub=isToday?(hasCentral&&hasLocal?'今日の中央・地方開催':(hasCentral?'今日の中央開催':(hasLocal?'今日の地方開催':'今日の開催'))):((state.date||'').replace(/-/g,'.')+' の開催');
   return '<section class="smart-race-day-heading"><div><b>'+esc(title)+'</b><small>'+esc(sub)+'</small></div></section>'
 }
-function smartLiveRaceSection(){
-  if(state.date!==today())return'';
-  var now=nowMins(),rows=state.races.filter(function(r){
-    if(isFinal(r)||!r.startTime)return false;
-    var d=mins(r.startTime)-now;
-    return d>=-25&&d<=120
-  }).sort(function(a,b){
-    var da=mins(a.startTime)-now,db=mins(b.startTime)-now,
-        ka=da<0?Math.abs(da)*.45:da,kb=db<0?Math.abs(db)*.45:db;
-    return ka-kb||mins(a.startTime)-mins(b.startTime)
-  }).slice(0,6);
-  if(!rows.length){
-    rows=state.races.filter(function(r){return !isFinal(r)&&r.startTime&&mins(r.startTime)>=now})
-      .sort(function(a,b){return mins(a.startTime)-mins(b.startTime)}).slice(0,3)
-  }
-  return '<section class="smart-live-section"><div class="smart-live-heading"><b>リアルタイムのレース</b><small>発走時刻に合わせて更新</small></div><div class="smart-live-grid">'+
-    (rows.length?rows.map(function(r){
+function smartLiveVenueRace(rows,now){
+  var active=(rows||[]).filter(function(r){return !isFinal(r)&&r.startTime});
+  if(!active.length)return null;
+  var running=active.filter(function(r){var d=mins(r.startTime)-now;return d<0&&d>=-25})
+    .sort(function(a,b){return mins(b.startTime)-mins(a.startTime)});
+  if(running.length)return running[0];
+  var future=active.filter(function(r){return mins(r.startTime)>=now})
+    .sort(function(a,b){return mins(a.startTime)-mins(b.startTime)});
+  return future.length?future[0]:null
+}
+function smartLiveCircuitGroup(circuit,label,now){
+  var source=state.races.filter(function(r){return r.circuit===circuit}),tracks=[],seen={};
+  source.forEach(function(r){var t=String(r.track||'');if(t&&!seen[t]){seen[t]=1;tracks.push(t)}});
+  tracks.sort(function(a,b){return a.localeCompare(b,'ja')});
+  var rows=tracks.map(function(track){return smartLiveVenueRace(source.filter(function(r){return r.track===track}),now)}).filter(Boolean);
+  if(!rows.length)return'';
+  return '<div class="smart-live-circuit"><div class="smart-live-circuit-head"><b>'+esc(label)+'</b><small>'+rows.length+'会場</small></div><div class="smart-live-strip">'+
+    rows.map(function(r){
       var d=mins(r.startTime)-now,status=d<0?'進行中':(d<=10?'まもなく':d+'分後'),cls=d<0?'running':(d<=10?'soon':'upcoming');
       return '<button type="button" class="smart-live-card '+cls+'" data-race="'+esc(r.id)+'">'+
-        '<small>'+esc(r.circuit||'')+'　'+esc(r.track)+' '+esc(r.raceNumber)+'R</small>'+ 
+        '<small>'+esc(r.track)+' '+esc(r.raceNumber)+'R</small>'+ 
         '<b>'+esc(r.title||((r.track||'')+' '+n(r.raceNumber)+'R'))+'</b>'+ 
         '<strong>'+esc(r.startTime||'--:--')+'</strong>'+ 
         '<span class="smart-live-status">'+esc(status)+'</span>'+ 
         '<em>'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m</em>'+ 
       '</button>'
-    }).join(''):'<div class="smart-live-empty">現在の対象レースはありません</div>')+
-  '</div></section>'
+    }).join('')+
+  '</div></div>'
+}
+function smartLiveRaceSection(){
+  if(state.date!==today())return'';
+  var now=nowMins(),central=smartLiveCircuitGroup('中央','中央',now),local=smartLiveCircuitGroup('地方','地方',now),body=central+local;
+  return '<section class="smart-live-section"><div class="smart-live-heading"><b>リアルタイムのレース</b><small>各会場から1レース</small></div>'+
+    (body||'<div class="smart-live-empty">現在の対象レースはありません</div>')+
+  '</section>'
 }
 function smartHomeHero(){
   return '<section class="smart-home-hero">'+
