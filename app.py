@@ -2119,14 +2119,8 @@ function assignPredictionMarks(rows,r){
       avgCoverage=sorted.length?mean(sorted.map(function(z){return n(z.coverage)})):0,
       styleEvidence=sorted.filter(function(z){return n(z.styleSamples)>0}).length,
       debut=predictionProfile(r||{}).code==='DEBUT';
-  if(!debut&&sorted.length&&avgCoverage<.25&&styleEvidence<Math.max(2,Math.ceil(sorted.length*.35))){
-    for(i=0;i<sorted.length;i++){sorted[i].predRank=i+1;sorted[i].predMark='';sorted[i].attentionReason=''}
-    return
-  }
-  if(sorted.length&&(hi-lo)<2&&avgCoverage<.40){
-    for(i=0;i<sorted.length;i++){sorted[i].predRank=i+1;sorted[i].predMark='';sorted[i].attentionReason=''}
-    return
-  }
+  // v147: always show the best available pre-race marks.
+  // Low data volume lowers confidence/tier, but must not hide ◎○▲☆△ from the race card.
 
   // まず上位5頭だけ通常印。6位以下を自動で「注」にしない。
   for(i=0;i<sorted.length;i++){
@@ -2397,6 +2391,12 @@ function smartVenueCards(){
     smartVenueGroup('地方','地方')+
   '</div>'
 }
+function smartRaceDayHeading(){
+  var parts=String(state.date||'').split('-'),m=n(parts[1]),d=n(parts[2]),isToday=state.date===today();
+  var title=isToday?'本日のレース':(m&&d?m+'月'+d+'日のレース':'開催レース');
+  var sub=isToday?'今日の中央・地方開催':((state.date||'').replace(/-/g,'.')+' の開催');
+  return '<section class="smart-race-day-heading"><div><b>'+esc(title)+'</b><small>'+esc(sub)+'</small></div></section>'
+}
 function smartHomeHero(){
   return '<section class="smart-home-hero">'+
     '<img class="smart-home-hero-image" src="/kraiz-racing-hero.webp" alt="KRAIZ hero">'+
@@ -2416,6 +2416,7 @@ function renderHome(){
     smartHomeHero()+
     '<main class="smart-main smart-home-main">'+
       smartPageControls()+
+      smartRaceDayHeading()+
       (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
       smartVenueCards()+
     '</main>'+
@@ -2569,9 +2570,9 @@ function venueRaceRows(){
 }
 function renderVenue(){
   return '<div class="smart-shell">'+
-    smartTopBar(true,state.track||'開催場',state.date+'・'+state.circuit)+
+    smartTopBar(true,state.track||'開催場',state.circuit)+
     '<main class="smart-main">'+
-      '<div class="smart-venue-tools"><div class="smart-venue-circuit-bar"><span class="smart-circuit-chip">'+esc(state.circuit)+'</span></div><div class="smart-date-controls">'+dateStrip()+'</div></div>'+
+      '<div class="smart-venue-tools"><div class="smart-venue-circuit-bar"><span class="smart-circuit-chip">'+esc(state.circuit)+'</span></div></div>'+
       (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
       venueRaceRows()+
     '</main>'+
@@ -2645,13 +2646,13 @@ function runnerStyleSection(r,p){
   var diagnosisReady=diagnosisCurrent(r);
   var cadenceText=oddsRefreshCadence(r)===30000?'自動30秒':'自動60秒';
   return '<section class="card"><h2>出走表</h2><button data-action="odds-update">オッズ手動更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
-    +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI全頭診断を自動計算中… 完了後に印を自動表示します。</div>':'')
+    +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">取得済みデータで印・総合評価を先に表示中。全頭診断更新後は自動で差し替えます。</div>':'')
     +'<div class="racecard-table">'
     +(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
       var scratch=isScratchHorse(h),x=(p.rows||[]).find(function(z){return n(z.horse.horseNumber)===n(h.horseNumber)}),
-          mark=scratch?'—':(diagnosisReady&&x?(x.predMark||'—'):'…'),
-          grade=scratch?'—':(diagnosisReady&&x?(x.overallGrade||'C'):'—'),
-          score=scratch?'—':(diagnosisReady&&x?(x.overallScore==null?'—':x.overallScore):'—');
+          mark=scratch?'—':(x?(x.predMark||'—'):'—'),
+          grade=scratch?'—':(x?(x.overallGrade||'C'):'—'),
+          score=scratch?'—':(x?(x.overallScore==null?'—':x.overallScore):'—');
       var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=bodyWeightInline(h),st=String(h.status||'欠場');
       return '<button class="racecard-row'+(scratch?' scratched':'')+'" '+(scratch?'disabled aria-disabled="true"':'data-horse-open="'+esc(h.horseNumber)+'"')+'>'
         +'<span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span>'
@@ -9571,6 +9572,23 @@ CSS += r"""
 @media(max-width:560px){
   .smart-hero-calendar-left{left:14px;top:50px;min-height:29px;padding:4px 8px;font-size:9px}
   .smart-hero-calendar-left .calendar-mark{font-size:15px}
+}
+"""
+
+
+CSS += r"""
+/* v147: clear home race-day heading; venue date strip removed */
+.smart-race-day-heading{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:2px 0 10px;padding:4px 2px 2px;color:#f4f5f6
+}
+.smart-race-day-heading b{display:block;font-size:24px;line-height:1.15;font-weight:800;letter-spacing:.01em}
+.smart-race-day-heading small{display:block;margin-top:5px;color:#9aa5ad;font-size:11px;letter-spacing:.03em}
+.smart-venue-tools .smart-date-controls,.smart-venue-tools .date-strip{display:none!important}
+@media(max-width:560px){
+  .smart-race-day-heading{margin:1px 2px 9px}
+  .smart-race-day-heading b{font-size:22px}
+  .smart-race-day-heading small{font-size:10px}
 }
 """
 
