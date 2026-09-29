@@ -67,7 +67,8 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-js = strings["JS"].replace("BUILD v130", "BUILD v135")
+BUILD_VERSION = "v137"
+js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 
 # v133 browsing is Cloudflare/D1 first. Remove two old manual-only
 # same-origin Render fallbacks from the static deployment as well.
@@ -103,6 +104,11 @@ index_html = strings["INDEX"].replace(
     '<link rel="stylesheet" href="/styles-kraiz-v130.css">',
     '<style>' + strings["CSS"] + '</style>'
 )
+# Keep every generated HTML route on the same immutable JS filename.  This is
+# deliberately rewritten even when app.py still contains an older route
+# template, so a stale Service Worker cannot keep serving the previous build.
+index_html = index_html.replace("/app-v133.js", f"/app-{BUILD_VERSION}.js")
+index_html = index_html.replace("/app-v136.js", f"/app-{BUILD_VERSION}.js")
 (DIST / "index.html").write_text(index_html, encoding="utf-8")
 (DIST / "404.html").write_text(index_html, encoding="utf-8")
 for route in ("venue", "race"):
@@ -110,11 +116,23 @@ for route in ("venue", "race"):
     (DIST / route / "index.html").write_text(index_html, encoding="utf-8")
 (DIST / "_redirects").write_text("/venue /index.html 200\n/race /index.html 200\n", encoding="utf-8")
 (DIST / "styles-kraiz-v130.css").write_text(strings["CSS"], encoding="utf-8")
-(DIST / "app-v135.js").write_text(js, encoding="utf-8")
+(DIST / f"app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
 (DIST / "manifest-kraiz-v130.webmanifest").write_text(strings["MANIFEST"], encoding="utf-8")
 sw = strings["SW"].replace(
     'const CACHE="kraiz-shell-v133-edge-only";',
-    'const CACHE="kraiz-shell-v133-inlinecss";'
+    f'const CACHE="kraiz-shell-{BUILD_VERSION}-inlinecss";'
+).replace(
+    'const CACHE="kraiz-shell-v133-inlinecss";',
+    f'const CACHE="kraiz-shell-{BUILD_VERSION}-inlinecss";'
+).replace(
+    'const CACHE="kraiz-shell-v136-instant-diagnosis";',
+    f'const CACHE="kraiz-shell-{BUILD_VERSION}-inlinecss";'
+).replace(
+    "/app-v133.js",
+    f"/app-{BUILD_VERSION}.js",
+).replace(
+    "/app-v136.js",
+    f"/app-{BUILD_VERSION}.js",
 ).replace(
     '  "/styles-kraiz-v130.css",\n',
     ''

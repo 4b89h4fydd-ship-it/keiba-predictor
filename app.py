@@ -380,7 +380,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">KRAIZを起動中…</div></div>
-<script src="/app-v135.js"></script>
+<script src="/app-v137.js"></script>
 </body>
 </html>"""
 
@@ -2084,26 +2084,15 @@ function assignPredictionMarks(rows,r){
            n(b.styleSamples)-n(a.styleSamples)||
            n(a.horse.horseNumber)-n(b.horse.horseNumber)
   });
-  var base=['◎','○','▲','☆','△'],i,x,fifth=sorted.length>=5?n(sorted[4].overallScore):0,candidates=[];
-  var hi=sorted.length?n(sorted[0].overallScore):0,
-      lo=sorted.length?n(sorted[sorted.length-1].overallScore):0,
-      avgCoverage=sorted.length?mean(sorted.map(function(z){return n(z.coverage)})):0,
-      styleEvidence=sorted.filter(function(z){return n(z.styleSamples)>0}).length,
-      debut=predictionProfile(r||{}).code==='DEBUT';
-  if(!debut&&sorted.length&&avgCoverage<.25&&styleEvidence<Math.max(2,Math.ceil(sorted.length*.35))){
-    for(i=0;i<sorted.length;i++){sorted[i].predRank=i+1;sorted[i].predMark='';sorted[i].attentionReason=''}
-    return
-  }
-  if(sorted.length&&(hi-lo)<2&&avgCoverage<.40){
-    for(i=0;i<sorted.length;i++){sorted[i].predRank=i+1;sorted[i].predMark='';sorted[i].attentionReason=''}
-    return
-  }
-
-  // まず上位5頭だけ通常印。6位以下を自動で「注」にしない。
+  var base=['◎','○','▲','☆','△'],i,x,fifth=sorted.length>=5?n(sorted[4].overallScore):0,candidates=[],
+      provisional=!(r&&diagnosisCurrent(r));
+  // 診断データが未完成でも、取得済みの能力・条件・オッズから必ず暫定印を出す。
+  // 完全診断が到着したときは predict() の再計算で正式印へ更新する。
   for(i=0;i<sorted.length;i++){
     x=sorted[i];
     x.predRank=i+1;
     x.predMark=i<5?base[i]:'';
+    x.predictionStage=provisional?'暫定':'正式';
     x.attentionReason='';
   }
 
@@ -2263,7 +2252,7 @@ function scheduleVisibleRefresh(){
   if(r){
     key='race:'+r.id;
     if(!detailNeedsRefresh(r)&&(r.date!==today()||isFinal(r)))return;
-    delay=detailNeedsRefresh(r)?5000:(oddsRefreshCadence(r)||30000);
+    delay=detailNeedsRefresh(r)?2500:(oddsRefreshCadence(r)||30000);
     if(state.visibleRefreshBusy===key)return;
     state.refreshTimer=setTimeout(refreshVisibleDetail,Math.max(0,delay-(Date.now()-(visibleRefreshTimes[key]||0))));
   }else if(state.track&&!state.raceLoading){
@@ -2361,7 +2350,18 @@ function ensureAutoOdds(r){
     },delay)
   }
 }
-function diagnosisPanel(r,p){var busy=false,ready=diagnosisCurrent(r);return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><div class="diagnosis-refresh-note '+(busy||!ready?'busy':'')+'">'+((busy||!ready)?'診断データを同期待ち（自動更新）':'最新の全頭診断')+'</div><p class="muted">評価点は比較用のモデル値です。的中確率ではありません。</p>'+p.rows.slice().sort(function(a,b){return a.predRank-b.predRank}).map(function(x){var head=ready?(x.predRank+'位 '+esc(x.predMark)+' '+esc(x.horse.name)+'　'+esc(x.overallGrade)+' '+x.overallScore):('— '+esc(x.horse.name)+'　診断準備中');return '<article class="horse-card"><button data-horse-open="'+esc(x.horse.horseNumber)+'"><b>'+head+'</b></button><p>'+(ready?evaluationText(x):'過去走・条件データを確認中')+'</p>'+(ready?'<p>'+esc((x.overallReasons||[]).join(' / ')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:''))+'</p>':'')+'</article>'}).join('')+'</section>'}
+function diagnosisPanel(r,p){
+  var ready=diagnosisCurrent(r),rows=(p&&p.rows)||[];
+  return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2>'+
+    '<div class="diagnosis-refresh-note '+(ready?'':'busy')+'">'+
+      (ready?'最新の全頭診断':'暫定診断を表示中・完全診断をCloudflareから自動同期中')+
+    '</div>'+
+    '<p class="muted">診断完了を待たず、取得済みデータで印・総合評価を先に表示します。完全診断取得後は自動で更新します。</p>'+
+    rows.slice().sort(function(a,b){return a.predRank-b.predRank}).map(function(x){
+      var head=x.predRank+'位 '+esc(x.predMark||'—')+' '+esc(x.horse.name)+'　'+esc(x.overallGrade||'C')+' '+(x.overallScore==null?'—':x.overallScore);
+      return '<article class="horse-card"><button data-horse-open="'+esc(x.horse.horseNumber)+'"><b>'+head+'</b></button><p>'+evaluationText(x)+'</p><p>'+esc((x.overallReasons||[]).join(' / ')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:''))+'</p></article>'
+    }).join('')+'</section>'
+}
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=(h.allPastRuns||h.recentRaces||[]).slice(0,5);return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：過去走0（正常）':'過去走0件：基礎情報で評価済み')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){return '<section id="section-pace" class="card"><h2>展開AI</h2><p class="muted">A/B/Cシナリオと隊列予想。利用できるデータ量に応じて評価信頼度を調整します。</p>'+scenarioProbabilitySection(p)+paceBoard(r,p)+'</section>'}
 function resultPanel(r){return '<section id="section-result" class="card"><h2>レース結果</h2>'+(isFinal(r)?renderResult(r)+renderPayouts(r)+renderActualFlow(r):'<div class="muted">結果はまだ確定していません。</div>')+'</section>'}
@@ -2388,7 +2388,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span>'+volatilityBadge(x)+'<span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v135</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">KRAIZ　<small>TACTICAL RACING · BUILD v137</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean">'+
     (back?'<button class="smart-back" data-action="home" aria-label="ホームに戻る">×</button>':'<span class="smart-back-space"></span>')+
@@ -2688,13 +2688,13 @@ function runnerStyleSection(r,p){
   var diagnosisReady=diagnosisCurrent(r);
   var cadenceText=oddsRefreshCadence(r)===30000?'自動30秒':'自動60秒';
   return '<section class="card"><h2>出走表</h2><button data-action="odds-update">オッズ手動更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
-    +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">診断データを同期待ち。取得でき次第、印を自動表示します。</div>':'')
+    +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">暫定印を表示中。完全診断はCloudflareから自動同期します。</div>':'')
     +'<div class="racecard-table">'
     +(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
       var scratch=isScratchHorse(h),x=(p.rows||[]).find(function(z){return n(z.horse.horseNumber)===n(h.horseNumber)}),
-          mark=scratch?'—':(diagnosisReady&&x?(x.predMark||'—'):'…'),
-          grade=scratch?'—':(diagnosisReady&&x?(x.overallGrade||'C'):'—'),
-          score=scratch?'—':(diagnosisReady&&x?(x.overallScore==null?'—':x.overallScore):'—');
+          mark=scratch?'—':(x?(x.predMark||'—'):'—'),
+          grade=scratch?'—':(x?(x.overallGrade||'C'):'—'),
+          score=scratch?'—':(x?(x.overallScore==null?'—':x.overallScore):'—');
       var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=bodyWeightInline(h),st=String(h.status||'欠場');
       return '<button class="racecard-row'+(scratch?' scratched':'')+'" '+(scratch?'disabled aria-disabled="true"':'data-horse-open="'+esc(h.horseNumber)+'"')+'>'
         +'<span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span>'
@@ -2932,11 +2932,12 @@ function installEdgeBack(){
 
 function refreshDiagnosisNow(id){
   if(!id||!state.race)return;
-  state.diagnosisBusy=false;
+  state.diagnosisBusy=true;
   state.analysisSaved={};
   try{delete state.race._prediction}catch(e){}
   state.pred=null;
-  render()
+  render();
+  refreshVisibleDetail().finally(function(){state.diagnosisBusy=false})
 }
 function pollDiagnosisRefresh(id,attempt){return}
 
@@ -3086,17 +3087,17 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="kraiz-shell-v135-refresh-pwa";
+SW = r'''const CACHE="kraiz-shell-v137-inlinecss";
 const STATIC=[
   "/index.html",
   "/styles-kraiz-v130.css",
-  "/app-v135.js",
+  "/app-v137.js",
   "/manifest-kraiz-v130.webmanifest",
   "/kraiz-icon-192.png",
   "/kraiz-icon-512.png",
   "/kraiz-racing-hero.webp"
 ];
-const LAST_PAGE="/__kraiz_last_page_v133_edge_only__";
+const LAST_PAGE="/__kraiz_last_page_v137__";
 
 self.addEventListener("install",event=>{
   event.waitUntil(
@@ -9554,8 +9555,8 @@ def home():
     # by the browser; Render remains the fallback for live/manual refreshes.
     boot='<script>window.__KRAIZ_BOOTSTRAP__=null;</script>'
     html=INDEX.replace(
-        '<script src="/app-v135.js"></script>',
-        boot+'\n<script src="/app-v135.js"></script>'
+        '<script src="/app-v137.js"></script>',
+        boot+'\n<script src="/app-v137.js"></script>'
     )
     return HTMLResponse(html, headers={
         "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
@@ -9597,7 +9598,7 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v135.js")
+@app.get("/app-v137.js")
 @app.get("/app-v132.js")
 @app.get("/app-v131.js")
 @app.get("/app-v130.js")
