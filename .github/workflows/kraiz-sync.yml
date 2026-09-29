@@ -1,4 +1,4 @@
-name: KRAIZ Production Sync
+name: NOXRA Production Sync
 
 "on":
   workflow_dispatch:
@@ -7,7 +7,7 @@ name: KRAIZ Production Sync
     - cron: "*/5 0-14 * * *"
 
 concurrency:
-  group: kraiz-production-sync
+  group:  noxra-production-sync
   cancel-in-progress: false
 
 jobs:
