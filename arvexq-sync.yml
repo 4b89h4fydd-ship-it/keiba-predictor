@@ -391,10 +391,13 @@ jobs:
 
           def odds(rid):
               enc = urllib.parse.quote(rid, safe="")
-              return call("GET", f"/api/v1/odds-refresh/{enc}?force=1", 20)
+              return call("GET", f"/api/v1/odds-refresh/{enc}?force=1", 24)
 
-          with ThreadPoolExecutor(max_workers=6) as ex:
-              for fut in as_completed([ex.submit(odds, rid) for rid in diagnosis_ids]):
+          # Body weight is display/prediction data, so keep collecting it even after
+          # the scheduled start while the race is still awaiting a final result.
+          odds_ids = [rid for rid in race_ids if rid not in final_ids]
+          with ThreadPoolExecutor(max_workers=4) as ex:
+              for fut in as_completed([ex.submit(odds, rid) for rid in odds_ids]):
                   try:
                       fut.result()
                   except Exception:

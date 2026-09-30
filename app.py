@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.3-edge-stats-v167")
+app = FastAPI(title="ARVEXQ", version="13.4-weightfix-v174")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.09-v11"
@@ -8691,6 +8691,105 @@ def _fast_card_worker():
         finally:
             with _fast_card_cv:_fast_card_running.discard(race_id)
 
+def _parse_nar_official_card_html(detail:dict, html:str)->list[dict]:
+    """Parse the NAR official card including layouts where 馬体重 and 増減 are separate cells."""
+    if not html:return []
+    soup=BeautifulSoup(html,"html.parser")
+    known={_clean(h.get("name")):int(h.get("horseNumber") or 0)
+           for h in detail.get("horses",[]) or []
+           if h.get("name") and int(h.get("horseNumber") or 0)>0}
+    out_by_no={}
+
+    def horse_no_from_row(tr, vals, rowtxt):
+        for name,hno in known.items():
+            if name and name in rowtxt:return hno
+        # Prefer the explicit 馬番 area near the start of the row.
+        nums=[]
+        for c in vals[:8]:
+            m=re.fullmatch(r"\D*(\d{1,2})\D*",c)
+            if m:
+                v=int(m.group(1))
+                if 1<=v<=18:nums.append(v)
+        return nums[-1] if nums else 0
+
+    def parse_weight_cell(txt):
+        m=re.search(r"(?<!\d)(\d{3})(?:\s*(?:kg)?)?(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?(?!\d)",txt,re.I)
+        if not m:return None,None
+        w=int(m.group(1))
+        if not (250<=w<=800):return None,None
+        c=int(m.group(2)) if m.group(2) is not None else None
+        return w,c
+
+    for table in soup.find_all("table"):
+        rows=table.find_all("tr")
+        if not rows:continue
+
+        # Try the header-driven layout first. NAR often publishes 馬体重 and 変更
+        # in separate columns, so the old "(+/-)"-only parser missed every horse.
+        header_vals=[];header_idx=-1
+        for ri,tr in enumerate(rows[:8]):
+            vals=[_clean(c.get_text(" ",strip=True)) for c in tr.find_all(["th","td"],recursive=False)]
+            compact=[re.sub(r"\s+","",x) for x in vals]
+            if any("馬体重" in x for x in compact):
+                header_vals=compact;header_idx=ri;break
+
+        ibw=-1;ichg=-1
+        if header_vals:
+            for i,x in enumerate(header_vals):
+                if ibw<0 and "馬体重" in x:ibw=i
+                if ichg<0 and ("変更" in x or "増減" in x):ichg=i
+
+        for tr in rows[(header_idx+1 if header_idx>=0 else 0):]:
+            cells=tr.find_all(["th","td"],recursive=False)
+            vals=[_clean(c.get_text(" ",strip=True)) for c in cells]
+            rowtxt=_clean(tr.get_text(" ",strip=True))
+            if not vals or not rowtxt:continue
+            no=horse_no_from_row(tr,vals,rowtxt)
+            if not no:continue
+
+            weight=None;change=None
+
+            # 1) Exact body-weight column when the table aligns normally.
+            if ibw>=0 and ibw<len(vals):
+                weight,change=parse_weight_cell(vals[ibw])
+                if weight and change is None and ichg>=0 and ichg<len(vals):
+                    cm=re.search(r"([+\-]?\d{1,3})",vals[ichg])
+                    if cm:
+                        cv=int(cm.group(1))
+                        if -99<=cv<=99:change=cv
+
+            # 2) Layouts that render 482(+4) in one text block.
+            if not weight:
+                wm=re.search(r"(?<!\d)(\d{3})\s*(?:kg)?\s*[（(]\s*([+\-]?\d+)\s*[）)]",rowtxt,re.I)
+                if wm:
+                    w=int(wm.group(1))
+                    if 250<=w<=800:
+                        weight=w;change=int(wm.group(2))
+
+            # 3) DebaTableSmall-style rows: current weight is a standalone 3-digit
+            # cell and the change is the next small integer cell.
+            if not weight:
+                for i,cell in enumerate(vals[:24]):
+                    if not re.fullmatch(r"\d{3}",cell):continue
+                    w=int(cell)
+                    if not (250<=w<=800):continue
+                    weight=w
+                    if i+1<len(vals):
+                        cm=re.fullmatch(r"\s*([+\-]?\d{1,2})\s*",vals[i+1])
+                        if cm:change=int(cm.group(1))
+                    break
+
+            if not weight:continue
+            out_by_no[no]={
+                "horseNumber":no,
+                "bodyWeight":weight,
+                "bodyWeightChange":change,
+                "source":"NAR公式出馬表",
+            }
+
+    return [out_by_no[k] for k in sorted(out_by_no)]
+
+
 def _nar_official_card_rows_fast(detail:dict)->list[dict]:
     """Fetch NAR official current body weight/change from multiple official card layouts."""
     code=NAR_BABA_CODES.get(str(detail.get("track") or ""))
@@ -8703,15 +8802,17 @@ def _nar_official_card_rows_fast(detail:dict)->list[dict]:
         "k_raceDate":date.replace("-","/"),
         "k_raceNo":race_no,
     })
-    # Desktop/IPAT currently exposes the weight column most reliably. Keep SP as fallback.
+    # DebaTableSmall exposes 馬体重 / 変更 as simple columns and is the most
+    # reliable source for the current value. Keep the other official layouts as fallbacks.
     urls=[
+        "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/DebaTableSmall?"+q,
         "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/DebaTable?"+q,
         "https://www.keiba.go.jp/KeibaWeb_IPAT/TodayRaceInfo/DebaTable_ipat?"+q,
         "https://www.keiba.go.jp/KeibaWebSP/TodayRaceInfo/S_DebaTable?"+q,
         "https://sp.keiba.go.jp/KeibaWebSP/TodayRaceInfo/S_DebaTable?"+q,
     ]
-    known={_clean(h.get("name")):int(h.get("horseNumber") or 0) for h in detail.get("horses",[]) or [] if h.get("name") and int(h.get("horseNumber") or 0)>0}
     out_by_no={}
+    target=max(1,len([h for h in detail.get("horses",[]) or [] if not h.get("scratched")])-1)
     for url in urls:
         try:
             req=urllib.request.Request(url,headers={
@@ -8723,38 +8824,10 @@ def _nar_official_card_rows_fast(detail:dict)->list[dict]:
                 html=_jra_decode(res.read())
         except Exception as exc:
             print("NAR official card failed",detail.get("id"),url,exc);continue
-        if not html:continue
-        soup=BeautifulSoup(html,"html.parser")
-        for tr in soup.find_all("tr"):
-            rowtxt=_clean(tr.get_text(" ",strip=True))
-            if not rowtxt:continue
-            # Current body weight is shown with an explicit +/- change. Past-run weights on
-            # the same card are plain numbers, so requiring parentheses avoids false matches.
-            wm=re.search(r"(?<!\d)(\d{3,4})\s*(?:kg)?\s*[（(]\s*([+\-]?\d+)\s*[）)]",rowtxt,re.I)
-            if not wm:continue
-            no=0
-            # Horse-name matching is much safer than positional small integers when frame cells use rowspan.
-            for name,hno in known.items():
-                if name and name in rowtxt:
-                    no=hno;break
-            if not no:
-                cells=tr.find_all(["th","td"],recursive=False)
-                vals=[_clean(c.get_text(" ",strip=True)) for c in cells]
-                nums=[]
-                for c in vals[:5]:
-                    m=re.fullmatch(r"\D*(\d{1,2})\D*",c)
-                    if m:
-                        v=int(m.group(1))
-                        if 1<=v<=18:nums.append(v)
-                no=(nums[-1] if nums else 0)
-            if not no:continue
-            out_by_no[no]={
-                "horseNumber":no,
-                "bodyWeight":int(wm.group(1)),
-                "bodyWeightChange":int(wm.group(2)),
-                "source":"NAR公式出馬表",
-            }
-        if len(out_by_no)>=max(1,len(known)-1):break
+        for row in _parse_nar_official_card_html(detail,html):
+            no=int(row.get("horseNumber") or 0)
+            if no:out_by_no[no]=row
+        if out_by_no and (not target or len(out_by_no)>=target):break
     return [out_by_no[k] for k in sorted(out_by_no)]
 
 
@@ -10090,7 +10163,13 @@ def odds_refresh(race_id:str, force: int = Query(0)):
             # Pull it directly instead of trying to resolve a JRA-style netkeiba race id.
             if not merged or any(not (z or {}).get("bodyWeight") for z in merged.values()):
                 try:
-                    detail={"id":race_id,"date":m.group(1),"track":m.group(2),"raceNumber":int(m.group(3))}
+                    detail=dict(saved or {})
+                    detail.update({"id":race_id,"date":m.group(1),"track":m.group(2),"raceNumber":int(m.group(3))})
+                    if not detail.get("horses"):
+                        try:
+                            qd=_fast_local_race_detail(race_id)
+                            if qd:detail=qd
+                        except Exception:pass
                     for h in _nar_official_card_rows_fast(detail):
                         no=int(h.get("horseNumber") or 0)
                         if not no:continue
