@@ -1,0 +1,268 @@
+name: ARVEXQ History Repair
+
+"on":
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+concurrency:
+  group: arvexq-history-repair
+  cancel-in-progress: true
+
+jobs:
+  history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      CLOUDFLARE_SYNC_URL: https://kraiz-api.4b89h4fydd.workers.dev/api/sync
+      KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-data
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      NAR_ON_DEMAND_HISTORY_MONTHS: "12"
+      ARVEXQ_HISTORY_DAYS: "7"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" beautifulsoup4==4.12.3
+
+      - name: Set history date
+        run: |
+          SLOT=$(( (GITHUB_RUN_NUMBER - 1) % ARVEXQ_HISTORY_DAYS + 1 ))
+          echo "HISTORY_OFFSET=$SLOT" >> "$GITHUB_ENV"
+          echo "HISTORY_DATE=$(TZ=Asia/Tokyo date -d "$SLOT days ago" +%F)" >> "$GITHUB_ENV"
+          echo "Rolling history slot: -${SLOT} day(s)"
+
+      - name: Restore ARVEXQ data cache
+        uses: actions/cache@v4
+        with:
+          path: .arvexq-data
+          key: arvexq-history-${{ runner.os }}-${{ env.HISTORY_DATE }}-${{ github.run_id }}
+          restore-keys: |
+            arvexq-history-${{ runner.os }}-${{ env.HISTORY_DATE }}-
+            arvexq-data-${{ runner.os }}-
+
+      - name: Start ARVEXQ locally
+        run: |
+          nohup uvicorn app:app \
+            --host 127.0.0.1 \
+            --port 8000 \
+            > /tmp/arvexq-history.log 2>&1 &
+          echo $! > /tmp/arvexq-history.pid
+
+          for i in $(seq 1 40)
+          do
+            if curl -fsS http://127.0.0.1:8000/health > /dev/null; then
+              echo "Local ARVEXQ started"
+              exit 0
+            fi
+            sleep 2
+          done
+
+          cat /tmp/arvexq-history.log || true
+          exit 1
+
+      - name: Backfill and repair one day from the previous week for both JRA and NAR
+        run: |
+          echo "Backfill date: $HISTORY_DATE (-$HISTORY_OFFSET day)"
+
+          # Kick both source refreshers. The bootstrap itself is intentionally fast;
+          # completeness is checked below by race ID instead of trusting a stopped worker.
+          curl -fsS --max-time 120 \
+            "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$HISTORY_DATE&force=1" \
+            -o history-bundle.json || true
+
+          for i in $(seq 1 16)
+          do
+            L=$(curl -fsS \
+              "http://127.0.0.1:8000/api/v1/local-refresh-status?date=$HISTORY_DATE" \
+              | jq -r '.running // false' || echo false)
+            C=$(curl -fsS \
+              "http://127.0.0.1:8000/api/v1/central-refresh-status?date=$HISTORY_DATE" \
+              | jq -r '.running // false' || echo false)
+
+            curl -fsS --max-time 120 \
+              "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$HISTORY_DATE" \
+              -o history-bundle.json || true
+
+            HR=$(jq '.races // [] | length' history-bundle.json 2>/dev/null || echo 0)
+            HD=$(jq '.details // [] | length' history-bundle.json 2>/dev/null || echo 0)
+            echo "History source attempt $i: local=$L central=$C races=$HR details=$HD"
+
+            if [ "$L" = "false" ] && [ "$C" = "false" ] && [ "$HR" -gt 0 ]; then
+              break
+            fi
+            sleep 3
+          done
+
+          # Cross-check every summary ID against details. Missing/incomplete rows are
+          # repaired directly, so a partial bundle can no longer be mistaken for complete.
+          python - <<'PY'
+          import copy
+          import json
+          import time
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+          import app
+
+          def read(path, fallback):
+              try:
+                  with open(path, encoding="utf-8") as f:
+                      return json.load(f)
+              except Exception:
+                  return fallback
+
+          def final_result(d):
+              r = (d or {}).get("result") or {}
+              status = str(r.get("status") or "")
+              return bool(
+                  r.get("finishers")
+                  or status in {"確定", "中止", "取止", "取消", "不成立"}
+              )
+
+          def history_complete(d):
+              if not isinstance(d, dict) or not d.get("id"):
+                  return False
+              # Historical analysis needs the runners, while result data is also
+              # important for form/results. Try to repair either side when absent.
+              return bool(d.get("horses")) and final_result(d)
+
+          def merge(old, new):
+              if not old:
+                  return copy.deepcopy(new or {})
+              if not new:
+                  return copy.deepcopy(old or {})
+              out = copy.deepcopy(old)
+              for k, v in (new or {}).items():
+                  if v not in (None, "", [], {}):
+                      out[k] = copy.deepcopy(v)
+              # Never throw away a final result or a populated horse list.
+              if final_result(old) and not final_result(new):
+                  out["result"] = copy.deepcopy(old.get("result"))
+              if old.get("horses") and not new.get("horses"):
+                  out["horses"] = copy.deepcopy(old.get("horses"))
+              return out
+
+          bundle = read("history-bundle.json", {})
+          rows = [r for r in (bundle.get("races") or []) if r.get("id")]
+          details = [d for d in (bundle.get("details") or []) if d.get("id")]
+          by_id = {str(d.get("id")): d for d in details}
+          labels = {
+              str(r.get("id")): f"{r.get('circuit','')} {r.get('track','')} {r.get('raceNumber','')}R"
+              for r in rows
+          }
+
+          def incomplete_ids():
+              return [
+                  str(r.get("id")) for r in rows
+                  if not history_complete(by_id.get(str(r.get("id"))))
+              ]
+
+          def repair_one(rid):
+              try:
+                  d = app._prepare_race_snapshot(rid, force=True, manual=False)
+                  if isinstance(d, dict) and d.get("id"):
+                      return d
+              except Exception as exc:
+                  print("history repair failed", labels.get(rid, rid), rid, exc)
+              return None
+
+          # Two bounded repair passes are enough to recover transient misses without
+          # letting a single history date consume the entire production workflow.
+          for attempt in (1, 2):
+              pending = incomplete_ids()
+              if not pending:
+                  break
+              print(f"History repair pass {attempt}: pending={len(pending)}")
+              with ThreadPoolExecutor(max_workers=4) as ex:
+                  futures = {ex.submit(repair_one, rid): rid for rid in pending}
+                  for fut in as_completed(futures):
+                      rid = futures[fut]
+                      try:
+                          d = fut.result()
+                      except Exception as exc:
+                          print("history repair worker failed", rid, exc)
+                          d = None
+                      if d:
+                          by_id[rid] = merge(by_id.get(rid), d)
+              if attempt == 1 and incomplete_ids():
+                  time.sleep(3)
+
+          summaries = []
+          for r in rows:
+              z = dict(r)
+              d = by_id.get(str(z.get("id") or ""))
+              result = (d or {}).get("result") or z.get("result") or {}
+              if result.get("status") == "確定" or result.get("finishers"):
+                  z["raceStatus"] = "確定"
+              summaries.append(z)
+
+          expected_ids = [str(r.get("id")) for r in rows]
+          complete_ids = [rid for rid in expected_ids if history_complete(by_id.get(rid))]
+          missing_ids = [rid for rid in expected_ids if rid not in set(complete_ids)]
+          nar_missing = [rid for rid in missing_ids if rid.startswith("nar-")]
+          jra_missing = [rid for rid in missing_ids if not rid.startswith("nar-")]
+
+          # D1 gets every usable detail we have, not only fully complete rows.
+          payload_details = [by_id[rid] for rid in expected_ids if rid in by_id]
+          payload = {
+              "summaries": summaries,
+              "details": payload_details,
+              "meta": {
+                  "source": "github-actions-history-v144",
+                  "sync_date": bundle.get("date") or "",
+                  "history_window_days": 7,
+                  "race_count": len(summaries),
+                  "expected_detail_count": len(expected_ids),
+                  "detail_count": len(payload_details),
+                  "complete_detail_count": len(complete_ids),
+                  "missing_detail_count": len(missing_ids),
+                  "nar_missing_count": len(nar_missing),
+                  "jra_missing_count": len(jra_missing),
+                  "history_complete": bool(expected_ids) and not missing_ids,
+              },
+          }
+
+          with open("history-payload.json", "w", encoding="utf-8") as f:
+              json.dump(payload, f, ensure_ascii=False)
+          with open("history-missing.json", "w", encoding="utf-8") as f:
+              json.dump({
+                  "date": bundle.get("date") or "",
+                  "missing": missing_ids,
+                  "nar": nar_missing,
+                  "jra": jra_missing,
+              }, f, ensure_ascii=False, indent=2)
+
+          print("History coverage:", len(complete_ids), "/", len(expected_ids))
+          print("History missing: total=", len(missing_ids), "NAR=", len(nar_missing), "JRA=", len(jra_missing))
+          for rid in missing_ids:
+              print(" - MISSING", labels.get(rid, rid), rid)
+          PY
+
+          HR=$(jq '.summaries | length' history-payload.json 2>/dev/null || echo 0)
+          if [ "$HR" -gt 0 ]; then
+            curl --fail-with-body -X POST "$CLOUDFLARE_SYNC_URL" \
+              -H "content-type: application/json" \
+              -H "x-sync-token: $SYNC_TOKEN" \
+              --data-binary @history-payload.json
+          else
+            echo "No races on $HISTORY_DATE; nothing to sync."
+          fi
+
+          echo "History repair summary:"
+          cat history-missing.json || true
+
+      - name: Show local log on failure
+        if: failure()
+        run: |
+          tail -n 300 /tmp/arvexq-history.log || true
