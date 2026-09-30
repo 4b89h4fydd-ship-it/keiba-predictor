@@ -372,11 +372,11 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
-<link rel="manifest" href="/manifest-arvexq-v171.webmanifest">
+<link rel="manifest" href="/manifest-arvexq-v172.webmanifest">
 <link rel="stylesheet" href="/styles-arvexq-v130.css">
 <title>ARVEXQ | RACE INTELLIGENCE</title>
-<link rel="icon" type="image/png" href="/arvexq-icon-v171-192.png">
-<link rel="apple-touch-icon" href="/arvexq-icon-v171-192.png">
+<link rel="icon" type="image/png" href="/arvexq-icon-v172-192.png">
+<link rel="apple-touch-icon" href="/arvexq-icon-v172-192.png">
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
@@ -3512,9 +3512,9 @@ MANIFEST = r'''{
   "name":"ARVEXQ",
   "short_name":"ARVEXQ",
   "description":"ARVEXQ — PACE · POSITION · VALUE",
-  "start_url":"/?pwa=1",
-  "id":"/",
-  "icons":[{"src":"/arvexq-icon-v171-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"/arvexq-icon-v171-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}],
+  "start_url":"/?pwa=1&v=172",
+  "id":"/arvexq-v172",
+  "icons":[{"src":"/arvexq-icon-v172-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"/arvexq-icon-v172-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}],
   "scope":"/",
   "display":"standalone",
   "background_color":"#041126",
@@ -3525,9 +3525,9 @@ SW = r'''const CACHE="arvexq-shell-v133-edge-only";
 const STATIC=[
   "/styles-arvexq-v130.css",
   "/app-v133.js",
-  "/manifest-arvexq-v171.webmanifest",
-  "/arvexq-icon-v171-192.png",
-  "/arvexq-icon-v171-512.png",
+  "/manifest-arvexq-v172.webmanifest",
+  "/arvexq-icon-v172-192.png",
+  "/arvexq-icon-v172-512.png",
   "/arvexq-racing-hero.webp"
 ];
 const LAST_PAGE="/__arvexq_last_page_v133_edge_only__";
@@ -10430,7 +10430,7 @@ CSS += r"""
 @media(max-width:560px){.smart-ai-daily{padding:10px;margin-bottom:9px}.smart-ai-daily-grid{gap:5px}.smart-ai-daily-grid>div{padding:7px 3px}.smart-ai-daily-grid strong{font-size:18px}.smart-ai-daily-grid small{font-size:8px}}
 """
 
-@app.get("/arvexq-icon-v171-{size}.png")
+@app.get("/arvexq-icon-v172-{size}.png")
 def arvexq_icon(size: int):
     if str(size) not in ARVEXQ_ICONS:raise HTTPException(status_code=404,detail="icon not found")
     return Response(base64.b64decode(ARVEXQ_ICONS[str(size)]),media_type="image/png",headers={"Cache-Control":"public,max-age=86400"})
@@ -10478,7 +10478,7 @@ def appjs():
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":"public, max-age=31536000, immutable"})
 
 @app.get("/manifest-v86.webmanifest")
-@app.get("/manifest-arvexq-v171.webmanifest")
+@app.get("/manifest-arvexq-v172.webmanifest")
 @app.get("/manifest-arvexq-v88.webmanifest")
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
@@ -10803,5 +10803,38 @@ CSS += r"""
     bottom:12px!important;
     left:14px!important;
   }
+}
+"""
+
+
+CSS += r"""
+/* v172: fixed hero clearance — prevent 本日のレース from being hidden under the fixed hero */
+.smart-home .smart-home-main{
+  padding-top:316px!important;
+}
+@media(max-width:560px){
+  .smart-home .smart-home-main{
+    padding-top:272px!important;
+  }
+}
+html.pwa-standalone .smart-home .smart-home-main{
+  padding-top:calc(316px + env(safe-area-inset-top))!important;
+}
+@media(max-width:560px){
+  html.pwa-standalone .smart-home .smart-home-main{
+    padding-top:calc(272px + env(safe-area-inset-top))!important;
+  }
+}
+.smart-race-day-heading{
+  position:relative!important;
+  z-index:3!important;
+  overflow:visible!important;
+  min-height:52px!important;
+  padding:8px 4px 6px!important;
+  margin:0 2px 10px!important;
+}
+.smart-race-day-heading b{
+  line-height:1.2!important;
+  overflow:visible!important;
 }
 """
