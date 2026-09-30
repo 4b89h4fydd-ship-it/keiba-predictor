@@ -2712,12 +2712,24 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span>'+volatilityBadge(x)+'<span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v167</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v179</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean">'+
     (back?'<button class="smart-back" data-action="back" aria-label="戻る">‹</button>':'<span class="smart-back-space"></span>')+
     '<div class="smart-head-copy smart-head-copy-clean"><strong>'+esc(title||'開催場')+'</strong><small>'+esc(sub||'')+'</small></div>'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+
+  '</header>'
+}
+function smartRaceTopBar(r){
+  var rows=(state.races||[]).filter(function(x){return x&&r&&x.circuit===r.circuit&&x.track===r.track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),idx=-1;
+  for(var i=0;i<rows.length;i++){if(String(rows[i].id)===String(r.id)){idx=i;break}}
+  var prev=idx>0?rows[idx-1]:null,next=idx>=0&&idx<rows.length-1?rows[idx+1]:null;
+  return '<header class="smart-topbar smart-topbar-clean smart-race-topbar">'+
+    '<button class="smart-back" data-action="back" aria-label="開催場一覧へ戻る">‹</button>'+ 
+    (prev?'<button class="smart-race-step prev" data-race="'+esc(prev.id)+'" aria-label="前のレース">‹</button>':'<button class="smart-race-step prev" disabled>‹</button>')+
+    '<div class="smart-head-copy smart-head-copy-clean smart-race-head-copy"><strong>'+esc(r.track)+' '+esc(r.raceNumber)+'R</strong><small>'+esc(r.date||state.date||'')+'</small></div>'+ 
+    (next?'<button class="smart-race-step next" data-race="'+esc(next.id)+'" aria-label="次のレース">›</button>':'<button class="smart-race-step next" disabled>›</button>')+
+    '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
   '</header>'
 }
 function smartPageControls(){return ''}
@@ -3079,7 +3091,7 @@ function smartRaceHead(r){
 function renderRaceLoading(){
   var row=state.races.find(function(x){return String(x.id)===String(state.raceLoading)});
   return '<div class="smart-shell">'+
-    smartTopBar(true,row?row.track:(state.track||'レース'),'レース詳細')+
+    row?smartRaceTopBar(row):smartTopBar(true,state.track||'レース','レース詳細')+
     '<main class="smart-main">'+
       (row?smartRaceHead(row):'')+
       '<div class="smart-loading"><span class="smart-loading-dot"></span><b>レース詳細を読み込み中</b><small>選択したレースだけ取得しています。開催場一覧は先に表示します。</small></div>'+
@@ -3100,7 +3112,7 @@ function renderRace(){
   var top=p.scenarios.slice().sort(function(a,b){return b.prob-a.prob})[0];
   if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=top?top.code:null;
   return '<div class="smart-shell">'+
-    smartTopBar(true,r.track+' '+r.raceNumber+'R',r.date)+
+    smartRaceTopBar(r)+
     '<main class="smart-main smart-race-page">'+
       smartRaceHead(r)+
       cinematicTabs(r)+
@@ -11098,4 +11110,15 @@ CSS += r"""
   .smart-race-result-side .smart-inline-result span{font-size:12px!important}
   .smart-race-result-side .smart-inline-result strong{font-size:16px!important}
 }
+"""
+
+
+CSS += r"""
+/* v179 */
+.smart-race-topbar{position:sticky!important;top:0!important;z-index:90!important;display:grid!important;grid-template-columns:38px 36px minmax(0,1fr) 36px 38px!important;gap:5px!important;min-height:58px!important;padding:calc(6px + env(safe-area-inset-top)) 7px 6px!important}
+.smart-race-topbar .smart-race-head-copy{align-items:center!important;text-align:center!important}.smart-race-topbar .smart-race-head-copy strong{font-size:19px!important;line-height:1.05!important;white-space:nowrap!important;overflow:visible!important}.smart-race-topbar .smart-race-head-copy small{font-size:10px!important;margin-top:3px!important}
+.smart-race-step{width:36px!important;height:36px!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;border:1px solid #315b76!important;border-radius:10px!important;background:rgba(8,31,48,.86)!important;color:#e8f7ff!important;font-size:30px!important;line-height:1!important}.smart-race-step:disabled{opacity:.23!important}
+.smart-race-page{padding-top:3px!important}.smart-race-page .smart-race-head{margin:3px 0 5px!important;padding:6px 8px!important}.smart-race-page .smart-race-headline{gap:6px!important;align-items:flex-start!important}.smart-race-page .smart-race-head-left{gap:5px!important}.smart-race-page .smart-race-head-left strong{font-size:18px!important;line-height:1.05!important}.smart-race-page .smart-race-head h1{font-size:18px!important;line-height:1.1!important;margin:3px 0 2px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.smart-race-page .smart-race-meta{font-size:11.5px!important;line-height:1.1!important;margin:0!important}.smart-race-result-side{min-width:108px!important;gap:2px!important}.smart-race-result-side time{font-size:11px!important;line-height:1!important}.smart-race-result-side .smart-inline-result{width:108px!important;min-width:108px!important;min-height:46px!important;padding:5px!important;gap:2px!important}.smart-race-result-side .smart-inline-result span{font-size:12px!important}.smart-race-result-side .smart-inline-result strong{font-size:15px!important}
+.smart-race-page .cinema-tabs.accordion-tabs{margin:0 0 6px!important;padding:5px!important;gap:5px!important}.smart-race-page .cinema-tabs.accordion-tabs button{min-height:48px!important;padding:8px 1px!important;font-size:15px!important;line-height:1.05!important;font-weight:900!important;letter-spacing:-.03em!important}.smart-race-page .cinema-tabs.accordion-tabs .panel-caret{font-size:18px!important;margin-left:2px!important}
+@media(max-width:560px){.smart-race-topbar{grid-template-columns:34px 34px minmax(0,1fr) 34px 34px!important;gap:3px!important;padding-left:5px!important;padding-right:5px!important}.smart-race-step,.smart-race-topbar .smart-back,.smart-race-topbar .smart-reload{width:34px!important;height:34px!important}.smart-race-topbar .smart-race-head-copy strong{font-size:18px!important}.smart-race-page .cinema-tabs.accordion-tabs button{font-size:14px!important;min-height:48px!important}}
 """
