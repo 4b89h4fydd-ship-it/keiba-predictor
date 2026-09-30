@@ -22,6 +22,7 @@ jobs:
       ARVEXQ_BOOTSTRAP_WARM: "0"
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
+      ARVEXQ_HISTORY_PREFETCH_RACES: "8"
 
     steps:
       - name: Checkout
@@ -383,6 +384,19 @@ jobs:
               enc = urllib.parse.quote(rid, safe="")
               call("POST", f"/api/v1/prepare-race/{enc}", 8)
 
+          # v183: start five-run history collection for the nearest upcoming races
+          # before diagnosis is finalized. The worker is ephemeral, so simply starting
+          # a daemon history job at the end of the workflow is not enough; this gives
+          # the history crawler time to finish while odds/diagnosis work continues.
+          prefetch_n = max(1, int(__import__("os").environ.get("ARVEXQ_HISTORY_PREFETCH_RACES", "8")))
+          history_prefetch_ids = diagnosis_ids[:prefetch_n]
+          for rid in history_prefetch_ids:
+              enc = urllib.parse.quote(rid, safe="")
+              call("GET", f"/api/v1/race/{enc}/collect?force=0", 8)
+          with open("history_prefetch_ids.json", "w", encoding="utf-8") as f:
+              json.dump(history_prefetch_ids, f, ensure_ascii=False)
+          print("Five-run history prefetch queued:", len(history_prefetch_ids))
+
           def odds(rid):
               enc = urllib.parse.quote(rid, safe="")
               return call("GET", f"/api/v1/odds-refresh/{enc}?force=1", 24)
@@ -464,11 +478,11 @@ jobs:
 
           # Usually all active races are already ready on pass 1. Retries are only
           # for genuinely in-progress history work, never for races already final.
-          for attempt in range(1, 5):
+          for attempt in range(1, 9):
               if not pending:
                   break
               if attempt > 1:
-                  time.sleep(5)
+                  time.sleep(6)
 
               next_pending = []
               with ThreadPoolExecutor(max_workers=8) as ex:
