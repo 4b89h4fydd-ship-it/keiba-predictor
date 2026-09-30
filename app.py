@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.15-no-user-mark-v185")
+app = FastAPI(title="ARVEXQ", version="13.16-live-vote-v186")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.09-v13-history-pace"
@@ -3257,10 +3257,30 @@ function smartInlineResult(r){
   var final=isFinal(r),f=((r.result||{}).finishers||[]).slice().sort(function(a,b){return n(a.finish)-n(b.finish)}).slice(0,3),nums=final&&f.length?f.map(function(x){return n(x.horseNumber)}).join(' - '):'';
   return '<button type="button" class="smart-inline-result '+(final?'final':'')+'" data-panel="result"><span>レース結果</span><strong>'+(final?'確定':'未確定')+'</strong></button>'
 }
+function officialRaceLinks(r){
+  var central=String((r&&r.circuit)||state.circuit||'')==='中央';
+  return central?{
+    live:'https://www.jra.go.jp/tvradio/racelive/',
+    vote:'https://www.jra.go.jp/dento/soku.html',
+    liveLabel:'JRA LIVE',voteLabel:'JRA 投票'
+  }:{
+    live:'https://www.keiba.go.jp/live/index.html',
+    vote:'https://www.spat4.jp/keiba/pc',
+    liveLabel:'地方 LIVE',voteLabel:'SPAT4 投票'
+  }
+}
+function officialRaceActions(r){
+  var u=officialRaceLinks(r);
+  return '<div class="smart-official-actions" aria-label="公式ライブ・投票">'+
+    '<a class="smart-official-btn live" href="'+esc(u.live)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(u.liveLabel)+'を開く"><span>LIVE</span><small>'+esc(u.liveLabel.replace(' LIVE',''))+'</small></a>'+ 
+    '<a class="smart-official-btn vote" href="'+esc(u.vote)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(u.voteLabel)+'を開く"><span>投票</span><small>'+esc(u.voteLabel.replace(' 投票',''))+'</small></a>'+ 
+  '</div>'
+}
 function smartRaceHead(r){
   var count=n(r.fieldSize,(r.horses||[]).length);
   return '<section class="smart-race-head smart-race-head-compact">'+
-    '<div class="smart-race-headline"><div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span><div class="smart-race-title-stack"><h1>'+esc(r.title||'レース詳細')+'</h1><div class="smart-race-meta">'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'')+' '+esc(r.condition||'')+'　'+count+'頭</div></div>'+cinematicGrade(r)+'</div><div class="smart-race-result-side"><time>'+timeHtml(r)+' 発走</time>'+smartInlineResult(r)+'</div></div>'+ 
+    '<div class="smart-race-headline"><div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span><div class="smart-race-title-stack"><h1>'+esc(r.title||'レース詳細')+'</h1><div class="smart-race-meta">'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'')+' '+esc(r.condition||'')+'　'+count+'頭</div></div>'+cinematicGrade(r)+'</div><div class="smart-race-result-side"><time>'+timeHtml(r)+' 発走</time>'+smartInlineResult(r)+'</div></div>'+
+    officialRaceActions(r)+
   '</section>'
 }
 function renderRaceLoading(){
@@ -5459,7 +5479,7 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v185","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v186","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
         "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,"siteBootstrap":True,"persistentDayBundle":True,"nonBlockingBootstrap":True,"autoOdds":True,
         "racedb":RACEDB.status(),
@@ -11483,4 +11503,33 @@ CSS += r"""
 .rc-user-pred,.mark-picker-layer{display:none!important}
 @media(max-width:430px){.racecard-row{grid-template-columns:34px minmax(0,1fr) 70px!important}}
 @media(max-width:360px){.racecard-row{grid-template-columns:32px minmax(0,1fr) 64px!important}}
+"""
+
+CSS += r"""
+/* v186 — official LIVE / vote shortcuts. External official services only. */
+.smart-official-actions{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:7px!important;
+  margin-top:7px!important;
+}
+.smart-official-btn{
+  min-height:42px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;
+  border:1px solid #315b76!important;border-radius:11px!important;
+  background:rgba(7,27,42,.92)!important;color:#eef8ff!important;
+  text-decoration:none!important;font-weight:900!important;letter-spacing:.02em!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+.smart-official-btn span{font-size:16px!important;line-height:1!important}
+.smart-official-btn small{font-size:10px!important;opacity:.72!important;font-weight:800!important}
+.smart-official-btn.live{border-color:#1c86a9!important;box-shadow:inset 0 0 0 1px rgba(49,191,235,.10)!important}
+.smart-official-btn.vote{border-color:#9a7937!important;box-shadow:inset 0 0 0 1px rgba(232,188,89,.10)!important}
+.smart-official-btn:active{transform:translateY(1px)!important;opacity:.82!important}
+@media(max-width:430px){
+  .smart-official-actions{gap:5px!important;margin-top:5px!important}
+  .smart-official-btn{min-height:39px!important;border-radius:10px!important}
+  .smart-official-btn span{font-size:15px!important}
+  .smart-official-btn small{font-size:9px!important}
+}
 """
