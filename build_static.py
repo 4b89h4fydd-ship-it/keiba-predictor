@@ -67,7 +67,7 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v165"
+BUILD_VERSION = "v166"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 js = re.sub(r'(kraiz-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
 js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
@@ -442,6 +442,7 @@ assets = {
     "CINEMATIC_HERO_WEBP": "kraiz-racing-hero.webp",
     "CINEMATIC_DETAIL_WEBP": "kraiz-racing-detail.webp",
     "HERO_HORSE_WEBP": "hero-horse.webp",
+    "NOXRA_LOGO_WEBP": "noxra-logo.webp",
     "PACE_PREVIEW_WEBP": "pace-preview.webp",
 }
 
