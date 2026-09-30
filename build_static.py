@@ -33,7 +33,7 @@ for node in tree.body:
             strings[name] = value.value
             continue
 
-        if name == "KRAIZ_ICONS" and isinstance(value, ast.Dict):
+        if name == "ARVEXQ_ICONS" and isinstance(value, ast.Dict):
             icons = ast.literal_eval(value)
             continue
 
@@ -67,15 +67,15 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v168"
+BUILD_VERSION = "v169"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
-js = re.sub(r'(kraiz-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
+js = re.sub(r'(arvexq-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
 js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
 # v148: the SW script URL itself changes, forcing Safari/PWA to check a new worker.
 js = js.replace('navigator.serviceWorker.register("/sw.js",{scope:"/"})',
                 f'navigator.serviceWorker.register("/sw-{BUILD_VERSION}.js",{{scope:"/"}})')
 # Expose the running build without changing normal UI.
-js = f'window.KRAIZ_BUILD="{BUILD_VERSION}";\n' + js
+js = f'window.ARVEXQ_BUILD="{BUILD_VERSION}";\n' + js
 
 # Cloudflare summary rows carry raceStatus rather than a nested result object.
 # Venue/home rows must still switch to "確定" immediately.
@@ -118,8 +118,8 @@ js = js.replace(
 
 # Keep frontend prediction metadata aligned with the current server diagnosis engine.
 js = js.replace(
-    "engineVersion:'kraiz-commercial-2026.09-v2'",
-    "engineVersion:'kraiz-commercial-2026.09-v9'",
+    "engineVersion:'arvexq-commercial-2026.09-v2'",
+    "engineVersion:'arvexq-commercial-2026.09-v9'",
 )
 
 # If a race has started but the venue row is not final yet, bypass the in-memory
@@ -222,10 +222,10 @@ old_error = (
     "再読み込み</button></div>';return false};"
 )
 new_error = (
-    "var kraizBootPainted=false;"
+    "var arvexqBootPainted=false;"
     "window.onerror=function(msg,src,line,col,err){"
-    "try{console.error('KRAIZ runtime error',msg,src,line,col,err||'')}catch(_e){};"
-    "try{if(app&&!kraizBootPainted&&app.querySelector&&app.querySelector('.boot')){"
+    "try{console.error('ARVEXQ runtime error',msg,src,line,col,err||'')}catch(_e){};"
+    "try{if(app&&!arvexqBootPainted&&app.querySelector&&app.querySelector('.boot')){"
     "var where=(src?String(src).split('/').pop():'')+(line?':'+line:'');"
     "app.innerHTML='<div class=\"notice\" style=\"margin:20px\">起動エラー：'+"
     "esc(msg||'不明なエラー')+(where?'<br><small>'+esc(where)+'</small>':'')+"
@@ -243,8 +243,8 @@ new_boot = (
     "try{installEdgeBack()}catch(e){try{console.error(e)}catch(_e){}};"
     "try{installPwaCache()}catch(e){try{console.error(e)}catch(_e){}};"
     "try{restoreLocation()}catch(e){try{console.error(e)}catch(_e){}};"
-    "setTimeout(function(){try{load();kraizBootPainted=true}catch(e){try{console.error(e)}catch(_e){}}},0);"
-    "setTimeout(function(){kraizBootPainted=true},3000);"
+    "setTimeout(function(){try{load();arvexqBootPainted=true}catch(e){try{console.error(e)}catch(_e){}}},0);"
+    "setTimeout(function(){arvexqBootPainted=true},3000);"
 )
 if old_boot in js:
     js = js.replace(old_boot, new_boot, 1)
@@ -260,7 +260,7 @@ if remaining:
     )
 
 index_html = strings["INDEX"].replace(
-    '<link rel="stylesheet" href="/styles-kraiz-v130.css">',
+    '<link rel="stylesheet" href="/styles-arvexq-v130.css">',
     '<style>' + strings["CSS"] + '</style>'
 )
 
@@ -275,7 +275,7 @@ index_html = index_html.replace(
 # v148: use a brand-new asset path so an old iPhone/PWA service worker cannot
 # answer with a cached app-v146/app-v147 bundle. Regex catches every historical
 # app-vNNN.js reference without maintaining a fragile hand-written list.
-JS_ASSET = f"/kraiz-app-{BUILD_VERSION}.js"
+JS_ASSET = f"/arvexq-app-{BUILD_VERSION}.js"
 index_html = re.sub(r'/app-v\d+(?:-[^"\']+)?\.js', JS_ASSET, index_html)
 
 (DIST / "index.html").write_text(index_html, encoding="utf-8")
@@ -291,8 +291,8 @@ for route in ("venue", "race"):
     encoding="utf-8",
 )
 
-(DIST / "styles-kraiz-v130.css").write_text(strings["CSS"], encoding="utf-8")
-(DIST / f"kraiz-app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
+(DIST / "styles-arvexq-v130.css").write_text(strings["CSS"], encoding="utf-8")
+(DIST / f"arvexq-app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
 # Keep the conventional filename too for direct/debug access.
 (DIST / f"app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
 
@@ -303,20 +303,20 @@ for compat in ("v147", "v146", "v145", "v141", "v140", "v139", "v138", "v137", "
     (DIST / f"app-{compat}.js").write_text(js, encoding="utf-8")
 
 manifest = strings["MANIFEST"].replace('"start_url":"/?pwa=1"', '"start_url":"/"')
-(DIST / "manifest-kraiz-v130.webmanifest").write_text(manifest, encoding="utf-8")
+(DIST / "manifest-arvexq-v130.webmanifest").write_text(manifest, encoding="utf-8")
 
 # iOS/Safari rejects a redirected Response when it is returned by a Service
 # Worker navigation handler ("Response served by service worker has redirections").
 # Always fetch /index.html directly and clone it into a fresh Response, which
 # strips redirect metadata before it is returned to the browser.
-sw = f'''const CACHE="kraiz-shell-{BUILD_VERSION}-safe-navigation";
+sw = f'''const CACHE="arvexq-shell-{BUILD_VERSION}-safe-navigation";
 const STATIC=[
   "/index.html",
-  "/kraiz-app-{BUILD_VERSION}.js",
-  "/manifest-kraiz-v130.webmanifest",
-  "/kraiz-icon-192.png",
-  "/kraiz-icon-512.png",
-  "/kraiz-racing-hero.webp"
+  "/arvexq-app-{BUILD_VERSION}.js",
+  "/manifest-arvexq-v130.webmanifest",
+  "/arvexq-icon-192.png",
+  "/arvexq-icon-512.png",
+  "/arvexq-racing-hero.webp"
 ];
 
 async function cleanResponse(r){{
@@ -405,7 +405,7 @@ self.addEventListener("fetch",event=>{{
     "  Cache-Control: no-store\n"
     "/404.html\n"
     "  Cache-Control: no-store\n"
-    f"/kraiz-app-{BUILD_VERSION}.js\n"
+    f"/arvexq-app-{BUILD_VERSION}.js\n"
     "  Cache-Control: no-store\n"
     "/app-v145.js\n"
     "  Cache-Control: no-store\n"
@@ -421,7 +421,7 @@ self.addEventListener("fetch",event=>{{
     "  Cache-Control: no-store\n"
     "/app-v133.js\n"
     "  Cache-Control: no-store\n"
-    "/manifest-kraiz-v130.webmanifest\n"
+    "/manifest-arvexq-v130.webmanifest\n"
     "  Cache-Control: no-store\n"
     "/sw.js\n"
     "  Cache-Control: no-store\n"
@@ -433,16 +433,16 @@ self.addEventListener("fetch",event=>{{
 )
 
 if not icons:
-    raise RuntimeError("KRAIZ_ICONS not found")
+    raise RuntimeError("ARVEXQ_ICONS not found")
 
-(DIST / "kraiz-icon-192.png").write_bytes(base64.b64decode(icons["192"]))
-(DIST / "kraiz-icon-512.png").write_bytes(base64.b64decode(icons["512"]))
+(DIST / "arvexq-icon-192.png").write_bytes(base64.b64decode(icons["192"]))
+(DIST / "arvexq-icon-512.png").write_bytes(base64.b64decode(icons["512"]))
 
 assets = {
-    "CINEMATIC_HERO_WEBP": "kraiz-racing-hero.webp",
-    "CINEMATIC_DETAIL_WEBP": "kraiz-racing-detail.webp",
+    "CINEMATIC_HERO_WEBP": "arvexq-racing-hero.webp",
+    "CINEMATIC_DETAIL_WEBP": "arvexq-racing-detail.webp",
     "HERO_HORSE_WEBP": "hero-horse.webp",
-    "NOXRA_LOGO_WEBP": "noxra-logo.webp",
+    "ARVEXQ_LOGO_WEBP": "arvexq-logo.webp",
     "PACE_PREVIEW_WEBP": "pace-preview.webp",
 }
 
@@ -451,6 +451,6 @@ for variable, filename in assets.items():
         raise RuntimeError(f"{variable} not found in app.py")
     (DIST / filename).write_bytes(base64.b64decode(binary_b64[variable]))
 
-print(f"KRAIZ static build complete: {DIST}")
+print(f"ARVEXQ static build complete: {DIST}")
 print(f"BUILD: {BUILD_VERSION}")
 print(f"Files: {len(list(DIST.rglob('*')))}")
