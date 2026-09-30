@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.5-iconfullbleed-v175")
+app = FastAPI(title="ARVEXQ", version="13.6-ui-weight-bets-v176")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.09-v11"
@@ -2025,9 +2025,30 @@ function roleProfileScore(p){p=p||{};var starts=n(p.starts);if(!starts)return.5;
 function genericRoleScore(stats){stats=stats||{};var st=n(stats.starts);if(!st)return.5;var pr=(n(stats.wins)+n(stats.seconds)+n(stats.thirds))/st;var sample=clamp(st/50,0,1);return .5*(1-sample)+clamp(pr/.45,0,1)*sample}
 function courseTraits(r){var cp=courseProfile(r),d=n(r.distance,1200),short=d<=1400,veryShort=d<=1200,compact=(cp.shape==="compact"||cp.shape==="pocket"||cp.shape==="egg"||cp.shape==="spiral"),wide=(cp.shape==="long"||cp.shape==="wide"),straight=clamp(cp.straight/520,0,1),turnLoad=compact?.78:(cp.shape==="boxy"?.62:(wide?.34:.48)),frontBias=clamp(.44+(veryShort?.14:(short?.08:0))+turnLoad*.12-straight*.12,0,1),outerLoad=clamp((short?.20:.07)+turnLoad*.12-straight*.05,0,.38),moveRoom=clamp(.35+straight*.38+(wide?.10:0)-turnLoad*.10,0,1);return{frontBias:frontBias,outerLoad:outerLoad,moveRoom:moveRoom,turnLoad:turnLoad,straight:straight}}
 function ageSexScore(h,r){var age=n(h.age),sex=String(h.sex||"");var x=.5;if(age>0){if(r.circuit==="中央"){if(age>=3&&age<=5)x=.58;else if(age===6)x=.51;else if(age>=7)x=.44}else{if(age>=3&&age<=7)x=.54;else if(age>=8)x=.49}}if(sex.indexOf("牝")>=0)x+=.005;return clamp(x,0,1)}
-function weightScore(h){var rs=(h.recentRaces||[]).slice(0,3),vals=[],i;for(i=0;i<rs.length;i++)if(n(rs[i].carriedWeight)>0)vals.push(n(rs[i].carriedWeight));if(!vals.length||!n(h.carriedWeight))return.5;var avg=mean(vals),diff=n(h.carriedWeight)-avg;return clamp(.55-diff*.035,.28,.72)}
-function currentBodyWeight(h){return n(h&&h.bodyWeight,0)||n(h&&h.horseWeight,0)||n(h&&h.currentBodyWeight,0)}
-function currentBodyWeightChange(h){if(!h)return null;var v=h.bodyWeightChange;if(v==null||v==='')v=h.weightChange;if(v==null||v==='')v=h.weightDiff;return(v==null||v==='')?null:n(v)}
+function saneCarriedWeightValue(v,bodyWeight){
+  if(v==null||v==='')return 0;
+  var raw=String(v).replace(/[^0-9.+-]/g,''),x=parseFloat(raw);
+  if(!isFinite(x)||x<=0)return 0;
+  if(x>=35&&x<=80)return Math.round(x*10)/10;
+  // Some sources expose 57.0kg as 570 / 55.5kg as 555. Only scale values
+  // that look like a deci-kg code; do not turn a 461kg horse weight into 46.1kg.
+  if(x>=350&&x<=800&&Math.abs(x-Math.round(x))<.001&&Math.round(x)%5===0){
+    var bw=n(bodyWeight,0);if(bw>250&&Math.abs(x-bw)<35)return 0;
+    var y=x/10;if(y>=35&&y<=80)return Math.round(y*10)/10
+  }
+  return 0
+}
+function carriedWeightText(h){var v=saneCarriedWeightValue(h&&h.carriedWeight,currentBodyWeight(h));return v?(String(v).replace(/\.0$/,'')+'kg'):'—'}
+function weightScore(h){var rs=(h.recentRaces||[]).slice(0,3),vals=[],i;for(i=0;i<rs.length;i++){var w=saneCarriedWeightValue(rs[i].carriedWeight,rs[i].bodyWeight);if(w)vals.push(w)}var cur=saneCarriedWeightValue(h&&h.carriedWeight,currentBodyWeight(h));if(!vals.length||!cur)return.5;var avg=mean(vals),diff=cur-avg;return clamp(.55-diff*.035,.28,.72)}
+function currentBodyWeight(h){
+  if(!h)return 0;var vals=[h.bodyWeight,h.horseWeight,h.currentBodyWeight];
+  for(var i=0;i<vals.length;i++){
+    var m=String(vals[i]==null?'':vals[i]).match(/(?:^|\D)(\d{3})(?:\D|$)/),w=m?n(m[1],0):n(vals[i],0);
+    if(w>=250&&w<=800)return Math.round(w)
+  }
+  return 0
+}
+function currentBodyWeightChange(h){if(!h)return null;var v=h.bodyWeightChange;if(v==null||v==='')v=h.weightChange;if(v==null||v==='')v=h.weightDiff;if(v==null||v==='')return null;var x=n(v,999);return Math.abs(x)<=99?x:null}
 function bodyWeightConditionScore(h){
   var bw=currentBodyWeight(h);if(!bw)return .5;
   var ch=currentBodyWeightChange(h),base=.55;
@@ -2477,7 +2498,7 @@ function nextRace(){var a=state.races.filter(function(r){return r.circuit===stat
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
 function homeVenueMark(track){var t=String(track||"?");return '<span class="venue-mark">'+esc(t.slice(0,1))+'</span>'}
-function horseBodyWeightText(h){var raw=h&&h.bodyWeight!=null&&h.bodyWeight!==''?h.bodyWeight:(h&&h.horseWeight!=null&&h.horseWeight!==''?h.horseWeight:(h&&h.currentBodyWeight!=null&&h.currentBodyWeight!==''?h.currentBodyWeight:'')),chg=h&&h.bodyWeightChange!=null&&h.bodyWeightChange!==''?h.bodyWeightChange:(h&&h.weightChange!=null&&h.weightChange!==''?h.weightChange:(h&&h.weightDiff!=null&&h.weightDiff!==''?h.weightDiff:null));if(raw===''||raw==null)return'';var s=String(raw);if(/^-?\d+(\.\d+)?$/.test(s))s+='kg';if(chg!=null&&chg!==''&&!/[()]/.test(s)){var c=n(chg);s+=c>0?' (+'+c+')':' ('+c+')'}return s}
+function horseBodyWeightText(h){var w=currentBodyWeight(h);if(!w)return'';var ch=currentBodyWeightChange(h),s=w+'kg';if(ch!=null)s+=ch>0?' (+'+ch+')':' ('+ch+')';return s}
 function markStoreKey(r,no){return'keiba:v64:mark:'+[(r&&r.circuit)||'',(r&&r.date)||'',(r&&r.track)||'',(r&&r.raceNumber)||'',no||''].join('|')}
 function rowMark(r,row){var v=null;try{v=localStorage.getItem(markStoreKey(r,row&&row.horse?row.horse.horseNumber:''))}catch(e){}if(v===null)return '';return v==='__EMPTY__'?'':v}
 function setUserMark(no,mark){if(!state.race||!state.pred)return;var row=rowByNo(state.pred.rows,no);if(!row)return;try{localStorage.setItem(markStoreKey(state.race,no),mark?mark:'__EMPTY__')}catch(e){}state.userMarkPicker=null;render()}
@@ -2488,8 +2509,8 @@ function sortedHorseRows(rows){return(rows||[]).slice().sort(function(a,b){retur
 function openHorseModal(no){state.modalScroll=window.scrollY;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.horseModalNo=n(no)||null;render();document.body.style.overflow='hidden'}
 function closeHorseModal(){var y=state.modalScroll||0;state.horseModalNo=null;document.body.style.overflow='';render();window.scrollTo(0,y);if(state.race)scheduleHistoryPoll(state.race.id)}
 function moveHorseModal(dir){if(!state.pred)return;var rows=sortedHorseRows(state.pred.rows),idx=rows.findIndex(function(x){return n(x.horse.horseNumber)===n(state.horseModalNo)});if(!rows.length)return;state.horseModalNo=n(rows[(idx+dir+rows.length)%rows.length].horse.horseNumber);render()}
-function runnerDetailBody(r,p,x){var h=x.horse,fit=x.fit||{},cnt=fit.counts||{},j=h.jockeyProfile||{},t=h.trainerProfile||{},fade=x.styleSamples?Math.round(x.fade*100):null,q=p.pressure&&p.pressure[n(h.horseNumber)]||{},su=p.suit&&p.suit[n(h.horseNumber)]||{};function fitVal(k){return Math.round(confidenceBlend(fit[k],cnt[k])*100)}function fitText(k){return n(cnt[k])?fitVal(k)+' / '+n(cnt[k])+'走':'— / 0走'}var recent=(h.recentRaces||[]).slice(0,5),distTxt=x.shorten?'短縮 '+Math.abs(x.distanceChange)+'m':(x.lengthen?'延長 '+Math.abs(x.distanceChange)+'m':'同距離帯'),pressureTxt=(q.sandwich?'逃げハサミ警戒':((q.leftHot||q.rightHot)?'逃げ横あり':'隣接圧力弱め')),reasons=(x.overallReasons||[]),bodyTxt=horseBodyWeightText(h),styleTxt=x.expected||x.pastStyle||'不明',ps=styleDisplayPcts(x),mx=Math.max.apply(null,ps);return'<div class="horse-detail"><p>'+evaluationText(x)+'</p><div class="runner-overall-box"><div class="runner-overall-head"><span class="label">AI総合評価</span><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><span class="runner-overall-mark">'+esc(x.predMark||'—')+'</span><span class="runner-overall-score">総合 '+esc(overallScoreText(x))+'</span></div>'+(reasons.length?'<div class="overall-reasons">'+reasons.map(function(z){var warn=String(z).indexOf('注意')>=0||String(z).indexOf('不足')>=0;return'<i class="'+(warn?'warn':'good')+'">'+esc(z)+'</i>'}).join('')+'</div>':'')+'</div><div class="detail-heading">基本情報</div><div class="horse-info-grid"><div class="horse-info-cell"><small>馬番 / 枠</small><b>'+esc(h.horseNumber)+'番 / '+esc(h.frameNumber||frame(h))+'枠</b></div><div class="horse-info-cell"><small>性齢 / 斤量</small><b>'+esc(h.sex||'—')+esc(h.age||'—')+' / '+esc(h.carriedWeight||'—')+'kg</b></div><div class="horse-info-cell"><small>脚質</small><b>'+esc(styleTxt)+'</b></div><div class="horse-info-cell"><small>騎手</small><b>'+esc(h.jockey||'—')+'</b></div><div class="horse-info-cell"><small>調教師</small><b>'+esc(h.trainer||'—')+'</b></div><div class="horse-info-cell"><small>馬体重</small><b>'+(bodyTxt?esc(bodyTxt):'—')+'</b></div><div class="horse-info-cell"><small>当時獲得賞金</small><b>'+((h.recentRaces||[]).length||n(h.prizeMoneyAtRace)>0?fmtMoney(h.prizeMoneyAtRace)+'円':'—')+'</b></div><div class="horse-info-cell"><small>今回の位置想定</small><b>'+esc(x.pastStyle)+' → '+esc(x.expected)+'</b></div><div class="horse-info-cell"><small>距離変更</small><b>'+esc(distTxt)+'</b></div><div class="horse-info-cell"><small>前走の前進区分</small><b>'+esc(firstThreeType(h))+'</b></div></div>'+sourceCollectionSection(h,r)+'<div class="horse-position-sheet"><div class="detail-heading">位置取り指標</div><div class="style-rate-grid five-rates">'+styleCell('逃',ps[0],ps[0]===mx,'front')+styleCell('先',ps[1],ps[1]===mx,'stalk')+styleCell('差',ps[2],ps[2]===mx,'mid')+styleCell('追',ps[3],ps[3]===mx,'close')+styleCell('下',fade,fade!=null&&fade>=55,'fade')+'</div></div><div class="detail-heading">脚質詳細</div><div class="runner-detail-scores"><div class="runner-detail-score"><small>脚質点</small><b>'+(x.styleSamples?x.score.toFixed(2):'—')+'</b></div><div class="runner-detail-score"><small>前へ行く</small><b>'+(x.styleSamples?Math.round(x.goProb*100)+'%':'—')+'</b></div><div class="runner-detail-score"><small>序盤位置</small><b>'+(x.styleSamples?Math.round(x.ten*100)+'%':'—')+'</b></div><div class="runner-detail-score"><small>前残り力</small><b>'+(x.styleSamples?Math.round(x.frontStay*100)+'%':'—')+'</b></div></div><div class="detail-heading">今回の位置取り診断</div><div class="pressure-grid"><div class="pressure-chip '+(q.leftHot?'danger':'safe')+'"><small>内隣圧力</small><b>'+Math.round(n(q.left)*100)+'%</b></div><div class="pressure-chip '+(q.rightHot?'danger':'safe')+'"><small>外隣圧力</small><b>'+Math.round(n(q.right)*100)+'%</b></div><div class="pressure-chip '+(q.sandwich?'danger':'')+'"><small>逃げハサミ</small><b>'+(q.sandwich?'成立警戒':'なし')+'</b></div><div class="pressure-chip"><small>判定</small><b>'+esc(pressureTxt)+'</b></div><div class="pressure-chip"><small>最初から3番手内</small><b>'+(x.styleSamples?Math.round(x.early3*100)+'%':'—')+'</b></div><div class="pressure-chip"><small>途中から3番手内</small><b>'+(x.styleSamples?Math.round(x.moved3*100)+'%':'—')+'</b></div><div class="pressure-chip"><small>差し上げ力</small><b>'+Math.round(x.comeFromBehind*100)+'</b></div><div class="pressure-chip"><small>下がり率</small><b>'+(fade==null?'—':fade+'%')+'</b></div><div class="pressure-chip"><small>1着適性</small><b>'+Math.round(n(su.win)*100)+'%</b></div><div class="pressure-chip"><small>2着適性</small><b>'+Math.round(n(su.place)*100)+'%</b></div><div class="pressure-chip"><small>3着適性</small><b>'+Math.round(n(su.show)*100)+'%</b></div><div class="pressure-chip safe"><small>ARVEXQ勝率</small><b>'+(n(x.winProbability)*100).toFixed(1)+'%</b></div><div class="pressure-chip"><small>市場評価</small><b>'+(n(x.marketProbability)*100).toFixed(1)+'%</b></div><div class="pressure-chip"><small>EDGE</small><b>'+esc(x.edgeScore||50)+'</b></div><div class="pressure-chip"><small>BOMB</small><b>'+esc(x.bombScore||0)+'</b></div><div class="pressure-chip"><small>展開指数</small><b>'+esc(x.paceScore||0)+'</b></div><div class="pressure-chip"><small>条件上昇</small><b>'+esc(x.shiftScore||0)+'</b></div></div><div class="detail-heading">今回条件への適性</div><div class="fit-grid"><div class="fit-chip"><small>距離</small><b>'+fitText('distance')+'</b></div><div class="fit-chip"><small>競馬場</small><b>'+fitText('track')+'</b></div><div class="fit-chip"><small>馬場</small><b>'+fitText('condition')+'</b></div><div class="fit-chip"><small>天候</small><b>'+fitText('weather')+'</b></div><div class="fit-chip"><small>季節</small><b>'+fitText('season')+'</b></div><div class="fit-chip"><small>相手レベル</small><b>'+fitText('level')+'</b></div></div>'+roleDetail('騎手成績',h.jockeyStats,j)+roleDetail('調教師成績',h.trainerStats,t)+'<div class="recent-list-title">近走データ（直近5走）</div>'+(recent.length?recent.map(function(rr){var rid=rr.raceId||((r.circuit==='地方'&&rr.date&&rr.track&&n(rr.raceNumber))?('nar-'+rr.date+'-'+rr.track+'-'+String(n(rr.raceNumber)).padStart(2,'0')):'');return'<div class="recent"><div class="recent-head"><b>'+esc(rr.date)+' '+esc(rr.track)+' '+(n(rr.raceNumber)?esc(rr.raceNumber)+'R ':'')+esc(rr.distance)+'m</b><strong>'+esc(rr.finish||'—')+'着</strong></div><div>'+fmtTime(rr.timeSeconds)+'　'+esc(rr.condition||'不明')+' / '+esc(rr.weather||'不明')+'</div><div class="muted">'+(rr.title?esc(rr.title)+'　':'')+'通過 '+esc((rr.cornerPositions||[]).join('-')||'—')+'　頭数 '+esc(rr.fieldSize||'—')+(n(rr.carriedWeight)>0?'　斤量 '+esc(rr.carriedWeight)+'kg':'')+(n(rr.racePrize1)>0?'　1着賞金 '+fmtMoney(rr.racePrize1):'')+(rr.jockey?'　騎手 '+esc(rr.jockey):'')+(rr.trainer?'　調教師 '+esc(rr.trainer):'')+'</div>'+(rid?'<button type="button" class="recent-open" data-past-race="'+esc(rid)+'">この過去レースを見る</button>':'')+'</div>'}).join(''):'<div class="empty compact">過去データを確認できませんでした</div>')+'</div>'}
-function horseModal(r,p){var no=n(state.horseModalNo,0);if(!no)return'';var rows=sortedHorseRows(p.rows),idx=-1,i;for(i=0;i<rows.length;i++)if(n(rows[i].horse.horseNumber)===no){idx=i;break}if(idx<0)return'';var x=rows[idx],h=x.horse,bodyTxt=horseBodyWeightText(h),styleTxt=x.expected||x.pastStyle||'不明';return'<div class="horse-modal-layer"><div class="horse-modal-backdrop" data-horse-close="1"></div><section class="horse-modal" role="dialog" aria-modal="true"><div class="horse-modal-head"><button type="button" class="horse-modal-nav" data-horse-prev="1">‹</button><div class="horse-modal-title"><div class="horse-modal-title-top">'+badge(h)+'<div style="min-width:0"><div class="horse-modal-name">'+esc(h.name)+'</div>'+(bodyTxt?'<div class="runner-weight-inline">('+esc(bodyTxt)+')</div>':'')+'</div></div><div class="horse-modal-meta"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span>'+esc(styleTxt)+'</span><span>'+esc(h.jockey||'騎手不明')+'</span><span>'+esc(h.carriedWeight||'—')+'kg</span></div><div class="horse-modal-sidechips"><span class="horse-modal-chip grade">総合評価 '+esc(x.overallGrade||'C')+'</span><span class="horse-modal-chip">総合点 '+esc(overallScoreText(x))+'</span><span class="horse-modal-chip mark">予想印 '+esc(x.predMark||'—')+'</span></div><div class="horse-modal-counter">'+(idx+1)+' / '+rows.length+' 頭</div></div><button type="button" class="horse-modal-nav" data-horse-next="1">›</button><button type="button" class="horse-modal-close" data-horse-close="1">×</button></div><div class="horse-modal-swipe">画面左半分タップ＝前の馬　／　右半分タップ＝次の馬</div><div id="horse-modal-panel" class="horse-modal-body">'+runnerDetailBody(r,p,x)+'</div></section></div>'}
+function runnerDetailBody(r,p,x){var h=x.horse,fit=x.fit||{},cnt=fit.counts||{},j=h.jockeyProfile||{},t=h.trainerProfile||{},fade=x.styleSamples?Math.round(x.fade*100):null,q=p.pressure&&p.pressure[n(h.horseNumber)]||{},su=p.suit&&p.suit[n(h.horseNumber)]||{};function fitVal(k){return Math.round(confidenceBlend(fit[k],cnt[k])*100)}function fitText(k){return n(cnt[k])?fitVal(k)+' / '+n(cnt[k])+'走':'— / 0走'}var recent=(h.recentRaces||[]).slice(0,5),distTxt=x.shorten?'短縮 '+Math.abs(x.distanceChange)+'m':(x.lengthen?'延長 '+Math.abs(x.distanceChange)+'m':'同距離帯'),pressureTxt=(q.sandwich?'逃げハサミ警戒':((q.leftHot||q.rightHot)?'逃げ横あり':'隣接圧力弱め')),reasons=(x.overallReasons||[]),bodyTxt=horseBodyWeightText(h),styleTxt=x.expected||x.pastStyle||'不明',ps=styleDisplayPcts(x),mx=Math.max.apply(null,ps);return'<div class="horse-detail"><p>'+evaluationText(x)+'</p><div class="runner-overall-box"><div class="runner-overall-head"><span class="label">AI総合評価</span><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><span class="runner-overall-mark">'+esc(x.predMark||'—')+'</span><span class="runner-overall-score">総合 '+esc(overallScoreText(x))+'</span></div>'+(reasons.length?'<div class="overall-reasons">'+reasons.map(function(z){var warn=String(z).indexOf('注意')>=0||String(z).indexOf('不足')>=0;return'<i class="'+(warn?'warn':'good')+'">'+esc(z)+'</i>'}).join('')+'</div>':'')+'</div><div class="detail-heading">基本情報</div><div class="horse-info-grid"><div class="horse-info-cell"><small>馬番 / 枠</small><b>'+esc(h.horseNumber)+'番 / '+esc(h.frameNumber||frame(h))+'枠</b></div><div class="horse-info-cell"><small>性齢 / 斤量</small><b>'+esc(h.sex||'—')+esc(h.age||'—')+' / '+esc(carriedWeightText(h))+'</b></div><div class="horse-info-cell"><small>脚質</small><b>'+esc(styleTxt)+'</b></div><div class="horse-info-cell"><small>騎手</small><b>'+esc(h.jockey||'—')+'</b></div><div class="horse-info-cell"><small>調教師</small><b>'+esc(h.trainer||'—')+'</b></div><div class="horse-info-cell"><small>馬体重</small><b>'+(bodyTxt?esc(bodyTxt):'—')+'</b></div><div class="horse-info-cell"><small>当時獲得賞金</small><b>'+((h.recentRaces||[]).length||n(h.prizeMoneyAtRace)>0?fmtMoney(h.prizeMoneyAtRace)+'円':'—')+'</b></div><div class="horse-info-cell"><small>今回の位置想定</small><b>'+esc(x.pastStyle)+' → '+esc(x.expected)+'</b></div><div class="horse-info-cell"><small>距離変更</small><b>'+esc(distTxt)+'</b></div><div class="horse-info-cell"><small>前走の前進区分</small><b>'+esc(firstThreeType(h))+'</b></div></div>'+sourceCollectionSection(h,r)+'<div class="horse-position-sheet"><div class="detail-heading">位置取り指標</div><div class="style-rate-grid five-rates">'+styleCell('逃',ps[0],ps[0]===mx,'front')+styleCell('先',ps[1],ps[1]===mx,'stalk')+styleCell('差',ps[2],ps[2]===mx,'mid')+styleCell('追',ps[3],ps[3]===mx,'close')+styleCell('下',fade,fade!=null&&fade>=55,'fade')+'</div></div><div class="detail-heading">脚質詳細</div><div class="runner-detail-scores"><div class="runner-detail-score"><small>脚質点</small><b>'+(x.styleSamples?x.score.toFixed(2):'—')+'</b></div><div class="runner-detail-score"><small>前へ行く</small><b>'+(x.styleSamples?Math.round(x.goProb*100)+'%':'—')+'</b></div><div class="runner-detail-score"><small>序盤位置</small><b>'+(x.styleSamples?Math.round(x.ten*100)+'%':'—')+'</b></div><div class="runner-detail-score"><small>前残り力</small><b>'+(x.styleSamples?Math.round(x.frontStay*100)+'%':'—')+'</b></div></div><div class="detail-heading">今回の位置取り診断</div><div class="pressure-grid"><div class="pressure-chip '+(q.leftHot?'danger':'safe')+'"><small>内隣圧力</small><b>'+Math.round(n(q.left)*100)+'%</b></div><div class="pressure-chip '+(q.rightHot?'danger':'safe')+'"><small>外隣圧力</small><b>'+Math.round(n(q.right)*100)+'%</b></div><div class="pressure-chip '+(q.sandwich?'danger':'')+'"><small>逃げハサミ</small><b>'+(q.sandwich?'成立警戒':'なし')+'</b></div><div class="pressure-chip"><small>判定</small><b>'+esc(pressureTxt)+'</b></div><div class="pressure-chip"><small>最初から3番手内</small><b>'+(x.styleSamples?Math.round(x.early3*100)+'%':'—')+'</b></div><div class="pressure-chip"><small>途中から3番手内</small><b>'+(x.styleSamples?Math.round(x.moved3*100)+'%':'—')+'</b></div><div class="pressure-chip"><small>差し上げ力</small><b>'+Math.round(x.comeFromBehind*100)+'</b></div><div class="pressure-chip"><small>下がり率</small><b>'+(fade==null?'—':fade+'%')+'</b></div><div class="pressure-chip"><small>1着適性</small><b>'+Math.round(n(su.win)*100)+'%</b></div><div class="pressure-chip"><small>2着適性</small><b>'+Math.round(n(su.place)*100)+'%</b></div><div class="pressure-chip"><small>3着適性</small><b>'+Math.round(n(su.show)*100)+'%</b></div><div class="pressure-chip safe"><small>ARVEXQ勝率</small><b>'+(n(x.winProbability)*100).toFixed(1)+'%</b></div><div class="pressure-chip"><small>市場評価</small><b>'+(n(x.marketProbability)*100).toFixed(1)+'%</b></div><div class="pressure-chip"><small>EDGE</small><b>'+esc(x.edgeScore||50)+'</b></div><div class="pressure-chip"><small>BOMB</small><b>'+esc(x.bombScore||0)+'</b></div><div class="pressure-chip"><small>展開指数</small><b>'+esc(x.paceScore||0)+'</b></div><div class="pressure-chip"><small>条件上昇</small><b>'+esc(x.shiftScore||0)+'</b></div></div><div class="detail-heading">今回条件への適性</div><div class="fit-grid"><div class="fit-chip"><small>距離</small><b>'+fitText('distance')+'</b></div><div class="fit-chip"><small>競馬場</small><b>'+fitText('track')+'</b></div><div class="fit-chip"><small>馬場</small><b>'+fitText('condition')+'</b></div><div class="fit-chip"><small>天候</small><b>'+fitText('weather')+'</b></div><div class="fit-chip"><small>季節</small><b>'+fitText('season')+'</b></div><div class="fit-chip"><small>相手レベル</small><b>'+fitText('level')+'</b></div></div>'+roleDetail('騎手成績',h.jockeyStats,j)+roleDetail('調教師成績',h.trainerStats,t)+'<div class="recent-list-title">近走データ（直近5走）</div>'+(recent.length?recent.map(function(rr){var rid=rr.raceId||((r.circuit==='地方'&&rr.date&&rr.track&&n(rr.raceNumber))?('nar-'+rr.date+'-'+rr.track+'-'+String(n(rr.raceNumber)).padStart(2,'0')):'');return'<div class="recent"><div class="recent-head"><b>'+esc(rr.date)+' '+esc(rr.track)+' '+(n(rr.raceNumber)?esc(rr.raceNumber)+'R ':'')+esc(rr.distance)+'m</b><strong>'+esc(rr.finish||'—')+'着</strong></div><div>'+fmtTime(rr.timeSeconds)+'　'+esc(rr.condition||'不明')+' / '+esc(rr.weather||'不明')+'</div><div class="muted">'+(rr.title?esc(rr.title)+'　':'')+'通過 '+esc((rr.cornerPositions||[]).join('-')||'—')+'　頭数 '+esc(rr.fieldSize||'—')+(saneCarriedWeightValue(rr.carriedWeight,rr.bodyWeight)?'　斤量 '+esc(String(saneCarriedWeightValue(rr.carriedWeight,rr.bodyWeight)).replace(/\.0$/,''))+'kg':'')+(n(rr.racePrize1)>0?'　1着賞金 '+fmtMoney(rr.racePrize1):'')+(rr.jockey?'　騎手 '+esc(rr.jockey):'')+(rr.trainer?'　調教師 '+esc(rr.trainer):'')+'</div>'+(rid?'<button type="button" class="recent-open" data-past-race="'+esc(rid)+'">この過去レースを見る</button>':'')+'</div>'}).join(''):'<div class="empty compact">過去データを確認できませんでした</div>')+'</div>'}
+function horseModal(r,p){var no=n(state.horseModalNo,0);if(!no)return'';var rows=sortedHorseRows(p.rows),idx=-1,i;for(i=0;i<rows.length;i++)if(n(rows[i].horse.horseNumber)===no){idx=i;break}if(idx<0)return'';var x=rows[idx],h=x.horse,bodyTxt=horseBodyWeightText(h),styleTxt=x.expected||x.pastStyle||'不明';return'<div class="horse-modal-layer"><div class="horse-modal-backdrop" data-horse-close="1"></div><section class="horse-modal" role="dialog" aria-modal="true"><div class="horse-modal-head"><button type="button" class="horse-modal-nav" data-horse-prev="1">‹</button><div class="horse-modal-title"><div class="horse-modal-title-top">'+badge(h)+'<div style="min-width:0"><div class="horse-modal-name">'+esc(h.name)+'</div>'+(bodyTxt?'<div class="runner-weight-inline">('+esc(bodyTxt)+')</div>':'')+'</div></div><div class="horse-modal-meta"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span>'+esc(styleTxt)+'</span><span>'+esc(h.jockey||'騎手不明')+'</span><span>'+esc(carriedWeightText(h))+'</span></div><div class="horse-modal-sidechips"><span class="horse-modal-chip grade">総合評価 '+esc(x.overallGrade||'C')+'</span><span class="horse-modal-chip">総合点 '+esc(overallScoreText(x))+'</span><span class="horse-modal-chip mark">予想印 '+esc(x.predMark||'—')+'</span></div><div class="horse-modal-counter">'+(idx+1)+' / '+rows.length+' 頭</div></div><button type="button" class="horse-modal-nav" data-horse-next="1">›</button><button type="button" class="horse-modal-close" data-horse-close="1">×</button></div><div class="horse-modal-swipe">画面左半分タップ＝前の馬　／　右半分タップ＝次の馬</div><div id="horse-modal-panel" class="horse-modal-body">'+runnerDetailBody(r,p,x)+'</div></section></div>'}
 function miniPacePreview(r){return '<div class="home-ai-preview-photo mini-flow-demo"><div class="mini-flow-axis"><span>← 後方</span><b>隊列イメージ</b><span>前方 →</span></div><div class="mini-flow-line"></div><i class="mini-flow-dot d1">1</i><i class="mini-flow-dot d2">4</i><i class="mini-flow-dot d3">7</i><i class="mini-flow-dot d4">10</i><div class="mini-flow-caption">写真背景なし・右が前</div></div>'}
 function raceNumbers(r){var track=r?r.track:state.track,rs=state.races.filter(function(x){return x.track===track&&x.circuit===(r?r.circuit:state.circuit)}),out='';for(var i=1;i<=12;i++){var found=rs.find(function(x){return n(x.raceNumber)===i});out+='<button '+(found?'data-race="'+esc(found.id)+'"':'disabled')+' class="'+(r&&n(r.raceNumber)===i?'active':'')+'">'+i+'R</button>'}return '<nav class="race-numbers">'+out+'</nav>'}
 function evaluationText(x){var e=x.evaluation||{},p=state.pred&&state.pred.profile||null;return (p?esc(p.label)+'　':'')+esc(e.mode||'基礎')+' / '+esc(e.tier||'基礎データ評価')+'　データ充足度 '+n(e.dataCompleteness)+'%　評価信頼度 '+esc(e.confidence||'低')+(e.tied?'　同点は馬番順':'')}
@@ -2629,10 +2650,38 @@ function ensureAutoOdds(r){
 }
 
 function overallScoreText(x){var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
+function aiBetRecommendation(r,p){
+  var rows=(p.rows||[]).slice().filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)}).sort(function(a,b){return n(a.predRank,999)-n(b.predRank,999)});
+  if(rows.length<3)return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><div class="muted">出走データが揃ってから表示します。</div></div>';
+  var target=raceTargetProfile(r,p),top=rows[0],second=rows[1],third=rows[2],fourth=rows[3]||third;
+  var scenarios=(p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)}),mainSc=scenarios[0]||{prob:0,title:'平均'};
+  var hole=null;(target.holes||[]).some(function(z){var no=n(z&&z.horse&&z.horse.horseNumber);hole=rows.find(function(x){return n(x.horse.horseNumber)===no});return !!hole});
+  if(!hole)hole=rows.find(function(x){return n(x.bombScore)>=65&&n(x.edgeScore)>=70});
+  function no(x){return x&&x.horse?n(x.horse.horseNumber):0}
+  function uniq(arr){var seen={},out=[];arr.forEach(function(x){var v=no(x);if(v&&!seen[v]){seen[v]=1;out.push(v)}});return out}
+  var wp=n(top.winProbability),gap=wp-n(second.winProbability),stable=wp>=.26&&gap>=.065&&n(mainSc.prob)>=.38;
+  var highEdge=!!hole&&n(target.score)>=62,items=[],reason='';
+  if(stable){
+    items.push({kind:'単勝',combo:String(no(top)),points:1});
+    items.push({kind:'馬単',combo:no(top)+' → '+no(second)+'・'+no(third),points:2});
+    reason='◎の勝ち切り確率と2位との差が大きく、主シナリオもまとまっているため1着固定寄り。'
+  }else if(highEdge){
+    var ps=uniq([second,third,hole,fourth]).slice(0,4),comb=Math.max(1,ps.length*(ps.length-1)/2);
+    items.push({kind:'3連複 1頭軸',combo:no(top)+' - '+ps.join('・'),points:comb});
+    items.push({kind:'ワイド',combo:no(hole)+' - '+uniq([top,second]).join('・'),points:2});
+    reason='EDGE/BOMB穴を拾えるレース判定。◎を軸にしつつ、穴の3着内を取りに行く構成。'
+  }else{
+    var pair=uniq([second,third,fourth]).slice(0,3);
+    items.push({kind:'馬連',combo:no(top)+' - '+pair.slice(0,2).join('・'),points:Math.min(2,pair.length)});
+    items.push({kind:'3連複',combo:no(top)+' - '+no(second)+' - '+uniq([third,fourth,hole]).slice(0,2).join('・'),points:Math.min(2,uniq([third,fourth,hole]).length)});
+    reason='勝ち馬候補は絞れるが1着固定までは強くないため、連系中心。'
+  }
+  return '<div class="ai-bet-box"><div class="ai-bet-head"><div><div class="ai-bet-title">AI買い目</div><small>'+esc(mainSc.title)+' '+Math.round(n(mainSc.prob)*100)+'% / 狙い度 '+esc(target.grade||'C')+'</small></div><span>推奨</span></div><div class="ai-bet-list">'+items.map(function(z){return '<div class="ai-bet-row"><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点</em></div>'}).join('')+'</div><p>'+esc(reason)+'</p><small class="ai-bet-note">オッズ確定前は買い目だけを表示し、金額配分は固定しません。</small></div>'
+}
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)}),target=raceTargetProfile(r,p),holes=target.holes||[];
   var targetHtml='<div class="ai-target-card target-'+String(target.grade||'C').toLowerCase()+'"><div><small>ARVEXQ EDGE 狙いレース判定</small><strong>狙い度 '+esc(target.grade)+'</strong><span>'+esc(target.label)+'　'+esc(target.score)+'/100</span></div>'+(holes.length?'<div class="ai-target-holes">'+holes.map(function(z){return badge(z.horse)+'<b>'+esc(z.horse.name)+'</b><em>BOMB '+esc(z.bombScore)+' / EDGE '+esc(z.edgeScore)+'</em>'}).join('')+'</div>':'<div class="ai-target-holes muted">強いEDGE穴候補はまだなし</div>')+'</div>';
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲はARVEXQ推定勝率の上位。☆は市場評価より勝率が高いEDGE穴、△は次点の勝ち候補、注は条件が重なった大穴だけに限定します。</p>'+targetHtml+'<div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winProbability)*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>勝率 '+esc(wp)+'%　市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲はARVEXQ推定勝率の上位。☆は市場評価より勝率が高いEDGE穴、△は次点の勝ち候補、注は条件が重なった大穴だけに限定します。</p>'+targetHtml+aiBetRecommendation(r,p)+'<div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winProbability)*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>勝率 '+esc(wp)+'%　市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function diagnosisPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.overallRank,999)-n(b.overallRank,999)||n(b.overallRaw)-n(a.overallRaw)||n(b.overallScore)-n(a.overallScore)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),ready=!!p;
@@ -3025,7 +3074,7 @@ function smartInlineResult(r){
 function smartRaceHead(r){
   var count=n(r.fieldSize,(r.horses||[]).length);
   return '<section class="smart-race-head">'+
-    '<div class="smart-race-headline"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span><strong>'+esc(r.track)+' '+esc(r.raceNumber)+'R</strong>'+smartInlineResult(r)+cinematicGrade(r)+'<time>'+timeHtml(r)+' 発走</time></div>'+ 
+    '<div class="smart-race-headline"><div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span><strong>'+esc(r.track)+' '+esc(r.raceNumber)+'R</strong>'+cinematicGrade(r)+'</div><div class="smart-race-result-side">'+smartInlineResult(r)+'<time>'+timeHtml(r)+' 発走</time></div></div>'+ 
     '<h1>'+esc(r.title||'レース詳細')+'</h1>'+ 
     '<div class="smart-race-meta">'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'')+' '+esc(r.condition||'')+'　'+count+'頭</div>'+ 
   '</section>'
@@ -3101,7 +3150,7 @@ function runnerStyleSection(r,p){
         +'<span class="rc-pred rc-user-pred" '+(scratch?'':'data-user-mark="'+esc(h.horseNumber)+'"')+'><b class="rc-pred-mark user-mark">'+esc(userMark||'＋')+'</b></span>'
         +'<span class="rc-horse">'
           +'<span class="rc-horse-top"><b class="rc-horse-name">'+esc(h.name)+'</b>'+(scratch?'<small class="rc-scratch">'+esc(st)+'</small>':'<small class="rc-bodyweight '+(bw?'':'pending')+'">馬体重 '+esc(bw||'未発表')+'</small>')+'</span>'
-          +'<span class="rc-horse-meta"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">斤量 '+esc(h.carriedWeight||'—')+'kg</span></span>'
+          +'<span class="rc-horse-meta"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">斤量 '+esc(carriedWeightText(h))+'</span></span>'
         +'</span>'
         +'<span class="rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</span>'
         +'</button>'
@@ -7317,6 +7366,51 @@ def _start_environment_collector():
 # We prepare complete display JSON in the background and serve that snapshot first.
 
 
+def _safe_body_weight_value(value):
+    if value in (None,""):return None
+    try:
+        m=re.search(r"(?<!\d)(\d{3})(?!\d)",str(value))
+        x=int(m.group(1)) if m else int(round(float(value)))
+    except Exception:return None
+    return x if 250<=x<=800 else None
+
+
+def _safe_carried_weight_value(value, body_weight=None):
+    if value in (None,""):return None
+    try:x=float(re.sub(r"[^0-9.+-]","",str(value)))
+    except Exception:return None
+    if 35<=x<=80:return round(x,1)
+    # deci-kg code such as 570 / 555. Avoid converting a current horse weight
+    # that accidentally landed in the carried-weight column.
+    if 350<=x<=800 and abs(x-round(x))<1e-6 and int(round(x))%5==0:
+        bw=_safe_body_weight_value(body_weight)
+        if bw and abs(x-bw)<35:return None
+        y=x/10.0
+        if 35<=y<=80:return round(y,1)
+    return None
+
+
+def _sanitize_horse_measurements(h:dict)->dict:
+    if not isinstance(h,dict):return h
+    z=dict(h)
+    bw=_safe_body_weight_value(z.get("bodyWeight") or z.get("horseWeight") or z.get("currentBodyWeight"))
+    z["bodyWeight"]=bw
+    ch=z.get("bodyWeightChange")
+    try:ch=int(float(ch)) if ch not in (None,"") else None
+    except Exception:ch=None
+    z["bodyWeightChange"]=ch if ch is not None and abs(ch)<=99 else None
+    z["carriedWeight"]=_safe_carried_weight_value(z.get("carriedWeight"),bw)
+    runs=[]
+    for rr in list(z.get("allPastRuns") or z.get("recentRaces") or []):
+        if not isinstance(rr,dict):continue
+        q=dict(rr);rbw=_safe_body_weight_value(q.get("bodyWeight"));q["bodyWeight"]=rbw
+        q["carriedWeight"]=_safe_carried_weight_value(q.get("carriedWeight"),rbw)
+        runs.append(q)
+    if z.get("allPastRuns") is not None:z["allPastRuns"]=runs
+    z["recentRaces"]=runs[:5]
+    return z
+
+
 def _compact_display_snapshot(detail: dict) -> dict:
     """Display JSON only; full career remains in RaceDB.past_runs."""
     if not isinstance(detail,dict):return detail
@@ -7324,8 +7418,8 @@ def _compact_display_snapshot(detail: dict) -> dict:
     horses=[]
     for h in detail.get("horses",[]) or []:
         if not isinstance(h,dict):continue
-        z=dict(h)
-        runs=list(h.get("allPastRuns") or h.get("recentRaces") or [])
+        z=_sanitize_horse_measurements(h)
+        runs=list(z.get("allPastRuns") or z.get("recentRaces") or [])
         z["recentRaces"]=runs[:5]
         z.pop("allPastRuns",None)
         z.pop("evaluationSources",None)
@@ -10928,5 +11022,35 @@ html.pwa-standalone .smart-home .smart-home-main{
 .smart-race-day-heading b{
   line-height:1.2!important;
   overflow:visible!important;
+}
+"""
+
+
+CSS += r"""
+/* v176: race result action placement, larger navigation labels, AI bet card */
+.smart-race-headline{
+  display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:12px!important;
+}
+.smart-race-head-left{display:flex;align-items:center;gap:7px;min-width:0;flex-wrap:wrap}
+.smart-race-result-side{
+  margin-left:auto;min-width:118px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;
+}
+.smart-race-result-side .smart-inline-result{
+  min-width:112px;padding:8px 10px!important;font-size:12px!important;text-align:center;
+  border-color:#536f82!important;background:#132433!important;color:#f0f6fa!important;
+}
+.smart-race-result-side .smart-inline-result.final{border-color:#55a779!important;background:#113a2b!important;color:#c7f1d4!important}
+.smart-race-result-side time{margin:0!important;font-size:12px!important;line-height:1.2;color:#91a7b8!important;font-weight:800!important}
+.cinema-tabs button,.accordion-tabs button,.race-tabs button{
+  font-size:12px!important;font-weight:850!important;min-height:44px!important;line-height:1.15!important;padding:9px 4px!important;
+}
+.panel-caret{font-size:15px!important;margin-left:4px!important;color:#55c9ff!important}
+.ai-bet-box{margin:12px 0 15px;padding:13px;border:1px solid #2f6585;border-radius:14px;background:linear-gradient(145deg,#0b2538,#071723);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.ai-bet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.ai-bet-head>div{min-width:0}.ai-bet-title{font-size:18px;font-weight:900;color:#f4f9fc}.ai-bet-head small{color:#8fb3ca}.ai-bet-head>span{padding:4px 9px;border:1px solid #3aa5df;border-radius:999px;color:#bdeaff;background:#0c3651;font-size:11px;font-weight:900}
+.ai-bet-list{display:grid;gap:7px}.ai-bet-row{display:grid;grid-template-columns:95px minmax(0,1fr) 42px;align-items:center;gap:8px;padding:9px 10px;border:1px solid #274f68;border-radius:10px;background:#0d2030}.ai-bet-row b{color:#83d5ff}.ai-bet-row strong{font-size:15px;color:#fff;letter-spacing:.02em}.ai-bet-row em{font-style:normal;text-align:right;color:#eac883;font-weight:850}.ai-bet-box p{margin:9px 0 4px;color:#c0d0da;font-size:12px;line-height:1.5}.ai-bet-note{color:#7896aa}
+@media(max-width:560px){
+  .smart-race-head-left strong{font-size:18px!important}.smart-race-result-side{min-width:105px}.smart-race-result-side .smart-inline-result{min-width:102px;font-size:11px!important;padding:7px 6px!important}.smart-race-result-side time{font-size:11px!important}
+  .cinema-tabs button,.accordion-tabs button,.race-tabs button{font-size:11.5px!important;min-height:46px!important;padding:10px 2px!important}
+  .ai-bet-row{grid-template-columns:82px minmax(0,1fr) 38px;padding:8px}.ai-bet-row strong{font-size:14px}
 }
 """
