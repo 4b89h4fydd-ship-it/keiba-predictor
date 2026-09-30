@@ -2824,9 +2824,7 @@ function smartHomeHero(){
     '<div class="smart-home-hero-date smart-home-hero-date-left">'+esc((state.date||'').replace(/-/g,'.'))+'</div>'+
     '<label class="smart-hero-calendar-left" title="開催日を選択"><span class="calendar-mark" aria-hidden="true">▦</span><span>日付選択</span><input id="date" type="date" value="'+esc(state.date)+'" aria-label="開催日を選択"></label>'+
     '<button class="smart-hero-refresh smart-hero-refresh-right" data-action="reload" aria-label="更新">↻</button>'+
-    '<div class="smart-home-brand smart-home-brand-lower smart-home-brand-art">'+
-      '<img class="smart-home-logo-art" src="/noxra-logo.webp" alt="NOXRA · PACE POSITION VALUE · RACE INTELLIGENCE">'+
-    '</div>'+
+    
   '</section>'
 }
 function renderHome(){
@@ -10647,5 +10645,14 @@ CSS += r"""
 .smart-home-script-logo,.smart-home-brand-rule,.smart-home-brand-sub{display:none!important}
 @media(max-width:560px){
   .smart-home-brand-art{left:10px!important;bottom:7px!important;width:78%!important}
+}
+"""
+
+CSS += r"""
+/* v168: the approved ARVEXQ hero already contains the full wordmark.
+   Never layer the separate logo artwork over it. */
+.smart-home-brand-art,
+.smart-home-logo-art{
+  display:none!important;
 }
 """
