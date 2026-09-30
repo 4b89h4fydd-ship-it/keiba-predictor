@@ -11813,3 +11813,42 @@ CSS += r"""
   .smart-venue-page .smart-race-row{grid-template-columns:38px 44px minmax(0,1fr) 14px!important;gap:6px!important}
 }
 """
+
+
+CSS += r"""
+/* v193 — hard fixed venue header + hard fixed daily trend; only race list scrolls. */
+.smart-venue-page>.smart-venue-topbar{
+  position:fixed!important;
+  top:0!important;left:50%!important;right:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(760px,100%)!important;
+  z-index:140!important;
+}
+.smart-venue-page .smart-venue-trend{
+  position:fixed!important;
+  top:calc(72px + env(safe-area-inset-top))!important;
+  left:50%!important;right:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(744px,calc(100% - 16px))!important;
+  z-index:130!important;
+  margin:8px 0 0!important;
+}
+.smart-venue-page>.smart-main{
+  padding-top:calc(174px + env(safe-area-inset-top))!important;
+}
+@media(max-width:560px){
+  .smart-venue-page .smart-venue-trend{
+    top:calc(66px + env(safe-area-inset-top))!important;
+    width:calc(100% - 14px)!important;
+    margin-top:7px!important;
+  }
+  .smart-venue-page>.smart-main{
+    padding-top:calc(163px + env(safe-area-inset-top))!important;
+  }
+}
+@media(max-width:390px){
+  .smart-venue-page>.smart-main{
+    padding-top:calc(160px + env(safe-area-inset-top))!important;
+  }
+}
+"""
