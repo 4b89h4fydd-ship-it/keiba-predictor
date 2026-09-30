@@ -67,7 +67,7 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v172"
+BUILD_VERSION = "v173"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 js = re.sub(r'(arvexq-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
 js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
@@ -303,7 +303,7 @@ for compat in ("v147", "v146", "v145", "v141", "v140", "v139", "v138", "v137", "
     (DIST / f"app-{compat}.js").write_text(js, encoding="utf-8")
 
 manifest = strings["MANIFEST"]
-(DIST / "manifest-arvexq-v172.webmanifest").write_text(manifest, encoding="utf-8")
+(DIST / "manifest-arvexq-v173.webmanifest").write_text(manifest, encoding="utf-8")
 (DIST / "manifest-arvexq-v130.webmanifest").write_text(manifest, encoding="utf-8")
 
 # iOS/Safari rejects a redirected Response when it is returned by a Service
@@ -314,9 +314,9 @@ sw = f'''const CACHE="arvexq-shell-{BUILD_VERSION}-safe-navigation";
 const STATIC=[
   "/index.html",
   "/arvexq-app-{BUILD_VERSION}.js",
-  "/manifest-arvexq-v172.webmanifest",
-  "/arvexq-icon-v172-192.png",
-  "/arvexq-icon-v172-512.png",
+  "/manifest-arvexq-v173.webmanifest",
+  "/arvexq-icon-v173-192.png",
+  "/arvexq-icon-v173-512.png",
   "/arvexq-racing-hero.webp"
 ];
 
@@ -422,7 +422,9 @@ self.addEventListener("fetch",event=>{{
     "  Cache-Control: no-store\n"
     "/app-v133.js\n"
     "  Cache-Control: no-store\n"
-    "/manifest-arvexq-v172.webmanifest\n"
+    "/manifest-arvexq-v173.webmanifest\n"
+    "  Cache-Control: no-store\n"
+    "/arvexq-touch-v173.png\n"
     "  Cache-Control: no-store\n"
     "/sw.js\n"
     "  Cache-Control: no-store\n"
@@ -435,10 +437,13 @@ self.addEventListener("fetch",event=>{{
 
 if not icons:
     raise RuntimeError("ARVEXQ_ICONS not found")
+if "ARVEXQ_TOUCH_ICON_180" not in binary_b64:
+    raise RuntimeError("ARVEXQ_TOUCH_ICON_180 not found")
 
-(DIST / "arvexq-icon-v172-192.png").write_bytes(base64.b64decode(icons["192"]))
-(DIST / "arvexq-icon-v172-512.png").write_bytes(base64.b64decode(icons["512"]))
-# Compatibility aliases for older installed shells; the HTML/manifest use v172 URLs.
+(DIST / "arvexq-touch-v173.png").write_bytes(base64.b64decode(binary_b64["ARVEXQ_TOUCH_ICON_180"]))
+(DIST / "arvexq-icon-v173-192.png").write_bytes(base64.b64decode(icons["192"]))
+(DIST / "arvexq-icon-v173-512.png").write_bytes(base64.b64decode(icons["512"]))
+# Compatibility aliases for older installed shells; the HTML/manifest use v173 URLs.
 (DIST / "arvexq-icon-192.png").write_bytes(base64.b64decode(icons["192"]))
 (DIST / "arvexq-icon-512.png").write_bytes(base64.b64decode(icons["512"]))
 
