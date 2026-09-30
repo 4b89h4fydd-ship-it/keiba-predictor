@@ -2895,7 +2895,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v191</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v192</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
@@ -3346,10 +3346,17 @@ function venueRaceRows(){
     '</div>'+ 
   '</section>'
 }
+function venueTopBar(hi){
+  return '<header class="smart-venue-topbar">'+
+    '<button class="smart-venue-reload" data-action="reload" aria-label="更新">↻</button>'+ 
+    '<div class="smart-venue-topcopy"><strong>'+esc((state.track||'開催場')+' 全レース')+'</strong><small>'+esc((hi&&hi.status)||'')+'</small></div>'+ 
+    '<button class="smart-venue-close" data-action="back" aria-label="トップへ戻る">×</button>'+ 
+  '</header>'
+}
 function renderVenue(){
   var hi=venueHeaderInfo();
   return '<div class="smart-shell smart-venue-page">'+
-    smartTopBar(true,(state.track||'開催場')+' 全レース',hi.status)+
+    venueTopBar(hi)+
     '<main class="smart-main">'+
       (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
       venueRaceRows()+
@@ -11766,6 +11773,43 @@ CSS += r"""
   .smart-venue-trend-head b{font-size:16px!important}
   .smart-venue-trend-grid{gap:5px!important}
   .smart-venue-trend-grid strong{font-size:12px!important}
+  .smart-venue-page .smart-race-row{grid-template-columns:38px 44px minmax(0,1fr) 14px!important;gap:6px!important}
+}
+"""
+
+
+CSS += r"""
+/* v192 — hard fix: dedicated venue header, exact requested layout. */
+.smart-venue-topbar{
+  position:sticky!important;top:0!important;z-index:120!important;
+  min-height:72px!important;
+  padding:calc(7px + env(safe-area-inset-top)) 12px 8px!important;
+  display:grid!important;grid-template-columns:46px minmax(0,1fr) 46px!important;
+  align-items:center!important;gap:8px!important;
+  background:#071724!important;border-bottom:1px solid #24475f!important;
+  box-shadow:0 3px 12px rgba(0,0,0,.30)!important;
+}
+.smart-venue-reload,.smart-venue-close{
+  appearance:none!important;width:44px!important;height:44px!important;min-width:44px!important;
+  padding:0!important;margin:0!important;border:1px solid #315b76!important;border-radius:12px!important;
+  background:#0a2132!important;color:#eff9ff!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  line-height:1!important;
+}
+.smart-venue-reload{font-size:29px!important}
+.smart-venue-close{font-size:31px!important;font-weight:500!important}
+.smart-venue-topcopy{min-width:0!important;text-align:center!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;line-height:1.12!important}
+.smart-venue-topcopy strong{display:block!important;width:100%!important;font-size:18px!important;font-weight:900!important;color:#f4f1eb!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.smart-venue-topcopy small{display:block!important;margin-top:5px!important;font-size:10px!important;font-weight:800!important;color:#d3b98e!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.smart-venue-page .smart-main{padding-top:7px!important}
+.smart-venue-page .smart-venue-trend{top:calc(72px + env(safe-area-inset-top))!important;margin-top:0!important}
+.smart-venue-page .race-vol-badge,.smart-venue-page [class*="volatility"]{display:none!important}
+.smart-venue-page .smart-race-row{grid-template-columns:42px 48px minmax(0,1fr) 18px!important}
+@media(max-width:560px){
+  .smart-venue-topbar{min-height:66px!important;padding:calc(5px + env(safe-area-inset-top)) 9px 6px!important;grid-template-columns:42px minmax(0,1fr) 42px!important;gap:6px!important}
+  .smart-venue-reload,.smart-venue-close{width:40px!important;height:40px!important;min-width:40px!important}
+  .smart-venue-reload{font-size:27px!important}.smart-venue-close{font-size:29px!important}
+  .smart-venue-topcopy strong{font-size:17px!important}.smart-venue-topcopy small{font-size:9px!important;margin-top:4px!important}
+  .smart-venue-page .smart-venue-trend{top:calc(66px + env(safe-area-inset-top))!important}
   .smart-venue-page .smart-race-row{grid-template-columns:38px 44px minmax(0,1fr) 14px!important;gap:6px!important}
 }
 """
