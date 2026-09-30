@@ -7,7 +7,7 @@ name: ARVEXQ Production Sync
     - cron: "*/5 0-14 * * *"
 
 concurrency:
-  group:  arvexq-sync.yml
+  group: arvexq-sync.yml
   cancel-in-progress: false
 
 jobs:
