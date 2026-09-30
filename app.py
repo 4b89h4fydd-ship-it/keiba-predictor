@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.13-history-pace-weight-v183")
+app = FastAPI(title="ARVEXQ", version="13.14-venue-fixed-header-v184")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.09-v13-history-pace"
@@ -3250,7 +3250,7 @@ function venueRaceRows(){
   '</section>'
 }
 function renderVenue(){
-  return '<div class="smart-shell">'+
+  return '<div class="smart-shell smart-venue-page">'+
     smartTopBar(true,state.track||'開催場','')+
     '<main class="smart-main">'+
       (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
@@ -5467,7 +5467,7 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v183","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v184","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
         "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,"siteBootstrap":True,"persistentDayBundle":True,"nonBlockingBootstrap":True,"autoOdds":True,
         "racedb":RACEDB.status(),
@@ -11458,5 +11458,28 @@ html.pwa-standalone .smart-home .smart-home-main{padding-top:calc(198px + env(sa
   .smart-race-topbar .smart-race-head-copy{height:39px!important;padding:0 2px!important}
   .smart-race-topbar .smart-race-head-copy strong{font-size:18px!important}
   .smart-race-page{padding-top:calc(67px + env(safe-area-inset-top))!important}
+}
+"""
+
+
+CSS += r"""
+/* v184: venue page fixed header + fixed venue summary */
+.smart-venue-page{padding-top:0!important}
+.smart-venue-page>.smart-topbar-clean{
+  position:fixed!important;
+  top:0!important;left:0!important;right:0!important;
+  width:100%!important;z-index:100!important;
+}
+.smart-venue-page>.smart-main{
+  padding-top:calc(72px + env(safe-area-inset-top))!important;
+}
+.smart-venue-page .smart-venue-race-summary{
+  position:sticky!important;
+  top:calc(62px + env(safe-area-inset-top))!important;
+  z-index:90!important;
+}
+@media(max-width:560px){
+  .smart-venue-page>.smart-main{padding-top:calc(70px + env(safe-area-inset-top))!important}
+  .smart-venue-page .smart-venue-race-summary{top:calc(60px + env(safe-area-inset-top))!important}
 }
 """
