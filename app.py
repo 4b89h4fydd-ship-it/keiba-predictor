@@ -347,10 +347,10 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.19-nav-vote-only-v189")
+app = FastAPI(title="ARVEXQ", version="13.20-winner-role-split-v190")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.09-v13-history-pace"
+PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.09-v14-winner-role-split"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
 
@@ -2366,47 +2366,83 @@ function sparseResetProfile(x,r,q){
 }
 function assignEdgeEngine(r,rows,suit,sc,pressure){
   pressure=pressure||{};sc=sc||[];
-  var field=Math.max(1,rows.length),uniform=1/field,raw=[],publicRaw=[],role2Raw=[],role3Raw=[],tripProfiles=[],i,x,no,su,q,fit,pace,peak,trip,reset,resetLift,shift,evidence,publicScore,strength,p2Strength,p3Strength,top3Hist,
-      oddsCount=0,popCount=0,coverageAvg=mean(rows.map(function(z){return n(z.coverage)})),temp=.070+(1-coverageAvg)*.045;
+  var field=Math.max(1,rows.length),uniform=1/field,p1Raw=[],publicRaw=[],role2Raw=[],role3Raw=[],i,x,no,su,q,fit,pace,shift,peak,trip,reset,resetLift,evidence,publicScore,p1Strength,p2Strength,p3Strength,top3Hist,winnerCore,winnerRisk,
+      oddsCount=0,popCount=0,coverageAvg=mean(rows.map(function(z){return n(z.coverage)})),temp=.074+(1-coverageAvg)*.045;
   var collapse=0,front=0;
   sc.forEach(function(z){if(z.code==='C')collapse=n(z.prob);if(z.code==='A')front=n(z.prob)});
   for(i=0;i<rows.length;i++){
     x=rows[i];no=n(x.horse.horseNumber);su=suit[no]||{win:.5,place:.5,show:.5,rankScore:.5,overall:.5};q=pressure[no]||{};
-    trip=tripRecoveryProfile(x,r);tripProfiles.push(trip);
+    trip=tripRecoveryProfile(x,r);
     reset=sparseResetProfile(x,r,q);resetLift=reset.score>=.25?reset.score:0;
-    fit=clamp(n(x.distFit,.5)*.40+n(x.trackFit,.5)*.33+n(x.condFit,.5)*.20+n(x.levelFit,.5)*.07,0,1);
+    fit=clamp(n(x.distFit,.5)*.39+n(x.trackFit,.5)*.34+n(x.condFit,.5)*.18+n(x.levelFit,.5)*.09,0,1);
     pace=clamp(n(su.rankScore,.5)*.64+n(su.win,.5)*.24+Math.max(n(x.frontStay),n(x.comeFromBehind))*.12,0,1.15);
+    shift=clamp(fit*.56+(1-clamp(n(q.conflict),0,1))*.10+n(x.bodyWeightSuit,.5)*.07+n(x.jockeyScore,.5)*.07+n(x.flexibility,.5)*.07+n(x.breakSkill,.5)*.06+resetLift*.07,0,1);
     peak=recentPeakScore(x.horse,r);top3Hist=recentTop3Rate(x.horse);
-    shift=clamp(
-      fit*.48+
-      resetLift*.18+
-      (1-n(x.outerStress))* .06+
-      (1-clamp(n(q.conflict),0,1))* .08+
-      n(x.bodyWeightSuit,.5)*.05+
-      n(x.jockeyScore,.5)*.05+
-      n(x.flexibility,.5)*.05+
-      n(x.breakSkill,.5)*.05,
-      0,1
-    );
     evidence=clamp(n(x.coverage)*.66+clamp(n(x.styleSamples)/4,0,1)*.16+clamp(((x.horse.recentRaces||[]).length)/5,0,1)*.18,0,1);
-    // BASE remains dominant. RESET is deliberately sparse and capped; single-factor peak/distance-return boosts were rejected in validation.
-    strength=clamp(
-      n(x.overallRaw,.5)*.42+
-      n(su.win,.5)*.20+
-      pace*.11+
-      n(x.representativeScore,.5)*.08+
-      peak*.055+
-      shift*.045+
-      trip.score*.035+
-      n(x.ability,.5)*.04+
+
+    // v14: P1 is a pure winner model. Market EDGE/BOMB never participates in this score.
+    // Repeatable ability, current-condition fit and opponent level dominate; tactical reset is only a tiny tiebreaker.
+    winnerCore=clamp(
+      n(x.overallRaw,.5)*.25+
+      n(x.resultsScore,.5)*.18+
+      n(x.representativeScore,.5)*.15+
+      n(x.ability,.5)*.105+
+      fit*.105+
+      n(su.win,.5)*.07+
+      n(x.levelFit,.5)*.04+
+      n(x.posCons,.5)*.035+
       (1-n(x.fade,.5))*.025+
-      evidence*.01+
-      resetLift*.035,
+      n(x.jockeyScore,.5)*.025+
+      n(x.bodyWeightSuit,.5)*.015+
+      evidence*.01,
       0,1.15
     );
-    // P2: repeatability + ability to hold/improve position. P3: peak/top3 history + move/late power.
-    p2Strength=clamp(strength*.56+n(su.place,.5)*.18+n(x.posCons,.5)*.09+n(x.move,.5)*.07+n(x.flexibility,.5)*.04+(1-n(x.fade,.5))*.03+trip.score*.02+resetLift*.01,0,1.15);
-    p3Strength=clamp(strength*.44+n(su.show,.5)*.18+top3Hist*.08+peak*.08+n(x.move,.5)*.08+n(x.lateGain,.5)*.06+n(x.flexibility,.5)*.04+trip.score*.025+resetLift*.015,0,1.15);
+    winnerRisk=clamp(
+      n(x.frontCost)*.30+
+      n(x.outerStress)*.16+
+      clamp(n(q.conflict),0,1)*.22+
+      (n(x.needLead)*n(x.fade))* .20+
+      n(x.collapse)*.12,
+      0,1
+    );
+    var savedEval=x.horse&&x.horse.integratedEvaluation||{},savedP1=clamp(n(savedEval.p1Score,50)/100,0,1);
+    p1Strength=clamp((winnerCore-winnerRisk*.055+trip.score*.008+resetLift*.007)*.72+savedP1*.28,0,1.15);
+
+    // P2 is independent: repeatability and the ability to hold/improve position matter most.
+    p2Strength=clamp(
+      n(x.overallRaw,.5)*.15+
+      n(x.resultsScore,.5)*.17+
+      n(su.place,.5)*.17+
+      n(x.posCons,.5)*.14+
+      n(x.holdFront,.5)*.08+
+      n(x.flexibility,.5)*.07+
+      (1-n(x.fade,.5))*.065+
+      fit*.055+
+      n(x.move,.5)*.04+
+      n(x.jockeyScore,.5)*.025+
+      evidence*.025,
+      0,1.15
+    );
+    p2Strength=clamp(p2Strength*.78+clamp(n(savedEval.p2Score,50)/100,0,1)*.22,0,1.15);
+
+    // P3 is independent: top-3 memory, peak run and move/late power can promote a horse without making it the win pick.
+    p3Strength=clamp(
+      n(su.show,.5)*.14+
+      n(x.resultsScore,.5)*.12+
+      n(x.representativeScore,.5)*.115+
+      top3Hist*.105+
+      peak*.10+
+      n(x.latePower,.5)*.085+
+      n(x.move,.5)*.085+
+      n(x.flexibility,.5)*.07+
+      n(x.overallRaw,.5)*.07+
+      fit*.045+
+      trip.score*.025+
+      evidence*.04,
+      0,1.15
+    );
+    p3Strength=clamp(p3Strength*.78+clamp(n(savedEval.p3Score,50)/100,0,1)*.22,0,1.15);
+
     publicScore=clamp(
       recentFinishScore(x.horse)*.29+
       n(x.speedScore,.5)*.16+
@@ -2421,14 +2457,13 @@ function assignEdgeEngine(r,rows,suit,sc,pressure){
     x.tripScore=Math.round(trip.score*100);x.tripReasons=trip.reasons;
     x.sparseReset=reset.score;x.sparseResetReasons=reset.reasons;x.frontMemoryScore=reset.frontMemory;x.frontMemoryCount=reset.frontMemoryCount;x.fadeRecoveryReset=reset.fadeRecovery;
     if(resetLift&&x.overallReasons){reset.reasons.forEach(function(t){if(x.overallReasons.indexOf(t)<0)x.overallReasons.push(t)})}
-    x.shiftScore=Math.round(shift*100);x.paceScore=Math.round(clamp(pace,0,1)*100);x.edgeEvidence=evidence;
-    x.winStrength=strength;x.p2Strength=p2Strength;x.p3Strength=p3Strength;x.publicAppeal=publicScore;
+    x.winnerCore=winnerCore;x.winnerRisk=winnerRisk;x.winStrength=p1Strength;x.p2Strength=p2Strength;x.p3Strength=p3Strength;x.publicAppeal=publicScore;x.paceScore=Math.round(clamp(pace,0,1)*100);x.shiftScore=Math.round(shift*100);x.edgeEvidence=evidence;
     x.tacticalReset=reset.score;
-    raw.push(strength);role2Raw.push(p2Strength);role3Raw.push(p3Strength);publicRaw.push(publicScore);
+    p1Raw.push(p1Strength);role2Raw.push(p2Strength);role3Raw.push(p3Strength);publicRaw.push(publicScore);
     if(Number(x.horse.winOdds||0)>1)oddsCount++;
     if(n(x.horse.popularity,0)>0)popCount++
   }
-  var winP=edgeSoftmax(raw,temp),p2P=edgeSoftmax(role2Raw,temp+.015),p3P=edgeSoftmax(role3Raw,temp+.025),predMarket=edgeSoftmax(publicRaw,.105),market=[],marketSource='予測市場';
+  var p1P=edgeSoftmax(p1Raw,temp),p2P=edgeSoftmax(role2Raw,temp+.014),p3P=edgeSoftmax(role3Raw,temp+.024),predMarket=edgeSoftmax(publicRaw,.105),market=[],marketSource='予測市場';
   if(oddsCount>=Math.max(2,Math.ceil(field*.75))){
     marketSource='実オッズ';var imp=[],impSum=0;
     for(i=0;i<rows.length;i++){
@@ -2443,19 +2478,19 @@ function assignEdgeEngine(r,rows,suit,sc,pressure){
     }
     market=rw.map(function(z){return rwSum?z/rwSum:uniform})
   }else market=predMarket;
-  var wpSum=0,p2Sum=0,p3Sum=0;
+  var p1Sum=0,p2Sum=0,p3Sum=0;
   for(i=0;i<rows.length;i++){
-    x=rows[i];var conf=.58+.42*clamp(n(x.edgeEvidence),0,1),adj=uniform+(winP[i]-uniform)*conf,adj2=uniform+(p2P[i]-uniform)*conf,adj3=uniform+(p3P[i]-uniform)*conf;
-    x.winProbabilityRaw=Math.max(.001,adj);x.p2ProbabilityRaw=Math.max(.001,adj2);x.p3ProbabilityRaw=Math.max(.001,adj3);wpSum+=x.winProbabilityRaw;p2Sum+=x.p2ProbabilityRaw;p3Sum+=x.p3ProbabilityRaw
+    x=rows[i];var conf=.58+.42*clamp(n(x.edgeEvidence),0,1),adj1=uniform+(p1P[i]-uniform)*conf,adj2=uniform+(p2P[i]-uniform)*conf,adj3=uniform+(p3P[i]-uniform)*conf;
+    x.winProbabilityRaw=Math.max(.001,adj1);x.p2ProbabilityRaw=Math.max(.001,adj2);x.p3ProbabilityRaw=Math.max(.001,adj3);p1Sum+=x.winProbabilityRaw;p2Sum+=x.p2ProbabilityRaw;p3Sum+=x.p3ProbabilityRaw
   }
   for(i=0;i<rows.length;i++){
-    rows[i].winProbability=rows[i].winProbabilityRaw/wpSum;rows[i].p1Probability=rows[i].winProbability;
+    rows[i].winProbability=rows[i].winProbabilityRaw/p1Sum;rows[i].p1Probability=rows[i].winProbability;
     rows[i].p2Probability=rows[i].p2ProbabilityRaw/p2Sum;rows[i].p3Probability=rows[i].p3ProbabilityRaw/p3Sum
   }
-  var winSorted=rows.slice().sort(function(a,b){return n(b.p1Probability)-n(a.p1Probability)||n(b.overallRaw)-n(a.overallRaw)||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),
-      p2Sorted=rows.slice().sort(function(a,b){return n(b.p2Probability)-n(a.p2Probability)||n(b.p1Probability)-n(a.p1Probability)}),
-      p3Sorted=rows.slice().sort(function(a,b){return n(b.p3Probability)-n(a.p3Probability)||n(b.p2Probability)-n(a.p2Probability)});
-  winSorted.forEach(function(z,idx){z.winRank=idx+1;z.p1Rank=idx+1});p2Sorted.forEach(function(z,idx){z.p2Rank=idx+1});p3Sorted.forEach(function(z,idx){z.p3Rank=idx+1});
+  var p1Sorted=rows.slice().sort(function(a,b){return n(b.p1Probability)-n(a.p1Probability)||n(b.winnerCore)-n(a.winnerCore)||n(b.overallRaw)-n(a.overallRaw)||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),
+      p2Sorted=rows.slice().sort(function(a,b){return n(b.p2Probability)-n(a.p2Probability)||n(b.posCons)-n(a.posCons)||n(b.p1Probability)-n(a.p1Probability)}),
+      p3Sorted=rows.slice().sort(function(a,b){return n(b.p3Probability)-n(a.p3Probability)||n(b.latePower)-n(a.latePower)||n(b.p2Probability)-n(a.p2Probability)});
+  p1Sorted.forEach(function(z,idx){z.winRank=idx+1;z.p1Rank=idx+1});p2Sorted.forEach(function(z,idx){z.p2Rank=idx+1});p3Sorted.forEach(function(z,idx){z.p3Rank=idx+1});
   for(i=0;i<rows.length;i++){
     x=rows[i];var pWin=Math.max(.001,n(x.p1Probability)),pMarket=Math.max(.001,n(market[i],uniform)),ratio=pWin/pMarket,delta=pWin-pMarket,log2=Math.log(ratio)/Math.LN2,
         edge=clamp(50+log2*20+delta*115,0,100),positiveEdge=clamp((edge-50)/36,0,1),viable=clamp(pWin/Math.max(uniform*1.30,.045),0,1),
@@ -2464,12 +2499,14 @@ function assignEdgeEngine(r,rows,suit,sc,pressure){
     bomb=clamp(
       positiveEdge*.34+
       viable*.14+
-      (n(x.paceScore)/100)*.14+
-      (n(x.shiftScore)/100)*.10+
-      (n(x.tripScore)/100)*.06+
-      peak2*.06+
-      n(x.edgeEvidence)*.07+
-      roleUpside*.09,
+      roleUpside*.14+
+      n(x.p3Probability)/Math.max(uniform,.04)*.035+
+      peak2*.065+
+      n(x.move,.5)*.055+
+      n(x.latePower,.5)*.055+
+      n(x.sparseReset)*.055+
+      n(x.edgeEvidence)*.045+
+      n(x.p2Probability)/Math.max(uniform,.04)*.025,
       0,1
     );
     if(edge<55)bomb*=.70;
@@ -2481,9 +2518,6 @@ function assignEdgeEngine(r,rows,suit,sc,pressure){
     if(edge>=61&&pWin>pMarket)eReasons.push('P1が市場評価を上回る');
     if(n(x.p2Rank)<=4&&n(x.winRank)>=4)eReasons.push('2着役で上昇');
     if(n(x.p3Rank)<=5&&n(x.winRank)>=5)eReasons.push('3着役で上昇');
-    if(n(x.paceScore)>=64)eReasons.push('展開適性が高い');
-    if(n(x.shiftScore)>=62)eReasons.push('今回条件で上昇');
-    if(n(x.tripScore)>=59)eReasons.push('前走内容に巻き返し余地');
     if(n(x.sparseReset)>=.25)eReasons.push((x.sparseResetReasons||[])[0]||'限定RESET成立');
     if(n(x.goProb)>=.58&&n(x.frontStay)>=.58&&front>=.30)eReasons.push('前残り展開で残せる');
     if(n(x.comeFromBehind)>=.64&&collapse>=.28)eReasons.push('前崩れで差し浮上');
@@ -2575,7 +2609,7 @@ function integratedGrades(r,rows){
   })
 }
 
-function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.09-v13-history-pace'};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
+function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.09-v14-winner-role-split'};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -2791,7 +2825,7 @@ function buildAiBetPlan(r,p){
     triReason='3連単は検討済み。順序信頼度'+orderScore+'のため見送り。';
   }
   items=items.filter(function(z){z.combos=(z.combos||[]).filter(function(c){return c&&c.length&&c.every(function(v){return n(v)>0})});z.points=z.combos.length;z.combo=betComboText(z.kind,z.combos);return z.points>0});
-  var plan={raceId:String(r.id||''),engineVersion:'arvexq-edge-2026.09-v13-history-pace',scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),targetGrade:target.grade,targetScore:n(target.score),orderScore:orderScore,trifectaReviewed:true,trifectaDecision:triReadable?'出す':'見送り',trifectaReason:triReason,
+  var plan={raceId:String(r.id||''),engineVersion:'arvexq-edge-2026.09-v14-winner-role-split',scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),targetGrade:target.grade,targetScore:n(target.score),orderScore:orderScore,trifectaReviewed:true,trifectaDecision:triReadable?'出す':'見送り',trifectaReason:triReason,
     roles:{p1:p1Rows.slice(0,3).map(function(z){return{no:no(z),p:n(z.p1Probability),rank:n(z.p1Rank)}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z),p:n(z.p2Probability),rank:n(z.p2Rank)}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z),p:n(z.p3Probability),rank:n(z.p3Rank)}})},
     items:items,reason:reason+' '+triReason};
   saveStoredAiBet(r,plan);return plan
@@ -2826,7 +2860,7 @@ function aiBetRecommendation(r,p){
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲はP1（1着）上位。☆はEDGEに加えてP2/P3で浮上する役割穴も対象、△は次点の勝ち候補、注は限定RESETまで重なった大穴だけに絞ります。買いの強弱は「買い目」で示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winProbability)*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>P1 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は純粋なP1（勝ち馬）モデル1位。○▲はP1上位を維持し、☆はEDGEに加えてP2/P3で浮上する役割穴、△は次点の勝ち候補、注は限定RESETまで重なった大穴だけに絞ります。EDGE/BOMBは◎選定には使いません。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winProbability)*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>P1 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card"><h2>AI買い目</h2>'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
@@ -5513,7 +5547,7 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v187","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v190","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
         "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,"siteBootstrap":True,"persistentDayBundle":True,"nonBlockingBootstrap":True,"autoOdds":True,
         "racedb":RACEDB.status(),
@@ -8418,11 +8452,61 @@ def _integrated_evaluation(horse: dict, race: dict) -> dict:
             'scoreMeaning':'比較用のモデル評価点。実測値・的中確率ではない'}
 
 
+def _saved_role_scores(horse: dict) -> tuple[float,float,float]:
+    """Stable pre-race P1/P2/P3 scores stored with the snapshot.
+
+    These are intentionally market-blind. P1 emphasizes repeatable winning evidence;
+    P2 emphasizes stability/front-hold; P3 allows peak/late-role evidence to surface.
+    """
+    e=horse.get('integratedEvaluation') or {}
+    c=e.get('components') or {}
+    pm=horse.get('precomputedMetrics') or {}
+    fit=pm.get('fit') or {}
+    st=pm.get('style') or {}
+    def u(v,default=.5):
+        try:
+            x=float(v)
+            return max(0.0,min(1.0,x)) if math.isfinite(x) else default
+        except (TypeError,ValueError):
+            return default
+    base=u(float(e.get('score') or 50)/100)
+    perf=u(c.get('racePerformance'))
+    rep=u(c.get('representative'))
+    track=u(fit.get('track'))
+    dist=u(fit.get('distance'))
+    going=u(fit.get('condition'))
+    level=u(fit.get('level'))
+    jockey=u(c.get('jockeyScore',c.get('jockeyResults')))
+    body=u(c.get('bodyWeightScore'))
+    lap=u(c.get('lapScore'))
+    ten=u(st.get('ten'))
+    early3=u(st.get('early3'))
+    moved3=u(st.get('moved3'))
+    front=u(st.get('front'))
+    stalk=u(st.get('stalk'))
+    mid=u(st.get('mid'))
+    close=u(st.get('close'))
+    samples=max(0,int(st.get('samples') or 0))
+    evidence=min(1.0,samples/5.0)
+    p1=(base*.26+perf*.20+rep*.15+dist*.10+track*.09+level*.07+going*.04+
+        jockey*.025+body*.015+lap*.02+ten*.02+evidence*.01)
+    p2=(base*.18+perf*.19+dist*.08+track*.08+going*.05+early3*.12+stalk*.08+
+        front*.05+ten*.06+jockey*.025+evidence*.055)
+    p3=(base*.14+perf*.14+rep*.14+dist*.06+track*.05+level*.05+going*.04+
+        moved3*.10+mid*.07+close*.08+lap*.06+evidence*.07)
+    return tuple(round(max(0.0,min(1.0,z))*100,2) for z in (p1,p2,p3))
+
+
 def _rank_evaluations(detail):
-    horses=sorted(
-        detail.get('horses') or [],
-        key=lambda h:(-float((h.get('integratedEvaluation') or {}).get('score') or 0),int(h.get('horseNumber') or 0))
-    )
+    horses=list(detail.get('horses') or [])
+    for horse in horses:
+        e=horse.get('integratedEvaluation') or {}
+        p1,p2,p3=_saved_role_scores(horse)
+        e['p1Score']=p1;e['p2Score']=p2;e['p3Score']=p3
+        e['roleModelVersion']=PREDICTION_ENGINE_VERSION
+    horses.sort(key=lambda h:(-float((h.get('integratedEvaluation') or {}).get('p1Score') or 0),
+                               -float((h.get('integratedEvaluation') or {}).get('score') or 0),
+                               int(h.get('horseNumber') or 0)))
     evidence_count=sum(1 for h in horses if not (h.get('integratedEvaluation') or {}).get('neutralPrior') and (int((h.get('integratedEvaluation') or {}).get('samples') or 0)>0 or bool((h.get('integratedEvaluation') or {}).get('components'))))
     mark_ready=(not horses) or evidence_count>=max(2,(len(horses)+2)//3)
     base_symbols=['◎','○','▲','☆','△']
@@ -8431,32 +8515,35 @@ def _rank_evaluations(detail):
         score=float(e.get('score') or 0)
         e.update({
             'rank':i+1,
+            'p1Rank':i+1,
             'mark':base_symbols[i] if mark_ready and i < len(base_symbols) else '',
             'grade':'S' if score>=80 else 'A' if score>=70 else 'B' if score>=55 else 'C',
-            'tied':sum(float((h.get('integratedEvaluation') or {}).get('score') or 0)==score for h in horses)>1,
+            'tied':sum(float((h.get('integratedEvaluation') or {}).get('p1Score') or 0)==float(e.get('p1Score') or 0) for h in horses)>1,
         })
+    p2_sorted=sorted(horses,key=lambda h:(-float((h.get('integratedEvaluation') or {}).get('p2Score') or 0),int(h.get('horseNumber') or 0)))
+    p3_sorted=sorted(horses,key=lambda h:(-float((h.get('integratedEvaluation') or {}).get('p3Score') or 0),int(h.get('horseNumber') or 0)))
+    for i,h in enumerate(p2_sorted):(h.get('integratedEvaluation') or {}).__setitem__('p2Rank',i+1)
+    for i,h in enumerate(p3_sorted):(h.get('integratedEvaluation') or {}).__setitem__('p3Rank',i+1)
 
+    # 注 remains a narrowly-scoped rescue mark; it never displaces the P1-based ◎.
     if mark_ready and len(horses)>5:
-        fifth=float((horses[4].get('integratedEvaluation') or {}).get('score') or 0)
+        fifth=float((horses[4].get('integratedEvaluation') or {}).get('p1Score') or 0)
         candidates=[]
         for horse in horses[5:]:
             e=horse.get('integratedEvaluation') or {}
-            score=float(e.get('score') or 0)
-            components=e.get('components') or {}
-            samples=int(e.get('samples') or 0)
-            coverage=e.get('coverage') or {}
-            gap=max(0.0,fifth-score)
-            strengths=0
+            p1=float(e.get('p1Score') or 0);p2r=int(e.get('p2Rank') or 999);p3r=int(e.get('p3Rank') or 999)
+            components=e.get('components') or {};samples=int(e.get('samples') or 0);coverage=e.get('coverage') or {}
+            gap=max(0.0,fifth-p1);strengths=0
             for key in ('representative','racePerformance','courseFit','distanceFit','goingFit','opponentLevelScore','lapScore'):
                 val=components.get(key)
                 if isinstance(val,(int,float)) and val>=.62:strengths+=1
             evidence=sum(1 for v in coverage.values() if v) if isinstance(coverage,dict) else 0
-            if score>=55 and fifth>=55 and (samples>=2 or evidence>=5) and ((gap<=4 and strengths>=1) or (gap<=9 and strengths>=2)):
-                candidates.append((score+strengths*2-gap*.4,horse))
+            role_help=(p2r<=5 or p3r<=6)
+            if p1>=52 and fifth>=52 and (samples>=2 or evidence>=5) and role_help and ((gap<=5 and strengths>=1) or (gap<=10 and strengths>=2)):
+                candidates.append((p1+strengths*2-gap*.35+(6-min(p2r,6))*0.5+(7-min(p3r,7))*0.4,horse))
         candidates.sort(key=lambda z:(-z[0],int(z[1].get('horseNumber') or 0)))
-        for _,horse in candidates[:2]:horse['integratedEvaluation']['mark']='注'
+        for _,horse in candidates[:1]:horse['integratedEvaluation']['mark']='注'
     return detail
-
 
 def _strip_excluded(value):
     if isinstance(value,dict):
@@ -11590,6 +11677,7 @@ CSS += r"""
 
 CSS += r"""
 /* v189 — requested navigation placement and vote-only race action. */
+/* v190 — P1 winner model separated from P2/P3 role models; EDGE/BOMB excluded from ◎. */
 .smart-home .smart-hero-refresh-right{
   left:8px!important;right:auto!important;top:8px!important;bottom:auto!important;
   width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;
