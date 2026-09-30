@@ -10778,3 +10778,30 @@ html,body{background:#030a12!important;color:#edf6ff!important}
 /* keep the approved ARVEXQ hero as the sole brand artwork */
 .smart-home-brand-art,.smart-home-logo-art,.smart-home-script-logo,.smart-home-brand-rule,.smart-home-brand-sub{display:none!important}
 """
+
+
+CSS += r"""
+/* v170: move the home date/calendar below the ARVEXQ wordmark so they never overlap it */
+.smart-home-hero-date-left{
+  top:auto!important;
+  bottom:52px!important;
+  left:18px!important;
+}
+.smart-hero-calendar-left{
+  top:auto!important;
+  bottom:14px!important;
+  left:18px!important;
+}
+@media(max-width:560px){
+  .smart-home-hero-date-left{
+    top:auto!important;
+    bottom:48px!important;
+    left:14px!important;
+  }
+  .smart-hero-calendar-left{
+    top:auto!important;
+    bottom:12px!important;
+    left:14px!important;
+  }
+}
+"""
