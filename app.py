@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.18-top-live-center-v188")
+app = FastAPI(title="ARVEXQ", version="13.19-nav-vote-only-v189")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.09-v13-history-pace"
@@ -2838,7 +2838,7 @@ function diagnosisPanel(r,p){
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=(h.allPastRuns||h.recentRaces||[]).slice(0,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中');return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){return '<section id="section-pace" class="card"><h2>展開AI</h2><p class="muted">直近5走の通過順から作る逃げ率・先行率・差し率・追込率・下がり率を、枠順、距離変更、隣接圧力、コース形状と統合し、スタート・3C・4C・直線の隊列を予測します。</p>'+paceBoard(r,p)+'</section>'}
 function resultPanel(r){return '<section id="section-result" class="card"><h2>レース結果</h2>'+(isFinal(r)?renderResult(r)+renderPayouts(r)+renderActualFlow(r):'<div class="muted">結果はまだ確定していません。</div>')+'</section>'}
-function detailTabs(r,p){var key=state.openPanel;if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='aimarks')return '<div class="accordion-panel">'+aiMarksPanel(r,p)+'</div>';if(key==='diagnosis')return '<div class="accordion-panel">'+diagnosisPanel(r,p)+'</div>';if(key==='history')return '<div class="accordion-panel">'+historyPanel(r)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='bets')return '<div class="accordion-panel">'+betPanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・AI印予想・全頭診断・過去走・展開AI・買い目から見たい項目を押してください。</div>'}
+function detailTabs(r,p){var key=state.openPanel;if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='aimarks')return '<div class="accordion-panel">'+aiMarksPanel(r,p)+'</div>';if(key==='diagnosis')return '<div class="accordion-panel">'+diagnosisPanel(r,p)+'</div>';if(key==='history')return '<div class="accordion-panel">'+historyPanel(r)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・AI印予想・全頭診断・過去走・展開AIから見たい項目を押してください。</div>'}
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side">'+volatilityBadge(r)+'<strong>'+(isFinal(r)?'確定':timeHtml(r))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
@@ -2852,7 +2852,7 @@ function cinematicTabs(r){
   var navStyle='display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;width:100%!important;overflow:visible!important;padding:5px!important;';
   var btnStyle='width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;flex:none!important;padding:8px 2px!important;box-sizing:border-box!important;font-size:16px!important;font-weight:900!important;line-height:1.05!important;';
   return '<nav class="cinema-tabs accordion-tabs" style="'+navStyle+'">'+
-    [['出走表','entry'],['AI印予想','aimarks'],['全頭診断','diagnosis'],['過去走','history'],['展開AI','pace'],['買い目','bets']]
+    [['出走表','entry'],['AI印予想','aimarks'],['全頭診断','diagnosis'],['過去走','history'],['展開AI','pace']]
       .map(function(t){
         var active=state.openPanel===t[1];
         return '<button style="'+btnStyle+'" data-panel="'+t[1]+'" aria-expanded="'+active+'" class="'+(active?'active':'')+'">'+t[0]+'<span class="panel-caret">'+(active?'−':'＋')+'</span></button>'
@@ -2863,10 +2863,10 @@ function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span>'+volatilityBadge(x)+'<span class="other-status">'+(isFinal(x)?'結果確定':'レース詳細')+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
 function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v183</small></footer>'}
 function smartTopBar(back,title,sub){
-  return '<header class="smart-topbar smart-topbar-clean">'+
-    (back?'<button class="smart-back" data-action="back" aria-label="戻る">‹</button>':'<span class="smart-back-space"></span>')+
-    '<div class="smart-head-copy smart-head-copy-clean"><strong>'+esc(title||'開催場')+'</strong><small>'+esc(sub||'')+'</small></div>'+
-    '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+
+  return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
+    '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
+    '<div class="smart-head-copy smart-head-copy-clean"><strong>'+esc(title||'開催場')+'</strong><small>'+esc(sub||'')+'</small></div>'+ 
+    (back?'<button class="smart-section-close" data-action="back" aria-label="トップへ戻る">×</button>':'<span class="smart-back-space"></span>')+
   '</header>'
 }
 function smartRaceTopBar(r){
@@ -2874,11 +2874,11 @@ function smartRaceTopBar(r){
   for(var i=0;i<rows.length;i++){if(String(rows[i].id)===String(r.id)){idx=i;break}}
   var prev=idx>0?rows[idx-1]:null,next=idx>=0&&idx<rows.length-1?rows[idx+1]:null;
   return '<header class="smart-topbar smart-topbar-clean smart-race-topbar">'+
-    '<button class="smart-race-close" data-action="back" aria-label="開催場のレース一覧へ戻る">×</button>'+ 
+    '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
     (prev?'<button class="smart-race-step prev" data-race="'+esc(prev.id)+'" aria-label="前のレース">&lt;</button>':'<button class="smart-race-step prev" disabled>&lt;</button>')+
     '<div class="smart-head-copy smart-head-copy-clean smart-race-head-copy"><strong>'+esc(r.track)+' '+esc(r.raceNumber)+'R</strong></div>'+ 
     (next?'<button class="smart-race-step next" data-race="'+esc(next.id)+'" aria-label="次のレース">&gt;</button>':'<button class="smart-race-step next" disabled>&gt;</button>')+
-    '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
+    '<button class="smart-race-close" data-action="back" aria-label="開催場のレース一覧へ戻る">×</button>'+ 
   '</header>'
 }
 function smartPageControls(){return ''}
@@ -3000,20 +3000,9 @@ function selectedRaceBetPreview(r){
 function smartSelectedRaces(){
   var picks=selectedRaceCandidates();if(!picks.length)return '';
   var finalCount=picks.filter(function(z){return isFinal(z.race)}).length;
-  return '<details class="smart-selected-races"><summary><span><b>本日の厳選レース</b><small>ARVEXQ先出し買い目 / メイン・重賞・高知ファイナルを含む</small></span><em>'+picks.length+'レース　'+(finalCount===picks.length?'結果を見る':'開く')+' ›</em></summary><div class="smart-selected-list">'+picks.map(function(z){var r=z.race;return '<button type="button" class="smart-selected-row '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><div class="selected-race-head"><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><time>'+esc(r.startTime||'--:--')+'</time></div><div class="selected-race-title">'+esc(r.title||'')+'</div><div class="selected-tags">'+z.tags.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+'</div>'+selectedRaceBetPreview(r)+'</button>'}).join('')+'</div></details>'
+  return '<details class="smart-selected-races"><summary><span><b>本日の厳選レース</b><small>メイン・重賞・高知ファイナルを含む</small></span><em>'+picks.length+'レース　'+(finalCount===picks.length?'結果を見る':'開く')+' ›</em></summary><div class="smart-selected-list">'+picks.map(function(z){var r=z.race;return '<button type="button" class="smart-selected-row '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><div class="selected-race-head"><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><time>'+esc(r.startTime||'--:--')+'</time></div><div class="selected-race-title">'+esc(r.title||'')+'</div><div class="selected-tags">'+z.tags.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+'</div>'+'</button>'}).join('')+'</div></details>'
 }
-function scheduleSelectedRacePredictions(){
-  if(state.race||state.track||state.picker||state.date!==today())return;
-  var picks=selectedRaceCandidates().map(function(z){return z.race}).filter(function(r){return r&&r.id&&!isFinal(r)&&mins(r.startTime)>nowMins()});
-  if(selectedRacePreload.date!==state.date){selectedRacePreload={date:state.date,busy:{},done:{},timer:null}}
-  var queue=picks.filter(function(r){var id=String(r.id);return !selectedRacePreload.busy[id]&&!selectedRacePreload.done[id]&&!loadStoredAiBet(id)}).slice(0,12);
-  if(!queue.length)return;
-  if(selectedRacePreload.timer)return;
-  selectedRacePreload.timer=setTimeout(function(){selectedRacePreload.timer=null;var cursor=0;
-    function worker(){if(cursor>=queue.length)return Promise.resolve();var r=queue[cursor++],id=String(r.id);selectedRacePreload.busy[id]=1;return fetchEdgeRace(id,false).then(function(d){if(d){try{var p=predict(d);buildAiBetPlan(d,p)}catch(e){}selectedRacePreload.done[id]=1}}).catch(function(){}).finally(function(){delete selectedRacePreload.busy[id]}).then(worker)}
-    Promise.all([worker(),worker()]).then(function(){if(!state.race&&!state.track&&!state.picker)render()})
-  },700)
-}
+function scheduleSelectedRacePredictions(){return}
 function smartDailyAiStats(){
   var dayRaces=(state.races||[]).filter(function(r){return r&&r.id});
   var allFinished=dayRaces.length>0&&dayRaces.every(function(r){return isFinal(r)});
@@ -3317,8 +3306,7 @@ function officialRaceLinks(r){
 }
 function officialRaceActions(r){
   var u=officialRaceLinks(r);
-  return '<div class="smart-official-actions" aria-label="公式ライブ・投票">'+
-    '<a class="smart-official-btn live" href="'+esc(u.live)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(u.liveLabel)+'を開く"><span>LIVE</span><small>'+esc(u.liveLabel.replace(' LIVE',''))+'</small></a>'+ 
+  return '<div class="smart-official-actions smart-official-vote-only" aria-label="公式投票">'+
     '<a class="smart-official-btn vote" href="'+esc(u.vote)+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(u.voteLabel)+'を開く"><span>投票</span><small>'+esc(u.voteLabel.replace(' 投票',''))+'</small></a>'+ 
   '</div>'
 }
@@ -11598,3 +11586,32 @@ CSS += r"""
 @media(min-width:700px){.live-center-overlay{align-items:center!important;padding:20px!important}.live-center-sheet{border-radius:18px!important}}
 """
 
+
+
+CSS += r"""
+/* v189 — requested navigation placement and vote-only race action. */
+.smart-home .smart-hero-refresh-right{
+  left:8px!important;right:auto!important;top:8px!important;bottom:auto!important;
+  width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;
+  border-radius:9px!important;font-size:18px!important;padding:0!important;
+}
+.smart-section-topbar{grid-template-columns:42px minmax(0,1fr) 42px!important;gap:6px!important}
+.smart-section-topbar .smart-reload,.smart-section-close{
+  width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;
+  margin:0!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  border:1px solid #315b76!important;border-radius:11px!important;background:#0a2132!important;color:#edf9ff!important;line-height:1!important;
+}
+.smart-section-topbar .smart-reload{font-size:25px!important}
+.smart-section-close{font-size:27px!important;font-weight:500!important}
+.smart-race-topbar .smart-reload{grid-column:1!important}
+.smart-race-topbar .smart-race-close{grid-column:5!important}
+.smart-official-vote-only{grid-template-columns:minmax(0,1fr)!important}
+.smart-official-vote-only .smart-official-btn.vote{width:100%!important}
+.smart-official-btn.live{display:none!important}
+#section-bets,.ai-bet-transfer,.selected-bets,.selected-bet-pending{display:none!important}
+@media(max-width:560px){
+  .smart-home .smart-hero-refresh-right{left:7px!important;top:7px!important;width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;font-size:17px!important}
+  .smart-section-topbar{grid-template-columns:39px minmax(0,1fr) 39px!important;gap:4px!important}
+  .smart-section-topbar .smart-reload,.smart-section-close{width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important}
+}
+"""
