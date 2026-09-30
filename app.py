@@ -2029,13 +2029,9 @@ function saneCarriedWeightValue(v,bodyWeight){
   if(v==null||v==='')return 0;
   var raw=String(v).replace(/[^0-9.+-]/g,''),x=parseFloat(raw);
   if(!isFinite(x)||x<=0)return 0;
+  // Never infer a 3-digit value as 斤量. A wrong 461kg→46.1kg conversion is
+  // much worse than showing “—”; upstream parsers must provide kg correctly.
   if(x>=35&&x<=80)return Math.round(x*10)/10;
-  // Some sources expose 57.0kg as 570 / 55.5kg as 555. Only scale values
-  // that look like a deci-kg code; do not turn a 461kg horse weight into 46.1kg.
-  if(x>=350&&x<=800&&Math.abs(x-Math.round(x))<.001&&Math.round(x)%5===0){
-    var bw=n(bodyWeight,0);if(bw>250&&Math.abs(x-bw)<35)return 0;
-    var y=x/10;if(y>=35&&y<=80)return Math.round(y*10)/10
-  }
   return 0
 }
 function carriedWeightText(h){var v=saneCarriedWeightValue(h&&h.carriedWeight,currentBodyWeight(h));return v?(String(v).replace(/\.0$/,'')+'kg'):'—'}
@@ -2681,8 +2677,9 @@ function aiBetRecommendation(r,p){
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)}),target=raceTargetProfile(r,p),holes=target.holes||[];
   var targetHtml='<div class="ai-target-card target-'+String(target.grade||'C').toLowerCase()+'"><div><small>ARVEXQ EDGE 狙いレース判定</small><strong>狙い度 '+esc(target.grade)+'</strong><span>'+esc(target.label)+'　'+esc(target.score)+'/100</span></div>'+(holes.length?'<div class="ai-target-holes">'+holes.map(function(z){return badge(z.horse)+'<b>'+esc(z.horse.name)+'</b><em>BOMB '+esc(z.bombScore)+' / EDGE '+esc(z.edgeScore)+'</em>'}).join('')+'</div>':'<div class="ai-target-holes muted">強いEDGE穴候補はまだなし</div>')+'</div>';
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲はARVEXQ推定勝率の上位。☆は市場評価より勝率が高いEDGE穴、△は次点の勝ち候補、注は条件が重なった大穴だけに限定します。</p>'+targetHtml+aiBetRecommendation(r,p)+'<div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winProbability)*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>勝率 '+esc(wp)+'%　市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲はARVEXQ推定勝率の上位。☆は市場評価より勝率が高いEDGE穴、△は次点の勝ち候補、注は条件が重なった大穴だけに限定します。</p>'+targetHtml+'<div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winProbability)*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>勝率 '+esc(wp)+'%　市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
+function betPanel(r,p){return '<section id="section-bets" class="card"><h2>AI買い目</h2>'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.overallRank,999)-n(b.overallRank,999)||n(b.overallRaw)-n(a.overallRaw)||n(b.overallScore)-n(a.overallScore)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),ready=!!p;
   var overview='<div class="diagnosis-overview"><div class="diagnosis-overview-title">総合評価一覧</div>'+rows.map(function(x,i){var h=x.horse,bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),rank=n(x.overallRank,i+1);return '<button data-horse-open="'+esc(h.horseNumber)+'" class="diagnosis-overview-row"><span class="diag-rank">'+rank+'位</span>'+badge(h)+'<span class="diag-name">'+esc(h.name)+'</span><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><b>'+esc(overallScoreText(x))+'</b><small>AI '+esc(x.predMark||'—')+' / '+esc(bw)+'</small></button>'}).join('')+'</div>';
@@ -2692,7 +2689,7 @@ function diagnosisPanel(r,p){
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=(h.allPastRuns||h.recentRaces||[]).slice(0,5);return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：過去走0（正常）':'過去走0件：基礎情報で評価済み')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){return '<section id="section-pace" class="card"><h2>展開AI</h2><p class="muted">直近5走の通過順から作る逃げ率・先行率・差し率・追込率・下がり率を、枠順、距離変更、隣接圧力、コース形態と組み合わせてA/B/Cを作ります。先行馬占有率だけで前崩れ判定はしません。</p>'+scenarioProbabilitySection(p)+paceBoard(r,p)+'</section>'}
 function resultPanel(r){return '<section id="section-result" class="card"><h2>レース結果</h2>'+(isFinal(r)?renderResult(r)+renderPayouts(r)+renderActualFlow(r):'<div class="muted">結果はまだ確定していません。</div>')+'</section>'}
-function detailTabs(r,p){var key=state.openPanel;if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='aimarks')return '<div class="accordion-panel">'+aiMarksPanel(r,p)+'</div>';if(key==='diagnosis')return '<div class="accordion-panel">'+diagnosisPanel(r,p)+'</div>';if(key==='history')return '<div class="accordion-panel">'+historyPanel(r)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・AI印予想・全頭診断・過去走・展開AI・レース結果から見たい項目を押してください。</div>'}
+function detailTabs(r,p){var key=state.openPanel;if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='aimarks')return '<div class="accordion-panel">'+aiMarksPanel(r,p)+'</div>';if(key==='diagnosis')return '<div class="accordion-panel">'+diagnosisPanel(r,p)+'</div>';if(key==='history')return '<div class="accordion-panel">'+historyPanel(r)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='bets')return '<div class="accordion-panel">'+betPanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・AI印予想・全頭診断・過去走・展開AI・買い目から見たい項目を押してください。</div>'}
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side">'+volatilityBadge(r)+'<strong>'+(isFinal(r)?'確定':timeHtml(r))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
@@ -2706,7 +2703,7 @@ function cinematicTabs(r){
   var navStyle='display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;width:100%!important;overflow:visible!important;padding:7px!important;';
   var btnStyle='width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;flex:none!important;padding:8px 1px!important;box-sizing:border-box!important;';
   return '<nav class="cinema-tabs accordion-tabs" style="'+navStyle+'">'+
-    [['出走表','entry'],['AI印予想','aimarks'],['全頭診断','diagnosis'],['過去走','history'],['展開AI','pace'],['レース結果','result']]
+    [['出走表','entry'],['AI印予想','aimarks'],['全頭診断','diagnosis'],['過去走','history'],['展開AI','pace'],['買い目','bets']]
       .map(function(t){
         var active=state.openPanel===t[1];
         return '<button style="'+btnStyle+'" data-panel="'+t[1]+'" aria-expanded="'+active+'" class="'+(active?'active':'')+'">'+t[0]+'<span class="panel-caret">'+(active?'−':'＋')+'</span></button>'
@@ -3068,13 +3065,13 @@ function renderVenue(){
   '</div>'
 }
 function smartInlineResult(r){
-  var final=isFinal(r),f=((r.result||{}).finishers||[]).slice().sort(function(a,b){return n(a.finish)-n(b.finish)}).slice(0,3),txt=final&&f.length?('結果 '+f.map(function(x){return n(x.horseNumber)}).join('-')):(final?'結果 確定':'レース結果');
-  return '<button type="button" class="smart-inline-result '+(final?'final':'')+'" data-panel="result">'+esc(txt)+'</button>'
+  var final=isFinal(r),f=((r.result||{}).finishers||[]).slice().sort(function(a,b){return n(a.finish)-n(b.finish)}).slice(0,3),nums=final&&f.length?f.map(function(x){return n(x.horseNumber)}).join(' - '):'';
+  return '<button type="button" class="smart-inline-result '+(final?'final':'')+'" data-panel="result"><span>レース結果</span><strong>'+(final?'確定':'未確定')+'</strong></button>'
 }
 function smartRaceHead(r){
   var count=n(r.fieldSize,(r.horses||[]).length);
   return '<section class="smart-race-head">'+
-    '<div class="smart-race-headline"><div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span><strong>'+esc(r.track)+' '+esc(r.raceNumber)+'R</strong>'+cinematicGrade(r)+'</div><div class="smart-race-result-side">'+smartInlineResult(r)+'<time>'+timeHtml(r)+' 発走</time></div></div>'+ 
+    '<div class="smart-race-headline"><div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span><strong>'+esc(r.track)+' '+esc(r.raceNumber)+'R</strong>'+cinematicGrade(r)+'</div><div class="smart-race-result-side"><time>'+timeHtml(r)+' 発走</time>'+smartInlineResult(r)+'</div></div>'+ 
     '<h1>'+esc(r.title||'レース詳細')+'</h1>'+ 
     '<div class="smart-race-meta">'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'')+' '+esc(r.condition||'')+'　'+count+'頭</div>'+ 
   '</section>'
@@ -7379,14 +7376,9 @@ def _safe_carried_weight_value(value, body_weight=None):
     if value in (None,""):return None
     try:x=float(re.sub(r"[^0-9.+-]","",str(value)))
     except Exception:return None
+    # Strict mode: 斤量 is already a kg value. Do not auto-divide 3-digit values,
+    # because a horse body weight such as 500 can otherwise become a false 50kg.
     if 35<=x<=80:return round(x,1)
-    # deci-kg code such as 570 / 555. Avoid converting a current horse weight
-    # that accidentally landed in the carried-weight column.
-    if 350<=x<=800 and abs(x-round(x))<1e-6 and int(round(x))%5==0:
-        bw=_safe_body_weight_value(body_weight)
-        if bw and abs(x-bw)<35:return None
-        y=x/10.0
-        if 35<=y<=80:return round(y,1)
     return None
 
 
@@ -11052,5 +11044,58 @@ CSS += r"""
   .smart-race-head-left strong{font-size:18px!important}.smart-race-result-side{min-width:105px}.smart-race-result-side .smart-inline-result{min-width:102px;font-size:11px!important;padding:7px 6px!important}.smart-race-result-side time{font-size:11px!important}
   .cinema-tabs button,.accordion-tabs button,.race-tabs button{font-size:11.5px!important;min-height:46px!important;padding:10px 2px!important}
   .ai-bet-row{grid-template-columns:82px minmax(0,1fr) 38px;padding:8px}.ai-bet-row strong{font-size:14px}
+}
+"""
+
+
+CSS += r"""
+/* v178: result box shows status only; no finish-order numbers */
+.smart-race-result-side{
+  min-width:132px!important;
+  gap:7px!important;
+  align-items:stretch!important;
+}
+.smart-race-result-side time{
+  order:0!important;
+  text-align:right!important;
+  font-size:13px!important;
+  color:#a9b9c8!important;
+  font-weight:900!important;
+  padding-right:2px!important;
+}
+.smart-race-result-side .smart-inline-result{
+  order:1!important;
+  width:132px!important;
+  min-width:132px!important;
+  min-height:64px!important;
+  padding:8px 8px!important;
+  border:1px solid #6d8191!important;
+  border-radius:10px!important;
+  background:linear-gradient(160deg,#223544,#132431)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),0 6px 18px rgba(0,0,0,.18)!important;
+}
+.smart-race-result-side .smart-inline-result span{
+  font-size:13px!important;font-weight:900!important;color:#eaf4fb!important;
+}
+.smart-race-result-side .smart-inline-result strong{
+  font-size:17px!important;line-height:1.1!important;color:#fff!important;letter-spacing:.04em!important;
+}
+.smart-race-result-side .smart-inline-result.final{
+  border-color:#62a97d!important;
+  background:linear-gradient(160deg,#153c2c,#102a22)!important;
+}
+.smart-race-result-side .smart-inline-result.final strong{color:#c9f1d7!important}
+#section-bets>.ai-bet-box{margin-top:8px!important}
+@media(max-width:560px){
+  .smart-race-result-side{min-width:118px!important}
+  .smart-race-result-side .smart-inline-result{width:118px!important;min-width:118px!important;min-height:60px!important}
+  .smart-race-result-side time{font-size:12px!important}
+  .smart-race-result-side .smart-inline-result span{font-size:12px!important}
+  .smart-race-result-side .smart-inline-result strong{font-size:16px!important}
 }
 """
