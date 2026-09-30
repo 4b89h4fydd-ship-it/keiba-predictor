@@ -1,4 +1,4 @@
-name: NOXRA Production Sync
+name: ARVEXQ Production Sync
 
 "on":
   workflow_dispatch:
@@ -7,7 +7,7 @@ name: NOXRA Production Sync
     - cron: "*/5 0-14 * * *"
 
 concurrency:
-  group:  noxra-production-sync
+  group:  arvexq-sync.yml
   cancel-in-progress: false
 
 jobs:
