@@ -67,7 +67,7 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v174"
+BUILD_VERSION = "v175"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 js = re.sub(r'(arvexq-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
 js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
@@ -315,8 +315,8 @@ const STATIC=[
   "/index.html",
   "/arvexq-app-{BUILD_VERSION}.js",
   "/manifest-arvexq-v173.webmanifest",
-  "/arvexq-icon-v173-192.png",
-  "/arvexq-icon-v173-512.png",
+  "/arvexq-icon-v175-192.png",
+  "/arvexq-icon-v175-512.png",
   "/arvexq-racing-hero.webp"
 ];
 
@@ -424,7 +424,7 @@ self.addEventListener("fetch",event=>{{
     "  Cache-Control: no-store\n"
     "/manifest-arvexq-v173.webmanifest\n"
     "  Cache-Control: no-store\n"
-    "/arvexq-touch-v173.png\n"
+    "/arvexq-touch-v175.png\n"
     "  Cache-Control: no-store\n"
     "/sw.js\n"
     "  Cache-Control: no-store\n"
@@ -440,9 +440,9 @@ if not icons:
 if "ARVEXQ_TOUCH_ICON_180" not in binary_b64:
     raise RuntimeError("ARVEXQ_TOUCH_ICON_180 not found")
 
-(DIST / "arvexq-touch-v173.png").write_bytes(base64.b64decode(binary_b64["ARVEXQ_TOUCH_ICON_180"]))
-(DIST / "arvexq-icon-v173-192.png").write_bytes(base64.b64decode(icons["192"]))
-(DIST / "arvexq-icon-v173-512.png").write_bytes(base64.b64decode(icons["512"]))
+(DIST / "arvexq-touch-v175.png").write_bytes(base64.b64decode(binary_b64["ARVEXQ_TOUCH_ICON_180"]))
+(DIST / "arvexq-icon-v175-192.png").write_bytes(base64.b64decode(icons["192"]))
+(DIST / "arvexq-icon-v175-512.png").write_bytes(base64.b64decode(icons["512"]))
 # Compatibility aliases for older installed shells; the HTML/manifest use v173 URLs.
 (DIST / "arvexq-icon-192.png").write_bytes(base64.b64decode(icons["192"]))
 (DIST / "arvexq-icon-512.png").write_bytes(base64.b64decode(icons["512"]))
