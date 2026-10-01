@@ -347,10 +347,10 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.27-v213-role-ranker")
+app = FastAPI(title="ARVEXQ", version="13.28-v215-pro-handicap")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v17-v213-role-ranker"
+PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v18-v215-pro-handicap"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
 V207_WINNER_MODEL_VERSION = "arvexq-winner-v207-from-v206-run1"
@@ -436,6 +436,35 @@ V213_BACKTEST_AUDIT = {
     "selectedHoldout": {"races": 29, "winnerTop1": 0.4483, "winnerTop3": 0.7241},
     "selectedTicketHoldout": {"wide4": 0.6552, "quinella4": 0.5862, "trio6": 0.3103},
     "trifectaGateHoldout": {"races": 16, "top12Hit": 0.375, "note": "small sample; challenge only"},
+}
+
+
+# v215 research-informed professional handicapping layer.
+# Only the P1/winner role is blended because the independently trained P2/P3
+# research candidates failed the untouched chronological holdout.
+V215_PRO_MODEL_VERSION = "arvexq-pro-handicap-v215-499r"
+V215_P1_BLEND = 0.25
+V215_FEATURES = ['eval_score', 'race_perf', 'representative', 'distance', 'track', 'going', 'level', 'lap', 'jockey', 'trainer', 'body', 'condition_change', 'ten', 'early3', 'moved3', 'front', 'stalk', 'mid', 'close', 'evidence', 'data', 'recent_win', 'recent_top3', 'recent_avg_finish', 'recent_peak_finish', 'recent_last_finish', 'recent_gain', 'recent_early', 'recent_front_hold', 'inside', 'weight_rel', 'age_rel', 'rel_eval_score', 'rel_race_perf', 'rel_representative', 'rel_distance', 'rel_track', 'rel_level', 'rel_ten', 'rel_early3', 'rel_moved3', 'rel_recent_avg_finish', 'rel_recent_peak_finish', 'rel_recent_top3', 'short_ten', 'short_early3', 'long_late', 'front_conflict', 'lone_front', 'late_role', 'speed_adj_avg', 'speed_adj_best', 'speed_adj_last', 'speed_adj_trend', 'speed_evidence', 'recency_wfinish', 'finish_trend', 'days_since_last', 'freshness', 'class_drop', 'class_fit', 'weight_delta', 'weight_stability', 'jockey_ctx', 'jockey_track', 'jockey_distance', 'jockey_condition', 'jockey_front', 'trainer_ctx', 'trainer_track', 'trainer_distance', 'trainer_condition', 'draw_hist', 'live_draw', 'live_style', 'pace_fit', 'field_norm', 'style_reliability']
+V215_MEAN = [0.49862552234008267, 0.5286401912751627, 0.8113265043110781, 0.5455662705400257, 0.5349918595268388, 0.5195316754534943, 0.5713893369583772, 0.5, 0.2828648147157827, 0.2877266321373995, 0.5, 0.5, 0.5461772771473442, 0.32997096360758454, 0.10940435811948795, 0.13693062844264947, 0.19356018227339145, 0.27005834146505237, 0.31555499439556983, 0.7785016072002445, 0.6976952748312574, 0.11765777349190919, 0.3305689488910345, 0.5274371196799693, 0.7778177008890635, 0.5177774518420613, 0.4882555134158328, 0.5469100761108961, 0.1935979856423437, 0.49999999999999994, 0.4285027944747626, 0.5979249258902098, 0.5000000000000003, 0.5000000000000003, 0.4999999999999979, 0.5000000000000011, 0.5000000000000008, 0.5000000000000012, 0.5000000000000003, 0.5000000000000018, 0.5000000000000008, 0.5000000000000004, 0.499999999999999, 0.5000000000000004, 0.37073258110925594, 0.22419330848249833, 0.009220176344871732, 0.12066028313146676, 0.2093106804761166, 0.21441279822184922, 0.4989708304807869, 0.5409168042015212, 0.4979695970621205, 0.49899540016298194, 0.8446158791385407, 0.5246316651890728, 0.49128406285429727, 0.16690953248330373, 0.8663157612771873, 0.5129177234604136, 0.5504369099332119, 0.5017229186756674, 0.9247467613492942, 0.4398832296990999, 0.4405353166622062, 0.439937483837236, 0.43903043827371446, 0.45449557715635425, 0.4417297918115731, 0.4428833187143582, 0.44032390305450186, 0.4423113080288322, 0.49992764894765473, 0.5149678154553733, 0.3103756514777972, 0.28325354220467636, 0.5582074359798596, 0.8446158791385407]
+V215_SCALE = [0.19877238050639265, 0.2096303554395283, 0.22893996863750873, 0.22457233793011097, 0.22007999113517696, 0.21532328180910382, 0.1607549968956983, 1.0, 0.2050125026332816, 0.20276428029944157, 1.0, 1.0, 0.2369064233708531, 0.3400688772181425, 0.17865200755655009, 0.2370569369712554, 0.23730788378209683, 0.2582627328195017, 0.33359409945210866, 0.16765115470154765, 0.06746494529005001, 0.20248068648762577, 0.3012009745923855, 0.21754345759080132, 0.236062645846582, 0.31102988841884105, 0.0872792462119, 0.2393828979827045, 0.2531620761180467, 0.3180025141663963, 0.4220338051965644, 0.30674577701347117, 0.31710261403644174, 0.31485290227006135, 0.284938102894347, 0.3120388476074538, 0.3133009245350343, 0.3112893322633602, 0.3088335409066222, 0.2989474165755682, 0.2667146610393564, 0.3147883455396069, 0.2967927376041988, 0.29810170631560823, 0.2384528593662824, 0.2706309704915666, 0.03634087594925736, 0.14298461523557046, 0.22232791912446292, 0.14824717483892305, 0.07614398343701861, 0.08330841986352304, 0.0852734017284489, 0.10365618281717524, 0.29414478729118676, 0.22361216909500758, 0.23032738952607612, 0.15528151787221545, 0.14901319839529142, 0.10365909958146949, 0.12000170169291183, 0.0848701717223585, 0.2191712509910046, 0.11421377337976377, 0.11818274245075691, 0.11762578033215801, 0.11709695274875363, 0.09412095781344301, 0.1117684745501456, 0.11592873066560812, 0.11669973403925167, 0.11866279319793899, 0.08315816558631134, 0.1422086552241309, 0.17305054653826307, 0.2003356443311809, 0.13946240929463782, 0.29414478729118676]
+V215_P1_COEF = [0.12615639701801815, 0.01160507072805922, -0.10876930370612836, 0.08504701791795245, 0.13419454180899007, -0.06960498386587281, 0.04240576697700811, 0.0, 0.23335960343195228, 0.09096535698542067, 0.0, 0.0, 0.001339153438756667, -0.01536048054609657, 0.06183648406677667, -0.040068804002116654, 0.0024778063682697215, -0.05757663159979205, -0.10695893954435069, -0.05114326362473146, -0.008819434391378458, 0.12719501215005377, 0.11853512268350247, 0.09681214961151105, 0.0727835385502329, 0.10274878950192899, -0.09374302613505754, -0.028000026837299793, -0.019066522860871585, 0.014044744043711933, -0.048820729634655315, 0.2007557907566592, 0.0774905934673594, -0.13795121193850782, -0.09355438178158672, 0.10565329579021998, -0.07824962124917814, -0.02420443201491286, 0.04054469695248763, -0.03369603394596484, 0.001532138230120493, 0.05390818461545925, 0.009860949183864253, 0.04483063578863741, 0.04215453484479308, 0.0033520206650365873, 0.040767943013560085, -0.0796950462705916, 0.027758745634120636, -0.06337769933164865, 0.13422764339664442, 0.216821309240248, 0.06420875940364575, 0.0, -0.051344386502311046, 0.01990284884887994, 0.03042759125242903, 0.01854124625503511, 0.0, 0.27606463749042665, 0.1422468870108603, 0.0, 0.0, 0.08081460168456266, 0.14484234419657618, 0.08288409267633011, 0.023472229320246923, 0.0, 0.06330592847998849, -0.010777344643794566, 0.06947012649192094, 0.0968273580731599, 0.1712022607837589, 0.0, 0.0, 0.07321008778338471, 0.0, -0.05134438650231138]
+V215_SPEED_BASE_EXACT = {'川崎|1600|良': 15.1946818613, '船橋|1800|不良': 15.3977758768, '大井|1200|稍重': 16.0642858167, '川崎|900|良': 15.9857904085, '大井|1600|良': 15.4888673766, '大井|1400|不良': 15.6424581006, '大井|2000|良': 15.6862745098, '船橋|1200|稍重': 15.5844155844, '大井|1800|不良': 15.6657963446, '川崎|1400|重': 14.7757297083, '川崎|1500|良': 15.3374233129, '川崎|1500|稍重': 15.4479917611, '浦和|1400|良': 15.3256750895, '船橋|1600|良': 15.2235965747, '浦和|1400|稍重': 15.3677277717, '船橋|1700|不良': 15.6826568266, '川崎|1400|稍重': 15.0214592275, '川崎|1500|重': 15.0602409639, '川崎|2000|重': 14.7167034584, '川崎|2100|稍重': 15.4525386313, '園田|1700|良': 14.8601398601, '川崎|1400|良': 14.8936170213, '大井|1400|重': 15.7924874027, '川崎|1600|不良': 14.828544949, '浦和|1500|良': 15.2827344806, '川崎|1600|稍重': 15.1228733459, '門別|1200|稍重': 15.873015873, '門別|1100|良': 15.6472261735, '門別|1000|良': 15.7977883096, '門別|1000|重': 15.8227848101, '門別|1200|良': 15.7894736842, '門別|1100|重': 15.770617423, '門別|1100|稍重': 15.6695156695, '門別|1000|稍重': 15.7728706625, '盛岡|1200|良': 16.1073825503, '門別|1600|良': 14.9602650744, '門別|1500|稍重': 15.0451354062, '門別|1800|稍重': 14.9812760027, '門別|1600|稍重': 15.1228733459, '門別|1700|良': 14.8861646235, '園田|1400|稍重': 14.8619957537, '園田|1400|良': 14.9572649573, '名古屋|1700|稍重': 15.1312891562, '名古屋|1500|不良': 15.1898773119, '名古屋|920|稍重': 16.1546335808, '門別|1800|良': 15.0376044802, '門別|1700|稍重': 15.1111230508, '門別|1700|重': 15.0176678445, '盛岡|1600|重': 16.1127895267, '盛岡|1400|良': 15.9635119726, '水沢|850|良': 16.1596958175, '盛岡|1200|稍重': 16.0965867175, '水沢|1300|良': 14.9428446103, '盛岡|1600|稍重': 16.016016016, '盛岡|1600|不良': 15.4903190192, '盛岡|1400|重': 16.1104718067, '盛岡|1000|良': 16.339869281, '大井|1200|不良': 15.8311345646, '大井|1200|良': 16.0427807487, '水沢|850|重': 16.5048543689, '浦和|2000|良': 14.9253731343, '船橋|1600|不良': 15.2526215443, '名古屋|1500|重': 15.2516562043, '船橋|1800|良': 15.1324112488, '船橋|1600|稍重': 15.2019311147, '船橋|1600|重': 15.2235965747, '浦和|1500|重': 15.306122449, '浦和|1500|不良': 15.5763239875, '船橋|1200|不良': 15.7068062827, '船橋|1200|良': 15.5642023346, '船橋|1200|重': 15.2866242038, '大井|1200|重': 15.8103041244, '川崎|1500|不良': 14.8588446555, '浦和|1400|不良': 15.6162904125, '浦和|1500|稍重': 15.3295901038, '浦和|2000|不良': 15.0489089541, '船橋|2200|重': 14.3696930111, '大井|2000|重': 15.4320987654, '大井|1800|稍重': 15.4715944097, '大井|1400|稍重': 15.7126823793, '船橋|1700|稍重': 14.9793805469, '大井|1600|不良': 15.2672311755, '船橋|2200|良': 14.9001169698, '船橋|1800|稍重': 14.8950709935, '笠松|1400|良': 15.0862068966, '浦和|2000|稍重': 14.9253731343, '園田|1870|稍重': 14.5752143414, '名古屋|2000|良': 15.0489089541, '名古屋|1500|良': 15.2594099695, '浦和|2000|重': 14.9142431022, '川崎|2000|良': 14.7547050692, '船橋|2200|稍重': 14.6764509673, '船橋|1500|良': 14.9253731343, '浦和|800|良': 16.393442623, '大井|1400|良': 15.873015873, '浦和|800|不良': 16.6666666667, '船橋|1000|不良': 16.0, '船橋|1000|良': 16.077170418, '浦和|800|稍重': 16.393442623, '船橋|1000|稍重': 15.7480314961, '川崎|900|稍重': 15.9292534396, '園田|1230|良': 15.0366748166, '水沢|1400|重': 15.5728587319, '佐賀|1400|良': 15.0537634409, '佐賀|1750|良': 14.9063032368, '門別|1200|重': 15.799875182, '川崎|900|重': 15.8591416346, '門別|1500|良': 15.0150300601, '名古屋|1500|稍重': 15.3374233129, '高知|1300|不良': 15.3211602996, '高知|1400|稍重': 14.9973262093, '名古屋|920|良': 16.112084063, '名古屋|1700|重': 15.0842945874, '名古屋|1400|稍重': 15.2671755725, '名古屋|1400|良': 15.3089165501, '名古屋|1700|良': 15.1853536321, '名古屋|1400|不良': 15.538290788, '笠松|1400|重': 14.8936170213, '名古屋|2000|稍重': 14.9087029484, '名古屋|1400|重': 15.3005464481, '名古屋|2100|稍重': 14.9253731343, '門別|2000|良': 15.3669954956, '金沢|1500|稍重': 14.7420183018, '笠松|1400|稍重': 14.9413020277, '名古屋|1700|不良': 15.2877697842, '盛岡|1700|良': 15.970111583, '園田|1700|稍重': 14.7058823529, '姫路|1400|良': 14.6827518088, '園田|1700|重': 14.6804835924, '笠松|1580|良': 14.8496240602, '金沢|1400|稍重': 14.8698926696, '門別|1600|重': 14.86993985, '金沢|1500|良': 14.8662041625, '金沢|1400|重': 14.8777895855, '園田|1870|良': 14.7244459655, '金沢|2100|良': 14.8409968115, '金沢|1400|良': 14.8462354189, '金沢|1700|稍重': 14.5802853534, '名古屋|2100|重': 15.3396639883, '笠松|1900|良': 14.751552795, '園田|1400|不良': 14.9892933619, '園田|1400|重': 14.8305084746, '園田|820|重': 15.7088122605, '園田|820|不良': 15.8148652368, '園田|820|良': 15.9223300971, '園田|820|稍重': 15.7844227064, '姫路|1400|不良': 14.6674013356, '園田|1230|稍重': 14.9453219927, '園田|1870|重': 14.6724228153, '高知|1300|良': 15.0289017341, '高知|1600|不良': 14.9532840888, '高知|1400|不良': 15.1433251433, '園田|1230|不良': 14.8550724638, '園田|1230|重': 14.8550724638, '高知|1400|重': 15.0862068966, '金沢|1700|良': 14.9647887324, '金沢|1500|不良': 14.6986806476, '金沢|1700|不良': 15.0442477876, '金沢|1500|重': 14.7420183018, '水沢|850|不良': 16.4093275642, '盛岡|1000|稍重': 16.2338090156, '盛岡|1000|重': 16.1943426015, '水沢|1400|不良': 15.5728587319, '佐賀|1400|不良': 15.1679306609, '盛岡|1400|稍重': 16.0366552119, '水沢|1300|不良': 15.7004830918, '盛岡|1600|良': 15.9680638723, '高知|1600|良': 14.5852324521, '盛岡|1200|不良': 16.2932865318, '水沢|1400|良': 15.2505627591, '盛岡|1000|不良': 16.4744645799, '盛岡|1200|重': 16.2162162162, '盛岡|1400|不良': 16.2224797219, '水沢|1400|稍重': 15.4185022026, '水沢|1600|良': 15.2671755725, '佐賀|1300|稍重': 15.2493980048, '水沢|1600|重': 15.4664125062, '川崎|1600|重': 14.9253731343, '水沢|1600|不良': 15.7329269896, '盛岡|1800|重': 15.8033362599, '盛岡|1700|稍重': 16.0529373318, '浦和|1300|良': 15.0462962963, '浦和|1300|稍重': 15.2941176471, '浦和|1300|重': 15.1250778352, '船橋|1500|不良': 14.8367952522, '川崎|1400|不良': 14.7757297083, '浦和|1400|重': 15.4185022026, '浦和|800|重': 16.4271047228, '佐賀|1400|重': 14.933337581, '川崎|900|不良': 16.0142348754, '船橋|1500|稍重': 14.7856122657, '笠松|800|重': 15.4142581888, '笠松|800|良': 15.4738878143, '笠松|1400|不良': 14.9015475948, '笠松|1600|良': 14.939309057, '笠松|1580|不良': 14.5622614615, '笠松|1580|稍重': 14.6296296296, '笠松|1580|重': 14.6025878004, '笠松|800|稍重': 15.5044000496, '笠松|1800|良': 14.9130074565, '金沢|1400|不良': 14.8698926696, '金沢|900|稍重': 15.6251883824, '高知|1600|重': 14.6185503327, '高知|1400|良': 14.8936338769, '高知|800|不良': 16.2601626016, '佐賀|1400|稍重': 15.0699677072, '佐賀|1300|良': 14.9942329873, '金沢|1700|重': 14.8471615721, '帯広ば|200|不明': 1.6246953696, '門別|1500|重': 15.2983529891, '門別|1800|重': 14.8210370455, '高知|1300|重': 15.0289017341, '高知|1600|稍重': 14.7533707779, '高知|1300|稍重': 15.0462962963, '姫路|1400|稍重': 14.4107089124, '姫路|800|良': 15.5642023346, '園田|1700|不良': 14.5299145299, '佐賀|1300|不良': 15.0289017341, '浦和|1300|不良': 15.2403282532, '佐賀|1300|重': 14.8401826484, '佐賀|900|良': 16.1581975535, '佐賀|900|稍重': 15.8590431478, '高知|800|良': 15.8573000157}
+V215_SPEED_BASE_TRACK_DISTANCE = {'川崎|1600': 15.1085930123, '船橋|1800': 15.1515151515, '大井|1200': 15.9786950732, '川崎|900': 15.9433251742, '大井|1600': 15.4291798599, '大井|1400': 15.7126823793, '大井|2000': 15.4440246532, '船橋|1200': 15.5642023346, '大井|1800': 15.5979202773, '川崎|1400': 14.8619957537, '川崎|1500': 15.243902439, '浦和|1400': 15.3846153846, '船橋|1600': 15.2235965747, '船橋|1700': 15.1718254935, '川崎|2000': 14.7167034584, '園田|1700': 14.7826086957, '浦和|1500': 15.3217568948, '門別|1200': 15.799875182, '門別|1100': 15.6695156695, '門別|1000': 15.8227848101, '盛岡|1200': 16.1507402423, '門別|1600': 14.9953139644, '門別|1500': 15.0451354062, '門別|1800': 14.987510408, '門別|1700': 14.9845776131, '園田|1400': 14.9094781683, '名古屋|1700': 15.1853536321, '名古屋|1500': 15.2594099695, '名古屋|920': 16.112084063, '盛岡|1600': 16.0, '盛岡|1400': 16.0183066362, '水沢|850': 16.3461538462, '水沢|1300': 15.6344013237, '盛岡|1000': 16.339869281, '浦和|2000': 14.94210145, '船橋|2200': 14.7651006711, '笠松|1400': 15.037593985, '園田|1870': 14.689709348, '名古屋|2000': 14.9588714947, '船橋|1500': 14.8957298908, '浦和|800': 16.4271047228, '船橋|1000': 15.9489633174, '園田|1230': 15.0, '水沢|1400': 15.5296775448, '佐賀|1400': 15.0537634409, '佐賀|1750': 14.9765999209, '高知|1300': 15.1162790698, '高知|1400': 15.0537634409, '笠松|1600': 14.939309057, '名古屋|1400': 15.3256750895, '名古屋|2100': 15.0322118826, '門別|2000': 15.3256704981, '盛岡|1700': 16.0226201697, '金沢|1500': 14.8075024679, '姫路|1400': 14.6596858639, '笠松|1580': 14.7801683817, '金沢|1400': 14.8462354189, '金沢|1700': 14.8861646235, '笠松|1900': 14.7343953909, '園田|820': 15.8301158301, '高知|1600': 14.6991303408, '水沢|1600': 15.4142581888, '佐賀|1300': 14.9942329873, '盛岡|1800': 15.8172354123, '浦和|1300': 15.1426958761, '笠松|800': 15.444015444, '笠松|1800': 14.8454239363, '金沢|900': 15.625, '姫路|800': 15.4440730016, '高知|800': 15.9362549801, '帯広ば|200': 1.6246953696, '佐賀|900': 16.0003160556}
+V215_SPEED_BASE_DISTANCE_GOING = {'1600|良': 15.1057401813, '1800|不良': 15.3374233129, '1200|稍重': 15.7068062827, '800|良': 16.015625, '1400|不良': 15.1843817787, '2000|良': 14.9145079147, '1400|重': 15.0214592275, '1600|稍重': 15.1196172249, '1400|良': 15.1024811219, '1400|稍重': 15.037593985, '1600|不良': 15.1209677419, '1600|重': 15.0589070187, '2000|重': 14.9142431022, '2000|稍重': 14.9253731343, '1200|良': 15.5844155844, '1000|良': 15.8478605388, '1000|重': 15.8227848101, '1200|重': 15.480030722, '1000|稍重': 15.8478605388, '1800|稍重': 14.9130074565, '1800|良': 14.9377593361, '1200|不良': 15.4028436019, '800|重': 15.9993201668, '2000|不良': 15.0093829764, '2200|良': 14.9001169698, '1800|重': 14.8425940013, '800|不良': 16.3967213115, '1000|不良': 16.1030595813, '800|稍重': 15.8607350097, '200|不明': 1.6246953696}
+V215_SPEED_GLOBAL = '15.200868621064062'
+V215_DRAW_STATS = {'川崎|1600': [14, 11, 14, 1, 5, 3], '門別|1200': [97, 75, 97, 27, 22, 29], '門別|1600': [32, 23, 32, 8, 6, 13], '盛岡|1600': [4, 4, 4, 1, 1, 1], '船橋|1600': [14, 10, 14, 4, 3, 2], '船橋|1200': [4, 4, 4, 1, 1, 1], '船橋|1800': [5, 3, 5, 2, 0, 1], '船橋|2200': [5, 3, 5, 1, 2, 0], '船橋|1000': [5, 4, 5, 1, 0, 2], '門別|1000': [72, 59, 72, 14, 19, 24], '大井|1200': [5, 5, 5, 2, 1, 0], '川崎|2000': [4, 2, 4, 2, 0, 1], '名古屋|1600': [50, 41, 50, 14, 10, 15], '名古屋|800': [3, 1, 3, 1, 0, 2], '名古屋|2000': [8, 7, 8, 1, 2, 3], '園田|1400': [106, 85, 106, 29, 31, 30], '園田|800': [24, 23, 24, 7, 6, 5], '園田|1200': [12, 9, 12, 3, 2, 4], '園田|1600': [15, 7, 15, 6, 0, 6], '金沢|1400': [32, 22, 32, 10, 7, 7], '水沢|800': [11, 7, 11, 3, 3, 3], '水沢|1200': [20, 11, 20, 5, 6, 4], '水沢|1400': [44, 37, 44, 9, 12, 12], '水沢|1600': [14, 8, 14, 5, 1, 6], '水沢|2000': [4, 3, 4, 0, 1, 2], '浦和|1400': [95, 75, 95, 29, 18, 22], '浦和|1600': [35, 33, 35, 13, 6, 8], '浦和|800': [32, 32, 32, 9, 9, 9], '浦和|2000': [28, 28, 28, 10, 6, 5], '笠松|800': [8, 7, 8, 3, 4, 2], '笠松|1400': [111, 77, 111, 41, 30, 31], '笠松|1600': [21, 14, 21, 5, 7, 6], '金沢|1600': [15, 13, 15, 3, 6, 3], '金沢|2000': [4, 4, 4, 2, 0, 1], '門別|1800': [11, 10, 11, 3, 4, 2], '高知|1200': [20, 16, 20, 6, 3, 9], '高知|1400': [40, 34, 40, 10, 10, 13], '園田|1800': [6, 5, 6, 1, 2, 3], '笠松|1800': [4, 2, 4, 2, 0, 1], '佐賀|800': [10, 10, 10, 3, 4, 2], '佐賀|1400': [29, 23, 29, 8, 5, 8], '帯広ば|200': [46, 26, 46, 11, 6, 19]}
+V215_TRACK_DRAW_STATS = {'川崎': [18, 13, 18, 3, 5, 4], '門別': [212, 167, 212, 52, 51, 68], '盛岡': [4, 4, 4, 1, 1, 1], '船橋': [33, 24, 33, 9, 6, 6], '大井': [5, 5, 5, 2, 1, 0], '名古屋': [61, 49, 61, 16, 12, 20], '園田': [163, 129, 163, 46, 41, 48], '金沢': [51, 39, 51, 15, 13, 11], '水沢': [93, 66, 93, 22, 23, 27], '浦和': [190, 168, 190, 61, 39, 44], '笠松': [144, 100, 144, 51, 41, 40], '高知': [60, 50, 60, 16, 13, 22], '佐賀': [39, 33, 39, 11, 9, 10], '帯広ば': [46, 26, 46, 11, 6, 19]}
+V215_RESEARCH_AUDIT = {
+    "usableRaces": 499, "trainRaces": 299, "validationRaces": 100, "holdoutRaces": 100,
+    "p1V213Validation": {"top1": 0.33, "top3": 0.63, "mrr": 0.53299},
+    "p1V215Validation": {"top1": 0.34, "top3": 0.65, "mrr": 0.54125},
+    "p1V213Holdout": {"top1": 0.25, "top3": 0.61, "mrr": 0.46833},
+    "p1V215Holdout": {"top1": 0.25, "top3": 0.63, "mrr": 0.47114},
+    "p2ResearchRejected": {"candidateTop1": 0.20, "candidateTop3": 0.38, "v213Top1": 0.22, "v213Top3": 0.47},
+    "p3ResearchRejected": {"candidateTop1": 0.12, "candidateTop3": 0.40, "v213Top1": 0.15, "v213Top3": 0.40},
+    "selectionGateKeptV213": {"holdoutRaces": 29, "winnerTop1": 0.4483, "winnerTop3": 0.7241},
+    "oddsUsedAsCoreFeature": False,
+    "resultUsedAsFeature": False,
 }
 
 
@@ -2583,7 +2612,7 @@ function assignEdgeEngine(r,rows,suit,sc,pressure){
     if(Number(x.horse.winOdds||0)>1)oddsCount++;
     if(n(x.horse.popularity,0)>0)popCount++
   }
-  var v213Ready=v207UsesWinnerModel(r)&&rows.length&&rows.every(function(z){var e=z&&z.horse&&z.horse.integratedEvaluation||{};return isFinite(Number(e.v213P1Utility))&&isFinite(Number(e.v213P2Utility))&&isFinite(Number(e.v213P3Utility))}),p1P=v213Ready?edgeSoftmax(rows.map(function(z){return Number((z.horse.integratedEvaluation||{}).v213P1Utility)}),1):edgeSoftmax(p1Raw,temp),p2P=v213Ready?edgeSoftmax(rows.map(function(z){return Number((z.horse.integratedEvaluation||{}).v213P2Utility)}),1):edgeSoftmax(role2Raw,temp+.014),p3P=v213Ready?edgeSoftmax(rows.map(function(z){return Number((z.horse.integratedEvaluation||{}).v213P3Utility)}),1):edgeSoftmax(role3Raw,temp+.024),predMarket=edgeSoftmax(publicRaw,.105),market=[],marketSource='予測市場';
+  var v213Ready=v207UsesWinnerModel(r)&&rows.length&&rows.every(function(z){var e=z&&z.horse&&z.horse.integratedEvaluation||{};return isFinite(Number(e.v215P1Utility!=null?e.v215P1Utility:e.v213P1Utility))&&isFinite(Number(e.v213P2Utility))&&isFinite(Number(e.v213P3Utility))}),p1P=v213Ready?edgeSoftmax(rows.map(function(z){var e=z.horse.integratedEvaluation||{};return Number(e.v215P1Utility!=null?e.v215P1Utility:e.v213P1Utility)}),1):edgeSoftmax(p1Raw,temp),p2P=v213Ready?edgeSoftmax(rows.map(function(z){return Number((z.horse.integratedEvaluation||{}).v213P2Utility)}),1):edgeSoftmax(role2Raw,temp+.014),p3P=v213Ready?edgeSoftmax(rows.map(function(z){return Number((z.horse.integratedEvaluation||{}).v213P3Utility)}),1):edgeSoftmax(role3Raw,temp+.024),predMarket=edgeSoftmax(publicRaw,.105),market=[],marketSource='予測市場';
   if(oddsCount>=Math.max(2,Math.ceil(field*.75))){
     marketSource='実オッズ';var imp=[],impSum=0;
     for(i=0;i<rows.length;i++){
@@ -2661,13 +2690,14 @@ function raceTargetProfile(r,p){
   return{score:score,grade:grade,label:label,holes:holes.slice(0,3)}
 }
 function raceSelectionProfile(r,p){
-  var rows=(p&&p.rows||[]).slice(),vals=rows.map(function(x){return clamp(n(x.p1Probability),0,1)}).sort(function(a,b){return b-a}),top=vals[0]||0,second=vals[1]||0,top3=(vals[0]||0)+(vals[1]||0)+(vals[2]||0),margin=top-second,cov=n(p&&p.coverage,0),ent=0,den=Math.log(Math.max(2,vals.length)),selected=false;
+  var rows=(p&&p.rows||[]).slice(),activeVals=rows.map(function(x){return clamp(n(x.p1Probability),0,1)}),localV213=String(r&&r.circuit||'')==='地方'&&rows.length&&rows.every(function(z){return !!z.v213RoleReady}),vals;
+  if(localV213){var core=edgeSoftmax(rows.map(function(z){var e=z&&z.horse&&z.horse.integratedEvaluation||{};return Number(e.v213P1Utility)}),1);vals=core.slice()}else vals=activeVals.slice();
+  vals.sort(function(a,b){return b-a});var top=vals[0]||0,second=vals[1]||0,top3=(vals[0]||0)+(vals[1]||0)+(vals[2]||0),margin=top-second,cov=n(p&&p.coverage,0),ent=0,den=Math.log(Math.max(2,vals.length)),selected=false;
   vals.forEach(function(q){q=Math.max(1e-12,q);ent-=q*Math.log(q)});ent=den>0?ent/den:1;
-  var localV213=String(r&&r.circuit||'')==='地方'&&rows.length&&rows.every(function(z){return !!z.v213RoleReady});
   if(localV213)selected=top3>=.71&&ent<=.82;
   else selected=top3>.613258&&((margin<=.046088)||(margin>.163086));
   var score=Math.round(clamp(top3*.55+(1-ent)*.25+cov*.12+(selected?.08:0),0,1)*100);
-  return{selected:selected,score:score,top:top,top3mass:top3,margin:margin,entropy:ent,coverage:cov,model:localV213?'v213-role-ranker':'legacy',holdoutWinnerTop1:localV213?.448:0,holdoutWinnerTop3:localV213?.724:0}
+  return{selected:selected,score:score,top:top,top3mass:top3,margin:margin,entropy:ent,coverage:cov,model:localV213?'v213-selection+v215-p1':'legacy',holdoutWinnerTop1:localV213?.448:0,holdoutWinnerTop3:localV213?.724:0}
 }
 
 function assignPredictionMarks(rows,r){
@@ -2898,8 +2928,8 @@ function ensureAutoOdds(r){
 }
 
 function overallScoreText(x){var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
-function aiBetStoreKey(id){return 'arvexq:prebet:v213:'+String(id||'')}
-function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){['v212','v211','v210','v207','v205','v181','v180'].forEach(function(v){keys.push('arvexq:prebet:'+v+':'+String(id||''))})}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
+function aiBetStoreKey(id){return 'arvexq:prebet:v215:'+String(id||'')}
+function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){['v213','v212','v211','v210','v207','v205','v181','v180'].forEach(function(v){keys.push('arvexq:prebet:'+v+':'+String(id||''))})}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
 function saveStoredAiBet(r,plan){try{if(!r||!r.id||!plan||isFinal(r))return;var st=mins(r.startTime),started=(r.date===today()&&st<9999&&nowMins()>=st);if(started||loadStoredAiBet(r.id,false))return;plan.fixedAt=new Date().toISOString();localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))}catch(e){}}
 function betComboText(kind,combos){
   combos=combos||[];
@@ -2916,7 +2946,7 @@ function isFeaturedBetRace(r,p){
 }
 function buildV213AiBetPlan(r,p,rows,featured){
   function no(x){return x&&x.horse?n(x.horse.horseNumber):0}
-  function util(x,k){var e=x&&x.horse&&x.horse.integratedEvaluation||{};return Number(e['v213P'+k+'Utility'])}
+  function util(x,k){var e=x&&x.horse&&x.horse.integratedEvaluation||{};if(k===1&&e.v215P1Utility!=null)return Number(e.v215P1Utility);return Number(e['v213P'+k+'Utility'])}
   function entropy(ps){var z=0,den=Math.log(Math.max(2,ps.length));ps.forEach(function(q){q=Math.max(1e-12,n(q));z-=q*Math.log(q)});return den>0?z/den:1}
   function key2(a,b){a=n(a);b=n(b);return a<b?a+'-'+b:b+'-'+a}
   function pushMap(map,key,score,combo){if(!map[key])map[key]={combo:combo,score:0};map[key].score+=score}
@@ -2934,7 +2964,7 @@ function buildV213AiBetPlan(r,p,rows,featured){
   if(triGate){var t3=topCombos(tri,12);if(t3.length)items.push({level:'3連単チャレンジ',kind:'3連単',combos:t3,confidence:'中'})}
   items.forEach(function(z){z.points=(z.combos||[]).length;z.combo=betComboText(z.kind,z.combos)});items=items.filter(function(z){return z.points>0});
   var decision=strong?'強く買う':(canIssue?'通常買い':'見送り'),quality=canIssue?Math.round(clamp(45+top3mass*42+(1-ent)*18+(strong?10:0),50,96)):0,reason=strong?'v213厳選ゲート通過。勝ち馬P1上位3頭の集中度と順位分布が検証基準を満たしています。':(featured?'メイン・重賞・高知ファイナル等の対象レースなので、見送りにせず役割順位から買い目を出します。':(canIssue?'v213通常ゲート通過。役割順位の集中度から買い目を作成。':'通常ゲート未通過。'));
-  return{raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v213-joint-role',decision:decision,featuredRace:featured,betQuality:quality,scenario:((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{title:'平均',prob:0}).title,scenarioProb:n(((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{}).prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v213順序集中ゲート通過。':'順序集中度が3連単チャレンジ基準未満。',winnerModel:'v213-role-ranker',p2Model:'v213-role-ranker',p3Model:'v213-role-ranker',selectionAudit:sel,roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z.x),p:z.p}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z.x),p:z.p}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z.x),p:z.p}})},audit:{field:rows.length,coverage:n(p.coverage),top3mass:top3mass,entropy:ent,triTop:triTop,triRatio:triRatio,selected:autoSelected,normalGate:normalGate},items:items,reason:reason}
+  return{raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v215-pro-handicap',decision:decision,featuredRace:featured,betQuality:quality,scenario:((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{title:'平均',prob:0}).title,scenarioProb:n(((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{}).prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v213順序集中ゲート通過。':'順序集中度が3連単チャレンジ基準未満。',winnerModel:'v215-pro-handicap',p2Model:'v213-role-ranker',p3Model:'v213-role-ranker',selectionAudit:sel,roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z.x),p:z.p}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z.x),p:z.p}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z.x),p:z.p}})},audit:{field:rows.length,coverage:n(p.coverage),top3mass:top3mass,entropy:ent,triTop:triTop,triRatio:triRatio,selected:autoSelected,normalGate:normalGate},items:items,reason:reason}
 }
 
 function buildAiBetPlan(r,p){
@@ -3025,11 +3055,11 @@ function aiBetRecommendation(r,p){
   var vote=officialRaceLinks(r).vote,rows=(plan.items||[]).map(function(z){return '<div class="ai-bet-row level-'+(z.level==='本線'?'main':z.level==='押さえ'?'cover':z.level==='強気'?'attack':'trifecta')+'"><span class="ai-bet-level">'+esc(z.level)+'</span><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点'+(z.confidence?' / '+esc(z.confidence):'')+'</em></div>'}).join('');
   if(plan.decision==='見送り')rows='<div class="ai-bet-row level-cover"><span class="ai-bet-level">見送り</span><b>全券種</b><strong>無理に買わない</strong><em>'+esc(plan.betQuality||0)+'/100</em></div>';
   if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')rows+='<div class="ai-bet-row level-trifecta"><span class="ai-bet-level">3連単</span><b>検討済み</b><strong>順序信頼不足で見送り</strong><em>'+esc(plan.orderScore||0)+'/100</em></div>';
-  return '<div class="ai-bet-box"><div class="ai-bet-head"><div><div class="ai-bet-title">AI買い目</div><small>'+esc(plan.scenario)+' '+Math.round(n(plan.scenarioProb)*100)+'% / 買い目信頼 '+esc(plan.betQuality||0)+'/100 / 発走前固定</small></div><span>ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">v213：地方499レースを時系列分割し、1着・2着・3着の役割順位を再学習。厳選はP1上位集中度で選び、厳選・メイン・重賞・高知ファイナルは必ず買い目を出します。</small></div>'
+  return '<div class="ai-bet-box"><div class="ai-bet-head"><div><div class="ai-bet-title">AI買い目</div><small>'+esc(plan.scenario)+' '+Math.round(n(plan.scenarioProb)*100)+'% / 買い目信頼 '+esc(plan.betQuality||0)+'/100 / 発走前固定</small></div><span>ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">v215：地方499レースの時系列Holdoutで、補正時計・近況・クラス変化・騎手/調教師の条件別成績・枠傾向・ペース適合をP1へ25%だけ追加。P2/P3と厳選ゲートは悪化を避けるためv213を維持。</small></div>'
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲はv213の勝ち馬順位。P2・P3は別役割モデルを使い、買い目では3役を同時に重複なしで組み合わせます。EDGE/BOMBは◎選定には使いません。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winProbability)*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>P1 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲はv213勝ち馬順位にv215プロ補正を25%だけ重ねたP1。補正時計・近況・クラス・条件別騎手/調教師・枠・ペース適合を追加し、P2/P3は検証で悪化したためv213を維持。EDGE/BOMBは◎選定には使いません。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winProbability)*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>P1 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card"><h2>AI買い目</h2>'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
@@ -9045,6 +9075,105 @@ def _v213_feature_rows(detail: dict, horses: list[dict]) -> list[dict[str,float]
     return rows
 
 
+
+
+def _v215_speed_ratio(rr: dict) -> float | None:
+    try:
+        sec=float(rr.get('timeSeconds') or 0); dist=int(float(rr.get('distance') or 0))
+    except (TypeError,ValueError):
+        return None
+    if sec <= 0 or dist <= 0:return None
+    track=str(rr.get('track') or '');cond=str(rr.get('condition') or '不明');db=round(dist/200)*200
+    base=(V215_SPEED_BASE_EXACT.get(f"{track}|{dist}|{cond}") or
+          V215_SPEED_BASE_TRACK_DISTANCE.get(f"{track}|{dist}") or
+          V215_SPEED_BASE_DISTANCE_GOING.get(f"{db}|{cond}") or V215_SPEED_GLOBAL)
+    return max(.75,min(1.25,(dist/sec)/max(1e-9,float(base))))
+
+
+def _v215_draw_score(track: str, dist: int, group: int) -> float:
+    db=round(int(dist or 0)/200)*200
+    arr=V215_DRAW_STATS.get(f"{track}|{db}")
+    if not arr or sum(arr[:3]) < 24:arr=V215_TRACK_DRAW_STATS.get(str(track))
+    if not arr or sum(arr[:3]) < 20:return .5
+    starts=float(arr[group]);hits=float(arr[3+group]);total_s=float(sum(arr[:3]));total_h=float(sum(arr[3:]))
+    base=(total_h+3)/(total_s+9);rate=(hits+1)/(starts+3);lift=rate/max(.05,base)
+    return max(0.0,min(1.0,.5+.45*(lift-1)))
+
+
+def _v215_prof_feature_rows(detail: dict, horses: list[dict], base_rows: list[dict]) -> list[dict]:
+    rows=[];field=max(1,len(horses))
+    try:target_date=dt_date.fromisoformat(str(detail.get('date') or ''))
+    except Exception:target_date=None
+    for idx,h in enumerate(horses):
+        f=dict(base_rows[idx]);runs=list(h.get('recentRaces') or [])[:5]
+        finish_scores=[];wf_num=wf_den=0.0;speed_vals=[];speed_ws=[];carried=[];prizes=[];days=[]
+        for j,rr in enumerate(runs):
+            wrec=.72**j
+            try:fin=int(float(rr.get('finish') or rr.get('finishPosition') or 0))
+            except (TypeError,ValueError):fin=0
+            try:fs=max(2,int(float(rr.get('fieldSize') or 12)))
+            except (TypeError,ValueError):fs=12
+            if fin>0:
+                score=max(0.0,min(1.0,1.0-(fin-1)/max(1,fs-1)));finish_scores.append(score);wf_num+=score*wrec;wf_den+=wrec
+            sr=_v215_speed_ratio(rr)
+            if sr is not None:speed_vals.append(sr);speed_ws.append(wrec)
+            try:
+                cw=float(rr.get('carriedWeight'))
+                if math.isfinite(cw):carried.append(cw)
+            except (TypeError,ValueError):pass
+            try:
+                rp=float(rr.get('racePrize1') or 0)
+                if rp>0:prizes.append(rp)
+            except (TypeError,ValueError):pass
+            if target_date and rr.get('date'):
+                try:days.append(max(0,(target_date-dt_date.fromisoformat(str(rr.get('date')))).days))
+                except Exception:pass
+        trend=(finish_scores[0]-(sum(finish_scores[1:])/len(finish_scores[1:]) if len(finish_scores)>1 else finish_scores[0])) if finish_scores else 0.0
+        spavg=sum(v*w for v,w in zip(speed_vals,speed_ws))/sum(speed_ws) if speed_vals else 1.0
+        spbest=max(speed_vals) if speed_vals else 1.0;splast=speed_vals[0] if speed_vals else 1.0
+        sptrend=(speed_vals[0]-(sum(speed_vals[1:])/len(speed_vals[1:]) if len(speed_vals)>1 else speed_vals[0])) if speed_vals else 0.0
+        curpr=float(detail.get('racePrize1') or 0);prevpr=(sum(prizes)/len(prizes) if prizes else 0.0);bestpr=max(prizes) if prizes else 0.0
+        class_drop=.5 if curpr<=0 or prevpr<=0 else max(0.0,min(1.0,.5+.22*math.log(max(1e-6,prevpr/curpr))))
+        class_fit=.5 if curpr<=0 or bestpr<=0 else max(0.0,min(1.0,.5+.20*math.log(max(1e-6,bestpr/curpr))))
+        try:curw=float(h.get('carriedWeight'));curw=curw if math.isfinite(curw) else float('nan')
+        except (TypeError,ValueError):curw=float('nan')
+        lastw=carried[0] if carried else curw
+        wd=0.0 if not (math.isfinite(curw) and math.isfinite(lastw)) else curw-lastw
+        weight_delta=max(0.0,min(1.0,.5-.08*wd));wstd=float(np.std(carried)) if False else (math.sqrt(sum((x-sum(carried)/len(carried))**2 for x in carried)/len(carried)) if len(carried)>=2 else 0.0)
+        jp=h.get('jockeyProfile') or {};tp=h.get('trainerProfile') or {}
+        def pv(p,key,default=.5):return _v207_norm01(p.get(key),default)
+        jctx=sum(pv(jp,k) for k in ('overall','track','distance','condition'))/4.0;tctx=sum(pv(tp,k) for k in ('overall','track','distance','condition'))/4.0
+        no=int(h.get('horseNumber') or 0);q=(no-1)/max(1,field-1);grp=0 if q<.34 else (2 if q>.66 else 1)
+        f.update({
+            'speed_adj_avg':max(0.0,min(1.0,.5+(spavg-1)*3.2)),'speed_adj_best':max(0.0,min(1.0,.5+(spbest-1)*2.8)),
+            'speed_adj_last':max(0.0,min(1.0,.5+(splast-1)*3.0)),'speed_adj_trend':max(0.0,min(1.0,.5+sptrend*5)),
+            'speed_evidence':min(1.0,len(speed_vals)/5.0),'recency_wfinish':wf_num/wf_den if wf_den else .5,
+            'finish_trend':max(0.0,min(1.0,.5+trend*.8)),'days_since_last':min(1.0,(days[0] if days else 90)/180.0),
+            'freshness':max(0.0,min(1.0,1-abs((days[0] if days else 45)-28)/120.0)),'class_drop':class_drop,'class_fit':class_fit,
+            'weight_delta':weight_delta,'weight_stability':max(0.0,min(1.0,1-wstd/4.0)),'jockey_ctx':jctx,'jockey_track':pv(jp,'track'),
+            'jockey_distance':pv(jp,'distance'),'jockey_condition':pv(jp,'condition'),'jockey_front':pv(jp,'early3Rate'),
+            'trainer_ctx':tctx,'trainer_track':pv(tp,'track'),'trainer_distance':pv(tp,'distance'),'trainer_condition':pv(tp,'condition'),
+            'draw_hist':_v215_draw_score(str(detail.get('track') or ''),int(float(detail.get('distance') or 1600)),grp),
+            'live_draw':.5,'live_style':.5,'field_norm':max(0.0,min(1.0,(field-4)/12.0)),
+            'style_reliability':min(1.0,max(int((h.get('precomputedMetrics') or {}).get('style',{}).get('samples') or 0),int((h.get('integratedEvaluation') or {}).get('samples') or 0))/5.0),
+        })
+        rows.append(f)
+    for i,f in enumerate(rows):
+        others=[z.get('early3',0) for j,z in enumerate(rows) if j!=i];pressure=sum(others)/len(others) if others else .5
+        late=.42*f.get('moved3',0)+.32*f.get('mid',0)+.26*f.get('close',0);early=max(f.get('front',0),f.get('stalk',0),f.get('early3',0))
+        f['pace_fit']=max(0.0,min(1.0,early*(1-pressure)+late*pressure))
+    return rows
+
+
+def _v215_professional_p1(detail: dict, horses: list[dict], base_rows: list[dict]) -> list[float]:
+    feats=_v215_prof_feature_rows(detail,horses,base_rows);raw=[]
+    for f in feats:
+        total=0.0
+        for i,name in enumerate(V215_FEATURES):
+            total += V215_P1_COEF[i]*((f.get(name,.5)-V215_MEAN[i])/max(1e-9,V215_SCALE[i]))
+        raw.append(total)
+    return _v213_zscore(raw)
+
 def _v213_role_utilities(detail: dict, horses: list[dict]):
     feats=_v213_feature_rows(detail,horses)
     def linear(f,coef):
@@ -9058,8 +9187,11 @@ def _v213_role_utilities(detail: dict, horses: list[dict]):
         cur2.append(V212_P2_MODEL_INTERCEPT+sum(V212_P2_MODEL_COEFFICIENTS[k]*p2f[k] for k in V212_P2_MODEL_COEFFICIENTS))
         cur3.append(f['eval_score']*.14+f['race_perf']*.14+f['representative']*.14+f['distance']*.06+f['track']*.05+f['level']*.05+f['going']*.04+f['moved3']*.10+f['mid']*.07+f['close']*.08+f['lap']*.06+f['evidence']*.07)
     z1=_v213_zscore(new1);z2n=_v213_zscore(new2);z2c=_v213_zscore(cur2);z3n=_v213_zscore(new3);z3c=_v213_zscore(cur3)
-    u1=z1;u2=[(1.0-V213_BLEND[1])*z2c[i]+V213_BLEND[1]*z2n[i] for i in range(len(horses))];u3=[(1.0-V213_BLEND[2])*z3c[i]+V213_BLEND[2]*z3n[i] for i in range(len(horses))]
-    return u1,u2,u3,_v213_softmax(u1),_v213_softmax(u2),_v213_softmax(u3)
+    pro1=_v215_professional_p1(detail,horses,feats)
+    u1=[(1.0-V215_P1_BLEND)*z1[i]+V215_P1_BLEND*pro1[i] for i in range(len(horses))]
+    u2=[(1.0-V213_BLEND[1])*z2c[i]+V213_BLEND[1]*z2n[i] for i in range(len(horses))]
+    u3=[(1.0-V213_BLEND[2])*z3c[i]+V213_BLEND[2]*z3n[i] for i in range(len(horses))]
+    return u1,u2,u3,_v213_softmax(u1),_v213_softmax(u2),_v213_softmax(u3),z1,pro1
 
 def _rank_evaluations(detail):
     horses=list(detail.get('horses') or [])
@@ -9072,7 +9204,7 @@ def _rank_evaluations(detail):
         except Exception:v213=None
     p1prob=p2prob=p3prob=None
     if v213:
-        u1,u2,u3,p1prob,p2prob,p3prob=v213
+        u1,u2,u3,p1prob,p2prob,p3prob,core1,pro1=v213
     for idx,horse in enumerate(horses):
         e=horse.get('integratedEvaluation') or {}
         legacy_p1,legacy_p2,legacy_p3=_saved_role_scores(horse)
@@ -9080,15 +9212,15 @@ def _rank_evaluations(detail):
         v212_p2=_v212_p2_score(horse) if use_v207 else legacy_p2
         if v213:
             active_p1=round(p1prob[idx]*100,4);active_p2=round(p2prob[idx]*100,4);active_p3=round(p3prob[idx]*100,4)
-            e['v213P1Utility']=round(u1[idx],8);e['v213P2Utility']=round(u2[idx],8);e['v213P3Utility']=round(u3[idx],8)
+            e['v213P1Utility']=round(core1[idx],8);e['v215ProfessionalP1Utility']=round(pro1[idx],8);e['v215P1Utility']=round(u1[idx],8);e['v213P2Utility']=round(u2[idx],8);e['v213P3Utility']=round(u3[idx],8)
             e['v213P1Probability']=active_p1;e['v213P2Probability']=active_p2;e['v213P3Probability']=active_p3
         else:
             active_p1=v207_p1 if use_v207 else legacy_p1;active_p2=v212_p2 if use_v207 else legacy_p2;active_p3=legacy_p3
         e['legacyP1Score']=legacy_p1;e['legacyP2Score']=legacy_p2;e['legacyP3Score']=legacy_p3
         e['v207WinnerScore']=v207_p1 if use_v207 else None;e['v212P2Score']=v212_p2 if use_v207 else None
         e['p1Score']=active_p1;e['p2Score']=active_p2;e['p3Score']=active_p3
-        e['roleModelVersion']=V213_ROLE_MODEL_VERSION if v213 else PREDICTION_ENGINE_VERSION
-        e['winnerModelVersion']=V213_ROLE_MODEL_VERSION if v213 else (V207_WINNER_MODEL_VERSION if use_v207 else 'legacy-v14-central-unvalidated')
+        e['roleModelVersion']=V215_PRO_MODEL_VERSION if v213 else PREDICTION_ENGINE_VERSION
+        e['winnerModelVersion']=V215_PRO_MODEL_VERSION if v213 else (V207_WINNER_MODEL_VERSION if use_v207 else 'legacy-v14-central-unvalidated')
         e['p2ModelVersion']=V213_ROLE_MODEL_VERSION if v213 else (V212_P2_MODEL_VERSION if use_v207 else 'legacy-p2-central-unvalidated')
         e['p3ModelVersion']=V213_ROLE_MODEL_VERSION if v213 else 'legacy-p3'
         e['winnerModelValidated']=bool(v213 or use_v207);e['p2ModelValidated']=bool(v213 or use_v207);e['p3ModelValidated']=bool(v213)
