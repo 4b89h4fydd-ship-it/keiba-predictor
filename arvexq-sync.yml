@@ -98,7 +98,7 @@ jobs:
             }],
             details: (.details // []),
             meta: {
-              source: "github-actions-first-paint-v195",
+              source: "github-actions-first-paint-v196",
               sync_date: (.date // ""),
               race_count: ((.races // []) | length),
               detail_count: ((.details // []) | length),
@@ -262,6 +262,22 @@ jobs:
               if new_ready or not old_ready:
                   if new.get("horses"):
                       out["horses"] = new["horses"]
+              elif new.get("horses"):
+                  # Keep the saved diagnosis, but live fields must always win.
+                  live_by_no = {
+                      int(h.get("horseNumber") or 0): h
+                      for h in (new.get("horses") or [])
+                      if int(h.get("horseNumber") or 0) > 0
+                  }
+                  merged_horses = [dict(h or {}) for h in (old.get("horses") or [])]
+                  for h in merged_horses:
+                      z = live_by_no.get(int(h.get("horseNumber") or 0))
+                      if not z:
+                          continue
+                      for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched","oddsSource"):
+                          if z.get(k) not in (None, ""):
+                              h[k] = z.get(k)
+                  out["horses"] = merged_horses
               pm = dict(old.get("preparedMeta") or {})
               npm = dict(new.get("preparedMeta") or {})
               pm.update(npm)
@@ -308,7 +324,7 @@ jobs:
               "summaries": summaries,
               "details": list(detail_map.values()),
               "meta": {
-                  "source": "github-actions-fastest-v195",
+                  "source": "github-actions-fastest-v196",
                   "sync_date": bundle.get("date") or "",
                   "race_count": len(summaries),
                   "detail_count": len(current_details),
