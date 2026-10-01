@@ -2818,8 +2818,8 @@ function ensureAutoOdds(r){
 }
 
 function overallScoreText(x){var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
-function aiBetStoreKey(id){return 'arvexq:prebet:v210:'+String(id||'')}
-function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){keys.push('arvexq:prebet:v207:'+String(id||''));keys.push('arvexq:prebet:v205:'+String(id||''));keys.push('arvexq:prebet:v181:'+String(id||''));keys.push('arvexq:prebet:v180:'+String(id||''))}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
+function aiBetStoreKey(id){return 'arvexq:prebet:v211:'+String(id||'')}
+function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){keys.push('arvexq:prebet:v210:'+String(id||''));keys.push('arvexq:prebet:v207:'+String(id||''));keys.push('arvexq:prebet:v205:'+String(id||''));keys.push('arvexq:prebet:v181:'+String(id||''));keys.push('arvexq:prebet:v180:'+String(id||''))}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
 function saveStoredAiBet(r,plan){try{if(!r||!r.id||!plan||isFinal(r))return;var st=mins(r.startTime),started=(r.date===today()&&st<9999&&nowMins()>=st);if(started||loadStoredAiBet(r.id,false))return;plan.fixedAt=new Date().toISOString();localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))}catch(e){}}
 function betComboText(kind,combos){
   combos=combos||[];
@@ -2863,9 +2863,10 @@ function buildAiBetPlan(r,p){
       qTop=quinellaRank[0]?quinellaRank[0].score:0,qSecond=quinellaRank[1]?quinellaRank[1].score:1e-9,qRatio=qTop/Math.max(1e-9,qSecond),
       trioTop=trioRank[0]?trioRank[0].score:0,trioSecond=trioRank[1]?trioRank[1].score:1e-9,trioRatio=trioTop/Math.max(1e-9,trioSecond),
       wideTop=wideRank[0]?wideRank[0].score:0,wideSecond=wideRank[1]?wideRank[1].score:1e-9,wideRatio=wideTop/Math.max(1e-9,wideSecond),
-      baseTrio=field>2?6/(field*(field-1)*(field-2)):0,trioNorm=trioTop/Math.max(1e-9,baseTrio),
-      wideGate=(top3mass>0.723393&&p1Ratio<=2.759384&&p1Margin>0.215675),
-      quinGate=(p1Top>0.358528&&p1Margin<=0.287268),
+      baseTrio=field>2?6/(field*(field-1)*(field-2)):0,trioNorm=trioTop/Math.max(1e-9,baseTrio),baseQuin=field>1?2/(field*(field-1)):0,quinNorm=qTop/Math.max(1e-9,baseQuin),top2mass=(p1vals[0]||0)+(p1vals[1]||0),
+      strongGate=(top3mass>0.723393&&p1Ratio<=2.759384&&p1Margin>0.215675),
+      normalGate=(field<=11?((quinNorm<=3.0314)?((quinNorm<=2.8216)?p1Entropy<=0.7942:false):true):((top2mass<=0.5913)?((trioRatio<=1.0271)?p1Top>0.2461:false):true)),
+      wideGate=(strongGate||normalGate),quinGate=(p1Top>0.358528&&p1Margin<=0.287268),
       trioGate=((p1Top<=0.383091&&wideRatio<=1.101357&&trioNorm<=1.032944&&trioRatio>1.028893)||(p1Top>0.383091&&((p1Entropy<=0.728520&&p1Ratio<=2.651191)||p1Entropy>0.728520))),
       items=[],decision=(useV207&&wideGate)?'買う':'見送り';
   function topCombos(list,max){var out=[],i;for(i=0;i<list.length&&out.length<max;i++){if(list[i]&&list[i].combo&&list[i].combo.every(function(v){return n(v)>0}))out.push(list[i].combo.slice())}return out}
@@ -2877,7 +2878,7 @@ function buildAiBetPlan(r,p){
       reason=!useV207?'中央は買い目専用バックテストが未完了のため、検証なしの買い目は出しません。':(wideGate?'499レースの時系列バックテストで通過した勝負レースだけ出しています。本線ワイドはHoldout 12レース中7的中（58.3%）。'+(wideGate&&quinGate?'馬連は二重ゲート通過時だけ追加（Holdout 8レース中4的中）。':'馬連条件は未通過。'):'v210勝負レースゲート未通過。的中率を落とすため無理に買い目を出しません。'),
       plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v210-gated',decision:decision,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),orderScore:0,trifectaReviewed:true,trifectaDecision:'見送り',trifectaReason:'3連単はHoldoutで十分な的中根拠が得られず停止中。',winnerModel:useV207?'v207-v206-promoted':'legacy-central',top1Agreement:!useV207||no(p1Rows[0])===no(legacyRows[0]),
         roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z),p:winActive(z)}}),legacyP1:legacyRows.slice(0,4).map(function(z){return{no:no(z),p:n(z.ticketLegacyP1Probability)}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z),p:role(z,'p2')}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z),p:role(z,'p3')}}),podium:podiumRows.slice(0,6).map(function(z){return{no:no(z),p:podiumSafe(z)}})},
-        audit:{field:field,coverage:cov,top3mass:top3mass,p1Top:p1Top,p1Margin:p1Margin,p1Ratio:p1Ratio,entropy:p1Entropy,wideRatio:wideRatio,quinRatio:qRatio,trioRatio:trioRatio,trioNorm:trioNorm,wideGate:wideGate,quinGate:quinGate,trioGate:trioGate},items:items,reason:reason};
+        audit:{field:field,coverage:cov,top2mass:top2mass,top3mass:top3mass,p1Top:p1Top,p1Margin:p1Margin,p1Ratio:p1Ratio,entropy:p1Entropy,wideRatio:wideRatio,quinNorm:quinNorm,quinRatio:qRatio,trioRatio:trioRatio,trioNorm:trioNorm,strongGate:strongGate,normalGate:normalGate,wideGate:wideGate,quinGate:quinGate,trioGate:trioGate},items:items,reason:reason};
   saveStoredAiBet(r,plan);return plan
 }
 function betItemHit(item,order){
@@ -2908,7 +2909,7 @@ function aiBetRecommendation(r,p){
   var vote=officialRaceLinks(r).vote,rows=(plan.items||[]).map(function(z){return '<div class="ai-bet-row level-'+(z.level==='本線'?'main':z.level==='押さえ'?'cover':z.level==='強気'?'attack':'trifecta')+'"><span class="ai-bet-level">'+esc(z.level)+'</span><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点'+(z.confidence?' / '+esc(z.confidence):'')+'</em></div>'}).join('');
   if(plan.decision==='見送り')rows='<div class="ai-bet-row level-cover"><span class="ai-bet-level">見送り</span><b>全券種</b><strong>無理に買わない</strong><em>'+esc(plan.betQuality||0)+'/100</em></div>';
   if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')rows+='<div class="ai-bet-row level-trifecta"><span class="ai-bet-level">3連単</span><b>検討済み</b><strong>順序信頼不足で見送り</strong><em>'+esc(plan.orderScore||0)+'/100</em></div>';
-  return '<div class="ai-bet-box"><div class="ai-bet-head"><div><div class="ai-bet-title">AI買い目</div><small>'+esc(plan.scenario)+' '+Math.round(n(plan.scenarioProb)*100)+'% / 買い目信頼 '+esc(plan.betQuality||0)+'/100 / 発走前固定</small></div><span>ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">v210：499レースの時系列バックテストで買い目をゲート化。本線ワイド中心。3連複・馬単・3連単は根拠不足のため停止中。</small></div>'
+  return '<div class="ai-bet-box"><div class="ai-bet-head"><div><div class="ai-bet-title">AI買い目</div><small>'+esc(plan.scenario)+' '+Math.round(n(plan.scenarioProb)*100)+'% / 買い目信頼 '+esc(plan.betQuality||0)+'/100 / 発走前固定</small></div><span>ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">v211：買い目を強勝負/通常買い/見送りの3段階へ。見送り過多を解消し、通常はワイド3点まで、強勝負はワイド2点＋条件一致時のみ馬連。</small></div>'
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
