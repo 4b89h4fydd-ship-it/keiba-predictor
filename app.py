@@ -3135,8 +3135,14 @@ function liveCenterModal(){
     '<div class="live-center-sheet">'+
       '<header class="live-center-head"><div><b>LIVE</b><small>'+(selected?esc(selected.track)+' / '+esc(selected.circuit):'開催場を選択')+'</small></div><button type="button" data-action="live-close" aria-label="閉じる">×</button></header>'+
       '<div class="live-center-venues">'+(rows.length?rows.map(function(v){return '<button type="button" data-live-track="'+esc(v.track)+'" data-live-circuit="'+esc(v.circuit)+'" class="'+(selected&&selected.track===v.track&&selected.circuit===v.circuit?'active':'')+'"><small>'+esc(v.circuit)+'</small><b>'+esc(v.track)+'</b></button>'}).join(''):'<div class="live-center-empty">本日の開催場データを取得中です</div>')+'</div>'+
-      (selected?'<div class="live-center-player"><iframe src="'+esc(src)+'" title="'+esc(selected.track)+' ライブ" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="live-center-player-foot"><span>'+(central?'JRA公式ライブ / 最大1080p・自動画質':'地方競馬ライブ映像専用版 / 画質選択対応')+'</span><a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer">公式画面で開く</a></div></div>':'<div class="live-center-prompt"><b>開催場をタップ</b><span>選択した開催場の公式ライブをすぐ表示します。</span></div>')+
+      (selected?'<div class="live-center-player '+(central?'central':'local')+'"><div class="live-center-frame"><iframe src="'+esc(src)+'" title="'+esc(selected.track)+' ライブ" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen scrolling="yes" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><div class="live-center-player-foot"><span>'+(central?'JRA公式ライブ / 最大1080p・自動画質':'地方競馬ライブ映像専用版 / 画質選択対応')+'</span><a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer">公式画面で開く</a></div></div>':'<div class="live-center-prompt"><b>開催場をタップ</b><span>選択した開催場の公式ライブをすぐ表示します。</span></div>')+
     '</div></div>'
+}
+function fitLiveCenterFrame(){
+  var frame=document.querySelector('.live-center-player.local .live-center-frame'),iframe=frame&&frame.querySelector('iframe');
+  if(!frame||!iframe)return;
+  var sourceWidth=760,w=Math.max(1,frame.clientWidth),h=Math.max(1,frame.clientHeight),scale=Math.min(1,w/sourceWidth);
+  iframe.style.position='absolute';iframe.style.left='0';iframe.style.top='0';iframe.style.maxWidth='none';iframe.style.width=sourceWidth+'px';iframe.style.height=Math.ceil(h/scale)+'px';iframe.style.transform='scale('+scale+')';iframe.style.transformOrigin='0 0';
 }
 function shouldShowTodayReturn(){
   var d=state.race&&state.race.date?String(state.race.date):String(state.date||'');
@@ -3693,7 +3699,7 @@ function refreshRaceAfterCollect(id,attempt){attempt=n(attempt,0);if(!id)return;
 function collectRaceInfo(no){if(state.race&&(state.race.date!==today()||isFinal(state.race)))return;if(!state.race||!state.race.id)return;var id=state.race.id;state.collectingHorse=no||'all';render();var u='/api/v1/race/'+encodeURIComponent(id)+'/collect?force=1'+(no?'&horse_no='+encodeURIComponent(no):'');fetch(u,{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,0)},250)}).catch(function(){state.collectingHorse=null;render()})}
 function stopTimer(){if(state.timer){clearTimeout(state.timer);state.timer=null}if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}state.simRunning=false}
 function drawPaceStage(idx){if(!state.race||!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;var stages=visiblePaceStages(plan),st=stages[clamp(idx,0,stages.length-1)],r=state.race,board=document.getElementById('pace-board');if(!st||!board)return;state.paceStage=clamp(idx,0,stages.length-1);var order=[],i,z,chip,left,top,rank,rowIdx;for(i=0;i<st.pack.length;i++){z=st.pack[i];rank=i;rowIdx=rank%4;chip=board.querySelector('[data-horse="'+z.no+'"]');if(!chip)continue;left=clamp(90-rank*5.9-n(z.gap)*58,8,92);top=clamp(16+rowIdx*20+n(z.lane)*2.4,12,88);chip.style.left=left+'%';chip.style.top=top+'%';order.push(z.no)}var label=st.key==='turn3'?'3C':(st.key==='turn4'?'4C':st.label),ob=document.getElementById('course-order');if(ob)ob.innerHTML='<b>'+esc(label)+'</b><span>'+order.map(function(no){var h=horseByNo(r,no);return esc(no)+(h?' '+esc(h.name):'')}).join(' → ')+'</span>';var ev=document.getElementById('pace-event');if(ev)ev.innerHTML=stageNarrative(state.pred,idx);var bs=document.querySelectorAll('[data-pace-stage]');for(i=0;i<bs.length;i++)bs[i].className=n(bs[i].getAttribute('data-pace-stage'))===idx?'active':''}
-function render(){var savedY=window.scrollY;syncLocation();stopTimer();try{var view=state.raceLoading?renderRaceLoading():(state.race?renderRace():(state.picker?renderPicker():(state.track?renderVenue():renderHome())));app.innerHTML=view+smartTodayReturn();bind();if(state.race){initPaceBoard();scheduleResultRefresh();ensureAutoOdds(state.race)}else if(!state.track&&!state.picker){scheduleSelectedRacePredictions()}window.scrollTo(0,savedY)}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
+function render(){var savedY=window.scrollY;syncLocation();stopTimer();try{var view=state.raceLoading?renderRaceLoading():(state.race?renderRace():(state.picker?renderPicker():(state.track?renderVenue():renderHome())));app.innerHTML=view+smartTodayReturn();bind();if(liveCenterOpen){requestAnimationFrame(function(){fitLiveCenterFrame()})}if(state.race){initPaceBoard();scheduleResultRefresh();ensureAutoOdds(state.race)}else if(!state.track&&!state.picker){scheduleSelectedRacePredictions()}window.scrollTo(0,savedY)}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
 function canGoBack(){return !!(state.horseModalNo||state.raceLoading||state.race||state.picker||state.track)}
 function goBack(){
     if(window.history&&window.history.state&&window.history.state.keibaDepth>0){window.history.back();return}
@@ -11979,4 +11985,21 @@ CSS += r"""
 #section-bets{display:block!important}
 #section-bets>.ai-bet-box{display:block!important}
 .ai-bet-transfer{display:none!important}
+"""
+
+
+CSS += r"""
+/* v202 — mobile LIVE fit: scale the official local-racing page to the modal width. */
+.live-center-sheet{height:min(94dvh,900px)!important}
+.live-center-player{overflow:hidden!important}
+.live-center-frame{position:relative!important;flex:1!important;min-height:0!important;overflow:hidden!important;background:#000!important}
+.live-center-frame iframe{display:block!important;border:0!important;background:#000!important}
+.live-center-player.central .live-center-frame iframe{position:static!important;width:100%!important;height:100%!important;max-width:100%!important;transform:none!important}
+@media(max-width:699px){
+  .live-center-overlay{align-items:stretch!important}
+  .live-center-sheet{width:100%!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important}
+  .live-center-head{padding-top:calc(7px + env(safe-area-inset-top))!important;padding-bottom:7px!important}
+  .live-center-venues{padding-top:6px!important;padding-bottom:6px!important}
+  .live-center-player-foot{padding-top:6px!important;padding-bottom:calc(6px + env(safe-area-inset-bottom))!important}
+}
 """
