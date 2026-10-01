@@ -2818,8 +2818,8 @@ function ensureAutoOdds(r){
 }
 
 function overallScoreText(x){var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
-function aiBetStoreKey(id){return 'arvexq:prebet:v207:'+String(id||'')}
-function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){keys.push('arvexq:prebet:v205:'+String(id||''));keys.push('arvexq:prebet:v181:'+String(id||''));keys.push('arvexq:prebet:v180:'+String(id||''))}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
+function aiBetStoreKey(id){return 'arvexq:prebet:v210:'+String(id||'')}
+function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){keys.push('arvexq:prebet:v207:'+String(id||''));keys.push('arvexq:prebet:v205:'+String(id||''));keys.push('arvexq:prebet:v181:'+String(id||''));keys.push('arvexq:prebet:v180:'+String(id||''))}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
 function saveStoredAiBet(r,plan){try{if(!r||!r.id||!plan||isFinal(r))return;var st=mins(r.startTime),started=(r.date===today()&&st<9999&&nowMins()>=st);if(started||loadStoredAiBet(r.id,false))return;plan.fixedAt=new Date().toISOString();localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))}catch(e){}}
 function betComboText(kind,combos){
   combos=combos||[];
@@ -2839,65 +2839,47 @@ function buildAiBetPlan(r,p){
   function no(x){return x&&x.horse?n(x.horse.horseNumber):0}
   function role(x,k){return clamp(n(x&&x[k+'Probability']),0,1)}
   function softFrom(vals,temp){return edgeSoftmax(vals,temp||.095)}
+  function entropy(ps){var z=0,i,q,den=Math.log(Math.max(2,ps.length));for(i=0;i<ps.length;i++){q=Math.max(1e-12,n(ps[i]));z-=q*Math.log(q)}return den>0?z/den:0}
   var legacyProbs=softFrom(rows.map(function(x){var e=x.horse&&x.horse.integratedEvaluation||{};return v207Unit(e.legacyP1Score!=null?e.legacyP1Score:(n(x.legacyP1Strength)*100),.5)}),.095);
-  rows.forEach(function(x,i){x.ticketLegacyP1Probability=legacyProbs[i]||role(x,'p1');x.ticketSafeP1Probability=useV207?(.75*x.ticketLegacyP1Probability+.25*role(x,'p1')):role(x,'p1')});
+  rows.forEach(function(x,i){x.ticketLegacyP1Probability=legacyProbs[i]||role(x,'p1');x.ticketSafeP1Probability=useV207?(.65*x.ticketLegacyP1Probability+.35*role(x,'p1')):role(x,'p1')});
   function winSafe(x){return clamp(n(x.ticketSafeP1Probability),0,1)}
   function winActive(x){return role(x,'p1')}
-  function podiumSafe(x){return clamp(winSafe(x)+role(x,'p2')+role(x,'p3'),0,1)}
+  function podiumSafe(x){return Math.max(0,winSafe(x)+role(x,'p2')+role(x,'p3'))}
   function key2(a,b){a=n(a);b=n(b);return a<b?a+'-'+b:b+'-'+a}
-  function key3(a,b,c){var z=[n(a),n(b),n(c)].sort(function(x,y){return x-y});return z.join('-')}
   function pushMap(map,key,score,combo){if(!map[key])map[key]={combo:combo,score:0};map[key].score+=score}
   function rankMap(map){return Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){return b.score-a.score})}
-  function ratioScore(v,base,span){return base>0?clamp((v/base-1)/span,0,1):0}
-  var exactActive=[],exactTotal=0,triSafe=[],triSafeTotal=0,triActive=[],triActiveTotal=0,i,j,k,raw;
+  var exactActive=[],exactTotal=0,triSafe=[],triSafeTotal=0,i,j,k,raw;
   for(i=0;i<rows.length;i++)for(j=0;j<rows.length;j++)if(i!==j){raw=winActive(rows[i])*role(rows[j],'p2');if(raw>0){exactActive.push({combo:[no(rows[i]),no(rows[j])],score:raw});exactTotal+=raw}}
-  for(i=0;i<rows.length;i++)for(j=0;j<rows.length;j++)if(i!==j)for(k=0;k<rows.length;k++)if(k!==i&&k!==j){
-    raw=winSafe(rows[i])*role(rows[j],'p2')*role(rows[k],'p3');if(raw>0){triSafe.push({combo:[no(rows[i]),no(rows[j]),no(rows[k])],score:raw});triSafeTotal+=raw}
-    raw=winActive(rows[i])*role(rows[j],'p2')*role(rows[k],'p3');if(raw>0){triActive.push({combo:[no(rows[i]),no(rows[j]),no(rows[k])],score:raw});triActiveTotal+=raw}
-  }
-  exactTotal=Math.max(exactTotal,1e-12);triSafeTotal=Math.max(triSafeTotal,1e-12);triActiveTotal=Math.max(triActiveTotal,1e-12);
-  exactActive.forEach(function(z){z.score/=exactTotal});triSafe.forEach(function(z){z.score/=triSafeTotal});triActive.forEach(function(z){z.score/=triActiveTotal});
-  exactActive.sort(function(x,y){return y.score-x.score});triSafe.sort(function(x,y){return y.score-x.score});triActive.sort(function(x,y){return y.score-x.score});
+  for(i=0;i<rows.length;i++)for(j=0;j<rows.length;j++)if(i!==j)for(k=0;k<rows.length;k++)if(k!==i&&k!==j){raw=winSafe(rows[i])*role(rows[j],'p2')*role(rows[k],'p3');if(raw>0){triSafe.push({combo:[no(rows[i]),no(rows[j]),no(rows[k])],score:raw});triSafeTotal+=raw}}
+  exactTotal=Math.max(exactTotal,1e-12);triSafeTotal=Math.max(triSafeTotal,1e-12);
+  exactActive.forEach(function(z){z.score/=exactTotal});triSafe.forEach(function(z){z.score/=triSafeTotal});
+  exactActive.sort(function(x,y){return y.score-x.score});triSafe.sort(function(x,y){return y.score-x.score});
   var quinellaMap={},trioMap={},wideMap={};
   exactActive.forEach(function(z){pushMap(quinellaMap,key2(z.combo[0],z.combo[1]),z.score,z.combo.slice().sort(function(x,y){return x-y}))});
-  triSafe.forEach(function(z){var t=z.combo,tk=key3(t[0],t[1],t[2]),sorted=t.slice().sort(function(x,y){return x-y});pushMap(trioMap,tk,z.score,sorted)});
-  var trioRank=rankMap(trioMap);trioRank.forEach(function(z){var t=z.combo;pushMap(wideMap,key2(t[0],t[1]),z.score,[t[0],t[1]]);pushMap(wideMap,key2(t[0],t[2]),z.score,[t[0],t[2]]);pushMap(wideMap,key2(t[1],t[2]),z.score,[t[1],t[2]])});
-  var wideRank=rankMap(wideMap),quinellaRank=rankMap(quinellaMap),p1Rows=rows.slice().sort(function(x,y){return winActive(y)-winActive(x)}),legacyRows=rows.slice().sort(function(x,y){return n(y.ticketLegacyP1Probability)-n(x.ticketLegacyP1Probability)}),p2Rows=rows.slice().sort(function(x,y){return role(y,'p2')-role(x,'p2')}),p3Rows=rows.slice().sort(function(x,y){return role(y,'p3')-role(x,'p3')}),podiumRows=rows.slice().sort(function(x,y){return podiumSafe(y)-podiumSafe(x)});
-  var baseWide=field>1?6/(field*(field-1)):0,baseQuinella=field>1?2/(field*(field-1)):0,baseTrio=field>2?6/(field*(field-1)*(field-2)):0,baseTri=field>2?1/(field*(field-1)*(field-2)):0,
-      topWide=wideRank[0]?wideRank[0].score:0,topQuinella=quinellaRank[0]?quinellaRank[0].score:0,topTrio=trioRank[0]?trioRank[0].score:0,topTri=triActive[0]?triActive[0].score:0,
-      p1Top=winActive(p1Rows[0]),p1Second=winActive(p1Rows[1]),p1Base=1/field,
-      p1Clear=clamp(((p1Top-p1Second)/Math.max(.018,p1Base*.35))*.55+((p1Top/p1Base-1)/1.8)*.45,0,1),
-      p2Top=role(p2Rows[0],'p2'),p2Third=role(p2Rows[Math.min(2,p2Rows.length-1)],'p2'),p2Clear=clamp((p2Top-p2Third)/Math.max(.014,p1Base*.24),0,1),
-      p3Top=role(p3Rows[0],'p3'),p3Fourth=role(p3Rows[Math.min(3,p3Rows.length-1)],'p3'),p3Clear=clamp((p3Top-p3Fourth)/Math.max(.012,p1Base*.20),0,1),
-      triRatio=triActive[1]?topTri/Math.max(1e-9,triActive[1].score):9,
-      topAgreement=!useV207||no(p1Rows[0])===no(legacyRows[0]),
-      orderComboClear=clamp((triRatio-1)/.60,0,1),
-      orderScore=Math.round(100*clamp(p1Clear*.34+p2Clear*.18+p3Clear*.10+orderComboClear*.20+clamp(n(mainSc.prob)/.50,0,1)*.10+clamp(cov/.60,0,1)*.08,0,1)),
-      topPodium=podiumSafe(podiumRows[0]),basePodium=Math.min(1,3/field),wideSignal=ratioScore(topWide,baseWide,1.55),podiumSignal=ratioScore(topPodium,basePodium,1.05),
-      betQuality=Math.round(100*clamp(wideSignal*.38+podiumSignal*.24+clamp(cov/.55,0,1)*.18+clamp(n(mainSc.prob)/.48,0,1)*.12+p1Clear*.08,0,1)),
-      mainGate=cov>=.20&&topWide>=baseWide*1.22&&betQuality>=42,
-      items=[],reason='',decision=mainGate?'買う':'見送り';
-  function pickRanked(list,max,minScore){var out=[],i;for(i=0;i<list.length&&out.length<max;i++){if(list[i].score+1e-12<minScore)break;out.push(list[i].combo.slice())}return out}
-  function conf(score){return score>=78?'高':score>=60?'中〜高':score>=45?'中':'低'}
-  if(mainGate){
-    var wideCombos=pickRanked(wideRank,topWide>=baseWide*2.0?2:3,Math.max(baseWide*1.10,topWide*.76));
-    if(wideCombos.length)items.push({level:'本線',kind:'ワイド',combos:wideCombos,confidence:conf(betQuality),modelScore:Math.round(topWide*1000)/10});
-    if(topTrio>=baseTrio*1.30&&cov>=.28){var trioCombos=pickRanked(trioRank,4,Math.max(baseTrio*1.05,topTrio*.62));if(trioCombos.length)items.push({level:'押さえ',kind:'3連複',combos:trioCombos,confidence:conf(Math.min(78,betQuality+4)),modelScore:Math.round(topTrio*1000)/10})}
-    if(topQuinella>=baseQuinella*1.45&&betQuality>=50){var qCombos=pickRanked(quinellaRank,2,Math.max(baseQuinella*1.10,topQuinella*.76));if(qCombos.length)items.push({level:'強気',kind:'馬連',combos:qCombos,confidence:conf(Math.round((betQuality+orderScore)/2)),modelScore:Math.round(topQuinella*1000)/10})}
-    reason=useV207?'地方v207勝ち馬モデルを本命順位へ採用。本線ワイド・3連複は旧P1との合議で暴走を抑え、馬連は新P1×P2で選定。馬単はv206検証で的中根拠不足のため停止。':'中央はv206検証対象外のため現行P1/P2/P3を維持。';
-  }else reason='券種別の同時確率が基準を超えないため見送り。無理に買い目を作りません。';
-  var triReadable=mainGate&&topAgreement&&orderScore>=80&&p1Clear>=.50&&n(mainSc.prob)>=.32&&cov>=.32&&topTri>=baseTri*2.70&&triRatio>=1.30;
-  if(triReadable){var triCombos=pickRanked(triActive,3,Math.max(baseTri*1.50,topTri*.66));if(triCombos.length)items.push({level:'3連単チャレンジ',kind:'3連単',confidence:conf(orderScore),combos:triCombos,modelScore:Math.round(topTri*1000)/10})}
-  items=items.filter(function(z){z.combos=(z.combos||[]).filter(function(c){return c&&c.length&&c.every(function(v){return n(v)>0})});z.points=z.combos.length;z.combo=betComboText(z.kind,z.combos);return z.points>0});
-  var triReason=triReadable?'新旧P1が1着候補で一致し、順序信頼度'+orderScore+'。上位3点まで。':'3連単は新旧P1一致＋順序信頼度80以上を満たさず見送り。',
-      plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v17-v207-consensus',decision:decision,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),orderScore:orderScore,trifectaReviewed:true,trifectaDecision:triReadable?'出す':'見送り',trifectaReason:triReason,
-        winnerModel:useV207?'v207-v206-promoted':'legacy-central',top1Agreement:topAgreement,
+  triSafe.forEach(function(z){var t=z.combo,tk=t.slice().sort(function(x,y){return x-y}).join('-');pushMap(trioMap,tk,z.score,t.slice().sort(function(x,y){return x-y}))});
+  for(i=0;i<rows.length;i++)for(j=i+1;j<rows.length;j++){raw=podiumSafe(rows[i])*podiumSafe(rows[j]);pushMap(wideMap,key2(no(rows[i]),no(rows[j])),raw,[no(rows[i]),no(rows[j])].sort(function(x,y){return x-y}))}
+  var wideRank=rankMap(wideMap),quinellaRank=rankMap(quinellaMap),trioRank=rankMap(trioMap),p1Rows=rows.slice().sort(function(x,y){return winActive(y)-winActive(x)}),legacyRows=rows.slice().sort(function(x,y){return n(y.ticketLegacyP1Probability)-n(x.ticketLegacyP1Probability)}),p2Rows=rows.slice().sort(function(x,y){return role(y,'p2')-role(x,'p2')}),p3Rows=rows.slice().sort(function(x,y){return role(y,'p3')-role(x,'p3')}),podiumRows=rows.slice().sort(function(x,y){return podiumSafe(y)-podiumSafe(x)});
+  var p1vals=rows.map(winActive).sort(function(a,b){return b-a}),p1Top=p1vals[0]||0,p1Second=p1vals[1]||0,p1Margin=p1Top-p1Second,p1Ratio=p1Top/Math.max(1e-9,p1Second),p1Entropy=entropy(rows.map(winActive)),top3mass=(p1vals[0]||0)+(p1vals[1]||0)+(p1vals[2]||0),
+      qTop=quinellaRank[0]?quinellaRank[0].score:0,qSecond=quinellaRank[1]?quinellaRank[1].score:1e-9,qRatio=qTop/Math.max(1e-9,qSecond),
+      trioTop=trioRank[0]?trioRank[0].score:0,trioSecond=trioRank[1]?trioRank[1].score:1e-9,trioRatio=trioTop/Math.max(1e-9,trioSecond),
+      wideTop=wideRank[0]?wideRank[0].score:0,wideSecond=wideRank[1]?wideRank[1].score:1e-9,wideRatio=wideTop/Math.max(1e-9,wideSecond),
+      baseTrio=field>2?6/(field*(field-1)*(field-2)):0,trioNorm=trioTop/Math.max(1e-9,baseTrio),
+      wideGate=(top3mass>0.723393&&p1Ratio<=2.759384&&p1Margin>0.215675),
+      quinGate=(p1Top>0.358528&&p1Margin<=0.287268),
+      trioGate=((p1Top<=0.383091&&wideRatio<=1.101357&&trioNorm<=1.032944&&trioRatio>1.028893)||(p1Top>0.383091&&((p1Entropy<=0.728520&&p1Ratio<=2.651191)||p1Entropy>0.728520))),
+      items=[],decision=(useV207&&wideGate)?'買う':'見送り';
+  function topCombos(list,max){var out=[],i;for(i=0;i<list.length&&out.length<max;i++){if(list[i]&&list[i].combo&&list[i].combo.every(function(v){return n(v)>0}))out.push(list[i].combo.slice())}return out}
+  if(useV207&&wideGate){var wc=topCombos(wideRank,2);if(wc.length)items.push({level:'本線',kind:'ワイド',combos:wc,confidence:'高',modelScore:58.3});}
+  if(useV207&&wideGate&&quinGate){var qc=topCombos(quinellaRank,2);if(qc.length)items.push({level:'強気',kind:'馬連',combos:qc,confidence:'中〜高',modelScore:50.0});}
+  /* v210: 3連複/3連単 are deliberately not sold yet. Holdout evidence was too weak. */
+  items=items.filter(function(z){z.points=(z.combos||[]).length;z.combo=betComboText(z.kind,z.combos);return z.points>0});
+  var betQuality=wideGate?Math.round(clamp((top3mass-.70)*180+p1Margin*120,58,92)):0,
+      reason=!useV207?'中央は買い目専用バックテストが未完了のため、検証なしの買い目は出しません。':(wideGate?'499レースの時系列バックテストで通過した勝負レースだけ出しています。本線ワイドはHoldout 12レース中7的中（58.3%）。'+(wideGate&&quinGate?'馬連は二重ゲート通過時だけ追加（Holdout 8レース中4的中）。':'馬連条件は未通過。'):'v210勝負レースゲート未通過。的中率を落とすため無理に買い目を出しません。'),
+      plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v210-gated',decision:decision,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),orderScore:0,trifectaReviewed:true,trifectaDecision:'見送り',trifectaReason:'3連単はHoldoutで十分な的中根拠が得られず停止中。',winnerModel:useV207?'v207-v206-promoted':'legacy-central',top1Agreement:!useV207||no(p1Rows[0])===no(legacyRows[0]),
         roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z),p:winActive(z)}}),legacyP1:legacyRows.slice(0,4).map(function(z){return{no:no(z),p:n(z.ticketLegacyP1Probability)}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z),p:role(z,'p2')}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z),p:role(z,'p3')}}),podium:podiumRows.slice(0,6).map(function(z){return{no:no(z),p:podiumSafe(z)}})},
-        audit:{field:field,coverage:cov,topWide:topWide,baseWide:baseWide,topTrio:topTrio,baseTrio:baseTrio,topQuinella:topQuinella,baseQuinella:baseQuinella,topTrifecta:topTri,baseTrifecta:baseTri,triRatio:triRatio,p1Clear:p1Clear,top1Agreement:topAgreement},
-        items:items,reason:reason+' '+triReason};
+        audit:{field:field,coverage:cov,top3mass:top3mass,p1Top:p1Top,p1Margin:p1Margin,p1Ratio:p1Ratio,entropy:p1Entropy,wideRatio:wideRatio,quinRatio:qRatio,trioRatio:trioRatio,trioNorm:trioNorm,wideGate:wideGate,quinGate:quinGate,trioGate:trioGate},items:items,reason:reason};
   saveStoredAiBet(r,plan);return plan
 }
-
 function betItemHit(item,order){
   if(!item||!order||!order.length)return false;var t=order.slice(0,3).map(n);
   return (item.combos||[]).some(function(c){var a=(c||[]).map(n);if(item.kind==='単勝')return t[0]===a[0];if(item.kind==='馬単')return t[0]===a[0]&&t[1]===a[1];if(item.kind==='馬連')return a.length===2&&a.slice().sort().join('-')===t.slice(0,2).sort().join('-');if(item.kind==='ワイド')return a.length===2&&t.slice(0,3).indexOf(a[0])>=0&&t.slice(0,3).indexOf(a[1])>=0;if(item.kind==='3連複')return a.length===3&&a.slice().sort().join('-')===t.slice(0,3).sort().join('-');if(item.kind==='3連単')return a.length===3&&a[0]===t[0]&&a[1]===t[1]&&a[2]===t[2];return false})
@@ -2926,7 +2908,7 @@ function aiBetRecommendation(r,p){
   var vote=officialRaceLinks(r).vote,rows=(plan.items||[]).map(function(z){return '<div class="ai-bet-row level-'+(z.level==='本線'?'main':z.level==='押さえ'?'cover':z.level==='強気'?'attack':'trifecta')+'"><span class="ai-bet-level">'+esc(z.level)+'</span><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点'+(z.confidence?' / '+esc(z.confidence):'')+'</em></div>'}).join('');
   if(plan.decision==='見送り')rows='<div class="ai-bet-row level-cover"><span class="ai-bet-level">見送り</span><b>全券種</b><strong>無理に買わない</strong><em>'+esc(plan.betQuality||0)+'/100</em></div>';
   if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')rows+='<div class="ai-bet-row level-trifecta"><span class="ai-bet-level">3連単</span><b>検討済み</b><strong>順序信頼不足で見送り</strong><em>'+esc(plan.orderScore||0)+'/100</em></div>';
-  return '<div class="ai-bet-box"><div class="ai-bet-head"><div><div class="ai-bet-title">AI買い目</div><small>'+esc(plan.scenario)+' '+Math.round(n(plan.scenarioProb)*100)+'% / 買い目信頼 '+esc(plan.betQuality||0)+'/100 / 発走前固定</small></div><span>ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">v207：地方はv206バックテスト昇格モデルを◎へ採用。ワイド・3連複は旧P1との合議、馬連は新P1、馬単は停止、3連単は新旧P1一致時だけ出します。</small></div>'
+  return '<div class="ai-bet-box"><div class="ai-bet-head"><div><div class="ai-bet-title">AI買い目</div><small>'+esc(plan.scenario)+' '+Math.round(n(plan.scenarioProb)*100)+'% / 買い目信頼 '+esc(plan.betQuality||0)+'/100 / 発走前固定</small></div><span>ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">v210：499レースの時系列バックテストで買い目をゲート化。本線ワイド中心。3連複・馬単・3連単は根拠不足のため停止中。</small></div>'
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
