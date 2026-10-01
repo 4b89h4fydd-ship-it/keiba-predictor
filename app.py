@@ -9295,7 +9295,10 @@ def _nar_official_card_rows_fast(detail:dict)->list[dict]:
         "https://sp.keiba.go.jp/KeibaWebSP/TodayRaceInfo/S_DebaTable?"+q,
     ]
     out_by_no={}
-    target=max(1,len([h for h in detail.get("horses",[]) or [] if not h.get("scratched")])-1)
+    # Every active runner matters. Do not stop at N-1 coverage: that caused the
+    # last horse on some NAR cards to remain "未発表" even after the official
+    # card had published its body weight.
+    target=max(1,len([h for h in detail.get("horses",[]) or [] if not h.get("scratched")]))
     for url in urls:
         try:
             req=urllib.request.Request(url,headers={
