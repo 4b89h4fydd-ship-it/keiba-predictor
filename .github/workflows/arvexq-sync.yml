@@ -13,7 +13,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 4
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
@@ -31,17 +31,20 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: .github/workflows/arvexq-sync.yml
 
-      - name: Install dependencies
+      - name: Install runtime dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install fastapi==0.115.6 "uvicorn[standard]==0.34.0" beautifulsoup4==4.12.3
+          python -m pip install --disable-pip-version-check --no-input \
+            fastapi==0.115.6 "uvicorn[standard]==0.34.0" beautifulsoup4==4.12.3
 
-      - name: Set dates
-        run: |
-          echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
+      - name: Set sync date
+        run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
+
       - name: Restore ARVEXQ data cache
-        uses: actions/cache@v4
+        id: cache-restore
+        uses: actions/cache/restore@v4
         with:
           path: .arvexq-data
           key: arvexq-data-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
@@ -51,129 +54,73 @@ jobs:
 
       - name: Start ARVEXQ locally
         run: |
-          nohup uvicorn app:app \
-            --host 127.0.0.1 \
-            --port 8000 \
-            > /tmp/arvexq.log 2>&1 &
+          nohup uvicorn app:app --host 127.0.0.1 --port 8000 > /tmp/arvexq.log 2>&1 &
           echo $! > /tmp/arvexq.pid
-
-          for i in $(seq 1 40)
-          do
-            if curl -fsS http://127.0.0.1:8000/health > /dev/null; then
-              echo "Local ARVEXQ started"
+          for i in $(seq 1 20); do
+            if curl -fsS --max-time 2 http://127.0.0.1:8000/health > /dev/null; then
+              echo "ARVEXQ ready"
               exit 0
             fi
-            sleep 2
+            sleep 1
           done
-
-          cat /tmp/arvexq.log || true
+          tail -n 200 /tmp/arvexq.log || true
           exit 1
 
-      - name: Start source refresh
+      - name: Fast bootstrap current card
         run: |
-          curl -fsS --max-time 120 \
+          curl -fsS --max-time 30 \
             "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE&force=1" \
             -o bundle.json || true
 
-      - name: Wait only for usable provisional bundle
-        run: |
-          for i in $(seq 1 10)
-          do
-            curl -fsS --max-time 120 \
+          for i in $(seq 1 6); do
+            curl -fsS --max-time 20 \
               "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
               -o bundle.json || true
-
             RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
             DETAILS=$(jq '.details // [] | length' bundle.json 2>/dev/null || echo 0)
-            ANALYSIS=$(jq '.analysisCount // 0' bundle.json 2>/dev/null || echo 0)
-
-            echo "Attempt $i: races=$RACES details=$DETAILS analysis=$ANALYSIS"
-
-            if [ "$RACES" -gt 0 ] && [ "$DETAILS" -gt 0 ]; then
-              exit 0
-            fi
-            sleep 3
+            echo "bootstrap $i races=$RACES details=$DETAILS"
+            if [ "$RACES" -gt 0 ] && [ "$DETAILS" -gt 0 ]; then break; fi
+            sleep 2
           done
 
-          echo "No usable provisional bundle"
-          tail -n 250 /tmp/arvexq.log || true
-          exit 1
+          RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
+          if [ "$RACES" -le 0 ]; then
+            echo "No current race card"
+            tail -n 220 /tmp/arvexq.log || true
+            exit 1
+          fi
 
-      - name: Sync provisional data to Cloudflare D1 immediately
+      - name: Push first paint to D1 immediately
         run: |
           jq '{
-            summaries: [
-              (.races // [])[] |
-              . + {
-                raceStatus: (
-                  if ((.result // {}).status // "") == "確定"
-                  then "確定"
-                  else (.raceStatus // "")
-                  end
-                )
-              }
-            ],
+            summaries: [(.races // [])[] | . + {
+              raceStatus: (if ((.result // {}).status // "") == "確定" then "確定" else (.raceStatus // "") end)
+            }],
             details: (.details // []),
             meta: {
-              source: "github-actions-provisional-fast-v194",
+              source: "github-actions-first-paint-v195",
               sync_date: (.date // ""),
               race_count: ((.races // []) | length),
               detail_count: ((.details // []) | length),
               analysis_count: (.analysisCount // 0),
-              analysis_complete: (.analysisComplete // false),
               display_complete: (.displayComplete // .complete // false)
             }
-          }' bundle.json > provisional-payload.json
+          }' bundle.json > first-paint.json
 
-          curl --fail-with-body -X POST "$CLOUDFLARE_SYNC_URL" \
+          curl --fail-with-body --max-time 20 -X POST "$CLOUDFLARE_SYNC_URL" \
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @provisional-payload.json
+            --data-binary @first-paint.json
 
-      - name: Wait briefly for live source refresh
-        run: |
-          for i in $(seq 1 6)
-          do
-            L=$(curl -fsS \
-              "http://127.0.0.1:8000/api/v1/local-refresh-status?date=$SYNC_DATE" \
-              | jq -r '.running // false' || echo false)
-            C=$(curl -fsS \
-              "http://127.0.0.1:8000/api/v1/central-refresh-status?date=$SYNC_DATE" \
-              | jq -r '.running // false' || echo false)
-
-            echo "source refresh: local=$L central=$C"
-            if [ "$L" = "false" ] && [ "$C" = "false" ]; then
-              break
-            fi
-            sleep 2
-          done
-
-      - name: Reload complete current bundle after source refresh
-        run: |
-          curl -fsS --max-time 120 \
-            "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
-            -o bundle.json
-
-          RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
-          DETAILS=$(jq '.details // [] | length' bundle.json 2>/dev/null || echo 0)
-          JRA=$(jq '[.races // [] | .[] | select((.circuit // "") == "中央" or ((.id // "") | startswith("jra-")))] | length' bundle.json 2>/dev/null || echo 0)
-          NAR=$(jq '[.races // [] | .[] | select((.circuit // "") == "地方" or ((.id // "") | startswith("nar-")))] | length' bundle.json 2>/dev/null || echo 0)
-          echo "Reloaded current bundle: races=$RACES details=$DETAILS JRA=$JRA NAR=$NAR"
-
-          if [ "$RACES" -le 0 ]; then
-            echo "Current bundle became empty after source refresh"
-            tail -n 250 /tmp/arvexq.log || true
-            exit 1
-          fi
-
-      - name: Refresh finished race results first
+      - name: Refresh only live and next races
         run: |
           python - <<'PY'
-          import json
-          from datetime import datetime, timedelta, timezone
+          import json, urllib.parse, urllib.request
           from concurrent.futures import ThreadPoolExecutor, as_completed
+          from datetime import datetime, timedelta, timezone
           import app
 
+          BASE = "http://127.0.0.1:8000"
           JST = timezone(timedelta(hours=9))
           now = datetime.now(JST)
           today = now.strftime("%Y-%m-%d")
@@ -181,431 +128,110 @@ jobs:
 
           with open("bundle.json", encoding="utf-8") as f:
               bundle = json.load(f)
+          rows = [r for r in (bundle.get("races") or []) if r.get("id")]
 
-          targets = []
-          for r in bundle.get("races") or []:
-              rid = str(r.get("id") or "")
-              date = str(r.get("date") or today)
+          def start_min(r):
               st = str(r.get("startTime") or "")
-              if not rid:
-                  continue
-
-              should = date < today
-              if date == today and ":" in st:
-                  try:
-                      h, m = st.split(":", 1)
-                      should = now_min >= int(h) * 60 + int(m[:2]) + 3
-                  except Exception:
-                      pass
-
-              if should:
-                  targets.append(rid)
-
-          def refresh(rid):
-              try:
-                  d = app._prepare_race_snapshot(rid, force=True, manual=False)
-                  if isinstance(d, dict) and (d.get("horses") or d.get("result")):
-                      return d
-              except Exception as exc:
-                  print("result refresh failed", rid, exc)
-              return None
-
-          out = []
-          with ThreadPoolExecutor(max_workers=4) as ex:
-              futures = [ex.submit(refresh, rid) for rid in targets]
-              for fut in as_completed(futures):
-                  d = fut.result()
-                  if d:
-                      out.append(d)
-
-          out.sort(key=lambda d: (
-              str(d.get("circuit") or ""),
-              str(d.get("track") or ""),
-              int(d.get("raceNumber") or 0),
-          ))
-
-          with open("result-details.json", "w", encoding="utf-8") as f:
-              json.dump(out, f, ensure_ascii=False)
-
-          finals = sum(
-              1 for d in out
-              if ((d.get("result") or {}).get("status") == "確定")
-              or bool((d.get("result") or {}).get("finishers"))
-          )
-          print("Finished targets:", len(targets), "fresh snapshots:", len(out), "final:", finals)
-          PY
-
-      - name: Fast sync finished results to D1
-        run: |
-          python - <<'PY'
-          import json
-
-          with open("bundle.json", encoding="utf-8") as f:
-              bundle = json.load(f)
-          with open("result-details.json", encoding="utf-8") as f:
-              result_details = json.load(f)
-
-          detail_map = {
-              str(d.get("id") or ""): d
-              for d in (bundle.get("details") or [])
-              if d.get("id")
-          }
-          for d in result_details:
-              if d.get("id"):
-                  detail_map[str(d["id"])] = d
-
-          summaries = []
-          for r in bundle.get("races") or []:
-              z = dict(r)
-              d = detail_map.get(str(z.get("id") or ""))
-              result = (d or {}).get("result") or z.get("result") or {}
-              if result.get("status") == "確定" or result.get("finishers"):
-                  z["raceStatus"] = "確定"
-              summaries.append(z)
-
-          payload = {
-              "summaries": summaries,
-              "details": list(detail_map.values()),
-              "meta": {
-                  "source": "github-actions-results-fast-v194",
-                  "sync_date": bundle.get("date") or "",
-                  "race_count": len(summaries),
-                  "detail_count": len(detail_map),
-                  "display_complete": bool(bundle.get("displayComplete") or bundle.get("complete")),
-              },
-          }
-
-          with open("results-payload.json", "w", encoding="utf-8") as f:
-              json.dump(payload, f, ensure_ascii=False)
-          PY
-
-          curl --fail-with-body -X POST "$CLOUDFLARE_SYNC_URL" \
-            -H "content-type: application/json" \
-            -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @results-payload.json
-
-      - name: Queue diagnosis and odds for active races only
-        run: |
-          python - <<'PY'
-          import json, time, urllib.parse, urllib.request
-          from datetime import datetime, timedelta, timezone
-          from concurrent.futures import ThreadPoolExecutor, as_completed
-
-          BASE = "http://127.0.0.1:8000"
-          JST = timezone(timedelta(hours=9))
-
-          def read(path, fallback):
-              try:
-                  with open(path, encoding="utf-8") as f:
-                      return json.load(f)
-              except Exception:
-                  return fallback
-
-          bundle = read("bundle.json", {})
-          result_details = read("result-details.json", [])
-
-          def final_result(d):
-              r = (d or {}).get("result") or {}
-              return bool(r.get("status") == "確定" or r.get("finishers"))
-
-          final_ids = {
-              str(d.get("id") or "")
-              for d in result_details
-              if d.get("id") and final_result(d)
-          }
-
-          rows = list(bundle.get("races") or [])
-          now_dt = datetime.now(JST)
-          today = now_dt.strftime("%Y-%m-%d")
-          now_min = now_dt.hour * 60 + now_dt.minute
-          now = now_dt.strftime("%H:%M")
-
-          def prediction_open(r):
-              date = str(r.get("date") or today)
-              if date < today:
-                  return False
-              if date > today:
-                  return True
-              st = str(r.get("startTime") or "")
-              if ":" not in st:
-                  return True
               try:
                   h, m = st.split(":", 1)
-                  return now_min < int(h) * 60 + int(m[:2])
+                  return int(h) * 60 + int(m[:2])
               except Exception:
-                  return True
+                  return 9999
 
-          def order_key(r):
-              st = str(r.get("startTime") or "99:99")
-              return (
-                  0 if st >= now else 1,
-                  st,
-                  str(r.get("circuit") or ""),
-                  str(r.get("track") or ""),
-                  int(r.get("raceNumber") or 0),
-              )
+          def summary_final(r):
+              result = r.get("result") or {}
+              return str(r.get("raceStatus") or "") == "確定" or str(result.get("status") or "") == "確定" or bool(result.get("finishers"))
 
-          rows.sort(key=order_key)
-          race_ids = []
+          # Result lane: only unresolved/recently finished races. Old finals are never re-scraped every 5 minutes.
+          result_targets = []
           for r in rows:
+              if str(r.get("date") or today) != today:
+                  continue
+              sm = start_min(r)
+              if sm >= 9999 or now_min < sm + 2:
+                  continue
+              age = now_min - sm
+              if (not summary_final(r)) or age <= 25:
+                  result_targets.append(str(r["id"]))
+
+          # Priority lane: running race + next race of every venue + anything starting within 35 minutes.
+          by_track = {}
+          for r in rows:
+              by_track.setdefault((str(r.get("circuit") or ""), str(r.get("track") or "")), []).append(r)
+
+          priority = []
+          for _, group in by_track.items():
+              group.sort(key=start_min)
+              live = [r for r in group if not summary_final(r) and start_min(r) <= now_min < start_min(r) + 25]
+              future = [r for r in group if not summary_final(r) and start_min(r) >= now_min]
+              for r in live[:1] + future[:1]:
+                  rid = str(r.get("id") or "")
+                  if rid and rid not in priority:
+                      priority.append(rid)
+
+          for r in sorted(rows, key=lambda x: abs(start_min(x) - now_min)):
+              sm = start_min(r)
               rid = str(r.get("id") or "")
-              if rid and rid not in race_ids:
-                  race_ids.append(rid)
+              if rid and not summary_final(r) and -5 <= sm - now_min <= 35 and rid not in priority:
+                  priority.append(rid)
+          priority = priority[:16]
 
-          row_by_id = {str(r.get("id") or ""): r for r in rows if r.get("id")}
-          started_ids = {
-              rid for rid in race_ids
-              if rid not in final_ids and not prediction_open(row_by_id.get(rid) or {})
-          }
-          diagnosis_ids = [
-              rid for rid in race_ids
-              if rid not in final_ids and rid not in started_ids
-          ]
-
-          with open("race_ids.json", "w", encoding="utf-8") as f:
-              json.dump(race_ids, f, ensure_ascii=False)
-          with open("diagnosis_ids.json", "w", encoding="utf-8") as f:
-              json.dump(diagnosis_ids, f, ensure_ascii=False)
-          with open("started_ids.json", "w", encoding="utf-8") as f:
-              json.dump(sorted(started_ids), f, ensure_ascii=False)
-
-          def call(method, path, timeout=15):
-              req = urllib.request.Request(BASE + path, method=method)
+          def refresh_result(rid):
               try:
-                  with urllib.request.urlopen(req, timeout=timeout) as res:
-                      return res.status
-              except Exception:
-                  return 0
-
-          # Never create a prediction after the result is already known.
-          # Final races keep any diagnosis that was produced before the result.
-          for rid in diagnosis_ids:
-              enc = urllib.parse.quote(rid, safe="")
-              call("POST", f"/api/v1/prepare-race/{enc}", 8)
-
-
-          def odds(rid):
-              enc = urllib.parse.quote(rid, safe="")
-              return call("GET", f"/api/v1/odds-refresh/{enc}?force=1", 24)
-
-          # Body weight is display/prediction data, so keep collecting it even after
-          # the scheduled start while the race is still awaiting a final result.
-          odds_ids = [rid for rid in race_ids if rid not in final_ids]
-          with ThreadPoolExecutor(max_workers=4) as ex:
-              for fut in as_completed([ex.submit(odds, rid) for rid in odds_ids]):
-                  try:
-                      fut.result()
-                  except Exception:
-                      pass
-
-          print("All current races:", len(race_ids))
-          print("Upcoming diagnosis targets:", len(diagnosis_ids))
-          print("Final races skipped from new diagnosis:", len(final_ids))
-          print("Started/unfinalized races skipped from new diagnosis:", len(started_ids))
-          PY
-
-      - name: Finish diagnosis and preserve ready snapshots
-        run: |
-          python - <<'PY'
-          import json, time, urllib.parse, urllib.request
-          from concurrent.futures import ThreadPoolExecutor, as_completed
-
-          BASE = "http://127.0.0.1:8000"
-
-          def read(path, fallback):
-              try:
-                  with open(path, encoding="utf-8") as f:
-                      return json.load(f)
-              except Exception:
-                  return fallback
-
-          race_ids = read("race_ids.json", [])
-          diagnosis_ids = read("diagnosis_ids.json", race_ids)
-          started_ids = set(read("started_ids.json", []))
-          bundle = read("bundle.json", {})
-          result_details = read("result-details.json", [])
-
-          labels = {
-              str(r.get("id") or ""): f"{r.get('circuit') or ''} {r.get('track') or ''} {int(r.get('raceNumber') or 0)}R"
-              for r in bundle.get("races") or []
-              if r.get("id")
-          }
-
-          def ready(d):
-              pm = (d or {}).get("preparedMeta") or {}
-              return bool(pm.get("diagnosisReady"))
-
-          def final_result(d):
-              r = (d or {}).get("result") or {}
-              return bool(r.get("status") == "確定" or r.get("finishers"))
-
-          # Seed with every already-completed diagnosis from the bundle, including
-          # finished races. This preserves genuine pre-race predictions.
-          best = {}
-          for d in bundle.get("details") or []:
-              rid = str((d or {}).get("id") or "")
-              if rid and ready(d):
-                  best[rid] = d
-
-          def refresh_one(rid):
-              enc = urllib.parse.quote(rid, safe="")
-              req = urllib.request.Request(
-                  BASE + f"/api/v1/race/{enc}/diagnosis-refresh",
-                  method="POST",
-              )
-              try:
-                  with urllib.request.urlopen(req, timeout=20) as res:
-                      data = json.loads(res.read().decode("utf-8"))
-                      return data if isinstance(data, dict) else {"status":"error","raceId":rid}
+                  d = app._prepare_race_snapshot(rid, force=True, manual=False)
+                  return d if isinstance(d, dict) and d.get("id") else None
               except Exception as exc:
-                  return {"status":"error","raceId":rid,"error":str(exc)}
+                  print("result refresh failed", rid, exc)
+                  return None
 
-          pending = [rid for rid in diagnosis_ids if rid not in best]
-          target_count = len(diagnosis_ids)
-
-          # Usually all active races are already ready on pass 1. Retries are only
-          # for genuinely in-progress history work, never for races already final.
-          for attempt in range(1, 3):
-              if not pending:
-                  break
-              if attempt > 1:
-                  time.sleep(2)
-
-              next_pending = []
-              with ThreadPoolExecutor(max_workers=8) as ex:
-                  futures = {ex.submit(refresh_one, rid): rid for rid in pending}
-                  for fut in as_completed(futures):
-                      rid = futures[fut]
-                      try:
-                          data = fut.result()
-                      except Exception as exc:
-                          data = {"status":"error","raceId":rid,"error":str(exc)}
-                      race = data.get("race") if isinstance(data, dict) else None
-                      is_ready = bool(
-                          isinstance(race, dict)
-                          and (race.get("preparedMeta") or {}).get("diagnosisReady") is True
-                      )
-                      if data.get("status") == "done" and is_ready:
-                          best[rid] = race
-                      else:
-                          next_pending.append(rid)
-
-              pending = next_pending
-              active_ready = sum(1 for rid in diagnosis_ids if rid in best)
-              print(f"Diagnosis pass {attempt}: upcoming {active_ready}/{target_count}, pending={len(pending)}")
-
-          # Keep only current-race ready snapshots. Final ready snapshots are kept;
-          # final non-ready snapshots are intentionally not manufactured post-race.
-          current_set = set(race_ids)
-          kept = [d for rid, d in best.items() if rid in current_set and ready(d)]
-          with open("diagnosis-details.json", "w", encoding="utf-8") as f:
-              json.dump(kept, f, ensure_ascii=False)
-
-          if pending:
-              print("Upcoming diagnosis still missing:")
-              for rid in pending:
-                  print(" -", labels.get(rid, rid), rid)
-          else:
-              print("All upcoming races diagnosis-ready.")
-
-          final_ids = {
-              str(d.get("id") or "")
-              for d in result_details
-              if d.get("id") and final_result(d)
-          }
-          final_ready = sum(1 for rid in final_ids if rid in best)
-          print("Final races excluded from blocking:", len(final_ids),
-                "with preserved pre-race diagnosis:", final_ready)
-          print("Started/unfinalized races excluded from blocking:", len(started_ids))
-          PY
-
-      - name: Collect latest current race details
-        run: |
-          python - <<'PY'
-          import json, urllib.parse, urllib.request
-          from concurrent.futures import ThreadPoolExecutor, as_completed
-          import app
-
-          BASE = "http://127.0.0.1:8000"
-          with open("race_ids.json", encoding="utf-8") as f:
-              race_ids = json.load(f)
-          with open("bundle.json", encoding="utf-8") as f:
-              bundle = json.load(f)
-
-          labels = {
-              str(r.get("id") or ""): f"{r.get('circuit') or ''} {r.get('track') or ''} {int(r.get('raceNumber') or 0)}R"
-              for r in bundle.get("races") or [] if r.get("id")
-          }
-
-          def usable(data):
-              return bool(
-                  isinstance(data, dict)
-                  and data.get("id")
-                  and (data.get("horses") or data.get("result"))
-              )
-
-          def get_one(rid):
-              enc = urllib.parse.quote(rid, safe="")
-              try:
-                  with urllib.request.urlopen(BASE + f"/api/v1/race/{enc}", timeout=20) as res:
-                      data = json.loads(res.read().decode("utf-8"))
-                      if usable(data):
-                          return data
-              except Exception:
-                  pass
-
-              # If the async queue has not materialized this race yet, repair only
-              # that missing ID directly. This applies equally to JRA and NAR.
-              try:
-                  data = app._prepare_race_snapshot(rid, force=True, manual=False)
-                  if usable(data):
-                      return data
-              except Exception as exc:
-                  print("current detail repair failed", labels.get(rid, rid), rid, exc)
-              return None
-
-          out = []
+          result_details = []
           with ThreadPoolExecutor(max_workers=8) as ex:
-              futures = [ex.submit(get_one, rid) for rid in race_ids]
-              for fut in as_completed(futures):
+              for fut in as_completed([ex.submit(refresh_result, rid) for rid in result_targets]):
                   d = fut.result()
                   if d:
-                      out.append(d)
+                      result_details.append(d)
 
-          out.sort(key=lambda d: (
-              str(d.get("circuit") or ""),
-              str(d.get("track") or ""),
-              int(d.get("raceNumber") or 0),
-          ))
+          def call(method, path, timeout):
+              try:
+                  req = urllib.request.Request(BASE + path, method=method)
+                  with urllib.request.urlopen(req, timeout=timeout) as res:
+                      return res.read()
+              except Exception:
+                  return None
 
-          with open("latest-details.json", "w", encoding="utf-8") as f:
-              json.dump(out, f, ensure_ascii=False)
+          def warm(rid):
+              enc = urllib.parse.quote(rid, safe="")
+              call("POST", f"/api/v1/prepare-race/{enc}", 4)
+              call("GET", f"/api/v1/odds-refresh/{enc}?force=1", 8)
+              raw = call("GET", f"/api/v1/race/{enc}", 5)
+              if not raw:
+                  return None
+              try:
+                  d = json.loads(raw.decode("utf-8"))
+                  return d if isinstance(d, dict) and d.get("id") else None
+              except Exception:
+                  return None
 
-          ready = sum(
-              1 for d in out
-              if bool((d.get("preparedMeta") or {}).get("diagnosisReady"))
-          )
-          finals = sum(
-              1 for d in out
-              if ((d.get("result") or {}).get("status") == "確定")
-              or bool((d.get("result") or {}).get("finishers"))
-          )
-          got = {str(d.get("id") or "") for d in out}
-          missing = [rid for rid in race_ids if rid not in got]
-          nar_missing = [rid for rid in missing if rid.startswith("nar-")]
-          jra_missing = [rid for rid in missing if not rid.startswith("nar-")]
-          print("Latest:", len(out), "diagnosis ready:", ready, "final:", finals)
-          print("Current detail coverage:", len(got), "/", len(race_ids),
-                "missing=", len(missing), "NAR=", len(nar_missing), "JRA=", len(jra_missing))
-          for rid in missing:
-              print(" - CURRENT MISSING", labels.get(rid, rid), rid)
+          active_details = []
+          with ThreadPoolExecutor(max_workers=12) as ex:
+              for fut in as_completed([ex.submit(warm, rid) for rid in priority]):
+                  d = fut.result()
+                  if d:
+                      active_details.append(d)
+
+          with open("result-details.json", "w", encoding="utf-8") as f:
+              json.dump(result_details, f, ensure_ascii=False)
+          with open("active-details.json", "w", encoding="utf-8") as f:
+              json.dump(active_details, f, ensure_ascii=False)
+
+          print("Fast result targets:", len(result_targets), "refreshed:", len(result_details))
+          print("Priority live/next targets:", len(priority), "refreshed:", len(active_details))
           PY
 
-      - name: Final sync current races to Cloudflare D1
+      - name: Push freshest active data to D1
         run: |
           python - <<'PY'
           import json
-          from datetime import datetime, timedelta, timezone
 
           def read(path, fallback):
               try:
@@ -621,36 +247,29 @@ jobs:
               r = (d or {}).get("result") or {}
               return bool(r.get("status") == "確定" or r.get("finishers"))
 
-          def merge_detail(old, new):
+          def merge(old, new):
               if not old:
                   return dict(new or {})
               if not new:
                   return dict(old or {})
               out = dict(old)
               old_ready, new_ready = ready(old), ready(new)
-
-              # New ordinary fields may refresh environment/odds, but a non-ready
-              # snapshot must never replace ready horse diagnosis data.
               for k, v in new.items():
                   if k in {"horses", "preparedMeta", "result"}:
                       continue
                   if v not in (None, "", [], {}):
                       out[k] = v
-
               if new_ready or not old_ready:
                   if new.get("horses"):
                       out["horses"] = new["horses"]
-
               pm = dict(old.get("preparedMeta") or {})
               npm = dict(new.get("preparedMeta") or {})
               pm.update(npm)
               if old_ready and not new_ready:
-                  opm = old.get("preparedMeta") or {}
                   for k in ("diagnosisReady","diagnosisVersion","diagnosisCoverage","diagnosisPreparedAtEpoch"):
-                      if k in opm:
-                          pm[k] = opm[k]
+                      if k in (old.get("preparedMeta") or {}):
+                          pm[k] = (old.get("preparedMeta") or {})[k]
               out["preparedMeta"] = pm
-
               if final_result(new) or not final_result(old):
                   if new.get("result"):
                       out["result"] = new["result"]
@@ -660,18 +279,17 @@ jobs:
 
           bundle = read("bundle.json", {})
           result_details = read("result-details.json", [])
-          latest = read("latest-details.json", [])
-          diagnosis = read("diagnosis-details.json", [])
-
+          active_details = read("active-details.json", [])
           detail_map = {}
-          for group in ((bundle.get("details") or []), result_details, latest, diagnosis):
+          for group in ((bundle.get("details") or []), result_details, active_details):
               for d in group:
-                  rid = str(d.get("id") or "")
+                  rid = str((d or {}).get("id") or "")
                   if rid:
-                      detail_map[rid] = merge_detail(detail_map.get(rid), d)
-          # Re-apply final results after diagnosis merge so results can never disappear.
+                      detail_map[rid] = merge(detail_map.get(rid), d)
+
+          # Final results always win; pre-race diagnosis remains preserved by merge().
           for d in result_details:
-              rid = str(d.get("id") or "")
+              rid = str((d or {}).get("id") or "")
               if rid and final_result(d) and rid in detail_map:
                   detail_map[rid]["result"] = d.get("result")
 
@@ -684,103 +302,56 @@ jobs:
                   z["raceStatus"] = "確定"
               summaries.append(z)
 
-          current_ids = {str(r.get("id") or "") for r in summaries}
+          current_ids = {str(r.get("id") or "") for r in summaries if r.get("id")}
           current_details = [d for rid, d in detail_map.items() if rid in current_ids]
-          current_detail_ids = {str(d.get("id") or "") for d in current_details}
-          missing_current_ids = sorted(current_ids - current_detail_ids)
-          nar_current_missing = [rid for rid in missing_current_ids if rid.startswith("nar-")]
-          jra_current_missing = [rid for rid in missing_current_ids if not rid.startswith("nar-")]
-          analysis_count = sum(1 for d in current_details if ready(d))
-          final_ids = {
-              rid for rid in current_ids
-              if final_result(detail_map.get(rid))
-          }
-
-          JST = timezone(timedelta(hours=9))
-          now_dt = datetime.now(JST)
-          today = now_dt.strftime("%Y-%m-%d")
-          now_min = now_dt.hour * 60 + now_dt.minute
-          summary_by_id = {str(r.get("id") or ""): r for r in summaries if r.get("id")}
-
-          def prediction_open(r):
-              date = str((r or {}).get("date") or today)
-              if date < today:
-                  return False
-              if date > today:
-                  return True
-              st = str((r or {}).get("startTime") or "")
-              if ":" not in st:
-                  return True
-              try:
-                  h, m = st.split(":", 1)
-                  return now_min < int(h) * 60 + int(m[:2])
-              except Exception:
-                  return True
-
-          started_unfinalized_ids = {
-              rid for rid in current_ids
-              if rid not in final_ids and not prediction_open(summary_by_id.get(rid) or {})
-          }
-          active_analysis_ids = current_ids - final_ids - started_unfinalized_ids
-          active_ready_ids = {
-              rid for rid in active_analysis_ids
-              if ready(detail_map.get(rid))
-          }
-          active_missing_ids = sorted(active_analysis_ids - active_ready_ids)
-
           payload = {
               "summaries": summaries,
               "details": list(detail_map.values()),
               "meta": {
-                  "source": "github-actions-fast-v194",
+                  "source": "github-actions-fastest-v195",
                   "sync_date": bundle.get("date") or "",
                   "race_count": len(summaries),
                   "detail_count": len(current_details),
                   "expected_detail_count": len(current_ids),
-                  "missing_detail_count": len(missing_current_ids),
-                  "nar_missing_detail_count": len(nar_current_missing),
-                  "jra_missing_detail_count": len(jra_current_missing),
-                  "analysis_count": analysis_count,
-                  "analysis_target_count": len(active_analysis_ids),
-                  "analysis_ready_active_count": len(active_ready_ids),
-                  "analysis_missing_active_count": len(active_missing_ids),
-                  "analysis_final_excluded_count": len(final_ids),
-                  "analysis_started_excluded_count": len(started_unfinalized_ids),
-                  "analysis_complete": len(active_missing_ids) == 0,
+                  "missing_detail_count": max(0, len(current_ids) - len({str(d.get('id') or '') for d in current_details})),
+                  "analysis_count": sum(1 for d in current_details if ready(d)),
+                  "fast_lane": True,
                   "past_detail_count": 0,
                   "display_complete": bool(bundle.get("displayComplete") or bundle.get("complete")),
-              },
+              }
           }
-
           with open("payload.json", "w", encoding="utf-8") as f:
               json.dump(payload, f, ensure_ascii=False)
-
-          print("Final races:", len(summaries))
-          print("Current details:", len(current_details))
-          print("Current missing details:", len(missing_current_ids),
-                "NAR=", len(nar_current_missing), "JRA=", len(jra_current_missing))
-          print("Diagnosis preserved total:", analysis_count)
-          print("Upcoming diagnosis:", len(active_ready_ids), "/", len(active_analysis_ids),
-                "missing=", len(active_missing_ids), "final excluded=", len(final_ids),
-                "started excluded=", len(started_unfinalized_ids))
-          if active_missing_ids:
-              print("Upcoming diagnosis missing IDs:", ", ".join(active_missing_ids))
+          print("Final push races:", len(summaries), "details:", len(current_details))
           PY
 
-          curl --fail-with-body -X POST "$CLOUDFLARE_SYNC_URL" \
+          curl --fail-with-body --max-time 20 -X POST "$CLOUDFLARE_SYNC_URL" \
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
             --data-binary @payload.json
 
-      - name: Stop ARVEXQ before cache save
+      - name: Stop ARVEXQ
         if: always()
         run: |
           if [ -f /tmp/arvexq.pid ]; then
             kill "$(cat /tmp/arvexq.pid)" 2>/dev/null || true
-            sleep 1
           fi
+
+      - name: Decide cache save
+        if: always()
+        run: |
+          SAVE=0
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then SAVE=1; fi
+          if [ $((GITHUB_RUN_NUMBER % 3)) -eq 0 ]; then SAVE=1; fi
+          echo "SAVE_ARVEXQ_CACHE=$SAVE" >> "$GITHUB_ENV"
+
+      - name: Save ARVEXQ data cache periodically
+        if: always() && env.SAVE_ARVEXQ_CACHE == '1'
+        uses: actions/cache/save@v4
+        with:
+          path: .arvexq-data
+          key: arvexq-data-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
 
       - name: Show local log on failure
         if: failure()
-        run: |
-          tail -n 300 /tmp/arvexq.log || true
+        run: tail -n 260 /tmp/arvexq.log || true
