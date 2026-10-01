@@ -98,7 +98,7 @@ jobs:
             }],
             details: (.details // []),
             meta: {
-              source: "github-actions-first-paint-v196",
+              source: "github-actions-first-paint-v201",
               sync_date: (.date // ""),
               race_count: ((.races // []) | length),
               detail_count: ((.details // []) | length),
@@ -140,19 +140,43 @@ jobs:
 
           def summary_final(r):
               result = r.get("result") or {}
-              return str(r.get("raceStatus") or "") == "確定" or str(result.get("status") or "") == "確定" or bool(result.get("finishers"))
+              status = str(result.get("status") or "")
+              if status == "速報":
+                  return False
+              if status == "確定":
+                  return True
+              return str(r.get("raceStatus") or "") == "確定"
 
-          # Result lane: only unresolved/recently finished races. Old finals are never re-scraped every 5 minutes.
-          result_targets = []
+          def result_complete(d):
+              result = (d or {}).get("result") or {}
+              ranks = {int(x.get("finish") or 0) for x in (result.get("finishers") or []) if isinstance(x, dict)}
+              return str(result.get("status") or "") == "確定" and all(i in ranks for i in (1, 2, 3))
+
+          detail_by_id = {str(d.get("id") or ""): d for d in (bundle.get("details") or []) if d.get("id")}
+
+          # A summary can say 確定 before the actual finishers reach D1.
+          # Keep refreshing every started race whose podium is still missing.
+          # Complete recent results are refreshed briefly so payouts/official corrections can land.
+          incomplete = []
+          recent_complete = []
           for r in rows:
               if str(r.get("date") or today) != today:
                   continue
               sm = start_min(r)
               if sm >= 9999 or now_min < sm + 2:
                   continue
+              rid = str(r["id"])
               age = now_min - sm
-              if (not summary_final(r)) or age <= 25:
-                  result_targets.append(str(r["id"]))
+              if not result_complete(detail_by_id.get(rid)):
+                  incomplete.append((sm, rid))
+              elif age <= 20:
+                  recent_complete.append((sm, rid))
+          incomplete.sort(reverse=True)
+          recent_complete.sort(reverse=True)
+          result_targets = [rid for _, rid in incomplete[:20]]
+          for _, rid in recent_complete[:8]:
+              if rid not in result_targets:
+                  result_targets.append(rid)
 
           # Priority lane: running race + next race of every venue + anything starting within 35 minutes.
           by_track = {}
@@ -178,7 +202,7 @@ jobs:
 
           def refresh_result(rid):
               try:
-                  d = app._prepare_race_snapshot(rid, force=True, manual=False)
+                  d = app._refresh_result_fast(rid)
                   return d if isinstance(d, dict) and d.get("id") else None
               except Exception as exc:
                   print("result refresh failed", rid, exc)
@@ -245,7 +269,7 @@ jobs:
 
           def final_result(d):
               r = (d or {}).get("result") or {}
-              return bool(r.get("status") == "確定" or r.get("finishers"))
+              return bool(r.get("status") == "確定" and r.get("finishers"))
 
           def merge(old, new):
               if not old:
@@ -314,8 +338,10 @@ jobs:
               z = dict(r)
               d = detail_map.get(str(z.get("id") or ""))
               result = (d or {}).get("result") or z.get("result") or {}
-              if result.get("status") == "確定" or result.get("finishers"):
+              if result.get("status") == "確定":
                   z["raceStatus"] = "確定"
+              elif result.get("status") == "速報" and result.get("finishers"):
+                  z["raceStatus"] = "速報"
               summaries.append(z)
 
           current_ids = {str(r.get("id") or "") for r in summaries if r.get("id")}
@@ -324,7 +350,7 @@ jobs:
               "summaries": summaries,
               "details": list(detail_map.values()),
               "meta": {
-                  "source": "github-actions-fastest-v196",
+                  "source": "github-actions-fastest-v201",
                   "sync_date": bundle.get("date") or "",
                   "race_count": len(summaries),
                   "detail_count": len(current_details),
