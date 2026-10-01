@@ -2724,26 +2724,27 @@ function archivedCacheComplete(r){
 function oddsRefreshCadence(r){var start=mins(r&&r.startTime),now=nowMins();if(start>=9999)return 60000;var remain=start-now;if(remain<=0)return 0;return remain<=30?30000:60000}
 function raceHasOdds(r){return !!(r&&(r.horses||[]).some(function(h){return n(h.winOdds)>0}))}
 function raceOddsComplete(r){
-  var hs=(r&&r.horses||[]).filter(function(h){return n(h.horseNumber)>0}),got=hs.filter(function(h){return n(h.winOdds)>0}).length;
-  return !!hs.length&&got>=Math.max(1,Math.ceil(hs.length*.75))
+  var hs=(r&&r.horses||[]).filter(function(h){return !isScratchHorse(h)&&n(h.horseNumber)>0}),got=hs.filter(function(h){return n(h.winOdds)>0}).length;
+  return !!hs.length&&got===hs.length
 }
-function raceBodyWeightComplete(r){var hs=(r&&r.horses||[]).filter(function(h){return !isScratchHorse(h)&&n(h.horseNumber)>0}),got=hs.filter(function(h){return currentBodyWeight(h)>250}).length;return !!hs.length&&got>=Math.max(1,Math.ceil(hs.length*.80))}
+function raceBodyWeightComplete(r){var hs=(r&&r.horses||[]).filter(function(h){return !isScratchHorse(h)&&n(h.horseNumber)>0}),got=hs.filter(function(h){return currentBodyWeight(h)>250}).length;return !!hs.length&&got===hs.length}
 function refreshOddsOnly(force){
   if(!state.race||state.oddsBusy)return Promise.resolve(false);
   var id=String(state.race.id||'');if(!id)return Promise.resolve(false);
   state.oddsBusy=true;
-  var status=document.getElementById('odds-status');if(status)status.textContent=' 馬体重取得中…';
+  var status=document.getElementById('odds-status');if(status)status.textContent=' オッズ・馬体重更新中…';
   return fetchEdgeRace(id,true).then(function(fresh){
     if(!fresh||!state.race||String(state.race.id)!==id)return false;
     var by={},changed=false;
     (fresh.horses||[]).forEach(function(h){if(n(h.horseNumber)>0)by[n(h.horseNumber)]=h});
-    (state.race.horses||[]).forEach(function(h){var z=by[n(h.horseNumber)];if(!z)return;['bodyWeight','bodyWeightChange','status','scratched'].forEach(function(k){if(z[k]!=null&&z[k]!==''&&h[k]!==z[k]){h[k]=z[k];changed=true}})});
+    (state.race.horses||[]).forEach(function(h){var z=by[n(h.horseNumber)];if(!z)return;['winOdds','popularity','bodyWeight','bodyWeightChange','status','scratched'].forEach(function(k){if(z[k]!=null&&z[k]!==''&&h[k]!==z[k]){h[k]=z[k];changed=true}});if(z.oddsSource)h.oddsSource=z.oddsSource});
     if(fresh.result&&JSON.stringify(fresh.result)!==JSON.stringify(state.race.result||null)){state.race.result=fresh.result;changed=true}
+    if(fresh.oddsSource)state.race.oddsSource=fresh.oddsSource;
     if(fresh.oddsUpdatedAt)state.race.oddsUpdatedAt=fresh.oddsUpdatedAt;
     if(changed){try{delete state.race._prediction}catch(e){}state.pred=null;saveDetailCache(id,state.race);render()}
-    else{var st=document.getElementById('odds-status');if(st)st.textContent=raceBodyWeightComplete(state.race)?' 馬体重取得済み':' 馬体重更新待ち'}
+    else{var st=document.getElementById('odds-status');if(st)st.textContent=(raceBodyWeightComplete(state.race)&&raceOddsComplete(state.race))?' オッズ・馬体重取得済み':' オッズ・馬体重更新待ち'}
     return changed
-  }).catch(function(){var st=document.getElementById('odds-status');if(st)st.textContent=' 馬体重更新待ち';return false}).finally(function(){state.oddsBusy=false})
+  }).catch(function(){var st=document.getElementById('odds-status');if(st)st.textContent=' オッズ・馬体重更新待ち';return false}).finally(function(){state.oddsBusy=false})
 }
 function ensureAutoOdds(r){
   if(!r)return;
@@ -2751,9 +2752,10 @@ function ensureAutoOdds(r){
   if(r.date!==today())return;
   var start=mins(r.startTime),remain=start-nowMins(),after=start<9999?nowMins()-start:-9999;
   var needWeight=!raceBodyWeightComplete(r);
+  var needOdds=!raceOddsComplete(r);
   var needResult=start<9999&&after>=0&&after<=90&&!isFinal(r);
-  if(!needWeight&&!needResult)return;
-  var delay=needResult?15000:(remain<=45?20000:60000);
+  if(!needWeight&&!needOdds&&!needResult)return;
+  var delay=needResult?15000:(remain<=45?15000:45000);
   state.oddsTimer=setTimeout(function(){
     if(state.race&&String(state.race.id)===String(r.id))refreshOddsOnly(false)
   },delay)
@@ -3466,8 +3468,8 @@ function runnerStyleSection(r,p){
     var os=ok?(Math.round(o*10)/10).toFixed(1):'--.-';
     return '<span class="odd '+(o>0&&o<10?'single':'')+'">'+esc(os)+'</span><span class="pop">'+(pop>0?esc(pop)+'人気':'--人気')+'</span>';
   }
-  var diagnosisReady=diagnosisCurrent(r),cadenceText=raceBodyWeightComplete(r)?'馬体重取得済み':'馬体重を自動取得';
-  return '<section class="card"><h2>出走表</h2><button data-action="odds-update">馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
+  var diagnosisReady=diagnosisCurrent(r),cadenceText=(raceBodyWeightComplete(r)&&raceOddsComplete(r))?'オッズ・馬体重取得済み':'オッズ・馬体重を自動取得';
+  return '<section class="card"><h2>出走表</h2><button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
     +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">取得済みデータでAI評価を先に計算中。更新後はAI印予想へ反映します。</div>':'')
     +'<div class="racecard-table">'
     +(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
