@@ -8,12 +8,12 @@ name: ARVEXQ Realtime Sync
 
 concurrency:
   group: arvexq-realtime-sync
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 6
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
@@ -22,7 +22,6 @@ jobs:
       ARVEXQ_BOOTSTRAP_WARM: "0"
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
-      ARVEXQ_HISTORY_PREFETCH_RACES: "8"
 
     steps:
       - name: Checkout
@@ -78,7 +77,7 @@ jobs:
 
       - name: Wait only for usable provisional bundle
         run: |
-          for i in $(seq 1 24)
+          for i in $(seq 1 10)
           do
             curl -fsS --max-time 120 \
               "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
@@ -93,7 +92,7 @@ jobs:
             if [ "$RACES" -gt 0 ] && [ "$DETAILS" -gt 0 ]; then
               exit 0
             fi
-            sleep 5
+            sleep 3
           done
 
           echo "No usable provisional bundle"
@@ -116,7 +115,7 @@ jobs:
             ],
             details: (.details // []),
             meta: {
-              source: "github-actions-provisional-v144",
+              source: "github-actions-provisional-fast-v194",
               sync_date: (.date // ""),
               race_count: ((.races // []) | length),
               detail_count: ((.details // []) | length),
@@ -133,7 +132,7 @@ jobs:
 
       - name: Wait briefly for live source refresh
         run: |
-          for i in $(seq 1 12)
+          for i in $(seq 1 6)
           do
             L=$(curl -fsS \
               "http://127.0.0.1:8000/api/v1/local-refresh-status?date=$SYNC_DATE" \
@@ -146,7 +145,7 @@ jobs:
             if [ "$L" = "false" ] && [ "$C" = "false" ]; then
               break
             fi
-            sleep 3
+            sleep 2
           done
 
       - name: Reload complete current bundle after source refresh
@@ -268,7 +267,7 @@ jobs:
               "summaries": summaries,
               "details": list(detail_map.values()),
               "meta": {
-                  "source": "github-actions-results-first-v143",
+                  "source": "github-actions-results-fast-v194",
                   "sync_date": bundle.get("date") or "",
                   "race_count": len(summaries),
                   "detail_count": len(detail_map),
@@ -384,18 +383,6 @@ jobs:
               enc = urllib.parse.quote(rid, safe="")
               call("POST", f"/api/v1/prepare-race/{enc}", 8)
 
-          # v183: start five-run history collection for the nearest upcoming races
-          # before diagnosis is finalized. The worker is ephemeral, so simply starting
-          # a daemon history job at the end of the workflow is not enough; this gives
-          # the history crawler time to finish while odds/diagnosis work continues.
-          prefetch_n = max(1, int(__import__("os").environ.get("ARVEXQ_HISTORY_PREFETCH_RACES", "8")))
-          history_prefetch_ids = diagnosis_ids[:prefetch_n]
-          for rid in history_prefetch_ids:
-              enc = urllib.parse.quote(rid, safe="")
-              call("GET", f"/api/v1/race/{enc}/collect?force=0", 8)
-          with open("history_prefetch_ids.json", "w", encoding="utf-8") as f:
-              json.dump(history_prefetch_ids, f, ensure_ascii=False)
-          print("Five-run history prefetch queued:", len(history_prefetch_ids))
 
           def odds(rid):
               enc = urllib.parse.quote(rid, safe="")
@@ -478,11 +465,11 @@ jobs:
 
           # Usually all active races are already ready on pass 1. Retries are only
           # for genuinely in-progress history work, never for races already final.
-          for attempt in range(1, 9):
+          for attempt in range(1, 3):
               if not pending:
                   break
               if attempt > 1:
-                  time.sleep(6)
+                  time.sleep(2)
 
               next_pending = []
               with ThreadPoolExecutor(max_workers=8) as ex:
@@ -614,77 +601,7 @@ jobs:
               print(" - CURRENT MISSING", labels.get(rid, rid), rid)
           PY
 
-      - name: Materialize recent past races
-        run: |
-          python - <<'PY'
-          import json
-          from concurrent.futures import ThreadPoolExecutor, as_completed
-          import app
-
-          with open("latest-details.json", encoding="utf-8") as f:
-              latest = json.load(f)
-          try:
-              with open("diagnosis-details.json", encoding="utf-8") as f:
-                  diagnosis = json.load(f)
-          except Exception:
-              diagnosis = []
-
-          current_map = {}
-          for d in latest + diagnosis:
-              rid = str(d.get("id") or "")
-              if rid:
-                  current_map[rid] = d
-          current = list(current_map.values())
-          current_ids = set(current_map)
-          candidates = {}
-
-          for d in current:
-              circuit = str(d.get("circuit") or "")
-              for h in d.get("horses") or []:
-                  for rr in (h.get("allPastRuns") or h.get("recentRaces") or [])[:5]:
-                      rid = str(rr.get("raceId") or "")
-                      if not rid and rr.get("date") and rr.get("track") and int(rr.get("raceNumber") or 0):
-                          prefix = "nar" if circuit == "地方" else "jra"
-                          rid = f"{prefix}-{rr['date']}-{rr['track']}-{int(rr['raceNumber']):02d}"
-                      if not rid or rid in current_ids:
-                          continue
-                      date = str(rr.get("date") or "")
-                      old = candidates.get(rid)
-                      if old is None or date > old:
-                          candidates[rid] = date
-
-          ids = [
-              rid for rid, _ in sorted(
-                  candidates.items(),
-                  key=lambda kv: kv[1],
-                  reverse=True,
-              )[:24]
-          ]
-
-          def build(rid):
-              try:
-                  d = app._prepare_race_snapshot(rid, force=False, manual=False)
-                  if isinstance(d, dict) and d.get("id") and (d.get("horses") or d.get("result")):
-                      return d
-              except Exception as exc:
-                  print("past snapshot failed", rid, exc)
-              return None
-
-          out = []
-          with ThreadPoolExecutor(max_workers=4) as ex:
-              futures = [ex.submit(build, rid) for rid in ids]
-              for fut in as_completed(futures):
-                  d = fut.result()
-                  if d:
-                      out.append(d)
-
-          with open("past-details.json", "w", encoding="utf-8") as f:
-              json.dump(out, f, ensure_ascii=False)
-
-          print("Past candidates:", len(ids), "materialized:", len(out))
-          PY
-
-      - name: Final sync current plus past races to Cloudflare D1
+      - name: Final sync current races to Cloudflare D1
         run: |
           python - <<'PY'
           import json
@@ -745,7 +662,6 @@ jobs:
           result_details = read("result-details.json", [])
           latest = read("latest-details.json", [])
           diagnosis = read("diagnosis-details.json", [])
-          past = read("past-details.json", [])
 
           detail_map = {}
           for group in ((bundle.get("details") or []), result_details, latest, diagnosis):
@@ -753,11 +669,6 @@ jobs:
                   rid = str(d.get("id") or "")
                   if rid:
                       detail_map[rid] = merge_detail(detail_map.get(rid), d)
-          for d in past:
-              rid = str(d.get("id") or "")
-              if rid and rid not in detail_map:
-                  detail_map[rid] = d
-
           # Re-apply final results after diagnosis merge so results can never disappear.
           for d in result_details:
               rid = str(d.get("id") or "")
@@ -821,7 +732,7 @@ jobs:
               "summaries": summaries,
               "details": list(detail_map.values()),
               "meta": {
-                  "source": "github-actions-final-v144",
+                  "source": "github-actions-fast-v194",
                   "sync_date": bundle.get("date") or "",
                   "race_count": len(summaries),
                   "detail_count": len(current_details),
@@ -836,7 +747,7 @@ jobs:
                   "analysis_final_excluded_count": len(final_ids),
                   "analysis_started_excluded_count": len(started_unfinalized_ids),
                   "analysis_complete": len(active_missing_ids) == 0,
-                  "past_detail_count": len(past),
+                  "past_detail_count": 0,
                   "display_complete": bool(bundle.get("displayComplete") or bundle.get("complete")),
               },
           }
@@ -846,7 +757,6 @@ jobs:
 
           print("Final races:", len(summaries))
           print("Current details:", len(current_details))
-          print("Past details:", len(past))
           print("Current missing details:", len(missing_current_ids),
                 "NAR=", len(nar_current_missing), "JRA=", len(jra_current_missing))
           print("Diagnosis preserved total:", analysis_count)
@@ -861,6 +771,14 @@ jobs:
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
             --data-binary @payload.json
+
+      - name: Stop ARVEXQ before cache save
+        if: always()
+        run: |
+          if [ -f /tmp/arvexq.pid ]; then
+            kill "$(cat /tmp/arvexq.pid)" 2>/dev/null || true
+            sleep 1
+          fi
 
       - name: Show local log on failure
         if: failure()
