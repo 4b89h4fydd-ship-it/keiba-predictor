@@ -3141,12 +3141,35 @@ function liveCenterModal(){
 function fitLiveCenterFrame(){
   var frame=document.querySelector('.live-center-player.local .live-center-frame'),iframe=frame&&frame.querySelector('iframe');
   if(!frame||!iframe)return;
-  // v203: do not scale the cross-origin mobile page. Its viewport already adapts
-  // to the iframe width; scaling it again makes the official page half-width.
-  iframe.style.position='absolute';iframe.style.inset='0';iframe.style.left='0';iframe.style.top='0';
-  iframe.style.width='100%';iframe.style.height='100%';iframe.style.maxWidth='100%';
-  iframe.style.transform='none';iframe.style.transformOrigin='0 0';
+  // v204: the official local-racing simple page uses a fixed desktop-like canvas.
+  // Give the iframe that full virtual width, then scale the whole canvas to ARVEXQ.
+  // setProperty(..., important) is required because the base LIVE CSS uses !important.
+  var sourceWidth=760,w=Math.max(1,frame.clientWidth),h=Math.max(1,frame.clientHeight);
+  var scale=Math.min(1,w/sourceWidth);
+  var virtualHeight=Math.max(h,Math.ceil(h/scale));
+  iframe.style.setProperty('position','absolute','important');
+  iframe.style.setProperty('inset','auto','important');
+  iframe.style.setProperty('left','0','important');
+  iframe.style.setProperty('top','0','important');
+  iframe.style.setProperty('width',sourceWidth+'px','important');
+  iframe.style.setProperty('max-width','none','important');
+  iframe.style.setProperty('height',virtualHeight+'px','important');
+  iframe.style.setProperty('transform','scale('+scale+')','important');
+  iframe.style.setProperty('transform-origin','0 0','important');
+  if(!iframe.__arvexqLiveFitBound){
+    iframe.__arvexqLiveFitBound=1;
+    iframe.addEventListener('load',function(){requestAnimationFrame(fitLiveCenterFrame)},{passive:true});
+  }
 }
+var __arvexqLiveResizeTimer=null;
+window.addEventListener('resize',function(){
+  if(!liveCenterOpen)return;
+  clearTimeout(__arvexqLiveResizeTimer);
+  __arvexqLiveResizeTimer=setTimeout(fitLiveCenterFrame,80);
+},{passive:true});
+window.addEventListener('orientationchange',function(){
+  if(liveCenterOpen)setTimeout(fitLiveCenterFrame,180);
+},{passive:true});
 function shouldShowTodayReturn(){
   var d=state.race&&state.race.date?String(state.race.date):String(state.date||'');
   return !!d&&d!==today()
@@ -12033,5 +12056,18 @@ CSS += r"""
 @media(max-width:699px){
   .live-center-player.local{min-width:0!important;width:100%!important}
   .live-center-player.local .live-center-frame{width:100%!important;min-width:0!important}
+}
+"""
+
+
+CSS += r"""
+/* v204 — proper fixed-canvas LIVE scaling.
+   The official local page is rendered at 760px, then JS scales that full canvas
+   to the ARVEXQ viewport. Do not force width:100% here. */
+.live-center-player.local .live-center-frame{position:relative!important;overflow:hidden!important;width:100%!important;min-width:0!important;background:#000!important}
+.live-center-player.local .live-center-frame iframe{
+  position:absolute!important;left:0!important;top:0!important;
+  width:760px!important;max-width:none!important;
+  border:0!important;background:#000!important;transform-origin:0 0!important;
 }
 """
