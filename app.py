@@ -2858,7 +2858,7 @@ function aiBetRecommendation(r,p){
   var plan=buildAiBetPlan(r,p);
   if(!plan)return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><div class="muted">発走前の予想データが揃ってから表示します。発走後に買い目を作り直すことはしません。</div></div>';
   var vote=officialRaceLinks(r).vote;
-  return '<div class="ai-bet-box"><div class="ai-bet-head"><div><div class="ai-bet-title">AI買い目</div><small>'+esc(plan.scenario)+' '+Math.round(n(plan.scenarioProb)*100)+'% / 発走前固定</small></div><span>ARVEXQ</span></div><div class="ai-bet-list">'+(plan.items||[]).map(function(z){return '<div class="ai-bet-row level-'+(z.level==='本線'?'main':z.level==='押さえ'?'cover':z.level==='強気'?'attack':'trifecta')+'"><span class="ai-bet-level">'+esc(z.level)+'</span><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点'+(z.confidence?' / '+esc(z.confidence):'')+'</em></div>'}).join('')+(plan.trifectaReviewed&&plan.trifectaDecision==='見送り'?'<div class="ai-bet-row level-trifecta"><span class="ai-bet-level">3連単</span><b>検討済み</b><strong>順序信頼不足で見送り</strong><em>'+esc(plan.orderScore||0)+'/100</em></div>':'')+'</div><div class="ai-bet-transfer"><button type="button" data-action="copy-bet">買い目をコピー</button><a href="'+esc(vote)+'" target="_blank" rel="noopener noreferrer">投票サイトを開く</a></div><div id="bet-copy-status" class="bet-copy-status" role="status" aria-live="polite"></div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">本線は的中率担当。3連単チャレンジはP1/P2/P3の順序まで読める時だけ出します。買い目はコピーできますが、投票確定は公式サイトで行います。</small></div>'
+  return '<div class="ai-bet-box"><div class="ai-bet-head"><div><div class="ai-bet-title">AI買い目</div><small>'+esc(plan.scenario)+' '+Math.round(n(plan.scenarioProb)*100)+'% / 発走前固定</small></div><span>ARVEXQ</span></div><div class="ai-bet-list">'+(plan.items||[]).map(function(z){return '<div class="ai-bet-row level-'+(z.level==='本線'?'main':z.level==='押さえ'?'cover':z.level==='強気'?'attack':'trifecta')+'"><span class="ai-bet-level">'+esc(z.level)+'</span><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点'+(z.confidence?' / '+esc(z.confidence):'')+'</em></div>'}).join('')+(plan.trifectaReviewed&&plan.trifectaDecision==='見送り'?'<div class="ai-bet-row level-trifecta"><span class="ai-bet-level">3連単</span><b>検討済み</b><strong>順序信頼不足で見送り</strong><em>'+esc(plan.orderScore||0)+'/100</em></div>':'')+'</div><div class="ai-bet-transfer"><button type="button" data-action="copy-bet">買い目をコピー</button><a href="'+esc(vote)+'" target="_blank" rel="noopener noreferrer">投票サイトを開く</a></div><div id="bet-copy-status" class="bet-copy-status" role="status" aria-live="polite"></div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">本線は的中率担当。3連単チャレンジはP1/P2/P3の順序まで読める時だけ出します。投票確定は上部の投票ボタンから公式サイトで行います。</small></div>'
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
@@ -2874,7 +2874,7 @@ function diagnosisPanel(r,p){
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=(h.allPastRuns||h.recentRaces||[]).slice(0,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中');return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){return '<section id="section-pace" class="card"><h2>展開AI</h2><p class="muted">直近5走の通過順から作る逃げ率・先行率・差し率・追込率・下がり率を、枠順、距離変更、隣接圧力、コース形状と統合し、スタート・3C・4C・直線の隊列を予測します。</p>'+paceBoard(r,p)+'</section>'}
 function resultPanel(r){return '<section id="section-result" class="card"><h2>レース結果</h2>'+(isFinal(r)?renderResult(r)+renderPayouts(r)+renderActualFlow(r):'<div class="muted">結果はまだ確定していません。</div>')+'</section>'}
-function detailTabs(r,p){var key=state.openPanel;if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='aimarks')return '<div class="accordion-panel">'+aiMarksPanel(r,p)+'</div>';if(key==='diagnosis')return '<div class="accordion-panel">'+diagnosisPanel(r,p)+'</div>';if(key==='history')return '<div class="accordion-panel">'+historyPanel(r)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・AI印予想・全頭診断・過去走・展開AIから見たい項目を押してください。</div>'}
+function detailTabs(r,p){var key=state.openPanel;if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='aimarks')return '<div class="accordion-panel">'+aiMarksPanel(r,p)+'</div>';if(key==='bets')return '<div class="accordion-panel">'+betPanel(r,p)+'</div>';if(key==='diagnosis')return '<div class="accordion-panel">'+diagnosisPanel(r,p)+'</div>';if(key==='history')return '<div class="accordion-panel">'+historyPanel(r)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・AI印予想・AI買い目・全頭診断・過去走・展開AIから見たい項目を押してください。</div>'}
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side"><strong>'+(isFinal(r)?'確定':timeHtml(r))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
@@ -2888,7 +2888,7 @@ function cinematicTabs(r){
   var navStyle='display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;width:100%!important;overflow:visible!important;padding:5px!important;';
   var btnStyle='width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;flex:none!important;padding:8px 2px!important;box-sizing:border-box!important;font-size:16px!important;font-weight:900!important;line-height:1.05!important;';
   return '<nav class="cinema-tabs accordion-tabs" style="'+navStyle+'">'+
-    [['出走表','entry'],['AI印予想','aimarks'],['全頭診断','diagnosis'],['過去走','history'],['展開AI','pace']]
+    [['出走表','entry'],['AI印予想','aimarks'],['AI買い目','bets'],['全頭診断','diagnosis'],['過去走','history'],['展開AI','pace']]
       .map(function(t){
         var active=state.openPanel===t[1];
         return '<button style="'+btnStyle+'" data-panel="'+t[1]+'" aria-expanded="'+active+'" class="'+(active?'active':'')+'">'+t[0]+'<span class="panel-caret">'+(active?'−':'＋')+'</span></button>'
@@ -6229,29 +6229,40 @@ def _parse_nar_live_odds_html(html:str)->dict:
                      "bodyWeightChange":chg,"oddsSource":"NAR公式" if odds else "",
                      "status":scratch_status,"scratched":bool(scratch_status)}
 
-    # Current official layout fallback:
+    # Current official layout second pass:
     # 枠 | 馬番 | 馬名 | 単勝 | 複勝下限 | 複勝上限 | 性齢 | 馬体重 ...
-    if not out:
-        for table in soup.find_all("table"):
-            for tr in table.find_all("tr"):
-                vals=[_clean(c.get_text(" ",strip=True)) for c in tr.find_all(["th","td"])]
-                if len(vals)<4:continue
-                m0=re.fullmatch(r"\d{1,2}",vals[0])
-                m1=re.fullmatch(r"\d{1,2}",vals[1]) if len(vals)>1 else None
-                oddm=re.fullmatch(r"\d+(?:\.\d+)?",vals[3]) if len(vals)>3 else None
-                scratch_status=_scratch_status(vals[3] if len(vals)>3 else "")
-                if not (m0 and m1 and (oddm or scratch_status)):continue
-                no=int(m1.group());odds=float(oddm.group()) if oddm else 0.0
-                if no<=0 or (odds<=0 and not scratch_status):continue
-                bw=0;chg=None
-                for cell in vals[6:10]:
-                    bm=re.search(r"(\d{3})\s*(?:[（(]\s*([+\-]?\d+)\s*[）)])?",cell)
-                    if bm:
-                        bw=int(bm.group(1));chg=int(bm.group(2)) if bm.group(2) is not None else None
-                        break
-                out[no]={"winOdds":odds or None,"popularity":None,"bodyWeight":bw or None,
-                         "bodyWeightChange":chg,"oddsSource":"NAR公式" if odds else "",
-                         "status":scratch_status,"scratched":bool(scratch_status)}
+    # Always run this pass, even when the header-driven pass already found odds.
+    # NAR uses multi-row/rowspan headers and the header index can be shifted for
+    # 馬体重 on only one runner. Previously `if not out` skipped this reliable
+    # flat-row pass as soon as odds existed, leaving cases such as the last horse
+    # with odds but bodyWeight=None. Merge the flat row into missing live fields.
+    for table in soup.find_all("table"):
+        for tr in table.find_all("tr"):
+            vals=[_clean(c.get_text(" ",strip=True)) for c in tr.find_all(["th","td"])]
+            if len(vals)<4:continue
+            m0=re.fullmatch(r"\d{1,2}",vals[0])
+            m1=re.fullmatch(r"\d{1,2}",vals[1]) if len(vals)>1 else None
+            oddm=re.fullmatch(r"\d+(?:\.\d+)?",vals[3]) if len(vals)>3 else None
+            scratch_status=_scratch_status(vals[3] if len(vals)>3 else "")
+            if not (m0 and m1 and (oddm or scratch_status)):continue
+            no=int(m1.group());odds=float(oddm.group()) if oddm else 0.0
+            if no<=0 or (odds<=0 and not scratch_status):continue
+            bw=0;chg=None
+            for cell in vals[6:10]:
+                bm=re.search(r"(\d{3})\s*(?:[（(]\s*([+\-]?\d+)\s*[）)])?",cell)
+                if bm:
+                    bw=int(bm.group(1));chg=int(bm.group(2)) if bm.group(2) is not None else None
+                    break
+            z=out.setdefault(no,{})
+            if odds>0:z["winOdds"]=odds
+            if bw:
+                z["bodyWeight"]=bw
+                z["bodyWeightChange"]=chg
+            z["oddsSource"]="NAR公式" if odds else z.get("oddsSource","")
+            if scratch_status:
+                z["status"]=scratch_status;z["scratched"]=True
+            else:
+                z.setdefault("status","");z.setdefault("scratched",False)
 
     ranked=sorted((float(v["winOdds"]),no) for no,v in out.items() if v.get("winOdds"))
     rank=0;last=None
@@ -11886,4 +11897,12 @@ CSS += r"""
 .smart-today-return b{font-size:14px!important;font-weight:900!important;letter-spacing:.02em!important}
 .smart-today-return:active{transform:scale(.97)!important}
 @media(max-width:560px){.smart-today-return{right:10px!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;height:39px!important;min-width:84px!important;padding:0 12px!important}.smart-today-return b{font-size:13px!important}}
+"""
+
+
+CSS += r"""
+/* v199 — restore ARVEXQ AI bet recommendations; keep transfer/copy controls hidden. */
+#section-bets{display:block!important}
+#section-bets>.ai-bet-box{display:block!important}
+.ai-bet-transfer{display:none!important}
 """
