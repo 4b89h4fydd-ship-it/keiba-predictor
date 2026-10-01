@@ -30,7 +30,7 @@ from typing import Any
 
 import backtest_v206 as core
 
-MODEL_VERSION = "arvexq-jra-backtest-2026.10-v208"
+MODEL_VERSION = "arvexq-jra-backtest-2026.10-v208r1"
 SEED = 208
 
 
@@ -58,21 +58,51 @@ def sanitize_for_scoring(detail: dict) -> tuple[dict, dict] | tuple[None, None]:
 
 
 def prepare_official_snapshot(prod, summary: dict) -> dict | None:
+    """Build a historical JRA snapshot without depending on the live JRA homepage.
+
+    Historical enumeration comes from netkeiba's date race list because the JRA
+    live CNAME discovery in production is intentionally optimized for the current
+    meeting.  The current-race market fields are stripped before scoring, and the
+    historical result is attached only after the pre-race feature build.
+    """
     rid = str(summary.get("id") or "")
     if not rid:
         return None
+    d = copy.deepcopy(summary)
+    d["circuit"] = "中央"
+    d.setdefault("horses", [])
+
+    # Historical entry card: use the production netkeiba parser directly.  It
+    # carries the same past-run evidence used by the live central fallback.
     try:
-        d = prod.central_race_detail(rid)
+        if not (d.get("horses") or []):
+            rows = prod._netkeiba_detail_rows(d) or []
+            if rows:
+                d["horses"] = rows
+                d["fieldSize"] = len(rows)
     except Exception as exc:
-        print("JRA detail failed", rid, exc, file=sys.stderr)
+        print("JRA historical card failed", rid, exc, file=sys.stderr)
         return None
-    if not isinstance(d, dict):
+    if not (d.get("horses") or []):
         return None
+
+    # Historical result is an evaluation label only.  It is removed immediately
+    # by sanitize_for_scoring() before any model feature is calculated.
+    try:
+        rr = prod._netkeiba_current_result(d)
+    except Exception as exc:
+        print("JRA historical result failed", rid, exc, file=sys.stderr)
+        rr = None
+    if not isinstance(rr, dict) or len(rr.get("finishers") or []) < 3:
+        return None
+    d["result"] = rr
+
     pre, label = sanitize_for_scoring(d)
     if pre is None:
         return None
     try:
-        # Recompute the exact pre-race evidence model with the current result removed.
+        # Recompute the exact pre-race evidence model with current result/market
+        # fields already removed.  No post-race value can enter these features.
         pre = prod._strip_excluded(prod._apply_enrichment(rid, pre))
         pre = prod._attach_stored_career(pre)
         pre = prod._precompute_detail_metrics(prod._attach_evaluation_context(pre))
@@ -143,7 +173,13 @@ def collect_jra_official(days: int, max_races: int, skip_ids: set[str], outdir: 
     for d in jra_candidate_dates(days):
         ds = d.isoformat()
         try:
-            rows = prod.fetch_jra_official(ds, lightweight=True) or []
+            # Production JRA CNAME discovery is tuned for today's meeting and can
+            # return zero on historical dates.  Enumerate historical JRA race IDs
+            # from the date race list instead; detail/result fetches remain isolated
+            # and market/result fields are forbidden from model inputs.
+            rows = prod._netkeiba_race_summaries(ds) or []
+            if not rows:
+                rows = prod.fetch_jra_official(ds, lightweight=True) or []
         except Exception as exc:
             calendar_rows.append({"date": ds, "summaryCount": 0, "error": str(exc)[:160]})
             continue
