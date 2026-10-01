@@ -3141,8 +3141,11 @@ function liveCenterModal(){
 function fitLiveCenterFrame(){
   var frame=document.querySelector('.live-center-player.local .live-center-frame'),iframe=frame&&frame.querySelector('iframe');
   if(!frame||!iframe)return;
-  var sourceWidth=760,w=Math.max(1,frame.clientWidth),h=Math.max(1,frame.clientHeight),scale=Math.min(1,w/sourceWidth);
-  iframe.style.position='absolute';iframe.style.left='0';iframe.style.top='0';iframe.style.maxWidth='none';iframe.style.width=sourceWidth+'px';iframe.style.height=Math.ceil(h/scale)+'px';iframe.style.transform='scale('+scale+')';iframe.style.transformOrigin='0 0';
+  // v203: do not scale the cross-origin mobile page. Its viewport already adapts
+  // to the iframe width; scaling it again makes the official page half-width.
+  iframe.style.position='absolute';iframe.style.inset='0';iframe.style.left='0';iframe.style.top='0';
+  iframe.style.width='100%';iframe.style.height='100%';iframe.style.maxWidth='100%';
+  iframe.style.transform='none';iframe.style.transformOrigin='0 0';
 }
 function shouldShowTodayReturn(){
   var d=state.race&&state.race.date?String(state.race.date):String(state.date||'');
@@ -3721,6 +3724,20 @@ function goBack(){
 var navigationRestoring=false,routeKey=null;
 function locationState(){return {tab:state.detailTab||'出走表',date:state.date,circuit:state.circuit,track:state.track,picker:state.picker,race_id:String(state.raceLoading||(state.race&&state.race.id)||''),horse:null,stack:state.raceStack.map(function(r){return r.id}),returnPicker:state.raceReturnPicker}}
 function syncLocation(){if(navigationRestoring||!window.history)return;var view=locationState(),key=JSON.stringify(view);if(key===routeKey)return;var u=new URL(window.location.href);u.pathname=view.race_id?'/race':(view.track?'/venue':'/');['date','circuit','track','race_id','horse','tab'].forEach(function(k){if(view[k])u.searchParams.set(k,view[k]);else u.searchParams.delete(k)});if(view.picker)u.searchParams.set('picker','1');else u.searchParams.delete('picker');var prior=window.history.state||{},depth=n(prior.keibaDepth);if(routeKey===null)window.history.replaceState({keibaDepth:depth,view:view},'',u);else window.history.pushState({keibaDepth:depth+1,view:view},'',u);routeKey=key}
+function normalizeInitialAppLaunch(){
+  try{
+    var standalone=!!((window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true);
+    if(!standalone)return;
+    var u=new URL(window.location.href),t=today(),d=u.searchParams.get('date');
+    // A fresh ARVEXQ app launch always starts from today's home. Historical
+    // navigation inside the running app is still preserved and has the 今日へ button.
+    if(d&&d!==t){
+      u.searchParams.set('date',t);
+      ['race_id','track','picker','horse','tab'].forEach(function(k){u.searchParams.delete(k)});
+      window.history.replaceState({},'',u.pathname+(u.searchParams.toString()?'?'+u.searchParams.toString():'')+u.hash);
+    }
+  }catch(e){}
+}
 function restoreLocation(){var u=new URL(window.location.href),saved=(window.history.state||{}).view||{},id=u.searchParams.get('race_id');navigationRestoring=true;++state.detailSeq;state.raceLoading=null;state.race=null;state.horseModalNo=n(u.searchParams.get('horse'))||null;state.detailTab=u.searchParams.get('tab')||'出走表';state.date=u.searchParams.get('date')||today();state.circuit=u.searchParams.get('circuit')||'中央';state.track=u.searchParams.get('track')||null;state.picker=u.searchParams.get('picker')==='1';state.raceReturnPicker=!!saved.returnPicker;state.raceStack=(saved.stack||[]).map(loadDetailCache).filter(Boolean);if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}var horse=state.horseModalNo;if(id){var cached=loadDetailCache(id);if(cached){state.race=cached;render()}else{openRace(id,true,true);state.horseModalNo=horse}}else render();navigationRestoring=false;routeKey=null;syncLocation()}
 function installNavigation(){window.addEventListener('popstate',restoreLocation)}
 function installEdgeBack(){
@@ -3906,7 +3923,7 @@ function load(force){
   requestList(0)
 }
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
-installNavigation();installEdgeBack();installPwaCache();restoreLocation();setTimeout(load,0);
+installNavigation();installEdgeBack();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
 })();
 """
 
@@ -12001,5 +12018,20 @@ CSS += r"""
   .live-center-head{padding-top:calc(7px + env(safe-area-inset-top))!important;padding-bottom:7px!important}
   .live-center-venues{padding-top:6px!important;padding-bottom:6px!important}
   .live-center-player-foot{padding-top:6px!important;padding-bottom:calc(6px + env(safe-area-inset-bottom))!important}
+}
+"""
+
+
+CSS += r"""
+/* v203 — LIVE full-width fix + app launches on today. */
+.live-center-player.local .live-center-frame{overflow:hidden!important;background:#000!important}
+.live-center-player.local .live-center-frame iframe{
+  position:absolute!important;inset:0!important;left:0!important;top:0!important;
+  width:100%!important;height:100%!important;max-width:100%!important;
+  transform:none!important;transform-origin:0 0!important;border:0!important;background:#000!important;
+}
+@media(max-width:699px){
+  .live-center-player.local{min-width:0!important;width:100%!important}
+  .live-center-player.local .live-center-frame{width:100%!important;min-width:0!important}
 }
 """
