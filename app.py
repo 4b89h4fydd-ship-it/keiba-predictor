@@ -347,11 +347,11 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.55-v243-axis-consensus")
+app = FastAPI(title="ARVEXQ", version="13.56-v244-live-bias")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v27-v243-axis-consensus"
-AI_EVALUATION_VERSION = "evidence-v243-axis-consensus-market-independent"
+PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v28-v244-live-bias"
+AI_EVALUATION_VERSION = "evidence-v244-live-bias-market-independent"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
 V207_WINNER_MODEL_VERSION = "arvexq-winner-v207-from-v206-run1"
@@ -2214,6 +2214,42 @@ function lateGainScore(h){var rs=(h.allPastRuns||h.recentRaces||[]),w=recencyWei
 function positionConsistency(h){var rs=(h.allPastRuns||h.recentRaces||[]),vals=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);vals.push((n(p[0])-1)/Math.max(3,fs-1))}if(vals.length<2)return.5;var m=mean(vals),vv=0;for(i=0;i<vals.length;i++)vv+=(vals[i]-m)*(vals[i]-m);vv/=vals.length;return clamp(1-Math.sqrt(vv)*2.1,0,1)}
 function positionTrend(h){var rs=(h.allPastRuns||h.recentRaces||[]).slice(0,5),vals=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);vals.push(clamp(1-(n(p[0])-1)/Math.max(3,fs-1),0,1))}if(vals.length<3)return 0;var cut=Math.min(2,vals.length-1),recent=mean(vals.slice(0,cut)),older=mean(vals.slice(cut));return clamp(recent-older,-.45,.45)}
 function earlyCollapseSeverity(h){var rs=(h.allPastRuns||h.recentRaces||[]),w=recencyWeights(rs.length),vals=[],ws=[],i,p,a,fin,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);fin=n(rs[i].finish);fs=raceField(rs[i]);if(!a||a>4||!fin)continue;vals.push(clamp((fin-a)/Math.max(3,fs-1),0,1));ws.push(w[i])}return weightedRate(vals,ws,.18)}
+// v244: same-day live track bias.  Use ONLY races already run at the same venue/date.
+// It is intentionally market-independent and shrunk hard toward neutral when sample size is small.
+function raceLiveBias(r,rows){
+  rows=rows||[];
+  var date=String(r&&r.date||state.date||''),circuit=String(r&&r.circuit||state.circuit||''),track=String(r&&r.track||state.track||''),raceNo=n(r&&r.raceNumber,99),
+      completed=0,frameW=0,innerW=0,outerW=0,styleW=0,frontW=0,lateW=0,source=[];
+  (state.races||[]).forEach(function(z){
+    if(!z||String(z.date||date)!==date||String(z.circuit||'')!==circuit||String(z.track||'')!==track)return;
+    if(n(z.raceNumber,99)>=raceNo)return;
+    var d=resultDetailForTrend(z),fs=((d&&d.result||{}).finishers||[]).filter(function(x){return n(x&&x.finish)>0}).sort(function(a,b){return n(a.finish)-n(b.finish)});
+    if(!fs.length)return;
+    completed++;
+    var gap=Math.max(1,raceNo-n(z.raceNumber,0)),rw=Math.pow(.86,Math.max(0,gap-1)),field=Math.max(1,n(d.fieldSize,(d.horses||[]).length||fs.length));
+    source.push(n(z.raceNumber));
+    fs.slice(0,3).forEach(function(f){
+      var h,fr=n(f.frameNumber,0);if(!fr&&(d.horses||[]).length){h=(d.horses||[]).find(function(q){return n(q.horseNumber)===n(f.horseNumber)});fr=n(h&&h.frameNumber,0)}
+      if(fr){var maxFrame=Math.max(2,Math.min(8,Math.ceil(field/2))),inside=clamp(1-(fr-1)/Math.max(1,maxFrame-1),0,1);frameW+=rw;innerW+=rw*inside;outerW+=rw*(1-inside)}
+      var cp=(f.cornerPositions||[]).filter(function(v){return n(v)>0});
+      if(cp.length){var pos=n(cp[0]),frontCut=Math.max(2,Math.ceil(field*.22)),lateCut=Math.max(frontCut+1,Math.ceil(field*.55));styleW+=rw;if(pos<=frontCut)frontW+=rw;else if(pos>=lateCut)lateW+=rw}
+    })
+  });
+  var frameRaw=frameW?innerW/frameW:.5,frontRaw=styleW?frontW/styleW:.5,lateRaw=styleW?lateW/styleW:.25,
+      evidence=clamp((completed/4)*.58+(Math.min(frameW,9)/9)*.22+(Math.min(styleW,9)/9)*.20,0,1),
+      frameBias=.5+(frameRaw-.5)*evidence,frontBias=.5+(frontRaw-.5)*evidence,lateBias=.5+(lateRaw-.25)*evidence;
+  var maxFrame=8;
+  (r&&r.horses||[]).forEach(function(h){maxFrame=Math.max(maxFrame,n(h.frameNumber,0))});
+  var byNo={};rows.forEach(function(x){
+    var h=x.horse||{},fr=n(h.frameNumber,0),inside=fr?clamp(1-(fr-1)/Math.max(1,maxFrame-1),0,1):clamp(1-(n(h.horseNumber,1)-1)/Math.max(1,rows.length-1),0,1),
+        rt=styleRates(h,r),early=clamp(rt.front*.52+rt.stalk*.28+rt.early3*.20,0,1),late=clamp(rt.mid*.30+rt.close*.48+rt.moved3*.22,0,1),
+        drawFit=clamp(.5+(inside-.5)*(frameBias-.5)*4.0,0,1),
+        styleSignal=frontBias-.5-(lateBias-.5)*.72,
+        styleFit=clamp(.5+(early-late)*styleSignal*2.8,0,1);
+    byNo[n(h.horseNumber)]={drawFit:drawFit,styleFit:styleFit,inside:inside,early:early,late:late}
+  });
+  return {completed:completed,evidence:evidence,frameBias:frameBias,frontBias:frontBias,lateBias:lateBias,byNo:byNo,sourceRaces:source}
+}
 function stylePoint(rt){return rt.front+2*rt.stalk+3*rt.mid+4*rt.close}
 function styleName(pt){if(pt<1.65)return"逃げ";if(pt<2.35)return"先行";if(pt<3.15)return"差し";return"追込"}
 function earlyOcc(r){var hs=r.horses||[],nums=[],early=[],moved=[],i,rr,p,j,hit;for(i=0;i<hs.length;i++){rr=(hs[i].recentRaces||[])[0];if(!rr)continue;p=rr.cornerPositions||[];hit=false;for(j=0;j<p.length;j++)if(n(p[j])>0&&n(p[j])<=3){hit=true;break}if(hit){nums.push(n(hs[i].horseNumber));if(n(p[0])<=3)early.push(n(hs[i].horseNumber));else moved.push(n(hs[i].horseNumber))}}return{nums:nums,early:early,moved:moved,rate:hs.length?nums.length/hs.length:0}}
@@ -2551,17 +2587,20 @@ function v207UsesWinnerModel(r){return String(r&&r.circuit||'')==='地方'}
 
 function assignEdgeEngine(r,rows,suit,sc,pressure){
   pressure=pressure||{};sc=sc||[];
-  var field=Math.max(1,rows.length),uniform=1/field,p1Raw=[],publicRaw=[],role2Raw=[],role3Raw=[],i,x,no,su,q,fit,pace,shift,peak,trip,reset,resetLift,evidence,publicScore,p1Strength,p2Strength,p3Strength,top3Hist,winnerCore,winnerRisk,
+  var liveBias=raceLiveBias(r,rows),field=Math.max(1,rows.length),uniform=1/field,p1Raw=[],publicRaw=[],role2Raw=[],role3Raw=[],i,x,no,su,q,fit,pace,shift,peak,trip,reset,resetLift,evidence,publicScore,p1Strength,p2Strength,p3Strength,top3Hist,winnerCore,winnerRisk,lb,liveDrawFit,liveStyleFit,
       oddsCount=0,popCount=0,actualOddsCount=0,forecastOddsCount=0,coverageAvg=mean(rows.map(function(z){return n(z.coverage)})),temp=.074+(1-coverageAvg)*.045;
   var collapse=0,front=0;
   sc.forEach(function(z){if(z.code==='C')collapse=n(z.prob);if(z.code==='A')front=n(z.prob)});
   for(i=0;i<rows.length;i++){
     x=rows[i];no=n(x.horse.horseNumber);su=suit[no]||{win:.5,place:.5,show:.5,rankScore:.5,overall:.5};q=pressure[no]||{};
+    lb=liveBias.byNo[no]||{drawFit:.5,styleFit:.5};liveDrawFit=n(lb.drawFit,.5);liveStyleFit=n(lb.styleFit,.5);x.liveDrawFit=liveDrawFit;x.liveStyleFit=liveStyleFit;x.liveBiasEvidence=n(liveBias.evidence,0);
     trip=tripRecoveryProfile(x,r);
     reset=sparseResetProfile(x,r,q);resetLift=reset.score>=.25?reset.score:0;
-    fit=clamp(n(x.distFit,.5)*.39+n(x.trackFit,.5)*.34+n(x.condFit,.5)*.18+n(x.levelFit,.5)*.09,0,1);
-    pace=clamp(n(su.rankScore,.5)*.64+n(su.win,.5)*.24+Math.max(n(x.frontStay),n(x.comeFromBehind))*.12,0,1.15);
-    shift=clamp(fit*.56+(1-clamp(n(q.conflict),0,1))*.10+n(x.bodyWeightSuit,.5)*.07+n(x.jockeyScore,.5)*.07+n(x.flexibility,.5)*.07+n(x.breakSkill,.5)*.06+resetLift*.07,0,1);
+    // v244: historical draw remains in the server score; this live overlay adds TODAY'S
+    // same-venue frame/style bias.  Small samples are automatically shrunk to 0.5.
+    fit=clamp(n(x.distFit,.5)*.39+n(x.trackFit,.5)*.34+n(x.condFit,.5)*.18+n(x.levelFit,.5)*.09+(liveDrawFit-.5)*.16,0,1);
+    pace=clamp(n(su.rankScore,.5)*.64+n(su.win,.5)*.24+Math.max(n(x.frontStay),n(x.comeFromBehind))*.12+(liveStyleFit-.5)*.16,0,1.15);
+    shift=clamp(fit*.52+(1-clamp(n(q.conflict),0,1))*.09+n(x.bodyWeightSuit,.5)*.06+n(x.jockeyScore,.5)*.06+n(x.flexibility,.5)*.06+n(x.breakSkill,.5)*.05+resetLift*.06+liveDrawFit*.05+liveStyleFit*.05,0,1);
     peak=recentPeakScore(x.horse,r);top3Hist=recentTop3Rate(x.horse);
     evidence=clamp(n(x.coverage)*.66+clamp(n(x.styleSamples)/4,0,1)*.16+clamp(((x.horse.recentRaces||[]).length)/5,0,1)*.18,0,1);
 
@@ -2599,14 +2638,14 @@ function assignEdgeEngine(r,rows,suit,sc,pressure){
         v217Pure=clamp(n(x.overallRaw,.5)*.24+n(x.resultsScore,.5)*.17+n(x.representativeScore,.5)*.14+n(x.ability,.5)*.11+fit*.10+n(x.levelFit,.5)*.06+n(x.speedScore,.5)*.07+n(x.lapScore,.5)*.06+n(x.jockeyScore,.5)*.05,0,1),
         v217True=clamp(n(x.resultsScore,.5)*.20+n(x.speedScore,.5)*.16+n(x.lapScore,.5)*.10+peak*.15+trip.score*.14+n(x.representativeScore,.5)*.10+n(x.lateGain,.5)*.07+n(x.posCons,.5)*.05+(1-n(x.fade,.5))*.03,0,1),
         v217Sectional=clamp(n(x.lapScore,.5)*.55+n(x.speedScore,.5)*.25+peak*.20,0,1),
-        v217Scenario=clamp(front*n(x.frontStay,.5)+collapse*n(x.comeFromBehind,.5)+v217Neutral*pace,0,1),
-        v217Conditions=clamp(fit*.55+shift*.25+n(su.win,.5)*.20,0,1),
+        v217Scenario=clamp(front*n(x.frontStay,.5)+collapse*n(x.comeFromBehind,.5)+v217Neutral*pace+(liveStyleFit-.5)*.12,0,1),
+        v217Conditions=clamp(fit*.49+shift*.21+n(su.win,.5)*.16+liveDrawFit*.08+liveStyleFit*.06,0,1),
         v217Opponent=clamp(n(x.levelFit,.5)*.62+fit*.38,0,1),
         v217State=clamp(evidence*.30+n(x.posCons,.5)*.20+n(x.bodyWeightSuit,.5)*.15+(1-n(x.fade,.5))*.15+n(x.flexibility,.5)*.10+n(x.resultsScore,.5)*.10,0,1),
         v239Client=clamp(.21*v217Pure+.17*v217True+.12*v217Sectional+.14*v217Scenario+.22*v217Conditions+.08*v217Opponent+.06*v217State,0,1);
     v239Client=.5+(v239Client-.5)*(.58+.42*evidence);
     x.v239Composite=v239Client;
-    x.v217Audit={pure:v217Pure,trueRun:v217True,sectional:v217Sectional,hiddenEffort:trip.score,positionScenario:v217Scenario,conditions:v217Conditions,opponentLevel:v217Opponent,stateConsistency:v217State,sevenAxisScore:v239Client,evidence:evidence,scenarioProbabilities:{front:front,neutral:v217Neutral,collapse:collapse}};
+    x.v217Audit={pure:v217Pure,trueRun:v217True,sectional:v217Sectional,hiddenEffort:trip.score,positionScenario:v217Scenario,conditions:v217Conditions,opponentLevel:v217Opponent,stateConsistency:v217State,sevenAxisScore:v239Client,evidence:evidence,liveBias:{evidence:liveBias.evidence,completed:liveBias.completed,drawFit:liveDrawFit,styleFit:liveStyleFit,frameBias:liveBias.frameBias,frontBias:liveBias.frontBias,lateBias:liveBias.lateBias},scenarioProbabilities:{front:front,neutral:v217Neutral,collapse:collapse}};
 
     var legacyP1Strength=p1Strength,v207P1Strength=v207WinnerScoreHorse(x.horse);
     // v239: keep the validated/statistical backbone, but make the agreed seven-axis
@@ -2859,7 +2898,7 @@ function integratedGrades(r,rows){
   })
 }
 
-function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v27-v243-axis-consensus',researchAudit:{sectional:true,probabilityRegularization:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
+function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v28-v244-live-bias',researchAudit:{sectional:true,probabilityRegularization:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,historicalDrawBias:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -3431,7 +3470,7 @@ function aiBetRecommendation(r,p){
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲は市場非依存。v243ではP1を主軸に、P2/P3支持・7軸能力・再現性を合議して◎を決定します。馬単・3連単は◎とP1が一致し軸信頼が高い時だけ使います。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winProbability)*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>P1 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲は市場非依存。v244ではP1を主軸に、P2/P3支持・7軸能力・再現性に加え、当日同場の枠・脚質バイアスもサンプル数補正して反映します。馬単・3連単は◎とP1が一致し軸信頼が高い時だけ使います。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winProbability)*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>P1 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
@@ -4298,6 +4337,34 @@ function waitForRaceReady(id,seq,attempt){
   },500+attempt*350)
 }
 
+var raceBiasTimer=null,raceBiasBusy=false;
+function scheduleRaceBiasRefresh(delay){
+  if(raceBiasTimer){clearTimeout(raceBiasTimer);raceBiasTimer=null}
+  var r=state.race;if(!r||String(r.date||'')!==today())return;
+  raceBiasTimer=setTimeout(function(){raceBiasTimer=null;refreshRaceBiasData()},Math.max(500,n(delay,1200)))
+}
+function refreshRaceBiasData(){
+  var r=state.race;if(raceBiasBusy||!r||String(r.date||'')!==today())return Promise.resolve(false);
+  var id=String(r.id||''),raceNo=n(r.raceNumber,99),now=nowMins(),targets=(state.races||[]).filter(function(z){
+    if(!z||String(z.date||'')!==String(r.date||'')||String(z.circuit||'')!==String(r.circuit||'')||String(z.track||'')!==String(r.track||''))return false;
+    if(n(z.raceNumber,99)>=raceNo)return false;
+    if(mins(z.startTime)>now-2)return false;
+    return !trendResultReady(z)
+  }).sort(function(a,b){return n(b.raceNumber)-n(a.raceNumber)}).slice(0,6),before=JSON.stringify(raceLiveBias(r,(state.pred&&state.pred.rows)||buildRows(analysisRace(r))).sourceRaces||[]);
+  if(!targets.length){scheduleRaceBiasRefresh(12000);return Promise.resolve(false)}
+  raceBiasBusy=true;var cursor=0,changed=false,workers=[];
+  function worker(){
+    if(cursor>=targets.length)return Promise.resolve();var z=targets[cursor++];
+    return fetchEdgeRace(z.id,true).then(function(d){if(d){if(mergeVenueTrendDetail(d))changed=true}}).catch(function(){}).then(worker)
+  }
+  for(var i=0;i<Math.min(3,targets.length);i++)workers.push(worker());
+  return Promise.all(workers).then(function(){
+    if(!state.race||String(state.race.id)!==id)return false;
+    var afterProfile=raceLiveBias(state.race,(state.pred&&state.pred.rows)||buildRows(analysisRace(state.race))),after=JSON.stringify([afterProfile.sourceRaces,Math.round(afterProfile.frameBias*1000),Math.round(afterProfile.frontBias*1000),Math.round(afterProfile.lateBias*1000)]);
+    if(changed||before!==after){try{delete state.race._prediction}catch(e){}state.pred=null;render();return true}
+    return false
+  }).finally(function(){raceBiasBusy=false;if(state.race&&String(state.race.id)===id)scheduleRaceBiasRefresh(12000)})
+}
 function scheduleResultRefresh(){
   if(state.resultTimer){clearTimeout(state.resultTimer);state.resultTimer=null}
   var r=state.race;if(!r||!r.id||String(r.date||'')!==today()||(isFinal(r)&&hasResultData(r))||!r.startTime)return;
@@ -4462,7 +4529,7 @@ function refreshRaceAfterCollect(id,attempt){attempt=n(attempt,0);if(!id)return;
 function collectRaceInfo(no){if(state.race&&(state.race.date!==today()||isFinal(state.race)))return;if(!state.race||!state.race.id)return;var id=state.race.id;state.collectingHorse=no||'all';render();var u='/api/v1/race/'+encodeURIComponent(id)+'/collect?force=1'+(no?'&horse_no='+encodeURIComponent(no):'');fetch(u,{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,0)},250)}).catch(function(){state.collectingHorse=null;render()})}
 function stopTimer(){if(state.timer){clearTimeout(state.timer);state.timer=null}if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}state.simRunning=false}
 function drawPaceStage(idx){if(!state.race||!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;var stages=visiblePaceStages(plan),st=stages[clamp(idx,0,stages.length-1)],r=state.race,board=document.getElementById('pace-board');if(!st||!board)return;state.paceStage=clamp(idx,0,stages.length-1);var order=[],i,z,chip,left,top,rank,rowIdx;for(i=0;i<st.pack.length;i++){z=st.pack[i];rank=i;rowIdx=rank%4;chip=board.querySelector('[data-horse="'+z.no+'"]');if(!chip)continue;left=clamp(90-rank*5.9-n(z.gap)*58,8,92);top=clamp(16+rowIdx*20+n(z.lane)*2.4,12,88);chip.style.left=left+'%';chip.style.top=top+'%';order.push(z.no)}var label=st.key==='turn3'?'3C':(st.key==='turn4'?'4C':st.label),ob=document.getElementById('course-order');if(ob)ob.innerHTML='<b>'+esc(label)+'</b><span>'+order.map(function(no){var h=horseByNo(r,no);return esc(no)+(h?' '+esc(h.name):'')}).join(' → ')+'</span>';var ev=document.getElementById('pace-event');if(ev)ev.innerHTML=stageNarrative(state.pred,idx);var bs=document.querySelectorAll('[data-pace-stage]');for(i=0;i<bs.length;i++)bs[i].className=n(bs[i].getAttribute('data-pace-stage'))===idx?'active':''}
-function render(){var savedY=window.scrollY;syncLocation();stopTimer();try{var view=state.raceLoading?renderRaceLoading():(state.race?renderRace():(state.picker?renderPicker():(state.track?renderVenue():renderHome())));app.innerHTML=view+smartTodayReturn();syncLiveCenterOverlay();bind();if(liveCenterOpen){requestAnimationFrame(function(){fitLiveCenterFrame()})}if(state.race){initPaceBoard();scheduleResultRefresh();ensureAutoOdds(state.race)}else if(state.track&&!state.picker){scheduleVenueTrendRefresh(350)}else if(!state.track&&!state.picker){scheduleSelectedRacePredictions()}window.scrollTo(0,savedY)}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
+function render(){var savedY=window.scrollY;syncLocation();stopTimer();try{var view=state.raceLoading?renderRaceLoading():(state.race?renderRace():(state.picker?renderPicker():(state.track?renderVenue():renderHome())));app.innerHTML=view+smartTodayReturn();syncLiveCenterOverlay();bind();if(liveCenterOpen){requestAnimationFrame(function(){fitLiveCenterFrame()})}if(state.race){initPaceBoard();scheduleResultRefresh();ensureAutoOdds(state.race);scheduleRaceBiasRefresh(700)}else if(state.track&&!state.picker){scheduleVenueTrendRefresh(350)}else if(!state.track&&!state.picker){scheduleSelectedRacePredictions()}window.scrollTo(0,savedY)}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
 function canGoBack(){return !!(state.horseModalNo||state.raceLoading||state.race||state.picker||state.track)}
 function goBack(){
     if(window.history&&window.history.state&&window.history.state.keibaDepth>0){window.history.back();return}
