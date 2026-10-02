@@ -347,11 +347,11 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.52-v240-data-integrity")
+app = FastAPI(title="ARVEXQ", version="13.53-v241-market-independent")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v25-v239-seven-axis-live-stable"
-AI_EVALUATION_VERSION = "evidence-v239-seven-axis"
+PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v26-v241-market-independent"
+AI_EVALUATION_VERSION = "evidence-v241-seven-axis-market-independent"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
 V207_WINNER_MODEL_VERSION = "arvexq-winner-v207-from-v206-run1"
@@ -2693,16 +2693,9 @@ function assignEdgeEngine(r,rows,suit,sc,pressure){
     rows[i].winProbability=rows[i].winProbabilityRaw/p1Sum;rows[i].p1Probability=rows[i].winProbability;
     rows[i].p2Probability=rows[i].p2ProbabilityRaw/p2Sum;rows[i].p3Probability=rows[i].p3ProbabilityRaw/p3Sum
   }
-  var marketBlendWeight=0;
-  for(i=0;i<rows.length;i++)rows[i].pureWinProbability=rows[i].p1Probability;
-  // v234: Benter-style geometric pooling. Only real current odds may influence the final
-  // win probability; forecast odds remain EV/display-only. EDGE always compares PURE vs market.
-  if(marketSource==='実オッズ'&&actualOddsCount>=Math.max(2,Math.ceil(field*.55))){
-    marketBlendWeight=v213Ready?clamp(.12+(1-coverageAvg)*.06,.12,.18):clamp(.20+(1-coverageAvg)*.08,.20,.28);
-    var pooled=[],pooledSum=0;
-    for(i=0;i<rows.length;i++){var pp=Math.max(.001,n(rows[i].p1Probability,uniform)),pm=Math.max(.001,n(market[i],uniform)),pq=Math.pow(pp,1-marketBlendWeight)*Math.pow(pm,marketBlendWeight);pooled.push(pq);pooledSum+=pq}
-    for(i=0;i<rows.length;i++){rows[i].p1Probability=rows[i].winProbability=pooledSum?pooled[i]/pooledSum:rows[i].p1Probability;rows[i].marketBlendWeight=marketBlendWeight}
-  }
+  // v241: prediction probabilities are strictly market-independent.
+  // Odds/popularity are display + EDGE/EV inputs only and NEVER alter P1/P2/P3 or AI marks.
+  for(i=0;i<rows.length;i++){rows[i].pureWinProbability=rows[i].p1Probability;rows[i].marketBlendWeight=0}
   var p1Sorted=rows.slice().sort(function(a,b){return n(b.p1Probability)-n(a.p1Probability)||n(b.winnerCore)-n(a.winnerCore)||n(b.overallRaw)-n(a.overallRaw)||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),
       p2Sorted=rows.slice().sort(function(a,b){return n(b.p2Probability)-n(a.p2Probability)||n(b.posCons)-n(a.posCons)||n(b.p1Probability)-n(a.p1Probability)}),
       p3Sorted=rows.slice().sort(function(a,b){return n(b.p3Probability)-n(a.p3Probability)||n(b.latePower)-n(a.latePower)||n(b.p2Probability)-n(a.p2Probability)});
@@ -2788,29 +2781,41 @@ function strictSelectedRaceProfile(r,p){
 }
 function assignPredictionMarks(rows,r){
   var field=Math.max(1,rows.length),uniform=1/field,sorted=rows.slice().sort(function(a,b){
-    return n(b.winProbability)-n(a.winProbability)||n(b.overallRaw)-n(a.overallRaw)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)
-  }),i,x,selected=[],attention=[];
+    return n(b.pureWinProbability,b.p1Probability)-n(a.pureWinProbability,a.p1Probability)||n(b.overallRaw)-n(a.overallRaw)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)
+  }),selected=[],attention=[];
   rows.forEach(function(z){z.predMark='';z.predRank=999;z.attentionReason=''});
+  function p1(z){return n(z.pureWinProbability,z.p1Probability)}
   function take(row,mark){if(!row||selected.indexOf(row)>=0)return;row.predMark=mark;selected.push(row)}
   take(sorted[0],'◎');take(sorted[1],'○');take(sorted[2],'▲');
+  // ☆ = model-only upside horse: strong 2nd/3rd role, pace fit, or seven-axis overall upside.
   var starPool=sorted.slice(3).filter(function(z){
-    return n(z.edgeScore)>=58&&n(z.bombScore)>=58&&(n(z.winProbability)>=uniform*.52||n(z.p2Rank)<=5||n(z.p3Rank)<=6)&&(n(z.coverage)>=.28||n(z.styleSamples)>=2||((z.horse.recentRaces||[]).length>=2))
+    var role=Math.max(n(z.p2Probability),n(z.p3Probability)),modelUpside=(n(z.p2Rank)<=4||n(z.p3Rank)<=4||n(z.paceScore)>=62||n(z.shiftScore)>=62);
+    return modelUpside&&(p1(z)>=uniform*.45||role>=uniform*.72)&&(n(z.coverage)>=.28||n(z.styleSamples)>=2||((z.horse.recentRaces||[]).length>=2))
   });
-  starPool.sort(function(a,b){return (n(b.bombScore)*.60+n(b.edgeScore)*.40)-(n(a.bombScore)*.60+n(a.edgeScore)*.40)||n(b.winProbability)-n(a.winProbability)});
-  var star=starPool[0]||null;
-  take(star,'☆');
+  starPool.sort(function(a,b){
+    var au=Math.max(n(a.p2Probability),n(a.p3Probability))*.44+p1(a)*.30+n(a.paceScore)/100*.14+n(a.shiftScore)/100*.12,
+        bu=Math.max(n(b.p2Probability),n(b.p3Probability))*.44+p1(b)*.30+n(b.paceScore)/100*.14+n(b.shiftScore)/100*.12;
+    return bu-au||p1(b)-p1(a)||n(b.overallRaw)-n(a.overallRaw)
+  });
+  var star=starPool[0]||null;take(star,'☆');
   var deltaPool=sorted.filter(function(z){return selected.indexOf(z)<0});
-  deltaPool.sort(function(a,b){return n(b.winProbability)-n(a.winProbability)||n(b.paceScore)-n(a.paceScore)||n(b.overallRaw)-n(a.overallRaw)});
+  deltaPool.sort(function(a,b){return p1(b)-p1(a)||n(b.paceScore)-n(a.paceScore)||n(b.overallRaw)-n(a.overallRaw)});
   take(deltaPool[0],'△');
+  // 注 = model-only hidden danger/upside. Market odds/popularity are intentionally ignored.
   sorted.forEach(function(z){
     if(selected.indexOf(z)>=0)return;
-    if(n(z.bombScore)>=70&&n(z.edgeScore)>=62&&n(z.winProbability)>n(z.marketProbability)&&(n(z.coverage)>=.30||n(z.styleSamples)>=2||((z.horse.recentRaces||[]).length>=2)))attention.push(z)
+    var role=Math.max(n(z.p2Probability),n(z.p3Probability)),hidden=(n(z.sparseReset)>=.28||n(z.paceScore)>=68||n(z.shiftScore)>=68);
+    if((hidden||role>=uniform*.92)&&(p1(z)>=uniform*.38||n(z.p2Rank)<=5||n(z.p3Rank)<=5)&&(n(z.coverage)>=.30||n(z.styleSamples)>=2||((z.horse.recentRaces||[]).length>=2)))attention.push(z)
   });
-  attention.sort(function(a,b){return n(b.bombScore)-n(a.bombScore)||n(b.edgeScore)-n(a.edgeScore)||n(b.winProbability)-n(a.winProbability)});
-  attention.slice(0,1).forEach(function(z){z.predMark='注';z.attentionReason=(z.upsetReasons||[]).slice(0,3).join('・')});
+  attention.sort(function(a,b){
+    var au=Math.max(n(a.p2Probability),n(a.p3Probability))*.42+p1(a)*.28+n(a.paceScore)/100*.15+n(a.shiftScore)/100*.15,
+        bu=Math.max(n(b.p2Probability),n(b.p3Probability))*.42+p1(b)*.28+n(b.paceScore)/100*.15+n(b.shiftScore)/100*.15;
+    return bu-au||p1(b)-p1(a)
+  });
+  attention.slice(0,1).forEach(function(z){z.predMark='注';z.attentionReason=(z.tripReasons||z.sparseResetReasons||[]).slice(0,3).join('・')||'展開・条件の隠れ上昇'});
   var order={'◎':1,'○':2,'▲':3,'☆':4,'△':5,'注':6};
-  rows.slice().sort(function(a,b){return n(order[a.predMark],99)-n(order[b.predMark],99)||n(b.winProbability)-n(a.winProbability)||n(b.bombScore)-n(a.bombScore)}).forEach(function(z,idx){z.predRank=idx+1});
-  if(star&&star.predMark==='☆')star.attentionReason=(star.upsetReasons||[]).slice(0,3).join('・')
+  rows.slice().sort(function(a,b){return n(order[a.predMark],99)-n(order[b.predMark],99)||p1(b)-p1(a)||n(b.overallRaw)-n(a.overallRaw)}).forEach(function(z,idx){z.predRank=idx+1});
+  if(star&&star.predMark==='☆')star.attentionReason=(star.tripReasons||star.sparseResetReasons||[]).slice(0,3).join('・')||'P2/P3・展開適合で上昇'
 }
 function raceMode(r){r=r||{};if(['平地','新馬','障害'].indexOf(r.analysisMode)>=0)return r.analysisMode;var title=String(r.title||'');if(r.surface==='障害'||/障害|J[･・.]?G[ⅠⅡⅢ123]|\bJS\b|ジャンプ/i.test(title))return '障害';return /新馬|メイクデビュー/.test(title)?'新馬':'平地'}
 function saveRaceAnalysis(r,p){return}
@@ -2855,7 +2860,7 @@ function integratedGrades(r,rows){
   })
 }
 
-function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v24-v238-stronger-conditions',researchAudit:{sectional:true,probabilityRegularization:true,marketConsensus:true,marketConsensusRealOddsOnly:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
+function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v26-v241-market-independent',researchAudit:{sectional:true,probabilityRegularization:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -2979,7 +2984,7 @@ function raceReflectionIncomplete(d,row){
   var names=hs.filter(function(h){return String(h.name||'').trim()}).length;
   if(names<hs.length)return true;
   var pm=d.preparedMeta||{};
-  if(!isFinal(d)&&(!pm.diagnosisReady||String(pm.diagnosisVersion||'')!=='arvexq-edge-2026.10-v25-v239-seven-axis-live-stable'))return true;
+  if(!isFinal(d)&&(!pm.diagnosisReady||String(pm.diagnosisVersion||'')!=='arvexq-edge-2026.10-v26-v241-market-independent'))return true;
   var hist=hs.filter(function(h){return (h.recentRaces||h.allPastRuns||[]).length>0||h.debutNoHistory}).length;
   if(hist<Math.ceil(hs.length*.75))return true;
   if(String((row||d).date||'')===today()){
@@ -12513,7 +12518,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v240","appVersion":"13.52-v240-data-integrity",
+        "build":"v241","appVersion":"13.53-v241-market-independent",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
