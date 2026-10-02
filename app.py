@@ -347,11 +347,11 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.50-v238-stronger-conditions")
+app = FastAPI(title="ARVEXQ", version="13.52-v240-data-integrity")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v24-v238-stronger-conditions"
-AI_EVALUATION_VERSION = "evidence-v234-sectionals"
+PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v25-v239-seven-axis-live-stable"
+AI_EVALUATION_VERSION = "evidence-v239-seven-axis"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
 V207_WINNER_MODEL_VERSION = "arvexq-winner-v207-from-v206-run1"
@@ -2598,15 +2598,20 @@ function assignEdgeEngine(r,rows,suit,sc,pressure){
     var v217Neutral=clamp(1-front-collapse,0,1),
         v217Pure=clamp(n(x.overallRaw,.5)*.24+n(x.resultsScore,.5)*.17+n(x.representativeScore,.5)*.14+n(x.ability,.5)*.11+fit*.10+n(x.levelFit,.5)*.06+n(x.speedScore,.5)*.07+n(x.lapScore,.5)*.06+n(x.jockeyScore,.5)*.05,0,1),
         v217True=clamp(n(x.resultsScore,.5)*.20+n(x.speedScore,.5)*.16+n(x.lapScore,.5)*.10+peak*.15+trip.score*.14+n(x.representativeScore,.5)*.10+n(x.lateGain,.5)*.07+n(x.posCons,.5)*.05+(1-n(x.fade,.5))*.03,0,1),
+        v217Sectional=clamp(n(x.lapScore,.5)*.55+n(x.speedScore,.5)*.25+peak*.20,0,1),
         v217Scenario=clamp(front*n(x.frontStay,.5)+collapse*n(x.comeFromBehind,.5)+v217Neutral*pace,0,1),
         v217Conditions=clamp(fit*.55+shift*.25+n(su.win,.5)*.20,0,1),
-        v217Client=clamp(.30*v217Pure+.25*v217True+.24*v217Scenario+.17*v217Conditions+.04*evidence,0,1);
-    v217Client=.5+(v217Client-.5)*(.58+.42*evidence);
-    x.v217Audit={pure:v217Pure,trueRun:v217True,hiddenEffort:trip.score,positionScenario:v217Scenario,conditions:v217Conditions,evidence:evidence,scenarioProbabilities:{front:front,neutral:v217Neutral,collapse:collapse}};
-    if(!v207UsesWinnerModel(r))p1Strength=clamp(p1Strength*.78+v217Client*.22,0,1.15);
+        v217Opponent=clamp(n(x.levelFit,.5)*.62+fit*.38,0,1),
+        v217State=clamp(evidence*.30+n(x.posCons,.5)*.20+n(x.bodyWeightSuit,.5)*.15+(1-n(x.fade,.5))*.15+n(x.flexibility,.5)*.10+n(x.resultsScore,.5)*.10,0,1),
+        v239Client=clamp(.21*v217Pure+.17*v217True+.12*v217Sectional+.14*v217Scenario+.22*v217Conditions+.08*v217Opponent+.06*v217State,0,1);
+    v239Client=.5+(v239Client-.5)*(.58+.42*evidence);
+    x.v239Composite=v239Client;
+    x.v217Audit={pure:v217Pure,trueRun:v217True,sectional:v217Sectional,hiddenEffort:trip.score,positionScenario:v217Scenario,conditions:v217Conditions,opponentLevel:v217Opponent,stateConsistency:v217State,sevenAxisScore:v239Client,evidence:evidence,scenarioProbabilities:{front:front,neutral:v217Neutral,collapse:collapse}};
 
     var legacyP1Strength=p1Strength,v207P1Strength=v207WinnerScoreHorse(x.horse);
-    if(v207UsesWinnerModel(r))p1Strength=v207P1Strength;
+    // v239: keep the validated/statistical backbone, but make the agreed seven-axis
+    // model a meaningful race-by-race overlay for both central and local racing.
+    p1Strength=clamp((v207UsesWinnerModel(r)?v207P1Strength:p1Strength)*.70+v239Client*.30,0,1.15);
     x.legacyP1Strength=legacyP1Strength;x.v207WinnerStrength=v207P1Strength;
 
     // P2 is independent: repeatability and the ability to hold/improve position matter most.
@@ -2891,6 +2896,100 @@ function edgeRaceUrl(id){
     +'?t='+Date.now()
 }
 
+// v240 data-integrity merge. D1 /api/race returns the saved detail and a separate
+// odds_current array. Older clients ignored the separate live rows and could also
+// let a sparse incoming snapshot overwrite a richer cached one. Keep the richest
+// horse/history/diagnosis data while allowing newer live fields to win.
+function reflectUseful(v){
+  if(v===false||v===0)return true;
+  if(v==null||v==='')return false;
+  if(Array.isArray(v))return v.length>0;
+  if(typeof v==='object')return Object.keys(v).length>0;
+  if(typeof v==='string'&&(v==='不明'||v==='—'))return false;
+  return true
+}
+function edgeOddsRow(z){
+  z=z||{};return {
+    horseNumber:n(z.horseNumber!=null?z.horseNumber:z.horse_no,0),
+    winOdds:z.winOdds!=null?z.winOdds:z.win_odds,
+    popularity:z.popularity,
+    bodyWeight:z.bodyWeight!=null?z.bodyWeight:z.body_weight,
+    bodyWeightChange:z.bodyWeightChange!=null?z.bodyWeightChange:z.body_weight_change,
+    status:z.status!=null?z.status:z.horse_status,
+    updatedAt:z.updatedAt!=null?z.updatedAt:z.updated_at
+  }
+}
+function mergeHorseReflection(oldH,newH,liveH){
+  oldH=oldH||{};newH=newH||{};liveH=liveH||{};
+  var out=Object.assign({},oldH),richArrays=['recentRaces','allPastRuns'],k;
+  Object.keys(newH).forEach(function(key){
+    var v=newH[key];
+    if(richArrays.indexOf(key)>=0){
+      var a=Array.isArray(out[key])?out[key]:[],b=Array.isArray(v)?v:[];
+      if(b.length>=a.length&&b.length)out[key]=b;
+      return
+    }
+    if(key==='scratched'){
+      if(v===true||out[key]!==true)out[key]=!!v;
+      return
+    }
+    if(reflectUseful(v))out[key]=v
+  });
+  ['winOdds','popularity','bodyWeight','bodyWeightChange','status','updatedAt'].forEach(function(key){
+    if(liveH[key]!=null&&liveH[key]!=='')out[key]=liveH[key]
+  });
+  if(liveH.horseNumber)out.horseNumber=liveH.horseNumber;
+  return out
+}
+function mergeRaceReflection(base,incoming,oddsRows,summary){
+  base=base||{};incoming=incoming||{};summary=summary||{};
+  var out=Object.assign({},base);
+  Object.keys(incoming).forEach(function(key){
+    var v=incoming[key];
+    if(key==='horses'||key==='result')return;
+    if(reflectUseful(v))out[key]=v
+  });
+  Object.keys(summary).forEach(function(key){
+    var v=summary[key];
+    if(key==='horses'||key==='result')return;
+    if(reflectUseful(v))out[key]=v
+  });
+  var oldResult=base.result||{},newResult=incoming.result||{};
+  var oldFinish=(oldResult.finishers||[]).length,newFinish=(newResult.finishers||[]).length;
+  if(newFinish>=oldFinish&&reflectUseful(newResult))out.result=newResult;
+  else if(reflectUseful(oldResult))out.result=oldResult;
+  var oldBy={},newBy={},liveBy={},order=[];
+  (base.horses||[]).forEach(function(h){var no=n(h&&h.horseNumber,0);if(no){oldBy[no]=h;order.push(no)}});
+  (incoming.horses||[]).forEach(function(h){var no=n(h&&h.horseNumber,0);if(no){newBy[no]=h;if(order.indexOf(no)<0)order.push(no)}});
+  (oddsRows||[]).forEach(function(z){var q=edgeOddsRow(z),no=n(q.horseNumber,0);if(no){liveBy[no]=q;if(order.indexOf(no)<0)order.push(no)}});
+  if(order.length){
+    order.sort(function(a,b){return a-b});
+    out.horses=order.map(function(no){return mergeHorseReflection(oldBy[no],newBy[no],liveBy[no])})
+  }
+  if((oddsRows||[]).length){
+    out.oddsUpdatedAt=String((oddsRows||[]).reduce(function(mx,z){return Math.max(mx,n(z&&((z.updatedAt!=null)?z.updatedAt:z.updated_at),0))},0)||out.oddsUpdatedAt||'');
+    out.liveFieldsMerged=true
+  }
+  return mergeResultHorseFields(out)
+}
+function raceReflectionIncomplete(d,row){
+  if(!d||!(d.horses||[]).length)return true;
+  var hs=(d.horses||[]).filter(function(h){return !isScratchHorse(h)&&n(h.horseNumber)>0});
+  if(!hs.length)return false;
+  var names=hs.filter(function(h){return String(h.name||'').trim()}).length;
+  if(names<hs.length)return true;
+  var pm=d.preparedMeta||{};
+  if(!isFinal(d)&&(!pm.diagnosisReady||String(pm.diagnosisVersion||'')!=='arvexq-edge-2026.10-v25-v239-seven-axis-live-stable'))return true;
+  var hist=hs.filter(function(h){return (h.recentRaces||h.allPastRuns||[]).length>0||h.debutNoHistory}).length;
+  if(hist<Math.ceil(hs.length*.75))return true;
+  if(String((row||d).date||'')===today()){
+    var st=mins((row||d).startTime),remain=st-nowMins();
+    if(remain<=180&&remain>=-90&&!raceOddsComplete(d))return true;
+    if(remain<=120&&remain>=-90&&!raceBodyWeightComplete(d))return true
+  }
+  return false
+}
+
 function fetchEdgeRace(id,forceNetwork){
   if(!id)return Promise.resolve(null);
   var cached=instantTrackDetails[String(id)]||loadDetailCache(id);
@@ -2906,11 +3005,13 @@ function fetchEdgeRace(id,forceNetwork){
       return res.json()
     })
     .then(function(body){
-      var d=body&&body.detail?body.detail:null;
-      if(!d||!((d.horses||[]).length||isFinal(d)))return cached||null;
-      instantTrackDetails[String(id)]=d;
-      saveDetailCache(id,d);
-      return d
+      var d=body&&body.detail?body.detail:null,odds=(body&&body.odds)||[],summary=(body&&body.summary)||{};
+      var merged=mergeRaceReflection(cached,d,odds,summary);
+      if(body&&body.analysis_ready){merged.preparedMeta=Object.assign({},merged.preparedMeta||{},{diagnosisReady:true})}
+      if(!merged||!((merged.horses||[]).length||isFinal(merged)))return cached||null;
+      instantTrackDetails[String(id)]=merged;
+      saveDetailCache(id,merged);
+      return merged
     })
     .catch(function(){return cached||null})
 }
@@ -2990,7 +3091,7 @@ function refreshOddsOnly(force){
   return fetchEdgeRace(id,true).then(function(fresh){
     if(!fresh||!state.race||String(state.race.id)!==id)return false;
     var before='';try{before=JSON.stringify(state.race)}catch(e){}
-    var next=applySummaryEnvironment(fresh),after='';try{after=JSON.stringify(next)}catch(e){}
+    var next=applySummaryEnvironment(mergeRaceReflection(state.race,fresh,null,null)),after='';try{after=JSON.stringify(next)}catch(e){}
     var changed=!before||!after||before!==after;
     if(changed){
       state.race=next;
@@ -3262,23 +3363,35 @@ function detailPanel(r,p){
   if(!field)return '<section class="card"><h2>詳細</h2><div class="muted">詳細データを取得中です。</div></section>';
   var no=n(state.detailHorseNo,0),idx=rows.findIndex(function(z){return n(z.horse.horseNumber)===no});
   if(idx<0){idx=0;state.detailHorseNo=n(rows[0].horse.horseNumber)}
-  var x=rows[idx],h=x.horse,a=(h.integratedEvaluation||{}).v218Audit||(h.integratedEvaluation||{}).v217Audit||x.v218Audit||x.v217Audit||{};
-  function pct(v){return v==null?'—':Math.round(clamp(n(v),0,1)*100)}
-  function abilityBar(label,v){var val=v==null?0:Math.round(clamp(n(v),0,1)*100);return '<div class="ability-line-v223"><div><span>'+label+'</span><b>'+(v==null?'—':val)+'</b></div><i><em style="width:'+val+'%"></em></i></div>'}
-  return '<section id="section-detail" class="card detail-panel-v223">'
+  var x=rows[idx],h=x.horse,e=h.integratedEvaluation||{},a=e.v218Audit||e.v217Audit||x.v218Audit||x.v217Audit||{},
+      recent=(h.recentRaces||h.allPastRuns||[]).slice(0,5),bodyTxt=horseBodyWeightText(h)||((referenceBodyWeight(h)>0)?('前走 '+referenceBodyWeight(h)+'kg'):'計量待ち'),
+      styleTxt=x.expected||x.pastStyle||'不明',score=Math.round(clamp(n(a.sevenAxisScore,x.v239Composite!=null?x.v239Composite:n(x.overallRaw,.5)),0,1)*100),
+      grade=score>=84?'S':score>=74?'A':score>=62?'B':'C';
+  var recentHtml=recent.length?recent.map(function(rr){
+    var rid=rr.raceId||((r.circuit==='地方'&&rr.date&&rr.track&&n(rr.raceNumber))?('nar-'+rr.date+'-'+rr.track+'-'+String(n(rr.raceNumber)).padStart(2,'0')):'');
+    return '<div class="recent detail-recent-v239"><div class="recent-head"><b>'+esc(rr.date||'—')+' '+esc(rr.track||'—')+' '+(n(rr.raceNumber)?esc(rr.raceNumber)+'R ':'')+esc(rr.distance||'—')+'m</b><strong>'+esc(rr.finish||rr.finishPosition||'—')+'着</strong></div>'+
+      '<div>'+fmtTime(rr.timeSeconds)+'　'+esc(rr.condition||'不明')+' / '+esc(rr.weather||'不明')+'</div>'+
+      '<div class="muted">'+(rr.title?esc(rr.title)+'　':'')+'通過 '+esc((rr.cornerPositions||[]).join('-')||'—')+(saneCarriedWeightValue(rr.carriedWeight,rr.bodyWeight)?'　斤量 '+esc(String(saneCarriedWeightValue(rr.carriedWeight,rr.bodyWeight)).replace(/\.0$/,''))+'kg':'')+'</div>'+
+      (rid?'<button type="button" class="recent-open" data-past-race="'+esc(rid)+'">この過去レースを見る</button>':'')+'</div>'
+  }).join(''):'<div class="empty compact">近走データを確認できませんでした</div>';
+  return '<section id="section-detail" class="card detail-panel-v223 detail-panel-v239">'
     +'<div class="detail-nav-v223">'
       +'<button type="button" data-detail-prev="1" aria-label="前の馬">‹</button>'
       +'<span class="detail-check-v223 rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span>'
-      +badge(h)
-      +'<strong class="detail-name-v223">'+esc(h.name)+'</strong>'
+      +badge(h)+'<strong class="detail-name-v223">'+esc(h.name)+'</strong>'
       +'<button type="button" data-detail-next="1" aria-label="次の馬">›</button>'
       +'<span class="detail-count-v223">'+(idx+1)+'/'+field+'頭</span>'
     +'</div>'
-    +'<div class="detail-ai-card-v223"><div class="detail-ai-label-v223">AI総合評価</div><div class="detail-ai-main-v223"><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><b>'+esc(overallScoreText(x))+'</b><i data-ai-mark="'+esc(x.predMark||'')+'">'+esc(x.predMark||'—')+'</i></div><div class="detail-ai-sub-v223"><span>1着 '+(n(x.p1Probability)*100).toFixed(1)+'%</span><span>2着 '+(n(x.p2Probability)*100).toFixed(1)+'%</span><span>3着 '+(n(x.p3Probability)*100).toFixed(1)+'%</span></div></div>'
-    +'<div class="ability-card-v223"><h3>能力分布</h3>'
-      +abilityBar('PURE能力',a.pure)+abilityBar('TRUE RUN',a.trueRun)+abilityBar('展開適合',a.positionScenario)+abilityBar('今回条件',a.conditions)
-    +'</div>'
-    +'<div class="detail-body-v223">'+runnerDetailBody(r,p,x)+'</div>'
+    +'<div class="detail-ai-card-v223 detail-ai-v239"><div class="detail-ai-label-v223">AI総合評価</div><div class="detail-ai-main-v223"><strong class="overall-grade '+gradeClass(grade)+'">'+grade+'</strong><b>'+score+'</b><i data-ai-mark="'+esc(x.predMark||'')+'">'+esc(x.predMark||'—')+'</i></div><div class="detail-ai-sub-v223"><span>1着 '+(n(x.p1Probability)*100).toFixed(1)+'%</span><span>2着 '+(n(x.p2Probability)*100).toFixed(1)+'%</span><span>3着 '+(n(x.p3Probability)*100).toFixed(1)+'%</span></div></div>'
+    +'<div class="detail-simple-section-v239"><h3>基本情報</h3><div class="horse-info-grid">'
+      +'<div class="horse-info-cell"><small>性齢</small><b>'+esc(h.sex||'—')+esc(h.age||'—')+'</b></div>'
+      +'<div class="horse-info-cell"><small>脚質</small><b>'+esc(styleTxt)+'</b></div>'
+      +'<div class="horse-info-cell"><small>騎手</small><b>'+esc(h.jockey||'—')+'</b></div>'
+      +'<div class="horse-info-cell"><small>斤量</small><b>'+esc(carriedWeightText(h))+'</b></div>'
+      +'<div class="horse-info-cell"><small>調教師</small><b>'+esc(h.trainer||'—')+'</b></div>'
+      +'<div class="horse-info-cell"><small>馬体重</small><b>'+esc(bodyTxt)+'</b></div>'
+    +'</div></div>'
+    +'<div class="detail-simple-section-v239"><h3>近走データ</h3>'+recentHtml+'</div>'
   +'</section>'
 }
 function moveDetailHorse(dir){
@@ -3583,12 +3696,21 @@ function smartLiveLauncher(){
 function liveCenterModal(){
   if(!liveCenterOpen)return '';
   var rows=liveVenueOptions(),selected=liveCenterTrack?{track:liveCenterTrack,circuit:liveCenterCircuit}:null,src=selected?liveVenueSource(selected.circuit,selected.track):'',central=selected&&selected.circuit==='中央';
-  return '<div class="live-center-overlay" role="dialog" aria-modal="true" aria-label="ライブ中継">'+
+  return '<div class="live-center-overlay" data-live-key="'+esc(String(liveCenterCircuit||'')+'|'+String(liveCenterTrack||''))+'" role="dialog" aria-modal="true" aria-label="ライブ中継">'+
     '<div class="live-center-sheet">'+
       '<header class="live-center-head"><div><b>LIVE</b><small>'+(selected?esc(selected.track)+' / '+esc(selected.circuit):'開催場を選択')+'</small></div><button type="button" data-action="live-close" aria-label="閉じる">×</button></header>'+
       '<div class="live-center-venues">'+(rows.length?rows.map(function(v){return '<button type="button" data-live-track="'+esc(v.track)+'" data-live-circuit="'+esc(v.circuit)+'" class="'+(selected&&selected.track===v.track&&selected.circuit===v.circuit?'active':'')+'"><small>'+esc(v.circuit)+'</small><b>'+esc(v.track)+'</b></button>'}).join(''):'<div class="live-center-empty">本日の開催場データを取得中です</div>')+'</div>'+
       (selected?'<div class="live-center-player '+(central?'central':'local')+'"><div class="live-center-frame"><iframe src="'+esc(src)+'" title="'+esc(selected.track)+' ライブ" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen scrolling="yes" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><div class="live-center-player-foot"><span>'+(central?'JRA公式ライブ / 最大1080p・自動画質':'地方競馬ライブ映像専用版 / 画質選択対応')+'</span><a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer">公式画面で開く</a></div></div>':'<div class="live-center-prompt"><b>開催場をタップ</b><span>選択した開催場の公式ライブをすぐ表示します。</span></div>')+
     '</div></div>'
+}
+function syncLiveCenterOverlay(){
+  var existing=document.querySelector('body > .live-center-overlay');
+  if(!liveCenterOpen){if(existing)existing.remove();return}
+  var key=String(liveCenterCircuit||'')+'|'+String(liveCenterTrack||'');
+  if(existing&&existing.getAttribute('data-live-key')===key)return; // keep the iframe browsing context alive
+  if(existing)existing.remove();
+  var box=document.createElement('div');box.innerHTML=liveCenterModal();
+  var node=box.firstElementChild;if(node)document.body.appendChild(node)
 }
 function fitLiveCenterFrame(){
   var frame=document.querySelector('.live-center-player.local .live-center-frame'),iframe=frame&&frame.querySelector('iframe');
@@ -3661,7 +3783,6 @@ function renderHome(){
       smartVenueCards()+
     '</main>'+ 
     cinematicFooter()+
-    liveCenterModal()+
   '</div>'
 }
 function volatilityBadge(r){
@@ -3778,11 +3899,12 @@ function mergeTrackPack(rows){
   var changed=false;
   (rows||[]).forEach(function(d){
     if(!d||!d.id)return;
-    saveDetailCache(d.id,d);
-    var r=state.races.find(function(x){return String(x.id)===String(d.id)});
-    if(r&&d.volatility){
-      var before=JSON.stringify(r.volatility||null),after=JSON.stringify(d.volatility);
-      if(before!==after){r.volatility=d.volatility;changed=true}
+    var id=String(d.id),old=instantTrackDetails[id]||loadDetailCache(id)||null,
+        r=state.races.find(function(x){return String(x.id)===id}),merged=mergeRaceReflection(old,d,null,r||null);
+    instantTrackDetails[id]=merged;saveDetailCache(id,merged);
+    if(r&&merged.volatility){
+      var before=JSON.stringify(r.volatility||null),after=JSON.stringify(merged.volatility);
+      if(before!==after){r.volatility=merged.volatility;changed=true}
     }
   });
   return changed
@@ -4245,7 +4367,7 @@ function refreshRaceAfterCollect(id,attempt){attempt=n(attempt,0);if(!id)return;
 function collectRaceInfo(no){if(state.race&&(state.race.date!==today()||isFinal(state.race)))return;if(!state.race||!state.race.id)return;var id=state.race.id;state.collectingHorse=no||'all';render();var u='/api/v1/race/'+encodeURIComponent(id)+'/collect?force=1'+(no?'&horse_no='+encodeURIComponent(no):'');fetch(u,{cache:'no-store'}).then(function(res){if(!res.ok)throw new Error('API '+res.status);return res.json()}).then(function(){state.collectTimer=setTimeout(function(){refreshRaceAfterCollect(id,0)},250)}).catch(function(){state.collectingHorse=null;render()})}
 function stopTimer(){if(state.timer){clearTimeout(state.timer);state.timer=null}if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}state.simRunning=false}
 function drawPaceStage(idx){if(!state.race||!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;var stages=visiblePaceStages(plan),st=stages[clamp(idx,0,stages.length-1)],r=state.race,board=document.getElementById('pace-board');if(!st||!board)return;state.paceStage=clamp(idx,0,stages.length-1);var order=[],i,z,chip,left,top,rank,rowIdx;for(i=0;i<st.pack.length;i++){z=st.pack[i];rank=i;rowIdx=rank%4;chip=board.querySelector('[data-horse="'+z.no+'"]');if(!chip)continue;left=clamp(90-rank*5.9-n(z.gap)*58,8,92);top=clamp(16+rowIdx*20+n(z.lane)*2.4,12,88);chip.style.left=left+'%';chip.style.top=top+'%';order.push(z.no)}var label=st.key==='turn3'?'3C':(st.key==='turn4'?'4C':st.label),ob=document.getElementById('course-order');if(ob)ob.innerHTML='<b>'+esc(label)+'</b><span>'+order.map(function(no){var h=horseByNo(r,no);return esc(no)+(h?' '+esc(h.name):'')}).join(' → ')+'</span>';var ev=document.getElementById('pace-event');if(ev)ev.innerHTML=stageNarrative(state.pred,idx);var bs=document.querySelectorAll('[data-pace-stage]');for(i=0;i<bs.length;i++)bs[i].className=n(bs[i].getAttribute('data-pace-stage'))===idx?'active':''}
-function render(){var savedY=window.scrollY;syncLocation();stopTimer();try{var view=state.raceLoading?renderRaceLoading():(state.race?renderRace():(state.picker?renderPicker():(state.track?renderVenue():renderHome())));app.innerHTML=view+smartTodayReturn();bind();if(liveCenterOpen){requestAnimationFrame(function(){fitLiveCenterFrame()})}if(state.race){initPaceBoard();scheduleResultRefresh();ensureAutoOdds(state.race)}else if(state.track&&!state.picker){scheduleVenueTrendRefresh(350)}else if(!state.track&&!state.picker){scheduleSelectedRacePredictions()}window.scrollTo(0,savedY)}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
+function render(){var savedY=window.scrollY;syncLocation();stopTimer();try{var view=state.raceLoading?renderRaceLoading():(state.race?renderRace():(state.picker?renderPicker():(state.track?renderVenue():renderHome())));app.innerHTML=view+smartTodayReturn();syncLiveCenterOverlay();bind();if(liveCenterOpen){requestAnimationFrame(function(){fitLiveCenterFrame()})}if(state.race){initPaceBoard();scheduleResultRefresh();ensureAutoOdds(state.race)}else if(state.track&&!state.picker){scheduleVenueTrendRefresh(350)}else if(!state.track&&!state.picker){scheduleSelectedRacePredictions()}window.scrollTo(0,savedY)}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
 function canGoBack(){return !!(state.horseModalNo||state.raceLoading||state.race||state.picker||state.track)}
 function goBack(){
     if(window.history&&window.history.state&&window.history.state.keibaDepth>0){window.history.back();return}
@@ -4482,11 +4604,23 @@ function load(force){
         var details=(body&&body.details)||[],summaryRows=(body&&body.races)||[];
         if(summaryRows.length){
           var oldBy={};(state.races||[]).forEach(function(x){if(x&&x.id)oldBy[String(x.id)]=x});
-          state.races=summaryRows.map(function(z){var old=oldBy[String(z.id)]||{};return Object.assign({},old,z)});
+          state.races=summaryRows.map(function(z){
+            var old=oldBy[String(z.id)]||{},out=Object.assign({},old);
+            Object.keys(z||{}).forEach(function(k){if(reflectUseful(z[k]))out[k]=z[k]});
+            return out
+          });
           saveRaceCache(d,'__ALL__',state.races)
         }
-        details.forEach(function(z){if(!z||!z.id)return;instantTrackDetails[String(z.id)]=z;saveDetailCache(z.id,z)});
-        var ids=(state.races||[]).filter(function(r){return r&&r.id}).map(function(r){return String(r.id)}),missing=ids.filter(function(id){return !instantTrackDetails[id]});
+        var summaryBy={};(state.races||[]).forEach(function(x){if(x&&x.id)summaryBy[String(x.id)]=x});
+        details.forEach(function(z){
+          if(!z||!z.id)return;
+          var id=String(z.id),old=instantTrackDetails[id]||loadDetailCache(id)||null;
+          var merged=mergeRaceReflection(old,z,null,summaryBy[id]||null);
+          instantTrackDetails[id]=merged;saveDetailCache(id,merged)
+        });
+        var ids=(state.races||[]).filter(function(r){return r&&r.id}).map(function(r){return String(r.id)}),
+            missing=ids.filter(function(id){return !instantTrackDetails[id]}),
+            incomplete=ids.filter(function(id){return raceReflectionIncomplete(instantTrackDetails[id],summaryBy[id])});
         selectedRacePreload.expectedCount=ids.length||n(body&&body.raceCount,0);selectedRacePreload.loadedCount=Math.max(details.length,ids.length-missing.length);
         function done(){
           if(seq!==state.requestSeq||state.date!==d)return;
@@ -4498,12 +4632,21 @@ function load(force){
           if(selectedRacePreload.fullLoaded)scheduleTopRefresh();
           if(!selectedRacePreload.fullLoaded&&attempt<5)setTimeout(function(){requestDetails(attempt+1)},900+attempt*350)
         }
-        if(!missing.length){if(ids.length){selectedRacePreload.fullLoaded=true;selectedRacePreload.fullLoading=false;render();scheduleTopRefresh();return}selectedRacePreload.fullLoading=true;render();if(attempt<5)setTimeout(function(){requestDetails(attempt+1)},700+attempt*300);return}
-        var cursor=0,workers=[],limit=Math.min(6,missing.length);
+        var targets=missing.slice();
+        incomplete.forEach(function(id){if(targets.indexOf(id)<0)targets.push(id)});
+        // Do not hammer D1 for the whole card every 6s. Refresh the most relevant
+        // incomplete races first; the full day pack still refreshes every cycle.
+        targets.sort(function(a,b){
+          var ra=summaryBy[a]||{},rb=summaryBy[b]||{},da=Math.abs(mins(ra.startTime)-nowMins()),db=Math.abs(mins(rb.startTime)-nowMins());
+          return da-db||n(ra.raceNumber)-n(rb.raceNumber)
+        });
+        targets=targets.slice(0,12);
+        if(!targets.length){if(ids.length){selectedRacePreload.fullLoaded=true;selectedRacePreload.fullLoading=false;render();scheduleTopRefresh();return}selectedRacePreload.fullLoading=true;render();if(attempt<5)setTimeout(function(){requestDetails(attempt+1)},700+attempt*300);return}
+        var cursor=0,workers=[],limit=Math.min(6,targets.length);
         function worker(){
-          if(cursor>=missing.length)return Promise.resolve();
-          var id=missing[cursor++];
-          return fetchEdgeRace(id,false).then(function(z){if(z){instantTrackDetails[id]=z;saveDetailCache(id,z)}}).catch(function(){}).then(worker)
+          if(cursor>=targets.length)return Promise.resolve();
+          var id=targets[cursor++];
+          return fetchEdgeRace(id,true).then(function(z){if(z){instantTrackDetails[id]=z;saveDetailCache(id,z)}}).catch(function(){}).then(worker)
         }
         for(var wi=0;wi<limit;wi++)workers.push(worker());
         Promise.all(workers).then(done).catch(done)
@@ -9635,7 +9778,7 @@ def _v215_professional_p1(detail: dict, horses: list[dict], base_rows: list[dict
 # v215/v213 remain the statistical bases. v218 strengthens the race-reading layer
 # using TRUE RUN, individual neighbour pressure, a probability mixture of pace shapes,
 # and role-specific compatibility. It does not use post-race information.
-V218_TACTICAL_MODEL_VERSION = "arvexq-conditional-order-v218"
+V218_TACTICAL_MODEL_VERSION = "arvexq-seven-axis-overlay-v239"
 V218_P1_BLEND = 0.24
 
 
@@ -9719,9 +9862,22 @@ def _v218_tactical_roles(detail: dict, horses: list[dict], base_rows: list[dict]
         ))
         evidence=max(0.0,min(1.0,.62*f.get('evidence',.5)+.38*f.get('style_reliability',.5)))
 
-        # v238: raise direct current-condition influence from 17% to 22%.
-        # PURE / TRUE RUN / scenario remain the majority, so this is a boost rather than an override.
-        p1_score=.27*pure+.24*true_run+.23*scenario+.22*conditions+.04*evidence
+        # v239 seven-axis ability model.  The visible detail screen is intentionally
+        # simple, but prediction keeps the full internal split: PURE / TRUE RUN /
+        # SECTIONAL / pace fit / current conditions / opponent level / reproducibility.
+        sectional=max(0.0,min(1.0,
+            .55*f.get('lap',.5)+.25*f.get('speed_adj_avg',.5)+.20*f.get('speed_adj_best',.5)
+        ))
+        opponent=max(0.0,min(1.0,.62*f.get('level',.5)+.38*f.get('class_fit',.5)))
+        reproducibility=max(0.0,min(1.0,
+            .30*evidence+.18*f.get('recency_wfinish',.5)+.14*f.get('finish_trend',.5)+
+            .14*f.get('weight_stability',.5)+.12*f.get('style_reliability',.5)+
+            .12*f.get('speed_evidence',.5)
+        ))
+        # Keep the user's strengthened current-condition stance (22%) while
+        # separating the other six concepts instead of hiding them inside one score.
+        p1_score=(.21*pure+.17*true_run+.12*sectional+.14*scenario+.22*conditions+
+                  .08*opponent+.06*reproducibility)
         p1_score=.5+(p1_score-.5)*(.58+.42*evidence)
         p1_raw.append(p1_score)
 
@@ -9739,7 +9895,8 @@ def _v218_tactical_roles(detail: dict, horses: list[dict], base_rows: list[dict]
         p2_role.append(second);p3_role.append(third)
         audits.append({
             'pure':round(pure,4),'trueRun':round(true_run,4),'hiddenEffort':round(hidden,4),
-            'positionScenario':round(scenario,4),'conditions':round(conditions,4),
+            'sectional':round(sectional,4),'positionScenario':round(scenario,4),'conditions':round(conditions,4),
+            'opponentLevel':round(opponent,4),'stateConsistency':round(reproducibility,4),'sevenAxisScore':round(p1_score,4),
             'secondRole':round(second,4),'thirdRole':round(third,4),'evidence':round(evidence,4),
             'positionPressure':{
                 'left':round(nb['left'],4),'right':round(nb['right'],4),
@@ -11349,6 +11506,7 @@ def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Q
 _site_bootstrap_lock=threading.Lock()
 _site_bootstrap_build_lock=threading.Lock()
 _site_bootstrap_cache:dict[str,tuple[float,dict]]={}
+_site_force_cache:dict[str,tuple[float,dict]]={}
 _site_bootstrap_state:dict[str,dict]={}
 
 class DayBundleStore:
@@ -11584,12 +11742,33 @@ def _schedule_day_bundle_refresh(date:str,force_sources:bool=False)->None:
                 _site_bootstrap_state[date]=st
     threading.Thread(target=worker,daemon=True,name="day-bundle-"+date).start()
 
+def _bundle_quality(p:dict|None)->tuple:
+    p=p or {}
+    return (
+        int(p.get("raceCount") or 0),
+        int(p.get("detailCount") or 0),
+        int(p.get("generatedAtEpoch") or p.get("updatedAtEpoch") or 0),
+        int(p.get("analysisCount") or 0),
+    )
+
 def _site_bootstrap_payload(date:str,force:bool=False,wait:bool=False)->dict:
     """
     Customer path is strictly non-blocking.
     Return the best local bundle immediately, then continue full preparation in background.
+    v240: a fresh force=1 collector result must not be immediately replaced by an
+    older persisted bundle on the next non-force poll.
     """
     stored=DAY_BUNDLES.get(date,complete_only=True)
+    recent_force=None
+    with _site_bootstrap_lock:
+        fc=_site_force_cache.get(date)
+        if fc and time.time()-float(fc[0])<=60:
+            recent_force=dict(fc[1])
+    if not force and recent_force and (not stored or _bundle_quality(recent_force)>=_bundle_quality(stored)):
+        out=dict(recent_force)
+        out["cached"]=False
+        out["servedFrom"]="recent-force-live"
+        return out
     if stored and not force:
         if date==_today_iso() and int(time.time())-int(stored.get("updatedAtEpoch") or 0)>20:
             _schedule_day_bundle_refresh(date,False)
@@ -11644,13 +11823,26 @@ def _force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
         if not rid:return None
         try:
             d=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
-            # Missing card/history: hydrate the current card first.
+            # Missing card: hydrate the current card first.
             if not _bootstrap_display_ready(d):
                 _hydrate_fast_card_now(rid,deep_history=False)
             # Refresh official live fields for every current race, not only the race the user opened.
             if date==_today_iso():
                 try:odds_refresh(rid,1)
                 except Exception as exc:print("full-day live field refresh failed",rid,exc)
+                # Near post time, immediately retry a still-incomplete live row once.
+                # This catches JRA/NAR pages whose odds/body-weight blocks land between two reads.
+                try:
+                    q=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid) or {}
+                    hs=[h for h in (q.get("horses") or []) if not h.get("scratched")]
+                    st=_race_minutes_server(row);nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
+                    near=st<9999 and -30<=st-nowm<=120
+                    live_incomplete=bool(hs) and any((not float(h.get("winOdds") or 0)) or int(h.get("bodyWeight") or 0)<=250 for h in hs)
+                    if near and live_incomplete:odds_refresh(rid,1)
+                    if st<9999 and nowm>=st+2 and not _snapshot_final(q):
+                        try:_refresh_result_fast(rid)
+                        except Exception:pass
+                except Exception as exc:print("full-day live retry failed",rid,exc)
             # Rebuild diagnosis from everything already stored; network history remains background work.
             try:_build_fast_diagnosis_snapshot(rid,allow_network=False,deep_context=False)
             except Exception as exc:print("full-day diagnosis rebuild failed",rid,exc)
@@ -11672,6 +11864,9 @@ def _force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
         except Exception:pass
     out["forceLiveRefresh"]=True
     out["forceElapsedMs"]=int((time.time()-started)*1000)
+    with _site_bootstrap_lock:
+        _site_force_cache[date]=(time.time(),dict(out))
+        _site_bootstrap_cache[date]=(time.time(),dict(out))
     return out
 
 @app.get("/api/v1/site-bootstrap")
@@ -12318,7 +12513,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v238","appVersion":"13.50-v238-stronger-conditions",
+        "build":"v240","appVersion":"13.52-v240-data-integrity",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -13570,4 +13765,20 @@ CSS += r"""
   .race-nav-v230-btn{height:53px!important;min-height:53px!important;padding:0 3px!important;font-size:14px!important;gap:3px!important}
   .race-nav-v230-caret{font-size:20px!important}
 }
+"""
+
+
+# v239: simplified horse detail and persistent live iframe
+CSS += r"""
+.detail-panel-v239 .detail-simple-section-v239{margin-top:10px;padding:10px;border:1px solid rgba(91,140,173,.28);border-radius:12px;background:rgba(8,28,42,.58)}
+.detail-panel-v239 .detail-simple-section-v239 h3{margin:0 0 8px;font-size:14px;color:#dcecf7}
+.detail-panel-v239 .detail-ai-v239{margin-top:9px}
+.detail-panel-v239 .detail-ai-main-v223>b{font-size:22px!important}
+.detail-panel-v239 .horse-info-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+.detail-panel-v239 .horse-info-cell{min-height:54px!important;padding:8px!important}
+.detail-panel-v239 .horse-info-cell small{font-size:10px!important}
+.detail-panel-v239 .horse-info-cell b{font-size:13px!important;line-height:1.25!important}
+.detail-recent-v239{font-size:12px!important;line-height:1.45!important}
+.detail-recent-v239 .recent-head b,.detail-recent-v239 .recent-head strong{font-size:13px!important}
+@media(max-width:430px){.detail-panel-v239 .detail-nav-v223{grid-template-columns:38px 34px 46px minmax(0,1fr) 38px auto!important}.detail-panel-v239 .detail-name-v223{font-size:14px!important}}
 """
