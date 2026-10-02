@@ -3276,12 +3276,11 @@ function cinematicVenues(ctx){return '<nav class="cinema-venues">'+ctx.venues.ma
 function cinematicNumbers(ctx){return '<nav class="cinema-numbers" aria-label="レース番号">'+Array.from({length:12},function(_,i){var row=ctx.races.find(function(x){return n(x.raceNumber)===i+1});if(!row&&ctx.featured&&n(ctx.featured.raceNumber)===i+1)row=ctx.featured;return '<button '+(row?'data-race="'+esc(row.id)+'"':'disabled')+' class="'+(ctx.featured&&n(ctx.featured.raceNumber)===i+1?'active':'')+'">'+(i+1)+'R</button>'}).join('')+'</nav>'}
 function cinematicGrade(r){var g=r.grade||r.gradeLabel||'',match=String(r.title||'').match(/(?:J[・･.]?)?G[ⅠⅡⅢ123]/i);if(!g&&match)g=match[0];return g?'<span class="cinema-grade">'+esc(g)+'</span>':''}
 function cinematicTabs(r){
-  function tab(label,key){var active=state.openPanel===key;return '<button data-panel="'+key+'" aria-expanded="'+active+'" class="'+(active?'active':'')+'">'+label+'<span class="panel-caret">'+(active?'−':'＋')+'</span></button>'}
-  // v229: two independent rows. Buttons are direct children so even older cached
-  // base .cinema-tabs CSS cannot squeeze the two rows side-by-side.
-  return '<div class="tabs-v229-wrap">'
-    +'<nav class="cinema-tabs accordion-tabs tabs-v229-row tabs-v229-top">'+tab('出走表','entry')+tab('全頭診断','diagnosis')+tab('詳細','detail')+'</nav>'
-    +'<nav class="cinema-tabs accordion-tabs tabs-v229-row tabs-v229-bottom">'+tab('展開予想','pace')+tab('買い目','bets')+'</nav>'
+  function tab(label,key){var active=state.openPanel===key;return '<button type="button" data-panel="'+key+'" aria-expanded="'+active+'" class="race-nav-v230-btn '+(active?'active':'')+'"><span class="race-nav-v230-label">'+label+'</span><span class="race-nav-v230-caret">'+(active?'−':'＋')+'</span></button>'}
+  // v230: isolated navigation classes only. Do not inherit any legacy cinema-tabs sizing.
+  return '<div class="race-nav-v230">'
+    +'<div class="race-nav-v230-row race-nav-v230-top">'+tab('出走表','entry')+tab('全頭診断','diagnosis')+tab('詳細','detail')+'</div>'
+    +'<div class="race-nav-v230-row race-nav-v230-bottom">'+tab('展開予想','pace')+tab('買い目','bets')+'</div>'
     +'</div>'
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
@@ -12014,7 +12013,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v229","appVersion":"13.32-v229-tab-layout-fix",
+        "build":"v230","appVersion":"13.33-v230-balanced-tabs",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -13240,4 +13239,30 @@ CSS += r"""
 .tabs-v229-row>button{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;max-width:none!important;min-height:50px!important;margin:0!important;padding:8px 4px!important;box-sizing:border-box!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;font-size:15px!important;font-weight:900!important;line-height:1!important;border-radius:8px!important}
 .tabs-v229-row>button .panel-caret{flex:0 0 auto!important;margin-left:4px!important;font-size:19px!important}
 @media(max-width:390px){.tabs-v229-wrap{padding:5px!important}.tabs-v229-row{gap:5px!important}.tabs-v229-top{margin-bottom:5px!important}.tabs-v229-row>button{min-height:48px!important;padding:8px 2px!important;font-size:14px!important}.tabs-v229-row>button .panel-caret{font-size:18px!important;margin-left:2px!important}}
+"""
+CSS += r"""
+/* v230: balanced 3-over-2 race navigation. Fully isolated from legacy tab CSS. */
+.race-nav-v230{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0 0 8px!important;padding:8px!important;box-sizing:border-box!important;border:1px solid #344955!important;border-radius:12px!important;background:#141f24!important;overflow:visible!important}
+.race-nav-v230-row{display:grid!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;gap:8px!important;box-sizing:border-box!important}
+.race-nav-v230-top{grid-template-columns:repeat(3,minmax(0,1fr))!important;margin-bottom:8px!important}
+.race-nav-v230-bottom{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.race-nav-v230-btn{appearance:none!important;-webkit-appearance:none!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;width:100%!important;max-width:none!important;min-width:0!important;height:58px!important;min-height:58px!important;margin:0!important;padding:0 8px!important;box-sizing:border-box!important;border:1px solid #53636d!important;border-radius:10px!important;background:#202b30!important;color:#eef2f4!important;box-shadow:none!important;font-family:inherit!important;font-size:17px!important;font-weight:900!important;line-height:1!important;white-space:nowrap!important;overflow:hidden!important}
+.race-nav-v230-btn.active{border-color:#9c865d!important;background:#4a5053!important;box-shadow:inset 0 -4px 0 #d1b277!important;color:#fff!important}
+.race-nav-v230-label{display:block!important;min-width:0!important;overflow:hidden!important;text-overflow:clip!important;white-space:nowrap!important}
+.race-nav-v230-caret{display:block!important;flex:0 0 auto!important;margin:0!important;color:#58c5ff!important;font-size:24px!important;font-weight:1000!important;line-height:.8!important}
+.race-nav-v230-btn.active .race-nav-v230-caret{color:#79d3ff!important}
+@media(max-width:430px){
+  .race-nav-v230{padding:7px!important;border-radius:11px!important}
+  .race-nav-v230-row{gap:7px!important}
+  .race-nav-v230-top{margin-bottom:7px!important}
+  .race-nav-v230-btn{height:56px!important;min-height:56px!important;padding:0 5px!important;font-size:16px!important;gap:4px!important}
+  .race-nav-v230-caret{font-size:22px!important}
+}
+@media(max-width:370px){
+  .race-nav-v230{padding:6px!important}
+  .race-nav-v230-row{gap:5px!important}
+  .race-nav-v230-top{margin-bottom:5px!important}
+  .race-nav-v230-btn{height:53px!important;min-height:53px!important;padding:0 3px!important;font-size:14px!important;gap:3px!important}
+  .race-nav-v230-caret{font-size:20px!important}
+}
 """
