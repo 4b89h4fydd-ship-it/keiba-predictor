@@ -340,14 +340,14 @@ import urllib.request
 import urllib.parse
 import zipfile
 from dataclasses import dataclass
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, wait
 from datetime import date as dt_date, datetime
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.34-v222-diagnosis-merge")
+app = FastAPI(title="ARVEXQ", version="13.43-v231-day-detail-prefetch")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v22-v220-compact-tickets"
@@ -2074,6 +2074,13 @@ CSS += r"""
 @media(max-width:360px){.racecard-row{grid-template-columns:32px minmax(0,1fr) 40px 64px!important}}
 """
 
+
+CSS += r"""
+/* v231: transparent TOP-page selection/data preload status */
+.smart-selected-status{margin:4px 0 10px;min-height:52px;padding:9px 12px;border:1px solid #315d79;border-radius:12px;background:linear-gradient(145deg,#0c2233,#071521);display:flex;align-items:center;justify-content:space-between;gap:10px;box-sizing:border-box}
+.smart-selected-status>div{display:flex;flex-direction:column;min-width:0}.smart-selected-status b{font-size:17px;color:#f4f9fc}.smart-selected-status small{margin-top:3px;font-size:10px;color:#92acbd;white-space:normal;line-height:1.3}.smart-selected-status em{font-style:normal;font-size:11px;font-weight:900;color:#8fd9ff;white-space:nowrap}.smart-selected-status.smart-value-status{border-color:#7a6335;background:linear-gradient(145deg,#241d10,#141006)}.smart-selected-status.smart-value-status b{color:#ffe19a}.smart-selected-status.smart-value-status em{color:#ffd06a}
+"""
+
 JS = r"""
 (function(){
 "use strict";
@@ -3393,7 +3400,22 @@ function aiStatsDayTitle(){
   return (m&&d)?(m+'月'+d+'日のAI成績'):'当日のAI成績'
 }
 
-var selectedRacePreload={date:'',busy:{},done:{},timer:null};
+var selectedRacePreload={date:'',busy:{},done:{},timer:null,fullLoaded:false,fullLoading:false,loadedCount:0,expectedCount:0,lastError:''};
+function selectedRaceLoadStatus(){
+  var expected=n(selectedRacePreload.expectedCount,0)||(state.races||[]).filter(function(r){return r&&r.id}).length,loaded=n(selectedRacePreload.loadedCount,0);
+  return{expected:expected,loaded:loaded,complete:!!selectedRacePreload.fullLoaded,loading:!!selectedRacePreload.fullLoading,error:selectedRacePreload.lastError||''}
+}
+function selectionStatusCard(kind){
+  var st=selectedRaceLoadStatus(),isValue=kind==='value',title=isValue?'期待値高レース':'本日の厳選レース';
+  if(!st.complete){
+    return '<section class="smart-selected-status '+(isValue?'smart-value-status':'')+'"><div><b>'+title+'</b><small>全レースAI判定用データを読込中 '+st.loaded+'/'+st.expected+'</small></div><em>選定中</em></section>'
+  }
+  if(isValue){
+    var eligible=(state.races||[]).filter(function(r){if(!r||!r.id||isFinal(r))return false;var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d)return false;var hs=(d.horses||[]).filter(function(h){return !isScratchHorse(h)});return hs.length&&hs.filter(function(h){return n(h.winOdds)>1}).length>=Math.max(3,Math.ceil(hs.length*.75))}).length;
+    return '<section class="smart-selected-status smart-value-status"><div><b>'+title+'</b><small>厳格基準の通過なし・公式オッズ判定可能 '+eligible+'/'+st.expected+'レース</small></div><em>0レース</em></section>'
+  }
+  return '<section class="smart-selected-status"><div><b>'+title+'</b><small>全レース判定済み・厳選ゲート通過なし</small></div><em>0レース</em></section>'
+}
 function raceIsGraded(r){var t=String(r&&r.title||''),c=String(r&&r.raceClass||r&&r.className||'');return /(?:Jpn\s*)?G\s*[ⅠⅡⅢ123]|(?:Jpn\s*)[ⅠⅡⅢ123]|\b(?:S|H|M)\s*[ⅠⅡⅢ123]\b|SP\s*[ⅠⅡⅢ123]|重賞|グランプリ|ダービー|優駿|賞\s*\(重賞\)/i.test(t+' '+c)}
 function explicitSelectedRace(r){return !!(r&&(r.arvexqSelected||r.selectedRace||r.isSelected||r.recommendedRace||r.aiSelected))}
 function mainRaceForTrack(rows){
@@ -3442,7 +3464,7 @@ function expectedValueRaceCandidates(){
   return out.sort(function(a,b){return n(b.value&&b.value.score)-n(a.value&&a.value.score)||n(b.value&&b.value.ev)-n(a.value&&a.value.ev)||mins(a.race.startTime)-mins(b.race.startTime)}).slice(0,6)
 }
 function smartExpectedValueRaces(){
-  var picks=expectedValueRaceCandidates();if(!picks.length)return '';
+  var picks=expectedValueRaceCandidates();if(!picks.length)return selectionStatusCard('value');
   return '<details class="smart-selected-races smart-value-races"><summary><span><b>期待値高レース</b><small>実オッズ×AI勝率でプラス期待値が大きいレースのみ</small></span><em>'+picks.length+'レース　開く ›</em></summary><div class="smart-selected-list">'+picks.map(function(z){var r=z.race,v=z.value||{},evPct=Math.round((n(v.ev)-1)*100);return '<button type="button" class="smart-selected-row" data-race="'+esc(r.id)+'"><div class="selected-race-head"><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><time>'+esc(r.startTime||'--:--')+'</time></div><div class="selected-race-title">'+esc(r.title||'')+'</div><div class="selected-tags"><span>期待値 +'+esc(evPct)+'%</span><span>'+esc(v.horseNo)+' '+esc(v.horseName)+'</span><span>AI '+(n(v.pwin)*100).toFixed(1)+'%</span><span>単勝 '+n(v.odds).toFixed(1)+'</span></div></button>'}).join('')+'</div></details>'
 }
 
@@ -3455,7 +3477,7 @@ function selectedRaceBetPreview(r){
   return '<div class="selected-bets">'+lines+'</div>'+result
 }
 function smartSelectedRaces(){
-  var picks=selectedRaceCandidates();if(!picks.length)return '';
+  var picks=selectedRaceCandidates();if(!picks.length)return selectionStatusCard('selected');
   var finalCount=picks.filter(function(z){return isFinal(z.race)}).length;
   return '<details class="smart-selected-races"><summary><span><b>本日の厳選レース</b><small>厳選ゲート通過レースのみ・該当なしの日は表示しません</small></span><em>'+picks.length+'レース　'+(finalCount===picks.length?'結果を見る':'開く')+' ›</em></summary><div class="smart-selected-list">'+picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="smart-selected-row '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><div class="selected-race-head"><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><time>'+esc(r.startTime||'--:--')+'</time></div><div class="selected-race-title">'+esc(r.title||'')+'</div><div class="selected-tags"><span>厳選 '+esc(t.score||'—')+'</span><span>P1 '+Math.round(n(t.top)*100)+'%</span><span>展開 '+Math.round(n(t.scenarioProb)*100)+'%</span></div>'+'</button>'}).join('')+'</div></details>'
 }
@@ -4317,6 +4339,7 @@ function load(force){
       full=force?null:loadFullBundle(d),
       listCache=force?null:loadRaceCache(d,'__ALL__');
   state.error=null;state.bootstrapReady=false;state.bootstrapProgress=null;
+  if(selectedRacePreload.date!==d){selectedRacePreload={date:d,busy:{},done:{},timer:null,fullLoaded:false,fullLoading:false,loadedCount:0,expectedCount:0,lastError:''}}
 
   // 1) Paint anything we already have immediately.
   if(embedded&&(embedded.races||[]).length){
@@ -4415,10 +4438,49 @@ function load(force){
     })
   }
 
-  // 3) Details arrive separately and never block the home/venue list.
-  function requestDetails(attempt){return}
+  // 3) Load the entire day's D1 detail pack in the background. This powers
+  // strict selection / value selection on TOP before any race is opened.
+  function requestDetails(attempt){
+    attempt=n(attempt,0);
+    if(seq!==state.requestSeq||state.date!==d)return;
+    selectedRacePreload.date=d;selectedRacePreload.fullLoading=true;selectedRacePreload.lastError='';
+    selectedRacePreload.expectedCount=(state.races||[]).filter(function(r){return r&&r.id}).length;
+    fetch('https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='+encodeURIComponent(d)+'&details=1&t='+Date.now(),{cache:'no-store'})
+      .then(function(res){if(!res.ok)throw Error('cloudflare-details '+res.status);return res.json()})
+      .then(function(body){
+        if(seq!==state.requestSeq||state.date!==d)return;
+        var details=(body&&body.details)||[];
+        details.forEach(function(z){if(!z||!z.id)return;instantTrackDetails[String(z.id)]=z;saveDetailCache(z.id,z)});
+        var ids=(state.races||[]).filter(function(r){return r&&r.id}).map(function(r){return String(r.id)}),missing=ids.filter(function(id){return !instantTrackDetails[id]});
+        selectedRacePreload.expectedCount=ids.length||n(body&&body.raceCount,0);selectedRacePreload.loadedCount=Math.max(details.length,ids.length-missing.length);
+        function done(){
+          if(seq!==state.requestSeq||state.date!==d)return;
+          var remain=ids.filter(function(id){return !instantTrackDetails[id]});
+          selectedRacePreload.loadedCount=ids.length-remain.length;
+          selectedRacePreload.fullLoaded=ids.length>0&&remain.length===0;
+          selectedRacePreload.fullLoading=!selectedRacePreload.fullLoaded;
+          render();
+          if(!selectedRacePreload.fullLoaded&&attempt<5)setTimeout(function(){requestDetails(attempt+1)},900+attempt*350)
+        }
+        if(!missing.length){if(ids.length){selectedRacePreload.fullLoaded=true;selectedRacePreload.fullLoading=false;render();return}selectedRacePreload.fullLoading=true;render();if(attempt<5)setTimeout(function(){requestDetails(attempt+1)},700+attempt*300);return}
+        var cursor=0,workers=[],limit=Math.min(6,missing.length);
+        function worker(){
+          if(cursor>=missing.length)return Promise.resolve();
+          var id=missing[cursor++];
+          return fetchEdgeRace(id,false).then(function(z){if(z){instantTrackDetails[id]=z;saveDetailCache(id,z)}}).catch(function(){}).then(worker)
+        }
+        for(var wi=0;wi<limit;wi++)workers.push(worker());
+        Promise.all(workers).then(done).catch(done)
+      })
+      .catch(function(err){
+        if(seq!==state.requestSeq||state.date!==d)return;
+        selectedRacePreload.fullLoading=false;selectedRacePreload.lastError=String(err&&err.message||err||'');
+        if(attempt<5)setTimeout(function(){requestDetails(attempt+1)},1000+attempt*400);else render()
+      })
+  }
 
-  requestList(0)
+  requestList(0);
+  setTimeout(function(){requestDetails(0)},180)
 }
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
 installNavigation();installEdgeBack();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
@@ -11397,10 +11459,67 @@ def _site_bootstrap_payload(date:str,force:bool=False,wait:bool=False)->dict:
     current["servedFrom"]="local-immediate"
     return current
 
+def _force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
+    """GitHub collector path: refresh every race concurrently before the D1 push."""
+    started=time.time()
+    try:
+        _schedule_live_refresh(date,force=True)
+    except Exception:pass
+    try:
+        _schedule_central_refresh(date,force=True)
+    except Exception:pass
+    # Give the day-program refresh a brief head start; never spend the whole request waiting.
+    deadline=started+max(5.0,float(timeout_sec))
+    while time.time()<deadline and _bootstrap_sources_running(date):
+        if time.time()-started>3.0:break
+        time.sleep(.20)
+    rows=_bootstrap_rows_local(date)
+    if not rows:
+        return _site_bootstrap_payload(date,True,False)
+
+    def one(row):
+        rid=str(row.get("id") or "")
+        if not rid:return None
+        try:
+            d=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
+            # Missing card/history: hydrate the current card first.
+            if not _bootstrap_display_ready(d):
+                _hydrate_fast_card_now(rid,deep_history=False)
+            # Refresh official live fields for every current race, not only the race the user opened.
+            if date==_today_iso():
+                try:odds_refresh(rid,1)
+                except Exception as exc:print("full-day live field refresh failed",rid,exc)
+            # Rebuild diagnosis from everything already stored; network history remains background work.
+            try:_build_fast_diagnosis_snapshot(rid,allow_network=False,deep_context=False)
+            except Exception as exc:print("full-day diagnosis rebuild failed",rid,exc)
+            d=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
+            return _compact_display_snapshot(d) if d else None
+        except Exception as exc:
+            print("full-day race refresh failed",rid,exc)
+            return None
+
+    ex=ThreadPoolExecutor(max_workers=max(4,min(12,len(rows))))
+    futures=[ex.submit(one,r) for r in rows]
+    remaining=max(1.0,deadline-time.time())
+    try:wait(futures,timeout=remaining)
+    finally:ex.shutdown(wait=False,cancel_futures=True)
+
+    out=_assemble_day_bundle(date,allow_network_fill=False)
+    if out.get("displayComplete"):
+        try:DAY_BUNDLES.put(date,out,True)
+        except Exception:pass
+    out["forceLiveRefresh"]=True
+    out["forceElapsedMs"]=int((time.time()-started)*1000)
+    return out
+
 @app.get("/api/v1/site-bootstrap")
 def site_bootstrap(date: str = Query(...), force: int = Query(0), wait: int = Query(0)):
-    """Immediate local race list/details. Never waits on public sites or full diagnosis."""
-    return _site_bootstrap_payload(date,bool(force),False)
+    """Fast customer bootstrap; force=1 is the GitHub full-day collector path."""
+    if force:
+        try:return _force_day_live_snapshot(date,23.0)
+        except Exception as exc:
+            print("force day snapshot failed",date,exc)
+    return _site_bootstrap_payload(date,False,False)
 
 def _site_bootstrap_warm_loop():
     time.sleep(float(os.getenv("BOOTSTRAP_START_DELAY_SEC","2.5")))
