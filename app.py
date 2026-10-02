@@ -347,10 +347,10 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.49-v237-persistent-open-state")
+app = FastAPI(title="ARVEXQ", version="13.50-v238-stronger-conditions")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v23-v234-research-ensemble"
+PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v24-v238-stronger-conditions"
 AI_EVALUATION_VERSION = "evidence-v234-sectionals"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
@@ -2850,7 +2850,7 @@ function integratedGrades(r,rows){
   })
 }
 
-function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v23-v234-research-ensemble',researchAudit:{sectional:true,probabilityRegularization:true,marketConsensus:true,marketConsensusRealOddsOnly:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
+function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v24-v238-stronger-conditions',researchAudit:{sectional:true,probabilityRegularization:true,marketConsensus:true,marketConsensusRealOddsOnly:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -9707,15 +9707,21 @@ def _v218_tactical_roles(detail: dict, horses: list[dict], base_rows: list[dict]
             front_prob*front_fit+collapse_prob*collapse_fit+late_prob*late_fit+neutral_prob*neutral_fit
         ))
 
+        # v238: "今回条件" is deliberately stronger, with more weight on the
+        # race-specific facts (distance/course/going/class/draw) and less on
+        # generic connections.  This is still bounded and evidence-regularized
+        # downstream so one noisy condition cannot dominate the whole forecast.
         conditions=max(0.0,min(1.0,
-            .15*f.get('distance',.5)+.13*f.get('track',.5)+.12*f.get('going',.5)+
-            .13*f.get('class_fit',.5)+.09*f.get('draw_hist',.5)+.10*f.get('jockey_ctx',.5)+
-            .08*f.get('trainer_ctx',.5)+.07*f.get('freshness',.5)+.07*f.get('weight_delta',.5)+
-            .06*f.get('pace_fit',.5)
+            .18*f.get('distance',.5)+.15*f.get('track',.5)+.15*f.get('going',.5)+
+            .14*f.get('class_fit',.5)+.10*f.get('draw_hist',.5)+.08*f.get('jockey_ctx',.5)+
+            .06*f.get('trainer_ctx',.5)+.05*f.get('freshness',.5)+.04*f.get('weight_delta',.5)+
+            .05*f.get('pace_fit',.5)
         ))
         evidence=max(0.0,min(1.0,.62*f.get('evidence',.5)+.38*f.get('style_reliability',.5)))
 
-        p1_score=.29*pure+.26*true_run+.24*scenario+.17*conditions+.04*evidence
+        # v238: raise direct current-condition influence from 17% to 22%.
+        # PURE / TRUE RUN / scenario remain the majority, so this is a boost rather than an override.
+        p1_score=.27*pure+.24*true_run+.23*scenario+.22*conditions+.04*evidence
         p1_score=.5+(p1_score-.5)*(.58+.42*evidence)
         p1_raw.append(p1_score)
 
@@ -12312,7 +12318,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v237","appVersion":"13.49-v237-persistent-open-state",
+        "build":"v238","appVersion":"13.50-v238-stronger-conditions",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
