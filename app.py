@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.43-v231-day-detail-prefetch")
+app = FastAPI(title="ARVEXQ", version="13.45-v233-fast-reflect-horse-order")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v22-v220-compact-tickets"
@@ -2550,7 +2550,7 @@ function v207UsesWinnerModel(r){return String(r&&r.circuit||'')==='地方'}
 function assignEdgeEngine(r,rows,suit,sc,pressure){
   pressure=pressure||{};sc=sc||[];
   var field=Math.max(1,rows.length),uniform=1/field,p1Raw=[],publicRaw=[],role2Raw=[],role3Raw=[],i,x,no,su,q,fit,pace,shift,peak,trip,reset,resetLift,evidence,publicScore,p1Strength,p2Strength,p3Strength,top3Hist,winnerCore,winnerRisk,
-      oddsCount=0,popCount=0,coverageAvg=mean(rows.map(function(z){return n(z.coverage)})),temp=.074+(1-coverageAvg)*.045;
+      oddsCount=0,popCount=0,actualOddsCount=0,forecastOddsCount=0,coverageAvg=mean(rows.map(function(z){return n(z.coverage)})),temp=.074+(1-coverageAvg)*.045;
   var collapse=0,front=0;
   sc.forEach(function(z){if(z.code==='C')collapse=n(z.prob);if(z.code==='A')front=n(z.prob)});
   for(i=0;i<rows.length;i++){
@@ -2659,12 +2659,12 @@ function assignEdgeEngine(r,rows,suit,sc,pressure){
     x.winnerCore=winnerCore;x.winnerRisk=winnerRisk;x.winStrength=p1Strength;x.p2Strength=p2Strength;x.p3Strength=p3Strength;x.publicAppeal=publicScore;x.paceScore=Math.round(clamp(pace,0,1)*100);x.shiftScore=Math.round(shift*100);x.edgeEvidence=evidence;
     x.tacticalReset=reset.score;
     p1Raw.push(p1Strength);role2Raw.push(p2Strength);role3Raw.push(p3Strength);publicRaw.push(publicScore);
-    if(Number(x.horse.winOdds||0)>1)oddsCount++;
+    if(Number(x.horse.winOdds||0)>1){oddsCount++;if(x.horse.oddsForecast||/予想|forecast/i.test(String(x.horse.oddsSource||'')))forecastOddsCount++;else actualOddsCount++}
     if(n(x.horse.popularity,0)>0)popCount++
   }
   var v213Ready=v207UsesWinnerModel(r)&&rows.length&&rows.every(function(z){var e=z&&z.horse&&z.horse.integratedEvaluation||{};return isFinite(Number(e.v218P1Utility!=null?e.v218P1Utility:(e.v217P1Utility!=null?e.v217P1Utility:(e.v215P1Utility!=null?e.v215P1Utility:e.v213P1Utility))))&&isFinite(Number(e.v213P2Utility))&&isFinite(Number(e.v213P3Utility))}),p1P=v213Ready?edgeSoftmax(rows.map(function(z){var e=z.horse.integratedEvaluation||{};return Number(e.v218P1Utility!=null?e.v218P1Utility:(e.v217P1Utility!=null?e.v217P1Utility:(e.v215P1Utility!=null?e.v215P1Utility:e.v213P1Utility)))}),1):edgeSoftmax(p1Raw,temp),p2P=v213Ready?edgeSoftmax(rows.map(function(z){return Number((z.horse.integratedEvaluation||{}).v213P2Utility)}),1):edgeSoftmax(role2Raw,temp+.014),p3P=v213Ready?edgeSoftmax(rows.map(function(z){return Number((z.horse.integratedEvaluation||{}).v213P3Utility)}),1):edgeSoftmax(role3Raw,temp+.024),predMarket=edgeSoftmax(publicRaw,.105),market=[],marketSource='予測市場';
   if(oddsCount>=Math.max(2,Math.ceil(field*.75))){
-    marketSource='実オッズ';var imp=[],impSum=0;
+    marketSource=actualOddsCount>=Math.max(2,Math.ceil(field*.55))?'実オッズ':'予想オッズ';var imp=[],impSum=0;
     for(i=0;i<rows.length;i++){
       var od=Number(rows[i].horse.winOdds||0),v=od>1?1/od:predMarket[i]*.85;
       imp.push(v);impSum+=v
@@ -2761,16 +2761,14 @@ function strictSelectedRaceProfile(r,p){
       ranked=rows.slice().sort(function(a,b){return n(b.p1Probability)-n(a.p1Probability)}),topRows=ranked.slice(0,3),evidence=0,trueRun=0,conditions=0,positionScenario=0;
   topRows.forEach(function(x){var e=x&&x.horse&&x.horse.integratedEvaluation||{},a=e.v218Audit||e.v217Audit||x.v218Audit||x.v217Audit||{};evidence+=n(a.evidence,n(x.coverage));trueRun+=n(a.trueRun,.5);conditions+=n(a.conditions,.5);positionScenario+=n(a.positionScenario,.5)});
   var d=Math.max(1,topRows.length);evidence/=d;trueRun/=d;conditions/=d;positionScenario/=d;
-  var uniform=1/Math.max(1,field),topFloor=Math.max(.24,uniform*2.45),
-      passes={coverage:cov>=.76,top:top>=topFloor,top3:top3>=.74,margin:margin>=.055,entropy:ent<=.78,scenario:scenarioProb>=.40,evidence:evidence>=.62,trueRun:trueRun>=.50,conditions:conditions>=.48,position:positionScenario>=.48};
-  var selected=Object.keys(passes).every(function(k){return passes[k]});
-  var score=Math.round(clamp(
-    cov*.13+top*.20+top3*.18+clamp(margin/.16,0,1)*.15+(1-ent)*.12+scenarioProb*.08+evidence*.06+trueRun*.035+conditions*.025+positionScenario*.02,
-    0,1)*100);
-  var failed=Object.keys(passes).filter(function(k){return !passes[k]});
-  return{selected:selected,score:score,top:top,top3mass:top3,margin:margin,entropy:ent,coverage:cov,scenarioProb:scenarioProb,evidence:evidence,trueRun:trueRun,conditions:conditions,positionScenario:positionScenario,failed:failed,reason:selected?'厳選ゲート通過':('見送り: '+failed.join(',')),base:base,model:'v226-strict-selected'}
+  var uniform=1/Math.max(1,field),qCov=clamp((cov-.28)/.52,0,1),qTop3=clamp((top3-.46)/.34,0,1),qMargin=clamp(margin/.11,0,1),qEnt=clamp((.96-ent)/.30,0,1),qScenario=clamp((scenarioProb-.18)/.40,0,1),qEvidence=clamp((evidence-.25)/.55,0,1),qTrue=clamp((trueRun-.38)/.34,0,1),qCond=clamp((conditions-.38)/.34,0,1),qPos=clamp((positionScenario-.38)/.34,0,1);
+  var score=Math.round(clamp(qCov*.15+qTop3*.20+qMargin*.16+qEnt*.12+qScenario*.11+qEvidence*.10+qTrue*.06+qCond*.05+qPos*.05,0,1)*100),
+      hard=(cov>=.34&&top3>=.52&&evidence>=.28&&scenarioProb>=.18),
+      separation=(base.selected||top>=Math.max(.155,uniform*1.45)||margin>=.018),
+      selected=hard&&separation&&score>=48;
+  var failed=[];if(cov<.34)failed.push('coverage');if(top3<.52)failed.push('top3');if(evidence<.28)failed.push('evidence');if(scenarioProb<.18)failed.push('scenario');if(!separation)failed.push('separation');if(score<48)failed.push('score');
+  return{selected:selected,score:score,top:top,top3mass:top3,margin:margin,entropy:ent,coverage:cov,scenarioProb:scenarioProb,evidence:evidence,trueRun:trueRun,conditions:conditions,positionScenario:positionScenario,failed:failed,reason:selected?'厳選ゲート通過':('見送り: '+failed.join(',')),base:base,model:'v232-daily-strict-score'}
 }
-
 function assignPredictionMarks(rows,r){
   var field=Math.max(1,rows.length),uniform=1/field,sorted=rows.slice().sort(function(a,b){
     return n(b.winProbability)-n(a.winProbability)||n(b.overallRaw)-n(a.overallRaw)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)
@@ -2846,6 +2844,7 @@ function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
 function homeVenueMark(track){var t=String(track||"?");return '<span class="venue-mark">'+esc(t.slice(0,1))+'</span>'}
 function horseBodyWeightText(h){var w=currentBodyWeight(h);if(!w)return'';var ch=currentBodyWeightChange(h),s=w+'kg';if(ch!=null)s+=ch>0?' (+'+ch+')':' ('+ch+')';return s}
+function referenceBodyWeight(h){if(!h)return 0;var w=n(h.referenceBodyWeight,0);if(w>250&&w<800)return w;var rs=h.recentRaces||[];for(var i=0;i<rs.length;i++){w=n(rs[i]&&rs[i].bodyWeight,0);if(w>250&&w<800)return w}return 0}
 function horseCheckKey(r){return 'arvexq-horse-check-v217:'+String(r&&r.id||'unknown')}
 function horseCheckMap(r){try{var raw=localStorage.getItem(horseCheckKey(r));var obj=raw?JSON.parse(raw):{};return obj&&typeof obj==='object'?obj:{}}catch(e){return{}}}
 function isHorseChecked(r,no){var m=horseCheckMap(r);return !!m[String(n(no,0))]}
@@ -2975,35 +2974,39 @@ function refreshOddsOnly(force){
   if(!state.race||state.oddsBusy)return Promise.resolve(false);
   var id=String(state.race.id||'');if(!id)return Promise.resolve(false);
   state.oddsBusy=true;
-  var status=document.getElementById('odds-status');if(status)status.textContent=' オッズ・馬体重更新中…';
+  var status=document.getElementById('odds-status');if(status)status.textContent=' 最新データ確認中…';
   return fetchEdgeRace(id,true).then(function(fresh){
     if(!fresh||!state.race||String(state.race.id)!==id)return false;
-    var by={},changed=false;
-    (fresh.horses||[]).forEach(function(h){if(n(h.horseNumber)>0)by[n(h.horseNumber)]=h});
-    (state.race.horses||[]).forEach(function(h){var z=by[n(h.horseNumber)];if(!z)return;['winOdds','popularity','bodyWeight','bodyWeightChange','status','scratched'].forEach(function(k){if(z[k]!=null&&z[k]!==''&&h[k]!==z[k]){h[k]=z[k];changed=true}});if(z.oddsSource)h.oddsSource=z.oddsSource});
-    if(fresh.result&&JSON.stringify(fresh.result)!==JSON.stringify(state.race.result||null)){state.race.result=fresh.result;changed=true}
-    if(fresh.oddsSource)state.race.oddsSource=fresh.oddsSource;
-    if(fresh.oddsUpdatedAt)state.race.oddsUpdatedAt=fresh.oddsUpdatedAt;
-    if(changed){try{delete state.race._prediction}catch(e){}state.pred=null;saveDetailCache(id,state.race);render()}
-    else{var st=document.getElementById('odds-status');if(st)st.textContent=(raceBodyWeightComplete(state.race)&&raceOddsComplete(state.race))?' オッズ・馬体重取得済み':' オッズ・馬体重更新待ち'}
+    var before='';try{before=JSON.stringify(state.race)}catch(e){}
+    var next=applySummaryEnvironment(fresh),after='';try{after=JSON.stringify(next)}catch(e){}
+    var changed=!before||!after||before!==after;
+    if(changed){
+      state.race=next;
+      instantTrackDetails[id]=next;
+      try{delete state.race._prediction}catch(e){}
+      state.pred=null;
+      saveDetailCache(id,state.race);
+      render()
+    }else{
+      var st=document.getElementById('odds-status');
+      if(st)st.textContent=(raceBodyWeightComplete(state.race)&&raceOddsComplete(state.race))?' 最新データ反映済み':' オッズ・馬体重更新待ち'
+    }
     return changed
-  }).catch(function(){var st=document.getElementById('odds-status');if(st)st.textContent=' オッズ・馬体重更新待ち';return false}).finally(function(){state.oddsBusy=false})
+  }).catch(function(){var st=document.getElementById('odds-status');if(st)st.textContent=' 更新待ち';return false}).finally(function(){state.oddsBusy=false})
 }
 function ensureAutoOdds(r){
   if(!r)return;
   if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}
   if(r.date!==today())return;
   var start=mins(r.startTime),remain=start-nowMins(),after=start<9999?nowMins()-start:-9999;
-  var needWeight=!raceBodyWeightComplete(r);
-  var needOdds=!raceOddsComplete(r);
+  var needWeight=!raceBodyWeightComplete(r),needOdds=!raceOddsComplete(r);
   var needResult=start<9999&&after>=0&&after<=90&&!isFinal(r);
-  if(!needWeight&&!needOdds&&!needResult)return;
-  var delay=needResult?15000:(remain<=45?15000:45000);
+  if(isFinal(r))return;
+  var delay=needResult?4000:((needWeight||needOdds)?5000:(remain>0?8000:5000));
   state.oddsTimer=setTimeout(function(){
     if(state.race&&String(state.race.id)===String(r.id))refreshOddsOnly(false)
   },delay)
 }
-
 function overallScoreText(x){var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
 function aiBetStoreKey(id){return 'arvexq:prebet:v220:'+String(id||'')}
 function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){['v218','v217','v215','v213','v212','v211','v210','v207','v205','v181','v180'].forEach(function(v){keys.push('arvexq:prebet:'+v+':'+String(id||''))})}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
@@ -3224,14 +3227,14 @@ function aiMarksPanel(r,p){
 }
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
-  var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.overallRank,999)-n(b.overallRank,999)||n(b.overallRaw)-n(a.overallRaw)||n(b.overallScore)-n(a.overallScore)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
+  var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse&&a.horse.horseNumber,999)-n(b.horse&&b.horse.horseNumber,999)});
   var details='<div class="diagnosis-merged-list">'+rows.map(function(x,i){
-    var h=x.horse,e=x.evaluation||{},confidence=esc(e.confidence||'低'),rank=n(x.overallRank,i+1),bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中');
+    var h=x.horse,e=x.evaluation||{},confidence=esc(e.confidence||'低'),rank=n(x.overallRank,i+1),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,bwLabel=bw?bw:(refbw?('前走 '+refbw+'kg'):(isFinal(r)?'結果確認中':'計量待ち'));
     var reason=(x.overallReasons||[]).join(' / ')+(n(x.bombScore)>=65?' / BOMB '+n(x.bombScore)+' EDGE '+n(x.edgeScore)+' '+(x.upsetReasons||[]).slice(0,2).join('・'):'')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:'');
     return '<article class="horse-card diagnosis-merged-row">'
       +'<div class="diagnosis-merged-head">'
         +'<span class="diag-check-cell"><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span></span>'
-        +'<button class="diagnosis-horse-main" data-detail-horse="'+esc(h.horseNumber)+'">'+badge(h)+'<span class="diagnosis-horse-name"><b>'+esc(h.name)+'</b><small>'+rank+'位　馬体重 '+esc(bw)+'</small></span></button>'
+        +'<button class="diagnosis-horse-main" data-detail-horse="'+esc(h.horseNumber)+'">'+badge(h)+'<span class="diagnosis-horse-name"><b>'+esc(h.name)+'</b><small>総合'+rank+'位　馬体重 '+esc(bwLabel)+'</small></span></button>'
         +'<span class="diagnosis-eval"><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><b>'+esc(overallScoreText(x))+'</b><i class="diagnosis-ai-mark" data-ai-mark="'+esc(x.predMark||'')+'">'+esc(x.predMark||'—')+'</i></span>'
       +'</div>'
       +'<div class="diag-confidence">データ信頼度 <strong>'+confidence+'</strong>　勝率 '+(n(x.winProbability)*100).toFixed(1)+'% / 市場 '+(n(x.marketProbability)*100).toFixed(1)+'%</div>'
@@ -3400,7 +3403,7 @@ function aiStatsDayTitle(){
   return (m&&d)?(m+'月'+d+'日のAI成績'):'当日のAI成績'
 }
 
-var selectedRacePreload={date:'',busy:{},done:{},timer:null,fullLoaded:false,fullLoading:false,loadedCount:0,expectedCount:0,lastError:''};
+var selectedRacePreload={date:'',busy:{},done:{},timer:null,fullLoaded:false,fullLoading:false,loadedCount:0,expectedCount:0,lastError:''},fastTopRefresh=null;
 function selectedRaceLoadStatus(){
   var expected=n(selectedRacePreload.expectedCount,0)||(state.races||[]).filter(function(r){return r&&r.id}).length,loaded=n(selectedRacePreload.loadedCount,0);
   return{expected:expected,loaded:loaded,complete:!!selectedRacePreload.fullLoaded,loading:!!selectedRacePreload.fullLoading,error:selectedRacePreload.lastError||''}
@@ -3411,8 +3414,8 @@ function selectionStatusCard(kind){
     return '<section class="smart-selected-status '+(isValue?'smart-value-status':'')+'"><div><b>'+title+'</b><small>全レースAI判定用データを読込中 '+st.loaded+'/'+st.expected+'</small></div><em>選定中</em></section>'
   }
   if(isValue){
-    var eligible=(state.races||[]).filter(function(r){if(!r||!r.id||isFinal(r))return false;var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d)return false;var hs=(d.horses||[]).filter(function(h){return !isScratchHorse(h)});return hs.length&&hs.filter(function(h){return n(h.winOdds)>1}).length>=Math.max(3,Math.ceil(hs.length*.75))}).length;
-    return '<section class="smart-selected-status smart-value-status"><div><b>'+title+'</b><small>厳格基準の通過なし・公式オッズ判定可能 '+eligible+'/'+st.expected+'レース</small></div><em>0レース</em></section>'
+    var eligible=(state.races||[]).filter(function(r){if(!r||!r.id||isFinal(r))return false;var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d)return false;var hs=(d.horses||[]).filter(function(h){return !isScratchHorse(h)});return hs.length&&hs.filter(function(h){return n(h.winOdds)>1}).length>=Math.max(3,Math.ceil(hs.length*.65))}).length;
+    return '<section class="smart-selected-status smart-value-status"><div><b>'+title+'</b><small>厳格基準の通過なし・オッズ判定可能 '+eligible+'/'+st.expected+'レース</small></div><em>0レース</em></section>'
   }
   return '<section class="smart-selected-status"><div><b>'+title+'</b><small>全レース判定済み・厳選ゲート通過なし</small></div><em>0レース</em></section>'
 }
@@ -3434,24 +3437,25 @@ function selectedRaceCandidates(){
     var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d))return;
     var p=predict(d),t=strictSelectedRaceProfile(d,p);if(t.selected)add(r,t)
   }catch(e){}});
-  return Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){return n(b.selection&&b.selection.score)-n(a.selection&&a.selection.score)||mins(a.race.startTime)-mins(b.race.startTime)||String(a.race.track).localeCompare(String(b.race.track),'ja')})
+  return Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){return n(b.selection&&b.selection.score)-n(a.selection&&a.selection.score)||mins(a.race.startTime)-mins(b.race.startTime)||String(a.race.track).localeCompare(String(b.race.track),'ja')}).slice(0,4)
 }
 function expectedValueRaceProfile(r,p){
   var rows=(p&&p.rows||[]).slice(),field=rows.length,cov=n(p&&p.coverage,0),uniform=1/Math.max(1,field);
-  if(field<5||cov<.68)return{selected:false,score:0,reason:'データ不足'};
-  var actualOdds=rows.filter(function(x){return x&&x.marketSource==='実オッズ'&&n(x.horse&&x.horse.winOdds)>1}).length;
-  if(actualOdds<Math.max(3,Math.ceil(field*.75)))return{selected:false,score:0,reason:'実オッズ不足'};
+  if(field<5||cov<.42)return{selected:false,score:0,reason:'データ不足'};
+  var withOdds=rows.filter(function(x){return n(x.horse&&x.horse.winOdds)>1}),actual=withOdds.filter(function(x){return !(x.horse&&x.horse.oddsForecast)&&!/予想|forecast/i.test(String(x.horse&&x.horse.oddsSource||''))}),need=Math.max(3,Math.ceil(field*.65)),mode=actual.length>=need?'actual':(withOdds.length>=need?'forecast':'');
+  if(!mode)return{selected:false,score:0,reason:'オッズ取得中'};
   var candidates=rows.map(function(x){
     var odds=n(x.horse&&x.horse.winOdds,0),pwin=n(x.p1Probability,0),ev=odds>1?pwin*odds:0,
-        edge=n(x.edgeScore,0),evidence=n(x.edgeEvidence,0),rank=n(x.winRank,999);
-    return{x:x,odds:odds,pwin:pwin,ev:ev,edge:edge,evidence:evidence,rank:rank}
+        edge=n(x.edgeScore,0),evidence=n(x.edgeEvidence,0),rank=n(x.winRank,999),forecast=!!(x.horse&&x.horse.oddsForecast)||/予想|forecast/i.test(String(x.horse&&x.horse.oddsSource||''));
+    return{x:x,odds:odds,pwin:pwin,ev:ev,edge:edge,evidence:evidence,rank:rank,forecast:forecast}
   }).filter(function(z){
-    return z.odds>1&&z.ev>=1.18&&z.edge>=62&&z.evidence>=.55&&z.pwin>=Math.max(.055,uniform*.65)&&z.rank<=5
+    var evMin=mode==='actual'?1.12:1.22,edgeMin=mode==='actual'?57:60,evidenceMin=mode==='actual'?.38:.42;
+    return z.odds>1&&z.ev>=evMin&&z.edge>=edgeMin&&z.evidence>=evidenceMin&&z.pwin>=Math.max(.045,uniform*.55)&&z.rank<=5&&(mode==='forecast'||!z.forecast)
   }).sort(function(a,b){return b.ev-a.ev||b.edge-a.edge||b.pwin-a.pwin});
-  if(!candidates.length)return{selected:false,score:0,reason:'期待値基準未達'};
+  if(!candidates.length)return{selected:false,score:0,reason:'期待値基準未達',mode:mode};
   var best=candidates[0],evEdge=best.ev-1,
-      score=Math.round(clamp(clamp(evEdge/.75,0,1)*.42+clamp((best.edge-60)/30,0,1)*.23+best.evidence*.15+cov*.12+clamp(best.pwin/Math.max(uniform*2,.12),0,1)*.08,0,1)*100);
-  return{selected:true,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,edge:best.edge,evidence:best.evidence,coverage:cov,reason:'実オッズに対してAI勝率が上回る',model:'v227-live-value'}
+      score=Math.round(clamp(clamp(evEdge/.75,0,1)*.42+clamp((best.edge-55)/35,0,1)*.23+best.evidence*.15+cov*.12+clamp(best.pwin/Math.max(uniform*2,.12),0,1)*.08,0,1)*100);
+  return{selected:true,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,edge:best.edge,evidence:best.evidence,coverage:cov,mode:mode,reason:mode==='actual'?'実オッズに対してAI勝率が上回る':'予想オッズに対してAI勝率が上回る',model:'v232-live-value'}
 }
 function expectedValueRaceCandidates(){
   var all=(state.races||[]).filter(function(r){return r&&r.id}),out=[];
@@ -3465,7 +3469,7 @@ function expectedValueRaceCandidates(){
 }
 function smartExpectedValueRaces(){
   var picks=expectedValueRaceCandidates();if(!picks.length)return selectionStatusCard('value');
-  return '<details class="smart-selected-races smart-value-races"><summary><span><b>期待値高レース</b><small>実オッズ×AI勝率でプラス期待値が大きいレースのみ</small></span><em>'+picks.length+'レース　開く ›</em></summary><div class="smart-selected-list">'+picks.map(function(z){var r=z.race,v=z.value||{},evPct=Math.round((n(v.ev)-1)*100);return '<button type="button" class="smart-selected-row" data-race="'+esc(r.id)+'"><div class="selected-race-head"><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><time>'+esc(r.startTime||'--:--')+'</time></div><div class="selected-race-title">'+esc(r.title||'')+'</div><div class="selected-tags"><span>期待値 +'+esc(evPct)+'%</span><span>'+esc(v.horseNo)+' '+esc(v.horseName)+'</span><span>AI '+(n(v.pwin)*100).toFixed(1)+'%</span><span>単勝 '+n(v.odds).toFixed(1)+'</span></div></button>'}).join('')+'</div></details>'
+  return '<details class="smart-selected-races smart-value-races"><summary><span><b>期待値高レース</b><small>実オッズ優先・未反映時は予想オッズで先行判定</small></span><em>'+picks.length+'レース　開く ›</em></summary><div class="smart-selected-list">'+picks.map(function(z){var r=z.race,v=z.value||{},evPct=Math.round((n(v.ev)-1)*100);return '<button type="button" class="smart-selected-row" data-race="'+esc(r.id)+'"><div class="selected-race-head"><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><time>'+esc(r.startTime||'--:--')+'</time></div><div class="selected-race-title">'+esc(r.title||'')+'</div><div class="selected-tags"><span>期待値 +'+esc(evPct)+'%</span><span>'+esc(v.horseNo)+' '+esc(v.horseName)+'</span><span>AI '+(n(v.pwin)*100).toFixed(1)+'%</span><span>'+(v.mode==='forecast'?'予想単勝 ':'単勝 ')+n(v.odds).toFixed(1)+'</span></div></button>'}).join('')+'</div></details>'
 }
 
 function selectedRaceBetPreview(r){
@@ -4004,9 +4008,9 @@ function positionBucket(x){if(x.expected==="逃げ候補")return"逃げ候補";i
 function stylePositionMap(r,p){var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)}),labels=['逃げ候補','先行','好位','中団','後方','不明'],field=Math.max(1,(r.horses||[]).length),html='<div class="style-position-map"><div class="style-map-axis"><span>内枠</span><b>脚質マップ＋枠順</b><span>外枠</span></div>';for(var j=0;j<labels.length;j++){var lab=labels[j];html+='<div class="style-lane"><div class="style-lane-label">'+lab+'</div><div class="style-lane-track">';for(var i=0;i<rows.length;i++){var x=rows[i],h=x.horse;if(positionBucket(x)!==lab)continue;var left=field<=1?50:6+(n(h.horseNumber)-1)/Math.max(1,field-1)*88,shift=x.pastStyle!==x.expected&&!(x.pastStyle==='先行'&&x.expected==='好位');html+='<span class="style-map-horse'+(shift?' shifted':'')+'" style="left:'+left+'%" title="'+esc(h.name)+'｜過去 '+esc(x.pastStyle)+' → 今回 '+esc(x.expected)+'｜'+esc(x.frontLineRole||'')+'">'+badge(h)+'</span>'}html+='</div></div>'}html+='<div class="style-map-note"><b>水色縁</b>＝過去脚質から今回条件で位置想定が動いた馬。馬番順で内→外を維持。</div>';html+='<div class="style-map-rate-list">'+rows.map(function(x){var h=x.horse,ps=styleDisplayPcts(x),fade=x.styleSamples?Math.round(x.fade*100):null;function cell(l,v,cls){return'<span class="style-map-rate-cell '+(cls||'')+'">'+l+'<strong class="'+(cls==='fade'&&v!=null&&v>=55?'high':'')+'">'+(v==null?'—':v+'%')+'</strong></span>'}return'<div class="style-map-rate-row"><span class="style-map-rate-horse">'+badge(h)+'<b>'+esc(h.name||'')+'</b></span>'+cell('逃',ps[0])+cell('先',ps[1])+cell('差',ps[2])+cell('追',ps[3])+cell('下',fade,'fade')+'</div>'}).join('')+'</div>';var arr=p.arrangement||{};html+='<div class="style-map-summary"><b>先行列：</b>'+esc(arr.pattern||'—')+'　<b>配置：</b>'+esc(arr.concentrationText||'—')+'　<b>初角まで：</b>'+Math.round(firstTurnDistance(r))+'m'+((r.firstTurnDistance||r.startToFirstTurn||r.firstCornerDistance||r.firstCornerMeters)?'':'（コース推定）')+'</div></div>';return html}
 function runnerStyleSection(r,p){
   function oddsCells(h){
-    var ok=h&&h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0,o=ok?n(h.winOdds):0,pop=n(h&&h.popularity,0);
-    var os=ok?(Math.round(o*10)/10).toFixed(1):'--.-';
-    return '<span class="odd '+(o>0&&o<10?'single':'')+'">'+esc(os)+'</span><span class="pop">'+(pop>0?esc(pop)+'人気':'--人気')+'</span>';
+    var ok=h&&h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0,o=ok?n(h.winOdds):0,pop=n(h&&h.popularity,0),forecast=!!(h&&h.oddsForecast)||/予想|forecast/i.test(String(h&&h.oddsSource||''));
+    var os=ok?(Math.round(o*10)/10).toFixed(1):'取得中';
+    return '<span class="odd '+(o>0&&o<10?'single':'')+'">'+esc(os)+'</span><span class="pop">'+(forecast?'予想 ':'')+(pop>0?esc(pop)+'人気':(ok?'参考':'更新中'))+'</span>';
   }
   var diagnosisReady=diagnosisCurrent(r),cadenceText=(raceBodyWeightComplete(r)&&raceOddsComplete(r))?'オッズ・馬体重取得済み':'オッズ・馬体重を自動取得';
   return '<section class="card"><h2>出走表</h2><button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
@@ -4014,12 +4018,12 @@ function runnerStyleSection(r,p){
     +'<div class="racecard-table">'
     +(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
       var scratch=isScratchHorse(h),x=(p.rows||[]).find(function(z){return n(z.horse.horseNumber)===n(h.horseNumber)});
-      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=horseBodyWeightText(h),st=String(h.status||'欠場');
+      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,st=String(h.status||'欠場');
       return '<div class="racecard-row'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
         +'<span class="rc-check-cell"><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span></span>'
         +'<span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span>'
         +'<span class="rc-horse">'
-          +'<span class="rc-horse-top"><b class="rc-horse-name">'+esc(h.name)+'</b>'+(scratch?'<small class="rc-scratch">'+esc(st)+'</small>':'<small class="rc-bodyweight '+(bw?'':'pending')+'">馬体重 '+esc(bw||'未発表')+'</small>')+'</span>'
+          +'<span class="rc-horse-top"><b class="rc-horse-name">'+esc(h.name)+'</b>'+(scratch?'<small class="rc-scratch">'+esc(st)+'</small>':'<small class="rc-bodyweight '+(bw?'':'pending')+'">'+(bw?('馬体重 '+esc(bw)):(refbw?('前走 '+esc(refbw)+'kg'):'計量待ち'))+'</small>')+'</span>'
           +'<span class="rc-horse-meta"><span class="rc-meta-left"><i class="rc-inline-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</i><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span></span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">斤量 '+esc(carriedWeightText(h))+'</span></span>'
         +'</span>'
         +'<span class="rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</span>'
@@ -4339,6 +4343,7 @@ function load(force){
       full=force?null:loadFullBundle(d),
       listCache=force?null:loadRaceCache(d,'__ALL__');
   state.error=null;state.bootstrapReady=false;state.bootstrapProgress=null;
+  if(selectedRacePreload.timer){clearTimeout(selectedRacePreload.timer);selectedRacePreload.timer=null}
   if(selectedRacePreload.date!==d){selectedRacePreload={date:d,busy:{},done:{},timer:null,fullLoaded:false,fullLoading:false,loadedCount:0,expectedCount:0,lastError:''}}
 
   // 1) Paint anything we already have immediately.
@@ -4445,11 +4450,22 @@ function load(force){
     if(seq!==state.requestSeq||state.date!==d)return;
     selectedRacePreload.date=d;selectedRacePreload.fullLoading=true;selectedRacePreload.lastError='';
     selectedRacePreload.expectedCount=(state.races||[]).filter(function(r){return r&&r.id}).length;
+    function scheduleTopRefresh(){
+      if(selectedRacePreload.timer){clearTimeout(selectedRacePreload.timer);selectedRacePreload.timer=null}
+      if(d===today())selectedRacePreload.timer=setTimeout(function(){
+        if(seq===state.requestSeq&&state.date===d&&!state.race&&!state.track&&!state.picker)requestDetails(0)
+      },6000)
+    }
     fetch('https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='+encodeURIComponent(d)+'&details=1&t='+Date.now(),{cache:'no-store'})
       .then(function(res){if(!res.ok)throw Error('cloudflare-details '+res.status);return res.json()})
       .then(function(body){
         if(seq!==state.requestSeq||state.date!==d)return;
-        var details=(body&&body.details)||[];
+        var details=(body&&body.details)||[],summaryRows=(body&&body.races)||[];
+        if(summaryRows.length){
+          var oldBy={};(state.races||[]).forEach(function(x){if(x&&x.id)oldBy[String(x.id)]=x});
+          state.races=summaryRows.map(function(z){var old=oldBy[String(z.id)]||{};return Object.assign({},old,z)});
+          saveRaceCache(d,'__ALL__',state.races)
+        }
         details.forEach(function(z){if(!z||!z.id)return;instantTrackDetails[String(z.id)]=z;saveDetailCache(z.id,z)});
         var ids=(state.races||[]).filter(function(r){return r&&r.id}).map(function(r){return String(r.id)}),missing=ids.filter(function(id){return !instantTrackDetails[id]});
         selectedRacePreload.expectedCount=ids.length||n(body&&body.raceCount,0);selectedRacePreload.loadedCount=Math.max(details.length,ids.length-missing.length);
@@ -4460,9 +4476,10 @@ function load(force){
           selectedRacePreload.fullLoaded=ids.length>0&&remain.length===0;
           selectedRacePreload.fullLoading=!selectedRacePreload.fullLoaded;
           render();
+          if(selectedRacePreload.fullLoaded)scheduleTopRefresh();
           if(!selectedRacePreload.fullLoaded&&attempt<5)setTimeout(function(){requestDetails(attempt+1)},900+attempt*350)
         }
-        if(!missing.length){if(ids.length){selectedRacePreload.fullLoaded=true;selectedRacePreload.fullLoading=false;render();return}selectedRacePreload.fullLoading=true;render();if(attempt<5)setTimeout(function(){requestDetails(attempt+1)},700+attempt*300);return}
+        if(!missing.length){if(ids.length){selectedRacePreload.fullLoaded=true;selectedRacePreload.fullLoading=false;render();scheduleTopRefresh();return}selectedRacePreload.fullLoading=true;render();if(attempt<5)setTimeout(function(){requestDetails(attempt+1)},700+attempt*300);return}
         var cursor=0,workers=[],limit=Math.min(6,missing.length);
         function worker(){
           if(cursor>=missing.length)return Promise.resolve();
@@ -4479,10 +4496,23 @@ function load(force){
       })
   }
 
+  fastTopRefresh=function(){
+    if(seq!==state.requestSeq||state.date!==d)return;
+    requestList(0);requestDetails(0)
+  };
   requestList(0);
-  setTimeout(function(){requestDetails(0)},180)
+  setTimeout(function(){requestDetails(0)},120)
 }
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
+function fastReflectNow(){
+  if(document.visibilityState==='hidden')return;
+  try{
+    if(state.race&&state.race.id){refreshOddsOnly(true);return}
+    if(!state.track&&!state.picker&&typeof fastTopRefresh==='function')fastTopRefresh()
+  }catch(e){}
+}
+window.addEventListener('pageshow',function(){setTimeout(fastReflectNow,120)},{passive:true});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')setTimeout(fastReflectNow,120)},{passive:true});
 installNavigation();installEdgeBack();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
 })();
 """
@@ -6793,6 +6823,66 @@ def central_race_summaries(iso_date: str, allow_network: bool = False, force: bo
     return out
 
 NAR_BABA_CODES={"帯広ば":"03","帯広":"03","盛岡":"10","水沢":"11","浦和":"18","船橋":"19","大井":"20","川崎":"21","金沢":"22","笠松":"23","名古屋":"24","園田":"27","姫路":"28","高知":"31","佐賀":"32","門別":"36"}
+NAR_NETKEIBA_CODES={"門別":"30","盛岡":"35","水沢":"36","浦和":"42","船橋":"43","大井":"44","川崎":"45","金沢":"46","笠松":"47","名古屋":"48","園田":"50","姫路":"51","高知":"54","佐賀":"55"}
+
+def _nar_netkeiba_race_id(iso_date:str,track:str,race_no:int)->str:
+    code=NAR_NETKEIBA_CODES.get(str(track or '').strip())
+    m=re.match(r'^(20\d{2})-(\d{2})-(\d{2})$',str(iso_date or ''))
+    if not code or not m or int(race_no)<=0:return ''
+    return f"{m.group(1)}{code}{m.group(2)}{m.group(3)}{int(race_no):02d}"
+
+def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
+    """Fallback before NAR live odds/weights appear: use netkeiba's current NAR card.
+    Predicted odds are explicitly tagged and are replaced by official live odds later.
+    """
+    rid=_nar_netkeiba_race_id(str(detail.get('date') or ''),str(detail.get('track') or ''),int(detail.get('raceNumber') or 0))
+    if not rid:return {}
+    url=f"https://nar.netkeiba.com/race/shutuba.html?race_id={rid}"
+    if force:url+=f"&t={int(time.time()*1000)}"
+    try:html=_netkeiba_get(url,float(os.getenv('NETKEIBA_NAR_TIMEOUT_SEC','3.5')),0 if force else 30)
+    except Exception as exc:
+        print('NAR netkeiba preview failed',rid,exc);return {}
+    soup=BeautifulSoup(html,'html.parser');full=_clean(soup.get_text(' ',strip=True));forecast_page='予想オッズ' in full
+    out={}
+    for tr in soup.select('tr.HorseList'):
+        txt=_clean(tr.get_text(' ',strip=True));no=0
+        um=tr.find('td',class_=re.compile(r'Umaban',re.I))
+        if um:
+            mm=re.search(r'\d{1,2}',_clean(um.get_text(' ',strip=True)));no=int(mm.group()) if mm else 0
+        if not no:
+            mm=re.match(r'\D*(\d{1,2})\D+',txt);no=int(mm.group(1)) if mm else 0
+        if not no:continue
+        odd=None;pop=None
+        os=tr.find('span',id=re.compile(r'^odds-1_'))
+        ns=tr.find('span',id=re.compile(r'^ninki-1_'))
+        if os:
+            mo=re.search(r'\d+(?:\.\d+)?',_clean(os.get_text(' ',strip=True)));odd=float(mo.group()) if mo else None
+        if ns:
+            mp=re.search(r'\d+',_clean(ns.get_text(' ',strip=True)));pop=int(mp.group()) if mp else None
+        if odd is None:
+            mo=re.search(r'(?<!\d)(\d{1,3}(?:\.\d+)?)\s*[（(]\s*(\d{1,2})人気\s*[）)]',txt)
+            if mo:odd=float(mo.group(1));pop=int(mo.group(2))
+        bw=None;chg=None
+        wt=tr.select_one('td.Weight')
+        wtxt=_clean(wt.get_text(' ',strip=True)) if wt else txt
+        bm=re.search(r'(?<!\d)(\d{3})\s*kg?\s*[（(]\s*([+\-]?\d+)\s*[）)]',wtxt)
+        if not bm:bm=re.search(r'(?<!\d)(\d{3})\s*[（(]\s*([+\-]?\d+)\s*[）)]',wtxt)
+        if bm:bw=int(bm.group(1));chg=int(bm.group(2))
+        if odd is None and bw is None:continue
+        z={}
+        if odd and odd>1:
+            z.update({'winOdds':odd,'popularity':pop,'oddsSource':'netkeiba予想オッズ' if forecast_page else 'netkeiba実オッズ','oddsForecast':bool(forecast_page)})
+        if bw:
+            z['bodyWeight']=bw;z['bodyWeightChange']=chg
+        out[no]=z
+    return out
+
+def _reference_weight_from_horse(h:dict)->tuple[int|None,str]:
+    for rr in (h.get('recentRaces') or []):
+        try:w=int(rr.get('bodyWeight') or 0)
+        except Exception:w=0
+        if 250<w<800:return w,str(rr.get('date') or '')
+    return None,''
 _nar_odds_cache_lock=threading.Lock()
 _nar_odds_cache:dict[str,tuple[float,dict]]={}
 
@@ -11860,6 +11950,29 @@ def odds_refresh(race_id:str, force: int = Query(0)):
                             if z.get(k) in (None,"") and h.get(k) not in (None,""):z[k]=h.get(k)
                     if merged and not odds:source="NAR公式出馬表"
                 except Exception as exc:print("NAR official body weight fallback failed",race_id,exc)
+            # v232: before official live odds/weights are posted, fill the screen with
+            # netkeiba NAR predicted odds and any current weight already exposed there.
+            try:
+                detail=dict(saved or {})
+                detail.update({"id":race_id,"date":m.group(1),"track":m.group(2),"raceNumber":int(m.group(3))})
+                nk=_nar_netkeiba_preview_rows(detail,bool(force)) or {}
+                for no,z0 in nk.items():
+                    z=merged.setdefault(int(no),{})
+                    official_live=bool(z.get("winOdds") and not z.get("oddsForecast"))
+                    if not official_live and z0.get("winOdds"):
+                        z["winOdds"]=z0.get("winOdds");z["popularity"]=z0.get("popularity");z["oddsSource"]=z0.get("oddsSource");z["oddsForecast"]=bool(z0.get("oddsForecast"))
+                    for k in ("bodyWeight","bodyWeightChange"):
+                        if z.get(k) in (None,"") and z0.get(k) not in (None,""):z[k]=z0.get(k)
+                if nk and not odds:source="netkeiba予想オッズ"
+            except Exception as exc:print("NAR netkeiba preview fallback failed",race_id,exc)
+            # Always attach a truthful previous-race weight reference while current weigh-in is pending.
+            if saved:
+                saved_by={int(h.get("horseNumber") or 0):h for h in (saved.get("horses") or [])}
+                for no,h0 in saved_by.items():
+                    z=merged.setdefault(no,{})
+                    if not z.get("bodyWeight"):
+                        rw,rd=_reference_weight_from_horse(h0)
+                        if rw:z["referenceBodyWeight"]=rw;z["referenceBodyWeightDate"]=rd
             if saved and _snapshot_final(saved):
                 for f in ((saved.get("result") or {}).get("finishers") or []):
                     no=int(f.get("horseNumber") or 0)
@@ -11869,7 +11982,7 @@ def odds_refresh(race_id:str, force: int = Query(0)):
                         if z.get(k) in (None,"") and f.get(k) not in (None,""):z[k]=f.get(k)
             for no,z in sorted(merged.items()):
                 horses.append({"horseNumber":int(no),**{k:v for k,v in z.items() if v is not None}})
-            if not source:source="NAR公式" if odds else ("NAR公式出馬表" if horses else "")
+            if not source:source="NAR公式" if odds else (next((str(z.get("oddsSource") or "") for z in merged.values() if z.get("oddsSource")),"") or ("NAR公式出馬表" if horses else ""))
     else:
         mm=re.match(r"^jra-(20\d{2}-\d{2}-\d{2})-([^\-]+)-(\d{2})$",race_id)
         detail={}
@@ -11940,8 +12053,9 @@ def odds_refresh(race_id:str, force: int = Query(0)):
                 by_no={int(h.get("horseNumber") or 0):h for h in horses}
                 for h in snapshot.get("horses",[]):
                     update=by_no.get(int(h.get("horseNumber") or 0),{})
-                    for key in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched"):
+                    for key in ("winOdds","popularity","bodyWeight","bodyWeightChange","oddsForecast","referenceBodyWeight","referenceBodyWeightDate","status","scratched"):
                         if update.get(key) is not None:h[key]=update[key]
+                    if update.get("oddsSource"):h["oddsSource"]=update.get("oddsSource")
                 snapshot["oddsSource"]=source
                 snapshot["oddsUpdatedAt"]=_now_jst().strftime("%H:%M:%S")
                 PREPARED_STORE.put(snapshot,force=True)
@@ -12132,7 +12246,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v230","appVersion":"13.33-v230-balanced-tabs",
+        "build":"v233","appVersion":"13.45-v233-fast-reflect-horse-order",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
