@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.03-v303-nested-picks")
+app = FastAPI(title="ARVEXQ", version="14.04-v304-elite-chronological")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v50-final"
@@ -490,7 +490,7 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
-<link rel="stylesheet" href="/styles-arvexq-v303.css">
+<link rel="stylesheet" href="/styles-arvexq-v304.css">
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
@@ -498,7 +498,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script src="/app-v303.js"></script>
+<script src="/app-v304.js"></script>
 </body>
 </html>"""
 
@@ -2157,8 +2157,8 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(sessionStorage.getItem("arvexq-sw-reload")!=="v303-nested-picks"){
-          sessionStorage.setItem("arvexq-sw-reload","v303-nested-picks");
+        if(sessionStorage.getItem("arvexq-sw-reload")!=="v304-elite-chronological"){
+          sessionStorage.setItem("arvexq-sw-reload","v304-elite-chronological");
           location.reload()
         }
       }catch(e){}
@@ -3685,7 +3685,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':(isFlash(x)?'結果速報':'レース詳細'))+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v303</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v304</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
@@ -3837,33 +3837,54 @@ function mainRaceForTrack(rows){
   return rows.length>=2?rows[rows.length-2]:rows[rows.length-1]
 }
 function kochiFinalRace(rows){rows=(rows||[]).filter(function(r){return r.track==='高知'}).slice().sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)});if(!rows.length)return null;return rows.find(function(r){return /ファイナル/i.test(String(r.title||''))})||rows[rows.length-1]}
+function raceChronologicalCompare(a,b){
+  var ra=(a&&a.race)||a||{},rb=(b&&b.race)||b||{},ta=mins(ra.startTime),tb=mins(rb.startTime);
+  if(ta!==tb)return ta-tb;
+  var tc=String(ra.track||'').localeCompare(String(rb.track||''),'ja');if(tc)return tc;
+  return n(ra.raceNumber)-n(rb.raceNumber)
+}
+function eliteSelectedRaceCut(rows){
+  rows=(rows||[]).slice().sort(function(a,b){
+    return n(b.selection&&b.selection.score)-n(a.selection&&a.selection.score)||
+      n(b.selection&&b.selection.winnerConfidence)-n(a.selection&&a.selection.winnerConfidence)||
+      n(b.selection&&b.selection.evidence)-n(a.selection&&a.selection.evidence)
+  });
+  if(!rows.length)return [];
+  var best=n(rows[0].selection&&rows[0].selection.score),floor=Math.max(64,best-5),limit=best>=78?3:2;
+  var elite=rows.filter(function(z){var t=z.selection||{},rd=t.readiness||{};return n(t.score)>=floor&&n(rd.prediction)>=.62&&n(t.coverage)>=.42&&n(t.top3mass)>=.57&&n(t.evidence)>=.36&&n(t.scenarioProb)>=.22&&!!t.winnerStable&&n(t.winnerConfidence)>=.60});
+  return elite.slice(0,limit).sort(raceChronologicalCompare)
+}
 function selectedRaceCandidates(circuit){
   var all=(state.races||[]).filter(function(r){return r&&r.id&&(!circuit||String(r.circuit||'')===String(circuit))}),map={};
   function add(r,t){if(!r)return;var k=String(r.id);map[k]={race:r,tags:['厳選'],selection:t}}
-  // v302: evaluate the FULL card for each circuit. Start time is never used to
-  // decide which races are selected, and qualifying races are not capped at top 4.
+  // v304: every race on the card is evaluated first. Clock time is NEVER a
+  // selection factor. A second full-card quality cut keeps only true elite races.
   all.forEach(function(r){try{
     var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d))return;
     var p=predict(d),t=strictSelectedRaceProfile(d,p);if(t.selected)add(r,t)
   }catch(e){}});
-  return Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){
-    return n(b.selection&&b.selection.score)-n(a.selection&&a.selection.score)||
-      String(a.race.track||'').localeCompare(String(b.race.track||''),'ja')||n(a.race.raceNumber)-n(b.race.raceNumber)
-  })
+  return eliteSelectedRaceCut(Object.keys(map).map(function(k){return map[k]}))
 }
 function expectedValueRaceProfile(r,p){
   var rows=(p&&p.rows||[]).slice(),field=rows.length,cov=n(p&&p.coverage,0),uniform=1/Math.max(1,field),ready=dataReadinessProfile(r,p);
-  if(field<5||cov<.42||ready.prediction<.54)return{selected:false,score:0,reason:'予想データ不足',readiness:ready};
-  var actual=rows.filter(function(x){var h=x.horse||{};return n(h.winOdds)>1&&!h.oddsForecast&&!/予想|forecast/i.test(String(h.oddsSource||''))}),need=Math.max(3,Math.ceil(field*.65));
+  if(field<5||cov<.50||ready.prediction<.62)return{selected:false,score:0,reason:'予想データ不足',readiness:ready};
+  var actual=rows.filter(function(x){var h=x.horse||{};return n(h.winOdds)>1&&!h.oddsForecast&&!/予想|forecast/i.test(String(h.oddsSource||''))}),need=Math.max(4,Math.ceil(field*.75));
   if(actual.length<need)return{selected:false,score:0,reason:'実オッズ待ち',mode:'actual',readiness:ready};
   var candidates=rows.map(function(x){
     var h=x.horse||{},odds=n(h.winOdds,0),forecast=!!h.oddsForecast||/予想|forecast/i.test(String(h.oddsSource||'')),pwin=n(x.evWinProbability,n(x.p1Probability,0)),ev=odds>1?pwin*odds:0,
         kelly=(odds>1&&ev>1)?(ev-1)/(odds-1):0,edge=n(x.edgeScore,0),evidence=n(x.edgeEvidence,0),rank=n(x.winnerDecisionRank,n(x.winnerConsensusRank,n(x.winRank,999)));
     return{x:x,odds:odds,pwin:pwin,ev:ev,kelly:kelly,edge:edge,evidence:evidence,rank:rank,forecast:forecast}
-  }).filter(function(z){return !z.forecast&&z.odds>1&&z.ev>=1.12&&z.edge>=57&&z.evidence>=.38&&z.kelly>=.015&&z.pwin>=Math.max(.045,uniform*.55)&&z.rank<=5}).sort(function(a,b){return b.ev-a.ev||b.kelly-a.kelly||b.edge-a.edge||b.pwin-a.pwin});
+  }).filter(function(z){return !z.forecast&&z.odds>1&&z.ev>=1.20&&z.edge>=64&&z.evidence>=.48&&z.kelly>=.025&&z.pwin>=Math.max(.05,uniform*.65)&&z.rank<=3}).sort(function(a,b){return b.ev-a.ev||b.kelly-a.kelly||b.edge-a.edge||b.pwin-a.pwin});
   if(!candidates.length)return{selected:false,score:0,reason:'実オッズ期待値基準未達',mode:'actual',readiness:ready};
-  var best=candidates[0],evEdge=best.ev-1,score=Math.round(clamp(clamp(evEdge/.70,0,1)*.38+clamp((best.edge-55)/35,0,1)*.20+best.evidence*.14+ready.market*.13+clamp(best.kelly/.12,0,1)*.10+clamp(best.pwin/Math.max(uniform*2,.12),0,1)*.05,0,1)*100);
-  return{selected:true,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,kelly:best.kelly,riskFraction:Math.min(.025,best.kelly*.25),edge:best.edge,evidence:best.evidence,coverage:cov,mode:'actual',readiness:ready,reason:'実オッズに対して市場非依存AI勝率が上回る',model:'v300-actual-odds-ev-kelly-guard'}
+  var best=candidates[0],evEdge=best.ev-1,score=Math.round(clamp(clamp(evEdge/.65,0,1)*.40+clamp((best.edge-60)/32,0,1)*.21+best.evidence*.15+ready.market*.12+clamp(best.kelly/.10,0,1)*.08+clamp(best.pwin/Math.max(uniform*2,.12),0,1)*.04,0,1)*100),selected=score>=64;
+  return{selected:selected,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,kelly:best.kelly,riskFraction:Math.min(.02,best.kelly*.20),edge:best.edge,evidence:best.evidence,coverage:cov,mode:'actual',readiness:ready,reason:selected?'高期待値ゲート通過':'期待値品質スコア不足',model:'v304-actual-odds-ev-elite-guard'}
+}
+function eliteValueRaceCut(rows){
+  rows=(rows||[]).slice().sort(function(a,b){return n(b.value&&b.value.score)-n(a.value&&a.value.score)||n(b.value&&b.value.ev)-n(a.value&&a.value.ev)||n(b.value&&b.value.evidence)-n(a.value&&a.value.evidence)});
+  if(!rows.length)return [];
+  var best=n(rows[0].value&&rows[0].value.score),floor=Math.max(68,best-5),limit=best>=82?3:2;
+  var elite=rows.filter(function(z){var v=z.value||{},rd=v.readiness||{};return n(v.score)>=floor&&n(v.ev)>=1.22&&n(v.edge)>=64&&n(v.evidence)>=.50&&n(rd.market)>=.66&&n(v.coverage)>=.50});
+  return elite.slice(0,limit).sort(raceChronologicalCompare)
 }
 function expectedValueRaceCandidates(circuit){
   var all=(state.races||[]).filter(function(r){return r&&r.id&&(!circuit||String(r.circuit||'')===String(circuit))}),out=[];
@@ -3873,12 +3894,9 @@ function expectedValueRaceCandidates(circuit){
     var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d))return;
     var p=predict(d),v=expectedValueRaceProfile(d,p);if(v.selected)out.push({race:r,value:v})
   }catch(e){}});
-  // Full-card EV ranking. Time is display metadata only; it is not a selection
-  // factor. Every race that clears the strict actual-odds EV gate is shown.
-  return out.sort(function(a,b){
-    return n(b.value&&b.value.score)-n(a.value&&a.value.score)||n(b.value&&b.value.ev)-n(a.value&&a.value.ev)||
-      String(a.race.track||'').localeCompare(String(b.race.track||''),'ja')||n(a.race.raceNumber)-n(b.race.raceNumber)
-  })
+  // v304: selection is based on full-card quality/EV only. After the elite cut,
+  // rows are displayed chronologically for readability.
+  return eliteValueRaceCut(out)
 }
 function fixedPickLoadStatus(circuit){
   var rows=(state.races||[]).filter(function(r){return r&&r.id&&String(r.circuit||'')===String(circuit)}),loaded=0;
@@ -3900,7 +3918,7 @@ function fixedValueBox(circuit,picks){
 }
 function smartExpectedValueRaces(){
   var central=expectedValueRaceCandidates('中央'),local=expectedValueRaceCandidates('地方'),open=!!selectedSectionsOpen.value,total=central.length+local.length;
-  return '<details class="smart-fixed-picks smart-fixed-values" data-selected-section="value" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>期待値高レース</b><small>全レース比較から基準通過のみ</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedValueBox('中央',central)+fixedValueBox('地方',local)+'</div></details>'
+  return '<details class="smart-fixed-picks smart-fixed-values" data-selected-section="value" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>期待値高レース</b><small>全レース比較から高期待値だけ・時間順</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedValueBox('中央',central)+fixedValueBox('地方',local)+'</div></details>'
 }
 
 function selectedRaceBetPreview(r){
@@ -3913,7 +3931,7 @@ function selectedRaceBetPreview(r){
 }
 function smartSelectedRaces(){
   var central=selectedRaceCandidates('中央'),local=selectedRaceCandidates('地方'),open=!!selectedSectionsOpen.selected,total=central.length+local.length;
-  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>全レース比較から厳選ゲート通過のみ</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
+  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>全レース比較から少数精鋭だけ・時間順</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
 }
 function scheduleSelectedRacePredictions(){return}
 function smartDailyAiStats(){
@@ -5031,16 +5049,16 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="arvexq-shell-v303-nested-picks";
+SW = r'''const CACHE="arvexq-shell-v304-elite-chronological";
 const STATIC=[
-  "/styles-arvexq-v303.css",
-  "/app-v303.js",
+  "/styles-arvexq-v304.css",
+  "/app-v304.js",
   "/manifest-arvexq-v175.webmanifest",
   "/arvexq-icon-v175-192.png",
   "/arvexq-icon-v175-512.png",
   "/arvexq-racing-hero.webp"
 ];
-const LAST_PAGE="/__arvexq_last_page_v303_nested_picks__";
+const LAST_PAGE="/__arvexq_last_page_v304_elite_chronological__";
 
 self.addEventListener("install",event=>{
   event.waitUntil(
@@ -13942,6 +13960,7 @@ def pace_preview():
 
 @app.get("/styles-arvexq-v88.css")
 @app.get("/styles-v86.css")
+@app.get("/styles-arvexq-v304.css")
 @app.get("/styles-arvexq-v303.css")
 @app.get("/styles-arvexq-v130.css")
 @app.get("/styles-arvexq-v91.css")
@@ -13951,6 +13970,7 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
+@app.get("/app-v304.js")
 @app.get("/app-v303.js")
 @app.get("/app-v133.js")
 @app.get("/app-v132.js")
@@ -15131,7 +15151,7 @@ CSS += r"""
 
 
 CSS += r"""
-/* v303 — two-stage pick accordion: category -> circuit -> races */
+/* v304 — two-stage pick accordion: category -> circuit -> races */
 details.smart-fixed-picks>summary,details.fixed-pick-circuit>summary{list-style:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 details.smart-fixed-picks>summary::-webkit-details-marker,details.fixed-pick-circuit>summary::-webkit-details-marker{display:none}
 .smart-fixed-picks-head{align-items:center!important;margin:0!important;min-height:52px;padding:7px 8px;border-radius:9px}
