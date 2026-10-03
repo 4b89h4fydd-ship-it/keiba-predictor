@@ -341,18 +341,18 @@ import urllib.parse
 import zipfile
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait
-from datetime import date as dt_date, datetime
+from datetime import date as dt_date, datetime, timedelta
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.70-v260-full-engine")
+app = FastAPI(title="ARVEXQ", version="13.80-v261-audit-loop")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v40-v260-full-engine"
-ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v260-full"
-AI_EVALUATION_VERSION = "evidence-v260-full-engine-market-independent"
+PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v41-v261-audit-loop"
+ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v261-audit"
+AI_EVALUATION_VERSION = "evidence-v261-market-independent-audit-lock"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
 V207_WINNER_MODEL_VERSION = "arvexq-winner-v207-from-v206-run1"
@@ -2122,7 +2122,7 @@ function normFrac(x){x=x%1;return x<0?x+1:x}
 function courseStageFrac(r,st){var p=courseProfile(r);if(p.shape==="straight")return st===0?.05:(st===1?.67:.92);var laps=Math.max(.1,n(r.distance,1200)/p.lap),start=normFrac(.965-p.dir*(laps%1)),prog=st===0?.015:(st===1?.81:.965);return normFrac(start+p.dir*laps*prog)}
 var app=document.getElementById("app");
 var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,detailSeq:0,raceReturnPicker:false,historyTimer:null,raceStack:[],historyPrefetch:{},paceStage:0,horseModalNo:null,detailHorseNo:null,collectingHorse:null,collectTimer:null,scenarioCode:null,analysisSaved:{},openPanel:null,oddsBusy:false,oddsRefreshAt:{},oddsTimer:null,environmentTimer:null,environmentBusy:false,bootstrapReady:false,bootstrapProgress:null,resultTimer:null};
-var dailyAiStats={date:"",loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,holePlaceHits:0,error:""},dailyAiStatsJob=0;
+var dailyAiStats={date:"",loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,holePlaceHits:0,top2Hits:0,top3Hits:0,candidateOrderMisses:0,candidateMisses:0,highConfHits:0,highConfTotal:0,brierSum:0,logLossSum:0,reasons:{},error:""},dailyAiStatsJob=0;
 var liveCenterOpen=false,liveCenterTrack="",liveCenterCircuit="";
 var autoDiagnosisJobs={},autoDiagnosisAttempts={};
 
@@ -2993,7 +2993,7 @@ function integratedGrades(r,rows){
   })
 }
 
-function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v40-v260-full-engine',researchAudit:{sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,liveTrackSpeedV250:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV260Independent:true,raceTypeTicketV260:true,pairwiseDuelV260:true,fullOrderSequential:true,strictReadinessV260:true,actualOddsEvOnlyV260:true,oddsCoverageV247:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
+function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v41-v261-audit-loop',researchAudit:{sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,liveTrackSpeedV250:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV260Independent:true,preRaceAuditV261:true,raceTypeTicketV260:true,pairwiseDuelV260:true,fullOrderSequential:true,strictReadinessV260:true,actualOddsEvOnlyV260:true,oddsCoverageV247:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -3739,25 +3739,27 @@ function smartVenueCards(){
 }
 
 function aiStoredMarks(detail){
-  // Daily score must use marks stored before the result. Never recompute after the race.
-  var rows=[];
-  (detail&&detail.horses||[]).forEach(function(h){
-    var e=h&&h.integratedEvaluation||{},mark=String(e.mark||'');
-    if(mark)rows.push({no:n(h.horseNumber),mark:mark})
-  });
-  return rows
+  // v261: prefer the immutable server-side pre-race lock. Fallback only supports
+  // older saved races that predate the lock.
+  var lock=detail&&detail.preRacePrediction||{},locked=Array.isArray(lock.horses)?lock.horses:[];
+  if(locked.length)return locked.map(function(x){return{no:n(x.horseNumber),mark:String(x.mark||''),p:n(x.decisionProbability),axes:x.axes||{},confidence:n(lock.winnerConfidence),stable:!!lock.winnerStable}}).filter(function(x){return x.no>0});
+  var rows=[];(detail&&detail.horses||[]).forEach(function(h){var e=h&&h.integratedEvaluation||{},mark=String(e.mark||'');if(mark)rows.push({no:n(h.horseNumber),mark:mark,p:n(e.winnerConsensusProbability),axes:(e.v218Audit||e.v217Audit||{}),confidence:n(e.axisConfidence),stable:!!e.winnerDecisionStable})});return rows
 }
 function aiDailyOne(detail){
   if(!detail||!isFinal(detail))return null;
-  var finishers=(detail.result&&detail.result.finishers||[]).filter(function(x){return n(x.finish)>0}).sort(function(a,b){return n(a.finish)-n(b.finish)});
-  if(!finishers.length)return null;
+  var finishers=(detail.result&&detail.result.finishers||[]).filter(function(x){return n(x.finish)>0}).sort(function(a,b){return n(a.finish)-n(b.finish)});if(!finishers.length)return null;
   var winner=n(finishers[0].horseNumber),top3={};finishers.slice(0,3).forEach(function(x){top3[n(x.horseNumber)]=1});
   var marks=aiStoredMarks(detail);if(!marks.length)return null;
-  var hon=marks.find(function(x){return x.mark==='◎'}),marked={};marks.forEach(function(x){if('◎○▲☆△注'.indexOf(x.mark)>=0)marked[x.no]=x.mark});
-  var holePlace=marks.some(function(x){return (x.mark==='☆'||x.mark==='注')&&top3[x.no]});
-  return {winHit:!!(hon&&hon.no===winner),markHit:!!marked[winner],holePlace:holePlace}
+  var hon=marks.find(function(x){return x.mark==='◎'}),marked={};marks.forEach(function(x){if(['◎','○','▲','☆+','☆','△','注+','注'].indexOf(x.mark)>=0)marked[x.no]=x.mark});
+  var holePlace=marks.some(function(x){return (x.mark==='☆'||x.mark==='☆+'||x.mark==='注'||x.mark==='注+')&&top3[x.no]});
+  var ranked=marks.slice().sort(function(a,b){return n(b.p)-n(a.p)||n(a.no)-n(b.no)}),wr=ranked.findIndex(function(x){return x.no===winner})+1,wrow=marks.find(function(x){return x.no===winner}),audit=detail.predictionAudit||{};
+  var winHit=!!(hon&&hon.no===winner),markHit=!!marked[winner],confidence=n(audit.winnerConfidence,hon&&hon.confidence),reason=String(audit.reason||'');
+  if(!reason&&!winHit)reason=markHit?'候補内の1着順位付け':'候補抽出';
+  var brier=n(audit.brier,0),logLoss=n(audit.logLoss,0);
+  if(!brier&&wrow){marks.forEach(function(x){var y=x.no===winner?1:0;brier+=Math.pow(n(x.p)-y,2)});logLoss=-Math.log(Math.max(1e-9,n(wrow.p)))}
+  return {winHit:winHit,markHit:markHit,holePlace:holePlace,top2:wr>0&&wr<=2,top3:wr>0&&wr<=3,candidateOrderMiss:!winHit&&markHit,candidateMiss:!markHit,highConf:confidence>=.70,highConfHit:confidence>=.70&&winHit,brier:brier,logLoss:logLoss,reason:reason,winnerMark:String(marked[winner]||'')}
 }
-function resetDailyAiStats(date){dailyAiStats={date:date||'',loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,holePlaceHits:0,error:''}}
+function resetDailyAiStats(date){dailyAiStats={date:date||'',loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,holePlaceHits:0,top2Hits:0,top3Hits:0,candidateOrderMisses:0,candidateMisses:0,highConfHits:0,highConfTotal:0,brierSum:0,logLossSum:0,reasons:{},error:''}}
 function scheduleDailyAiStats(){
   if(dailyAiStats.date!==state.date)resetDailyAiStats(state.date);
   if(dailyAiStats.loading)return;
@@ -3779,6 +3781,14 @@ function scheduleDailyAiStats(){
     dailyAiStats.winHits=results.filter(function(x){return x.winHit}).length;
     dailyAiStats.markHits=results.filter(function(x){return x.markHit}).length;
     dailyAiStats.holePlaceHits=results.filter(function(x){return x.holePlace}).length;
+    dailyAiStats.top2Hits=results.filter(function(x){return x.top2}).length;
+    dailyAiStats.top3Hits=results.filter(function(x){return x.top3}).length;
+    dailyAiStats.candidateOrderMisses=results.filter(function(x){return x.candidateOrderMiss}).length;
+    dailyAiStats.candidateMisses=results.filter(function(x){return x.candidateMiss}).length;
+    dailyAiStats.highConfTotal=results.filter(function(x){return x.highConf}).length;
+    dailyAiStats.highConfHits=results.filter(function(x){return x.highConfHit}).length;
+    dailyAiStats.brierSum=results.reduce(function(a,x){return a+n(x.brier)},0);dailyAiStats.logLossSum=results.reduce(function(a,x){return a+n(x.logLoss)},0);
+    dailyAiStats.reasons={};results.forEach(function(x){if(x.winHit)return;var k=x.reason||'その他';dailyAiStats.reasons[k]=(dailyAiStats.reasons[k]||0)+1});
     render()
   }).catch(function(){if(token!==dailyAiStatsJob)return;dailyAiStats.loading=false;dailyAiStats.done=true;dailyAiStats.error='集計できませんでした';render()})
 }
@@ -3892,11 +3902,12 @@ function smartDailyAiStats(){
     return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>'+esc(title)+'</b><small>'+msg+'</small></div><p>※結果を見てから予想を作り直したレースは成績に含めません。</p></section>'
   }
   function rate(hit){return Math.round(hit/s.total*100)}
+  var miss=Math.max(0,s.total-s.winHits),reasonRows=Object.keys(s.reasons||{}).map(function(k){return[k,n(s.reasons[k])]}).sort(function(a,b){return b[1]-a[1]}).slice(0,3),reasonText=reasonRows.length?reasonRows.map(function(z){return z[0]+' '+z[1]}).join(' / '):'なし',hc=s.highConfTotal?(Math.round(s.highConfHits/s.highConfTotal*100)+'% '+s.highConfHits+'/'+s.highConfTotal):'対象なし',avgB=s.total?(s.brierSum/s.total).toFixed(3):'—';
   return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>'+esc(title)+'</b><small>'+s.total+'レース集計'+(s.finalCount>s.total?' / 確定'+s.finalCount:'')+'</small></div><div class="smart-ai-daily-grid">'+
     '<div><small>◎1着</small><strong>'+rate(s.winHits)+'%</strong><em>'+s.winHits+'/'+s.total+'</em></div>'+ 
     '<div><small>AI印内1着</small><strong>'+rate(s.markHits)+'%</strong><em>'+s.markHits+'/'+s.total+'</em></div>'+ 
     '<div><small>☆・注 3着内</small><strong>'+rate(s.holePlaceHits)+'%</strong><em>'+s.holePlaceHits+'/'+s.total+'</em></div>'+ 
-  '</div><p>※発走前に保存済みのAI印だけを集計。過去日も同じ基準。買い目的中率とは別。</p></section>'
+  '</div><div class="smart-ai-review"><b>自動回顧</b><span>◎外れ '+miss+'　印内の順位ミス '+s.candidateOrderMisses+' / 候補外 '+s.candidateMisses+'</span><span>勝ち馬Top2 '+rate(s.top2Hits)+'%　Top3 '+rate(s.top3Hits)+'%</span><span>高信頼◎ '+hc+'　Brier '+avgB+'</span><small>主なズレ　'+esc(reasonText)+'</small></div><p>※v261は発走前ロックを優先して集計。発走後の再計算を成績へ混ぜません。</p></section>'
 }
 
 function smartRaceDayHeading(){
@@ -8955,9 +8966,172 @@ def _sanitize_horse_measurements(h:dict)->dict:
     return z
 
 
+PRERACE_AUDIT_VERSION = "arvexq-prerace-audit-v261"
+
+
+def _prediction_clock_state(detail: dict) -> tuple[str, int | None]:
+    """Return (state, minutes_to_post). Never infer a lock after the race has started."""
+    d=str((detail or {}).get("date") or "")
+    st=str((detail or {}).get("startTime") or (detail or {}).get("scheduledStartTime") or "")
+    if not d:return "unknown",None
+    today=_today_iso()
+    if d<today:return "started",None
+    if d>today:return "future",None
+    m=re.match(r"^(\d{1,2}):(\d{2})",st)
+    if not m:return "unknown",None
+    post=int(m.group(1))*60+int(m.group(2));now=_now_jst();nowm=now.hour*60+now.minute
+    return ("pre" if nowm<post else "started"),post-nowm
+
+
+def _prob_vector(values:list[float])->list[float]:
+    clean=[]
+    for v in values:
+        try:x=max(0.0,float(v or 0))
+        except Exception:x=0.0
+        clean.append(x)
+    sm=sum(clean)
+    if sm<=0:
+        return ([1.0/len(clean)]*len(clean)) if clean else []
+    return [x/sm for x in clean]
+
+
+def _audit_axes_from_eval(e:dict)->dict:
+    a=(e or {}).get("v218Audit") or (e or {}).get("v217Audit") or {}
+    def u(key,default=.5):
+        try:return round(max(0.0,min(1.0,float(a.get(key) if a.get(key) is not None else default))),6)
+        except Exception:return default
+    pp=a.get("positionPressure") if isinstance(a.get("positionPressure"),dict) else {}
+    try:frag=max(0.0,min(1.0,float(pp.get("local") or 0)))
+    except Exception:frag=0.0
+    return {
+        "pure":u("pure"),"trueRun":u("trueRun"),"sectional":u("sectional"),
+        "positionScenario":u("positionScenario"),"conditions":u("conditions"),
+        "opponentLevel":u("opponentLevel"),"stateConsistency":u("stateConsistency"),
+        "evidence":u("evidence",.0),"sevenAxisScore":u("sevenAxisScore"),"fragility":round(frag,6),
+    }
+
+
+def _build_prerace_prediction(detail:dict)->dict|None:
+    if not isinstance(detail,dict) or _snapshot_final(detail):return None
+    state,minutes=_prediction_clock_state(detail)
+    if state not in {"pre","future"}:return None
+    horses=[h for h in (detail.get("horses") or []) if isinstance(h,dict) and int(h.get("horseNumber") or 0)>0 and not h.get("scratched") and not re.search(r"取消|除外|欠場",str(h.get("status") or ""))]
+    if len(horses)<2:return None
+    evals=[h.get("integratedEvaluation") if isinstance(h.get("integratedEvaluation"),dict) else {} for h in horses]
+    if sum(1 for e in evals if e)>=max(2,len(horses)//2):
+        p1=_prob_vector([float(e.get("p1Score") or 0) for e in evals])
+        p2=_prob_vector([float(e.get("p2Score") or 0) for e in evals])
+        p3=_prob_vector([float(e.get("p3Score") or 0) for e in evals])
+        cons=_prob_vector([float(e.get("winnerConsensusProbability") or 0) for e in evals])
+    else:return None
+    hon_idx=next((i for i,e in enumerate(evals) if str(e.get("mark") or "")=="◎"),None)
+    if hon_idx is None:
+        hon_idx=max(range(len(horses)),key=lambda i:p1[i])
+    hon_e=evals[hon_idx]
+    stable=bool(hon_e.get("winnerDecisionStable"))
+    decision=list(cons if stable and any(cons) else p1)
+    # The stored mark is the actual decision. Keep the probability ranking aligned
+    # with it without fabricating a large gap.
+    top_i=max(range(len(decision)),key=lambda i:decision[i]) if decision else hon_idx
+    if decision and top_i!=hon_idx and decision[top_i]>decision[hon_idx]:
+        decision[top_i],decision[hon_idx]=decision[hon_idx],decision[top_i]
+    rows=[]
+    completeness=[]
+    for i,(h,e) in enumerate(zip(horses,evals)):
+        try:dc=max(0.0,min(1.0,float(e.get("dataCompleteness") or 0)/100.0))
+        except Exception:dc=0.0
+        completeness.append(dc)
+        rows.append({
+            "horseNumber":int(h.get("horseNumber") or 0),"name":str(h.get("name") or ""),"mark":str(e.get("mark") or ""),
+            "decisionProbability":round(decision[i],8),"p1Probability":round(p1[i],8),"p2Probability":round(p2[i],8),"p3Probability":round(p3[i],8),
+            "winnerConsensusProbability":round(cons[i],8),"pairwiseWinRate":round(float(e.get("pairwiseWinRate") or .5),8),
+            "winEvidenceProbability":round(float(e.get("winEvidenceProbability") or 0),8),"axisConfidence":round(float(e.get("axisConfidence") or 0),8),
+            "winnerDecisionStable":bool(e.get("winnerDecisionStable")),"score":round(float(e.get("score") or 0),3),"grade":str(e.get("grade") or ""),
+            "axes":_audit_axes_from_eval(e),
+        })
+    now=int(time.time());quality=round(sum(completeness)/len(completeness),6) if completeness else 0.0
+    mark_count=sum(1 for x in rows if x.get("mark"))
+    payload={
+        "version":PRERACE_AUDIT_VERSION,"modelVersion":AI_EVALUATION_VERSION,"predictionEngine":PREDICTION_ENGINE_VERSION,
+        "raceId":str(detail.get("id") or ""),"raceDate":str(detail.get("date") or ""),"circuit":str(detail.get("circuit") or ""),
+        "track":str(detail.get("track") or ""),"raceNumber":int(detail.get("raceNumber") or 0),"startTime":str(detail.get("startTime") or ""),
+        "capturedAtEpoch":now,"capturedAtJst":_now_jst().isoformat(timespec="seconds"),"minutesToPost":minutes,
+        "winnerNo":int(horses[hon_idx].get("horseNumber") or 0),"winnerProbability":round(decision[hon_idx],8),
+        "winnerConfidence":round(float(hon_e.get("axisConfidence") or 0),8),"winnerStable":stable,
+        "fieldSize":len(rows),"markCount":mark_count,"dataQuality":quality,"horses":rows,
+        "marketIndependent":True,"oddsStored":False,"status":"pre-race",
+    }
+    payload["revision"]=hashlib.sha1(json.dumps({"m":[(x["horseNumber"],x["mark"],x["decisionProbability"]) for x in rows],"q":quality},ensure_ascii=False,sort_keys=True).encode()).hexdigest()[:16]
+    return payload
+
+
+def _prediction_audit_from_lock(detail:dict)->dict|None:
+    lock=(detail or {}).get("preRacePrediction")
+    result=(detail or {}).get("result") or {}
+    if not isinstance(lock,dict) or not isinstance(lock.get("horses"),list) or result.get("status")!="確定":return None
+    finishers=[x for x in (result.get("finishers") or []) if isinstance(x,dict) and int(x.get("finish") or 0)>0]
+    if not finishers:return None
+    finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
+    winner=int(finishers[0].get("horseNumber") or 0);top3={int(x.get("horseNumber") or 0) for x in finishers[:3]}
+    rows=[x for x in lock.get("horses") or [] if int(x.get("horseNumber") or 0)>0]
+    by={int(x.get("horseNumber") or 0):x for x in rows};w=by.get(winner)
+    hon=next((x for x in rows if str(x.get("mark") or "")=="◎"),None)
+    if not hon or not w:return None
+    mark=str(w.get("mark") or "");marked=mark in {"◎","○","▲","☆+","☆","△","注+","注"}
+    hit=int(hon.get("horseNumber") or 0)==winner
+    ranked=sorted(rows,key=lambda x:(-float(x.get("decisionProbability") or 0),int(x.get("horseNumber") or 0)))
+    winner_rank=next((i+1 for i,x in enumerate(ranked) if int(x.get("horseNumber") or 0)==winner),999)
+    hp=max(1e-9,min(.999999,float(hon.get("decisionProbability") or 0)));wp=max(1e-9,min(.999999,float(w.get("decisionProbability") or 0)))
+    brier=sum((float(x.get("decisionProbability") or 0)-(1.0 if int(x.get("horseNumber") or 0)==winner else 0.0))**2 for x in rows)
+    axis_labels={"pure":"PURE","trueRun":"TRUE RUN","sectional":"SECTIONAL","positionScenario":"展開適合","conditions":"今回条件","opponentLevel":"相手レベル","stateConsistency":"状態・再現性"}
+    diffs={}
+    wa=w.get("axes") if isinstance(w.get("axes"),dict) else {};ha=hon.get("axes") if isinstance(hon.get("axes"),dict) else {}
+    for k in axis_labels:
+        try:diffs[k]=round(float(wa.get(k) or 0)-float(ha.get(k) or 0),6)
+        except Exception:diffs[k]=0.0
+    frag_gap=float(ha.get("fragility") or 0)-float(wa.get("fragility") or 0)
+    if hit:reason="的中"
+    elif frag_gap>=.08:reason="◎の脆さを過小評価"
+    else:
+        best_key=max(diffs,key=lambda k:diffs[k]) if diffs else ""
+        best_val=diffs.get(best_key,0)
+        if best_val>=.035:reason=axis_labels.get(best_key,best_key)+"を過小評価"
+        elif hp-wp<=.03:reason="僅差順位"
+        elif marked:reason="候補内の1着順位付け"
+        else:reason="候補抽出"
+    return {
+        "version":PRERACE_AUDIT_VERSION,"raceId":str(detail.get("id") or ""),"raceDate":str(detail.get("date") or ""),"circuit":str(detail.get("circuit") or ""),"track":str(detail.get("track") or ""),"raceNumber":int(detail.get("raceNumber") or 0),"dataQuality":round(float(lock.get("dataQuality") or 0),6),"winnerNo":winner,"honNo":int(hon.get("horseNumber") or 0),
+        "honHit":hit,"winnerMarked":marked,"winnerMark":mark,"winnerRank":winner_rank,"top2Hit":winner_rank<=2,"top3Hit":winner_rank<=3,
+        "honProbability":round(hp,8),"winnerProbability":round(wp,8),"probabilityGap":round(hp-wp,8),
+        "winnerConfidence":round(float(lock.get("winnerConfidence") or 0),8),"winnerStable":bool(lock.get("winnerStable")),
+        "highConfidence":float(lock.get("winnerConfidence") or 0)>=.70,"brier":round(brier,8),"logLoss":round(-math.log(wp),8),
+        "missClass":"hit" if hit else ("candidate-order" if marked else "candidate-miss"),"reason":reason,"axisDiffs":diffs,
+        "lockedAtEpoch":int(lock.get("capturedAtEpoch") or 0),"modelVersion":str(lock.get("modelVersion") or ""),
+        "top3Finishers":[int(x.get("horseNumber") or 0) for x in finishers[:3]],
+    }
+
+
+def _attach_prerace_audit(detail:dict)->dict:
+    if not isinstance(detail,dict):return detail
+    state,_=_prediction_clock_state(detail)
+    current=detail.get("preRacePrediction") if isinstance(detail.get("preRacePrediction"),dict) else None
+    if state in {"pre","future"} and not _snapshot_final(detail):
+        fresh=_build_prerace_prediction(detail)
+        if fresh:
+            old_q=float((current or {}).get("dataQuality") or 0)
+            new_q=float(fresh.get("dataQuality") or 0)
+            # Prefer the newest pre-race view unless it is materially sparser.
+            if not current or new_q+.02>=old_q:detail["preRacePrediction"]=fresh
+    if _snapshot_final(detail) and isinstance(detail.get("preRacePrediction"),dict):
+        audit=_prediction_audit_from_lock(detail)
+        if audit:detail["predictionAudit"]=audit
+    return detail
+
+
 def _compact_display_snapshot(detail: dict) -> dict:
     """Display JSON only; full career remains in RaceDB.past_runs."""
     if not isinstance(detail,dict):return detail
+    detail=_attach_prerace_audit(detail)
     out=dict(detail)
     horses=[]
     for h in detail.get("horses",[]) or []:
@@ -9043,6 +9217,11 @@ class PreparedRaceStore:
             old=conn.execute("SELECT payload FROM prepared_races WHERE race_id=?",(race_id,)).fetchone()
             if old:
                 previous=json.loads(old[0])
+                if isinstance(previous.get("preRacePrediction"),dict) and (_prediction_clock_state(detail)[0]=="started" or not isinstance(detail.get("preRacePrediction"),dict)):
+                    detail["preRacePrediction"]=previous["preRacePrediction"]
+                    audit=_prediction_audit_from_lock(detail)
+                    if audit:detail["predictionAudit"]=audit
+                    payload=json.dumps(detail,ensure_ascii=False,separators=(",",":"))
                 prev_meta=previous.get("preparedMeta") or {}
                 prev_payouts=((previous.get("result") or {}).get("payouts") or [])
                 new_payouts=((detail.get("result") or {}).get("payouts") or [])
@@ -9301,11 +9480,17 @@ class RaceDataBank:
         if not race_id:return
         now=int(time.time())
         detail=_strip_excluded(detail)
-        snapshot_payload=_compact_display_snapshot(detail)
-        payload=json.dumps(snapshot_payload,ensure_ascii=False,separators=(",",":"),default=str)
         conn=sqlite3.connect(self.path,timeout=5)
         try:
             conn.execute("PRAGMA journal_mode=WAL")
+            old=conn.execute("SELECT payload FROM race_snapshots WHERE race_id=?",(race_id,)).fetchone()
+            if old:
+                try:previous=json.loads(old[0])
+                except Exception:previous={}
+                if isinstance(previous.get("preRacePrediction"),dict) and (_prediction_clock_state(detail)[0]=="started" or not isinstance(detail.get("preRacePrediction"),dict)):
+                    detail["preRacePrediction"]=previous["preRacePrediction"]
+            snapshot_payload=_compact_display_snapshot(detail)
+            payload=json.dumps(snapshot_payload,ensure_ascii=False,separators=(",",":"),default=str)
             conn.execute(
                 """INSERT INTO race_snapshots(race_id,race_date,circuit,track,race_no,title,surface,distance,condition,weather,start_time,updated_at,payload)
                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
@@ -13282,9 +13467,51 @@ async def racedb_save_analysis(race_id: str, request: Request):
 def racedb_get_analysis(race_id: str):
     return {"raceId":race_id,"analysis":RACEDB.get_analysis(race_id)}
 
+@app.get("/api/v1/model-audit")
+def model_audit(date: str = Query(""), days: int = Query(30, ge=1, le=180)):
+    end=date or _today_iso()
+    try:end_dt=datetime.strptime(end,"%Y-%m-%d").date()
+    except Exception:raise HTTPException(status_code=400,detail="date must be YYYY-MM-DD")
+    start_dt=end_dt-timedelta(days=max(0,int(days)-1));start=start_dt.isoformat()
+    rows=[];cal=[];segments={}
+    if not RACEDB.path.exists():return {"version":PRERACE_AUDIT_VERSION,"races":0,"audited":0,"start":start,"end":end}
+    conn=sqlite3.connect(RACEDB.path,timeout=3);conn.row_factory=sqlite3.Row
+    try:dbrows=conn.execute("SELECT payload FROM race_snapshots WHERE race_date BETWEEN ? AND ? ORDER BY race_date,track,race_no",(start,end)).fetchall()
+    finally:conn.close()
+    for row in dbrows:
+        try:d=json.loads(row["payload"])
+        except Exception:continue
+        a=d.get("predictionAudit") if isinstance(d.get("predictionAudit"),dict) else _prediction_audit_from_lock(d)
+        if not a:continue
+        rows.append(a)
+        seg=str(a.get("circuit") or "不明");z=segments.setdefault(seg,{"races":0,"hits":0,"marked":0});z["races"]+=1;z["hits"]+=1 if a.get("honHit") else 0;z["marked"]+=1 if a.get("winnerMarked") else 0
+        lock=d.get("preRacePrediction") if isinstance(d.get("preRacePrediction"),dict) else {};winner=int(a.get("winnerNo") or 0)
+        for h in lock.get("horses") or []:
+            try:p=max(0.0,min(1.0,float(h.get("decisionProbability") or 0)))
+            except Exception:continue
+            cal.append((p,1 if int(h.get("horseNumber") or 0)==winner else 0))
+    n=len(rows);hits=sum(1 for a in rows if a.get("honHit"));marked=sum(1 for a in rows if a.get("winnerMarked"));top2=sum(1 for a in rows if a.get("top2Hit"));top3=sum(1 for a in rows if a.get("top3Hit"));hc=[a for a in rows if a.get("highConfidence")]
+    reasons={}
+    for a in rows:
+        if a.get("honHit"):continue
+        k=str(a.get("reason") or "その他");reasons[k]=reasons.get(k,0)+1
+    bins=[];ece=0.0
+    for bi in range(10):
+        lo=bi/10;hi=(bi+1)/10;vals=[x for x in cal if (x[0]>=lo and (x[0]<hi or (bi==9 and x[0]<=hi)))]
+        if not vals:continue
+        pm=sum(x[0] for x in vals)/len(vals);ar=sum(x[1] for x in vals)/len(vals);ece+=abs(pm-ar)*len(vals)/max(1,len(cal));bins.append({"lo":lo,"hi":hi,"count":len(vals),"predicted":round(pm,4),"actual":round(ar,4),"gap":round(ar-pm,4)})
+    segout={k:{"races":v["races"],"top1":round(v["hits"]/v["races"],4) if v["races"] else 0,"winnerMarked":round(v["marked"]/v["races"],4) if v["races"] else 0} for k,v in segments.items()}
+    return {"version":PRERACE_AUDIT_VERSION,"start":start,"end":end,"races":len(dbrows),"audited":n,"learningReady":n>=100,
+            "honTop1":round(hits/n,4) if n else 0,"winnerMarked":round(marked/n,4) if n else 0,"winnerTop2":round(top2/n,4) if n else 0,"winnerTop3":round(top3/n,4) if n else 0,
+            "highConfidence":{"races":len(hc),"hits":sum(1 for a in hc if a.get("honHit")),"rate":round(sum(1 for a in hc if a.get("honHit"))/len(hc),4) if hc else 0},
+            "brier":round(sum(float(a.get("brier") or 0) for a in rows)/n,6) if n else None,"logLoss":round(sum(float(a.get("logLoss") or 0) for a in rows)/n,6) if n else None,
+            "calibration":{"horseSamples":len(cal),"ece":round(ece,6) if cal else None,"bins":bins},"segments":segout,
+            "missReasons":dict(sorted(reasons.items(),key=lambda kv:(-kv[1],kv[0]))),"audits":rows[-100:]}
+
+
 @app.get("/api/v1/racedb-status")
 def racedb_status(date: str = Query(""), circuit: str = Query("")):
-    return {"build":"v260-full-engine","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"note":"ARVEXQ Data Coreが項目別欠損監視に加え、当日終了済みレースだけからLIVE TRACK SPEEDを算出し、項目別充足度を各レースへ保存します。"}
+    return {"build":"v261-audit-loop","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"preRaceAudit":True,"note":"Data Core + 発走前予想ロック + 結果自動回顧。発走後に予想スナップショットを上書きしません。"}
 
 @app.get("/api/v1/racedb-race/{race_id}")
 def racedb_race(race_id:str):
@@ -13425,6 +13652,7 @@ CSS += r"""
 .smart-ai-daily-grid strong{display:block;margin-top:2px;font-size:20px;line-height:1.1;color:#f0d29a}
 .smart-ai-daily-grid em{display:block;margin-top:3px;font-style:normal;font-size:9px;color:#8f9da5}
 .smart-ai-daily p{margin:7px 1px 0;color:#88969e;font-size:8px}
+.smart-ai-review{margin-top:8px;border-top:1px solid #3e4d55;padding-top:8px;display:grid;gap:3px}.smart-ai-review b{font-size:11px;color:#f0d29a}.smart-ai-review span{font-size:10px;color:#d8e1e6}.smart-ai-review small{font-size:9px;color:#9fb0ba;white-space:normal;line-height:1.4}
 @media(max-width:560px){.smart-ai-daily{padding:10px;margin-bottom:9px}.smart-ai-daily-grid{gap:5px}.smart-ai-daily-grid>div{padding:7px 3px}.smart-ai-daily-grid strong{font-size:18px}.smart-ai-daily-grid small{font-size:8px}}
 """
 
