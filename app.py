@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.01-v301-practical-baseline")
+app = FastAPI(title="ARVEXQ", version="14.03-v303-nested-picks")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v50-final"
@@ -490,7 +490,7 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
-<link rel="stylesheet" href="/styles-arvexq-v130.css">
+<link rel="stylesheet" href="/styles-arvexq-v303.css">
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
@@ -498,7 +498,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script src="/app-v133.js"></script>
+<script src="/app-v303.js"></script>
 </body>
 </html>"""
 
@@ -2157,8 +2157,8 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(sessionStorage.getItem("arvexq-sw-reload")!=="v133-edge-only"){
-          sessionStorage.setItem("arvexq-sw-reload","v133-edge-only");
+        if(sessionStorage.getItem("arvexq-sw-reload")!=="v303-nested-picks"){
+          sessionStorage.setItem("arvexq-sw-reload","v303-nested-picks");
           location.reload()
         }
       }catch(e){}
@@ -2838,7 +2838,9 @@ function dataReadinessProfile(r,p){
       body=hs.filter(function(h){var w=n(h.bodyWeight);return w>=250&&w<=800}).length/field,
       env=((r&&r.weather&&String(r.weather)!=='不明')?.5:0)+((r&&r.condition&&String(r.condition)!=='不明')?.5:0),
       analysis=clamp(n(p&&p.coverage,0),0,1),server=(r&&r.dataCoreHealth)||{},serverAnalysis=n(server.analysis&&server.analysis.completeness,0)/100,
-      st=mins(r&&r.startTime),remain=(r&&String(r.date||'')===today()&&st<9999)?st-nowMins():-9999,bodyDue=!(r&&String(r.date||'')===today())||remain<=120||body>0,bodyReady=bodyDue?body:1;
+      // v302: readiness must not flip just because the clock entered a T-120 window.
+      // Body weight improves the model when published; unpublished weight is neutral.
+      bodyReady=body>0?body:1;
   if(serverAnalysis>0)analysis=Math.max(analysis,serverAnalysis);
   var prediction=clamp(card*.18+hist*.28+env*.15+analysis*.28+bodyReady*.11,0,1),
       market=clamp(prediction*.72+actual*.28,0,1),missing=[];
@@ -3683,7 +3685,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':(isFlash(x)?'結果速報':'レース詳細'))+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v300</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v303</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
@@ -3801,7 +3803,7 @@ function aiStatsDayTitle(){
   return (m&&d)?(m+'月'+d+'日のAI成績'):'当日のAI成績'
 }
 
-var selectedRacePreload={date:'',busy:{},done:{},timer:null,fullLoaded:false,fullLoading:false,loadedCount:0,expectedCount:0,lastError:''},fastTopRefresh=null,selectedSectionsOpen={selected:false,value:false};
+var selectedRacePreload={date:'',busy:{},done:{},timer:null,fullLoaded:false,fullLoading:false,loadedCount:0,expectedCount:0,lastError:''},fastTopRefresh=null,selectedSectionsOpen={selected:false,value:false},selectedCircuitSectionsOpen={selected:{'中央':false,'地方':false},value:{'中央':false,'地方':false}};
 function selectedRaceLoadStatus(){
   var expected=n(selectedRacePreload.expectedCount,0)||(state.races||[]).filter(function(r){return r&&r.id}).length,loaded=n(selectedRacePreload.loadedCount,0);
   return{expected:expected,loaded:loaded,complete:!!selectedRacePreload.fullLoaded,loading:!!selectedRacePreload.fullLoading,error:selectedRacePreload.lastError||''}
@@ -3838,14 +3840,16 @@ function kochiFinalRace(rows){rows=(rows||[]).filter(function(r){return r.track=
 function selectedRaceCandidates(circuit){
   var all=(state.races||[]).filter(function(r){return r&&r.id&&(!circuit||String(r.circuit||'')===String(circuit))}),map={};
   function add(r,t){if(!r)return;var k=String(r.id);map[k]={race:r,tags:['厳選'],selection:t}}
-  // v301: strict AI selection remains unchanged. Circuit filtering happens BEFORE top-N
-  // so 中央 and 地方 have independent fixed boxes and cannot crowd each other out.
+  // v302: evaluate the FULL card for each circuit. Start time is never used to
+  // decide which races are selected, and qualifying races are not capped at top 4.
   all.forEach(function(r){try{
     var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d))return;
     var p=predict(d),t=strictSelectedRaceProfile(d,p);if(t.selected)add(r,t)
   }catch(e){}});
-  var picked=Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){return n(b.selection&&b.selection.score)-n(a.selection&&a.selection.score)||mins(a.race.startTime)-mins(b.race.startTime)||String(a.race.track).localeCompare(String(b.race.track),'ja')}).slice(0,4);
-  return picked.sort(function(a,b){return mins(a.race.startTime)-mins(b.race.startTime)||String(a.race.track||'').localeCompare(String(b.race.track||''),'ja')||n(a.race.raceNumber)-n(b.race.raceNumber)})
+  return Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){
+    return n(b.selection&&b.selection.score)-n(a.selection&&a.selection.score)||
+      String(a.race.track||'').localeCompare(String(b.race.track||''),'ja')||n(a.race.raceNumber)-n(b.race.raceNumber)
+  })
 }
 function expectedValueRaceProfile(r,p){
   var rows=(p&&p.rows||[]).slice(),field=rows.length,cov=n(p&&p.coverage,0),uniform=1/Math.max(1,field),ready=dataReadinessProfile(r,p);
@@ -3869,8 +3873,12 @@ function expectedValueRaceCandidates(circuit){
     var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d))return;
     var p=predict(d),v=expectedValueRaceProfile(d,p);if(v.selected)out.push({race:r,value:v})
   }catch(e){}});
-  var picked=out.sort(function(a,b){return n(b.value&&b.value.score)-n(a.value&&a.value.score)||n(b.value&&b.value.ev)-n(a.value&&a.value.ev)||mins(a.race.startTime)-mins(b.race.startTime)}).slice(0,4);
-  return picked.sort(function(a,b){return mins(a.race.startTime)-mins(b.race.startTime)||String(a.race.track||'').localeCompare(String(b.race.track||''),'ja')||n(a.race.raceNumber)-n(b.race.raceNumber)})
+  // Full-card EV ranking. Time is display metadata only; it is not a selection
+  // factor. Every race that clears the strict actual-odds EV gate is shown.
+  return out.sort(function(a,b){
+    return n(b.value&&b.value.score)-n(a.value&&a.value.score)||n(b.value&&b.value.ev)-n(a.value&&a.value.ev)||
+      String(a.race.track||'').localeCompare(String(b.race.track||''),'ja')||n(a.race.raceNumber)-n(b.race.raceNumber)
+  })
 }
 function fixedPickLoadStatus(circuit){
   var rows=(state.races||[]).filter(function(r){return r&&r.id&&String(r.circuit||'')===String(circuit)}),loaded=0;
@@ -3883,16 +3891,16 @@ function fixedPickEmpty(kind,circuit){
   return '<div class="fixed-pick-empty"><b>該当なし</b><small>'+label+'基準を通過したレースなし</small></div>'
 }
 function fixedSelectedBox(circuit,picks){
-  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>厳選 '+esc(t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
-  return '<div class="fixed-pick-box"><div class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><em>'+picks.length+'レース</em></div>'+body+'</div>'
+  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>厳選 '+esc(t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
+  return '<details class="fixed-pick-box fixed-pick-circuit" data-selected-circuit="selected" data-pick-circuit="'+esc(circuit)+'" '+(open?'open':'')+'><summary class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><span class="fixed-pick-summary-right"><em>'+picks.length+'レース</em><i>⌄</i></span></summary><div class="fixed-pick-box-body">'+body+'</div></details>'
 }
 function fixedValueBox(circuit,picks){
-  var body=picks.length?picks.map(function(z){var r=z.race,v=z.value||{},evPct=Math.round((n(v.ev)-1)*100);return '<button type="button" class="fixed-pick-row value" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(v.horseNo)+' '+esc(v.horseName||'')+' / 単勝 '+n(v.odds).toFixed(1)+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>+'+esc(evPct)+'%</em></button>'}).join(''):fixedPickEmpty('value',circuit);
-  return '<div class="fixed-pick-box value"><div class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><em>'+picks.length+'レース</em></div>'+body+'</div>'
+  var body=picks.length?picks.map(function(z){var r=z.race,v=z.value||{},evPct=Math.round((n(v.ev)-1)*100);return '<button type="button" class="fixed-pick-row value" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(v.horseNo)+' '+esc(v.horseName||'')+' / 単勝 '+n(v.odds).toFixed(1)+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>+'+esc(evPct)+'%</em></button>'}).join(''):fixedPickEmpty('value',circuit),open=!!(selectedCircuitSectionsOpen.value&&selectedCircuitSectionsOpen.value[circuit]);
+  return '<details class="fixed-pick-box fixed-pick-circuit value" data-selected-circuit="value" data-pick-circuit="'+esc(circuit)+'" '+(open?'open':'')+'><summary class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><span class="fixed-pick-summary-right"><em>'+picks.length+'レース</em><i>⌄</i></span></summary><div class="fixed-pick-box-body">'+body+'</div></details>'
 }
 function smartExpectedValueRaces(){
-  var central=expectedValueRaceCandidates('中央'),local=expectedValueRaceCandidates('地方');
-  return '<section class="smart-fixed-picks smart-fixed-values"><div class="smart-fixed-picks-head"><b>期待値高レース</b><small>実オッズ × 市場非依存AI勝率</small></div><div class="smart-fixed-pick-grid">'+fixedValueBox('中央',central)+fixedValueBox('地方',local)+'</div></section>'
+  var central=expectedValueRaceCandidates('中央'),local=expectedValueRaceCandidates('地方'),open=!!selectedSectionsOpen.value,total=central.length+local.length;
+  return '<details class="smart-fixed-picks smart-fixed-values" data-selected-section="value" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>期待値高レース</b><small>全レース比較から基準通過のみ</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedValueBox('中央',central)+fixedValueBox('地方',local)+'</div></details>'
 }
 
 function selectedRaceBetPreview(r){
@@ -3904,8 +3912,8 @@ function selectedRaceBetPreview(r){
   return '<div class="selected-bets">'+lines+'</div>'+result
 }
 function smartSelectedRaces(){
-  var central=selectedRaceCandidates('中央'),local=selectedRaceCandidates('地方');
-  return '<section class="smart-fixed-picks"><div class="smart-fixed-picks-head"><b>厳選レース</b><small>厳選ゲート通過のみ</small></div><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></section>'
+  var central=selectedRaceCandidates('中央'),local=selectedRaceCandidates('地方'),open=!!selectedSectionsOpen.selected,total=central.length+local.length;
+  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>全レース比較から厳選ゲート通過のみ</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
 }
 function scheduleSelectedRacePredictions(){return}
 function smartDailyAiStats(){
@@ -3973,8 +3981,16 @@ function smartLiveRaceSection(){
   '</section>'
 }
 var ARVEXQ_LOCAL_LIVE_SLUG={"帯広":"obihiro","門別":"monbetsu","盛岡":"morioka","水沢":"mizusawa","浦和":"urawa","船橋":"funabashi","大井":"ooi","川崎":"kawasaki","金沢":"kanazawa","笠松":"kasamatsu","名古屋":"nagoya","園田":"sonoda","姫路":"himeji","高知":"kouchi","佐賀":"saga"};
+var ARVEXQ_JRA_YOUTUBE_CHANNEL='UCj6AKkCWS6FJqf0o5wP45eQ';
 function liveVenueSource(circuit,track){
-  if(String(circuit||'')==='中央')return 'https://www.jra.go.jp/tvradio/racelive/';
+  // v302: the JRA landing page is not used as an iframe player. Embed the
+  // official JRA YouTube live endpoint directly so iPhone/PWA can actually play it.
+  if(String(circuit||'')==='中央')return 'https://www.youtube.com/embed/live_stream?channel='+encodeURIComponent(ARVEXQ_JRA_YOUTUBE_CHANNEL)+'&autoplay=1&playsinline=1&rel=0';
+  var slug=ARVEXQ_LOCAL_LIVE_SLUG[String(track||'')]||'';
+  return slug?'https://simple.keiba-lv-st.jp/?track='+encodeURIComponent(slug):'https://simple.keiba-lv-st.jp/'
+}
+function liveVenueExternal(circuit,track){
+  if(String(circuit||'')==='中央')return 'https://www.youtube.com/@jraofficial/live';
   var slug=ARVEXQ_LOCAL_LIVE_SLUG[String(track||'')]||'';
   return slug?'https://simple.keiba-lv-st.jp/?track='+encodeURIComponent(slug):'https://simple.keiba-lv-st.jp/'
 }
@@ -3989,12 +4005,12 @@ function smartLiveLauncher(){
 }
 function liveCenterModal(){
   if(!liveCenterOpen)return '';
-  var rows=liveVenueOptions(),selected=liveCenterTrack?{track:liveCenterTrack,circuit:liveCenterCircuit}:null,src=selected?liveVenueSource(selected.circuit,selected.track):'',central=selected&&selected.circuit==='中央';
+  var rows=liveVenueOptions(),selected=liveCenterTrack?{track:liveCenterTrack,circuit:liveCenterCircuit}:null,src=selected?liveVenueSource(selected.circuit,selected.track):'',external=selected?liveVenueExternal(selected.circuit,selected.track):'',central=selected&&selected.circuit==='中央';
   return '<div class="live-center-overlay" data-live-key="'+esc(String(liveCenterCircuit||'')+'|'+String(liveCenterTrack||''))+'" role="dialog" aria-modal="true" aria-label="ライブ中継">'+
     '<div class="live-center-sheet">'+
       '<header class="live-center-head"><div><b>LIVE</b><small>'+(selected?esc(selected.track)+' / '+esc(selected.circuit):'開催場を選択')+'</small></div><button type="button" data-action="live-close" aria-label="閉じる">×</button></header>'+
       '<div class="live-center-venues">'+(rows.length?rows.map(function(v){return '<button type="button" data-live-track="'+esc(v.track)+'" data-live-circuit="'+esc(v.circuit)+'" class="'+(selected&&selected.track===v.track&&selected.circuit===v.circuit?'active':'')+'"><small>'+esc(v.circuit)+'</small><b>'+esc(v.track)+'</b></button>'}).join(''):'<div class="live-center-empty">本日の開催場データを取得中です</div>')+'</div>'+
-      (selected?'<div class="live-center-player '+(central?'central':'local')+'"><div class="live-center-frame"><iframe src="'+esc(src)+'" title="'+esc(selected.track)+' ライブ" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen scrolling="yes" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><div class="live-center-player-foot"><span>'+(central?'JRA公式ライブ / 最大1080p・自動画質':'地方競馬ライブ映像専用版 / 画質選択対応')+'</span><a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer">公式画面で開く</a></div></div>':'<div class="live-center-prompt"><b>開催場をタップ</b><span>選択した開催場の公式ライブをすぐ表示します。</span></div>')+
+      (selected?'<div class="live-center-player '+(central?'central':'local')+'"><div class="live-center-frame"><iframe src="'+esc(src)+'" title="'+esc(selected.track)+' ライブ" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen scrolling="yes" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><div class="live-center-player-foot"><span>'+(central?'JRA公式YouTubeライブ / 開催時間中のみ配信':'地方競馬ライブ映像専用版 / 再生を維持して表示')+'</span><a href="'+esc(external)+'" target="_blank" rel="noopener noreferrer">公式画面で開く</a></div></div>':'<div class="live-center-prompt"><b>開催場をタップ</b><span>選択した開催場の公式ライブをすぐ表示します。</span></div>')+
     '</div></div>'
 }
 function syncLiveCenterOverlay(){
@@ -4764,7 +4780,7 @@ function refreshDiagnosisNow(id){
 }
 function pollDiagnosisRefresh(id,attempt){return}
 
-function bind(){document.querySelectorAll('[data-selected-section]').forEach(function(el){el.ontoggle=function(){var k=el.getAttribute('data-selected-section');if(k==='selected'||k==='value')selectedSectionsOpen[k]=!!el.open}});document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;if(key==='detail'&&state.race&&!state.detailHorseNo){var hs=(state.race.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)});if(hs.length)state.detailHorseNo=n(hs[0].horseNumber)}state.openPanel=opening?key:null;render();if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-action="copy-bet"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}copyCurrentBet()}});document.querySelectorAll('[data-action="live-open"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterOpen=true;liveCenterTrack='';liveCenterCircuit='';render()}});document.querySelectorAll('[data-action="live-close"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterOpen=false;render()}});document.querySelectorAll('[data-action="today-return"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}returnToToday()}});document.querySelectorAll('[data-live-track]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterTrack=this.getAttribute('data-live-track')||'';liveCenterCircuit=this.getAttribute('data-live-circuit')||'';render()}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);window.scrollTo(0,0);render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)}),preserve=this.getAttribute('data-preserve-panel')==='1';if(row){state.track=row.track;if(row.circuit)state.circuit=row.circuit}window.scrollTo(0,0);openRace(id,false,false,preserve)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false,true)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-check]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}if(state.race)toggleHorseChecked(state.race,this.getAttribute('data-horse-check'))};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-detail-horse]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.detailHorseNo=n(this.getAttribute('data-detail-horse'));state.openPanel='detail';render();var panel=document.getElementById('section-detail');if(panel)setTimeout(function(){panel.scrollIntoView({block:'start',behavior:'smooth'})},0)};els=document.querySelectorAll('[data-detail-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveDetailHorse(-1)};els=document.querySelectorAll('[data-detail-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveDetailHorse(1)};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
+function bind(){document.querySelectorAll('[data-selected-section]').forEach(function(el){el.ontoggle=function(){var k=el.getAttribute('data-selected-section');if(k==='selected'||k==='value')selectedSectionsOpen[k]=!!el.open}});document.querySelectorAll('[data-selected-circuit]').forEach(function(el){el.ontoggle=function(){var k=el.getAttribute('data-selected-circuit'),c=el.getAttribute('data-pick-circuit');if((k==='selected'||k==='value')&&(c==='中央'||c==='地方'))selectedCircuitSectionsOpen[k][c]=!!el.open}});document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;if(key==='detail'&&state.race&&!state.detailHorseNo){var hs=(state.race.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)});if(hs.length)state.detailHorseNo=n(hs[0].horseNumber)}state.openPanel=opening?key:null;render();if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-action="copy-bet"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}copyCurrentBet()}});document.querySelectorAll('[data-action="live-open"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterOpen=true;liveCenterTrack='';liveCenterCircuit='';render()}});document.querySelectorAll('[data-action="live-close"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterOpen=false;render();setTimeout(fastReflectNow,150)}});document.querySelectorAll('[data-action="today-return"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}returnToToday()}});document.querySelectorAll('[data-live-track]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterTrack=this.getAttribute('data-live-track')||'';liveCenterCircuit=this.getAttribute('data-live-circuit')||'';render()}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);window.scrollTo(0,0);render()};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)}),preserve=this.getAttribute('data-preserve-panel')==='1';if(row){state.track=row.track;if(row.circuit)state.circuit=row.circuit}window.scrollTo(0,0);openRace(id,false,false,preserve)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false,true)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-check]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}if(state.race)toggleHorseChecked(state.race,this.getAttribute('data-horse-check'))};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseModal(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-detail-horse]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.detailHorseNo=n(this.getAttribute('data-detail-horse'));state.openPanel='detail';render();var panel=document.getElementById('section-detail');if(panel)setTimeout(function(){panel.scrollIntoView({block:'start',behavior:'smooth'})},0)};els=document.querySelectorAll('[data-detail-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveDetailHorse(-1)};els=document.querySelectorAll('[data-detail-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveDetailHorse(1)};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
 function initPaceBoard(){if(!state.pred)return;var plan=activeScenarioPlan(state.pred),stages=visiblePaceStages(plan);if(!stages.length)return;drawPaceStage(clamp(state.paceStage,0,stages.length-1))}
 
 function hydrateInstantFromDevice(rows){
@@ -4916,8 +4932,9 @@ function load(force){
     function scheduleTopRefresh(){
       if(selectedRacePreload.timer){clearTimeout(selectedRacePreload.timer);selectedRacePreload.timer=null}
       if(d===today())selectedRacePreload.timer=setTimeout(function(){
+        if(liveCenterOpen){scheduleTopRefresh();return}
         if(seq===state.requestSeq&&state.date===d&&!state.race&&!state.track&&!state.picker)requestDetails(0)
-      },6000)
+      },30000)
     }
     fetch('https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='+encodeURIComponent(d)+'&details=1&t='+Date.now(),{cache:'no-store'})
       .then(function(res){if(!res.ok)throw Error('cloudflare-details '+res.status);return res.json()})
@@ -4956,13 +4973,13 @@ function load(force){
         }
         var targets=missing.slice();
         incomplete.forEach(function(id){if(targets.indexOf(id)<0)targets.push(id)});
-        // Do not hammer D1 for the whole card every 6s. Refresh the most relevant
-        // incomplete races first; the full day pack still refreshes every cycle.
+        // v302: no current-time bias. Walk every missing/incomplete race on the
+        // card so later races cannot be starved by the nearest 12 races.
         targets.sort(function(a,b){
-          var ra=summaryBy[a]||{},rb=summaryBy[b]||{},da=Math.abs(mins(ra.startTime)-nowMins()),db=Math.abs(mins(rb.startTime)-nowMins());
-          return da-db||n(ra.raceNumber)-n(rb.raceNumber)
+          var ra=summaryBy[a]||{},rb=summaryBy[b]||{};
+          return String(ra.circuit||'').localeCompare(String(rb.circuit||''),'ja')||
+            String(ra.track||'').localeCompare(String(rb.track||''),'ja')||n(ra.raceNumber)-n(rb.raceNumber)
         });
-        targets=targets.slice(0,12);
         if(!targets.length){if(ids.length){selectedRacePreload.fullLoaded=true;selectedRacePreload.fullLoading=false;render();scheduleTopRefresh();return}selectedRacePreload.fullLoading=true;render();if(attempt<5)setTimeout(function(){requestDetails(attempt+1)},700+attempt*300);return}
         var cursor=0,workers=[],limit=Math.min(6,targets.length);
         function worker(){
@@ -4989,7 +5006,7 @@ function load(force){
 }
 window.onerror=function(msg){if(app)app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(msg)+'<br><button onclick="location.reload()">再読み込み</button></div>';return false};
 function fastReflectNow(){
-  if(document.visibilityState==='hidden')return;
+  if(document.visibilityState==='hidden'||liveCenterOpen)return;
   try{
     if(state.race&&state.race.id){refreshOddsOnly(true);return}
     if(!state.track&&!state.picker&&typeof fastTopRefresh==='function')fastTopRefresh()
@@ -5014,16 +5031,16 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="arvexq-shell-v133-edge-only";
+SW = r'''const CACHE="arvexq-shell-v303-nested-picks";
 const STATIC=[
-  "/styles-arvexq-v130.css",
-  "/app-v133.js",
+  "/styles-arvexq-v303.css",
+  "/app-v303.js",
   "/manifest-arvexq-v175.webmanifest",
   "/arvexq-icon-v175-192.png",
   "/arvexq-icon-v175-512.png",
   "/arvexq-racing-hero.webp"
 ];
-const LAST_PAGE="/__arvexq_last_page_v133_edge_only__";
+const LAST_PAGE="/__arvexq_last_page_v303_nested_picks__";
 
 self.addEventListener("install",event=>{
   event.waitUntil(
@@ -13742,7 +13759,7 @@ def model_learning(date: str = Query(""), circuit: str = Query("地方")):
 
 @app.get("/api/v1/racedb-status")
 def racedb_status(date: str = "", circuit: str = ""):
-    return {"build":"v301-practical-baseline","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"preRaceAudit":True,"safeWinnerLearning":True,"note":"Data Core + T-5分最終固定 + 日付ブロックTRAIN/TUNE/PROMOTION。SHADOWは選定・昇格に使わず監査専用。市場情報はwinner学習に不使用。"}
+    return {"build":"v302-fullcard-livefix","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"preRaceAudit":True,"safeWinnerLearning":True,"note":"Data Core + T-5分最終固定 + 日付ブロックTRAIN/TUNE/PROMOTION。SHADOWは選定・昇格に使わず監査専用。市場情報はwinner学習に不使用。"}
 
 @app.get("/api/v1/racedb-race/{race_id}")
 def racedb_race(race_id:str):
@@ -13805,7 +13822,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v301","appVersion":"14.01-v301-practical-baseline",
+        "build":"v302","appVersion":"14.02-v302-fullcard-livefix",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -13925,6 +13942,7 @@ def pace_preview():
 
 @app.get("/styles-arvexq-v88.css")
 @app.get("/styles-v86.css")
+@app.get("/styles-arvexq-v303.css")
 @app.get("/styles-arvexq-v130.css")
 @app.get("/styles-arvexq-v91.css")
 def styles():
@@ -13933,6 +13951,7 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
+@app.get("/app-v303.js")
 @app.get("/app-v133.js")
 @app.get("/app-v132.js")
 @app.get("/app-v131.js")
@@ -15108,4 +15127,32 @@ CSS += r"""
 .fixed-pick-row.value>em{color:#ffd06a}.fixed-pick-row.value>span>small{color:#c8b37d}
 .fixed-pick-empty{min-height:62px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.fixed-pick-empty>b{font-size:12px;color:#9fb4c1}.fixed-pick-empty>small{margin-top:3px;font-size:8.8px;line-height:1.3;color:#718895}
 @media(max-width:370px){.smart-fixed-picks{padding:7px}.smart-fixed-pick-grid{gap:6px}.fixed-pick-box-head{padding:6px}.fixed-pick-box-head>b{font-size:14px}.fixed-pick-row{padding:6px}.fixed-pick-row>span>b{font-size:11.5px}.fixed-pick-row>time{font-size:10px}}
+"""
+
+
+CSS += r"""
+/* v303 — two-stage pick accordion: category -> circuit -> races */
+details.smart-fixed-picks>summary,details.fixed-pick-circuit>summary{list-style:none;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+details.smart-fixed-picks>summary::-webkit-details-marker,details.fixed-pick-circuit>summary::-webkit-details-marker{display:none}
+.smart-fixed-picks-head{align-items:center!important;margin:0!important;min-height:52px;padding:7px 8px;border-radius:9px}
+.smart-fixed-picks-head>span:first-child{min-width:0;display:flex;flex-direction:column;gap:2px}
+.smart-fixed-picks-head>span:first-child>b{font-size:18px;color:#f4f9fc;line-height:1.15}.smart-fixed-values .smart-fixed-picks-head>span:first-child>b{color:#ffe19a}
+.smart-fixed-picks-head>span:first-child>small{font-size:9.5px;color:#92acbd;line-height:1.2}.smart-fixed-values .smart-fixed-picks-head>span:first-child>small{color:#c7aa69}
+.smart-fixed-summary-right,.fixed-pick-summary-right{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.smart-fixed-summary-right>em,.fixed-pick-summary-right>em{font-style:normal;font-size:10px;font-weight:900;color:#8fd9ff}.smart-fixed-values .smart-fixed-summary-right>em,.fixed-pick-box.value .fixed-pick-summary-right>em{color:#ffd06a}
+.smart-fixed-summary-right>i,.fixed-pick-summary-right>i{font-style:normal;font-size:18px;font-weight:900;line-height:1;color:#b9d2df;transition:transform .16s ease}
+.smart-fixed-values .smart-fixed-summary-right>i,.fixed-pick-box.value .fixed-pick-summary-right>i{color:#e6c677}
+details.smart-fixed-picks[open]>.smart-fixed-picks-head .smart-fixed-summary-right>i,details.fixed-pick-circuit[open]>.fixed-pick-box-head .fixed-pick-summary-right>i{transform:rotate(180deg)}
+.smart-fixed-pick-grid{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;margin-top:8px}
+.fixed-pick-box{overflow:hidden}.fixed-pick-box-head{min-height:44px;border-bottom:0!important}.fixed-pick-circuit[open]>.fixed-pick-box-head{border-bottom:1px solid rgba(92,142,172,.24)!important}.fixed-pick-circuit.value[open]>.fixed-pick-box-head{border-bottom-color:rgba(153,120,52,.28)!important}
+.fixed-pick-box-body{display:block}.fixed-pick-circuit:not([open])>.fixed-pick-box-body{display:none}
+@media(max-width:370px){.smart-fixed-picks-head{min-height:48px;padding:6px}.smart-fixed-picks-head>span:first-child>b{font-size:16px}.fixed-pick-box-head{min-height:42px}}
+"""
+
+CSS += r"""
+/* v302 — stable in-app LIVE. JRA uses the official YouTube live embed;
+   local racing keeps the fixed-canvas scaler and is isolated from home refreshes. */
+.live-center-player.central .live-center-frame{flex:0 0 auto!important;aspect-ratio:16/9!important;width:100%!important;min-height:0!important;background:#000!important}
+.live-center-player.central{justify-content:center!important}
+.live-center-player.central .live-center-player-foot{margin-top:auto!important}
 """
