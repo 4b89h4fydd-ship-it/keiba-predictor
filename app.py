@@ -347,12 +347,12 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.80-v261-audit-loop")
+app = FastAPI(title="ARVEXQ", version="13.90-v262-safe-learning")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v41-v261-audit-loop"
-ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v261-audit"
-AI_EVALUATION_VERSION = "evidence-v261-market-independent-audit-lock"
+PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v42-v262-safe-learning"
+ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v262-learning"
+AI_EVALUATION_VERSION = "evidence-v262-market-independent-learned-calibration"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
 V207_WINNER_MODEL_VERSION = "arvexq-winner-v207-from-v206-run1"
@@ -2904,8 +2904,10 @@ function assignPredictionMarks(rows,r){
 
   // Consensus: statistical P1 is the backbone; independent win evidence and direct
   // duels can resolve close calls. P2/P3 and market data never enter this layer.
-  var consensusRaw=rows.map(function(z){return .58*p1(z)+.24*n(z.winEvidenceProbability)+.18*n(z.pairwiseProbability)}),cs=consensusRaw.reduce(function(a,b){return a+b},0)||1;
-  rows.forEach(function(z,i){z.winnerConsensusProbability=consensusRaw[i]/cs});
+  var learning=(r&&r.winnerLearningProfile)||{},lw=(learning.active&&learning.weights)||{},wP1=n(lw.p1,.58),wWin=n(lw.winEvidence,.24),wPair=n(lw.pairwise,.18),
+      consensusRaw=rows.map(function(z){return Math.max(1e-12,wP1*p1(z)+wWin*n(z.winEvidenceProbability)+wPair*n(z.pairwiseProbability))}),pow=learning.active?clamp(n(learning.power,1),.55,1.65):1,shr=learning.active?clamp(n(learning.shrink,0),0,.25):0;
+  if(pow!==1)consensusRaw=consensusRaw.map(function(v){return Math.pow(v,pow)});var cs=consensusRaw.reduce(function(a,b){return a+b},0)||1;
+  rows.forEach(function(z,i){z.winnerConsensusProbability=(1-shr)*(consensusRaw[i]/cs)+shr/field;z.winnerLearningActive=!!learning.active;z.winnerLearningProfileId=String(learning.profileId||'baseline')});
   var consensus=rows.slice().sort(function(a,b){return n(b.winnerConsensusProbability)-n(a.winnerConsensusProbability)||p1(b)-p1(a)||n(b.winEvidenceProbability)-n(a.winEvidenceProbability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
   consensus.forEach(function(z,i){z.winnerConsensusRank=i+1});
   var core=rows.slice().sort(function(a,b){return p1(b)-p1(a)||n(b.winnerCore)-n(a.winnerCore)||n(b.overallRaw)-n(a.overallRaw)||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),
@@ -2993,7 +2995,7 @@ function integratedGrades(r,rows){
   })
 }
 
-function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v41-v261-audit-loop',researchAudit:{sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,liveTrackSpeedV250:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV260Independent:true,preRaceAuditV261:true,raceTypeTicketV260:true,pairwiseDuelV260:true,fullOrderSequential:true,strictReadinessV260:true,actualOddsEvOnlyV260:true,oddsCoverageV247:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
+function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v42-v262-safe-learning',researchAudit:{sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,liveTrackSpeedV250:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV260Independent:true,preRaceAuditV262:true,safeWinnerLearningV262:true,raceTypeTicketV260:true,pairwiseDuelV260:true,fullOrderSequential:true,strictReadinessV260:true,actualOddsEvOnlyV260:true,oddsCoverageV247:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -8966,7 +8968,11 @@ def _sanitize_horse_measurements(h:dict)->dict:
     return z
 
 
-PRERACE_AUDIT_VERSION = "arvexq-prerace-audit-v261"
+PRERACE_AUDIT_VERSION = "arvexq-prerace-audit-v262"
+WINNER_LEARNING_VERSION = "arvexq-winner-learning-v262"
+WINNER_LEARNING_MIN_RACES = max(100, int(os.getenv("WINNER_LEARNING_MIN_RACES", "120")))
+_WINNER_LEARNING_CACHE = {}
+_WINNER_LEARNING_LOCK = threading.Lock()
 
 
 def _prediction_clock_state(detail: dict) -> tuple[str, int | None]:
@@ -9009,6 +9015,114 @@ def _audit_axes_from_eval(e:dict)->dict:
         "opponentLevel":u("opponentLevel"),"stateConsistency":u("stateConsistency"),
         "evidence":u("evidence",.0),"sevenAxisScore":u("sevenAxisScore"),"fragility":round(frag,6),
     }
+
+
+def _learning_probability(rows:list[dict], weights:dict, power:float=1.0, shrink:float=0.0)->list[float]:
+    """Market-independent winner distribution from immutable pre-race lock fields."""
+    if not rows:return []
+    p1=_prob_vector([float(x.get("p1Probability") or 0) for x in rows])
+    win=_prob_vector([float(x.get("winEvidenceProbability") or 0) for x in rows])
+    pair=_prob_vector([float(x.get("pairwiseWinRate") or .5) for x in rows])
+    w1=float(weights.get("p1",.58));w2=float(weights.get("winEvidence",.24));w3=float(weights.get("pairwise",.18))
+    raw=[max(1e-12,w1*p1[i]+w2*win[i]+w3*pair[i]) for i in range(len(rows))]
+    pw=max(.55,min(1.65,float(power or 1.0)))
+    raw=[x**pw for x in raw];sm=sum(raw) or 1.0;probs=[x/sm for x in raw]
+    sh=max(0.0,min(.25,float(shrink or 0.0)));u=1.0/len(rows)
+    if sh:probs=[(1-sh)*x+sh*u for x in probs]
+    sm=sum(probs) or 1.0
+    return [x/sm for x in probs]
+
+
+def _learning_metric(races:list[dict], weights:dict, power:float=1.0, shrink:float=0.0)->dict:
+    if not races:return {"races":0,"top1":0.0,"logLoss":None,"brier":None,"hits":0}
+    hits=0;ll=0.0;br=0.0;used=0
+    for z in races:
+        rows=z.get("horses") or [];winner=int(z.get("winnerNo") or 0)
+        probs=_learning_probability(rows,weights,power,shrink)
+        if not probs or winner<=0:continue
+        try:wi=next(i for i,x in enumerate(rows) if int(x.get("horseNumber") or 0)==winner)
+        except StopIteration:continue
+        pred=max(range(len(probs)),key=lambda i:(probs[i],-int(rows[i].get("horseNumber") or 999)))
+        hits+=1 if pred==wi else 0;ll-=math.log(max(1e-12,probs[wi]));br+=sum((p-(1.0 if i==wi else 0.0))**2 for i,p in enumerate(probs));used+=1
+    return {"races":used,"hits":hits,"top1":round(hits/used,6) if used else 0.0,"logLoss":round(ll/used,6) if used else None,"brier":round(br/used,6) if used else None}
+
+
+def _learning_races(as_of_date:str,circuit:str)->list[dict]:
+    if not RACEDB.path.exists():return []
+    conn=sqlite3.connect(RACEDB.path,timeout=4);conn.row_factory=sqlite3.Row
+    try:
+        dbrows=conn.execute("SELECT race_date,payload FROM race_snapshots WHERE race_date<? AND circuit=? ORDER BY race_date,track,race_no",(as_of_date,circuit)).fetchall()
+    finally:conn.close()
+    out=[]
+    for row in dbrows:
+        try:d=json.loads(row["payload"])
+        except Exception:continue
+        lock=d.get("preRacePrediction") if isinstance(d.get("preRacePrediction"),dict) else None
+        result=d.get("result") if isinstance(d.get("result"),dict) else None
+        if not lock or not result or result.get("status")!="確定":continue
+        fs=[x for x in (result.get("finishers") or []) if isinstance(x,dict) and int(x.get("finish") or 0)>0]
+        if not fs:continue
+        fs.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)));winner=int(fs[0].get("horseNumber") or 0)
+        horses=[x for x in (lock.get("horses") or []) if isinstance(x,dict) and int(x.get("horseNumber") or 0)>0]
+        if len(horses)<4 or winner not in {int(x.get("horseNumber") or 0) for x in horses}:continue
+        # v261+ immutable lock fields only. Results/odds never enter model features.
+        if not all("p1Probability" in x and "winEvidenceProbability" in x and "pairwiseWinRate" in x for x in horses):continue
+        out.append({"date":str(row["race_date"] or ""),"winnerNo":winner,"horses":horses})
+    return out
+
+
+def _winner_learning_profile(detail:dict)->dict:
+    """Chronological challenger-vs-baseline promotion. Holdout is never used to choose parameters."""
+    asof=str((detail or {}).get("date") or _today_iso());circuit=str((detail or {}).get("circuit") or "")
+    if circuit not in {"中央","地方"}:return {"version":WINNER_LEARNING_VERSION,"active":False,"reason":"unsupported-circuit","races":0}
+    key=(asof,circuit)
+    now=time.time()
+    with _WINNER_LEARNING_LOCK:
+        hit=_WINNER_LEARNING_CACHE.get(key)
+        if hit and now-float(hit.get("_cachedAt") or 0)<300:return dict(hit["profile"])
+    races=_learning_races(asof,circuit);n=len(races)
+    base_w={"p1":.58,"winEvidence":.24,"pairwise":.18}
+    inactive={"version":WINNER_LEARNING_VERSION,"active":False,"circuit":circuit,"asOf":asof,"races":n,"minRaces":WINNER_LEARNING_MIN_RACES,"weights":base_w,"power":1.0,"shrink":0.0}
+    if n<WINNER_LEARNING_MIN_RACES:
+        inactive["reason"]="insufficient-locked-races"
+        with _WINNER_LEARNING_LOCK:_WINNER_LEARNING_CACHE[key]={"_cachedAt":now,"profile":inactive}
+        return dict(inactive)
+    a=max(60,int(n*.60));b=max(a+24,int(n*.80));b=min(b,n-24)
+    if b<=a or n-b<20:
+        inactive["reason"]="insufficient-holdout";return inactive
+    train=races[:a];valid=races[a:b];hold=races[b:]
+    candidates=[]
+    # Deterministic grid: compact enough to rerun, broad enough to challenge v260's 58/24/18 blend.
+    for p1i in range(35,76,5):
+        for wei in range(10,46,5):
+            pai=100-p1i-wei
+            if pai<5 or pai>40:continue
+            w={"p1":p1i/100.0,"winEvidence":wei/100.0,"pairwise":pai/100.0}
+            for power in (.75,.90,1.00,1.10,1.25,1.40):
+                for shrink in (0.0,.05,.10):
+                    tm=_learning_metric(train,w,power,shrink);vm=_learning_metric(valid,w,power,shrink)
+                    # Select on train+validation only; top1 dominates, calibration breaks ties.
+                    score=vm["top1"]*.78+tm["top1"]*.22-.025*float(vm["logLoss"] or 9)-.008*float(tm["logLoss"] or 9)
+                    candidates.append((score,w,power,shrink,tm,vm))
+    candidates.sort(key=lambda x:(-x[0],-x[5]["top1"],float(x[5]["logLoss"] or 99),-x[4]["top1"]))
+    _,cw,cp,cs,ct,cv=candidates[0]
+    base_train=_learning_metric(train,base_w,1,0);base_valid=_learning_metric(valid,base_w,1,0);base_hold=_learning_metric(hold,base_w,1,0);cand_hold=_learning_metric(hold,cw,cp,cs)
+    base_all=_learning_metric(races,base_w,1,0);cand_all=_learning_metric(races,cw,cp,cs)
+    valid_ok=cv["top1"]>=base_valid["top1"] and float(cv["logLoss"] or 99)<=float(base_valid["logLoss"] or 99)+.025
+    hold_ok=cand_hold["top1"]>=base_hold["top1"] and float(cand_hold["logLoss"] or 99)<=float(base_hold["logLoss"] or 99)+.025
+    improvement=(cv["hits"]>base_valid["hits"] or cand_hold["hits"]>base_hold["hits"] or (cand_all["hits"]>=base_all["hits"]+2 and float(cand_all["logLoss"] or 99)<float(base_all["logLoss"] or 99)))
+    active=bool(valid_ok and hold_ok and improvement and cand_all["top1"]>=base_all["top1"])
+    profile={"version":WINNER_LEARNING_VERSION,"active":active,"circuit":circuit,"asOf":asof,"races":n,"minRaces":WINNER_LEARNING_MIN_RACES,
+             "weights":cw if active else base_w,"power":cp if active else 1.0,"shrink":cs if active else 0.0,
+             "challenger":{"weights":cw,"power":cp,"shrink":cs},
+             "split":{"train":len(train),"validation":len(valid),"holdout":len(hold)},
+             "baseline":{"train":base_train,"validation":base_valid,"holdout":base_hold,"all":base_all},
+             "candidate":{"train":ct,"validation":cv,"holdout":cand_hold,"all":cand_all},
+             "promotion":{"validationPass":valid_ok,"holdoutPass":hold_ok,"improvement":improvement,"promoted":active},
+             "reason":"promoted" if active else "challenger-not-promoted"}
+    profile["profileId"]=hashlib.sha1(json.dumps({"c":circuit,"a":asof,"n":n,"w":profile["weights"],"p":profile["power"],"s":profile["shrink"]},sort_keys=True).encode()).hexdigest()[:14]
+    with _WINNER_LEARNING_LOCK:_WINNER_LEARNING_CACHE[key]={"_cachedAt":now,"profile":profile}
+    return dict(profile)
 
 
 def _build_prerace_prediction(detail:dict)->dict|None:
@@ -9060,6 +9174,7 @@ def _build_prerace_prediction(detail:dict)->dict|None:
         "winnerConfidence":round(float(hon_e.get("axisConfidence") or 0),8),"winnerStable":stable,
         "fieldSize":len(rows),"markCount":mark_count,"dataQuality":quality,"horses":rows,
         "marketIndependent":True,"oddsStored":False,"status":"pre-race",
+        "learningProfile":{k:v for k,v in (detail.get("winnerLearningProfile") or {}).items() if k in {"version","profileId","active","circuit","races","weights","power","shrink","reason"}},
     }
     payload["revision"]=hashlib.sha1(json.dumps({"m":[(x["horseNumber"],x["mark"],x["decisionProbability"]) for x in rows],"q":quality},ensure_ascii=False,sort_keys=True).encode()).hexdigest()[:16]
     return payload
@@ -9107,6 +9222,7 @@ def _prediction_audit_from_lock(detail:dict)->dict|None:
         "highConfidence":float(lock.get("winnerConfidence") or 0)>=.70,"brier":round(brier,8),"logLoss":round(-math.log(wp),8),
         "missClass":"hit" if hit else ("candidate-order" if marked else "candidate-miss"),"reason":reason,"axisDiffs":diffs,
         "lockedAtEpoch":int(lock.get("capturedAtEpoch") or 0),"modelVersion":str(lock.get("modelVersion") or ""),
+        "learningProfileId":str((lock.get("learningProfile") or {}).get("profileId") or "baseline"),"learningActive":bool((lock.get("learningProfile") or {}).get("active")),
         "top3Finishers":[int(x.get("horseNumber") or 0) for x in finishers[:3]],
     }
 
@@ -10951,9 +11067,14 @@ def _rank_evaluations(detail):
         mx=max(win_raw);wex=[math.exp((x-mx)/.105) for x in win_raw];ws=sum(wex) or 1.0;win_prob=[x/ws for x in wex]
     else:win_prob=[]
     p1_vals=[max(0.0,float((h.get('integratedEvaluation') or {}).get('p1Score') or 0)) for h in horses];p1_sum=sum(p1_vals) or 1.0;p1_prob=[x/p1_sum for x in p1_vals]
-    consensus=[.58*p1_prob[i]+.24*win_prob[i]+.18*duel_prob[i] for i in range(len(horses))];cs=sum(consensus) or 1.0;consensus=[x/cs for x in consensus]
+    learn=detail.get('winnerLearningProfile') if isinstance(detail.get('winnerLearningProfile'),dict) else {};lw=learn.get('weights') if learn.get('active') and isinstance(learn.get('weights'),dict) else {'p1':.58,'winEvidence':.24,'pairwise':.18}
+    wp1=float(lw.get('p1',.58));wwe=float(lw.get('winEvidence',.24));wpa=float(lw.get('pairwise',.18));consensus=[max(1e-12,wp1*p1_prob[i]+wwe*win_prob[i]+wpa*duel_prob[i]) for i in range(len(horses))]
+    power=max(.55,min(1.65,float(learn.get('power') or 1.0))) if learn.get('active') else 1.0;consensus=[x**power for x in consensus];cs=sum(consensus) or 1.0;consensus=[x/cs for x in consensus]
+    shrink=max(0.0,min(.25,float(learn.get('shrink') or 0.0))) if learn.get('active') else 0.0
+    if shrink and horses:
+        uni=1.0/len(horses);consensus=[(1-shrink)*x+shrink*uni for x in consensus];cs=sum(consensus) or 1.0;consensus=[x/cs for x in consensus]
     for i,h in enumerate(horses):
-        e=h.get('integratedEvaluation') or {};e['pairwiseWinRate']=round(duel_rates[i],8);e['pairwiseProbability']=round(duel_prob[i],8);e['winEvidenceProbability']=round(win_prob[i],8);e['winnerConsensusProbability']=round(consensus[i],8)
+        e=h.get('integratedEvaluation') or {};e['pairwiseWinRate']=round(duel_rates[i],8);e['pairwiseProbability']=round(duel_prob[i],8);e['winEvidenceProbability']=round(win_prob[i],8);e['winnerConsensusProbability']=round(consensus[i],8);e['winnerLearningProfileId']=str(learn.get('profileId') or 'baseline');e['winnerLearningActive']=bool(learn.get('active'))
     for rank,h in enumerate(sorted(horses,key=lambda z:(-float((z.get('integratedEvaluation') or {}).get('pairwiseWinRate') or .5),-float((z.get('integratedEvaluation') or {}).get('p1Score') or 0),int(z.get('horseNumber') or 0))),1):(h.get('integratedEvaluation') or {})['pairwiseRank']=rank
     for rank,h in enumerate(sorted(horses,key=lambda z:(-float((z.get('integratedEvaluation') or {}).get('winEvidenceProbability') or 0),int(z.get('horseNumber') or 0))),1):(h.get('integratedEvaluation') or {})['winEvidenceRank']=rank
     cons_sorted=sorted(horses,key=lambda z:(-float((z.get('integratedEvaluation') or {}).get('winnerConsensusProbability') or 0),-float((z.get('integratedEvaluation') or {}).get('p1Score') or 0),int(z.get('horseNumber') or 0)))
@@ -11207,6 +11328,8 @@ def _precompute_detail_metrics(detail: dict) -> dict:
     detail=_apply_enrichment(str(detail.get("id") or ""),detail)
     try:detail["trackSpeed"]=_pc_live_track_speed(detail)
     except Exception:detail["trackSpeed"]={"version":"track-speed-v250","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","source":"fallback"}
+    try:detail["winnerLearningProfile"]=_winner_learning_profile(detail)
+    except Exception as exc:detail["winnerLearningProfile"]={"version":WINNER_LEARNING_VERSION,"active":False,"reason":"profile-error","error":str(exc)[:120]}
     for horse in detail.get("horses",[]) or []:
         runs=horse.get("allPastRuns") or horse.get("recentRaces") or []
         if detail.get("analysisMode")=="新馬" and not runs:horse["debutNoHistory"]=True
@@ -13501,7 +13624,11 @@ def model_audit(date: str = Query(""), days: int = Query(30, ge=1, le=180)):
         if not vals:continue
         pm=sum(x[0] for x in vals)/len(vals);ar=sum(x[1] for x in vals)/len(vals);ece+=abs(pm-ar)*len(vals)/max(1,len(cal));bins.append({"lo":lo,"hi":hi,"count":len(vals),"predicted":round(pm,4),"actual":round(ar,4),"gap":round(ar-pm,4)})
     segout={k:{"races":v["races"],"top1":round(v["hits"]/v["races"],4) if v["races"] else 0,"winnerMarked":round(v["marked"]/v["races"],4) if v["races"] else 0} for k,v in segments.items()}
-    return {"version":PRERACE_AUDIT_VERSION,"start":start,"end":end,"races":len(dbrows),"audited":n,"learningReady":n>=100,
+    learning={}
+    for c in ("地方","中央"):
+        try:learning[c]=_winner_learning_profile({"date":end,"circuit":c})
+        except Exception as exc:learning[c]={"version":WINNER_LEARNING_VERSION,"active":False,"reason":"profile-error","error":str(exc)[:120]}
+    return {"version":PRERACE_AUDIT_VERSION,"start":start,"end":end,"races":len(dbrows),"audited":n,"learningReady":n>=WINNER_LEARNING_MIN_RACES,"learning":learning,
             "honTop1":round(hits/n,4) if n else 0,"winnerMarked":round(marked/n,4) if n else 0,"winnerTop2":round(top2/n,4) if n else 0,"winnerTop3":round(top3/n,4) if n else 0,
             "highConfidence":{"races":len(hc),"hits":sum(1 for a in hc if a.get("honHit")),"rate":round(sum(1 for a in hc if a.get("honHit"))/len(hc),4) if hc else 0},
             "brier":round(sum(float(a.get("brier") or 0) for a in rows)/n,6) if n else None,"logLoss":round(sum(float(a.get("logLoss") or 0) for a in rows)/n,6) if n else None,
@@ -13509,9 +13636,18 @@ def model_audit(date: str = Query(""), days: int = Query(30, ge=1, le=180)):
             "missReasons":dict(sorted(reasons.items(),key=lambda kv:(-kv[1],kv[0]))),"audits":rows[-100:]}
 
 
+@app.get("/api/v1/model-learning")
+def model_learning(date: str = Query(""), circuit: str = Query("地方")):
+    target=date or _today_iso();c=_clean(circuit) or "地方"
+    if c not in {"中央","地方"}:raise HTTPException(status_code=400,detail="circuit must be 中央 or 地方")
+    try:datetime.strptime(target,"%Y-%m-%d")
+    except Exception:raise HTTPException(status_code=400,detail="date must be YYYY-MM-DD")
+    return _winner_learning_profile({"date":target,"circuit":c})
+
+
 @app.get("/api/v1/racedb-status")
 def racedb_status(date: str = Query(""), circuit: str = Query("")):
-    return {"build":"v261-audit-loop","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"preRaceAudit":True,"note":"Data Core + 発走前予想ロック + 結果自動回顧。発走後に予想スナップショットを上書きしません。"}
+    return {"build":"v262-safe-learning","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"preRaceAudit":True,"safeWinnerLearning":True,"note":"Data Core + 発走前固定 + chronological train/validation/holdout。検証を通過したwinner challengerだけ翌日以降に昇格します。"}
 
 @app.get("/api/v1/racedb-race/{race_id}")
 def racedb_race(race_id:str):
