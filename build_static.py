@@ -67,14 +67,11 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v314"
+BUILD_VERSION = "v315"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
-js = re.sub(r'(arvexq-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
-js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
-js = re.sub(r'(sessionStorage\.setItem\("arvexq-sw-reload",")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
-# v148: the SW script URL itself changes, forcing Safari/PWA to check a new worker.
+# v315: never rewrite the reload tag to an old generic edge-only value.
 js = js.replace('navigator.serviceWorker.register("/sw.js",{scope:"/"})',
-                f'navigator.serviceWorker.register("/sw-{BUILD_VERSION}.js",{{scope:"/"}})')
+                'navigator.serviceWorker.register("/sw-v315-reset.js",{scope:"/"})')
 # Expose the running build without changing normal UI.
 js = f'window.ARVEXQ_BUILD="{BUILD_VERSION}";\n' + js
 
@@ -288,6 +285,7 @@ for route in ("venue", "race"):
     (DIST / route / "index.html").write_text(index_html, encoding="utf-8")
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION+"\n", encoding="utf-8")
+(DIST / "version.json").write_text('{"build":"v315","shell":"update-reset","model":"v314-sameday-flow-fix"}\n', encoding="utf-8")
 
 (DIST / "_redirects").write_text(
     "/venue /index.html 200\n/race /index.html 200\n",
@@ -312,131 +310,24 @@ manifest = strings["MANIFEST"]
 (DIST / "manifest-arvexq-v173.webmanifest").write_text(manifest, encoding="utf-8")
 (DIST / "manifest-arvexq-v130.webmanifest").write_text(manifest, encoding="utf-8")
 
-# iOS/Safari rejects a redirected Response when it is returned by a Service
-# Worker navigation handler ("Response served by service worker has redirections").
-# Always fetch /index.html directly and clone it into a fresh Response, which
-# strips redirect metadata before it is returned to the browser.
-sw = f'''const CACHE="arvexq-shell-{BUILD_VERSION}-safe-navigation";
-const STATIC=[
-  "/index.html",
-  "/arvexq-app-{BUILD_VERSION}.js",
-  "/manifest-arvexq-v173.webmanifest",
-  "/arvexq-icon-v175-192.png",
-  "/arvexq-icon-v175-512.png",
-  "/arvexq-racing-hero.webp"
-];
-
-async function cleanResponse(r){{
-  const body=await r.arrayBuffer();
-  return new Response(body,{{
-    status:r.status,
-    statusText:r.statusText,
-    headers:new Headers(r.headers)
-  }});
-}}
-
-self.addEventListener("install",event=>{{
-  event.waitUntil(
-    caches.open(CACHE)
-      .then(async cache=>{{
-        for(const url of STATIC){{
-          try{{
-            const r=await fetch(url,{{cache:"reload",redirect:"follow"}});
-            if(r&&r.ok)await cache.put(url,await cleanResponse(r));
-          }}catch(_e){{}}
-        }}
-      }})
-      .then(()=>self.skipWaiting())
-  );
-}});
-
-self.addEventListener("activate",event=>{{
-  event.waitUntil(
-    caches.keys()
-      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
-      .then(()=>self.clients.claim())
-  );
-}});
-
-self.addEventListener("fetch",event=>{{
-  const req=event.request;
-  if(req.method!=="GET")return;
-  const url=new URL(req.url);
-  if(url.origin!==self.location.origin)return;
-  if(url.pathname.startsWith("/api/"))return;
-
-  if(req.mode==="navigate"){{
-    event.respondWith((async()=>{{
-      const cache=await caches.open(CACHE);
-      try{{
-        const r=await fetch("/index.html?sw="+Date.now(),{{
-          cache:"no-store",
-          redirect:"follow"
-        }});
-        if(!r||!r.ok)throw new Error("navigation "+(r&&r.status));
-        const clean=await cleanResponse(r);
-        await cache.put("/index.html",clean.clone());
-        return clean;
-      }}catch(_e){{
-        return (await cache.match("/index.html")) ||
-          new Response("通信状態を確認して再読み込みしてください",{{
-            status:503,
-            headers:{{"Content-Type":"text/plain; charset=utf-8"}}
-          }});
-      }}
-    }})());
-    return;
-  }}
-
-  if(STATIC.includes(url.pathname)){{
-    event.respondWith((async()=>{{
-      const cache=await caches.open(CACHE);
-      const cached=await cache.match(url.pathname);
-      if(cached)return cached;
-      const r=await fetch(req,{{cache:"reload",redirect:"follow"}});
-      if(!r||!r.ok)return r;
-      const clean=await cleanResponse(r);
-      await cache.put(url.pathname,clean.clone());
-      return clean;
-    }})());
-  }}
-}});
+# v315 update-reset worker: delete every old cache and never intercept fetches.
+sw = r'''const RESET_TAG="arvexq-reset-v315";
+self.addEventListener("install",function(event){event.waitUntil(self.skipWaiting())});
+self.addEventListener("activate",function(event){
+  event.waitUntil(caches.keys().then(function(keys){
+    return Promise.all(keys.map(function(k){return caches.delete(k)}));
+  }).then(function(){return self.clients.claim()}));
+});
 '''
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
-(DIST / f"sw-{BUILD_VERSION}.js").write_text(sw, encoding="utf-8")
+(DIST / "sw-v315-reset.js").write_text(sw, encoding="utf-8")
 
 (DIST / "_headers").write_text(
-    "/\n"
-    "  Cache-Control: no-store\n"
-    "/index.html\n"
-    "  Cache-Control: no-store\n"
-    "/404.html\n"
-    "  Cache-Control: no-store\n"
-    f"/arvexq-app-{BUILD_VERSION}.js\n"
-    "  Cache-Control: no-store\n"
-    "/app-v145.js\n"
-    "  Cache-Control: no-store\n"
-    "/app-v140.js\n"
-    "  Cache-Control: no-store\n"
-    "/app-v139.js\n"
-    "  Cache-Control: no-store\n"
-    "/app-v138.js\n"
-    "  Cache-Control: no-store\n"
-    "/app-v137.js\n"
-    "  Cache-Control: no-store\n"
-    "/app-v136.js\n"
-    "  Cache-Control: no-store\n"
-    "/app-v133.js\n"
-    "  Cache-Control: no-store\n"
-    "/manifest-arvexq-v173.webmanifest\n"
-    "  Cache-Control: no-store\n"
-    "/arvexq-touch-v175.png\n"
-    "  Cache-Control: no-store\n"
+    "/*\n"
+    "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0\n"
     "/sw.js\n"
-    "  Cache-Control: no-store\n"
     "  Service-Worker-Allowed: /\n"
-    f"/sw-{BUILD_VERSION}.js\n"
-    "  Cache-Control: no-store\n"
+    "/sw-v315-reset.js\n"
     "  Service-Worker-Allowed: /\n",
     encoding="utf-8",
 )
