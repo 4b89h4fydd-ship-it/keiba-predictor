@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.05-v305-odds-fullcard")
+app = FastAPI(title="ARVEXQ", version="14.06-v306-livefix")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v50-final"
@@ -490,7 +490,7 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
-<link rel="stylesheet" href="/styles-arvexq-v305.css">
+<link rel="stylesheet" href="/styles-arvexq-v306.css">
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
@@ -498,7 +498,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script src="/app-v305.js"></script>
+<script src="/app-v306.js"></script>
 </body>
 </html>"""
 
@@ -2157,8 +2157,8 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(sessionStorage.getItem("arvexq-sw-reload")!=="v305-odds-fullcard"){
-          sessionStorage.setItem("arvexq-sw-reload","v305-odds-fullcard");
+        if(sessionStorage.getItem("arvexq-sw-reload")!=="v306-livefix"){
+          sessionStorage.setItem("arvexq-sw-reload","v306-livefix");
           location.reload()
         }
       }catch(e){}
@@ -3685,7 +3685,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':(isFlash(x)?'結果速報':'レース詳細'))+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v305</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v306</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
@@ -4000,10 +4000,22 @@ function smartLiveRaceSection(){
 }
 var ARVEXQ_LOCAL_LIVE_SLUG={"帯広":"obihiro","門別":"monbetsu","盛岡":"morioka","水沢":"mizusawa","浦和":"urawa","船橋":"funabashi","大井":"ooi","川崎":"kawasaki","金沢":"kanazawa","笠松":"kasamatsu","名古屋":"nagoya","園田":"sonoda","姫路":"himeji","高知":"kouchi","佐賀":"saga"};
 var ARVEXQ_JRA_YOUTUBE_CHANNEL='UCj6AKkCWS6FJqf0o5wP45eQ';
+function livePlayerOrigin(){
+  try{
+    var o=String(window.location&&window.location.origin||'');
+    return /^https?:\/\//i.test(o)?o:''
+  }catch(_e){return ''}
+}
 function liveVenueSource(circuit,track){
-  // v302: the JRA landing page is not used as an iframe player. Embed the
-  // official JRA YouTube live endpoint directly so iPhone/PWA can actually play it.
-  if(String(circuit||'')==='中央')return 'https://www.youtube.com/embed/live_stream?channel='+encodeURIComponent(ARVEXQ_JRA_YOUTUBE_CHANNEL)+'&autoplay=1&playsinline=1&rel=0';
+  // v306: YouTube requires an embedding client identity/referrer. iOS/PWA can
+  // otherwise fail with player error 153. Pass both origin + widget_referrer,
+  // keep playback inline, and do not depend on autoplay (often blocked on iPhone).
+  if(String(circuit||'')==='中央'){
+    var origin=livePlayerOrigin();
+    var q='channel='+encodeURIComponent(ARVEXQ_JRA_YOUTUBE_CHANNEL)+'&playsinline=1&rel=0&enablejsapi=1';
+    if(origin)q+='&origin='+encodeURIComponent(origin)+'&widget_referrer='+encodeURIComponent(origin+'/');
+    return 'https://www.youtube.com/embed/live_stream?'+q
+  }
   var slug=ARVEXQ_LOCAL_LIVE_SLUG[String(track||'')]||'';
   return slug?'https://simple.keiba-lv-st.jp/?track='+encodeURIComponent(slug):'https://simple.keiba-lv-st.jp/'
 }
@@ -4028,7 +4040,7 @@ function liveCenterModal(){
     '<div class="live-center-sheet">'+
       '<header class="live-center-head"><div><b>LIVE</b><small>'+(selected?esc(selected.track)+' / '+esc(selected.circuit):'開催場を選択')+'</small></div><button type="button" data-action="live-close" aria-label="閉じる">×</button></header>'+
       '<div class="live-center-venues">'+(rows.length?rows.map(function(v){return '<button type="button" data-live-track="'+esc(v.track)+'" data-live-circuit="'+esc(v.circuit)+'" class="'+(selected&&selected.track===v.track&&selected.circuit===v.circuit?'active':'')+'"><small>'+esc(v.circuit)+'</small><b>'+esc(v.track)+'</b></button>'}).join(''):'<div class="live-center-empty">本日の開催場データを取得中です</div>')+'</div>'+
-      (selected?'<div class="live-center-player '+(central?'central':'local')+'"><div class="live-center-frame"><iframe src="'+esc(src)+'" title="'+esc(selected.track)+' ライブ" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen scrolling="yes" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><div class="live-center-player-foot"><span>'+(central?'JRA公式YouTubeライブ / 開催時間中のみ配信':'地方競馬ライブ映像専用版 / 再生を維持して表示')+'</span><a href="'+esc(external)+'" target="_blank" rel="noopener noreferrer">公式画面で開く</a></div></div>':'<div class="live-center-prompt"><b>開催場をタップ</b><span>選択した開催場の公式ライブをすぐ表示します。</span></div>')+
+      (selected?'<div class="live-center-player '+(central?'central':'local')+'"><div class="live-center-frame"><iframe src="'+esc(src)+'" title="'+esc(selected.track)+' ライブ" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen scrolling="yes" referrerpolicy="origin"></iframe></div><div class="live-center-player-foot"><span>'+(central?'JRA公式YouTubeライブ / iPhoneで埋め込み再生できない場合は公式再生へ':'地方競馬ライブ / 映像を大きく表示')+'</span><a class="live-center-external" href="'+esc(external)+'" target="_blank" rel="noopener noreferrer">'+(central?'▶ JRA公式で再生':'↗ 公式画面')+'</a></div></div>':'<div class="live-center-prompt"><b>開催場をタップ</b><span>選択した開催場の公式ライブをすぐ表示します。</span></div>')+
     '</div></div>'
 }
 function syncLiveCenterOverlay(){
@@ -4043,15 +4055,19 @@ function syncLiveCenterOverlay(){
 function fitLiveCenterFrame(){
   var frame=document.querySelector('.live-center-player.local .live-center-frame'),iframe=frame&&frame.querySelector('iframe');
   if(!frame||!iframe)return;
-  // v204: the official local-racing simple page uses a fixed desktop-like canvas.
-  // Give the iframe that full virtual width, then scale the whole canvas to ARVEXQ.
-  // setProperty(..., important) is required because the base LIVE CSS uses !important.
+  // v306: the local-racing page is a 760px desktop canvas. Fitting all 760px
+  // makes the actual movie/controls too small on iPhone. Use a deliberate
+  // center-crop zoom on narrow screens so the live picture is the priority.
   var sourceWidth=760,w=Math.max(1,frame.clientWidth),h=Math.max(1,frame.clientHeight);
-  var scale=Math.min(1,w/sourceWidth);
-  var virtualHeight=Math.max(h,Math.ceil(h/scale));
+  var fit=w/sourceWidth;
+  var minMobileScale=w<700?0.72:fit;
+  var scale=Math.min(1,Math.max(fit,minMobileScale));
+  var visibleSourceWidth=w/scale;
+  var left=Math.min(0,Math.round((visibleSourceWidth-sourceWidth)/2));
+  var virtualHeight=Math.max(Math.ceil(h/scale),980);
   iframe.style.setProperty('position','absolute','important');
   iframe.style.setProperty('inset','auto','important');
-  iframe.style.setProperty('left','0','important');
+  iframe.style.setProperty('left',left+'px','important');
   iframe.style.setProperty('top','0','important');
   iframe.style.setProperty('width',sourceWidth+'px','important');
   iframe.style.setProperty('max-width','none','important');
@@ -5049,16 +5065,16 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="arvexq-shell-v305-odds-fullcard";
+SW = r'''const CACHE="arvexq-shell-v306-livefix";
 const STATIC=[
-  "/styles-arvexq-v305.css",
-  "/app-v305.js",
+  "/styles-arvexq-v306.css",
+  "/app-v306.js",
   "/manifest-arvexq-v175.webmanifest",
   "/arvexq-icon-v175-192.png",
   "/arvexq-icon-v175-512.png",
   "/arvexq-racing-hero.webp"
 ];
-const LAST_PAGE="/__arvexq_last_page_v305_odds_fullcard__";
+const LAST_PAGE="/__arvexq_last_page_v306_livefix__";
 
 self.addEventListener("install",event=>{
   event.waitUntil(
@@ -14073,7 +14089,7 @@ def pace_preview():
 
 @app.get("/styles-arvexq-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-arvexq-v305.css")
+@app.get("/styles-arvexq-v306.css")
 @app.get("/styles-arvexq-v303.css")
 @app.get("/styles-arvexq-v130.css")
 @app.get("/styles-arvexq-v91.css")
@@ -14083,7 +14099,7 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v305.js")
+@app.get("/app-v306.js")
 @app.get("/app-v303.js")
 @app.get("/app-v133.js")
 @app.get("/app-v132.js")
@@ -15288,4 +15304,22 @@ CSS += r"""
 .live-center-player.central .live-center-frame{flex:0 0 auto!important;aspect-ratio:16/9!important;width:100%!important;min-height:0!important;background:#000!important}
 .live-center-player.central{justify-content:center!important}
 .live-center-player.central .live-center-player-foot{margin-top:auto!important}
+"""
+
+CSS += r"""
+/* v306 — iPhone LIVE reliability + larger local-racing picture. */
+.live-center-player-foot{flex:0 0 auto!important;min-height:54px!important}
+.live-center-player-foot>span{line-height:1.35!important;max-width:58%!important}
+.live-center-external{min-height:38px!important;padding:0 12px!important;border:1px solid #2f8db4!important;border-radius:10px!important;background:#0b3148!important;color:#dff7ff!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:12px!important;font-weight:950!important}
+.live-center-player.central .live-center-frame{min-height:min(56vw,330px)!important;max-height:420px!important}
+.live-center-player.local .live-center-frame{min-height:0!important}
+@media(max-width:699px){
+  .live-center-head{flex:0 0 auto!important}
+  .live-center-venues{flex:0 0 auto!important}
+  .live-center-player.local{flex:1 1 auto!important;min-height:0!important}
+  .live-center-player.local .live-center-frame{flex:1 1 auto!important;min-height:calc(100dvh - 174px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important}
+  .live-center-player-foot{padding:7px 8px calc(7px + env(safe-area-inset-bottom))!important}
+  .live-center-player-foot>span{font-size:9px!important;max-width:52%!important}
+  .live-center-external{min-height:42px!important;padding:0 13px!important;font-size:12px!important}
+}
 """
