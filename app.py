@@ -347,12 +347,12 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="13.90-v262-safe-learning")
+app = FastAPI(title="ARVEXQ", version="14.00-v300-final")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v42-v262-safe-learning"
-ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v262-learning"
-AI_EVALUATION_VERSION = "evidence-v262-market-independent-learned-calibration"
+PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v50-final"
+ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v300-final"
+AI_EVALUATION_VERSION = "evidence-v300-market-independent-walkforward-calibrated"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
 V207_WINNER_MODEL_VERSION = "arvexq-winner-v207-from-v206-run1"
@@ -2760,9 +2760,9 @@ function assignEdgeEngine(r,rows,suit,sc,pressure){
   for(i=0;i<rows.length;i++){
     rows[i].rawP1Probability=rawP1[i];rows[i].rawP2Probability=rawP2[i];rows[i].rawP3Probability=rawP3[i];
     rows[i].winProbability=guardP1[i];rows[i].p1Probability=guardP1[i];rows[i].evWinProbability=guardP1[i];
-    rows[i].p2Probability=guardP2[i];rows[i].p3Probability=guardP3[i];rows[i].probabilityGuard='evidence-shrink-v260'
+    rows[i].p2Probability=guardP2[i];rows[i].p3Probability=guardP3[i];rows[i].probabilityGuard='evidence-shrink-v300'
   }
-  // v260: probability guard is deliberately conservative and market-independent.
+  // v300: probability guard is deliberately conservative and market-independent.
   // It is NOT a claim of fitted calibration; it only shrinks weak-evidence races toward the field prior.
   // Odds/popularity remain display + EDGE/EV inputs only and NEVER alter P1/P2/P3 or AI marks.
   for(i=0;i<rows.length;i++){rows[i].pureWinProbability=rows[i].p1Probability;rows[i].marketBlendWeight=0}
@@ -2837,9 +2837,10 @@ function dataReadinessProfile(r,p){
       actual=hs.filter(function(h){return n(h.winOdds)>1&&!h.oddsForecast&&!/予想|forecast/i.test(String(h.oddsSource||''))}).length/field,
       body=hs.filter(function(h){var w=n(h.bodyWeight);return w>=250&&w<=800}).length/field,
       env=((r&&r.weather&&String(r.weather)!=='不明')?.5:0)+((r&&r.condition&&String(r.condition)!=='不明')?.5:0),
-      analysis=clamp(n(p&&p.coverage,0),0,1),server=(r&&r.dataCoreHealth)||{},serverAnalysis=n(server.analysis&&server.analysis.completeness,0)/100;
+      analysis=clamp(n(p&&p.coverage,0),0,1),server=(r&&r.dataCoreHealth)||{},serverAnalysis=n(server.analysis&&server.analysis.completeness,0)/100,
+      st=mins(r&&r.startTime),remain=(r&&String(r.date||'')===today()&&st<9999)?st-nowMins():-9999,bodyDue=!(r&&String(r.date||'')===today())||remain<=120||body>0,bodyReady=bodyDue?body:1;
   if(serverAnalysis>0)analysis=Math.max(analysis,serverAnalysis);
-  var prediction=clamp(card*.18+hist*.28+env*.15+analysis*.28+body*.11,0,1),
+  var prediction=clamp(card*.18+hist*.28+env*.15+analysis*.28+bodyReady*.11,0,1),
       market=clamp(prediction*.72+actual*.28,0,1),missing=[];
   if(card<.90)missing.push('出馬表');if(hist<.70)missing.push('近走');if(env<.50)missing.push('馬場');if(analysis<.45)missing.push('診断');if(actual<.65)missing.push('実オッズ');
   return{prediction:prediction,market:market,card:card,history:hist,actualOdds:actual,bodyWeight:body,environment:env,analysis:analysis,missing:missing}
@@ -2861,7 +2862,7 @@ function strictSelectedRaceProfile(r,p){
       hard=(ready.prediction>=.56&&cov>=.34&&top3>=.52&&evidence>=.28&&scenarioProb>=.18&&winnerStable&&winnerConf>=.52),
       separation=(top>=Math.max(.15,uniform*1.40)||margin>=.017),selected=hard&&separation&&score>=52;
   var failed=[];if(ready.prediction<.56)failed.push('data');if(cov<.34)failed.push('coverage');if(top3<.52)failed.push('top3');if(evidence<.28)failed.push('evidence');if(scenarioProb<.18)failed.push('scenario');if(!winnerStable||winnerConf<.52)failed.push('winner');if(!separation)failed.push('separation');if(score<52)failed.push('score');
-  return{selected:selected,score:score,top:top,top3mass:top3,margin:margin,entropy:ent,coverage:cov,scenarioProb:scenarioProb,evidence:evidence,trueRun:trueRun,conditions:conditions,positionScenario:positionScenario,winnerConfidence:winnerConf,winnerStable:winnerStable,readiness:ready,failed:failed,reason:selected?'厳選ゲート通過':('見送り: '+failed.join(',')),base:base,model:'v260-strict-winner-readiness'}
+  return{selected:selected,score:score,top:top,top3mass:top3,margin:margin,entropy:ent,coverage:cov,scenarioProb:scenarioProb,evidence:evidence,trueRun:trueRun,conditions:conditions,positionScenario:positionScenario,winnerConfidence:winnerConf,winnerStable:winnerStable,readiness:ready,failed:failed,reason:selected?'厳選ゲート通過':('見送り: '+failed.join(',')),base:base,model:'v300-strict-winner-readiness'}
 }
 function assignPredictionMarks(rows,r){
   var field=Math.max(1,rows.length),uniform=1/field,selected=[],attention=[];
@@ -2881,7 +2882,7 @@ function assignPredictionMarks(rows,r){
   function robust(z){return clamp(seven(z)*.48+n(z.overallRaw,.5)*.20+n(z.edgeEvidence,n(z.coverage,.5))*.17+(1-fragile(z))*.15,0,1)}
   if(!rows.length)return;
 
-  // v260 WIN-EVIDENCE is independent of P1. Each winner axis is counted once.
+  // v300 WIN-EVIDENCE is independent of P1. Each winner axis is counted once.
   // This prevents the previous P1 + seven-axis + duplicated-components stacking.
   var winEvidenceRaw=rows.map(function(z){
     var q=.25*pure(z)+.24*trueRun(z)+.16*sectional(z)+.13*scenario(z)+.10*conditions(z)+.07*opponent(z)+.05*stateFit(z);
@@ -2995,7 +2996,7 @@ function integratedGrades(r,rows){
   })
 }
 
-function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v42-v262-safe-learning',researchAudit:{sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,liveTrackSpeedV250:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV260Independent:true,preRaceAuditV262:true,safeWinnerLearningV262:true,raceTypeTicketV260:true,pairwiseDuelV260:true,fullOrderSequential:true,strictReadinessV260:true,actualOddsEvOnlyV260:true,oddsCoverageV247:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
+function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v50-final',researchAudit:{sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -3126,7 +3127,7 @@ function raceReflectionIncomplete(d,row){
   var names=hs.filter(function(h){return String(h.name||'').trim()}).length;
   if(names<hs.length)return true;
   var pm=d.preparedMeta||{};
-  if(!isFinal(d)&&(!pm.diagnosisReady||String(pm.diagnosisVersion||'')!=='arvexq-edge-2026.10-v40-v260-full-engine'))return true;
+  if(!isFinal(d)&&(!pm.diagnosisReady||String(pm.diagnosisVersion||'')!=='arvexq-edge-2026.10-v50-final'))return true;
   var hist=hs.filter(function(h){return (h.recentRaces||h.allPastRuns||[]).length>0||h.debutNoHistory}).length;
   if(hist<Math.ceil(hs.length*.75))return true;
   if(String((row||d).date||'')===today()){
@@ -3268,7 +3269,7 @@ function ensureAutoOdds(r){
   },delay)
 }
 function overallScoreText(x){var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
-function aiBetStoreKey(id){return 'arvexq:prebet:v260:'+String(id||'')}
+function aiBetStoreKey(id){return 'arvexq:prebet:v300:'+String(id||'')}
 function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){['v218','v217','v215','v213','v212','v211','v210','v207','v205','v181','v180'].forEach(function(v){keys.push('arvexq:prebet:'+v+':'+String(id||''))})}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
 function saveStoredAiBet(r,plan){try{if(!r||!r.id||!plan||isFinal(r))return;var st=mins(r.startTime),started=(r.date===today()&&st<9999&&nowMins()>=st);if(started||loadStoredAiBet(r.id,false))return;plan.fixedAt=new Date().toISOString();localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))}catch(e){}}
 function betComboText(kind,combos){
@@ -3359,7 +3360,7 @@ function buildV213AiBetPlan(r,p,rows,featured){
   if(triGate){var triMax=orderConfidence>=.55?4:6,triCut=orderConfidence>=.55?.56:.46,t3=compactCombos(tri,triMax,triCut,2);if(t3.length)items.push({level:'3連単チャレンジ',kind:'3連単',combos:t3,confidence:orderConfidence>=.55?'高':'中'})}
   items.forEach(function(z){z.points=(z.combos||[]).length;z.combo=betComboText(z.kind,z.combos)});items=items.filter(function(z){return z.points>0});
   var decision=strong?'強く買う':(canIssue?'通常買い':'見送り'),quality=canIssue?Math.round(clamp(45+top3mass*42+(1-ent)*18+(strong?10:0),50,96)):0,reason=strong?'厳選ゲート通過。v220は共通の条件付き着順分布から5券種を生成し、上位確率が離れた地点で買い目を自動打ち切りします。3連単は順序信頼ゲート通過時のみ最大6点です。':(featured?'メイン・重賞・高知ファイナル等の対象レースなので、役割順位から本線を出します。':(canIssue?'通常ゲート通過。役割順位の集中度から買い目を作成。':'通常ゲート未通過。'));
-  return{raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v260-full-engine',decision:decision,featuredRace:featured,betQuality:quality,scenario:((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{title:'平均',prob:0}).title,scenarioProb:n(((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{}).prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'1着→2着→3着の条件付き順序集中度が基準未満。',winnerModel:'v260-independent-winner-consensus+conditional-order',p2Model:'v245-v213+seven-axis-live-role+conditional',p3Model:'v245-v213+sectional-live-role+conditional',selectionAudit:sel,roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z.x),p:z.p}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z.x),p:z.p}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z.x),p:z.p}})},audit:{field:rows.length,coverage:n(p.coverage),p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:ent,exactaTop:exactaRank[0]?exactaRank[0].score:0,exactaRatio:(exactaRank[0]?n(exactaRank[0].score):0)/Math.max(1e-9,exactaRank[1]?n(exactaRank[1].score):1e-9),quinTop:quinRank[0]?quinRank[0].score:0,quinRatio:(quinRank[0]?n(quinRank[0].score):0)/Math.max(1e-9,quinRank[1]?n(quinRank[1].score):1e-9),wideTop:wideRank[0]?wideRank[0].score:0,wideRatio:(wideRank[0]?n(wideRank[0].score):0)/Math.max(1e-9,wideRank[1]?n(wideRank[1].score):1e-9),trioTop:trioRank[0]?trioRank[0].score:0,trioRatio:(trioRank[0]?n(trioRank[0].score):0)/Math.max(1e-9,trioRank[1]?n(trioRank[1].score):1e-9),triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderEntropy:orderEntropy,orderConfidence:orderConfidence,selected:autoSelected,normalGate:normalGate,ticketDistribution:'sequential-joint-v260-winner-consensus'},items:items,reason:reason}
+  return{raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v300-final',decision:decision,featuredRace:featured,betQuality:quality,scenario:((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{title:'平均',prob:0}).title,scenarioProb:n(((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{}).prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'1着→2着→3着の条件付き順序集中度が基準未満。',winnerModel:'v300-winner-consensus+walkforward+conditional-order',p2Model:'v245-v213+seven-axis-live-role+conditional',p3Model:'v245-v213+sectional-live-role+conditional',selectionAudit:sel,roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z.x),p:z.p}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z.x),p:z.p}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z.x),p:z.p}})},audit:{field:rows.length,coverage:n(p.coverage),p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:ent,exactaTop:exactaRank[0]?exactaRank[0].score:0,exactaRatio:(exactaRank[0]?n(exactaRank[0].score):0)/Math.max(1e-9,exactaRank[1]?n(exactaRank[1].score):1e-9),quinTop:quinRank[0]?quinRank[0].score:0,quinRatio:(quinRank[0]?n(quinRank[0].score):0)/Math.max(1e-9,quinRank[1]?n(quinRank[1].score):1e-9),wideTop:wideRank[0]?wideRank[0].score:0,wideRatio:(wideRank[0]?n(wideRank[0].score):0)/Math.max(1e-9,wideRank[1]?n(wideRank[1].score):1e-9),trioTop:trioRank[0]?trioRank[0].score:0,trioRatio:(trioRank[0]?n(trioRank[0].score):0)/Math.max(1e-9,trioRank[1]?n(trioRank[1].score):1e-9),triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderEntropy:orderEntropy,orderConfidence:orderConfidence,selected:autoSelected,normalGate:normalGate,ticketDistribution:'sequential-joint-v300-winner-consensus'},items:items,reason:reason}
 }
 
 
@@ -3392,7 +3393,7 @@ function rebuildBetStrategyV242(base,r,p){
       axisNo=axisRow&&axisRow.horse?n(axisRow.horse.horseNumber):0,axisConfidence=clamp(n(axisRow&&axisRow.axisConfidence),0,1),
       coreP1No=p1.length?n(p1[0].no):0,axisAgreement=!!(axisNo&&coreP1No&&axisNo===coreP1No),axisStable=!!(axisRow&&axisRow.winnerDecisionStable),axisLocked=axisStable&&axisConfidence>=.60,
       raceType=arvexqRaceType(base,p),readiness=dataReadinessProfile(r,p);
-  if(readiness.prediction<.52){base.items=[];base.decision='見送り';base.betQuality=0;base.betStrategy='v260-full-engine';base.dataReadiness=readiness;base.reason='予想データの充足度が不足しているため買い目を固定しません。';base.trifectaDecision='見送り';base.trifectaReason='データ充足待ち。';return base}
+  if(readiness.prediction<.52){base.items=[];base.decision='見送り';base.betQuality=0;base.betStrategy='v300-final';base.dataReadiness=readiness;base.reason='予想データの充足度が不足しているため買い目を固定しません。';base.trifectaDecision='見送り';base.trifectaReason='データ充足待ち。';return base}
   function ratioScore(v,lo,hi){return clamp((n(v)-lo)/Math.max(.0001,hi-lo),0,1)}
   function concentration(v,scale){return clamp(n(v)/Math.max(.0001,scale),0,1)}
   var winClarity=clamp(.58*ratioScore(p1Margin,Math.max(.006,1/field*.05),Math.max(.040,1/field*.34))+.42*ratioScore(p1Top,1/field*1.05,Math.min(.48,1/field*2.75)),0,1),
@@ -3410,7 +3411,7 @@ function rebuildBetStrategyV242(base,r,p){
   add('馬連',clamp(.48*pairStrength+.27*top2/Math.max(.52,top2)+.25*(1-order),0,1),'上位2頭は強いが順番は固定しすぎない');
   add('3連複',clamp(.50*trioStrength+.25*clamp(top3/.70,0,1)+.25*uncertainty,0,1),'上位3頭の組み合わせが強く順序依存が小さい');
   add('ワイド',clamp(.48*wideStrength+.30*clamp(top3/.72,0,1)+.22*uncertainty,0,1),'上位候補は安定するが着順の断定は弱い');
-  // v250 race-type layer chooses the ticket family before point-count trimming.
+  // v300 race-type layer chooses the ticket family before point-count trimming.
   // It never changes horse probabilities; it only avoids using an ordered ticket
   // in a race whose probability shape says the order itself is unclear.
   candidates.forEach(function(c){
@@ -3436,7 +3437,7 @@ function rebuildBetStrategyV242(base,r,p){
   var primary=candidates[0]||null,threshold=(selected ? .50 : (base.featuredRace ? .54 : .57))+(raceType.code==='chaos'?.03:0);
   if(!primary||primary.score<threshold){
     base.items=[];base.decision='見送り';base.betQuality=Math.round(clamp(quality*.72,0,70));
-    base.betStrategy='v260-full-engine';base.raceType=raceType;base.primaryKind='';base.secondaryKind='';base.axisNo=axisNo;base.axisConfidence=Math.round(axisConfidence*100);base.axisAgreement=axisAgreement;base.axisLocked=axisLocked;
+    base.betStrategy='v300-final';base.raceType=raceType;base.primaryKind='';base.secondaryKind='';base.axisNo=axisNo;base.axisConfidence=Math.round(axisConfidence*100);base.axisAgreement=axisAgreement;base.axisLocked=axisLocked;
     base.reason='券種選択ゲート未通過。予想上位がいても、買い方として優位な形が作れないため見送りします。';
     base.trifectaDecision='見送り';base.trifectaReason='順序信頼または1着固定力が不足。';
     return base
@@ -3466,7 +3467,7 @@ function rebuildBetStrategyV242(base,r,p){
   base.items=items.filter(function(z){return z.points>0});
   base.decision=primary.score>=.74?'強く買う':'通常買い';
   base.betQuality=Math.round(clamp(52+primary.score*35+(secondary?4:0)+(selected?5:0),55,96));
-  base.betStrategy='v260-full-engine';base.raceType=raceType;base.primaryKind=primary.kind;base.secondaryKind=secondary?secondary.kind:'';base.axisNo=axisNo;base.axisConfidence=Math.round(axisConfidence*100);base.axisAgreement=axisAgreement;base.axisLocked=axisLocked;
+  base.betStrategy='v300-final';base.raceType=raceType;base.primaryKind=primary.kind;base.secondaryKind=secondary?secondary.kind:'';base.axisNo=axisNo;base.axisConfidence=Math.round(axisConfidence*100);base.axisAgreement=axisAgreement;base.axisLocked=axisLocked;
   base.ticketScores={};candidates.forEach(function(c){base.ticketScores[c.kind]=Math.round(c.score*100)});
   base.reason='レース型 '+raceType.label+'。主軸は'+primary.kind+'。'+primary.why+'ため、この券種に集中'+(secondary?'し、'+secondary.kind+'だけを補助に使用':'')+'。'+(axisLocked?'◎専用モデルの軸固定ゲート通過。':'◎専用モデルの安定度が不足しているため、馬単・3連単の1着固定は使いません。');
   base.trifectaDecision=primary.kind==='3連単'?'採用':'見送り';
@@ -3560,9 +3561,9 @@ function buildAiBetPlan(r,p){
   var sel=null;try{sel=strictSelectedRaceProfile(r,p)}catch(e){}
   var betQuality=canIssue?Math.round(clamp(48+top3mass*30+(1-p1Entropy)*12+(featured?7:0)+(strongGate?8:0),50,92)):0,
       reason=featured?'本日の厳選/メイン/重賞/高知ファイナル対象。v220は共通着順分布から5券種を生成し、確率差で自動的に点数を絞ります。':(canIssue?'通常レースの買い目ゲート通過。5券種は同じ条件付き着順分布から派生。':'通常レースの買い目ゲート未通過。'),
-      plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v260-full-engine',decision:decision,featuredRace:featured,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'条件付き順序集中度が3連単基準未満。',winnerModel:'v260-independent-winner-consensus+conditional-order',p2Model:useV207?'v212-role+v220-conditional':'legacy-central+v220-conditional',p3Model:'role-marginal+v220-conditional',selectionAudit:sel,
+      plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v300-final',decision:decision,featuredRace:featured,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'条件付き順序集中度が3連単基準未満。',winnerModel:'v300-winner-consensus+walkforward+conditional-order',p2Model:useV207?'v212-role+v220-conditional':'legacy-central+v220-conditional',p3Model:'role-marginal+v220-conditional',selectionAudit:sel,
         roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z),p:winActive(z)}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z),p:role(z,2)}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z),p:role(z,3)}}),legacyP1:legacyRows.slice(0,4).map(function(z){return{no:no(z),p:n(z.ticketLegacyP1Probability)}})},
-        audit:{field:field,coverage:cov,p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:p1Entropy,exactaTop:exactaTop,exactaRatio:exactaRatio,wideTop:wideTop,wideRatio:wideRatio,quinTop:qTop,quinRatio:qRatio,trioTop:trioTop,trioRatio:trioRatio,triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderConfidence:orderConfidence,normalGate:normalGate,strongGate:strongGate,featured:featured,ticketDistribution:'sequential-joint-v260-winner-consensus'},items:items,reason:reason};
+        audit:{field:field,coverage:cov,p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:p1Entropy,exactaTop:exactaTop,exactaRatio:exactaRatio,wideTop:wideTop,wideRatio:wideRatio,quinTop:qTop,quinRatio:qRatio,trioTop:trioTop,trioRatio:trioRatio,triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderConfidence:orderConfidence,normalGate:normalGate,strongGate:strongGate,featured:featured,ticketDistribution:'sequential-joint-v300-winner-consensus'},items:items,reason:reason};
   plan=rebuildBetStrategyV242(plan,r,p);saveStoredAiBet(r,plan);return plan
 }
 
@@ -3594,11 +3595,11 @@ function aiBetRecommendation(r,p){
   var vote=officialRaceLinks(r).vote,rows=(plan.items||[]).map(function(z){return '<div class="ai-bet-row level-'+(z.level==='本線'?'main':z.level==='押さえ'?'cover':z.level==='強気'?'attack':'trifecta')+'"><span class="ai-bet-level">'+esc(z.level)+'</span><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点'+(z.confidence?' / '+esc(z.confidence):'')+'</em></div>'}).join('');
   if(plan.decision==='見送り')rows='<div class="ai-bet-row level-cover"><span class="ai-bet-level">見送り</span><b>全券種</b><strong>無理に買わない</strong><em>'+esc(plan.betQuality||0)+'/100</em></div>';
   if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')rows+='<div class="ai-bet-row level-trifecta"><span class="ai-bet-level">3連単</span><b>検討済み</b><strong>順序信頼不足で見送り</strong><em>'+esc(plan.orderScore||0)+'/100</em></div>';
-  return '<div class="ai-bet-box"><div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div><div class="ai-bet-meta"><span><b>'+esc(plan.scenario)+'</b> '+Math.round(n(plan.scenarioProb)*100)+'%</span><span>信頼 <b>'+esc(plan.betQuality||0)+'</b>/100</span><span>発走前固定</span></div><span class="ai-bet-brand">ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><div class="bet-mark-guide"><b>印の見方</b><div class="bet-mark-grid"><span><i>◎</i>1着本命</span><span><i>○</i>1着対抗・2着本線</span><span><i>▲</i>1〜3着の有力馬</span><span><i>☆+</i>強穴・1着まで</span><span><i>☆</i>基本3着の能力穴</span><span><i>△</i>押さえ・3着候補</span><span><i>注+</i>条件ハマりで2着以上</span><span><i>注</i>特殊条件・展開ハマり待ち</span></div></div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">v260：◎はP2/P3・市場を使わず、P1＋独立1着評価＋全頭直接対戦で決定。確率はデータ量に応じて保守化し、馬単・3連単は◎専用モデルが安定した時だけ1着固定。</small></div>'
+  return '<div class="ai-bet-box"><div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div><div class="ai-bet-meta"><span><b>'+esc(plan.scenario)+'</b> '+Math.round(n(plan.scenarioProb)*100)+'%</span><span>信頼 <b>'+esc(plan.betQuality||0)+'</b>/100</span><span>発走前固定</span></div><span class="ai-bet-brand">ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><div class="bet-mark-guide"><b>印の見方</b><div class="bet-mark-grid"><span><i>◎</i>1着本命</span><span><i>○</i>1着対抗・2着本線</span><span><i>▲</i>1〜3着の有力馬</span><span><i>☆+</i>強穴・1着まで</span><span><i>☆</i>基本3着の能力穴</span><span><i>△</i>押さえ・3着候補</span><span><i>注+</i>条件ハマりで2着以上</span><span><i>注</i>特殊条件・展開ハマり待ち</span></div></div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">v300：◎はP2/P3・市場を使わず、P1＋独立1着評価＋全頭直接対戦で決定。学習は日付単位で分離し、未使用SHADOWを監査に残します。馬単・3連単は◎が安定した時だけ1着固定。</small></div>'
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲は市場非依存。v260の◎はP2/P3を使わず、P1＋独立1着評価＋全頭直接対戦で決定。○▲☆△注は候補回収を広く保ち、2着は残し/位置維持、3着は末脚・ピーク・浮上力を重視。馬単・3連単は◎専用モデルが安定した時だけ1着固定します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎○▲は市場非依存。v300の◎はP2/P3を使わず、P1＋独立1着評価＋全頭直接対戦で決定。○▲☆△注は候補回収を広く保ち、2着は残し/位置維持、3着は末脚・ピーク・浮上力を重視。馬単・3連単は◎専用モデルが安定した時だけ1着固定します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
@@ -3682,7 +3683,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':(isFlash(x)?'結果速報':'レース詳細'))+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v222</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v300</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
@@ -3859,7 +3860,7 @@ function expectedValueRaceProfile(r,p){
   }).filter(function(z){return !z.forecast&&z.odds>1&&z.ev>=1.12&&z.edge>=57&&z.evidence>=.38&&z.kelly>=.015&&z.pwin>=Math.max(.045,uniform*.55)&&z.rank<=5}).sort(function(a,b){return b.ev-a.ev||b.kelly-a.kelly||b.edge-a.edge||b.pwin-a.pwin});
   if(!candidates.length)return{selected:false,score:0,reason:'実オッズ期待値基準未達',mode:'actual',readiness:ready};
   var best=candidates[0],evEdge=best.ev-1,score=Math.round(clamp(clamp(evEdge/.70,0,1)*.38+clamp((best.edge-55)/35,0,1)*.20+best.evidence*.14+ready.market*.13+clamp(best.kelly/.12,0,1)*.10+clamp(best.pwin/Math.max(uniform*2,.12),0,1)*.05,0,1)*100);
-  return{selected:true,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,kelly:best.kelly,riskFraction:Math.min(.025,best.kelly*.25),edge:best.edge,evidence:best.evidence,coverage:cov,mode:'actual',readiness:ready,reason:'実オッズに対して市場非依存AI勝率が上回る',model:'v260-actual-odds-ev-kelly-guard'}
+  return{selected:true,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,kelly:best.kelly,riskFraction:Math.min(.025,best.kelly*.25),edge:best.edge,evidence:best.evidence,coverage:cov,mode:'actual',readiness:ready,reason:'実オッズに対して市場非依存AI勝率が上回る',model:'v300-actual-odds-ev-kelly-guard'}
 }
 function expectedValueRaceCandidates(){
   var all=(state.races||[]).filter(function(r){return r&&r.id}),out=[];
@@ -4555,7 +4556,7 @@ function idleTask(fn,delay){
 
 function diagnosisCurrent(r){
   var pm=r&&r.preparedMeta||{};
-  return pm.diagnosisReady===true&&pm.diagnosisVersion==='arvexq-commercial-2026.09-v9'
+  return pm.diagnosisReady===true&&pm.diagnosisVersion==='arvexq-edge-2026.10-v50-final'
 }
 function ensureAutoDiagnosis(id){return}
 function checkSnapshotVersion(id,cached,seq){return}
@@ -6485,7 +6486,7 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v260-full-engine", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v300-final", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")), "jraOfficialFallback":True,
         "centralHistoryFeedConfigured":bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
@@ -6716,7 +6717,7 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v218","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v300","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
         "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,"siteBootstrap":True,"persistentDayBundle":True,"nonBlockingBootstrap":True,"autoOdds":True,
         "racedb":RACEDB.status(),
@@ -8968,9 +8969,12 @@ def _sanitize_horse_measurements(h:dict)->dict:
     return z
 
 
-PRERACE_AUDIT_VERSION = "arvexq-prerace-audit-v262"
-WINNER_LEARNING_VERSION = "arvexq-winner-learning-v262"
+PRERACE_AUDIT_VERSION = "arvexq-prerace-audit-v300"
+WINNER_LEARNING_VERSION = "arvexq-winner-learning-v300-date-blocked"
 WINNER_LEARNING_MIN_RACES = max(100, int(os.getenv("WINNER_LEARNING_MIN_RACES", "120")))
+WINNER_LEARNING_MIN_DAYS = max(6, int(os.getenv("WINNER_LEARNING_MIN_DAYS", "8")))
+WINNER_LEARNING_MIN_DATA_QUALITY = max(0.25, min(0.85, float(os.getenv("WINNER_LEARNING_MIN_DATA_QUALITY", "0.45"))))
+PRERACE_FREEZE_MINUTES = max(1, min(20, int(os.getenv("PRERACE_FREEZE_MINUTES", "5"))))
 _WINNER_LEARNING_CACHE = {}
 _WINNER_LEARNING_LOCK = threading.Lock()
 
@@ -9034,8 +9038,13 @@ def _learning_probability(rows:list[dict], weights:dict, power:float=1.0, shrink
 
 
 def _learning_metric(races:list[dict], weights:dict, power:float=1.0, shrink:float=0.0)->dict:
-    if not races:return {"races":0,"top1":0.0,"logLoss":None,"brier":None,"hits":0}
-    hits=0;ll=0.0;br=0.0;used=0
+    """Winner metrics from immutable pre-race probabilities only.
+
+    Top-1 is the primary objective. Log loss, Brier and ECE are calibration guards;
+    they prevent a superficially good ranker from becoming over-confident.
+    """
+    if not races:return {"races":0,"top1":0.0,"logLoss":None,"brier":None,"ece":None,"hits":0,"horseSamples":0}
+    hits=0;ll=0.0;br=0.0;used=0;cal=[]
     for z in races:
         rows=z.get("horses") or [];winner=int(z.get("winnerNo") or 0)
         probs=_learning_probability(rows,weights,power,shrink)
@@ -9044,10 +9053,22 @@ def _learning_metric(races:list[dict], weights:dict, power:float=1.0, shrink:flo
         except StopIteration:continue
         pred=max(range(len(probs)),key=lambda i:(probs[i],-int(rows[i].get("horseNumber") or 999)))
         hits+=1 if pred==wi else 0;ll-=math.log(max(1e-12,probs[wi]));br+=sum((p-(1.0 if i==wi else 0.0))**2 for i,p in enumerate(probs));used+=1
-    return {"races":used,"hits":hits,"top1":round(hits/used,6) if used else 0.0,"logLoss":round(ll/used,6) if used else None,"brier":round(br/used,6) if used else None}
+        cal.extend((float(p),1 if i==wi else 0) for i,p in enumerate(probs))
+    ece=0.0
+    if cal:
+        for bi in range(10):
+            lo=bi/10;hi=(bi+1)/10
+            vals=[x for x in cal if x[0]>=lo and (x[0]<hi or (bi==9 and x[0]<=hi))]
+            if vals:
+                pm=sum(x[0] for x in vals)/len(vals);ar=sum(x[1] for x in vals)/len(vals)
+                ece+=abs(pm-ar)*len(vals)/len(cal)
+    return {"races":used,"hits":hits,"top1":round(hits/used,6) if used else 0.0,
+            "logLoss":round(ll/used,6) if used else None,"brier":round(br/used,6) if used else None,
+            "ece":round(ece,6) if cal else None,"horseSamples":len(cal)}
 
 
 def _learning_races(as_of_date:str,circuit:str)->list[dict]:
+    """Load only completed races with an immutable, market-independent pre-race lock."""
     if not RACEDB.path.exists():return []
     conn=sqlite3.connect(RACEDB.path,timeout=4);conn.row_factory=sqlite3.Row
     try:
@@ -9060,70 +9081,119 @@ def _learning_races(as_of_date:str,circuit:str)->list[dict]:
         lock=d.get("preRacePrediction") if isinstance(d.get("preRacePrediction"),dict) else None
         result=d.get("result") if isinstance(d.get("result"),dict) else None
         if not lock or not result or result.get("status")!="確定":continue
+        if lock.get("marketIndependent") is False:continue
+        try:quality=float(lock.get("dataQuality") or 0)
+        except Exception:quality=0.0
+        if quality<WINNER_LEARNING_MIN_DATA_QUALITY:continue
         fs=[x for x in (result.get("finishers") or []) if isinstance(x,dict) and int(x.get("finish") or 0)>0]
         if not fs:continue
         fs.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)));winner=int(fs[0].get("horseNumber") or 0)
         horses=[x for x in (lock.get("horses") or []) if isinstance(x,dict) and int(x.get("horseNumber") or 0)>0]
         if len(horses)<4 or winner not in {int(x.get("horseNumber") or 0) for x in horses}:continue
-        # v261+ immutable lock fields only. Results/odds never enter model features.
+        # Never learn from results, odds, popularity or post-race recomputation.
         if not all("p1Probability" in x and "winEvidenceProbability" in x and "pairwiseWinRate" in x for x in horses):continue
-        out.append({"date":str(row["race_date"] or ""),"winnerNo":winner,"horses":horses})
+        out.append({"date":str(row["race_date"] or ""),"winnerNo":winner,"horses":horses,"dataQuality":quality,
+                    "profileId":str((lock.get("learningProfile") or {}).get("profileId") or "baseline")})
     return out
 
 
+def _learning_date_split(races:list[dict])->dict:
+    """Split on whole race dates so one day's track state never straddles train/test blocks."""
+    dates=sorted({str(x.get("date") or "") for x in races if x.get("date")})
+    if len(dates)<4:return {"dates":dates,"train":races,"tune":[],"promotion":[],"shadow":[]}
+    nd=len(dates)
+    i1=max(1,min(nd-3,int(round(nd*.55))))
+    i2=max(i1+1,min(nd-2,int(round(nd*.75))))
+    i3=max(i2+1,min(nd-1,int(round(nd*.90))))
+    d1=set(dates[:i1]);d2=set(dates[i1:i2]);d3=set(dates[i2:i3]);d4=set(dates[i3:])
+    pick=lambda ds:[x for x in races if str(x.get("date") or "") in ds]
+    return {"dates":dates,"train":pick(d1),"tune":pick(d2),"promotion":pick(d3),"shadow":pick(d4),
+            "dateBlocks":{"train":sorted(d1),"tune":sorted(d2),"promotion":sorted(d3),"shadow":sorted(d4)}}
+
+
+def _learning_paired_top1(races:list[dict], base_w:dict, cand_w:dict, power:float, shrink:float)->dict:
+    base_only=cand_only=both=neither=0
+    for z in races:
+        rows=z.get("horses") or [];winner=int(z.get("winnerNo") or 0)
+        bp=_learning_probability(rows,base_w,1.0,0.0);cp=_learning_probability(rows,cand_w,power,shrink)
+        if not bp or not cp:continue
+        b=rows[max(range(len(bp)),key=lambda i:(bp[i],-int(rows[i].get("horseNumber") or 999)))]
+        c=rows[max(range(len(cp)),key=lambda i:(cp[i],-int(rows[i].get("horseNumber") or 999)))]
+        bh=int(b.get("horseNumber") or 0)==winner;ch=int(c.get("horseNumber") or 0)==winner
+        if bh and ch:both+=1
+        elif bh:base_only+=1
+        elif ch:cand_only+=1
+        else:neither+=1
+    return {"candidateOnly":cand_only,"baselineOnly":base_only,"both":both,"neither":neither,"netWins":cand_only-base_only}
+
+
 def _winner_learning_profile(detail:dict)->dict:
-    """Chronological challenger-vs-baseline promotion. Holdout is never used to choose parameters."""
+    """Date-blocked challenger promotion with an untouched reporting-only shadow holdout.
+
+    Parameters are selected on TRAIN/TUNE. Promotion is decided on the later PROMOTION
+    block. The final SHADOW block is reported but is deliberately not used to select or
+    promote the model, so it stays useful as an honest drift/generalisation signal.
+    """
     asof=str((detail or {}).get("date") or _today_iso());circuit=str((detail or {}).get("circuit") or "")
     if circuit not in {"中央","地方"}:return {"version":WINNER_LEARNING_VERSION,"active":False,"reason":"unsupported-circuit","races":0}
-    key=(asof,circuit)
-    now=time.time()
+    key=(asof,circuit);now=time.time()
     with _WINNER_LEARNING_LOCK:
         hit=_WINNER_LEARNING_CACHE.get(key)
         if hit and now-float(hit.get("_cachedAt") or 0)<300:return dict(hit["profile"])
-    races=_learning_races(asof,circuit);n=len(races)
+    races=_learning_races(asof,circuit);n=len(races);unique_days=len({x.get("date") for x in races if x.get("date")})
     base_w={"p1":.58,"winEvidence":.24,"pairwise":.18}
-    inactive={"version":WINNER_LEARNING_VERSION,"active":False,"circuit":circuit,"asOf":asof,"races":n,"minRaces":WINNER_LEARNING_MIN_RACES,"weights":base_w,"power":1.0,"shrink":0.0}
-    if n<WINNER_LEARNING_MIN_RACES:
-        inactive["reason"]="insufficient-locked-races"
+    inactive={"version":WINNER_LEARNING_VERSION,"active":False,"circuit":circuit,"asOf":asof,"races":n,"days":unique_days,
+              "minRaces":WINNER_LEARNING_MIN_RACES,"minDays":WINNER_LEARNING_MIN_DAYS,"minDataQuality":WINNER_LEARNING_MIN_DATA_QUALITY,
+              "weights":base_w,"power":1.0,"shrink":0.0}
+    if n<WINNER_LEARNING_MIN_RACES or unique_days<WINNER_LEARNING_MIN_DAYS:
+        inactive["reason"]="insufficient-locked-races-or-days"
         with _WINNER_LEARNING_LOCK:_WINNER_LEARNING_CACHE[key]={"_cachedAt":now,"profile":inactive}
         return dict(inactive)
-    a=max(60,int(n*.60));b=max(a+24,int(n*.80));b=min(b,n-24)
-    if b<=a or n-b<20:
-        inactive["reason"]="insufficient-holdout";return inactive
-    train=races[:a];valid=races[a:b];hold=races[b:]
+    split=_learning_date_split(races);train=split["train"];tune=split["tune"];promotion=split["promotion"];shadow=split["shadow"]
+    if min(len(train),len(tune),len(promotion))<8 or len(shadow)<4:
+        inactive["reason"]="insufficient-date-blocks";inactive["split"]={k:len(split[k]) for k in ("train","tune","promotion","shadow")};return inactive
+    base_train=_learning_metric(train,base_w,1,0);base_tune=_learning_metric(tune,base_w,1,0)
     candidates=[]
-    # Deterministic grid: compact enough to rerun, broad enough to challenge v260's 58/24/18 blend.
-    for p1i in range(35,76,5):
-        for wei in range(10,46,5):
+    # Fixed search space; no market features and no access to promotion/shadow labels.
+    for p1i in range(40,76,5):
+        for wei in range(10,41,5):
             pai=100-p1i-wei
-            if pai<5 or pai>40:continue
+            if pai<5 or pai>35:continue
             w={"p1":p1i/100.0,"winEvidence":wei/100.0,"pairwise":pai/100.0}
             for power in (.75,.90,1.00,1.10,1.25,1.40):
-                for shrink in (0.0,.05,.10):
-                    tm=_learning_metric(train,w,power,shrink);vm=_learning_metric(valid,w,power,shrink)
-                    # Select on train+validation only; top1 dominates, calibration breaks ties.
-                    score=vm["top1"]*.78+tm["top1"]*.22-.025*float(vm["logLoss"] or 9)-.008*float(tm["logLoss"] or 9)
+                for shrink in (0.0,.04,.08,.12):
+                    tm=_learning_metric(train,w,power,shrink);vm=_learning_metric(tune,w,power,shrink)
+                    train_drop=max(0.0,base_train["top1"]-tm["top1"])
+                    score=(vm["top1"]-base_tune["top1"])*1.00+(tm["top1"]-base_train["top1"])*.18-train_drop*.20
+                    score-=.055*(float(vm["logLoss"] or 9)-float(base_tune["logLoss"] or 9))
+                    score-=.020*(float(vm["brier"] or 9)-float(base_tune["brier"] or 9))
                     candidates.append((score,w,power,shrink,tm,vm))
-    candidates.sort(key=lambda x:(-x[0],-x[5]["top1"],float(x[5]["logLoss"] or 99),-x[4]["top1"]))
+    candidates.sort(key=lambda x:(-x[0],-x[5]["top1"],float(x[5]["logLoss"] or 99),float(x[5]["brier"] or 99),-x[4]["top1"]))
     _,cw,cp,cs,ct,cv=candidates[0]
-    base_train=_learning_metric(train,base_w,1,0);base_valid=_learning_metric(valid,base_w,1,0);base_hold=_learning_metric(hold,base_w,1,0);cand_hold=_learning_metric(hold,cw,cp,cs)
+    base_promo=_learning_metric(promotion,base_w,1,0);cand_promo=_learning_metric(promotion,cw,cp,cs)
+    base_shadow=_learning_metric(shadow,base_w,1,0);cand_shadow=_learning_metric(shadow,cw,cp,cs)
     base_all=_learning_metric(races,base_w,1,0);cand_all=_learning_metric(races,cw,cp,cs)
-    valid_ok=cv["top1"]>=base_valid["top1"] and float(cv["logLoss"] or 99)<=float(base_valid["logLoss"] or 99)+.025
-    hold_ok=cand_hold["top1"]>=base_hold["top1"] and float(cand_hold["logLoss"] or 99)<=float(base_hold["logLoss"] or 99)+.025
-    improvement=(cv["hits"]>base_valid["hits"] or cand_hold["hits"]>base_hold["hits"] or (cand_all["hits"]>=base_all["hits"]+2 and float(cand_all["logLoss"] or 99)<float(base_all["logLoss"] or 99)))
-    active=bool(valid_ok and hold_ok and improvement and cand_all["top1"]>=base_all["top1"])
-    profile={"version":WINNER_LEARNING_VERSION,"active":active,"circuit":circuit,"asOf":asof,"races":n,"minRaces":WINNER_LEARNING_MIN_RACES,
+    paired=_learning_paired_top1(promotion,base_w,cw,cp,cs)
+    tune_ok=(cv["top1"]>=base_tune["top1"] and float(cv["logLoss"] or 99)<=float(base_tune["logLoss"] or 99)+.020 and float(cv["brier"] or 99)<=float(base_tune["brier"] or 99)+.018)
+    train_ok=(ct["top1"]>=base_train["top1"]-.03 and float(ct["logLoss"] or 99)<=float(base_train["logLoss"] or 99)+.035)
+    # Winner-selector weights only promote when they create additional correct winners
+    # in the later promotion block. Calibration-only changes do not rewrite the ranking model.
+    promo_rank=(cand_promo["top1"]>=base_promo["top1"] and paired["netWins"]>=1)
+    promotion_ok=bool(promo_rank)
+    active=bool(train_ok and tune_ok and promotion_ok)
+    profile={"version":WINNER_LEARNING_VERSION,"active":active,"circuit":circuit,"asOf":asof,"races":n,"days":unique_days,
+             "minRaces":WINNER_LEARNING_MIN_RACES,"minDays":WINNER_LEARNING_MIN_DAYS,"minDataQuality":WINNER_LEARNING_MIN_DATA_QUALITY,
              "weights":cw if active else base_w,"power":cp if active else 1.0,"shrink":cs if active else 0.0,
              "challenger":{"weights":cw,"power":cp,"shrink":cs},
-             "split":{"train":len(train),"validation":len(valid),"holdout":len(hold)},
-             "baseline":{"train":base_train,"validation":base_valid,"holdout":base_hold,"all":base_all},
-             "candidate":{"train":ct,"validation":cv,"holdout":cand_hold,"all":cand_all},
-             "promotion":{"validationPass":valid_ok,"holdoutPass":hold_ok,"improvement":improvement,"promoted":active},
+             "split":{"train":len(train),"tune":len(tune),"promotion":len(promotion),"shadow":len(shadow),"dates":split.get("dateBlocks",{})},
+             "baseline":{"train":base_train,"tune":base_tune,"promotion":base_promo,"shadow":base_shadow,"all":base_all},
+             "candidate":{"train":ct,"tune":cv,"promotion":cand_promo,"shadow":cand_shadow,"all":cand_all},
+             "promotion":{"trainPass":train_ok,"tunePass":tune_ok,"promotionPass":promotion_ok,"paired":paired,"promoted":active,
+                          "shadowUsedForSelection":False,"shadowUsedForPromotion":False},
              "reason":"promoted" if active else "challenger-not-promoted"}
-    profile["profileId"]=hashlib.sha1(json.dumps({"c":circuit,"a":asof,"n":n,"w":profile["weights"],"p":profile["power"],"s":profile["shrink"]},sort_keys=True).encode()).hexdigest()[:14]
+    profile["profileId"]=hashlib.sha1(json.dumps({"c":circuit,"a":asof,"n":n,"d":unique_days,"w":profile["weights"],"p":profile["power"],"s":profile["shrink"]},sort_keys=True).encode()).hexdigest()[:14]
     with _WINNER_LEARNING_LOCK:_WINNER_LEARNING_CACHE[key]={"_cachedAt":now,"profile":profile}
     return dict(profile)
-
 
 def _build_prerace_prediction(detail:dict)->dict|None:
     if not isinstance(detail,dict) or _snapshot_final(detail):return None
@@ -9174,6 +9244,8 @@ def _build_prerace_prediction(detail:dict)->dict|None:
         "winnerConfidence":round(float(hon_e.get("axisConfidence") or 0),8),"winnerStable":stable,
         "fieldSize":len(rows),"markCount":mark_count,"dataQuality":quality,"horses":rows,
         "marketIndependent":True,"oddsStored":False,"status":"pre-race",
+        "frozen":bool(state=="pre" and minutes is not None and minutes<=PRERACE_FREEZE_MINUTES),
+        "freezeWindowMinutes":PRERACE_FREEZE_MINUTES,
         "learningProfile":{k:v for k,v in (detail.get("winnerLearningProfile") or {}).items() if k in {"version","profileId","active","circuit","races","weights","power","shrink","reason"}},
     }
     payload["revision"]=hashlib.sha1(json.dumps({"m":[(x["horseNumber"],x["mark"],x["decisionProbability"]) for x in rows],"q":quality},ensure_ascii=False,sort_keys=True).encode()).hexdigest()[:16]
@@ -9232,12 +9304,17 @@ def _attach_prerace_audit(detail:dict)->dict:
     state,_=_prediction_clock_state(detail)
     current=detail.get("preRacePrediction") if isinstance(detail.get("preRacePrediction"),dict) else None
     if state in {"pre","future"} and not _snapshot_final(detail):
-        fresh=_build_prerace_prediction(detail)
-        if fresh:
-            old_q=float((current or {}).get("dataQuality") or 0)
-            new_q=float(fresh.get("dataQuality") or 0)
-            # Prefer the newest pre-race view unless it is materially sparser.
-            if not current or new_q+.02>=old_q:detail["preRacePrediction"]=fresh
+        # Once the final pre-race window has been captured, never rewrite it.
+        # This keeps the audit/training label immutable even if later refreshes arrive.
+        if not (current and current.get("frozen")):
+            fresh=_build_prerace_prediction(detail)
+            if fresh:
+                old_q=float((current or {}).get("dataQuality") or 0)
+                new_q=float(fresh.get("dataQuality") or 0)
+                entering_freeze=bool(fresh.get("frozen"))
+                # In the freeze window, prefer the latest snapshot unless it is badly sparser.
+                if not current or (entering_freeze and new_q+.08>=old_q) or (not entering_freeze and new_q+.02>=old_q):
+                    detail["preRacePrediction"]=fresh
     if _snapshot_final(detail) and isinstance(detail.get("preRacePrediction"),dict):
         audit=_prediction_audit_from_lock(detail)
         if audit:detail["predictionAudit"]=audit
@@ -9847,6 +9924,10 @@ def _data_core_health(detail:dict|None)->dict:
         weights.append(bool(250<=bw<=800))
     odds_pct=int(round(100*sum(real_odds)/max(1,total))) if total else 0
     body_pct=int(round(100*sum(weights)/max(1,total))) if total else 0
+    clock_state,minutes_to_post=_prediction_clock_state(d)
+    is_today=str(d.get("date") or "")==_today_iso()
+    odds_due=bool((not is_today) or clock_state=="started" or minutes_to_post is None or minutes_to_post<=360 or any(real_odds))
+    body_due=bool((not is_today) or clock_state=="started" or minutes_to_post is None or minutes_to_post<=120 or any(weights))
 
     weather=str(d.get("weather") or "").strip();condition=str(d.get("condition") or "").strip()
     env_ready=weather not in ("","不明","—") and condition not in ("","不明","—")
@@ -9871,8 +9952,8 @@ def _data_core_health(detail:dict|None)->dict:
     return {
         "card":rec("ready" if card_ready else "missing",card_pct,note=f"{named}/{field_size or total}頭 基本項目"),
         "history":rec("ready" if history_ready else ("partial" if hist_points else "missing"),hist_pct,note=f"{hist_points}/{total*5 if total else 0}走"),
-        "odds":rec("ready" if total and all(real_odds) else ("partial" if any(real_odds) else "missing"),odds_pct,str(d.get("oddsSource") or default_source),f"{sum(real_odds)}/{total}頭 実単勝"),
-        "body_weight":rec("ready" if total and all(weights) else ("partial" if any(weights) else "missing"),body_pct,note=f"{sum(weights)}/{total}頭 現在馬体重"),
+        "odds":rec("ready" if total and all(real_odds) else (("partial" if any(real_odds) else "missing") if odds_due else "not_due"),odds_pct,str(d.get("oddsSource") or default_source),f"{sum(real_odds)}/{total}頭 実単勝"+(" / 取得時間前" if not odds_due else "")),
+        "body_weight":rec("ready" if total and all(weights) else (("partial" if any(weights) else "missing") if body_due else "not_due"),body_pct,note=f"{sum(weights)}/{total}頭 現在馬体重"+(" / 発表時間前" if not body_due else "")),
         "environment":rec("ready" if env_ready else ("partial" if env_pct else "missing"),env_pct,note=f"天候 {weather or '—'} / 馬場 {condition or '—'}"),
         "result":rec("ready" if result_ready else ("pending" if due else "not_due"),100 if result_ready else 0,str(result.get("source") or default_source),"上位3頭" if result_ready else "確定待ち"),
         "payouts":rec("ready" if payouts_ready else ("pending" if final else "not_due"),100 if payouts_ready else 0,str(result.get("payoutSource") or default_source),f"{len(payouts)}件" if payouts_ready else "確定待ち"),
@@ -10031,7 +10112,7 @@ def _data_core_day_status(date:str,circuit:str="")->dict:
             status=str((st.get(k) or {}).get("status") or "missing")
             fields[k][status if status in fields[k] else "missing"]+=1
         essential=("card","history","odds","body_weight","environment","analysis")
-        ready=all(str((st.get(k) or {}).get("status") or "")=="ready" for k in essential)
+        ready=all(str((st.get(k) or {}).get("status") or "") in ({"ready","not_due"} if k in {"odds","body_weight"} else {"ready"}) for k in essential)
         if ready:ready_races+=1
         race_rows.append({"id":rid,"track":r.get("track"),"raceNumber":r.get("raceNumber"),"startTime":r.get("startTime"),"ready":ready,"fields":st})
     return {"version":ARVEXQ_DATA_CORE_VERSION,"date":date,"circuit":circuit,"raceCount":len(rows),"readyRaceCount":ready_races,"fields":fields,"races":race_rows}
@@ -10051,7 +10132,7 @@ def _data_core_cycle():
             if not rid:continue
             d=_data_core_snapshot(rid);h=_data_core_health(d);checked+=1
             _data_core_store_health(d,set(),"local") if d else None
-            needed=[k for k in ("card","history","odds","body_weight","environment","analysis") if h.get(k,{}).get("status")!="ready"]
+            needed=[k for k in ("card","history","odds","body_weight","environment","analysis") if h.get(k,{}).get("status") not in {"ready","not_due"}]
             if _data_core_result_due(d or r) and h.get("result",{}).get("status")!="ready":needed.append("result")
             if h.get("result",{}).get("status")=="ready" and h.get("payouts",{}).get("status")!="ready":needed.append("payouts")
             if needed:
@@ -10674,14 +10755,13 @@ def _v215_speed_ratio(rr: dict) -> float | None:
 
 
 def _pc_live_track_speed(detail: dict) -> dict:
-    """Pre-race track-speed variant from races already completed at this venue today.
+    """Leakage-safe same-day track-speed variant from earlier completed races only.
 
-    Each earlier winner's speed is compared with ARVEXQ's historical track/distance/going
-    baseline (the same baseline used by v215).  Only races with a smaller race number are
-    read, so a target race can never see its own result or a later result.  Small samples
-    are aggressively shrunk toward neutral.
+    Earlier winners are normalized by the historical track/distance/going baseline.
+    A recency-weighted mean is blended with the median, then shrunk by sample size and
+    cross-race dispersion so one exceptional winner cannot make the whole card "fast".
     """
-    neutral={"version":"track-speed-v250","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","source":"RaceDB pre-race"}
+    neutral={"version":"track-speed-v300","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","dispersion":0.0,"source":"RaceDB pre-race"}
     if not isinstance(detail,dict) or not RACEDB_PATH.exists():return neutral
     ds=str(detail.get("date") or "");track=str(detail.get("track") or "");circuit=str(detail.get("circuit") or "")
     surface=str(detail.get("surface") or "");race_no=int(detail.get("raceNumber") or 0)
@@ -10691,40 +10771,40 @@ def _pc_live_track_speed(detail: dict) -> dict:
     try:
         rows=conn.execute("SELECT race_no,payload FROM race_snapshots WHERE race_date=? AND circuit=? AND track=? AND race_no<? ORDER BY race_no",
                           (ds,circuit,track,race_no)).fetchall()
-    except Exception:
-        rows=[]
-    finally:
-        conn.close()
+    except Exception:rows=[]
+    finally:conn.close()
+    try:target_dist=int(detail.get("distance") or 0)
+    except Exception:target_dist=0
     for row in rows:
         try:d=json.loads(row["payload"])
         except Exception:continue
         if surface and str(d.get("surface") or "") and str(d.get("surface") or "")!=surface:continue
         result=d.get("result") or {}
         if str(result.get("status") or "")!="確定":continue
-        winner=None
-        for z in result.get("finishers") or []:
-            if isinstance(z,dict) and int(z.get("finish") or 0)==1:winner=z;break
+        winner=next((z for z in (result.get("finishers") or []) if isinstance(z,dict) and int(z.get("finish") or 0)==1),None)
         if not winner:continue
-        try:sec=float(winner.get("timeSeconds") or 0);dist=int(d.get("distance") or 0)
+        try:sec=float(winner.get("timeSeconds") or 0);dist=int(d.get("distance") or 0);rn=int(row["race_no"] or 0)
         except Exception:continue
         if sec<=0 or dist<=0:continue
         ratio=_v215_speed_ratio({"timeSeconds":sec,"distance":dist,"track":track,"condition":d.get("condition") or "不明"})
         if ratio is None:continue
-        # Very different distances are still useful after baseline normalization, but
-        # keep them slightly lower weight to avoid a sprint dictating a route race.
-        try:target_dist=int(detail.get("distance") or 0)
-        except Exception:target_dist=0
-        w=1.0 if not target_dist or abs(dist-target_dist)<=300 else .72
-        vals.append((float(ratio),w))
+        distance_w=1.0 if not target_dist or abs(dist-target_dist)<=300 else .72
+        recency_w=.82+.18*max(0.0,min(1.0,rn/max(1,race_no-1)))
+        vals.append((float(ratio),distance_w*recency_w))
     if not vals:return neutral
-    den=sum(w for _,w in vals) or 1.0
-    ratio=sum(v*w for v,w in vals)/den
-    completed=len(vals);evidence=min(1.0,completed/4.0)
-    shrunk=1.0+(ratio-1.0)*(.35+.65*evidence)
+    den=sum(w for _,w in vals) or 1.0;mean_ratio=sum(v*w for v,w in vals)/den
+    ordered=sorted(v for v,_ in vals);m=len(ordered);median_ratio=ordered[m//2] if m%2 else (ordered[m//2-1]+ordered[m//2])/2
+    center=.58*median_ratio+.42*mean_ratio if m>=3 else mean_ratio
+    absdev=sorted(abs(v-median_ratio) for v,_ in vals);mad=absdev[len(absdev)//2] if absdev else 0.0
+    completed=len(vals);sample_evidence=min(1.0,completed/5.0);consistency=max(.25,min(1.0,1.0-mad/.035))
+    evidence=sample_evidence*consistency
+    shrink_factor=.22+.66*evidence
+    shrunk=1.0+(center-1.0)*shrink_factor
     score=_pc_clamp(.5+(shrunk-1.0)*8.0,.20,.80)
     label="高速" if shrunk>=1.012 else ("低速" if shrunk<=.988 else "標準")
-    return {"version":"track-speed-v250","score":round(score,4),"ratio":round(shrunk,5),"rawRatio":round(ratio,5),"evidence":round(evidence,4),"completed":completed,"label":label,"source":"RaceDB pre-race completed winners"}
-
+    return {"version":"track-speed-v300","score":round(score,4),"ratio":round(shrunk,5),"rawRatio":round(center,5),
+            "meanRatio":round(mean_ratio,5),"medianRatio":round(median_ratio,5),"dispersion":round(mad,5),
+            "evidence":round(evidence,4),"completed":completed,"label":label,"source":"RaceDB earlier-race robust variant"}
 
 def _v215_draw_score(track: str, dist: int, group: int) -> float:
     db=round(int(dist or 0)/200)*200
@@ -10871,7 +10951,7 @@ def _v218_tactical_roles(detail: dict, horses: list[dict], base_rows: list[dict]
             .10*f.get('finish_trend',.5)+.13*hidden+.10*f.get('class_fit',.5)
         ))
 
-        # v250 live track-speed fit. A fast surface rewards horses that can sustain
+        # v300 robust live track-speed fit. A fast surface rewards horses that can sustain
         # raw speed/early position; a slow surface rewards TRUE RUN, late role and
         # going tolerance. Evidence controls the strength and neutralizes early races.
         fast_track_fit=max(0.0,min(1.0,.42*f.get('speed_adj_best',.5)+.28*f.get('speed_adj_avg',.5)+.18*f.get('ten',.5)+.12*f.get('early3',0)))
@@ -11025,7 +11105,7 @@ def _rank_evaluations(detail):
     for i,h in enumerate(legacy_sorted):(h.get('integratedEvaluation') or {}).__setitem__('legacyP1Rank',i+1)
     v207_sorted=sorted(horses,key=lambda h:(-float((h.get('integratedEvaluation') or {}).get('v207WinnerScore') or 0),int(h.get('horseNumber') or 0)))
 
-    # v260: rank P1/P2/P3 first, then select ◎ with a winner-only market-independent
+    # v300: rank P1/P2/P3 first, then select ◎ with a winner-only market-independent
     # consensus. P2/P3 NEVER enter the winner selector; they remain role models.
     p1_sorted=sorted(horses,key=lambda h:(-float((h.get('integratedEvaluation') or {}).get('p1Score') or 0),-float((h.get('integratedEvaluation') or {}).get('score') or 0),int(h.get('horseNumber') or 0)))
     p2_sorted=sorted(horses,key=lambda h:(-float((h.get('integratedEvaluation') or {}).get('p2Score') or 0),int(h.get('horseNumber') or 0)))
@@ -11327,7 +11407,7 @@ def _precompute_detail_metrics(detail: dict) -> dict:
     if not isinstance(detail,dict):return detail
     detail=_apply_enrichment(str(detail.get("id") or ""),detail)
     try:detail["trackSpeed"]=_pc_live_track_speed(detail)
-    except Exception:detail["trackSpeed"]={"version":"track-speed-v250","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","source":"fallback"}
+    except Exception:detail["trackSpeed"]={"version":"track-speed-v300","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","source":"fallback"}
     try:detail["winnerLearningProfile"]=_winner_learning_profile(detail)
     except Exception as exc:detail["winnerLearningProfile"]={"version":WINNER_LEARNING_VERSION,"active":False,"reason":"profile-error","error":str(exc)[:120]}
     for horse in detail.get("horses",[]) or []:
@@ -13647,7 +13727,7 @@ def model_learning(date: str = Query(""), circuit: str = Query("地方")):
 
 @app.get("/api/v1/racedb-status")
 def racedb_status(date: str = Query(""), circuit: str = Query("")):
-    return {"build":"v262-safe-learning","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"preRaceAudit":True,"safeWinnerLearning":True,"note":"Data Core + 発走前固定 + chronological train/validation/holdout。検証を通過したwinner challengerだけ翌日以降に昇格します。"}
+    return {"build":"v300-final","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"preRaceAudit":True,"safeWinnerLearning":True,"note":"Data Core + T-5分最終固定 + 日付ブロックTRAIN/TUNE/PROMOTION。SHADOWは選定・昇格に使わず監査専用。市場情報はwinner学習に不使用。"}
 
 @app.get("/api/v1/racedb-race/{race_id}")
 def racedb_race(race_id:str):
@@ -13710,7 +13790,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v260","appVersion":"13.70-v260-full-engine",
+        "build":"v300","appVersion":"14.00-v300-final",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,

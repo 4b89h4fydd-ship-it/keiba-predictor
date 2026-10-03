@@ -67,7 +67,7 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v262"
+BUILD_VERSION = "v300"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 js = re.sub(r'(arvexq-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
 js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
@@ -118,8 +118,8 @@ js = js.replace(
 
 # Keep frontend prediction metadata aligned with the current server diagnosis engine.
 js = js.replace(
-    "engineVersion:'arvexq-commercial-2026.09-v2'",
-    "engineVersion:'arvexq-commercial-2026.09-v9'",
+    "engineVersion:'arvexq-edge-2026.10-v50-final'",
+    "engineVersion:'arvexq-edge-2026.10-v50-final'",
 )
 
 # If a race has started but the venue row is not final yet, bypass the in-memory
