@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.00-v300-final")
+app = FastAPI(title="ARVEXQ", version="14.01-v301-practical-baseline")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v50-final"
@@ -3835,17 +3835,16 @@ function mainRaceForTrack(rows){
   return rows.length>=2?rows[rows.length-2]:rows[rows.length-1]
 }
 function kochiFinalRace(rows){rows=(rows||[]).filter(function(r){return r.track==='高知'}).slice().sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)});if(!rows.length)return null;return rows.find(function(r){return /ファイナル/i.test(String(r.title||''))})||rows[rows.length-1]}
-function selectedRaceCandidates(){
-  var all=(state.races||[]).filter(function(r){return r&&r.id}),map={};
+function selectedRaceCandidates(circuit){
+  var all=(state.races||[]).filter(function(r){return r&&r.id&&(!circuit||String(r.circuit||'')===String(circuit))}),map={};
   function add(r,t){if(!r)return;var k=String(r.id);map[k]={race:r,tags:['厳選'],selection:t}}
-  // v226: top-page 厳選 means strict AI selection only. Main races, graded races,
-  // Kochi Final, explicit labels and volatility do NOT bypass this gate.
+  // v301: strict AI selection remains unchanged. Circuit filtering happens BEFORE top-N
+  // so 中央 and 地方 have independent fixed boxes and cannot crowd each other out.
   all.forEach(function(r){try{
     var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d))return;
     var p=predict(d),t=strictSelectedRaceProfile(d,p);if(t.selected)add(r,t)
   }catch(e){}});
   var picked=Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){return n(b.selection&&b.selection.score)-n(a.selection&&a.selection.score)||mins(a.race.startTime)-mins(b.race.startTime)||String(a.race.track).localeCompare(String(b.race.track),'ja')}).slice(0,4);
-  // v236: keep the strongest races selected, but display them in post-time order.
   return picked.sort(function(a,b){return mins(a.race.startTime)-mins(b.race.startTime)||String(a.race.track||'').localeCompare(String(b.race.track||''),'ja')||n(a.race.raceNumber)-n(b.race.raceNumber)})
 }
 function expectedValueRaceProfile(r,p){
@@ -3862,21 +3861,38 @@ function expectedValueRaceProfile(r,p){
   var best=candidates[0],evEdge=best.ev-1,score=Math.round(clamp(clamp(evEdge/.70,0,1)*.38+clamp((best.edge-55)/35,0,1)*.20+best.evidence*.14+ready.market*.13+clamp(best.kelly/.12,0,1)*.10+clamp(best.pwin/Math.max(uniform*2,.12),0,1)*.05,0,1)*100);
   return{selected:true,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,kelly:best.kelly,riskFraction:Math.min(.025,best.kelly*.25),edge:best.edge,evidence:best.evidence,coverage:cov,mode:'actual',readiness:ready,reason:'実オッズに対して市場非依存AI勝率が上回る',model:'v300-actual-odds-ev-kelly-guard'}
 }
-function expectedValueRaceCandidates(){
-  var all=(state.races||[]).filter(function(r){return r&&r.id}),out=[];
+function expectedValueRaceCandidates(circuit){
+  var all=(state.races||[]).filter(function(r){return r&&r.id&&(!circuit||String(r.circuit||'')===String(circuit))}),out=[];
   all.forEach(function(r){try{
     if(isFinal(r))return;
     if(r.date===today()&&mins(r.startTime)<9999&&nowMins()>=mins(r.startTime))return;
     var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d))return;
     var p=predict(d),v=expectedValueRaceProfile(d,p);if(v.selected)out.push({race:r,value:v})
   }catch(e){}});
-  var picked=out.sort(function(a,b){return n(b.value&&b.value.score)-n(a.value&&a.value.score)||n(b.value&&b.value.ev)-n(a.value&&a.value.ev)||mins(a.race.startTime)-mins(b.race.startTime)}).slice(0,6);
-  // v236: keep the highest-value candidates, but display them in post-time order.
+  var picked=out.sort(function(a,b){return n(b.value&&b.value.score)-n(a.value&&a.value.score)||n(b.value&&b.value.ev)-n(a.value&&a.value.ev)||mins(a.race.startTime)-mins(b.race.startTime)}).slice(0,4);
   return picked.sort(function(a,b){return mins(a.race.startTime)-mins(b.race.startTime)||String(a.race.track||'').localeCompare(String(b.race.track||''),'ja')||n(a.race.raceNumber)-n(b.race.raceNumber)})
 }
+function fixedPickLoadStatus(circuit){
+  var rows=(state.races||[]).filter(function(r){return r&&r.id&&String(r.circuit||'')===String(circuit)}),loaded=0;
+  rows.forEach(function(r){if(instantTrackDetails[String(r.id)]||loadDetailCache(r.id))loaded++});
+  return{expected:rows.length,loaded:loaded,complete:rows.length?loaded>=rows.length:selectedRaceLoadStatus().complete}
+}
+function fixedPickEmpty(kind,circuit){
+  var st=fixedPickLoadStatus(circuit),label=kind==='value'?'期待値判定':'厳選判定';
+  if(!st.complete)return '<div class="fixed-pick-empty"><b>選定中</b><small>'+label+'用データ '+st.loaded+'/'+st.expected+'</small></div>';
+  return '<div class="fixed-pick-empty"><b>該当なし</b><small>'+label+'基準を通過したレースなし</small></div>'
+}
+function fixedSelectedBox(circuit,picks){
+  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>厳選 '+esc(t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
+  return '<div class="fixed-pick-box"><div class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><em>'+picks.length+'レース</em></div>'+body+'</div>'
+}
+function fixedValueBox(circuit,picks){
+  var body=picks.length?picks.map(function(z){var r=z.race,v=z.value||{},evPct=Math.round((n(v.ev)-1)*100);return '<button type="button" class="fixed-pick-row value" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(v.horseNo)+' '+esc(v.horseName||'')+' / 単勝 '+n(v.odds).toFixed(1)+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>+'+esc(evPct)+'%</em></button>'}).join(''):fixedPickEmpty('value',circuit);
+  return '<div class="fixed-pick-box value"><div class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><em>'+picks.length+'レース</em></div>'+body+'</div>'
+}
 function smartExpectedValueRaces(){
-  var picks=expectedValueRaceCandidates();if(!picks.length)return selectionStatusCard('value');
-  return '<details class="smart-selected-races smart-value-races" data-selected-section="value"'+(selectedSectionsOpen.value?' open':'')+'><summary><span><b>期待値高レース</b><small>実オッズのみ・AI勝率は市場非依存</small></span><em>'+picks.length+'レース　開く ›</em></summary><div class="smart-selected-list">'+picks.map(function(z){var r=z.race,v=z.value||{},evPct=Math.round((n(v.ev)-1)*100);return '<button type="button" class="smart-selected-row" data-race="'+esc(r.id)+'"><div class="selected-race-head"><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><time>'+esc(r.startTime||'--:--')+'</time></div><div class="selected-race-title">'+esc(r.title||'')+'</div><div class="selected-tags"><span>期待値 +'+esc(evPct)+'%</span><span>'+esc(v.horseNo)+' '+esc(v.horseName)+'</span><span>AI '+(n(v.pwin)*100).toFixed(1)+'%</span><span>'+'単勝 '+n(v.odds).toFixed(1)+'</span></div></button>'}).join('')+'</div></details>'
+  var central=expectedValueRaceCandidates('中央'),local=expectedValueRaceCandidates('地方');
+  return '<section class="smart-fixed-picks smart-fixed-values"><div class="smart-fixed-picks-head"><b>期待値高レース</b><small>実オッズ × 市場非依存AI勝率</small></div><div class="smart-fixed-pick-grid">'+fixedValueBox('中央',central)+fixedValueBox('地方',local)+'</div></section>'
 }
 
 function selectedRaceBetPreview(r){
@@ -3888,9 +3904,8 @@ function selectedRaceBetPreview(r){
   return '<div class="selected-bets">'+lines+'</div>'+result
 }
 function smartSelectedRaces(){
-  var picks=selectedRaceCandidates();if(!picks.length)return selectionStatusCard('selected');
-  var finalCount=picks.filter(function(z){return isFinal(z.race)}).length;
-  return '<details class="smart-selected-races" data-selected-section="selected"'+(selectedSectionsOpen.selected?' open':'')+'><summary><span><b>本日の厳選レース</b><small>厳選ゲート通過レースのみ・該当なしの日は表示しません</small></span><em>'+picks.length+'レース　'+(finalCount===picks.length?'結果を見る':'開く')+' ›</em></summary><div class="smart-selected-list">'+picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="smart-selected-row '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><div class="selected-race-head"><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><time>'+esc(r.startTime||'--:--')+'</time></div><div class="selected-race-title">'+esc(r.title||'')+'</div><div class="selected-tags"><span>厳選 '+esc(t.score||'—')+'</span><span>1着 '+Math.round(n(t.top)*100)+'%</span><span>展開 '+Math.round(n(t.scenarioProb)*100)+'%</span></div>'+'</button>'}).join('')+'</div></details>'
+  var central=selectedRaceCandidates('中央'),local=selectedRaceCandidates('地方');
+  return '<section class="smart-fixed-picks"><div class="smart-fixed-picks-head"><b>厳選レース</b><small>厳選ゲート通過のみ</small></div><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></section>'
 }
 function scheduleSelectedRacePredictions(){return}
 function smartDailyAiStats(){
@@ -13726,8 +13741,8 @@ def model_learning(date: str = Query(""), circuit: str = Query("地方")):
 
 
 @app.get("/api/v1/racedb-status")
-def racedb_status(date: str = Query(""), circuit: str = Query("")):
-    return {"build":"v300-final","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"preRaceAudit":True,"safeWinnerLearning":True,"note":"Data Core + T-5分最終固定 + 日付ブロックTRAIN/TUNE/PROMOTION。SHADOWは選定・昇格に使わず監査専用。市場情報はwinner学習に不使用。"}
+def racedb_status(date: str = "", circuit: str = ""):
+    return {"build":"v301-practical-baseline","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"preRaceAudit":True,"safeWinnerLearning":True,"note":"Data Core + T-5分最終固定 + 日付ブロックTRAIN/TUNE/PROMOTION。SHADOWは選定・昇格に使わず監査専用。市場情報はwinner学習に不使用。"}
 
 @app.get("/api/v1/racedb-race/{race_id}")
 def racedb_race(race_id:str):
@@ -13790,7 +13805,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v300","appVersion":"14.00-v300-final",
+        "build":"v301","appVersion":"14.01-v301-practical-baseline",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -15070,4 +15085,27 @@ CSS += r"""
 .bet-mark-grid>span{display:flex;align-items:center;gap:6px;min-width:0;color:#bcd0dc;font-size:11px;line-height:1.25}
 .bet-mark-grid>span>i{display:inline-flex;align-items:center;justify-content:center;flex:0 0 30px;min-height:24px;padding:2px 4px;border:1px solid #356781;border-radius:7px;background:#0c2a3d;color:#fff;font-style:normal;font-weight:950;font-size:13px}
 @media(max-width:370px){.bet-mark-grid{grid-template-columns:1fr}.bet-mark-grid>span{font-size:10.5px}}
+"""
+
+
+CSS += r"""
+/* v301 — fixed top selection layout: 厳選/期待値 × 中央/地方 */
+.smart-fixed-picks{margin:5px 0 10px;padding:9px;border:1px solid #315d79;border-radius:13px;background:linear-gradient(145deg,#0c2233,#071521);box-shadow:0 7px 20px rgba(0,0,0,.18)}
+.smart-fixed-picks.smart-fixed-values{border-color:#7a6335;background:linear-gradient(145deg,#241d10,#141006)}
+.smart-fixed-picks-head{display:flex;align-items:end;justify-content:space-between;gap:8px;margin:0 1px 8px}
+.smart-fixed-picks-head>b{font-size:18px;color:#f4f9fc}.smart-fixed-values .smart-fixed-picks-head>b{color:#ffe19a}
+.smart-fixed-picks-head>small{font-size:9.5px;color:#92acbd;text-align:right}.smart-fixed-values .smart-fixed-picks-head>small{color:#c7aa69}
+.smart-fixed-pick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fixed-pick-box{min-width:0;border:1px solid #284e67;border-radius:10px;background:#0b1d2b;overflow:hidden}
+.fixed-pick-box.value{border-color:#65522d;background:#211a0d}
+.fixed-pick-box-head{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 8px;border-bottom:1px solid rgba(92,142,172,.24);background:rgba(20,54,76,.42)}
+.fixed-pick-box.value .fixed-pick-box-head{background:rgba(84,61,18,.35);border-bottom-color:rgba(153,120,52,.28)}
+.fixed-pick-box-head>b{font-size:15px;color:#eaf6fd}.fixed-pick-box.value .fixed-pick-box-head>b{color:#ffe19a}
+.fixed-pick-box-head>em{font-style:normal;font-size:9.5px;font-weight:900;color:#8fd9ff}.fixed-pick-box.value .fixed-pick-box-head>em{color:#ffd06a}
+.fixed-pick-row{appearance:none;-webkit-appearance:none;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 5px;width:100%;min-width:0;padding:7px 8px;border:0;border-bottom:1px solid rgba(80,119,143,.18);background:transparent;color:#eaf5fc;text-align:left}
+.fixed-pick-row:last-child{border-bottom:0}.fixed-pick-row>span{min-width:0}.fixed-pick-row>span>b{display:block;font-size:12.5px;white-space:nowrap}.fixed-pick-row>span>small{display:block;margin-top:2px;font-size:8.8px;color:#9fb4c1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fixed-pick-row>time{font-size:11px;font-weight:900;color:#c8eaff;white-space:nowrap}.fixed-pick-row>em{grid-column:1/-1;font-style:normal;font-size:9px;font-weight:900;color:#7fd5ff}
+.fixed-pick-row.value>em{color:#ffd06a}.fixed-pick-row.value>span>small{color:#c8b37d}
+.fixed-pick-empty{min-height:62px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.fixed-pick-empty>b{font-size:12px;color:#9fb4c1}.fixed-pick-empty>small{margin-top:3px;font-size:8.8px;line-height:1.3;color:#718895}
+@media(max-width:370px){.smart-fixed-picks{padding:7px}.smart-fixed-pick-grid{gap:6px}.fixed-pick-box-head{padding:6px}.fixed-pick-box-head>b{font-size:14px}.fixed-pick-row{padding:6px}.fixed-pick-row>span>b{font-size:11.5px}.fixed-pick-row>time{font-size:10px}}
 """
