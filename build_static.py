@@ -67,7 +67,7 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v304"
+BUILD_VERSION = "v305"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 js = re.sub(r'(arvexq-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
 js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
@@ -260,7 +260,7 @@ if remaining:
     )
 
 index_html = strings["INDEX"].replace(
-    '<link rel="stylesheet" href="/styles-arvexq-v304.css">',
+    '<link rel="stylesheet" href="/styles-arvexq-v305.css">',
     '<style>' + strings["CSS"] + '</style>'
 )
 
@@ -291,7 +291,7 @@ for route in ("venue", "race"):
     encoding="utf-8",
 )
 
-(DIST / "styles-arvexq-v304.css").write_text(strings["CSS"], encoding="utf-8")
+(DIST / "styles-arvexq-v305.css").write_text(strings["CSS"], encoding="utf-8")
 (DIST / "styles-arvexq-v303.css").write_text(strings["CSS"], encoding="utf-8")
 (DIST / "styles-arvexq-v130.css").write_text(strings["CSS"], encoding="utf-8")
 (DIST / f"arvexq-app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")

@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.04-v304-elite-chronological")
+app = FastAPI(title="ARVEXQ", version="14.05-v305-odds-fullcard")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v50-final"
@@ -490,7 +490,7 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
-<link rel="stylesheet" href="/styles-arvexq-v304.css">
+<link rel="stylesheet" href="/styles-arvexq-v305.css">
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
@@ -498,7 +498,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script src="/app-v304.js"></script>
+<script src="/app-v305.js"></script>
 </body>
 </html>"""
 
@@ -2157,8 +2157,8 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(sessionStorage.getItem("arvexq-sw-reload")!=="v304-elite-chronological"){
-          sessionStorage.setItem("arvexq-sw-reload","v304-elite-chronological");
+        if(sessionStorage.getItem("arvexq-sw-reload")!=="v305-odds-fullcard"){
+          sessionStorage.setItem("arvexq-sw-reload","v305-odds-fullcard");
           location.reload()
         }
       }catch(e){}
@@ -3685,7 +3685,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':(isFlash(x)?'結果速報':'レース詳細'))+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v304</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v305</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
@@ -3877,7 +3877,7 @@ function expectedValueRaceProfile(r,p){
   }).filter(function(z){return !z.forecast&&z.odds>1&&z.ev>=1.20&&z.edge>=64&&z.evidence>=.48&&z.kelly>=.025&&z.pwin>=Math.max(.05,uniform*.65)&&z.rank<=3}).sort(function(a,b){return b.ev-a.ev||b.kelly-a.kelly||b.edge-a.edge||b.pwin-a.pwin});
   if(!candidates.length)return{selected:false,score:0,reason:'実オッズ期待値基準未達',mode:'actual',readiness:ready};
   var best=candidates[0],evEdge=best.ev-1,score=Math.round(clamp(clamp(evEdge/.65,0,1)*.40+clamp((best.edge-60)/32,0,1)*.21+best.evidence*.15+ready.market*.12+clamp(best.kelly/.10,0,1)*.08+clamp(best.pwin/Math.max(uniform*2,.12),0,1)*.04,0,1)*100),selected=score>=64;
-  return{selected:selected,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,kelly:best.kelly,riskFraction:Math.min(.02,best.kelly*.20),edge:best.edge,evidence:best.evidence,coverage:cov,mode:'actual',readiness:ready,reason:selected?'高期待値ゲート通過':'期待値品質スコア不足',model:'v304-actual-odds-ev-elite-guard'}
+  return{selected:selected,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,kelly:best.kelly,riskFraction:Math.min(.02,best.kelly*.20),edge:best.edge,evidence:best.evidence,coverage:cov,mode:'actual',readiness:ready,reason:selected?'高期待値ゲート通過':'期待値品質スコア不足',model:'v305-actual-odds-ev-elite-guard'}
 }
 function eliteValueRaceCut(rows){
   rows=(rows||[]).slice().sort(function(a,b){return n(b.value&&b.value.score)-n(a.value&&a.value.score)||n(b.value&&b.value.ev)-n(a.value&&a.value.ev)||n(b.value&&b.value.evidence)-n(a.value&&a.value.evidence)});
@@ -5049,16 +5049,16 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="arvexq-shell-v304-elite-chronological";
+SW = r'''const CACHE="arvexq-shell-v305-odds-fullcard";
 const STATIC=[
-  "/styles-arvexq-v304.css",
-  "/app-v304.js",
+  "/styles-arvexq-v305.css",
+  "/app-v305.js",
   "/manifest-arvexq-v175.webmanifest",
   "/arvexq-icon-v175-192.png",
   "/arvexq-icon-v175-512.png",
   "/arvexq-racing-hero.webp"
 ];
-const LAST_PAGE="/__arvexq_last_page_v304_elite_chronological__";
+const LAST_PAGE="/__arvexq_last_page_v305_odds_fullcard__";
 
 self.addEventListener("install",event=>{
   event.waitUntil(
@@ -13058,68 +13058,120 @@ def _site_bootstrap_payload(date:str,force:bool=False,wait:bool=False)->dict:
     return current
 
 def _force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
-    """GitHub collector path: refresh every race concurrently before the D1 push."""
+    """GitHub collector path: all-card live fields first, diagnosis second.
+
+    v304 refreshed each race as one long job (card -> odds -> result -> diagnosis).
+    Slow diagnosis jobs could occupy all workers and starve later races before their
+    odds call ever started.  v305 splits the phases: every race gets an odds attempt
+    first; only then do we spend the remaining budget on results/diagnosis.
+    """
     started=time.time()
-    try:
-        _schedule_live_refresh(date,force=True)
+    try:_schedule_live_refresh(date,force=True)
     except Exception:pass
-    try:
-        _schedule_central_refresh(date,force=True)
+    try:_schedule_central_refresh(date,force=True)
     except Exception:pass
-    # Give the day-program refresh a brief head start; never spend the whole request waiting.
-    deadline=started+max(5.0,float(timeout_sec))
+    deadline=started+max(8.0,float(timeout_sec))
+    # Let program/card discovery start, but reserve most of the request for market data.
     while time.time()<deadline and _bootstrap_sources_running(date):
-        if time.time()-started>3.0:break
-        time.sleep(.20)
+        if time.time()-started>2.2:break
+        time.sleep(.15)
     rows=_bootstrap_rows_local(date)
     if not rows:
         return _site_bootstrap_payload(date,True,False)
 
-    def one(row):
+    def snapshot(rid:str)->dict:
+        return _prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid) or {}
+
+    def live_coverage(d:dict)->tuple[int,int,int]:
+        hs=[h for h in (d.get("horses") or []) if not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
+        got=sum(1 for h in hs if float(h.get("winOdds") or 0)>0)
+        weights=sum(1 for h in hs if int(h.get("bodyWeight") or 0)>250)
+        return len(hs),got,weights
+
+    # PHASE 1 — FULL CARD ODDS. No diagnosis is allowed to block these workers.
+    def market_one(row):
+        rid=str(row.get("id") or "")
+        if not rid:return rid,False
+        try:
+            d=snapshot(rid)
+            if not _bootstrap_display_ready(d):
+                try:_hydrate_fast_card_now(rid,deep_history=False)
+                except Exception as exc:print("full-day card hydrate failed",rid,exc)
+            body=odds_refresh(rid,1)
+            field=int((body or {}).get("fieldCount") or 0);got=int((body or {}).get("oddsCount") or 0)
+            return rid,bool(field and got==field)
+        except Exception as exc:
+            print("full-day market refresh failed",rid,exc)
+            return rid,False
+
+    market_workers=max(6,min(int(os.getenv("FULL_DAY_ODDS_WORKERS","20")),24,len(rows)))
+    market_results={}
+    ex=ThreadPoolExecutor(max_workers=market_workers)
+    futures={ex.submit(market_one,r):str(r.get("id") or "") for r in rows}
+    # Reserve a few seconds for a second sparse-row pass and bundle assembly.
+    market_deadline=min(deadline-5.0,time.time()+max(6.0,min(14.0,deadline-time.time()-5.0)))
+    try:
+        done,_=wait(list(futures),timeout=max(.5,market_deadline-time.time()))
+        for fut in done:
+            rid=futures[fut]
+            try:market_results[rid]=bool(fut.result()[1])
+            except Exception:market_results[rid]=False
+    finally:
+        ex.shutdown(wait=False,cancel_futures=True)
+
+    # PHASE 1B — retry only races still missing at least one active runner's odds.
+    missing=[]
+    for r in rows:
+        rid=str(r.get("id") or "")
+        field,got,_=live_coverage(snapshot(rid))
+        if rid and field and got<field:missing.append(r)
+    if missing and time.time()<deadline-2.5:
+        retry_workers=max(4,min(int(os.getenv("FULL_DAY_ODDS_RETRY_WORKERS","16")),20,len(missing)))
+        ex=ThreadPoolExecutor(max_workers=retry_workers)
+        fs=[ex.submit(market_one,r) for r in missing]
+        try:wait(fs,timeout=max(.5,min(4.0,deadline-time.time()-2.0)))
+        finally:ex.shutdown(wait=False,cancel_futures=True)
+
+    # PHASE 2 — results and body-weight-sensitive diagnosis only for the useful time window.
+    nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
+    focus=[]
+    for r in rows:
+        st=_race_minutes_server(r)
+        remain=(st-nowm) if st<9999 else 9999
+        if (-45<=remain<=240) or not _bootstrap_analysis_ready(snapshot(str(r.get("id") or ""))):
+            focus.append(r)
+    focus.sort(key=lambda r:abs((_race_minutes_server(r) if _race_minutes_server(r)<9999 else nowm+9999)-nowm))
+    focus=focus[:max(12,min(28,len(focus)))]
+
+    def finish_one(row):
         rid=str(row.get("id") or "")
         if not rid:return None
         try:
-            d=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
-            # Missing card: hydrate the current card first.
-            if not _bootstrap_display_ready(d):
-                _hydrate_fast_card_now(rid,deep_history=False)
-            # Refresh official live fields for every current race, not only the race the user opened.
-            if date==_today_iso():
-                try:odds_refresh(rid,1)
-                except Exception as exc:print("full-day live field refresh failed",rid,exc)
-                # Near post time, immediately retry a still-incomplete live row once.
-                # This catches JRA/NAR pages whose odds/body-weight blocks land between two reads.
-                try:
-                    q=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid) or {}
-                    hs=[h for h in (q.get("horses") or []) if not h.get("scratched")]
-                    st=_race_minutes_server(row);nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
-                    near=st<9999 and -30<=st-nowm<=120
-                    live_incomplete=bool(hs) and any((not float(h.get("winOdds") or 0)) or int(h.get("bodyWeight") or 0)<=250 for h in hs)
-                    if near and live_incomplete:odds_refresh(rid,1)
-                    if st<9999 and nowm>=st+2 and not _snapshot_final(q):
-                        try:_refresh_result_fast(rid)
-                        except Exception:pass
-                except Exception as exc:print("full-day live retry failed",rid,exc)
-            # Rebuild diagnosis from everything already stored; network history remains background work.
+            st=_race_minutes_server(row)
+            if st<9999 and nowm>=st+2 and not _snapshot_final(snapshot(rid)):
+                try:_refresh_result_fast(rid)
+                except Exception:pass
+            # Rebuild only after live fields have been persisted, so newly published
+            # body weight can affect the current diagnosis without starving market fetches.
             try:_build_fast_diagnosis_snapshot(rid,allow_network=False,deep_context=False)
-            except Exception as exc:print("full-day diagnosis rebuild failed",rid,exc)
-            d=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
+            except Exception as exc:print("focused diagnosis rebuild failed",rid,exc)
+            d=snapshot(rid)
             return _compact_display_snapshot(d) if d else None
         except Exception as exc:
-            print("full-day race refresh failed",rid,exc)
+            print("focused live rebuild failed",rid,exc)
             return None
 
-    ex=ThreadPoolExecutor(max_workers=max(4,min(12,len(rows))))
-    futures=[ex.submit(one,r) for r in rows]
-    remaining=max(1.0,deadline-time.time())
-    try:wait(futures,timeout=remaining)
-    finally:ex.shutdown(wait=False,cancel_futures=True)
+    if focus and time.time()<deadline-1.2:
+        workers=max(4,min(10,len(focus)))
+        ex=ThreadPoolExecutor(max_workers=workers)
+        fs=[ex.submit(finish_one,r) for r in focus]
+        try:wait(fs,timeout=max(.4,deadline-time.time()-1.0))
+        finally:ex.shutdown(wait=False,cancel_futures=True)
 
     out=_assemble_day_bundle(date,allow_network_fill=False)
     if out.get("displayComplete"):
         try:DAY_BUNDLES.put(date,out,True)
         except Exception:pass
-    # v249: persist per-field completeness for every race pushed to D1.
     dc_ready=0
     for d in out.get("details",[]) or []:
         try:
@@ -13128,12 +13180,16 @@ def _force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
                 dc_ready+=1
         except Exception as exc:print("data core force health failed",(d or {}).get("id"),exc)
     out["dataCore"]={"version":ARVEXQ_DATA_CORE_VERSION,"readyRaceCount":dc_ready,"raceCount":len(out.get("races") or [])}
-    odds_ready=0
+    odds_ready=0;odds_partial=0;odds_missing=[]
     for d in out.get("details",[]) or []:
-        hs=[h for h in (d.get("horses") or []) if not h.get("scratched")]
-        got=sum(1 for h in hs if float(h.get("winOdds") or 0)>1 and not h.get("oddsForecast") and not re.search(r"予想|forecast",str(h.get("oddsSource") or ""),re.I))
-        if hs and got>=max(3,math.ceil(len(hs)*.65)):odds_ready+=1
+        hs=[h for h in (d.get("horses") or []) if not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
+        got=sum(1 for h in hs if float(h.get("winOdds") or 0)>0)
+        if hs and got==len(hs):odds_ready+=1
+        elif hs and got:odds_partial+=1;odds_missing.append(str(d.get("id") or ""))
+        elif hs:odds_missing.append(str(d.get("id") or ""))
     out["oddsReadyCount"]=odds_ready
+    out["oddsPartialCount"]=odds_partial
+    out["oddsMissingRaceIds"]=odds_missing
     out["forceLiveRefresh"]=True
     out["forceElapsedMs"]=int((time.time()-started)*1000)
     with _site_bootstrap_lock:
@@ -13454,6 +13510,43 @@ def payout_refresh(race_id:str):
                 print("payout snapshot patch failed",race_id,exc)
     return {"raceId":race_id,"payouts":payouts,"source":source,"cached":False,"error":error[:240]}
 
+def _merge_live_market_rows(race_id:str, fresh_rows:list[dict], saved:dict|None=None)->list[dict]:
+    """Preserve the best known live fields per horse when a source returns a partial table.
+
+    A live odds page can briefly omit one or more runners while updating.  Never let
+    that sparse response erase previously captured odds/body weight for other horses.
+    Fresh non-empty fields win; the latest RaceDB point and saved race snapshot fill gaps.
+    """
+    by_no:dict[int,dict]={}
+    saved=saved or {}
+    for h in (saved.get("horses") or []):
+        try:no=int(h.get("horseNumber") or 0)
+        except Exception:no=0
+        if not no:continue
+        z={"horseNumber":no}
+        for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","oddsForecast",
+                  "referenceBodyWeight","referenceBodyWeightDate","status","scratched","oddsSource"):
+            if h.get(k) not in (None,""):z[k]=h.get(k)
+        by_no[no]=z
+    try:
+        for h in RACEDB.odds_latest(race_id) or []:
+            no=int(h.get("horseNumber") or 0)
+            if not no:continue
+            z=by_no.setdefault(no,{"horseNumber":no})
+            for k in ("winOdds","popularity","oddsSource"):
+                if z.get(k) in (None,"") and h.get(k) not in (None,""):z[k]=h.get(k)
+    except Exception as exc:
+        print("odds preserve read failed",race_id,exc)
+    for h in fresh_rows or []:
+        try:no=int(h.get("horseNumber") or 0)
+        except Exception:no=0
+        if not no:continue
+        z=by_no.setdefault(no,{"horseNumber":no})
+        for k,v in h.items():
+            if k=="horseNumber":continue
+            if v not in (None,""):z[k]=v
+    return [by_no[k] for k in sorted(by_no)]
+
 @app.get("/api/v1/odds-refresh/{race_id}")
 def odds_refresh(race_id:str, force: int = Query(0)):
     saved=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
@@ -13583,6 +13676,12 @@ def odds_refresh(race_id:str, force: int = Query(0)):
 
             for no,z in sorted(merged.items()):horses.append({"horseNumber":no,**z})
             if not source and horses:source="netkeiba"
+    # v305: a source can momentarily return a sparse odds table. Merge it with the
+    # best already-saved per-horse live fields so one missing row never falls back
+    # to the endless "取得中" state after another horse was successfully refreshed.
+    horses=_merge_live_market_rows(race_id,horses,saved)
+    if not source:
+        source=next((str(h.get("oddsSource") or "") for h in horses if h.get("oddsSource")),"")
     if horses:
         try:RACEDB.save_odds(race_id,horses,source)
         except Exception as exc:print("RaceDB odds save failed",race_id,exc)
@@ -13611,7 +13710,12 @@ def odds_refresh(race_id:str, force: int = Query(0)):
                 horses=stored
                 source=next((str(x.get("oddsSource") or "") for x in stored if x.get("oddsSource")),"保存済み")
         except Exception:pass
-    return {"raceId":race_id,"horses":horses,"oddsSource":source,"oddsUpdatedAt":_now_jst().strftime("%H:%M:%S"),"storedInRaceDB":bool(horses)}
+    live=[h for h in horses if not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
+    odds_count=sum(1 for h in live if float(h.get("winOdds") or 0)>0)
+    return {"raceId":race_id,"horses":horses,"oddsSource":source,
+            "oddsUpdatedAt":_now_jst().strftime("%H:%M:%S"),"storedInRaceDB":bool(horses),
+            "fieldCount":len(live),"oddsCount":odds_count,
+            "oddsComplete":bool(live) and odds_count==len(live)}
 
 
 _auto_odds_lock=threading.Lock()
@@ -13660,19 +13764,28 @@ def _auto_odds_cycle():
                 for attempt in range(2):
                     last_body=odds_refresh(rid,1)
                     hs=(last_body or {}).get("horses") or []
-                    live=[h for h in hs if not h.get("scratched")]
-                    if live and all(float(h.get("winOdds") or 0)>0 and int(h.get("bodyWeight") or 0)>250 for h in live):
-                        return rid,True
+                    live=[h for h in hs if not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
+                    got=sum(1 for h in live if float(h.get("winOdds") or 0)>0)
+                    weights=sum(1 for h in live if int(h.get("bodyWeight") or 0)>250)
+                    if live and got==len(live):
+                        return rid,{"complete":True,"odds":got,"field":len(live),"weights":weights}
                     if attempt==0:time.sleep(.15)
-                return rid,bool((last_body or {}).get("horses"))
+                return rid,{"complete":False,"odds":got if 'got' in locals() else 0,
+                            "field":len(live) if 'live' in locals() else 0,
+                            "weights":weights if 'weights' in locals() else 0}
             except Exception as exc:
                 return rid,exc
-        workers=max(1,min(16,int(os.getenv("AUTO_ODDS_WORKERS","16")),len(targets))) if targets else 0
+        workers=max(1,min(20,int(os.getenv("AUTO_ODDS_WORKERS","18")),len(targets))) if targets else 0
         if workers:
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 for rid,res in pool.map(one,targets):
                     checked+=1
-                    if res is True:updated+=1
+                    if isinstance(res,dict) and res.get("complete"):
+                        updated+=1
+                    elif isinstance(res,dict):
+                        # Partial tables are not success. Retry on the next short cycle instead
+                        # of waiting the normal far-race cadence for a missing runner.
+                        _auto_odds_last[rid]=min(float(_auto_odds_last.get(rid,0)),time.time()-20)
                     elif isinstance(res,Exception):errors.append(rid+": "+str(res))
     finally:
         with _auto_odds_lock:
@@ -13960,7 +14073,7 @@ def pace_preview():
 
 @app.get("/styles-arvexq-v88.css")
 @app.get("/styles-v86.css")
-@app.get("/styles-arvexq-v304.css")
+@app.get("/styles-arvexq-v305.css")
 @app.get("/styles-arvexq-v303.css")
 @app.get("/styles-arvexq-v130.css")
 @app.get("/styles-arvexq-v91.css")
@@ -13970,7 +14083,7 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
-@app.get("/app-v304.js")
+@app.get("/app-v305.js")
 @app.get("/app-v303.js")
 @app.get("/app-v133.js")
 @app.get("/app-v132.js")
