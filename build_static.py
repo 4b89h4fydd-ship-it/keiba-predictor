@@ -67,11 +67,11 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v315"
+BUILD_VERSION = "v316"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 # v315: never rewrite the reload tag to an old generic edge-only value.
 js = js.replace('navigator.serviceWorker.register("/sw.js",{scope:"/"})',
-                'navigator.serviceWorker.register("/sw-v315-reset.js",{scope:"/"})')
+                'navigator.serviceWorker.register("/sw-v316-reset.js",{scope:"/"})')
 # Expose the running build without changing normal UI.
 js = f'window.ARVEXQ_BUILD="{BUILD_VERSION}";\n' + js
 
@@ -285,7 +285,7 @@ for route in ("venue", "race"):
     (DIST / route / "index.html").write_text(index_html, encoding="utf-8")
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION+"\n", encoding="utf-8")
-(DIST / "version.json").write_text('{"build":"v315","shell":"update-reset","model":"v314-sameday-flow-fix"}\n', encoding="utf-8")
+(DIST / "version.json").write_text('{"build":"v316","shell":"recall-calibration","model":"v316-recall-calibration"}\n', encoding="utf-8")
 
 (DIST / "_redirects").write_text(
     "/venue /index.html 200\n/race /index.html 200\n",
@@ -310,8 +310,8 @@ manifest = strings["MANIFEST"]
 (DIST / "manifest-arvexq-v173.webmanifest").write_text(manifest, encoding="utf-8")
 (DIST / "manifest-arvexq-v130.webmanifest").write_text(manifest, encoding="utf-8")
 
-# v315 update-reset worker: delete every old cache and never intercept fetches.
-sw = r'''const RESET_TAG="arvexq-reset-v315";
+# v316 recall-calibration reset worker: delete every old cache and never intercept fetches.
+sw = r'''const RESET_TAG="arvexq-reset-v316";
 self.addEventListener("install",function(event){event.waitUntil(self.skipWaiting())});
 self.addEventListener("activate",function(event){
   event.waitUntil(caches.keys().then(function(keys){
@@ -327,7 +327,7 @@ self.addEventListener("activate",function(event){
     "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0\n"
     "/sw.js\n"
     "  Service-Worker-Allowed: /\n"
-    "/sw-v315-reset.js\n"
+    "/sw-v316-reset.js\n"
     "  Service-Worker-Allowed: /\n",
     encoding="utf-8",
 )

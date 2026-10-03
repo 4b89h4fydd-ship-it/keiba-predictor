@@ -347,12 +347,12 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.15-v315-update-reset")
+app = FastAPI(title="ARVEXQ", version="14.16-v316-recall-calibration")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v52-central-local-split"
 ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v300-final"
-AI_EVALUATION_VERSION = "evidence-v314-sameday-flow-fix"
+AI_EVALUATION_VERSION = "evidence-v316-recall-calibration"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
 V207_WINNER_MODEL_VERSION = "arvexq-winner-v207-from-v206-run1"
@@ -490,7 +490,7 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
-<link rel="stylesheet" href="/styles-arvexq-v315.css">
+<link rel="stylesheet" href="/styles-arvexq-v316.css">
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
@@ -512,7 +512,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script src="/app-v315.js"></script>
+<script src="/app-v316.js"></script>
 </body>
 </html>"""
 
@@ -2171,13 +2171,13 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(localStorage.getItem("arvexq-sw-reload")!=="v315-update-reset-20261003"){
-          localStorage.setItem("arvexq-sw-reload","v315-update-reset-20261003");
+        if(localStorage.getItem("arvexq-sw-reload")!=="v316-recall-calibration-20261003"){
+          localStorage.setItem("arvexq-sw-reload","v316-recall-calibration-20261003");
           location.reload()
         }
       }catch(e){}
     });
-    navigator.serviceWorker.register("/sw-v315-reset.js",{scope:"/"}).then(function(reg){
+    navigator.serviceWorker.register("/sw-v316-reset.js",{scope:"/"}).then(function(reg){
       try{reg.update()}catch(e){}
     }).catch(function(){})
   }catch(e){}
@@ -2299,7 +2299,8 @@ function sameDayCorrectionProfileV313(r,rows){
     var h=z.horse||{},rt=styleRates(h,r),early=clamp(rt.front*.52+rt.stalk*.30+rt.early3*.18,0,1),late=clamp(rt.mid*.30+rt.close*.48+rt.moved3*.22,0,1),
         fr=n(h.frameNumber,0),maxFrame=Math.max(2,Math.min(8,Math.ceil(Math.max(2,rows.length)/2))),inside=fr?clamp(1-(fr-1)/Math.max(1,maxFrame-1),0,1):.5,
         raw=frontSignal*(early-late)+lateSignal*(late-early)+innerSignal*(inside-.5)*1.35,
-        markBoost=clamp(raw,-.09,.09),winBoost=clamp(raw*.34,-.025,.025),p2Boost=clamp(raw*.55,-.055,.055),p3Boost=clamp(raw*.82+deficit*evidence*.018*(late>.52||early>.52?1:0),-.075,.075);
+        coreScale=markRaces>=3?1:(markRaces>=2?.55:.35),
+        markBoost=clamp(raw,-.06,.06),winBoost=clamp(raw*.18*coreScale,-.012,.012),p2Boost=clamp(raw*.38*coreScale,-.030,.030),p3Boost=clamp(raw*.65*(.75+.25*deficit)*coreScale,-.055,.055);
     byNo[n(h.horseNumber)]={markBoost:markBoost,winBoost:winBoost,p2Boost:p2Boost,p3Boost:p3Boost,early:early,late:late,inside:inside}
   });
   var flow=(lateSignal>=.055&&lateSignal>=Math.abs(frontSignal)*.85)?'差し・追込':((frontSignal>=.055&&frontSignal>=Math.abs(lateSignal)*.85)?'前残り':(frontSignal<=-.055?'前不利':(lateSignal<=-.055?'差し不利':'')));
@@ -2950,11 +2951,11 @@ function dataReadinessProfile(r,p){
 function v312CircuitMethod(r){
   var central=String((r&&r.circuit)||'')==='中央';
   return central?{
-    id:'central-v314',winner:{p1:.38,winEvidence:.37,pairwise:.25,fragPenalty:.18},
+    id:'central-v316',winner:{p1:.38,winEvidence:.37,pairwise:.25,fragPenalty:.18},
     gate:{ready:.68,cov:.50,top3:.60,evidence:.44,scenario:.30,confidence:.66,score:70,top:.17,uniform:1.55,margin:.032},
     value:{cov:.58,ready:.68,oddsCoverage:.90,ev:1.32,edge:70,evidence:.58,kelly:.035,score:72}
   }:{
-    id:'local-v314',winner:{p1:.58,winEvidence:.24,pairwise:.18,fragPenalty:.08},
+    id:'local-v316',winner:{p1:.58,winEvidence:.24,pairwise:.18,fragPenalty:.08},
     gate:{ready:.61,cov:.42,top3:.60,evidence:.36,scenario:.22,confidence:.60,score:64,top:.15,uniform:1.42,margin:.020},
     value:{cov:.52,ready:.64,oddsCoverage:.85,ev:1.25,edge:66,evidence:.52,kelly:.030,score:68}
   }
@@ -2999,7 +3000,7 @@ function assignPredictionMarks(rows,r){
   // v312: central/local winner evidence is genuinely separate.
   // Central: pace pressure / sectional / opponent class matter more, with a stronger fragility penalty.
   // Local: preserve the validated local backbone and track-position repeatability.
-  var method=v312CircuitMethod(r),centralRace=method.id==='central-v314',dayCorr=sameDayCorrectionProfileV313(r,rows)||{active:false,completed:0,markRaces:0,evidence:0,coverage:.83,deficit:0,frontSignal:0,lateSignal:0,innerSignal:0,flowLabel:'中立',sourceRaces:[],byNo:{}};
+  var method=v312CircuitMethod(r),centralRace=method.id==='central-v316',dayCorr=sameDayCorrectionProfileV313(r,rows)||{active:false,completed:0,markRaces:0,evidence:0,coverage:.83,deficit:0,frontSignal:0,lateSignal:0,innerSignal:0,flowLabel:'中立',sourceRaces:[],byNo:{}};
   var winEvidenceRaw=rows.map(function(z){
     var q=centralRace
       ?(.18*pure(z)+.22*trueRun(z)+.17*sectional(z)+.17*scenario(z)+.09*conditions(z)+.10*opponent(z)+.04*stateFit(z)+.03*n(z.flexibility,.5))
@@ -3102,12 +3103,21 @@ function assignPredictionMarks(rows,r){
     var dc=(dayCorr.byNo||{})[n(z.horse&&z.horse.horseNumber)]||{};
     z.p2RecallScore=secondRecall(z);z.p3RecallScore=thirdRecall(z);z.sameDayMarkBoost=n(dc.markBoost,0);z.sameDayFlowActive=!!dayCorr.active;z.sameDayFlowLabel=dayCorr.flowLabel;
     // A podium candidate can enter through any of the three finishing roles.
-    z.podiumRecallScore=clamp(Math.max(p1(z)*.86+n(dc.winBoost,0),z.p2RecallScore,z.p3RecallScore)*.72+robust(z)*.18+n(z.edgeEvidence,n(z.coverage,.5))*.10+n(dc.markBoost,0)*.26,0,1)
+    z.podiumRecallScore=clamp(Math.max(p1(z)*.86+n(dc.winBoost,0),z.p2RecallScore,z.p3RecallScore)*.72+robust(z)*.18+n(z.edgeEvidence,n(z.coverage,.5))*.10+n(dc.markBoost,0)*.10,0,1)
   });
   var p2Recall=rows.slice().sort(function(a,b){return n(b.p2RecallScore)-n(a.p2RecallScore)||n(a.p2Rank,99)-n(b.p2Rank,99)||n(b.axisProbability)-n(a.axisProbability)}),
       p3Recall=rows.slice().sort(function(a,b){return n(b.p3RecallScore)-n(a.p3RecallScore)||n(a.p3Rank,99)-n(b.p3Rank,99)||n(b.axisProbability)-n(a.axisProbability)}),
       podiumRecall=rows.slice().sort(function(a,b){return n(b.podiumRecallScore)-n(a.podiumRecallScore)||n(b.axisProbability)-n(a.axisProbability)||p1(b)-p1(a)});
   p2Recall.forEach(function(z,i){z.p2RecallRank=i+1});p3Recall.forEach(function(z,i){z.p3RecallRank=i+1});podiumRecall.forEach(function(z,i){z.podiumRecallRank=i+1});
+
+  // v316: independent-route diversity guard.  A frequent failure was one horse
+  // missing from the marked set even though it ranked highly on a different route.
+  // This is market-independent and only affects the lower coverage lanes.
+  function dimRank(fn){var a=rows.slice().sort(function(x,y){return n(fn(y))-n(fn(x))||n(x.horse.horseNumber)-n(y.horse.horseNumber)}),m={};a.forEach(function(z,i){m[n(z.horse.horseNumber)]=i+1});return m}
+  var dimMaps=centralRace
+    ?[dimRank(trueRun),dimRank(sectional),dimRank(scenario),dimRank(opponent),dimRank(robust)]
+    :[dimRank(function(z){return n(z.posCons,.5)}),dimRank(function(z){return n(z.trackFit,.5)}),dimRank(scenario),dimRank(function(z){return recentTop3Rate(z.horse)}),dimRank(robust)];
+  rows.forEach(function(z){var no=n(z.horse.horseNumber),rs=dimMaps.map(function(m){return n(m[no],99)}),hits=rs.filter(function(v){return v<=4}).length,best=Math.min.apply(null,rs);z.recallDiversityHits=hits;z.recallDiversityBest=best;z.recallDiversityScore=clamp(n(z.podiumRecallScore)*.52+n(z.p3RecallScore)*.18+n(z.p2RecallScore)*.10+robust(z)*.10+(hits/5)*.08+(best<=2?.04:0),0,1)});
 
   // ◎ = winner role. ○ = dedicated second-role. ▲ = best remaining podium role.
   take(winLeader||sorted[0],'◎');
@@ -3129,17 +3139,23 @@ function assignPredictionMarks(rows,r){
   // cannot be discarded if it has a different credible route into third.
   var rescue=thirdRescueCandidateV312(r,rows,selected);
   if(rescue){take(rescue,'△');rescue.thirdRescue=true;rescue.attentionReason='3着救済 '+Math.round(n(rescue.thirdRescueScore)*100)+'/100｜'+(centralRace?'上がり・TRUE RUN・区間/展開':'位置取り再現・同場/展開・近走3着内')}
+  // If the race itself is uncertain, keep one softer third-role lane instead of
+  // pretending the remaining field is safely discardable.
+  if(!rescue&&field>=10&&(!stable||(dayCorr.active&&dayCorr.deficit>=.22))){var softRescue=p3Recall.find(function(z){return selected.indexOf(z)<0&&n(z.p3RecallRank)<=7&&n(z.edgeEvidence,n(z.coverage,.5))>=.20});if(softRescue){take(softRescue,'△');softRescue.thirdRescue=true;softRescue.attentionReason='難解戦の3着保険｜P3 '+Math.round(n(softRescue.p3RecallScore)*100)+'/100'}}
 
-  // The final coverage lane protects role diversity.  It is not a simple overall
-  // rank fill: top P2/P3 role ranks and circuit-specific evidence are prioritized.
-  var targetMarks=Math.min(field,field>=12?7:(field>=7?6:Math.min(field,5)));
+  // The final coverage lane protects role diversity. Hard/unstable 10-11 runner
+  // races may use the seventh mark; strong/easy races remain compact.
+  var hardRecallRace=!stable||conf<(centralRace?.70:.64)||(dayCorr.active&&dayCorr.deficit>=.22),
+      targetMarks=Math.min(field,field>=12?7:(field>=10&&hardRecallRace?7:(field>=7?6:Math.min(field,5))));
+  var diversityPool=rows.filter(function(z){return selected.indexOf(z)<0&&n(z.edgeEvidence,n(z.coverage,.5))>=.22&&(n(z.recallDiversityHits)>=2||n(z.recallDiversityBest)<=2)&&n(z.podiumRecallScore)>=.36}).sort(function(a,b){return n(b.recallDiversityScore)-n(a.recallDiversityScore)||n(b.p3RecallScore)-n(a.p3RecallScore)});
+  if(selected.length<targetMarks&&diversityPool.length){var dv=diversityPool[0];take(dv,'注+');dv.attentionReason='独立根拠の拾い漏れ防止｜'+n(dv.recallDiversityHits)+'軸上位 / P3 '+Math.round(n(dv.p3RecallScore)*100)}
   var coveragePool=rows.filter(function(z){return selected.indexOf(z)<0}).sort(function(a,b){
     var ar=Math.min(n(a.p2RecallRank,99),n(a.p3RecallRank,99),n(a.axisRank,99)),br=Math.min(n(b.p2RecallRank,99),n(b.p3RecallRank,99),n(b.axisRank,99));
     var au=n(a.podiumRecallScore)*.56+n(a.p2RecallScore)*.17+n(a.p3RecallScore)*.20+n(a.edgeEvidence,n(a.coverage,.5))*.07+(ar<=5?.05:0),
         bu=n(b.podiumRecallScore)*.56+n(b.p2RecallScore)*.17+n(b.p3RecallScore)*.20+n(b.edgeEvidence,n(b.coverage,.5))*.07+(br<=5?.05:0);
     return bu-au||ar-br||n(b.axisProbability)-n(a.axisProbability)
   });
-  var alertLabels=['注+','注'],ci=0;
+  var alertLabels=selected.some(function(z){return z.predMark==='注+'})?['注']:['注+','注'],ci=0;
   while(selected.length<targetMarks&&ci<coveragePool.length&&alertLabels.length){
     var z=coveragePool[ci++],eligible=(n(z.podiumRecallScore)>=.43||n(z.p2RecallRank)<=5||n(z.p3RecallRank)<=6||n(z.axisRank)<=6);
     if(!eligible)continue;
@@ -3147,6 +3163,11 @@ function assignPredictionMarks(rows,r){
     if(strong&&alertLabels.indexOf('注+')>=0)mark='注+';else if(alertLabels.indexOf('注')>=0)mark='注';else mark=alertLabels[0];
     alertLabels.splice(alertLabels.indexOf(mark),1);take(z,mark);z.attentionReason=(mark==='注+'?'複数役で上位圏まで警戒':'候補完全包含の最終ガード')+'｜P2 '+Math.round(n(z.p2RecallScore)*100)+' / P3 '+Math.round(n(z.p3RecallScore)*100)
   }
+  // v316 shadow swap: only the lowest alert lane can be replaced. Core marks
+  // (◎○▲☆+☆△) are never rewritten by this guard.
+  var shadowPool=rows.filter(function(z){return selected.indexOf(z)<0&&n(z.recallDiversityHits)>=2&&n(z.edgeEvidence,n(z.coverage,.5))>=.24}).sort(function(a,b){return n(b.recallDiversityScore)-n(a.recallDiversityScore)}),
+      weakPool=selected.filter(function(z){return z.predMark==='注'||z.predMark==='注+'}).sort(function(a,b){return n(a.recallDiversityScore)-n(b.recallDiversityScore)});
+  if(shadowPool.length&&weakPool.length){var sh=shadowPool[0],wk=weakPool[0];if(n(sh.recallDiversityScore)>=n(wk.recallDiversityScore)+.055){var mk=wk.predMark;wk.predMark='';selected.splice(selected.indexOf(wk),1);take(sh,mk);sh.attentionReason='最終シャドー救済｜独立'+n(sh.recallDiversityHits)+'軸で上位'}}
   if(dayCorr.active){selected.forEach(function(z){if(n(z.sameDayMarkBoost)>.012){z.attentionReason=(z.attentionReason?z.attentionReason+'｜':'')+'当日'+dayCorr.flowLabel+'補正'}})}
   var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注+':7,'注':8};rows.slice().sort(function(a,b){return n(order[a.predMark],99)-n(order[b.predMark],99)||n(b.axisProbability)-n(a.axisProbability)||p1(b)-p1(a)}).forEach(function(z,idx){z.predRank=idx+1});
   if(winLeader){winLeader.circuitMethod=method.id;winLeader.sameDayCorrection=dayCorr;winLeader.axisReason=method.id+' / '+winLeader.winDecisionReason+' / P1差 '+(p1Gap*100).toFixed(1)+'pt / 独立1着 '+(n(winLeader.winEvidenceProbability)*100).toFixed(1)+'% / 対戦 '+(n(winLeader.pairwiseWinRate)*100).toFixed(1)+'% / 統合 '+(n(winLeader.winnerConsensusProbability)*100).toFixed(1)+'% / 軸信頼 '+Math.round(conf*100)+'/100'+(dayCorr.active?' / 当日'+dayCorr.flowLabel+'補正 '+Math.round(dayCorr.evidence*100)+'/100':'')}
@@ -3195,7 +3216,7 @@ function integratedGrades(r,rows){
   })
 }
 
-function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v50-final',markEngineVersion:'v314-sameday-flow-fix',researchAudit:{podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
+function predict(r){if(r._prediction)return r._prediction;var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;assignOverallGrades(modelRace,rows,suit,sc,pressure);assignEdgeEngine(modelRace,rows,suit,sc,pressure);integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++){var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)}var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),cov=mean(rows.map(function(x){return x.coverage}));var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,engineVersion:'arvexq-edge-2026.10-v50-final',markEngineVersion:'v316-recall-calibration',researchAudit:{podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true}};Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});return result}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -3559,7 +3580,7 @@ function buildV213AiBetPlan(r,p,rows,featured){
   if(triGate){var triMax=orderConfidence>=.55?4:6,triCut=orderConfidence>=.55?.56:.46,t3=compactCombos(tri,triMax,triCut,2);if(rescue3)appendRescueRankedV312(t3,tri,no(rescue3),orderConfidence>=.55?1:2,.27,true);if(t3.length)items.push({level:'3連単チャレンジ',kind:'3連単',combos:t3,confidence:orderConfidence>=.55?'高':'中'})}
   items.forEach(function(z){z.points=(z.combos||[]).length;z.combo=betComboText(z.kind,z.combos)});items=items.filter(function(z){return z.points>0});
   var decision=strong?'強く買う':(canIssue?'通常買い':'見送り'),quality=canIssue?Math.round(clamp(45+top3mass*42+(1-ent)*18+(strong?10:0),50,96)):0,reason=strong?'厳選ゲート通過。v220は共通の条件付き着順分布から5券種を生成し、上位確率が離れた地点で買い目を自動打ち切りします。3連単は順序信頼ゲート通過時のみ最大6点です。':(featured?'メイン・重賞・高知ファイナル等の対象レースなので、役割順位から本線を出します。':(canIssue?'通常ゲート通過。役割順位の集中度から買い目を作成。':'通常ゲート未通過。'));
-  return{raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v314-sameday-flow-fix',decision:decision,featuredRace:featured,betQuality:quality,scenario:((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{title:'平均',prob:0}).title,scenarioProb:n(((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{}).prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'1着→2着→3着の条件付き順序集中度が基準未満。',winnerModel:(String((r&&r.circuit)||'')==='中央'?'central-v314-sameday-flow-fix':'local-v314-sameday-flow-fix')+'+walkforward+precision-order',p2Model:'v245-v213+seven-axis-live-role+conditional',p3Model:'v245-v213+sectional-live-role+conditional',selectionAudit:sel,roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z.x),p:z.p}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z.x),p:z.p}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z.x),p:z.p}})},audit:{field:rows.length,coverage:n(p.coverage),p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:ent,exactaTop:exactaRank[0]?exactaRank[0].score:0,exactaRatio:(exactaRank[0]?n(exactaRank[0].score):0)/Math.max(1e-9,exactaRank[1]?n(exactaRank[1].score):1e-9),quinTop:quinRank[0]?quinRank[0].score:0,quinRatio:(quinRank[0]?n(quinRank[0].score):0)/Math.max(1e-9,quinRank[1]?n(quinRank[1].score):1e-9),wideTop:wideRank[0]?wideRank[0].score:0,wideRatio:(wideRank[0]?n(wideRank[0].score):0)/Math.max(1e-9,wideRank[1]?n(wideRank[1].score):1e-9),trioTop:trioRank[0]?trioRank[0].score:0,trioRatio:(trioRank[0]?n(trioRank[0].score):0)/Math.max(1e-9,trioRank[1]?n(trioRank[1].score):1e-9),triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderEntropy:orderEntropy,orderConfidence:orderConfidence,selected:autoSelected,normalGate:normalGate,ticketDistribution:'sequential-joint-v300-winner-consensus'},items:items,reason:reason}
+  return{raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v316-recall-calibration',decision:decision,featuredRace:featured,betQuality:quality,scenario:((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{title:'平均',prob:0}).title,scenarioProb:n(((p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0]||{}).prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'1着→2着→3着の条件付き順序集中度が基準未満。',winnerModel:(String((r&&r.circuit)||'')==='中央'?'central-v316-recall-calibration':'local-v316-recall-calibration')+'+walkforward+precision-order',p2Model:'v245-v213+seven-axis-live-role+conditional',p3Model:'v245-v213+sectional-live-role+conditional',selectionAudit:sel,roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z.x),p:z.p}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z.x),p:z.p}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z.x),p:z.p}})},audit:{field:rows.length,coverage:n(p.coverage),p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:ent,exactaTop:exactaRank[0]?exactaRank[0].score:0,exactaRatio:(exactaRank[0]?n(exactaRank[0].score):0)/Math.max(1e-9,exactaRank[1]?n(exactaRank[1].score):1e-9),quinTop:quinRank[0]?quinRank[0].score:0,quinRatio:(quinRank[0]?n(quinRank[0].score):0)/Math.max(1e-9,quinRank[1]?n(quinRank[1].score):1e-9),wideTop:wideRank[0]?wideRank[0].score:0,wideRatio:(wideRank[0]?n(wideRank[0].score):0)/Math.max(1e-9,wideRank[1]?n(wideRank[1].score):1e-9),trioTop:trioRank[0]?trioRank[0].score:0,trioRatio:(trioRank[0]?n(trioRank[0].score):0)/Math.max(1e-9,trioRank[1]?n(trioRank[1].score):1e-9),triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderEntropy:orderEntropy,orderConfidence:orderConfidence,selected:autoSelected,normalGate:normalGate,ticketDistribution:'sequential-joint-v300-winner-consensus'},items:items,reason:reason}
 }
 
 
@@ -3751,16 +3772,16 @@ function buildAiBetPlan(r,p){
     var ec=compactCombos(exactaRank,strongGate?2:1,strongGate?.68:.78,1);if(ec.length)items.push({level:strongGate?'本線':'通常',kind:'馬単',combos:ec,confidence:strongGate?'高':'中',modelScore:0});
     var qc=compactCombos(quinellaRank,2,strongGate?.70:.78,1);if(qc.length)items.push({level:strongGate?'本線':'通常',kind:'馬連',combos:qc,confidence:strongGate?'高':'中',modelScore:0});
     var wc=compactCombos(wideRank,2,strongGate?.74:.82,1);if(wc.length)items.push({level:strongGate?'本線':'通常',kind:'ワイド',combos:wc,confidence:strongGate?'高':'中',modelScore:0});
-    var tc=compactCombos(trioRank,strongGate?3:2,strongGate?.60:.72,strongGate?2:1),rescue3=thirdRescueCandidateV312(r,rows,[]);if(rescue3)appendRescueRankedV312(tc,trioRank,no(rescue3),1,strongGate?.34:.40,false);if(tc.length)items.push({level:strongGate?'押さえ':'通常',kind:'3連複',combos:tc,confidence:strongGate?'高':'中',modelScore:0});
+    var tc=compactCombos(trioRank,strongGate?3:2,strongGate?.60:.72,strongGate?2:1),rescue3=thirdRescueCandidateV312(r,rows,[]),recallGuard=rows.filter(function(z){return ['△','注+','注'].indexOf(String(z.predMark||''))>=0}).sort(function(a,b){return n(b.p3RecallScore)-n(a.p3RecallScore)||n(b.recallDiversityScore)-n(a.recallDiversityScore)})[0]||null;if(rescue3)appendRescueRankedV312(tc,trioRank,no(rescue3),1,strongGate?.34:.40,false);if(recallGuard&&(!rescue3||no(recallGuard)!==no(rescue3)))appendRescueRankedV312(tc,trioRank,no(recallGuard),1,strongGate?.31:.36,false);if(tc.length)items.push({level:strongGate?'押さえ':'通常',kind:'3連複',combos:tc,confidence:strongGate?'高':'中',modelScore:0});
   }
   var triGate=canIssue&&strongGate&&triTop>=.018&&triRatio>=1.06&&triTop6>=.080&&orderConfidence>=.34;
-  if(triGate){var triMax=orderConfidence>=.52?4:6,triCut=orderConfidence>=.52?.56:.46,t3=compactCombos(tri,triMax,triCut,2);if(rescue3)appendRescueRankedV312(t3,tri,no(rescue3),orderConfidence>=.52?1:2,.27,true);if(t3.length)items.push({level:'3連単チャレンジ',kind:'3連単',combos:t3,confidence:orderConfidence>=.52?'高':'中',modelScore:0});}
+  if(triGate){var triMax=orderConfidence>=.52?4:6,triCut=orderConfidence>=.52?.56:.46,t3=compactCombos(tri,triMax,triCut,2);if(rescue3)appendRescueRankedV312(t3,tri,no(rescue3),orderConfidence>=.52?1:2,.27,true);if(recallGuard&&(!rescue3||no(recallGuard)!==no(rescue3)))appendRescueRankedV312(t3,tri,no(recallGuard),1,.24,true);if(t3.length)items.push({level:'3連単チャレンジ',kind:'3連単',combos:t3,confidence:orderConfidence>=.52?'高':'中',modelScore:0});}
   items=items.filter(function(z){z.points=(z.combos||[]).length;z.combo=betComboText(z.kind,z.combos);return z.points>0});
   if(!items.length&&canIssue){var fallback=topCombos(wideRank,3);if(fallback.length)items.push({level:'通常',kind:'ワイド',combos:fallback,points:fallback.length,combo:betComboText('ワイド',fallback),confidence:'中',modelScore:0})}
   var sel=null;try{sel=strictSelectedRaceProfile(r,p)}catch(e){}
   var betQuality=canIssue?Math.round(clamp(48+top3mass*30+(1-p1Entropy)*12+(featured?7:0)+(strongGate?8:0),50,92)):0,
       reason=featured?'本日の厳選/メイン/重賞/高知ファイナル対象。v220は共通着順分布から5券種を生成し、確率差で自動的に点数を絞ります。':(canIssue?'通常レースの買い目ゲート通過。5券種は同じ条件付き着順分布から派生。':'通常レースの買い目ゲート未通過。'),
-      plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v314-sameday-flow-fix',decision:decision,featuredRace:featured,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'条件付き順序集中度が3連単基準未満。',winnerModel:(String((r&&r.circuit)||'')==='中央'?'central-v314-sameday-flow-fix':'local-v314-sameday-flow-fix')+'+walkforward+precision-order',p2Model:useV207?'v212-role+v220-conditional':'legacy-central+v220-conditional',p3Model:'role-marginal+v220-conditional',selectionAudit:sel,
+      plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v316-recall-calibration',decision:decision,featuredRace:featured,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'条件付き順序集中度が3連単基準未満。',winnerModel:(String((r&&r.circuit)||'')==='中央'?'central-v316-recall-calibration':'local-v316-recall-calibration')+'+walkforward+precision-order',p2Model:useV207?'v212-role+v220-conditional':'legacy-central+v220-conditional',p3Model:'role-marginal+v220-conditional',selectionAudit:sel,
         roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z),p:winActive(z)}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z),p:role(z,2)}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z),p:role(z,3)}}),legacyP1:legacyRows.slice(0,4).map(function(z){return{no:no(z),p:n(z.ticketLegacyP1Probability)}})},
         audit:{field:field,coverage:cov,p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:p1Entropy,exactaTop:exactaTop,exactaRatio:exactaRatio,wideTop:wideTop,wideRatio:wideRatio,quinTop:qTop,quinRatio:qRatio,trioTop:trioTop,trioRatio:trioRatio,triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderConfidence:orderConfidence,normalGate:normalGate,strongGate:strongGate,featured:featured,ticketDistribution:'sequential-joint-v300-winner-consensus'},items:items,reason:reason};
   plan=rebuildBetStrategyV242(plan,r,p);saveStoredAiBet(r,plan);return plan
@@ -6678,7 +6699,7 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v315-update-reset", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v316-recall-calibration", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")), "jraOfficialFallback":True,
         "centralHistoryFeedConfigured":bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
@@ -9161,7 +9182,7 @@ def _sanitize_horse_measurements(h:dict)->dict:
     return z
 
 
-PRERACE_AUDIT_VERSION = "arvexq-prerace-audit-v314-sameday-flow-fix"
+PRERACE_AUDIT_VERSION = "arvexq-prerace-audit-v316-recall-calibration"
 WINNER_LEARNING_VERSION = "arvexq-winner-learning-v309-circuit-date-blocked"
 WINNER_LEARNING_MIN_RACES = max(100, int(os.getenv("WINNER_LEARNING_MIN_RACES", "120")))
 WINNER_LEARNING_MIN_DAYS = max(6, int(os.getenv("WINNER_LEARNING_MIN_DAYS", "8")))
@@ -11030,7 +11051,7 @@ def _pc_live_track_speed(detail: dict) -> dict:
 
 def _v313_same_day_mark_profile(detail: dict) -> dict:
     """Leakage-safe same-day style + mark-miss profile from earlier finalized races only."""
-    neutral={"version":"sameday-mark-v314","active":False,"completed":0,"evidence":0.0,"coverage":1.0,"deficit":0.0,
+    neutral={"version":"sameday-mark-v316","active":False,"completed":0,"evidence":0.0,"coverage":1.0,"deficit":0.0,
              "frontSignal":0.0,"lateSignal":0.0,"innerSignal":0.0,"flowLabel":"中立","sourceRaces":[]}
     if not isinstance(detail,dict) or not RACEDB_PATH.exists():return neutral
     ds=str(detail.get("date") or "");track=str(detail.get("track") or "");circuit=str(detail.get("circuit") or "")
@@ -11089,7 +11110,7 @@ def _v313_same_day_mark_profile(detail: dict) -> dict:
     elif front_signal<=-.055:flow="前不利"
     else:flow="差し不利" if late_signal<=-.055 else ""
     if not flow and abs(inner_signal)>=.06:flow="内寄り" if inner_signal>0 else "外寄り"
-    return {"version":"sameday-mark-v314","active":bool(evidence>=.18),"completed":completed,"markRaces":mark_races,"evidence":round(evidence,6),"coverage":round(coverage,6),
+    return {"version":"sameday-mark-v316","active":bool(evidence>=.18),"completed":completed,"markRaces":mark_races,"evidence":round(evidence,6),"coverage":round(coverage,6),
             "deficit":round(deficit,6),"frontSignal":round(front_signal,6),"lateSignal":round(late_signal,6),"innerSignal":round(inner_signal,6),
             "flowLabel":flow or "中立","sourceRaces":source}
 
@@ -11116,7 +11137,7 @@ def _v313_horse_flow_adjust(h:dict, profile:dict, field:int)->float:
     except Exception:fr=0
     max_frame=max(2,min(8,math.ceil(max(2,field)/2)));inside=max(0.0,min(1.0,1-(fr-1)/max(1,max_frame-1))) if fr else .5
     raw=float(profile.get("frontSignal") or 0)*(early-late)+float(profile.get("lateSignal") or 0)*(late-early)+float(profile.get("innerSignal") or 0)*(inside-.5)*1.35
-    return max(-.09,min(.09,raw))
+    return max(-.06,min(.06,raw))
 
 def _v215_draw_score(track: str, dist: int, group: int) -> float:
     db=round(int(dist or 0)/200)*200
@@ -11408,7 +11429,7 @@ def _rank_evaluations(detail):
         e['v207WinnerScore']=v207_p1 if use_v207 else None;e['v212P2Score']=v212_p2 if use_v207 else None
         e['p1Score']=active_p1;e['p2Score']=active_p2;e['p3Score']=active_p3
         e['roleModelVersion']=V218_TACTICAL_MODEL_VERSION if v213 else PREDICTION_ENGINE_VERSION
-        e['winnerModelVersion']=V218_TACTICAL_MODEL_VERSION if v213 else (V207_WINNER_MODEL_VERSION if use_v207 else ('central-winner-v314-sameday-flow-fix' if str(detail.get('circuit') or '')=='中央' else 'local-winner-v314-sameday-flow-fix'))
+        e['winnerModelVersion']=V218_TACTICAL_MODEL_VERSION if v213 else (V207_WINNER_MODEL_VERSION if use_v207 else ('central-winner-v316-recall-calibration' if str(detail.get('circuit') or '')=='中央' else 'local-winner-v316-recall-calibration'))
         e['p2ModelVersion']=V213_ROLE_MODEL_VERSION if v213 else (V212_P2_MODEL_VERSION if use_v207 else 'legacy-p2-central-unvalidated')
         e['p3ModelVersion']=V213_ROLE_MODEL_VERSION if v213 else 'legacy-p3'
         e['winnerModelValidated']=bool(v213 or use_v207);e['p2ModelValidated']=bool(v213 or use_v207);e['p3ModelValidated']=bool(v213)
@@ -11467,7 +11488,7 @@ def _rank_evaluations(detail):
             q=.18*_axis(h,'pure')+.22*_axis(h,'trueRun')+.17*_axis(h,'sectional')+.17*_axis(h,'positionScenario')+.09*_axis(h,'conditions')+.10*_axis(h,'opponentLevel')+.04*_axis(h,'stateConsistency')+.03*_axis(h,'flexibility',.5)
         else:
             q=.27*_axis(h,'pure')+.22*_axis(h,'trueRun')+.13*_axis(h,'sectional')+.14*_axis(h,'positionScenario')+.09*_axis(h,'conditions')+.06*_axis(h,'opponentLevel')+.04*_axis(h,'stateConsistency')+.05*_axis(h,'evidence',.5)
-        q+=day_adjust[len(win_raw)]*.32
+        q+=day_adjust[len(win_raw)]*.10
         win_raw.append(max(.001,q*(1-float(method.get('fragPenalty') or .08)*_frag(h))))
     if win_raw:
         mx=max(win_raw);temp=.095 if central_race else .105;wex=[math.exp((x-mx)/temp) for x in win_raw];ws=sum(wex) or 1.0;win_prob=[x/ws for x in wex]
@@ -11538,8 +11559,8 @@ def _rank_evaluations(detail):
         else:
             s2=.42*p2+.10*p1+.12*state+.10*course+.09*scn+.06*cond+.06*recent+.05*robust[i];s2*=1-.035*frag
             s3=.42*p3+.12*state+.11*course+.10*scn+.08*recent+.06*cond+.06*robust[i]+.05*ev;s3*=1-.025*frag
-        s2+=day_adjust[i]*.55;s3+=day_adjust[i]*.82
-        s2=max(0.0,min(1.0,s2));s3=max(0.0,min(1.0,s3));pod=max(0.0,min(1.0,max(.86*p1+day_adjust[i]*.34,s2,s3)*.72+robust[i]*.18+ev*.10+day_adjust[i]*.26))
+        core_scale=1.0 if int(day_profile.get('markRaces') or 0)>=3 else .55;s2+=day_adjust[i]*.38*core_scale;s3+=day_adjust[i]*.65*core_scale
+        s2=max(0.0,min(1.0,s2));s3=max(0.0,min(1.0,s3));pod=max(0.0,min(1.0,max(.86*p1+day_adjust[i]*.12,s2,s3)*.72+robust[i]*.18+ev*.10+day_adjust[i]*.10))
         second_scores.append(s2);third_scores.append(s3);podium_scores.append(pod)
         axis=max(.0001,.54*p1+.15*p2+.11*p3+.12*(seven[i]/s7)+.08*(robust[i]/sr));e['axisProbabilityRaw']=round(axis,8);e['p2RecallScore']=round(s2,8);e['p3RecallScore']=round(s3,8);e['podiumRecallScore']=round(pod,8);axis_raw.append(axis)
     axis_total=sum(axis_raw) or 1.0
@@ -11548,6 +11569,20 @@ def _rank_evaluations(detail):
     p3_recall=sorted(range(len(horses)),key=lambda i:(-third_scores[i],int(horses[i].get('horseNumber') or 0)))
     podium_recall=sorted(range(len(horses)),key=lambda i:(-podium_scores[i],-axis_raw[i],int(horses[i].get('horseNumber') or 0)))
     p2_rank={idx:rank+1 for rank,idx in enumerate(p2_recall)};p3_rank={idx:rank+1 for rank,idx in enumerate(p3_recall)};pod_rank={idx:rank+1 for rank,idx in enumerate(podium_recall)}
+    # v316 independent-route diversity ranks; market fields are not used.
+    def _ranks(vals):
+        order=sorted(range(len(vals)),key=lambda i:(-float(vals[i]),int(horses[i].get('horseNumber') or 0)))
+        return {idx:rank+1 for rank,idx in enumerate(order)}
+    if central_race:
+        dim_vals=[[_axis(h,'trueRun',.5) for h in horses],[_axis(h,'sectional',.5) for h in horses],[_axis(h,'positionScenario',.5) for h in horses],[_axis(h,'opponentLevel',.5) for h in horses],robust]
+    else:
+        dim_vals=[[_axis(h,'stateConsistency',.5) for h in horses],[_comp(h,['courseFit','trackFit'],.5) for h in horses],[_axis(h,'positionScenario',.5) for h in horses],[_recent_top3(h) for h in horses],robust]
+    dim_ranks=[_ranks(v) for v in dim_vals]
+    diversity=[]
+    for i,h in enumerate(horses):
+        rs=[m.get(i,99) for m in dim_ranks];hits=sum(1 for x in rs if x<=4);best=min(rs) if rs else 99
+        score=max(0.0,min(1.0,.52*podium_scores[i]+.18*third_scores[i]+.10*second_scores[i]+.10*robust[i]+.08*(hits/5)+(.04 if best<=2 else 0)))
+        diversity.append((score,hits,best));e=h.get('integratedEvaluation') or {};e['recallDiversityScore']=round(score,8);e['recallDiversityHits']=hits;e['recallDiversityBest']=best
     for i,h in enumerate(horses):
         e=h.get('integratedEvaluation') or {};e['axisProbability']=round(axis_raw[i]/axis_total,8);e['axisRank']=general.index(h)+1;e['p2RecallRank']=p2_rank[i];e['p3RecallRank']=p3_rank[i];e['podiumRecallRank']=pod_rank[i];e['mark']=''
     selected=[]
@@ -11578,25 +11613,45 @@ def _rank_evaluations(detail):
             rs=.58*third_scores[i]+.18*podium_scores[i]+.12*_axis(h,'trueRun',.5)+.12*_axis(h,'positionScenario',.5)
             rescue_pool.append((rs,h))
     rescue_pool.sort(key=lambda z:(-z[0],int(z[1].get('horseNumber') or 0)))
+    winner_stable=bool((winner_leader.get('integratedEvaluation') or {}).get('winnerDecisionStable')) if winner_leader else False
+    hard_recall=(not winner_stable) or float(day_profile.get('deficit') or 0)>=.22
     if rescue_pool and rescue_pool[0][0]>=(.47 if central_race else .48):_take(rescue_pool[0][1],'△')
-    target=min(len(horses),7 if len(horses)>=12 else (6 if len(horses)>=7 else min(len(horses),5)))
+    elif len(horses)>=10 and hard_recall:
+        soft=next((horses[i] for i in p3_recall if horses[i] not in selected and p3_rank[i]<=7 and _axis(horses[i],'evidence',.5)>=.20),None)
+        if soft is not None:_take(soft,'△')
+    target=min(len(horses),7 if len(horses)>=12 else (7 if len(horses)>=10 and hard_recall else (6 if len(horses)>=7 else min(len(horses),5))))
+    # Reserve one lower mark for a horse supported by multiple independent routes.
+    div_pool=[]
+    for i,h in enumerate(horses):
+        if h in selected:continue
+        score,hits,best=diversity[i];ev=_axis(h,'evidence',.5)
+        if ev>=.22 and (hits>=2 or best<=2) and podium_scores[i]>=.36:div_pool.append((score,h,i))
+    div_pool.sort(key=lambda z:(-z[0],int(z[1].get('horseNumber') or 0)))
+    if len(selected)<target and div_pool:_take(div_pool[0][1],'注+')
     cov=[]
     for i,h in enumerate(horses):
         if h in selected:continue
         role_rank=min(p2_rank[i],p3_rank[i],general.index(h)+1);score=.56*podium_scores[i]+.17*second_scores[i]+.20*third_scores[i]+.07*_axis(h,'evidence',.5)+(.05 if role_rank<=5 else 0)
         if podium_scores[i]>=.43 or p2_rank[i]<=5 or p3_rank[i]<=6 or (general.index(h)+1)<=6:cov.append((score,h,i))
-    cov.sort(key=lambda z:(-z[0],int(z[1].get('horseNumber') or 0)));labels=['注+','注']
+    cov.sort(key=lambda z:(-z[0],int(z[1].get('horseNumber') or 0)));labels=['注'] if any(str((h.get('integratedEvaluation') or {}).get('mark') or '')=='注+' for h in selected) else ['注+','注']
     for score,h,i in cov:
         if len(selected)>=target or not labels:break
         strong=podium_scores[i]>=.56 and (p2_rank[i]<=4 or p3_rank[i]<=4 or _axis(h,'positionScenario',.5)>=.58)
         mark='注+' if strong and '注+' in labels else ('注' if '注' in labels else labels[0]);labels.remove(mark);_take(h,mark)
+    # v316 final shadow swap: only 注/注+ can be replaced, never core marks.
+    unmarked=[(diversity[i][0],h,i) for i,h in enumerate(horses) if h not in selected and diversity[i][1]>=2 and _axis(h,'evidence',.5)>=.24]
+    weak=[(diversity[horses.index(h)][0],h) for h in selected if str((h.get('integratedEvaluation') or {}).get('mark') or '') in {'注','注+'}]
+    if unmarked and weak:
+        unmarked.sort(key=lambda z:(-z[0],int(z[1].get('horseNumber') or 0)));weak.sort(key=lambda z:(z[0],int(z[1].get('horseNumber') or 0)))
+        if unmarked[0][0]>=weak[0][0]+.055:
+            sh=unmarked[0][1];wk=weak[0][1];mk=str((wk.get('integratedEvaluation') or {}).get('mark') or '注');(wk.get('integratedEvaluation') or {})['mark']='';selected.remove(wk);_take(sh,mk)
     evidence_count=sum(1 for h in horses if not (h.get('integratedEvaluation') or {}).get('neutralPrior') and (int((h.get('integratedEvaluation') or {}).get('samples') or 0)>0 or bool((h.get('integratedEvaluation') or {}).get('components'))));mark_confident=evidence_count>=max(2,(len(horses)+2)//3)
     mark_order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注+':7,'注':8}
     ranked_marks=sorted(horses,key=lambda h:(mark_order.get(str((h.get('integratedEvaluation') or {}).get('mark') or ''),99),-float((h.get('integratedEvaluation') or {}).get('podiumRecallScore') or 0),int(h.get('horseNumber') or 0)))
     for i,horse in enumerate(ranked_marks):
         e=horse.get('integratedEvaluation') or {};score=float(e.get('score') or 0);e.update({'rank':i+1,'markConfidence':'通常' if mark_confident else '暫定','markProvisional':bool(not mark_confident),'grade':'S' if score>=80 else 'A' if score>=70 else 'B' if score>=55 else 'C'})
     active_top=int(winner_leader.get('horseNumber') or 0) if winner_leader else 0;legacy_top=int(legacy_sorted[0].get('horseNumber') or 0) if legacy_sorted else 0;v207_top=int(v207_sorted[0].get('horseNumber') or 0) if v207_sorted else 0
-    detail['modelComparison']={'activeVersion':V218_TACTICAL_MODEL_VERSION if v213 else (V207_WINNER_MODEL_VERSION if use_v207 else ('central-winner-v314-sameday-flow-fix' if central_race else 'local-winner-v314-sameday-flow-fix')),'legacyVersion':V207_WINNER_MODEL_VERSION if v213 else 'arvexq-edge-2026.09-v14-winner-role-split','validatedCircuit':bool(v213 or use_v207),'activeTop1':active_top,'legacyTop1':v207_top if v213 else legacy_top,'top1Agreement':bool(active_top and active_top==(v207_top if v213 else legacy_top)),'circuitMethod':method.get('id'),'backtest':dict(V213_BACKTEST_AUDIT) if v213 else (dict(V207_BACKTEST_AUDIT) if use_v207 else {'note':'中央は地方499Rモデルを転用せず、v314中央専用＋当日フロー補正を使用。未使用Holdoutでの昇格検証は継続'})}
+    detail['modelComparison']={'activeVersion':V218_TACTICAL_MODEL_VERSION if v213 else (V207_WINNER_MODEL_VERSION if use_v207 else ('central-winner-v316-recall-calibration' if central_race else 'local-winner-v316-recall-calibration')),'legacyVersion':V207_WINNER_MODEL_VERSION if v213 else 'arvexq-edge-2026.09-v14-winner-role-split','validatedCircuit':bool(v213 or use_v207),'activeTop1':active_top,'legacyTop1':v207_top if v213 else legacy_top,'top1Agreement':bool(active_top and active_top==(v207_top if v213 else legacy_top)),'circuitMethod':method.get('id'),'backtest':dict(V213_BACKTEST_AUDIT) if v213 else (dict(V207_BACKTEST_AUDIT) if use_v207 else {'note':'中央は地方499Rモデルを転用せず、v316中央専用＋独立ルート包含ガードを使用。未使用Holdoutでの昇格検証は継続'})}
     return detail
 
 def _strip_excluded(value):
@@ -14306,7 +14361,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v315","appVersion":"14.15-v315-update-reset",
+        "build":"v316","appVersion":"14.16-v316-recall-calibration",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -14325,8 +14380,8 @@ def home():
     # by the browser; Render remains the fallback for live/manual refreshes.
     boot='<script>window.__ARVEXQ_BOOTSTRAP__=null;</script>'
     html=INDEX.replace(
-        '<script src="/app-v315.js"></script>',
-        boot+'\n<script src="/app-v315.js"></script>'
+        '<script src="/app-v316.js"></script>',
+        boot+'\n<script src="/app-v316.js"></script>'
     )
     return HTMLResponse(html, headers={
         "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
@@ -14426,9 +14481,9 @@ def pace_preview():
 
 @app.get("/version.json")
 def version_json():
-    return Response('{"build":"v315","shell":"update-reset","model":"v314-sameday-flow-fix"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
+    return Response('{"build":"v316","shell":"recall-calibration","model":"v316-recall-calibration"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
 
-@app.get("/styles-arvexq-v315.css")
+@app.get("/styles-arvexq-v316.css")
 @app.get("/styles-arvexq-v88.css")
 @app.get("/styles-v86.css")
 @app.get("/styles-arvexq-v312.css")
@@ -14441,7 +14496,7 @@ def version_json():
 def styles():
     return Response(CSS, media_type="text/css", headers={"Cache-Control":"public, max-age=31536000, immutable"})
 
-@app.get("/app-v315.js")
+@app.get("/app-v316.js")
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
@@ -14464,7 +14519,7 @@ def appjs():
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
 
-@app.get("/sw-v315-reset.js")
+@app.get("/sw-v316-reset.js")
 @app.get("/sw.js")
 def service_worker():
     return Response(SW, media_type="application/javascript", headers={"Service-Worker-Allowed":"/", "Cache-Control":"no-store, max-age=0"})
