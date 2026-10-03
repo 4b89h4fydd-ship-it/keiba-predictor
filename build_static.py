@@ -67,10 +67,11 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py")
 
-BUILD_VERSION = "v311"
+BUILD_VERSION = "v312"
 js = re.sub(r"BUILD v\d+", f"BUILD {BUILD_VERSION}", strings["JS"])
 js = re.sub(r'(arvexq-sw-reload"\)!==")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
 js = js.replace('"v133-edge-only"', f'"{BUILD_VERSION}-edge-only"')
+js = re.sub(r'(sessionStorage\.setItem\("arvexq-sw-reload",")v[^"\n]+("\))', r'\1'+BUILD_VERSION+r'-edge-only\2', js)
 # v148: the SW script URL itself changes, forcing Safari/PWA to check a new worker.
 js = js.replace('navigator.serviceWorker.register("/sw.js",{scope:"/"})',
                 f'navigator.serviceWorker.register("/sw-{BUILD_VERSION}.js",{{scope:"/"}})')
