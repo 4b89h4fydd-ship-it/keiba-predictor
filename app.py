@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.06-v306-livefix")
+app = FastAPI(title="ARVEXQ", version="14.08-v308-live-direct")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v50-final"
@@ -490,7 +490,7 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
-<link rel="stylesheet" href="/styles-arvexq-v306.css">
+<link rel="stylesheet" href="/styles-arvexq-v308.css">
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
@@ -498,7 +498,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script src="/app-v306.js"></script>
+<script src="/app-v308.js"></script>
 </body>
 </html>"""
 
@@ -2157,8 +2157,8 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(sessionStorage.getItem("arvexq-sw-reload")!=="v306-livefix"){
-          sessionStorage.setItem("arvexq-sw-reload","v306-livefix");
+        if(sessionStorage.getItem("arvexq-sw-reload")!=="v308-live-direct"){
+          sessionStorage.setItem("arvexq-sw-reload","v308-live-direct");
           location.reload()
         }
       }catch(e){}
@@ -3685,7 +3685,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':(isFlash(x)?'結果速報':'レース詳細'))+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v306</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v308</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
@@ -4031,63 +4031,35 @@ function liveVenueOptions(){
   return rows
 }
 function smartLiveLauncher(){
-  return '<section class="smart-live-launcher"><button type="button" data-action="live-open" class="smart-live-launch-button"><span class="smart-live-launch-badge">● LIVE</span><span class="smart-live-launch-copy"><b>ライブ中継</b><small>開催場を選んですぐ見る</small></span><strong>▶</strong></button></section>'
+  return '<section class="smart-live-launcher"><button type="button" data-action="live-open" class="smart-live-launch-button"><span class="smart-live-launch-badge">● LIVE</span><span class="smart-live-launch-copy"><b>ライブ中継</b><small>中央 / 地方から公式LIVEへ</small></span><strong>▶</strong></button></section>'
 }
 function liveCenterModal(){
   if(!liveCenterOpen)return '';
-  var rows=liveVenueOptions(),selected=liveCenterTrack?{track:liveCenterTrack,circuit:liveCenterCircuit}:null,src=selected?liveVenueSource(selected.circuit,selected.track):'',external=selected?liveVenueExternal(selected.circuit,selected.track):'',central=selected&&selected.circuit==='中央';
-  return '<div class="live-center-overlay" data-live-key="'+esc(String(liveCenterCircuit||'')+'|'+String(liveCenterTrack||''))+'" role="dialog" aria-modal="true" aria-label="ライブ中継">'+
-    '<div class="live-center-sheet">'+
-      '<header class="live-center-head"><div><b>LIVE</b><small>'+(selected?esc(selected.track)+' / '+esc(selected.circuit):'開催場を選択')+'</small></div><button type="button" data-action="live-close" aria-label="閉じる">×</button></header>'+
-      '<div class="live-center-venues">'+(rows.length?rows.map(function(v){return '<button type="button" data-live-track="'+esc(v.track)+'" data-live-circuit="'+esc(v.circuit)+'" class="'+(selected&&selected.track===v.track&&selected.circuit===v.circuit?'active':'')+'"><small>'+esc(v.circuit)+'</small><b>'+esc(v.track)+'</b></button>'}).join(''):'<div class="live-center-empty">本日の開催場データを取得中です</div>')+'</div>'+
-      (selected?'<div class="live-center-player '+(central?'central':'local')+'"><div class="live-center-frame"><iframe src="'+esc(src)+'" title="'+esc(selected.track)+' ライブ" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen scrolling="yes" referrerpolicy="origin"></iframe></div><div class="live-center-player-foot"><span>'+(central?'JRA公式YouTubeライブ / iPhoneで埋め込み再生できない場合は公式再生へ':'地方競馬ライブ / 映像を大きく表示')+'</span><a class="live-center-external" href="'+esc(external)+'" target="_blank" rel="noopener noreferrer">'+(central?'▶ JRA公式で再生':'↗ 公式画面')+'</a></div></div>':'<div class="live-center-prompt"><b>開催場をタップ</b><span>選択した開催場の公式ライブをすぐ表示します。</span></div>')+
+  var rows=liveVenueOptions();
+  var locals=rows.filter(function(v){return String(v.circuit||'')==='地方'});
+  var jra=liveVenueExternal('中央','');
+  var localBody=locals.length?locals.map(function(v){
+    return '<a class="live-direct-venue" href="'+esc(liveVenueExternal('地方',v.track))+'" target="_blank" rel="noopener noreferrer"><small>地方</small><b>'+esc(v.track)+'</b><strong>›</strong></a>'
+  }).join(''):'<div class="live-center-empty">本日の地方開催場はありません</div>';
+  return '<div class="live-center-overlay" data-live-key="direct" role="dialog" aria-modal="true" aria-label="ライブ中継">'+
+    '<div class="live-center-sheet live-direct-sheet">'+
+      '<header class="live-center-head"><div><b>LIVE</b><small>公式ライブへ移動</small></div><button type="button" data-action="live-close" aria-label="閉じる">×</button></header>'+
+      '<div class="live-direct-menu">'+
+        '<a class="live-direct-box central" href="'+esc(jra)+'" target="_blank" rel="noopener noreferrer"><span><small>中央競馬</small><b>中央</b></span><em>JRA公式LIVEへ</em><strong>›</strong></a>'+
+        '<details class="live-direct-local"><summary class="live-direct-box local"><span><small>地方競馬</small><b>地方</b></span><em>開催場を選ぶ</em><strong>＋</strong></summary><div class="live-direct-venues">'+localBody+'</div></details>'+
+      '</div>'+
     '</div></div>'
 }
 function syncLiveCenterOverlay(){
   var existing=document.querySelector('body > .live-center-overlay');
   if(!liveCenterOpen){if(existing)existing.remove();return}
-  var key=String(liveCenterCircuit||'')+'|'+String(liveCenterTrack||'');
-  if(existing&&existing.getAttribute('data-live-key')===key)return; // keep the iframe browsing context alive
+  var key='direct';
+  if(existing&&existing.getAttribute('data-live-key')===key)return; // keep the LIVE menu state alive
   if(existing)existing.remove();
   var box=document.createElement('div');box.innerHTML=liveCenterModal();
   var node=box.firstElementChild;if(node)document.body.appendChild(node)
 }
-function fitLiveCenterFrame(){
-  var frame=document.querySelector('.live-center-player.local .live-center-frame'),iframe=frame&&frame.querySelector('iframe');
-  if(!frame||!iframe)return;
-  // v306: the local-racing page is a 760px desktop canvas. Fitting all 760px
-  // makes the actual movie/controls too small on iPhone. Use a deliberate
-  // center-crop zoom on narrow screens so the live picture is the priority.
-  var sourceWidth=760,w=Math.max(1,frame.clientWidth),h=Math.max(1,frame.clientHeight);
-  var fit=w/sourceWidth;
-  var minMobileScale=w<700?0.72:fit;
-  var scale=Math.min(1,Math.max(fit,minMobileScale));
-  var visibleSourceWidth=w/scale;
-  var left=Math.min(0,Math.round((visibleSourceWidth-sourceWidth)/2));
-  var virtualHeight=Math.max(Math.ceil(h/scale),980);
-  iframe.style.setProperty('position','absolute','important');
-  iframe.style.setProperty('inset','auto','important');
-  iframe.style.setProperty('left',left+'px','important');
-  iframe.style.setProperty('top','0','important');
-  iframe.style.setProperty('width',sourceWidth+'px','important');
-  iframe.style.setProperty('max-width','none','important');
-  iframe.style.setProperty('height',virtualHeight+'px','important');
-  iframe.style.setProperty('transform','scale('+scale+')','important');
-  iframe.style.setProperty('transform-origin','0 0','important');
-  if(!iframe.__arvexqLiveFitBound){
-    iframe.__arvexqLiveFitBound=1;
-    iframe.addEventListener('load',function(){requestAnimationFrame(fitLiveCenterFrame)},{passive:true});
-  }
-}
-var __arvexqLiveResizeTimer=null;
-window.addEventListener('resize',function(){
-  if(!liveCenterOpen)return;
-  clearTimeout(__arvexqLiveResizeTimer);
-  __arvexqLiveResizeTimer=setTimeout(fitLiveCenterFrame,80);
-},{passive:true});
-window.addEventListener('orientationchange',function(){
-  if(liveCenterOpen)setTimeout(fitLiveCenterFrame,180);
-},{passive:true});
+function fitLiveCenterFrame(){return}
 function shouldShowTodayReturn(){
   var d=state.race&&state.race.date?String(state.race.date):String(state.date||'');
   return !!d&&d!==today()
@@ -4506,9 +4478,10 @@ function runnerStyleSection(r,p){
         +'<span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span>'
         +'<span class="rc-horse">'
           +'<span class="rc-horse-top"><b class="rc-horse-name">'+esc(h.name)+'</b>'+(scratch?'<small class="rc-scratch">'+esc(st)+'</small>':'<small class="rc-bodyweight '+(bw?'':'pending')+'">'+(bw?('馬体重 '+esc(bw)):(refbw?('前走 '+esc(refbw)+'kg'):'計量待ち'))+'</small>')+'</span>'
-          +'<span class="rc-horse-meta"><span class="rc-meta-left"><i class="rc-inline-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</i><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span></span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">斤量 '+esc(carriedWeightText(h))+'</span></span>'
+          +'<span class="rc-horse-meta"><span class="rc-meta-left"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span></span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">斤量 '+esc(carriedWeightText(h))+'</span></span>'
         +'</span>'
         +'<span class="rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</span>'
+        +'<span class="rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</span>'
         +'</div>'
     }).join('')
     +'</div></section>'
@@ -5065,10 +5038,10 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const CACHE="arvexq-shell-v306-livefix";
+SW = r'''const CACHE="arvexq-shell-v308-live-direct";
 const STATIC=[
-  "/styles-arvexq-v306.css",
-  "/app-v306.js",
+  "/styles-arvexq-v308.css",
+  "/app-v308.js",
   "/manifest-arvexq-v175.webmanifest",
   "/arvexq-icon-v175-192.png",
   "/arvexq-icon-v175-512.png",
@@ -6552,7 +6525,7 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v300-final", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v308-live-direct", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")), "jraOfficialFallback":True,
         "centralHistoryFeedConfigured":bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
@@ -13969,7 +13942,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v302","appVersion":"14.02-v302-fullcard-livefix",
+        "build":"v308","appVersion":"14.08-v308-live-direct",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -14089,6 +14062,8 @@ def pace_preview():
 
 @app.get("/styles-arvexq-v88.css")
 @app.get("/styles-v86.css")
+@app.get("/styles-arvexq-v308.css")
+@app.get("/styles-arvexq-v307.css")
 @app.get("/styles-arvexq-v306.css")
 @app.get("/styles-arvexq-v303.css")
 @app.get("/styles-arvexq-v130.css")
@@ -14099,6 +14074,8 @@ def styles():
 @app.get("/app-v86-fix1.js")
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
+@app.get("/app-v308.js")
+@app.get("/app-v307.js")
 @app.get("/app-v306.js")
 @app.get("/app-v303.js")
 @app.get("/app-v133.js")
@@ -15323,3 +15300,67 @@ CSS += r"""
   .live-center-external{min-height:42px!important;padding:0 13px!important;font-size:12px!important}
 }
 """
+
+
+CSS += r"""
+/* v307 — entry table mark moved to the right of odds.
+   Phone layout: check | horse no | horse | odds | AI mark.
+   The mark column is wide enough for ☆+ / 注+ without clipping. */
+.racecard-row{
+  grid-template-columns:34px 46px minmax(0,1fr) 58px 46px!important;
+}
+.rc-number{font-size:19px!important}
+.rc-horse{padding-left:8px!important;padding-right:8px!important}
+.rc-meta-left{gap:0!important}
+.rc-inline-mark{display:none!important}
+.rc-odds{padding-left:1px!important;padding-right:1px!important}
+.rc-odds .odd{font-size:18px!important;letter-spacing:-.02em!important}
+.rc-odds .pop{font-size:11px!important;margin-top:4px!important}
+.rc-ai-mark{
+  min-height:78px!important;height:100%!important;align-self:stretch!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  min-width:0!important;padding:0 2px!important;border-right:0!important;
+  background:#20282d!important;color:#d6dde0!important;
+  font-style:normal!important;font-size:20px!important;font-weight:1000!important;line-height:1!important;
+  white-space:nowrap!important;overflow:visible!important;letter-spacing:-.04em!important;
+}
+.rc-ai-mark[data-ai-mark="◎"]{color:#ff6675!important}
+.rc-ai-mark[data-ai-mark="○"]{color:#5fe3ff!important}
+.rc-ai-mark[data-ai-mark="▲"]{color:#ffd75a!important}
+.rc-ai-mark[data-ai-mark="☆"],.rc-ai-mark[data-ai-mark="☆+"]{color:#d49cff!important}
+.rc-ai-mark[data-ai-mark="△"]{color:#a9c4e9!important}
+.rc-ai-mark[data-ai-mark="注"],.rc-ai-mark[data-ai-mark="注+"]{color:#ffad66!important}
+@media(max-width:430px){
+  .racecard-row{grid-template-columns:32px 44px minmax(0,1fr) 54px 44px!important;min-height:76px!important}
+  .racecard-row>span,.rc-number,.rc-horse,.rc-odds,.rc-ai-mark{min-height:76px!important}
+  .rc-number{font-size:18px!important}
+  .rc-horse{padding-left:6px!important;padding-right:6px!important}
+  .rc-odds .odd{font-size:17px!important}
+  .rc-odds .pop{font-size:10.5px!important}
+  .rc-ai-mark{font-size:19px!important;padding:0 1px!important}
+}
+@media(max-width:360px){
+  .racecard-row{grid-template-columns:30px 42px minmax(0,1fr) 50px 42px!important}
+  .rc-number{font-size:17px!important}
+  .rc-horse{padding-left:5px!important;padding-right:5px!important}
+  .rc-odds .odd{font-size:16px!important}
+  .rc-odds .pop{font-size:10px!important}
+  .rc-ai-mark{font-size:18px!important;letter-spacing:-.06em!important}
+}
+"""
+
+
+CSS += r'''
+/* v308 — LIVE external-only: Central opens JRA; Local expands today's venues. */
+.live-center-overlay{align-items:flex-end!important}
+.live-center-sheet.live-direct-sheet{height:auto!important;max-height:88dvh!important;min-height:0!important;border-radius:18px 18px 0 0!important;overflow:hidden!important}
+.live-direct-menu{display:flex!important;flex-direction:column!important;gap:10px!important;padding:12px 12px calc(14px + env(safe-area-inset-bottom))!important;background:#07131d!important;overflow:auto!important}
+.live-direct-box{width:100%!important;min-height:76px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto 28px!important;align-items:center!important;gap:10px!important;padding:12px 14px!important;border:1px solid #315c75!important;border-radius:14px!important;background:linear-gradient(135deg,#0c2638,#081925)!important;color:#eef9ff!important;text-decoration:none!important;box-sizing:border-box!important}
+.live-direct-box span{display:flex!important;flex-direction:column!important;gap:2px!important;min-width:0!important}.live-direct-box span small{font-size:10px!important;color:#83aabe!important}.live-direct-box span b{font-size:24px!important;line-height:1.05!important}.live-direct-box em{font-size:12px!important;font-style:normal!important;font-weight:850!important;color:#8ddfff!important;white-space:nowrap!important}.live-direct-box>strong{font-size:28px!important;line-height:1!important;color:#71d9ff!important;text-align:center!important}
+.live-direct-box.central{border-color:#367ba1!important}.live-direct-box.local{cursor:pointer!important;list-style:none!important}.live-direct-box.local::-webkit-details-marker{display:none!important}
+.live-direct-local[open] .live-direct-box.local>strong{transform:rotate(45deg)!important}
+.live-direct-venues{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:8px 2px 2px!important}
+.live-direct-venue{min-height:62px!important;display:grid!important;grid-template-columns:minmax(0,1fr) 22px!important;grid-template-rows:auto auto!important;align-items:center!important;padding:9px 11px!important;border:1px solid #294e64!important;border-radius:12px!important;background:#0b2130!important;color:#edf8ff!important;text-decoration:none!important;box-sizing:border-box!important}.live-direct-venue small{grid-column:1!important;font-size:9px!important;color:#789fb3!important}.live-direct-venue b{grid-column:1!important;font-size:18px!important;line-height:1.15!important}.live-direct-venue strong{grid-column:2!important;grid-row:1 / span 2!important;font-size:24px!important;color:#72d9ff!important;text-align:right!important}
+.live-direct-venues .live-center-empty{grid-column:1/-1!important;padding:16px!important;text-align:center!important;border:1px dashed #294e64!important;border-radius:12px!important}
+@media(max-width:699px){.live-center-overlay{align-items:flex-end!important}.live-center-sheet.live-direct-sheet{width:100%!important;height:auto!important;max-height:88dvh!important;border-radius:18px 18px 0 0!important}.live-direct-menu{padding-left:10px!important;padding-right:10px!important}.live-direct-box{min-height:72px!important}.live-direct-box span b{font-size:22px!important}}
+'''
