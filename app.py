@@ -5051,6 +5051,21 @@ def _float(value: str | None, default: float = 0.0) -> float:
         return default
 
 
+def _carried_weight(value: str | None, default: float = 0.0) -> float:
+    """斤量セルを数値にする。NAR公式は減量騎手を「▲ 51.0」「☆55.0」のように
+    印つきで出すため、float() に直接渡すと失敗して 0kg 扱いになっていた。"""
+    s = _clean(value).replace(",", "")
+    if not s:
+        return default
+    m = re.search(r"\d+(?:\.\d+)?", s)
+    if not m:
+        return default
+    try:
+        return float(m.group(0))
+    except ValueError:
+        return default
+
+
 def _iso_date(yyyymmdd: str) -> str:
     s = re.sub(r"\D", "", yyyymmdd)
     if len(s) != 8:
@@ -5271,7 +5286,7 @@ class NarArchiveParser:
                     sex=_normalize_sex(row[HORSE_IDX["sex"]]),
                     age=_int(row[HORSE_IDX["age"]]),
                     jockey=_clean(row[HORSE_IDX["jockey"]]),
-                    carried_weight=_float(row[HORSE_IDX["carried_weight"]]),
+                    carried_weight=_carried_weight(row[HORSE_IDX["carried_weight"]]),
                     trainer=_clean(row[HORSE_IDX["trainer"]]),
                     finish=_int(row[HORSE_IDX["finish"]]) if len(row) > HORSE_IDX["finish"] else 0,
                     time_seconds=_time_seconds(row[HORSE_IDX["time"]]) if len(row) > HORSE_IDX["time"] else 0,

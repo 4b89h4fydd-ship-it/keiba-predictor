@@ -150,6 +150,9 @@ jobs:
                   # Horse-number/odds skeletons are NOT race details. Names must exist for every active runner.
                   if any(not str(h.get("name") or "").strip() for h in active):
                       return False
+                  # ばんえい（帯広）は負担重量が数百kgで、斤量の妥当性チェック(35〜80kg)で空になる。
+                  # 馬名・騎手が揃っていれば出走表として使えるので、斤量は条件にしない。
+                  banei = "帯広" in str(d.get("id") or "") or str(d.get("track") or "").startswith("帯広")
                   core = 0
                   for h in active:
                       jockey = str(h.get("jockey") or "").strip()
@@ -157,7 +160,7 @@ jobs:
                           weight = float(h.get("carriedWeight") or h.get("weight") or 0)
                       except Exception:
                           weight = 0
-                      if jockey and weight > 0:
+                      if jockey and (banei or weight > 0):
                           core += 1
                   if len(active) >= 4 and core < max(3, (len(active) * 7 + 9) // 10):
                       return False
@@ -357,8 +360,9 @@ jobs:
                       pass
                   if h.get("recentRaces") or h.get("allPastRuns") or h.get("debutNoHistory"):
                       histories += 1
+              banei = "帯広" in str((d or {}).get("id") or "") or str((d or {}).get("track") or "").startswith("帯広")
               complete_names = named == len(active) and len(active) > 0
-              core = complete_names and (len(active) < 4 or (jockeys >= max(3, (len(active) * 7 + 9) // 10) and weights >= max(3, (len(active) * 7 + 9) // 10)))
+              core = complete_names and (len(active) < 4 or (jockeys >= max(3, (len(active) * 7 + 9) // 10) and (banei or weights >= max(3, (len(active) * 7 + 9) // 10))))
               return (10000 if core else 0) + named * 100 + jockeys * 20 + weights * 20 + histories * 5 + len(horses)
 
           def merge(old, new):
@@ -435,6 +439,9 @@ jobs:
                   active = [h for h in horses if not h.get("scratched") and str(h.get("status") or "") not in {"取消","除外","競走除外","競走取消"}] or horses
                   if any(not str(h.get("name") or "").strip() for h in active):
                       return False
+                  # ばんえい（帯広）は負担重量が数百kgで、斤量の妥当性チェック(35〜80kg)で空になる。
+                  # 馬名・騎手が揃っていれば出走表として使えるので、斤量は条件にしない。
+                  banei = "帯広" in str(d.get("id") or "") or str(d.get("track") or "").startswith("帯広")
                   core = 0
                   for h in active:
                       jockey = str(h.get("jockey") or "").strip()
@@ -442,7 +449,7 @@ jobs:
                           weight = float(h.get("carriedWeight") or h.get("weight") or 0)
                       except Exception:
                           weight = 0
-                      if jockey and weight > 0:
+                      if jockey and (banei or weight > 0):
                           core += 1
                   if len(active) >= 4 and core < max(3, (len(active) * 7 + 9) // 10):
                       return False
