@@ -1,0 +1,27 @@
+ARVEXQ v324 BOOT + SYNC FIX AUDIT
+
+Confirmed production mismatch before this package:
+- main app.py = v324
+- main build_static.py = v321
+- main .github/workflows/arvexq-sync.yml = old live/next-only workflow
+
+This package replaces ONLY:
+1) build_static.py
+2) .github/workflows/arvexq-sync.yml
+
+No prediction logic is changed.
+
+Executed locally against the current v324 app.py:
+PASS python compile: app.py + build_static.py
+PASS build_static.py outputs BUILD v324
+PASS dist/app-v324.js exists and is non-empty
+PASS dist/styles-arvexq-v324.css exists and is non-empty
+PASS dist/sw-v324-reset.js exists and is non-empty
+PASS dist/version.json says v324
+PASS node --check dist/app-v324.js
+PASS workflow contains full-card usable-data validation/retry
+PASS workflow rejects incomplete cards and fails when missing_detail_count > 0
+
+Expected effect:
+- fixes white 'ARVEXQを起動中…' screen caused by v324 HTML requesting assets that old v321 build did not emit
+- restores full-card sync workflow instead of live/next-only sync
