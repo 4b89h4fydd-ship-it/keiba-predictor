@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 """ARVEXQ result repair lane.
 
-Repairs every started race whose result or payout is incomplete. It is designed
-for GitHub Actions and deliberately does not rebuild diagnosis/history. Rich
-race-detail payloads are preserved while only authoritative live/result fields
-are upgraded.
+Repairs every started race whose result or payout is incomplete. Rich D1 race
+payloads are seeded locally and preserved; only authoritative result/live fields
+are upgraded. Pending races are oldest-first with no arbitrary race-count cap.
 """
 from __future__ import annotations
 
@@ -53,55 +52,97 @@ def _start_minutes(row: dict[str, Any]) -> int:
         return 9999
 
 
+def _row_date(row: dict[str, Any]) -> str:
+    return str(row.get("date") or row.get("race_date") or row.get("raceDate") or "")
+
+
+def _podium_final(result: Any) -> bool:
+    if not isinstance(result, dict) or str(result.get("status") or "") != "確定":
+        return False
+    ranks = {
+        int(x.get("finish") or 0)
+        for x in (result.get("finishers") or [])
+        if isinstance(x, dict)
+    }
+    return all(x in ranks for x in (1, 2, 3))
+
+
 def _result_state(detail: dict[str, Any] | None) -> tuple[bool, bool, str]:
     d = detail if isinstance(detail, dict) else {}
     result = d.get("result") if isinstance(d.get("result"), dict) else {}
     status = str(result.get("status") or "")
-    finishers = [x for x in (result.get("finishers") or []) if isinstance(x, dict)]
-    ranks = {int(x.get("finish") or 0) for x in finishers}
-    podium = all(x in ranks for x in (1, 2, 3))
-    final = status == "確定" and podium
     if status in TERMINAL_NO_PAYOUT:
         return True, True, status
     payouts = result.get("payouts") if isinstance(result.get("payouts"), list) else []
-    return final, bool(payouts), status
+    return _podium_final(result), bool(payouts), status
 
 
-def _started(summary: dict[str, Any], now_minutes: int) -> bool:
+def _started(summary: dict[str, Any], now: datetime) -> bool:
+    """Historical dates are always started; today's races use post time + 2 min."""
+    race_date = _row_date(summary)
+    today = now.strftime("%Y-%m-%d")
+    if race_date:
+        if race_date < today:
+            return True
+        if race_date > today:
+            return False
     sm = _start_minutes(summary)
+    now_minutes = now.hour * 60 + now.minute
     return sm < 9999 and now_minutes >= sm + 2
 
 
+def _merge_result(old: Any, new: Any) -> dict[str, Any]:
+    old_r = copy.deepcopy(old) if isinstance(old, dict) else {}
+    new_r = new if isinstance(new, dict) else {}
+    if not new_r:
+        return old_r
+    old_final = _podium_final(old_r)
+    new_final = _podium_final(new_r)
+    out = old_r
+    for key, value in new_r.items():
+        if value in (None, "", [], {}):
+            continue
+        # A transient flash response must never downgrade a stored final result.
+        if old_final and not new_final and key in {"status", "finishers"}:
+            continue
+        out[key] = copy.deepcopy(value)
+    return out
+
+
 def _merge_detail(old: dict[str, Any] | None, new: dict[str, Any] | None) -> dict[str, Any]:
-    """Merge a refreshed result without degrading a precomputed rich card."""
+    """Merge refreshed result data without degrading a precomputed rich card."""
     if not old:
         return copy.deepcopy(new or {})
     if not new:
         return copy.deepcopy(old)
 
     out = copy.deepcopy(old)
+    protected = {
+        "horses", "preparedMeta", "preRacePrediction", "predictionAudit",
+        "aiEvaluation", "pace", "pacePrediction", "volatility",
+    }
     for key, value in new.items():
-        if key in {"horses", "preparedMeta", "preRacePrediction", "predictionAudit"}:
+        if key in protected or key == "result":
             continue
         if value not in (None, "", [], {}):
             out[key] = copy.deepcopy(value)
 
     if isinstance(new.get("result"), dict) and new.get("result"):
-        result = copy.deepcopy(old.get("result") or {})
-        for key, value in new["result"].items():
-            if value not in (None, "", [], {}):
-                result[key] = copy.deepcopy(value)
-        out["result"] = result
+        out["result"] = _merge_result(old.get("result"), new.get("result"))
 
-    if old.get("horses"):
-        out["horses"] = copy.deepcopy(old["horses"])
-    if old.get("preparedMeta"):
-        out["preparedMeta"] = copy.deepcopy(old["preparedMeta"])
-    if old.get("preRacePrediction"):
-        out["preRacePrediction"] = copy.deepcopy(old["preRacePrediction"])
-    if old.get("predictionAudit"):
-        out["predictionAudit"] = copy.deepcopy(old["predictionAudit"])
+    for key in protected:
+        if key in old:
+            out[key] = copy.deepcopy(old[key])
     return out
+
+
+def _seed_base(rid: str, detail: dict[str, Any] | None) -> None:
+    if not isinstance(detail, dict) or not detail.get("id"):
+        return
+    try:
+        app._store_fast_snapshot(copy.deepcopy(detail))
+    except Exception as exc:
+        print("RESULT_BASE_SEED_ERROR", rid, type(exc).__name__, exc)
 
 
 def repair(bundle_path: str, payload_path: str, report_path: str, workers: int = 6) -> int:
@@ -112,9 +153,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     summary_by_id = {str(r["id"]): r for r in rows}
 
     now = datetime.now(JST)
-    now_minutes = now.hour * 60 + now.minute
-
-    started_ids = [str(r["id"]) for r in rows if _started(r, now_minutes)]
+    started_ids = [str(r["id"]) for r in rows if _started(r, now)]
     pending = []
     for rid in started_ids:
         result_ok, payout_ok, _ = _result_state(by_id.get(rid))
@@ -122,9 +161,14 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             pending.append(rid)
 
     # Oldest missing result first. No arbitrary 24-race cap.
-    pending.sort(key=lambda rid: (_start_minutes(summary_by_id[rid]), rid))
+    pending.sort(key=lambda rid: (_row_date(summary_by_id[rid]), _start_minutes(summary_by_id[rid]), rid))
     errors: dict[str, str] = {}
     repaired: set[str] = set()
+
+    # D1 is the current display source of truth. Seed its rich details so result
+    # collectors do not start from an old/empty Actions cache.
+    for rid in pending:
+        _seed_base(rid, by_id.get(rid))
 
     def refresh_one(rid: str) -> tuple[str, dict[str, Any] | None, str]:
         try:
@@ -149,13 +193,19 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         with ThreadPoolExecutor(max_workers=max(1, min(workers, len(todo)))) as pool:
             futures = {pool.submit(refresh_one, rid): rid for rid in todo}
             for fut in as_completed(futures):
-                rid, fresh, error = fut.result()
+                rid = futures[fut]
+                try:
+                    _, fresh, error = fut.result()
+                except Exception as exc:
+                    fresh, error = None, f"{type(exc).__name__}: {exc}"
                 if error:
                     errors[rid] = error
                     print("RESULT_REPAIR_ERROR", rid, error)
                     continue
                 merged = _merge_detail(by_id.get(rid), fresh)
                 by_id[rid] = merged
+                # Keep the improved merged result available to the second pass.
+                _seed_base(rid, merged)
                 result_ok, payout_ok, _ = _result_state(merged)
                 if result_ok and payout_ok:
                     repaired.add(rid)
@@ -187,34 +237,32 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         detail = by_id.get(rid)
         result_ok, payout_ok, status = _result_state(detail)
         row = summary_by_id[rid]
+        item = {
+            "race_id": rid,
+            "circuit": row.get("circuit") or "",
+            "track": row.get("track") or "",
+            "race_no": row.get("raceNumber") or row.get("raceNo") or "",
+            "start_time": row.get("startTime") or "",
+            "status": status,
+            "error": errors.get(rid, ""),
+        }
         if not result_ok:
-            unresolved.append({
-                "race_id": rid,
-                "circuit": row.get("circuit") or "",
-                "track": row.get("track") or "",
-                "race_no": row.get("raceNumber") or row.get("raceNo") or "",
-                "start_time": row.get("startTime") or "",
-                "status": status,
-                "error": errors.get(rid, "result still incomplete"),
-            })
+            item["error"] = item["error"] or "result still incomplete"
+            unresolved.append(item)
         elif not payout_ok:
-            payout_missing.append({
-                "race_id": rid,
-                "circuit": row.get("circuit") or "",
-                "track": row.get("track") or "",
-                "race_no": row.get("raceNumber") or row.get("raceNo") or "",
-                "start_time": row.get("startTime") or "",
-                "status": status,
-                "error": errors.get(rid, "payout still incomplete"),
-            })
+            item["error"] = item["error"] or "payout still incomplete"
+            payout_missing.append(item)
 
     # Send full rich detail snapshots so Cloudflare's replace-upsert cannot erase cards.
-    detail_payload = [by_id[rid] for rid in started_ids if isinstance(by_id.get(rid), dict) and by_id[rid].get("id")]
+    detail_payload = [
+        by_id[rid] for rid in started_ids
+        if isinstance(by_id.get(rid), dict) and by_id[rid].get("id")
+    ]
     payload = {
         "summaries": summaries,
         "details": detail_payload,
         "meta": {
-            "source": "github-actions-result-repair-v1",
+            "source": "github-actions-result-repair-v2-d1-base",
             "sync_date": bundle.get("date") or "",
             "started_race_count": len(started_ids),
             "result_pending_before": len(pending),
