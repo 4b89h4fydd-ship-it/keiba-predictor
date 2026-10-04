@@ -8,6 +8,7 @@ name: ARVEXQ Refactor Check
     paths:
       - app.py
       - build_static.py
+      - arvexq/**
       - scripts/**
       - .github/workflows/arvexq-*.yml
 
@@ -19,6 +20,11 @@ jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 12
+
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
 
     steps:
       - name: Checkout
@@ -37,6 +43,7 @@ jobs:
       - name: Python syntax
         run: |
           python -m py_compile app.py build_static.py \
+            arvexq/pipeline/fingerprints.py \
             scripts/arvexq_prefetch.py \
             scripts/arvexq_live_sync.py \
             scripts/arvexq_result_repair.py
@@ -51,7 +58,6 @@ jobs:
           test -f dist/sw.js
           python - <<'PY'
           import json
-          import re
           from pathlib import Path
 
           version=json.loads(Path('dist/version.json').read_text(encoding='utf-8'))['build']
@@ -74,6 +80,7 @@ jobs:
 
           live=Path('.github/workflows/arvexq-sync.yml').read_text(encoding='utf-8')
           script=Path('scripts/arvexq_live_sync.py').read_text(encoding='utf-8')
+          repair=Path('scripts/arvexq_result_repair.py').read_text(encoding='utf-8')
           forbidden=[
               '_prepare_race_snapshot(',
               '_hydrate_fast_card_now(',
@@ -82,18 +89,82 @@ jobs:
           bad=[x for x in forbidden if x in live or x in script]
           if bad:
               raise SystemExit('live lane contains heavy/legacy path: '+repr(bad))
-          required=['arvexq_live_sync.py','ARVEXQ_DATA_CORE: "0"','cancel-in-progress: true']
+          required=[
+              'arvexq_live_sync.py',
+              'ARVEXQ_DATA_CORE: "0"',
+              'cancel-in-progress: true',
+              'details=0',
+              'CLOUDFLARE_API_BASE',
+          ]
           missing=[x for x in required if x not in live]
           if missing:
               raise SystemExit('live workflow guard missing: '+repr(missing))
+          if '[:24]' in repair:
+              raise SystemExit('result repair must not cap pending results at 24')
           print('architecture guard OK')
           PY
 
+      - name: Live merge and hash invariants
+        run: |
+          python - <<'PY'
+          import copy
+          from arvexq.pipeline.fingerprints import analysis_input_hash
+          import scripts.arvexq_live_sync as live
+          import scripts.arvexq_result_repair as repair
+          import scripts.arvexq_prefetch as prefetch
+
+          base={
+              'id':'nar-2026-10-04-園田-01','date':'2026-10-04','track':'園田',
+              'surface':'ダート','distance':1400,'weather':'晴','condition':'良',
+              'horses':[{
+                  'horseNumber':1,'name':'テスト馬','jockey':'騎手A','trainer':'厩舎A',
+                  'carriedWeight':54.0,'bodyWeight':480,'bodyWeightChange':0,
+                  'recentRaces':[{'date':'2026-09-01','finish':1}],
+              }],
+              'preparedMeta':{'diagnosisReady':True},
+              'preRacePrediction':{'mark':'◎','score':88},
+              'predictionAudit':{'locked':True},
+          }
+          base['preparedMeta']['analysisInputHash']=analysis_input_hash(base)
+          fresh={
+              'id':base['id'],'weather':'曇','condition':'稍重',
+              'horses':[{'horseNumber':1,'bodyWeight':486,'bodyWeightChange':6,'winOdds':2.8}],
+          }
+          market={'horses':[{'horseNumber':1,'winOdds':2.6,'popularity':1,'bodyWeight':486,'bodyWeightChange':6}]}
+          merged=live.merge_live(base,fresh,market,False)
+          h=merged['horses'][0]
+          assert h['name']=='テスト馬'
+          assert h['recentRaces'][0]['finish']==1
+          assert h['bodyWeight']==486 and h['winOdds']==2.6
+          assert merged['preRacePrediction']==base['preRacePrediction']
+          assert merged['predictionAudit']==base['predictionAudit']
+          assert merged['weather']=='曇' and merged['condition']=='稍重'
+          assert analysis_input_hash(merged)!=analysis_input_hash(base)
+
+          odds_only=copy.deepcopy(base)
+          odds_only['horses'][0]['winOdds']=99.9
+          assert analysis_input_hash(odds_only)==analysis_input_hash(base)
+
+          old_final={'status':'確定','finishers':[{'finish':1,'horseNumber':1}]}
+          flash={'status':'速報','finishers':[{'finish':1,'horseNumber':9}]}
+          assert live._merge_result(old_final,flash)==old_final
+
+          upgraded=repair._merge_detail(base,{
+              'id':base['id'],
+              'horses':[{'horseNumber':1}],
+              'result':{'status':'確定','finishers':[{'finish':1,'horseNumber':1},{'finish':2,'horseNumber':2},{'finish':3,'horseNumber':3}]},
+          })
+          assert upgraded['horses'][0]['name']=='テスト馬'
+          assert upgraded['preRacePrediction']==base['preRacePrediction']
+          assert upgraded['result']['status']=='確定'
+
+          assert prefetch._analysis_current(base)
+          changed=copy.deepcopy(base); changed['horses'][0]['bodyWeight']=488
+          assert not prefetch._analysis_current(changed)
+          print('merge/hash invariants OK')
+          PY
+
       - name: Import pipeline modules without running them
-        env:
-          ARVEXQ_DATA_CORE: "0"
-          ARVEXQ_BOOTSTRAP_WARM: "0"
-          RACEDB_AUTO_UPDATE: "0"
         run: |
           python - <<'PY'
           import importlib.util
