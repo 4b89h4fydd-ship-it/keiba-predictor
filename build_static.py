@@ -6,7 +6,7 @@ import shutil
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "app.py"
 DIST = ROOT / "dist"
-BUILD_VERSION = "v321"
+BUILD_VERSION = "v324"
 
 if DIST.exists():
     shutil.rmtree(DIST)
@@ -70,21 +70,22 @@ for route in ("venue", "race"):
 
 # Legacy shell compatibility uses redirects, not duplicate 300KB JS/CSS copies.
 # This keeps old PWA shells recoverable while the deploy stays small.
-compat_css = ("v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v130")
-compat_app = ("v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v147","v146","v145","v141","v140","v139","v138","v137","v136","v133")
-compat_arvexq = ("v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303")
+compat_css = ("v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v130")
+compat_app = ("v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v147","v146","v145","v141","v140","v139","v138","v137","v136","v133")
+compat_arvexq = ("v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303")
 
 # PWA/manifest: current plus compatibility aliases.
 for name in ("manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
     (DIST / name).write_text(manifest, encoding="utf-8")
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
+(DIST / "sw-v324-reset.js").write_text(sw, encoding="utf-8")
 (DIST / "sw-v321-reset.js").write_text(sw, encoding="utf-8")
 (DIST / "sw-v320-reset.js").write_text(sw, encoding="utf-8")
 (DIST / "sw-v319-reset.js").write_text(sw, encoding="utf-8")
 (DIST / "sw-v318-reset.js").write_text(sw, encoding="utf-8")
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
-(DIST / "version.json").write_text('{"build":"v321","shell":"race-sync-fix","model":"v317-consensus-rebuild"}\n', encoding="utf-8")
+(DIST / "version.json").write_text('{"build":"v324","shell":"core-data-guard","model":"v317-consensus-rebuild"}\n', encoding="utf-8")
 redirects = ["/venue /index.html 200", "/race /index.html 200"]
 for v in compat_app:
     redirects.append(f"/app-{v}.js /app-{BUILD_VERSION}.js 302")
@@ -103,6 +104,7 @@ headers = [
     "/version.json", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
     "/manifest-arvexq-v175.webmanifest", "  Cache-Control: no-cache, must-revalidate",
     "/sw.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",
+    "/sw-v324-reset.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",
     "/sw-v321-reset.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",
     "/sw-v320-reset.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",
     "/sw-v319-reset.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",
