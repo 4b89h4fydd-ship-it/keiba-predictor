@@ -1,12 +1,13 @@
 from pathlib import Path
 import ast
 import base64
+import json
+import re
 import shutil
 
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "app.py"
 DIST = ROOT / "dist"
-BUILD_VERSION = "v324"
 
 if DIST.exists():
     shutil.rmtree(DIST)
@@ -14,6 +15,32 @@ DIST.mkdir()
 
 source = SRC.read_text(encoding="utf-8")
 tree = ast.parse(source)
+
+
+def _build_version_from_app(tree: ast.AST) -> str:
+    """Read the FastAPI version literal without importing app.py or running side effects."""
+    for node in getattr(tree, "body", []):
+        if not (
+            isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+            and node.targets[0].id == "app"
+            and isinstance(node.value, ast.Call)
+        ):
+            continue
+        fn = node.value.func
+        fn_name = fn.id if isinstance(fn, ast.Name) else ""
+        if fn_name != "FastAPI":
+            continue
+        for kw in node.value.keywords:
+            if kw.arg == "version" and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str):
+                match = re.search(r"\bv\d+\b", kw.value.value)
+                if match:
+                    return match.group(0)
+    raise RuntimeError("ARVEXQ build version not found in FastAPI(version=...) literal")
+
+
+BUILD_VERSION = _build_version_from_app(tree)
 strings = {}
 icons = None
 binary_b64 = {}
@@ -78,14 +105,20 @@ compat_arvexq = ("v321","v320","v319","v318","v317","v316","v315","v314","v313",
 for name in ("manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
     (DIST / name).write_text(manifest, encoding="utf-8")
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
-(DIST / "sw-v324-reset.js").write_text(sw, encoding="utf-8")
-(DIST / "sw-v321-reset.js").write_text(sw, encoding="utf-8")
-(DIST / "sw-v320-reset.js").write_text(sw, encoding="utf-8")
-(DIST / "sw-v319-reset.js").write_text(sw, encoding="utf-8")
-(DIST / "sw-v318-reset.js").write_text(sw, encoding="utf-8")
+(DIST / f"sw-{BUILD_VERSION}-reset.js").write_text(sw, encoding="utf-8")
+for legacy_sw in ("v321", "v320", "v319", "v318"):
+    (DIST / f"sw-{legacy_sw}-reset.js").write_text(sw, encoding="utf-8")
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
-(DIST / "version.json").write_text('{"build":"v324","shell":"core-data-guard","model":"v317-consensus-rebuild"}\n', encoding="utf-8")
+model_version = strings.get("AI_EVALUATION_VERSION", "").removeprefix("evidence-")
+(DIST / "version.json").write_text(
+    json.dumps(
+        {"build": BUILD_VERSION, "shell": "core-data-guard", "model": model_version},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ) + "\n",
+    encoding="utf-8",
+)
 redirects = ["/venue /index.html 200", "/race /index.html 200"]
 for v in compat_app:
     redirects.append(f"/app-{v}.js /app-{BUILD_VERSION}.js 302")
@@ -104,7 +137,7 @@ headers = [
     "/version.json", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
     "/manifest-arvexq-v175.webmanifest", "  Cache-Control: no-cache, must-revalidate",
     "/sw.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",
-    "/sw-v324-reset.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",
+    f"/sw-{BUILD_VERSION}-reset.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",
     "/sw-v321-reset.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",
     "/sw-v320-reset.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",
     "/sw-v319-reset.js", "  Cache-Control: no-store, no-cache, must-revalidate, max-age=0", "  Service-Worker-Allowed: /",

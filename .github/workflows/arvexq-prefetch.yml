@@ -1,0 +1,162 @@
+name: ARVEXQ Full Prefetch
+
+"on":
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Target date YYYY-MM-DD (blank = today JST)"
+        required: false
+        type: string
+  schedule:
+    # 06:30 / 08:30 / 11:30 JST. Heavy work is kept out of five-minute live sync.
+    - cron: "30 21 * * *"
+    - cron: "30 23 * * *"
+    - cron: "30 2 * * *"
+
+concurrency:
+  group: arvexq-full-prefetch-${{ github.event.inputs.date || 'today' }}
+  cancel-in-progress: true
+
+jobs:
+  prefetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+      KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-data
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      NAR_ON_DEMAND_HISTORY_MONTHS: "12"
+      ARVEXQ_PREFETCH_WORKERS: "6"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install runtime dependencies
+        run: python -m pip install --disable-pip-version-check --no-input -r requirements.txt
+
+      - name: Resolve target date
+        env:
+          REQUESTED_DATE: ${{ github.event.inputs.date }}
+        run: |
+          if [ -n "$REQUESTED_DATE" ]; then
+            TARGET_DATE="$REQUESTED_DATE"
+          else
+            TARGET_DATE=$(TZ=Asia/Tokyo date +%F)
+          fi
+          if ! echo "$TARGET_DATE" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; then
+            echo "::error::Invalid date: $TARGET_DATE"
+            exit 1
+          fi
+          echo "TARGET_DATE=$TARGET_DATE" >> "$GITHUB_ENV"
+
+      - name: Restore ARVEXQ data cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .arvexq-data
+          key: arvexq-prefetch-${{ runner.os }}-${{ env.TARGET_DATE }}-${{ github.run_id }}
+          restore-keys: |
+            arvexq-prefetch-${{ runner.os }}-${{ env.TARGET_DATE }}-
+            arvexq-data-${{ runner.os }}-${{ env.TARGET_DATE }}-
+            arvexq-data-${{ runner.os }}-
+
+      - name: Start ARVEXQ locally
+        run: |
+          nohup uvicorn app:app --host 127.0.0.1 --port 8000 > /tmp/arvexq-prefetch.log 2>&1 &
+          echo $! > /tmp/arvexq-prefetch.pid
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 2 http://127.0.0.1:8000/health > /dev/null; then
+              echo "ARVEXQ ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          tail -n 200 /tmp/arvexq-prefetch.log || true
+          exit 1
+
+      - name: Discover all officially available races
+        run: |
+          curl -fsS --max-time 120 \
+            "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$TARGET_DATE&force=1" \
+            -o bundle.json || true
+          curl -fsS --max-time 30 \
+            "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$TARGET_DATE" \
+            -o bundle.json || true
+          RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
+          echo "FULL_PREFETCH discovered races=$RACES date=$TARGET_DATE"
+          if [ "$RACES" -le 0 ]; then
+            echo "No officially available races for $TARGET_DATE; no fabricated data will be created."
+            exit 0
+          fi
+
+      - name: Precompute all race cards and analysis
+        run: |
+          RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
+          if [ "$RACES" -le 0 ]; then
+            echo '{"summaries":[],"details":[],"meta":{"race_count":0}}' > prefetch-payload.json
+            echo '{"races":0,"missing_card":[],"missing_analysis":[]}' > prefetch-report.json
+            exit 0
+          fi
+          python -m py_compile scripts/arvexq_prefetch.py
+          python scripts/arvexq_prefetch.py \
+            --bundle bundle.json \
+            --payload prefetch-payload.json \
+            --report prefetch-report.json
+          cat prefetch-report.json
+
+      - name: Push prepared day to D1
+        run: |
+          RACES=$(jq '.meta.race_count // 0' prefetch-payload.json)
+          if [ "$RACES" -le 0 ]; then
+            echo "Nothing to sync."
+            exit 0
+          fi
+          curl --fail-with-body --max-time 60 -X POST \
+            "$CLOUDFLARE_API_BASE/api/sync" \
+            -H "content-type: application/json" \
+            -H "x-sync-token: $SYNC_TOKEN" \
+            --data-binary @prefetch-payload.json
+
+      - name: Verify prepared day from D1
+        run: |
+          EXPECTED=$(jq '.meta.race_count // 0' prefetch-payload.json)
+          if [ "$EXPECTED" -le 0 ]; then
+            exit 0
+          fi
+          curl --fail-with-body --max-time 30 \
+            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=1" \
+            -o verified-prefetch.json
+          ACTUAL=$(jq '.details // [] | length' verified-prefetch.json)
+          echo "D1 PREFETCH VERIFY expected=$EXPECTED details=$ACTUAL"
+          if [ "$ACTUAL" -lt "$EXPECTED" ]; then
+            echo "::error::D1 is missing prepared race details"
+            exit 1
+          fi
+
+      - name: Stop ARVEXQ
+        if: always()
+        run: |
+          if [ -f /tmp/arvexq-prefetch.pid ]; then
+            kill "$(cat /tmp/arvexq-prefetch.pid)" 2>/dev/null || true
+          fi
+
+      - name: Save ARVEXQ data cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .arvexq-data
+          key: arvexq-prefetch-${{ runner.os }}-${{ env.TARGET_DATE }}-${{ github.run_id }}
+
+      - name: Show local log on failure
+        if: failure()
+        run: tail -n 300 /tmp/arvexq-prefetch.log || true
