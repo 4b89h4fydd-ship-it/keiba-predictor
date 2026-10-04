@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.19-v319-full-audit")
+app = FastAPI(title="ARVEXQ", version="14.20-v320-race-open-fix")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v53-consensus-rebuild"
@@ -490,21 +490,21 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
-<link rel="stylesheet" href="/styles-arvexq-v319.css">
+<link rel="stylesheet" href="/styles-arvexq-v320.css">
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
 <link rel="apple-touch-icon-precomposed" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
 <script>
 (function(){
-  var tag="arvexq-hard-reset-v319-20261004";
+  var tag="arvexq-hard-reset-v320-20261004";
   try{
     if(localStorage.getItem(tag)==="1")return;
     localStorage.setItem(tag,"1");
     Promise.resolve().then(async function(){
       try{if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}}catch(_e){}
       try{if("serviceWorker" in navigator){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(r){return r.unregister()}))}}catch(_e){}
-      var u=new URL(location.href);u.searchParams.set("arvexq_build","v319");u.searchParams.set("_",Date.now());location.replace(u.toString());
+      var u=new URL(location.href);u.searchParams.set("arvexq_build","v320");u.searchParams.set("_",Date.now());location.replace(u.toString());
     });
   }catch(_e){}
 })();
@@ -512,7 +512,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script src="/app-v319.js"></script>
+<script src="/app-v320.js"></script>
 </body>
 </html>"""
 
@@ -2097,7 +2097,7 @@ CSS += r"""
 .smart-selected-status>div{display:flex;flex-direction:column;min-width:0}.smart-selected-status b{font-size:17px;color:#f4f9fc}.smart-selected-status small{margin-top:3px;font-size:10px;color:#92acbd;white-space:normal;line-height:1.3}.smart-selected-status em{font-style:normal;font-size:11px;font-weight:900;color:#8fd9ff;white-space:nowrap}.smart-selected-status.smart-value-status{border-color:#7a6335;background:linear-gradient(145deg,#241d10,#141006)}.smart-selected-status.smart-value-status b{color:#ffe19a}.smart-selected-status.smart-value-status em{color:#ffd06a}
 """
 
-JS = r"""window.ARVEXQ_BUILD="v319";
+JS = r"""window.ARVEXQ_BUILD="v320";
 
 (function(){
 "use strict";
@@ -2170,13 +2170,13 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(localStorage.getItem("arvexq-sw-reload")!=="v319-full-audit-20261004"){
-          localStorage.setItem("arvexq-sw-reload","v319-full-audit-20261004");
+        if(localStorage.getItem("arvexq-sw-reload")!=="v320-race-open-fix-20261004"){
+          localStorage.setItem("arvexq-sw-reload","v320-race-open-fix-20261004");
           location.reload()
         }
       }catch(e){}
     });
-    navigator.serviceWorker.register("/sw-v319-reset.js",{scope:"/"}).then(function(reg){
+    navigator.serviceWorker.register("/sw-v320-reset.js",{scope:"/"}).then(function(reg){
       try{reg.update()}catch(e){}
     }).catch(function(){})
   }catch(e){}
@@ -3388,30 +3388,42 @@ function raceReflectionIncomplete(d,row){
   return false
 }
 
-function fetchEdgeRace(id,forceNetwork){
-  if(!id)return Promise.resolve(null);
-  var cached=instantTrackDetails[String(id)]||loadDetailCache(id);
-  var historical=!!(cached&&cached.date&&String(cached.date)<today());
-  if(!forceNetwork&&historical&&((cached.horses||[]).length||isFinal(cached))){
-    instantTrackDetails[String(id)]=cached;
-    return Promise.resolve(cached)
-  }
-
-  return fetch(edgeRaceUrl(id),{cache:'no-store'})
-    .then(function(res){
-      if(!res.ok)throw Error('edge-race '+res.status);
-      return res.json()
-    })
+function edgeFetchJson(url,timeoutMs){
+  timeoutMs=n(timeoutMs,6500);
+  var controller=(typeof AbortController!=='undefined')?new AbortController():null,timer=null,opts={cache:'no-store'};
+  if(controller){opts.signal=controller.signal;timer=setTimeout(function(){try{controller.abort()}catch(e){}},timeoutMs)}
+  return fetch(url,opts).then(function(res){if(!res.ok)throw Error('http '+res.status);return res.json()}).finally(function(){if(timer)clearTimeout(timer)})
+}
+function edgeDayRaceFallback(id,date,cached){
+  date=String(date||state.date||today());
+  return edgeFetchJson('https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='+encodeURIComponent(date)+'&details=1&t='+Date.now(),7000)
     .then(function(body){
-      var d=body&&body.detail?body.detail:null,odds=(body&&body.odds)||[],summary=(body&&body.summary)||{};
-      var merged=mergeRaceReflection(cached,d,odds,summary);
-      if(body&&body.analysis_ready){merged.preparedMeta=Object.assign({},merged.preparedMeta||{},{diagnosisReady:true})}
+      var details=(body&&body.details)||[],summaries=(body&&body.races)||[],d=null,summary=null,i;
+      for(i=0;i<details.length;i++)if(String(details[i]&&details[i].id||'')===String(id)){d=details[i];break}
+      for(i=0;i<summaries.length;i++)if(String(summaries[i]&&summaries[i].id||'')===String(id)){summary=summaries[i];break}
+      var merged=mergeRaceReflection(cached,d,null,summary||null);
       if(!merged||!((merged.horses||[]).length||isFinal(merged)))return cached||null;
-      instantTrackDetails[String(id)]=merged;
-      saveDetailCache(id,merged);
-      return merged
+      instantTrackDetails[String(id)]=merged;saveDetailCache(id,merged);return merged
     })
     .catch(function(){return cached||null})
+}
+function fetchEdgeRace(id,forceNetwork){
+  if(!id)return Promise.resolve(null);
+  var cached=instantTrackDetails[String(id)]||loadDetailCache(id),
+      row=(state.races||[]).find(function(x){return String(x&&x.id||'')===String(id)})||null,
+      date=String((row&&row.date)||(cached&&cached.date)||state.date||today()),
+      historical=!!(cached&&cached.date&&String(cached.date)<today());
+  if(!forceNetwork&&historical&&((cached.horses||[]).length||isFinal(cached))){instantTrackDetails[String(id)]=cached;return Promise.resolve(cached)}
+
+  return edgeFetchJson(edgeRaceUrl(id),6500)
+    .then(function(body){
+      var d=body&&body.detail?body.detail:null,odds=(body&&body.odds)||[],summary=(body&&body.summary)||row||{};
+      var merged=mergeRaceReflection(cached,d,odds,summary);
+      if(body&&body.analysis_ready&&merged)merged.preparedMeta=Object.assign({},merged.preparedMeta||{},{diagnosisReady:true});
+      if(!merged||!((merged.horses||[]).length||isFinal(merged)))throw Error('edge detail missing');
+      instantTrackDetails[String(id)]=merged;saveDetailCache(id,merged);return merged
+    })
+    .catch(function(){return edgeDayRaceFallback(id,date,cached)})
 }
 
 function warmTrackSnapshots(track,high){
@@ -3934,7 +3946,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':(isFlash(x)?'結果速報':'レース詳細'))+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v319</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v320</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
@@ -4629,7 +4641,7 @@ function renderRaceLoading(){
     row?smartRaceTopBar(row):smartTopBar(true,state.track||'レース','レース詳細')+
     '<main class="smart-main smart-race-page">'+
       (row?smartRaceHead(row):'')+
-      '<div class="smart-loading"><span class="smart-loading-dot"></span><b>レース詳細を読み込み中</b><small>選択したレースだけ取得しています。開催場一覧は先に表示します。</small></div>'+
+      '<div class="smart-loading"><span class="smart-loading-dot"></span><b>'+(state.error?'レース詳細の同期待ち':'レース詳細を読み込み中')+'</b><small>'+(state.error?esc(state.error):'選択したレースだけ取得しています。開催場一覧は先に表示します。')+'</small>'+(state.error&&row?'<button type="button" class="smart-refresh" data-race="'+esc(row.id)+'">再試行</button>':'')+'</div>'+
     '</main>'+cinematicFooter()+
   '</div>'
 }
@@ -4812,7 +4824,7 @@ function diagnosisCurrent(r){
   return pm.diagnosisReady===true&&pm.diagnosisVersion==='arvexq-edge-2026.10-v53-consensus-rebuild'
 }
 function openRace(id,keepStack,skipHistory,preservePanel){
-  if(!id||state.raceLoading)return;
+  if(!id)return;
   if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}
   state.oddsBusy=false;
   if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}
@@ -4873,8 +4885,8 @@ function openRace(id,keepStack,skipHistory,preservePanel){
         render();
         return
       }
-      state.error='Cloudflareにこのレース詳細がまだありません。次回同期後に更新してください。';
-      if(state.raceStack.length)state.race=state.raceStack.pop();
+      state.error='詳細データを取得できませんでした。再試行してください。';
+      state.raceLoading=String(id);
       render()
     })
 }
@@ -5253,7 +5265,7 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const RESET_TAG="arvexq-reset-v319";
+SW = r'''const RESET_TAG="arvexq-reset-v320";
 self.addEventListener("install",function(event){event.waitUntil(self.skipWaiting())});
 self.addEventListener("activate",function(event){
   event.waitUntil(caches.keys().then(function(keys){
@@ -6688,7 +6700,7 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v319-full-audit", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v320-race-open-fix", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")), "jraOfficialFallback":True,
         "centralHistoryFeedConfigured":bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
@@ -6919,7 +6931,7 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v319","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v320","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
         "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,"siteBootstrap":True,"persistentDayBundle":True,"nonBlockingBootstrap":True,"autoOdds":True,
         "racedb":RACEDB.status(),
@@ -14348,7 +14360,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v319","appVersion":"14.19-v319-full-audit",
+        "build":"v320","appVersion":"14.20-v320-race-open-fix",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -14367,8 +14379,8 @@ def home():
     # by the browser; Render remains the fallback for live/manual refreshes.
     boot='<script>window.__ARVEXQ_BOOTSTRAP__=null;</script>'
     html=INDEX.replace(
-        '<script src="/app-v319.js"></script>',
-        boot+'\n<script src="/app-v319.js"></script>'
+        '<script src="/app-v320.js"></script>',
+        boot+'\n<script src="/app-v320.js"></script>'
     )
     return HTMLResponse(html, headers={
         "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
@@ -14468,8 +14480,9 @@ def pace_preview():
 
 @app.get("/version.json")
 def version_json():
-    return Response('{"build":"v319","shell":"full-audit-fast-core","model":"v317-consensus-rebuild"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
+    return Response('{"build":"v320","shell":"race-open-fix","model":"v317-consensus-rebuild"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
 
+@app.get("/styles-arvexq-v320.css")
 @app.get("/styles-arvexq-v319.css")
 @app.get("/styles-arvexq-v318.css")
 @app.get("/styles-arvexq-v317.css")
@@ -14488,10 +14501,12 @@ def version_json():
 @app.get("/styles-arvexq-v88.css")
 @app.get("/styles-v86.css")
 def styles(request: Request):
-    current=request.url.path=="/styles-arvexq-v319.css"
+    current=request.url.path=="/styles-arvexq-v320.css"
     cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
     return Response(CSS, media_type="text/css", headers={"Cache-Control":cache})
 
+@app.get("/app-v320.js")
+@app.get("/arvexq-app-v320.js")
 @app.get("/app-v319.js")
 @app.get("/arvexq-app-v319.js")
 @app.get("/app-v318.js")
@@ -14527,7 +14542,7 @@ def styles(request: Request):
 @app.get("/app-v87.js")
 @app.get("/app-v86-fix1.js")
 def appjs(request: Request):
-    current=request.url.path in {"/app-v319.js","/arvexq-app-v319.js"}
+    current=request.url.path in {"/app-v320.js","/arvexq-app-v320.js"}
     cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":cache})
 
@@ -14539,6 +14554,7 @@ def appjs(request: Request):
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
 
+@app.get("/sw-v320-reset.js")
 @app.get("/sw-v319-reset.js")
 @app.get("/sw-v318-reset.js")
 @app.get("/sw.js")
