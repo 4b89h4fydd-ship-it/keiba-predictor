@@ -2,6 +2,11 @@ name: ARVEXQ Realtime Sync
 
 "on":
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - app.py
+      - .github/workflows/arvexq-sync.yml
   schedule:
     - cron: "*/5 22-23 * * *"
     - cron: "*/5 0-14 * * *"
@@ -13,7 +18,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 5
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
@@ -32,18 +37,16 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: .github/workflows/arvexq-sync.yml
+          cache-dependency-path: requirements.txt
 
       - name: Install runtime dependencies
         run: |
-          python -m pip install --disable-pip-version-check --no-input \
-            fastapi==0.115.6 "uvicorn[standard]==0.34.0" beautifulsoup4==4.12.3
+          python -m pip install --disable-pip-version-check --no-input -r requirements.txt
 
       - name: Set sync date
         run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
 
       - name: Restore ARVEXQ data cache
-        id: cache-restore
         uses: actions/cache/restore@v4
         with:
           path: .arvexq-data
@@ -66,31 +69,23 @@ jobs:
           tail -n 200 /tmp/arvexq.log || true
           exit 1
 
-      - name: Fast bootstrap current card
+      - name: Build current card snapshot
         run: |
           curl -fsS --max-time 30 \
             "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE&force=1" \
             -o bundle.json || true
-
-          for i in $(seq 1 6); do
-            curl -fsS --max-time 20 \
-              "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
-              -o bundle.json || true
-            RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
-            DETAILS=$(jq '.details // [] | length' bundle.json 2>/dev/null || echo 0)
-            echo "bootstrap $i races=$RACES details=$DETAILS"
-            if [ "$RACES" -gt 0 ] && [ "$DETAILS" -gt 0 ]; then break; fi
-            sleep 2
-          done
-
+          curl -fsS --max-time 20 \
+            "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
+            -o bundle.json || true
           RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
+          DETAILS=$(jq '.details // [] | length' bundle.json 2>/dev/null || echo 0)
+          echo "bootstrap races=$RACES details=$DETAILS"
           if [ "$RACES" -le 0 ]; then
-            echo "No current race card"
-            tail -n 220 /tmp/arvexq.log || true
+            tail -n 240 /tmp/arvexq.log || true
             exit 1
           fi
 
-      - name: Push first paint to D1 immediately
+      - name: Push first paint immediately
         run: |
           jq '{
             summaries: [(.races // [])[] | . + {
@@ -98,21 +93,19 @@ jobs:
             }],
             details: (.details // []),
             meta: {
-              source: "github-actions-first-paint-v201",
+              source: "github-actions-first-paint-v323",
               sync_date: (.date // ""),
               race_count: ((.races // []) | length),
               detail_count: ((.details // []) | length),
-              analysis_count: (.analysisCount // 0),
-              display_complete: (.displayComplete // .complete // false)
+              display_complete: false
             }
           }' bundle.json > first-paint.json
-
           curl --fail-with-body --max-time 20 -X POST "$CLOUDFLARE_SYNC_URL" \
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
             --data-binary @first-paint.json
 
-      - name: Refresh only live and next races
+      - name: Fill every incomplete race detail and refresh live data
         run: |
           python - <<'PY'
           import json, urllib.parse, urllib.request
@@ -123,12 +116,13 @@ jobs:
           BASE = "http://127.0.0.1:8000"
           JST = timezone(timedelta(hours=9))
           now = datetime.now(JST)
-          today = now.strftime("%Y-%m-%d")
           now_min = now.hour * 60 + now.minute
 
           with open("bundle.json", encoding="utf-8") as f:
               bundle = json.load(f)
           rows = [r for r in (bundle.get("races") or []) if r.get("id")]
+          base_details = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id")]
+          detail_by_id = {str(d["id"]): d for d in base_details}
 
           def start_min(r):
               st = str(r.get("startTime") or "")
@@ -138,67 +132,115 @@ jobs:
               except Exception:
                   return 9999
 
-          def summary_final(r):
+          def final_summary(r):
               result = r.get("result") or {}
-              status = str(result.get("status") or "")
-              if status == "速報":
-                  return False
-              if status == "確定":
-                  return True
-              return str(r.get("raceStatus") or "") == "確定"
+              return str(result.get("status") or r.get("raceStatus") or "") == "確定"
 
           def result_complete(d):
               result = (d or {}).get("result") or {}
               ranks = {int(x.get("finish") or 0) for x in (result.get("finishers") or []) if isinstance(x, dict)}
               return str(result.get("status") or "") == "確定" and all(i in ranks for i in (1, 2, 3))
 
-          detail_by_id = {str(d.get("id") or ""): d for d in (bundle.get("details") or []) if d.get("id")}
+          def usable(d):
+              if not isinstance(d, dict) or not d.get("id"):
+                  return False
+              horses = [h for h in (d.get("horses") or []) if isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0]
+              if horses:
+                  active = [h for h in horses if not h.get("scratched") and str(h.get("status") or "") not in {"取消","除外","競走除外","競走取消"}] or horses
+                  # Horse-number/odds skeletons are NOT race details. Names must exist for every active runner.
+                  if any(not str(h.get("name") or "").strip() for h in active):
+                      return False
+                  core = 0
+                  for h in active:
+                      jockey = str(h.get("jockey") or "").strip()
+                      try:
+                          weight = float(h.get("carriedWeight") or h.get("weight") or 0)
+                      except Exception:
+                          weight = 0
+                      if jockey and weight > 0:
+                          core += 1
+                  if len(active) >= 4 and core < max(3, (len(active) * 7 + 9) // 10):
+                      return False
+                  expected = int(d.get("fieldSize") or 0)
+                  if expected >= 4 and len(horses) < max(3, (expected * 7 + 9) // 10):
+                      return False
+                  return True
+              result = d.get("result") or {}
+              finishers = [x for x in (result.get("finishers") or []) if isinstance(x, dict) and int(x.get("horseNumber") or 0) > 0 and str(x.get("name") or "").strip()]
+              return str(result.get("status") or "") == "確定" and len(finishers) >= 3
 
-          # A summary can say 確定 before the actual finishers reach D1.
-          # Keep refreshing every started race whose podium is still missing.
-          # Complete recent results are refreshed briefly so payouts/official corrections can land.
-          incomplete = []
-          recent_complete = []
+          def local_snapshot(rid):
+              d = app._prepared_get_fresh(rid) or app._racedb_get_fast(rid) or app._fast_local_race_detail(rid)
+              if not d:
+                  return None
+              try:
+                  return app._compact_display_snapshot(d)
+              except Exception:
+                  return d
+
+          def rebuild_detail(rid):
+              d = local_snapshot(rid)
+              if usable(d):
+                  return d
+              try:
+                  # Synchronous hydration: unlike /prepare-race this does not merely queue work.
+                  app._hydrate_fast_card_now(rid, deep_history=False)
+              except Exception as exc:
+                  print("fast card hydrate failed", rid, exc)
+              d = local_snapshot(rid)
+              if usable(d):
+                  return d
+              try:
+                  # Slower synchronous fallback only for cards still unusable.
+                  d = app._prepare_race_snapshot(rid, force=True)
+              except Exception as exc:
+                  print("full detail fallback failed", rid, exc)
+                  d = None
+              return d if usable(d) else None
+
+          # IMPORTANT: an ID-only/empty object is not a completed detail.
+          # Rebuild every race whose horse card is absent, not only IDs missing from the list.
+          targets = [str(r["id"]) for r in rows if not usable(detail_by_id.get(str(r["id"])))]
+          rebuilt = []
+          if targets:
+              with ThreadPoolExecutor(max_workers=min(12, max(1, len(targets)))) as ex:
+                  futs = {ex.submit(rebuild_detail, rid): rid for rid in targets}
+                  for fut in as_completed(futs):
+                      rid = futs[fut]
+                      try:
+                          d = fut.result()
+                      except Exception as exc:
+                          print("detail rebuild worker failed", rid, exc)
+                          d = None
+                      if usable(d):
+                          rebuilt.append(d)
+                          detail_by_id[rid] = d
+
+          # One deterministic synchronous retry for anything still unusable.
+          still_bad = [str(r["id"]) for r in rows if not usable(detail_by_id.get(str(r["id"])))]
+          retry_details = []
+          if still_bad:
+              with ThreadPoolExecutor(max_workers=min(6, max(1, len(still_bad)))) as ex:
+                  futs = {ex.submit(rebuild_detail, rid): rid for rid in still_bad}
+                  for fut in as_completed(futs):
+                      rid = futs[fut]
+                      try:
+                          d = fut.result()
+                      except Exception as exc:
+                          print("detail retry worker failed", rid, exc)
+                          d = None
+                      if usable(d):
+                          retry_details.append(d)
+                          detail_by_id[rid] = d
+
+          # Results lane: started races whose podium is not complete.
+          result_targets = []
           for r in rows:
-              if str(r.get("date") or today) != today:
-                  continue
               sm = start_min(r)
-              if sm >= 9999 or now_min < sm + 2:
-                  continue
               rid = str(r["id"])
-              age = now_min - sm
-              if not result_complete(detail_by_id.get(rid)):
-                  incomplete.append((sm, rid))
-              elif age <= 20:
-                  recent_complete.append((sm, rid))
-          incomplete.sort(reverse=True)
-          recent_complete.sort(reverse=True)
-          result_targets = [rid for _, rid in incomplete[:20]]
-          for _, rid in recent_complete[:8]:
-              if rid not in result_targets:
-                  result_targets.append(rid)
-
-          # Priority lane: running race + next race of every venue + anything starting within 35 minutes.
-          by_track = {}
-          for r in rows:
-              by_track.setdefault((str(r.get("circuit") or ""), str(r.get("track") or "")), []).append(r)
-
-          priority = []
-          for _, group in by_track.items():
-              group.sort(key=start_min)
-              live = [r for r in group if not summary_final(r) and start_min(r) <= now_min < start_min(r) + 25]
-              future = [r for r in group if not summary_final(r) and start_min(r) >= now_min]
-              for r in live[:1] + future[:1]:
-                  rid = str(r.get("id") or "")
-                  if rid and rid not in priority:
-                      priority.append(rid)
-
-          for r in sorted(rows, key=lambda x: abs(start_min(x) - now_min)):
-              sm = start_min(r)
-              rid = str(r.get("id") or "")
-              if rid and not summary_final(r) and -5 <= sm - now_min <= 35 and rid not in priority:
-                  priority.append(rid)
-          priority = priority[:16]
+              if sm < 9999 and now_min >= sm + 2 and not result_complete(detail_by_id.get(rid)):
+                  result_targets.append((sm, rid))
+          result_targets = [rid for _, rid in sorted(result_targets, reverse=True)[:24]]
 
           def refresh_result(rid):
               try:
@@ -223,36 +265,63 @@ jobs:
               except Exception:
                   return None
 
-          def warm(rid):
+          def fetch_active(rid):
               enc = urllib.parse.quote(rid, safe="")
-              call("POST", f"/api/v1/prepare-race/{enc}", 4)
               call("GET", f"/api/v1/odds-refresh/{enc}?force=1", 8)
               raw = call("GET", f"/api/v1/race/{enc}", 5)
               if not raw:
                   return None
               try:
                   d = json.loads(raw.decode("utf-8"))
-                  return d if isinstance(d, dict) and d.get("id") else None
+                  return d if usable(d) else None
               except Exception:
                   return None
 
+          # Live/next lane: freshest odds/body weight for soonest-viewed races.
+          by_track = {}
+          for r in rows:
+              by_track.setdefault((str(r.get("circuit") or ""), str(r.get("track") or "")), []).append(r)
+          priority = []
+          for group in by_track.values():
+              group.sort(key=start_min)
+              live = [r for r in group if not final_summary(r) and start_min(r) <= now_min < start_min(r) + 25]
+              future = [r for r in group if not final_summary(r) and start_min(r) >= now_min]
+              for r in live[:1] + future[:1]:
+                  rid = str(r["id"])
+                  if rid not in priority:
+                      priority.append(rid)
+          for r in sorted(rows, key=lambda x: abs(start_min(x) - now_min)):
+              rid = str(r["id"])
+              sm = start_min(r)
+              if rid not in priority and not final_summary(r) and -5 <= sm - now_min <= 35:
+                  priority.append(rid)
+          priority = priority[:18]
+
           active_details = []
           with ThreadPoolExecutor(max_workers=12) as ex:
-              for fut in as_completed([ex.submit(warm, rid) for rid in priority]):
+              for fut in as_completed([ex.submit(fetch_active, rid) for rid in priority]):
                   d = fut.result()
                   if d:
                       active_details.append(d)
 
-          with open("result-details.json", "w", encoding="utf-8") as f:
-              json.dump(result_details, f, ensure_ascii=False)
-          with open("active-details.json", "w", encoding="utf-8") as f:
-              json.dump(active_details, f, ensure_ascii=False)
+          for name, data in (
+              ("full-details.json", rebuilt + retry_details),
+              ("result-details.json", result_details),
+              ("active-details.json", active_details),
+          ):
+              with open(name, "w", encoding="utf-8") as f:
+                  json.dump(data, f, ensure_ascii=False)
 
-          print("Fast result targets:", len(result_targets), "refreshed:", len(result_details))
-          print("Priority live/next targets:", len(priority), "refreshed:", len(active_details))
+          total_ids = {str(r["id"]) for r in rows}
+          usable_ids = {rid for rid in total_ids if usable(detail_by_id.get(rid))}
+          missing = sorted(total_ids - usable_ids)
+          print("Usable full-card details:", len(usable_ids), "/", len(total_ids), "missing:", len(missing))
+          if missing:
+              print("Still unusable IDs:", missing)
+          print("Result refreshed:", len(result_details), "Priority refreshed:", len(active_details))
           PY
 
-      - name: Push freshest active data to D1
+      - name: Push complete day data to D1
         run: |
           python - <<'PY'
           import json
@@ -271,6 +340,27 @@ jobs:
               r = (d or {}).get("result") or {}
               return bool(r.get("status") == "確定" and r.get("finishers"))
 
+          def horse_card_score(d):
+              horses = [h for h in ((d or {}).get("horses") or []) if isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0]
+              if not horses:
+                  return 0
+              active = [h for h in horses if not h.get("scratched") and str(h.get("status") or "") not in {"取消","除外","競走除外","競走取消"}] or horses
+              named = sum(1 for h in active if str(h.get("name") or "").strip())
+              jockeys = sum(1 for h in active if str(h.get("jockey") or "").strip())
+              weights = 0
+              histories = 0
+              for h in active:
+                  try:
+                      if float(h.get("carriedWeight") or h.get("weight") or 0) > 0:
+                          weights += 1
+                  except Exception:
+                      pass
+                  if h.get("recentRaces") or h.get("allPastRuns") or h.get("debutNoHistory"):
+                      histories += 1
+              complete_names = named == len(active) and len(active) > 0
+              core = complete_names and (len(active) < 4 or (jockeys >= max(3, (len(active) * 7 + 9) // 10) and weights >= max(3, (len(active) * 7 + 9) // 10)))
+              return (10000 if core else 0) + named * 100 + jockeys * 20 + weights * 20 + histories * 5 + len(horses)
+
           def merge(old, new):
               if not old:
                   return dict(new or {})
@@ -283,32 +373,28 @@ jobs:
                       continue
                   if v not in (None, "", [], {}):
                       out[k] = v
-              if new_ready or not old_ready:
-                  if new.get("horses"):
-                      out["horses"] = new["horses"]
-              elif new.get("horses"):
-                  # Keep the saved diagnosis, but live fields must always win.
-                  live_by_no = {
-                      int(h.get("horseNumber") or 0): h
-                      for h in (new.get("horses") or [])
-                      if int(h.get("horseNumber") or 0) > 0
-                  }
-                  merged_horses = [dict(h or {}) for h in (old.get("horses") or [])]
-                  for h in merged_horses:
+              old_score, new_score = horse_card_score(old), horse_card_score(new)
+              if new.get("horses") and new_score > old_score:
+                  out["horses"] = new["horses"]
+              elif new.get("horses") and old.get("horses"):
+                  # Never let an odds-only/number-only refresh erase a rich horse card.
+                  live_by_no = {int(h.get("horseNumber") or 0): h for h in new.get("horses") or [] if int(h.get("horseNumber") or 0) > 0}
+                  horses = [dict(h or {}) for h in old.get("horses") or []]
+                  for h in horses:
                       z = live_by_no.get(int(h.get("horseNumber") or 0))
-                      if not z:
-                          continue
-                      for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched","oddsSource"):
-                          if z.get(k) not in (None, ""):
-                              h[k] = z.get(k)
-                  out["horses"] = merged_horses
+                      if z:
+                          for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched","oddsSource"):
+                              if z.get(k) not in (None, ""):
+                                  h[k] = z[k]
+                  out["horses"] = horses
+              elif new.get("horses"):
+                  out["horses"] = new["horses"]
               pm = dict(old.get("preparedMeta") or {})
-              npm = dict(new.get("preparedMeta") or {})
-              pm.update(npm)
+              pm.update(dict(new.get("preparedMeta") or {}))
               if old_ready and not new_ready:
                   for k in ("diagnosisReady","diagnosisVersion","diagnosisCoverage","diagnosisPreparedAtEpoch"):
-                      if k in (old.get("preparedMeta") or {}):
-                          pm[k] = (old.get("preparedMeta") or {})[k]
+                      if k in old.get("preparedMeta", {}):
+                          pm[k] = old["preparedMeta"][k]
               out["preparedMeta"] = pm
               if final_result(new) or not final_result(old):
                   if new.get("result"):
@@ -318,20 +404,17 @@ jobs:
               return out
 
           bundle = read("bundle.json", {})
-          result_details = read("result-details.json", [])
-          active_details = read("active-details.json", [])
           detail_map = {}
-          for group in ((bundle.get("details") or []), result_details, active_details):
+          for group in (
+              bundle.get("details") or [],
+              read("full-details.json", []),
+              read("result-details.json", []),
+              read("active-details.json", []),
+          ):
               for d in group:
                   rid = str((d or {}).get("id") or "")
                   if rid:
                       detail_map[rid] = merge(detail_map.get(rid), d)
-
-          # Final results always win; pre-race diagnosis remains preserved by merge().
-          for d in result_details:
-              rid = str((d or {}).get("id") or "")
-              if rid and final_result(d) and rid in detail_map:
-                  detail_map[rid]["result"] = d.get("result")
 
           summaries = []
           for r in bundle.get("races") or []:
@@ -344,33 +427,69 @@ jobs:
                   z["raceStatus"] = "速報"
               summaries.append(z)
 
+          def usable(d):
+              if not isinstance(d, dict) or not d.get("id"):
+                  return False
+              horses = [h for h in (d.get("horses") or []) if isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0]
+              if horses:
+                  active = [h for h in horses if not h.get("scratched") and str(h.get("status") or "") not in {"取消","除外","競走除外","競走取消"}] or horses
+                  if any(not str(h.get("name") or "").strip() for h in active):
+                      return False
+                  core = 0
+                  for h in active:
+                      jockey = str(h.get("jockey") or "").strip()
+                      try:
+                          weight = float(h.get("carriedWeight") or h.get("weight") or 0)
+                      except Exception:
+                          weight = 0
+                      if jockey and weight > 0:
+                          core += 1
+                  if len(active) >= 4 and core < max(3, (len(active) * 7 + 9) // 10):
+                      return False
+                  expected = int(d.get("fieldSize") or 0)
+                  if expected >= 4 and len(horses) < max(3, (expected * 7 + 9) // 10):
+                      return False
+                  return True
+              result = d.get("result") or {}
+              finishers = [x for x in (result.get("finishers") or []) if isinstance(x, dict) and int(x.get("horseNumber") or 0) > 0 and str(x.get("name") or "").strip()]
+              return str(result.get("status") or "") == "確定" and len(finishers) >= 3
+
           current_ids = {str(r.get("id") or "") for r in summaries if r.get("id")}
-          current_details = [d for rid, d in detail_map.items() if rid in current_ids]
+          usable_detail_ids = {rid for rid, d in detail_map.items() if rid in current_ids and usable(d)}
+          missing = sorted(current_ids-usable_detail_ids)
           payload = {
               "summaries": summaries,
-              "details": list(detail_map.values()),
+              "details": [d for rid, d in detail_map.items() if rid in current_ids and usable(d)],
               "meta": {
-                  "source": "github-actions-fastest-v201",
+                  "source": "github-actions-full-card-v324",
                   "sync_date": bundle.get("date") or "",
-                  "race_count": len(summaries),
-                  "detail_count": len(current_details),
+                  "race_count": len(current_ids),
+                  "detail_count": len(usable_detail_ids),
                   "expected_detail_count": len(current_ids),
-                  "missing_detail_count": max(0, len(current_ids) - len({str(d.get('id') or '') for d in current_details})),
-                  "analysis_count": sum(1 for d in current_details if ready(d)),
+                  "missing_detail_count": len(missing),
+                  "analysis_count": sum(1 for rid, d in detail_map.items() if rid in current_ids and ready(d)),
                   "fast_lane": True,
-                  "past_detail_count": 0,
-                  "display_complete": bool(bundle.get("displayComplete") or bundle.get("complete")),
+                  "full_card_lane": True,
+                  "display_complete": len(missing) == 0,
               }
           }
           with open("payload.json", "w", encoding="utf-8") as f:
               json.dump(payload, f, ensure_ascii=False)
-          print("Final push races:", len(summaries), "details:", len(current_details))
+          print("Final push races:", len(current_ids), "usable details:", len(usable_detail_ids), "missing:", len(missing))
+          if missing:
+              print("Missing IDs:", missing)
           PY
 
           curl --fail-with-body --max-time 20 -X POST "$CLOUDFLARE_SYNC_URL" \
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
             --data-binary @payload.json
+
+          MISSING=$(jq '.meta.missing_detail_count // 0' payload.json)
+          if [ "$MISSING" -gt 0 ]; then
+            echo "::error::ARVEXQ full-card sync incomplete: $MISSING race detail(s) still unusable"
+            exit 1
+          fi
 
       - name: Stop ARVEXQ
         if: always()
@@ -379,16 +498,8 @@ jobs:
             kill "$(cat /tmp/arvexq.pid)" 2>/dev/null || true
           fi
 
-      - name: Decide cache save
+      - name: Save ARVEXQ data cache
         if: always()
-        run: |
-          SAVE=0
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then SAVE=1; fi
-          if [ $((GITHUB_RUN_NUMBER % 3)) -eq 0 ]; then SAVE=1; fi
-          echo "SAVE_ARVEXQ_CACHE=$SAVE" >> "$GITHUB_ENV"
-
-      - name: Save ARVEXQ data cache periodically
-        if: always() && env.SAVE_ARVEXQ_CACHE == '1'
         uses: actions/cache/save@v4
         with:
           path: .arvexq-data
@@ -396,4 +507,4 @@ jobs:
 
       - name: Show local log on failure
         if: failure()
-        run: tail -n 260 /tmp/arvexq.log || true
+        run: tail -n 300 /tmp/arvexq.log || true
