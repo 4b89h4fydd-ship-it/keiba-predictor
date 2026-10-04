@@ -2,6 +2,11 @@ name: ARVEXQ Result Repair
 
 "on":
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/arvexq_result_repair.py
+      - .github/workflows/arvexq-result-repair.yml
   schedule:
     # Offset from the main realtime sync so both jobs do not hammer sources at once.
     - cron: "2-59/5 22-23 * * *"
@@ -21,6 +26,7 @@ jobs:
       CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
       KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-data
       ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
       ARVEXQ_RESULT_WORKERS: "6"
@@ -105,6 +111,7 @@ jobs:
               if str(result.get('status') or '')!='確定' or not all(i in ranks for i in (1,2,3)):
                   missing.append(rid)
           print('D1_VERIFY repaired=',len(report.get('repaired') or []),'not_visible=',len(missing))
+          print('D1_VERIFY result_missing=',len(report.get('result_missing') or []),'payout_missing=',len(report.get('payout_missing') or []))
           if missing:
               raise SystemExit('D1 did not expose repaired result(s): '+','.join(missing))
           PY

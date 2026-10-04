@@ -2,6 +2,12 @@ name: ARVEXQ History Repair
 
 "on":
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/arvexq_history_repair.py
+      - scripts/arvexq_result_repair.py
+      - .github/workflows/arvexq-history-sync.yml
   schedule:
     - cron: "17 * * * *"
 
@@ -41,10 +47,14 @@ jobs:
 
       - name: Set history date
         run: |
-          SLOT=$(( (GITHUB_RUN_NUMBER - 1) % ARVEXQ_HISTORY_DAYS + 1 ))
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            SLOT=1
+          else
+            SLOT=$(( (GITHUB_RUN_NUMBER - 1) % ARVEXQ_HISTORY_DAYS + 1 ))
+          fi
           echo "HISTORY_OFFSET=$SLOT" >> "$GITHUB_ENV"
           echo "HISTORY_DATE=$(TZ=Asia/Tokyo date -d "$SLOT days ago" +%F)" >> "$GITHUB_ENV"
-          echo "Rolling history slot: -${SLOT} day(s)"
+          echo "History slot: -${SLOT} day(s), event=$GITHUB_EVENT_NAME"
 
       - name: Restore ARVEXQ data cache
         uses: actions/cache/restore@v4

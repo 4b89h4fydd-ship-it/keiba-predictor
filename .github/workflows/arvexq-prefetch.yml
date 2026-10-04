@@ -7,6 +7,13 @@ name: ARVEXQ Full Prefetch
         description: "Target date YYYY-MM-DD (blank = today JST)"
         required: false
         type: string
+  push:
+    branches: [main]
+    paths:
+      - app.py
+      - scripts/arvexq_prefetch.py
+      - arvexq/pipeline/fingerprints.py
+      - .github/workflows/arvexq-prefetch.yml
   schedule:
     # 06:30 / 08:30 / 11:30 JST. Heavy work is kept out of five-minute live sync.
     - cron: "30 21 * * *"

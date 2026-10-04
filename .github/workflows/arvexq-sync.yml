@@ -105,11 +105,13 @@ jobs:
 
       - name: Refresh live deltas only
         run: |
+          # app.py RaceDB uses SQLite; keep the small target set serialized so
+          # body-weight/odds persistence cannot lose a write to database locking.
           python scripts/arvexq_live_sync.py \
             --bundle bundle.json \
             --out live-payload.json \
             --audit live-audit.json \
-            --workers 10
+            --workers 1
           cat live-audit.json
 
       - name: Push live deltas to D1
