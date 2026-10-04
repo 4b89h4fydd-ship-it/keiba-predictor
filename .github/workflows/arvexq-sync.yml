@@ -23,6 +23,7 @@ jobs:
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
       CLOUDFLARE_SYNC_URL: https://kraiz-api.4b89h4fydd.workers.dev/api/sync
       CLOUDFLARE_DAY_URL: https://kraiz-api.4b89h4fydd.workers.dev/api/day
       KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-data
@@ -72,15 +73,24 @@ jobs:
           tail -n 200 /tmp/arvexq-live.log || true
           exit 1
 
-      - name: Load cached day snapshot
+      - name: Load prepared day from D1
         run: |
-          curl -fsS --max-time 20 \
-            "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
+          # D1 is the display source of truth. The 5-minute lane reads only summaries;
+          # scripts/arvexq_live_sync.py fetches rich details only for its small target set.
+          curl -fsS --max-time 15 \
+            "$CLOUDFLARE_DAY_URL?date=$SYNC_DATE&details=0&t=$(date +%s)" \
             -o bundle.json || true
 
           RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
           if [ "$RACES" -le 0 ]; then
-            echo "No cached races; one bootstrap repair is allowed."
+            echo "D1 has no day snapshot yet; use one local discovery fallback."
+            curl -fsS --max-time 20 \
+              "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
+              -o bundle.json || true
+            RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
+          fi
+          if [ "$RACES" -le 0 ]; then
+            echo "No cached races; one forced bootstrap repair is allowed."
             curl -fsS --max-time 45 \
               "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE&force=1" \
               -o bundle.json || true
