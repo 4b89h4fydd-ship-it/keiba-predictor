@@ -66,19 +66,27 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           live=Path('.github/workflows/arvexq-sync.yml').read_text(encoding='utf-8')
-          script=Path('scripts/arvexq_live_sync.py').read_text(encoding='utf-8')
+          live_script=Path('scripts/arvexq_live_sync.py').read_text(encoding='utf-8')
           repair=Path('scripts/arvexq_result_repair.py').read_text(encoding='utf-8')
+          prefetch=Path('scripts/arvexq_prefetch.py').read_text(encoding='utf-8')
+          prefetch_workflow=Path('.github/workflows/arvexq-prefetch.yml').read_text(encoding='utf-8')
           forbidden=['_prepare_race_snapshot(','_hydrate_fast_card_now(','result_targets = [rid for _, rid in sorted(result_targets, reverse=True)[:24]]']
-          bad=[x for x in forbidden if x in live or x in script]
+          bad=[x for x in forbidden if x in live or x in live_script]
           if bad:raise SystemExit('live lane contains heavy/legacy path: '+repr(bad))
           required=['arvexq_live_sync.py','ARVEXQ_DATA_CORE: "0"','cancel-in-progress: true','details=0','CLOUDFLARE_API_BASE']
           missing=[x for x in required if x not in live]
           if missing:raise SystemExit('live workflow guard missing: '+repr(missing))
           if '[:24]' in repair:raise SystemExit('result repair must not cap pending results at 24')
+          prefetch_required=['_build_fast_diagnosis_snapshot(','allow_network=True','deep_context=True']
+          missing=[x for x in prefetch_required if x not in prefetch]
+          if missing:raise SystemExit('prefetch must explicitly materialize existing diagnosis: '+repr(missing))
+          workflow_required=['missing_analysis_count','analysisCount','D1 is missing prepared analysis']
+          missing=[x for x in workflow_required if x not in prefetch_workflow]
+          if missing:raise SystemExit('prefetch workflow must fail incomplete analysis: '+repr(missing))
           print('architecture guard OK')
           PY
 
-      - name: Merge, hash, result and history invariants
+      - name: Merge, hash, result, prefetch and history invariants
         run: |
           python - <<'PY'
           import copy
@@ -121,6 +129,31 @@ jobs:
           assert prefetch._analysis_current(base)
           changed=copy.deepcopy(base);changed['horses'][0]['bodyWeight']=488
           assert not prefetch._analysis_current(changed)
+
+          # Prefetch must invoke app.py's existing diagnosis builder when analysis is absent.
+          state={'detail':copy.deepcopy(base),'calls':[]}
+          state['detail']['preparedMeta']={}
+          orig_raw=prefetch._raw_snapshot
+          orig_seed=prefetch._seed_snapshot
+          orig_build=prefetch.app._build_fast_diagnosis_snapshot
+          try:
+              prefetch._raw_snapshot=lambda rid: copy.deepcopy(state['detail'])
+              def seed(d):
+                  if isinstance(d,dict):state['detail']=copy.deepcopy(d)
+              prefetch._seed_snapshot=seed
+              def build(rid,allow_network=False,deep_context=False):
+                  state['calls'].append((allow_network,deep_context))
+                  d=copy.deepcopy(state['detail']);d.setdefault('preparedMeta',{})['diagnosisReady']=True
+                  state['detail']=d
+                  return d
+              prefetch.app._build_fast_diagnosis_snapshot=build
+              ready,error=prefetch._ensure_analysis(base['id'],state['detail'])
+              assert prefetch._analysis_ready(ready)
+              assert state['calls']==[(False,False)]
+          finally:
+              prefetch._raw_snapshot=orig_raw
+              prefetch._seed_snapshot=orig_seed
+              prefetch.app._build_fast_diagnosis_snapshot=orig_build
 
           complete=copy.deepcopy(base);complete['result']={'status':'確定','finishers':old_final['finishers'],'payouts':[{'type':'単勝','amount':500}]}
           assert history.card_complete(complete) and history.history_complete(complete)
