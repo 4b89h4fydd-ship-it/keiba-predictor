@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+
+# build output (Cloudflare builds dist/ from build_static.py)
+dist/
+
+# local runtime data
+.arvexq-data/
+*.db
+*.sqlite3
+
+# workflow temp files
+bundle.json
+first-paint.json
+payload.json
+full-details.json
+result-details.json
+active-details.json
+
+# OS
+.DS_Store
