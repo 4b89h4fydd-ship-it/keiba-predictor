@@ -10,13 +10,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
-import urllib.parse
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import app
 
@@ -61,9 +64,31 @@ def snapshot(rid: str) -> dict[str, Any] | None:
     if not isinstance(d, dict):
         return None
     try:
-        return app._compact_display_snapshot(d)
+        compact = app._compact_display_snapshot(d)
+        return compact if isinstance(compact, dict) else d
     except Exception:
         return d
+
+
+def detail_safe_for_replace(detail: dict[str, Any] | None) -> bool:
+    """Do not let a thin live snapshot replace a rich precomputed D1 payload."""
+    if not isinstance(detail, dict) or not detail.get("id"):
+        return False
+    horses = [
+        h for h in (detail.get("horses") or [])
+        if isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0
+    ]
+    if not horses:
+        return False
+    active = [
+        h for h in horses
+        if not h.get("scratched")
+        and str(h.get("status") or "") not in {"取消", "除外", "競走除外", "競走取消"}
+    ] or horses
+    if any(not str(h.get("name") or "").strip() for h in active):
+        return False
+    pm = detail.get("preparedMeta") if isinstance(detail.get("preparedMeta"), dict) else {}
+    return bool(pm.get("diagnosisReady") or detail.get("preRacePrediction") or detail.get("predictionAudit"))
 
 
 def horse_live_rows(detail: dict[str, Any]) -> list[dict[str, Any]]:
@@ -133,15 +158,13 @@ def refresh_one(rid: str, now_min: int, row_by_id: dict[str, dict[str, Any]]) ->
     row = row_by_id.get(rid) or {}
     sm = start_min(row)
 
-    # Market/body weight/status lane. This endpoint is intentionally narrower than
-    # race hydration and does not rebuild diagnosis/history.
+    # Market/body weight/status lane. No diagnosis/history rebuild here.
     try:
         app.odds_refresh(rid, 1)
     except Exception as exc:
         errors.append("market:" + str(exc))
 
-    # Recent results are refreshed here for low latency. Long-tail misses are owned
-    # by arvexq-result-repair.yml, so this lane never scans the whole day deeply.
+    # Recent result only. Old misses are handled by RESULT REPAIR.
     if sm < 9999 and now_min >= sm + 2:
         d0 = snapshot(rid)
         if not terminal(d0):
@@ -175,6 +198,7 @@ def main() -> int:
     odds_current: list[dict[str, Any]] = []
     errors: dict[str, str] = {}
     refreshed: dict[str, dict[str, Any]] = {}
+    skipped_thin: list[str] = []
 
     with ThreadPoolExecutor(max_workers=max(1, min(args.workers, 12))) as ex:
         futs = {ex.submit(refresh_one, rid, now_min, row_by_id): rid for rid in targets}
@@ -188,8 +212,11 @@ def main() -> int:
                 errors[rid] = err
             if isinstance(d, dict) and d.get("id"):
                 refreshed[rid] = d
-                details.append(d)
                 odds_current.extend(horse_live_rows(d))
+                if detail_safe_for_replace(d):
+                    details.append(d)
+                else:
+                    skipped_thin.append(rid)
 
     summaries = [merge_summary(r, refreshed.get(str(r.get("id") or ""))) for r in rows]
     payload = {
@@ -197,12 +224,13 @@ def main() -> int:
         "details": details,
         "odds_current": odds_current,
         "meta": {
-            "source": "github-actions-live-delta-v1",
+            "source": "github-actions-live-delta-v2",
             "sync_date": bundle.get("date") or now.strftime("%Y-%m-%d"),
             "live_delta": True,
             "full_card_lane": False,
             "target_count": len(targets),
             "detail_update_count": len(details),
+            "thin_detail_skipped_count": len(skipped_thin),
             "odds_row_count": len(odds_current),
             "error_count": len(errors),
             "live_updated_at": int(time.time()),
@@ -212,6 +240,7 @@ def main() -> int:
         "date": payload["meta"]["sync_date"],
         "targets": targets,
         "updated": sorted(refreshed),
+        "thin_detail_skipped": sorted(skipped_thin),
         "errors": errors,
         "targetCount": len(targets),
         "updatedCount": len(refreshed),
@@ -222,6 +251,7 @@ def main() -> int:
         "LIVE SYNC",
         "targets=", len(targets),
         "details=", len(details),
+        "thinSkipped=", len(skipped_thin),
         "oddsRows=", len(odds_current),
         "errors=", len(errors),
     )
