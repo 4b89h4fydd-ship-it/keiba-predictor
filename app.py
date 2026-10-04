@@ -347,7 +347,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.21-v321-race-sync-fix")
+app = FastAPI(title="ARVEXQ", version="14.24-v324-core-data-guard")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v53-consensus-rebuild"
@@ -490,21 +490,21 @@ INDEX = r"""<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
-<link rel="stylesheet" href="/styles-arvexq-v321.css">
+<link rel="stylesheet" href="/styles-arvexq-v324.css">
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
 <link rel="apple-touch-icon-precomposed" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
 <script>
 (function(){
-  var tag="arvexq-hard-reset-v321-20261004";
+  var tag="arvexq-hard-reset-v324-20261004";
   try{
     if(localStorage.getItem(tag)==="1")return;
     localStorage.setItem(tag,"1");
     Promise.resolve().then(async function(){
       try{if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}}catch(_e){}
       try{if("serviceWorker" in navigator){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(r){return r.unregister()}))}}catch(_e){}
-      var u=new URL(location.href);u.searchParams.set("arvexq_build","v321");u.searchParams.set("_",Date.now());location.replace(u.toString());
+      var u=new URL(location.href);u.searchParams.set("arvexq_build","v324");u.searchParams.set("_",Date.now());location.replace(u.toString());
     });
   }catch(_e){}
 })();
@@ -512,7 +512,7 @@ INDEX = r"""<!doctype html>
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script src="/app-v321.js"></script>
+<script src="/app-v324.js"></script>
 </body>
 </html>"""
 
@@ -2097,7 +2097,7 @@ CSS += r"""
 .smart-selected-status>div{display:flex;flex-direction:column;min-width:0}.smart-selected-status b{font-size:17px;color:#f4f9fc}.smart-selected-status small{margin-top:3px;font-size:10px;color:#92acbd;white-space:normal;line-height:1.3}.smart-selected-status em{font-style:normal;font-size:11px;font-weight:900;color:#8fd9ff;white-space:nowrap}.smart-selected-status.smart-value-status{border-color:#7a6335;background:linear-gradient(145deg,#241d10,#141006)}.smart-selected-status.smart-value-status b{color:#ffe19a}.smart-selected-status.smart-value-status em{color:#ffd06a}
 """
 
-JS = r"""window.ARVEXQ_BUILD="v321";
+JS = r"""window.ARVEXQ_BUILD="v324";
 
 (function(){
 "use strict";
@@ -2160,8 +2160,8 @@ function loadFullBundle(d){
   }catch(e){return null}
 }
 function detailCacheKey(id){return "keiba:v90:detail:"+String(id||"")}
-function loadDetailCache(id){try{var raw=localStorage.getItem(detailCacheKey(id));if(!raw)return null;var x=JSON.parse(raw);if(!x||!x.row)return null;var age=Date.now()-n(x.ts);if(x.row.date>=today()&&age>12*3600000)return null;var r=x.row,hs=r&&r.horses||[];if(!hs.length)return null;return r}catch(e){return null}}
-function saveDetailCache(id,row){try{if(!id||!row)return;var hs=row.horses||[];if(!hs.length)return;localStorage.setItem(detailCacheKey(id),JSON.stringify({ts:Date.now(),row:row}))}catch(e){}}
+function loadDetailCache(id){try{var raw=localStorage.getItem(detailCacheKey(id));if(!raw)return null;var x=JSON.parse(raw);if(!x||!x.row)return null;var age=Date.now()-n(x.ts);if(x.row.date>=today()&&age>12*3600000)return null;var r=x.row;if(!raceDisplayCoreReady(r,r))return null;return r}catch(e){return null}}
+function saveDetailCache(id,row){try{if(!id||!row||!raceDisplayCoreReady(row,row))return;localStorage.setItem(detailCacheKey(id),JSON.stringify({ts:Date.now(),row:row}))}catch(e){}}
 function installPwaCache(){
   try{
     if(!("serviceWorker" in navigator))return;
@@ -2170,13 +2170,13 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(localStorage.getItem("arvexq-sw-reload")!=="v321-race-sync-fix-20261004"){
-          localStorage.setItem("arvexq-sw-reload","v321-race-sync-fix-20261004");
+        if(localStorage.getItem("arvexq-sw-reload")!=="v324-core-data-guard-20261004"){
+          localStorage.setItem("arvexq-sw-reload","v324-core-data-guard-20261004");
           location.reload()
         }
       }catch(e){}
     });
-    navigator.serviceWorker.register("/sw-v321-reset.js",{scope:"/"}).then(function(reg){
+    navigator.serviceWorker.register("/sw-v324-reset.js",{scope:"/"}).then(function(reg){
       try{reg.update()}catch(e){}
     }).catch(function(){})
   }catch(e){}
@@ -3370,22 +3370,25 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
   }
   return mergeResultHorseFields(out)
 }
-function raceReflectionIncomplete(d,row){
-  if(!d||!(d.horses||[]).length)return true;
-  var hs=(d.horses||[]).filter(function(h){return !isScratchHorse(h)&&n(h.horseNumber)>0});
-  if(!hs.length)return false;
-  var names=hs.filter(function(h){return String(h.name||'').trim()}).length;
-  if(names<hs.length)return true;
-  var pm=d.preparedMeta||{};
-  if(!isFinal(d)&&(!pm.diagnosisReady||String(pm.diagnosisVersion||'')!=='arvexq-edge-2026.10-v53-consensus-rebuild'))return true;
-  var hist=hs.filter(function(h){return (h.recentRaces||h.allPastRuns||[]).length>0||h.debutNoHistory}).length;
-  if(hist<Math.ceil(hs.length*.75))return true;
-  if(String((row||d).date||'')===today()){
-    var st=mins((row||d).startTime),remain=st-nowMins();
-    if(remain<=180&&remain>=-90&&!raceOddsComplete(d))return true;
-    if(remain<=120&&remain>=-90&&!raceBodyWeightComplete(d))return true
+function raceDisplayCoreReady(d,row){
+  if(!d)return false;
+  var hs=(d.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0});
+  if(!hs.length){
+    var fs=d.result&&d.result.finishers||[];
+    return isFinal(d)&&fs.filter(function(x){return x&&n(x.horseNumber)>0&&String(x.name||'').trim()}).length>=3
   }
-  return false
+  var expected=n((row||d).fieldSize,0);
+  if(expected>=4&&hs.length<Math.max(3,Math.ceil(expected*.70)))return false;
+  var active=hs.filter(function(h){return !isScratchHorse(h)});
+  if(!active.length)active=hs;
+  var named=active.filter(function(h){return String(h.name||'').trim()}).length;
+  if(named<active.length)return false;
+  var core=active.filter(function(h){
+    var jockey=String(h.jockey||'').trim(),cw=n(h.carriedWeight!=null?h.carriedWeight:h.weight,0);
+    return !!jockey&&cw>0
+  }).length;
+  if(active.length>=4&&core<Math.ceil(active.length*.70))return false;
+  return true
 }
 
 function edgeFetchJson(url,timeoutMs){
@@ -3402,7 +3405,7 @@ function edgeDayRaceFallback(id,date,cached){
       for(i=0;i<details.length;i++)if(String(details[i]&&details[i].id||'')===String(id)){d=details[i];break}
       for(i=0;i<summaries.length;i++)if(String(summaries[i]&&summaries[i].id||'')===String(id)){summary=summaries[i];break}
       var merged=mergeRaceReflection(cached,d,null,summary||null);
-      if(!merged||!((merged.horses||[]).length||isFinal(merged)))return cached||null;
+      if(!raceDisplayCoreReady(merged,summary||merged))return raceDisplayCoreReady(cached,cached)?cached:null;
       instantTrackDetails[String(id)]=merged;saveDetailCache(id,merged);return merged
     })
     .catch(function(){return cached||null})
@@ -3413,14 +3416,14 @@ function fetchEdgeRace(id,forceNetwork){
       row=(state.races||[]).find(function(x){return String(x&&x.id||'')===String(id)})||null,
       date=String((row&&row.date)||(cached&&cached.date)||state.date||today()),
       historical=!!(cached&&cached.date&&String(cached.date)<today());
-  if(!forceNetwork&&historical&&((cached.horses||[]).length||isFinal(cached))){instantTrackDetails[String(id)]=cached;return Promise.resolve(cached)}
+  if(!forceNetwork&&historical&&raceDisplayCoreReady(cached,row||cached)){instantTrackDetails[String(id)]=cached;return Promise.resolve(cached)}
 
   return edgeFetchJson(edgeRaceUrl(id),6500)
     .then(function(body){
       var d=body&&body.detail?body.detail:null,odds=(body&&body.odds)||[],summary=(body&&body.summary)||row||{};
       var merged=mergeRaceReflection(cached,d,odds,summary);
       if(body&&body.analysis_ready&&merged)merged.preparedMeta=Object.assign({},merged.preparedMeta||{},{diagnosisReady:true});
-      if(!merged||!((merged.horses||[]).length||isFinal(merged)))throw Error('edge detail missing');
+      if(!raceDisplayCoreReady(merged,summary||row||merged))throw Error('edge core detail incomplete');
       instantTrackDetails[String(id)]=merged;saveDetailCache(id,merged);return merged
     })
     .catch(function(){return edgeDayRaceFallback(id,date,cached)})
@@ -3946,7 +3949,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':(isFlash(x)?'結果速報':'レース詳細'))+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v321</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v324</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
@@ -4148,7 +4151,7 @@ function expectedValueRaceCandidates(circuit){
 }
 function fixedPickLoadStatus(circuit){
   var rows=(state.races||[]).filter(function(r){return r&&r.id&&String(r.circuit||'')===String(circuit)}),loaded=0;
-  rows.forEach(function(r){var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(d&&((d.horses||[]).length||isFinal(d)))loaded++});
+  rows.forEach(function(r){var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(d&&raceDisplayCoreReady(d,r||d))loaded++});
   return{expected:rows.length,loaded:loaded,complete:rows.length?loaded>=rows.length:selectedRaceLoadStatus().complete,partial:loaded>0}
 }
 function fixedPickEmpty(kind,circuit){
@@ -4842,7 +4845,7 @@ function openRace(id,keepStack,skipHistory,preservePanel){
   state.paceStage=0;
 
   var cached=instantTrackDetails[String(id)]||loadDetailCache(id);
-  var hasCached=!!(cached&&((cached.horses||[]).length||isFinal(cached)));
+  var hasCached=!!(cached&&raceDisplayCoreReady(cached,(state.races||[]).find(function(x){return String(x&&x.id||'')===String(id)})||cached));
 
   if(hasCached){
     state.raceLoading=null;
@@ -5213,7 +5216,7 @@ function load(force){
           instantTrackDetails[id]=mergeRaceReflection(old,z,null,summaryBy[id]||null)
         });
         var ids=(state.races||[]).filter(function(r){return r&&r.id}).map(function(r){return String(r.id)}),loaded=0,analysisReady=0;
-        ids.forEach(function(id){var z=instantTrackDetails[id];if(z&&((z.horses||[]).length||isFinal(z))){loaded++;if(isFinal(z)||diagnosisCurrent(z))analysisReady++}});
+        ids.forEach(function(id){var z=instantTrackDetails[id];if(z&&raceDisplayCoreReady(z,summaryBy[id]||z)){loaded++;if(isFinal(z)||diagnosisCurrent(z))analysisReady++}});
         selectedRacePreload.expectedCount=ids.length||n(body&&body.raceCount,0);
         selectedRacePreload.loadedCount=loaded;
         selectedRacePreload.fullLoaded=!!ids.length&&loaded>=ids.length;
@@ -5256,7 +5259,7 @@ MANIFEST = r'''{
   "name":"ARVEXQ",
   "short_name":"ARVEXQ",
   "description":"ARVEXQ — PACE · POSITION · VALUE",
-  "start_url":"/?pwa=1&v=321",
+  "start_url":"/?pwa=1&v=324",
   "id":"/arvexq-v175-install",
   "icons":[{"src":"/arvexq-icon-v175-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"/arvexq-icon-v175-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}],
   "scope":"/",
@@ -5265,7 +5268,7 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const RESET_TAG="arvexq-reset-v321";
+SW = r'''const RESET_TAG="arvexq-reset-v324";
 self.addEventListener("install",function(event){event.waitUntil(self.skipWaiting())});
 self.addEventListener("activate",function(event){
   event.waitUntil(caches.keys().then(function(keys){
@@ -6700,7 +6703,7 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v321-race-sync-fix", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v324-core-data-guard", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")), "jraOfficialFallback":True,
         "centralHistoryFeedConfigured":bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
@@ -6931,7 +6934,7 @@ def runtime_status():
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
     return {
-        "build":"v321","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
+        "build":"v324","engine":PREDICTION_ENGINE_VERSION,"volatilityEngine":VOLATILITY_ENGINE_VERSION,"dataRoot":str(DATA_ROOT),
         "persistentLikely":str(DATA_ROOT).startswith("/var/data") or str(DATA_ROOT).startswith("/data/"),
         "fastCardQueue":queued,"fastCardRunning":running,"collector":collector,"siteBootstrap":True,"persistentDayBundle":True,"nonBlockingBootstrap":True,"autoOdds":True,
         "racedb":RACEDB.status(),
@@ -14360,7 +14363,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v321","appVersion":"14.21-v321-race-sync-fix",
+        "build":"v324","appVersion":"14.24-v324-core-data-guard",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
@@ -14379,8 +14382,8 @@ def home():
     # by the browser; Render remains the fallback for live/manual refreshes.
     boot='<script>window.__ARVEXQ_BOOTSTRAP__=null;</script>'
     html=INDEX.replace(
-        '<script src="/app-v321.js"></script>',
-        boot+'\n<script src="/app-v321.js"></script>'
+        '<script src="/app-v324.js"></script>',
+        boot+'\n<script src="/app-v324.js"></script>'
     )
     return HTMLResponse(html, headers={
         "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
@@ -14480,8 +14483,9 @@ def pace_preview():
 
 @app.get("/version.json")
 def version_json():
-    return Response('{"build":"v321","shell":"race-sync-fix","model":"v317-consensus-rebuild"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
+    return Response('{"build":"v324","shell":"core-data-guard","model":"v317-consensus-rebuild"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
 
+@app.get("/styles-arvexq-v324.css")
 @app.get("/styles-arvexq-v321.css")
 @app.get("/styles-arvexq-v320.css")
 @app.get("/styles-arvexq-v319.css")
@@ -14502,10 +14506,12 @@ def version_json():
 @app.get("/styles-arvexq-v88.css")
 @app.get("/styles-v86.css")
 def styles(request: Request):
-    current=request.url.path=="/styles-arvexq-v321.css"
+    current=request.url.path=="/styles-arvexq-v324.css"
     cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
     return Response(CSS, media_type="text/css", headers={"Cache-Control":cache})
 
+@app.get("/app-v324.js")
+@app.get("/arvexq-app-v324.js")
 @app.get("/app-v321.js")
 @app.get("/arvexq-app-v321.js")
 @app.get("/app-v320.js")
@@ -14545,7 +14551,7 @@ def styles(request: Request):
 @app.get("/app-v87.js")
 @app.get("/app-v86-fix1.js")
 def appjs(request: Request):
-    current=request.url.path in {"/app-v321.js","/arvexq-app-v321.js"}
+    current=request.url.path in {"/app-v324.js","/arvexq-app-v324.js"}
     cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":cache})
 
@@ -14557,6 +14563,7 @@ def appjs(request: Request):
 def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
 
+@app.get("/sw-v324-reset.js")
 @app.get("/sw-v321-reset.js")
 @app.get("/sw-v320-reset.js")
 @app.get("/sw-v319-reset.js")
