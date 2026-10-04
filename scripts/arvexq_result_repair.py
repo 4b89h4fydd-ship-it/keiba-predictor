@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """ARVEXQ result repair lane.
 
-Repairs every started race whose result or payout is incomplete.  It is designed
-for GitHub Actions and deliberately does not rebuild diagnosis/history.  Rich
+Repairs every started race whose result or payout is incomplete. It is designed
+for GitHub Actions and deliberately does not rebuild diagnosis/history. Rich
 race-detail payloads are preserved while only authoritative live/result fields
 are upgraded.
 """
@@ -13,11 +13,16 @@ import argparse
 import copy
 import json
 import os
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import app
 
@@ -81,7 +86,6 @@ def _merge_detail(old: dict[str, Any] | None, new: dict[str, Any] | None) -> dic
         if value not in (None, "", [], {}):
             out[key] = copy.deepcopy(value)
 
-    # Live result/environment fields are authoritative when present.
     if isinstance(new.get("result"), dict) and new.get("result"):
         result = copy.deepcopy(old.get("result") or {})
         for key, value in new["result"].items():
@@ -89,7 +93,6 @@ def _merge_detail(old: dict[str, Any] | None, new: dict[str, Any] | None) -> dic
                 result[key] = copy.deepcopy(value)
         out["result"] = result
 
-    # Never erase the prepared horse card/analysis while repairing a result.
     if old.get("horses"):
         out["horses"] = copy.deepcopy(old["horses"])
     if old.get("preparedMeta"):
@@ -114,7 +117,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     started_ids = [str(r["id"]) for r in rows if _started(r, now_minutes)]
     pending = []
     for rid in started_ids:
-        result_ok, payout_ok, status = _result_state(by_id.get(rid))
+        result_ok, payout_ok, _ = _result_state(by_id.get(rid))
         if not result_ok or not payout_ok:
             pending.append(rid)
 
