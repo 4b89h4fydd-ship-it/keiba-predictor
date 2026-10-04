@@ -1,0 +1,124 @@
+name: ARVEXQ Refactor Check
+
+"on":
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/arvexq-live-results-prefetch
+    paths:
+      - app.py
+      - build_static.py
+      - scripts/**
+      - .github/workflows/arvexq-*.yml
+
+concurrency:
+  group: arvexq-refactor-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check --no-input -r requirements.txt
+
+      - name: Python syntax
+        run: |
+          python -m py_compile app.py build_static.py \
+            scripts/arvexq_prefetch.py \
+            scripts/arvexq_live_sync.py \
+            scripts/arvexq_result_repair.py
+
+      - name: Static PWA build
+        run: python build_static.py
+
+      - name: Verify generated current assets
+        run: |
+          test -f dist/index.html
+          test -f dist/version.json
+          test -f dist/sw.js
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          version=json.loads(Path('dist/version.json').read_text(encoding='utf-8'))['build']
+          html=Path('dist/index.html').read_text(encoding='utf-8')
+          files={p.name for p in Path('dist').iterdir() if p.is_file()}
+          expected={f'app-{version}.js',f'arvexq-app-{version}.js',f'styles-arvexq-{version}.css'}
+          missing=sorted(expected-files)
+          print('build=',version,'missing=',missing)
+          if missing:
+              raise SystemExit('missing current assets: '+','.join(missing))
+          for name in expected:
+              if name not in html and name.startswith(('app-','styles-')):
+                  print('note: asset reference may be injected through source shell:',name)
+          PY
+
+      - name: Architecture guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          live=Path('.github/workflows/arvexq-sync.yml').read_text(encoding='utf-8')
+          script=Path('scripts/arvexq_live_sync.py').read_text(encoding='utf-8')
+          forbidden=[
+              '_prepare_race_snapshot(',
+              '_hydrate_fast_card_now(',
+              'result_targets = [rid for _, rid in sorted(result_targets, reverse=True)[:24]]',
+          ]
+          bad=[x for x in forbidden if x in live or x in script]
+          if bad:
+              raise SystemExit('live lane contains heavy/legacy path: '+repr(bad))
+          required=['arvexq_live_sync.py','ARVEXQ_DATA_CORE: "0"','cancel-in-progress: true']
+          missing=[x for x in required if x not in live]
+          if missing:
+              raise SystemExit('live workflow guard missing: '+repr(missing))
+          print('architecture guard OK')
+          PY
+
+      - name: Import pipeline modules without running them
+        env:
+          ARVEXQ_DATA_CORE: "0"
+          ARVEXQ_BOOTSTRAP_WARM: "0"
+          RACEDB_AUTO_UPDATE: "0"
+        run: |
+          python - <<'PY'
+          import importlib.util
+          from pathlib import Path
+
+          for path in [
+              Path('scripts/arvexq_prefetch.py'),
+              Path('scripts/arvexq_live_sync.py'),
+              Path('scripts/arvexq_result_repair.py'),
+          ]:
+              spec=importlib.util.spec_from_file_location(path.stem,path)
+              mod=importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(mod)
+              print('import OK',path)
+          PY
+
+      - name: Validate workflow YAML files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          try:
+              import yaml
+          except Exception:
+              raise SystemExit('PyYAML unavailable after requirements install')
+          for path in Path('.github/workflows').glob('arvexq-*.yml'):
+              yaml.safe_load(path.read_text(encoding='utf-8'))
+              print('yaml OK',path)
+          PY
