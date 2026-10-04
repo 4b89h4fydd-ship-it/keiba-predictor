@@ -4,8 +4,8 @@
 
 FULL PREFETCH owns stable card/analysis data. RESULT REPAIR owns long-tail
 result misses. LIVE SYNC reads the rich D1 detail as its merge base and changes
-only volatile fields, so a stale/thin local cache can never erase a prepared
-race card.
+volatile fields only. Prediction is recomputed only before post time and only
+when an analysis-relevant live input (body weight/scratch/weather/going) changed.
 """
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import app
+from arvexq.pipeline.fingerprints import analysis_input_hash
 
 JST = timezone(timedelta(hours=9))
 D1_BASE = os.getenv("CLOUDFLARE_API_BASE", "https://kraiz-api.4b89h4fydd.workers.dev").rstrip("/")
@@ -34,6 +35,10 @@ TERMINAL = {"中止", "取止", "取消", "不成立"}
 LIVE_HORSE_FIELDS = (
     "winOdds", "popularity", "bodyWeight", "bodyWeightChange",
     "status", "scratched", "oddsSource", "oddsForecast",
+)
+ANALYSIS_FIELDS = (
+    "preparedMeta", "preRacePrediction", "predictionAudit", "aiEvaluation",
+    "analysisMode", "pace", "pacePrediction", "volatility",
 )
 
 
@@ -82,7 +87,6 @@ def snapshot(rid: str) -> dict[str, Any] | None:
 
 
 def fetch_d1_detail(rid: str) -> dict[str, Any] | None:
-    """Get the authoritative prepared payload used as the non-destructive base."""
     url = f"{D1_BASE}/api/race/{urllib.parse.quote(rid, safe='')}?t={int(time.time())}"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "ARVEXQ-LiveSync/1"})
@@ -110,7 +114,6 @@ def _merge_horses(base: list[Any], fresh: list[Any]) -> list[dict[str, Any]]:
             continue
         row = by_no.get(no)
         if row is None:
-            # Only use a new runner when there is no prepared runner with that number.
             row = {"horseNumber": no}
             for key in ("frameNumber", "name"):
                 if raw.get(key) not in (None, ""):
@@ -130,7 +133,6 @@ def _merge_result(old: Any, new: Any) -> dict[str, Any]:
         return old_r
     old_final = str(old_r.get("status") or "") == "確定" and bool(old_r.get("finishers"))
     new_final = str(new_r.get("status") or "") == "確定" and bool(new_r.get("finishers"))
-    # Never downgrade a final result to a sparse/flash response.
     if old_final and not new_final:
         return old_r
     out = old_r
@@ -140,8 +142,12 @@ def _merge_result(old: Any, new: Any) -> dict[str, Any]:
     return out
 
 
-def merge_live(base: dict[str, Any] | None, fresh: dict[str, Any] | None, market: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Overlay volatile source data on a rich prepared payload without degrading it."""
+def merge_live(
+    base: dict[str, Any] | None,
+    fresh: dict[str, Any] | None,
+    market: dict[str, Any] | None,
+    prefer_fresh_analysis: bool = False,
+) -> dict[str, Any] | None:
     if not isinstance(base, dict):
         base = {}
     if not isinstance(fresh, dict):
@@ -171,13 +177,12 @@ def merge_live(base: dict[str, Any] | None, fresh: dict[str, Any] | None, market
     if fresh.get("result"):
         out["result"] = _merge_result(out.get("result"), fresh.get("result"))
 
-    # Stable/pre-race fields always come from the prepared base when one exists.
     if base:
-        for key in (
-            "preparedMeta", "preRacePrediction", "predictionAudit", "aiEvaluation",
-            "analysisMode", "pace", "pacePrediction", "volatility",
-        ):
-            if key in base:
+        source = fresh if prefer_fresh_analysis else base
+        for key in ANALYSIS_FIELDS:
+            if key in source:
+                out[key] = copy.deepcopy(source[key])
+            elif key in base:
                 out[key] = copy.deepcopy(base[key])
 
     pm = dict(out.get("preparedMeta") or {})
@@ -265,11 +270,50 @@ def choose_targets(rows: list[dict[str, Any]], now_min: int) -> list[str]:
     return ids
 
 
-def refresh_one(rid: str, now_min: int, row_by_id: dict[str, dict[str, Any]], bundled_detail: dict[str, Any] | None) -> tuple[str, dict[str, Any] | None, str, bool]:
+def seed_prepared_base(rid: str, detail: dict[str, Any] | None) -> None:
+    if not isinstance(detail, dict) or not detail.get("id"):
+        return
+    try:
+        app._store_fast_snapshot(copy.deepcopy(detail))
+    except Exception as exc:
+        print("LIVE_BASE_SEED_ERROR", rid, type(exc).__name__, exc)
+
+
+def refresh_environment(rows: list[dict[str, Any]], target_ids: set[str]) -> dict[str, dict[str, Any]]:
+    groups: dict[tuple[str, str, str], None] = {}
+    for row in rows:
+        rid = str(row.get("id") or "")
+        if rid not in target_ids:
+            continue
+        date = str(row.get("date") or "")
+        circuit = str(row.get("circuit") or "")
+        track = str(row.get("track") or "")
+        if date and circuit and track:
+            groups[(date, circuit, track)] = None
+
+    states: dict[str, dict[str, Any]] = {}
+    for date, circuit, track in groups:
+        key = f"{date}|{circuit}|{track}"
+        try:
+            state = app._refresh_track_environment(date, circuit, track, True)
+            states[key] = state if isinstance(state, dict) else {}
+        except Exception as exc:
+            states[key] = {"error": f"{type(exc).__name__}: {exc}", "changed": 0}
+            print("LIVE_ENV_ERROR", key, states[key]["error"])
+    return states
+
+
+def refresh_one(
+    rid: str,
+    now_min: int,
+    row_by_id: dict[str, dict[str, Any]],
+    base: dict[str, Any] | None,
+) -> tuple[str, dict[str, Any] | None, str, bool, bool]:
     errors: list[str] = []
     row = row_by_id.get(rid) or {}
     sm = start_min(row)
-    base = bundled_detail or fetch_d1_detail(rid)
+    pre_market = snapshot(rid) or base
+    pre_market_hash = analysis_input_hash(pre_market) if isinstance(pre_market, dict) else ""
 
     market: dict[str, Any] | None = None
     try:
@@ -278,8 +322,24 @@ def refresh_one(rid: str, now_min: int, row_by_id: dict[str, dict[str, Any]], bu
     except Exception as exc:
         errors.append("market:" + str(exc))
 
-    fresh = snapshot(rid)
-    reference = merge_live(base, fresh, market) or base or fresh
+    fresh = snapshot(rid) or pre_market
+    candidate = merge_live(base, fresh, market, False)
+    candidate_hash = analysis_input_hash(candidate) if isinstance(candidate, dict) else ""
+    pre_post = sm < 9999 and now_min < sm
+    market_analysis_changed = bool(pre_post and pre_market_hash and candidate_hash and pre_market_hash != candidate_hash)
+
+    # Environment updater already rebuilds diagnoses for changed weather/going.
+    base_hash = analysis_input_hash(base) if isinstance(base, dict) else ""
+    env_analysis_changed = bool(pre_post and base_hash and pre_market_hash and base_hash != pre_market_hash)
+
+    if market_analysis_changed:
+        try:
+            app._build_fast_diagnosis_snapshot(rid, allow_network=False, deep_context=False)
+            fresh = snapshot(rid) or fresh
+        except Exception as exc:
+            errors.append("analysis:" + str(exc))
+
+    reference = merge_live(base, fresh, market, env_analysis_changed or market_analysis_changed) or base or fresh
     if sm < 9999 and now_min >= sm + 2 and not terminal(reference):
         try:
             result_detail = app._refresh_result_fast(rid)
@@ -288,8 +348,14 @@ def refresh_one(rid: str, now_min: int, row_by_id: dict[str, dict[str, Any]], bu
         except Exception as exc:
             errors.append("result:" + str(exc))
 
-    merged = merge_live(base, fresh or snapshot(rid), market)
-    return rid, merged, "; ".join(errors), bool(base)
+    analysis_changed = bool(env_analysis_changed or market_analysis_changed)
+    merged = merge_live(base, fresh or snapshot(rid), market, analysis_changed)
+    if merged and analysis_changed and pre_post:
+        pm = dict(merged.get("preparedMeta") or {})
+        pm["analysisInputHash"] = analysis_input_hash(merged)
+        pm["analysisInputChangedAtEpoch"] = int(time.time())
+        merged["preparedMeta"] = pm
+    return rid, merged, "; ".join(errors), bool(base), analysis_changed
 
 
 def main() -> int:
@@ -315,28 +381,51 @@ def main() -> int:
     row_by_id = {str(r["id"]): r for r in rows}
     targets = choose_targets(rows, now_min)
 
+    base_by_id: dict[str, dict[str, Any]] = dict(bundled_by_id)
+    missing_for_d1 = [rid for rid in targets if rid not in base_by_id]
+    if missing_for_d1:
+        with ThreadPoolExecutor(max_workers=min(8, len(missing_for_d1))) as ex:
+            futures = {ex.submit(fetch_d1_detail, rid): rid for rid in missing_for_d1}
+            for fut in as_completed(futures):
+                rid = futures[fut]
+                try:
+                    detail = fut.result()
+                except Exception:
+                    detail = None
+                if detail:
+                    base_by_id[rid] = detail
+
+    # Seed the rich D1 payload into local RaceDB before any live collector runs.
+    for rid in targets:
+        seed_prepared_base(rid, base_by_id.get(rid))
+
+    environment = refresh_environment(rows, set(targets))
+
     details: list[dict[str, Any]] = []
     odds_current: list[dict[str, Any]] = []
     errors: dict[str, str] = {}
     refreshed: dict[str, dict[str, Any]] = {}
     skipped_thin: list[str] = []
     missing_base: list[str] = []
+    reanalyzed: list[str] = []
 
     with ThreadPoolExecutor(max_workers=max(1, min(args.workers, 12))) as ex:
         futs = {
-            ex.submit(refresh_one, rid, now_min, row_by_id, bundled_by_id.get(rid)): rid
+            ex.submit(refresh_one, rid, now_min, row_by_id, base_by_id.get(rid)): rid
             for rid in targets
         }
         for fut in as_completed(futs):
             rid = futs[fut]
             try:
-                rid, d, err, had_base = fut.result()
+                rid, d, err, had_base, analysis_changed = fut.result()
             except Exception as exc:
-                d, err, had_base = None, str(exc), False
+                d, err, had_base, analysis_changed = None, str(exc), False, False
             if err:
                 errors[rid] = err
             if not had_base:
                 missing_base.append(rid)
+            if analysis_changed:
+                reanalyzed.append(rid)
             if isinstance(d, dict) and d.get("id"):
                 refreshed[rid] = d
                 odds_current.extend(horse_live_rows(d))
@@ -351,7 +440,7 @@ def main() -> int:
         "details": details,
         "odds_current": odds_current,
         "meta": {
-            "source": "github-actions-live-delta-v3-d1-base",
+            "source": "github-actions-live-delta-v4-d1-hash",
             "sync_date": bundle.get("date") or now.strftime("%Y-%m-%d"),
             "live_delta": True,
             "full_card_lane": False,
@@ -359,6 +448,8 @@ def main() -> int:
             "detail_update_count": len(details),
             "thin_detail_skipped_count": len(skipped_thin),
             "missing_d1_base_count": len(missing_base),
+            "reanalyzed_count": len(reanalyzed),
+            "environment_track_count": len(environment),
             "odds_row_count": len(odds_current),
             "error_count": len(errors),
             "live_updated_at": int(time.time()),
@@ -368,6 +459,8 @@ def main() -> int:
         "date": payload["meta"]["sync_date"],
         "targets": targets,
         "updated": sorted(refreshed),
+        "reanalyzed": sorted(reanalyzed),
+        "environment": environment,
         "thin_detail_skipped": sorted(skipped_thin),
         "missing_d1_base": sorted(missing_base),
         "errors": errors,
@@ -380,6 +473,7 @@ def main() -> int:
         "LIVE SYNC",
         "targets=", len(targets),
         "details=", len(details),
+        "reanalyzed=", len(reanalyzed),
         "thinSkipped=", len(skipped_thin),
         "missingD1Base=", len(missing_base),
         "oddsRows=", len(odds_current),
