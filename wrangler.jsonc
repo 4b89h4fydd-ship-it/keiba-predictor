@@ -1,11 +1,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+
+  // Legacy production resource name. Keep until a planned endpoint migration.
   "name": "kraiz-api",
   "main": "worker.js",
   "compatibility_date": "2026-09-28",
+
   "d1_databases": [
     {
       "binding": "DB",
+      // Legacy production D1 name. Do not rename without a data migration.
       "database_name": "kraiz-prod",
       "database_id": "c68ca1ac-357a-4c1f-81ce-0b6337716809"
     }
