@@ -5,7 +5,7 @@ from typing import Any, Iterable
 
 from arvexq.core.runner_status import is_inactive_runner
 
-MODEL_VERSION = "arvexq-four-pillar-consensus-v1"
+MODEL_VERSION = "arvexq-four-pillar-consensus-v2"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
 
 
@@ -24,6 +24,10 @@ def _unit(value: Any) -> float | None:
     if x > 1.5:
         x /= 100.0
     return max(0.0, min(1.0, x))
+
+
+def _first(*values: float | None) -> float | None:
+    return next((v for v in values if v is not None), None)
 
 
 def _runs(horse: dict[str, Any]) -> list[dict[str, Any]]:
@@ -56,11 +60,6 @@ def _mean(values: Iterable[float | None]) -> float | None:
     return sum(vals) / len(vals) if vals else None
 
 
-def _max(values: Iterable[float | None]) -> float | None:
-    vals = [float(v) for v in values if v is not None]
-    return max(vals) if vals else None
-
-
 def _component(horse: dict[str, Any], *names: str) -> float | None:
     evaluation = horse.get("integratedEvaluation") or {}
     components = evaluation.get("components") if isinstance(evaluation.get("components"), dict) else {}
@@ -85,12 +84,12 @@ def _research(horse: dict[str, Any]) -> dict[str, Any]:
 
 
 def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, float | None]:
-    """Collect pre-race evidence without assigning arbitrary factor percentages.
+    """Collect only pre-race evidence; do not invent factor percentages.
 
-    The four primary pillars are ability, record, suitability and pace. Pedigree,
-    weather response, bias/draw, body weight, condition changes and connections are
-    collected as support signals. Missing evidence stays missing; it is never replaced
-    with an invented neutral performance.
+    Primary: ability / record / suitability / pace.
+    Support: pedigree, weather/going response, same-day bias, draw, body weight,
+    condition change, freshness/weight context when already measured, and connections.
+    Missing data remains missing instead of being converted into a fake neutral score.
     """
     runs = _runs(horse)
     qualities = [_finish_quality(r) for r in runs]
@@ -101,23 +100,30 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
 
     wins = top3 = completed = 0
     levels: list[float] = []
+    prizes: list[float] = []
     for run in runs:
         finish = _f(run.get("finish", run.get("finishPosition", run.get("rank"))))
         if finish is not None and finish > 0:
             completed += 1
             wins += int(finish == 1)
             top3 += int(finish <= 3)
-        level = _f(run.get("opponentLevel", run.get("levelScore", run.get("racePrize1"))))
+        level = _f(run.get("opponentLevel", run.get("levelScore")))
         if level is not None and level > 0:
             levels.append(level)
+        prize = _f(run.get("racePrize1"))
+        if prize is not None and prize > 0:
+            prizes.append(prize)
 
     target_distance = _f(race.get("distance"))
     target_track = str(race.get("track") or "")
     target_condition = str(race.get("condition") or race.get("going") or "")
+    target_surface = str(race.get("surface") or "")
+    current_prize = _f(race.get("racePrize1"))
 
     same_distance: list[float] = []
     same_track: list[float] = []
     same_condition: list[float] = []
+    same_surface: list[float] = []
     for run, quality in zip(runs, qualities):
         if quality is None:
             continue
@@ -129,54 +135,72 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
         run_condition = str(run.get("condition") or run.get("going") or "")
         if target_condition and run_condition == target_condition:
             same_condition.append(quality)
+        if target_surface and str(run.get("surface") or "") == target_surface:
+            same_surface.append(quality)
 
     audit = _audit(horse)
     research = _research(horse)
     evaluation = horse.get("integratedEvaluation") or {}
+    class_edge = None
+    if current_prize and current_prize > 0 and prizes:
+        class_edge = (sum(prizes) / len(prizes)) / current_prize
 
     return {
-        # 能力: raw speed / peak output / sectional / TRUE RUN.
+        # 能力: speed, peak output, sectional, TRUE RUN, pure-ability diagnostics.
         "ability_speed_peak": max(valid_speeds) if valid_speeds else None,
         "ability_speed_median": median(valid_speeds) if valid_speeds else None,
         "ability_peak_finish": max(valid_q) if valid_q else None,
-        "ability_sectional": _unit(audit.get("sectional")) or _component(horse, "lapScore"),
+        "ability_sectional": _first(_unit(audit.get("sectional")), _component(horse, "lapScore")),
         "ability_true_run": _unit(audit.get("trueRun")),
         "ability_pure": _unit(audit.get("pure")),
+        "ability_research": _unit(research.get("ability")),
 
-        # 実績: career/recent results, wins/top3, class/opponent level, representative run.
+        # 実績: career/recent results, win/top3 record, opponent/class level, representative run.
         "record_career": _mean(valid_q),
         "record_recent": _mean(recent_q),
         "record_win_rate": wins / completed if completed else None,
         "record_top3_rate": top3 / completed if completed else None,
         "record_level": _mean(levels),
+        "record_class_edge": class_edge,
         "record_representative": _component(horse, "representative"),
         "record_race_performance": _component(horse, "racePerformance"),
+        "record_class_research": _unit(research.get("classLevel")),
+        "record_form_research": _unit(research.get("form")),
 
-        # 適性: distance/course/going evidence from actual past performance + stored fits.
+        # 適性: actual same-condition results plus modelled distance/course/going/surface fit.
         "suit_distance_history": _mean(same_distance),
         "suit_track_history": _mean(same_track),
         "suit_going_history": _mean(same_condition),
+        "suit_surface_history": _mean(same_surface),
         "suit_distance_model": _component(horse, "distanceFit"),
         "suit_track_model": _component(horse, "courseFit", "trackFit"),
         "suit_going_model": _component(horse, "goingFit", "conditionFit"),
+        "suit_surface_model": _component(horse, "surfaceSuitabilityScore"),
+        "suit_research": _unit(research.get("suitability")),
 
-        # 展開: scenario/pace diagnostics. No odds or post-race result is used.
+        # 展開: projected scenario, repeatability and same-day track-speed compatibility.
         "pace_scenario": _unit(audit.get("positionScenario")),
         "pace_state": _unit(audit.get("stateConsistency")),
         "pace_research": _unit(research.get("pace")),
         "pace_track_speed_fit": _unit(audit.get("trackSpeedFit")),
+        "pace_hidden_effort": _unit(audit.get("hiddenEffort")),
 
-        # 補助: pedigree/weather/bias/draw/body/condition change/connections.
+        # 補助: bloodline / weather / bias / draw / body / changes / rider-trainer context.
         "support_pedigree": _component(horse, "pedigreeScore"),
         "support_pedigree_distance": _component(horse, "distanceSuitabilityScore"),
         "support_pedigree_surface": _component(horse, "surfaceSuitabilityScore"),
         "support_weather": _component(horse, "weatherFit", "weatherScore"),
         "support_draw": _component(horse, "drawScore"),
         "support_body": _component(horse, "bodyWeightScore"),
+        "support_body_change": _component(horse, "bodyWeightChangeScore", "weightChangeScore"),
+        "support_carried_weight": _component(horse, "carriedWeightScore", "weightReliefScore"),
         "support_condition_change": _component(horse, "conditionChangeScore"),
+        "support_freshness": _component(horse, "freshnessScore", "restSuitabilityScore"),
+        "support_age_sex": _component(horse, "ageSexScore"),
         "support_jockey": _component(horse, "jockeyScore", "jockeyResults"),
         "support_trainer": _component(horse, "trainerScore", "trainerResults"),
         "support_bias": _f(evaluation.get("sameDayMarkAdjustment")),
+        "support_bias_model": _component(horse, "biasScore", "trackBiasScore"),
         "support_connections": _unit(research.get("connections")),
         "support_pedigree_research": _unit(research.get("pedigree")),
         "sample": float(len(runs)),
@@ -226,10 +250,10 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
         return []
 
     metric_names = sorted({k for row in rows for k in row["raw"] if k != "sample"})
-    relative_by_metric: dict[str, list[float | None]] = {}
-    for metric in metric_names:
-        relative_by_metric[metric] = _relative([row["raw"].get(metric) for row in rows])
-
+    relative_by_metric = {
+        metric: _relative([row["raw"].get(metric) for row in rows])
+        for metric in metric_names
+    }
     groups = {
         "ability": [m for m in metric_names if m.startswith("ability_")],
         "record": [m for m in metric_names if m.startswith("record_")],
@@ -261,9 +285,9 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
         row["pairwiseTies"] = 0
         row["supportTieBreakWins"] = 0
 
-    # Primary pillars decide every head-to-head comparison. Support factors are allowed
-    # to decide only a 2-2/insufficient-evidence tie, so they can influence close calls
-    # without overruling clear ability/record/suitability/pace superiority.
+    # Head-to-head: the four primary pillars vote. Support only resolves a primary tie.
+    # This is deliberate: pedigree/weather/bias can move a close race, but cannot erase
+    # a clear superiority in ability, record, suitability and pace.
     for i in range(len(rows)):
         for j in range(i + 1, len(rows)):
             a, b = rows[i], rows[j]
