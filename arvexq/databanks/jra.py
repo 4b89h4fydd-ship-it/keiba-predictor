@@ -8,24 +8,32 @@ from .registry import DataSource, SourceCapabilities
 
 def build_jra_source(
     *,
-    racecard: Callable[..., Any] | None = None,
+    schedule: Callable[..., Any] | None = None,
+    race_detail: Callable[..., Any] | None = None,
     horse_history: Callable[..., Any] | None = None,
     odds: Callable[..., Any] | None = None,
     results: Callable[..., Any] | None = None,
+    payouts: Callable[..., Any] | None = None,
     track_weather: Callable[..., Any] | None = None,
+    body_weight: Callable[..., Any] | None = None,
+    scratches: Callable[..., Any] | None = None,
     jockey_trainer: Callable[..., Any] | None = None,
 ) -> DataSource:
     fetchers = {
-        k: v
-        for k, v in {
-            "racecard": racecard,
+        key: value
+        for key, value in {
+            "schedule": schedule,
+            "race_detail": race_detail,
             "horse_history": horse_history,
             "odds": odds,
             "results": results,
+            "payouts": payouts,
             "track_weather": track_weather,
+            "body_weight": body_weight,
+            "scratches": scratches,
             "jockey_trainer": jockey_trainer,
         }.items()
-        if v is not None
+        if value is not None
     }
     return DataSource(
         name="jra_official",
