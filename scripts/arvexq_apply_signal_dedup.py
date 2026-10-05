@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Idempotent v4 patcher; touching this file also validates the generated main head.
 from pathlib import Path
 
 PATH = Path('arvexq/prediction/factor_model.py')
