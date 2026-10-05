@@ -67,6 +67,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             "pillarScores": row["pillarScores"],
             "pillarRanks": row["pillarRanks"],
             "evidenceCounts": row["evidenceCounts"],
+            "evidenceFamilyCounts": row.get("evidenceFamilyCounts", {}),
             "metricRelative": row["metricRelative"],
             "rawMetrics": row["raw"],
             "sample": row["sample"],
