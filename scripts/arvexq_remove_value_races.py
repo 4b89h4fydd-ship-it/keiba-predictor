@@ -57,7 +57,8 @@ PATH.write_text(text, encoding="utf-8")
 print("expected-value race category removed")
 
 # Keep selection policy enforced after every generated UI pass. True selections
-# use hit-first ticket choice; they are not forced into trifecta.
+# use hit-first ticket choice and now require multi-head agreement; they are not
+# forced into trifecta.
 policy = Path("scripts/arvexq_enforce_selection_policy.py")
 if policy.exists():
     runpy.run_path(str(policy), run_name="__main__")
