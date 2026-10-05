@@ -5,6 +5,7 @@ on:
     branches: [cloudflare]
     paths:
       - worker.js
+      - worker-entry.js
       - wrangler.jsonc
       - package.json
       - .github/workflows/arvexq-cloudflare-validation.yml
