@@ -6,6 +6,7 @@ on:
     paths:
       - 'scripts/arvexq_patch_app.py'
       - 'scripts/arvexq_extract_ui.py'
+      - 'scripts/arvexq_extract_backend.py'
       - 'scripts/arvexq_patch_build_static.py'
       - 'build_static.py'
       - 'arvexq/**/*.py'
@@ -54,22 +55,25 @@ jobs:
           PY
       - name: Patch app boundary
         run: python scripts/arvexq_patch_app.py
+      - name: Extract backend role blocks
+        run: python scripts/arvexq_extract_backend.py
       - name: Extract embedded UI and images
         run: python scripts/arvexq_extract_ui.py
       - name: Patch static builder for extracted assets
         run: python scripts/arvexq_patch_build_static.py
       - name: Compile check
         run: |
-          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py
+          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py
           python -m compileall -q arvexq
       - name: Commit modularization
         run: |
-          if git diff --quiet -- app.py build_static.py arvexq/ui/static; then
+          TARGETS="app.py build_static.py arvexq/ui/static arvexq/infra/legacy_stores.py arvexq/infra/race_stores.py arvexq/domain/legacy_evaluation.py"
+          if [ -z "$(git status --porcelain -- $TARGETS)" ]; then
             echo 'No generated modularization changes needed'
             exit 0
           fi
           git config user.name 'arvexq-bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add app.py build_static.py arvexq/ui/static
-          git commit -m 'refactor: keep modular UI static build working'
+          git add $TARGETS
+          git commit -m 'refactor: split legacy backend roles out of app'
           git push
