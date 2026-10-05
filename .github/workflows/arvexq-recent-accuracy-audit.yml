@@ -1,0 +1,32 @@
+name: ARVEXQ Recent Accuracy Audit
+
+"on":
+  push:
+    branches: [research/recent-accuracy-20261005]
+    paths:
+      - scripts/arvexq_recent_accuracy_audit.py
+      - .github/workflows/arvexq-recent-accuracy-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile
+        run: python -m py_compile scripts/arvexq_recent_accuracy_audit.py
+      - name: Audit recent production predictions
+        run: python scripts/arvexq_recent_accuracy_audit.py --days 14 --out recent-accuracy.json
+      - name: Upload audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: recent-accuracy
+          path: recent-accuracy.json
+          retention-days: 7
