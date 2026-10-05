@@ -12,6 +12,7 @@ name: ARVEXQ Full Prefetch
     paths:
       - app.py
       - scripts/arvexq_prefetch.py
+      - scripts/arvexq_sqlite_health.py
       - arvexq/pipeline/fingerprints.py
       - .github/workflows/arvexq-prefetch.yml
   schedule:
@@ -81,13 +82,12 @@ jobs:
             arvexq-data-${{ runner.os }}-${{ env.TARGET_DATE }}-
             arvexq-data-${{ runner.os }}-
 
-      - name: Normalize ARVEXQ cache permissions
+      - name: Validate restored SQLite cache
         run: |
           mkdir -p .arvexq-data
           chmod -R u+rwX .arvexq-data || true
-          # WAL/SHM are process-local transient files. Never restore stale ones
-          # into a fresh runner because they can make SQLite appear read-only/locked.
-          find .arvexq-data -type f \( -name '*-wal' -o -name '*-shm' \) -delete || true
+          python -m py_compile scripts/arvexq_sqlite_health.py
+          python scripts/arvexq_sqlite_health.py --root "$KEIBA_DATA_DIR"
           test -w .arvexq-data
 
       - name: Start ARVEXQ locally
@@ -184,6 +184,11 @@ jobs:
           if [ -f /tmp/arvexq-prefetch.pid ]; then
             kill "$(cat /tmp/arvexq-prefetch.pid)" 2>/dev/null || true
           fi
+
+      - name: Recheck SQLite cache before save
+        if: always()
+        run: |
+          python scripts/arvexq_sqlite_health.py --root "$KEIBA_DATA_DIR" || true
 
       - name: Save ARVEXQ data cache
         if: always()
