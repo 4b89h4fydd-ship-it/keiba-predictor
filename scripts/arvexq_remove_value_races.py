@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import runpy
 
 PATH = Path("arvexq/ui/static/app.js")
 text = PATH.read_text(encoding="utf-8")
@@ -54,4 +55,8 @@ for forbidden in (
 
 PATH.write_text(text, encoding="utf-8")
 print("expected-value race category removed")
-# Kept idempotent so every generated UI build stays free of this category.
+
+# Keep selection policy enforced after every generated UI pass.
+policy = Path("scripts/arvexq_enforce_selection_policy.py")
+if policy.exists():
+    runpy.run_path(str(policy), run_name="__main__")
