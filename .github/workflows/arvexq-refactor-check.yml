@@ -6,6 +6,7 @@ name: ARVEXQ Refactor Check
     branches:
       - fix/arvexq-live-results-prefetch
       - fix/arvexq-prefetch-analysis-v2
+      - fix/arvexq-prefetch-db-health
     paths:
       - app.py
       - build_static.py
@@ -44,7 +45,8 @@ jobs:
             scripts/arvexq_prefetch.py \
             scripts/arvexq_live_sync.py \
             scripts/arvexq_result_repair.py \
-            scripts/arvexq_history_repair.py
+            scripts/arvexq_history_repair.py \
+            scripts/arvexq_sqlite_health.py
 
       - name: Static PWA build and version guard
         run: |
@@ -72,6 +74,7 @@ jobs:
           repair=Path('scripts/arvexq_result_repair.py').read_text(encoding='utf-8')
           prefetch=Path('scripts/arvexq_prefetch.py').read_text(encoding='utf-8')
           prefetch_workflow=Path('.github/workflows/arvexq-prefetch.yml').read_text(encoding='utf-8')
+          sqlite_health=Path('scripts/arvexq_sqlite_health.py').read_text(encoding='utf-8')
           forbidden=['_prepare_race_snapshot(','_hydrate_fast_card_now(','result_targets = [rid for _, rid in sorted(result_targets, reverse=True)[:24]]']
           bad=[x for x in forbidden if x in live or x in live_script]
           if bad:raise SystemExit('live lane contains heavy/legacy path: '+repr(bad))
@@ -82,9 +85,12 @@ jobs:
           prefetch_required=['_build_fast_diagnosis_snapshot(','allow_network=True','deep_context=True','_merge_detail(','memory-authoritative']
           missing=[x for x in prefetch_required if x not in prefetch]
           if missing:raise SystemExit('prefetch must explicitly materialize and retain diagnosis: '+repr(missing))
-          workflow_required=['missing_analysis_count','analysisCount','D1 is missing prepared analysis','ARVEXQ_PREFETCH_WORKERS: "1"','ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "1"','Normalize ARVEXQ cache permissions']
+          workflow_required=['missing_analysis_count','analysisCount','D1 is missing prepared analysis','ARVEXQ_PREFETCH_WORKERS: "1"','ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "1"','Validate restored SQLite cache','arvexq_sqlite_health.py']
           missing=[x for x in workflow_required if x not in prefetch_workflow]
           if missing:raise SystemExit('prefetch workflow correctness guard missing: '+repr(missing))
+          sqlite_required=['PRAGMA quick_check','SQLITE_CACHE_BAD','*-wal','*-shm']
+          missing=[x for x in sqlite_required if x not in sqlite_health]
+          if missing:raise SystemExit('sqlite health guard missing: '+repr(missing))
           print('architecture guard OK')
           PY
 
@@ -92,12 +98,16 @@ jobs:
         run: |
           python - <<'PY'
           import copy
+          import sqlite3
+          import tempfile
+          from pathlib import Path
           from datetime import datetime, timezone, timedelta
           from arvexq.pipeline.fingerprints import analysis_input_hash
           import scripts.arvexq_live_sync as live
           import scripts.arvexq_result_repair as repair
           import scripts.arvexq_prefetch as prefetch
           import scripts.arvexq_history_repair as history
+          import scripts.arvexq_sqlite_health as sqlite_health
 
           base={
             'id':'nar-2026-10-04-園田-01','date':'2026-10-04','track':'園田','circuit':'地方',
@@ -132,8 +142,6 @@ jobs:
           changed=copy.deepcopy(base);changed['horses'][0]['bodyWeight']=488
           assert not prefetch._analysis_current(changed)
 
-          # Prefetch must keep the builder return even when RaceDB remains stale
-          # and persistence fails. This reproduces the production failure fixed by v4.
           stale=copy.deepcopy(base);stale['preparedMeta']={};stale.pop('preRacePrediction',None);stale.pop('predictionAudit',None)
           orig_raw=prefetch._raw_snapshot
           orig_seed=prefetch._seed_snapshot
@@ -171,6 +179,18 @@ jobs:
           jst=timezone(timedelta(hours=9));now=datetime(2026,10,5,8,0,tzinfo=jst)
           assert repair._started({'date':'2026-10-04','startTime':'23:59'},now)
           assert not repair._started({'date':'2026-10-06','startTime':'00:01'},now)
+
+          # Healthy SQLite survives; a structurally corrupted copy is deleted.
+          with tempfile.TemporaryDirectory() as td:
+              root=Path(td)
+              healthy=root/'healthy.sqlite'
+              con=sqlite3.connect(healthy);con.execute('create table t(x text)');con.execute("insert into t values ('ok')");con.commit();con.close()
+              checked,removed,_=sqlite_health.sanitize(root)
+              assert checked==1 and removed==0 and healthy.exists()
+              broken=root/'broken.sqlite'
+              broken.write_bytes(sqlite_health.SQLITE_MAGIC + b'broken' * 128)
+              checked,removed,files=sqlite_health.sanitize(root)
+              assert removed==1 and not broken.exists() and any('broken.sqlite' in x for x in files)
           print('pipeline invariants OK')
           PY
 
