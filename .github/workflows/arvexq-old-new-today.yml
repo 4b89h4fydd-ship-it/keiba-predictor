@@ -1,0 +1,26 @@
+name: ARVEXQ Old vs New Today
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_today_old_new_compare.py'
+      - '.github/workflows/arvexq-old-new-today.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compare old and new predictions
+        env:
+          ARVEXQ_DATE: '2026-10-05'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+        run: python scripts/arvexq_today_old_new_compare.py
