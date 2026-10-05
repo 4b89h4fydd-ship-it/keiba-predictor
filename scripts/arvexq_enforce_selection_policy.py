@@ -29,6 +29,16 @@ text = text.replace(
     "reason=featured?'厳選ゲート通過、または必須予想の重賞/高知ファイナル対象。必須予想は厳選扱いしません。':",
 )
 
+# For true selections, choose the bet family by hit probability / robustness,
+# not by trifecta preference. Graded/Kochi races still receive the mandatory
+# trifecta challenge later as a separate add-on.
+old_sort = "candidates.sort(function(x,y){return y.score-x.score});"
+new_sort = "candidates.sort(function(x,y){return y.score-x.score});\n  if(selected){\n    function hitPriority(c){\n      if(c.kind==='ワイド')return .42+.58*wideStrength;\n      if(c.kind==='馬連')return .34+.66*pairStrength;\n      if(c.kind==='3連複')return .30+.70*trioStrength;\n      if(c.kind==='馬単')return .18+.52*exactStrength+.30*winClarity;\n      if(c.kind==='3連単')return .08+.46*triStrength+.46*winClarity;\n      return n(c.score)\n    }\n    candidates.sort(function(x,y){return hitPriority(y)-hitPriority(x)||y.score-x.score})\n  }"
+if new_sort not in text:
+    if old_sort not in text:
+        raise SystemExit('candidate sort block not found')
+    text = text.replace(old_sort, new_sort, 1)
+
 # UI copy: selected can be zero. This is deliberate.
 text = text.replace(
     '<b>厳選レース</b><small>全レース比較から少数精鋭だけ・時間順</small>',
@@ -36,4 +46,4 @@ text = text.replace(
 )
 
 PATH.write_text(text, encoding='utf-8')
-print('selection policy enforced: true selections separate from graded/Kochi mandatory races')
+print('selection policy enforced: true selections use hit-first bets; graded/Kochi stay separate')
