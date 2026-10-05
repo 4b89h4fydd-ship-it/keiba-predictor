@@ -68,17 +68,21 @@ jobs:
         run: |
           python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_wire_core_marks.py
           python -m compileall -q arvexq
-      - name: Mark linkage regression check
+      - name: Four pillar prediction regression check
         run: |
           python - <<'PY'
           from arvexq.prediction.final_marks import apply_core_marks
 
-          def horse(no, finishes, speed):
+          def horse(no, finishes, speed, components=None, audit=None, research=None):
               runs=[]
               for i,fin in enumerate(finishes):
-                  runs.append({'finish':fin,'fieldSize':12,'distance':1600,'track':'T','condition':'良','speedIndex':speed-i})
-              return {'horseNumber':no,'name':f'H{no}','recentRaces':runs,'integratedEvaluation':{'mark':'旧'}}
+                  runs.append({'finish':fin,'fieldSize':12,'distance':1600,'track':'T','condition':'良','speedIndex':speed-i,'opponentLevel':100-i})
+              ev={'mark':'旧','components':components or {}}
+              if audit: ev['v218Audit']=audit
+              if research: ev['researchFactors']=research
+              return {'horseNumber':no,'name':f'H{no}','recentRaces':runs,'integratedEvaluation':ev}
 
+          # Ability + record + suitability must directly determine the core order.
           detail={'distance':1600,'track':'T','condition':'良','horses':[
               horse(1,[8,8,7,9,8],70),
               horse(2,[1,2,1,2,1],105),
@@ -90,8 +94,10 @@ jobs:
           assert marks[2]=='◎', marks
           assert marks[3]=='○', marks
           assert marks[4]=='▲', marks
+          assert detail['markEngineVersion']=='arvexq-four-pillar-marks-v4'
+          assert detail['predictionModelVersion']=='arvexq-four-pillar-consensus-v1'
 
-          # Change the evidence, not a legacy P1/P2/P3 field: ◎ must move.
+          # Old P1/P2/P3 cannot overrule the four primary pillars.
           detail2={'distance':1600,'track':'T','condition':'良','horses':[
               horse(1,[1,1,1,2,1],110),
               horse(2,[6,7,5,6,6],75),
@@ -100,12 +106,28 @@ jobs:
           ]}
           for h in detail2['horses']:
               h['integratedEvaluation']['p1Score']=999 if h['horseNumber']==2 else 0
+              h['integratedEvaluation']['p2Score']=999 if h['horseNumber']==2 else 0
+              h['integratedEvaluation']['p3Score']=999 if h['horseNumber']==2 else 0
           apply_core_marks(detail2)
           marks2={h['horseNumber']:h['integratedEvaluation']['mark'] for h in detail2['horses']}
           assert marks2[1]=='◎', marks2
           assert marks2[2] != '◎', marks2
-          assert detail2['markEngineVersion']=='arvexq-ability-record-marks-v3'
-          print('mark-linkage-ok', marks, marks2)
+
+          # When the four pillars are tied, pedigree/weather/draw/body/connection support must matter.
+          base=[3,3,3,3,3]
+          support_a={'pedigreeScore':.20,'weatherFit':.20,'drawScore':.20,'bodyWeightScore':.20,'jockeyScore':.20,'trainerScore':.20}
+          support_b={'pedigreeScore':.90,'weatherFit':.90,'drawScore':.90,'bodyWeightScore':.90,'jockeyScore':.90,'trainerScore':.90}
+          tied={'distance':1600,'track':'T','condition':'良','horses':[
+              horse(1,base,90,support_a),
+              horse(2,base,90,support_b),
+          ]}
+          apply_core_marks(tied)
+          marks3={h['horseNumber']:h['integratedEvaluation']['mark'] for h in tied['horses']}
+          assert marks3[2]=='◎', marks3
+          row2=next(x for x in tied['factorRanking'] if x['horseNumber']==2)
+          assert row2['supportTieBreakWins']>=1, row2
+
+          print('four-pillar-ok',marks,marks2,marks3)
           PY
       - name: Commit modularization
         run: |
@@ -117,5 +139,5 @@ jobs:
           git config user.name 'arvexq-bot'
           git config user.email 'actions@users.noreply.github.com'
           git add $TARGETS
-          git commit -m 'fix: wire ability record final marks'
+          git commit -m 'refactor: sync generated modularization'
           git push
