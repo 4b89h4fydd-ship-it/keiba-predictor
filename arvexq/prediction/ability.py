@@ -65,7 +65,6 @@ def horse_evidence(h: dict[str, Any], race: dict[str, Any]) -> dict[str, Any]:
         level = run.get("opponentLevel", run.get("levelScore", run.get("racePrize1")))
         if level is not None and _n(level) > 0:
             levels.append(_n(level))
-
         rd = _n(run.get("distance"))
         diff = abs(rd - target_d) if rd > 0 and target_d > 0 else 9999
         distance_match = 1.0 if diff <= 100 else (0.65 if diff <= 200 else (0.35 if diff <= 400 else 0.0))
@@ -131,7 +130,16 @@ def apply_ability_ranking(detail: dict[str, Any]) -> dict[str, Any]:
                 "components": row["components"],
             }
     detail["abilityRanking"] = [
-        {"horseNumber": int(r["horse"].get("horseNumber") or 0), "name": r["horse"].get("name") or "", "rank": r["abilityRank"], "score": r["abilityScore"], "components": r["components"]}
+        {
+            "horseNumber": int(r["horse"].get("horseNumber") or 0),
+            "name": r["horse"].get("name") or "",
+            "rank": r["abilityRank"],
+            "score": r["abilityScore"],
+            "sample": r["sample"],
+            "evidenceWins": r["evidenceWins"],
+            "evidenceWeak": r["evidenceWeak"],
+            "components": r["components"],
+        }
         for r in ranked
     ]
     return detail
