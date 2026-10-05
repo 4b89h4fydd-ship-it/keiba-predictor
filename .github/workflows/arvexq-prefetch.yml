@@ -37,8 +37,10 @@ jobs:
       ARVEXQ_DATA_CORE: "0"
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
-      ARVEXQ_PREFETCH_WORKERS: "6"
-      ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "2"
+      # app.py owns one local SQLite RaceDB. FULL PREFETCH favors correctness;
+      # heavy work is background, so serialize writers instead of risking locks.
+      ARVEXQ_PREFETCH_WORKERS: "1"
+      ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "1"
 
     steps:
       - name: Checkout
@@ -78,6 +80,15 @@ jobs:
             arvexq-prefetch-${{ runner.os }}-${{ env.TARGET_DATE }}-
             arvexq-data-${{ runner.os }}-${{ env.TARGET_DATE }}-
             arvexq-data-${{ runner.os }}-
+
+      - name: Normalize ARVEXQ cache permissions
+        run: |
+          mkdir -p .arvexq-data
+          chmod -R u+rwX .arvexq-data || true
+          # WAL/SHM are process-local transient files. Never restore stale ones
+          # into a fresh runner because they can make SQLite appear read-only/locked.
+          find .arvexq-data -type f \( -name '*-wal' -o -name '*-shm' \) -delete || true
+          test -w .arvexq-data
 
       - name: Start ARVEXQ locally
         run: |
@@ -121,6 +132,7 @@ jobs:
             --bundle bundle.json \
             --payload prefetch-payload.json \
             --report prefetch-report.json \
+            --workers "$ARVEXQ_PREFETCH_WORKERS" \
             --analysis-workers "$ARVEXQ_PREFETCH_ANALYSIS_WORKERS"
           cat prefetch-report.json
 
