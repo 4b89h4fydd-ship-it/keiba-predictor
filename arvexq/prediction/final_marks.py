@@ -10,12 +10,7 @@ LOWER_MARKS = ("☆+", "☆", "△", "注")
 
 
 def _plus_candidate(remaining_rows: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """Pick ☆+ only when one remaining horse leads multiple upside routes.
-
-    There is no fixed score threshold. Among remaining horses, a ☆+ candidate must
-    lead at least two of ability, suitability, pace and support. This keeps ☆+ rare
-    and tied to genuine win-upside evidence instead of an arbitrary percentage.
-    """
+    """Pick ☆+ only when one remaining horse leads multiple upside routes."""
     if not remaining_rows:
         return None
     routes = ("ability", "suitability", "pace", "support")
@@ -37,11 +32,9 @@ def _plus_candidate(remaining_rows: list[dict[str, Any]]) -> dict[str, Any] | No
 def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     """Apply final marks from the ARVEXQ four-pillar consensus model.
 
-    Primary order is determined by ability, record, suitability and pace via
-    head-to-head majority comparison. Pedigree, weather response, bias/draw,
-    body weight, condition changes, jockey/trainer and related factors are used
-    only to break close primary ties, so they influence the prediction without
-    overruling clear superiority in the four main pillars.
+    Primary order is ability, record, suitability and pace by head-to-head majority.
+    Pedigree, weather/going response, same-day bias, draw, body/weight context,
+    condition changes, freshness, jockey and trainer resolve close primary ties.
     """
     if not isinstance(detail, dict):
         return detail
@@ -74,6 +67,8 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             "pillarScores": row["pillarScores"],
             "pillarRanks": row["pillarRanks"],
             "evidenceCounts": row["evidenceCounts"],
+            "metricRelative": row["metricRelative"],
+            "rawMetrics": row["raw"],
             "sample": row["sample"],
             "modelVersion": MODEL_VERSION,
         }
@@ -120,6 +115,6 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     detail["predictionModelVersion"] = MODEL_VERSION
     detail["markMethod"] = (
         "primary=ability+record+suitability+pace majority; "
-        "support=pedigree+weather+bias+draw+body+condition-change+jockey+trainer tie-break"
+        "support=pedigree+weather/going+bias+draw+body/weight+condition-change+freshness+age/sex+jockey+trainer tie-break"
     )
     return detail
