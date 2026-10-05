@@ -19,9 +19,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compare old and new predictions
+      - name: Compare old frozen marks and new replay
         env:
           PYTHONPATH: '.'
           ARVEXQ_DATE: '2026-10-05'
           ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
-        run: python scripts/arvexq_today_old_new_compare.py
+        run: |
+          python - <<'PY'
+          import scripts.arvexq_today_old_new_compare as audit
+          audit.replay_base = lambda detail, snapshot: (audit.scrub_postrace(detail), 'full saved detail; result and target-day history scrubbed')
+          audit.main()
+          PY
