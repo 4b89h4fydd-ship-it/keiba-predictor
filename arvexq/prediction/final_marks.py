@@ -2,101 +2,87 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvexq.prediction.ability import rank_ability
+from arvexq.prediction.factor_model import MODEL_VERSION, PRIMARY_PILLARS, rank_factor_model
 
-MARK_ENGINE_VERSION = "arvexq-ability-record-marks-v3"
+MARK_ENGINE_VERSION = "arvexq-four-pillar-marks-v4"
 CORE_MARKS = ("◎", "○", "▲")
 LOWER_MARKS = ("☆+", "☆", "△", "注")
 
 
-def _n(value: Any, default: float = 0.0) -> float:
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return default
+def _plus_candidate(remaining_rows: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Pick ☆+ only when one remaining horse leads multiple upside routes.
 
-
-def _audit(horse: dict[str, Any]) -> dict[str, Any]:
-    e = horse.get("integratedEvaluation") or {}
-    a = e.get("v218Audit") or e.get("v217Audit") or {}
-    return a if isinstance(a, dict) else {}
-
-
-def _relative_ranks(horses: list[dict[str, Any]], key: str) -> dict[int, int]:
-    ordered = sorted(
-        horses,
-        key=lambda h: (
-            -_n(_audit(h).get(key), 0.5),
-            int(h.get("horseNumber") or 999),
-        ),
-    )
-    return {id(h): i + 1 for i, h in enumerate(ordered)}
-
-
-def _plus_candidate(remaining: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """Return a rare ☆+ candidate using relative, not fixed percentage, checks.
-
-    ☆+ is allowed only when the best remaining ability/record horse is also near the
-    front of at least two race-specific routes (TRUE RUN / scenario / conditions).
-    No old P1/P2/P3 score is allowed to replace ◎○▲.
+    There is no fixed score threshold. Among remaining horses, a ☆+ candidate must
+    lead at least two of ability, suitability, pace and support. This keeps ☆+ rare
+    and tied to genuine win-upside evidence instead of an arbitrary percentage.
     """
-    if len(remaining) < 1:
+    if not remaining_rows:
         return None
-    ranks = {
-        key: _relative_ranks(remaining, key)
-        for key in ("trueRun", "positionScenario", "conditions")
-    }
-    top_band = max(2, (len(remaining) + 2) // 3)
-    for horse in remaining:
-        hits = sum(ranks[key].get(id(horse), 999) <= top_band for key in ranks)
+    routes = ("ability", "suitability", "pace", "support")
+    leaders: dict[str, set[int]] = {}
+    for route in routes:
+        vals = [r.get(route) for r in remaining_rows if r.get(route) is not None]
+        if not vals:
+            leaders[route] = set()
+            continue
+        best = max(float(v) for v in vals)
+        leaders[route] = {id(r) for r in remaining_rows if r.get(route) is not None and float(r[route]) == best}
+    for row in remaining_rows:
+        hits = sum(id(row) in leaders[route] for route in routes)
         if hits >= 2:
-            return horse
+            return row["horse"]
     return None
 
 
 def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
-    """Make the displayed marks follow the current ability/record method.
+    """Apply final marks from the ARVEXQ four-pillar consensus model.
 
-    The legacy evaluator may still calculate auxiliary pace/P2/P3 diagnostics, but it
-    can no longer choose or overwrite ◎○▲. Core marks come from `rank_ability()`.
-    Race-shape diagnostics are used only to decide whether the best remaining horse
-    deserves ☆+; they never replace the top-three ability/record order.
+    Primary order is determined by ability, record, suitability and pace via
+    head-to-head majority comparison. Pedigree, weather response, bias/draw,
+    body weight, condition changes, jockey/trainer and related factors are used
+    only to break close primary ties, so they influence the prediction without
+    overruling clear superiority in the four main pillars.
     """
     if not isinstance(detail, dict):
         return detail
 
     horses = [h for h in (detail.get("horses") or []) if isinstance(h, dict)]
-    ranked_rows = rank_ability(horses, detail)
-    ranked = [row["horse"] for row in ranked_rows]
-    if not ranked:
+    ranked_rows = rank_factor_model(horses, detail)
+    if not ranked_rows:
         return detail
+    ranked = [row["horse"] for row in ranked_rows]
 
-    # Clear every live computed mark first. Pre-race frozen snapshots are separate
-    # objects and are intentionally not rewritten here.
     for horse in horses:
         e = horse.setdefault("integratedEvaluation", {})
         e["legacyComputedMark"] = str(e.get("mark") or "")
         e["mark"] = ""
         e["markEngineVersion"] = MARK_ENGINE_VERSION
-        e["markSource"] = "ability-record-core"
+        e["markSource"] = "four-pillar-consensus"
 
-    detail["abilityRanking"] = []
-    for idx, row in enumerate(ranked_rows, 1):
+    detail["factorRanking"] = []
+    for row in ranked_rows:
         horse = row["horse"]
-        evidence = {
-            "rank": idx,
-            "score": row["abilityScore"],
-            "wins": row["evidenceWins"],
-            "weak": row["evidenceWeak"],
-            "sample": row["sample"],
-            "components": row["components"],
-        }
-        horse["abilityEvidence"] = evidence
         e = horse.setdefault("integratedEvaluation", {})
-        e["coreAbilityRank"] = idx
-        e["coreAbilityScore"] = row["abilityScore"]
-        e["coreAbilityComponents"] = row["components"]
-        detail["abilityRanking"].append(
+        evidence = {
+            "rank": row["rank"],
+            "dominanceScore": row["dominanceScore"],
+            "scoreMeaning": "field-relative head-to-head dominance; not win probability",
+            "pairwiseWins": row["pairwiseWins"],
+            "pairwiseLosses": row["pairwiseLosses"],
+            "pairwiseTies": row["pairwiseTies"],
+            "supportTieBreakWins": row["supportTieBreakWins"],
+            "pillarScores": row["pillarScores"],
+            "pillarRanks": row["pillarRanks"],
+            "evidenceCounts": row["evidenceCounts"],
+            "sample": row["sample"],
+            "modelVersion": MODEL_VERSION,
+        }
+        e["coreAbilityRank"] = row["rank"]
+        e["coreAbilityScore"] = row["dominanceScore"]
+        e["primaryPillars"] = list(PRIMARY_PILLARS)
+        e["factorEvidence"] = evidence
+        horse["abilityEvidence"] = evidence
+        detail["factorRanking"].append(
             {
                 "horseNumber": int(horse.get("horseNumber") or 0),
                 "name": horse.get("name") or "",
@@ -104,22 +90,20 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             }
         )
 
-    # Core marks are deterministic and directly tied to the new prediction method.
     for mark, horse in zip(CORE_MARKS, ranked[:3]):
         horse["integratedEvaluation"]["mark"] = mark
 
-    remaining = ranked[3:]
+    remaining_rows = ranked_rows[3:]
+    plus = _plus_candidate(remaining_rows)
     used: set[int] = set()
-    plus = _plus_candidate(remaining)
     if plus is not None:
         plus["integratedEvaluation"]["mark"] = "☆+"
         used.add(id(plus))
 
-    leftovers = [h for h in remaining if id(h) not in used]
+    leftovers = [r["horse"] for r in remaining_rows if id(r["horse"]) not in used]
     for mark, horse in zip(("☆", "△", "注"), leftovers[:3]):
         horse["integratedEvaluation"]["mark"] = mark
 
-    # Display/order metadata must describe the same method that produced the marks.
     mark_order = {"◎": 1, "○": 2, "▲": 3, "☆+": 4, "☆": 5, "△": 6, "注": 7}
     marked = sorted(
         ranked,
@@ -133,5 +117,9 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         horse["integratedEvaluation"]["rank"] = idx
 
     detail["markEngineVersion"] = MARK_ENGINE_VERSION
-    detail["markMethod"] = "ability-record-core; pace only lower-mark tie/uplift"
+    detail["predictionModelVersion"] = MODEL_VERSION
+    detail["markMethod"] = (
+        "primary=ability+record+suitability+pace majority; "
+        "support=pedigree+weather+bias+draw+body+condition-change+jockey+trainer tie-break"
+    )
     return detail
