@@ -8,6 +8,7 @@ on:
       - 'scripts/arvexq_extract_ui.py'
       - 'scripts/arvexq_extract_backend.py'
       - 'scripts/arvexq_patch_mass_prerace_store.py'
+      - 'scripts/arvexq_audit_legacy_learning.py'
       - 'scripts/check_mass_feature_leakage.py'
       - 'scripts/arvexq_patch_build_static.py'
       - 'scripts/arvexq_wire_core_marks.py'
@@ -58,6 +59,8 @@ jobs:
           for size, span, refs, name, start, end in ranked[:80]:
               print(f'{size}\t{span}\t{refs}\t{name}\t{start}-{end}')
           PY
+      - name: Audit legacy learning leakage
+        run: python scripts/arvexq_audit_legacy_learning.py
       - name: Patch app boundary
         run: python scripts/arvexq_patch_app.py
       - name: Extract backend role blocks
@@ -76,7 +79,7 @@ jobs:
         run: python scripts/arvexq_patch_build_static.py
       - name: Compile check
         run: |
-          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_patch_mass_prerace_store.py scripts/check_mass_feature_leakage.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py scripts/arvexq_remove_value_races.py
+          python -m py_compile app.py build_static.py scripts/arvexq_audit_legacy_learning.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_patch_mass_prerace_store.py scripts/check_mass_feature_leakage.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py scripts/arvexq_remove_value_races.py
           python -m compileall -q arvexq
       - name: Mass feature leakage regression check
         run: python scripts/check_mass_feature_leakage.py
