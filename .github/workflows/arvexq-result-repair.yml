@@ -8,7 +8,7 @@ name: ARVEXQ Result Repair
       - scripts/arvexq_result_repair.py
       - .github/workflows/arvexq-result-repair.yml
   schedule:
-    # Offset from the main realtime sync so both jobs do not hammer sources at once.
+    # Offset from realtime sync so both jobs do not hit result sources together.
     - cron: "2-59/5 22-23 * * *"
     - cron: "2-59/5 0-14 * * *"
 
@@ -30,6 +30,8 @@ jobs:
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
       ARVEXQ_RESULT_WORKERS: "6"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_INPUT: "1"
 
     steps:
       - name: Checkout
@@ -43,18 +45,18 @@ jobs:
           cache-dependency-path: requirements.txt
 
       - name: Install runtime dependencies
-        run: python -m pip install --disable-pip-version-check --no-input -r requirements.txt
+        run: python -m pip install -q -r requirements.txt
 
       - name: Set sync date
         run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
 
-      - name: Restore ARVEXQ data cache
+      - name: Restore warm cache read-only
         uses: actions/cache/restore@v4
         with:
           path: .arvexq-data
-          key: arvexq-result-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
+          key: arvexq-result-readonly-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
           restore-keys: |
-            arvexq-result-${{ runner.os }}-${{ env.SYNC_DATE }}-
+            arvexq-prefetch-${{ runner.os }}-${{ env.SYNC_DATE }}-
             arvexq-data-${{ runner.os }}-${{ env.SYNC_DATE }}-
             arvexq-data-${{ runner.os }}-
 
@@ -65,19 +67,19 @@ jobs:
             -o bundle.json
           RACES=$(jq '.races // [] | length' bundle.json)
           DETAILS=$(jq '.details // [] | length' bundle.json)
-          echo "D1 day snapshot races=$RACES details=$DETAILS"
-          if [ "$RACES" -le 0 ]; then
-            echo "No races found for $SYNC_DATE; nothing to repair."
-          fi
+          echo "D1 day races=$RACES details=$DETAILS"
 
       - name: Repair all started incomplete results
         run: |
-          python -m py_compile scripts/arvexq_result_repair.py
-          python scripts/arvexq_result_repair.py \
+          if ! python scripts/arvexq_result_repair.py \
             --bundle bundle.json \
             --payload result-repair-payload.json \
-            --report result-repair-report.json
-          cat result-repair-report.json
+            --report result-repair-report.json > result-repair.log 2>&1; then
+            echo "::error::Result repair failed"
+            tail -n 80 result-repair.log || true
+            exit 1
+          fi
+          jq '{date,started,pending_before,repairedCount:(.repaired|length),resultMissing:(.result_missing|length),payoutMissing:(.payout_missing|length)}' result-repair-report.json
 
       - name: Push repaired full-detail snapshots to D1
         run: |
@@ -90,7 +92,8 @@ jobs:
             "$CLOUDFLARE_API_BASE/api/sync" \
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @result-repair-payload.json
+            --data-binary @result-repair-payload.json > /dev/null
+          echo "D1 result repair push OK"
 
       - name: Verify D1 after repair
         run: |
@@ -110,15 +113,22 @@ jobs:
               ranks={int(x.get('finish') or 0) for x in (result.get('finishers') or []) if isinstance(x,dict)}
               if str(result.get('status') or '')!='確定' or not all(i in ranks for i in (1,2,3)):
                   missing.append(rid)
-          print('D1_VERIFY repaired=',len(report.get('repaired') or []),'not_visible=',len(missing))
-          print('D1_VERIFY result_missing=',len(report.get('result_missing') or []),'payout_missing=',len(report.get('payout_missing') or []))
+          print('D1_VERIFY repaired=',len(report.get('repaired') or []),'not_visible=',len(missing),'result_missing=',len(report.get('result_missing') or []),'payout_missing=',len(report.get('payout_missing') or []))
           if missing:
               raise SystemExit('D1 did not expose repaired result(s): '+','.join(missing))
           PY
 
-      - name: Save ARVEXQ data cache
-        if: always()
-        uses: actions/cache/save@v4
+      - name: Show concise failure log
+        if: failure()
+        run: tail -n 80 result-repair.log 2>/dev/null || true
+
+      - name: Upload full failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          path: .arvexq-data
-          key: arvexq-result-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
+          name: arvexq-result-repair-failure-${{ github.run_number }}
+          path: |
+            result-repair.log
+            result-repair-report.json
+          if-no-files-found: ignore
+          retention-days: 3
