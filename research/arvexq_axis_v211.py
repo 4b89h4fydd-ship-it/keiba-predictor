@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, json, math
+import argparse, json, math, sys
 from datetime import datetime
 from pathlib import Path
 import numpy as np
 import pandas as pd
 from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
-from research.arvexq_ranker_v209 import JST, FEATURES, load_d1, load_extra, rows_from_details
+
+ROOT = Path(__file__).resolve().parents[1]
+RESEARCH = Path(__file__).resolve().parent
+for p in (ROOT, RESEARCH):
+    s = str(p)
+    if s not in sys.path:
+        sys.path.insert(0, s)
+
+from arvexq_ranker_v209 import JST, FEATURES, load_d1, load_extra, rows_from_details
 
 
 def race_ids_by_time(df: pd.DataFrame) -> list[str]:
@@ -16,7 +24,6 @@ def race_ids_by_time(df: pd.DataFrame) -> list[str]:
 
 def fold_ranges(ids: list[str], folds: int = 4):
     n=len(ids)
-    # expanding-window: first 40% train, then four future slices
     start=max(20,int(n*.40))
     remain=n-start
     step=max(1,remain//folds)
@@ -59,7 +66,6 @@ def tune_alpha(valid: pd.DataFrame, model_col: str):
     for a in np.arange(0,1.01,.05):
         x=q.copy(); x['_blend']=a*x[model_col]+(1-a)*x.market_prob
         m=selection_metrics(x,'_blend')
-        # primary objective is honmei place rate; win rate is tie-breaker only
         obj=(m['placeRate'],m['winRate'])
         if best is None or obj>best[0]: best=(obj,float(a),m)
     return best[1],best[2]
