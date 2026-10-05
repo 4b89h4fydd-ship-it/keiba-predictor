@@ -1,0 +1,70 @@
+name: ARVEXQ Cache Integrity Check
+
+"on":
+  workflow_dispatch:
+  push:
+    branches: [fix/arvexq-cache-integrity]
+    paths:
+      - scripts/arvexq_cache_health.py
+      - .github/workflows/arvexq-*.yml
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Python and YAML syntax
+        run: |
+          python -m py_compile scripts/arvexq_cache_health.py
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          for p in Path('.github/workflows').glob('arvexq-*.yml'):
+              yaml.safe_load(p.read_text(encoding='utf-8'))
+              print('YAML_OK', p)
+          PY
+      - name: Cache health regression
+        run: |
+          python - <<'PY'
+          import sqlite3, tempfile
+          from pathlib import Path
+          from scripts.arvexq_cache_health import SQLITE_HEADER, scan
+          with tempfile.TemporaryDirectory() as td:
+              root=Path(td)
+              good=root/'good.db'
+              con=sqlite3.connect(good); con.execute('create table t(x integer)'); con.execute('insert into t values(1)'); con.commit(); con.close()
+              bad=root/'bad.db'; bad.write_bytes(SQLITE_HEADER+b'broken-database-image')
+              note=root/'keep.json'; note.write_text('{"ok":true}', encoding='utf-8')
+              (root/'ghost.db-wal').write_bytes(b'transient')
+              report=scan(root, delete_corrupt=True)
+              assert report['checked_count']==2, report
+              assert report['healthy_count']==1, report
+              assert report['corrupt_count']==1, report
+              assert good.exists(), report
+              assert not bad.exists(), report
+              assert note.exists(), report
+              assert not (root/'ghost.db-wal').exists(), report
+              con=sqlite3.connect(good); assert con.execute('pragma quick_check').fetchone()[0]=='ok'; con.close()
+          print('CACHE_HEALTH_REGRESSION_OK')
+          PY
+      - name: Workflow integration guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          targets=[
+              '.github/workflows/arvexq-prefetch.yml',
+              '.github/workflows/arvexq-sync.yml',
+              '.github/workflows/arvexq-history-sync.yml',
+              '.github/workflows/arvexq-result-repair.yml',
+          ]
+          for name in targets:
+              text=Path(name).read_text(encoding='utf-8')
+              assert 'scripts/arvexq_cache_health.py' in text, name
+              assert '--delete-corrupt' in text, name
+              assert 'Validate restored ARVEXQ cache' in text, name
+              print('CACHE_GUARD_OK', name)
+          PY
