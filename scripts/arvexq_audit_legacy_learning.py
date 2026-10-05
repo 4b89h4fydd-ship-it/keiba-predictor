@@ -10,8 +10,8 @@ lines = source.splitlines()
 tree = ast.parse(source)
 
 target_names = {
-    "winner_learning_profile",
-    "learning_metric",
+    "_winner_learning_profile",
+    "_learning_metric",
     "_learning_races",
 }
 
@@ -47,4 +47,4 @@ for name in sorted(target_names):
 
 missing = target_names - {n.name for n in found}
 if missing:
-    print("MISSING", sorted(missing))
+    raise SystemExit(f"missing legacy learning helpers: {sorted(missing)}")
