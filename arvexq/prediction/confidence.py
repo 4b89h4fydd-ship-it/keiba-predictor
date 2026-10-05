@@ -3,11 +3,25 @@ from __future__ import annotations
 from typing import Any
 
 
+def _horse_no(row: dict[str, Any]) -> int:
+    horse = row.get("horse") if isinstance(row.get("horse"), dict) else row
+    return int(horse.get("horseNumber") or 0)
+
+
+def _horse_name(row: dict[str, Any]) -> str:
+    horse = row.get("horse") if isinstance(row.get("horse"), dict) else row
+    return str(horse.get("name") or "")
+
+
+def _score(row: dict[str, Any]) -> float:
+    return float(row.get("abilityScore", row.get("score", 0.0)) or 0.0)
+
+
 def build_win_confidence_evidence(ranking: list[dict[str, Any]]) -> dict[str, Any]:
     """Return raw evidence separating the top horse from the runner-up.
 
-    No arbitrary probability or HIGH/MEDIUM/LOW label is produced here. Thresholds
-    must be calibrated by backtest and can live outside the prediction core.
+    This layer deliberately does not invent a win probability or HIGH/MEDIUM/LOW
+    threshold. Calibration belongs to backtest/selection, not prediction core.
     """
     if not ranking:
         return {"available": False, "reason": "no-ranking"}
@@ -35,10 +49,10 @@ def build_win_confidence_evidence(ranking: list[dict[str, Any]]) -> dict[str, An
 
     return {
         "available": True,
-        "horseNumber": int((top.get("horse") or {}).get("horseNumber") or 0),
-        "name": (top.get("horse") or {}).get("name") or "",
-        "runnerUpHorseNumber": int(((second or {}).get("horse") or {}).get("horseNumber") or 0),
-        "scoreGap": round(float(top.get("abilityScore") or 0.0) - float((second or {}).get("abilityScore") or 0.0), 2),
+        "horseNumber": _horse_no(top),
+        "name": _horse_name(top),
+        "runnerUpHorseNumber": _horse_no(second or {}),
+        "scoreGap": round(_score(top) - _score(second or {}), 2),
         "componentWins": top_wins,
         "componentLosses": second_wins,
         "componentTies": ties,
