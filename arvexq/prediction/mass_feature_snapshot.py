@@ -9,8 +9,12 @@ from arvexq.prediction.mass_feature_factory import (
     build_race_feature_matrix,
     feature_schema_summary,
 )
+from arvexq.prediction.mass_feature_selection import (
+    SELECTION_VERSION,
+    prune_matrix_for_snapshot,
+)
 
-SNAPSHOT_VERSION = "arvexq-mass-feature-snapshot-v1"
+SNAPSHOT_VERSION = "arvexq-mass-feature-snapshot-v2"
 
 
 def _stable_hash(payload: Any) -> str:
@@ -19,9 +23,11 @@ def _stable_hash(payload: Any) -> str:
 
 
 def build_mass_feature_snapshot(detail: dict[str, Any]) -> dict[str, Any]:
-    """Freeze a pre-race mass-feature snapshot without reading result fields."""
+    """Freeze a leakage-safe, structurally pruned pre-race feature snapshot."""
     horses = [h for h in (detail.get("horses") or []) if isinstance(h, dict)]
-    matrix = build_race_feature_matrix(horses, detail)
+    raw_matrix = build_race_feature_matrix(horses, detail)
+    raw_summary = feature_schema_summary(raw_matrix)
+    matrix = prune_matrix_for_snapshot(raw_matrix)
     rows = []
     for row in matrix:
         horse = row.get("horse") or {}
@@ -38,6 +44,7 @@ def build_mass_feature_snapshot(detail: dict[str, Any]) -> dict[str, Any]:
     core = {
         "snapshotVersion": SNAPSHOT_VERSION,
         "schemaVersion": FEATURE_SCHEMA_VERSION,
+        "selectionVersion": SELECTION_VERSION,
         "raceId": str(detail.get("id") or detail.get("raceId") or ""),
         "date": str(detail.get("date") or ""),
         "circuit": str(detail.get("circuit") or ""),
@@ -47,6 +54,7 @@ def build_mass_feature_snapshot(detail: dict[str, Any]) -> dict[str, Any]:
         "surface": detail.get("surface"),
         "condition": detail.get("condition", detail.get("going")),
         "horseCount": len(rows),
+        "rawCandidateFeatureCount": int(raw_summary.get("featureCount") or 0),
         "featureSchema": {k: v for k, v in summary.items() if k != "featureNames"},
         "rows": rows,
     }
