@@ -24,6 +24,30 @@ if old_cut in text:
 elif new_cut not in text:
     raise SystemExit('elite selection cut block not found')
 
+# True selection needs agreement between the existing winner engine and the new
+# independent multi-head layer. No arbitrary probability is introduced: require
+# same winner, win-head rank 1, no danger-popular flag, and a non-tied top score.
+old_gate = "var score=Math.round(clamp(qReady*.14+qTop3*.17+qMargin*.15+qEnt*.10+qScenario*.09+qEvidence*.10+qWin*.13+qTrue*.05+qCond*.04+qPos*.03,0,1)*100),\n      hard=(ready.prediction>=g.ready&&cov>=g.cov&&top3>=g.top3&&evidence>=g.evidence&&scenarioProb>=g.scenario&&winnerStable&&winnerConf>=g.confidence),\n      separation=(top>=Math.max(g.top,uniform*g.uniform)||margin>=g.margin),selected=hard&&separation&&score>=g.score;"
+new_gate = "var mh=((leader.horse||{}).integratedEvaluation||{}).multiHead||{},mhSummary=(r&&r.multiHeadSummary)||{},mhReady=String(mhSummary.modelVersion||'').indexOf('arvexq-multi-head-')===0,leaderNo=n(leader.horse&&leader.horse.horseNumber),mhWinner=n(mhSummary.winnerHorseNumber),mhAgree=!mhReady||(mhWinner>0&&leaderNo===mhWinner&&n(mh.winRank,999)===1&&!mh.dangerPopular&&n(mhSummary.winnerGap,0)>0);\n  var score=Math.round(clamp(qReady*.14+qTop3*.17+qMargin*.15+qEnt*.10+qScenario*.09+qEvidence*.10+qWin*.13+qTrue*.05+qCond*.04+qPos*.03,0,1)*100),\n      hard=(ready.prediction>=g.ready&&cov>=g.cov&&top3>=g.top3&&evidence>=g.evidence&&scenarioProb>=g.scenario&&winnerStable&&winnerConf>=g.confidence),\n      separation=(top>=Math.max(g.top,uniform*g.uniform)||margin>=g.margin),selected=hard&&separation&&score>=g.score&&mhAgree;"
+if new_gate not in text:
+    if old_gate not in text:
+        raise SystemExit('strict selection gate block not found')
+    text = text.replace(old_gate, new_gate, 1)
+
+old_failed = "var failed=[];if(ready.prediction<g.ready)failed.push('data');if(cov<g.cov)failed.push('coverage');if(top3<g.top3)failed.push('top3');if(evidence<g.evidence)failed.push('evidence');if(scenarioProb<g.scenario)failed.push('scenario');if(!winnerStable||winnerConf<g.confidence)failed.push('winner');if(!separation)failed.push('separation');if(score<g.score)failed.push('score');"
+new_failed = "var failed=[];if(ready.prediction<g.ready)failed.push('data');if(cov<g.cov)failed.push('coverage');if(top3<g.top3)failed.push('top3');if(evidence<g.evidence)failed.push('evidence');if(scenarioProb<g.scenario)failed.push('scenario');if(!winnerStable||winnerConf<g.confidence)failed.push('winner');if(!separation)failed.push('separation');if(score<g.score)failed.push('score');if(!mhAgree)failed.push('multihead');"
+if new_failed not in text:
+    if old_failed not in text:
+        raise SystemExit('strict selection failed-reason block not found')
+    text = text.replace(old_failed, new_failed, 1)
+
+old_return = "return{selected:selected,score:score,top:top,top3mass:top3,margin:margin,entropy:ent,coverage:cov,scenarioProb:scenarioProb,evidence:evidence,trueRun:trueRun,conditions:conditions,positionScenario:positionScenario,winnerConfidence:winnerConf,winnerStable:winnerStable,readiness:ready,failed:failed,reason:selected?'厳選ゲート通過':('見送り: '+failed.join(',')),base:base,model:method.id};"
+new_return = "return{selected:selected,score:score,top:top,top3mass:top3,margin:margin,entropy:ent,coverage:cov,scenarioProb:scenarioProb,evidence:evidence,trueRun:trueRun,conditions:conditions,positionScenario:positionScenario,winnerConfidence:winnerConf,winnerStable:winnerStable,multiHeadReady:mhReady,multiHeadAgreement:mhAgree,multiHeadGap:mhSummary.winnerGap,multiHeadWinner:mhWinner,readiness:ready,failed:failed,reason:selected?'厳選ゲート通過':('見送り: '+failed.join(',')),base:base,model:method.id};"
+if new_return not in text:
+    if old_return not in text:
+        raise SystemExit('strict selection return block not found')
+    text = text.replace(old_return, new_return, 1)
+
 text = text.replace(
     "reason=featured?'本日の厳選/メイン/重賞/高知ファイナル対象。v220は共通着順分布から5券種を生成し、確率差で自動的に点数を絞ります。':",
     "reason=featured?'厳選ゲート通過、または必須予想の重賞/高知ファイナル対象。必須予想は厳選扱いしません。':",
@@ -46,4 +70,4 @@ text = text.replace(
 )
 
 PATH.write_text(text, encoding='utf-8')
-print('selection policy enforced: true selections use hit-first bets; graded/Kochi stay separate')
+print('selection policy enforced: multi-head agreement + hit-first bets; graded/Kochi stay separate')
