@@ -42,6 +42,16 @@ if "function mandatoryTrifectaRace(r){" not in text:
         raise SystemExit("raceIsGraded line end not found")
     text = text[:end+1] + helper + text[end+1:]
 
+# Production has two bet-plan paths: the richer local/v213 path and the fallback path.
+# Force the mandatory trifecta after rebuildBetStrategyV242 on BOTH paths so a
+# later ticket-selection gate can never turn graded/Kochi Final into a skip.
+old_v213 = "if(v213Ready){var vp=rebuildBetStrategyV242(buildV213AiBetPlan(r,p,rows,featured),r,p);saveStoredAiBet(r,vp);return vp}"
+new_v213 = "if(v213Ready){var vp=rebuildBetStrategyV242(buildV213AiBetPlan(r,p,rows,featured),r,p);vp=forceMandatoryTrifecta(vp,r,p);saveStoredAiBet(r,vp);return vp}"
+if old_v213 in text:
+    text = text.replace(old_v213, new_v213, 1)
+elif new_v213 not in text:
+    raise SystemExit("v213 buildAiBetPlan path not found")
+
 old = "plan=rebuildBetStrategyV242(plan,r,p);saveStoredAiBet(r,plan);return plan"
 new = "plan=rebuildBetStrategyV242(plan,r,p);plan=forceMandatoryTrifecta(plan,r,p);saveStoredAiBet(r,plan);return plan"
 if old in text:
@@ -60,6 +70,7 @@ elif new_copy not in text:
 for required in (
     "function mandatoryTrifectaRace(r){",
     "function forceMandatoryTrifecta(plan,r,p){",
+    "vp=forceMandatoryTrifecta(vp,r,p)",
     "plan=forceMandatoryTrifecta(plan,r,p)",
     "重賞・高知ファイルは3連単チャレンジ必須",
 ):
@@ -67,4 +78,4 @@ for required in (
         raise SystemExit(f"mandatory trifecta patch missing: {required}")
 
 PATH.write_text(text, encoding="utf-8")
-print("mandatory trifecta challenge enforced for graded and Kochi final races")
+print("mandatory trifecta challenge enforced for graded and Kochi final races on all bet-plan paths")
