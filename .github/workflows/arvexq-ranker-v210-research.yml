@@ -1,0 +1,125 @@
+name: ARVEXQ Ranker v210 Walk Forward
+
+"on":
+  push:
+    branches: [research/recent-accuracy-20261005]
+    paths:
+      - research/arvexq_ranker_v210.py
+      - research/arvexq_ranker_v209.py
+      - .github/workflows/arvexq-ranker-v210-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-ranker-v210-research
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ARVEXQ_API_URL: https://kraiz-api.4b89h4fydd.workers.dev
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_INPUT: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install research dependencies quietly
+        run: |
+          python -m pip install -q -r requirements.txt
+          python -m pip install -q numpy pandas scikit-learn lightgbm catboost
+
+      - name: Fast preflight
+        run: |
+          python -m py_compile research/arvexq_ranker_v209.py research/arvexq_ranker_v210.py backtest_v206.py backtest_v208_jra.py
+          python - <<'PY'
+          import sys
+          sys.path.insert(0,'research')
+          import arvexq_ranker_v210 as v210
+          print('PREFLIGHT OK features=',len(v210.v209.FEATURES))
+          PY
+
+      - name: Restore reusable JRA 360R seed
+        id: jra-seed-cache
+        uses: actions/cache@v4
+        with:
+          path: jra-seed
+          key: arvexq-v209-jra-seed-${{ runner.os }}-${{ hashFiles('app.py', 'backtest_v206.py', 'backtest_v208_jra.py') }}
+
+      - name: Build JRA seed only on cache miss
+        if: steps.jra-seed-cache.outputs.cache-hit != 'true'
+        run: |
+          rm -rf jra-seed
+          mkdir -p jra-seed
+          if ! python backtest_v208_jra.py \
+            --days 90 \
+            --max-races 360 \
+            --iterations 500 \
+            --workers 6 \
+            --out jra-seed > jra-seed.log 2>&1; then
+            echo "::error::JRA seed build failed"
+            tail -n 80 jra-seed.log || true
+            exit 1
+          fi
+          test -s jra-seed/jra-official-snapshots.json
+
+      - name: Confirm cached JRA seed
+        run: |
+          test -s jra-seed/jra-official-snapshots.json
+          echo "JRA seed ready; cache-hit=${{ steps.jra-seed-cache.outputs.cache-hit }}"
+
+      - name: Run four-fold walk-forward validation
+        run: |
+          if ! python research/arvexq_ranker_v210.py \
+            --days 28 \
+            --extra-jra jra-seed/jra-official-snapshots.json \
+            --folds 4 \
+            --out ranker-v210.json > ranker-v210.log 2>&1; then
+            echo "::error::v210 walk-forward benchmark failed"
+            tail -n 80 ranker-v210.log || true
+            exit 1
+          fi
+
+      - name: Show concise result
+        run: |
+          python - <<'PY'
+          import json
+          z=json.load(open('ranker-v210.json',encoding='utf-8'))
+          print('# ARVEXQ v210 walk-forward')
+          for circuit,r in z['circuits'].items():
+              print(f"{circuit}: races={r.get('races')} folds={r.get('foldCount')}")
+              for name,s in (r.get('summary') or {}).items():
+                  b=s.get('baselineEligible') or {}; m=s.get('marketOnly') or {}; q=s.get('blend') or {}
+                  c=(s.get('confidence') or {}).get('tripleAgreeHighMargin') or {}
+                  print(f"  {name}: baseline={b.get('top1',0):.1%}/{b.get('top3',0):.1%} market={m.get('top1',0):.1%}/{m.get('top3',0):.1%} blend={q.get('top1',0):.1%}/{q.get('top3',0):.1%} beatBase={s.get('beatBaselineTop1Folds')}/{s.get('folds')} beatMarket={s.get('beatMarketTop1Folds')}/{s.get('folds')} selected n={c.get('races',0)} top1={c.get('top1',0):.1%}")
+          PY
+
+      - name: Show concise failure log
+        if: failure()
+        run: |
+          tail -n 80 jra-seed.log 2>/dev/null || true
+          tail -n 80 ranker-v210.log 2>/dev/null || true
+
+      - name: Upload v210 research artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-ranker-v210
+          path: |
+            ranker-v210.json
+            ranker-v210.log
+          if-no-files-found: ignore
+          retention-days: 7
