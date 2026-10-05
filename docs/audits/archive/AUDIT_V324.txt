@@ -1,0 +1,55 @@
+ARVEXQ v324 CORE DATA GUARD - PREDEPLOY AUDIT
+Date: 2026-10-04
+
+Problem reproduced from screenshot:
+- race had horse numbers + win odds + popularity + AI marks
+- horse names/jockey/carried weight were blank
+- this shape was incorrectly treated as a valid detail because horses.length > 0
+
+Root cause confirmed in v321:
+1. mergeRaceReflection() can create horse skeletons from odds rows alone.
+2. openRace(), fetchEdgeRace(), cache loading, and selected-race load status accepted any non-empty horses array.
+3. raceReflectionIncomplete() had stricter checks but was never used.
+4. v323 workflow still considered any horseNumber-only card "usable", so v323 was not sufficient for this screenshot case.
+
+v324 replacement:
+- removed the unused raceReflectionIncomplete() block.
+- added one actually-used raceDisplayCoreReady() validator.
+- a race card is not display-ready unless active runners have names and at least 70% have jockey + carried weight; field-size coverage is also checked.
+- odds-only/horse-number-only skeletons are rejected by direct race fetch, day fallback, cache load/save, race opening, and selected-race completion counts.
+- old incomplete localStorage detail rows are ignored automatically.
+- full-card GitHub workflow now uses the same concept of usable core horse data.
+- workflow merge uses horse-card quality so an odds-only refresh cannot overwrite a richer horse card.
+- if any race remains unusable, final workflow validation reports it as missing instead of silently publishing it as complete.
+
+Executed checks:
+PASS Python compile: app.py, build_static.py
+PASS static build: v324
+PASS generated app-v324.js node --check
+PASS JSON/webmanifest parse
+PASS local static asset references
+PASS FastAPI: /, /health, /build, /version.json, current JS/CSS/SW/manifest, v321 compatibility
+PASS current app-v324.js + arvexq-app-v324.js immutable cache; old v321 alias revalidates
+PASS screenshot-shaped 18-runner odds skeleton is rejected by frontend validator
+PASS full 18-runner core card is accepted
+PASS names-only incomplete card is rejected
+PASS thin partial field is rejected
+PASS final result-only card with named top 3 is accepted
+PASS workflow YAML parse
+PASS every workflow shell block bash -n
+PASS every embedded workflow Python block compiles
+PASS both workflow usable() validators reject odds skeleton / accept full core card
+PASS workflow merge: rich horse card + odds skeleton preserves names and merges live odds
+PASS workflow merge: skeleton + rich horse card upgrades to rich card
+PASS prediction core unchanged vs v321:
+  JS assignPredictionMarks
+  JS v317ConsensusFactors
+  JS v317FactorWeights
+  JS buildRows
+  PY _v317_factor_weights
+  PY _v317_factor_profile
+  PY _rank_evaluations
+
+Environment limitation:
+- This container cannot resolve the external Cloudflare/JRA/NAR hosts, so the real production 77/77 count cannot be proven before GitHub Actions runs.
+- v324 is designed to FAIL the sync validation rather than claim success if core race details are still incomplete.
