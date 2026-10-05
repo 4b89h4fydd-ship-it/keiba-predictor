@@ -8,11 +8,15 @@ Fetcher = Callable[..., Any]
 
 @dataclass(slots=True)
 class SourceCapabilities:
-    racecard: bool = False
+    schedule: bool = False
+    race_detail: bool = False
     horse_history: bool = False
     odds: bool = False
     results: bool = False
+    payouts: bool = False
     track_weather: bool = False
+    body_weight: bool = False
+    scratches: bool = False
     jockey_trainer: bool = False
     pedigree: bool = False
 
@@ -47,6 +51,10 @@ class DataBankRegistry:
 
     def names(self) -> list[str]:
         return sorted(self._sources)
+
+    def capability_map(self) -> dict[str, list[str]]:
+        domains = SourceCapabilities.__dataclass_fields__.keys()
+        return {domain: [s.name for s in self.providers(domain)] for domain in domains}
 
 
 registry = DataBankRegistry()
