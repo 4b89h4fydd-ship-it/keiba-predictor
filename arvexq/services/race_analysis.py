@@ -2,30 +2,29 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvexq.core.runner_status import normalize_runner_status
+from arvexq.features.horse_features import attach_race_features
+from arvexq.ingest.source_merge import merge_race_sources
+from arvexq.normalize.race import normalize_race
 from arvexq.prediction.ability import apply_ability_ranking
+from arvexq.prediction.confidence import build_win_confidence_evidence
 
 
 def normalize_race_detail(detail: dict[str, Any]) -> dict[str, Any]:
-    if not isinstance(detail, dict):
-        return detail
-    for horse in detail.get("horses") or []:
-        if not isinstance(horse, dict):
-            continue
-        horse["status"] = normalize_runner_status(
-            horse.get("status"),
-            scratched=bool(horse.get("scratched")),
-            withdrawn=bool(horse.get("withdrawn")),
-        )
-    return detail
+    return normalize_race(detail)
 
 
 def prepare_race_detail(detail: dict[str, Any]) -> dict[str, Any]:
-    """Stable orchestration boundary used by app/API code.
+    """Single orchestration boundary for pre-race analysis.
 
-    Keep source acquisition, normalization, feature building and prediction internals
-    behind this service so app.py does not need to know their implementation details.
+    Flow: source merge -> canonical normalization -> ability/record ranking ->
+    inspectable features -> raw win-confidence evidence. Source adapters and UI code
+    stay outside the prediction core.
     """
-    detail = normalize_race_detail(detail)
+    if not isinstance(detail, dict):
+        return detail
+    detail = merge_race_sources(detail)
+    detail = normalize_race(detail)
     detail = apply_ability_ranking(detail)
+    detail = attach_race_features(detail)
+    detail["winConfidenceEvidence"] = build_win_confidence_evidence(detail.get("abilityRanking") or [])
     return detail
