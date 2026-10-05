@@ -6,6 +6,8 @@ on:
     paths:
       - 'scripts/arvexq_patch_app.py'
       - 'scripts/arvexq_extract_ui.py'
+      - 'scripts/arvexq_patch_build_static.py'
+      - 'build_static.py'
       - 'arvexq/**/*.py'
       - '.github/workflows/arvexq-auto-refactor.yml'
   workflow_dispatch:
@@ -27,18 +29,20 @@ jobs:
         run: python scripts/arvexq_patch_app.py
       - name: Extract embedded UI and images
         run: python scripts/arvexq_extract_ui.py
+      - name: Patch static builder for extracted assets
+        run: python scripts/arvexq_patch_build_static.py
       - name: Compile check
         run: |
-          python -m py_compile app.py
+          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py
           python -m compileall -q arvexq
       - name: Commit modularization
         run: |
-          if git diff --quiet -- app.py arvexq/ui/static; then
+          if git diff --quiet -- app.py build_static.py arvexq/ui/static; then
             echo 'No generated modularization changes needed'
             exit 0
           fi
           git config user.name 'arvexq-bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add app.py arvexq/ui/static
-          git commit -m 'refactor: extract UI assets from monolithic app'
+          git add app.py build_static.py arvexq/ui/static
+          git commit -m 'refactor: keep modular UI static build working'
           git push
