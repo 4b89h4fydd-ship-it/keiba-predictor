@@ -32,7 +32,7 @@ jobs:
       - name: Install app and research dependencies
         run: |
           python -m pip install --disable-pip-version-check --no-input -r requirements.txt
-          python -m pip install --disable-pip-version-check --no-input numpy pandas lightgbm catboost
+          python -m pip install --disable-pip-version-check --no-input numpy pandas scikit-learn lightgbm catboost
       - name: Compile research model
         run: python -m py_compile research/arvexq_ranker_v209.py
       - name: Build leakage-free JRA historical snapshots
@@ -66,4 +66,5 @@ jobs:
             ranker-v209.log
             jra-seed/report.json
             jra-seed/candidate_model_v208_jra.json
+            jra-seed/jra-official-snapshots.json
           retention-days: 7
