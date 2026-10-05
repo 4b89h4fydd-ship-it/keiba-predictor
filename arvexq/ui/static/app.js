@@ -1731,7 +1731,7 @@ function buildAiBetPlan(r,p){
       plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v317-consensus-rebuild',decision:decision,featuredRace:featured,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'条件付き順序集中度が3連単基準未満。',winnerModel:(String((r&&r.circuit)||'')==='中央'?'central-v317-consensus-rebuild':'local-v317-consensus-rebuild')+'+walkforward+precision-order',p2Model:useV207?'v212-role+v220-conditional':'legacy-central+v220-conditional',p3Model:'role-marginal+v220-conditional',selectionAudit:sel,
         roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z),p:winActive(z)}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z),p:role(z,2)}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z),p:role(z,3)}}),legacyP1:legacyRows.slice(0,4).map(function(z){return{no:no(z),p:n(z.ticketLegacyP1Probability)}})},
         audit:{field:field,coverage:cov,p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:p1Entropy,exactaTop:exactaTop,exactaRatio:exactaRatio,wideTop:wideTop,wideRatio:wideRatio,quinTop:qTop,quinRatio:qRatio,trioTop:trioTop,trioRatio:trioRatio,triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderConfidence:orderConfidence,normalGate:normalGate,strongGate:strongGate,featured:featured,ticketDistribution:'sequential-joint-v300-winner-consensus'},items:items,reason:reason};
-  plan=rebuildBetStrategyV242(plan,r,p);saveStoredAiBet(r,plan);return plan
+  plan=rebuildBetStrategyV242(plan,r,p);plan=forceMandatoryTrifecta(plan,r,p);saveStoredAiBet(r,plan);return plan
 }
 
 function betItemHit(item,order){
@@ -1744,7 +1744,7 @@ function betTransferText(r,p){
   if(!plan)return '';
   var lines=['ARVEXQ 買い目',String(r.track||'')+' '+String(r.raceNumber||'')+'R '+String(r.title||''),'発走 '+String(r.startTime||'--:--')];
   (plan.items||[]).forEach(function(z){lines.push(String(z.level||'')+'｜'+String(z.kind||'')+'｜'+String(z.combo||'')+'｜'+String(z.points||0)+'点'+(z.confidence?'｜'+String(z.confidence):''))});
-  if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')lines.push('3連単｜検討済み｜順序信頼不足で見送り｜'+String(plan.orderScore||0)+'/100');
+  if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り'&&!mandatoryTrifectaRace(r))lines.push('3連単｜検討済み｜順序信頼不足で見送り｜'+String(plan.orderScore||0)+'/100');
   lines.push('※投票内容・金額は公式投票サイトで確認して確定してください。');
   return lines.join('\n')
 }
@@ -1980,6 +1980,32 @@ function selectedRaceLoadStatus(){
   return{expected:expected,loaded:loaded,complete:!!selectedRacePreload.fullLoaded,loading:!!selectedRacePreload.fullLoading,error:selectedRacePreload.lastError||''}
 }
 function raceIsGraded(r){var t=String(r&&r.title||''),c=String(r&&r.raceClass||r&&r.className||'');return /(?:Jpn\s*)?G\s*[ⅠⅡⅢ123]|(?:Jpn\s*)[ⅠⅡⅢ123]|\b(?:S|H|M)\s*[ⅠⅡⅢ123]\b|SP\s*[ⅠⅡⅢ123]|重賞|グランプリ|ダービー|優駿|賞\s*\(重賞\)/i.test(t+' '+c)}
+function mandatoryTrifectaRace(r){
+  var title=String(r&&r.title||'');
+  return !!(r&&(raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))))
+}
+function forceMandatoryTrifecta(plan,r,p){
+  if(!plan||!mandatoryTrifectaRace(r))return plan;
+  var rows=(p&&p.rows||[]).slice().filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)});
+  if(rows.length<3)return plan;
+  function no(x){return x&&x.horse?n(x.horse.horseNumber):0}
+  function win(x){return n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.p1Probability,0)))}
+  var axis=rows.filter(function(x){return String(x.predMark||'')==='◎'})[0]||rows.slice().sort(function(a,b){return win(b)-win(a)})[0]||null;
+  var axisNo=no(axis);if(!axisNo)return plan;
+  var markOrder={'○':0,'▲':1,'☆+':2,'☆':3,'△':4,'注+':5,'注':6,'':7};
+  var mates=rows.filter(function(x){return no(x)!==axisNo}).sort(function(a,b){
+    var ma=String(a.predMark||''),mb=String(b.predMark||''),ra=markOrder.hasOwnProperty(ma)?markOrder[ma]:8,rb=markOrder.hasOwnProperty(mb)?markOrder[mb]:8;
+    return ra-rb||win(b)-win(a)||no(a)-no(b)
+  }).slice(0,3),combos=[];
+  for(var i=0;i<mates.length;i++)for(var j=0;j<mates.length;j++)if(i!==j)combos.push([axisNo,no(mates[i]),no(mates[j])]);
+  if(!combos.length)return plan;
+  plan.items=(plan.items||[]).filter(function(z){return !(z&&z.kind==='3連単')});
+  plan.items.push({level:'3連単チャレンジ',kind:'3連単',combos:combos,points:combos.length,combo:betComboText('3連単',combos),confidence:'チャレンジ',mandatory:true});
+  plan.trifectaReviewed=true;plan.trifectaDecision='採用';plan.trifectaReason='重賞・高知ファイルは3連単チャレンジ必須。◎1着固定で相手上位3頭を2・3着入替。';
+  if(plan.decision==='見送り')plan.decision='通常買い';
+  plan.mandatoryTrifecta=true;
+  return plan
+}
 function explicitSelectedRace(r){return !!(r&&(r.arvexqSelected||r.selectedRace||r.isSelected||r.recommendedRace||r.aiSelected))}
 function mainRaceForTrack(rows){
   rows=(rows||[]).slice().sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)});if(!rows.length)return null;
