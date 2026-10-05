@@ -54,3 +54,4 @@ for forbidden in (
 
 PATH.write_text(text, encoding="utf-8")
 print("expected-value race category removed")
+# Kept idempotent so every generated UI build stays free of this category.
