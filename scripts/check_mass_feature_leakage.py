@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 from copy import deepcopy
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from arvexq.prediction.mass_feature_snapshot import build_mass_feature_snapshot
 
