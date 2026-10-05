@@ -1,0 +1,28 @@
+name: ARVEXQ Schema Probe
+
+"on":
+  push:
+    branches: [research/recent-accuracy-20261005]
+    paths:
+      - research/arvexq_schema_probe.py
+      - .github/workflows/arvexq-schema-probe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
+      RACEDB_AUTO_UPDATE: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Probe snapshot schema
+        run: python research/arvexq_schema_probe.py
