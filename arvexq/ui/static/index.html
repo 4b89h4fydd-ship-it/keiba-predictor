@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>try{if(window.navigator.standalone===true)document.documentElement.classList.add("pwa-standalone")}catch(e){}</script>
+<meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="ARVEXQ">
+<link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
+<link rel="stylesheet" href="/styles-arvexq-v324.css">
+<title>ARVEXQ | RACE INTELLIGENCE</title>
+<link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
+<script>
+(function(){
+  var tag="arvexq-hard-reset-v324-20261004";
+  try{
+    if(localStorage.getItem(tag)==="1")return;
+    localStorage.setItem(tag,"1");
+    Promise.resolve().then(async function(){
+      try{if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}}catch(_e){}
+      try{if("serviceWorker" in navigator){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(r){return r.unregister()}))}}catch(_e){}
+      var u=new URL(location.href);u.searchParams.set("arvexq_build","v324");u.searchParams.set("_",Date.now());location.replace(u.toString());
+    });
+  }catch(_e){}
+})();
+</script>
+</head>
+<body>
+<div id="app"><div class="boot">ARVEXQを起動中…</div></div>
+<script src="/app-v324.js"></script>
+</body>
+</html>
