@@ -56,12 +56,14 @@ for forbidden in (
 PATH.write_text(text, encoding="utf-8")
 print("expected-value race category removed")
 
-# Keep selection policy enforced after every generated UI pass.
+# Keep selection policy enforced after every generated UI pass. True selections
+# use hit-first ticket choice; they are not forced into trifecta.
 policy = Path("scripts/arvexq_enforce_selection_policy.py")
 if policy.exists():
     runpy.run_path(str(policy), run_name="__main__")
 
-# Graded races and Kochi Final must always publish a trifecta challenge on every bet-plan path.
+# Graded races and Kochi Final always add a separate trifecta challenge on top
+# of the recommended bet.
 mandatory_tri = Path("scripts/arvexq_force_mandatory_trifecta.py")
 if mandatory_tri.exists():
     runpy.run_path(str(mandatory_tri), run_name="__main__")
