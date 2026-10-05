@@ -1,0 +1,39 @@
+name: ARVEXQ JRA Research Audit
+
+"on":
+  push:
+    branches: [research/recent-accuracy-20261005]
+    paths:
+      - .github/workflows/arvexq-jra-research-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ARVEXQ_API_URL: https://kraiz-api.4b89h4fydd.workers.dev
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
+      RACEDB_AUTO_UPDATE: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check --no-input -r requirements.txt
+      - name: Run JRA leakage-free audit
+        run: python backtest_v208_jra.py --days 90 --max-races 360 --iterations 1500 --workers 6 --out jra-research
+      - name: Show report
+        if: always()
+        run: |
+          test -f jra-research/report.md && cat jra-research/report.md || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jra-research-audit
+          path: jra-research/
+          retention-days: 7
