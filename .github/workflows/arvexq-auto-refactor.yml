@@ -10,6 +10,7 @@ on:
       - 'scripts/arvexq_patch_build_static.py'
       - 'scripts/arvexq_wire_core_marks.py'
       - 'scripts/arvexq_apply_signal_dedup.py'
+      - 'scripts/arvexq_remove_value_races.py'
       - 'build_static.py'
       - 'arvexq/**/*.py'
       - '.github/workflows/arvexq-auto-refactor.yml'
@@ -65,11 +66,13 @@ jobs:
         run: python scripts/arvexq_apply_signal_dedup.py
       - name: Extract embedded UI and images
         run: python scripts/arvexq_extract_ui.py
+      - name: Remove expected value race category
+        run: python scripts/arvexq_remove_value_races.py
       - name: Patch static builder for extracted assets
         run: python scripts/arvexq_patch_build_static.py
       - name: Compile check
         run: |
-          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py
+          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py scripts/arvexq_remove_value_races.py
           python -m compileall -q arvexq
       - name: Four pillar prediction regression check
         run: |
