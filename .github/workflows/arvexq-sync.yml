@@ -7,6 +7,7 @@ name: ARVEXQ Realtime Sync
     paths:
       - app.py
       - scripts/arvexq_live_sync.py
+      - scripts/arvexq_cache_health.py
       - .github/workflows/arvexq-sync.yml
   schedule:
     - cron: "*/5 22-23 * * *"
@@ -20,7 +21,6 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     timeout-minutes: 4
-
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
       CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
@@ -31,24 +31,19 @@ jobs:
       ARVEXQ_DATA_CORE: "0"
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.txt
-
       - name: Install runtime dependencies
         run: python -m pip install --disable-pip-version-check --no-input -r requirements.txt
-
       - name: Set sync date
         run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
-
       - name: Restore ARVEXQ data cache
         uses: actions/cache/restore@v4
         with:
@@ -58,95 +53,57 @@ jobs:
             arvexq-live-${{ runner.os }}-${{ env.SYNC_DATE }}-
             arvexq-data-${{ runner.os }}-${{ env.SYNC_DATE }}-
             arvexq-data-${{ runner.os }}-
-
+      - name: Validate restored ARVEXQ cache
+        run: |
+          mkdir -p "$KEIBA_DATA_DIR"
+          chmod -R u+rwX "$KEIBA_DATA_DIR" || true
+          python scripts/arvexq_cache_health.py "$KEIBA_DATA_DIR" --delete-corrupt --report cache-health.json
+          cat cache-health.json
       - name: Start lightweight ARVEXQ runtime
         run: |
           nohup uvicorn app:app --host 127.0.0.1 --port 8000 > /tmp/arvexq-live.log 2>&1 &
           echo $! > /tmp/arvexq-live.pid
           for i in $(seq 1 20); do
-            if curl -fsS --max-time 2 http://127.0.0.1:8000/health > /dev/null; then
-              echo "ARVEXQ live runtime ready"
-              exit 0
-            fi
+            if curl -fsS --max-time 2 http://127.0.0.1:8000/health >/dev/null; then echo "ARVEXQ live runtime ready"; exit 0; fi
             sleep 1
           done
           tail -n 200 /tmp/arvexq-live.log || true
           exit 1
-
       - name: Load prepared day from D1
         run: |
-          # D1 is the display source of truth. The 5-minute lane reads only summaries;
-          # scripts/arvexq_live_sync.py fetches rich details only for its small target set.
-          curl -fsS --max-time 15 \
-            "$CLOUDFLARE_DAY_URL?date=$SYNC_DATE&details=0&t=$(date +%s)" \
-            -o bundle.json || true
-
+          curl -fsS --max-time 15 "$CLOUDFLARE_DAY_URL?date=$SYNC_DATE&details=0&t=$(date +%s)" -o bundle.json || true
           RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
           if [ "$RACES" -le 0 ]; then
-            echo "D1 has no day snapshot yet; use one local discovery fallback."
-            curl -fsS --max-time 20 \
-              "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
-              -o bundle.json || true
+            curl -fsS --max-time 20 "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" -o bundle.json || true
             RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
           fi
           if [ "$RACES" -le 0 ]; then
-            echo "No cached races; one forced bootstrap repair is allowed."
-            curl -fsS --max-time 45 \
-              "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE&force=1" \
-              -o bundle.json || true
+            curl -fsS --max-time 45 "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE&force=1" -o bundle.json || true
             RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
           fi
-
           echo "live snapshot races=$RACES"
-          if [ "$RACES" -le 0 ]; then
-            tail -n 240 /tmp/arvexq-live.log || true
-            exit 1
-          fi
-
+          if [ "$RACES" -le 0 ]; then tail -n 240 /tmp/arvexq-live.log || true; exit 1; fi
       - name: Refresh live deltas only
         run: |
-          # app.py RaceDB uses SQLite; keep the small target set serialized so
-          # body-weight/odds persistence cannot lose a write to database locking.
-          python scripts/arvexq_live_sync.py \
-            --bundle bundle.json \
-            --out live-payload.json \
-            --audit live-audit.json \
-            --workers 1
+          python scripts/arvexq_live_sync.py --bundle bundle.json --out live-payload.json --audit live-audit.json --workers 1
           cat live-audit.json
-
       - name: Push live deltas to D1
-        run: |
-          curl --fail-with-body --max-time 20 -X POST "$CLOUDFLARE_SYNC_URL" \
-            -H "content-type: application/json" \
-            -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @live-payload.json
-
+        run: curl --fail-with-body --max-time 20 -X POST "$CLOUDFLARE_SYNC_URL" -H "content-type: application/json" -H "x-sync-token: $SYNC_TOKEN" --data-binary @live-payload.json
       - name: Verify D1 first-paint endpoint
         run: |
-          curl -fsS --max-time 15 \
-            "$CLOUDFLARE_DAY_URL?date=$SYNC_DATE&details=0&t=$(date +%s)" \
-            -o d1-day.json
+          curl -fsS --max-time 15 "$CLOUDFLARE_DAY_URL?date=$SYNC_DATE&details=0&t=$(date +%s)" -o d1-day.json
           D1_RACES=$(jq '.races // [] | length' d1-day.json 2>/dev/null || echo 0)
           echo "D1 races=$D1_RACES"
-          if [ "$D1_RACES" -le 0 ]; then
-            echo "::error::D1 day endpoint returned no races after live sync"
-            exit 1
-          fi
-
+          if [ "$D1_RACES" -le 0 ]; then echo "::error::D1 day endpoint returned no races after live sync"; exit 1; fi
       - name: Stop ARVEXQ
         if: always()
-        run: |
-          if [ -f /tmp/arvexq-live.pid ]; then
-            kill "$(cat /tmp/arvexq-live.pid)" 2>/dev/null || true
-          fi
-
+        run: if [ -f /tmp/arvexq-live.pid ]; then kill "$(cat /tmp/arvexq-live.pid)" 2>/dev/null || true; fi
       - name: Save ARVEXQ live cache
         if: always()
         uses: actions/cache/save@v4
         with:
           path: .arvexq-data
           key: arvexq-live-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
-
       - name: Show live log on failure
         if: failure()
         run: tail -n 300 /tmp/arvexq-live.log || true
