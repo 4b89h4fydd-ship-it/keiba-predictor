@@ -1,4 +1,5 @@
 from arvexq.services import prepare_race_detail
+from arvexq.databanks.legacy_bridge import register_legacy_sources
 from arvexq.ui.assets import read_asset, read_binary_asset
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -9606,6 +9607,9 @@ def service_worker():
 
 
 # Start the v86 RaceDB updater after module initialization.
+# ARVEXQ_DATABANK_REGISTRY
+register_legacy_sources(globals())
+
 _start_racedb_daemon()
 
 
