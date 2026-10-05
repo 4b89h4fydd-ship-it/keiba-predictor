@@ -7,27 +7,29 @@ APP = Path('app.py')
 text = APP.read_text(encoding='utf-8')
 original = text
 
-# 1) Import the split ability engine without disturbing __future__ imports.
-imp = 'from arvexq.ability_engine import apply_ability_ranking\n'
-if imp not in text:
+# 1) Keep app.py dependent on a stable service boundary, not prediction internals.
+old_imp = 'from arvexq.ability_engine import apply_ability_ranking\n'
+new_imp = 'from arvexq.services import prepare_race_detail\n'
+if old_imp in text:
+    text = text.replace(old_imp, new_imp, 1)
+elif new_imp not in text:
     future = re.search(r'^(from __future__ import .*\n)', text, re.M)
     if future:
-        text = text[:future.end()] + imp + text[future.end():]
+        text = text[:future.end()] + new_imp + text[future.end():]
     else:
-        text = imp + text
+        text = new_imp + text
 
-# 2) Wire ability/record-first evidence into the common precompute path.
-#    This attaches evidence to horses before the existing prediction/UI logic uses them.
-if 'apply_ability_ranking(detail)' not in text:
+# 2) Route common precompute through the service layer.
+text = text.replace('    detail = apply_ability_ranking(detail)\n', '    detail = prepare_race_detail(detail)\n', 1)
+if 'prepare_race_detail(detail)' not in text:
     pat = re.compile(r'(def _precompute_detail_metrics\(detail(?::\s*dict)?\s*\)(?:\s*->\s*[^:]+)?\s*:\s*\n)')
     m = pat.search(text)
     if not m:
         raise SystemExit('PATCH_ABORT: _precompute_detail_metrics(detail) not found')
-    inject = m.group(1) + '    detail = apply_ability_ranking(detail)\n'
+    inject = m.group(1) + '    detail = prepare_race_detail(detail)\n'
     text = text[:m.start()] + inject + text[m.end():]
 
 # 3) Normalize explicit scratch labels. Keep different statuses separate.
-#    Only patch the dedicated helper body, never global text blindly.
 sm = re.search(r'def _scratch_status\(value:\s*str\)\s*->\s*str:\s*\n(?P<body>(?:    .*\n)+?)(?=\n\ndef |\nclass |\Z)', text)
 if sm:
     body = sm.group('body')
