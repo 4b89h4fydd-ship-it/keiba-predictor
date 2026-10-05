@@ -7,7 +7,8 @@ with stale WAL/SHM sidecars.  D1 is the serving source of truth, so a malformed
 local SQLite cache must never be allowed to slow or break prefetch/live/result
 jobs.  This helper removes transient sidecars, runs PRAGMA quick_check on every
 SQLite database under KEIBA_DATA_DIR, and deletes only databases that fail the
-check so app.py can recreate them cleanly.
+check so app.py can recreate them cleanly. It is dependency-free so it can run
+immediately after cache restore.
 """
 from __future__ import annotations
 
