@@ -4,7 +4,6 @@ from __future__ import annotations
 import copy
 import json
 import os
-import re
 import urllib.parse
 import urllib.request
 from collections import Counter
@@ -32,7 +31,7 @@ def fv(v: Any, d: float = -1e18) -> float:
 
 
 def api_json(url: str) -> dict[str, Any]:
-    req = urllib.request.Request(url, headers={"user-agent": "ARVEXQ-old-new-audit/1.0", "accept": "application/json"})
+    req = urllib.request.Request(url, headers={"user-agent": "ARVEXQ-old-new-audit/1.1", "accept": "application/json"})
     with urllib.request.urlopen(req, timeout=45) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
@@ -51,8 +50,9 @@ def finish_order(detail: dict[str, Any]) -> list[int]:
     return [n for f, n in sorted(out)]
 
 
-def mark_from_obj(obj: dict[str, Any]) -> str:
+def old_mark_from_obj(obj: dict[str, Any]) -> str:
     ev = obj.get("integratedEvaluation") if isinstance(obj.get("integratedEvaluation"), dict) else {}
+    # Historical UI used horse-level aiMark first, then integrated evaluation.
     for source in (obj, ev):
         for key in ("aiMark", "mark", "predictionMark", "symbol", "predictionSymbol"):
             value = source.get(key)
@@ -61,7 +61,7 @@ def mark_from_obj(obj: dict[str, Any]) -> str:
     return ""
 
 
-def marks_from_horses(rows: Any) -> dict[int, str]:
+def old_marks_from_horses(rows: Any) -> dict[int, str]:
     if not isinstance(rows, list):
         return {}
     out: dict[int, str] = {}
@@ -69,8 +69,28 @@ def marks_from_horses(rows: Any) -> dict[int, str]:
         if not isinstance(row, dict):
             continue
         n = iv(row.get("horseNumber", row.get("number", row.get("horseNo"))))
-        m = mark_from_obj(row)
+        m = old_mark_from_obj(row)
         if n > 0 and m:
+            out[n] = m
+    return out
+
+
+def new_marks_from_horses(rows: Any) -> dict[int, str]:
+    """Read only the mark written by the replayed four-pillar engine.
+
+    Horse-level aiMark/predictionMark fields in a frozen snapshot belong to the old
+    prediction. Reading them here would contaminate the new-model comparison.
+    """
+    if not isinstance(rows, list):
+        return {}
+    out: dict[int, str] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        n = iv(row.get("horseNumber", row.get("number", row.get("horseNo"))))
+        ev = row.get("integratedEvaluation") if isinstance(row.get("integratedEvaluation"), dict) else {}
+        m = str(ev.get("mark") or "").strip()
+        if n > 0 and m in MARKS:
             out[n] = m
     return out
 
@@ -93,7 +113,7 @@ def find_prerace_snapshot(detail: dict[str, Any]) -> tuple[dict[str, Any] | None
             continue
         horses = obj.get("horses")
         if isinstance(horses, list) and len(horses) >= 2:
-            marks = marks_from_horses(horses)
+            marks = old_marks_from_horses(horses)
             score = len(marks) * 100 + len(horses)
             if "lock" in low or "frozen" in low:
                 score += 1000
@@ -108,13 +128,9 @@ def find_prerace_snapshot(detail: dict[str, Any]) -> tuple[dict[str, Any] | None
 
 def legacy_marks(detail: dict[str, Any], snapshot: dict[str, Any] | None) -> tuple[dict[int, str], str]:
     if snapshot:
-        marks = marks_from_horses(snapshot.get("horses"))
+        marks = old_marks_from_horses(snapshot.get("horses"))
         if marks:
             return marks, "frozen/prerace snapshot"
-
-    # The final-mark wrapper saves the mark produced immediately before the new core
-    # marks replace it. This is the strongest fallback when a frozen snapshot is not
-    # exposed by the public day payload.
     legacy: dict[int, str] = {}
     for horse in detail.get("horses") or []:
         if not isinstance(horse, dict):
@@ -126,14 +142,10 @@ def legacy_marks(detail: dict[str, Any], snapshot: dict[str, Any] | None) -> tup
             legacy[n] = m
     if legacy:
         return legacy, "legacyComputedMark fallback"
-
-    current = marks_from_horses(detail.get("horses"))
+    current = old_marks_from_horses(detail.get("horses"))
     engine = str(detail.get("markEngineVersion") or "")
     if current and "four-pillar" not in engine:
         return current, "stored old mark"
-
-    # Last-resort legacy P1 order: label explicitly so it is never misrepresented as
-    # the historical displayed mark.
     scored: list[tuple[float, int]] = []
     for horse in detail.get("horses") or []:
         if not isinstance(horse, dict):
@@ -143,29 +155,23 @@ def legacy_marks(detail: dict[str, Any], snapshot: dict[str, Any] | None) -> tup
         if n > 0 and ev.get("p1Score") is not None:
             scored.append((fv(ev.get("p1Score")), n))
     scored.sort(key=lambda x: (-x[0], x[1]))
-    out = {n: m for (_, n), m in zip(scored, MARKS)}
-    return out, "legacy p1Score fallback"
+    return {n: m for (_, n), m in zip(scored, MARKS)}, "legacy p1Score fallback"
 
 
 def scrub_postrace(detail: dict[str, Any]) -> dict[str, Any]:
     d = copy.deepcopy(detail)
     for key in list(d):
-        low = key.lower()
-        if low in {"result", "results", "payout", "payouts", "payoff", "finishers", "finishorder", "winner"}:
+        if key.lower() in {"result", "results", "payout", "payouts", "payoff", "finishers", "finishorder", "winner"}:
             d.pop(key, None)
-
-    # A horse cannot legitimately have the same race in its pre-race history. Remove
-    # target-day history rows when dates are present. This is conservative and avoids
-    # obvious result leakage during retrospective replay.
     for horse in d.get("horses") or []:
         if not isinstance(horse, dict):
             continue
         for key in ("allPastRuns", "recentRaces"):
-            rows = horse.get(key)
-            if not isinstance(rows, list):
+            history = horse.get(key)
+            if not isinstance(history, list):
                 continue
             kept = []
-            for run in rows:
+            for run in history:
                 if not isinstance(run, dict):
                     continue
                 date_text = str(run.get("date") or run.get("raceDate") or run.get("day") or "")
@@ -179,7 +185,6 @@ def scrub_postrace(detail: dict[str, Any]) -> dict[str, Any]:
 def replay_base(detail: dict[str, Any], snapshot: dict[str, Any] | None) -> tuple[dict[str, Any], str]:
     if snapshot and isinstance(snapshot.get("horses"), list):
         base = copy.deepcopy(snapshot)
-        # Fill immutable race context if the lock stores only the horse snapshot.
         for key in ("id", "date", "circuit", "track", "venue", "raceNumber", "distance", "surface", "condition", "going", "weather", "bias", "trackBias"):
             if base.get(key) in (None, "") and detail.get(key) not in (None, ""):
                 base[key] = copy.deepcopy(detail.get(key))
@@ -210,7 +215,7 @@ def main() -> None:
         old, old_source = legacy_marks(detail, snapshot)
         base, replay_source = replay_base(detail, snapshot)
         apply_core_marks(base)
-        new = marks_from_horses(base.get("horses"))
+        new = new_marks_from_horses(base.get("horses"))
         if not old or not new:
             continue
         source_counts[old_source] += 1
@@ -220,32 +225,21 @@ def main() -> None:
         old_pos = order.index(old_best) + 1 if old_best in order else 999
         new_pos = order.index(new_best) + 1 if new_best in order else 999
         rows.append({
-            "id": str(detail.get("id") or ""),
-            "circuit": str(detail.get("circuit") or ""),
+            "id": str(detail.get("id") or ""), "circuit": str(detail.get("circuit") or ""),
             "track": str(detail.get("track") or detail.get("venue") or ""),
-            "raceNo": iv(detail.get("raceNumber", detail.get("raceNo"))),
-            "winner": winner,
-            "oldBest": old_best,
-            "newBest": new_best,
-            "oldBestPos": old_pos,
-            "newBestPos": new_pos,
-            "oldWinnerMark": old.get(winner, ""),
-            "newWinnerMark": new.get(winner, ""),
-            "oldSource": old_source,
-            "replaySource": replay_source,
-            "snapshotPath": snapshot_path,
+            "raceNo": iv(detail.get("raceNumber", detail.get("raceNo"))), "winner": winner,
+            "oldBest": old_best, "newBest": new_best, "oldBestPos": old_pos, "newBestPos": new_pos,
+            "oldWinnerMark": old.get(winner, ""), "newWinnerMark": new.get(winner, ""),
+            "oldSource": old_source, "replaySource": replay_source, "snapshotPath": snapshot_path,
         })
 
     def metrics(which: str) -> dict[str, int]:
-        best_pos = f"{which}BestPos"
-        winner_mark = f"{which}WinnerMark"
+        pos = f"{which}BestPos"; wm = f"{which}WinnerMark"
         return {
-            "races": len(rows),
-            "bestWin": sum(r[best_pos] == 1 for r in rows),
-            "bestTop2": sum(r[best_pos] <= 2 for r in rows),
-            "bestTop3": sum(r[best_pos] <= 3 for r in rows),
-            "winnerCore": sum(r[winner_mark] in {"◎", "○", "▲"} for r in rows),
-            "winnerAnyMark": sum(bool(r[winner_mark]) for r in rows),
+            "races": len(rows), "bestWin": sum(r[pos] == 1 for r in rows),
+            "bestTop2": sum(r[pos] <= 2 for r in rows), "bestTop3": sum(r[pos] <= 3 for r in rows),
+            "winnerCore": sum(r[wm] in {"◎", "○", "▲"} for r in rows),
+            "winnerAnyMark": sum(bool(r[wm]) for r in rows),
         }
 
     old_m, new_m = metrics("old"), metrics("new")
@@ -265,25 +259,10 @@ def main() -> None:
     print(f"◎変更={len(changed)} 改善={improved} 悪化={worsened} 着順同等={equal}")
     print("RACES")
     for r in rows:
-        print(
-            f"{r['circuit'] or '-'} {r['track'] or '-'} {r['raceNo']}R "
-            f"勝={r['winner']} 旧◎={r['oldBest']}({r['oldBestPos']}着) "
-            f"新◎={r['newBest']}({r['newBestPos']}着) "
-            f"勝馬印 旧={r['oldWinnerMark'] or '無'} 新={r['newWinnerMark'] or '無'}"
-        )
-    out = {
-        "date": TARGET_DATE,
-        "evaluable": len(rows),
-        "old": old_m,
-        "new": new_m,
-        "changed": len(changed),
-        "improved": improved,
-        "worsened": worsened,
-        "equal": equal,
-        "oldSource": dict(source_counts),
-        "newReplaySource": dict(replay_counts),
-        "rows": rows,
-    }
+        print(f"{r['circuit'] or '-'} {r['track'] or '-'} {r['raceNo']}R 勝={r['winner']} 旧◎={r['oldBest']}({r['oldBestPos']}着) 新◎={r['newBest']}({r['newBestPos']}着) 勝馬印 旧={r['oldWinnerMark'] or '無'} 新={r['newWinnerMark'] or '無'}")
+    out = {"date": TARGET_DATE, "evaluable": len(rows), "old": old_m, "new": new_m,
+           "changed": len(changed), "improved": improved, "worsened": worsened, "equal": equal,
+           "oldSource": dict(source_counts), "newReplaySource": dict(replay_counts), "rows": rows}
     print("ARVEXQ_COMPARISON_JSON=" + json.dumps(out, ensure_ascii=False, separators=(",", ":")))
 
 
