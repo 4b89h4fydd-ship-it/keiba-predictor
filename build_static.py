@@ -240,7 +240,9 @@ def _inject_before_iife_close(script: str, patch: str) -> str:
     return script[:pos] + "\n" + patch + "\n" + script[pos:]
 
 
-js = _inject_before_iife_close(js, ABILITY_FIRST_JS)
+# Disabled: source app.js owns prediction behavior. Injecting ABILITY_FIRST_JS here
+# caused static-build marks to diverge from server/source marks.
+# js = _inject_before_iife_close(js, ABILITY_FIRST_JS)
 
 SCRATCH_OVERLAY_CSS = r'''
 <style id="arvexq-scratch-overlay-css">
@@ -298,9 +300,9 @@ for route in ("venue", "race"):
 (DIST / f"app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
 (DIST / f"arvexq-app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
 
-compat_css = ("v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v130")
-compat_app = ("v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v147","v146","v145","v141","v140","v139","v138","v137","v136","v133")
-compat_arvexq = ("v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303")
+compat_css = ("v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v130")
+compat_app = ("v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v147","v146","v145","v141","v140","v139","v138","v137","v136","v133")
+compat_arvexq = ("v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303")
 for name in ("manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
     (DIST / name).write_text(manifest, encoding="utf-8")
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
@@ -310,7 +312,7 @@ for legacy_sw in ("v321", "v320", "v319", "v318"):
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
 model_version = strings.get("AI_EVALUATION_VERSION", "").removeprefix("evidence-")
-(DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"ability-first-evidence","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
+(DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"four-pillar-authoritative","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
 redirects=["/venue /index.html 200","/race /index.html 200"]
 for v in compat_app:redirects.append(f"/app-{v}.js /app-{BUILD_VERSION}.js 302")
 for v in compat_arvexq:redirects.append(f"/arvexq-app-{v}.js /arvexq-app-{BUILD_VERSION}.js 302")
