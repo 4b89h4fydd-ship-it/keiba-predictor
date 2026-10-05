@@ -42,11 +42,13 @@ def fold_ranges(ids: list[str], folds: int = 4):
 
 
 def add_market_prob(z: pd.DataFrame) -> pd.DataFrame:
-    z=z.copy(); vals=[]
+    z=z.copy()
+    z['market_prob']=0.0
     for _,g in z.groupby('race_id',sort=False):
         inv=np.array([1/max(.01,float(x)) if float(x)>0 else 0 for x in g.odds],float)
-        s=inv.sum(); p=inv/s if s>0 else np.zeros(len(g)); vals.extend(p.tolist())
-    z['market_prob']=vals
+        s=inv.sum()
+        p=inv/s if s>0 else np.zeros(len(g))
+        z.loc[g.index,'market_prob']=p
     return z
 
 
@@ -132,7 +134,7 @@ def main():
     details=load_d1(a.days)+load_extra(a.extra_jra)
     df=pd.DataFrame(rows_from_details(details))
     if df.empty: raise SystemExit('no usable rows')
-    report={'generatedAt':datetime.now(JST).isoformat(),'objective':'maximize honmei place rate first, then win rate','leakageGuard':{'resultAsFeature':False,'payoutAsFeature':False,'marketOnlyPostModel':True},'circuits':{}}
+    report={'generatedAt':datetime.now(JST).isoformat(),'objective':'maximize honmei place rate first, then win rate','leakageGuard':{'resultAsFeature':False,'payoutAsFeature':False,'marketOnlyPostModel':True},'marketProbabilityAlignment':'index-safe','circuits':{}}
     for c in ('中央','地方'):
         report['circuits'][c]=run_circuit(df,c)
         print(c,json.dumps(report['circuits'][c]['aggregate'],ensure_ascii=False))
