@@ -20,8 +20,8 @@ def ensure_replace(text: str, old: str, new: str, label: str) -> str:
 
 js = APP_JS.read_text(encoding="utf-8")
 
-# Cache namespaces must move with the deployed build. Fixed historical keys survived
-# many revisions and could resurrect stale result/bodyweight state in the PWA.
+# Cache namespaces move with the deployed build. Fixed historical keys survived many
+# revisions and could resurrect stale result/bodyweight state in the PWA.
 js = ensure_replace(
     js,
     'function cacheKey(d,c){return "keiba:v86:races:"+d+":"+(c||state.circuit||"")}',
@@ -113,13 +113,13 @@ if new_mh not in js:
     else:
         raise RuntimeError("strict selection multi-head anchor not found")
 
-# Featured status must mean exactly strict selection OR mandatory graded/Kochi target.
+# Featured status means exactly strict selection OR mandatory graded/Kochi target.
 old_featured = "function isFeaturedBetRace(r,p){\n  var title=String(r&&r.title||''),sel=null;\n  try{sel=raceSelectionProfile(r,p)}catch(e){}\n  return !!(r&&(raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))\n}"
 new_featured = "function isFeaturedBetRace(r,p){\n  var title=String(r&&r.title||''),sel=null;\n  try{sel=strictSelectedRaceProfile(r,p)}catch(e){}\n  return !!(r&&(raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))\n}"
 js = ensure_replace(js, old_featured, new_featured, "strict featured race policy")
 
 # An authoritative ◎ may differ from legacy P1. In that disagreement, do not permit
-# the 1st-place lock merely because the old winner model reports itself stable.
+# a 1st-place lock merely because the older winner model reports itself stable.
 old_axis = "coreP1No=p1.length?n(p1[0].no):0,axisAgreement=!!(axisNo&&coreP1No&&axisNo===coreP1No),axisStable=!!(axisRow&&axisRow.winnerDecisionStable),centralRace=String((r&&r.circuit)||'')==='中央',axisLocked=axisStable&&axisConfidence>=(centralRace?.68:.62),"
 new_axis = "coreP1No=p1.length?n(p1[0].no):0,axisAgreement=!!(axisNo&&coreP1No&&axisNo===coreP1No),axisStable=!!(axisRow&&axisRow.winnerDecisionStable),centralRace=String((r&&r.circuit)||'')==='中央',axisLocked=axisStable&&axisAgreement&&axisConfidence>=(centralRace?.68:.62),"
 js = ensure_replace(js, old_axis, new_axis, "authoritative axis agreement")
@@ -133,16 +133,23 @@ js = ensure_replace(js, old_merge, new_merge, "bodyweight/status invalidation")
 APP_JS.write_text(js, encoding="utf-8")
 
 build = BUILD.read_text(encoding="utf-8")
-# Historical static injection redefined prediction functions after source app.js load.
-old_inject = 'js = _inject_before_iife_close(js, ABILITY_FIRST_JS)'
-new_inject = '# Disabled: source app.js owns prediction behavior. Injecting ABILITY_FIRST_JS here\n# caused static-build marks to diverge from server/source marks.\n# js = _inject_before_iife_close(js, ABILITY_FIRST_JS)'
-if new_inject not in build:
-    if old_inject not in build:
-        raise RuntimeError("build_static prediction injection anchor not found")
-    build = build.replace(old_inject, new_inject, 1)
 
-# Keep redirect compatibility for immediately preceding shells. A stale installed PWA
-# can still request these names during an update before the new index takes control.
+# Remove the obsolete build-time prediction implementation entirely. Keeping a dormant
+# second assignPredictionMarks implementation made accidental reactivation too easy.
+legacy_start = build.find("# Ability-first prediction core.")
+legacy_end = build.find("SCRATCH_OVERLAY_CSS = r'''", legacy_start if legacy_start >= 0 else 0)
+if legacy_start >= 0:
+    if legacy_end <= legacy_start:
+        raise RuntimeError("obsolete static prediction block end not found")
+    build = build[:legacy_start] + (
+        "# Prediction/mark logic is owned by arvexq/ui/static/app.js and the server-side\n"
+        "# four-pillar engine. build_static.py must never redefine prediction functions.\n\n"
+    ) + build[legacy_end:]
+elif "ABILITY_FIRST_JS" in build or "_inject_before_iife_close" in build:
+    raise RuntimeError("partial obsolete static prediction override remains")
+
+# Keep redirects for immediately preceding shells. A stale installed PWA can request
+# these names during an update before the new index takes control.
 for label, old, new in (
     ("compat css", 'compat_css = ("v321",', 'compat_css = ("v323","v322","v321",'),
     ("compat app", 'compat_app = ("v321",', 'compat_app = ("v323","v322","v321",'),
@@ -161,4 +168,4 @@ build = ensure_replace(
 )
 BUILD.write_text(build, encoding="utf-8")
 
-print("prediction paths reconciled; selection/bets/cache/PWA compatibility hardened")
+print("prediction paths reconciled; obsolete override removed; selection/bets/cache/PWA hardened")
