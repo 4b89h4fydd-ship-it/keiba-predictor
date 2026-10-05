@@ -24,6 +24,7 @@ jobs:
           PYTHONPATH: '.'
           ARVEXQ_DATE: '2026-10-05'
           ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_MODEL_AUDIT: 'four-pillar-v3'
         run: |
           python - <<'PY'
           import scripts.arvexq_today_old_new_compare as audit
