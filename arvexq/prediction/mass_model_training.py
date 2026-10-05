@@ -5,9 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
+from arvexq.prediction.mass_feature_selection import choose_training_manifest, restrict_features
 from arvexq.prediction.mass_training_dataset import split_walk_forward
 
-TRAINER_VERSION = "arvexq-mass-model-trainer-v1"
+TRAINER_VERSION = "arvexq-mass-model-trainer-v2"
 
 
 @dataclass(frozen=True)
@@ -19,12 +20,8 @@ class HeadSpec:
     row_filter: Callable[[dict[str, Any]], bool]
 
 
-def _not_market(name: str) -> bool:
-    return not name.startswith("market::")
-
-
 def _ability_feature(name: str) -> bool:
-    """Baseline ability should not learn current market or highly specific current-race fit."""
+    """Baseline ability excludes current market and current-condition specialization."""
     if name.startswith("market::"):
         return False
     if name.startswith("history::all::"):
@@ -69,35 +66,13 @@ def _top3_popular(row: dict[str, Any]) -> bool:
 
 
 HEAD_SPECS: dict[str, HeadSpec] = {
-    "ability": HeadSpec(
-        name="ability",
-        task="binary",
-        label="labelWin",
-        include_feature=_ability_feature,
-        row_filter=lambda row: True,
-    ),
-    "win": HeadSpec(
-        name="win",
-        task="binary",
-        label="labelWin",
-        include_feature=_all_prerace_non_market,
-        row_filter=lambda row: True,
-    ),
-    "value": HeadSpec(
-        name="value",
-        task="regression",
-        label="marketResidual",
-        include_feature=_value_feature,
-        row_filter=_has_popularity,
-    ),
-    "danger": HeadSpec(
-        name="danger",
-        task="binary",
-        label="labelDanger",
-        include_feature=_danger_feature,
-        row_filter=_top3_popular,
-    ),
+    "ability": HeadSpec("ability", "binary", "labelWin", _ability_feature, lambda row: True),
+    "win": HeadSpec("win", "binary", "labelWin", _all_prerace_non_market, lambda row: True),
+    "value": HeadSpec("value", "regression", "marketResidual", _value_feature, _has_popularity),
+    "danger": HeadSpec("danger", "binary", "labelDanger", _danger_feature, _top3_popular),
 }
+
+HEAD_FEATURE_LIMITS = {"ability": 5000, "win": 8000, "value": 8000, "danger": 6000}
 
 
 def _target(row: dict[str, Any], spec: HeadSpec) -> float:
@@ -176,16 +151,21 @@ def _xy(rows: list[dict[str, Any]], vectorizer: Any | None = None, fit: bool = F
     return x, y, vectorizer
 
 
+def _apply_manifest(rows: list[dict[str, Any]], manifest: set[str]) -> list[dict[str, Any]]:
+    out=[]
+    for row in rows:
+        features=restrict_features(row.get("modelFeatures") or {},manifest)
+        out.append({**row,"modelFeatures":features})
+    return out
+
+
 def train_head(
     rows: list[dict[str, Any]],
     head: str,
     output_dir: str | Path,
     params: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Train one head using chronological race-group splits.
-
-    Heavy dependencies are imported only here so the production runtime remains light.
-    """
+    """Train one head using chronological race-group splits and train-only feature pruning."""
     if head not in HEAD_SPECS:
         raise KeyError(f"unknown head: {head}")
     from catboost import CatBoostClassifier, CatBoostRegressor
@@ -199,6 +179,20 @@ def train_head(
     test_rows = split["test"]
     if not train_rows or not valid_rows or not test_rows:
         raise ValueError(f"insufficient chronological data for head={head}")
+
+    # Fit the feature manifest on TRAIN only. Validation/test cannot influence which
+    # factors survive. This is part of the leakage boundary, not just optimization.
+    feature_names = choose_training_manifest(
+        train_rows,
+        min_coverage=0.01,
+        max_features=HEAD_FEATURE_LIMITS[head],
+    )
+    if not feature_names:
+        raise ValueError(f"no usable training features for head={head}")
+    manifest=set(feature_names)
+    train_rows=_apply_manifest(train_rows,manifest)
+    valid_rows=_apply_manifest(valid_rows,manifest)
+    test_rows=_apply_manifest(test_rows,manifest)
 
     x_train, y_train, vectorizer = _xy(train_rows, fit=True)
     x_valid, y_valid, _ = _xy(valid_rows, vectorizer=vectorizer)
@@ -216,7 +210,8 @@ def train_head(
         "trainRows": len(train_rows),
         "validRows": len(valid_rows),
         "testRows": len(test_rows),
-        "featureCount": len(vectorizer.feature_names_),
+        "candidateFeatureCount": len(feature_names),
+        "vectorizedFeatureCount": len(vectorizer.feature_names_),
     }
     if spec.task == "binary":
         valid_prob = model.predict_proba(x_valid)[:, 1]
@@ -253,6 +248,8 @@ def train_head(
         "head": head,
         "task": spec.task,
         "label": spec.label,
+        "featureLimit": HEAD_FEATURE_LIMITS[head],
+        "selectedFeatureNames": feature_names,
         "metrics": metrics,
         "modelPath": model_path.name,
         "vectorizerPath": vectorizer_path.name,
