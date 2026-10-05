@@ -1,0 +1,30 @@
+name: ARVEXQ Cloudflare Sync Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check API health
+        run: |
+          curl --fail-with-body \
+            "https://kraiz-api.4b89h4fydd.workers.dev/api/health"
+
+      - name: Test authenticated sync
+        run: |
+          curl --fail-with-body \
+            -X POST \
+            "https://kraiz-api.4b89h4fydd.workers.dev/api/sync" \
+            -H "content-type: application/json" \
+            -H "x-sync-token: ${{ secrets.SYNC_TOKEN }}" \
+            --data '{
+              "meta": {
+                "arvexq_sync_test": "ok"
+              }
+            }'
