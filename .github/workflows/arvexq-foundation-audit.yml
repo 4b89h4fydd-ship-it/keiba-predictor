@@ -1,10 +1,11 @@
-name: ARVEXQ Foundation Priority Audit
+name: ARVEXQ Prediction Audits
 
 on:
   push:
     branches: [main]
     paths:
       - 'scripts/arvexq_foundation_priority_audit.py'
+      - 'scripts/arvexq_signal_dedup_audit.py'
       - '.github/workflows/arvexq-foundation-audit.yml'
   workflow_dispatch:
 
@@ -25,3 +26,9 @@ jobs:
           ARVEXQ_DATE: '2026-10-05'
           ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
         run: python scripts/arvexq_foundation_priority_audit.py
+      - name: Compare deduplicated evidence families
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_DATE: '2026-10-05'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+        run: python scripts/arvexq_signal_dedup_audit.py
