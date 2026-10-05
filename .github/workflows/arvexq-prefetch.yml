@@ -27,16 +27,18 @@ concurrency:
 jobs:
   prefetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
       CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
       KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-data
       ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
       ARVEXQ_PREFETCH_WORKERS: "6"
+      ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "2"
 
     steps:
       - name: Checkout
@@ -118,8 +120,17 @@ jobs:
           python scripts/arvexq_prefetch.py \
             --bundle bundle.json \
             --payload prefetch-payload.json \
-            --report prefetch-report.json
+            --report prefetch-report.json \
+            --analysis-workers "$ARVEXQ_PREFETCH_ANALYSIS_WORKERS"
           cat prefetch-report.json
+
+          MISSING_CARD=$(jq '.meta.missing_card_count // 0' prefetch-payload.json)
+          MISSING_ANALYSIS=$(jq '.meta.missing_analysis_count // 0' prefetch-payload.json)
+          if [ "$MISSING_CARD" -gt 0 ] || [ "$MISSING_ANALYSIS" -gt 0 ]; then
+            echo "::error::FULL PREFETCH incomplete: missing_card=$MISSING_CARD missing_analysis=$MISSING_ANALYSIS"
+            jq '{missing_card,missing_analysis,analysis_errors,card_errors}' prefetch-report.json
+            exit 1
+          fi
 
       - name: Push prepared day to D1
         run: |
@@ -134,19 +145,24 @@ jobs:
             -H "x-sync-token: $SYNC_TOKEN" \
             --data-binary @prefetch-payload.json
 
-      - name: Verify prepared day from D1
+      - name: Verify prepared day and analysis from D1
         run: |
           EXPECTED=$(jq '.meta.race_count // 0' prefetch-payload.json)
           if [ "$EXPECTED" -le 0 ]; then
             exit 0
           fi
           curl --fail-with-body --max-time 30 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=1" \
+            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=1&t=$(date +%s)" \
             -o verified-prefetch.json
           ACTUAL=$(jq '.details // [] | length' verified-prefetch.json)
-          echo "D1 PREFETCH VERIFY expected=$EXPECTED details=$ACTUAL"
+          ANALYSIS=$(jq '.analysisCount // 0' verified-prefetch.json)
+          echo "D1 PREFETCH VERIFY expected=$EXPECTED details=$ACTUAL analysis=$ANALYSIS"
           if [ "$ACTUAL" -lt "$EXPECTED" ]; then
             echo "::error::D1 is missing prepared race details"
+            exit 1
+          fi
+          if [ "$ANALYSIS" -lt "$EXPECTED" ]; then
+            echo "::error::D1 is missing prepared analysis: $ANALYSIS/$EXPECTED"
             exit 1
           fi
 
@@ -166,4 +182,4 @@ jobs:
 
       - name: Show local log on failure
         if: failure()
-        run: tail -n 300 /tmp/arvexq-prefetch.log || true
+        run: tail -n 400 /tmp/arvexq-prefetch.log || true
