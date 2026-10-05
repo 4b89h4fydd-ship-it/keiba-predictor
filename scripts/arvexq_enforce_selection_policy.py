@@ -15,7 +15,8 @@ elif new_featured not in text:
     raise SystemExit('featured race policy block not found')
 
 # Make the visible 厳選 list genuinely sparse. It may be empty. Do not fill it
-# with main/graded/Kochi races merely to have something to show.
+# with main/graded/Kochi races merely to have something to show. These stricter
+# gates are selection filters, not a claim that any race is literally certain.
 old_cut = "var best=n(rows[0].selection&&rows[0].selection.score),central=String((rows[0].race&&rows[0].race.circuit)||'')==='中央',floor=Math.max(central?72:68,best-4),limit=best>=(central?87:84)?3:2;\n  var elite=rows.filter(function(z){var t=z.selection||{},rd=t.readiness||{},central=String((z.race&&z.race.circuit)||'')==='中央';return n(t.score)>=floor&&n(rd.prediction)>=(central?.64:.61)&&n(t.coverage)>=(central?.44:.42)&&n(t.top3mass)>=(central?.58:.60)&&n(t.evidence)>=(central?.38:.36)&&n(t.scenarioProb)>=(central?.24:.22)&&!!t.winnerStable&&n(t.winnerConfidence)>=.60});\n  return elite.slice(0,limit).sort(raceChronologicalCompare)"
 new_cut = "var best=n(rows[0].selection&&rows[0].selection.score),central=String((rows[0].race&&rows[0].race.circuit)||'')==='中央',floor=Math.max(central?82:80,best-2),limit=1;\n  var elite=rows.filter(function(z){var t=z.selection||{},rd=t.readiness||{},central=String((z.race&&z.race.circuit)||'')==='中央';return n(t.score)>=floor&&n(rd.prediction)>=(central?.74:.72)&&n(t.coverage)>=(central?.60:.58)&&n(t.top3mass)>=(central?.68:.70)&&n(t.evidence)>=(central?.55:.53)&&n(t.scenarioProb)>=(central?.30:.28)&&!!t.winnerStable&&n(t.winnerConfidence)>=.72});\n  return elite.slice(0,limit).sort(raceChronologicalCompare)"
 if old_cut in text:
