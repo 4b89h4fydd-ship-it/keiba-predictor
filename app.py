@@ -1,4 +1,4 @@
-from arvexq.ability_engine import apply_ability_ranking
+from arvexq.services import prepare_race_detail
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ARVEXQ Python source
@@ -11742,7 +11742,7 @@ def _restore_saved_odds(detail:dict)->dict:
 
 
 def _precompute_detail_metrics(detail: dict) -> dict:
-    detail = apply_ability_ranking(detail)
+    detail = prepare_race_detail(detail)
     if not isinstance(detail,dict):return detail
     detail=_apply_enrichment(str(detail.get("id") or ""),detail)
     try:detail["trackSpeed"]=_pc_live_track_speed(detail)
