@@ -1,0 +1,27 @@
+name: ARVEXQ Foundation Priority Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_foundation_priority_audit.py'
+      - '.github/workflows/arvexq-foundation-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compare foundation priority
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_DATE: '2026-10-05'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+        run: python scripts/arvexq_foundation_priority_audit.py
