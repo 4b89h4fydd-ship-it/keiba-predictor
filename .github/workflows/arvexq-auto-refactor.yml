@@ -7,6 +7,8 @@ on:
       - 'scripts/arvexq_patch_app.py'
       - 'scripts/arvexq_extract_ui.py'
       - 'scripts/arvexq_extract_backend.py'
+      - 'scripts/arvexq_patch_mass_prerace_store.py'
+      - 'scripts/check_mass_feature_leakage.py'
       - 'scripts/arvexq_patch_build_static.py'
       - 'scripts/arvexq_wire_core_marks.py'
       - 'scripts/arvexq_apply_signal_dedup.py'
@@ -60,6 +62,8 @@ jobs:
         run: python scripts/arvexq_patch_app.py
       - name: Extract backend role blocks
         run: python scripts/arvexq_extract_backend.py
+      - name: Wire mass pre-race snapshot bridge
+        run: python scripts/arvexq_patch_mass_prerace_store.py
       - name: Wire ability-record final marks
         run: python scripts/arvexq_wire_core_marks.py
       - name: Apply deduplicated evidence families
@@ -72,8 +76,10 @@ jobs:
         run: python scripts/arvexq_patch_build_static.py
       - name: Compile check
         run: |
-          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py scripts/arvexq_remove_value_races.py
+          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_patch_mass_prerace_store.py scripts/check_mass_feature_leakage.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py scripts/arvexq_remove_value_races.py
           python -m compileall -q arvexq
+      - name: Mass feature leakage regression check
+        run: python scripts/check_mass_feature_leakage.py
       - name: Four pillar prediction regression check
         run: |
           python - <<'PY'
