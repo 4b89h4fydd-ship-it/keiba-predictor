@@ -1,73 +1,90 @@
 # ARVEXQ 競馬展開AI（PWA）
 
-iPhone の Safari から使う競馬予想 PWA です。
-中央（JRA）・地方（NAR）の出走表、過去走、オッズを集めて、展開予想と AI 評価を表示します。
+iPhone Safariから使う競馬予想PWAです。中央（JRA）・地方（NAR）の出走表、近走、オッズ、馬体重、馬場・天候、結果・払戻を集め、事前計算したAI評価と展開予想をD1経由で表示します。
 
-## できること
-
-- 日付 → 中央 / 地方 → 会場 → 1R〜12R の順に選択
-- 馬齢・性別・斤量、騎手・調教師の成績
-- 直近レースのタイム・着順・通過順
-- 距離・競馬場・馬場・季節・天候
-- 先行馬占有率、脚質マップ、5局面の隊列、A/B/C 評価、◎○▲☆△注 の印
-
-## 全体の構成
+## 現在の基本構成
 
 | 役割 | 場所 | 内容 |
 |---|---|---|
-| アプリ本体 | `main` ブランチの `app.py` | データ取得、予想エンジン、画面（HTML/JS/CSS）を1ファイルにまとめたもの |
-| 画面の配信 | `build_static.py` → `dist/` | `app.py` に埋め込まれた画面を静的ファイルとして書き出す。配信設定は `wrangler.toml`（Cloudflare: `kraizweb1`） |
-| データ API | `cloudflare` ブランチの `worker.js` | 画面が読みに行く API（`kraiz-api` Worker / D1） |
-| データ更新 | `.github/workflows/` | GitHub Actions が `app.py` を動かしてデータを集め、API（D1）へ送る |
+| アプリ本体 | `main/app.py` | データ取得、予想エンジン、FastAPI、画面HTML/JS/CSS |
+| PWAビルド | `build_static.py` → `dist/` | `app.py` の画面を静的PWAへ書き出す。build番号は `app.py` から自動取得 |
+| 共通処理 | `arvexq/` | fingerprintなど、段階的に `app.py` から分離している共通ロジック |
+| 同期処理 | `scripts/` | Prefetch / Live Sync / Result Repair / History Repair / SQLite health |
+| データAPI | `cloudflare` ブランチ | `kraiz-api` Worker + D1。`main`とは別系統 |
+| 配信 | `wrangler.toml` | Cloudflare Pages/Workers側の静的配信設定 |
+| 検証 | `backtest_v206.py`, `backtest_v208_jra.py` | 地方・中央の時系列バックテスト |
 
-> `cloudflare` ブランチは API Worker の本体です。`main` とは別物なので、マージや削除はしないでください。
+> `cloudflare` ブランチはAPI Worker本体です。`main`へ丸ごとマージしたり削除したりしないでください。
 
-## ファイル構成（main）
+## データ更新の考え方
 
-```
-.
-├── app.py                  アプリ本体（FastAPI）
-├── build_static.py         画面の静的ファイル書き出し（BUILD_VERSION を app.py と合わせる）
-├── backtest_v206.py        予想モデルの検証（地方）
-├── backtest_v208_jra.py    予想モデルの検証（中央）
-├── requirements.txt        Python の依存ライブラリ
-├── wrangler.toml           Cloudflare の配信設定
-├── docs/audits/            修正時の監査メモ・調査報告
-└── .github/workflows/      GitHub Actions（.yml だけを置く）
-```
+ARVEXQは「画面を開いた時に重い取得・分析をする」構成ではありません。
+
+1. **Full Prefetch** が当日レースの出走表・近走・AI診断を先に作る
+2. **Realtime Sync** が5分ごとにオッズ、人気、馬体重、取消、天候・馬場などの変動項目だけ更新する
+3. **Result Repair** が発走後の着順・払戻の取りこぼしを補修する
+4. **History Repair** が直近7日を巡回して欠損したカード・結果・払戻を補修する
+5. iPhoneはD1に準備済みのデータを読んで表示する
+
+完成済みの全頭診断・事前予想は、薄いライブデータで上書きしないよう保護しています。馬体重・取消・天候・馬場など分析入力が変わった時だけ、発走前に再診断します。
 
 ## GitHub Actions
 
-| ファイル | 表示名 | 動くタイミング | 内容 |
-|---|---|---|---|
-| `arvexq-sync.yml` | ARVEXQ Realtime Sync | 5分ごと（JST 7:00〜23:59）、`app.py` 更新時、手動 | 当日の全レースの出走表・結果・オッズを集めて D1 へ送る。出走表が欠けたレースが残ると失敗扱い |
-| `arvexq-history-sync.yml` | ARVEXQ History Repair | 毎時17分、手動 | 過去走データの補修 |
-| `arvexq-backtest.yml` | ARVEXQ Backtest v206 | 毎日 JST 23:45、手動 | 地方の予想精度の検証 |
-| `arvexq-jra-backtest.yml` | ARVEXQ JRA Backtest v208 | 手動のみ | 中央の予想精度の検証 |
+| Workflow | タイミング | 役割 |
+|---|---|---|
+| `arvexq-prefetch.yml` | 06:30 / 08:30 / 11:30 JST、手動、関連コード更新 | 全レースの出走表・AI分析を事前生成してD1へ保存 |
+| `arvexq-sync.yml` | 5分ごと（JST 7:00〜23:59）、手動、関連コード更新 | 変動データだけを軽量更新 |
+| `arvexq-result-repair.yml` | Realtime Syncとずらして5分ごと、手動 | 発走済みで結果/払戻が未完のレースを古い順に補修 |
+| `arvexq-history-sync.yml` | 毎時17分、手動 | 直近7日の欠損を巡回補修 |
+| `arvexq-backtest.yml` | 毎日23:45 JST、手動 | 地方中心のv206バックテスト |
+| `arvexq-jra-backtest.yml` | 手動 | 中央専用v208バックテスト |
+| `arvexq-validation.yml` | main向けPR、main更新、手動 | 構文、PWAビルド、同期不変条件、Workflow YAMLを検証 |
 
-必要なシークレット: `SYNC_TOKEN`（D1 への書き込み用。Sync と History Repair が使用）
+D1への書き込みにはGitHub Actions Secret `SYNC_TOKEN` を使います。
 
-## 更新のしかた（iPhone から）
+## ログとキャッシュの運用
 
-1. GitHub で `app.py` を開き、新しいファイルに置き換えてコミットする
-2. `app.py` を更新すると「ARVEXQ Realtime Sync」が自動で動き、データが新しいコードで作り直される
-3. 画面のバージョンを上げた場合は、`build_static.py` の `BUILD_VERSION` も同じ値にする（ずれると「ARVEXQを起動中…」のまま止まる）
+- Actions画面には原則として**件数・成功/失敗・最終指標だけ**を表示する
+- 詳細ログはファイルへ出し、失敗時だけ末尾80行をActionsへ表示する
+- 深掘りが必要な失敗ログは短期Artifact（3日）へ保存する
+- 5分ごとのRealtime Sync / Result Repairは**新しいGitHub cacheを毎回作らない**
+- SQLiteの永続cacheは主にFull Prefetch側で作り、軽量ジョブは必要に応じてread-onlyで復元する
+- バックテストArtifactは14日で自動削除する
 
-ファイルは必ず元と同じ場所に置いてください。`.py` や `.txt` を `.github/workflows/` に入れても動きません。
+生成JSON、SQLite、ログ、研究出力は `.gitignore` で除外し、リポジトリへコミットしません。
 
-## ローカルで動かす（パソコンがある場合）
+## mainの主なファイル
+
+```text
+.
+├── app.py
+├── build_static.py
+├── arvexq/
+│   └── pipeline/
+├── scripts/
+│   ├── arvexq_prefetch.py
+│   ├── arvexq_live_sync.py
+│   ├── arvexq_result_repair.py
+│   ├── arvexq_history_repair.py
+│   └── arvexq_sqlite_health.py
+├── backtest_v206.py
+├── backtest_v208_jra.py
+├── docs/audits/
+├── .github/workflows/
+├── requirements.txt
+└── wrangler.toml
+```
+
+## ローカルで動かす
 
 ```bash
 pip install -r requirements.txt
 KEIBA_DATA_DIR=./.arvexq-data ARVEXQ_BOOTSTRAP_WARM=0 uvicorn app:app --port 8000
-# http://127.0.0.1:8000 を開く
-
-python3 build_static.py   # dist/ に画面を書き出す
+python build_static.py
 ```
 
-## データの出どころ
+## データ取得について
 
-- 中央: netkeiba の出走表・過去走ページ（JRA 公式はフォールバック）
-- 地方: NAR 公式・netkeiba
+中央はJRA公式/外部競馬情報サイト、地方はNAR公式/外部競馬情報サイトを組み合わせて取得します。HTMLや配信仕様が変わると取得が壊れる可能性があるため、障害調査は `docs/audits/` に日付入りで残します。
 
-サイトの HTML が変わると取得が壊れることがあります。直近の例は [docs/audits/BUG_REPORT_2026-10-04.md](docs/audits/BUG_REPORT_2026-10-04.md) を見てください。
+現行の監査一覧は `docs/audits/README.md` を参照してください。
