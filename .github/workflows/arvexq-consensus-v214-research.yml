@@ -1,0 +1,80 @@
+name: ARVEXQ Consensus v214 Research
+
+"on":
+  push:
+    branches: [research/recent-accuracy-20261005]
+    paths:
+      - research/arvexq_consensus_v214.py
+      - .github/workflows/arvexq-consensus-v214-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-consensus-v214-research
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_INPUT: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install research dependencies quietly
+        run: |
+          python -m pip install -q -r requirements.txt
+          python -m pip install -q numpy pandas scikit-learn lightgbm catboost
+      - name: Fast preflight
+        run: python -m py_compile research/arvexq_consensus_v214.py research/arvexq_axis_v213.py research/arvexq_ranker_v209.py
+      - name: Restore reusable JRA seed
+        id: jra-seed-cache
+        uses: actions/cache@v4
+        with:
+          path: jra-seed
+          key: arvexq-v209-jra-seed-${{ runner.os }}-${{ hashFiles('app.py', 'backtest_v206.py', 'backtest_v208_jra.py') }}
+      - name: Require JRA seed
+        run: test -s jra-seed/jra-official-snapshots.json
+      - name: Run v214 consensus benchmark
+        run: |
+          if ! python research/arvexq_consensus_v214.py --days 28 --extra-jra jra-seed/jra-official-snapshots.json --out consensus-v214.json > consensus-v214.log 2>&1; then
+            echo "::error::v214 benchmark failed"
+            tail -n 100 consensus-v214.log || true
+            exit 1
+          fi
+      - name: Show concise result
+        run: |
+          python - <<'PY'
+          import json
+          z=json.load(open('consensus-v214.json',encoding='utf-8'))
+          print('# ARVEXQ v214 consensus')
+          for c,r in z['circuits'].items():
+              print(c,'races=',r['races'],'target=',r['target'])
+              for k,m in r['aggregate'].items():
+                  x=f" coverage={m.get('coverage',0):.1%}" if k=='selected' else ''
+                  print(f"  {k}: n={m['races']} place={m['placeRate']:.1%} win={m['winRate']:.1%}{x}")
+          PY
+      - name: Failure tail
+        if: failure()
+        run: tail -n 100 consensus-v214.log 2>/dev/null || true
+      - name: Upload v214 artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-consensus-v214
+          path: |
+            consensus-v214.json
+            consensus-v214.log
+          if-no-files-found: ignore
+          retention-days: 7
