@@ -14,7 +14,7 @@ checks = {
     "one-source-assignPredictionMarks": js.count("function assignPredictionMarks(") == 1,
     "authoritative-mark-guard": "function applyServerAuthoritativeMarks(rows,r)" in js,
     "predict-applies-server-marks": "assignPredictionMarks(rows,modelRace);applyServerAuthoritativeMarks(rows,modelRace);" in js,
-    "static-build-no-mark-override": "\njs = _inject_before_iife_close(js, ABILITY_FIRST_JS)\n" not in build,
+    "static-build-no-prediction-override": "ABILITY_FIRST_JS" not in build and "_inject_before_iife_close" not in build and "assignPredictionMarks=function" not in build,
     "race-cache-build-namespaced": 'String(window.ARVEXQ_BUILD||"dev")+":races:"' in js,
     "detail-cache-build-namespaced": 'String(window.ARVEXQ_BUILD||"dev")+":detail:"' in js,
     "bundle-cache-build-namespaced": 'String(window.ARVEXQ_BUILD||"dev")+":fullbundle:"' in js,
