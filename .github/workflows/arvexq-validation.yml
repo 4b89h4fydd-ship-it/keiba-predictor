@@ -1,0 +1,228 @@
+name: ARVEXQ Validation
+
+"on":
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - app.py
+      - build_static.py
+      - arvexq/**
+      - scripts/**
+      - .github/workflows/arvexq-*.yml
+      - requirements.txt
+  push:
+    branches: [main]
+    paths:
+      - app.py
+      - build_static.py
+      - arvexq/**
+      - scripts/**
+      - .github/workflows/arvexq-*.yml
+      - requirements.txt
+
+concurrency:
+  group: arvexq-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_INPUT: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -q -r requirements.txt
+
+      - name: Python syntax
+        run: |
+          python -m py_compile app.py build_static.py \
+            arvexq/pipeline/fingerprints.py \
+            scripts/arvexq_prefetch.py \
+            scripts/arvexq_live_sync.py \
+            scripts/arvexq_result_repair.py \
+            scripts/arvexq_history_repair.py \
+            scripts/arvexq_sqlite_health.py
+
+      - name: Static PWA build and version guard
+        run: |
+          python build_static.py > build-static.log 2>&1
+          test -f dist/index.html
+          test -f dist/version.json
+          test -f dist/sw.js
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          version=json.loads(Path('dist/version.json').read_text(encoding='utf-8'))['build']
+          files={p.name for p in Path('dist').iterdir() if p.is_file()}
+          expected={f'app-{version}.js',f'arvexq-app-{version}.js',f'styles-arvexq-{version}.css',f'sw-{version}-reset.js'}
+          missing=sorted(expected-files)
+          print('build=',version,'missing=',missing)
+          if missing:raise SystemExit('missing current assets: '+','.join(missing))
+          PY
+
+      - name: Architecture and operations guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          live=Path('.github/workflows/arvexq-sync.yml').read_text(encoding='utf-8')
+          result_workflow=Path('.github/workflows/arvexq-result-repair.yml').read_text(encoding='utf-8')
+          live_script=Path('scripts/arvexq_live_sync.py').read_text(encoding='utf-8')
+          repair=Path('scripts/arvexq_result_repair.py').read_text(encoding='utf-8')
+          prefetch=Path('scripts/arvexq_prefetch.py').read_text(encoding='utf-8')
+          prefetch_workflow=Path('.github/workflows/arvexq-prefetch.yml').read_text(encoding='utf-8')
+          sqlite_health=Path('scripts/arvexq_sqlite_health.py').read_text(encoding='utf-8')
+
+          forbidden=['_prepare_race_snapshot(','_hydrate_fast_card_now(','result_targets = [rid for _, rid in sorted(result_targets, reverse=True)[:24]]']
+          bad=[x for x in forbidden if x in live or x in live_script]
+          if bad:raise SystemExit('live lane contains heavy/legacy path: '+repr(bad))
+
+          required=['arvexq_live_sync.py','ARVEXQ_DATA_CORE: "0"','cancel-in-progress: true','details=0','CLOUDFLARE_API_BASE']
+          missing=[x for x in required if x not in live]
+          if missing:raise SystemExit('live workflow guard missing: '+repr(missing))
+
+          if 'actions/cache/save@v4' in live:
+              raise SystemExit('five-minute live workflow must not create a new cache every run')
+          if 'actions/cache/save@v4' in result_workflow:
+              raise SystemExit('five-minute result workflow must not create a new cache every run')
+          if 'tail -n 300' in live or 'tail -n 400' in prefetch_workflow:
+              raise SystemExit('workflow failure output is too verbose')
+
+          if '[:24]' in repair:raise SystemExit('result repair must not cap pending results at 24')
+          prefetch_required=['_build_fast_diagnosis_snapshot(','allow_network=True','deep_context=True','_merge_detail(','memory-authoritative']
+          missing=[x for x in prefetch_required if x not in prefetch]
+          if missing:raise SystemExit('prefetch must explicitly materialize and retain diagnosis: '+repr(missing))
+          workflow_required=['missing_analysis_count','analysisCount','D1 is missing prepared analysis','ARVEXQ_PREFETCH_WORKERS: "1"','ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "1"','Validate restored SQLite cache','arvexq_sqlite_health.py']
+          missing=[x for x in workflow_required if x not in prefetch_workflow]
+          if missing:raise SystemExit('prefetch workflow correctness guard missing: '+repr(missing))
+          sqlite_required=['PRAGMA quick_check','SQLITE_CACHE_BAD','*-wal','*-shm']
+          missing=[x for x in sqlite_required if x not in sqlite_health]
+          if missing:raise SystemExit('sqlite health guard missing: '+repr(missing))
+          print('architecture and operations guard OK')
+          PY
+
+      - name: Merge, hash, result, prefetch and history invariants
+        run: |
+          python - <<'PY'
+          import copy
+          import sqlite3
+          import tempfile
+          from pathlib import Path
+          from datetime import datetime, timezone, timedelta
+          from arvexq.pipeline.fingerprints import analysis_input_hash
+          import scripts.arvexq_live_sync as live
+          import scripts.arvexq_result_repair as repair
+          import scripts.arvexq_prefetch as prefetch
+          import scripts.arvexq_history_repair as history
+          import scripts.arvexq_sqlite_health as sqlite_health
+
+          base={
+            'id':'nar-2026-10-04-園田-01','date':'2026-10-04','track':'園田','circuit':'地方',
+            'surface':'ダート','distance':1400,'weather':'晴','condition':'良','fieldSize':3,
+            'horses':[{'horseNumber':1,'name':'テスト馬','jockey':'騎手A','trainer':'厩舎A','carriedWeight':54.0,'bodyWeight':480,'bodyWeightChange':0,'recentRaces':[{'date':'2026-09-01','finish':1}]},
+                       {'horseNumber':2,'name':'テスト馬2','jockey':'騎手B','carriedWeight':55.0,'recentRaces':[{'finish':2}]},
+                       {'horseNumber':3,'name':'テスト馬3','jockey':'騎手C','carriedWeight':56.0,'recentRaces':[{'finish':3}]}],
+            'preparedMeta':{'diagnosisReady':True},'preRacePrediction':{'mark':'◎','score':88},'predictionAudit':{'locked':True},
+          }
+          base['preparedMeta']['analysisInputHash']=analysis_input_hash(base)
+          fresh={'id':base['id'],'weather':'曇','condition':'稍重','horses':[{'horseNumber':1,'bodyWeight':486,'bodyWeightChange':6,'winOdds':2.8}]}
+          market={'horses':[{'horseNumber':1,'winOdds':2.6,'popularity':1,'bodyWeight':486,'bodyWeightChange':6}]}
+          merged=live.merge_live(base,fresh,market,False)
+          h=merged['horses'][0]
+          assert h['name']=='テスト馬' and h['recentRaces'][0]['finish']==1
+          assert h['bodyWeight']==486 and h['winOdds']==2.6
+          assert merged['preRacePrediction']==base['preRacePrediction'] and merged['predictionAudit']==base['predictionAudit']
+          assert analysis_input_hash(merged)!=analysis_input_hash(base)
+          odds_only=copy.deepcopy(base);odds_only['horses'][0]['winOdds']=99.9
+          assert analysis_input_hash(odds_only)==analysis_input_hash(base)
+
+          old_final={'status':'確定','finishers':[{'finish':1,'horseNumber':1},{'finish':2,'horseNumber':2},{'finish':3,'horseNumber':3}]}
+          flash={'status':'速報','finishers':[{'finish':1,'horseNumber':9}]}
+          assert live._merge_result(old_final,flash)==old_final
+          assert repair._merge_result(old_final,flash)==old_final
+
+          upgraded=repair._merge_detail(base,{'id':base['id'],'horses':[{'horseNumber':1}],'result':{'status':'確定','finishers':old_final['finishers'],'payouts':[{'type':'単勝','amount':500}]}})
+          assert upgraded['horses'][0]['name']=='テスト馬' and upgraded['preRacePrediction']==base['preRacePrediction']
+          assert upgraded['result']['status']=='確定'
+
+          assert prefetch._analysis_current(base)
+          changed=copy.deepcopy(base);changed['horses'][0]['bodyWeight']=488
+          assert not prefetch._analysis_current(changed)
+
+          stale=copy.deepcopy(base);stale['preparedMeta']={};stale.pop('preRacePrediction',None);stale.pop('predictionAudit',None)
+          orig_raw=prefetch._raw_snapshot
+          orig_seed=prefetch._seed_snapshot
+          orig_build=prefetch.app._build_fast_diagnosis_snapshot
+          calls=[]
+          try:
+              prefetch._raw_snapshot=lambda rid: copy.deepcopy(stale)
+              prefetch._seed_snapshot=lambda d: None
+              def build(rid,allow_network=False,deep_context=False):
+                  calls.append((allow_network,deep_context))
+                  d=copy.deepcopy(stale)
+                  d.setdefault('preparedMeta',{})['diagnosisReady']=True
+                  d['preRacePrediction']={'mark':'◎','score':91}
+                  d['horses'][0]['aiEvaluation']='S'
+                  return d
+              prefetch.app._build_fast_diagnosis_snapshot=build
+              ready,error=prefetch._ensure_analysis(base['id'],stale)
+              assert prefetch._analysis_ready(ready), error
+              assert ready['preRacePrediction']['score']==91
+              assert ready['horses'][0]['name']=='テスト馬'
+              assert ready['horses'][0]['aiEvaluation']=='S'
+              assert calls==[(False,False)]
+              final=prefetch._merge_detail(prefetch._raw_snapshot(base['id']),ready)
+              assert prefetch._analysis_ready(final) and final['preRacePrediction']['score']==91
+          finally:
+              prefetch._raw_snapshot=orig_raw
+              prefetch._seed_snapshot=orig_seed
+              prefetch.app._build_fast_diagnosis_snapshot=orig_build
+
+          complete=copy.deepcopy(base);complete['result']={'status':'確定','finishers':old_final['finishers'],'payouts':[{'type':'単勝','amount':500}]}
+          assert history.card_complete(complete) and history.history_complete(complete)
+          no_pay=copy.deepcopy(complete);no_pay['result']['payouts']=[]
+          assert not history.history_complete(no_pay)
+
+          jst=timezone(timedelta(hours=9));now=datetime(2026,10,5,8,0,tzinfo=jst)
+          assert repair._started({'date':'2026-10-04','startTime':'23:59'},now)
+          assert not repair._started({'date':'2026-10-06','startTime':'00:01'},now)
+
+          with tempfile.TemporaryDirectory() as td:
+              root=Path(td)
+              healthy=root/'healthy.sqlite'
+              con=sqlite3.connect(healthy);con.execute('create table t(x text)');con.execute("insert into t values ('ok')");con.commit();con.close()
+              checked,removed,_=sqlite_health.sanitize(root)
+              assert checked==1 and removed==0 and healthy.exists()
+              broken=root/'broken.sqlite'
+              broken.write_bytes(sqlite_health.SQLITE_MAGIC + b'broken' * 128)
+              checked,removed,files=sqlite_health.sanitize(root)
+              assert removed==1 and not broken.exists() and any('broken.sqlite' in x for x in files)
+          print('pipeline invariants OK')
+          PY
+
+      - name: Validate workflow YAML files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          for path in Path('.github/workflows').glob('arvexq-*.yml'):
+              yaml.safe_load(path.read_text(encoding='utf-8'))
+              print('yaml OK',path.name)
+          PY
+
+      - name: Show concise build log on failure
+        if: failure()
+        run: tail -n 80 build-static.log 2>/dev/null || true
