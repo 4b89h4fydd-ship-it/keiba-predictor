@@ -9,6 +9,7 @@ on:
       - 'scripts/arvexq_extract_backend.py'
       - 'scripts/arvexq_patch_build_static.py'
       - 'scripts/arvexq_wire_core_marks.py'
+      - 'scripts/arvexq_apply_signal_dedup.py'
       - 'build_static.py'
       - 'arvexq/**/*.py'
       - '.github/workflows/arvexq-auto-refactor.yml'
@@ -60,18 +61,21 @@ jobs:
         run: python scripts/arvexq_extract_backend.py
       - name: Wire ability-record final marks
         run: python scripts/arvexq_wire_core_marks.py
+      - name: Apply deduplicated evidence families
+        run: python scripts/arvexq_apply_signal_dedup.py
       - name: Extract embedded UI and images
         run: python scripts/arvexq_extract_ui.py
       - name: Patch static builder for extracted assets
         run: python scripts/arvexq_patch_build_static.py
       - name: Compile check
         run: |
-          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_wire_core_marks.py
+          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py
           python -m compileall -q arvexq
       - name: Four pillar prediction regression check
         run: |
           python - <<'PY'
           from arvexq.prediction.final_marks import apply_core_marks
+          from arvexq.prediction.factor_model import MODEL_VERSION, SIGNAL_FAMILIES
 
           def horse(no, finishes, speed, components=None, audit=None, research=None):
               runs=[]
@@ -82,7 +86,6 @@ jobs:
               if research: ev['researchFactors']=research
               return {'horseNumber':no,'name':f'H{no}','recentRaces':runs,'integratedEvaluation':ev}
 
-          # Ability + record + suitability must directly determine the core order.
           detail={'distance':1600,'track':'T','condition':'良','horses':[
               horse(1,[8,8,7,9,8],70),
               horse(2,[1,2,1,2,1],105),
@@ -95,9 +98,10 @@ jobs:
           assert marks[3]=='○', marks
           assert marks[4]=='▲', marks
           assert detail['markEngineVersion']=='arvexq-four-pillar-marks-v4'
-          assert detail['predictionModelVersion']=='arvexq-four-pillar-consensus-v2'
+          assert detail['predictionModelVersion']=='arvexq-four-pillar-consensus-v4'
+          assert MODEL_VERSION=='arvexq-four-pillar-consensus-v4'
+          assert ('record_career','record_recent') in SIGNAL_FAMILIES['record']
 
-          # Old P1/P2/P3 cannot overrule the four primary pillars.
           detail2={'distance':1600,'track':'T','condition':'良','horses':[
               horse(1,[1,1,1,2,1],110),
               horse(2,[6,7,5,6,6],75),
@@ -113,7 +117,6 @@ jobs:
           assert marks2[1]=='◎', marks2
           assert marks2[2] != '◎', marks2
 
-          # When the four pillars are tied, support factors must break the tie.
           base=[3,3,3,3,3]
           support_a={'pedigreeScore':.20,'weatherFit':.20,'drawScore':.20,'bodyWeightScore':.20,'jockeyScore':.20,'trainerScore':.20,'freshnessScore':.20}
           support_b={'pedigreeScore':.90,'weatherFit':.90,'drawScore':.90,'bodyWeightScore':.90,'jockeyScore':.90,'trainerScore':.90,'freshnessScore':.90}
@@ -126,15 +129,13 @@ jobs:
           assert marks3[2]=='◎', marks3
           row2=next(x for x in tied['factorRanking'] if x['horseNumber']==2)
           assert row2['supportTieBreakWins']>=1, row2
-          assert 'support_weather' in row2['metricRelative'], row2
-          assert 'support_pedigree' in row2['metricRelative'], row2
-          assert 'support_draw' in row2['metricRelative'], row2
+          assert 'evidenceFamilyCounts' in row2, row2
 
-          print('four-pillar-v2-ok',marks,marks2,marks3)
+          print('four-pillar-v4-ok',marks,marks2,marks3)
           PY
       - name: Commit modularization
         run: |
-          TARGETS="app.py build_static.py arvexq/ui/static arvexq/infra/legacy_stores.py arvexq/infra/race_stores.py arvexq/domain/legacy_evaluation.py"
+          TARGETS="app.py build_static.py arvexq/ui/static arvexq/infra/legacy_stores.py arvexq/infra/race_stores.py arvexq/domain/legacy_evaluation.py arvexq/prediction/factor_model.py"
           if [ -z "$(git status --porcelain -- $TARGETS)" ]; then
             echo 'No generated modularization changes needed'
             exit 0
