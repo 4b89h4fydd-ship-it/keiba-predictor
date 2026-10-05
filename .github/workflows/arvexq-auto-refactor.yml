@@ -95,7 +95,7 @@ jobs:
           assert marks[3]=='○', marks
           assert marks[4]=='▲', marks
           assert detail['markEngineVersion']=='arvexq-four-pillar-marks-v4'
-          assert detail['predictionModelVersion']=='arvexq-four-pillar-consensus-v1'
+          assert detail['predictionModelVersion']=='arvexq-four-pillar-consensus-v2'
 
           # Old P1/P2/P3 cannot overrule the four primary pillars.
           detail2={'distance':1600,'track':'T','condition':'良','horses':[
@@ -113,10 +113,10 @@ jobs:
           assert marks2[1]=='◎', marks2
           assert marks2[2] != '◎', marks2
 
-          # When the four pillars are tied, pedigree/weather/draw/body/connection support must matter.
+          # When the four pillars are tied, support factors must break the tie.
           base=[3,3,3,3,3]
-          support_a={'pedigreeScore':.20,'weatherFit':.20,'drawScore':.20,'bodyWeightScore':.20,'jockeyScore':.20,'trainerScore':.20}
-          support_b={'pedigreeScore':.90,'weatherFit':.90,'drawScore':.90,'bodyWeightScore':.90,'jockeyScore':.90,'trainerScore':.90}
+          support_a={'pedigreeScore':.20,'weatherFit':.20,'drawScore':.20,'bodyWeightScore':.20,'jockeyScore':.20,'trainerScore':.20,'freshnessScore':.20}
+          support_b={'pedigreeScore':.90,'weatherFit':.90,'drawScore':.90,'bodyWeightScore':.90,'jockeyScore':.90,'trainerScore':.90,'freshnessScore':.90}
           tied={'distance':1600,'track':'T','condition':'良','horses':[
               horse(1,base,90,support_a),
               horse(2,base,90,support_b),
@@ -126,8 +126,11 @@ jobs:
           assert marks3[2]=='◎', marks3
           row2=next(x for x in tied['factorRanking'] if x['horseNumber']==2)
           assert row2['supportTieBreakWins']>=1, row2
+          assert 'support_weather' in row2['metricRelative'], row2
+          assert 'support_pedigree' in row2['metricRelative'], row2
+          assert 'support_draw' in row2['metricRelative'], row2
 
-          print('four-pillar-ok',marks,marks2,marks3)
+          print('four-pillar-v2-ok',marks,marks2,marks3)
           PY
       - name: Commit modularization
         run: |
