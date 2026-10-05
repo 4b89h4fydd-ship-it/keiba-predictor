@@ -93,7 +93,8 @@ jobs:
           python scripts/check_prediction_app_integrity.py
           node --check arvexq/ui/static/app.js
           python build_static.py
-          node --check dist/app.js
+          BUILD=$(tr -d '\r\n' < dist/build-version.txt)
+          node --check "dist/app-${BUILD}.js"
       - name: Mass feature leakage regression check
         run: python scripts/check_mass_feature_leakage.py
       - name: Frozen mass training store regression check
@@ -158,8 +159,7 @@ jobs:
           assert row2['supportTieBreakWins']>=1, row2
           assert 'evidenceFamilyCounts' in row2, row2
 
-          # Popularity may be recorded as a market diagnostic but must not alter core
-          # marks. Changing only popularity must leave the final mark order unchanged.
+          # Market data can be diagnostics, but changing only popularity must not alter marks.
           before={h['horseNumber']:h['integratedEvaluation']['mark'] for h in tied['horses']}
           tied['horses'][0]['popularity']=1
           tied['horses'][1]['popularity']=12
