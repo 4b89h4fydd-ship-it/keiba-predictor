@@ -24,24 +24,78 @@ jobs:
       ARVEXQ_BOOTSTRAP_WARM: "0"
       ARVEXQ_DATA_CORE: "0"
       RACEDB_AUTO_UPDATE: "0"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_INPUT: "1"
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install app and research dependencies
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install research dependencies quietly
         run: |
-          python -m pip install --disable-pip-version-check --no-input -r requirements.txt
-          python -m pip install --disable-pip-version-check --no-input numpy pandas scikit-learn lightgbm catboost
-      - name: Compile research model
-        run: python -m py_compile research/arvexq_ranker_v209.py
+          python -m pip install -q -r requirements.txt
+          python -m pip install -q numpy pandas scikit-learn lightgbm catboost
+
+      - name: Fast preflight before heavy work
+        run: |
+          python -m py_compile research/arvexq_ranker_v209.py backtest_v206.py backtest_v208_jra.py
+          python - <<'PY'
+          import sklearn
+          import backtest_v206
+          from lightgbm import LGBMRanker
+          from catboost import CatBoostRanker
+          LGBMRanker(n_estimators=1)
+          CatBoostRanker(iterations=1, verbose=False, allow_writing_files=False)
+          print('PREFLIGHT OK sklearn=', sklearn.__version__, 'features=', len(backtest_v206.FEATURES))
+          PY
+
+      - name: Restore reusable JRA 360R seed
+        id: jra-seed-cache
+        uses: actions/cache@v4
+        with:
+          path: jra-seed
+          key: arvexq-v209-jra-seed-${{ runner.os }}-${{ hashFiles('app.py', 'backtest_v206.py', 'backtest_v208_jra.py') }}
+
       - name: Build leakage-free JRA historical snapshots
+        if: steps.jra-seed-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf jra-seed
-          python backtest_v208_jra.py --days 90 --max-races 360 --iterations 500 --workers 6 --out jra-seed
+          mkdir -p jra-seed
+          if ! python backtest_v208_jra.py \
+            --days 90 \
+            --max-races 360 \
+            --iterations 500 \
+            --workers 6 \
+            --out jra-seed > jra-seed.log 2>&1; then
+            echo "::error::JRA seed build failed"
+            tail -n 80 jra-seed.log || true
+            exit 1
+          fi
+          test -s jra-seed/jra-official-snapshots.json
+          echo "JRA seed built and will be cached"
+
+      - name: Reuse cached JRA seed
+        if: steps.jra-seed-cache.outputs.cache-hit == 'true'
+        run: |
+          test -s jra-seed/jra-official-snapshots.json
+          echo "JRA seed cache hit; skipped 360R rebuild"
+
       - name: Benchmark circuit-specific rankers and market calibration
         run: |
-          python research/arvexq_ranker_v209.py --days 28 --extra-jra jra-seed/jra-official-snapshots.json --out ranker-v209.json | tee ranker-v209.log
+          if ! python research/arvexq_ranker_v209.py \
+            --days 28 \
+            --extra-jra jra-seed/jra-official-snapshots.json \
+            --out ranker-v209.json > ranker-v209.log 2>&1; then
+            echo "::error::v209 ranker benchmark failed"
+            tail -n 80 ranker-v209.log || true
+            exit 1
+          fi
+
       - name: Show concise result
         run: |
           python - <<'PY'
@@ -49,13 +103,21 @@ jobs:
           z=json.load(open('ranker-v209.json',encoding='utf-8'))
           print('# ARVEXQ v209 ranker benchmark')
           for c,r in z['circuits'].items():
-              print('\n##',c,'races',r.get('races'),'holdout',r.get('holdout'))
-              print('baseline',r.get('baseline'))
+              b=r.get('baseline') or {}
+              print(f"{c}: races={r.get('races')} holdout={r.get('holdout')} baseline top1={b.get('top1',0):.1%} top3={b.get('top3',0):.1%} mrr={b.get('mrr',0):.3f}")
               for name,m in (r.get('models') or {}).items():
-                  print(name,'pure',m.get('pure'))
-                  print(name,'blend',m.get('blend'))
-                  print(name,'confidence',m.get('confidence'))
+                  pure=m.get('pure') or {}
+                  blend=(m.get('blend') or {}).get('holdout') or {}
+                  conf=(m.get('confidence') or {}).get('agree_high_margin') or {}
+                  print(f"  {name}: pure top1={pure.get('top1',0):.1%} top3={pure.get('top3',0):.1%} mrr={pure.get('mrr',0):.3f}; blend top1={blend.get('top1',0):.1%} top3={blend.get('top3',0):.1%}; hi-conf n={conf.get('races',0)} top1={conf.get('top1',0):.1%}")
           PY
+
+      - name: Show concise failure log
+        if: failure()
+        run: |
+          tail -n 80 jra-seed.log 2>/dev/null || true
+          tail -n 80 ranker-v209.log 2>/dev/null || true
+
       - name: Upload research artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -66,5 +128,5 @@ jobs:
             ranker-v209.log
             jra-seed/report.json
             jra-seed/candidate_model_v208_jra.json
-            jra-seed/jra-official-snapshots.json
+          if-no-files-found: ignore
           retention-days: 7
