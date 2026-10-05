@@ -30,6 +30,8 @@ jobs:
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
       ARVEXQ_HISTORY_DAYS: "7"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_INPUT: "1"
 
     steps:
       - name: Checkout
@@ -43,7 +45,7 @@ jobs:
           cache-dependency-path: requirements.txt
 
       - name: Install dependencies
-        run: python -m pip install --disable-pip-version-check --no-input -r requirements.txt
+        run: python -m pip install -q -r requirements.txt
 
       - name: Set history date
         run: |
@@ -54,7 +56,7 @@ jobs:
           fi
           echo "HISTORY_OFFSET=$SLOT" >> "$GITHUB_ENV"
           echo "HISTORY_DATE=$(TZ=Asia/Tokyo date -d "$SLOT days ago" +%F)" >> "$GITHUB_ENV"
-          echo "History slot: -${SLOT} day(s), event=$GITHUB_EVENT_NAME"
+          echo "History target=-${SLOT}d event=$GITHUB_EVENT_NAME"
 
       - name: Restore ARVEXQ data cache
         uses: actions/cache/restore@v4
@@ -63,6 +65,7 @@ jobs:
           key: arvexq-history-${{ runner.os }}-${{ env.HISTORY_DATE }}-${{ github.run_id }}
           restore-keys: |
             arvexq-history-${{ runner.os }}-${{ env.HISTORY_DATE }}-
+            arvexq-prefetch-${{ runner.os }}-
             arvexq-data-${{ runner.os }}-
 
       - name: Start lightweight fallback runtime
@@ -76,7 +79,7 @@ jobs:
             fi
             sleep 1
           done
-          tail -n 200 /tmp/arvexq-history.log || true
+          tail -n 80 /tmp/arvexq-history.log || true
           exit 1
 
       - name: Load historical day from D1 first
@@ -88,7 +91,7 @@ jobs:
           echo "D1 history races=$RACES"
 
           if [ "$RACES" -le 0 ]; then
-            echo "Historical D1 day absent; discover it once from source collectors."
+            echo "Historical D1 day absent; discovering once from source collectors."
             curl -fsS --max-time 120 \
               "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$HISTORY_DATE&force=1" \
               -o history-bundle.json || true
@@ -97,7 +100,7 @@ jobs:
               -o history-bundle.json || true
             RACES=$(jq '.races // [] | length' history-bundle.json 2>/dev/null || echo 0)
           fi
-          echo "history repair source races=$RACES"
+          echo "History repair source races=$RACES"
 
       - name: Repair missing fields only
         run: |
@@ -108,12 +111,16 @@ jobs:
             exit 0
           fi
           python -m py_compile scripts/arvexq_history_repair.py
-          python scripts/arvexq_history_repair.py \
+          if ! python scripts/arvexq_history_repair.py \
             --bundle history-bundle.json \
             --payload history-payload.json \
             --report history-report.json \
-            --workers 4
-          cat history-report.json
+            --workers 4 > history-repair.log 2>&1; then
+            echo "::error::History repair failed"
+            tail -n 80 history-repair.log || true
+            exit 1
+          fi
+          jq '{races,missingCard:(.missing_card|length),missingResult:(.missing_result|length),missingPayout:(.missing_payout|length)}' history-report.json
 
       - name: Push repaired historical day to D1
         run: |
@@ -125,7 +132,8 @@ jobs:
           curl --fail-with-body --max-time 60 -X POST "$CLOUDFLARE_SYNC_URL" \
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @history-payload.json
+            --data-binary @history-payload.json > /dev/null
+          echo "D1 history repair push OK"
 
       - name: Verify repaired historical day
         run: |
@@ -153,7 +161,7 @@ jobs:
               if status in {'中止','取止','取消','不成立'}:continue
               ranks={int(x.get('finish') or 0) for x in (r.get('finishers') or []) if isinstance(x,dict)}
               if not all(i in ranks for i in (1,2,3)) or not (r.get('payouts') or []):visible_fail.append(rid)
-          print('HISTORY_D1_VERIFY details=',len(by),'unresolved=',len(unresolved),'unexpectedIncomplete=',len(visible_fail))
+          print('HISTORY_D1 details=',len(by),'unresolved=',len(unresolved),'unexpectedIncomplete=',len(visible_fail))
           if visible_fail:
               raise SystemExit('D1 lost repaired historical result/payout: '+','.join(visible_fail[:10]))
           PY
@@ -172,6 +180,21 @@ jobs:
           path: .arvexq-data
           key: arvexq-history-${{ runner.os }}-${{ env.HISTORY_DATE }}-${{ github.run_id }}
 
-      - name: Show local log on failure
+      - name: Show concise failure log
         if: failure()
-        run: tail -n 300 /tmp/arvexq-history.log || true
+        run: |
+          tail -n 80 history-repair.log 2>/dev/null || true
+          tail -n 80 /tmp/arvexq-history.log 2>/dev/null || true
+          cp /tmp/arvexq-history.log runtime-history.log 2>/dev/null || true
+
+      - name: Upload full failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-history-failure-${{ github.run_number }}
+          path: |
+            history-repair.log
+            history-report.json
+            runtime-history.log
+          if-no-files-found: ignore
+          retention-days: 3

@@ -8,23 +8,14 @@ name: ARVEXQ Backtest v206
         required: true
         default: "28"
         type: choice
-        options:
-          - "7"
-          - "14"
-          - "28"
-          - "56"
+        options: ["7", "14", "28", "56"]
       iterations:
         description: "候補モデル探索回数"
         required: true
         default: "2500"
         type: choice
-        options:
-          - "800"
-          - "1500"
-          - "2500"
-          - "5000"
+        options: ["800", "1500", "2500", "5000"]
   schedule:
-    # 23:45 JST. Daily D1 history grows automatically without touching production.
     - cron: "45 14 * * *"
 
 permissions:
@@ -38,7 +29,6 @@ jobs:
   backtest:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     env:
       ARVEXQ_API_URL: https://kraiz-api.4b89h4fydd.workers.dev
 
@@ -54,24 +44,28 @@ jobs:
       - name: Resolve backtest window
         shell: bash
         run: |
-          DAYS="${{ github.event.inputs.days }}"
-          ITER="${{ github.event.inputs.iterations }}"
-          if [ -z "$DAYS" ]; then DAYS=28; fi
-          if [ -z "$ITER" ]; then ITER=2500; fi
+          DAYS="${{ github.event.inputs.days }}"; [ -n "$DAYS" ] || DAYS=28
+          ITER="${{ github.event.inputs.iterations }}"; [ -n "$ITER" ] || ITER=2500
           echo "BACKTEST_DAYS=$DAYS" >> "$GITHUB_ENV"
           echo "BACKTEST_ITERATIONS=$ITER" >> "$GITHUB_ENV"
-          echo "ARVEXQ v206: days=$DAYS iterations=$ITER"
+          echo "ARVEXQ v206 days=$DAYS iterations=$ITER"
 
       - name: Run leakage-guarded historical backtest
         run: |
           rm -rf backtest-v206
-          python backtest_v206.py \
+          mkdir -p backtest-v206
+          if ! python backtest_v206.py \
             --api-url "$ARVEXQ_API_URL" \
             --days "$BACKTEST_DAYS" \
             --iterations "$BACKTEST_ITERATIONS" \
-            --out backtest-v206
+            --out backtest-v206 > backtest-v206/run.log 2>&1; then
+            echo "::error::v206 backtest failed"
+            tail -n 80 backtest-v206/run.log || true
+            exit 1
+          fi
+          echo "v206 backtest complete"
 
-      - name: Show report in Actions
+      - name: Show report in Actions summary
         if: always()
         shell: bash
         run: |
@@ -82,6 +76,10 @@ jobs:
             echo "report.md was not created" >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      - name: Show concise failure log
+        if: failure()
+        run: tail -n 80 backtest-v206/run.log 2>/dev/null || true
+
       - name: Upload backtest report
         if: always()
         uses: actions/upload-artifact@v4
@@ -89,4 +87,4 @@ jobs:
           name: ARVEXQ-v206-backtest-${{ github.run_number }}
           path: backtest-v206/
           if-no-files-found: warn
-          retention-days: 30
+          retention-days: 14

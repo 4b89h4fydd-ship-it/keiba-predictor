@@ -31,6 +31,8 @@ jobs:
       ARVEXQ_DATA_CORE: "0"
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_INPUT: "1"
 
     steps:
       - name: Checkout
@@ -44,18 +46,18 @@ jobs:
           cache-dependency-path: requirements.txt
 
       - name: Install runtime dependencies
-        run: python -m pip install --disable-pip-version-check --no-input -r requirements.txt
+        run: python -m pip install -q -r requirements.txt
 
       - name: Set sync date
         run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
 
-      - name: Restore ARVEXQ data cache
+      - name: Restore warm cache read-only
         uses: actions/cache/restore@v4
         with:
           path: .arvexq-data
-          key: arvexq-live-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
+          key: arvexq-live-readonly-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
           restore-keys: |
-            arvexq-live-${{ runner.os }}-${{ env.SYNC_DATE }}-
+            arvexq-prefetch-${{ runner.os }}-${{ env.SYNC_DATE }}-
             arvexq-data-${{ runner.os }}-${{ env.SYNC_DATE }}-
             arvexq-data-${{ runner.os }}-
 
@@ -70,20 +72,18 @@ jobs:
             fi
             sleep 1
           done
-          tail -n 200 /tmp/arvexq-live.log || true
+          tail -n 80 /tmp/arvexq-live.log || true
           exit 1
 
       - name: Load prepared day from D1
         run: |
-          # D1 is the display source of truth. The 5-minute lane reads only summaries;
-          # scripts/arvexq_live_sync.py fetches rich details only for its small target set.
           curl -fsS --max-time 15 \
             "$CLOUDFLARE_DAY_URL?date=$SYNC_DATE&details=0&t=$(date +%s)" \
             -o bundle.json || true
 
           RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
           if [ "$RACES" -le 0 ]; then
-            echo "D1 has no day snapshot yet; use one local discovery fallback."
+            echo "D1 has no day snapshot; using one local discovery fallback."
             curl -fsS --max-time 20 \
               "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$SYNC_DATE" \
               -o bundle.json || true
@@ -97,29 +97,32 @@ jobs:
             RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
           fi
 
-          echo "live snapshot races=$RACES"
+          echo "LIVE source races=$RACES"
           if [ "$RACES" -le 0 ]; then
-            tail -n 240 /tmp/arvexq-live.log || true
+            tail -n 80 /tmp/arvexq-live.log || true
             exit 1
           fi
 
       - name: Refresh live deltas only
         run: |
-          # app.py RaceDB uses SQLite; keep the small target set serialized so
-          # body-weight/odds persistence cannot lose a write to database locking.
-          python scripts/arvexq_live_sync.py \
+          if ! python scripts/arvexq_live_sync.py \
             --bundle bundle.json \
             --out live-payload.json \
             --audit live-audit.json \
-            --workers 1
-          cat live-audit.json
+            --workers 1 > live-sync.log 2>&1; then
+            echo "::error::LIVE sync failed"
+            tail -n 80 live-sync.log || true
+            exit 1
+          fi
+          jq '{date,targetCount,updatedCount,reanalyzedCount:(.reanalyzed|length),errorCount:(.errors|length),thinSkipped:(.thin_detail_skipped|length),missingD1Base:(.missing_d1_base|length)}' live-audit.json
 
       - name: Push live deltas to D1
         run: |
           curl --fail-with-body --max-time 20 -X POST "$CLOUDFLARE_SYNC_URL" \
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @live-payload.json
+            --data-binary @live-payload.json > /dev/null
+          echo "D1 live delta push OK"
 
       - name: Verify D1 first-paint endpoint
         run: |
@@ -140,13 +143,23 @@ jobs:
             kill "$(cat /tmp/arvexq-live.pid)" 2>/dev/null || true
           fi
 
-      - name: Save ARVEXQ live cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: .arvexq-data
-          key: arvexq-live-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
-
-      - name: Show live log on failure
+      - name: Show concise failure log
         if: failure()
-        run: tail -n 300 /tmp/arvexq-live.log || true
+        run: |
+          echo "--- live-sync.log ---"
+          tail -n 80 live-sync.log 2>/dev/null || true
+          echo "--- runtime ---"
+          tail -n 80 /tmp/arvexq-live.log 2>/dev/null || true
+          cp /tmp/arvexq-live.log runtime-live.log 2>/dev/null || true
+
+      - name: Upload full failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-live-failure-${{ github.run_number }}
+          path: |
+            live-sync.log
+            live-audit.json
+            runtime-live.log
+          if-no-files-found: ignore
+          retention-days: 3

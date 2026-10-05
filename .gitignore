@@ -1,22 +1,48 @@
 # Python
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # build output (Cloudflare builds dist/ from build_static.py)
 dist/
 
-# local runtime data
+# local/runtime data
 .arvexq-data/
+.arvexq-v*-data/
 *.db
+*.sqlite
 *.sqlite3
+*.sqlite-wal
+*.sqlite-shm
 
-# workflow temp files
+# logs
+*.log
+
+# GitHub Actions / local workflow temp files
 bundle.json
+bundle-*.json
 first-paint.json
 payload.json
 full-details.json
 result-details.json
 active-details.json
+d1-day.json
+verified-*.json
+live-*.json
+prefetch-*.json
+result-repair-*.json
+history-*.json
+*-payload.json
+*-report.json
 
-# OS
+# research/backtest generated output
+backtest-v*/
+jra-seed/
+ranker-v*.json
+ranker-v*.log
+research-output/
+
+# OS / editor
 .DS_Store
+.vscode/
+.idea/
