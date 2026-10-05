@@ -6,6 +6,7 @@ on:
     paths:
       - 'scripts/arvexq_foundation_priority_audit.py'
       - 'scripts/arvexq_signal_dedup_audit.py'
+      - 'scripts/arvexq_signal_dedup_multiday_audit.py'
       - '.github/workflows/arvexq-foundation-audit.yml'
   workflow_dispatch:
 
@@ -32,3 +33,10 @@ jobs:
           ARVEXQ_DATE: '2026-10-05'
           ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
         run: python scripts/arvexq_signal_dedup_audit.py
+      - name: Validate dedup across seven days
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_DATE: '2026-10-05'
+          ARVEXQ_DAYS: '7'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+        run: python scripts/arvexq_signal_dedup_multiday_audit.py
