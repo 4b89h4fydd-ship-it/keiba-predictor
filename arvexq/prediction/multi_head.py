@@ -3,7 +3,7 @@ from __future__ import annotations
 from statistics import median
 from typing import Any
 
-MODEL_VERSION = "arvexq-multi-head-v1"
+MODEL_VERSION = "arvexq-multi-head-v2"
 
 
 def _median(values: list[float | None]) -> float | None:
@@ -22,15 +22,16 @@ def _rank_rows(rows: list[dict[str, Any]], key: str) -> dict[int, int]:
 
 
 def attach_multi_head_signals(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    """Attach separate, race-relative decision heads without inventing probabilities.
+    """Attach separate race-relative decision heads without inventing probabilities.
 
-    strength: ability + record only.
-    win: all four primary pillars.
-    upside: suitability + pace + support; used to find horses whose current setup
-      can outperform their baseline or market rank.
-    fragility: disagreement among the four primary pillars. This is an index of
-      instability, not a loss probability.
-    market disagreement: compares pre-race popularity rank with the model ranks.
+    Core heads remain market independent:
+      strength = ability + record
+      win = ability + record + suitability + pace
+      upside = suitability + pace + support
+      fragility = disagreement among primary pillars
+
+    Popularity disagreement is stored only as a market diagnostic. It must not alter
+    the core ranking, ☆+ eligibility, or strict selection gate.
     """
     if not rows:
         return {"modelVersion": MODEL_VERSION, "winnerGap": None, "winnerHorseNumber": 0}
@@ -63,6 +64,11 @@ def attach_multi_head_signals(rows: list[dict[str, Any]]) -> dict[str, Any]:
         fragility_rank = fragility_ranks[id(row)]
 
         market_gap = popularity - win_rank if popularity > 0 else None
+        # Upside is a pure racing/setup signal: current suitability/pace/support lift
+        # the horse above its baseline strength rank. Popularity is deliberately absent.
+        setup_lift = strength_rank - win_rank
+        upside_candidate = bool(win_rank <= 4 and upside_rank <= 3 and setup_lift >= 1)
+
         row["multiHead"] = {
             "modelVersion": MODEL_VERSION,
             "strengthScore": row.get("strengthHeadScore"),
@@ -73,12 +79,12 @@ def attach_multi_head_signals(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "upsideRank": upside_rank,
             "fragilityScore": row.get("fragilityHeadScore"),
             "fragilityRank": fragility_rank,
+            "setupLift": setup_lift,
+            "upsideCandidate": upside_candidate,
+            # Market diagnostics are metadata only; they never drive core marks.
             "popularityRank": popularity or None,
             "marketGap": market_gap,
-            # High market rank but the model puts the horse materially lower.
             "dangerPopular": bool(popularity and popularity <= 3 and win_rank >= popularity + 2),
-            # Lower market attention while win/setup heads both keep the horse live.
-            "upsideCandidate": bool(popularity and popularity >= 5 and win_rank <= 4 and upside_rank <= 3),
         }
 
     ranked = sorted(
