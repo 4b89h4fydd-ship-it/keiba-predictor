@@ -1,0 +1,69 @@
+name: ARVEXQ Ranker v209 Research
+
+"on":
+  push:
+    branches: [research/recent-accuracy-20261005]
+    paths:
+      - research/arvexq_ranker_v209.py
+      - .github/workflows/arvexq-ranker-v209-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-ranker-v209-research
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ARVEXQ_API_URL: https://kraiz-api.4b89h4fydd.workers.dev
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
+      RACEDB_AUTO_UPDATE: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install app and research dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --no-input -r requirements.txt
+          python -m pip install --disable-pip-version-check --no-input numpy pandas lightgbm catboost
+      - name: Compile research model
+        run: python -m py_compile research/arvexq_ranker_v209.py
+      - name: Build leakage-free JRA historical snapshots
+        run: |
+          rm -rf jra-seed
+          python backtest_v208_jra.py --days 90 --max-races 360 --iterations 500 --workers 6 --out jra-seed
+      - name: Benchmark circuit-specific rankers and market calibration
+        run: |
+          python research/arvexq_ranker_v209.py --days 28 --extra-jra jra-seed/jra-official-snapshots.json --out ranker-v209.json | tee ranker-v209.log
+      - name: Show concise result
+        run: |
+          python - <<'PY'
+          import json
+          z=json.load(open('ranker-v209.json',encoding='utf-8'))
+          print('# ARVEXQ v209 ranker benchmark')
+          for c,r in z['circuits'].items():
+              print('\n##',c,'races',r.get('races'),'holdout',r.get('holdout'))
+              print('baseline',r.get('baseline'))
+              for name,m in (r.get('models') or {}).items():
+                  print(name,'pure',m.get('pure'))
+                  print(name,'blend',m.get('blend'))
+                  print(name,'confidence',m.get('confidence'))
+          PY
+      - name: Upload research artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-ranker-v209
+          path: |
+            ranker-v209.json
+            ranker-v209.log
+            jra-seed/report.json
+            jra-seed/candidate_model_v208_jra.json
+          retention-days: 7
