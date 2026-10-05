@@ -6,9 +6,9 @@ name: ARVEXQ Result Repair
     branches: [main]
     paths:
       - scripts/arvexq_result_repair.py
+      - scripts/arvexq_cache_health.py
       - .github/workflows/arvexq-result-repair.yml
   schedule:
-    # Offset from the main realtime sync so both jobs do not hammer sources at once.
     - cron: "2-59/5 22-23 * * *"
     - cron: "2-59/5 0-14 * * *"
 
@@ -20,7 +20,6 @@ jobs:
   repair:
     runs-on: ubuntu-latest
     timeout-minutes: 8
-
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
       CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
@@ -30,24 +29,19 @@ jobs:
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
       ARVEXQ_RESULT_WORKERS: "6"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.txt
-
       - name: Install runtime dependencies
         run: python -m pip install --disable-pip-version-check --no-input -r requirements.txt
-
       - name: Set sync date
         run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
-
       - name: Restore ARVEXQ data cache
         uses: actions/cache/restore@v4
         with:
@@ -57,50 +51,35 @@ jobs:
             arvexq-result-${{ runner.os }}-${{ env.SYNC_DATE }}-
             arvexq-data-${{ runner.os }}-${{ env.SYNC_DATE }}-
             arvexq-data-${{ runner.os }}-
-
+      - name: Validate restored ARVEXQ cache
+        run: |
+          mkdir -p "$KEIBA_DATA_DIR"
+          chmod -R u+rwX "$KEIBA_DATA_DIR" || true
+          python scripts/arvexq_cache_health.py "$KEIBA_DATA_DIR" --delete-corrupt --report cache-health.json
+          cat cache-health.json
       - name: Read current day from D1
         run: |
-          curl --fail-with-body --max-time 20 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE" \
-            -o bundle.json
+          curl --fail-with-body --max-time 20 "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE" -o bundle.json
           RACES=$(jq '.races // [] | length' bundle.json)
           DETAILS=$(jq '.details // [] | length' bundle.json)
           echo "D1 day snapshot races=$RACES details=$DETAILS"
-          if [ "$RACES" -le 0 ]; then
-            echo "No races found for $SYNC_DATE; nothing to repair."
-          fi
-
+          if [ "$RACES" -le 0 ]; then echo "No races found for $SYNC_DATE; nothing to repair."; fi
       - name: Repair all started incomplete results
         run: |
           python -m py_compile scripts/arvexq_result_repair.py
-          python scripts/arvexq_result_repair.py \
-            --bundle bundle.json \
-            --payload result-repair-payload.json \
-            --report result-repair-report.json
+          python scripts/arvexq_result_repair.py --bundle bundle.json --payload result-repair-payload.json --report result-repair-report.json
           cat result-repair-report.json
-
       - name: Push repaired full-detail snapshots to D1
         run: |
           STARTED=$(jq '.meta.started_race_count // 0' result-repair-payload.json)
-          if [ "$STARTED" -le 0 ]; then
-            echo "No started races; skip sync."
-            exit 0
-          fi
-          curl --fail-with-body --max-time 30 -X POST \
-            "$CLOUDFLARE_API_BASE/api/sync" \
-            -H "content-type: application/json" \
-            -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @result-repair-payload.json
-
+          if [ "$STARTED" -le 0 ]; then echo "No started races; skip sync."; exit 0; fi
+          curl --fail-with-body --max-time 30 -X POST "$CLOUDFLARE_API_BASE/api/sync" -H "content-type: application/json" -H "x-sync-token: $SYNC_TOKEN" --data-binary @result-repair-payload.json
       - name: Verify D1 after repair
         run: |
-          curl --fail-with-body --max-time 20 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE" \
-            -o verified-day.json
+          curl --fail-with-body --max-time 20 "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE" -o verified-day.json
           python - <<'PY'
           import json
           from pathlib import Path
-
           day=json.loads(Path('verified-day.json').read_text(encoding='utf-8'))
           report=json.loads(Path('result-repair-report.json').read_text(encoding='utf-8'))
           by_id={str(d.get('id') or ''):d for d in (day.get('details') or []) if isinstance(d,dict)}
@@ -108,14 +87,11 @@ jobs:
           for rid in report.get('repaired') or []:
               result=(by_id.get(str(rid)) or {}).get('result') or {}
               ranks={int(x.get('finish') or 0) for x in (result.get('finishers') or []) if isinstance(x,dict)}
-              if str(result.get('status') or '')!='確定' or not all(i in ranks for i in (1,2,3)):
-                  missing.append(rid)
+              if str(result.get('status') or '')!='確定' or not all(i in ranks for i in (1,2,3)): missing.append(rid)
           print('D1_VERIFY repaired=',len(report.get('repaired') or []),'not_visible=',len(missing))
           print('D1_VERIFY result_missing=',len(report.get('result_missing') or []),'payout_missing=',len(report.get('payout_missing') or []))
-          if missing:
-              raise SystemExit('D1 did not expose repaired result(s): '+','.join(missing))
+          if missing: raise SystemExit('D1 did not expose repaired result(s): '+','.join(missing))
           PY
-
       - name: Save ARVEXQ data cache
         if: always()
         uses: actions/cache/save@v4
