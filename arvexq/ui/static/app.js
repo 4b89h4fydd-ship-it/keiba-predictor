@@ -1449,7 +1449,7 @@ function betComboText(kind,combos){
 function isFeaturedBetRace(r,p){
   var title=String(r&&r.title||''),sel=null;
   try{sel=raceSelectionProfile(r,p)}catch(e){}
-  return !!(r&&(explicitSelectedRace(r)||raceIsGraded(r)||r.isMain||r.mainRace||r.featured||n(r.raceNumber)===11||
+  return !!(r&&(raceIsGraded(r)||
     (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))
 }
 function buildV213AiBetPlan(r,p,rows,featured){
@@ -1727,7 +1727,7 @@ function buildAiBetPlan(r,p){
   if(!items.length&&canIssue){var fallback=topCombos(wideRank,3);if(fallback.length)items.push({level:'通常',kind:'ワイド',combos:fallback,points:fallback.length,combo:betComboText('ワイド',fallback),confidence:'中',modelScore:0})}
   var sel=null;try{sel=strictSelectedRaceProfile(r,p)}catch(e){}
   var betQuality=canIssue?Math.round(clamp(48+top3mass*30+(1-p1Entropy)*12+(featured?7:0)+(strongGate?8:0),50,92)):0,
-      reason=featured?'本日の厳選/メイン/重賞/高知ファイナル対象。v220は共通着順分布から5券種を生成し、確率差で自動的に点数を絞ります。':(canIssue?'通常レースの買い目ゲート通過。5券種は同じ条件付き着順分布から派生。':'通常レースの買い目ゲート未通過。'),
+      reason=featured?'厳選ゲート通過、または必須予想の重賞/高知ファイナル対象。必須予想は厳選扱いしません。':(canIssue?'通常レースの買い目ゲート通過。5券種は同じ条件付き着順分布から派生。':'通常レースの買い目ゲート未通過。'),
       plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v317-consensus-rebuild',decision:decision,featuredRace:featured,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'条件付き順序集中度が3連単基準未満。',winnerModel:(String((r&&r.circuit)||'')==='中央'?'central-v317-consensus-rebuild':'local-v317-consensus-rebuild')+'+walkforward+precision-order',p2Model:useV207?'v212-role+v220-conditional':'legacy-central+v220-conditional',p3Model:'role-marginal+v220-conditional',selectionAudit:sel,
         roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z),p:winActive(z)}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z),p:role(z,2)}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z),p:role(z,3)}}),legacyP1:legacyRows.slice(0,4).map(function(z){return{no:no(z),p:n(z.ticketLegacyP1Probability)}})},
         audit:{field:field,coverage:cov,p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:p1Entropy,exactaTop:exactaTop,exactaRatio:exactaRatio,wideTop:wideTop,wideRatio:wideRatio,quinTop:qTop,quinRatio:qRatio,trioTop:trioTop,trioRatio:trioRatio,triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderConfidence:orderConfidence,normalGate:normalGate,strongGate:strongGate,featured:featured,ticketDistribution:'sequential-joint-v300-winner-consensus'},items:items,reason:reason};
@@ -2001,8 +2001,8 @@ function eliteSelectedRaceCut(rows){
       n(b.selection&&b.selection.evidence)-n(a.selection&&a.selection.evidence)
   });
   if(!rows.length)return [];
-  var best=n(rows[0].selection&&rows[0].selection.score),central=String((rows[0].race&&rows[0].race.circuit)||'')==='中央',floor=Math.max(central?72:68,best-4),limit=best>=(central?87:84)?3:2;
-  var elite=rows.filter(function(z){var t=z.selection||{},rd=t.readiness||{},central=String((z.race&&z.race.circuit)||'')==='中央';return n(t.score)>=floor&&n(rd.prediction)>=(central?.64:.61)&&n(t.coverage)>=(central?.44:.42)&&n(t.top3mass)>=(central?.58:.60)&&n(t.evidence)>=(central?.38:.36)&&n(t.scenarioProb)>=(central?.24:.22)&&!!t.winnerStable&&n(t.winnerConfidence)>=.60});
+  var best=n(rows[0].selection&&rows[0].selection.score),central=String((rows[0].race&&rows[0].race.circuit)||'')==='中央',floor=Math.max(central?82:80,best-2),limit=1;
+  var elite=rows.filter(function(z){var t=z.selection||{},rd=t.readiness||{},central=String((z.race&&z.race.circuit)||'')==='中央';return n(t.score)>=floor&&n(rd.prediction)>=(central?.74:.72)&&n(t.coverage)>=(central?.60:.58)&&n(t.top3mass)>=(central?.68:.70)&&n(t.evidence)>=(central?.55:.53)&&n(t.scenarioProb)>=(central?.30:.28)&&!!t.winnerStable&&n(t.winnerConfidence)>=.72});
   return elite.slice(0,limit).sort(raceChronologicalCompare)
 }
 function selectedRaceCandidates(circuit){
@@ -2055,7 +2055,7 @@ function selectedRaceBetPreview(r){
 }
 function smartSelectedRaces(){
   var central=selectedRaceCandidates('中央'),local=selectedRaceCandidates('地方'),open=!!selectedSectionsOpen.selected,total=central.length+local.length;
-  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>全レース比較から少数精鋭だけ・時間順</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
+  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>基準未達なら0件・本当に強い時だけ</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
 }
 function smartDailyAiStats(){
   var dayRaces=(state.races||[]).filter(function(r){return r&&r.id});
