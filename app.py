@@ -1,3 +1,4 @@
+from arvexq.ability_engine import apply_ability_ranking
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ARVEXQ Python source
@@ -2886,7 +2887,7 @@ function assignPredictionMarks(rows,r){
 
 function raceMode(r){r=r||{};if(['平地','新馬','障害'].indexOf(r.analysisMode)>=0)return r.analysisMode;var title=String(r.title||'');if(r.surface==='障害'||/障害|J[･・.]?G[ⅠⅡⅢ123]|\bJS\b|ジャンプ/i.test(title))return '障害';return /新馬|メイクデビュー/.test(title)?'新馬':'平地'}
 function saveRaceAnalysis(r,p){return}
-function isScratchHorse(h){var s=String(h&&h.status||'');return !!(h&&(h.scratched===true||h.withdrawn===true||/欠場|取消|除外/.test(s)))}
+function isScratchHorse(h){var s=String(h&&h.status||'');return !!(h&&(h.scratched===true||h.withdrawn===true||/欠場|出走取消|取消|競走除外|除外/.test(s)))}
 function analysisRace(r){
   var active=(r.horses||[]).filter(function(h){return !isScratchHorse(h)}).map(function(h){
     var runs=h.allPastRuns||h.recentRaces||[];
@@ -4384,7 +4385,7 @@ function runnerStyleSection(r,p){
     +'<div class="racecard-table">'
     +(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
       var scratch=isScratchHorse(h),x=(p.rows||[]).find(function(z){return n(z.horse.horseNumber)===n(h.horseNumber)});
-      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,st=String(h.status||'欠場');
+      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,st=String(h.status||(h.scratched||h.withdrawn?'出走取消':'欠場'));
       return '<div class="racecard-row'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
         +'<span class="rc-check-cell"><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span></span>'
         +'<span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span>'
@@ -5108,7 +5109,7 @@ def _scratch_status(value: str) -> str:
     s=_clean(value)
     if not s:return ""
     if "競走除外" in s or "除外" in s:return "除外"
-    if "出走取消" in s or "取消" in s:return "取消"
+    if "出走取消" in s or "取消" in s:return "出走取消"
     if "欠場" in s:return "欠場"
     return ""
 
@@ -11741,6 +11742,7 @@ def _restore_saved_odds(detail:dict)->dict:
 
 
 def _precompute_detail_metrics(detail: dict) -> dict:
+    detail = apply_ability_ranking(detail)
     if not isinstance(detail,dict):return detail
     detail=_apply_enrichment(str(detail.get("id") or ""),detail)
     try:detail["trackSpeed"]=_pc_live_track_speed(detail)
