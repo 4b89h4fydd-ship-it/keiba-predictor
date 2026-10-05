@@ -68,6 +68,45 @@ jobs:
         run: |
           python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_wire_core_marks.py
           python -m compileall -q arvexq
+      - name: Mark linkage regression check
+        run: |
+          python - <<'PY'
+          from arvexq.prediction.final_marks import apply_core_marks
+
+          def horse(no, finishes, speed):
+              runs=[]
+              for i,fin in enumerate(finishes):
+                  runs.append({'finish':fin,'fieldSize':12,'distance':1600,'track':'T','condition':'良','speedIndex':speed-i})
+              return {'horseNumber':no,'name':f'H{no}','recentRaces':runs,'integratedEvaluation':{'mark':'旧'}}
+
+          detail={'distance':1600,'track':'T','condition':'良','horses':[
+              horse(1,[8,8,7,9,8],70),
+              horse(2,[1,2,1,2,1],105),
+              horse(3,[3,3,4,2,3],92),
+              horse(4,[5,4,5,4,6],82),
+          ]}
+          apply_core_marks(detail)
+          marks={h['horseNumber']:h['integratedEvaluation']['mark'] for h in detail['horses']}
+          assert marks[2]=='◎', marks
+          assert marks[3]=='○', marks
+          assert marks[4]=='▲', marks
+
+          # Change the evidence, not a legacy P1/P2/P3 field: ◎ must move.
+          detail2={'distance':1600,'track':'T','condition':'良','horses':[
+              horse(1,[1,1,1,2,1],110),
+              horse(2,[6,7,5,6,6],75),
+              horse(3,[3,3,4,2,3],92),
+              horse(4,[5,4,5,4,6],82),
+          ]}
+          for h in detail2['horses']:
+              h['integratedEvaluation']['p1Score']=999 if h['horseNumber']==2 else 0
+          apply_core_marks(detail2)
+          marks2={h['horseNumber']:h['integratedEvaluation']['mark'] for h in detail2['horses']}
+          assert marks2[1]=='◎', marks2
+          assert marks2[2] != '◎', marks2
+          assert detail2['markEngineVersion']=='arvexq-ability-record-marks-v3'
+          print('mark-linkage-ok', marks, marks2)
+          PY
       - name: Commit modularization
         run: |
           TARGETS="app.py build_static.py arvexq/ui/static arvexq/infra/legacy_stores.py arvexq/infra/race_stores.py arvexq/domain/legacy_evaluation.py"
