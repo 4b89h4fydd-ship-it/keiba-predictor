@@ -84,6 +84,80 @@ js = strings["JS"]
 manifest = strings["MANIFEST"]
 sw = strings["SW"]
 
+# Static-shell safety overlay: make scratches/cancellations visually unmistakable even
+# when upstream markup varies between JRA/NAR payloads. Inline injection avoids stale
+# immutable versioned CSS/JS caches and is safe to remove once app.py owns the same UX.
+SCRATCH_OVERLAY_CSS = r"""
+<style id="arvexq-scratch-overlay-css">
+.arvexq-scratched{position:relative!important;opacity:.62!important;filter:grayscale(.72)!important;background:linear-gradient(90deg,rgba(127,29,29,.22),rgba(30,41,59,.16))!important;border-color:rgba(248,113,113,.58)!important}
+.arvexq-scratched .arvexq-scratch-badge{display:inline-flex!important;align-items:center;justify-content:center;min-height:22px;padding:2px 8px;margin:0 6px;border:1px solid rgba(254,202,202,.75);border-radius:999px;background:#b91c1c;color:#fff;font-size:12px;font-weight:900;letter-spacing:.04em;line-height:1.2;white-space:nowrap;box-shadow:0 1px 8px rgba(127,29,29,.35)}
+.arvexq-scratched input[type="checkbox"],.arvexq-scratched [role="checkbox"]{pointer-events:none!important;opacity:.28!important;filter:grayscale(1)!important}
+.arvexq-scratched [class*="name"],.arvexq-scratched [data-horse-name]{text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:rgba(248,113,113,.9)}
+</style>
+"""
+SCRATCH_OVERLAY_JS = r"""
+<script id="arvexq-scratch-overlay-js">
+(()=>{
+  const TERM=/^(?:出走取消|取消|競走除外|除外|SCRATCHED)$/i;
+  const CLASS_HINT=/(horse|runner|entry|uma|row|card)/i;
+  const statusText=(el)=>String(el?.getAttribute?.('data-status')||el?.getAttribute?.('aria-label')||'').trim();
+  const isScratchText=(s)=>TERM.test(String(s||'').replace(/\s+/g,''));
+  const rowFor=(el)=>{
+    if(!el)return null;
+    const hit=el.closest?.('[data-horse-number],[data-runner],[data-entry],tr,.horse-row,.runner-row,.entry-row,.horse-card,.runner-card,.entry-card');
+    if(hit)return hit;
+    let cur=el;
+    for(let i=0;i<5&&cur&&cur!==document.body;i++,cur=cur.parentElement){
+      const txt=(cur.textContent||'').trim();
+      if(txt.length<=700&&(CLASS_HINT.test(cur.className||'')||cur.querySelector?.('input[type="checkbox"],[role="checkbox"]')))return cur;
+    }
+    return el.parentElement;
+  };
+  const mark=(row)=>{
+    if(!row||row.classList?.contains('arvexq-scratched'))return;
+    row.classList?.add('arvexq-scratched');
+    row.setAttribute?.('data-arvexq-scratched','true');
+    row.setAttribute?.('aria-label',`${row.getAttribute?.('aria-label')||''} 出走取消`.trim());
+    row.querySelectorAll?.('input[type="checkbox"],[role="checkbox"]').forEach(x=>{
+      if('disabled' in x)x.disabled=true;
+      x.setAttribute?.('aria-disabled','true');
+      if(x.getAttribute?.('role')==='checkbox')x.setAttribute?.('aria-checked','false');
+    });
+    if(!row.querySelector?.('.arvexq-scratch-badge')){
+      const badge=document.createElement('span');
+      badge.className='arvexq-scratch-badge';
+      badge.textContent='出走取消';
+      const anchor=row.querySelector?.('[data-horse-name],[class*="horse-name"],[class*="runner-name"],[class*="entry-name"],[class*="name"]');
+      if(anchor?.parentNode)anchor.insertAdjacentElement('afterend',badge);else row.prepend?.(badge);
+    }
+  };
+  let queued=false;
+  const scan=()=>{
+    queued=false;
+    document.querySelectorAll('[data-scratched="true"],[data-status*="取消"],[data-status*="除外"],[aria-label*="出走取消"],[aria-label*="競走除外"]').forEach(el=>mark(rowFor(el)));
+    document.querySelectorAll('span,small,strong,b,em,div,td').forEach(el=>{
+      const own=Array.from(el.childNodes||[]).filter(n=>n.nodeType===3).map(n=>n.nodeValue).join('').trim();
+      if(isScratchText(own)||isScratchText(statusText(el)))mark(rowFor(el));
+    });
+  };
+  const schedule=()=>{if(queued)return;queued=true;requestAnimationFrame(scan)};
+  document.addEventListener('click',e=>{
+    const row=e.target?.closest?.('.arvexq-scratched');
+    if(!row)return;
+    if(e.target?.matches?.('input[type="checkbox"],[role="checkbox"],[data-select-horse],.horse-check,.runner-check,.entry-check')){
+      e.preventDefault();e.stopPropagation();
+    }
+  },true);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
+  new MutationObserver(schedule).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['data-scratched','data-status','aria-label']});
+})();
+</script>
+"""
+if "</head>" in index_html:
+    index_html = index_html.replace("</head>", SCRATCH_OVERLAY_CSS + "\n</head>", 1)
+if "</body>" in index_html:
+    index_html = index_html.replace("</body>", SCRATCH_OVERLAY_JS + "\n</body>", 1)
+
 # Current shell. Dynamic FastAPI and static Pages intentionally use byte-identical JS/CSS.
 (DIST / "index.html").write_text(index_html, encoding="utf-8")
 (DIST / "404.html").write_text(index_html, encoding="utf-8")
