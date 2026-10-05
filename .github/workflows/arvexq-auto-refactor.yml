@@ -25,6 +25,33 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Map remaining backend blocks
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          src = Path('app.py').read_text(encoding='utf-8')
+          lines = src.splitlines(keepends=True)
+          tree = ast.parse(src)
+          ranked = []
+          for node in tree.body:
+              if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                  continue
+              start = node.lineno
+              end = node.end_lineno or start
+              segment = ''.join(lines[start-1:end])
+              refs = set()
+              locals_ = {a.arg for a in getattr(getattr(node, 'args', None), 'args', [])}
+              for sub in ast.walk(node):
+                  if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Load) and sub.id not in locals_:
+                      refs.add(sub.id)
+              ranked.append((len(segment.encode('utf-8')), end-start+1, len(refs), getattr(node, 'name', '?'), start, end))
+          ranked.sort(reverse=True)
+          print(f'app.py bytes={len(src.encode("utf-8")):,} lines={len(lines):,}')
+          print('bytes\tlines\trefs\tname\trange')
+          for size, span, refs, name, start, end in ranked[:80]:
+              print(f'{size}\t{span}\t{refs}\t{name}\t{start}-{end}')
+          PY
       - name: Patch app boundary
         run: python scripts/arvexq_patch_app.py
       - name: Extract embedded UI and images
