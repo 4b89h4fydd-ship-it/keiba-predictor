@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, json, math, re, urllib.parse, urllib.request
+import argparse, json, math, re, sys, urllib.parse, urllib.request
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import numpy as np
 import pandas as pd
