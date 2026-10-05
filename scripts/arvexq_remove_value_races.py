@@ -60,3 +60,8 @@ print("expected-value race category removed")
 policy = Path("scripts/arvexq_enforce_selection_policy.py")
 if policy.exists():
     runpy.run_path(str(policy), run_name="__main__")
+
+# Graded races and Kochi Final must always publish a trifecta challenge.
+mandatory_tri = Path("scripts/arvexq_force_mandatory_trifecta.py")
+if mandatory_tri.exists():
+    runpy.run_path(str(mandatory_tri), run_name="__main__")
