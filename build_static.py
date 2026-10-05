@@ -8,6 +8,7 @@ import shutil
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "app.py"
 DIST = ROOT / "dist"
+# UI assets are intentionally stored outside app.py after modularization.
 STATIC = ROOT / "arvexq" / "ui" / "static"
 
 if DIST.exists():
@@ -94,7 +95,7 @@ for node in tree.body:
 
 for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
-        raise RuntimeError(f"{required} not found in app.py")
+        raise RuntimeError(f"{required} not found in app.py or extracted UI assets")
 if not icons:
     raise RuntimeError("ARVEXQ_ICONS not found")
 if "ARVEXQ_TOUCH_ICON_180" not in binary_b64:
