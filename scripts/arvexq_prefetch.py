@@ -41,6 +41,74 @@ def _write(path: str, value: Any) -> None:
     Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _meaningful(value: Any) -> bool:
+    return value not in (None, "", [], {})
+
+
+def _merge_horses(base: Any, fresh: Any) -> list[dict[str, Any]]:
+    """Preserve the rich card while allowing newer diagnosis/live fields to win."""
+    out = [copy.deepcopy(h) for h in (base or []) if isinstance(h, dict)]
+    by_no: dict[int, dict[str, Any]] = {}
+    for row in out:
+        try:
+            no = int(row.get("horseNumber") or 0)
+        except Exception:
+            no = 0
+        if no > 0:
+            by_no[no] = row
+
+    for raw in fresh or []:
+        if not isinstance(raw, dict):
+            continue
+        try:
+            no = int(raw.get("horseNumber") or 0)
+        except Exception:
+            no = 0
+        if no <= 0:
+            continue
+        row = by_no.get(no)
+        if row is None:
+            row = {"horseNumber": no}
+            out.append(row)
+            by_no[no] = row
+        for key, value in raw.items():
+            if key == "horseNumber":
+                continue
+            if _meaningful(value) or key not in row:
+                row[key] = copy.deepcopy(value)
+    return out
+
+
+def _merge_detail(base: Any, fresh: Any) -> dict[str, Any]:
+    """Merge snapshots without letting a thin/stale cache erase rich fields."""
+    out = copy.deepcopy(base) if isinstance(base, dict) else {}
+    new = fresh if isinstance(fresh, dict) else {}
+    if not out:
+        return copy.deepcopy(new)
+    if not new:
+        return out
+
+    for key, value in new.items():
+        if key == "horses":
+            out["horses"] = _merge_horses(out.get("horses"), value)
+            continue
+        if key == "preparedMeta" and isinstance(value, dict):
+            pm = dict(out.get("preparedMeta") or {})
+            pm.update(copy.deepcopy(value))
+            out["preparedMeta"] = pm
+            continue
+        if key == "result" and isinstance(value, dict):
+            result = dict(out.get("result") or {})
+            for rkey, rvalue in value.items():
+                if _meaningful(rvalue) or rkey not in result:
+                    result[rkey] = copy.deepcopy(rvalue)
+            out["result"] = result
+            continue
+        if _meaningful(value) or key not in out:
+            out[key] = copy.deepcopy(value)
+    return out
+
+
 def _card_usable(detail: dict[str, Any] | None) -> bool:
     if not isinstance(detail, dict) or not detail.get("id"):
         return False
@@ -92,6 +160,7 @@ def _snapshot(rid: str) -> dict[str, Any] | None:
 
 
 def _seed_snapshot(detail: dict[str, Any] | None) -> None:
+    """Best-effort local persistence only; D1 payload correctness must not depend on it."""
     if not isinstance(detail, dict) or not detail.get("id"):
         return
     try:
@@ -101,14 +170,16 @@ def _seed_snapshot(detail: dict[str, Any] | None) -> None:
 
 
 def _ensure_analysis(rid: str, current: dict[str, Any] | None) -> tuple[dict[str, Any] | None, str]:
-    """Run the existing diagnosis builder; never implement prediction logic here."""
-    latest = _raw_snapshot(rid) or current
+    """Run app.py diagnosis and keep its returned JSON even if SQLite persistence fails."""
+    raw_before = _raw_snapshot(rid)
+    latest = _merge_detail(current, raw_before)
     if _analysis_current(latest):
         return latest, ""
-    if isinstance(current, dict):
-        _seed_snapshot(current)
+    if latest:
+        _seed_snapshot(latest)
 
     errors: list[str] = []
+    shallow: dict[str, Any] | None = None
     try:
         built = app._build_fast_diagnosis_snapshot(
             rid,
@@ -116,16 +187,22 @@ def _ensure_analysis(rid: str, current: dict[str, Any] | None) -> tuple[dict[str
             deep_context=False,
         )
         if isinstance(built, dict) and built.get("id"):
+            shallow = built
+            # Persist when possible, but never make the returned analysis depend
+            # on SQLite/cache success.
             _seed_snapshot(built)
     except Exception as exc:
         errors.append(f"shallow:{type(exc).__name__}:{exc}")
 
-    latest = _raw_snapshot(rid) or latest
+    raw_after_shallow = _raw_snapshot(rid)
+    latest = _merge_detail(latest, raw_after_shallow)
+    latest = _merge_detail(latest, shallow)
     if _analysis_ready(latest):
         return latest, ";".join(errors)
 
     # FULL PREFETCH is the heavy lane, so one deep fallback is allowed when the
-    # local prepared card is not sufficient to produce all-head diagnosis.
+    # prepared card is not sufficient to produce all-head diagnosis.
+    deep: dict[str, Any] | None = None
     try:
         built = app._build_fast_diagnosis_snapshot(
             rid,
@@ -133,14 +210,17 @@ def _ensure_analysis(rid: str, current: dict[str, Any] | None) -> tuple[dict[str
             deep_context=True,
         )
         if isinstance(built, dict) and built.get("id"):
+            deep = built
             _seed_snapshot(built)
     except Exception as exc:
         errors.append(f"deep:{type(exc).__name__}:{exc}")
 
-    latest = _raw_snapshot(rid) or latest
+    raw_after_deep = _raw_snapshot(rid)
+    latest = _merge_detail(latest, raw_after_deep)
+    latest = _merge_detail(latest, deep)
     if not _analysis_ready(latest) and not errors:
         errors.append("diagnosis builder completed but diagnosisReady is false")
-    return latest, ";".join(errors)
+    return latest or current, ";".join(errors)
 
 
 def _decorate(detail: dict[str, Any]) -> dict[str, Any]:
@@ -178,16 +258,20 @@ def prepare(
     skipped_unchanged: list[str] = []
 
     def prepare_card(rid: str) -> tuple[str, dict[str, Any] | None, str]:
-        current = _raw_snapshot(rid) or by_id.get(rid)
+        raw = _raw_snapshot(rid)
+        current = _merge_detail(by_id.get(rid), raw)
         if _card_usable(current):
             return rid, current, ""
         try:
-            detail = app._prepare_race_snapshot(rid, force=True)
+            prepared = app._prepare_race_snapshot(rid, force=True)
+            detail = prepared if isinstance(prepared, dict) else None
         except Exception as exc:
             detail = None
-            return rid, current, f"{type(exc).__name__}: {exc}"
-        latest = _raw_snapshot(rid) or detail or current
-        if isinstance(latest, dict) and latest.get("id"):
+            return rid, current or None, f"{type(exc).__name__}: {exc}"
+        # If RaceDB save failed, keep the returned prepared card authoritative.
+        latest = _merge_detail(current, _raw_snapshot(rid))
+        latest = _merge_detail(latest, detail)
+        if latest.get("id"):
             return rid, latest, ""
         return rid, None, "no usable snapshot after card preparation"
 
@@ -213,8 +297,8 @@ def prepare(
     # Diagnose only cards whose prediction fingerprint is not already current.
     analysis_targets = []
     for rid in ids:
-        detail = _raw_snapshot(rid) or by_id.get(rid)
-        if isinstance(detail, dict):
+        detail = _merge_detail(by_id.get(rid), _raw_snapshot(rid))
+        if detail:
             by_id[rid] = detail
         if _card_usable(detail):
             if _analysis_current(detail):
@@ -227,8 +311,9 @@ def prepare(
         f"unchanged={len(skipped_unchanged)}"
     )
     if analysis_targets:
-        # Keep diagnosis concurrency deliberately low because app.py persists into
-        # one SQLite RaceDB. This prevents the database-lock race seen in live sync.
+        # app.py persists into one SQLite RaceDB. Production deliberately uses
+        # one diagnosis worker; the merge above keeps returned JSON authoritative
+        # even if local persistence is unavailable.
         with ThreadPoolExecutor(
             max_workers=max(1, min(analysis_workers, len(analysis_targets)))
         ) as pool:
@@ -250,8 +335,10 @@ def prepare(
 
     decorated: dict[str, dict[str, Any]] = {}
     for rid in ids:
-        detail = _raw_snapshot(rid) or by_id.get(rid)
-        if isinstance(detail, dict) and detail.get("id"):
+        # Local RaceDB can lag if a write was locked/read-only. Never let that
+        # stale copy erase the in-memory card/diagnosis we just built.
+        detail = _merge_detail(_raw_snapshot(rid), by_id.get(rid))
+        if detail.get("id"):
             decorated[rid] = _decorate(detail)
 
     missing_card = [rid for rid in ids if not _card_usable(decorated.get(rid))]
@@ -266,7 +353,7 @@ def prepare(
         "summaries": rows,
         "details": [decorated[rid] for rid in ids if rid in decorated],
         "meta": {
-            "source": "github-actions-full-prefetch-v3-explicit-analysis",
+            "source": "github-actions-full-prefetch-v4-memory-authoritative",
             "sync_date": bundle.get("date") or "",
             "race_count": len(ids),
             "detail_count": len(decorated),
@@ -321,7 +408,7 @@ def main() -> int:
     parser.add_argument(
         "--analysis-workers",
         type=int,
-        default=int(os.getenv("ARVEXQ_PREFETCH_ANALYSIS_WORKERS", "2")),
+        default=int(os.getenv("ARVEXQ_PREFETCH_ANALYSIS_WORKERS", "1")),
     )
     args = parser.parse_args()
     return prepare(

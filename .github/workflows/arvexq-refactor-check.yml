@@ -3,7 +3,9 @@ name: ARVEXQ Refactor Check
 "on":
   workflow_dispatch:
   push:
-    branches: [fix/arvexq-live-results-prefetch]
+    branches:
+      - fix/arvexq-live-results-prefetch
+      - fix/arvexq-prefetch-analysis-v2
     paths:
       - app.py
       - build_static.py
@@ -77,12 +79,12 @@ jobs:
           missing=[x for x in required if x not in live]
           if missing:raise SystemExit('live workflow guard missing: '+repr(missing))
           if '[:24]' in repair:raise SystemExit('result repair must not cap pending results at 24')
-          prefetch_required=['_build_fast_diagnosis_snapshot(','allow_network=True','deep_context=True']
+          prefetch_required=['_build_fast_diagnosis_snapshot(','allow_network=True','deep_context=True','_merge_detail(','memory-authoritative']
           missing=[x for x in prefetch_required if x not in prefetch]
-          if missing:raise SystemExit('prefetch must explicitly materialize existing diagnosis: '+repr(missing))
-          workflow_required=['missing_analysis_count','analysisCount','D1 is missing prepared analysis']
+          if missing:raise SystemExit('prefetch must explicitly materialize and retain diagnosis: '+repr(missing))
+          workflow_required=['missing_analysis_count','analysisCount','D1 is missing prepared analysis','ARVEXQ_PREFETCH_WORKERS: "1"','ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "1"','Normalize ARVEXQ cache permissions']
           missing=[x for x in workflow_required if x not in prefetch_workflow]
-          if missing:raise SystemExit('prefetch workflow must fail incomplete analysis: '+repr(missing))
+          if missing:raise SystemExit('prefetch workflow correctness guard missing: '+repr(missing))
           print('architecture guard OK')
           PY
 
@@ -130,26 +132,32 @@ jobs:
           changed=copy.deepcopy(base);changed['horses'][0]['bodyWeight']=488
           assert not prefetch._analysis_current(changed)
 
-          # Prefetch must invoke app.py's existing diagnosis builder when analysis is absent.
-          state={'detail':copy.deepcopy(base),'calls':[]}
-          state['detail']['preparedMeta']={}
+          # Prefetch must keep the builder return even when RaceDB remains stale
+          # and persistence fails. This reproduces the production failure fixed by v4.
+          stale=copy.deepcopy(base);stale['preparedMeta']={};stale.pop('preRacePrediction',None);stale.pop('predictionAudit',None)
           orig_raw=prefetch._raw_snapshot
           orig_seed=prefetch._seed_snapshot
           orig_build=prefetch.app._build_fast_diagnosis_snapshot
+          calls=[]
           try:
-              prefetch._raw_snapshot=lambda rid: copy.deepcopy(state['detail'])
-              def seed(d):
-                  if isinstance(d,dict):state['detail']=copy.deepcopy(d)
-              prefetch._seed_snapshot=seed
+              prefetch._raw_snapshot=lambda rid: copy.deepcopy(stale)
+              prefetch._seed_snapshot=lambda d: None
               def build(rid,allow_network=False,deep_context=False):
-                  state['calls'].append((allow_network,deep_context))
-                  d=copy.deepcopy(state['detail']);d.setdefault('preparedMeta',{})['diagnosisReady']=True
-                  state['detail']=d
+                  calls.append((allow_network,deep_context))
+                  d=copy.deepcopy(stale)
+                  d.setdefault('preparedMeta',{})['diagnosisReady']=True
+                  d['preRacePrediction']={'mark':'◎','score':91}
+                  d['horses'][0]['aiEvaluation']='S'
                   return d
               prefetch.app._build_fast_diagnosis_snapshot=build
-              ready,error=prefetch._ensure_analysis(base['id'],state['detail'])
-              assert prefetch._analysis_ready(ready)
-              assert state['calls']==[(False,False)]
+              ready,error=prefetch._ensure_analysis(base['id'],stale)
+              assert prefetch._analysis_ready(ready), error
+              assert ready['preRacePrediction']['score']==91
+              assert ready['horses'][0]['name']=='テスト馬'
+              assert ready['horses'][0]['aiEvaluation']=='S'
+              assert calls==[(False,False)]
+              final=prefetch._merge_detail(prefetch._raw_snapshot(base['id']),ready)
+              assert prefetch._analysis_ready(final) and final['preRacePrediction']['score']==91
           finally:
               prefetch._raw_snapshot=orig_raw
               prefetch._seed_snapshot=orig_seed
