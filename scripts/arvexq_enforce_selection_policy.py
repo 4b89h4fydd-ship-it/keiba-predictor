@@ -23,8 +23,8 @@ if old_cut in text:
 elif new_cut not in text:
     raise SystemExit('elite selection cut block not found')
 
-# The reconciliation pass now owns authoritative ◎ agreement. If that current gate
-# is already present, never downgrade it to an older multi-head gate.
+# The reconciliation pass owns authoritative ◎ agreement. If that current gate is
+# already present, never downgrade it to an older multi-head gate.
 authoritative_gate = "authAgree=!authAxisNo||leaderNo===authAxisNo"
 if authoritative_gate not in text:
     old_gate = "var score=Math.round(clamp(qReady*.14+qTop3*.17+qMargin*.15+qEnt*.10+qScenario*.09+qEvidence*.10+qWin*.13+qTrue*.05+qCond*.04+qPos*.03,0,1)*100),\n      hard=(ready.prediction>=g.ready&&cov>=g.cov&&top3>=g.top3&&evidence>=g.evidence&&scenarioProb>=g.scenario&&winnerStable&&winnerConf>=g.confidence),\n      separation=(top>=Math.max(g.top,uniform*g.uniform)||margin>=g.margin),selected=hard&&separation&&score>=g.score;"
@@ -38,7 +38,7 @@ if authoritative_gate not in text:
         text = text.replace(old_gate, new_gate, 1)
 
     old_failed = "var failed=[];if(ready.prediction<g.ready)failed.push('data');if(cov<g.cov)failed.push('coverage');if(top3<g.top3)failed.push('top3');if(evidence<g.evidence)failed.push('evidence');if(scenarioProb<g.scenario)failed.push('scenario');if(!winnerStable||winnerConf<g.confidence)failed.push('winner');if(!separation)failed.push('separation');if(score<g.score)failed.push('score');"
-    new_failed = old_failed[:-1] + "if(!mhAgree)failed.push('multihead');"
+    new_failed = "var failed=[];if(ready.prediction<g.ready)failed.push('data');if(cov<g.cov)failed.push('coverage');if(top3<g.top3)failed.push('top3');if(evidence<g.evidence)failed.push('evidence');if(scenarioProb<g.scenario)failed.push('scenario');if(!winnerStable||winnerConf<g.confidence)failed.push('winner');if(!separation)failed.push('separation');if(score<g.score)failed.push('score');if(!mhAgree)failed.push('multihead');"
     if new_failed not in text:
         if old_failed not in text:
             raise SystemExit('strict selection failed-reason block not found')
