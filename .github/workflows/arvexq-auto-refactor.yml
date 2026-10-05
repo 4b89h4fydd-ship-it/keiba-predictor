@@ -9,6 +9,8 @@ on:
       - 'scripts/arvexq_extract_backend.py'
       - 'scripts/arvexq_patch_mass_prerace_store.py'
       - 'scripts/arvexq_audit_legacy_learning.py'
+      - 'scripts/arvexq_reconcile_prediction_paths.py'
+      - 'scripts/check_prediction_app_integrity.py'
       - 'scripts/check_mass_feature_leakage.py'
       - 'scripts/check_mass_training_store.py'
       - 'scripts/export_mass_training_dataset.py'
@@ -78,12 +80,20 @@ jobs:
         run: python scripts/arvexq_extract_ui.py
       - name: Remove expected value race category
         run: python scripts/arvexq_remove_value_races.py
+      - name: Reconcile prediction paths and live cache behavior
+        run: python scripts/arvexq_reconcile_prediction_paths.py
       - name: Patch static builder for extracted assets
         run: python scripts/arvexq_patch_build_static.py
       - name: Compile check
         run: |
-          python -m py_compile app.py build_static.py scripts/arvexq_audit_legacy_learning.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_patch_mass_prerace_store.py scripts/check_mass_feature_leakage.py scripts/check_mass_training_store.py scripts/export_mass_training_dataset.py scripts/train_mass_models.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py scripts/arvexq_remove_value_races.py
+          python -m py_compile app.py build_static.py scripts/arvexq_audit_legacy_learning.py scripts/arvexq_reconcile_prediction_paths.py scripts/check_prediction_app_integrity.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_patch_mass_prerace_store.py scripts/check_mass_feature_leakage.py scripts/check_mass_training_store.py scripts/export_mass_training_dataset.py scripts/train_mass_models.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py scripts/arvexq_remove_value_races.py
           python -m compileall -q arvexq
+      - name: Prediction and web app integrity check
+        run: |
+          python scripts/check_prediction_app_integrity.py
+          node --check arvexq/ui/static/app.js
+          python build_static.py
+          node --check dist/app.js
       - name: Mass feature leakage regression check
         run: python scripts/check_mass_feature_leakage.py
       - name: Frozen mass training store regression check
@@ -148,11 +158,20 @@ jobs:
           assert row2['supportTieBreakWins']>=1, row2
           assert 'evidenceFamilyCounts' in row2, row2
 
-          print('four-pillar-v4-ok',marks,marks2,marks3)
+          # Popularity may be recorded as a market diagnostic but must not alter core
+          # marks. Changing only popularity must leave the final mark order unchanged.
+          before={h['horseNumber']:h['integratedEvaluation']['mark'] for h in tied['horses']}
+          tied['horses'][0]['popularity']=1
+          tied['horses'][1]['popularity']=12
+          apply_core_marks(tied)
+          after={h['horseNumber']:h['integratedEvaluation']['mark'] for h in tied['horses']}
+          assert before==after,(before,after)
+
+          print('four-pillar-v4-ok',marks,marks2,marks3,'market-independent')
           PY
       - name: Commit modularization
         run: |
-          TARGETS="app.py build_static.py arvexq/ui/static arvexq/infra/legacy_stores.py arvexq/infra/race_stores.py arvexq/domain/legacy_evaluation.py arvexq/prediction/factor_model.py"
+          TARGETS="app.py build_static.py arvexq/ui/static arvexq/infra/legacy_stores.py arvexq/infra/race_stores.py arvexq/domain/legacy_evaluation.py arvexq/prediction/factor_model.py arvexq/prediction/multi_head.py"
           if [ -z "$(git status --porcelain -- $TARGETS)" ]; then
             echo 'No generated modularization changes needed'
             exit 0
