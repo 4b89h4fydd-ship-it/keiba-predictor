@@ -5,7 +5,7 @@ from typing import Any, Iterable
 
 from arvexq.core.runner_status import is_inactive_runner
 
-MODEL_VERSION = "arvexq-four-pillar-consensus-v2"
+MODEL_VERSION = "arvexq-four-pillar-consensus-v3"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
 
 
@@ -146,7 +146,6 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
         class_edge = (sum(prizes) / len(prizes)) / current_prize
 
     return {
-        # 能力: speed, peak output, sectional, TRUE RUN, pure-ability diagnostics.
         "ability_speed_peak": max(valid_speeds) if valid_speeds else None,
         "ability_speed_median": median(valid_speeds) if valid_speeds else None,
         "ability_peak_finish": max(valid_q) if valid_q else None,
@@ -154,8 +153,6 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
         "ability_true_run": _unit(audit.get("trueRun")),
         "ability_pure": _unit(audit.get("pure")),
         "ability_research": _unit(research.get("ability")),
-
-        # 実績: career/recent results, win/top3 record, opponent/class level, representative run.
         "record_career": _mean(valid_q),
         "record_recent": _mean(recent_q),
         "record_win_rate": wins / completed if completed else None,
@@ -166,8 +163,6 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
         "record_race_performance": _component(horse, "racePerformance"),
         "record_class_research": _unit(research.get("classLevel")),
         "record_form_research": _unit(research.get("form")),
-
-        # 適性: actual same-condition results plus modelled distance/course/going/surface fit.
         "suit_distance_history": _mean(same_distance),
         "suit_track_history": _mean(same_track),
         "suit_going_history": _mean(same_condition),
@@ -177,15 +172,11 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
         "suit_going_model": _component(horse, "goingFit", "conditionFit"),
         "suit_surface_model": _component(horse, "surfaceSuitabilityScore"),
         "suit_research": _unit(research.get("suitability")),
-
-        # 展開: projected scenario, repeatability and same-day track-speed compatibility.
         "pace_scenario": _unit(audit.get("positionScenario")),
         "pace_state": _unit(audit.get("stateConsistency")),
         "pace_research": _unit(research.get("pace")),
         "pace_track_speed_fit": _unit(audit.get("trackSpeedFit")),
         "pace_hidden_effort": _unit(audit.get("hiddenEffort")),
-
-        # 補助: bloodline / weather / bias / draw / body / changes / rider-trainer context.
         "support_pedigree": _component(horse, "pedigreeScore"),
         "support_pedigree_distance": _component(horse, "distanceSuitabilityScore"),
         "support_pedigree_surface": _component(horse, "surfaceSuitabilityScore"),
@@ -232,15 +223,14 @@ def _pillar(values: list[float | None]) -> float | None:
 
 
 def _rank_map(rows: list[dict[str, Any]], key: str) -> dict[int, int]:
-    ordered = sorted(
-        rows,
-        key=lambda r: (
-            r[key] is None,
-            -float(r[key] or 0.0),
-            int(r["horse"].get("horseNumber") or 999),
-        ),
-    )
-    return {id(row): i + 1 for i, row in enumerate(ordered)}
+    """Rank equal evidence equally; missing evidence must never become horse-number rank."""
+    values = sorted({float(row[key]) for row in rows if row.get(key) is not None}, reverse=True)
+    by_value = {value: idx + 1 for idx, value in enumerate(values)}
+    missing_rank = len(values) + 1
+    return {
+        id(row): by_value.get(float(row[key]), missing_rank) if row.get(key) is not None else missing_rank
+        for row in rows
+    }
 
 
 def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) -> list[dict[str, Any]]:
@@ -273,8 +263,15 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
         row["pillarScores"] = scores
         row["evidenceCounts"] = counts
         row["sample"] = int(row["raw"].get("sample") or 0)
+        row["primaryEvidenceCount"] = sum(counts[p] for p in PRIMARY_PILLARS)
+        row["primaryPillarCoverage"] = sum(counts[p] > 0 for p in PRIMARY_PILLARS)
         for pillar in (*PRIMARY_PILLARS, "support"):
             row[pillar] = scores[pillar]
+
+    # If the new model has no primary evidence at all, do not manufacture a ranking.
+    # The caller can keep the existing prediction or flag the race as data-insufficient.
+    if not any(row["primaryEvidenceCount"] > 0 for row in rows):
+        return []
 
     pillar_ranks = {pillar: _rank_map(rows, pillar) for pillar in (*PRIMARY_PILLARS, "support")}
     for row in rows:
@@ -285,16 +282,16 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
         row["pairwiseTies"] = 0
         row["supportTieBreakWins"] = 0
 
-    # Head-to-head: the four primary pillars vote. Support only resolves a primary tie.
-    # This is deliberate: pedigree/weather/bias can move a close race, but cannot erase
-    # a clear superiority in ability, record, suitability and pace.
     for i in range(len(rows)):
         for j in range(i + 1, len(rows)):
             a, b = rows[i], rows[j]
-            aw = bw = 0
+            aw = bw = compared = 0
             for pillar in PRIMARY_PILLARS:
                 av, bv = a[pillar], b[pillar]
-                if av is None or bv is None or av == bv:
+                if av is None or bv is None:
+                    continue
+                compared += 1
+                if av == bv:
                     continue
                 if av > bv:
                     aw += 1
@@ -308,7 +305,8 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
                 a["pairwiseLosses"] += 1
             else:
                 sa, sb = a["support"], b["support"]
-                if sa is not None and sb is not None and sa != sb:
+                # Support is a tie-break only when primary evidence was actually compared.
+                if compared > 0 and sa is not None and sb is not None and sa != sb:
                     winner, loser = (a, b) if sa > sb else (b, a)
                     winner["pairwiseWins"] += 1
                     loser["pairwiseLosses"] += 1
@@ -321,6 +319,7 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
         key=lambda r: (
             -r["pairwiseWins"],
             r["pairwiseLosses"],
+            -r["primaryPillarCoverage"],
             r["primaryRankSum"],
             r["pillarRanks"]["support"],
             -r["sample"],
