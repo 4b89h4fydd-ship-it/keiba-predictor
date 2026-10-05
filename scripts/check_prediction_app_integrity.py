@@ -20,11 +20,16 @@ checks = {
     "bundle-cache-build-namespaced": 'String(window.ARVEXQ_BUILD||"dev")+":fullbundle:"' in js,
     "live-detail-ttl-bounded": "age>2*60000" in js,
     "bodyweight-invalidates-prediction": "predictionInputChanged" in js and "delete state.race._prediction" in js,
-    "strict-selection-market-independent": "mhAgree=!mhReady||(mhWinner>0&&leaderNo===mhWinner&&n(mh.winRank,999)===1&&n(mhSummary.winnerGap,0)>0);" in js,
+    "strict-selection-market-independent": "!mh.dangerPopular" not in js,
+    "strict-selection-authoritative-agreement": "authAgree=!authAxisNo||leaderNo===authAxisNo" in js and "mhAgree=authAgree&&" in js,
+    "featured-uses-strict-selector": "try{sel=strictSelectedRaceProfile(r,p)}catch(e){}" in js,
+    "bet-axis-needs-authoritative-agreement": "axisLocked=axisStable&&axisAgreement&&axisConfidence" in js,
     "core-mark-engine-four-pillar": 'MARK_ENGINE_VERSION = "arvexq-four-pillar-marks-v4"' in final_marks,
     "multihead-v2": 'MODEL_VERSION = "arvexq-multi-head-v2"' in multi_head,
     "multihead-upside-market-independent": "setup_lift = strength_rank - win_rank" in multi_head and "popularity >= 5" not in multi_head,
     "mass-ml-not-in-production-mark-path": "mass_model_runtime" not in final_marks and "mass_model_runtime" not in race_analysis,
+    "pwa-prev-build-compat": all(v in build for v in ('"v323"', '"v322"')),
+    "version-label-authoritative": '"shell":"four-pillar-authoritative"' in build,
 }
 
 failed = [name for name, ok in checks.items() if not ok]
