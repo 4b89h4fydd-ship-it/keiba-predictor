@@ -8,6 +8,7 @@ on:
       - 'scripts/arvexq_extract_ui.py'
       - 'scripts/arvexq_extract_backend.py'
       - 'scripts/arvexq_patch_build_static.py'
+      - 'scripts/arvexq_wire_core_marks.py'
       - 'build_static.py'
       - 'arvexq/**/*.py'
       - '.github/workflows/arvexq-auto-refactor.yml'
@@ -57,13 +58,15 @@ jobs:
         run: python scripts/arvexq_patch_app.py
       - name: Extract backend role blocks
         run: python scripts/arvexq_extract_backend.py
+      - name: Wire ability-record final marks
+        run: python scripts/arvexq_wire_core_marks.py
       - name: Extract embedded UI and images
         run: python scripts/arvexq_extract_ui.py
       - name: Patch static builder for extracted assets
         run: python scripts/arvexq_patch_build_static.py
       - name: Compile check
         run: |
-          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py
+          python -m py_compile app.py build_static.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_wire_core_marks.py
           python -m compileall -q arvexq
       - name: Commit modularization
         run: |
@@ -75,5 +78,5 @@ jobs:
           git config user.name 'arvexq-bot'
           git config user.email 'actions@users.noreply.github.com'
           git add $TARGETS
-          git commit -m 'refactor: split legacy backend roles out of app'
+          git commit -m 'fix: wire ability record final marks'
           git push
