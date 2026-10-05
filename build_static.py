@@ -8,6 +8,7 @@ import shutil
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "app.py"
 DIST = ROOT / "dist"
+STATIC = ROOT / "arvexq" / "ui" / "static"
 
 if DIST.exists():
     shutil.rmtree(DIST)
@@ -55,6 +56,21 @@ for node in tree.body:
             continue
         if isinstance(value, ast.Call):
             fn = value.func
+            if (
+                isinstance(fn, ast.Name)
+                and fn.id in {"read_asset", "read_binary_asset"}
+                and value.args
+                and isinstance(value.args[0], ast.Constant)
+                and isinstance(value.args[0].value, str)
+            ):
+                asset_path = STATIC / value.args[0].value
+                if not asset_path.is_file():
+                    raise RuntimeError(f"extracted asset not found: {asset_path}")
+                if fn.id == "read_asset":
+                    strings[name] = asset_path.read_text(encoding="utf-8")
+                else:
+                    binary_b64[name] = base64.b64encode(asset_path.read_bytes()).decode("ascii")
+                continue
             if (
                 isinstance(fn, ast.Attribute)
                 and isinstance(fn.value, ast.Name)
