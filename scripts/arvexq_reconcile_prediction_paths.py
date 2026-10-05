@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,60 +8,62 @@ APP_JS = ROOT / "arvexq" / "ui" / "static" / "app.js"
 BUILD = ROOT / "build_static.py"
 
 
-def replace_once(text: str, old: str, new: str, label: str) -> str:
+def ensure_replace(text: str, old: str, new: str, label: str) -> str:
+    """Apply a generated patch once and stay safe on already-patched sources."""
+    if new in text:
+        return text
     count = text.count(old)
     if count != 1:
-        raise RuntimeError(f"{label}: expected exactly 1 match, got {count}")
+        raise RuntimeError(f"{label}: expected exactly 1 old match, got {count}")
     return text.replace(old, new, 1)
 
 
 js = APP_JS.read_text(encoding="utf-8")
 
-# Cache namespaces must move with the deployed build. Old fixed v86/v90/v128 keys
-# could survive many prediction/data revisions and resurrect stale race/result state.
-js = replace_once(
+# Cache namespaces must move with the deployed build. Fixed historical keys survived
+# many revisions and could resurrect stale result/bodyweight state in the PWA.
+js = ensure_replace(
     js,
     'function cacheKey(d,c){return "keiba:v86:races:"+d+":"+(c||state.circuit||"")}',
     'function cacheKey(d,c){return "arvexq:"+String(window.ARVEXQ_BUILD||"dev")+":races:"+d+":"+(c||state.circuit||"")}',
     "race cache namespace",
 )
-js = replace_once(
+js = ensure_replace(
     js,
     'function fullBundleKey(d){return "arvexq:v128:fullbundle:"+String(d||"")}',
     'function fullBundleKey(d){return "arvexq:"+String(window.ARVEXQ_BUILD||"dev")+":fullbundle:"+String(d||"")}',
     "bundle cache namespace",
 )
-js = replace_once(
+js = ensure_replace(
     js,
     'function detailCacheKey(id){return "keiba:v90:detail:"+String(id||"")}',
     'function detailCacheKey(id){return "arvexq:"+String(window.ARVEXQ_BUILD||"dev")+":detail:"+String(id||"")}',
     "detail cache namespace",
 )
 
-# Today's live caches are display accelerators only; they must not remain authoritative
-# through bodyweight/result/finalization changes.
-js = replace_once(
+# Today's local caches are accelerators only. Live state must refresh frequently enough
+# for bodyweight, scratches, finalization and payouts.
+js = ensure_replace(
     js,
     'if(d>=today()&&Date.now()-n(x.ts)>90*60000)return null;',
     'if(d>=today()&&Date.now()-n(x.ts)>2*60000)return null;',
     "race live ttl",
 )
-js = replace_once(
+js = ensure_replace(
     js,
     'if(d>=today()&&age>6*3600000)return null;',
     'if(d>=today()&&age>5*60000)return null;',
     "bundle live ttl",
 )
-js = replace_once(
+js = ensure_replace(
     js,
     'if(x.row.date>=today()&&age>12*3600000)return null;',
     'if(x.row.date>=today()&&age>2*60000)return null;',
     "detail live ttl",
 )
 
-# Server-side four-pillar marks / immutable pre-race lock are authoritative. Front-end
-# V317 calculations may still produce supporting probabilities and scenarios, but are
-# not allowed to silently replace ◎○▲☆+☆△注 when authoritative marks exist.
+# Server four-pillar marks / immutable pre-race lock are authoritative. Front-end V317
+# may compute supporting probabilities/scenarios, but cannot silently replace marks.
 helper = r'''
 function applyServerAuthoritativeMarks(rows,r){
   rows=rows||[];r=r||{};
@@ -92,42 +93,72 @@ if helper not in js:
         raise RuntimeError("predict function anchor not found")
     js = js.replace(needle, helper + "\n" + needle, 1)
 
-js = replace_once(
+js = ensure_replace(
     js,
     'integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);for(i=0;i<sc.length;i++)',
     'integratedGrades(r,rows);assignPredictionMarks(rows,modelRace);applyServerAuthoritativeMarks(rows,modelRace);for(i=0;i<sc.length;i++)',
     "authoritative mark application",
 )
 
-# Strict selection must stay market-independent. Popularity disagreement can remain a
-# Value/Danger diagnostic, but cannot veto the pure prediction/selection gate.
-js = replace_once(
-    js,
-    "mhAgree=!mhReady||(mhWinner>0&&leaderNo===mhWinner&&n(mh.winRank,999)===1&&!mh.dangerPopular&&n(mhSummary.winnerGap,0)>0);",
-    "mhAgree=!mhReady||(mhWinner>0&&leaderNo===mhWinner&&n(mh.winRank,999)===1&&n(mhSummary.winnerGap,0)>0);",
-    "market-independent strict selection",
-)
+# Strict selection must be market-independent AND agree with the authoritative ◎ when
+# one is available. If legacy/current-win probability disagrees, the race is not elite.
+old_mh = "var mh=((leader.horse||{}).integratedEvaluation||{}).multiHead||{},mhSummary=(r&&r.multiHeadSummary)||{},mhReady=String(mhSummary.modelVersion||'').indexOf('arvexq-multi-head-')===0,leaderNo=n(leader.horse&&leader.horse.horseNumber),mhWinner=n(mhSummary.winnerHorseNumber),mhAgree=!mhReady||(mhWinner>0&&leaderNo===mhWinner&&n(mh.winRank,999)===1&&!mh.dangerPopular&&n(mhSummary.winnerGap,0)>0);"
+old_mh2 = "var mh=((leader.horse||{}).integratedEvaluation||{}).multiHead||{},mhSummary=(r&&r.multiHeadSummary)||{},mhReady=String(mhSummary.modelVersion||'').indexOf('arvexq-multi-head-')===0,leaderNo=n(leader.horse&&leader.horse.horseNumber),mhWinner=n(mhSummary.winnerHorseNumber),mhAgree=!mhReady||(mhWinner>0&&leaderNo===mhWinner&&n(mh.winRank,999)===1&&n(mhSummary.winnerGap,0)>0);"
+new_mh = "var authAxis=rows.filter(function(z){return z&&z.predMark==='◎'})[0]||null,authAxisNo=n(authAxis&&authAxis.horse&&authAxis.horse.horseNumber),mh=((leader.horse||{}).integratedEvaluation||{}).multiHead||{},mhSummary=(r&&r.multiHeadSummary)||{},mhReady=String(mhSummary.modelVersion||'').indexOf('arvexq-multi-head-')===0,leaderNo=n(leader.horse&&leader.horse.horseNumber),mhWinner=n(mhSummary.winnerHorseNumber),authAgree=!authAxisNo||leaderNo===authAxisNo,mhAgree=authAgree&&(!mhReady||(mhWinner>0&&leaderNo===mhWinner&&n(mh.winRank,999)===1&&n(mhSummary.winnerGap,0)>0));"
+if new_mh not in js:
+    if old_mh in js:
+        js = js.replace(old_mh, new_mh, 1)
+    elif old_mh2 in js:
+        js = js.replace(old_mh2, new_mh, 1)
+    else:
+        raise RuntimeError("strict selection multi-head anchor not found")
+
+# Featured status must mean exactly strict selection OR mandatory graded/Kochi target.
+old_featured = "function isFeaturedBetRace(r,p){\n  var title=String(r&&r.title||''),sel=null;\n  try{sel=raceSelectionProfile(r,p)}catch(e){}\n  return !!(r&&(raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))\n}"
+new_featured = "function isFeaturedBetRace(r,p){\n  var title=String(r&&r.title||''),sel=null;\n  try{sel=strictSelectedRaceProfile(r,p)}catch(e){}\n  return !!(r&&(raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))\n}"
+js = ensure_replace(js, old_featured, new_featured, "strict featured race policy")
+
+# An authoritative ◎ may differ from legacy P1. In that disagreement, do not permit
+# the 1st-place lock merely because the old winner model reports itself stable.
+old_axis = "coreP1No=p1.length?n(p1[0].no):0,axisAgreement=!!(axisNo&&coreP1No&&axisNo===coreP1No),axisStable=!!(axisRow&&axisRow.winnerDecisionStable),centralRace=String((r&&r.circuit)||'')==='中央',axisLocked=axisStable&&axisConfidence>=(centralRace?.68:.62),"
+new_axis = "coreP1No=p1.length?n(p1[0].no):0,axisAgreement=!!(axisNo&&coreP1No&&axisNo===coreP1No),axisStable=!!(axisRow&&axisRow.winnerDecisionStable),centralRace=String((r&&r.circuit)||'')==='中央',axisLocked=axisStable&&axisAgreement&&axisConfidence>=(centralRace?.68:.62),"
+js = ensure_replace(js, old_axis, new_axis, "authoritative axis agreement")
 
 # Bodyweight/status are prediction inputs. Odds/popularity remain market-only and do
 # not invalidate the market-independent prediction core.
 old_merge = "function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}"
 new_merge = "function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,predictionInputChanged=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h,old;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){if(String(h.winOdds||'')!==String(z.winOdds))changed=true;h.winOdds=z.winOdds}if(z.popularity!=null&&String(z.popularity)!==''){if(String(h.popularity||'')!==String(z.popularity))changed=true;h.popularity=z.popularity}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){old=String(h.bodyWeight||'');if(old!==String(z.bodyWeight)){changed=true;predictionInputChanged=true}h.bodyWeight=z.bodyWeight}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){old=String(h.bodyWeightChange||'');if(old!==String(z.bodyWeightChange)){changed=true;predictionInputChanged=true}h.bodyWeightChange=z.bodyWeightChange}if(z.status!=null&&String(z.status)!==''){old=String(h.status||'');if(old!==String(z.status)){changed=true;predictionInputChanged=true}h.status=z.status}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;if(predictionInputChanged){try{delete state.race._prediction}catch(e){}state.pred=null;state.analysisSaved={}}return changed}"
-js = replace_once(js, old_merge, new_merge, "bodyweight/status invalidation")
+js = ensure_replace(js, old_merge, new_merge, "bodyweight/status invalidation")
 
 APP_JS.write_text(js, encoding="utf-8")
 
 build = BUILD.read_text(encoding="utf-8")
-# This historical injection redefined assignPredictionMarks/grade functions after the
-# source app.js loaded, creating a different model in static builds than in the app source.
+# Historical static injection redefined prediction functions after source app.js load.
 old_inject = 'js = _inject_before_iife_close(js, ABILITY_FIRST_JS)'
-if old_inject in build:
-    build = build.replace(
-        old_inject,
-        '# Disabled: source app.js owns prediction behavior. Injecting ABILITY_FIRST_JS here\n# caused static-build marks to diverge from server/source marks.\n# js = _inject_before_iife_close(js, ABILITY_FIRST_JS)',
-        1,
-    )
-elif '# js = _inject_before_iife_close(js, ABILITY_FIRST_JS)' not in build:
-    raise RuntimeError("build_static prediction injection anchor not found")
+new_inject = '# Disabled: source app.js owns prediction behavior. Injecting ABILITY_FIRST_JS here\n# caused static-build marks to diverge from server/source marks.\n# js = _inject_before_iife_close(js, ABILITY_FIRST_JS)'
+if new_inject not in build:
+    if old_inject not in build:
+        raise RuntimeError("build_static prediction injection anchor not found")
+    build = build.replace(old_inject, new_inject, 1)
+
+# Keep redirect compatibility for immediately preceding shells. A stale installed PWA
+# can still request these names during an update before the new index takes control.
+for label, old, new in (
+    ("compat css", 'compat_css = ("v321",', 'compat_css = ("v323","v322","v321",'),
+    ("compat app", 'compat_app = ("v321",', 'compat_app = ("v323","v322","v321",'),
+    ("compat arvexq", 'compat_arvexq = ("v321",', 'compat_arvexq = ("v323","v322","v321",'),
+):
+    if new not in build:
+        if old not in build:
+            raise RuntimeError(f"{label}: anchor not found")
+        build = build.replace(old, new, 1)
+
+build = ensure_replace(
+    build,
+    '"shell":"ability-first-evidence"',
+    '"shell":"four-pillar-authoritative"',
+    "version shell label",
+)
 BUILD.write_text(build, encoding="utf-8")
 
-print("prediction paths reconciled; live cache/input invalidation hardened")
+print("prediction paths reconciled; selection/bets/cache/PWA compatibility hardened")
