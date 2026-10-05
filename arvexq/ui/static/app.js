@@ -1589,6 +1589,17 @@ function rebuildBetStrategyV242(base,r,p){
     c.score=clamp(c.score,0,1)
   });
   candidates.sort(function(x,y){return y.score-x.score});
+  if(selected){
+    function hitPriority(c){
+      if(c.kind==='ワイド')return .42+.58*wideStrength;
+      if(c.kind==='馬連')return .34+.66*pairStrength;
+      if(c.kind==='3連複')return .30+.70*trioStrength;
+      if(c.kind==='馬単')return .18+.52*exactStrength+.30*winClarity;
+      if(c.kind==='3連単')return .08+.46*triStrength+.46*winClarity;
+      return n(c.score)
+    }
+    candidates.sort(function(x,y){return hitPriority(y)-hitPriority(x)||y.score-x.score})
+  }
 
   // 3連単/馬単 are allowed only when the displayed ◎ agrees with core P1,
   // the axis confidence is high, and an actual generated combo starts from that ◎.
