@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 js = (ROOT / "arvexq/ui/static/app.js").read_text(encoding="utf-8")
+index = (ROOT / "arvexq/ui/static/index.html").read_text(encoding="utf-8")
 build = (ROOT / "build_static.py").read_text(encoding="utf-8")
 final_marks = (ROOT / "arvexq/prediction/final_marks.py").read_text(encoding="utf-8")
 multi_head = (ROOT / "arvexq/prediction/multi_head.py").read_text(encoding="utf-8")
@@ -12,6 +13,12 @@ race_analysis = (ROOT / "arvexq/services/race_analysis.py").read_text(encoding="
 remove_value = (ROOT / "scripts/arvexq_remove_value_races.py").read_text(encoding="utf-8")
 selection_policy = (ROOT / "scripts/arvexq_enforce_selection_policy.py").read_text(encoding="utf-8")
 special_patch = (ROOT / "scripts/arvexq_patch_special_races.py").read_text(encoding="utf-8")
+
+legacy_sw_versions = ("v325","v324","v323","v322","v321","v320","v319","v318")
+legacy_sw_header_ok = all(
+    f'"/sw-{v}-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0"' in build
+    for v in legacy_sw_versions
+)
 
 checks = {
     "one-source-assignPredictionMarks": js.count("function assignPredictionMarks(") == 1,
@@ -43,7 +50,15 @@ checks = {
     "multihead-v2": 'MODEL_VERSION = "arvexq-multi-head-v2"' in multi_head,
     "multihead-upside-market-independent": "setup_lift = strength_rank - win_rank" in multi_head and "popularity >= 5" not in multi_head,
     "mass-ml-not-in-production-mark-path": "mass_model_runtime" not in final_marks and "mass_model_runtime" not in race_analysis,
-    "pwa-prev-build-compat": all(v in build for v in ('"v323"', '"v322"')),
+    "runtime-build-v326": 'window.ARVEXQ_BUILD="v326";' in js,
+    "runtime-sw-v326": "/sw-v326-reset.js" in js,
+    "index-app-v326": "/app-v326.js" in index,
+    "index-css-v326": "/styles-arvexq-v326.css" in index,
+    "pwa-prev-build-compat": all(v in build for v in ('"v325"', '"v324"', '"v323"', '"v322"')),
+    "legacy-sw-aliases-retained": 'for legacy_sw in ("v325", "v324", "v323", "v322", "v321", "v320", "v319", "v318")' in build,
+    "legacy-sw-no-store-headers": legacy_sw_header_ok,
+    "current-js-css-revalidate": build.count('Cache-Control: no-cache, must-revalidate') >= 4,
+    "no-one-year-immutable-current-assets": 'max-age=31536000, immutable' not in build,
     "version-label-authoritative": '"shell":"four-pillar-authoritative"' in build,
     "value-cleanup-does-not-own-special-scope": "SPECIAL =" not in remove_value and "v325" not in remove_value and "special forecast source unexpectedly missing" in remove_value,
     "selection-policy-preserves-main-featured": "isMainForecastRace(r)||raceIsGraded(r)" in selection_policy,
