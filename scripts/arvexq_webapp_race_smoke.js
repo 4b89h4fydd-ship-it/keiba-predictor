@@ -6,6 +6,7 @@ const browserName = String(process.env.ARVEXQ_BROWSER || 'chromium').toLowerCase
 const browserType = browserName === 'webkit' ? webkit : chromium;
 const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(base);
 const resetMarker = 'arvexq-hard-reset-v328-safari-runtime-20261006';
+const swReloadMarker = 'v328-safari-runtime-20261006';
 
 (async () => {
   const browser = await browserType.launch({ headless: true });
@@ -15,9 +16,12 @@ const resetMarker = 'arvexq-hard-reset-v328-safari-runtime-20261006';
   const consoleErrors = [];
   const httpFailures = [];
 
-  await page.addInitScript(marker => {
-    try { localStorage.setItem(marker, '1'); } catch (_) {}
-  }, resetMarker);
+  await page.addInitScript(({ resetMarker, swReloadMarker }) => {
+    try {
+      localStorage.setItem(resetMarker, '1');
+      localStorage.setItem('arvexq-sw-reload', swReloadMarker);
+    } catch (_) {}
+  }, { resetMarker, swReloadMarker });
 
   page.on('pageerror', err => pageErrors.push(String(err && err.stack || err)));
   page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
