@@ -29,23 +29,26 @@ jobs:
         run: python scripts/arvexq_special_forecast_ui.py
       - name: Validate special forecast UI
         run: |
-          python -m py_compile scripts/arvexq_special_forecast_ui.py
+          python -m py_compile scripts/arvexq_special_forecast_ui.py scripts/arvexq_patch_special_races.py
           node --check arvexq/ui/static/app.js
           python - <<'PY'
           from pathlib import Path
           js=Path('arvexq/ui/static/app.js').read_text(encoding='utf-8')
           css=Path('arvexq/ui/static/styles.css').read_text(encoding='utf-8')
+          src=Path('scripts/arvexq_patch_special_races.py').read_text(encoding='utf-8')
           assert 'data-special-fold="1"' in js
           assert "arvexq-special-forecast-open" in js
           assert "Object.keys(groups).forEach(function(k){add(mainRaceForTrack(groups[k]))})" not in js
           assert '<small>メイン・重賞・高知ファイナル</small>' not in js
           assert '本日のメイン・重賞・高知ファイナルなし' not in js
           assert 'ARVEXQ special forecast fold v1' in css
+          assert 'data-special-fold="1"' in src
+          assert '<small>メイン・重賞・高知ファイナル</small>' not in src.split('new_render = ',1)[1].split('replace_once(old_render',1)[0]
           print('special-forecast-ui-validated')
           PY
-      - name: Commit generated UI
+      - name: Commit generated UI and generator
         run: |
-          TARGETS="arvexq/ui/static/app.js arvexq/ui/static/styles.css"
+          TARGETS="arvexq/ui/static/app.js arvexq/ui/static/styles.css scripts/arvexq_patch_special_races.py"
           if [ -z "$(git status --porcelain -- $TARGETS)" ]; then
             echo 'Special forecast UI already synchronized'
             exit 0
@@ -53,6 +56,6 @@ jobs:
           git config user.name 'arvexq-bot'
           git config user.email 'actions@users.noreply.github.com'
           git add $TARGETS
-          git commit -m 'ui: fold special forecast and remove main races'
+          git commit -m 'ui: persist folded special forecast scope'
           git pull --rebase origin main
           git push
