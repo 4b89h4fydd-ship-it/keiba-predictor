@@ -1,0 +1,63 @@
+name: ARVEXQ Central History Merge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_fix_central_history_merge.py'
+      - '.github/workflows/arvexq-central-history-merge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply central history merge patch
+        run: python scripts/arvexq_fix_central_history_merge.py
+      - name: Syntax check
+        run: python -m py_compile app.py scripts/arvexq_fix_central_history_merge.py
+      - name: Central history merge regression
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          src=Path('app.py').read_text(encoding='utf-8')
+          assert 'h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],row.get("recentRaces") or [],5)' in src
+          assert 'h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],z.get("recentRaces") or [],5)' in src
+          assert 'merged=_jra_merge_runs(old,runs,max(5,len(old)+len(runs)))' in src
+          tree=ast.parse(src)
+          wanted={'_jra_run_key','_jra_run_value_present','_jra_merge_run_fields','_jra_merge_runs'}
+          nodes=[n for n in tree.body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) and n.name in wanted]
+          assert {n.name for n in nodes}==wanted
+          ns={}
+          exec(compile(ast.Module(body=nodes,type_ignores=[]),'central-merge-test','exec'),ns,ns)
+          official={'date':'2026-09-20','track':'中山','title':'2歳未勝利','distance':1600,'finish':0,'fieldSize':0,'timeSeconds':95.1,'cornerPositions':[6,5,4,3],'last3FSeconds':34.8,'last3FRank':2,'last3FPercentile':.9,'source':'JRA公式'}
+          profile={'date':'2026-09-20','track':'中山','title':'2歳 未勝利','distance':1600,'finish':2,'fieldSize':16,'carriedWeight':55,'source':'JRA公式競走馬情報'}
+          rows=ns['_jra_merge_runs']([official],[profile],5)
+          assert len(rows)==1,rows
+          r=rows[0]
+          assert r['finish']==2 and r['fieldSize']==16,r
+          assert r['cornerPositions']==[6,5,4,3],r
+          assert r['last3FSeconds']==34.8 and r['last3FRank']==2 and r['last3FPercentile']==.9,r
+          print('central-history-merge-ok',r)
+          PY
+      - name: Commit generated app patch
+        run: |
+          if [ -z "$(git status --porcelain -- app.py)" ]; then
+            echo 'app.py already current'
+            exit 0
+          fi
+          git config user.name 'arvexq-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add app.py
+          git commit -m 'fix: unify central history evidence merges'
+          git push
