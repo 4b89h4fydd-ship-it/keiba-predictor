@@ -1689,10 +1689,21 @@ function rebuildBetStrategyV242(base,r,p){
   return base
 }
 
+function immutableStoredAiBetView(r,plan){
+  if(!plan)return plan;
+  var status=String(r&&r.raceStatus||'')+' '+String(r&&r.result&&r.result.status||'');
+  if(/中止|取止|取り止め|不成立/.test(status)){
+    var cancelled=Object.assign({},plan);cancelled.items=[];cancelled.decision='見送り';cancelled.betQuality=0;cancelled.invalidatedAfterLock=true;cancelled.originalFixedAt=plan.fixedAt||'';cancelled.reason='レース中止・取止めのため、固定済み買い目は変更せず投票見送り。';cancelled.trifectaDecision='見送り';cancelled.trifectaReason='レース中止・取止め。';return cancelled
+  }
+  var scratched={};(r&&r.horses||[]).forEach(function(h){if(isScratchHorse(h))scratched[n(h.horseNumber)]=1});
+  var affected=(plan.items||[]).some(function(z){return (z.combos||[]).some(function(c){return (c||[]).some(function(no){return !!scratched[n(no)]})})});
+  if(!affected)return plan;
+  var view=Object.assign({},plan);view.items=[];view.decision='見送り';view.betQuality=0;view.invalidatedAfterLock=true;view.originalFixedAt=plan.fixedAt||'';view.reason='発走前固定後に取消・除外馬が発生。元の買い目は変更せず、投票は見送り。';view.trifectaDecision='見送り';view.trifectaReason='固定後の取消・除外馬発生。';return view
+}
 function buildAiBetPlan(r,p){
   var started=r&&r.date===today()&&mins(r.startTime)<9999&&nowMins()>=mins(r.startTime),terminal=isFinal(r)||started,
       stored=loadStoredAiBet(r&&r.id,terminal);
-  if(stored)return stored;
+  if(stored)return immutableStoredAiBetView(r,stored);
   if(terminal)return null;
   var rows=(p&&p.rows||[]).slice().filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)});
   if(rows.length<4)return null;
@@ -1773,7 +1784,7 @@ function buildAiBetPlan(r,p){
   if(!items.length&&canIssue){var fallback=topCombos(wideRank,3);if(fallback.length)items.push({level:'通常',kind:'ワイド',combos:fallback,points:fallback.length,combo:betComboText('ワイド',fallback),confidence:'中',modelScore:0})}
   var sel=null;try{sel=strictSelectedRaceProfile(r,p)}catch(e){}
   var betQuality=canIssue?Math.round(clamp(48+top3mass*30+(1-p1Entropy)*12+(featured?7:0)+(strongGate?8:0),50,92)):0,
-      reason=featured?'厳選ゲート通過、または必須予想の重賞/高知ファイナル対象。必須予想は厳選扱いしません。':(canIssue?'通常レースの買い目ゲート通過。5券種は同じ条件付き着順分布から派生。':'通常レースの買い目ゲート未通過。'),
+      reason=featured?'メイン・重賞・高知ファイナル等の対象レース。厳選とは別枠で、役割順位から買い目を判定します。':(canIssue?'通常レースの買い目ゲート通過。5券種は同じ条件付き着順分布から派生。':'通常レースの買い目ゲート未通過。'),
       plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v317-consensus-rebuild',decision:decision,featuredRace:featured,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'条件付き順序集中度が3連単基準未満。',winnerModel:(String((r&&r.circuit)||'')==='中央'?'central-v317-consensus-rebuild':'local-v317-consensus-rebuild')+'+walkforward+precision-order',p2Model:useV207?'v212-role+v220-conditional':'legacy-central+v220-conditional',p3Model:'role-marginal+v220-conditional',selectionAudit:sel,
         roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z),p:winActive(z)}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z),p:role(z,2)}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z),p:role(z,3)}}),legacyP1:legacyRows.slice(0,4).map(function(z){return{no:no(z),p:n(z.ticketLegacyP1Probability)}})},
         audit:{field:field,coverage:cov,p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:p1Entropy,exactaTop:exactaTop,exactaRatio:exactaRatio,wideTop:wideTop,wideRatio:wideRatio,quinTop:qTop,quinRatio:qRatio,trioTop:trioTop,trioRatio:trioRatio,triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderConfidence:orderConfidence,normalGate:normalGate,strongGate:strongGate,featured:featured,ticketDistribution:'sequential-joint-v300-winner-consensus'},items:items,reason:reason};
@@ -2028,8 +2039,8 @@ function selectedRaceLoadStatus(){
 function raceIsGraded(r){
   if(!r)return false;
   if(r.isGraded===true||r.graded===true||r.isGradeRace===true||r.gradeRace===true)return true;
-  var t=String(r.title||''),meta=[r.grade,r.gradeLabel,r.raceGrade,r.gradeCode,r.raceClass,r.className,r.category].map(function(v){return String(v||'')}).join(' '),s=t+' '+meta;
-  if(/(?:Jpn\s*)?G\s*(?:[ⅠⅡⅢ]|[123])|(?:Jpn\s*)(?:[ⅠⅡⅢ]|[123])|(?:^|[\s（(\[])(?:S|H|M|SP)\s*(?:[ⅠⅡⅢ]|[123])(?:$|[\s）)\]])|重賞|賞\s*[（(]重賞[）)]/i.test(s))return true;
+  var t=String(r.title||''),meta=[r.grade,r.gradeLabel,r.raceGrade,r.gradeCode,r.raceClass,r.className,r.category].map(function(v){return String(v||'')}).join(' '),s=t+' '+meta,grade='(?:[ⅠⅡⅢ]|I{1,3}|[123])';
+  if(new RegExp('(?:Jpn\\s*)?G\\s*'+grade+'|(?:Jpn\\s*)'+grade+'|(?:^|[\\s（(\\[])(?:S|H|M|SP)\\s*'+grade+'(?:$|[\\s）)\\]])|重賞|賞\\s*[（(]重賞[）)]','i').test(s))return true;
   return /(?:ダービー|優駿|グランプリ)(?:$|[（(])/i.test(t)
 }
 function mandatoryTrifectaRace(r){
@@ -2124,7 +2135,7 @@ function fixedSelectedBox(circuit,picks){
   return '<details class="fixed-pick-box fixed-pick-circuit" data-selected-circuit="selected" data-pick-circuit="'+esc(circuit)+'" '+(open?'open':'')+'><summary class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><span class="fixed-pick-summary-right"><em>'+picks.length+'レース</em><i>⌄</i></span></summary><div class="fixed-pick-box-body">'+body+'</div></details>'
 }
 function selectedRaceBetPreview(r){
-  var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id),st=mins(r.startTime),started=r.date===today()&&st<9999&&nowMins()>=st,plan=loadStoredAiBet(r.id,isFinal(r)||started),p=null;if(d&&!plan&&!isFinal(d)&&!started){try{p=predict(d);plan=buildAiBetPlan(d,p)}catch(e){}}
+  var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id),st=mins(r.startTime),started=r.date===today()&&st<9999&&nowMins()>=st,plan=loadStoredAiBet(r.id,isFinal(r)||started),p=null;if(plan)plan=immutableStoredAiBetView(d||r,plan);if(d&&!plan&&!isFinal(d)&&!started){try{p=predict(d);plan=buildAiBetPlan(d,p)}catch(e){}}
   if(!plan)return '<div class="selected-bet-pending">ARVEXQの買い目　準備中</div>';
   if(plan.decision==='見送り')return '<div class="selected-bet-pending">ARVEXQ買い目　見送り（'+esc(plan.betQuality||0)+'/100）</div>';
   var lines=(plan.items||[]).map(function(z){return '<span class="selected-bet-chip '+(z.level==='3連単チャレンジ'?'tri':'')+'"><b>'+esc(z.level)+'</b> '+esc(z.kind)+' '+esc(z.combo)+'</span>'}).join('');if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')lines+='<span class="selected-bet-chip tri"><b>3連単</b> 検討済み・見送り</span>';
