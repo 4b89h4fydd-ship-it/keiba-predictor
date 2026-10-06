@@ -1,0 +1,30 @@
+name: ARVEXQ Race Selectability Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'arvexq/selection/race_selectability.py'
+      - 'arvexq/selection/race_selectability_snapshot.py'
+      - 'arvexq/selection/race_selectability_training.py'
+      - 'scripts/check_race_selectability_snapshot.py'
+      - '.github/workflows/arvexq-race-selectability-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile
+        run: python -m py_compile arvexq/selection/race_selectability.py arvexq/selection/race_selectability_snapshot.py arvexq/selection/race_selectability_training.py scripts/check_race_selectability_snapshot.py
+      - name: Frozen selectability regression
+        env:
+          PYTHONPATH: '.'
+        run: python scripts/check_race_selectability_snapshot.py
