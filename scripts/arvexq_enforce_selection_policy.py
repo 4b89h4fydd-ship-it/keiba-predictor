@@ -4,15 +4,19 @@ from pathlib import Path
 PATH = Path('arvexq/ui/static/app.js')
 text = PATH.read_text(encoding='utf-8')
 
-# Mandatory prediction races are NOT the same thing as true ARVEXQ selections.
-# Keep graded races and Kochi Final as mandatory targets, but never promote them
-# to 厳選 unless they independently pass the strict selection gate.
-old_featured = "return !!(r&&(explicitSelectedRace(r)||raceIsGraded(r)||r.isMain||r.mainRace||r.featured||n(r.raceNumber)===11||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))"
-new_featured = "return !!(r&&(raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))"
-if old_featured in text:
-    text = text.replace(old_featured, new_featured, 1)
-elif new_featured not in text:
-    raise SystemExit('featured race policy block not found')
+# Mandatory/special forecast races are NOT the same thing as true ARVEXQ selections.
+# Main + graded + Kochi Final remain featured targets, but none are promoted to 厳選
+# unless they independently pass the strict selection gate.
+legacy_broad = "return !!(r&&(explicitSelectedRace(r)||raceIsGraded(r)||r.isMain||r.mainRace||r.featured||n(r.raceNumber)===11||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))"
+legacy_strict = "return !!(r&&(raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))"
+main_featured = "return !!(r&&(isMainForecastRace(r)||raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))"
+if main_featured not in text:
+    if legacy_strict in text:
+        text = text.replace(legacy_strict, main_featured, 1)
+    elif legacy_broad in text:
+        text = text.replace(legacy_broad, main_featured, 1)
+    else:
+        raise SystemExit('featured race policy block not found')
 
 # Visible 厳選 is intentionally sparse and may be empty. These are operational
 # filters, not a claim that a selected race is literally certain.
@@ -53,11 +57,15 @@ if authoritative_gate not in text:
 
 text = text.replace(
     "reason=featured?'本日の厳選/メイン/重賞/高知ファイナル対象。v220は共通着順分布から5券種を生成し、確率差で自動的に点数を絞ります。':",
+    "reason=featured?'メイン・重賞・高知ファイナル等の対象レース。厳選とは別枠で、役割順位から買い目を判定します。':",
+)
+text = text.replace(
     "reason=featured?'厳選ゲート通過、または必須予想の重賞/高知ファイナル対象。必須予想は厳選扱いしません。':",
+    "reason=featured?'メイン・重賞・高知ファイナル等の対象レース。厳選とは別枠で、役割順位から買い目を判定します。':",
 )
 
 # True selections choose the bet family by hit probability/robustness, not by trifecta
-# preference. Graded/Kochi gets its mandatory trifecta challenge in a separate pass.
+# preference. Graded/Kochi gets its mandatory trifecta review in a separate pass.
 old_sort = "candidates.sort(function(x,y){return y.score-x.score});"
 new_sort = "candidates.sort(function(x,y){return y.score-x.score});\n  if(selected){\n    function hitPriority(c){\n      if(c.kind==='ワイド')return .42+.58*wideStrength;\n      if(c.kind==='馬連')return .34+.66*pairStrength;\n      if(c.kind==='3連複')return .30+.70*trioStrength;\n      if(c.kind==='馬単')return .18+.52*exactStrength+.30*winClarity;\n      if(c.kind==='3連単')return .08+.46*triStrength+.46*winClarity;\n      return n(c.score)\n    }\n    candidates.sort(function(x,y){return hitPriority(y)-hitPriority(x)||y.score-x.score})\n  }"
 if new_sort not in text:
@@ -70,5 +78,8 @@ text = text.replace(
     '<b>厳選レース</b><small>基準未達なら0件・本当に強い時だけ</small>',
 )
 
+if main_featured not in text:
+    raise SystemExit('main featured policy missing after enforcement')
+
 PATH.write_text(text, encoding='utf-8')
-print('selection policy enforced: authoritative-compatible multi-head + hit-first bets; graded/Kochi separate')
+print('selection policy enforced: main/graded/Kochi stay featured; true selection remains strict + hit-first')
