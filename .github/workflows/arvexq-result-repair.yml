@@ -101,6 +101,10 @@ jobs:
             exit 1
           fi
           jq '{date,started,pending_before,repairedCount:(.repaired|length),resultMissing:(.result_missing|length),payoutMissing:(.payout_missing|length)}' result-repair-report.json
+          echo "--- unresolved result detail ---"
+          jq '.result_missing // []' result-repair-report.json
+          echo "--- payout-missing detail ---"
+          jq '.payout_missing // []' result-repair-report.json
 
       - name: Push repaired snapshots to D1 in safe batches
         run: |
