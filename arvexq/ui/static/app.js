@@ -1,4 +1,4 @@
-window.ARVEXQ_BUILD="v327";
+window.ARVEXQ_BUILD="v328";
 
 (function(){
 "use strict";
@@ -80,13 +80,13 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(localStorage.getItem("arvexq-sw-reload")!=="v327-race-open-repair-20261006"){
-          localStorage.setItem("arvexq-sw-reload","v327-race-open-repair-20261006");
+        if(localStorage.getItem("arvexq-sw-reload")!=="v328-safari-runtime-20261006"){
+          localStorage.setItem("arvexq-sw-reload","v328-safari-runtime-20261006");
           location.reload()
         }
       }catch(e){}
     });
-    navigator.serviceWorker.register("/sw-v327-reset.js",{scope:"/"}).then(function(reg){
+    navigator.serviceWorker.register("/sw-v328-reset.js",{scope:"/"}).then(function(reg){
       try{reg.update()}catch(e){}
     }).catch(function(){})
   }catch(e){}
