@@ -1,6 +1,30 @@
 import legacyWorker from "./worker.js";
 
 const SCRATCH_RE = /(?:出走取消|取消|競走除外|競走取消|除外|SCRATCHED)/i;
+const CORS_ALLOW_HEADERS = "content-type, authorization, x-sync-token, cache-control, pragma, accept";
+const CORS_ALLOW_METHODS = "GET,POST,OPTIONS";
+
+function corsHeaders(request) {
+  const requested = String(request?.headers?.get("access-control-request-headers") || "").trim();
+  return {
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": CORS_ALLOW_METHODS,
+    "access-control-allow-headers": requested || CORS_ALLOW_HEADERS,
+    "access-control-max-age": "86400",
+    "vary": "Origin, Access-Control-Request-Headers"
+  };
+}
+
+function withCors(response, request) {
+  const headers = new Headers(response.headers);
+  const cors = corsHeaders(request);
+  for (const [key, value] of Object.entries(cors)) headers.set(key, value);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+}
 
 function overlayHorse(horse, live) {
   if (!horse || !live) return horse;
@@ -114,14 +138,24 @@ async function enhanceDayResponse(response, env, url) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const response = await legacyWorker.fetch(request, env, ctx);
-    if (request.method !== "GET") return response;
-    if (url.pathname.startsWith("/api/race/")) {
-      return enhanceRaceResponse(response);
+
+    // Safari/WebKit can preflight fetch(..., {cache:'no-store'}). The legacy
+    // worker returned a bare 204, which fails WebKit's CORS access-control check.
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders(request)
+      });
     }
-    if (url.pathname === "/api/day") {
-      return enhanceDayResponse(response, env, url);
+
+    let response = await legacyWorker.fetch(request, env, ctx);
+    if (request.method === "GET") {
+      if (url.pathname.startsWith("/api/race/")) {
+        response = await enhanceRaceResponse(response);
+      } else if (url.pathname === "/api/day") {
+        response = await enhanceDayResponse(response, env, url);
+      }
     }
-    return response;
+    return withCors(response, request);
   }
 };
