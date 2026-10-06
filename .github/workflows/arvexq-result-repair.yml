@@ -6,6 +6,7 @@ name: ARVEXQ Result Repair
     branches: [main]
     paths:
       - scripts/arvexq_result_repair.py
+      - scripts/arvexq_sync_batches.py
       - .github/workflows/arvexq-result-repair.yml
   schedule:
     # Offset from realtime sync so both jobs do not hit result sources together.
@@ -19,7 +20,7 @@ concurrency:
 jobs:
   repair:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
@@ -65,7 +66,7 @@ jobs:
         run: |
           curl --fail-with-body --retry 6 --retry-all-errors --retry-delay 5 --retry-max-time 120 \
             --connect-timeout 10 --max-time 30 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE&t=$(date +%s)" \
+            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE&details=1&t=$(date +%s)" \
             -o bundle.json
           RACES=$(jq '.races // [] | length' bundle.json)
           DETAILS=$(jq '.details // [] | length' bundle.json)
@@ -77,36 +78,56 @@ jobs:
 
       - name: Repair all started incomplete results
         run: |
-          if ! python scripts/arvexq_result_repair.py \
-            --bundle bundle.json \
-            --payload result-repair-payload.json \
-            --report result-repair-report.json > result-repair.log 2>&1; then
+          if ! python - <<'PY' > result-repair.log 2>&1
+          import app, runpy, sys
+          # app.py currently has one NAR result branch that references last3f
+          # before assignment. Seed the module global until that legacy branch
+          # is removed; this prevents a NameError from dropping the whole result.
+          app.last3f = None
+          sys.argv = [
+              'scripts/arvexq_result_repair.py',
+              '--bundle', 'bundle.json',
+              '--payload', 'result-repair-payload.json',
+              '--report', 'result-repair-report.json',
+          ]
+          runpy.run_path('scripts/arvexq_result_repair.py', run_name='__main__')
+          PY
+          then
             echo "::error::Result repair failed"
             tail -n 80 result-repair.log || true
             exit 1
           fi
           jq '{date,started,pending_before,repairedCount:(.repaired|length),resultMissing:(.result_missing|length),payoutMissing:(.payout_missing|length)}' result-repair-report.json
 
-      - name: Push repaired full-detail snapshots to D1
+      - name: Push repaired snapshots to D1 in safe batches
         run: |
           STARTED=$(jq '.meta.started_race_count // 0' result-repair-payload.json)
           if [ "$STARTED" -le 0 ]; then
             echo "No started races; skip sync."
             exit 0
           fi
-          curl --fail-with-body --retry 5 --retry-all-errors --retry-delay 3 --retry-max-time 120 \
-            --connect-timeout 10 --max-time 45 -X POST \
-            "$CLOUDFLARE_API_BASE/api/sync" \
-            -H "content-type: application/json" \
-            -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @result-repair-payload.json > /dev/null
-          echo "D1 result repair push OK"
+          python scripts/arvexq_sync_batches.py \
+            --input result-repair-payload.json \
+            --out-dir result-sync-batches
+          COUNT=$(find result-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
+          echo "D1 result repair batches=$COUNT"
+          for file in result-sync-batches/batch-*.json; do
+            BYTES=$(wc -c < "$file" | tr -d ' ')
+            echo "POST $(basename "$file") bytes=$BYTES"
+            curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
+              --connect-timeout 10 --max-time 40 -X POST \
+              "$CLOUDFLARE_API_BASE/api/sync" \
+              -H "content-type: application/json" \
+              -H "x-sync-token: $SYNC_TOKEN" \
+              --data-binary @"$file" > /dev/null
+          done
+          echo "D1 result repair batched push OK"
 
       - name: Verify D1 after repair
         run: |
           curl --fail-with-body --retry 6 --retry-all-errors --retry-delay 5 --retry-max-time 120 \
             --connect-timeout 10 --max-time 30 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE&t=$(date +%s)" \
+            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE&details=1&t=$(date +%s)" \
             -o verified-day.json
           python - <<'PY'
           import json
@@ -121,14 +142,14 @@ jobs:
               ranks={int(x.get('finish') or 0) for x in (result.get('finishers') or []) if isinstance(x,dict)}
               if str(result.get('status') or '')!='確定' or not all(i in ranks for i in (1,2,3)):
                   missing.append(rid)
-          print('D1_VERIFY repaired=',len(report.get('repaired') or []),'not_visible=',len(missing),'result_missing=',len(report.get('result_missing') or []),'payout_missing=',len(report.get('payout_missing') or []))
+          print('D1_VERIFY details=',len(by_id),'repaired=',len(report.get('repaired') or []),'not_visible=',len(missing),'result_missing=',len(report.get('result_missing') or []),'payout_missing=',len(report.get('payout_missing') or []))
           if missing:
               raise SystemExit('D1 did not expose repaired result(s): '+','.join(missing))
           PY
 
       - name: Show concise failure log
         if: failure()
-        run: tail -n 80 result-repair.log 2>/dev/null || true
+        run: tail -n 100 result-repair.log 2>/dev/null || true
 
       - name: Upload full failure logs
         if: failure()
