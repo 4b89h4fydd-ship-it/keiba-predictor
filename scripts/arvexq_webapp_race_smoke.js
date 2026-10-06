@@ -1,24 +1,36 @@
-const { chromium } = require('playwright');
+const { chromium, webkit, devices } = require('playwright');
 
 const base = process.env.ARVEXQ_BASE_URL || 'http://127.0.0.1:8788';
 const timeout = Number(process.env.ARVEXQ_SMOKE_TIMEOUT || 20000);
+const browserName = String(process.env.ARVEXQ_BROWSER || 'chromium').toLowerCase();
+const browserType = browserName === 'webkit' ? webkit : chromium;
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const browser = await browserType.launch({ headless: true });
+  const iphone = devices['iPhone 15 Pro'] || { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true };
+  const page = await browser.newPage({ ...iphone, locale: 'ja-JP' });
   const pageErrors = [];
   const consoleErrors = [];
   page.on('pageerror', err => pageErrors.push(String(err && err.stack || err)));
   page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
 
+  function hasFatalUiError(text) {
+    return /表示エラー|起動エラー|undefined is not an object|Cannot read properties of undefined|Cannot read property .* of undefined/i.test(String(text || ''));
+  }
+
   try {
-    await page.goto(base + '/?smoke=' + Date.now(), { waitUntil: 'domcontentloaded', timeout });
+    await page.goto(base + '/?smoke=' + Date.now() + '&browser=' + browserName, { waitUntil: 'domcontentloaded', timeout });
     await page.waitForFunction(() => !document.querySelector('.boot'), null, { timeout });
+
+    let initialText = await page.locator('body').innerText();
+    if (hasFatalUiError(initialText)) throw new Error('startup display error: ' + initialText.slice(0, 1000));
 
     if ((await page.locator('[data-race]').count()) === 0) {
       const venue = page.locator('button[data-track]').first();
       await venue.waitFor({ state: 'visible', timeout });
       await venue.click();
+      const venueText = await page.locator('body').innerText();
+      if (hasFatalUiError(venueText)) throw new Error('venue display error: ' + venueText.slice(0, 1000));
     }
 
     const race = page.locator('button[data-race]').first();
@@ -30,21 +42,21 @@ const timeout = Number(process.env.ARVEXQ_SMOKE_TIMEOUT || 20000);
     await page.waitForFunction(() => location.pathname === '/race' && !!document.querySelector('.smart-race-page'), null, { timeout });
     await page.waitForFunction(() => {
       const body = document.body.innerText || '';
-      if (/表示エラー|起動エラー/.test(body)) return true;
+      if (/表示エラー|起動エラー|undefined is not an object|Cannot read properties of undefined/i.test(body)) return true;
       return !!document.querySelector('.racecard-table, .result-card, .accordion-panel');
     }, null, { timeout });
 
     const bodyText = await page.locator('body').innerText();
-    if (/表示エラー|起動エラー/.test(bodyText)) throw new Error('runtime display error: ' + bodyText.slice(0, 800));
-    if (await page.locator('.smart-loading').count()) throw new Error('race remained on loading screen: ' + bodyText.slice(0, 800));
+    if (hasFatalUiError(bodyText)) throw new Error('runtime display error: ' + bodyText.slice(0, 1000));
+    if (await page.locator('.smart-loading').count()) throw new Error('race remained on loading screen: ' + bodyText.slice(0, 1000));
 
     for (const key of ['diagnosis', 'detail', 'pace', 'bets']) {
       const tab = page.locator(`[data-panel="${key}"]`).first();
       if (await tab.count()) {
         await tab.click();
-        await page.waitForTimeout(120);
+        await page.waitForTimeout(180);
         const txt = await page.locator('body').innerText();
-        if (/表示エラー|起動エラー/.test(txt)) throw new Error(`tab ${key} caused display error: ` + txt.slice(0, 800));
+        if (hasFatalUiError(txt)) throw new Error(`tab ${key} caused display error: ` + txt.slice(0, 1000));
       }
     }
 
@@ -52,16 +64,15 @@ const timeout = Number(process.env.ARVEXQ_SMOKE_TIMEOUT || 20000);
     if (await close.count()) {
       await close.click();
       await page.waitForFunction(() => location.pathname !== '/race', null, { timeout: 8000 });
+      const backText = await page.locator('body').innerText();
+      if (hasFatalUiError(backText)) throw new Error('back navigation display error: ' + backText.slice(0, 1000));
     }
 
-    // The built service-worker URL is checked separately by CI. Chromium can emit a
-    // transient pageerror while the hard-reset code unregisters/re-registers the worker;
-    // that must not hide an otherwise successful race-navigation test.
     const fatalPageErrors = pageErrors.filter(x => !/ServiceWorker.*Not found|Failed to update a ServiceWorker/i.test(x));
     if (fatalPageErrors.length) throw new Error('page errors:\n' + fatalPageErrors.join('\n'));
     const fatalConsole = consoleErrors.filter(x => !/Failed to load resource|favicon|ServiceWorker/i.test(x));
     if (fatalConsole.length) throw new Error('console errors:\n' + fatalConsole.join('\n'));
-    console.log(`ARVEXQ race smoke OK race=${raceId}`);
+    console.log(`ARVEXQ ${browserName} race smoke OK race=${raceId}`);
   } finally {
     await browser.close();
   }
