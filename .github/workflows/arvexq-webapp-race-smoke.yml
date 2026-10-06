@@ -27,12 +27,19 @@ jobs:
         with:
           node-version: '20'
       - name: Static validation
+        shell: bash
         run: |
           node --check arvexq/ui/static/app.js
           python -m py_compile build_static.py
           python build_static.py
+          BUILD="$(tr -d '\r\n' < dist/build-version.txt)"
+          echo "BUILD=$BUILD" >> "$GITHUB_ENV"
           test -s dist/index.html
-          test -s dist/app-v326.js
+          test -s "dist/app-$BUILD.js"
+          test -s "dist/styles-arvexq-$BUILD.css"
+          test -s "dist/sw-$BUILD-reset.js"
+          grep -q "/app-$BUILD.js" dist/index.html
+          grep -q "/styles-arvexq-$BUILD.css" dist/index.html
       - name: Edge API diagnostic
         continue-on-error: true
         shell: bash
@@ -76,18 +83,14 @@ jobs:
           npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium
       - name: Start built web app
+        shell: bash
         run: |
           python -m http.server 8788 --directory dist >/tmp/arvexq-http.log 2>&1 &
           for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
+          curl -fsS "http://127.0.0.1:8788/sw-$BUILD-reset.js" >/tmp/current-sw.js
+          test -s /tmp/current-sw.js
       - name: Real click smoke
         env:
           ARVEXQ_BASE_URL: http://127.0.0.1:8788
           ARVEXQ_SMOKE_TIMEOUT: '25000'
         run: node scripts/arvexq_webapp_race_smoke.js
-      - name: Production shell diagnostic
-        if: always()
-        shell: bash
-        run: |
-          echo 'candidate production shell:'
-          curl -A 'Mozilla/5.0' -L -sS -o /tmp/prod-version -w '%{http_code}\n' --max-time 20 https://kraizweb1.pages.dev/version.json || true
-          cat /tmp/prod-version 2>/dev/null | head -c 500 || true
