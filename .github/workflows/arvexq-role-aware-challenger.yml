@@ -1,0 +1,43 @@
+name: ARVEXQ Role Aware Challenger
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_role_aware_challenger.py'
+      - '.github/workflows/arvexq-role-aware-challenger.yml'
+  workflow_dispatch:
+    inputs:
+      days:
+        required: false
+        default: '7'
+      end_date:
+        required: false
+        default: '2026-10-05'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Syntax check
+        run: python -m py_compile scripts/arvexq_role_aware_challenger.py
+      - name: Run challenger
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_DAYS: ${{ inputs.days || '7' }}
+          ARVEXQ_END_DATE: ${{ inputs.end_date || '2026-10-05' }}
+        run: python scripts/arvexq_role_aware_challenger.py | tee role-aware-challenger.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-role-aware-challenger
+          path: role-aware-challenger.log
+          retention-days: 14
