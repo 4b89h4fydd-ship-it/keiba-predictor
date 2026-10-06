@@ -32,10 +32,15 @@ jobs:
           src=Path('app.py').read_text(encoding='utf-8')
           assert '"last3f":hidx("推定上り","上り")' in src
           assert '"last3FSeconds":last3f' in src
+          assert 'x["last3FRank"]=' in src
+          assert 'x["last3FPercentile"]=' in src
           assert 'last3f = fin.get("last3FSeconds")' in src
+          assert 'last3f_rank=fin.get("last3FRank")' in src
           assert '"last3FSeconds": last3f' in src
-          assert '"timeSeconds","last3FSeconds","carriedWeight"' in src
-          print('jra-sectionals-ok')
+          assert '"last3FRank": last3f_rank' in src
+          assert '"last3FPercentile": last3f_pct' in src
+          assert '"last3FSeconds","last3FRank","last3FPercentile"' in src
+          print('jra-sectionals-relative-ok')
           PY
       - name: Commit generated app patch
         run: |
@@ -46,5 +51,5 @@ jobs:
           git config user.name 'arvexq-bot'
           git config user.email 'actions@users.noreply.github.com'
           git add app.py
-          git commit -m 'fix: preserve JRA estimated closing sectionals'
+          git commit -m 'fix: preserve JRA race-relative closing sectionals'
           git push
