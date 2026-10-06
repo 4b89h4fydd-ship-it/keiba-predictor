@@ -6,7 +6,6 @@ import runpy
 PATH = Path("arvexq/ui/static/app.js")
 INDEX_PATH = Path("arvexq/ui/static/index.html")
 APP_PATH = Path("app.py")
-BUILD_PATH = Path("build_static.py")
 text = PATH.read_text(encoding="utf-8")
 
 
@@ -103,14 +102,6 @@ if APP_PATH.exists():
     app_text = APP_PATH.read_text(encoding="utf-8")
     app_text = app_text.replace("v324-core-data-guard", "v325-home-race-boxes")
     APP_PATH.write_text(app_text, encoding="utf-8")
-
-# Old cached v324 asset URLs must redirect to the new immutable v325 assets.
-if BUILD_PATH.exists():
-    build = BUILD_PATH.read_text(encoding="utf-8")
-    build = build.replace('compat_css = ("v323",', 'compat_css = ("v324","v323",')
-    build = build.replace('compat_app = ("v323",', 'compat_app = ("v324","v323",')
-    build = build.replace('compat_arvexq = ("v323",', 'compat_arvexq = ("v324","v323",')
-    BUILD_PATH.write_text(build, encoding="utf-8")
 
 print("home race boxes enforced: selected + special forecasts; value-race category removed; build v325")
 
