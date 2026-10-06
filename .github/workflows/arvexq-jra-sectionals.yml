@@ -1,0 +1,50 @@
+name: ARVEXQ JRA Sectionals
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_fix_jra_sectional_evidence.py'
+      - '.github/workflows/arvexq-jra-sectionals.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply JRA sectional patch
+        run: python scripts/arvexq_fix_jra_sectional_evidence.py
+      - name: Syntax check
+        run: python -m py_compile app.py scripts/arvexq_fix_jra_sectional_evidence.py
+      - name: Sectional preservation regression
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          src=Path('app.py').read_text(encoding='utf-8')
+          assert '"last3f":hidx("推定上り","上り")' in src
+          assert '"last3FSeconds":last3f' in src
+          assert 'last3f = fin.get("last3FSeconds")' in src
+          assert '"last3FSeconds": last3f' in src
+          assert '"timeSeconds","last3FSeconds","carriedWeight"' in src
+          print('jra-sectionals-ok')
+          PY
+      - name: Commit generated app patch
+        run: |
+          if [ -z "$(git status --porcelain -- app.py)" ]; then
+            echo 'app.py already current'
+            exit 0
+          fi
+          git config user.name 'arvexq-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add app.py
+          git commit -m 'fix: preserve JRA estimated closing sectionals'
+          git push
