@@ -2121,6 +2121,16 @@ function specialForecastRaceTag(r){
   if(String(r&&r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r&&r.raceNumber)===12))return '高知ファイナル';
   return 'メイン'
 }
+function prebuildSpecialForecastPlans(){
+  var picks=specialForecastRaceCandidates();
+  picks.forEach(function(r){
+    var id=String(r&&r.id||''),detail=id?(instantTrackDetails[id]||loadDetailCache(id)):null;
+    if(!detail||isFinal(detail))return;
+    var st=mins(detail.startTime||r.startTime),started=(detail.date||r.date)===today()&&st<9999&&nowMins()>=st;
+    if(started)return;
+    try{var p=predict(detail);buildAiBetPlan(detail,p)}catch(e){}
+  })
+}
 function smartSpecialForecastRaces(){
   var picks=specialForecastRaceCandidates(),body=picks.length?picks.map(function(r){
     var tag=specialForecastRaceTag(r);
@@ -3168,6 +3178,7 @@ function load(force){
         selectedRacePreload.fullLoading=false;
         selectedRacePreload.analysisReady=analysisReady;
         lastDetailsAt=Date.now();
+        prebuildSpecialForecastPlans();
         render();scheduleTopRefresh()
       })
       .catch(function(err){
