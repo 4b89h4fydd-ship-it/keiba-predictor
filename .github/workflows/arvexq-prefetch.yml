@@ -14,6 +14,7 @@ name: ARVEXQ Full Prefetch
       - scripts/arvexq_prefetch.py
       - scripts/arvexq_sync_batches.py
       - scripts/arvexq_fetch_d1_bundle.py
+      - scripts/arvexq_select_prefetch_repairs.py
       - scripts/arvexq_sqlite_health.py
       - arvexq/pipeline/fingerprints.py
       - .github/workflows/arvexq-prefetch.yml
@@ -163,15 +164,36 @@ jobs:
             exit 1
           fi
 
-      - name: Push prepared day to D1 in safe batches
+      - name: Select only missing or thin D1 details
         run: |
           RACES=$(jq '.meta.race_count // 0' prefetch-payload.json)
+          if [ "$RACES" -le 0 ]; then
+            cp prefetch-payload.json prefetch-sync-payload.json
+            exit 0
+          fi
+          python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --date "$TARGET_DATE" \
+            --out current-d1.json \
+            --report current-d1-report.json \
+            --workers 8 \
+            --allow-missing-details
+          python scripts/arvexq_select_prefetch_repairs.py \
+            --prepared prefetch-payload.json \
+            --current current-d1.json \
+            --out prefetch-sync-payload.json \
+            --report prefetch-repair-selection.json
+          jq '{prepared,existing,existing_rich,repair_count}' prefetch-repair-selection.json
+
+      - name: Push prepared day repairs to D1 in safe batches
+        run: |
+          RACES=$(jq '.meta.race_count // 0' prefetch-sync-payload.json)
           if [ "$RACES" -le 0 ]; then
             echo "Nothing to sync."
             exit 0
           fi
           python scripts/arvexq_sync_batches.py \
-            --input prefetch-payload.json \
+            --input prefetch-sync-payload.json \
             --out-dir prefetch-sync-batches
           COUNT=$(find prefetch-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
           echo "D1 prefetch batches=$COUNT"
@@ -185,7 +207,7 @@ jobs:
               -H "x-sync-token: $SYNC_TOKEN" \
               --data-binary @"$file" > /dev/null
           done
-          echo "D1 prefetch batched push OK"
+          echo "D1 prefetch repair push OK"
 
       - name: Verify prepared day and analysis from D1
         run: |
@@ -217,8 +239,9 @@ jobs:
           for d in details:
               rid=str(d.get('id') or '')
               horses=d.get('horses') or []
-              has_analysis=any(d.get(k) not in (None,'',[],{}) for k in ('preRacePrediction','aiEvaluation','pace','pacePrediction','volatility'))
-              if not horses or not has_analysis:
+              pm=d.get('preparedMeta') if isinstance(d.get('preparedMeta'),dict) else {}
+              has_analysis=bool(pm.get('diagnosisReady')) or any(d.get(k) not in (None,'',[],{}) for k in ('preRacePrediction','aiEvaluation','pace','pacePrediction','volatility'))
+              if len([h for h in horses if isinstance(h,dict)]) < 2 or not has_analysis:
                   thin.append(rid)
           analysisCount=len(details)-len(thin)
           print('D1_PREFETCH_DETAIL_VERIFY details=',len(details),'analysisCount=',analysisCount,'thin=',len(thin))
@@ -250,6 +273,8 @@ jobs:
         run: |
           echo "--- prefetch-run.log ---"
           tail -n 100 prefetch-run.log 2>/dev/null || true
+          echo "--- prefetch-repair-selection.json ---"
+          cat prefetch-repair-selection.json 2>/dev/null || true
           echo "--- runtime ---"
           tail -n 100 /tmp/arvexq-prefetch.log 2>/dev/null || true
           cp /tmp/arvexq-prefetch.log runtime-prefetch.log 2>/dev/null || true
@@ -262,6 +287,8 @@ jobs:
           path: |
             prefetch-run.log
             prefetch-report.json
+            prefetch-repair-selection.json
+            current-d1-report.json
             verified-d1-report.json
             runtime-prefetch.log
           if-no-files-found: ignore
