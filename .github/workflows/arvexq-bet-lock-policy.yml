@@ -1,0 +1,52 @@
+name: ARVEXQ Bet Lock Policy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_patch_bet_lock_policy.py'
+      - '.github/workflows/arvexq-bet-lock-policy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply final input lock policy
+        run: python scripts/arvexq_patch_bet_lock_policy.py
+      - name: Validate lock policy
+        run: |
+          python -m py_compile scripts/arvexq_patch_bet_lock_policy.py
+          node --check arvexq/ui/static/app.js
+          python - <<'PY'
+          from pathlib import Path
+          js=Path('arvexq/ui/static/app.js').read_text(encoding='utf-8')
+          assert "lockWindow=30" in js
+          assert "actualOdds,0)>=.65" in js
+          assert "bodyWeight,0)>=.70" in js
+          assert "environment,0)>=1" in js
+          assert "raceDate!==todayKey" in js
+          assert "v327-final-input-window-30m" in js
+          print('bet-lock-policy-validated')
+          PY
+      - name: Commit generated UI
+        run: |
+          if [ -z "$(git status --porcelain -- arvexq/ui/static/app.js)" ]; then
+            echo 'Bet lock policy already synchronized'
+            exit 0
+          fi
+          git config user.name 'arvexq-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add arvexq/ui/static/app.js
+          git commit -m 'bet: lock only on final pre-race inputs'
+          git pull --rebase origin main
+          git push
