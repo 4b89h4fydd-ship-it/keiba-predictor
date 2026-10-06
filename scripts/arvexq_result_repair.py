@@ -211,8 +211,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
                     repaired.add(rid)
                     errors.pop(rid, None)
         if attempt == 1:
-            unresolved = [rid for rid in todo if not all(_result_state(by_id.get(rid))[:2])]
-            if unresolved:
+            unresolved_now = [rid for rid in todo if not all(_result_state(by_id.get(rid))[:2])]
+            if unresolved_now:
                 time.sleep(float(os.getenv("ARVEXQ_RESULT_RETRY_SLEEP_SEC", "2")))
 
     summaries = []
@@ -253,22 +253,25 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             item["error"] = item["error"] or "payout still incomplete"
             payout_missing.append(item)
 
-    # Send full rich detail snapshots so Cloudflare's replace-upsert cannot erase cards.
+    # Only races that were actually pending need to be written back. Sending all
+    # started rich snapshots on every five-minute repair run produced 100+ MB of
+    # needless writes and eventually overloaded the Worker/D1 path with 503s.
     detail_payload = [
-        by_id[rid] for rid in started_ids
+        by_id[rid] for rid in pending
         if isinstance(by_id.get(rid), dict) and by_id[rid].get("id")
     ]
     payload = {
         "summaries": summaries,
         "details": detail_payload,
         "meta": {
-            "source": "github-actions-result-repair-v2-d1-base",
+            "source": "github-actions-result-repair-v3-pending-only",
             "sync_date": bundle.get("date") or "",
             "started_race_count": len(started_ids),
             "result_pending_before": len(pending),
             "result_repaired_count": len(repaired),
             "result_missing_count": len(unresolved),
             "payout_missing_count": len(payout_missing),
+            "result_detail_write_count": len(detail_payload),
             "result_repair_complete": not unresolved and not payout_missing,
             "result_repair_at": int(now.timestamp()),
         },
@@ -280,6 +283,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "repaired": sorted(repaired),
         "result_missing": unresolved,
         "payout_missing": payout_missing,
+        "detail_write_count": len(detail_payload),
     }
     _write_json(payload_path, payload)
     _write_json(report_path, report)
@@ -289,6 +293,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         f"started={len(started_ids)}",
         f"pending_before={len(pending)}",
         f"repaired={len(repaired)}",
+        f"detail_write_count={len(detail_payload)}",
         f"result_missing={len(unresolved)}",
         f"payout_missing={len(payout_missing)}",
     )
