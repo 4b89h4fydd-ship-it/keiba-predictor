@@ -20,4 +20,6 @@ jobs:
         with:
           python-version: '3.12'
       - name: Inspect same-day bias functions
+        env:
+          PYTHONPATH: '.'
         run: python scripts/arvexq_inspect_sameday_bias.py
