@@ -5,6 +5,8 @@ from math import sqrt
 from statistics import median
 from typing import Any, Callable, Iterable
 
+from arvexq.prediction.jra_class_evidence import class_ordinal
+
 FEATURE_SCHEMA_VERSION = "arvexq-mass-features-v1"
 
 # This module is intentionally isolated from factor_model.py/final_marks.py.
@@ -117,6 +119,15 @@ def _speed(run: dict[str, Any]) -> float | None:
 
 
 def _late_speed(run: dict[str, Any]) -> float | None:
+    # Prefer race-relative JRA closing evidence. Raw last3F seconds are never fed
+    # directly because course/distance/going make cross-race seconds incomparable.
+    direct = _f(run.get("last3FPercentile"))
+    if direct is not None:
+        return max(0.0, min(1.0, direct))
+    rank = _f(run.get("last3FRank"))
+    field = _f(run.get("fieldSize"))
+    if rank is not None and field is not None and field >= 2 and 1 <= rank <= field:
+        return max(0.0, min(1.0, 1.0 - (rank - 1.0) / (field - 1.0)))
     return _f(
         run.get(
             "last3FIndex",
@@ -148,7 +159,14 @@ def _position_quality(run: dict[str, Any]) -> float | None:
 
 
 def _opponent_level(run: dict[str, Any]) -> float | None:
-    return _f(run.get("opponentLevel", run.get("levelScore", run.get("raceLevel"))))
+    direct = _f(run.get("opponentLevel", run.get("levelScore", run.get("raceLevel"))))
+    if direct is not None and direct > 0:
+        return direct
+    # Class parsed from the historical race title is a candidate ML feature only.
+    # It is not promoted into the production four-pillar marks after the challenger
+    # showed no win-rate gain.
+    parsed = class_ordinal(run.get("title") or run.get("raceName"))
+    return float(parsed) if parsed is not None else None
 
 
 def _prize(run: dict[str, Any]) -> float | None:
