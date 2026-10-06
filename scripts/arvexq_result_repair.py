@@ -57,14 +57,26 @@ def _row_date(row: dict[str, Any]) -> str:
 
 
 def _podium_final(result: Any) -> bool:
+    """Accept normal and dead-heat podiums once the source marks them final.
+
+    A dead heat can legally produce ranks such as 1,1,3 or 1,2,2. Requiring the
+    literal rank set {1,2,3} leaves those races stuck in "result pending" forever.
+    """
     if not isinstance(result, dict) or str(result.get("status") or "") != "確定":
         return False
-    ranks = {
-        int(x.get("finish") or 0)
-        for x in (result.get("finishers") or [])
-        if isinstance(x, dict)
-    }
-    return all(x in ranks for x in (1, 2, 3))
+    finishes: list[int] = []
+    for row in result.get("finishers") or []:
+        if not isinstance(row, dict):
+            continue
+        try:
+            finish = int(row.get("finish") or 0)
+        except Exception:
+            finish = 0
+        if finish > 0:
+            finishes.append(finish)
+    # Three classified horses occupying places 1-3 is enough even when a tie
+    # means one nominal rank is skipped. Payout validation is handled separately.
+    return 1 in finishes and sum(1 for finish in finishes if finish <= 3) >= 3
 
 
 def _result_state(detail: dict[str, Any] | None) -> tuple[bool, bool, str]:
@@ -264,7 +276,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "summaries": summaries,
         "details": detail_payload,
         "meta": {
-            "source": "github-actions-result-repair-v3-pending-only",
+            "source": "github-actions-result-repair-v4-deadheat-safe",
             "sync_date": bundle.get("date") or "",
             "started_race_count": len(started_ids),
             "result_pending_before": len(pending),
