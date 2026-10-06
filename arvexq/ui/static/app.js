@@ -1,4 +1,4 @@
-window.ARVEXQ_BUILD="v324";
+window.ARVEXQ_BUILD="v325";
 
 (function(){
 "use strict";
@@ -71,13 +71,13 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(localStorage.getItem("arvexq-sw-reload")!=="v324-core-data-guard-20261004"){
-          localStorage.setItem("arvexq-sw-reload","v324-core-data-guard-20261004");
+        if(localStorage.getItem("arvexq-sw-reload")!=="v325-home-race-boxes-20261006"){
+          localStorage.setItem("arvexq-sw-reload","v325-home-race-boxes-20261006");
           location.reload()
         }
       }catch(e){}
     });
-    navigator.serviceWorker.register("/sw-v324-reset.js",{scope:"/"}).then(function(reg){
+    navigator.serviceWorker.register("/sw-v325-reset.js",{scope:"/"}).then(function(reg){
       try{reg.update()}catch(e){}
     }).catch(function(){})
   }catch(e){}
@@ -2088,7 +2088,7 @@ function expectedValueRaceProfile(r,p){
   }).filter(function(z){return !z.forecast&&z.odds>1&&z.ev>=vg.ev&&z.edge>=vg.edge&&z.evidence>=vg.evidence&&z.kelly>=vg.kelly&&z.pwin>=Math.max(.055,uniform*.72)&&z.rank<=2}).sort(function(a,b){return b.ev-a.ev||b.kelly-a.kelly||b.edge-a.edge||b.pwin-a.pwin});
   if(!candidates.length)return{selected:false,score:0,reason:'実オッズ期待値基準未達',mode:'actual',readiness:ready,selection:strict,model:method.id};
   var best=candidates[0],evEdge=best.ev-1,score=Math.round(clamp(clamp(evEdge/.65,0,1)*.40+clamp((best.edge-60)/32,0,1)*.21+best.evidence*.15+ready.market*.12+clamp(best.kelly/.10,0,1)*.08+clamp(best.pwin/Math.max(uniform*2,.12),0,1)*.04,0,1)*100),selected=score>=vg.score;
-  return{selected:selected,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,kelly:best.kelly,riskFraction:Math.min(.02,best.kelly*.20),edge:best.edge,evidence:best.evidence,coverage:cov,mode:'actual',readiness:ready,selection:strict,reason:selected?'高期待値ゲート通過':'期待値品質スコア不足',model:method.id+'-actual-odds'}
+  return{selected:selected,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,kelly:best.kelly,riskFraction:Math.min(.02,best.kelly*.20),edge:best.edge,evidence:best.evidence,coverage:cov,mode:'actual',readiness:ready,selection:strict,reason:selected?'買い目品質ゲート通過':'買い目品質スコア不足',model:method.id+'-actual-odds'}
 }
 function fixedPickLoadStatus(circuit){
   var rows=(state.races||[]).filter(function(r){return r&&r.id&&String(r.circuit||'')===String(circuit)}),loaded=0;
@@ -2116,6 +2116,17 @@ function smartSelectedRaces(){
   var central=selectedRaceCandidates('中央'),local=selectedRaceCandidates('地方'),open=!!selectedSectionsOpen.selected,total=central.length+local.length;
   return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>基準未達なら0件・本当に強い時だけ</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
 }
+function specialForecastRaceCandidates(){
+  return (state.races||[]).filter(function(r){return r&&r.id&&mandatoryTrifectaRace(r)}).slice().sort(raceChronologicalCompare)
+}
+function smartSpecialForecastRaces(){
+  var picks=specialForecastRaceCandidates(),body=picks.length?picks.map(function(r){
+    var tag=raceIsGraded(r)?'重賞':'高知ファイナル';
+    return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+tag+'</em></button>'
+  }).join(''):'<div class="fixed-pick-empty"><b>該当なし</b><small>本日の重賞・高知ファイナルなし</small></div>';
+  return '<section class="smart-fixed-picks smart-special-picks"><div class="smart-fixed-picks-head"><span><b>特別予想</b><small>重賞・高知ファイナル</small></span><span class="smart-fixed-summary-right"><em>'+picks.length+'レース</em></span></div><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">'+body+'</div></div></div></section>'
+}
+
 function smartDailyAiStats(){
   var dayRaces=(state.races||[]).filter(function(r){return r&&r.id});
   var allFinished=dayRaces.length>0&&dayRaces.every(function(r){return isFinal(r)});
@@ -2254,6 +2265,7 @@ function renderHome(){
       smartLiveLauncher()+
       smartPageControls()+
       smartSelectedRaces()+
+      smartSpecialForecastRaces()+
       smartDailyAiStats()+
       (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
       smartLiveRaceSection()+

@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.24-v324-core-data-guard")
+app = FastAPI(title="ARVEXQ", version="14.24-v325-home-race-boxes")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v53-consensus-rebuild"
@@ -1222,7 +1222,7 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v324-core-data-guard", "historyStarted":_history_started,
+        "status":"ok", "mode":"production-v325-home-race-boxes", "historyStarted":_history_started,
         "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")), "jraOfficialFallback":True,
         "centralHistoryFeedConfigured":bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
@@ -7274,7 +7274,7 @@ def enrichment_schema():
 @app.get("/build")
 def build_info():
     return {
-        "build":"v324","appVersion":"14.24-v324-core-data-guard",
+        "build":"v324","appVersion":"14.24-v325-home-race-boxes",
         "predictionEngine":PREDICTION_ENGINE_VERSION,
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
