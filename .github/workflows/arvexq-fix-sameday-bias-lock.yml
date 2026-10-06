@@ -1,0 +1,50 @@
+name: ARVEXQ Same-Day Bias Lock Guard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_fix_sameday_bias_lock.py'
+      - '.github/workflows/arvexq-fix-sameday-bias-lock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch same-day bias learning
+        env:
+          PYTHONPATH: '.'
+        run: python scripts/arvexq_fix_sameday_bias_lock.py
+      - name: Validate
+        env:
+          PYTHONPATH: '.'
+        run: |
+          python -m py_compile arvexq/domain/legacy_evaluation.py scripts/arvexq_fix_sameday_bias_lock.py
+          python - <<'PY'
+          from arvexq.domain.legacy_evaluation import SOURCE
+          assert 'Historical post-race/recomputed marks must never substitute.' in SOURCE
+          assert 'if not marked:\n            marked={int(h.get("horseNumber")' not in SOURCE
+          assert 'race_no<?' in SOURCE
+          assert 'str(result.get("status") or "")!="確定"' in SOURCE
+          print('same-day-bias-lock-safe')
+          PY
+      - name: Commit
+        run: |
+          if [ -z "$(git status --porcelain -- arvexq/domain/legacy_evaluation.py)" ]; then
+            echo 'already current'; exit 0
+          fi
+          git config user.name 'arvexq-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add arvexq/domain/legacy_evaluation.py
+          git commit -m 'fix: require pre-race locks for same-day miss learning'
+          git push
