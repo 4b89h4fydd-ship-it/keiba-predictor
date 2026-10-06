@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import inspect
 import json
 import os
 import sys
@@ -58,6 +59,23 @@ def _seed_base(rid: str, detail: dict[str, Any] | None) -> None:
         print("RESULT_BASE_SEED_ERROR", rid, type(exc).__name__, exc)
 
 
+def _dump_result_pipeline_once(pending: list[str]) -> None:
+    if not pending:
+        return
+    print("RESULT_PIPELINE_DIAG pending=", pending)
+    for name in ("_refresh_result_fast", "_nar_official_result_fast", "_netkeiba_current_result"):
+        fn = getattr(app, name, None)
+        if not callable(fn):
+            print("RESULT_PIPELINE_SOURCE_MISSING", name)
+            continue
+        try:
+            print("RESULT_PIPELINE_SOURCE_BEGIN", name, inspect.signature(fn))
+            print(inspect.getsource(fn))
+            print("RESULT_PIPELINE_SOURCE_END", name)
+        except Exception as exc:
+            print("RESULT_PIPELINE_SOURCE_ERROR", name, type(exc).__name__, exc)
+
+
 def repair(bundle_path: str, payload_path: str, report_path: str, workers: int = 6) -> int:
     bundle = _read_json(bundle_path)
     rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
@@ -77,6 +95,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     errors: dict[str, str] = {}
     repaired: set[str] = set()
 
+    _dump_result_pipeline_once(pending)
+
     for rid in pending:
         _seed_base(rid, by_id.get(rid))
 
@@ -85,6 +105,9 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             fresh = app._refresh_result_fast(rid)
             if not isinstance(fresh, dict) or not fresh.get("id"):
                 return rid, None, "result refresher returned no usable detail"
+            result = fresh.get("result") if isinstance(fresh.get("result"), dict) else {}
+            ranks = [int(x.get("finish") or 0) for x in (result.get("finishers") or []) if isinstance(x, dict)]
+            print("RESULT_REFRESH_SNAPSHOT", rid, "status=", result.get("status"), "ranks=", ranks[:8], "payouts=", len(result.get("payouts") or []))
             return rid, fresh, ""
         except Exception as exc:
             return rid, None, f"{type(exc).__name__}: {exc}"
