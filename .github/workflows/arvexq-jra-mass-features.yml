@@ -1,0 +1,54 @@
+name: ARVEXQ JRA Mass Features
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_wire_sectional_features.py'
+      - 'arvexq/prediction/jra_class_evidence.py'
+      - 'arvexq/prediction/jra_sectional_evidence.py'
+      - '.github/workflows/arvexq-jra-mass-features.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch mass features
+        env:
+          PYTHONPATH: '.'
+        run: python scripts/arvexq_wire_sectional_features.py
+      - name: Validate
+        env:
+          PYTHONPATH: '.'
+        run: |
+          python -m py_compile arvexq/prediction/mass_feature_factory.py arvexq/prediction/jra_class_evidence.py arvexq/prediction/jra_sectional_evidence.py
+          python - <<'PY'
+          from arvexq.prediction.mass_feature_factory import _late_speed,_opponent_level
+          from arvexq.prediction.jra_sectional_evidence import run_sectional_percentile
+          assert _late_speed({'last3FPercentile':.875,'last3FSeconds':35.4})==.875
+          assert abs(_late_speed({'last3FRank':2,'fieldSize':10})-(8/9))<1e-9
+          assert _opponent_level({'title':'3勝クラス'})==4.0
+          assert _opponent_level({'title':'G1 テスト'})==9.0
+          assert run_sectional_percentile({'last3FRank':1,'fieldSize':16})==1.0
+          print('jra-mass-context-ok')
+          PY
+      - name: Commit
+        run: |
+          if [ -z "$(git status --porcelain -- arvexq/prediction/mass_feature_factory.py)" ]; then
+            echo 'already current'; exit 0
+          fi
+          git config user.name 'arvexq-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add arvexq/prediction/mass_feature_factory.py
+          git commit -m 'feat: add JRA relative sectional and class ML features'
+          git push
