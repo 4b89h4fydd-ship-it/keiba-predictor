@@ -1295,23 +1295,16 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
 }
 function raceDisplayCoreReady(d,row){
   if(!d)return false;
-  var hs=(d.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0});
+  var hs=(d.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}),fs=d.result&&d.result.finishers||[];
   if(!hs.length){
-    var fs=d.result&&d.result.finishers||[];
-    return isFinal(d)&&fs.filter(function(x){return x&&n(x.horseNumber)>0&&String(x.name||'').trim()}).length>=3
+    return isFinal(d)&&fs.some(function(x){return x&&n(x.horseNumber)>0&&String(x.name||'').trim()})
   }
-  var expected=n((row||d).fieldSize,0);
-  if(expected>=4&&hs.length<Math.max(3,Math.ceil(expected*.70)))return false;
   var active=hs.filter(function(h){return !isScratchHorse(h)});
   if(!active.length)active=hs;
   var named=active.filter(function(h){return String(h.name||'').trim()}).length;
-  if(named<active.length)return false;
-  var core=active.filter(function(h){
-    var jockey=String(h.jockey||'').trim(),cw=n(h.carriedWeight!=null?h.carriedWeight:h.weight,0);
-    return !!jockey&&cw>0
-  }).length;
-  if(active.length>=4&&core<Math.ceil(active.length*.70))return false;
-  return true
+  // Rendering uses runner identity only. Secondary fields can continue syncing.
+  // Prediction and bet locking keep their separate strict data-readiness checks.
+  return named>=Math.min(active.length,Math.max(1,Math.ceil(active.length*.50)))
 }
 
 function edgeFetchJson(url,timeoutMs){
@@ -1911,7 +1904,7 @@ function cinematicTabs(r){
 }
 function cinematicFeature(r){if(!r)return '';var count=n(r.fieldSize,(r.horses||[]).length),surface=r.surface||'—',course=COURSE[r.track]||{},turn=r.turn||course.turn||'—';return '<section class="cinema-feature" aria-label="選択したレース"><div class="cinema-feature-photo" aria-hidden="true"></div><div class="cinema-feature-info"><div class="cinema-feature-heading"><h1>'+esc(r.track)+' '+esc(r.raceNumber)+'R</h1>'+cinematicGrade(r)+'</div><h2>'+esc(r.title||'レース詳細')+'</h2><div class="cinema-feature-meta">'+timeHtml(r)+' 発走　'+esc(surface)+' '+esc(r.distance||'—')+'m ('+esc(turn)+')　<span>'+esc(r.weather||'')+' '+esc(r.condition||'')+'</span></div><div class="cinema-metrics">'+[[r.distance?r.distance+'m':'—','距離'],[turn,'コース'],[surface,'馬場'],[r.raceClass||r.className||raceMode(r),'条件'],[count?count+'頭':'—','頭数']].map(function(x){return '<div><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div>'}).join('')+'</div></div><button class="cinema-feature-open" data-race="'+esc(r.id)+'" aria-label="レース詳細を開く">›</button>'+cinematicTabs(r)+'</section>'}
 function otherRaces(r){var ctx=cinematicContext(r),rows=ctx.races.filter(function(x){return !r||x.id!==r.id});return '<section class="cinema-others"><div class="cinema-section-heading"><h2>◷ '+(state.date===today()?'本日の他レース':'この日の他レース')+'</h2><button data-action="all-races">全レース一覧 ›</button></div><div class="cinema-other-list">'+(rows.length?rows.map(function(x){return '<button data-race="'+esc(x.id)+'" class="cinema-other-row '+(isFinal(x)?'final':'')+'"><span>'+esc(x.track)+'</span><b>'+esc(x.raceNumber)+'R</b><span class="other-title">'+esc(x.title||'')+'</span><time>'+timeHtml(x)+'</time><span class="other-distance">'+esc(x.surface||'')+' '+esc(x.distance||'—')+'m</span><span class="other-condition">'+esc(x.condition||'')+'</span><span class="other-status">'+(isFinal(x)?'結果確定':(isFlash(x)?'結果速報':'レース詳細'))+' ›</span></button>'}).join(''):'<div class="cinema-empty">他のレースはありません</div>')+'</div></section>'}
-function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD v326</small></footer>'}
+function cinematicFooter(){return '<footer class="cinema-footer">ARVEXQ　<small>PACE · POSITION · VALUE · BUILD '+esc(window.ARVEXQ_BUILD||'v327')+'</small></footer>'}
 function smartTopBar(back,title,sub){
   return '<header class="smart-topbar smart-topbar-clean smart-section-topbar">'+
     '<button class="smart-reload" data-action="reload" aria-label="更新">↻</button>'+ 
