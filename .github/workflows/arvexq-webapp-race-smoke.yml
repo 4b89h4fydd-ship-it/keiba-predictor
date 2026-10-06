@@ -119,12 +119,15 @@ jobs:
           curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "$PROD/sw-v328-reset.js?ci=$GITHUB_SHA" >/tmp/prod-sw.js
           test -s /tmp/prod-sw.js
       - name: Production Chromium click smoke
+        id: prod_chromium
         shell: bash
         run: |
           ARVEXQ_BASE_URL="$PROD_BASE" ARVEXQ_SMOKE_TIMEOUT=30000 ARVEXQ_BROWSER=chromium node scripts/arvexq_webapp_race_smoke.js
       - name: Production WebKit Safari click smoke
+        if: always()
         shell: bash
         run: |
+          test -n "$PROD_BASE"
           ARVEXQ_BASE_URL="$PROD_BASE" ARVEXQ_SMOKE_TIMEOUT=30000 ARVEXQ_BROWSER=webkit node scripts/arvexq_webapp_race_smoke.js
       - name: Start local built web app
         if: always()
