@@ -435,9 +435,9 @@ SOURCE = (
     '        completed+=1;source.append(int(row["race_no"] or 0))\n'
     '        lock=d.get("preRacePrediction") if isinstance(d.get("preRacePrediction"),dict) else {}\n'
     '        locked=lock.get("horses") if isinstance(lock.get("horses"),list) else []\n'
+    '        # Mark-miss learning is valid only when the earlier race has an immutable\n'
+    '        # pre-race lock. Historical post-race/recomputed marks must never substitute.\n'
     '        marked={int(x.get("horseNumber") or 0) for x in locked if isinstance(x,dict) and str(x.get("mark") or "") in valid_marks}\n'
-    '        if not marked:\n'
-    '            marked={int(h.get("horseNumber") or 0) for h in (d.get("horses") or []) if isinstance(h,dict) and str((h.get("integratedEvaluation") or {}).get("mark") or "") in valid_marks}\n'
     '        comparable=bool(marked)\n'
     '        if comparable:\n'
     '            mark_races+=1\n'
@@ -1225,18 +1225,3 @@ SOURCE = (
 def install_evaluation_core(namespace: dict) -> None:
     code = compile(SOURCE, '<arvexq:evaluation_core>', 'exec')
     exec(code, namespace, namespace)
-
-    # Final marks must follow the current ability/record engine. The legacy ranker is
-    # retained only for auxiliary diagnostics and lower-mark context.
-    from arvexq.prediction.final_marks import apply_core_marks
-
-    legacy_rank = namespace.get('_rank_evaluations')
-    if callable(legacy_rank) and not getattr(legacy_rank, '_arvexq_core_marks_wrapped', False):
-        def _rank_evaluations_core_marks(detail):
-            result = legacy_rank(detail)
-            target = result if isinstance(result, dict) else detail
-            return apply_core_marks(target)
-
-        _rank_evaluations_core_marks._arvexq_core_marks_wrapped = True
-        _rank_evaluations_core_marks.__name__ = '_rank_evaluations'
-        namespace['_rank_evaluations'] = _rank_evaluations_core_marks
