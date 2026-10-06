@@ -1,4 +1,4 @@
-# v328 iPhone-class race-open verification against actual Cloudflare Pages app
+# v328 iPhone-class race-open verification against actual Cloudflare Worker app
 name: ARVEXQ Webapp Race Smoke
 
 on:
@@ -64,11 +64,12 @@ jobs:
           from datetime import datetime, timedelta
           from zoneinfo import ZoneInfo
           base='https://kraiz-api.4b89h4fydd.workers.dev'
+          frontend='https://kraizweb1.4b89h4fydd.workers.dev'
           headers={
               'User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1',
               'Accept':'application/json,text/plain,*/*',
-              'Origin':'https://kraizweb1.pages.dev',
-              'Referer':'https://kraizweb1.pages.dev/'
+              'Origin':frontend,
+              'Referer':frontend+'/'
           }
           def read_json(url):
               req=urllib.request.Request(url,headers=headers)
@@ -97,10 +98,10 @@ jobs:
         run: |
           npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium webkit
-      - name: Verify Cloudflare Pages production v328
+      - name: Verify Cloudflare Worker production v328
         shell: bash
         run: |
-          PROD='https://kraizweb1.pages.dev'
+          PROD='https://kraizweb1.4b89h4fydd.workers.dev'
           ok=0
           for i in $(seq 1 48); do
             headers="$(mktemp)"
@@ -108,7 +109,7 @@ jobs:
             if curl -fsS --max-time 12 -D "$headers" -o "$body" -H 'Cache-Control: no-cache' "$PROD/?ci=$GITHUB_SHA-$i"; then
               ctype="$(grep -i '^content-type:' "$headers" | tail -1 | tr -d '\r' || true)"
               echo "production root attempt $i: ${ctype:-<no-content-type>}"
-              if grep -qi 'text/html' "$headers" && grep -qi '<html' "$body"; then
+              if grep -qi 'text/html' "$headers" && grep -qi '<html' "$body" && ! grep -q '"service":"KRAIZ API"' "$body"; then
                 version="$(curl -fsS --max-time 8 -H 'Cache-Control: no-cache' "$PROD/version.json?ci=$GITHUB_SHA-$i" 2>/dev/null || true)"
                 echo "production version attempt $i: ${version:-<no-response>}"
                 if printf '%s' "$version" | grep -q '"build":"v328"'; then ok=1; break; fi
