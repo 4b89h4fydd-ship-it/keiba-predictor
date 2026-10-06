@@ -16,6 +16,7 @@ API_BASE = os.environ.get("ARVEXQ_API_BASE", "https://kraiz-api.4b89h4fydd.worke
 END_DATE = os.environ.get("ARVEXQ_END_DATE", "")
 DAYS = max(1, int(os.environ.get("ARVEXQ_DAYS", "7") or 7))
 MARK_ORDER = {"◎": 0, "○": 1, "▲": 2, "☆+": 3, "☆": 4, "△": 5, "注+": 6, "注": 7, "": 99}
+PILLARS = ("ability", "record", "suitability", "pace", "support")
 
 
 def iv(v: Any, default: int = 0) -> int:
@@ -33,10 +34,7 @@ def fv(v: Any, default: float = 0.0) -> float:
 
 
 def api_json(url: str) -> dict[str, Any]:
-    req = urllib.request.Request(
-        url,
-        headers={"user-agent": "ARVEXQ-unified-audit/1.0", "accept": "application/json"},
-    )
+    req = urllib.request.Request(url, headers={"user-agent": "ARVEXQ-unified-audit/1.1", "accept": "application/json"})
     with urllib.request.urlopen(req, timeout=45) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
@@ -56,18 +54,10 @@ def finish_order(detail: dict[str, Any]) -> list[int]:
 
 
 def scrub_for_replay(detail: dict[str, Any], target_date: str) -> dict[str, Any]:
-    """Best-effort retrospective replay base.
-
-    This is deliberately reported as retrospective, never as an exact historical
-    pre-race snapshot. Result/payout fields and target-day history are removed,
-    but the saved detail may still contain values generated later in the day.
-    """
+    """Best-effort retrospective replay base, never labelled exact historical."""
     d = copy.deepcopy(detail)
     for key in list(d):
-        if key.lower() in {
-            "result", "results", "payout", "payouts", "payoff", "finishers",
-            "finishorder", "winner", "raceStatus",
-        }:
+        if key.lower() in {"result", "results", "payout", "payouts", "payoff", "finishers", "finishorder", "winner", "racestatus"}:
             d.pop(key, None)
     d.pop("preRacePrediction", None)
     for horse in d.get("horses") or []:
@@ -79,15 +69,11 @@ def scrub_for_replay(detail: dict[str, Any], target_date: str) -> dict[str, Any]
             history = horse.get(key)
             if not isinstance(history, list):
                 continue
-            cleaned = []
-            for run in history:
-                if not isinstance(run, dict):
-                    continue
-                rd = str(run.get("date") or run.get("raceDate") or run.get("day") or "")
-                if target_date and target_date in rd:
-                    continue
-                cleaned.append(run)
-            horse[key] = cleaned
+            horse[key] = [
+                run for run in history
+                if isinstance(run, dict)
+                and target_date not in str(run.get("date") or run.get("raceDate") or run.get("day") or "")
+            ]
     return d
 
 
@@ -127,16 +113,7 @@ def lock_rank(rows: list[dict[str, Any]]) -> list[int]:
 
 
 def init_metrics() -> dict[str, int]:
-    return {
-        "races": 0,
-        "honmeiWin": 0,
-        "honmeiTop2": 0,
-        "honmeiTop3": 0,
-        "winnerTop3": 0,
-        "winnerTop5": 0,
-        "winnerCoreMark": 0,
-        "winnerAnyMark": 0,
-    }
+    return {"races": 0, "honmeiWin": 0, "honmeiTop2": 0, "honmeiTop3": 0, "winnerTop3": 0, "winnerTop5": 0, "winnerCoreMark": 0, "winnerAnyMark": 0}
 
 
 def add_metrics(m: dict[str, int], order: list[int], rank: list[int], marks: dict[int, str]) -> None:
@@ -169,6 +146,104 @@ def rates(m: dict[str, int]) -> dict[str, Any]:
     return out
 
 
+def init_head_metrics() -> dict[str, int]:
+    return {
+        "races": 0,
+        "coreHits": 0,
+        "strengthHits": 0,
+        "winHeadHits": 0,
+        "coreWinAgree": 0,
+        "coreWinAgreeHits": 0,
+        "coreStrengthAgree": 0,
+        "coreStrengthAgreeHits": 0,
+        "allAgree": 0,
+        "allAgreeHits": 0,
+    }
+
+
+def add_head_metrics(m: dict[str, int], order: list[int], detail: dict[str, Any]) -> tuple[int, int, int]:
+    ranking = detail.get("factorRanking") if isinstance(detail.get("factorRanking"), list) else []
+    if not order or not ranking:
+        return 0, 0, 0
+    winner = order[0]
+    core = iv(ranking[0].get("horseNumber"))
+    valid = [x for x in ranking if isinstance(x, dict) and iv(x.get("horseNumber")) > 0]
+    strength_sorted = sorted(valid, key=lambda x: (iv((x.get("multiHead") or {}).get("strengthRank"), 999), iv((x.get("multiHead") or {}).get("winRank"), 999), iv(x.get("horseNumber"), 999)))
+    strength = iv(strength_sorted[0].get("horseNumber")) if strength_sorted else 0
+    mh = detail.get("multiHeadSummary") if isinstance(detail.get("multiHeadSummary"), dict) else {}
+    win_head = iv(mh.get("winnerHorseNumber"))
+    if not win_head:
+        win_sorted = sorted(valid, key=lambda x: (iv((x.get("multiHead") or {}).get("winRank"), 999), iv((x.get("multiHead") or {}).get("strengthRank"), 999), iv(x.get("horseNumber"), 999)))
+        win_head = iv(win_sorted[0].get("horseNumber")) if win_sorted else 0
+    if not core or not strength or not win_head:
+        return core, strength, win_head
+    m["races"] += 1
+    m["coreHits"] += int(core == winner)
+    m["strengthHits"] += int(strength == winner)
+    m["winHeadHits"] += int(win_head == winner)
+    if core == win_head:
+        m["coreWinAgree"] += 1
+        m["coreWinAgreeHits"] += int(core == winner)
+    if core == strength:
+        m["coreStrengthAgree"] += 1
+        m["coreStrengthAgreeHits"] += int(core == winner)
+    if core == strength == win_head:
+        m["allAgree"] += 1
+        m["allAgreeHits"] += int(core == winner)
+    return core, strength, win_head
+
+
+def head_rates(m: dict[str, int]) -> dict[str, Any]:
+    out = dict(m)
+    n = m.get("races", 0)
+    out["coreHitRate"] = round(m.get("coreHits", 0) / n, 4) if n else None
+    out["strengthHitRate"] = round(m.get("strengthHits", 0) / n, 4) if n else None
+    out["winHeadHitRate"] = round(m.get("winHeadHits", 0) / n, 4) if n else None
+    for prefix in ("coreWinAgree", "coreStrengthAgree", "allAgree"):
+        c = m.get(prefix, 0)
+        out[prefix + "HitRate"] = round(m.get(prefix + "Hits", 0) / c, 4) if c else None
+    return out
+
+
+def init_pillar_miss() -> dict[str, int]:
+    out = {"misses": 0, "winnerCoreTop3": 0, "winnerCoreTop5": 0, "winnerStrengthRank1": 0, "winnerWinRank1": 0}
+    for p in PILLARS:
+        out[f"winnerBetter_{p}"] = 0
+        out[f"honmeiBetter_{p}"] = 0
+        out[f"tie_{p}"] = 0
+    return out
+
+
+def add_pillar_miss(m: dict[str, int], order: list[int], detail: dict[str, Any], core: int) -> None:
+    if not order or core == order[0]:
+        return
+    winner = order[0]
+    ranking = detail.get("factorRanking") if isinstance(detail.get("factorRanking"), list) else []
+    by_no = {iv(x.get("horseNumber")): x for x in ranking if isinstance(x, dict)}
+    w = by_no.get(winner)
+    h = by_no.get(core)
+    if not w or not h:
+        return
+    m["misses"] += 1
+    wrank = iv(w.get("rank"), 999)
+    m["winnerCoreTop3"] += int(wrank <= 3)
+    m["winnerCoreTop5"] += int(wrank <= 5)
+    wm = w.get("multiHead") or {}
+    m["winnerStrengthRank1"] += int(iv(wm.get("strengthRank"), 999) == 1)
+    m["winnerWinRank1"] += int(iv(wm.get("winRank"), 999) == 1)
+    wp = w.get("pillarRanks") or {}
+    hp = h.get("pillarRanks") or {}
+    for p in PILLARS:
+        a = iv(wp.get(p), 999)
+        b = iv(hp.get(p), 999)
+        if a < b:
+            m[f"winnerBetter_{p}"] += 1
+        elif b < a:
+            m[f"honmeiBetter_{p}"] += 1
+        else:
+            m[f"tie_{p}"] += 1
+
+
 def resolved_end_date() -> date:
     if END_DATE:
         return datetime.strptime(END_DATE, "%Y-%m-%d").date()
@@ -182,6 +257,9 @@ def main() -> None:
     replay_total = init_metrics()
     exact_by_circuit: dict[str, dict[str, int]] = defaultdict(init_metrics)
     replay_by_circuit: dict[str, dict[str, int]] = defaultdict(init_metrics)
+    heads_total = init_head_metrics()
+    heads_by_circuit: dict[str, dict[str, int]] = defaultdict(init_head_metrics)
+    misses_by_circuit: dict[str, dict[str, int]] = defaultdict(init_pillar_miss)
     per_day: list[dict[str, Any]] = []
     changed = improved = worsened = equal = 0
     details_seen = finals_seen = exact_locks = replayed = 0
@@ -229,6 +307,9 @@ def main() -> None:
             if rr and replay_honmei:
                 add_metrics(day_replay, order, rr, replay_marks)
                 add_metrics(replay_by_circuit[circuit], order, rr, replay_marks)
+                core, _, _ = add_head_metrics(heads_total, order, replay)
+                add_head_metrics(heads_by_circuit[circuit], order, replay)
+                add_pillar_miss(misses_by_circuit[circuit], order, replay, core)
                 replayed += 1
                 day_replay_n += 1
 
@@ -245,25 +326,11 @@ def main() -> None:
 
         merge_metrics(exact_total, day_exact)
         merge_metrics(replay_total, day_replay)
-        per_day.append({
-            "date": ds,
-            "details": len(details),
-            "finals": day_finals,
-            "exactLocked": rates(day_exact),
-            "currentReplay": rates(day_replay),
-        })
-        print(
-            "DAY", ds,
-            "details", len(details),
-            "finals", day_finals,
-            "locked", day_locks,
-            "replay", day_replay_n,
-            "lockedHonmeiWin", rates(day_exact).get("honmeiWinRate"),
-            "replayHonmeiWin", rates(day_replay).get("honmeiWinRate"),
-        )
+        per_day.append({"date": ds, "details": len(details), "finals": day_finals, "exactLocked": rates(day_exact), "currentReplay": rates(day_replay)})
+        print("DAY", ds, "details", len(details), "finals", day_finals, "locked", day_locks, "replay", day_replay_n, "lockedHonmeiWin", rates(day_exact).get("honmeiWinRate"), "replayHonmeiWin", rates(day_replay).get("honmeiWinRate"))
 
     result = {
-        "version": "arvexq-unified-prediction-audit-v1",
+        "version": "arvexq-unified-prediction-audit-v2",
         "start": dates[0],
         "end": dates[-1],
         "days": DAYS,
@@ -275,9 +342,12 @@ def main() -> None:
         "currentFourPillarReplay": rates(replay_total),
         "exactByCircuit": {k: rates(v) for k, v in sorted(exact_by_circuit.items())},
         "replayByCircuit": {k: rates(v) for k, v in sorted(replay_by_circuit.items())},
+        "decisionHeads": head_rates(heads_total),
+        "decisionHeadsByCircuit": {k: head_rates(v) for k, v in sorted(heads_by_circuit.items())},
+        "pillarMissesByCircuit": {k: dict(v) for k, v in sorted(misses_by_circuit.items())},
         "honmeiChanged": {"races": changed, "improved": improved, "worsened": worsened, "equal": equal},
         "perDay": per_day,
-        "warning": "exactLocked is the only exact contemporaneous pre-race evaluation. currentFourPillarReplay is retrospective: result/payout and target-day history are scrubbed, but saved detail may contain later-mutated non-result fields.",
+        "warning": "exactLocked is the only exact contemporaneous pre-race evaluation. currentFourPillarReplay and decision-head diagnostics are retrospective: result/payout and target-day history are scrubbed, but saved detail may contain later-mutated non-result fields.",
     }
     print("ARVEXQ_UNIFIED_AUDIT_JSON=" + json.dumps(result, ensure_ascii=False, separators=(",", ":")))
 
