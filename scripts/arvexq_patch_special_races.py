@@ -4,6 +4,55 @@ from pathlib import Path
 PATH = Path("arvexq/ui/static/app.js")
 text = PATH.read_text(encoding="utf-8")
 
+
+def replace_once(old: str, new: str, label: str) -> None:
+    global text
+    if old in text:
+        text = text.replace(old, new, 1)
+    elif new not in text:
+        raise SystemExit(f"{label} block not found")
+
+
+# Use structured grade fields first. Title fallbacks are intentionally conservative:
+# a generic occurrence of "ダービー" or "優駿" in the middle of a promotional title
+# must not automatically turn a race into a graded race.
+old_graded = '''function raceIsGraded(r){var t=String(r&&r.title||''),c=String(r&&r.raceClass||r&&r.className||'');return /(?:Jpn\\s*)?G\\s*[ⅠⅡⅢ123]|(?:Jpn\\s*)[ⅠⅡⅢ123]|\\b(?:S|H|M)\\s*[ⅠⅡⅢ123]\\b|SP\\s*[ⅠⅡⅢ123]|重賞|グランプリ|ダービー|優駿|賞\\s*\\(重賞\\)/i.test(t+' '+c)}
+'''
+new_graded = '''function raceIsGraded(r){
+  if(!r)return false;
+  if(r.isGraded===true||r.graded===true||r.isGradeRace===true||r.gradeRace===true)return true;
+  var t=String(r.title||''),meta=[r.grade,r.gradeLabel,r.raceGrade,r.gradeCode,r.raceClass,r.className,r.category].map(function(v){return String(v||'')}).join(' '),s=t+' '+meta;
+  if(/(?:Jpn\\s*)?G\\s*(?:[ⅠⅡⅢ]|[123])|(?:Jpn\\s*)(?:[ⅠⅡⅢ]|[123])|(?:^|[\\s（(\\[])(?:S|H|M|SP)\\s*(?:[ⅠⅡⅢ]|[123])(?:$|[\\s）)\\]])|重賞|賞\\s*[（(]重賞[）)]/i.test(s))return true;
+  return /(?:ダービー|優駿|グランプリ)(?:$|[（(])/i.test(t)
+}
+'''
+replace_once(old_graded, new_graded, "raceIsGraded")
+
+old_main = '''function mainRaceForTrack(rows){
+  rows=(rows||[]).slice().sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)});if(!rows.length)return null;
+  var explicit=rows.find(function(r){return r.isMain||r.mainRace||r.featured||/メイン/.test(String(r.title||''))});if(explicit)return explicit;
+  var r11=rows.find(function(r){return n(r.raceNumber)===11});if(r11)return r11;
+  return rows.length>=2?rows[rows.length-2]:rows[rows.length-1]
+}
+'''
+new_main = '''function mainRaceForTrack(rows){
+  rows=(rows||[]).filter(function(r){return r&&r.id}).slice().sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)});if(!rows.length)return null;
+  var explicit=rows.find(function(r){var role=String(r.raceRole||r.role||r.raceType||'').toLowerCase();return r.isMain===true||r.mainRace===true||role==='main'||role==='mainrace'||/メイン/.test(String(r.title||''))});if(explicit)return explicit;
+  var featured=rows.find(function(r){return r.featured===true});if(featured)return featured;
+  var r11=rows.find(function(r){return n(r.raceNumber)===11});if(r11)return r11;
+  return rows[rows.length-1]
+}
+function isMainForecastRace(r){
+  if(!r||!r.id)return false;
+  var circuit=String(r.circuit||''),track=String(r.track||''),rows=(state.races||[]).filter(function(z){
+    if(!z||!z.id||String(z.track||'')!==track)return false;
+    return !circuit||!z.circuit||String(z.circuit||'')===circuit
+  }),main=mainRaceForTrack(rows);
+  return !!(main&&String(main.id)===String(r.id))
+}
+'''
+replace_once(old_main, new_main, "mainRaceForTrack")
+
 old_candidates = '''function specialForecastRaceCandidates(){
   return (state.races||[]).filter(function(r){return r&&r.id&&mandatoryTrifectaRace(r)}).slice().sort(raceChronologicalCompare)
 }
@@ -23,10 +72,23 @@ function specialForecastRaceTag(r){
   return 'メイン'
 }
 '''
-if old_candidates in text:
-    text = text.replace(old_candidates, new_candidates, 1)
-elif new_candidates not in text:
-    raise SystemExit("specialForecastRaceCandidates block not found")
+replace_once(old_candidates, new_candidates, "specialForecastRaceCandidates")
+
+old_featured = '''function isFeaturedBetRace(r,p){
+  var title=String(r&&r.title||''),sel=null;
+  try{sel=strictSelectedRaceProfile(r,p)}catch(e){}
+  return !!(r&&(raceIsGraded(r)||
+    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))
+}
+'''
+new_featured = '''function isFeaturedBetRace(r,p){
+  var title=String(r&&r.title||''),sel=null;
+  try{sel=strictSelectedRaceProfile(r,p)}catch(e){}
+  return !!(r&&(isMainForecastRace(r)||raceIsGraded(r)||
+    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))
+}
+'''
+replace_once(old_featured, new_featured, "isFeaturedBetRace")
 
 old_render = '''function smartSpecialForecastRaces(){
   var picks=specialForecastRaceCandidates(),body=picks.length?picks.map(function(r){
@@ -44,10 +106,50 @@ new_render = '''function smartSpecialForecastRaces(){
   return '<section class="smart-fixed-picks smart-special-picks"><div class="smart-fixed-picks-head"><span><b>特別予想</b><small>メイン・重賞・高知ファイナル</small></span><span class="smart-fixed-summary-right"><em>'+picks.length+'レース</em></span></div><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">'+body+'</div></div></div></section>'
 }
 '''
-if old_render in text:
-    text = text.replace(old_render, new_render, 1)
-elif new_render not in text:
-    raise SystemExit("smartSpecialForecastRaces block not found")
+replace_once(old_render, new_render, "smartSpecialForecastRaces")
+
+# A plan may be displayed before the final lock, but it must not be frozen while
+# core prediction data is incomplete. Once a current-generation plan is stored,
+# every pre/post-start view must reuse exactly that plan.
+old_save = '''function saveStoredAiBet(r,plan){try{if(!r||!r.id||!plan||isFinal(r))return;var st=mins(r.startTime),started=(r.date===today()&&st<9999&&nowMins()>=st);if(started||loadStoredAiBet(r.id,false))return;plan.fixedAt=new Date().toISOString();localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))}catch(e){}}
+'''
+new_save = '''function saveStoredAiBet(r,plan){
+  try{
+    if(!r||!r.id||!plan||isFinal(r))return;
+    var st=mins(r.startTime),raceDate=String(r.date||''),todayKey=today(),started=(raceDate===todayKey&&st<9999&&nowMins()>=st);
+    if(started||st>=9999||raceDate>todayKey||loadStoredAiBet(r.id,false))return;
+    var rd=plan.dataReadiness||{},central=String(r.circuit||'')==='中央',minReady=central?.68:.60,ready=Number(rd.prediction),bodyReady=n(rd.bodyWeight,0)>=.70,remain=raceDate===todayKey?st-nowMins():9999,
+        incomplete=/予想データの充足度が不足|データ充足待ち|予想データ不足|データ不足|準備中/.test(String(plan.reason||'')+' '+String(plan.trifectaReason||''));
+    if(isFinite(ready)&&ready<minReady)return;
+    if(plan.decision==='見送り'&&incomplete)return;
+    if(raceDate===todayKey&&remain>45&&!bodyReady)return;
+    plan.fixedAt=new Date().toISOString();plan.fixedBeforePost=true;
+    localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))
+  }catch(e){}
+}
+'''
+replace_once(old_save, new_save, "saveStoredAiBet")
+
+old_plan_open = '''function buildAiBetPlan(r,p){
+  var started=r&&r.date===today()&&mins(r.startTime)<9999&&nowMins()>=mins(r.startTime),terminal=isFinal(r)||started,
+      stored=loadStoredAiBet(r&&r.id,terminal);
+  if(terminal&&stored)return stored;
+  if(terminal&&!stored)return null;
+'''
+new_plan_open = '''function buildAiBetPlan(r,p){
+  var started=r&&r.date===today()&&mins(r.startTime)<9999&&nowMins()>=mins(r.startTime),terminal=isFinal(r)||started,
+      stored=loadStoredAiBet(r&&r.id,terminal);
+  if(stored)return stored;
+  if(terminal)return null;
+'''
+replace_once(old_plan_open, new_plan_open, "buildAiBetPlan stored-plan lock")
+
+old_lock_label = "<span>発走前固定</span>"
+new_lock_label = "<span>'+esc(plan.fixedAt?'発走前固定':'暫定・更新あり')+'</span>"
+if old_lock_label in text:
+    text = text.replace(old_lock_label, new_lock_label, 1)
+elif new_lock_label not in text:
+    raise SystemExit("bet lock label not found")
 
 prebuild_helper = '''function prebuildSpecialForecastPlans(){
   var picks=specialForecastRaceCandidates();
@@ -76,12 +178,15 @@ new_after_details = '''        selectedRacePreload.analysisReady=analysisReady;
         prebuildSpecialForecastPlans();
         render();scheduleTopRefresh()
 '''
-if old_after_details in text:
-    text = text.replace(old_after_details, new_after_details, 1)
-elif new_after_details not in text:
-    raise SystemExit("requestDetails completion anchor not found")
+replace_once(old_after_details, new_after_details, "requestDetails completion")
 
 for required in (
+    "function raceIsGraded(r){",
+    "r.isGraded===true",
+    "function mainRaceForTrack(rows){",
+    "return rows[rows.length-1]",
+    "function isMainForecastRace(r){",
+    "isMainForecastRace(r)||raceIsGraded(r)",
     "function specialForecastRaceTag(r){",
     "add(mainRaceForTrack(groups[k]))",
     "add(kochiFinalRace(rows))",
@@ -89,9 +194,19 @@ for required in (
     "function prebuildSpecialForecastPlans(){",
     "prebuildSpecialForecastPlans();",
     "buildAiBetPlan(detail,p)",
+    "if(stored)return stored;",
+    "remain>45&&!bodyReady",
+    "暫定・更新あり",
 ):
     if required not in text:
         raise SystemExit(f"special race patch missing: {required}")
 
+for forbidden in (
+    "return rows.length>=2?rows[rows.length-2]:rows[rows.length-1]",
+    "if(terminal&&stored)return stored;",
+):
+    if forbidden in text:
+        raise SystemExit(f"obsolete special/bet-lock behavior remains: {forbidden}")
+
 PATH.write_text(text, encoding="utf-8")
-print("special forecast scope patched and pre-race prediction/bet plans prebuilt for main + graded + Kochi final")
+print("special forecast hardened: structured graded/main classification, main-race betting, safe pre-race lock, immutable stored plan")
