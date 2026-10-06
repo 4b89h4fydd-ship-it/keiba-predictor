@@ -1,0 +1,70 @@
+name: ARVEXQ Race Open Repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_patch_race_open_reliability.py'
+      - 'arvexq/ui/static/app.js'
+      - '.github/workflows/arvexq-race-open-repair.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: arvexq-race-open-repair
+  cancel-in-progress: true
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Apply repair
+        run: python scripts/arvexq_patch_race_open_reliability.py
+      - name: Validate runtime and preserved policies
+        shell: bash
+        run: |
+          python -m py_compile scripts/arvexq_patch_race_open_reliability.py
+          node --check arvexq/ui/static/app.js
+          python build_static.py
+          BUILD="$(tr -d '\r\n' < dist/build-version.txt)"
+          test "$BUILD" = "v327"
+          node --check "dist/app-$BUILD.js"
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('arvexq/ui/static/app.js').read_text()
+          start=s.index('function raceDisplayCoreReady(')
+          end=s.index('\n}',start)+2
+          block=s[start:end]
+          assert 'carriedWeight' not in block
+          assert 'jockey' not in block
+          assert 'fieldSize' not in block
+          assert 'named>=Math.min' in block
+          assert "plan.lockPolicy='v327-final-input-window-30m'" in s
+          assert "String(r.track||'')==='高知'" in s
+          print('RACE_OPEN_POLICY_OK')
+          PY
+      - name: Commit repair
+        shell: bash
+        run: |
+          if git diff --quiet -- arvexq/ui/static/app.js; then
+            echo 'race-open repair already applied'
+            exit 0
+          fi
+          git config user.name 'arvexq-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add arvexq/ui/static/app.js
+          git commit -m 'fix: open race view before secondary data finishes syncing'
+          git pull --rebase origin main
+          git push
