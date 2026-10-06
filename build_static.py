@@ -166,14 +166,14 @@ for route in ("venue", "race"):
 (DIST / f"app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
 (DIST / f"arvexq-app-{BUILD_VERSION}.js").write_text(js, encoding="utf-8")
 
-compat_css = ("v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v130")
-compat_app = ("v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v147","v146","v145","v141","v140","v139","v138","v137","v136","v133")
-compat_arvexq = ("v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303")
+compat_css = ("v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v130")
+compat_app = ("v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v147","v146","v145","v141","v140","v139","v138","v137","v136","v133")
+compat_arvexq = ("v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303")
 for name in ("manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
     (DIST / name).write_text(manifest, encoding="utf-8")
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
 (DIST / f"sw-{BUILD_VERSION}-reset.js").write_text(sw, encoding="utf-8")
-for legacy_sw in ("v321", "v320", "v319", "v318"):
+for legacy_sw in ("v325", "v324", "v323", "v322", "v321", "v320", "v319", "v318"):
     (DIST / f"sw-{legacy_sw}-reset.js").write_text(sw, encoding="utf-8")
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
