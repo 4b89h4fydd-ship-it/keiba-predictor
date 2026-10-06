@@ -24,6 +24,15 @@ def replace_once_or_done(text: str, old: str, new: str, label: str) -> str:
     raise RuntimeError(f"{label}: expected one old anchor, got {count}")
 
 
+def replace_all_or_done(text: str, old: str, new: str, expected: int, label: str) -> str:
+    count = text.count(old)
+    if count == expected:
+        return text.replace(old, new)
+    if count == 0 and text.count(new) >= expected:
+        return text
+    raise RuntimeError(f"{label}: expected {expected} old anchors, got {count}")
+
+
 def bump_fastapi_version(text: str) -> str:
     tree = ast.parse(text)
     for node in tree.body:
@@ -71,7 +80,7 @@ INDEX.write_text(index, encoding="utf-8")
 # 3) JS cache namespace + service worker must move in lockstep.
 js = APP_JS.read_text(encoding="utf-8")
 js = replace_once_or_done(js, 'window.ARVEXQ_BUILD="v325";', 'window.ARVEXQ_BUILD="v326";', "runtime build")
-js = replace_once_or_done(js, '"v325-home-race-boxes-20261006"', '"v326-special-races-20261006"', "sw reload marker")
+js = replace_all_or_done(js, '"v325-home-race-boxes-20261006"', '"v326-special-races-20261006"', 2, "sw reload marker")
 js = replace_once_or_done(js, '/sw-v325-reset.js', '/sw-v326-reset.js', "sw registration")
 js = js.replace('BUILD v324', 'BUILD v326')
 APP_JS.write_text(js, encoding="utf-8")
@@ -104,6 +113,7 @@ checks = {
     "index js": "/app-v326.js" in index,
     "runtime build": 'window.ARVEXQ_BUILD="v326";' in js,
     "runtime sw": "/sw-v326-reset.js" in js,
+    "runtime sw marker": js.count('"v326-special-races-20261006"') >= 2,
     "prior app redirect": 'compat_app = ("v325","v324",' in build,
     "prior css redirect": 'compat_css = ("v325","v324",' in build,
     "prior sw alias": 'for legacy_sw in ("v325", "v324",' in build,
