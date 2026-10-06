@@ -41,6 +41,19 @@ def replace_function(src: str, name: str, replacement: str) -> str:
     raise SystemExit(f'{name}: closing brace not found')
 
 
+COURSE_PROFILE = '''function courseProfile(r){
+  r=r||{};
+  return COURSE[r.track]||{lap:1400,straight:300,dir:-1,shape:"wide",turn:"右",firstTurn:300}
+}'''
+
+COURSE_STAGE = '''function courseStageFrac(r,st){
+  r=r||{};
+  var p=courseProfile(r);
+  if(p.shape==="straight")return st===0?.05:(st===1?.67:.92);
+  var laps=Math.max(.1,n(r.distance,1200)/p.lap),start=normFrac(.965-p.dir*(laps%1)),prog=st===0?.015:(st===1?.81:.965);
+  return normFrac(start+p.dir*laps*prog)
+}'''
+
 RACE_READY = '''function raceDisplayCoreReady(d,row){
   if(!d)return false;
   var hs=(d.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}),fs=d.result&&d.result.finishers||[];
@@ -55,6 +68,8 @@ RACE_READY = '''function raceDisplayCoreReady(d,row){
   return named>=Math.min(active.length,Math.max(1,Math.ceil(active.length*.50)))
 }'''
 
+text = replace_function(text, 'courseProfile', COURSE_PROFILE)
+text = replace_function(text, 'courseStageFrac', COURSE_STAGE)
 text = replace_function(text, 'raceDisplayCoreReady', RACE_READY)
 
 old_footer = "function cinematicFooter(){return '<footer class=\"cinematic-footer\"><b>ARVEXQ</b><span>ARTIFICIAL RACING INTELLIGENCE</span><small>TACTICAL ENGINE · BUILD v326</small></footer>'}"
@@ -74,6 +89,8 @@ required = [
     "plan.lockPolicy='v327-final-input-window-30m'",
     'window.ARVEXQ_BUILD="v327";',
     '/sw-v327-reset.js',
+    'function courseProfile(r){\n  r=r||{};',
+    'function courseStageFrac(r,st){\n  r=r||{};',
 ]
 missing = [x for x in required if x not in text]
 if missing:
@@ -86,5 +103,13 @@ for forbidden in ('h.carriedWeight', 'h.jockey', '.fieldSize'):
     if forbidden in ready_block:
         raise SystemExit(f'race display still contains strict secondary gate {forbidden}')
 
+# Safari must never see a direct dereference before the null guard in these helpers.
+for name in ('courseProfile', 'courseStageFrac'):
+    start = text.find(f'function {name}(')
+    end = text.find('\n}', start) + 2
+    block = text[start:end]
+    if 'r=r||{};' not in block:
+        raise SystemExit(f'{name}: missing null guard')
+
 PATH.write_text(text, encoding='utf-8')
-print('ARVEXQ race-open reliability patched: runner identity opens UI; strict prediction readiness preserved')
+print('ARVEXQ race-open reliability patched: Safari undefined-race guard + runner-first rendering')
