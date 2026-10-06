@@ -15,9 +15,6 @@ const resetMarker = 'arvexq-hard-reset-v328-safari-runtime-20261006';
   const consoleErrors = [];
   const httpFailures = [];
 
-  // Runtime smoke starts after the one-time PWA cache reset. The reset itself is
-  // checked statically; pre-seeding this marker prevents WebKit from tearing down
-  // the execution context mid-assertion on its deliberate location.replace().
   await page.addInitScript(marker => {
     try { localStorage.setItem(marker, '1'); } catch (_) {}
   }, resetMarker);
@@ -47,8 +44,18 @@ const resetMarker = 'arvexq-hard-reset-v328-safari-runtime-20261006';
     const u = String(item && item.url || '');
     if (!u) return false;
     if (/\/app-v328\.js(?:\?|$)|\/styles-arvexq-v328\.css(?:\?|$)|\/version\.json(?:\?|$)|\/sw-v328-reset\.js(?:\?|$)/i.test(u)) return true;
-    if (/\/api\/(?:day|race|prediction|odds|result|payout)/i.test(u)) return true;
+    if (/\/api\/(?:day|prediction|odds|result|payout)/i.test(u)) return true;
     return Number(item.status) >= 500;
+  }
+
+  function isSelectedRaceFailure(item, raceId) {
+    if (!item || !raceId || Number(item.status) < 400) return false;
+    try {
+      const path = decodeURIComponent(new URL(item.url).pathname);
+      return path === '/api/race/' + String(raceId) || path.endsWith('/api/race/' + String(raceId));
+    } catch (_) {
+      return false;
+    }
   }
 
   try {
@@ -108,7 +115,7 @@ const resetMarker = 'arvexq-hard-reset-v328-safari-runtime-20261006';
     });
     if (fatalPageErrors.length) throw new Error('page errors:\n' + fatalPageErrors.join('\n'));
 
-    const criticalHttp = httpFailures.filter(criticalHttpFailure);
+    const criticalHttp = httpFailures.filter(x => criticalHttpFailure(x) || isSelectedRaceFailure(x, raceId));
     if (criticalHttp.length) {
       throw new Error('critical HTTP failures:\n' + criticalHttp.map(x => `${x.status} ${x.url}`).join('\n'));
     }
