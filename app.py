@@ -3262,8 +3262,10 @@ def central_race_detail(race_id: str) -> dict | None:
                     for h in detail.get("horses",[]) or []:
                         z=by_no.get(int(h.get("horseNumber") or 0))
                         if z:
-                            for k in ("bodyWeight","bodyWeightChange","sex","age","carriedWeight","jockey","trainer","recentRaces"):
+                            for k in ("bodyWeight","bodyWeightChange","sex","age","carriedWeight","jockey","trainer"):
                                 if z.get(k) not in (None,"",0,[]):h[k]=z.get(k)
+                            if z.get("recentRaces"):
+                                h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],z.get("recentRaces") or [],5)
         except Exception as exc:print("JRA official card hydrate failed",race_id,exc)
     # If the official card is unavailable (e.g. publication ended), fill missing card rows from netkeiba.
     if not (detail.get("horses") or []):
@@ -3439,8 +3441,8 @@ def _merge_enrichment(detail:dict,data:dict)->dict:
             if (h.get(k) in (None,"",0)) and row.get(k) not in (None,""):h[k]=row.get(k)
         if row.get("pedigree"):h["pedigree"]={**(h.get("pedigree") or {}),**row.get("pedigree")}
         if row.get("_netkeibaHorseId"):h["_netkeibaHorseId"]=row.get("_netkeibaHorseId")
-        if row.get("recentRaces") and len(h.get("recentRaces") or [])<5:
-            existing=list(h.get("recentRaces") or []);existing.extend(row.get("recentRaces") or []);h["recentRaces"]=[z for z in existing if isinstance(z,dict)][:5]
+        if row.get("recentRaces"):
+            h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],row.get("recentRaces") or [],5)
     for b in data.get("extra") or []:
         src=str(b.get("source") or "補助")
         for row in b.get("rows") or []:
@@ -5667,10 +5669,7 @@ def _merge_fast_history(detail:dict, history_rows:list[dict])->dict:
         runs=list(row.get("recentRaces") or [])
         if runs:
             old=list(h.get("allPastRuns") or h.get("recentRaces") or [])
-            dedup={}
-            for rr in runs+old:
-                if isinstance(rr,dict):dedup[RACEDB._run_key(rr)]=rr
-            merged=sorted(dedup.values(),key=lambda z:str(z.get("date") or ""),reverse=True)
+            merged=_jra_merge_runs(old,runs,max(5,len(old)+len(runs)))
             h["recentRaces"]=merged[:5]
             h["allPastRuns"]=merged
     return detail
