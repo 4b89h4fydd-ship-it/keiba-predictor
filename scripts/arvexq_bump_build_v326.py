@@ -69,7 +69,7 @@ app_py = APP_PY.read_text(encoding="utf-8")
 app_py = bump_fastapi_version(app_py)
 APP_PY.write_text(app_py, encoding="utf-8")
 
-# 2) HTML must request the same immutable generation it advertises in the hard reset.
+# 2) HTML must request the same generation it advertises in the hard reset.
 index = INDEX.read_text(encoding="utf-8")
 index = replace_once_or_done(index, "/styles-arvexq-v325.css", "/styles-arvexq-v326.css", "index css generation")
 index = replace_once_or_done(index, "/app-v325.js", "/app-v326.js", "index js generation")
@@ -85,7 +85,7 @@ js = replace_once_or_done(js, '/sw-v325-reset.js', '/sw-v326-reset.js', "sw regi
 js = js.replace('BUILD v324', 'BUILD v326')
 APP_JS.write_text(js, encoding="utf-8")
 
-# 4) Preserve immediately previous immutable asset URLs and installed SW generations.
+# 4) Preserve immediately previous asset URLs and installed SW generations.
 build = BUILD.read_text(encoding="utf-8")
 for name in ("compat_css", "compat_app", "compat_arvexq"):
     old = f'{name} = ("v324",'
@@ -101,10 +101,23 @@ if new_sw not in build:
     if old_sw not in build:
         raise RuntimeError("legacy service-worker alias anchor not found")
     build = build.replace(old_sw, new_sw, 1)
+
+# ARVEXQ is patched frequently between formal build-number bumps. A one-year immutable
+# policy can therefore pin an iPhone/PWA to stale JS/CSS even after main is fixed.
+# Keep browser caching, but force revalidation so same-generation hotfixes are visible.
+immutable = '  Cache-Control: public, max-age=31536000, immutable'
+revalidate = '  Cache-Control: no-cache, must-revalidate'
+count = build.count(immutable)
+if count:
+    if count != 3:
+        raise RuntimeError(f"current JS/CSS immutable header count changed: {count}")
+    build = build.replace(immutable, revalidate)
+elif build.count(revalidate) < 3:
+    raise RuntimeError("current JS/CSS revalidation policy missing")
+
 BUILD.write_text(build, encoding="utf-8")
 
-# Final invariants. These are deliberately strict because immutable URLs must never
-# point at changed content under the same generation.
+# Final invariants.
 index = INDEX.read_text(encoding="utf-8")
 js = APP_JS.read_text(encoding="utf-8")
 build = BUILD.read_text(encoding="utf-8")
@@ -117,8 +130,10 @@ checks = {
     "prior app redirect": 'compat_app = ("v325","v324",' in build,
     "prior css redirect": 'compat_css = ("v325","v324",' in build,
     "prior sw alias": 'for legacy_sw in ("v325", "v324",' in build,
+    "no current immutable assets": 'max-age=31536000, immutable' not in build,
+    "current assets revalidate": build.count('Cache-Control: no-cache, must-revalidate') >= 4,
 }
 missing = [k for k, ok in checks.items() if not ok]
 if missing:
-    raise SystemExit("v326 build bump incomplete: " + ", ".join(missing))
-print("ARVEXQ build coherently bumped to v326; v325 compatibility retained")
+    raise SystemExit("v326 build/cache policy incomplete: " + ", ".join(missing))
+print("ARVEXQ v326 coherent; v325 compatibility retained; current JS/CSS revalidate on load")
