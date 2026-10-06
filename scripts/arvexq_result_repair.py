@@ -28,11 +28,21 @@ from arvexq.results import (
     JST,
     TERMINAL_NO_PAYOUT,
     merge_detail,
+    merge_result,
     result_state,
     row_date,
     start_minutes,
     started,
 )
+
+# Transitional compatibility for history/validation callers while result-domain
+# helpers now live in arvexq.results. New code should import the domain module.
+_merge_detail = merge_detail
+_merge_result = merge_result
+_result_state = result_state
+_row_date = row_date
+_start_minutes = start_minutes
+_started = started
 
 
 def _read_json(path: str) -> dict[str, Any]:
