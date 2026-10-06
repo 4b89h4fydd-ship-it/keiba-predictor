@@ -15,32 +15,68 @@ API_BASE = os.environ.get("ARVEXQ_API_BASE", base.API_BASE).rstrip("/")
 END_DATE = os.environ.get("ARVEXQ_END_DATE", "2026-10-05")
 DAYS = max(1, int(os.environ.get("ARVEXQ_DAYS", "7") or 7))
 PILLARS = ("ability", "record", "suitability", "pace", "support")
+HISTORY_VIEWS = ("allPast", "recent", "merged")
 
 
 def init() -> dict[str, float]:
     d: dict[str, float] = {
-        "races": 0,
-        "horses": 0,
-        "horsesNoRuns": 0,
-        "horsesLt3Runs": 0,
-        "horsesGe5Runs": 0,
-        "runs": 0,
-        "runsFinish": 0,
-        "runsFieldSize": 0,
-        "runsSpeedIndex": 0,
-        "runsTimed": 0,
-        "runsOpponentLevel": 0,
-        "runsPrize": 0,
-        "horsesAudit": 0,
-        "horsesResearch": 0,
-        "raceDistance": 0,
-        "raceSurface": 0,
-        "raceCondition": 0,
+        "races": 0, "horses": 0, "horsesNoRuns": 0, "horsesLt3Runs": 0, "horsesGe5Runs": 0,
+        "runs": 0, "runsFinish": 0, "runsFieldSize": 0, "runsSpeedIndex": 0, "runsTimed": 0,
+        "runsOpponentLevel": 0, "runsPrize": 0, "horsesAudit": 0, "horsesResearch": 0,
+        "raceDistance": 0, "raceSurface": 0, "raceCondition": 0,
     }
     for p in PILLARS:
-        d[f"familySum_{p}"] = 0
-        d[f"familyNonzero_{p}"] = 0
+        d[f"familySum_{p}"] = 0; d[f"familyNonzero_{p}"] = 0
+    for view in HISTORY_VIEWS:
+        d[f"{view}Runs"] = 0; d[f"{view}Finish"] = 0; d[f"{view}Field"] = 0; d[f"{view}Prize"] = 0
+        d[f"horsesWith_{view}"] = 0
     return d
+
+
+def valid_runs(value: Any) -> list[dict[str, Any]]:
+    return [r for r in (value or []) if isinstance(r, dict)]
+
+
+def run_key(r: dict[str, Any]) -> tuple[Any, ...]:
+    day = str(r.get("date") or r.get("raceDate") or "")
+    track = str(r.get("track") or "")
+    distance = int(float(r.get("distance") or 0))
+    if day:
+        return day, track, distance
+    return day, track, distance, str(r.get("title") or ""), str(r.get("raceId") or "")
+
+
+def present(key: str, value: Any) -> bool:
+    if value in (None, "", [], {}, "不明"):
+        return False
+    if key in {"finish", "fieldSize", "distance", "timeSeconds", "racePrize1"}:
+        try: return float(value) > 0
+        except (TypeError, ValueError): return False
+    return True
+
+
+def merge_history(all_past: list[dict[str, Any]], recent: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    merged: dict[tuple[Any, ...], dict[str, Any]] = {}
+    order: list[tuple[Any, ...]] = []
+    for run in all_past + recent:
+        key = run_key(run)
+        if key not in merged:
+            merged[key] = dict(run); order.append(key); continue
+        row = merged[key]
+        for field, value in run.items():
+            if not present(field, row.get(field)) and present(field, value): row[field] = value
+            elif field == "cornerPositions" and value and len(value) > len(row.get(field) or []): row[field] = value
+    rows = [merged[k] for k in order]
+    rows.sort(key=lambda r: str(r.get("date") or ""), reverse=True)
+    return rows
+
+
+def add_history_view(target: dict[str, float], view: str, runs: list[dict[str, Any]]) -> None:
+    target[f"horsesWith_{view}"] += int(bool(runs)); target[f"{view}Runs"] += len(runs)
+    for r in runs:
+        target[f"{view}Finish"] += int(float(r.get("finish") or r.get("finishPosition") or r.get("rank") or 0) > 0)
+        target[f"{view}Field"] += int(float(r.get("fieldSize") or 0) > 0)
+        target[f"{view}Prize"] += int(float(r.get("racePrize1") or 0) > 0)
 
 
 def add(target: dict[str, float], detail: dict[str, Any]) -> None:
@@ -48,17 +84,14 @@ def add(target: dict[str, float], detail: dict[str, Any]) -> None:
     target["raceDistance"] += int(float(detail.get("distance") or 0) > 0)
     target["raceSurface"] += int(bool(str(detail.get("surface") or "").strip()))
     target["raceCondition"] += int(bool(str(detail.get("condition") or detail.get("going") or "").strip()))
-
     horses = [h for h in (detail.get("horses") or []) if isinstance(h, dict)]
     target["horses"] += len(horses)
     for h in horses:
-        runs = h.get("allPastRuns") or h.get("recentRaces") or []
-        runs = [r for r in runs if isinstance(r, dict)]
+        all_past = valid_runs(h.get("allPastRuns")); recent = valid_runs(h.get("recentRaces")); merged = merge_history(all_past, recent)
+        add_history_view(target, "allPast", all_past); add_history_view(target, "recent", recent); add_history_view(target, "merged", merged)
+        runs = all_past or recent
         n = len(runs)
-        target["horsesNoRuns"] += int(n == 0)
-        target["horsesLt3Runs"] += int(n < 3)
-        target["horsesGe5Runs"] += int(n >= 5)
-        target["runs"] += n
+        target["horsesNoRuns"] += int(n == 0); target["horsesLt3Runs"] += int(n < 3); target["horsesGe5Runs"] += int(n >= 5); target["runs"] += n
         ev = h.get("integratedEvaluation") if isinstance(h.get("integratedEvaluation"), dict) else {}
         target["horsesAudit"] += int(isinstance(ev.get("v218Audit") or ev.get("v217Audit"), dict) and bool(ev.get("v218Audit") or ev.get("v217Audit")))
         target["horsesResearch"] += int(isinstance(ev.get("researchFactors"), dict) and bool(ev.get("researchFactors")))
@@ -69,73 +102,49 @@ def add(target: dict[str, float], detail: dict[str, Any]) -> None:
             target["runsTimed"] += int(float(r.get("timeSeconds") or 0) > 0 and float(r.get("distance") or 0) > 0)
             target["runsOpponentLevel"] += int(float(r.get("opponentLevel") or r.get("levelScore") or 0) > 0)
             target["runsPrize"] += int(float(r.get("racePrize1") or 0) > 0)
-
     ranking = detail.get("factorRanking") if isinstance(detail.get("factorRanking"), list) else []
     for row in ranking:
-        if not isinstance(row, dict):
-            continue
+        if not isinstance(row, dict): continue
         fam = row.get("evidenceFamilyCounts") if isinstance(row.get("evidenceFamilyCounts"), dict) else {}
         for p in PILLARS:
-            v = int(fam.get(p) or 0)
-            target[f"familySum_{p}"] += v
-            target[f"familyNonzero_{p}"] += int(v > 0)
+            v = int(fam.get(p) or 0); target[f"familySum_{p}"] += v; target[f"familyNonzero_{p}"] += int(v > 0)
 
 
 def normalize(d: dict[str, float]) -> dict[str, Any]:
-    races = max(1.0, d["races"])
-    horses = max(1.0, d["horses"])
-    runs = max(1.0, d["runs"])
-    out: dict[str, Any] = dict(d)
+    races=max(1.0,d["races"]); horses=max(1.0,d["horses"]); runs=max(1.0,d["runs"]); out=dict(d)
     out.update({
-        "avgFieldSize": round(d["horses"] / races, 3),
-        "avgRunsPerHorse": round(d["runs"] / horses, 3),
-        "horseNoRunsRate": round(d["horsesNoRuns"] / horses, 4),
-        "horseLt3RunsRate": round(d["horsesLt3Runs"] / horses, 4),
-        "horseGe5RunsRate": round(d["horsesGe5Runs"] / horses, 4),
-        "runFinishRate": round(d["runsFinish"] / runs, 4),
-        "runFieldSizeRate": round(d["runsFieldSize"] / runs, 4),
-        "runSpeedIndexRate": round(d["runsSpeedIndex"] / runs, 4),
-        "runTimedRate": round(d["runsTimed"] / runs, 4),
-        "runOpponentLevelRate": round(d["runsOpponentLevel"] / runs, 4),
-        "runPrizeRate": round(d["runsPrize"] / runs, 4),
-        "horseAuditRate": round(d["horsesAudit"] / horses, 4),
-        "horseResearchRate": round(d["horsesResearch"] / horses, 4),
-        "raceDistanceRate": round(d["raceDistance"] / races, 4),
-        "raceSurfaceRate": round(d["raceSurface"] / races, 4),
-        "raceConditionRate": round(d["raceCondition"] / races, 4),
+        "avgFieldSize":round(d["horses"]/races,3), "avgRunsPerHorse":round(d["runs"]/horses,3),
+        "horseNoRunsRate":round(d["horsesNoRuns"]/horses,4), "horseLt3RunsRate":round(d["horsesLt3Runs"]/horses,4), "horseGe5RunsRate":round(d["horsesGe5Runs"]/horses,4),
+        "runFinishRate":round(d["runsFinish"]/runs,4), "runFieldSizeRate":round(d["runsFieldSize"]/runs,4), "runSpeedIndexRate":round(d["runsSpeedIndex"]/runs,4),
+        "runTimedRate":round(d["runsTimed"]/runs,4), "runOpponentLevelRate":round(d["runsOpponentLevel"]/runs,4), "runPrizeRate":round(d["runsPrize"]/runs,4),
+        "horseAuditRate":round(d["horsesAudit"]/horses,4), "horseResearchRate":round(d["horsesResearch"]/horses,4),
+        "raceDistanceRate":round(d["raceDistance"]/races,4), "raceSurfaceRate":round(d["raceSurface"]/races,4), "raceConditionRate":round(d["raceCondition"]/races,4),
     })
     for p in PILLARS:
-        out[f"avgFamilies_{p}"] = round(d[f"familySum_{p}"] / horses, 3)
-        out[f"familyCoverage_{p}"] = round(d[f"familyNonzero_{p}"] / horses, 4)
+        out[f"avgFamilies_{p}"]=round(d[f"familySum_{p}"]/horses,3); out[f"familyCoverage_{p}"]=round(d[f"familyNonzero_{p}"]/horses,4)
+    history={}
+    for view in HISTORY_VIEWS:
+        vr=max(1.0,d[f"{view}Runs"])
+        history[view]={
+            "horsesWithHistoryRate":round(d[f"horsesWith_{view}"]/horses,4), "runs":int(d[f"{view}Runs"]),
+            "finishRate":round(d[f"{view}Finish"]/vr,4), "fieldSizeRate":round(d[f"{view}Field"]/vr,4), "prizeRate":round(d[f"{view}Prize"]/vr,4),
+        }
+    out["historyViews"]=history
     return out
 
 
 def main() -> None:
-    end = datetime.strptime(END_DATE, "%Y-%m-%d").date()
-    dates = [(end - timedelta(days=i)).isoformat() for i in range(DAYS - 1, -1, -1)]
-    by_circuit: dict[str, dict[str, float]] = defaultdict(init)
-    usable = 0
+    end=datetime.strptime(END_DATE,"%Y-%m-%d").date(); dates=[(end-timedelta(days=i)).isoformat() for i in range(DAYS-1,-1,-1)]
+    by_circuit:dict[str,dict[str,float]]=defaultdict(init); usable=0
     for ds in dates:
-        url = API_BASE + "/api/day?" + urllib.parse.urlencode({"date": ds, "details": "1"})
-        payload = base.api_json(url)
+        url=API_BASE+"/api/day?"+urllib.parse.urlencode({"date":ds,"details":"1"}); payload=base.api_json(url)
         for detail in payload.get("details") or []:
-            if not isinstance(detail, dict) or not base.finish_order(detail):
-                continue
-            replay = base.scrub_for_replay(detail, ds)
-            apply_core_marks(replay)
-            circuit = str(replay.get("circuit") or "unknown")
-            add(by_circuit[circuit], replay)
-            usable += 1
-    out = {
-        "version": "arvexq-data-quality-audit-v1",
-        "start": dates[0],
-        "end": dates[-1],
-        "usableRaces": usable,
-        "byCircuit": {k: normalize(v) for k, v in sorted(by_circuit.items())},
-        "warning": "Retrospective saved-detail completeness audit. It identifies source/evidence gaps but is not an exact contemporaneous feature snapshot.",
-    }
-    print("ARVEXQ_DATA_QUALITY_JSON=" + json.dumps(out, ensure_ascii=False, separators=(",", ":")))
+            if not isinstance(detail,dict) or not base.finish_order(detail): continue
+            replay=base.scrub_for_replay(detail,ds); apply_core_marks(replay); circuit=str(replay.get("circuit") or "unknown"); add(by_circuit[circuit],replay); usable+=1
+    out={"version":"arvexq-data-quality-audit-v2","start":dates[0],"end":dates[-1],"usableRaces":usable,
+         "byCircuit":{k:normalize(v) for k,v in sorted(by_circuit.items())},
+         "warning":"Retrospective saved-detail completeness audit. It identifies source/evidence gaps but is not an exact contemporaneous feature snapshot."}
+    print("ARVEXQ_DATA_QUALITY_JSON="+json.dumps(out,ensure_ascii=False,separators=(",",":")))
 
 
-if __name__ == "__main__":
-    main()
+if __name__=="__main__": main()
