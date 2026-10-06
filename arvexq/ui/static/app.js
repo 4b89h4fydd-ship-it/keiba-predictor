@@ -1460,7 +1460,20 @@ function ensureAutoOdds(r){
 function overallScoreText(x){var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
 function aiBetStoreKey(id){return 'arvexq:prebet:v300:'+String(id||'')}
 function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){['v218','v217','v215','v213','v212','v211','v210','v207','v205','v181','v180'].forEach(function(v){keys.push('arvexq:prebet:'+v+':'+String(id||''))})}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
-function saveStoredAiBet(r,plan){try{if(!r||!r.id||!plan||isFinal(r))return;var st=mins(r.startTime),started=(r.date===today()&&st<9999&&nowMins()>=st);if(started||loadStoredAiBet(r.id,false))return;plan.fixedAt=new Date().toISOString();localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))}catch(e){}}
+function saveStoredAiBet(r,plan){
+  try{
+    if(!r||!r.id||!plan||isFinal(r))return;
+    var st=mins(r.startTime),raceDate=String(r.date||''),todayKey=today(),started=(raceDate===todayKey&&st<9999&&nowMins()>=st);
+    if(started||st>=9999||raceDate>todayKey||loadStoredAiBet(r.id,false))return;
+    var rd=plan.dataReadiness||{},central=String(r.circuit||'')==='中央',minReady=central?.68:.60,ready=Number(rd.prediction),bodyReady=n(rd.bodyWeight,0)>=.70,remain=raceDate===todayKey?st-nowMins():9999,
+        incomplete=/予想データの充足度が不足|データ充足待ち|予想データ不足|データ不足|準備中/.test(String(plan.reason||'')+' '+String(plan.trifectaReason||''));
+    if(isFinite(ready)&&ready<minReady)return;
+    if(plan.decision==='見送り'&&incomplete)return;
+    if(raceDate===todayKey&&remain>45&&!bodyReady)return;
+    plan.fixedAt=new Date().toISOString();plan.fixedBeforePost=true;
+    localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))
+  }catch(e){}
+}
 function betComboText(kind,combos){
   combos=combos||[];
   function j(c,sep){return (c||[]).join(sep)}
@@ -1471,7 +1484,7 @@ function betComboText(kind,combos){
 function isFeaturedBetRace(r,p){
   var title=String(r&&r.title||''),sel=null;
   try{sel=strictSelectedRaceProfile(r,p)}catch(e){}
-  return !!(r&&(raceIsGraded(r)||
+  return !!(r&&(isMainForecastRace(r)||raceIsGraded(r)||
     (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))
 }
 function buildV213AiBetPlan(r,p,rows,featured){
@@ -1679,8 +1692,8 @@ function rebuildBetStrategyV242(base,r,p){
 function buildAiBetPlan(r,p){
   var started=r&&r.date===today()&&mins(r.startTime)<9999&&nowMins()>=mins(r.startTime),terminal=isFinal(r)||started,
       stored=loadStoredAiBet(r&&r.id,terminal);
-  if(terminal&&stored)return stored;
-  if(terminal&&!stored)return null;
+  if(stored)return stored;
+  if(terminal)return null;
   var rows=(p&&p.rows||[]).slice().filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)});
   if(rows.length<4)return null;
   var featured=isFeaturedBetRace(r,p),v213Ready=String(r&&r.circuit||'')==='地方'&&rows.every(function(x){var e=x&&x.horse&&x.horse.integratedEvaluation||{};return isFinite(Number(e.v218P1Utility!=null?e.v218P1Utility:(e.v217P1Utility!=null?e.v217P1Utility:e.v213P1Utility)))&&isFinite(Number(e.v213P2Utility))&&isFinite(Number(e.v213P3Utility))});
@@ -1795,7 +1808,7 @@ function aiBetRecommendation(r,p){
   var vote=officialRaceLinks(r).vote,rows=(plan.items||[]).map(function(z){return '<div class="ai-bet-row level-'+(z.level==='本線'?'main':z.level==='押さえ'?'cover':z.level==='強気'?'attack':'trifecta')+'"><span class="ai-bet-level">'+esc(z.level)+'</span><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点'+(z.confidence?' / '+esc(z.confidence):'')+'</em></div>'}).join('');
   if(plan.decision==='見送り')rows='<div class="ai-bet-row level-cover"><span class="ai-bet-level">見送り</span><b>全券種</b><strong>無理に買わない</strong><em>'+esc(plan.betQuality||0)+'/100</em></div>';
   if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')rows+='<div class="ai-bet-row level-trifecta"><span class="ai-bet-level">3連単</span><b>検討済み</b><strong>順序信頼不足で見送り</strong><em>'+esc(plan.orderScore||0)+'/100</em></div>';
-  return '<div class="ai-bet-box"><div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div><div class="ai-bet-meta"><span><b>'+esc(plan.scenario)+'</b> '+Math.round(n(plan.scenarioProb)*100)+'%</span><span>信頼 <b>'+esc(plan.betQuality||0)+'</b>/100</span><span>発走前固定</span></div><span class="ai-bet-brand">ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><div class="bet-mark-guide"><b>印の見方</b><div class="bet-mark-grid"><span><i>◎</i>1着本命</span><span><i>○</i>1着対抗・2着本線</span><span><i>▲</i>1〜3着の有力馬</span><span><i>☆+</i>強穴・1着まで</span><span><i>☆</i>基本3着の能力穴</span><span><i>△</i>押さえ・3着候補</span><span><i>注+</i>条件ハマりで2着以上</span><span><i>注</i>特殊条件・展開ハマり待ち</span></div></div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">現行：中央/地方を別エンジンで評価し、能力・相手レベル・近況・展開/ラップ・条件適性・騎手/厩舎/状態・血統・全頭相対比較を統合。当日の同場傾向は弱い補正に限定し、1〜3着の全頭包含を最優先KPIに維持します。</small></div>'
+  return '<div class="ai-bet-box"><div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div><div class="ai-bet-meta"><span><b>'+esc(plan.scenario)+'</b> '+Math.round(n(plan.scenarioProb)*100)+'%</span><span>信頼 <b>'+esc(plan.betQuality||0)+'</b>/100</span><span>'+esc(plan.fixedAt?'発走前固定':'暫定・更新あり')+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><div class="bet-mark-guide"><b>印の見方</b><div class="bet-mark-grid"><span><i>◎</i>1着本命</span><span><i>○</i>1着対抗・2着本線</span><span><i>▲</i>1〜3着の有力馬</span><span><i>☆+</i>強穴・1着まで</span><span><i>☆</i>基本3着の能力穴</span><span><i>△</i>押さえ・3着候補</span><span><i>注+</i>条件ハマりで2着以上</span><span><i>注</i>特殊条件・展開ハマり待ち</span></div></div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">現行：中央/地方を別エンジンで評価し、能力・相手レベル・近況・展開/ラップ・条件適性・騎手/厩舎/状態・血統・全頭相対比較を統合。当日の同場傾向は弱い補正に限定し、1〜3着の全頭包含を最優先KPIに維持します。</small></div>'
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
@@ -2012,7 +2025,13 @@ function selectedRaceLoadStatus(){
   var expected=n(selectedRacePreload.expectedCount,0)||(state.races||[]).filter(function(r){return r&&r.id}).length,loaded=n(selectedRacePreload.loadedCount,0);
   return{expected:expected,loaded:loaded,complete:!!selectedRacePreload.fullLoaded,loading:!!selectedRacePreload.fullLoading,error:selectedRacePreload.lastError||''}
 }
-function raceIsGraded(r){var t=String(r&&r.title||''),c=String(r&&r.raceClass||r&&r.className||'');return /(?:Jpn\s*)?G\s*[ⅠⅡⅢ123]|(?:Jpn\s*)[ⅠⅡⅢ123]|\b(?:S|H|M)\s*[ⅠⅡⅢ123]\b|SP\s*[ⅠⅡⅢ123]|重賞|グランプリ|ダービー|優駿|賞\s*\(重賞\)/i.test(t+' '+c)}
+function raceIsGraded(r){
+  if(!r)return false;
+  if(r.isGraded===true||r.graded===true||r.isGradeRace===true||r.gradeRace===true)return true;
+  var t=String(r.title||''),meta=[r.grade,r.gradeLabel,r.raceGrade,r.gradeCode,r.raceClass,r.className,r.category].map(function(v){return String(v||'')}).join(' '),s=t+' '+meta;
+  if(/(?:Jpn\s*)?G\s*(?:[ⅠⅡⅢ]|[123])|(?:Jpn\s*)(?:[ⅠⅡⅢ]|[123])|(?:^|[\s（(\[])(?:S|H|M|SP)\s*(?:[ⅠⅡⅢ]|[123])(?:$|[\s）)\]])|重賞|賞\s*[（(]重賞[）)]/i.test(s))return true;
+  return /(?:ダービー|優駿|グランプリ)(?:$|[（(])/i.test(t)
+}
 function mandatoryTrifectaRace(r){
   var title=String(r&&r.title||'');
   return !!(r&&(raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))))
@@ -2032,10 +2051,19 @@ function forceMandatoryTrifecta(plan,r,p){
 }
 function explicitSelectedRace(r){return !!(r&&(r.arvexqSelected||r.selectedRace||r.isSelected||r.recommendedRace||r.aiSelected))}
 function mainRaceForTrack(rows){
-  rows=(rows||[]).slice().sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)});if(!rows.length)return null;
-  var explicit=rows.find(function(r){return r.isMain||r.mainRace||r.featured||/メイン/.test(String(r.title||''))});if(explicit)return explicit;
+  rows=(rows||[]).filter(function(r){return r&&r.id}).slice().sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)});if(!rows.length)return null;
+  var explicit=rows.find(function(r){var role=String(r.raceRole||r.role||r.raceType||'').toLowerCase();return r.isMain===true||r.mainRace===true||role==='main'||role==='mainrace'||/メイン/.test(String(r.title||''))});if(explicit)return explicit;
+  var featured=rows.find(function(r){return r.featured===true});if(featured)return featured;
   var r11=rows.find(function(r){return n(r.raceNumber)===11});if(r11)return r11;
-  return rows.length>=2?rows[rows.length-2]:rows[rows.length-1]
+  return rows[rows.length-1]
+}
+function isMainForecastRace(r){
+  if(!r||!r.id)return false;
+  var circuit=String(r.circuit||''),track=String(r.track||''),rows=(state.races||[]).filter(function(z){
+    if(!z||!z.id||String(z.track||'')!==track)return false;
+    return !circuit||!z.circuit||String(z.circuit||'')===circuit
+  }),main=mainRaceForTrack(rows);
+  return !!(main&&String(main.id)===String(r.id))
 }
 function kochiFinalRace(rows){rows=(rows||[]).filter(function(r){return r.track==='高知'}).slice().sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)});if(!rows.length)return null;return rows.find(function(r){return /ファイナル/i.test(String(r.title||''))})||rows[rows.length-1]}
 function raceChronologicalCompare(a,b){
