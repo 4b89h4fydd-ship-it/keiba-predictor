@@ -49,14 +49,49 @@ if old_render in text:
 elif new_render not in text:
     raise SystemExit("smartSpecialForecastRaces block not found")
 
+prebuild_helper = '''function prebuildSpecialForecastPlans(){
+  var picks=specialForecastRaceCandidates();
+  picks.forEach(function(r){
+    var id=String(r&&r.id||''),detail=id?(instantTrackDetails[id]||loadDetailCache(id)):null;
+    if(!detail||isFinal(detail))return;
+    var st=mins(detail.startTime||r.startTime),started=(detail.date||r.date)===today()&&st<9999&&nowMins()>=st;
+    if(started)return;
+    try{var p=predict(detail);buildAiBetPlan(detail,p)}catch(e){}
+  })
+}
+'''
+if prebuild_helper not in text:
+    anchor = 'function smartSpecialForecastRaces(){'
+    idx = text.find(anchor)
+    if idx < 0:
+        raise SystemExit("smartSpecialForecastRaces anchor not found")
+    text = text[:idx] + prebuild_helper + text[idx:]
+
+old_after_details = '''        selectedRacePreload.analysisReady=analysisReady;
+        lastDetailsAt=Date.now();
+        render();scheduleTopRefresh()
+'''
+new_after_details = '''        selectedRacePreload.analysisReady=analysisReady;
+        lastDetailsAt=Date.now();
+        prebuildSpecialForecastPlans();
+        render();scheduleTopRefresh()
+'''
+if old_after_details in text:
+    text = text.replace(old_after_details, new_after_details, 1)
+elif new_after_details not in text:
+    raise SystemExit("requestDetails completion anchor not found")
+
 for required in (
     "function specialForecastRaceTag(r){",
     "add(mainRaceForTrack(groups[k]))",
     "add(kochiFinalRace(rows))",
     "メイン・重賞・高知ファイナル",
+    "function prebuildSpecialForecastPlans(){",
+    "prebuildSpecialForecastPlans();",
+    "buildAiBetPlan(detail,p)",
 ):
     if required not in text:
         raise SystemExit(f"special race patch missing: {required}")
 
 PATH.write_text(text, encoding="utf-8")
-print("special forecast scope patched: main + graded + Kochi final; mandatory trifecta policy unchanged")
+print("special forecast scope patched and pre-race prediction/bet plans prebuilt for main + graded + Kochi final")
