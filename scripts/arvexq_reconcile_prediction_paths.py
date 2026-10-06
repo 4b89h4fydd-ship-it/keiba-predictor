@@ -113,10 +113,18 @@ if new_mh not in js:
     else:
         raise RuntimeError("strict selection multi-head anchor not found")
 
-# Featured status means exactly strict selection OR mandatory graded/Kochi target.
+# Featured status is strict selection OR any special forecast target. Main races are
+# intentionally included here, but they are NOT promoted to strict-selected status.
 old_featured = "function isFeaturedBetRace(r,p){\n  var title=String(r&&r.title||''),sel=null;\n  try{sel=raceSelectionProfile(r,p)}catch(e){}\n  return !!(r&&(raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))\n}"
-new_featured = "function isFeaturedBetRace(r,p){\n  var title=String(r&&r.title||''),sel=null;\n  try{sel=strictSelectedRaceProfile(r,p)}catch(e){}\n  return !!(r&&(raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))\n}"
-js = ensure_replace(js, old_featured, new_featured, "strict featured race policy")
+strict_featured = "function isFeaturedBetRace(r,p){\n  var title=String(r&&r.title||''),sel=null;\n  try{sel=strictSelectedRaceProfile(r,p)}catch(e){}\n  return !!(r&&(raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))\n}"
+main_featured = "function isFeaturedBetRace(r,p){\n  var title=String(r&&r.title||''),sel=null;\n  try{sel=strictSelectedRaceProfile(r,p)}catch(e){}\n  return !!(r&&(isMainForecastRace(r)||raceIsGraded(r)||\n    (String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))||(sel&&sel.selected)))\n}"
+if main_featured not in js:
+    if strict_featured in js:
+        js = js.replace(strict_featured, main_featured, 1)
+    elif old_featured in js:
+        js = js.replace(old_featured, main_featured, 1)
+    else:
+        raise RuntimeError("strict/main featured race policy anchor not found")
 
 # An authoritative ◎ may differ from legacy P1. In that disagreement, do not permit
 # a 1st-place lock merely because the older winner model reports itself stable.
@@ -127,9 +135,6 @@ js = ensure_replace(js, old_axis, new_axis, "authoritative axis agreement")
 # Bodyweight/status are prediction inputs. Odds/popularity remain market-only and do
 # not invalidate the market-independent prediction core.
 old_merge = "function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){h.winOdds=z.winOdds;changed=true}if(z.popularity!=null&&String(z.popularity)!==''){h.popularity=z.popularity;changed=true}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){h.bodyWeight=z.bodyWeight;changed=true}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){h.bodyWeightChange=z.bodyWeightChange;changed=true}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;return changed}"
-new_merge = "function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,predictionInputChanged=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h,old;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){if(String(h.winOdds||'')!==String(z.winOdds))changed=true;h.winOdds=z.winOdds}if(z.popularity!=null&&String(z.popularity)!==''){if(String(h.popularity||'')!==String(z.popularity))changed=true;h.popularity=z.popularity}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){old=String(h.bodyWeight||'');if(old!==String(z.bodyWeight)){changed=true;predictionInputChanged=true}h.bodyWeight=z.bodyWeight}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){old=String(h.bodyWeightChange||'');if(old!==String(z.bodyWeightChange)){changed=true;predictionInputChanged=true}h.bodyWeightChange=z.bodyWeightChange}if(z.status!=null&&String(z.status)!==''){old=String(h.status||'');if(old!==String(z.status)){changed=true;predictionInputChanged=true}h.status=z.status}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt;if(predictionInputChanged){try{delete state.race._prediction}catch(e){}state.pred=null;state.analysisSaved={}}return changed}"
-# Preserve the exact current implementation if it is already reconciled. The assignment
-# typo above is intentionally not applied; this block only replaces the legacy source.
 current_merge = "function mergeOddsPayload(body){if(!state.race||!body)return false;var changed=false,predictionInputChanged=false,hs=state.race.horses||[],rows=body.horses||[],map={},i,z,h,old;for(i=0;i<rows.length;i++){z=rows[i]||{};if(n(z.horseNumber)>0)map[n(z.horseNumber)]=z}for(i=0;i<hs.length;i++){h=hs[i];z=map[n(h.horseNumber)];if(!z)continue;if(z.winOdds!=null&&String(z.winOdds)!==''){if(String(h.winOdds||'')!==String(z.winOdds))changed=true;h.winOdds=z.winOdds}if(z.popularity!=null&&String(z.popularity)!==''){if(String(h.popularity||'')!==String(z.popularity))changed=true;h.popularity=z.popularity}if(z.bodyWeight!=null&&String(z.bodyWeight)!==''){old=String(h.bodyWeight||'');if(old!==String(z.bodyWeight)){changed=true;predictionInputChanged=true}h.bodyWeight=z.bodyWeight}if(z.bodyWeightChange!=null&&String(z.bodyWeightChange)!==''){old=String(h.bodyWeightChange||'');if(old!==String(z.bodyWeightChange)){changed=true;predictionInputChanged=true}h.bodyWeightChange=z.bodyWeightChange}if(z.status!=null&&String(z.status)!==''){old=String(h.status||'');if(old!==String(z.status)){changed=true;predictionInputChanged=true}h.status=z.status}if(z.oddsSource)h.oddsSource=z.oddsSource}if(body.oddsSource)state.race.oddsSource=body.oddsSource;if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;if(predictionInputChanged){try{delete state.race._prediction}catch(e){}state.pred=null;state.analysisSaved={}}return changed}"
 if current_merge not in js:
     js = ensure_replace(js, old_merge, current_merge, "bodyweight/status invalidation")
@@ -177,4 +182,4 @@ build = ensure_replace(
 )
 BUILD.write_text(build, encoding="utf-8")
 
-print("prediction paths reconciled; obsolete override removed; selection/bets/cache/PWA hardened")
+print("prediction paths reconciled; main/graded/Kochi featured scope preserved; cache/PWA hardened")
