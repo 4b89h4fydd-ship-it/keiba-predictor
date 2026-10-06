@@ -2117,14 +2117,25 @@ function smartSelectedRaces(){
   return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>基準未達なら0件・本当に強い時だけ</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
 }
 function specialForecastRaceCandidates(){
-  return (state.races||[]).filter(function(r){return r&&r.id&&mandatoryTrifectaRace(r)}).slice().sort(raceChronologicalCompare)
+  var rows=(state.races||[]).filter(function(r){return r&&r.id}),out=[],seen={},groups={};
+  function add(r){var id=String(r&&r.id||'');if(!id||seen[id])return;seen[id]=1;out.push(r)}
+  rows.forEach(function(r){if(raceIsGraded(r))add(r);var key=String(r.circuit||'')+'|'+String(r.track||'');(groups[key]||(groups[key]=[])).push(r)});
+  Object.keys(groups).forEach(function(k){add(mainRaceForTrack(groups[k]))});
+  add(kochiFinalRace(rows));
+  return out.sort(raceChronologicalCompare)
+}
+function specialForecastRaceTag(r){
+  var title=String(r&&r.title||'');
+  if(raceIsGraded(r))return '重賞';
+  if(String(r&&r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r&&r.raceNumber)===12))return '高知ファイナル';
+  return 'メイン'
 }
 function smartSpecialForecastRaces(){
   var picks=specialForecastRaceCandidates(),body=picks.length?picks.map(function(r){
-    var tag=raceIsGraded(r)?'重賞':'高知ファイナル';
+    var tag=specialForecastRaceTag(r);
     return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+tag+'</em></button>'
-  }).join(''):'<div class="fixed-pick-empty"><b>該当なし</b><small>本日の重賞・高知ファイナルなし</small></div>';
-  return '<section class="smart-fixed-picks smart-special-picks"><div class="smart-fixed-picks-head"><span><b>特別予想</b><small>重賞・高知ファイナル</small></span><span class="smart-fixed-summary-right"><em>'+picks.length+'レース</em></span></div><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">'+body+'</div></div></div></section>'
+  }).join(''):'<div class="fixed-pick-empty"><b>該当なし</b><small>本日のメイン・重賞・高知ファイナルなし</small></div>';
+  return '<section class="smart-fixed-picks smart-special-picks"><div class="smart-fixed-picks-head"><span><b>特別予想</b><small>メイン・重賞・高知ファイナル</small></span><span class="smart-fixed-summary-right"><em>'+picks.length+'レース</em></span></div><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">'+body+'</div></div></div></section>'
 }
 
 function smartDailyAiStats(){
