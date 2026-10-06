@@ -1,4 +1,4 @@
-# v327 race-open verification after display-gate repair
+# iPhone-class race-open verification in Chromium and WebKit
 name: ARVEXQ Webapp Race Smoke
 
 on:
@@ -18,7 +18,7 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -79,10 +79,10 @@ jobs:
           assert horses or finishers, f'edge race API has neither horses nor result for {rid}'
           print('EDGE_RACE_OK',rid,'horses',len(horses),'finishers',len(finishers))
           PY
-      - name: Install browser
+      - name: Install browsers
         run: |
           npm install --no-save playwright@1.48.2
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
       - name: Start built web app
         shell: bash
         run: |
@@ -90,8 +90,15 @@ jobs:
           for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
           curl -fsS "http://127.0.0.1:8788/sw-$BUILD-reset.js" >/tmp/current-sw.js
           test -s /tmp/current-sw.js
-      - name: Real click smoke
+      - name: Chromium click smoke
         env:
           ARVEXQ_BASE_URL: http://127.0.0.1:8788
           ARVEXQ_SMOKE_TIMEOUT: '25000'
+          ARVEXQ_BROWSER: chromium
+        run: node scripts/arvexq_webapp_race_smoke.js
+      - name: WebKit Safari click smoke
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8788
+          ARVEXQ_SMOKE_TIMEOUT: '25000'
+          ARVEXQ_BROWSER: webkit
         run: node scripts/arvexq_webapp_race_smoke.js
