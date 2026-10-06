@@ -1,0 +1,76 @@
+name: ARVEXQ Webapp Race Smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'arvexq/ui/static/**'
+      - 'build_static.py'
+      - 'app.py'
+      - 'scripts/arvexq_webapp_race_smoke.js'
+      - '.github/workflows/arvexq-webapp-race-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Static validation
+        run: |
+          node --check arvexq/ui/static/app.js
+          python -m py_compile build_static.py
+          python build_static.py
+          test -s dist/index.html
+          test -s dist/app-v326.js
+      - name: Edge API race-detail validation
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          from datetime import datetime, timedelta
+          from zoneinfo import ZoneInfo
+          base='https://kraiz-api.4b89h4fydd.workers.dev'
+          race=None
+          for back in range(0,4):
+              day=(datetime.now(ZoneInfo('Asia/Tokyo')).date()-timedelta(days=back)).isoformat()
+              with urllib.request.urlopen(f'{base}/api/day?date={day}&details=0', timeout=20) as r:
+                  body=json.load(r)
+              rows=body if isinstance(body,list) else body.get('races',[])
+              if rows:
+                  race=rows[0]
+                  break
+          assert race and race.get('id'), 'edge day API returned no selectable race'
+          rid=race['id']
+          with urllib.request.urlopen(f'{base}/api/race/{urllib.parse.quote(str(rid), safe="")}', timeout=25) as r:
+              detail=json.load(r)
+          d=detail.get('detail') if isinstance(detail,dict) else None
+          assert d, f'edge race API missing detail for {rid}'
+          horses=d.get('horses') or []
+          finishers=((d.get('result') or {}).get('finishers') or [])
+          assert horses or finishers, f'edge race API has neither horses nor result for {rid}'
+          print('EDGE_RACE_OK', rid, 'horses', len(horses), 'finishers', len(finishers))
+          PY
+      - name: Install browser
+        run: |
+          npm install --no-save playwright@1.48.2
+          npx playwright install --with-deps chromium
+      - name: Start built web app
+        run: |
+          python -m http.server 8788 --directory dist >/tmp/arvexq-http.log 2>&1 &
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
+      - name: Real click smoke
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8788
+          ARVEXQ_SMOKE_TIMEOUT: '25000'
+        run: node scripts/arvexq_webapp_race_smoke.js
