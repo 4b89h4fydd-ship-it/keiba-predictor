@@ -265,18 +265,18 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             item["error"] = item["error"] or "payout still incomplete"
             payout_missing.append(item)
 
-    # Only races that were actually pending need to be written back. Sending all
-    # started rich snapshots on every five-minute repair run produced 100+ MB of
-    # needless writes and eventually overloaded the Worker/D1 path with 503s.
+    # Write back only races whose result actually improved to a complete result.
+    # Unresolved races already exist in D1; re-uploading their 1-3 MB rich cards
+    # wastes time and was causing Worker 500/503 responses on every repair cycle.
     detail_payload = [
-        by_id[rid] for rid in pending
+        by_id[rid] for rid in sorted(repaired)
         if isinstance(by_id.get(rid), dict) and by_id[rid].get("id")
     ]
     payload = {
         "summaries": summaries,
         "details": detail_payload,
         "meta": {
-            "source": "github-actions-result-repair-v4-deadheat-safe",
+            "source": "github-actions-result-repair-v5-repaired-only",
             "sync_date": bundle.get("date") or "",
             "started_race_count": len(started_ids),
             "result_pending_before": len(pending),
