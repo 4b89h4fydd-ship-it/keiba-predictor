@@ -19,7 +19,7 @@ concurrency:
 jobs:
   repair:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
@@ -30,6 +30,7 @@ jobs:
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
       ARVEXQ_RESULT_WORKERS: "6"
+      ARVEXQ_RESULT_RETRY_SLEEP_SEC: "3"
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
       PIP_NO_INPUT: "1"
 
@@ -62,12 +63,17 @@ jobs:
 
       - name: Read current day from D1
         run: |
-          curl --fail-with-body --max-time 20 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE" \
+          curl --fail-with-body --retry 6 --retry-all-errors --retry-delay 5 --retry-max-time 120 \
+            --connect-timeout 10 --max-time 30 \
+            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE&t=$(date +%s)" \
             -o bundle.json
           RACES=$(jq '.races // [] | length' bundle.json)
           DETAILS=$(jq '.details // [] | length' bundle.json)
           echo "D1 day races=$RACES details=$DETAILS"
+          if [ "$RACES" -le 0 ]; then
+            echo "::error::D1 returned no races for $SYNC_DATE"
+            exit 1
+          fi
 
       - name: Repair all started incomplete results
         run: |
@@ -88,7 +94,8 @@ jobs:
             echo "No started races; skip sync."
             exit 0
           fi
-          curl --fail-with-body --max-time 30 -X POST \
+          curl --fail-with-body --retry 5 --retry-all-errors --retry-delay 3 --retry-max-time 120 \
+            --connect-timeout 10 --max-time 45 -X POST \
             "$CLOUDFLARE_API_BASE/api/sync" \
             -H "content-type: application/json" \
             -H "x-sync-token: $SYNC_TOKEN" \
@@ -97,8 +104,9 @@ jobs:
 
       - name: Verify D1 after repair
         run: |
-          curl --fail-with-body --max-time 20 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE" \
+          curl --fail-with-body --retry 6 --retry-all-errors --retry-delay 5 --retry-max-time 120 \
+            --connect-timeout 10 --max-time 30 \
+            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE&t=$(date +%s)" \
             -o verified-day.json
           python - <<'PY'
           import json
