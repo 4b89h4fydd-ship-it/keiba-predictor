@@ -73,11 +73,11 @@ text = replace_function(text, 'courseStageFrac', COURSE_STAGE)
 text = replace_function(text, 'raceDisplayCoreReady', RACE_READY)
 
 old_footer = "function cinematicFooter(){return '<footer class=\"cinematic-footer\"><b>ARVEXQ</b><span>ARTIFICIAL RACING INTELLIGENCE</span><small>TACTICAL ENGINE · BUILD v326</small></footer>'}"
-new_footer = "function cinematicFooter(){return '<footer class=\"cinematic-footer\"><b>ARVEXQ</b><span>ARTIFICIAL RACING INTELLIGENCE</span><small>TACTICAL ENGINE · BUILD '+esc(window.ARVEXQ_BUILD||'v327')+'</small></footer>'}"
+new_footer = "function cinematicFooter(){return '<footer class=\"cinematic-footer\"><b>ARVEXQ</b><span>ARTIFICIAL RACING INTELLIGENCE</span><small>TACTICAL ENGINE · BUILD '+esc(window.ARVEXQ_BUILD||'v328')+'</small></footer>'}"
 if old_footer in text:
     text = text.replace(old_footer, new_footer, 1)
 elif new_footer not in text and 'BUILD v326</small></footer>' in text:
-    text = text.replace('BUILD v326</small></footer>', "BUILD '+esc(window.ARVEXQ_BUILD||'v327')+'</small></footer>", 1)
+    text = text.replace('BUILD v326</small></footer>', "BUILD '+esc(window.ARVEXQ_BUILD||'v328')+'</small></footer>", 1)
 
 required = [
     'function specialForecastRaceCandidates()',
@@ -87,8 +87,8 @@ required = [
     'n(rd.bodyWeight,0)>=.70',
     'n(rd.environment,0)>=1',
     "plan.lockPolicy='v327-final-input-window-30m'",
-    'window.ARVEXQ_BUILD="v327";',
-    '/sw-v327-reset.js',
+    'window.ARVEXQ_BUILD="v328";',
+    '/sw-v328-reset.js',
     'function courseProfile(r){\n  r=r||{};',
     'function courseStageFrac(r,st){\n  r=r||{};',
 ]
@@ -103,7 +103,6 @@ for forbidden in ('h.carriedWeight', 'h.jockey', '.fieldSize'):
     if forbidden in ready_block:
         raise SystemExit(f'race display still contains strict secondary gate {forbidden}')
 
-# Safari must never see a direct dereference before the null guard in these helpers.
 for name in ('courseProfile', 'courseStageFrac'):
     start = text.find(f'function {name}(')
     end = text.find('\n}', start) + 2
@@ -112,4 +111,4 @@ for name in ('courseProfile', 'courseStageFrac'):
         raise SystemExit(f'{name}: missing null guard')
 
 PATH.write_text(text, encoding='utf-8')
-print('ARVEXQ race-open reliability patched: Safari undefined-race guard + runner-first rendering')
+print('ARVEXQ race-open reliability patched: Safari undefined-race guard + runner-first rendering + v328')
