@@ -1,0 +1,36 @@
+name: ARVEXQ JRA Evidence Coverage
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_jra_evidence_coverage.py'
+      - '.github/workflows/arvexq-jra-evidence-coverage.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile audit
+        run: python -m py_compile scripts/arvexq_jra_evidence_coverage.py
+      - name: Run JRA evidence coverage audit
+        env:
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_DAYS: '7'
+          ARVEXQ_END_DATE: '2026-10-05'
+        run: python scripts/arvexq_jra_evidence_coverage.py | tee jra-evidence-coverage.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-jra-evidence-coverage
+          path: jra-evidence-coverage.log
+          if-no-files-found: error
+          retention-days: 14
