@@ -102,6 +102,28 @@ if new_sw not in build:
         raise RuntimeError("legacy service-worker alias anchor not found")
     build = build.replace(old_sw, new_sw, 1)
 
+# Old installed PWAs may still request one of these exact service-worker URLs.
+# Give every retained alias the same no-store policy as the current SW so an older
+# iPhone shell cannot keep a stale worker merely because the compatibility file exists.
+legacy_headers_old = '''    "/sw-v321-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+    "/sw-v320-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+    "/sw-v319-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+    "/sw-v318-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+'''
+legacy_headers_new = '''    "/sw-v325-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+    "/sw-v324-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+    "/sw-v323-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+    "/sw-v322-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+    "/sw-v321-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+    "/sw-v320-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+    "/sw-v319-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+    "/sw-v318-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
+'''
+if legacy_headers_new not in build:
+    if legacy_headers_old not in build:
+        raise RuntimeError("legacy service-worker header block not found")
+    build = build.replace(legacy_headers_old, legacy_headers_new, 1)
+
 # ARVEXQ is patched frequently between formal build-number bumps. A one-year immutable
 # policy can therefore pin an iPhone/PWA to stale JS/CSS even after main is fixed.
 # Keep browser caching, but force revalidation so same-generation hotfixes are visible.
@@ -130,10 +152,11 @@ checks = {
     "prior app redirect": 'compat_app = ("v325","v324",' in build,
     "prior css redirect": 'compat_css = ("v325","v324",' in build,
     "prior sw alias": 'for legacy_sw in ("v325", "v324",' in build,
+    "legacy sw no-store headers": all((f'"/sw-{v}-reset.js"' in build) for v in ("v325","v324","v323","v322","v321","v320","v319","v318")),
     "no current immutable assets": 'max-age=31536000, immutable' not in build,
     "current assets revalidate": build.count('Cache-Control: no-cache, must-revalidate') >= 4,
 }
 missing = [k for k, ok in checks.items() if not ok]
 if missing:
     raise SystemExit("v326 build/cache policy incomplete: " + ", ".join(missing))
-print("ARVEXQ v326 coherent; v325 compatibility retained; current JS/CSS revalidate on load")
+print("ARVEXQ v326 coherent; v325 compatibility retained; all retained SW aliases no-store; current JS/CSS revalidate on load")
