@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Split ARVEXQ /api/sync payloads into small race-scoped batches.
+
+Cloudflare rejects the previous 150+ MB all-day payloads.  This helper keeps
+replace-upserts safe by pairing each rich detail with its matching summary and
+only sends unmatched summaries/odds in compact follow-up batches.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+from typing import Any
+
+
+def load_json(path: Path) -> dict[str, Any]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise SystemExit(f"sync payload must be an object: {path}")
+    return value
+
+
+def write_json(path: Path, value: dict[str, Any]) -> int:
+    raw = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    path.write_bytes(raw)
+    return len(raw)
+
+
+def race_id(row: Any) -> str:
+    return str(row.get("id") or "") if isinstance(row, dict) else ""
+
+
+def main() -> int:
+    p = argparse.ArgumentParser()
+    p.add_argument("--input", required=True)
+    p.add_argument("--out-dir", required=True)
+    p.add_argument("--odds-rows-per-batch", type=int, default=250)
+    args = p.parse_args()
+
+    payload = load_json(Path(args.input))
+    summaries = [x for x in (payload.get("summaries") or []) if isinstance(x, dict)]
+    details = [x for x in (payload.get("details") or []) if isinstance(x, dict) and race_id(x)]
+    odds = [x for x in (payload.get("odds_current") or []) if isinstance(x, dict)]
+    meta = dict(payload.get("meta") or {})
+
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for old in out_dir.glob("*.json"):
+        old.unlink()
+
+    summary_by_id = {race_id(x): x for x in summaries if race_id(x)}
+    consumed_summary_ids: set[str] = set()
+    batch_no = 0
+    total_bytes = 0
+    largest = 0
+
+    def emit(body: dict[str, Any], kind: str) -> None:
+        nonlocal batch_no, total_bytes, largest
+        batch_no += 1
+        body_meta = dict(meta)
+        body_meta.update({
+            "sync_batch": True,
+            "sync_batch_index": batch_no,
+            "sync_batch_kind": kind,
+        })
+        body["meta"] = body_meta
+        path = out_dir / f"batch-{batch_no:04d}.json"
+        size = write_json(path, body)
+        total_bytes += size
+        largest = max(largest, size)
+        print(f"SYNC_BATCH {path} kind={kind} bytes={size}")
+
+    # Rich details dominate payload size. Send one race at a time so a single
+    # oversized day can never trip Cloudflare's request-body limit.
+    for detail in details:
+        rid = race_id(detail)
+        body: dict[str, Any] = {
+            "summaries": [summary_by_id[rid]] if rid in summary_by_id else [],
+            "details": [detail],
+        }
+        if rid in summary_by_id:
+            consumed_summary_ids.add(rid)
+        emit(body, "detail")
+
+    # Summaries that have no detail yet are still important for the race list.
+    remaining_summaries = [
+        row for row in summaries
+        if race_id(row) not in consumed_summary_ids
+    ]
+    if remaining_summaries:
+        emit({"summaries": remaining_summaries, "details": []}, "summaries")
+
+    # Live odds are compact but can still be numerous. Keep them separate so
+    # detail replacement and market refresh cannot make one giant request.
+    step = max(1, int(args.odds_rows_per_batch))
+    for i in range(0, len(odds), step):
+        emit({"summaries": [], "details": [], "odds_current": odds[i:i + step]}, "odds")
+
+    if batch_no == 0:
+        emit({"summaries": [], "details": []}, "empty")
+
+    print(
+        "SYNC_BATCH_AUDIT",
+        f"batches={batch_no}",
+        f"details={len(details)}",
+        f"summaries={len(summaries)}",
+        f"odds={len(odds)}",
+        f"largest_bytes={largest}",
+        f"total_bytes={total_bytes}",
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
