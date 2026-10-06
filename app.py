@@ -735,10 +735,10 @@ def _jra_parse_past_cell(cell, cutoff:str) -> dict | None:
     for t in list(JRA_TRACK_CODES.values())+["門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"]:
         if re.search(r"(?:日|\s)"+re.escape(t)+r"(?:\s|$)",txt): track=t;break
     finish=0
-    fm=re.search(r"(?:^|\s)(\d{1,2})着(?:\s|$)",txt)
+    fm=re.search(r"(?<!\d)(\d{1,2})\s*着(?!\d)",txt)
     if fm: finish=int(fm.group(1))
     field=0
-    fsm=re.search(r"(\d{1,2})頭",txt)
+    fsm=re.search(r"(\d{1,2})\s*頭",txt)
     if fsm: field=int(fsm.group(1))
     dist=0; surface=""
     dsm=re.search(r"(\d{3,4})(芝|ダ|障)",txt)
@@ -798,13 +798,60 @@ def _jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
             if len(out)>=limit:return out
     return out
 
+def _jra_run_key(r:dict)->tuple:
+    """Stable horse-start key across JRA/profile/supplemental sources.
+
+    A horse cannot run twice at the same track on the same date, so title wording
+    must not prevent two representations of the same start from being merged.
+    """
+    date=str(r.get("date") or "");track=str(r.get("track") or "");distance=int(r.get("distance") or 0)
+    if date:return (date,track,distance)
+    return (date,track,distance,str(r.get("title") or ""),str(r.get("raceId") or ""))
+
+
+def _jra_run_value_present(key:str,value)->bool:
+    if value in (None,"",[],{},"不明"):return False
+    if key in {"finish","fieldSize","distance","timeSeconds","carriedWeight","racePrize1","raceNumber"}:
+        try:return float(value)>0
+        except (TypeError,ValueError):return False
+    return True
+
+
+def _jra_merge_run_fields(base:dict,incoming:dict)->dict:
+    """Merge duplicate starts field-by-field instead of discarding richer data."""
+    out=dict(base or {})
+    for key,value in (incoming or {}).items():
+        if not _jra_run_value_present(key,out.get(key)) and _jra_run_value_present(key,value):out[key]=value
+        elif key=="cornerPositions" and value and len(value)>len(out.get(key) or []):out[key]=value
+    sources=[]
+    for src in (str((base or {}).get("source") or ""),str((incoming or {}).get("source") or "")):
+        if src and src not in sources:sources.append(src)
+    if sources:out["source"]=" + ".join(sources)
+    return out
+
+
+def _jra_run_core_complete(r:dict)->bool:
+    try:finish=int(r.get("finish") or 0);field=int(r.get("fieldSize") or 0);distance=int(r.get("distance") or 0)
+    except (TypeError,ValueError):return False
+    return bool(str(r.get("date") or "") and str(r.get("track") or "") and finish>0 and field>1 and distance>0)
+
+
+def _jra_history_complete(runs:list[dict],career_complete:bool=False)->bool:
+    rows=[r for r in (runs or []) if isinstance(r,dict)]
+    target=min(5,len(rows)) if career_complete else 5
+    if target==0:return bool(career_complete)
+    return len(rows)>=target and sum(1 for r in rows[:target] if _jra_run_core_complete(r))>=target
+
+
 def _jra_merge_runs(a:list[dict],b:list[dict],limit:int=5)->list[dict]:
-    allr=[];seen=set()
+    merged={};order=[]
     for r in list(a or [])+list(b or []):
         if not isinstance(r,dict):continue
-        key=(str(r.get("date") or ""),str(r.get("track") or ""),str(r.get("title") or ""),int(r.get("distance") or 0))
-        if key in seen:continue
-        seen.add(key);allr.append(r)
+        key=_jra_run_key(r)
+        if key not in merged:
+            merged[key]=dict(r);order.append(key)
+        else:merged[key]=_jra_merge_run_fields(merged[key],r)
+    allr=[merged[k] for k in order]
     allr.sort(key=lambda r:str(r.get("date") or ""),reverse=True)
     return allr[:limit]
 
@@ -943,9 +990,10 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     # Listing must stay fast. Full five-run profile supplementation is done only when needed.
     if supplement_profiles:
         def supplement(h):
-            if len(h.get("recentRaces") or [])>=5 or h.get("_jraCareerComplete"):return h
+            existing=h.get("recentRaces") or []
+            if _jra_history_complete(existing,bool(h.get("_jraCareerComplete"))):return h
             extra=_jra_profile_runs(h.get("_jraHorseCname") or "",date,5)
-            h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],extra,5)
+            h["recentRaces"]=_jra_merge_runs(existing,extra,5)
             return h
         workers=max(2,min(8,int(os.getenv("JRA_PROFILE_WORKERS","6"))))
         with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -3081,10 +3129,15 @@ def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
     if not finishers:return None
     payouts=_parse_payouts(soup)
     status="確定" if payouts or re.search(r"確定",full) else "速報"
-    return {"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":len(finishers),"startTime":start,"scheduledStartTime":start,"result":{"status":status,"finishers":finishers,"source":"JRA公式","payouts":payouts},"resultCname":result_cname,"source":"JRA公式結果"}
+    prize1=0
+    pm=re.search(r"1着\s*([\d,.]+)",full)
+    if pm:
+        try:prize1=int(float(pm.group(1).replace(",",""))*10000)
+        except (TypeError,ValueError):prize1=0
+    return {"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":len(finishers),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"result":{"status":status,"finishers":finishers,"source":"JRA公式","payouts":payouts},"resultCname":result_cname,"source":"JRA公式結果"}
 def _merge_official_result(detail:dict,official:dict)->dict:
     if not official:return detail
-    for k in ("title","distance","surface","condition","weather","fieldSize","startTime","scheduledStartTime","resultCname"):
+    for k in ("title","distance","surface","condition","weather","fieldSize","racePrize1","startTime","scheduledStartTime","resultCname"):
         v=official.get(k)
         if v not in (None,"",0,"不明"):detail[k]=v
     if official.get("result"):detail["result"]=official["result"]
