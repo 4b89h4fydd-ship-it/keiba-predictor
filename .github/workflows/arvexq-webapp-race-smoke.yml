@@ -1,4 +1,4 @@
-# v328 iPhone-class race-open verification in Chromium and WebKit
+# v328 iPhone-class race-open verification in local build and production
 name: ARVEXQ Webapp Race Smoke
 
 on:
@@ -18,7 +18,7 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -42,7 +42,17 @@ jobs:
           test -s "dist/sw-$BUILD-reset.js"
           grep -q "/app-$BUILD.js" dist/index.html
           grep -q "/styles-arvexq-$BUILD.css" dist/index.html
-          grep -q 'function courseProfile(r)' arvexq/ui/static/app.js
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('arvexq/ui/static/app.js').read_text()
+          for fn in ('courseProfile','courseStageFrac'):
+              start=s.index(f'function {fn}(')
+              end=s.index('\n}',start)+2
+              assert 'r=r||{};' in s[start:end], fn
+          assert 'window.ARVEXQ_BUILD="v328";' in s
+          assert '/sw-v328-reset.js' in s
+          print('STATIC_SAFARI_GUARDS_OK')
+          PY
       - name: Edge API diagnostic
         continue-on-error: true
         shell: bash
@@ -92,15 +102,42 @@ jobs:
           for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
           curl -fsS "http://127.0.0.1:8788/sw-$BUILD-reset.js" >/tmp/current-sw.js
           test -s /tmp/current-sw.js
-      - name: Chromium click smoke
+      - name: Local Chromium click smoke
         env:
           ARVEXQ_BASE_URL: http://127.0.0.1:8788
           ARVEXQ_SMOKE_TIMEOUT: '25000'
           ARVEXQ_BROWSER: chromium
         run: node scripts/arvexq_webapp_race_smoke.js
-      - name: WebKit Safari click smoke
+      - name: Local WebKit Safari click smoke
         env:
           ARVEXQ_BASE_URL: http://127.0.0.1:8788
           ARVEXQ_SMOKE_TIMEOUT: '25000'
+          ARVEXQ_BROWSER: webkit
+        run: node scripts/arvexq_webapp_race_smoke.js
+      - name: Wait for production v328
+        shell: bash
+        run: |
+          PROD='https://kraizweb1.pages.dev'
+          ok=0
+          for i in $(seq 1 72); do
+            body="$(curl -fsS -H 'Cache-Control: no-cache' "$PROD/version.json?ci=$GITHUB_SHA-$i" 2>/dev/null || true)"
+            echo "production version attempt $i: $body"
+            if printf '%s' "$body" | grep -q '"build":"v328"'; then ok=1; break; fi
+            sleep 5
+          done
+          test "$ok" = "1"
+          curl -fsS -H 'Cache-Control: no-cache' "$PROD/app-v328.js?ci=$GITHUB_SHA" | grep -q 'function courseProfile(r)'
+          curl -fsS -H 'Cache-Control: no-cache' "$PROD/sw-v328-reset.js?ci=$GITHUB_SHA" >/tmp/prod-sw.js
+          test -s /tmp/prod-sw.js
+      - name: Production Chromium click smoke
+        env:
+          ARVEXQ_BASE_URL: https://kraizweb1.pages.dev
+          ARVEXQ_SMOKE_TIMEOUT: '30000'
+          ARVEXQ_BROWSER: chromium
+        run: node scripts/arvexq_webapp_race_smoke.js
+      - name: Production WebKit Safari click smoke
+        env:
+          ARVEXQ_BASE_URL: https://kraizweb1.pages.dev
+          ARVEXQ_SMOKE_TIMEOUT: '30000'
           ARVEXQ_BROWSER: webkit
         run: node scripts/arvexq_webapp_race_smoke.js
