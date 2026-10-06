@@ -22,6 +22,7 @@ on:
       - 'scripts/arvexq_enforce_selection_policy.py'
       - 'scripts/arvexq_force_mandatory_trifecta.py'
       - 'scripts/arvexq_patch_special_races.py'
+      - 'scripts/arvexq_bump_build_v326.py'
       - 'build_static.py'
       - 'arvexq/**/*.py'
       - '.github/workflows/arvexq-auto-refactor.yml'
@@ -85,13 +86,17 @@ jobs:
         run: python scripts/arvexq_remove_value_races.py
       - name: Patch special race scope
         run: python scripts/arvexq_patch_special_races.py
+      - name: Apply trifecta review policy
+        run: python scripts/arvexq_force_mandatory_trifecta.py
       - name: Reconcile prediction paths and live cache behavior
         run: python scripts/arvexq_reconcile_prediction_paths.py
       - name: Patch static builder for extracted assets
         run: python scripts/arvexq_patch_build_static.py
+      - name: Synchronize v326 web generation
+        run: python scripts/arvexq_bump_build_v326.py
       - name: Compile check
         run: |
-          python -m py_compile app.py build_static.py scripts/arvexq_audit_legacy_learning.py scripts/arvexq_reconcile_prediction_paths.py scripts/check_prediction_app_integrity.py scripts/arvexq_enforce_selection_policy.py scripts/arvexq_force_mandatory_trifecta.py scripts/arvexq_patch_special_races.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_patch_mass_prerace_store.py scripts/check_mass_feature_leakage.py scripts/check_mass_training_store.py scripts/export_mass_training_dataset.py scripts/train_mass_models.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py scripts/arvexq_remove_value_races.py
+          python -m py_compile app.py build_static.py scripts/arvexq_audit_legacy_learning.py scripts/arvexq_reconcile_prediction_paths.py scripts/check_prediction_app_integrity.py scripts/arvexq_enforce_selection_policy.py scripts/arvexq_force_mandatory_trifecta.py scripts/arvexq_patch_special_races.py scripts/arvexq_bump_build_v326.py scripts/arvexq_patch_build_static.py scripts/arvexq_extract_backend.py scripts/arvexq_patch_mass_prerace_store.py scripts/check_mass_feature_leakage.py scripts/check_mass_training_store.py scripts/export_mass_training_dataset.py scripts/train_mass_models.py scripts/arvexq_wire_core_marks.py scripts/arvexq_apply_signal_dedup.py scripts/arvexq_remove_value_races.py
           python -m compileall -q arvexq
       - name: Prediction and web app integrity check
         run: |
