@@ -5566,8 +5566,8 @@ def _nar_official_result_fast(detail:dict)->dict|None:
             if finishers:break
         finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
         # Do not call a partial page final until at least the podium is visible.
-        ranks={int(x.get("finish") or 0) for x in finishers}
-        if not all(i in ranks for i in (1,2,3)):continue
+        classified=[int(x.get("finish") or 0) for x in finishers if int(x.get("finish") or 0)>0]
+        if 1 not in classified or sum(1 for finish in classified if finish<=3)<3:continue
         payouts=_parse_payouts(soup)
         explicit_final=bool(re.search(r"確定",full)) and not bool(re.search(r"速報|暫定",full))
         out={"status":"確定" if explicit_final else "速報","finishers":finishers,"source":"NAR公式競走成績","payouts":payouts}
