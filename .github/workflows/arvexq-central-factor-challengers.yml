@@ -34,4 +34,4 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-# rerun marker: 2026-10-06 central evidence audit
+# rerun marker: 2026-10-06 exact-role-audit follow-up
