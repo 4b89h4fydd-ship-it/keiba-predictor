@@ -4,6 +4,7 @@ from __future__ import annotations
 # The block is executed in the caller namespace to preserve legacy global lookup.
 SOURCE = (
     'from arvexq.prediction.mass_prerace_bridge import prepare_mass_prerace_fields, apply_mass_prerace_fields, frozen_mass_fields\n'
+    'from arvexq.selection.race_selectability_snapshot import prepare_race_selectability_fields, apply_race_selectability_fields, frozen_selectability_fields\n'
     'class PreparedRaceStore:\n'
     '    def __init__(self, path: Path = PREPARED_DB_PATH):\n'
     '        self.path = path\n'
@@ -51,6 +52,7 @@ SOURCE = (
     '        if not _racedb_snapshot_usable(detail):\n'
     '            return\n'
     '        mass_fields=prepare_mass_prerace_fields(detail)\n'
+    '        selectability_fields=prepare_race_selectability_fields(detail)\n'
     '        now = int(time.time())\n'
     '        detail.setdefault("preparedMeta", {})\n'
     '        revision_data={k:v for k,v in detail.items() if k!="preparedMeta"}\n'
@@ -64,6 +66,7 @@ SOURCE = (
     '        clean=_compact_display_snapshot(_strip_excluded(detail))\n'
     '        detail.clear();detail.update(clean)\n'
     '        if mass_fields:apply_mass_prerace_fields(detail,mass_fields)\n'
+    '        if selectability_fields:apply_race_selectability_fields(detail,selectability_fields)\n'
     '        payload = json.dumps(detail, ensure_ascii=False, separators=(",", ":"))\n'
     '        conn = sqlite3.connect(self.path, timeout=3)\n'
     '        try:\n'
@@ -75,6 +78,8 @@ SOURCE = (
     '                    detail["preRacePrediction"]=previous["preRacePrediction"]\n'
     '                    previous_mass=frozen_mass_fields(previous)\n'
     '                    if previous_mass:apply_mass_prerace_fields(detail,previous_mass)\n'
+    '                    previous_selectability=frozen_selectability_fields(previous)\n'
+    '                    if previous_selectability:apply_race_selectability_fields(detail,previous_selectability)\n'
     '                    audit=_prediction_audit_from_lock(detail)\n'
     '                    if audit:detail["predictionAudit"]=audit\n'
     '                    payload=json.dumps(detail,ensure_ascii=False,separators=(",",":"))\n'
