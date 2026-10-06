@@ -33,3 +33,5 @@ jobs:
           path: central-factor-challengers.log
           if-no-files-found: error
           retention-days: 14
+
+# rerun marker: 2026-10-06 central evidence audit
