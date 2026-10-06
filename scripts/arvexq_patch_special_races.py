@@ -68,21 +68,7 @@ old_candidates = '''function specialForecastRaceCandidates(){
   return (state.races||[]).filter(function(r){return r&&r.id&&mandatoryTrifectaRace(r)}).slice().sort(raceChronologicalCompare)
 }
 '''
-new_candidates = '''function specialForecastRaceCandidates(){
-  var rows=(state.races||[]).filter(function(r){return r&&r.id}),out=[],seen={},groups={};
-  function add(r){var id=String(r&&r.id||'');if(!id||seen[id])return;seen[id]=1;out.push(r)}
-  rows.forEach(function(r){if(raceIsGraded(r))add(r);var key=String(r.circuit||'')+'|'+String(r.track||'');(groups[key]||(groups[key]=[])).push(r)});
-  Object.keys(groups).forEach(function(k){add(mainRaceForTrack(groups[k]))});
-  add(kochiFinalRace(rows));
-  return out.sort(raceChronologicalCompare)
-}
-function specialForecastRaceTag(r){
-  var title=String(r&&r.title||'');
-  if(raceIsGraded(r))return '重賞';
-  if(String(r&&r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r&&r.raceNumber)===12))return '高知ファイナル';
-  return 'メイン'
-}
-'''
+new_candidates = "function specialForecastRaceCandidates(){\n  return (state.races||[]).filter(function(r){\n    if(!r||!r.id)return false;\n    var title=String(r.title||'');\n    return raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))\n  }).slice().sort(raceChronologicalCompare)\n}\nfunction specialForecastRaceTag(r){\n  var title=String(r&&r.title||'');\n  if(raceIsGraded(r))return '重賞';\n  if(String(r&&r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r&&r.raceNumber)===12))return '高知ファイナル';\n  return '特別'\n}\n"
 replace_once(old_candidates, new_candidates, "specialForecastRaceCandidates")
 
 old_featured = '''function isFeaturedBetRace(r,p){
@@ -109,14 +95,7 @@ old_render = '''function smartSpecialForecastRaces(){
   return '<section class="smart-fixed-picks smart-special-picks"><div class="smart-fixed-picks-head"><span><b>特別予想</b><small>重賞・高知ファイナル</small></span><span class="smart-fixed-summary-right"><em>'+picks.length+'レース</em></span></div><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">'+body+'</div></div></div></section>'
 }
 '''
-new_render = '''function smartSpecialForecastRaces(){
-  var picks=specialForecastRaceCandidates(),body=picks.length?picks.map(function(r){
-    var tag=specialForecastRaceTag(r);
-    return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+tag+'</em></button>'
-  }).join(''):'<div class="fixed-pick-empty"><b>該当なし</b><small>本日のメイン・重賞・高知ファイナルなし</small></div>';
-  return '<section class="smart-fixed-picks smart-special-picks"><div class="smart-fixed-picks-head"><span><b>特別予想</b><small>メイン・重賞・高知ファイナル</small></span><span class="smart-fixed-summary-right"><em>'+picks.length+'レース</em></span></div><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">'+body+'</div></div></div></section>'
-}
-'''
+new_render = 'function smartSpecialForecastRaces(){\n  if(typeof state.specialForecastOpen!==\'boolean\'){\n    try{state.specialForecastOpen=localStorage.getItem(\'arvexq-special-forecast-open\')!==\'0\'}catch(e){state.specialForecastOpen=true}\n  }\n  var picks=specialForecastRaceCandidates(),body=picks.length?picks.map(function(r){\n    var tag=specialForecastRaceTag(r);\n    return \'<button type="button" class="fixed-pick-row" data-race="\'+esc(r.id)+\'"><span><b>\'+esc(r.track)+\' \'+esc(r.raceNumber)+\'R</b><small>\'+esc(r.title||\'\')+\'</small></span><time>\'+esc(r.startTime||\'--:--\')+\'</time><em>\'+tag+\'</em></button>\'\n  }).join(\'\'):\'<div class="fixed-pick-empty"><b>該当なし</b><small>本日の重賞・高知ファイナルなし</small></div>\';\n  return \'<details class="smart-fixed-picks smart-special-picks" data-special-fold="1"\'+(state.specialForecastOpen?\' open\':\'\')+\'><summary class="smart-fixed-picks-head"><span><b>特別予想</b><small>重賞・高知ファイナル</small></span><span class="smart-fixed-summary-right"><em>\'+picks.length+\'レース</em><i class="special-fold-icon" aria-hidden="true">›</i></span></summary><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">\'+body+\'</div></div></div></details>\'\n}\n'
 replace_once(old_render, new_render, "smartSpecialForecastRaces")
 
 old_save = '''function saveStoredAiBet(r,plan){try{if(!r||!r.id||!plan||isFinal(r))return;var st=mins(r.startTime),started=(r.date===today()&&st<9999&&nowMins()>=st);if(started||loadStoredAiBet(r.id,false))return;plan.fixedAt=new Date().toISOString();localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))}catch(e){}}
