@@ -1,0 +1,71 @@
+name: ARVEXQ JRA History Quality
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_fix_jra_history_quality.py'
+      - '.github/workflows/arvexq-jra-history-quality.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply JRA history quality patch
+        run: python scripts/arvexq_fix_jra_history_quality.py
+      - name: Syntax check
+        run: python -m py_compile app.py scripts/arvexq_fix_jra_history_quality.py
+      - name: JRA merge regression
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          src=Path('app.py').read_text(encoding='utf-8')
+          tree=ast.parse(src)
+          wanted={'_jra_run_key','_jra_run_value_present','_jra_merge_run_fields','_jra_run_core_complete','_jra_history_complete','_jra_merge_runs'}
+          nodes=[n for n in tree.body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) and n.name in wanted]
+          assert {n.name for n in nodes}==wanted,{n.name for n in nodes}
+          ns={}
+          exec(compile(ast.Module(body=nodes,type_ignores=[]),'jra-merge-test','exec'),ns,ns)
+          poor={'date':'2026-09-01','track':'中山','title':'2歳未勝利','distance':1600,'finish':0,'fieldSize':0,'timeSeconds':95.1,'source':'JRA card'}
+          rich={'date':'2026-09-01','track':'中山','title':'2歳 未勝利','distance':1600,'finish':2,'fieldSize':16,'cornerPositions':[4,4,3,2],'racePrize1':5600000,'source':'JRA profile'}
+          rows=ns['_jra_merge_runs']([poor],[rich],5)
+          assert len(rows)==1,rows
+          r=rows[0]
+          assert r['finish']==2 and r['fieldSize']==16 and r['racePrize1']==5600000,r
+          assert r['timeSeconds']==95.1,r
+          assert r['cornerPositions']==[4,4,3,2],r
+          assert ns['_jra_history_complete'](rows,False) is False
+          five=[]
+          for i in range(5):
+              z=dict(r);z['date']=f'2026-08-{20-i:02d}';five.append(z)
+          assert ns['_jra_history_complete'](five,False) is True
+          incomplete=[dict(z) for z in five];incomplete[2]['fieldSize']=0
+          assert ns['_jra_history_complete'](incomplete,False) is False
+          text=src
+          assert 'fm=re.search(r"(?<!\\d)(\\d{1,2})\\s*着(?!\\d)",txt)' in text
+          assert '"racePrize1":prize1,"startTime":start' in text
+          assert '"fieldSize","racePrize1","startTime"' in text
+          print('jra-history-quality-ok',r)
+          PY
+      - name: Commit generated app patch
+        run: |
+          if [ -z "$(git status --porcelain -- app.py)" ]; then
+            echo 'app.py already current'
+            exit 0
+          fi
+          git config user.name 'arvexq-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add app.py
+          git commit -m 'fix: enrich JRA history evidence'
+          git push
