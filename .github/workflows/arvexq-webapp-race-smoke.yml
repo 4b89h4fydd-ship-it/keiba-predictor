@@ -1,4 +1,4 @@
-# v328 iPhone-class race-open verification in local build and production
+# v328 iPhone-class race-open verification in local build and actual Cloudflare production
 name: ARVEXQ Webapp Race Smoke
 
 on:
@@ -7,6 +7,7 @@ on:
     paths:
       - 'arvexq/ui/static/**'
       - 'build_static.py'
+      - 'wrangler.toml'
       - 'app.py'
       - 'scripts/arvexq_webapp_race_smoke.js'
       - '.github/workflows/arvexq-webapp-race-smoke.yml'
@@ -42,6 +43,7 @@ jobs:
           test -s "dist/sw-$BUILD-reset.js"
           grep -q "/app-$BUILD.js" dist/index.html
           grep -q "/styles-arvexq-$BUILD.css" dist/index.html
+          grep -q 'directory = "./dist"' wrangler.toml
           python - <<'PY'
           from pathlib import Path
           s=Path('arvexq/ui/static/app.js').read_text()
@@ -65,8 +67,8 @@ jobs:
           headers={
               'User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1',
               'Accept':'application/json,text/plain,*/*',
-              'Origin':'https://kraizweb1.pages.dev',
-              'Referer':'https://kraizweb1.pages.dev/'
+              'Origin':'https://kraizweb1.4b89h4fydd.workers.dev',
+              'Referer':'https://kraizweb1.4b89h4fydd.workers.dev/'
           }
           def read_json(url):
               req=urllib.request.Request(url,headers=headers)
@@ -114,30 +116,32 @@ jobs:
           ARVEXQ_SMOKE_TIMEOUT: '25000'
           ARVEXQ_BROWSER: webkit
         run: node scripts/arvexq_webapp_race_smoke.js
-      - name: Wait for production v328
+      - name: Resolve and verify Cloudflare production v328
         shell: bash
         run: |
-          PROD='https://kraizweb1.pages.dev'
-          ok=0
-          for i in $(seq 1 72); do
-            body="$(curl -fsS -H 'Cache-Control: no-cache' "$PROD/version.json?ci=$GITHUB_SHA-$i" 2>/dev/null || true)"
-            echo "production version attempt $i: $body"
-            if printf '%s' "$body" | grep -q '"build":"v328"'; then ok=1; break; fi
+          CANDIDATES='https://kraizweb1.4b89h4fydd.workers.dev https://kraizweb1.pages.dev'
+          PROD=''
+          for i in $(seq 1 48); do
+            for url in $CANDIDATES; do
+              body="$(curl -fsS --max-time 8 -H 'Cache-Control: no-cache' "$url/version.json?ci=$GITHUB_SHA-$i" 2>/dev/null || true)"
+              echo "production probe $i $url: ${body:-<no-response>}"
+              if printf '%s' "$body" | grep -q '"build":"v328"'; then PROD="$url"; break 2; fi
+            done
             sleep 5
           done
-          test "$ok" = "1"
-          curl -fsS -H 'Cache-Control: no-cache' "$PROD/app-v328.js?ci=$GITHUB_SHA" | grep -q 'function courseProfile(r)'
-          curl -fsS -H 'Cache-Control: no-cache' "$PROD/sw-v328-reset.js?ci=$GITHUB_SHA" >/tmp/prod-sw.js
+          test -n "$PROD"
+          echo "PROD_BASE=$PROD" >> "$GITHUB_ENV"
+          echo "resolved production: $PROD"
+          curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "$PROD/app-v328.js?ci=$GITHUB_SHA" >/tmp/prod-app.js
+          grep -q 'function courseProfile(r)' /tmp/prod-app.js
+          grep -A3 'function courseProfile(r)' /tmp/prod-app.js | grep -q 'r=r||{}'
+          curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "$PROD/sw-v328-reset.js?ci=$GITHUB_SHA" >/tmp/prod-sw.js
           test -s /tmp/prod-sw.js
       - name: Production Chromium click smoke
-        env:
-          ARVEXQ_BASE_URL: https://kraizweb1.pages.dev
-          ARVEXQ_SMOKE_TIMEOUT: '30000'
-          ARVEXQ_BROWSER: chromium
-        run: node scripts/arvexq_webapp_race_smoke.js
+        shell: bash
+        run: |
+          ARVEXQ_BASE_URL="$PROD_BASE" ARVEXQ_SMOKE_TIMEOUT=30000 ARVEXQ_BROWSER=chromium node scripts/arvexq_webapp_race_smoke.js
       - name: Production WebKit Safari click smoke
-        env:
-          ARVEXQ_BASE_URL: https://kraizweb1.pages.dev
-          ARVEXQ_SMOKE_TIMEOUT: '30000'
-          ARVEXQ_BROWSER: webkit
-        run: node scripts/arvexq_webapp_race_smoke.js
+        shell: bash
+        run: |
+          ARVEXQ_BASE_URL="$PROD_BASE" ARVEXQ_SMOKE_TIMEOUT=30000 ARVEXQ_BROWSER=webkit node scripts/arvexq_webapp_race_smoke.js
