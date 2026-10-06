@@ -38,7 +38,7 @@ replace_once(
 
 required = (
     "function runnerDetailBody",
-    "recentFiveForHorse",
+    "近走データ（直近5走）",
     "data-horse-open",
     "tab('全頭診断','diagnosis')",
     "tab('展開予想','pace')",
