@@ -1,0 +1,38 @@
+name: ARVEXQ Selectability Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'arvexq/selection/race_selectability.py'
+      - 'scripts/arvexq_selectability_audit.py'
+      - '.github/workflows/arvexq-selectability-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile
+        run: python -m py_compile arvexq/selection/race_selectability.py scripts/arvexq_selectability_audit.py
+      - name: Run 7-day selectability audit
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_DAYS: '7'
+          ARVEXQ_END_DATE: '2026-10-05'
+        run: python scripts/arvexq_selectability_audit.py | tee selectability-audit.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-selectability-audit
+          path: selectability-audit.log
+          if-no-files-found: error
+          retention-days: 14
