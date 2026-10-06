@@ -1,0 +1,88 @@
+name: ARVEXQ Role Mark Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_role_mark_audit.py'
+      - '.github/workflows/arvexq-role-mark-audit.yml'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Number of completed days to audit'
+        required: false
+        default: '7'
+      end_date:
+        description: 'Last completed date (YYYY-MM-DD)'
+        required: false
+        default: '2026-10-05'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Syntax check
+        run: python -m py_compile scripts/arvexq_role_mark_audit.py
+      - name: Run exact locked role audit
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_DAYS: ${{ inputs.days || '7' }}
+          ARVEXQ_END_DATE: ${{ inputs.end_date || '2026-10-05' }}
+        run: python scripts/arvexq_role_mark_audit.py | tee role-audit.log
+      - name: Publish role summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload=None
+          p=Path('role-audit.log')
+          if p.exists():
+              for line in p.read_text(encoding='utf-8').splitlines():
+                  if line.startswith('ARVEXQ_ROLE_AUDIT_JSON='):
+                      payload=json.loads(line.split('=',1)[1])
+          if not payload:
+              raise SystemExit(0)
+          def pct(v): return '—' if v is None else f'{v*100:.1f}%'
+          e=payload['exactLocked']
+          lines=[
+              '## ARVEXQ exact pre-race role audit',
+              f"Period: {payload['start']} → {payload['end']}",
+              f"Exact locked races: {payload['lockedRaces']}",
+              '',
+              '| metric | exact |',
+              '|---|---:|',
+              f"| ◎1着 | {pct(e.get('honmeiWinRate'))} |",
+              f"| ◎3着内 | {pct(e.get('honmeiTop3Rate'))} |",
+              f"| ○2着 | {pct(e.get('maruSecondRate'))} |",
+              f"| ○2着内 | {pct(e.get('maruTop2Rate'))} |",
+              f"| ▲3着内 | {pct(e.get('triangleTop3Rate'))} |",
+              f"| 1〜3着すべてAI印内 | {pct(e.get('podiumAllMarkedRate'))} |",
+              f"| 1〜3着のうち2頭以上AI印内 | {pct(e.get('podiumAtLeast2MarkedRate'))} |",
+              f"| 1着◎＋2着○ | {pct(e.get('firstSecondRoleExactRate'))} |",
+              f"| 平均印頭数 | {e.get('avgMarkSetSize')} |",
+              f"| 平均1〜3着包含数 | {e.get('avgPodiumMarked')} / 3 |",
+          ]
+          for circuit, q in payload.get('byCircuit', {}).items():
+              lines += ['', f"### {circuit}", f"◎1着 {pct(q.get('honmeiWinRate'))} / ○2着 {pct(q.get('maruSecondRate'))} / 3頭印内 {pct(q.get('podiumAllMarkedRate'))}"]
+          out='\n'.join(lines)+'\n'
+          Path('role-audit-summary.md').write_text(out,encoding='utf-8')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f: f.write(out)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-role-mark-audit
+          path: |
+            role-audit.log
+            role-audit-summary.md
+          if-no-files-found: ignore
+          retention-days: 14
