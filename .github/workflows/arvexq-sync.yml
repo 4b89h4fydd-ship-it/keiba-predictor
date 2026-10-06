@@ -7,6 +7,7 @@ name: ARVEXQ Realtime Sync
     paths:
       - app.py
       - scripts/arvexq_live_sync.py
+      - scripts/arvexq_sync_batches.py
       - .github/workflows/arvexq-sync.yml
   schedule:
     - cron: "*/5 22-23 * * *"
@@ -19,7 +20,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
@@ -63,7 +64,7 @@ jobs:
 
       - name: Start lightweight ARVEXQ runtime
         run: |
-          nohup uvicorn app:app --host 127.0.0.1 --port 8000 > /tmp/arvexq-live.log 2>&1 &
+          nohup python -c 'import app,uvicorn; app.last3f=None; uvicorn.run(app.app,host="127.0.0.1",port=8000)' > /tmp/arvexq-live.log 2>&1 &
           echo $! > /tmp/arvexq-live.pid
           for i in $(seq 1 20); do
             if curl -fsS --max-time 2 http://127.0.0.1:8000/health > /dev/null; then
@@ -105,24 +106,42 @@ jobs:
 
       - name: Refresh live deltas only
         run: |
-          if ! python scripts/arvexq_live_sync.py \
-            --bundle bundle.json \
-            --out live-payload.json \
-            --audit live-audit.json \
-            --workers 1 > live-sync.log 2>&1; then
+          if ! python - <<'PY' > live-sync.log 2>&1
+          import app, runpy, sys
+          app.last3f = None
+          sys.argv = [
+              'scripts/arvexq_live_sync.py',
+              '--bundle', 'bundle.json',
+              '--out', 'live-payload.json',
+              '--audit', 'live-audit.json',
+              '--workers', '1',
+          ]
+          runpy.run_path('scripts/arvexq_live_sync.py', run_name='__main__')
+          PY
+          then
             echo "::error::LIVE sync failed"
             tail -n 80 live-sync.log || true
             exit 1
           fi
           jq '{date,targetCount,updatedCount,reanalyzedCount:(.reanalyzed|length),errorCount:(.errors|length),thinSkipped:(.thin_detail_skipped|length),missingD1Base:(.missing_d1_base|length)}' live-audit.json
 
-      - name: Push live deltas to D1
+      - name: Push live deltas to D1 in safe batches
         run: |
-          curl --fail-with-body --max-time 20 -X POST "$CLOUDFLARE_SYNC_URL" \
-            -H "content-type: application/json" \
-            -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @live-payload.json > /dev/null
-          echo "D1 live delta push OK"
+          python scripts/arvexq_sync_batches.py \
+            --input live-payload.json \
+            --out-dir live-sync-batches
+          COUNT=$(find live-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
+          echo "D1 live batches=$COUNT"
+          for file in live-sync-batches/batch-*.json; do
+            BYTES=$(wc -c < "$file" | tr -d ' ')
+            echo "POST $(basename "$file") bytes=$BYTES"
+            curl --fail-with-body --retry 3 --retry-all-errors --retry-delay 1 --retry-max-time 45 \
+              --connect-timeout 8 --max-time 20 -X POST "$CLOUDFLARE_SYNC_URL" \
+              -H "content-type: application/json" \
+              -H "x-sync-token: $SYNC_TOKEN" \
+              --data-binary @"$file" > /dev/null
+          done
+          echo "D1 live batched push OK"
 
       - name: Verify D1 first-paint endpoint
         run: |
@@ -147,9 +166,9 @@ jobs:
         if: failure()
         run: |
           echo "--- live-sync.log ---"
-          tail -n 80 live-sync.log 2>/dev/null || true
+          tail -n 100 live-sync.log 2>/dev/null || true
           echo "--- runtime ---"
-          tail -n 80 /tmp/arvexq-live.log 2>/dev/null || true
+          tail -n 100 /tmp/arvexq-live.log 2>/dev/null || true
           cp /tmp/arvexq-live.log runtime-live.log 2>/dev/null || true
 
       - name: Upload full failure logs
