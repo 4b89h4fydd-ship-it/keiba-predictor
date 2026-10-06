@@ -811,7 +811,7 @@ def _jra_run_key(r:dict)->tuple:
 
 def _jra_run_value_present(key:str,value)->bool:
     if value in (None,"",[],{},"不明"):return False
-    if key in {"finish","fieldSize","distance","timeSeconds","last3FSeconds","carriedWeight","racePrize1","raceNumber"}:
+    if key in {"finish","fieldSize","distance","timeSeconds","last3FSeconds","last3FRank","last3FPercentile","carriedWeight","racePrize1","raceNumber"}:
         try:return float(value)>0
         except (TypeError,ValueError):return False
     return True
@@ -2531,6 +2531,15 @@ def _central_run_from_race(race: dict, horse_name: str) -> dict | None:
     last3f = fin.get("last3FSeconds") or fin.get("last3F") or horse.get("last3FSeconds") or horse.get("last3F")
     try:last3f=float(last3f) if last3f not in (None,"") else None
     except (TypeError,ValueError):last3f=None
+    last3f = fin.get("last3FSeconds") or fin.get("last3F") or horse.get("last3FSeconds") or horse.get("last3F")
+    try:last3f=float(last3f) if last3f not in (None,"") else None
+    except (TypeError,ValueError):last3f=None
+    last3f_rank=fin.get("last3FRank") or horse.get("last3FRank")
+    try:last3f_rank=int(last3f_rank) if last3f_rank not in (None,"") else None
+    except (TypeError,ValueError):last3f_rank=None
+    last3f_pct=fin.get("last3FPercentile") if fin.get("last3FPercentile") is not None else horse.get("last3FPercentile")
+    try:last3f_pct=float(last3f_pct) if last3f_pct is not None else None
+    except (TypeError,ValueError):last3f_pct=None
     return {
         "raceId": race.get("id") or "",
         "date": race.get("date") or "",
@@ -2545,6 +2554,8 @@ def _central_run_from_race(race: dict, horse_name: str) -> dict | None:
         "finish": finish,
         "timeSeconds": float(fin.get("timeSeconds") or horse.get("timeSeconds") or 0),
         "last3FSeconds": last3f,
+        "last3FRank": last3f_rank,
+        "last3FPercentile": last3f_pct,
         "cornerPositions": [int(x) for x in corners if str(x).strip().isdigit()],
         "carriedWeight": float(horse.get("carriedWeight") or fin.get("carriedWeight") or 0),
         "racePrize1": int(race.get("racePrize1") or 0),
@@ -3129,6 +3140,14 @@ def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
         if mb:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
         mp=re.search(r"\d+",val("pop"));pop=int(mp.group()) if mp else None
         finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val("fin"),"horseNumber":no,"frameNumber":frame,"name":name,"sex":sx,"age":age,"carriedWeight":cw,"jockey":_clean(val("jockey")),"trainer":_clean(val("trainer")),"timeSeconds":tm,"last3FSeconds":last3f,"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,"popularity":pop})
+    sectionals=sorted({float(x.get("last3FSeconds")) for x in finishers if x.get("last3FSeconds") not in (None,"") and float(x.get("last3FSeconds"))>0})
+    for x in finishers:
+        try:s=float(x.get("last3FSeconds")) if x.get("last3FSeconds") not in (None,"") else 0.0
+        except (TypeError,ValueError):s=0.0
+        if s>0 and sectionals:
+            rk=sectionals.index(s)+1
+            x["last3FRank"]=rk
+            x["last3FPercentile"]=0.5 if len(sectionals)==1 else 1.0-(rk-1)/(len(sectionals)-1)
     finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
     if not finishers:return None
     payouts=_parse_payouts(soup)
@@ -5539,7 +5558,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                 finishers.append({
                     "finish":fin,"finishLabel":f"{fin}着","horseNumber":no,
                     "frameNumber":fr or int((no+1)//2),"name":name or next((nm for nm,hno in known.items() if hno==no),""),
-                    "timeSeconds":tm,"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,
+                    "timeSeconds":tm,"last3FSeconds":last3f,"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,
                     "popularity":pop,"winOdds":odd,
                 })
             if finishers:break
