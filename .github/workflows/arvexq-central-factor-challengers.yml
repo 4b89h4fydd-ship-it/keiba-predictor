@@ -1,0 +1,35 @@
+name: ARVEXQ Central Factor Challengers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_central_factor_challengers.py'
+      - '.github/workflows/arvexq-central-factor-challengers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run central factor challengers
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_DAYS: '7'
+          ARVEXQ_END_DATE: '2026-10-05'
+        run: python scripts/arvexq_central_factor_challengers.py | tee central-factor-challengers.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-central-factor-challengers
+          path: central-factor-challengers.log
+          if-no-files-found: error
+          retention-days: 14
