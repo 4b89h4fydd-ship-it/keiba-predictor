@@ -6,6 +6,7 @@ from pathlib import Path
 
 APP = Path("arvexq/ui/static/app.js")
 CSS = Path("arvexq/ui/static/styles.css")
+GENERATOR = Path("scripts/arvexq_patch_special_races.py")
 
 text = APP.read_text(encoding="utf-8")
 
@@ -57,7 +58,6 @@ if fold_handler not in text:
         raise SystemExit("data-race bind anchor not found")
     text = text.replace(anchor, fold_handler + anchor, 1)
 
-# Guard against the old special-forecast copy/scope being regenerated later.
 for forbidden in (
     "<small>メイン・重賞・高知ファイナル</small>",
     "本日のメイン・重賞・高知ファイナルなし",
@@ -81,5 +81,32 @@ block = '''
 if marker not in css:
     css = css.rstrip() + "\n" + block
 CSS.write_text(css, encoding="utf-8")
+
+# Align the upstream generator with this final UI so Auto Refactor cannot restore
+# generic main races or a non-collapsible special forecast block.
+generator = GENERATOR.read_text(encoding="utf-8")
+
+def replace_assignment(source: str, name: str, value: str, anchor: str) -> str:
+    anchor_pos = source.find(anchor)
+    if anchor_pos < 0:
+        raise SystemExit(f"generator anchor missing: {anchor}")
+    start = source.rfind(name + " = ", 0, anchor_pos)
+    if start < 0:
+        raise SystemExit(f"generator assignment missing: {name}")
+    return source[:start] + name + " = " + repr(value) + "\n" + source[anchor_pos:]
+
+generator = replace_assignment(
+    generator,
+    "new_candidates",
+    candidate_block,
+    'replace_once(old_candidates, new_candidates, "specialForecastRaceCandidates")',
+)
+generator = replace_assignment(
+    generator,
+    "new_render",
+    render_block,
+    'replace_once(old_render, new_render, "smartSpecialForecastRaces")',
+)
+GENERATOR.write_text(generator, encoding="utf-8")
 
 print("special-forecast-ui-ok")
