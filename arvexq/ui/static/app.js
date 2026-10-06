@@ -1,4 +1,4 @@
-window.ARVEXQ_BUILD="v326";
+window.ARVEXQ_BUILD="v325";
 
 (function(){
 "use strict";
@@ -1777,7 +1777,7 @@ function betTransferText(r,p){
   if(!plan)return '';
   var lines=['ARVEXQ 買い目',String(r.track||'')+' '+String(r.raceNumber||'')+'R '+String(r.title||''),'発走 '+String(r.startTime||'--:--')];
   (plan.items||[]).forEach(function(z){lines.push(String(z.level||'')+'｜'+String(z.kind||'')+'｜'+String(z.combo||'')+'｜'+String(z.points||0)+'点'+(z.confidence?'｜'+String(z.confidence):''))});
-  if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り'&&!mandatoryTrifectaRace(r))lines.push('3連単｜検討済み｜順序信頼不足で見送り｜'+String(plan.orderScore||0)+'/100');
+  if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')lines.push('3連単｜検討済み｜順序信頼不足で見送り｜'+String(plan.orderScore||0)+'/100');
   lines.push('※投票内容・金額は公式投票サイトで確認して確定してください。');
   return lines.join('\n')
 }
@@ -2019,24 +2019,15 @@ function mandatoryTrifectaRace(r){
 }
 function forceMandatoryTrifecta(plan,r,p){
   if(!plan||!mandatoryTrifectaRace(r))return plan;
-  var rows=(p&&p.rows||[]).slice().filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)});
-  if(rows.length<3)return plan;
-  function no(x){return x&&x.horse?n(x.horse.horseNumber):0}
-  function win(x){return n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.p1Probability,0)))}
-  var axis=rows.filter(function(x){return String(x.predMark||'')==='◎'})[0]||rows.slice().sort(function(a,b){return win(b)-win(a)})[0]||null;
-  var axisNo=no(axis);if(!axisNo)return plan;
-  var markOrder={'○':0,'▲':1,'☆+':2,'☆':3,'△':4,'注+':5,'注':6,'':7};
-  var mates=rows.filter(function(x){return no(x)!==axisNo}).sort(function(a,b){
-    var ma=String(a.predMark||''),mb=String(b.predMark||''),ra=markOrder.hasOwnProperty(ma)?markOrder[ma]:8,rb=markOrder.hasOwnProperty(mb)?markOrder[mb]:8;
-    return ra-rb||win(b)-win(a)||no(a)-no(b)
-  }).slice(0,3),combos=[];
-  for(var i=0;i<mates.length;i++)for(var j=0;j<mates.length;j++)if(i!==j)combos.push([axisNo,no(mates[i]),no(mates[j])]);
-  if(!combos.length)return plan;
-  plan.items=(plan.items||[]).filter(function(z){return !(z&&z.kind==='3連単')});
-  plan.items.push({level:'3連単チャレンジ',kind:'3連単',combos:combos,points:combos.length,combo:betComboText('3連単',combos),confidence:'チャレンジ',mandatory:true});
-  plan.trifectaReviewed=true;plan.trifectaDecision='採用';plan.trifectaReason='重賞・高知ファイルは3連単チャレンジ必須。◎1着固定で相手上位3頭を2・3着入替。';
-  if(plan.decision==='見送り')plan.decision='通常買い';
-  plan.mandatoryTrifecta=true;
+  plan.trifectaReviewed=true;
+  plan.mandatoryTrifectaReviewed=true;
+  if(plan.trifectaDecision==='採用'){
+    plan.trifectaReason=plan.trifectaReason||'重賞・高知ファイルの3連単を検討し、順序信頼ゲートを通過。';
+    return plan
+  }
+  plan.trifectaDecision='見送り';
+  plan.trifectaReason='重賞・高知ファイルは3連単を必ず検討。今回は順序信頼不足のため見送り。';
+  plan.mandatoryTrifecta=false;
   return plan
 }
 function explicitSelectedRace(r){return !!(r&&(r.arvexqSelected||r.selectedRace||r.isSelected||r.recommendedRace||r.aiSelected))}
