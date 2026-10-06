@@ -1,0 +1,60 @@
+name: ARVEXQ Contextual Challenger
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'arvexq/prediction/contextual_evidence.py'
+      - 'scripts/arvexq_contextual_challenger.py'
+      - '.github/workflows/arvexq-contextual-challenger.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Syntax check
+        run: python -m py_compile arvexq/prediction/contextual_evidence.py scripts/arvexq_contextual_challenger.py
+      - name: Context fallback regression
+        env:
+          PYTHONPATH: '.'
+        run: |
+          python - <<'PY'
+          from arvexq.prediction.contextual_evidence import build_contextual_evidence, attach_contextual_evidence
+          horse={'horseNumber':1,'recentRaces':[
+            {'finish':2,'fieldSize':10,'cornerPositions':[7,6,4],'distance':1600},
+            {'finish':3,'fieldSize':12,'cornerPositions':[8,7,5],'distance':1600},
+            {'finish':1,'fieldSize':9,'cornerPositions':[4,3,2],'distance':1600},
+          ],'integratedEvaluation':{}}
+          race={'distance':1600,'horses':[horse]}
+          ev=build_contextual_evidence(horse,race)
+          assert ev['cornerSamples']==3,ev
+          assert ev['advanceSamples']==3,ev
+          assert ev['trueRunFallback'] is not None,ev
+          attach_contextual_evidence(race)
+          audit=race['horses'][0]['integratedEvaluation']['v218Audit']
+          assert audit['contextFallbackOnly'] is True,audit
+          assert audit['trueRun'] is not None and audit['positionScenario'] is not None,audit
+          print('contextual-evidence-ok',ev)
+          PY
+      - name: Run 7-day contextual challenger
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_DAYS: '7'
+          ARVEXQ_END_DATE: '2026-10-05'
+        run: python scripts/arvexq_contextual_challenger.py | tee contextual-challenger.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-contextual-challenger
+          path: contextual-challenger.log
+          if-no-files-found: error
+          retention-days: 14
