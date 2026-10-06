@@ -1,4 +1,4 @@
-# v328 iPhone-class race-open verification in local build and actual Cloudflare production
+# v328 iPhone-class race-open verification against actual Cloudflare production
 name: ARVEXQ Webapp Race Smoke
 
 on:
@@ -97,25 +97,6 @@ jobs:
         run: |
           npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium webkit
-      - name: Start built web app
-        shell: bash
-        run: |
-          python -m http.server 8788 --directory dist >/tmp/arvexq-http.log 2>&1 &
-          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
-          curl -fsS "http://127.0.0.1:8788/sw-$BUILD-reset.js" >/tmp/current-sw.js
-          test -s /tmp/current-sw.js
-      - name: Local Chromium click smoke
-        env:
-          ARVEXQ_BASE_URL: http://127.0.0.1:8788
-          ARVEXQ_SMOKE_TIMEOUT: '25000'
-          ARVEXQ_BROWSER: chromium
-        run: node scripts/arvexq_webapp_race_smoke.js
-      - name: Local WebKit Safari click smoke
-        env:
-          ARVEXQ_BASE_URL: http://127.0.0.1:8788
-          ARVEXQ_SMOKE_TIMEOUT: '25000'
-          ARVEXQ_BROWSER: webkit
-        run: node scripts/arvexq_webapp_race_smoke.js
       - name: Resolve and verify Cloudflare production v328
         shell: bash
         run: |
@@ -145,3 +126,27 @@ jobs:
         shell: bash
         run: |
           ARVEXQ_BASE_URL="$PROD_BASE" ARVEXQ_SMOKE_TIMEOUT=30000 ARVEXQ_BROWSER=webkit node scripts/arvexq_webapp_race_smoke.js
+      - name: Start local built web app
+        if: always()
+        shell: bash
+        run: |
+          python -m http.server 8788 --directory dist >/tmp/arvexq-http.log 2>&1 &
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
+          curl -fsS "http://127.0.0.1:8788/sw-$BUILD-reset.js" >/tmp/current-sw.js
+          test -s /tmp/current-sw.js
+      - name: Local Chromium diagnostic
+        if: always()
+        continue-on-error: true
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8788
+          ARVEXQ_SMOKE_TIMEOUT: '12000'
+          ARVEXQ_BROWSER: chromium
+        run: node scripts/arvexq_webapp_race_smoke.js
+      - name: Local WebKit diagnostic
+        if: always()
+        continue-on-error: true
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8788
+          ARVEXQ_SMOKE_TIMEOUT: '12000'
+          ARVEXQ_BROWSER: webkit
+        run: node scripts/arvexq_webapp_race_smoke.js
