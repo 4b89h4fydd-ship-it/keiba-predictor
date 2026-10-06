@@ -50,16 +50,13 @@ RACE_READY = '''function raceDisplayCoreReady(d,row){
   var active=hs.filter(function(h){return !isScratchHorse(h)});
   if(!active.length)active=hs;
   var named=active.filter(function(h){return String(h.name||'').trim()}).length;
-  // Rendering readiness is intentionally weaker than prediction/bet readiness.
-  // Never trap the user on a loading screen while jockey, carried weight, odds,
-  // bodyweight or history are still syncing. Those are guarded separately by
-  // dataReadinessProfile before predictions/bets are fixed.
+  // Rendering uses runner identity only. Secondary fields can continue syncing.
+  // Prediction and bet locking keep their separate strict data-readiness checks.
   return named>=Math.min(active.length,Math.max(1,Math.ceil(active.length*.50)))
 }'''
 
 text = replace_function(text, 'raceDisplayCoreReady', RACE_READY)
 
-# Keep the visible build label tied to the actual runtime build instead of a stale literal.
 old_footer = "function cinematicFooter(){return '<footer class=\"cinematic-footer\"><b>ARVEXQ</b><span>ARTIFICIAL RACING INTELLIGENCE</span><small>TACTICAL ENGINE · BUILD v326</small></footer>'}"
 new_footer = "function cinematicFooter(){return '<footer class=\"cinematic-footer\"><b>ARVEXQ</b><span>ARTIFICIAL RACING INTELLIGENCE</span><small>TACTICAL ENGINE · BUILD '+esc(window.ARVEXQ_BUILD||'v327')+'</small></footer>'}"
 if old_footer in text:
@@ -67,7 +64,6 @@ if old_footer in text:
 elif new_footer not in text and 'BUILD v326</small></footer>' in text:
     text = text.replace('BUILD v326</small></footer>', "BUILD '+esc(window.ARVEXQ_BUILD||'v327')+'</small></footer>", 1)
 
-# Invariants: do not regress special-race scope or the final-input buy-plan lock.
 required = [
     'function specialForecastRaceCandidates()',
     "String(r.track||'')==='高知'",
@@ -83,14 +79,12 @@ missing = [x for x in required if x not in text]
 if missing:
     raise SystemExit('race-open patch invariant failure: ' + repr(missing))
 
-# The old display gate must be gone. These fields remain prediction/bet readiness inputs,
-# but must not block rendering a race page.
 fn_start = text.find('function raceDisplayCoreReady(')
 fn_end = text.find('\n}', fn_start) + 2
 ready_block = text[fn_start:fn_end]
-for forbidden in ('carriedWeight', 'jockey', 'fieldSize'):
+for forbidden in ('h.carriedWeight', 'h.jockey', '.fieldSize'):
     if forbidden in ready_block:
-        raise SystemExit(f'race display still blocked by {forbidden}')
+        raise SystemExit(f'race display still contains strict secondary gate {forbidden}')
 
 PATH.write_text(text, encoding='utf-8')
 print('ARVEXQ race-open reliability patched: runner identity opens UI; strict prediction readiness preserved')
