@@ -31,3 +31,46 @@ jobs:
         run: npm run check
       - name: Wrangler dry run
         run: npx wrangler deploy --dry-run --outdir .wrangler-dry-run
+      - name: Verify Safari CORS policy in source
+        shell: bash
+        run: |
+          grep -q 'access-control-allow-origin' worker-entry.js
+          grep -q 'access-control-allow-methods' worker-entry.js
+          grep -q 'access-control-allow-headers' worker-entry.js
+          grep -q 'cache-control, pragma' worker-entry.js
+          grep -q 'request.method === "OPTIONS"' worker-entry.js
+      - name: Verify production Safari preflight
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          URL='https://kraiz-api.4b89h4fydd.workers.dev/api/day?date=2026-10-06&details=1'
+          ok=0
+          for i in $(seq 1 30); do
+            curl -sS -D /tmp/preflight.h -o /dev/null -X OPTIONS "$URL&probe=$i" \
+              -H 'Origin: https://kraizweb1.4b89h4fydd.workers.dev' \
+              -H 'Access-Control-Request-Method: GET' \
+              -H 'Access-Control-Request-Headers: cache-control,pragma' || true
+            tr '[:upper:]' '[:lower:]' </tmp/preflight.h >/tmp/preflight.lower
+            cat /tmp/preflight.h
+            if grep -q '^access-control-allow-origin: \*' /tmp/preflight.lower \
+              && grep -q '^access-control-allow-methods: .*get' /tmp/preflight.lower \
+              && grep -q '^access-control-allow-headers: .*cache-control' /tmp/preflight.lower \
+              && grep -q '^access-control-allow-headers: .*pragma' /tmp/preflight.lower; then
+              ok=1
+              break
+            fi
+            sleep 3
+          done
+          test "$ok" = "1"
+          curl -sS -D /tmp/get.h -o /tmp/get.json "$URL" \
+            -H 'Origin: https://kraizweb1.4b89h4fydd.workers.dev' \
+            -H 'Cache-Control: no-cache'
+          tr '[:upper:]' '[:lower:]' </tmp/get.h >/tmp/get.lower
+          grep -q '^access-control-allow-origin: \*' /tmp/get.lower
+          python - <<'PY'
+          import json
+          body=json.load(open('/tmp/get.json'))
+          assert body.get('ok') is True
+          assert isinstance(body.get('races'),list)
+          print('SAFARI_CORS_PRODUCTION_OK races',len(body['races']))
+          PY
