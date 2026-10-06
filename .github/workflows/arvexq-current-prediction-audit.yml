@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/arvexq_current_prediction_audit.py'
+      - 'scripts/arvexq_central_data_quality_audit.py'
       - '.github/workflows/arvexq-current-prediction-audit.yml'
   workflow_dispatch:
     inputs:
@@ -13,9 +14,9 @@ on:
         required: false
         default: '7'
       end_date:
-        description: 'Last completed date (YYYY-MM-DD); blank = yesterday UTC runner date'
+        description: 'Last completed date (YYYY-MM-DD)'
         required: false
-        default: ''
+        default: '2026-10-05'
 
 permissions:
   contents: read
@@ -34,25 +35,29 @@ jobs:
           ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
           ARVEXQ_DAYS: ${{ inputs.days || '7' }}
           ARVEXQ_END_DATE: ${{ inputs.end_date || '2026-10-05' }}
-        run: |
-          python scripts/arvexq_current_prediction_audit.py | tee unified-audit.log
+        run: python scripts/arvexq_current_prediction_audit.py | tee unified-audit.log
+      - name: Run central/local data quality audit
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_DAYS: ${{ inputs.days || '7' }}
+          ARVEXQ_END_DATE: ${{ inputs.end_date || '2026-10-05' }}
+        run: python scripts/arvexq_central_data_quality_audit.py | tee data-quality-audit.log
       - name: Publish concise summary
         if: always()
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          p=Path('unified-audit.log')
-          if not p.exists():
-              raise SystemExit(0)
           payload=None
-          for line in p.read_text(encoding='utf-8').splitlines():
-              if line.startswith('ARVEXQ_UNIFIED_AUDIT_JSON='):
-                  payload=json.loads(line.split('=',1)[1])
+          p=Path('unified-audit.log')
+          if p.exists():
+              for line in p.read_text(encoding='utf-8').splitlines():
+                  if line.startswith('ARVEXQ_UNIFIED_AUDIT_JSON='):
+                      payload=json.loads(line.split('=',1)[1])
           if not payload:
               raise SystemExit(0)
-          def pct(v):
-              return '—' if v is None else f'{v*100:.1f}%'
+          def pct(v): return '—' if v is None else f'{v*100:.1f}%'
           exact=payload['exactLocked']; replay=payload['currentFourPillarReplay']; change=payload['honmeiChanged']
           lines=[
               '## ARVEXQ 7-day prediction audit',
@@ -72,8 +77,7 @@ jobs:
               '> exact locked = 発走前固定値。current replay = 結果・払戻・当日履歴を除去した遡及再計算で、完全な当時再現ではありません。',
           ]
           Path('audit-summary.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
-          with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
-              f.write('\n'.join(lines)+'\n')
+          with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f: f.write('\n'.join(lines)+'\n')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
@@ -81,6 +85,7 @@ jobs:
           name: arvexq-current-prediction-audit
           path: |
             unified-audit.log
+            data-quality-audit.log
             audit-summary.md
           if-no-files-found: ignore
           retention-days: 14
