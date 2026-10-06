@@ -1,0 +1,55 @@
+name: ARVEXQ v326 Build Bump
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_bump_build_v326.py'
+      - '.github/workflows/arvexq-v326-bump.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: arvexq-v326-build-bump
+  cancel-in-progress: true
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply coherent v326 generation
+        run: python scripts/arvexq_bump_build_v326.py
+      - name: Verify sources and static build
+        run: |
+          python -m py_compile app.py build_static.py scripts/arvexq_bump_build_v326.py
+          node --check arvexq/ui/static/app.js
+          python build_static.py
+          test "$(tr -d '\r\n' < dist/build-version.txt)" = "v326"
+          test -f dist/app-v326.js
+          test -f dist/styles-arvexq-v326.css
+          test -f dist/sw-v326-reset.js
+          test -f dist/sw-v325-reset.js
+          grep -q '/app-v326.js' dist/index.html
+          grep -q '/styles-arvexq-v326.css' dist/index.html
+          node --check dist/app-v326.js
+      - name: Commit v326 generation
+        run: |
+          TARGETS="app.py build_static.py arvexq/ui/static/index.html arvexq/ui/static/app.js"
+          if [ -z "$(git status --porcelain -- $TARGETS)" ]; then
+            echo 'v326 already applied'
+            exit 0
+          fi
+          git config user.name 'arvexq-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add $TARGETS
+          git commit -m 'fix: bump immutable web assets to v326'
+          git push
