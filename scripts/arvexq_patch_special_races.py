@@ -13,12 +13,10 @@ def replace_once(old: str, new: str, label: str) -> None:
         raise SystemExit(f"{label} block not found")
 
 
-# Use structured grade fields first. Title fallbacks are intentionally conservative:
-# a generic occurrence of "ダービー" or "優駿" in the middle of a promotional title
-# must not automatically turn a race into a graded race.
+# Use structured grade fields first. Title fallbacks are intentionally conservative.
 old_graded = '''function raceIsGraded(r){var t=String(r&&r.title||''),c=String(r&&r.raceClass||r&&r.className||'');return /(?:Jpn\\s*)?G\\s*[ⅠⅡⅢ123]|(?:Jpn\\s*)[ⅠⅡⅢ123]|\\b(?:S|H|M)\\s*[ⅠⅡⅢ123]\\b|SP\\s*[ⅠⅡⅢ123]|重賞|グランプリ|ダービー|優駿|賞\\s*\\(重賞\\)/i.test(t+' '+c)}
 '''
-new_graded = '''function raceIsGraded(r){
+graded_v1 = '''function raceIsGraded(r){
   if(!r)return false;
   if(r.isGraded===true||r.graded===true||r.isGradeRace===true||r.gradeRace===true)return true;
   var t=String(r.title||''),meta=[r.grade,r.gradeLabel,r.raceGrade,r.gradeCode,r.raceClass,r.className,r.category].map(function(v){return String(v||'')}).join(' '),s=t+' '+meta;
@@ -26,7 +24,20 @@ new_graded = '''function raceIsGraded(r){
   return /(?:ダービー|優駿|グランプリ)(?:$|[（(])/i.test(t)
 }
 '''
-replace_once(old_graded, new_graded, "raceIsGraded")
+new_graded = '''function raceIsGraded(r){
+  if(!r)return false;
+  if(r.isGraded===true||r.graded===true||r.isGradeRace===true||r.gradeRace===true)return true;
+  var t=String(r.title||''),meta=[r.grade,r.gradeLabel,r.raceGrade,r.gradeCode,r.raceClass,r.className,r.category].map(function(v){return String(v||'')}).join(' '),s=t+' '+meta,grade='(?:[ⅠⅡⅢ]|I{1,3}|[123])';
+  if(new RegExp('(?:Jpn\\\\s*)?G\\\\s*'+grade+'|(?:Jpn\\\\s*)'+grade+'|(?:^|[\\\\s（(\\\\[])(?:S|H|M|SP)\\\\s*'+grade+'(?:$|[\\\\s）)\\\\]])|重賞|賞\\\\s*[（(]重賞[）)]','i').test(s))return true;
+  return /(?:ダービー|優駿|グランプリ)(?:$|[（(])/i.test(t)
+}
+'''
+if old_graded in text:
+    text = text.replace(old_graded, new_graded, 1)
+elif graded_v1 in text:
+    text = text.replace(graded_v1, new_graded, 1)
+elif new_graded not in text:
+    raise SystemExit("raceIsGraded block not found")
 
 old_main = '''function mainRaceForTrack(rows){
   rows=(rows||[]).slice().sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)});if(!rows.length)return null;
@@ -108,9 +119,6 @@ new_render = '''function smartSpecialForecastRaces(){
 '''
 replace_once(old_render, new_render, "smartSpecialForecastRaces")
 
-# A plan may be displayed before the final lock, but it must not be frozen while
-# core prediction data is incomplete. Once a current-generation plan is stored,
-# every pre/post-start view must reuse exactly that plan.
 old_save = '''function saveStoredAiBet(r,plan){try{if(!r||!r.id||!plan||isFinal(r))return;var st=mins(r.startTime),started=(r.date===today()&&st<9999&&nowMins()>=st);if(started||loadStoredAiBet(r.id,false))return;plan.fixedAt=new Date().toISOString();localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))}catch(e){}}
 '''
 new_save = '''function saveStoredAiBet(r,plan){
@@ -130,19 +138,53 @@ new_save = '''function saveStoredAiBet(r,plan){
 '''
 replace_once(old_save, new_save, "saveStoredAiBet")
 
+stored_helper = '''function immutableStoredAiBetView(r,plan){
+  if(!plan)return plan;
+  var status=String(r&&r.raceStatus||'')+' '+String(r&&r.result&&r.result.status||'');
+  if(/中止|取止|取り止め|不成立/.test(status)){
+    var cancelled=Object.assign({},plan);cancelled.items=[];cancelled.decision='見送り';cancelled.betQuality=0;cancelled.invalidatedAfterLock=true;cancelled.originalFixedAt=plan.fixedAt||'';cancelled.reason='レース中止・取止めのため、固定済み買い目は変更せず投票見送り。';cancelled.trifectaDecision='見送り';cancelled.trifectaReason='レース中止・取止め。';return cancelled
+  }
+  var scratched={};(r&&r.horses||[]).forEach(function(h){if(isScratchHorse(h))scratched[n(h.horseNumber)]=1});
+  var affected=(plan.items||[]).some(function(z){return (z.combos||[]).some(function(c){return (c||[]).some(function(no){return !!scratched[n(no)]})})});
+  if(!affected)return plan;
+  var view=Object.assign({},plan);view.items=[];view.decision='見送り';view.betQuality=0;view.invalidatedAfterLock=true;view.originalFixedAt=plan.fixedAt||'';view.reason='発走前固定後に取消・除外馬が発生。元の買い目は変更せず、投票は見送り。';view.trifectaDecision='見送り';view.trifectaReason='固定後の取消・除外馬発生。';return view
+}
+'''
+if stored_helper not in text:
+    anchor='function buildAiBetPlan(r,p){'
+    idx=text.find(anchor)
+    if idx < 0:
+        raise SystemExit("buildAiBetPlan anchor not found")
+    text=text[:idx]+stored_helper+text[idx:]
+
 old_plan_open = '''function buildAiBetPlan(r,p){
   var started=r&&r.date===today()&&mins(r.startTime)<9999&&nowMins()>=mins(r.startTime),terminal=isFinal(r)||started,
       stored=loadStoredAiBet(r&&r.id,terminal);
   if(terminal&&stored)return stored;
   if(terminal&&!stored)return null;
 '''
-new_plan_open = '''function buildAiBetPlan(r,p){
+plan_open_v1 = '''function buildAiBetPlan(r,p){
   var started=r&&r.date===today()&&mins(r.startTime)<9999&&nowMins()>=mins(r.startTime),terminal=isFinal(r)||started,
       stored=loadStoredAiBet(r&&r.id,terminal);
   if(stored)return stored;
   if(terminal)return null;
 '''
-replace_once(old_plan_open, new_plan_open, "buildAiBetPlan stored-plan lock")
+new_plan_open = '''function buildAiBetPlan(r,p){
+  var started=r&&r.date===today()&&mins(r.startTime)<9999&&nowMins()>=mins(r.startTime),terminal=isFinal(r)||started,
+      stored=loadStoredAiBet(r&&r.id,terminal);
+  if(stored)return immutableStoredAiBetView(r,stored);
+  if(terminal)return null;
+'''
+if old_plan_open in text:
+    text=text.replace(old_plan_open,new_plan_open,1)
+elif plan_open_v1 in text:
+    text=text.replace(plan_open_v1,new_plan_open,1)
+elif new_plan_open not in text:
+    raise SystemExit("buildAiBetPlan stored-plan lock block not found")
+
+old_selected_preview = "var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id),st=mins(r.startTime),started=r.date===today()&&st<9999&&nowMins()>=st,plan=loadStoredAiBet(r.id,isFinal(r)||started),p=null;if(d&&!plan&&!isFinal(d)&&!started){try{p=predict(d);plan=buildAiBetPlan(d,p)}catch(e){}}"
+new_selected_preview = "var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id),st=mins(r.startTime),started=r.date===today()&&st<9999&&nowMins()>=st,plan=loadStoredAiBet(r.id,isFinal(r)||started),p=null;if(plan)plan=immutableStoredAiBetView(d||r,plan);if(d&&!plan&&!isFinal(d)&&!started){try{p=predict(d);plan=buildAiBetPlan(d,p)}catch(e){}}"
+replace_once(old_selected_preview,new_selected_preview,"selectedRaceBetPreview locked-plan safety")
 
 old_lock_label = "<span>発走前固定</span>"
 new_lock_label = "<span>'+esc(plan.fixedAt?'発走前固定':'暫定・更新あり')+'</span>"
@@ -182,7 +224,7 @@ replace_once(old_after_details, new_after_details, "requestDetails completion")
 
 for required in (
     "function raceIsGraded(r){",
-    "r.isGraded===true",
+    "I{1,3}",
     "function mainRaceForTrack(rows){",
     "return rows[rows.length-1]",
     "function isMainForecastRace(r){",
@@ -194,7 +236,9 @@ for required in (
     "function prebuildSpecialForecastPlans(){",
     "prebuildSpecialForecastPlans();",
     "buildAiBetPlan(detail,p)",
-    "if(stored)return stored;",
+    "function immutableStoredAiBetView(r,plan){",
+    "if(stored)return immutableStoredAiBetView(r,stored);",
+    "発走前固定後に取消・除外馬が発生",
     "remain>45&&!bodyReady",
     "暫定・更新あり",
 ):
@@ -204,9 +248,10 @@ for required in (
 for forbidden in (
     "return rows.length>=2?rows[rows.length-2]:rows[rows.length-1]",
     "if(terminal&&stored)return stored;",
+    "if(stored)return stored;",
 ):
     if forbidden in text:
         raise SystemExit(f"obsolete special/bet-lock behavior remains: {forbidden}")
 
 PATH.write_text(text, encoding="utf-8")
-print("special forecast hardened: structured graded/main classification, main-race betting, safe pre-race lock, immutable stored plan")
+print("special forecast hardened: graded/main scope, pre-race lock, immutable plan, scratch/cancel safety")
