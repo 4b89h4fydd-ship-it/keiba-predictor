@@ -13,6 +13,7 @@ name: ARVEXQ Full Prefetch
       - app.py
       - scripts/arvexq_prefetch.py
       - scripts/arvexq_sync_batches.py
+      - scripts/arvexq_fetch_d1_bundle.py
       - scripts/arvexq_sqlite_health.py
       - arvexq/pipeline/fingerprints.py
       - .github/workflows/arvexq-prefetch.yml
@@ -153,6 +154,9 @@ jobs:
           jq '{races,missingCard:(.missing_card|length),missingAnalysis:(.missing_analysis|length),analysisErrors:(.analysis_errors|length),cardErrors:(.card_errors|length)}' prefetch-report.json
           MISSING_CARD=$(jq '.meta.missing_card_count // 0' prefetch-payload.json)
           MISSING_ANALYSIS=$(jq '.meta.missing_analysis_count // 0' prefetch-payload.json)
+          RACES=$(jq '.meta.race_count // 0' prefetch-payload.json)
+          analysisCount=$((RACES - MISSING_ANALYSIS))
+          echo "analysisCount=$analysisCount races=$RACES"
           if [ "$MISSING_CARD" -gt 0 ] || [ "$MISSING_ANALYSIS" -gt 0 ]; then
             echo "::error::FULL PREFETCH incomplete: missing_card=$MISSING_CARD missing_analysis=$MISSING_ANALYSIS"
             jq '{missing_card,missing_analysis,analysis_errors,card_errors}' prefetch-report.json
@@ -183,50 +187,44 @@ jobs:
           done
           echo "D1 prefetch batched push OK"
 
-      - name: Verify prepared day race-by-race from D1
+      - name: Verify prepared day and analysis from D1
         run: |
           EXPECTED=$(jq '.meta.race_count // 0' prefetch-payload.json)
           if [ "$EXPECTED" -le 0 ]; then
             exit 0
           fi
-          curl --fail-with-body --retry 5 --retry-all-errors --retry-delay 3 --retry-max-time 90 \
-            --connect-timeout 10 --max-time 25 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=0&t=$(date +%s)" \
-            -o verified-day.json
+          python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --date "$TARGET_DATE" \
+            --out verified-day.json \
+            --report verified-d1-report.json \
+            --workers 8 \
+            --allow-missing-details
           ACTUAL=$(jq '.races // [] | length' verified-day.json)
-          echo "D1 PREFETCH summaries expected=$EXPECTED actual=$ACTUAL"
-          if [ "$ACTUAL" -lt "$EXPECTED" ]; then
-            echo "::error::D1 is missing race summaries"
+          DETAILS=$(jq '.details // [] | length' verified-day.json)
+          MISSING=$(jq '.missing_detail_count // 0' verified-d1-report.json)
+          echo "D1 PREFETCH summaries expected=$EXPECTED actual=$ACTUAL details=$DETAILS missing=$MISSING"
+          if [ "$ACTUAL" -lt "$EXPECTED" ] || [ "$DETAILS" -lt "$EXPECTED" ] || [ "$MISSING" -gt 0 ]; then
+            echo "::error::D1 is missing race summaries or prepared details"
             exit 1
           fi
           python - <<'PY'
-          import json, os, urllib.parse, urllib.request
+          import json
           from pathlib import Path
-
-          base=os.environ['CLOUDFLARE_API_BASE'].rstrip('/')
-          payload=json.loads(Path('prefetch-payload.json').read_text(encoding='utf-8'))
-          ids=[str(d.get('id') or '') for d in (payload.get('details') or []) if isinstance(d,dict) and d.get('id')]
-          missing=[]
+          day=json.loads(Path('verified-day.json').read_text(encoding='utf-8'))
+          details=[d for d in (day.get('details') or []) if isinstance(d,dict)]
           thin=[]
-          for i,rid in enumerate(ids,1):
-              url=base+'/api/race/'+urllib.parse.quote(rid,safe='')+'?t='+str(i)
-              try:
-                  with urllib.request.urlopen(url,timeout=25) as r:
-                      d=json.loads(r.read().decode('utf-8'))
-              except Exception as exc:
-                  missing.append(rid)
-                  print('VERIFY_FETCH_ERROR',rid,type(exc).__name__,exc)
-                  continue
-              if str(d.get('id') or '') != rid:
-                  missing.append(rid)
-                  continue
+          for d in details:
+              rid=str(d.get('id') or '')
               horses=d.get('horses') or []
               has_analysis=any(d.get(k) not in (None,'',[],{}) for k in ('preRacePrediction','aiEvaluation','pace','pacePrediction','volatility'))
               if not horses or not has_analysis:
                   thin.append(rid)
-          print('D1_PREFETCH_DETAIL_VERIFY expected=',len(ids),'missing=',len(missing),'thin=',len(thin))
-          if missing or thin:
-              raise SystemExit('D1 detail verification failed missing='+str(len(missing))+' thin='+str(len(thin)))
+          analysisCount=len(details)-len(thin)
+          print('D1_PREFETCH_DETAIL_VERIFY details=',len(details),'analysisCount=',analysisCount,'thin=',len(thin))
+          if thin:
+              print('D1_THIN',thin[:20])
+              raise SystemExit('D1 is missing prepared analysis for '+str(len(thin))+' race(s)')
           PY
 
       - name: Stop ARVEXQ
@@ -264,6 +262,7 @@ jobs:
           path: |
             prefetch-run.log
             prefetch-report.json
+            verified-d1-report.json
             runtime-prefetch.log
           if-no-files-found: ignore
           retention-days: 3
