@@ -3,7 +3,10 @@ from __future__ import annotations
 from statistics import median
 from typing import Any
 
-MODEL_VERSION = "arvexq-race-selectability-v1"
+from arvexq.prediction.jra_class_evidence import class_ordinal
+from arvexq.prediction.jra_sectional_evidence import run_sectional_percentile
+
+MODEL_VERSION = "arvexq-race-selectability-v2"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
 
 
@@ -25,6 +28,16 @@ def _i(value: Any, default: int = 0) -> int:
 def _med(values: list[float | None]) -> float | None:
     vals = [float(v) for v in values if v is not None]
     return float(median(vals)) if vals else None
+
+
+def _history_rows(horse: dict[str, Any], cutoff: str) -> list[dict[str, Any]]:
+    rows = horse.get("allPastRuns") or horse.get("recentRaces") or []
+    return [
+        row
+        for row in rows
+        if isinstance(row, dict)
+        and (not row.get("date") or str(row.get("date")) < cutoff)
+    ]
 
 
 def build_race_selectability_features(detail: dict[str, Any]) -> dict[str, Any]:
@@ -55,7 +68,6 @@ def build_race_selectability_features(detail: dict[str, Any]) -> dict[str, Any]:
     leader_mh = leader_row.get("multiHead") if isinstance(leader_row.get("multiHead"), dict) else {}
     strength_rank = _i(leader_mh.get("strengthRank"), 999)
     win_rank = _i(leader_mh.get("winRank"), 999)
-    upside_rank = _i(leader_mh.get("upsideRank"), 999)
     fragility = _f(leader_mh.get("fragilityScore"))
 
     pillar_scores = leader_row.get("pillarScores") if isinstance(leader_row.get("pillarScores"), dict) else {}
@@ -72,7 +84,6 @@ def build_race_selectability_features(detail: dict[str, Any]) -> dict[str, Any]:
     core_win_agree = win_rank == 1
     core_multihead_agree = bool(mh_winner and mh_winner == leader_no)
 
-    # Field-level evidence dispersion: not a confidence score, just an observed fact.
     top3 = ranking[:3]
     top3_family_counts = [
         sum(_i((r.get("evidenceFamilyCounts") or {}).get(p)) for p in PRIMARY_PILLARS)
@@ -81,6 +92,13 @@ def build_race_selectability_features(detail: dict[str, Any]) -> dict[str, Any]:
 
     completeness: list[float] = []
     context_coverage: list[float] = []
+    history_counts: list[float] = []
+    sectional_horses = 0
+    class_horses = 0
+    sectional_samples = 0
+    class_samples = 0
+    cutoff = str(detail.get("date") or "9999-12-31")
+
     for h in horses:
         ev = h.get("integratedEvaluation") if isinstance(h.get("integratedEvaluation"), dict) else {}
         dc = _f(ev.get("dataCompleteness"))
@@ -91,10 +109,23 @@ def build_race_selectability_features(detail: dict[str, Any]) -> dict[str, Any]:
         if cc is not None:
             context_coverage.append(cc)
 
+        rows = _history_rows(h, cutoff)
+        history_counts.append(float(len(rows)))
+        sec_n = sum(run_sectional_percentile(row) is not None for row in rows)
+        cls_n = sum(class_ordinal(row.get("title") or row.get("raceName")) is not None for row in rows)
+        sectional_samples += sec_n
+        class_samples += cls_n
+        sectional_horses += int(sec_n > 0)
+        class_horses += int(cls_n > 0)
+
+    same_day = detail.get("sameDayMarkProfile") if isinstance(detail.get("sameDayMarkProfile"), dict) else {}
+    same_day_evidence = _f(same_day.get("evidence"))
+
     return {
         "modelVersion": MODEL_VERSION,
         "available": True,
         "fieldSize": len(horses),
+        "circuit": str(detail.get("circuit") or ""),
         "leaderHorseNumber": leader_no,
         "multiHeadWinnerHorseNumber": mh_winner or None,
         "coreStrengthAgree": core_strength_agree,
@@ -110,6 +141,15 @@ def build_race_selectability_features(detail: dict[str, Any]) -> dict[str, Any]:
         "top3PrimaryFamilyCountMedian": _med([float(v) for v in top3_family_counts]),
         "fieldDataCompletenessMedian": _med(completeness),
         "fieldContextCoverageMedian": _med(context_coverage),
+        "historyRunCountMedian": _med(history_counts),
+        "jraSectionalHorseCoverage": (sectional_horses / len(horses)) if horses else None,
+        "jraSectionalSampleCount": sectional_samples,
+        "jraClassHorseCoverage": (class_horses / len(horses)) if horses else None,
+        "jraClassSampleCount": class_samples,
+        "sameDayBiasActive": bool(same_day.get("active")),
+        "sameDayBiasEvidence": same_day_evidence,
+        "sameDayBiasCompletedRaces": _i(same_day.get("completed")),
+        "sameDayBiasFlowLabel": str(same_day.get("flowLabel") or "中立"),
         "predictionModelVersion": detail.get("predictionModelVersion"),
         "markEngineVersion": detail.get("markEngineVersion"),
     }
