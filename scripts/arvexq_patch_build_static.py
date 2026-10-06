@@ -24,12 +24,18 @@ def main() -> None:
             raise SystemExit("PATCH_ABORT: build_static call parser anchor not found")
         text = text.replace(needle, replacement, 1)
 
+    # v325 must keep redirects for the immediately previous installed shell (v324).
+    # This prevents a stale iPhone PWA index from requesting an asset that no longer exists.
+    text = text.replace('compat_css = ("v323",', 'compat_css = ("v324","v323",')
+    text = text.replace('compat_app = ("v323",', 'compat_app = ("v324","v323",')
+    text = text.replace('compat_arvexq = ("v323",', 'compat_arvexq = ("v324","v323",')
+
     if text == original:
         print("No build_static changes needed")
         return
 
     TARGET.write_text(text, encoding="utf-8")
-    print("build_static.py patched for extracted UI assets")
+    print("build_static.py patched for extracted UI assets and v324 compatibility")
 
 
 if __name__ == "__main__":
