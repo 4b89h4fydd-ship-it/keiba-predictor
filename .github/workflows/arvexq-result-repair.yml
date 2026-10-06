@@ -5,6 +5,7 @@ name: ARVEXQ Result Repair
   push:
     branches: [main]
     paths:
+      - app.py
       - scripts/arvexq_result_repair.py
       - scripts/arvexq_sync_batches.py
       - scripts/arvexq_fetch_d1_bundle.py
@@ -85,7 +86,6 @@ jobs:
         run: |
           if ! python - <<'PY' > result-repair.log 2>&1
           import app, runpy, sys
-          # Guard the legacy NAR result branch until its local variable is removed.
           app.last3f = None
           sys.argv = [
               'scripts/arvexq_result_repair.py',
@@ -139,6 +139,8 @@ jobs:
           base=os.environ['CLOUDFLARE_API_BASE'].rstrip('/')
           report=json.loads(Path('result-repair-report.json').read_text(encoding='utf-8'))
           repaired=[str(x) for x in (report.get('repaired') or [])]
+          unresolved=[str((x or {}).get('race_id') or '') for x in (report.get('result_missing') or [])]
+          payout_missing=[str((x or {}).get('race_id') or '') for x in (report.get('payout_missing') or [])]
           missing=[]
           for n,rid in enumerate(repaired,1):
               url=base+'/api/race/'+urllib.parse.quote(rid,safe='')+'?t='+str(int(time.time()*1000)+n)
@@ -146,7 +148,7 @@ jobs:
               err=''
               for attempt in range(4):
                   try:
-                      req=urllib.request.Request(url,headers={'accept':'application/json','user-agent':'ARVEXQ-Result-Verify/1'})
+                      req=urllib.request.Request(url,headers={'accept':'application/json','user-agent':'ARVEXQ-Result-Verify/2'})
                       with urllib.request.urlopen(req,timeout=25) as resp:
                           value=json.loads(resp.read().decode('utf-8'))
                       if isinstance(value,dict):
@@ -156,14 +158,15 @@ jobs:
                       err=f'{type(exc).__name__}: {exc}'
                       time.sleep(1+attempt)
               result=detail.get('result') if isinstance(detail,dict) and isinstance(detail.get('result'),dict) else {}
-              ranks={int(x.get('finish') or 0) for x in (result.get('finishers') or []) if isinstance(x,dict)}
-              if str(result.get('status') or '')!='確定' or not all(i in ranks for i in (1,2,3)):
-                  missing.append((rid,err,str(result.get('status') or ''),sorted(ranks)[:5]))
-          print('D1_RESULT_VERIFY repaired=',len(repaired),'not_visible=',len(missing),'result_missing=',len(report.get('result_missing') or []),'payout_missing=',len(report.get('payout_missing') or []))
+              finishes=[int(x.get('finish') or 0) for x in (result.get('finishers') or []) if isinstance(x,dict) and int(x.get('finish') or 0)>0]
+              podium_ok=1 in finishes and sum(1 for finish in finishes if finish<=3)>=3
+              if str(result.get('status') or '')!='確定' or not podium_ok or not (result.get('payouts') or []):
+                  missing.append((rid,err,str(result.get('status') or ''),finishes[:5],len(result.get('payouts') or [])))
+          print('D1_RESULT_VERIFY repaired=',len(repaired),'not_visible=',len(missing),'result_missing=',len(unresolved),'payout_missing=',len(payout_missing))
           for item in missing[:20]:
               print('D1_RESULT_NOT_VISIBLE',item)
-          if missing:
-              raise SystemExit('D1 did not expose repaired result(s): '+','.join(x[0] for x in missing))
+          if missing or unresolved or payout_missing:
+              raise SystemExit('result repair incomplete: unresolved='+','.join(unresolved)+' payout_missing='+','.join(payout_missing)+' not_visible='+','.join(x[0] for x in missing))
           PY
 
       - name: Show concise failure log
