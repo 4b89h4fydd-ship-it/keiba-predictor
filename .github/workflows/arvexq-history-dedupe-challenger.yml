@@ -1,0 +1,35 @@
+name: ARVEXQ History Dedupe Challenger
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_history_dedupe_challenger.py'
+      - '.github/workflows/arvexq-history-dedupe-challenger.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run deduplicated-history challenger
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_DAYS: '7'
+          ARVEXQ_END_DATE: '2026-10-05'
+        run: python scripts/arvexq_history_dedupe_challenger.py | tee history-dedupe-challenger.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-history-dedupe-challenger
+          path: history-dedupe-challenger.log
+          if-no-files-found: error
+          retention-days: 14
