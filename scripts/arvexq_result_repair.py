@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-import inspect
 import json
 import os
 import sys
@@ -59,23 +58,6 @@ def _seed_base(rid: str, detail: dict[str, Any] | None) -> None:
         print("RESULT_BASE_SEED_ERROR", rid, type(exc).__name__, exc)
 
 
-def _result_pipeline_excerpt() -> dict[str, Any]:
-    out: dict[str, Any] = {}
-    keys = ("finish", "rank", "status", "payout", "result", "return", "official", "netkeiba", "race_id")
-    for name in ("_refresh_result_fast", "_nar_official_result_fast", "_netkeiba_current_result"):
-        fn = getattr(app, name, None)
-        if not callable(fn):
-            out[name] = {"missing": True}
-            continue
-        try:
-            src = inspect.getsource(fn).splitlines()
-            selected = [f"{i + 1}:{line.strip()}" for i, line in enumerate(src) if any(k in line.lower() for k in keys)]
-            out[name] = {"signature": str(inspect.signature(fn)), "lines": selected[:80]}
-        except Exception as exc:
-            out[name] = {"error": f"{type(exc).__name__}: {exc}"}
-    return out
-
-
 def repair(bundle_path: str, payload_path: str, report_path: str, workers: int = 6) -> int:
     bundle = _read_json(bundle_path)
     rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
@@ -94,7 +76,6 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     pending.sort(key=lambda rid: (row_date(summary_by_id[rid]), start_minutes(summary_by_id[rid]), rid))
     errors: dict[str, str] = {}
     repaired: set[str] = set()
-    pipeline_diag = _result_pipeline_excerpt() if pending else {}
 
     for rid in pending:
         _seed_base(rid, by_id.get(rid))
@@ -104,9 +85,6 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             fresh = app._refresh_result_fast(rid)
             if not isinstance(fresh, dict) or not fresh.get("id"):
                 return rid, None, "result refresher returned no usable detail"
-            result = fresh.get("result") if isinstance(fresh.get("result"), dict) else {}
-            ranks = [int(x.get("finish") or 0) for x in (result.get("finishers") or []) if isinstance(x, dict)]
-            print("RESULT_REFRESH_SNAPSHOT", rid, "status=", result.get("status"), "ranks=", ranks[:8], "payouts=", len(result.get("payouts") or []))
             return rid, fresh, ""
         except Exception as exc:
             return rid, None, f"{type(exc).__name__}: {exc}"
@@ -136,14 +114,10 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
                 merged = merge_detail(by_id.get(rid), fresh)
                 by_id[rid] = merged
                 _seed_base(rid, merged)
-                result_ok, payout_ok, status = result_state(merged)
+                result_ok, payout_ok, _ = result_state(merged)
                 if result_ok and payout_ok:
                     repaired.add(rid)
                     errors.pop(rid, None)
-                else:
-                    result = merged.get("result") if isinstance(merged.get("result"), dict) else {}
-                    ranks = [int(x.get("finish") or 0) for x in (result.get("finishers") or []) if isinstance(x, dict)]
-                    errors[rid] = f"refreshed status={status!r} ranks={ranks[:10]} payouts={len(result.get('payouts') or [])}"
         if attempt == 1:
             unresolved_now = [rid for rid in todo if not all(result_state(by_id.get(rid))[:2])]
             if unresolved_now:
@@ -182,11 +156,9 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         }
         if not result_ok:
             item["error"] = item["error"] or "result still incomplete"
-            item["pipeline_diag"] = pipeline_diag
             unresolved.append(item)
         elif not payout_ok:
             item["error"] = item["error"] or "payout still incomplete"
-            item["pipeline_diag"] = pipeline_diag
             payout_missing.append(item)
 
     detail_payload = [
