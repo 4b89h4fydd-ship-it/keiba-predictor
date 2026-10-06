@@ -24,6 +24,8 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
     text = String(text || '');
     return /Cannot update a null\/nonexistent service worker registration/i.test(text) ||
       /Fetch API cannot load .* due to access control checks/i.test(text) ||
+      /Access to fetch at .* has been blocked by CORS policy/i.test(text) ||
+      /No 'Access-Control-Allow-Origin' header is present/i.test(text) ||
       /Load failed|NetworkError when attempting to fetch resource/i.test(text);
   }
 
