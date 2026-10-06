@@ -1,4 +1,4 @@
-# v327 race-open verification
+# v327 race-open verification after display-gate repair
 name: ARVEXQ Webapp Race Smoke
 
 on:
