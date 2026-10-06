@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
-<link rel="stylesheet" href="/styles-arvexq-v326.css">
+<link rel="stylesheet" href="/styles-arvexq-v327.css">
 <style>.smart-special-picks .fixed-pick-box-body{display:block!important}</style>
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
@@ -17,14 +17,14 @@
 <link rel="apple-touch-icon-precomposed" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
 <script>
 (function(){
-  var tag="arvexq-hard-reset-v326-special-races-20261006";
+  var tag="arvexq-hard-reset-v327-race-open-repair-20261006";
   try{
     if(localStorage.getItem(tag)==="1")return;
     localStorage.setItem(tag,"1");
     Promise.resolve().then(async function(){
       try{if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}}catch(_e){}
       try{if("serviceWorker" in navigator){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(r){return r.unregister()}))}}catch(_e){}
-      var u=new URL(location.href);u.searchParams.set("arvexq_build","v326");u.searchParams.set("_",Date.now());location.replace(u.toString());
+      var u=new URL(location.href);u.searchParams.set("arvexq_build","v327");u.searchParams.set("_",Date.now());location.replace(u.toString());
     });
   }catch(_e){}
 })();
@@ -32,6 +32,6 @@
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script src="/app-v326.js"></script>
+<script src="/app-v327.js"></script>
 </body>
 </html>
