@@ -1,4 +1,4 @@
-# iPhone-class race-open verification in Chromium and WebKit
+# v328 iPhone-class race-open verification in Chromium and WebKit
 name: ARVEXQ Webapp Race Smoke
 
 on:
@@ -35,12 +35,14 @@ jobs:
           python build_static.py
           BUILD="$(tr -d '\r\n' < dist/build-version.txt)"
           echo "BUILD=$BUILD" >> "$GITHUB_ENV"
+          test "$BUILD" = "v328"
           test -s dist/index.html
           test -s "dist/app-$BUILD.js"
           test -s "dist/styles-arvexq-$BUILD.css"
           test -s "dist/sw-$BUILD-reset.js"
           grep -q "/app-$BUILD.js" dist/index.html
           grep -q "/styles-arvexq-$BUILD.css" dist/index.html
+          grep -q 'function courseProfile(r)' arvexq/ui/static/app.js
       - name: Edge API diagnostic
         continue-on-error: true
         shell: bash
