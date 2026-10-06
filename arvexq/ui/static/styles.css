@@ -2707,3 +2707,11 @@ details.smart-fixed-picks[open]>.smart-fixed-picks-head .smart-fixed-summary-rig
 .live-direct-venue{min-height:62px!important;display:grid!important;grid-template-columns:minmax(0,1fr) 22px!important;grid-template-rows:auto auto!important;align-items:center!important;padding:9px 11px!important;border:1px solid #294e64!important;border-radius:12px!important;background:#0b2130!important;color:#edf8ff!important;text-decoration:none!important;box-sizing:border-box!important}.live-direct-venue small{grid-column:1!important;font-size:9px!important;color:#789fb3!important}.live-direct-venue b{grid-column:1!important;font-size:18px!important;line-height:1.15!important}.live-direct-venue strong{grid-column:2!important;grid-row:1 / span 2!important;font-size:24px!important;color:#72d9ff!important;text-align:right!important}
 .live-direct-venues .live-center-empty{grid-column:1/-1!important;padding:16px!important;text-align:center!important;border:1px dashed #294e64!important;border-radius:12px!important}
 @media(max-width:699px){.live-center-overlay{align-items:flex-end!important}.live-center-sheet.live-direct-sheet{width:100%!important;height:auto!important;max-height:88dvh!important;border-radius:18px 18px 0 0!important}.live-direct-menu{padding-left:10px!important;padding-right:10px!important}.live-direct-box{min-height:72px!important}.live-direct-box span b{font-size:22px!important}}
+
+/* ARVEXQ special forecast fold v1 */
+.smart-special-picks>summary.smart-fixed-picks-head{list-style:none;cursor:pointer;-webkit-user-select:none;user-select:none}
+.smart-special-picks>summary.smart-fixed-picks-head::-webkit-details-marker{display:none}
+.smart-special-picks .smart-fixed-summary-right{display:flex;align-items:center;gap:8px}
+.smart-special-picks .special-fold-icon{display:inline-block;font-style:normal;font-size:20px;line-height:1;transform:rotate(90deg);transition:transform .15s ease}
+.smart-special-picks:not([open]) .special-fold-icon{transform:rotate(0deg)}
+.smart-special-picks:not([open]) .smart-fixed-pick-grid{display:none!important}
