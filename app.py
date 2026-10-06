@@ -811,7 +811,7 @@ def _jra_run_key(r:dict)->tuple:
 
 def _jra_run_value_present(key:str,value)->bool:
     if value in (None,"",[],{},"不明"):return False
-    if key in {"finish","fieldSize","distance","timeSeconds","carriedWeight","racePrize1","raceNumber"}:
+    if key in {"finish","fieldSize","distance","timeSeconds","last3FSeconds","carriedWeight","racePrize1","raceNumber"}:
         try:return float(value)>0
         except (TypeError,ValueError):return False
     return True
@@ -2528,6 +2528,9 @@ def _central_run_from_race(race: dict, horse_name: str) -> dict | None:
     corners = fin.get("cornerPositions") or horse.get("cornerPositions") or []
     if not isinstance(corners, list):
         corners = []
+    last3f = fin.get("last3FSeconds") or fin.get("last3F") or horse.get("last3FSeconds") or horse.get("last3F")
+    try:last3f=float(last3f) if last3f not in (None,"") else None
+    except (TypeError,ValueError):last3f=None
     return {
         "raceId": race.get("id") or "",
         "date": race.get("date") or "",
@@ -2541,6 +2544,7 @@ def _central_run_from_race(race: dict, horse_name: str) -> dict | None:
         "fieldSize": int(race.get("fieldSize") or len(race.get("horses") or [])),
         "finish": finish,
         "timeSeconds": float(fin.get("timeSeconds") or horse.get("timeSeconds") or 0),
+        "last3FSeconds": last3f,
         "cornerPositions": [int(x) for x in corners if str(x).strip().isdigit()],
         "carriedWeight": float(horse.get("carriedWeight") or fin.get("carriedWeight") or 0),
         "racePrize1": int(race.get("racePrize1") or 0),
@@ -3104,7 +3108,7 @@ def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
             for k in keys:
                 if k in v:return i
         return -1
-    ix={"fin":hidx("着順"),"frame":hidx("枠"),"no":hidx("馬番"),"name":hidx("馬名"),"sexage":hidx("性齢"),"cw":hidx("負担重量","斤量"),"jockey":hidx("騎手名","騎手"),"time":hidx("タイム"),"corner":hidx("コーナー通過順位","コーナー通過順"),"bw":hidx("馬体重"),"trainer":hidx("調教師名","調教師"),"pop":hidx("単勝人気","人気")}
+    ix={"fin":hidx("着順"),"frame":hidx("枠"),"no":hidx("馬番"),"name":hidx("馬名"),"sexage":hidx("性齢"),"cw":hidx("負担重量","斤量"),"jockey":hidx("騎手名","騎手"),"time":hidx("タイム"),"last3f":hidx("推定上り","上り"),"corner":hidx("コーナー通過順位","コーナー通過順"),"bw":hidx("馬体重"),"trainer":hidx("調教師名","調教師"),"pop":hidx("単勝人気","人気")}
     finishers=[]
     for tr in table.find_all("tr"):
         tds=tr.find_all("td")
@@ -3118,13 +3122,13 @@ def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
         name=_clean(val("name"));sxage=val("sexage");sx="";age=0;smx=re.search(r"(牡|牝|せん)(\d+)",sxage)
         if smx:sx=smx.group(1);age=int(smx.group(2))
         mcw=re.search(r"\d+(?:\.\d+)?",val("cw"));cw=float(mcw.group()) if mcw else 0.0
-        tm=_jra_parse_time_seconds(val("time"));corners=[];cm=re.search(r"\d{1,2}(?:-\d{1,2})+",val("corner"))
+        tm=_jra_parse_time_seconds(val("time"));m3=re.search(r"\d+(?:\.\d+)?",val("last3f"));last3f=float(m3.group()) if m3 else None;corners=[];cm=re.search(r"\d{1,2}(?:-\d{1,2})+",val("corner"))
         if cm:corners=[int(x) for x in cm.group().split("-")]
         elif val("corner"):corners=[int(x) for x in re.findall(r"\d{1,2}",val("corner"))]
         bw=None;chg=None;mb=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",val("bw"))
         if mb:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
         mp=re.search(r"\d+",val("pop"));pop=int(mp.group()) if mp else None
-        finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val("fin"),"horseNumber":no,"frameNumber":frame,"name":name,"sex":sx,"age":age,"carriedWeight":cw,"jockey":_clean(val("jockey")),"trainer":_clean(val("trainer")),"timeSeconds":tm,"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,"popularity":pop})
+        finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val("fin"),"horseNumber":no,"frameNumber":frame,"name":name,"sex":sx,"age":age,"carriedWeight":cw,"jockey":_clean(val("jockey")),"trainer":_clean(val("trainer")),"timeSeconds":tm,"last3FSeconds":last3f,"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,"popularity":pop})
     finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
     if not finishers:return None
     payouts=_parse_payouts(soup)
