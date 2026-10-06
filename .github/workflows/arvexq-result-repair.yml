@@ -7,6 +7,7 @@ name: ARVEXQ Result Repair
     paths:
       - scripts/arvexq_result_repair.py
       - scripts/arvexq_sync_batches.py
+      - scripts/arvexq_fetch_d1_bundle.py
       - .github/workflows/arvexq-result-repair.yml
   schedule:
     # Offset from realtime sync so both jobs do not hit result sources together.
@@ -62,15 +63,19 @@ jobs:
             arvexq-data-${{ runner.os }}-${{ env.SYNC_DATE }}-
             arvexq-data-${{ runner.os }}-
 
-      - name: Read current day from D1
+      - name: Read current day from D1 race-by-race
         run: |
-          curl --fail-with-body --retry 6 --retry-all-errors --retry-delay 5 --retry-max-time 120 \
-            --connect-timeout 10 --max-time 30 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE&details=1&t=$(date +%s)" \
-            -o bundle.json
+          python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --date "$SYNC_DATE" \
+            --out bundle.json \
+            --report d1-bundle-report.json \
+            --workers 8 \
+            --allow-missing-details
           RACES=$(jq '.races // [] | length' bundle.json)
           DETAILS=$(jq '.details // [] | length' bundle.json)
-          echo "D1 day races=$RACES details=$DETAILS"
+          MISSING=$(jq '.missing_detail_count // 0' d1-bundle-report.json)
+          echo "D1 day races=$RACES details=$DETAILS missing_details=$MISSING"
           if [ "$RACES" -le 0 ]; then
             echo "::error::D1 returned no races for $SYNC_DATE"
             exit 1
@@ -80,9 +85,7 @@ jobs:
         run: |
           if ! python - <<'PY' > result-repair.log 2>&1
           import app, runpy, sys
-          # app.py currently has one NAR result branch that references last3f
-          # before assignment. Seed the module global until that legacy branch
-          # is removed; this prevents a NameError from dropping the whole result.
+          # Guard the legacy NAR result branch until its local variable is removed.
           app.last3f = None
           sys.argv = [
               'scripts/arvexq_result_repair.py',
@@ -123,33 +126,47 @@ jobs:
           done
           echo "D1 result repair batched push OK"
 
-      - name: Verify D1 after repair
+      - name: Verify repaired results race-by-race from D1
         run: |
-          curl --fail-with-body --retry 6 --retry-all-errors --retry-delay 5 --retry-max-time 120 \
-            --connect-timeout 10 --max-time 30 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$SYNC_DATE&details=1&t=$(date +%s)" \
-            -o verified-day.json
           python - <<'PY'
-          import json
+          import json, os, time, urllib.parse, urllib.request
           from pathlib import Path
 
-          day=json.loads(Path('verified-day.json').read_text(encoding='utf-8'))
+          base=os.environ['CLOUDFLARE_API_BASE'].rstrip('/')
           report=json.loads(Path('result-repair-report.json').read_text(encoding='utf-8'))
-          by_id={str(d.get('id') or ''):d for d in (day.get('details') or []) if isinstance(d,dict)}
+          repaired=[str(x) for x in (report.get('repaired') or [])]
           missing=[]
-          for rid in report.get('repaired') or []:
-              result=(by_id.get(str(rid)) or {}).get('result') or {}
+          for n,rid in enumerate(repaired,1):
+              url=base+'/api/race/'+urllib.parse.quote(rid,safe='')+'?t='+str(int(time.time()*1000)+n)
+              detail={}
+              err=''
+              for attempt in range(4):
+                  try:
+                      req=urllib.request.Request(url,headers={'accept':'application/json','user-agent':'ARVEXQ-Result-Verify/1'})
+                      with urllib.request.urlopen(req,timeout=25) as resp:
+                          value=json.loads(resp.read().decode('utf-8'))
+                      if isinstance(value,dict):
+                          detail=value if str(value.get('id') or '')==rid else (value.get('detail') or value.get('race') or {})
+                      break
+                  except Exception as exc:
+                      err=f'{type(exc).__name__}: {exc}'
+                      time.sleep(1+attempt)
+              result=detail.get('result') if isinstance(detail,dict) and isinstance(detail.get('result'),dict) else {}
               ranks={int(x.get('finish') or 0) for x in (result.get('finishers') or []) if isinstance(x,dict)}
               if str(result.get('status') or '')!='確定' or not all(i in ranks for i in (1,2,3)):
-                  missing.append(rid)
-          print('D1_VERIFY details=',len(by_id),'repaired=',len(report.get('repaired') or []),'not_visible=',len(missing),'result_missing=',len(report.get('result_missing') or []),'payout_missing=',len(report.get('payout_missing') or []))
+                  missing.append((rid,err,str(result.get('status') or ''),sorted(ranks)[:5]))
+          print('D1_RESULT_VERIFY repaired=',len(repaired),'not_visible=',len(missing),'result_missing=',len(report.get('result_missing') or []),'payout_missing=',len(report.get('payout_missing') or []))
+          for item in missing[:20]:
+              print('D1_RESULT_NOT_VISIBLE',item)
           if missing:
-              raise SystemExit('D1 did not expose repaired result(s): '+','.join(missing))
+              raise SystemExit('D1 did not expose repaired result(s): '+','.join(x[0] for x in missing))
           PY
 
       - name: Show concise failure log
         if: failure()
-        run: tail -n 100 result-repair.log 2>/dev/null || true
+        run: |
+          tail -n 100 result-repair.log 2>/dev/null || true
+          cat d1-bundle-report.json 2>/dev/null || true
 
       - name: Upload full failure logs
         if: failure()
@@ -159,5 +176,6 @@ jobs:
           path: |
             result-repair.log
             result-repair-report.json
+            d1-bundle-report.json
           if-no-files-found: ignore
           retention-days: 3
