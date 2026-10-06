@@ -4,78 +4,63 @@ from pathlib import Path
 PATH = Path("arvexq/ui/static/app.js")
 text = PATH.read_text(encoding="utf-8")
 
-helper = r'''function mandatoryTrifectaRace(r){
-  var title=String(r&&r.title||'');
-  return !!(r&&(raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))))
-}
-function forceMandatoryTrifecta(plan,r,p){
+# Keep the race classification and both existing call sites, but change the
+# historical "force" helper into a review-only guard. Graded races and Kochi
+# Final must always REVIEW the trifecta, never manufacture one when the normal
+# order-confidence gate rejected it.
+start = text.find("function forceMandatoryTrifecta(plan,r,p){")
+if start < 0:
+    raise SystemExit("forceMandatoryTrifecta helper not found")
+next_fn = text.find("\nfunction ", start + 1)
+if next_fn < 0:
+    raise SystemExit("forceMandatoryTrifecta end anchor not found")
+
+replacement = r'''function forceMandatoryTrifecta(plan,r,p){
   if(!plan||!mandatoryTrifectaRace(r))return plan;
-  var rows=(p&&p.rows||[]).slice().filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)});
-  if(rows.length<3)return plan;
-  function no(x){return x&&x.horse?n(x.horse.horseNumber):0}
-  function win(x){return n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.p1Probability,0)))}
-  var axis=rows.filter(function(x){return String(x.predMark||'')==='◎'})[0]||rows.slice().sort(function(a,b){return win(b)-win(a)})[0]||null;
-  var axisNo=no(axis);if(!axisNo)return plan;
-  var markOrder={'○':0,'▲':1,'☆+':2,'☆':3,'△':4,'注+':5,'注':6,'':7};
-  var mates=rows.filter(function(x){return no(x)!==axisNo}).sort(function(a,b){
-    var ma=String(a.predMark||''),mb=String(b.predMark||''),ra=markOrder.hasOwnProperty(ma)?markOrder[ma]:8,rb=markOrder.hasOwnProperty(mb)?markOrder[mb]:8;
-    return ra-rb||win(b)-win(a)||no(a)-no(b)
-  }).slice(0,3),combos=[];
-  for(var i=0;i<mates.length;i++)for(var j=0;j<mates.length;j++)if(i!==j)combos.push([axisNo,no(mates[i]),no(mates[j])]);
-  if(!combos.length)return plan;
-  plan.items=(plan.items||[]).filter(function(z){return !(z&&z.kind==='3連単')});
-  plan.items.push({level:'3連単チャレンジ',kind:'3連単',combos:combos,points:combos.length,combo:betComboText('3連単',combos),confidence:'チャレンジ',mandatory:true});
-  plan.trifectaReviewed=true;plan.trifectaDecision='採用';plan.trifectaReason='重賞・高知ファイルは3連単チャレンジ必須。◎1着固定で相手上位3頭を2・3着入替。';
-  if(plan.decision==='見送り')plan.decision='通常買い';
-  plan.mandatoryTrifecta=true;
+  plan.trifectaReviewed=true;
+  plan.mandatoryTrifectaReviewed=true;
+  if(plan.trifectaDecision==='採用'){
+    plan.trifectaReason=plan.trifectaReason||'重賞・高知ファイルの3連単を検討し、順序信頼ゲートを通過。';
+    return plan
+  }
+  plan.trifectaDecision='見送り';
+  plan.trifectaReason='重賞・高知ファイルは3連単を必ず検討。今回は順序信頼不足のため見送り。';
+  plan.mandatoryTrifecta=false;
   return plan
 }
 '''
+text = text[:start] + replacement + text[next_fn+1:]
 
-anchor = "function raceIsGraded(r){"
-if "function mandatoryTrifectaRace(r){" not in text:
-    idx = text.find(anchor)
-    if idx < 0:
-        raise SystemExit("raceIsGraded anchor not found")
-    end = text.find("\n", idx)
-    if end < 0:
-        raise SystemExit("raceIsGraded line end not found")
-    text = text[:end+1] + helper + text[end+1:]
-
-# Production has two bet-plan paths: the richer local/v213 path and the fallback path.
-# Force the mandatory trifecta after rebuildBetStrategyV242 on BOTH paths so a
-# later ticket-selection gate can never turn graded/Kochi Final into a skip.
-old_v213 = "if(v213Ready){var vp=rebuildBetStrategyV242(buildV213AiBetPlan(r,p,rows,featured),r,p);saveStoredAiBet(r,vp);return vp}"
-new_v213 = "if(v213Ready){var vp=rebuildBetStrategyV242(buildV213AiBetPlan(r,p,rows,featured),r,p);vp=forceMandatoryTrifecta(vp,r,p);saveStoredAiBet(r,vp);return vp}"
-if old_v213 in text:
-    text = text.replace(old_v213, new_v213, 1)
-elif new_v213 not in text:
-    raise SystemExit("v213 buildAiBetPlan path not found")
-
-old = "plan=rebuildBetStrategyV242(plan,r,p);saveStoredAiBet(r,plan);return plan"
-new = "plan=rebuildBetStrategyV242(plan,r,p);plan=forceMandatoryTrifecta(plan,r,p);saveStoredAiBet(r,plan);return plan"
-if old in text:
-    text = text.replace(old, new, 1)
-elif new not in text:
-    raise SystemExit("buildAiBetPlan finalization anchor not found")
-
-# Do not emit the generic trifecta-skip copy for mandatory races.
-old_copy = "if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')lines.push('3連単｜検討済み｜順序信頼不足で見送り｜'+String(plan.orderScore||0)+'/100');"
-new_copy = "if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り'&&!mandatoryTrifectaRace(r))lines.push('3連単｜検討済み｜順序信頼不足で見送り｜'+String(plan.orderScore||0)+'/100');"
+# Mandatory races must also show the "reviewed but skipped" copy when order
+# confidence is insufficient. Remove the old suppression if it is present.
+old_copy = "if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り'&&!mandatoryTrifectaRace(r))lines.push('3連単｜検討済み｜順序信頼不足で見送り｜'+String(plan.orderScore||0)+'/100');"
+new_copy = "if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')lines.push('3連単｜検討済み｜順序信頼不足で見送り｜'+String(plan.orderScore||0)+'/100');"
 if old_copy in text:
     text = text.replace(old_copy, new_copy, 1)
 elif new_copy not in text:
-    raise SystemExit("betTransferText trifecta-skip line not found")
+    raise SystemExit("betTransferText trifecta review line not found")
+
+# UI copy must follow the same rule. aiBetRecommendation already renders a
+# reviewed/skipped row whenever trifectaDecision is 見送り, so no extra ticket
+# injection is allowed here.
+for forbidden in (
+    "重賞・高知ファイルは3連単チャレンジ必須",
+    "mandatory:true",
+    "if(plan.decision==='見送り')plan.decision='通常買い'",
+):
+    if forbidden in text:
+        raise SystemExit(f"old forced-trifecta behavior still present: {forbidden}")
 
 for required in (
     "function mandatoryTrifectaRace(r){",
     "function forceMandatoryTrifecta(plan,r,p){",
     "vp=forceMandatoryTrifecta(vp,r,p)",
     "plan=forceMandatoryTrifecta(plan,r,p)",
-    "重賞・高知ファイルは3連単チャレンジ必須",
+    "mandatoryTrifectaReviewed=true",
+    "今回は順序信頼不足のため見送り",
 ):
     if required not in text:
-        raise SystemExit(f"mandatory trifecta patch missing: {required}")
+        raise SystemExit(f"trifecta review policy missing: {required}")
 
 PATH.write_text(text, encoding="utf-8")
-print("mandatory trifecta challenge enforced for graded and Kochi final races on all bet-plan paths")
+print("graded/Kochi trifecta policy changed from forced ticket to mandatory review with order-confidence gate")
