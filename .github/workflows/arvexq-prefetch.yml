@@ -12,6 +12,7 @@ name: ARVEXQ Full Prefetch
     paths:
       - app.py
       - scripts/arvexq_prefetch.py
+      - scripts/arvexq_sync_batches.py
       - scripts/arvexq_sqlite_health.py
       - arvexq/pipeline/fingerprints.py
       - .github/workflows/arvexq-prefetch.yml
@@ -30,7 +31,7 @@ concurrency:
 jobs:
   prefetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
@@ -94,7 +95,7 @@ jobs:
 
       - name: Start ARVEXQ locally
         run: |
-          nohup uvicorn app:app --host 127.0.0.1 --port 8000 > /tmp/arvexq-prefetch.log 2>&1 &
+          nohup python -c 'import app,uvicorn; app.last3f=None; uvicorn.run(app.app,host="127.0.0.1",port=8000)' > /tmp/arvexq-prefetch.log 2>&1 &
           echo $! > /tmp/arvexq-prefetch.pid
           for i in $(seq 1 30); do
             if curl -fsS --max-time 2 http://127.0.0.1:8000/health > /dev/null; then
@@ -130,12 +131,20 @@ jobs:
             exit 0
           fi
           python -m py_compile scripts/arvexq_prefetch.py
-          if ! python scripts/arvexq_prefetch.py \
-            --bundle bundle.json \
-            --payload prefetch-payload.json \
-            --report prefetch-report.json \
-            --workers "$ARVEXQ_PREFETCH_WORKERS" \
-            --analysis-workers "$ARVEXQ_PREFETCH_ANALYSIS_WORKERS" > prefetch-run.log 2>&1; then
+          if ! python - <<'PY' > prefetch-run.log 2>&1
+          import app, runpy, sys
+          app.last3f = None
+          sys.argv = [
+              'scripts/arvexq_prefetch.py',
+              '--bundle', 'bundle.json',
+              '--payload', 'prefetch-payload.json',
+              '--report', 'prefetch-report.json',
+              '--workers', '1',
+              '--analysis-workers', '1',
+          ]
+          runpy.run_path('scripts/arvexq_prefetch.py', run_name='__main__')
+          PY
+          then
             echo "::error::FULL PREFETCH script failed"
             tail -n 80 prefetch-run.log || true
             exit 1
@@ -150,42 +159,75 @@ jobs:
             exit 1
           fi
 
-      - name: Push prepared day to D1
+      - name: Push prepared day to D1 in safe batches
         run: |
           RACES=$(jq '.meta.race_count // 0' prefetch-payload.json)
           if [ "$RACES" -le 0 ]; then
             echo "Nothing to sync."
             exit 0
           fi
-          curl --fail-with-body --retry 5 --retry-all-errors --retry-delay 3 --retry-max-time 150 \
-            --connect-timeout 10 --max-time 60 -X POST \
-            "$CLOUDFLARE_API_BASE/api/sync" \
-            -H "content-type: application/json" \
-            -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @prefetch-payload.json > /dev/null
-          echo "D1 prefetch push OK"
+          python scripts/arvexq_sync_batches.py \
+            --input prefetch-payload.json \
+            --out-dir prefetch-sync-batches
+          COUNT=$(find prefetch-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
+          echo "D1 prefetch batches=$COUNT"
+          for file in prefetch-sync-batches/batch-*.json; do
+            BYTES=$(wc -c < "$file" | tr -d ' ')
+            echo "POST $(basename "$file") bytes=$BYTES"
+            curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
+              --connect-timeout 10 --max-time 40 -X POST \
+              "$CLOUDFLARE_API_BASE/api/sync" \
+              -H "content-type: application/json" \
+              -H "x-sync-token: $SYNC_TOKEN" \
+              --data-binary @"$file" > /dev/null
+          done
+          echo "D1 prefetch batched push OK"
 
-      - name: Verify prepared day and analysis from D1
+      - name: Verify prepared day race-by-race from D1
         run: |
           EXPECTED=$(jq '.meta.race_count // 0' prefetch-payload.json)
           if [ "$EXPECTED" -le 0 ]; then
             exit 0
           fi
-          curl --fail-with-body --retry 6 --retry-all-errors --retry-delay 5 --retry-max-time 150 \
-            --connect-timeout 10 --max-time 30 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=1&t=$(date +%s)" \
-            -o verified-prefetch.json
-          ACTUAL=$(jq '.details // [] | length' verified-prefetch.json)
-          ANALYSIS=$(jq '.analysisCount // 0' verified-prefetch.json)
-          echo "D1 PREFETCH expected=$EXPECTED details=$ACTUAL analysis=$ANALYSIS"
+          curl --fail-with-body --retry 5 --retry-all-errors --retry-delay 3 --retry-max-time 90 \
+            --connect-timeout 10 --max-time 25 \
+            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=0&t=$(date +%s)" \
+            -o verified-day.json
+          ACTUAL=$(jq '.races // [] | length' verified-day.json)
+          echo "D1 PREFETCH summaries expected=$EXPECTED actual=$ACTUAL"
           if [ "$ACTUAL" -lt "$EXPECTED" ]; then
-            echo "::error::D1 is missing prepared race details"
+            echo "::error::D1 is missing race summaries"
             exit 1
           fi
-          if [ "$ANALYSIS" -lt "$EXPECTED" ]; then
-            echo "::error::D1 is missing prepared analysis: $ANALYSIS/$EXPECTED"
-            exit 1
-          fi
+          python - <<'PY'
+          import json, os, urllib.parse, urllib.request
+          from pathlib import Path
+
+          base=os.environ['CLOUDFLARE_API_BASE'].rstrip('/')
+          payload=json.loads(Path('prefetch-payload.json').read_text(encoding='utf-8'))
+          ids=[str(d.get('id') or '') for d in (payload.get('details') or []) if isinstance(d,dict) and d.get('id')]
+          missing=[]
+          thin=[]
+          for i,rid in enumerate(ids,1):
+              url=base+'/api/race/'+urllib.parse.quote(rid,safe='')+'?t='+str(i)
+              try:
+                  with urllib.request.urlopen(url,timeout=25) as r:
+                      d=json.loads(r.read().decode('utf-8'))
+              except Exception as exc:
+                  missing.append(rid)
+                  print('VERIFY_FETCH_ERROR',rid,type(exc).__name__,exc)
+                  continue
+              if str(d.get('id') or '') != rid:
+                  missing.append(rid)
+                  continue
+              horses=d.get('horses') or []
+              has_analysis=any(d.get(k) not in (None,'',[],{}) for k in ('preRacePrediction','aiEvaluation','pace','pacePrediction','volatility'))
+              if not horses or not has_analysis:
+                  thin.append(rid)
+          print('D1_PREFETCH_DETAIL_VERIFY expected=',len(ids),'missing=',len(missing),'thin=',len(thin))
+          if missing or thin:
+              raise SystemExit('D1 detail verification failed missing='+str(len(missing))+' thin='+str(len(thin)))
+          PY
 
       - name: Stop ARVEXQ
         if: always()
@@ -209,9 +251,9 @@ jobs:
         if: failure()
         run: |
           echo "--- prefetch-run.log ---"
-          tail -n 80 prefetch-run.log 2>/dev/null || true
+          tail -n 100 prefetch-run.log 2>/dev/null || true
           echo "--- runtime ---"
-          tail -n 80 /tmp/arvexq-prefetch.log 2>/dev/null || true
+          tail -n 100 /tmp/arvexq-prefetch.log 2>/dev/null || true
           cp /tmp/arvexq-prefetch.log runtime-prefetch.log 2>/dev/null || true
 
       - name: Upload full failure logs
