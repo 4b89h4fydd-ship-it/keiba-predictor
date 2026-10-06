@@ -90,6 +90,12 @@ const resetMarker = 'arvexq-hard-reset-v328-safari-runtime-20261006';
     if (hasFatalUiError(bodyText)) throw new Error('runtime display error: ' + bodyText.slice(0, 1000));
     if (await page.locator('.smart-loading').count()) throw new Error('race remained on loading screen: ' + bodyText.slice(0, 1000));
 
+    const racecard = page.locator('.racecard-table').first();
+    await racecard.waitFor({ state: 'visible', timeout });
+    const racecardRows = await racecard.locator('.racecard-row').count();
+    if (racecardRows < 1) throw new Error('racecard rendered without runner rows: ' + bodyText.slice(0, 1000));
+    console.log(`RACECARD_VISIBLE rows=${racecardRows} race=${raceId}`);
+
     for (const key of ['diagnosis', 'detail', 'pace', 'bets']) {
       const tab = page.locator(`[data-panel="${key}"]`).first();
       if (await tab.count()) {
