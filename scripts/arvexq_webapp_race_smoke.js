@@ -5,6 +5,7 @@ const timeout = Number(process.env.ARVEXQ_SMOKE_TIMEOUT || 20000);
 const browserName = String(process.env.ARVEXQ_BROWSER || 'chromium').toLowerCase();
 const browserType = browserName === 'webkit' ? webkit : chromium;
 const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(base);
+const resetMarker = 'arvexq-hard-reset-v328-safari-runtime-20261006';
 
 (async () => {
   const browser = await browserType.launch({ headless: true });
@@ -12,8 +13,21 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
   const page = await browser.newPage({ ...iphone, locale: 'ja-JP' });
   const pageErrors = [];
   const consoleErrors = [];
+  const httpFailures = [];
+
+  // Runtime smoke starts after the one-time PWA cache reset. The reset itself is
+  // checked statically; pre-seeding this marker prevents WebKit from tearing down
+  // the execution context mid-assertion on its deliberate location.replace().
+  await page.addInitScript(marker => {
+    try { localStorage.setItem(marker, '1'); } catch (_) {}
+  }, resetMarker);
+
   page.on('pageerror', err => pageErrors.push(String(err && err.stack || err)));
   page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
+  page.on('response', res => {
+    const status = res.status();
+    if (status >= 400) httpFailures.push({ status, url: res.url() });
+  });
 
   function hasFatalUiError(text) {
     return /表示エラー|起動エラー|undefined is not an object|Cannot read properties of undefined|Cannot read property .* of undefined/i.test(String(text || ''));
@@ -27,6 +41,14 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
       /Access to fetch at .* has been blocked by CORS policy/i.test(text) ||
       /No 'Access-Control-Allow-Origin' header is present/i.test(text) ||
       /Load failed|NetworkError when attempting to fetch resource/i.test(text);
+  }
+
+  function criticalHttpFailure(item) {
+    const u = String(item && item.url || '');
+    if (!u) return false;
+    if (/\/app-v328\.js(?:\?|$)|\/styles-arvexq-v328\.css(?:\?|$)|\/version\.json(?:\?|$)|\/sw-v328-reset\.js(?:\?|$)/i.test(u)) return true;
+    if (/\/api\/(?:day|race|prediction|odds|result|payout)/i.test(u)) return true;
+    return Number(item.status) >= 500;
   }
 
   try {
@@ -86,13 +108,23 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
     });
     if (fatalPageErrors.length) throw new Error('page errors:\n' + fatalPageErrors.join('\n'));
 
+    const criticalHttp = httpFailures.filter(criticalHttpFailure);
+    if (criticalHttp.length) {
+      throw new Error('critical HTTP failures:\n' + criticalHttp.map(x => `${x.status} ${x.url}`).join('\n'));
+    }
+
     const fatalConsole = consoleErrors.filter(x => {
       if (/favicon|ServiceWorker/i.test(x)) return false;
+      if (/Failed to load resource: the server responded with a status of 404/i.test(x)) return false;
       if (isExpectedLocalHarnessError(x)) return false;
       if (isLocal && /Failed to load resource/i.test(x)) return false;
       return true;
     });
     if (fatalConsole.length) throw new Error('console errors:\n' + fatalConsole.join('\n'));
+
+    if (httpFailures.length) {
+      console.log('noncritical HTTP failures:', httpFailures.map(x => `${x.status} ${x.url}`).join(' | '));
+    }
     console.log(`ARVEXQ ${browserName} race smoke OK race=${raceId} origin=${isLocal ? 'local' : 'production'}`);
   } finally {
     await browser.close();
