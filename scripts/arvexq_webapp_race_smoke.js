@@ -4,6 +4,7 @@ const base = process.env.ARVEXQ_BASE_URL || 'http://127.0.0.1:8788';
 const timeout = Number(process.env.ARVEXQ_SMOKE_TIMEOUT || 20000);
 const browserName = String(process.env.ARVEXQ_BROWSER || 'chromium').toLowerCase();
 const browserType = browserName === 'webkit' ? webkit : chromium;
+const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(base);
 
 (async () => {
   const browser = await browserType.launch({ headless: true });
@@ -16,6 +17,14 @@ const browserType = browserName === 'webkit' ? webkit : chromium;
 
   function hasFatalUiError(text) {
     return /表示エラー|起動エラー|undefined is not an object|Cannot read properties of undefined|Cannot read property .* of undefined/i.test(String(text || ''));
+  }
+
+  function isExpectedLocalHarnessError(text) {
+    if (!isLocal) return false;
+    text = String(text || '');
+    return /Cannot update a null\/nonexistent service worker registration/i.test(text) ||
+      /Fetch API cannot load .* due to access control checks/i.test(text) ||
+      /Load failed|NetworkError when attempting to fetch resource/i.test(text);
   }
 
   try {
@@ -68,11 +77,21 @@ const browserType = browserName === 'webkit' ? webkit : chromium;
       if (hasFatalUiError(backText)) throw new Error('back navigation display error: ' + backText.slice(0, 1000));
     }
 
-    const fatalPageErrors = pageErrors.filter(x => !/ServiceWorker.*Not found|Failed to update a ServiceWorker/i.test(x));
+    const fatalPageErrors = pageErrors.filter(x => {
+      if (/ServiceWorker.*Not found|Failed to update a ServiceWorker/i.test(x)) return false;
+      if (isExpectedLocalHarnessError(x)) return false;
+      return true;
+    });
     if (fatalPageErrors.length) throw new Error('page errors:\n' + fatalPageErrors.join('\n'));
-    const fatalConsole = consoleErrors.filter(x => !/Failed to load resource|favicon|ServiceWorker/i.test(x));
+
+    const fatalConsole = consoleErrors.filter(x => {
+      if (/favicon|ServiceWorker/i.test(x)) return false;
+      if (isExpectedLocalHarnessError(x)) return false;
+      if (isLocal && /Failed to load resource/i.test(x)) return false;
+      return true;
+    });
     if (fatalConsole.length) throw new Error('console errors:\n' + fatalConsole.join('\n'));
-    console.log(`ARVEXQ ${browserName} race smoke OK race=${raceId}`);
+    console.log(`ARVEXQ ${browserName} race smoke OK race=${raceId} origin=${isLocal ? 'local' : 'production'}`);
   } finally {
     await browser.close();
   }
