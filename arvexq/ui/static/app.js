@@ -223,6 +223,99 @@ function sameDayTrendSignatureV313(r,rows){
 function stylePoint(rt){return rt.front+2*rt.stalk+3*rt.mid+4*rt.close}
 function styleName(pt){if(pt<1.65)return"逃げ";if(pt<2.35)return"先行";if(pt<3.15)return"差し";return"追込"}
 function earlyOcc(r){var hs=r.horses||[],nums=[],early=[],moved=[],i,rr,p,j,hit;for(i=0;i<hs.length;i++){rr=(hs[i].recentRaces||[])[0];if(!rr)continue;p=rr.cornerPositions||[];hit=false;for(j=0;j<p.length;j++)if(n(p[j])>0&&n(p[j])<=3){hit=true;break}if(hit){nums.push(n(hs[i].horseNumber));if(n(p[0])<=3)early.push(n(hs[i].horseNumber));else moved.push(n(hs[i].horseNumber))}}return{nums:nums,early:early,moved:moved,rate:hs.length?nums.length/hs.length:0}}
+function minetaPastProfile(h,r){
+  var rs=(h&&((h.recentRaces&&h.recentRaces.length)?h.recentRaces:h.allPastRuns)||[]).slice(0,5),last=rs[0]||null,
+      lp=(last&&last.cornerPositions||[]).map(function(v){return n(v,0)}).filter(function(v){return v>0}),
+      field=last?raceField(last):12,first=lp.length?lp[0]:0,prevEarly=false,prevLeader=false,prevRear=false,
+      w=recencyWeights(rs.length),moveW=0,moveDen=0,leadW=0,leadDen=0,rearW=0,rearDen=0,i,rr,p,j,best,ww,fs,midLead;
+  if(lp.length){prevEarly=lp.some(function(v){return v<=3});prevLeader=lp.some(function(v){return v===1});prevRear=lp.some(function(v){return v>=10})||(first>=Math.max(6,Math.ceil(field*.66)))}
+  for(i=0;i<rs.length;i++){
+    rr=rs[i]||{};p=(rr.cornerPositions||[]).map(function(v){return n(v,0)}).filter(function(v){return v>0});if(!p.length)continue;
+    ww=w[i]||1;fs=raceField(rr);best=99;for(j=1;j<p.length;j++)if(p[j]<best)best=p[j];
+    moveDen+=ww;if(p[0]>3&&best<=Math.max(3,p[0]-2))moveW+=ww;
+    leadDen+=ww;midLead=p[0]>1&&p.slice(1).some(function(v){return v===1});if(midLead)leadW+=ww;
+    rearDen+=ww;if(p.some(function(v){return v>=10})||p[0]>=Math.max(6,Math.ceil(fs*.66)))rearW+=ww
+  }
+  var norm=first?((first-1)/Math.max(1,field-1)):1,bucket='不明';
+  if(lp.length){if(prevEarly)bucket='先行';else if(norm<=.38)bucket='準先行';else if(norm<=.68)bucket='準後方';else bucket='後方'}
+  return{samples:rs.length,prevEarly:prevEarly,prevLeader:prevLeader,prevRear:prevRear,firstPos:first,lastPositions:lp,bucket:bucket,
+    moveHistory:moveDen?moveW/moveDen:0,midRaceLead:leadDen?leadW/leadDen:0,rearHistory:rearDen?rearW/rearDen:0}
+}
+function minetaRaceContext(rows,r){
+  rows=rows||[];var active=rows.filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)}),field=Math.max(1,active.length),raw=0,adjusted=0,rear=0,leadPool=[];
+  active.forEach(function(z){
+    var p=z.minetaPast||minetaPastProfile(z.horse,r);z.minetaPast=p;
+    var early=!!p.prevEarly,adjustedEarly=early||(!!z.lengthen&&p.samples>0);
+    z.minetaEarlyIntent=adjustedEarly;z.minetaRawEarly=early;
+    if(early)raw++;if(adjustedEarly)adjusted++;if(p.prevRear)rear++
+  });
+  leadPool=active.filter(function(z){var q=z.minetaPast||{};return q.prevLeader||q.prevEarly||z.rawFront>=.18||z.goProbBase>=.50||z.lengthen}).sort(function(a,b){
+    var ap=a.minetaPast||{},bp=b.minetaPast||{};
+    if(!!bp.prevLeader!==!!ap.prevLeader)return bp.prevLeader?1:-1;
+    if(!!bp.prevEarly!==!!ap.prevEarly)return bp.prevEarly?1:-1;
+    if(!!b.lengthen!==!!a.lengthen)return b.lengthen?1:-1;
+    if(n(b.rawFront)!==n(a.rawFront))return n(b.rawFront)-n(a.rawFront);
+    if(n(b.ten)!==n(a.ten))return n(b.ten)-n(a.ten);
+    if(n(b.breakSkill)!==n(a.breakSkill))return n(b.breakSkill)-n(a.breakSkill);
+    if(n(b.needLead)!==n(a.needLead))return n(b.needLead)-n(a.needLead);
+    if(n(b.ability)!==n(a.ability))return n(b.ability)-n(a.ability);
+    return n(a.horse.horseNumber)-n(b.horse.horseNumber)
+  });
+  leadPool.slice(0,3).forEach(function(z,k){z.minetaLeadRank=k+1});
+  var rawOcc=raw/field,adjustedOcc=adjusted/field,rearOcc=rear/field,band=rawOcc<=.25?'前少なめ':(rawOcc>=.45?'前多め':'中間');
+  return{field:field,rawFrontCount:raw,adjustedFrontCount:adjusted,rearCount:rear,rawOcc:rawOcc,adjustedOcc:adjustedOcc,rearOcc:rearOcc,band:band,
+    firstTurn:firstTurnDistance(r),leadNos:leadPool.slice(0,3).map(function(z){return n(z.horse.horseNumber)})}
+}
+function minetaAssignRoles(rows,r,ctx,pressure){
+  rows=rows||[];ctx=ctx||minetaRaceContext(rows,r);pressure=pressure||pressureInfo(rows);
+  var byNo={},abilityVals=rows.map(function(z){return n(z.ability,.5)}).sort(function(a,b){return a-b}),abilityMed=abilityVals.length?abilityVals[Math.floor(abilityVals.length/2)]:.5;
+  rows.forEach(function(z){byNo[n(z.horse.horseNumber)]=z});
+  rows.forEach(function(x){
+    var no=n(x.horse.horseNumber),p=x.minetaPast||minetaPastProfile(x.horse,r),q=pressure[no]||{},left=byNo[no-1],right=byNo[no+1],role='不明',notes=[];
+    if(!p.samples){x.expected='不明';x.minetaRole='不明';x.minetaNotes=['過去走不足'];return}
+    if(p.prevLeader&&n(x.rawFront,x.front)>=.12)role='逃げ候補';
+    else if(p.prevEarly||p.bucket==='先行')role='先行';
+    else if(p.bucket==='準先行')role='好位';
+    else if(p.bucket==='準後方')role='中団';
+    else role='後方';
+
+    if(p.midRaceLead>=.20||p.moveHistory>=.35){if(role==='後方')role='中団';else if(role==='中団'&&n(x.ability)>=abilityMed)role='好位';notes.push(p.midRaceLead>=.20?'道中先頭歴':'道中進出歴')}
+    if(x.lengthen){if(role==='後方'&&(n(x.move)>=.28||n(x.ability)>=abilityMed))role='中団';else if(role==='中団'&&ctx.rawOcc<=.33)role='好位';notes.push('距離延長で位置前進余地')}
+    if(x.shorten&&ctx.rawOcc>=.45){if(role==='好位'&&!p.prevEarly)role='中団';if(role==='中団'&&n(x.rawClose,x.close)>=.35)role='後方';notes.push('前多め＋距離短縮で脚ため')}
+    if(ctx.rawOcc<=.25&&ctx.rearOcc>=.45){if(role==='中団'&&(n(x.ability)>=abilityMed||n(x.move)>=.30))role='好位';else if(role==='後方'&&n(x.move)>=.45)role='中団';notes.push('後方馬多く相対的に前')}
+
+    x.minetaEscapeOutside=!!(left&&n(left.minetaLeadRank,0)>0&&n(left.minetaLeadRank)<=2&&!x.minetaEarlyIntent);
+    x.minetaEscapeSandwich=!!(left&&right&&left.minetaEarlyIntent&&right.minetaEarlyIntent&&!x.minetaEarlyIntent);
+    x.minetaSameStyleCrowd=!!((left&&left.minetaPast&&left.minetaPast.bucket===p.bucket)||(right&&right.minetaPast&&right.minetaPast.bucket===p.bucket));
+    if(x.minetaEscapeSandwich)notes.push('逃げ挟み');else if(x.minetaEscapeOutside)notes.push('強い先行馬の外');
+    if(x.minetaSameStyleCrowd)notes.push('同脚質並び');
+    if(p.prevEarly)notes.push('前走3番手以内');
+    if(ctx.rawOcc>=.45&&x.minetaEarlyIntent&&x.outer)notes.push('前多め＋外で先行負荷');
+    if(ctx.firstTurn<300&&x.minetaEarlyIntent&&x.inner)notes.push('初角近く内で先行しやすい');
+
+    if(n(x.minetaLeadRank,0)===1&&role!=='不明')role='逃げ候補';
+    else if(n(x.minetaLeadRank,0)>1&&role==='逃げ候補')role='先行';
+
+    x.expected=role;x.minetaRole=role;x.minetaNotes=notes.slice(0,5);
+    if(role==='逃げ候補')x.goProb=Math.max(n(x.goProb),.64);
+    else if(role==='先行')x.goProb=Math.max(n(x.goProb),.53);
+    else if(role==='好位')x.goProb=clamp(n(x.goProb),.38,.56);
+    else if(role==='中団')x.goProb=Math.min(n(x.goProb),.44);
+    else if(role==='後方')x.goProb=Math.min(n(x.goProb),.34);
+    if(x.minetaEscapeOutside){x.flexibility=clamp(n(x.flexibility,.5)+.05,0,1);x.trafficTol=clamp(n(x.trafficTol,.5)+.05,0,1)}
+    if(x.minetaEscapeSandwich){x.trafficTol=clamp(n(x.trafficTol,.5)+.08,0,1);x.latePower=clamp(n(x.latePower,.5)+.04,0,1)}
+    if(x.minetaSameStyleCrowd&&!x.minetaEscapeOutside&&!x.minetaEscapeSandwich)x.frontCost=clamp(n(x.frontCost,0)+.025,0,.30)
+  });
+  return ctx
+}
+function minetaStructureText(ctx){
+  if(!ctx)return'';
+  var bits=['先行占有 '+Math.round(ctx.rawOcc*100)+'%','距離補正後 '+Math.round(ctx.adjustedOcc*100)+'%','後方占有 '+Math.round(ctx.rearOcc*100)+'%'];
+  if(ctx.band==='前少なめ')bits.push('前・好位と強い先行馬の外を重視');
+  else if(ctx.band==='前多め')bits.push('内・距離短縮・行き切り・差し巻き返しを重視');
+  else bits.push('隊列と並びを重視');
+  return bits.join('｜')
+}
 function recentDistance(h){var rr=(h.recentRaces||[])[0];return rr?n(rr.distance):0}
 function recentFirst(h){var rr=(h.recentRaces||[])[0],p=rr&&rr.cornerPositions||[];return n(p[0],99)}
 function targetSeason(r){return season(r.date)}
@@ -272,19 +365,26 @@ function confidenceBlend(score,count){var q=clamp(n(count)/3,0,1);return .5*(1-q
 function buildRows(r){var hs=r.horses||[],tmp=[],speeds=[],prizes=[],i,h,rt,pt,sr,fit,ct=courseTraits(r),cp=courseProfile(r),field=Math.max(1,hs.length);for(i=0;i<hs.length;i++){h=hs[i];rt=styleRates(h,r);pt=rt.samples?stylePoint(rt):9;sr=speedRaw(h,n(r.distance));fit=conditionFit(h,r);var cf=rt.samples?rt.front:.08,cs=rt.samples?rt.stalk:.28,cm=rt.samples?rt.mid:.40,cc=rt.samples?rt.close:.24,ce=rt.samples?rt.early3:.24,cmo=rt.samples?rt.moved3:.08;tmp.push({horse:h,front:cf,stalk:cs,mid:cm,close:cc,rawFront:rt.front,rawStalk:rt.stalk,rawMid:rt.mid,rawClose:rt.close,early3:ce,moved3:cmo,styleSamples:rt.samples,styleUnknown:!rt.samples,ten:tenScore(h,r),fade:fadeRate(h),move:moveRate(h),hold:holdRate(h),yieldFlex:yieldFlex(h),breakRel:breakReliability(h),lateGain:lateGainScore(h),posCons:positionConsistency(h),collapse:earlyCollapseSeverity(h),score:pt,pastStyle:rt.samples?styleName(pt):"履歴なし",expected:rt.samples?styleName(pt):"不明",speedRaw:sr,fit:fit});speeds.push(sr);prizes.push(n(h.prizeMoneyAtRace))}
 for(i=0;i<tmp.length;i++){var x=tmp[i],hh=x.horse,rf=recentFirst(hh),rd=recentDistance(hh),distChange=rd?rd-n(r.distance):0,shorten=distChange>=150?1:0,lengthen=distChange<=-150?1:0,lengthenScale=rd?clamp((n(r.distance)-rd)/600,0,1):0,no=n(hh.horseNumber),draw=(no-1)/Math.max(1,field-1),outer=draw>.70?1:0,edge=no===field?1:0,inner=draw<.28?1:0,recentEarly=(rf<99?clamp((8-rf)/7,0,1):.5),posTrend=positionTrend(hh),jp=hh.jockeyProfile||{},jockeyFront=n(jp.early3Rate,0),leadHabit=n(jp.leaderRate,0),needLead=clamp(x.front*.78+Math.max(0,x.front-x.stalk)*.48+leadHabit*.10,0,1),flexibility=clamp(x.yieldFlex*.58+x.stalk*.25+x.mid*.12+(1-needLead)*.05,0,1),shortenBoost=shorten*(x.front*.12+x.stalk*.08+x.ten*.07),shortenPenalty=shorten*Math.max(0,.52-x.ten)*.18,lengthenBoost=lengthen*(x.stalk*.07+x.mid*.11+x.close*.05+(1-x.ten)*.055)+lengthenScale*.045,firstTurnRush=clamp(1-firstTurnDistance(r)/650,0,1),outerStress=outer*firstTurnRush*ct.turnLoad*(edge?.45:1),drawAdj=inner*ct.turnLoad*.055+edge*(1-ct.outerLoad)*.055-outerStress*.095,jf=hh.jockeyProfile?roleProfileScore(hh.jockeyProfile):genericRoleScore(hh.jockeyStats),tf=hh.trainerProfile?roleProfileScore(hh.trainerProfile):genericRoleScore(hh.trainerStats),trackFit=confidenceBlend(x.fit.track,x.fit.counts.track),distFit=confidenceBlend(x.fit.distance,x.fit.counts.distance),condFit=confidenceBlend(x.fit.condition,x.fit.counts.condition),weatherFit=confidenceBlend(x.fit.weather,x.fit.counts.weather),seasonFit=confidenceBlend(x.fit.season,x.fit.counts.season),levelFit=confidenceBlend(x.fit.level,x.fit.counts.level),speed=normalize(speeds,x.speedRaw),prize=normalize(prizes,n(hh.prizeMoneyAtRace)),baseAbility=recentFinishScore(hh)*.20+speed*.18+distFit*.11+trackFit*.08+condFit*.07+levelFit*.10+prize*.06+jf*.07+tf*.035+seasonFit*.02+weatherFit*.015+weightScore(hh)*.025+bodyWeightConditionScore(hh)*.040+ageSexScore(hh,r)*.025+x.lateGain*.025,dataN=Math.min(8,(hh.recentRaces||[]).length),coverage=clamp(dataN/5,0,1)*.60+clamp((x.fit.counts.distance+x.fit.counts.track)/4,0,1)*.22+clamp(n(jp.starts)/30,0,1)*.18,frontIntent=clamp(x.front*.36+x.stalk*.17+x.ten*.18+x.early3*.10+jockeyFront*.07+leadHabit*.05+needLead*.07+posTrend*.10,0,1.25),goBase=clamp(frontIntent+shortenBoost+lengthenBoost+drawAdj-shortenPenalty,0,1.25);x.forward=frontIntent;x.goProbBase=clamp(goBase*.72+x.breakRel*.14+x.ten*.14,0,1);x.goProb=x.goProbBase;x.needLead=needLead;x.flexibility=flexibility;x.positionTrend=posTrend;x.ability=clamp(baseAbility*.90+x.posCons*.035+(1-x.collapse)*.035+x.lateGain*.03,0,1);x.speedScore=speed;x.prizeScore=prize;x.jockeyScore=jf;x.trainerScore=tf;x.trackFit=trackFit;x.distFit=distFit;x.condFit=condFit;x.weatherFit=weatherFit;x.seasonFit=seasonFit;x.levelFit=levelFit;x.weightSuit=weightScore(hh);x.bodyWeightSuit=bodyWeightConditionScore(hh);x.bodyWeightKnown=!!currentBodyWeight(hh);x.ageSexSuit=ageSexScore(hh,r);x.coverage=coverage;x.draw=draw;x.outer=outer;x.edge=edge;x.inner=inner;x.outerStress=outerStress;x.shorten=shorten;x.lengthen=lengthen;x.lengthenScale=lengthenScale;x.leadVacancyBoost=0;x.distanceChange=distChange;x.course=ct;x.jockeyFront=jockeyFront;x.stamina=clamp((1-x.fade)*.35+x.hold*.26+distFit*.15+x.posCons*.10+x.ability*.09+(rd>n(r.distance)?.05:0),0,1);x.holdFront=clamp(x.hold*.33+(1-x.fade)*.30+x.stamina*.15+x.ability*.12+distFit*.06+ct.frontBias*.04,0,1);x.latePower=clamp(x.lateGain*.28+x.move*.25+x.close*.14+x.mid*.07+x.ability*.18+(1-x.fade)*.08,0,1);x.turnSkill=clamp(trackFit*.22+x.move*.18+x.flexibility*.18+x.posCons*.16+(1-ct.turnLoad)*.06+x.ability*.20,0,1);x.breakSkill=clamp(x.breakRel*.32+x.ten*.30+x.goProbBase*.20+recentEarly*.10+jockeyFront*.08,0,1);x.trafficTol=clamp(x.flexibility*.34+x.move*.24+x.posCons*.18+x.turnSkill*.18+x.lateGain*.06,0,1)}
 for(i=0;i<tmp.length;i++){var lx=tmp[i],le=lx.horse&&lx.horse.integratedEvaluation||{},lc=le.components||{},rawLap=(lc.lapScore!=null?lc.lapScore:(lx.horse&&lx.horse.lapScore));lx.lapScore=clamp(n(rawLap,.5),0,1);lx.sectionalSamples=n(lx.horse&&lx.horse.officialSectionalSamples,0)}
-var clearFrontCount=tmp.filter(function(z){return n(z.goProbBase)>=.53}).length;
+var minetaCtx=minetaRaceContext(tmp,r),clearFrontCount=tmp.filter(function(z){return z.minetaEarlyIntent||n(z.goProbBase)>=.53}).length;
 if(clearFrontCount<=1){
   for(i=0;i<tmp.length;i++){
     var lv=tmp[i],reposition=clamp(n(lv.lengthenScale)*.52+n(lv.breakRel)*.15+n(lv.ten)*.09+n(lv.positionTrend)*.08+n(lv.jockeyFront)*.08+(1-n(lv.needLead))*.08,0,1),drawChance=lv.edge?.055:(lv.inner?.035:.045),vacancyBoost=clamp(reposition*(clearFrontCount===0?.16:.10)+n(lv.lengthenScale)*.045+drawChance*(1-n(lv.outerStress)),0,.18);
-    lv.leadVacancyBoost=vacancyBoost;
-    lv.goProbBase=clamp(lv.goProbBase+vacancyBoost,0,1);
-    lv.goProb=lv.goProbBase
+    lv.leadVacancyBoost=vacancyBoost;lv.goProbBase=clamp(lv.goProbBase+vacancyBoost,0,1);lv.goProb=lv.goProbBase
   }
 }
-var p0=pressureInfo(tmp);for(i=0;i<tmp.length;i++){var y=tmp[i],q=p0[n(y.horse.horseNumber)]||{},pressurePenalty=(q.conflict||0)*(.055+.055*y.needLead)+(q.sandwich||0)*.075*(1-y.flexibility)+(q.lineMiddle||0)*.045*(.4+.6*y.needLead)+y.outerStress*.055-(q.lineEndRelief||0)*.025;y.leftPressure=q.left||0;y.rightPressure=q.right||0;y.sandwichRisk=q.sandwich||0;y.escapeSideRisk=q.escapeSide||0;y.frontLineRole=q.lineRole||'単独';y.frontLineMiddle=q.lineMiddle||0;y.frontLineEnd=q.lineEnd||0;y.lineEndRelief=q.lineEndRelief||0;y.frontCost=clamp(pressurePenalty,0,.30);y.goProb=clamp(y.goProbBase-pressurePenalty+(q.freeOuter||0)*.08+(q.lineEndRelief||0)*.05,0,1);if(y.goProb>=.68&&y.front>=.16&&y.ten>=.55)y.expected="逃げ候補";else if(y.goProb>=.54)y.expected="先行";else if(y.goProb>=.40||y.stalk>=.32)y.expected="好位";else if(y.close>=.42&&y.mid<.36)y.expected="後方";else y.expected="中団";if(y.styleUnknown)y.expected="不明";y.frontStay=clamp(y.goProb*.34+y.holdFront*.34+(1-y.fade)*.12+y.ability*.12+y.course.frontBias*.08-y.frontCost*.30+(q.lineEndRelief||0)*.035,0,1);y.comeFromBehind=clamp(y.latePower*.46+y.move*.20+y.ability*.16+y.course.moveRoom*.10+(1-y.goProb)*.08,0,1)}return tmp}
+var p0=pressureInfo(tmp);minetaAssignRoles(tmp,r,minetaCtx,p0);p0=pressureInfo(tmp);
+for(i=0;i<tmp.length;i++){
+  var y=tmp[i],q=p0[n(y.horse.horseNumber)]||{},pressurePenalty=(q.conflict||0)*(.055+.055*y.needLead)+(q.sandwich||0)*.075*(1-y.flexibility)+(q.lineMiddle||0)*.045*(.4+.6*y.needLead)+y.outerStress*.055-(q.lineEndRelief||0)*.025;
+  y.leftPressure=q.left||0;y.rightPressure=q.right||0;y.sandwichRisk=q.sandwich||0;y.escapeSideRisk=q.escapeSide||0;y.frontLineRole=q.lineRole||'単独';y.frontLineMiddle=q.lineMiddle||0;y.frontLineEnd=q.lineEnd||0;y.lineEndRelief=q.lineEndRelief||0;
+  y.frontCost=clamp(Math.max(n(y.frontCost,0),pressurePenalty),0,.30);
+  if(y.expected==='逃げ候補')y.goProb=Math.max(y.goProb,.64);else if(y.expected==='先行')y.goProb=Math.max(y.goProb,.53);
+  y.frontStay=clamp(y.goProb*.31+y.holdFront*.33+(1-y.fade)*.12+y.ability*.12+y.course.frontBias*.07-y.frontCost*.27+(q.lineEndRelief||0)*.035+(minetaCtx.rawOcc<=.25&&y.minetaEarlyIntent?.045:0)+(y.minetaEscapeOutside?.025:0)-(minetaCtx.rawOcc>=.45&&y.outer&&y.minetaEarlyIntent?.035:0),0,1);
+  y.comeFromBehind=clamp(y.latePower*.43+y.move*.19+y.ability*.16+y.course.moveRoom*.09+(1-y.goProb)*.07+(minetaCtx.rawOcc>=.45?.035:0)+(y.shorten&&minetaCtx.rawOcc>=.45?.035:0)+(y.minetaEscapeSandwich?.035:0),0,1)
+}
+tmp.minetaContext=minetaCtx;return tmp}
 function rowByNo(rows,no){var i;for(i=0;i<rows.length;i++)if(n(rows[i].horse.horseNumber)===n(no))return rows[i];return null}
 function pressureInfo(rows){var sorted=rows.slice().sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)}),p={},attacks=[],hot=[],segFor=[],segments=[],i,x,l,r,lp,rp,base,current=null;function attack(z){if(!z)return 0;base=z.goProbBase!=null?z.goProbBase:z.goProb;return clamp(base*(.46+.34*z.needLead+.20*z.ten),0,1.2)}for(i=0;i<sorted.length;i++){attacks[i]=attack(sorted[i]);hot[i]=attacks[i]>.50&&n(sorted[i].goProbBase,sorted[i].goProb)>=.44}for(i=0;i<sorted.length;i++){if(hot[i]){if(!current||i===0||!hot[i-1]||n(sorted[i].horse.horseNumber)-n(sorted[i-1].horse.horseNumber)!==1){current={idx:[]};segments.push(current)}current.idx.push(i);segFor[i]=current}else current=null}for(i=0;i<sorted.length;i++){x=sorted[i];l=i?sorted[i-1]:null;r=i<sorted.length-1?sorted[i+1]:null;lp=l&&n(x.horse.horseNumber)-n(l.horse.horseNumber)===1?attacks[i-1]:0;rp=r&&n(r.horse.horseNumber)-n(x.horse.horseNumber)===1?attacks[i+1]:0;var leftHot=lp>.50,rightHot=rp>.50,sandwich=leftHot&&rightHot?1:0,escapeSide=(leftHot||rightHot)&&!sandwich?1:0,adj=(leftHot?1:0)+(rightHot?1:0),near2=0;if(i>1&&n(x.horse.horseNumber)-n(sorted[i-2].horse.horseNumber)===2)near2+=attacks[i-2]*.14;if(i<sorted.length-2&&n(sorted[i+2].horse.horseNumber)-n(x.horse.horseNumber)===2)near2+=attacks[i+2]*.14;var seg=segFor[i]||null,clusterLen=seg?seg.idx.length:0,clusterPos=seg?seg.idx.indexOf(i):-1,lineMiddle=clusterLen>=3&&clusterPos>0&&clusterPos<clusterLen-1?1:0,lineEnd=clusterLen>=2&&(clusterPos===0||clusterPos===clusterLen-1)?1:0,innerEnd=lineEnd&&clusterPos===0?1:0,outerEnd=lineEnd&&clusterPos===clusterLen-1?1:0,lineEndRelief=lineEnd?(.05+.08*x.flexibility):0;if(outerEnd&&!rightHot)lineEndRelief+=.04;if(innerEnd&&!leftHot)lineEndRelief+=.025;var conflict=(lp+rp)*(.43+.38*x.needLead+.19*x.ten)*(1-.42*x.flexibility)+near2+lineMiddle*(.10+.10*x.needLead)+(clusterLen>=4?.04:0);conflict=Math.max(0,conflict-lineEndRelief*.42);var freeOuter=x.edge?(.055+.075*x.flexibility):0,lineRole=lineMiddle?'先行列中央':(outerEnd?'先行列外端':(innerEnd?'先行列最内':(lineEnd?'先行列端':'単独/飛び')));p[n(x.horse.horseNumber)]={adj:adj,sandwich:sandwich,escapeSide:escapeSide,conflict:clamp(conflict,0,1.7),freeOuter:freeOuter,left:lp,right:rp,leftHot:leftHot,rightHot:rightHot,selfAttack:attacks[i],clusterLen:clusterLen,lineMiddle:lineMiddle,lineEnd:lineEnd,innerEnd:innerEnd,outerEnd:outerEnd,lineEndRelief:lineEndRelief,lineRole:lineRole}}return p}
-function frontArrangement(rows,pressure){pressure=pressure||pressureInfo(rows);var field=Math.max(1,rows.length),front=rows.filter(function(x){return x.goProb>=.50}).sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)}),segments=[],cur=[],i,x,no,prev=0;for(i=0;i<front.length;i++){x=front[i];no=n(x.horse.horseNumber);if(!cur.length||no===prev+1)cur.push(x);else{segments.push(cur);cur=[x]}prev=no}if(cur.length)segments.push(cur);var adjacentPairs=0,longest=0;for(i=0;i<segments.length;i++){longest=Math.max(longest,segments[i].length);adjacentPairs+=Math.max(0,segments[i].length-1)}var pattern=!front.length?'前候補なし':(front.length===1?'単独':(adjacentPairs===0?'飛び飛び':(longest>=3?'連続':'一部連続'))),innerCut=Math.ceil(field*.35),outerCut=Math.floor(field*.65)+1,innerCount=front.filter(function(z){return n(z.horse.horseNumber)<=innerCut}).length,outerCount=front.filter(function(z){return n(z.horse.horseNumber)>=outerCut}).length,innerShare=front.length?innerCount/front.length:0,outerShare=front.length?outerCount/front.length:0,concentrationText=innerShare>=.60?'内枠に集中':(outerShare>=.60?'外枠に集中':'内外に分散'),scored=rows.slice();for(i=0;i<scored.length;i++){x=scored[i];var q=pressure[n(x.horse.horseNumber)]||{};x.canYield=clamp(x.flexibility*.62+x.stalk*.20+(1-x.needLead)*.18,0,1)>=.55;x.leaderScore=clamp(x.goProb*.38+x.ten*.20+x.needLead*.17+x.breakSkill*.13+x.jockeyFront*.05+x.front*.05+(q.lineEndRelief||0)*.05-(q.conflict||0)*.04,0,1.3);x.secondScore=clamp(x.goProb*.34+x.stalk*.22+x.flexibility*.16+x.holdFront*.12+x.ability*.08+(q.lineEndRelief||0)*.05-(q.conflict||0)*.04,0,1.3);x.positionScore=clamp(x.goProb*.23+x.stalk*.24+x.mid*.13+x.flexibility*.13+x.ability*.12+x.turnSkill*.09+(1-x.frontCost)*.06,0,1.2)}var leadOrder=scored.filter(function(z){return z.goProb>=.48}).sort(function(a,b){return b.leaderScore-a.leaderScore||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),leadMax=leadOrder.length?leadOrder[0].leaderScore:0,leadCandidates=leadOrder.filter(function(z,idx){return idx<3&&z.leaderScore>=leadMax-.085&&z.goProb>=.53}),leadTop=leadCandidates[0]||leadOrder[0]||null,secondCandidates=scored.filter(function(z){return !leadTop||n(z.horse.horseNumber)!==n(leadTop.horse.horseNumber)}).filter(function(z){return z.goProb>=.42||z.stalk>=.28}).sort(function(a,b){return b.secondScore-a.secondScore}).slice(0,3),positionCandidates=scored.filter(function(z){return z.goProb>=.34||z.stalk>=.30||z.mid>=.34}).sort(function(a,b){return b.positionScore-a.positionScore}).slice(0,4),escapeSide=leadCandidates.filter(function(z){var q=pressure[n(z.horse.horseNumber)]||{};return q.escapeSide}),sandwich=leadCandidates.filter(function(z){var q=pressure[n(z.horse.horseNumber)]||{};return q.sandwich}),middleFront=front.filter(function(z){var q=pressure[n(z.horse.horseNumber)]||{};return q.lineMiddle}),highFade=front.filter(function(z){return z.fade>=.50}),hardLead=leadCandidates.filter(function(z){return z.needLead>=.58&&z.canYield===false});return{front:front,segments:segments,pattern:pattern,longest:longest,adjacentPairs:adjacentPairs,innerShare:innerShare,outerShare:outerShare,concentrationText:concentrationText,leadCandidates:leadCandidates,secondCandidates:secondCandidates,positionCandidates:positionCandidates,escapeSide:escapeSide,sandwich:sandwich,middleFront:middleFront,highFade:highFade,hardLeadCount:hardLead.length}}
+function frontArrangement(rows,pressure){pressure=pressure||pressureInfo(rows);var field=Math.max(1,rows.length),front=rows.filter(function(x){return x.minetaEarlyIntent||x.expected==='逃げ候補'||x.expected==='先行'||x.goProb>=.50}).sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)}),segments=[],cur=[],i,x,no,prev=0;for(i=0;i<front.length;i++){x=front[i];no=n(x.horse.horseNumber);if(!cur.length||no===prev+1)cur.push(x);else{segments.push(cur);cur=[x]}prev=no}if(cur.length)segments.push(cur);var adjacentPairs=0,longest=0;for(i=0;i<segments.length;i++){longest=Math.max(longest,segments[i].length);adjacentPairs+=Math.max(0,segments[i].length-1)}var pattern=!front.length?'前候補なし':(front.length===1?'単独':(adjacentPairs===0?'飛び飛び':(longest>=3?'連続':'一部連続'))),innerCut=Math.ceil(field*.35),outerCut=Math.floor(field*.65)+1,innerCount=front.filter(function(z){return n(z.horse.horseNumber)<=innerCut}).length,outerCount=front.filter(function(z){return n(z.horse.horseNumber)>=outerCut}).length,innerShare=front.length?innerCount/front.length:0,outerShare=front.length?outerCount/front.length:0,concentrationText=innerShare>=.60?'内枠に集中':(outerShare>=.60?'外枠に集中':'内外に分散'),scored=rows.slice();for(i=0;i<scored.length;i++){x=scored[i];var q=pressure[n(x.horse.horseNumber)]||{};x.canYield=clamp(x.flexibility*.62+x.stalk*.20+(1-x.needLead)*.18,0,1)>=.55;x.leaderScore=clamp(x.goProb*.38+x.ten*.20+x.needLead*.17+x.breakSkill*.13+x.jockeyFront*.05+x.front*.05+(q.lineEndRelief||0)*.05-(q.conflict||0)*.04,0,1.3);x.secondScore=clamp(x.goProb*.34+x.stalk*.22+x.flexibility*.16+x.holdFront*.12+x.ability*.08+(q.lineEndRelief||0)*.05-(q.conflict||0)*.04,0,1.3);x.positionScore=clamp(x.goProb*.23+x.stalk*.24+x.mid*.13+x.flexibility*.13+x.ability*.12+x.turnSkill*.09+(1-x.frontCost)*.06,0,1.2)}var leadOrder=scored.filter(function(z){return z.minetaEarlyIntent||z.goProb>=.48}).sort(function(a,b){var ar=n(a.minetaLeadRank,99),br=n(b.minetaLeadRank,99);if(ar!==br)return ar-br;return b.leaderScore-a.leaderScore||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),leadMax=leadOrder.length?leadOrder[0].leaderScore:0,leadCandidates=leadOrder.filter(function(z,idx){return idx<3&&((n(z.minetaLeadRank,0)>0)||(z.leaderScore>=leadMax-.085&&z.goProb>=.53))}),leadTop=leadCandidates[0]||leadOrder[0]||null,secondCandidates=scored.filter(function(z){return !leadTop||n(z.horse.horseNumber)!==n(leadTop.horse.horseNumber)}).filter(function(z){return z.goProb>=.42||z.stalk>=.28}).sort(function(a,b){return b.secondScore-a.secondScore}).slice(0,3),positionCandidates=scored.filter(function(z){return z.goProb>=.34||z.stalk>=.30||z.mid>=.34}).sort(function(a,b){return b.positionScore-a.positionScore}).slice(0,4),escapeSide=leadCandidates.filter(function(z){var q=pressure[n(z.horse.horseNumber)]||{};return q.escapeSide}),sandwich=leadCandidates.filter(function(z){var q=pressure[n(z.horse.horseNumber)]||{};return q.sandwich}),middleFront=front.filter(function(z){var q=pressure[n(z.horse.horseNumber)]||{};return q.lineMiddle}),highFade=front.filter(function(z){return z.fade>=.50}),hardLead=leadCandidates.filter(function(z){return z.needLead>=.58&&z.canYield===false});return{front:front,segments:segments,pattern:pattern,longest:longest,adjacentPairs:adjacentPairs,innerShare:innerShare,outerShare:outerShare,concentrationText:concentrationText,leadCandidates:leadCandidates,secondCandidates:secondCandidates,positionCandidates:positionCandidates,escapeSide:escapeSide,sandwich:sandwich,middleFront:middleFront,highFade:highFade,hardLeadCount:hardLead.length}}
 function tacticalContext(r,rows){var pressure=pressureInfo(rows),arr=frontArrangement(rows,pressure),collapseWatch=arr.highFade.length>=2,i,x,q;for(i=0;i<rows.length;i++){x=rows[i];q=pressure[n(x.horse.horseNumber)]||{};x.frontLineRole=q.lineRole||'単独/飛び';x.collapseBeneficiary=collapseWatch&&x.goProb<.58?clamp(x.comeFromBehind*.42+x.latePower*.22+x.move*.15+x.trafficTol*.12+x.ability*.09,0,1):0}arr.collapseWatch=collapseWatch;arr.collapseRecheck=collapseWatch?rows.filter(function(z){return z.goProb<.58&&(z.mid+z.close)>=.45}).sort(function(a,b){return b.collapseBeneficiary-a.collapseBeneficiary||b.comeFromBehind-a.comeFromBehind}).slice(0,2):[];return{pressure:pressure,arrangement:arr}}
 function scenarioModel(r,rows,pressure,arr){pressure=pressure||pressureInfo(rows);arr=arr||frontArrangement(rows,pressure);var front=rows.slice().sort(function(a,b){return b.goProb-a.goProb}),active=arr.front,top=active.slice().sort(function(a,b){return b.goProb-a.goProb}).slice(0,Math.min(5,active.length)),fade=top.length?mean(top.map(function(x){return x.fade})):0,hold=top.length?mean(top.map(function(x){return x.holdFront})):0,conf=top.length?mean(top.map(function(x){return (pressure[n(x.horse.horseNumber)]||{}).conflict||0})):0,sand=top.length?mean(top.map(function(x){return (pressure[n(x.horse.horseNumber)]||{}).sandwich||0})):0,flex=top.length?mean(top.map(function(x){return x.flexibility})):0,ct=rows.length?rows[0].course:courseTraits(r),cp=courseProfile(r),firstTurnRush=clamp(1-firstTurnDistance(r)/650,0,1),lead=arr.leadCandidates||[],leadGap=lead.length>1?Math.max(0,lead[0].leaderScore-lead[1].leaderScore):.20,clear=lead.length?clamp(leadGap*2.0+lead[0].holdFront*.10+(lead[0].lineEndRelief||0)*.08,0,.42):.12,cluster=clamp((arr.longest-1)/3,0,1),outerLoad=arr.outerShare*firstTurnRush*ct.turnLoad,frontVolume=clamp(active.length/Math.max(1,rows.length),0,1),stableLead=lead.length?clamp(lead[0].holdFront*.45+(1-lead[0].fade)*.30+lead[0].ten*.15+(lead[0].canYield?.10:0),0,1):0,hardMulti=Math.max(0,(arr.hardLeadCount||0)-1),spreadRelief=arr.pattern==='飛び飛び'?.08:(arr.pattern==='一部連続'?.035:0),A=.28+ct.frontBias*.24+clear*.20+hold*.12+(1-fade)*.075+(1-clamp(conf,0,1))*.05+flex*.03+stableLead*.045+spreadRelief*.035,C=.16+(1-ct.frontBias)*.09+ct.moveRoom*.09+fade*.17+clamp(conf,0,1)*.13+sand*.09+cluster*.06+outerLoad*.055+hardMulti*.055,B=.34+flex*.075+(1-Math.abs(A-C))*.035+spreadRelief*.03;if(arr.highFade.length>=2)C+=.045+Math.min(.055,(arr.highFade.length-2)*.018);if(frontVolume>.52)C+=cluster>.20?Math.min(.045,(frontVolume-.52)*.16):Math.min(.015,(frontVolume-.52)*.08);if(lead.length>1&&hardMulti===0)B+=.025;if(lead.length===1&&stableLead>.62)A+=.035;if(arr.pattern==='飛び飛び'&&flex>.52)C-=.025;A=clamp(A,.15,.68);B=clamp(B,.20,.52);C=clamp(C,.12,.60);var sum=A+B+C;A/=sum;B/=sum;C/=sum;return[{code:"A",title:"前残り",prob:A},{code:"B",title:"平均",prob:B},{code:"C",title:"前崩れ・差し届く",prob:C}]}
 function startOrder(rows){var p=pressureInfo(rows);return rows.slice().sort(function(a,b){function s(x){var q=p[n(x.horse.horseNumber)]||{};return x.goProb+x.needLead*.12+(q.freeOuter||0)-q.conflict*.035}return s(b)-s(a)||n(a.horse.horseNumber)-n(b.horse.horseNumber)})}
@@ -380,7 +480,9 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
     q=p[n(z.horse.horseNumber)]||{};
     if(q.sandwich&&z.flexibility<.48)move(orders[1],z,1);
     if(z.outerStress>=.58&&z.goProb>=.46)move(orders[1],z,1);
-    if(q.lineMiddle&&z.needLead>=.58&&z.flexibility<.45)move(orders[1],z,1)
+    if(q.lineMiddle&&z.needLead>=.58&&z.flexibility<.45)move(orders[1],z,1);
+    if(z.minetaEscapeOutside&&z.expected!=='逃げ候補'&&q.conflict<.55)move(orders[1],z,-1);
+    if(z.minetaSameStyleCrowd&&!z.minetaEscapeOutside&&!z.minetaEscapeSandwich&&z.flexibility<.48)move(orders[1],z,1)
   });
   if(leader&&topRank(orders[1],leader)>2&&leader.goProb>=.62&&leader.breakSkill>=.52)moveTo(orders[1],leader,0);
 
@@ -436,6 +538,7 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
   ]);
   closers.slice(0,code==='C'?3:2).forEach(function(z){
     var gain=(z.comeFromBehind>=.68&&z.latePower>=.64)?3:2;
+    if(z.minetaEscapeSandwich)gain+=1;
     if(code==='A')gain=Math.max(1,gain-1);
     move(orders[5],z,-gain)
   });
