@@ -116,6 +116,31 @@ def init_metrics() -> dict[str, int]:
     return {"races": 0, "honmeiWin": 0, "honmeiTop2": 0, "honmeiTop3": 0, "winnerTop3": 0, "winnerTop5": 0, "winnerCoreMark": 0, "winnerAnyMark": 0}
 
 
+def init_published_honmei() -> dict[str, int]:
+    return {"eligibleRaces": 0, "wins": 0, "top2": 0, "top3": 0, "withheldRaces": 0}
+
+
+def add_published_honmei(target: dict[str, int], order: list[int], marks: dict[int, str]) -> None:
+    honmei = next((no for no, mark in marks.items() if mark == "◎"), 0)
+    if not honmei:
+        target["withheldRaces"] += 1
+        return
+    target["eligibleRaces"] += 1
+    pos = order.index(honmei) + 1 if honmei in order else 999
+    target["wins"] += int(pos == 1)
+    target["top2"] += int(pos <= 2)
+    target["top3"] += int(pos <= 3)
+
+
+def published_honmei_rates(target: dict[str, int]) -> dict[str, Any]:
+    n = int(target.get("eligibleRaces", 0))
+    out = dict(target)
+    out["winRate"] = round(target.get("wins", 0) / n, 4) if n else None
+    out["top2Rate"] = round(target.get("top2", 0) / n, 4) if n else None
+    out["top3Rate"] = round(target.get("top3", 0) / n, 4) if n else None
+    return out
+
+
 def add_metrics(m: dict[str, int], order: list[int], rank: list[int], marks: dict[int, str]) -> None:
     if not order or not rank:
         return
@@ -255,6 +280,8 @@ def main() -> None:
     dates = [(end - timedelta(days=i)).isoformat() for i in range(DAYS - 1, -1, -1)]
     exact_total = init_metrics()
     replay_total = init_metrics()
+    published_replay = init_published_honmei()
+    published_replay_by_circuit: dict[str, dict[str, int]] = defaultdict(init_published_honmei)
     exact_by_circuit: dict[str, dict[str, int]] = defaultdict(init_metrics)
     replay_by_circuit: dict[str, dict[str, int]] = defaultdict(init_metrics)
     heads_total = init_head_metrics()
@@ -303,7 +330,11 @@ def main() -> None:
             replay_rows = mark_rows(replay.get("horses"), lock=False)
             replay_marks = {x["no"]: x["mark"] for x in replay_rows if x.get("mark")}
             rr = replay_rank(replay)
-            replay_honmei = next((no for no, mark in replay_marks.items() if mark == "◎"), rr[0] if rr else 0)
+            published_honmei = next((no for no, mark in replay_marks.items() if mark == "◎"), 0)
+            replay_honmei = published_honmei or (rr[0] if rr else 0)
+            if rr:
+                add_published_honmei(published_replay, order, replay_marks)
+                add_published_honmei(published_replay_by_circuit[circuit], order, replay_marks)
             if rr and replay_honmei:
                 add_metrics(day_replay, order, rr, replay_marks)
                 add_metrics(replay_by_circuit[circuit], order, rr, replay_marks)
@@ -340,6 +371,8 @@ def main() -> None:
         "replayedRaces": replayed,
         "exactLocked": rates(exact_total),
         "currentFourPillarReplay": rates(replay_total),
+        "publishedHonmeiReplay": published_honmei_rates(published_replay),
+        "publishedHonmeiByCircuit": {k: published_honmei_rates(v) for k, v in sorted(published_replay_by_circuit.items())},
         "exactByCircuit": {k: rates(v) for k, v in sorted(exact_by_circuit.items())},
         "replayByCircuit": {k: rates(v) for k, v in sorted(replay_by_circuit.items())},
         "decisionHeads": head_rates(heads_total),
