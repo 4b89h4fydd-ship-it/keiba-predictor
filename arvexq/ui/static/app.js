@@ -2050,18 +2050,36 @@ function schedulePreviousAiStats(){
       var rows=Array.isArray(body)?body:((body&&body.races)||[]);
       rows=rows.filter(function(r){return r&&r.id});
       previousAiStats.finalCount=rows.length;
-      var cursor=0,results=[],workers=[];
+      var cursor=0,results=rows.map(function(row){
+        return {
+          raceId:String(row.id||''),track:String(row.track||''),raceNumber:n(row.raceNumber),
+          title:String(row.title||''),circuit:String(row.circuit||''),marks:[],podiumNos:[],
+          winHit:false,markHit:false,fullPodiumHit:false,markedPodiumCount:0,
+          hasMarks:false,resultReady:false,loadError:false
+        }
+      }),workers=[];
       function worker(){
         if(token!==previousAiStatsJob||cursor>=rows.length)return Promise.resolve();
-        var row=rows[cursor++],id=String(row.id||'');
+        var idx=cursor++,row=rows[idx],id=String(row.id||'');
         return edgeFetchJson(edgeRaceUrl(id),9000)
           .then(function(body){
             var d=body&&body.detail?body.detail:null;
-            if(d){
-              if(!d.track)d.track=row.track;if(!d.raceNumber)d.raceNumber=row.raceNumber;if(!d.title)d.title=row.title;if(!d.circuit)d.circuit=row.circuit;
-              var z=aiDailyOne(d);if(z)results.push(z)
+            if(!d){results[idx].loadError=true;return}
+            if(!d.track)d.track=row.track;if(!d.raceNumber)d.raceNumber=row.raceNumber;if(!d.title)d.title=row.title;if(!d.circuit)d.circuit=row.circuit;
+            var finishers=(d.result&&d.result.finishers||[]).filter(function(x){return n(x.finish)>0}).sort(function(a,b){return n(a.finish)-n(b.finish)});
+            results[idx].resultReady=finishers.length>0;
+            results[idx].podiumNos=finishers.slice(0,3).map(function(x){return n(x.horseNumber)}).filter(function(x){return x>0});
+            var marks=aiStoredMarks(d);
+            results[idx].hasMarks=marks.length>0;
+            results[idx].marks=marks.filter(function(x){return !!String(x.mark||'')}).map(function(x){return{no:x.no,mark:x.mark}});
+            var z=aiDailyOne(d);
+            if(z){
+              z.hasMarks=true;z.resultReady=results[idx].resultReady;z.loadError=false;
+              results[idx]=z
             }
-          }).catch(function(){}).then(worker)
+          })
+          .catch(function(){results[idx].loadError=true})
+          .then(worker)
       }
       for(var i=0;i<Math.min(4,rows.length);i++)workers.push(worker());
       return Promise.all(workers).then(function(){return results})
@@ -2084,21 +2102,24 @@ function schedulePreviousAiStats(){
 function smartPreviousAiStats(){
   var s=previousAiStats,date=s.date||previousDateKey(today()),p=String(date||'').split('-'),label=(n(p[1])&&n(p[2]))?(n(p[1])+'月'+n(p[2])+'日'):'前日';
   if(!s.done&&!s.loading){setTimeout(schedulePreviousAiStats,0);return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日のAI成績</b><small>全レース集計準備中</small></div></section>'}
-  if(s.loading)return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>AI印を付けた全レースを集計中…</small></div></section>';
+  if(s.loading)return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>前日の全レースを集計中…</small></div></section>';
   if(s.error)return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>'+esc(s.error)+'</small></div></section>';
-  if(!s.total)return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>事前AI印が保存された確定レースなし</small></div></section>';
+  if(!s.total)return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>前日のレースデータなし</small></div></section>';
   function rate(hit){return Math.round(hit/s.total*100)}
-  function markText(row){var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注+':7,'注':8};return (row.marks||[]).slice().sort(function(a,b){return n(order[a.mark],99)-n(order[b.mark],99)||n(a.no)-n(b.no)}).map(function(x){return x.mark+x.no}).join(' ')}
+  function markText(row){var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注+':7,'注':8};var txt=(row.marks||[]).slice().sort(function(a,b){return n(order[a.mark],99)-n(order[b.mark],99)||n(a.no)-n(b.no)}).map(function(x){return x.mark+x.no}).join(' ');return txt||'印なし'}
   var rows=(s.rows||[]).map(function(x){
-    var result=(x.podiumNos||[]).slice(0,3).join('-')||'—',cls=x.fullPodiumHit?'hit':(x.markHit?'partial':'miss'),
-        judge=x.fullPodiumHit?'3頭完全':(x.markHit?'1着印内':'1着印外');
+    var result=(x.podiumNos||[]).slice(0,3).join('-')||'—',cls=x.fullPodiumHit?'hit':(x.markHit?'partial':'miss'),judge;
+    if(x.loadError)judge='詳細取得失敗';
+    else if(!x.resultReady)judge='結果未取得';
+    else if(!x.hasMarks)judge='印なし';
+    else judge=x.fullPodiumHit?'3頭完全':(x.markHit?'1着印内':'1着印外');
     return '<div class="smart-ai-race-row '+cls+'"><span class="smart-ai-race-name"><b>'+esc(x.track)+' '+esc(x.raceNumber)+'R</b><small>'+esc(x.title||'')+'</small></span><span class="smart-ai-race-marks">'+esc(markText(x))+'</span><span class="smart-ai-race-result">結果 '+esc(result)+'</span><strong>'+esc(judge)+'</strong></div>'
   }).join('');
-  return '<section class="smart-ai-daily smart-ai-previous"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>AI印を付けた全'+s.total+'レース</small></div><div class="smart-ai-daily-grid">'+
+  return '<section class="smart-ai-daily smart-ai-previous"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>前日の全'+s.total+'レース</small></div><div class="smart-ai-daily-grid">'+
     '<div><small>AI印内1着</small><strong>'+rate(s.markHits)+'%</strong><em>'+s.markHits+'/'+s.total+'</em></div>'+
     '<div><small>◎1着</small><strong>'+rate(s.winHits)+'%</strong><em>'+s.winHits+'/'+s.total+'</em></div>'+
     '<div><small>印内3頭完全</small><strong>'+rate(s.fullPodiumHits)+'%</strong><em>'+s.fullPodiumHits+'/'+s.total+'</em></div>'+
-  '</div><div class="smart-ai-race-list">'+rows+'</div><p>※分母は前日に発走前AI印が保存され、結果確定した全レース。厳選レースだけではなく、印を付けたレースを全部表示します。</p></section>'
+  '</div><div class="smart-ai-race-list">'+rows+'</div><p>※分母は前日の全レース。事前AI印が無いレースも除外せず「印なし」として表示します。</p></section>'
 }
 function aiStatsDayTitle(){
   if(state.date===today())return '本日のAI成績';
