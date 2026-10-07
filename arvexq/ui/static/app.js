@@ -462,29 +462,47 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
   function isStalk(z){return z.expected==='好位'||z.stalk>=.30}
   function isCloser(z){return z.expected==='後方'||z.close>=.38||z.comeFromBehind>=.58}
 
-  // START: choose roles lexicographically, not by one combined score.
+  // START: distinguish "who contests the lead" from "where they settle after losing it".
+  // A horse strong enough to be named in the lead battle cannot jump straight to midfield
+  // unless a concrete retreat / pressure event occurs.
   var leaderPool=(arr.leadCandidates||[]).length?(arr.leadCandidates||[]):rows.filter(function(z){return z.goProb>=.50});
   leaderPool=lex(leaderPool,[function(z){return z.goProb},function(z){return z.needLead},function(z){return z.breakSkill},function(z){return z.ten}]);
-  var leader=leaderPool[0]||lex(rows,[function(z){return z.goProb},function(z){return z.breakSkill}])[0]||null;
-  var front=lex(rows.filter(function(z){return z!==leader&&isFront(z)}),[function(z){return z.goProb},function(z){return z.ten},function(z){return z.needLead}]);
-  var stalk=lex(rows.filter(function(z){return z!==leader&&!isFront(z)&&isStalk(z)}),[function(z){return z.stalk},function(z){return z.posCons},function(z){return z.breakSkill}]);
-  var middle=lex(rows.filter(function(z){return z!==leader&&!isFront(z)&&!isStalk(z)&&!isCloser(z)}),[function(z){return z.mid},function(z){return z.posCons}]);
-  var rear=lex(rows.filter(function(z){return z!==leader&&!isFront(z)&&!isStalk(z)&&isCloser(z)}),[function(z){return z.close},function(z){return z.latePower}]);
-  var orders=[];
-  orders[0]=uniq([[leader],front,stalk,middle,rear]);
+  var leader=leaderPool[0]||lex(rows,[function(z){return z.goProb},function(z){return z.breakSkill}])[0]||null,
+      leadBattlers=leaderPool.filter(function(z){return z!==leader}),
+      front=lex(rows.filter(function(z){return z!==leader&&leadBattlers.indexOf(z)<0&&isFront(z)}),[function(z){return z.goProb},function(z){return z.ten},function(z){return z.needLead}]),
+      stalk=lex(rows.filter(function(z){return z!==leader&&leadBattlers.indexOf(z)<0&&!isFront(z)&&isStalk(z)}),[function(z){return z.stalk},function(z){return z.posCons},function(z){return z.breakSkill}]),
+      middle=lex(rows.filter(function(z){return z!==leader&&leadBattlers.indexOf(z)<0&&!isFront(z)&&!isStalk(z)&&!isCloser(z)}),[function(z){return z.mid},function(z){return z.posCons}]),
+      rear=lex(rows.filter(function(z){return z!==leader&&leadBattlers.indexOf(z)<0&&!isFront(z)&&!isStalk(z)&&isCloser(z)}),[function(z){return z.close},function(z){return z.latePower}]),
+      orders=[];
+  // At the instant of the break, all genuine lead battlers stay in the front cluster.
+  orders[0]=uniq([[leader],leadBattlers,front,stalk,middle,rear]);
 
-  // FIRST TURN: resolve the actual fight for position. A horse only loses ground
-  // when there is a concrete pressure / draw / flexibility reason.
+  // FIRST TURN: predict the settling order after the lead battle.
+  // This is where a horse such as 7 can go from "challenged for the lead" to 2nd/3rd,
+  // rather than incorrectly being thrown into midfield.
   orders[1]=orders[0].slice();
-  orders[1].slice(0,Math.min(5,orders[1].length)).forEach(function(z){
+  if(leader){
+    var settlePool=uniq([leadBattlers,(arr.secondCandidates||[]),front,stalk]).filter(function(z){return z&&z!==leader}).slice(0,Math.min(6,rows.length-1));
+    function settleScore(z){
+      var qq=p[n(z.horse.horseNumber)]||{},wasLead=leadBattlers.indexOf(z)>=0?1:0,
+          yieldPenalty=wasLead*n(z.needLead)*(1-n(z.canYield,.5))*.16;
+      return n(z.secondScore,.5)*.38+n(z.stalk,.3)*.15+n(z.flexibility,.5)*.12+n(z.breakSkill,.5)*.09+
+        n(z.ten,.5)*.08+n(z.ability,.5)*.08+n(z.posCons,.5)*.06+wasLead*.08+
+        (z.minetaEscapeOutside?.035:0)-(n(z.outerStress)*.06+n(qq.conflict)*.06+yieldPenalty)
+    }
+    settlePool.sort(function(a,b){return settleScore(b)-settleScore(a)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
+    var settleTop=settlePool.slice(0,Math.min(4,settlePool.length)),
+        rest=orders[1].filter(function(z){return z!==leader&&settleTop.indexOf(z)<0});
+    orders[1]=[leader].concat(settleTop,rest)
+  }
+  orders[1].slice(0,Math.min(6,orders[1].length)).forEach(function(z){
     q=p[n(z.horse.horseNumber)]||{};
-    if(q.sandwich&&z.flexibility<.48)move(orders[1],z,1);
-    if(z.outerStress>=.58&&z.goProb>=.46)move(orders[1],z,1);
-    if(q.lineMiddle&&z.needLead>=.58&&z.flexibility<.45)move(orders[1],z,1);
-    if(z.minetaEscapeOutside&&z.expected!=='逃げ候補'&&q.conflict<.55)move(orders[1],z,-1);
-    if(z.minetaSameStyleCrowd&&!z.minetaEscapeOutside&&!z.minetaEscapeSandwich&&z.flexibility<.48)move(orders[1],z,1)
+    var explicitRetreat=(z.fade>=.58&&z.frontCost>=.14)||(z.outerStress>=.68&&z.goProb>=.46)||
+      (q.lineMiddle&&z.needLead>=.66&&z.flexibility<.40)||(q.sandwich&&z.flexibility<.38);
+    if(explicitRetreat)move(orders[1],z,1);
+    if(z.minetaEscapeOutside&&z.expected!=='逃げ候補'&&q.conflict<.55)move(orders[1],z,-1)
   });
-  if(leader&&topRank(orders[1],leader)>2&&leader.goProb>=.62&&leader.breakSkill>=.52)moveTo(orders[1],leader,0);
+  if(leader&&topRank(orders[1],leader)>1)moveTo(orders[1],leader,0);
 
   // BACKSTRETCH: mostly preserve established positions. Only obvious over-racing /
   // early-pressure horses concede a place; flexible stalkers can tuck in.
@@ -3424,14 +3442,19 @@ function paceStageNarrative(p,key){
   rows.forEach(function(x){var no=n(x.horse.horseNumber),a=n(prevRank[no],0),b=n(rank[no],0);if(a&&b&&a-b>=2)gainers.push(x);if(a&&b&&b-a>=2)droppers.push(x)});
 
   if(key==='start'){
-    var contenders=leadCandidates.length>=2?leadCandidates:order.slice(0,Math.min(2,order.length));
+    var contenders=leadCandidates.length>=2?leadCandidates:order.slice(0,Math.min(2,order.length)),
+        settled=paceStageRows(p,'first'),settledLeader=settled[0]||leader,
+        secondLine=settled.slice(1,Math.min(3,settled.length)),
+        nextLine=settled.slice(3,Math.min(5,settled.length)),
+        midSettled=settled.slice(5,Math.max(5,settled.length-1)),
+        tailSettled=settled[settled.length-1]||tail;
     if(contenders.length>=2)text.push(paceNosText(contenders)+'がハナ争い');
-    text.push(leadNo+'がハナ');
-    if(secondNo)text.push('2番手'+secondNo);
-    if(front2.length)text.push('その後ろに'+paceNosText(front2));
-    if(middle.length>=2)text.push('中団は'+paceNosText(middle)+'が一団');
-    else if(middle.length===1)text.push('中団に'+paceNosText(middle));
-    if(tail&&n(tail.horse.horseNumber)!==leadNo)text.push('しんがりは'+n(tail.horse.horseNumber));
+    text.push(n(settledLeader&&settledLeader.horse&&settledLeader.horse.horseNumber)+'がハナ');
+    if(secondLine.length)text.push('2番手集団 '+paceNosText(secondLine));
+    if(nextLine.length)text.push('その後ろ '+paceNosText(nextLine));
+    if(midSettled.length>=2)text.push('中団 '+paceNosText(midSettled));
+    else if(midSettled.length===1)text.push('中団 '+paceNosText(midSettled));
+    if(tailSettled&&settled.length>5)text.push('しんがり '+n(tailSettled.horse.horseNumber));
     return text.join(' → ')
   }
 
