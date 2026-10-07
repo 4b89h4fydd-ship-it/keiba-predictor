@@ -70,6 +70,10 @@ const swReloadMarker = 'v329-racecard-stable-20261007';
     if (hasFatalUiError(initialText)) throw new Error('startup display error: ' + initialText.slice(0, 1000));
 
     if ((await page.locator('[data-race]').count()) === 0) {
+      // v330+: home -> central/local -> venue -> race. Older smoke skipped the circuit page.
+      const circuit = page.locator('button[data-home-page="central"],button[data-home-page="local"]').first();
+      await circuit.waitFor({ state: 'visible', timeout });
+      await circuit.click();
       const venue = page.locator('button[data-track]').first();
       await venue.waitFor({ state: 'visible', timeout });
       await venue.click();
