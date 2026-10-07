@@ -52,7 +52,8 @@ jobs:
               end=s.index('\n}',start)+2
               assert 'r=r||{};' in s[start:end], fn
           assert 'window.ARVEXQ_BUILD="v329";' in s
-          assert '/sw-v329-reset.js' in s
+          assert 'serviceWorker.register' not in s
+          assert 'getRegistrations' in s
           print('STATIC_SAFARI_GUARDS_OK')
           PY
       - name: Edge API diagnostic
