@@ -5,8 +5,8 @@ const timeout = Number(process.env.ARVEXQ_SMOKE_TIMEOUT || 20000);
 const browserName = String(process.env.ARVEXQ_BROWSER || 'chromium').toLowerCase();
 const browserType = browserName === 'webkit' ? webkit : chromium;
 const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(base);
-const resetMarker = 'arvexq-hard-reset-v328-safari-runtime-20261006';
-const swReloadMarker = 'v328-safari-runtime-20261006';
+const resetMarker = 'arvexq-hard-reset-v329-racecard-stable-20261007';
+const swReloadMarker = 'v329-racecard-stable-20261007';
 
 (async () => {
   const browser = await browserType.launch({ headless: true });
@@ -47,7 +47,7 @@ const swReloadMarker = 'v328-safari-runtime-20261006';
   function criticalHttpFailure(item) {
     const u = String(item && item.url || '');
     if (!u) return false;
-    if (/\/app-v328\.js(?:\?|$)|\/styles-arvexq-v328\.css(?:\?|$)|\/version\.json(?:\?|$)|\/sw-v328-reset\.js(?:\?|$)/i.test(u)) return true;
+    if (/\/app-v329\.js(?:\?|$)|\/styles-arvexq-v329\.css(?:\?|$)|\/version\.json(?:\?|$)|\/sw-v329-reset\.js(?:\?|$)/i.test(u)) return true;
     if (/\/api\/(?:day|prediction|odds|result|payout)/i.test(u)) return true;
     return Number(item.status) >= 500;
   }
