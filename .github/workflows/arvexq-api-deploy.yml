@@ -1,0 +1,39 @@
+name: ARVEXQ API Deploy
+on:
+  push:
+    branches: [cloudflare]
+    paths: [worker.js, worker-entry.js, racecard.js, wrangler.jsonc, package.json, tests/**, .github/workflows/arvexq-api-deploy.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: arvexq-api-production
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npm run check
+      - name: Deploy tested API
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+      - name: Verify compact roster
+        run: |
+          curl -fsS --retry 3 --max-time 20 'https://kraiz-api.4b89h4fydd.workers.dev/api/racecard/nar-2026-10-07-%E5%A4%A7%E4%BA%95-11' -o /tmp/racecard.json
+          node --input-type=module - <<'JS'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const b=JSON.parse(fs.readFileSync('/tmp/racecard.json'));
+          assert.equal(b.ok,true);
+          assert.equal(b.race_id,'nar-2026-10-07-大井-11');
+          assert.equal(b.detail.horses.length,16);
+          assert.ok(fs.statSync('/tmp/racecard.json').size<50000);
+          JS

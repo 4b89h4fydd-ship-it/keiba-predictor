@@ -6,6 +6,8 @@ on:
     paths:
       - worker.js
       - worker-entry.js
+      - racecard.js
+      - tests/**
       - wrangler.jsonc
       - package.json
       - .github/workflows/arvexq-cloudflare-validation.yml
