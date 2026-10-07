@@ -2915,6 +2915,7 @@ function renderRace(){
       '<div class="smart-race-content">'+content+'</div>'+ 
     '</main>'+ 
     cinematicFooter()+
+    (state.horseModalNo?horseModal(r,p):'')+
   '</div>'
 }
 

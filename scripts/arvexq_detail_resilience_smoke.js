@@ -34,7 +34,7 @@ const instrumented = source.replace(boot, `
    if(url.pathname.startsWith('/api/racecard/')&&extras.card){await extras.card(route);return}
    if(url.pathname.startsWith('/api/odds/')&&extras.odds){await extras.odds(route);return}
    if(url.pathname.startsWith('/api/race/')){requests.push({url:url.href,at:Date.now()});await response(route,requests.length);return}
-   await route.fulfill({status:200,body:'<div id="app"></div>'});
+   await route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="app"></div></body></html>'});
   });
   await page.goto('https://arvexq.test/');
   await page.addStyleTag({content:fs.readFileSync(path.join(root,'arvexq/ui/static/styles.css'),'utf8')});
@@ -60,6 +60,9 @@ const instrumented = source.replace(boot, `
  await t.page.waitForFunction(()=>testDetail.prediction()!=null);
  await t.page.locator('[data-panel="diagnosis"]').click();await t.page.waitForSelector('.diagnosis-merged-row');
  assert.equal(await t.page.locator('.diagnosis-merged-row').count(),detail.horses.length);
+ await t.page.locator('.diagnosis-horse-main[data-horse-open="2"]').click();await t.page.waitForSelector('.horse-modal-body .recent');
+ assert.equal(await t.page.locator('.horse-modal-body .recent').count(),Math.min(5,(detail.horses.find(h=>h.horseNumber===2).recentRaces||[]).length));
+ await t.page.locator('.horse-modal-close').click();
  await t.page.locator('[data-panel="entry"]').click();
  const rects=await t.page.locator('.race-nav-v230-top .race-nav-v230-btn').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return [r.width,r.height,s.padding,s.fontSize,s.lineHeight,s.boxSizing]}));assert.deepEqual(rects[0],rects[1]);
  const layout=await t.page.evaluate(()=>{const h=document.querySelector('.smart-race-title-stack h1'),time=document.querySelector('.smart-race-result-side');return {title:h.getBoundingClientRect().toJSON(),time:time.getBoundingClientRect().toJSON(),lineHeight:parseFloat(getComputedStyle(h).lineHeight),clamp:getComputedStyle(h).webkitLineClamp}});

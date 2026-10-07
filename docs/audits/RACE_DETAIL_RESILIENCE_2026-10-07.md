@@ -17,6 +17,7 @@ NARの公式取得設定は大井 `k_babaCode=20`、日付 `2026/10/07`、レー
 - 対象レースのstale cacheを表示し、裏で更新。全キャッシュ削除なし。
 - 自動詳細取得は最大3回、1秒/2秒のバックオフ。手動再試行は新しいfetchで、他レースの失敗状態やキャッシュには触れない。
 - race_id不一致・HTTP失敗・項目の例外は限定件数の診断トレースへ記録。
+- 馬詳細ダイアログの既存描画呼び出しを復旧。固定ヘッダーより手前に配置し、取得済み近走5走の表示と閉じる操作を検証。
 - 均等幅タブを維持。レース名はカード内で横幅を確保し最大2行にし、発走時刻と重ねない。
 - 旧JS/CSSを再利用しないよう、asset URLの修正識別子を更新。
 
@@ -33,3 +34,5 @@ NARの公式取得設定は大井 `k_babaCode=20`、日付 `2026/10/07`、レー
 
 main: `arvexq/ui/static/app.js`, `styles.css`, `index.html`, `scripts/arvexq_detail_resilience_smoke.js`, `.github/workflows/arvexq-webapp-race-smoke.yml`, 本報告。
 cloudflare: `racecard.js`, `worker-entry.js`, `tests/racecard.test.js`, `package.json`, `.github/workflows/arvexq-cloudflare-validation.yml`, `.github/workflows/arvexq-api-deploy.yml`。
+
+APIの公開は成功し、新しい出走表APIはHTTP 200・16頭・4960bytesを確認。既存Cloudflare Validationの全日詳細（details=1）GETによるCORS検証は再実行しても失敗。OPTIONS、構文、Worker単体テスト、dry runは成功し、全日一括の重いGETは今回変更していない。

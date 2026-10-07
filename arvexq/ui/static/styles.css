@@ -2734,3 +2734,4 @@ details.smart-fixed-picks[open]>.smart-fixed-picks-head .smart-fixed-summary-rig
 .smart-race-page .smart-race-result-side{flex-shrink:0!important}
 
 .smart-race-page .smart-race-full-title{display:block!important;width:100%;margin-bottom:5px!important}
+.smart-shell>.horse-modal-layer{z-index:300!important}
