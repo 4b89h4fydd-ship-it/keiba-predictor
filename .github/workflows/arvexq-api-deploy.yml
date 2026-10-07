@@ -27,13 +27,22 @@ jobs:
         run: npx wrangler deploy
       - name: Verify compact roster
         run: |
-          curl -fsS --retry 3 --max-time 20 'https://kraiz-api.4b89h4fydd.workers.dev/api/racecard/nar-2026-10-07-%E5%A4%A7%E4%BA%95-11' -o /tmp/racecard.json
           node --input-type=module - <<'JS'
-          import fs from 'node:fs';
           import assert from 'node:assert/strict';
-          const b=JSON.parse(fs.readFileSync('/tmp/racecard.json'));
-          assert.equal(b.ok,true);
-          assert.equal(b.race_id,'nar-2026-10-07-大井-11');
-          assert.equal(b.detail.horses.length,16);
-          assert.ok(fs.statSync('/tmp/racecard.json').size<50000);
+          const url='https://kraiz-api.4b89h4fydd.workers.dev/api/racecard/nar-2026-10-07-%E5%A4%A7%E4%BA%95-11';
+          let lastError;
+          for(let attempt=0;attempt<12;attempt++){
+            try{
+              const r=await fetch(url+'?deploy='+Date.now(),{signal:AbortSignal.timeout(10000),headers:{'Cache-Control':'no-cache'}});
+              assert.equal(r.status,200);
+              const text=await r.text(),b=JSON.parse(text);
+              assert.equal(b.ok,true);
+              assert.equal(b.race_id,'nar-2026-10-07-大井-11');
+              assert.equal(b.detail.horses.length,16);
+              assert.ok(Buffer.byteLength(text)<50000);
+              console.log('Compact roster verified: 16 horses');
+              lastError=null;break;
+            }catch(error){lastError=error;if(attempt<11)await new Promise(r=>setTimeout(r,3000))}
+          }
+          if(lastError)throw lastError;
           JS
