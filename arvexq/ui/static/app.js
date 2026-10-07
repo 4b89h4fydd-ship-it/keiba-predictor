@@ -3376,15 +3376,14 @@ function runnerStyleSection(r,p){
     +(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
       var scratch=isScratchHorse(h),x=(p.rows||[]).find(function(z){return n(z.horse.horseNumber)===n(h.horseNumber)});
       var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,st=String(h.status||(h.scratched||h.withdrawn?'出走取消':'欠場'));
-      return '<div class="racecard-row'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-        +'<span class="rc-check-cell"><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span></span>'
-        +'<span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span>'
-        +'<span class="rc-horse">'
-          +'<span class="rc-horse-top"><button type="button" class="rc-horse-name" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く" style="appearance:none;border:0;background:none;padding:0;color:inherit;font:inherit;font-weight:800;text-align:left;cursor:pointer">'+esc(horseDisplayName(r,h))+'</button>'+(scratch?'<small class="rc-scratch">'+esc(st)+'</small>':'<small class="rc-bodyweight '+(bw?'':'pending')+'">'+(bw?('馬体重 '+esc(bw)):(refbw?('前走 '+esc(refbw)+'kg'):'計量待ち'))+'</small>')+'</span>'
-          +'<span class="rc-horse-meta"><span class="rc-meta-left"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span></span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">斤量 '+esc(carriedWeightText(h))+'</span></span>'
-        +'</span>'
-        +'<span class="rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</span>'
+      return '<div class="racecard-row rc-racecard-2line'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
         +'<span class="rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</span>'
+        +'<span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span>'
+        +'<button type="button" class="rc-horse-name" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く">'+esc(horseDisplayName(r,h))+'</button>'
+        +(scratch?'<small class="rc-bodyweight rc-scratch">'+esc(st)+'</small>':'<small class="rc-bodyweight '+(bw?'':'pending')+'">'+(bw?esc(bw):(refbw?('前走 '+esc(refbw)+'kg'):'計量待ち'))+'</small>')
+        +'<span class="rc-check-cell"><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span></span>'
+        +'<span class="rc-horse-meta"><span class="rc-sexage">'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">'+esc(carriedWeightText(h))+'</span></span>'
+        +'<span class="rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</span>'
         +'</div>'
     }).join('')
     +'</div></section>'
