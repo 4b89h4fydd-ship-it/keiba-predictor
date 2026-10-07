@@ -2864,9 +2864,6 @@ function mergeResultHorseFields(r){
   return r
 }
 function renderRace(){
-  applySummaryEnvironment(state.race);
-  if(!entryDataAvailable(state.race))return renderPartialRace(state.race);
-  if(state.race._entryOnly||!state.race._prediction)return renderPredictionPending(state.race);
   var r=applySummaryEnvironment(mergeResultHorseFields(state.race)),p=null,predictionError=null;
   state.race=r;
   try{
@@ -2894,15 +2891,14 @@ function renderRace(){
   try{
     content=detailTabs(r,p)
   }catch(e){
-    if(state.openPanel!=='entry'){
-      detailState(r.id)[state.openPanel==='bets'?'diagnosis':state.openPanel]='error';
-      traceRaceDetail(r.id,'section-failed',{section:state.openPanel,message:String(e&&e.message||e)});
-      content=pendingDetailPanel(r)
-    }else{
     predictionError=predictionError||e;
     state.openPanel='entry';
-    content=minimalRacecardPanel(r)
-  }
+    content='<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2><div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'+
+      (r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
+        var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),odds=(h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0)?((Math.round(n(h.winOdds)*10)/10).toFixed(1)):'取得中',pop=n(h.popularity)>0?n(h.popularity)+'人気':'更新中',bw=(h.bodyWeight!=null&&h.bodyWeight!==''&&n(h.bodyWeight)>0)?String(h.bodyWeight)+'kg':'計量待ち',cw=(h.carriedWeight!=null&&h.carriedWeight!=='')?String(h.carriedWeight).replace(/\.0$/,'')+'kg':'—';
+        return '<div class="racecard-row"><span class="rc-check-cell"></span><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span><span class="rc-horse"><span class="rc-horse-top"><b class="rc-horse-name">'+esc(h.name||'馬名取得中')+'</b><small class="rc-bodyweight '+(bw==='計量待ち'?'pending':'')+'">'+esc(bw)+'</small></span><span class="rc-jockey">'+esc(h.jockey||'騎手取得中')+' / '+esc(cw)+'</span></span><span class="rc-odds"><span class="odd '+(n(h.winOdds)>0&&n(h.winOdds)<10?'single':'')+'">'+esc(odds)+'</span><span class="pop">'+esc(pop)+'</span></span></div>'
+      }).join('')+
+      '</div></section></div>'
   }
   if(predictionError&&content.indexOf('AI解析はバックグラウンド')<0){
     content='<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析の一部を再取得中です。出走表の表示は継続します。</div>'+content
@@ -2911,11 +2907,10 @@ function renderRace(){
     smartRaceTopBar(r)+
     '<main class="smart-main smart-race-page">'+
       smartRaceHead(r)+
-      cinematicTabs(r)+raceDetailNotice(r)+
+      cinematicTabs(r)+
       '<div class="smart-race-content">'+content+'</div>'+ 
     '</main>'+ 
     cinematicFooter()+
-    (state.horseModalNo?horseModal(r,p):'')+
   '</div>'
 }
 
