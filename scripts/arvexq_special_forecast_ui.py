@@ -34,7 +34,7 @@ if candidate_block not in text:
     if count != 1:
         raise SystemExit("special forecast candidate block not found")
 
-render_block = '''function smartSpecialForecastRaces(){
+render_block = '''function smartSpecialForecastRaces(forceOpen){
   if(typeof state.specialForecastOpen!=='boolean'){
     try{state.specialForecastOpen=localStorage.getItem('arvexq-special-forecast-open')!=='0'}catch(e){state.specialForecastOpen=true}
   }
@@ -42,10 +42,10 @@ render_block = '''function smartSpecialForecastRaces(){
     var tag=specialForecastRaceTag(r);
     return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+tag+'</em></button>'
   }).join(''):'<div class="fixed-pick-empty"><b>該当なし</b><small>本日の重賞・高知ファイナルなし</small></div>';
-  return '<details class="smart-fixed-picks smart-special-picks" data-special-fold="1"'+(state.specialForecastOpen?' open':'')+'><summary class="smart-fixed-picks-head"><span><b>特別予想</b><small>重賞・高知ファイナル</small></span><span class="smart-fixed-summary-right"><em>'+picks.length+'レース</em><i class="special-fold-icon" aria-hidden="true">›</i></span></summary><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">'+body+'</div></div></div></details>'
+  return '<details class="smart-fixed-picks smart-special-picks" data-special-fold="1"'+((forceOpen||state.specialForecastOpen)?' open':'')+'><summary class="smart-fixed-picks-head"><span><b>特別予想</b><small>重賞・高知ファイナル</small></span><span class="smart-fixed-summary-right"><em>'+picks.length+'レース</em><i class="special-fold-icon" aria-hidden="true">›</i></span></summary><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">'+body+'</div></div></div></details>'
 }
 '''
-render_pattern = re.compile(r"function smartSpecialForecastRaces\(\)\{.*?\n\}", re.S)
+render_pattern = re.compile(r"function smartSpecialForecastRaces(?:\\(forceOpen\\)|\\(\\))\\{.*?\\n\\}", re.S)
 if render_block.rstrip() not in text:
     text, count = render_pattern.subn(render_block.rstrip(), text, count=1)
     if count != 1:
