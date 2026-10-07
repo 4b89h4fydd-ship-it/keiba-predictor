@@ -1,4 +1,4 @@
-window.ARVEXQ_BUILD="v328";
+window.ARVEXQ_BUILD="v329";
 
 (function(){
 "use strict";
@@ -81,13 +81,13 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(localStorage.getItem("arvexq-sw-reload")!=="v328-racecard-priority-20261007"){
-          localStorage.setItem("arvexq-sw-reload","v328-racecard-priority-20261007");
+        if(localStorage.getItem("arvexq-sw-reload")!=="v329-racecard-stable-20261007"){
+          localStorage.setItem("arvexq-sw-reload","v329-racecard-stable-20261007");
           location.reload()
         }
       }catch(e){}
     });
-    navigator.serviceWorker.register("/sw-v328-reset.js",{scope:"/"}).then(function(reg){
+    navigator.serviceWorker.register("/sw-v329-reset.js",{scope:"/"}).then(function(reg){
       try{reg.update()}catch(e){}
     }).catch(function(){})
   }catch(e){}
