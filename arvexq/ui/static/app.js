@@ -3044,7 +3044,61 @@ function stageNarrative(p,idx){var rows=p.rows||[],plan=activeScenarioPlan(p),st
 function activeScenarioPlan(p){return p&&p.plan?p.plan:null}
 function visiblePaceStages(plan){var wanted={start:1,turn3:1,turn4:1,straight:1};return ((plan&&plan.stages)||[]).filter(function(s){return !!wanted[String(s&&s.key||'')]})}
 function scenarioProbabilitySection(p){return''}
-function paceBoard(r,p){var hs=(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}),plan=activeScenarioPlan(p)||p.plan,stages=visiblePaceStages(plan),cp=courseProfile(r);return'<section class="card ai-flow-card"><div class="ai-flow-head"><span class="ai-flow-bars"><i></i><i></i><i></i></span><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div><div class="ai-flow-sub">直近5走・通過順・脚質・枠順・隣接圧力・コース形状から局面ごとの隊列を表示</div></div></div><div class="ai-stage-tabs">'+stages.map(function(s,i){var label=s.key==='turn3'?'3C':(s.key==='turn4'?'4C':s.label);return'<button data-pace-stage="'+i+'" class="'+(i===0?'active':'')+'">'+esc(label)+'</button>'}).join('')+'</div><div class="ai-race-swipe-hint">図の左半分タップ＝前の局面　／　右半分タップ＝次の局面</div><div class="ai-race-topline"><div class="ai-race-meta-chip">'+esc(r.track)+'　'+esc(r.distance)+'m　'+esc(cp.turn)+(cp.shape==='straight'?'':'回り')+'</div><div class="ai-race-axis-strip"><span>← 後方</span><span>前方・先頭 →</span></div></div><div class="ai-race-board-wrap"><div id="pace-board" class="ai-race-visual">'+hs.map(function(h){return'<div class="ai-race-runner" data-horse="'+esc(h.horseNumber)+'" style="left:10%;top:50%">'+badge(h)+'</div>'}).join('')+'</div></div><div id="course-order" class="ai-race-order-panel">隊列を準備中</div><div id="pace-event" class="ai-stage-event">展開イベントを準備中</div><div class="ai-race-note">スタート → 3C → 4C → 直線。右が先頭、左が後方です。</div></section>'}
+function paceOutcomeModel(r,p){
+  var rows=(p&&p.rows||[]).slice(),plan=activeScenarioPlan(p)||p.plan||{},stages=visiblePaceStages(plan),straight=stages.find(function(s){return s&&s.key==='straight'})||stages[stages.length-1]||{},pack=straight.pack||[],byNo={},stageScore={},i;
+  rows.forEach(function(x){byNo[n(x.horse&&x.horse.horseNumber)]=x});
+  pack.forEach(function(z){stageScore[n(z.no)]=n(z.score)});
+  if(!rows.length)return null;
+  var stageVals=rows.map(function(x){return n(stageScore[n(x.horse.horseNumber)],0)}),
+      winVals=rows.map(function(x){return n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.p1Probability))) }),
+      p2Vals=rows.map(function(x){return n(x.p2RecallScore,n(x.p2Probability))}),
+      p3Vals=rows.map(function(x){return n(x.p3RecallScore,n(x.p3Probability))}),
+      day=sameDayCorrectionProfileV313(r,rows)||{active:false,flowLabel:'中立',byNo:{}},sc=plan.scenario||{},arr=p.arrangement||{},leader=(arr.leadCandidates||[])[0]||null;
+  function rel(vals,v){return normalize(vals,v)}
+  rows.forEach(function(x){
+    var no=n(x.horse.horseNumber),dc=(day.byNo||{})[no]||{},sv=n(stageScore[no],0),wv=n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.p1Probability))),
+        p2=n(x.p2RecallScore,n(x.p2Probability)),p3=n(x.p3RecallScore,n(x.p3Probability)),pod=n(x.podiumRecallScore,Math.max(p2,p3)),
+        biasWin=clamp(.5+n(dc.winBoost,0)*18+n(dc.markBoost,0)*5,0,1),
+        biasP2=clamp(.5+n(dc.p2Boost,0)*10+n(dc.markBoost,0)*4,0,1),
+        biasP3=clamp(.5+n(dc.p3Boost,0)*8+n(dc.markBoost,0)*3,0,1);
+    x._paceOutcomeFirst=clamp(rel(stageVals,sv)*.44+rel(winVals,wv)*.34+n(x.overallRaw,.5)*.12+biasWin*.10,0,1);
+    x._paceOutcomeSecond=clamp(rel(stageVals,sv)*.27+rel(p2Vals,p2)*.46+pod*.17+biasP2*.10,0,1);
+    x._paceOutcomeThird=clamp(rel(stageVals,sv)*.22+rel(p3Vals,p3)*.48+pod*.20+biasP3*.10,0,1)
+  });
+  var first=rows.slice().sort(function(a,b){return b._paceOutcomeFirst-a._paceOutcomeFirst||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),
+      second=rows.slice().sort(function(a,b){return b._paceOutcomeSecond-a._paceOutcomeSecond||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),
+      third=rows.slice().sort(function(a,b){return b._paceOutcomeThird-a._paceOutcomeThird||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),
+      top=first[0],runner=first[1],margin=top&&runner?top._paceOutcomeFirst-runner._paceOutcomeFirst:1,
+      firstGroup=first.slice(0,margin<=.055?2:1),secondGroup=second.slice(0,Math.min(3,second.length)),thirdGroup=third.slice(0,Math.min(4,third.length)),
+      leaderNo=n(leader&&leader.horse&&leader.horse.horseNumber),winnerNo=n(top&&top.horse&&top.horse.horseNumber),leaderRow=byNo[leaderNo]||null,
+      winnerStyle=String(top&&(top.expected||top.pastStyle)||''),verdict='好位抜け出し';
+  if(top){
+    if(winnerNo===leaderNo&&n(top.frontStay)>=Math.max(.52,n(top.comeFromBehind)-.03))verdict='逃げ切り';
+    else if((winnerStyle.indexOf('追')>=0||n(top.rawClose)>=.48||n(top.close)>=.48)&&n(top.comeFromBehind)>=.60)verdict='追い込み';
+    else if(n(top.comeFromBehind)>=n(top.frontStay)+.04||String(sc.code||'')==='C'||winnerStyle.indexOf('差')>=0||winnerStyle.indexOf('後方')>=0)verdict='差し切り';
+    else if(n(top.goProb)>=.46||winnerStyle.indexOf('先行')>=0||winnerStyle.indexOf('好位')>=0)verdict='先行押し切り'
+  }
+  var leadText=leaderRow?rowName(leaderRow):'不明',winnerText=top?rowName(top):'不明',leadRank=leaderRow?first.indexOf(leaderRow)+1:0,
+      reason=[];
+  reason.push('ハナ想定 '+leadText);
+  if(day.active)reason.push('当日バイアス '+day.flowLabel);
+  reason.push('基本展開 '+String(sc.title||'平均'));
+  if(winnerNo===leaderNo)reason.push('直線評価でも先頭維持');
+  else if(leaderRow)reason.push('逃げ馬は最終'+leadRank+'番手評価、'+winnerText+'が逆転');
+  return{verdict:verdict,leader:leaderRow,winner:top,first:firstGroup,second:secondGroup,third:thirdGroup,margin:margin,day:day,scenario:sc,reason:reason.join('｜')}
+}
+function paceOutcomeNums(list){return(list||[]).map(function(x){return n(x.horse&&x.horse.horseNumber)}).filter(Boolean).join('・')||'—'}
+function paceOutcomeSection(r,p){
+  var o=paceOutcomeModel(r,p);if(!o)return'';
+  var winner=o.winner?rowName(o.winner):'—',lead=o.leader?rowName(o.leader):'—';
+  return '<div class="ai-stage-event" style="margin:10px 0 12px;padding:12px;border:1px solid rgba(120,170,255,.32);border-radius:12px;background:rgba(8,18,36,.68)">'
+    +'<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b style="font-size:15px">展開結論：'+esc(o.verdict)+'</b><span class="muted">'+esc(o.day&&o.day.active?o.day.flowLabel:'バイアス中立')+'</span></div>'
+    +'<div style="margin-top:7px;font-size:13px;line-height:1.6">逃げ想定 <b>'+esc(lead)+'</b>　→　勝ち切り本線 <b>'+esc(winner)+'</b></div>'
+    +'<div style="margin-top:8px;font-size:16px;font-weight:800;letter-spacing:.02em">'+esc(paceOutcomeNums(o.first))+' → '+esc(paceOutcomeNums(o.second))+' → '+esc(paceOutcomeNums(o.third))+'</div>'
+    +'<div class="muted" style="margin-top:7px;line-height:1.55">'+esc(o.reason)+'</div>'
+    +'</div>'
+}
+function paceBoard(r,p){var hs=(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}),plan=activeScenarioPlan(p)||p.plan,stages=visiblePaceStages(plan),cp=courseProfile(r);return'<section class="card ai-flow-card"><div class="ai-flow-head"><span class="ai-flow-bars"><i></i><i></i><i></i></span><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div><div class="ai-flow-sub">全頭診断・直近5走・通過順・脚質・枠順・隣接圧力・コース形状・当日バイアスを統合し、隊列から最終決着まで予測</div></div></div>'+paceOutcomeSection(r,p)+'<div class="ai-stage-tabs">'+stages.map(function(s,i){var label=s.key==='turn3'?'3C':(s.key==='turn4'?'4C':s.label);return'<button data-pace-stage="'+i+'" class="'+(i===0?'active':'')+'">'+esc(label)+'</button>'}).join('')+'</div><div class="ai-race-swipe-hint">図の左半分タップ＝前の局面　／　右半分タップ＝次の局面</div><div class="ai-race-topline"><div class="ai-race-meta-chip">'+esc(r.track)+'　'+esc(r.distance)+'m　'+esc(cp.turn)+(cp.shape==='straight'?'':'回り')+'</div><div class="ai-race-axis-strip"><span>← 後方</span><span>前方・先頭 →</span></div></div><div class="ai-race-board-wrap"><div id="pace-board" class="ai-race-visual">'+hs.map(function(h){return'<div class="ai-race-runner" data-horse="'+esc(h.horseNumber)+'" style="left:10%;top:50%">'+badge(h)+'</div>'}).join('')+'</div></div><div id="course-order" class="ai-race-order-panel">隊列を準備中</div><div id="pace-event" class="ai-stage-event">展開イベントを準備中</div><div class="ai-race-note">スタート → 3C → 4C → 直線。右が先頭、左が後方です。</div></section>'}
 function historySearchSection(r){var hs=r.historySearch||{},cv=hs.coverage||{},months=n(hs.monthsDone),max=n(hs.maxMonths,60),progress=max?clamp(months/max*100,4,96):8,counts=cv.counts||{},isCentral=r.circuit==='中央',horseHtml=(r.horses||[]).map(function(h){var c=n(counts[h.name]);return'<span>'+badge(h)+esc(h.name||'')+' <b>'+Math.min(5,c)+'/5</b></span>'}).join(''),src=isCentral?'中央データを過去へさかのぼり':'NAR公式履歴を過去へさかのぼり';return'<section class="card history-search-card"><div class="history-search-head"><span class="history-spinner"></span><div><div class="history-search-title">直近5走を取得中</div><div class="history-search-sub">全頭について'+src+'、直近最大5走を確認します。キャリア5走未満の馬は存在する全走を取得した時点で確定し、固定値では埋めません。取得した過去レースは詳細画面から開けます。</div></div></div><div class="history-progress"><i style="width:'+progress+'%"></i></div><div class="history-stats"><span>検索 '+months+' / '+max+'か月</span><span>'+(isCentral?'履歴確定 ':'5走取得 ')+n(isCentral?(cv.horsesResolved||cv.horsesWith5Plus):cv.horsesWith5Plus)+' / '+n(cv.totalHorses,(r.horses||[]).length)+'頭</span><span>履歴あり '+n(cv.horsesWithHistory)+'頭</span><span>取得 '+n(cv.totalRuns)+'走</span></div><div class="history-horses">'+horseHtml+'</div></section>'}
 function scheduleHistoryPoll(id){return}
 function prefetchNextHistory(){return}
