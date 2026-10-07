@@ -4414,10 +4414,10 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
 .arv-home-hub-btn .arv-home-alert{
   display:inline-flex!important;align-items:center!important;justify-content:center!important;
   width:20px!important;height:20px!important;min-width:20px!important;
-  padding:0!important;border-radius:50%!important;
-  border:1px solid rgba(255,192,192,.8)!important;background:#cf2335!important;
-  color:#fff!important;font-size:15px!important;font-weight:950!important;
-  box-shadow:0 0 11px rgba(230,41,64,.42);
+  padding:0!important;border-radius:0!important;
+  border:0!important;background:transparent!important;
+  color:#ff354f!important;font-size:21px!important;font-weight:950!important;
+  text-shadow:0 0 9px rgba(255,53,79,.48);box-shadow:none!important;
   line-height:1!important
 }
 .arv-pick-circuit-btn .arv-pick-count{
