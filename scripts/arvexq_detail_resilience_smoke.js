@@ -70,7 +70,8 @@ const instrumented = source.replace(boot, `
  console.log('503 x3 -> summary stays visible -> fresh retry recovers roster, diagnosis; equal tabs and 2-line title PASS');
  await t.page.close();
  const card={...base,fieldSize:detail.horses.length,horses:detail.horses.map(h=>({horseNumber:h.horseNumber,name:h.name,frameNumber:h.frameNumber,jockey:h.jockey,sex:h.sex,age:h.age,carriedWeight:h.carriedWeight}))};
- t=await setup(route=>route.fulfill({status:503,body:'full detail outage'}),{
+ let recoverFull=false;
+ t=await setup(route=>recoverFull?route.fulfill({json:{ok:true,detail,summary:base,odds:[]}}):route.fulfill({status:503,body:'full detail outage'}),{
   card:route=>route.fulfill({json:{ok:true,race_id:id,detail:card,entry_state:'loaded'}}),
   odds:route=>route.fulfill({json:{ok:true,race_id:id,odds:detail.horses.map(h=>({horse_no:h.horseNumber,win_odds:h.winOdds,popularity:h.popularity}))}})
  });
@@ -82,7 +83,12 @@ const instrumented = source.replace(boot, `
  assert.equal(await t.page.locator('.notice,.smart-loading').count(),0);
  await t.page.locator('[data-panel="diagnosis"]').click();assert.equal(await t.page.locator('[data-section-state="error"]').count(),1);
  await t.page.locator('[data-panel="entry"]').click();assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);
- console.log('Independent compact roster + odds survive full detail outage PASS');await t.page.close();
+ assert.equal(await t.page.evaluate(()=>testDetail.state.race._entryOnly),true);
+ recoverFull=true;await t.page.locator('[data-detail-retry]').first().click();
+ await t.page.waitForFunction(()=>testDetail.state.race._entryOnly===false&&testDetail.prediction()!=null);
+ await t.page.locator('[data-panel="diagnosis"]').click();await t.page.waitForSelector('.diagnosis-merged-row');
+ assert.equal(await t.page.locator('.diagnosis-merged-row').count(),detail.horses.length);
+ console.log('Independent compact roster + odds survive outage; full recovery clears compact flag PASS');await t.page.close();
  t=await setup(route=>route.fulfill({status:503,body:'outage'}));
  await t.page.evaluate(({id,detail})=>{localStorage.setItem(testDetail.detailCacheKey(id),JSON.stringify({ts:Date.now()-3600000,row:detail}));testDetail.openRace(id)}, {id,detail});
  await t.page.waitForSelector('.racecard-row');assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);

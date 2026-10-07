@@ -1222,7 +1222,7 @@ var instantTrackDetails={},trackSnapshotJobs={};
 function edgeRaceUrl(id){
   return 'https://kraiz-api.4b89h4fydd.workers.dev/api/race/'
     +encodeURIComponent(id)
-    +'?t='+Date.now()
+    +'?view=display&t='+Date.now()
 }
 
 // v240 data-integrity merge. D1 /api/race returns the saved detail and a separate
@@ -1447,7 +1447,7 @@ function fetchEdgeRace(id,forceNetwork,retryLimit){
       merged=mergeRaceReflection(normalizeDetailSummary(row,id),merged,null,null);
       if(!d&&!entryDataAvailable(merged))throw Error('racecard unavailable');
       if(!entryDataAvailable(merged)&&!(d&&Array.isArray(d.horses)&&Number(d.fieldSize)===0&&d.fieldSize!=null))throw Error('racecard incomplete');
-      if(d&&!d._entryOnly)delete merged._entryOnly;
+      if(d&&!d._entryOnly)merged._entryOnly=false;
       if(body.analysis_ready)merged.preparedMeta=Object.assign({},merged.preparedMeta||{},{diagnosisReady:true});
       st.error='';updateDetailSections(id,merged,true);
       traceRaceDetail(id,'loaded',{attempt:index+1,horses:(merged.horses||[]).length,sections:Object.assign({},st)});
