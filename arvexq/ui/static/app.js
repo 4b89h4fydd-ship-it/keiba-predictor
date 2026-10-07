@@ -3664,7 +3664,7 @@ function openRace(id,keepStack,skipHistory,preservePanel){
   state.openPanel=preservedPanel||'entry';
   var seq=++state.detailSeq;
   if(!keepStack){state.raceStack=[];state.raceReturnPicker=state.picker}
-  state.horseModalNo=null;state.detailHorseNo=null;
+  state.horseModalNo=null;state.detailHorseNo=null;state.subPage=null;state.subPageReturnPanel=null;
   if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}
   state.error=null;
   state.pred=null;
