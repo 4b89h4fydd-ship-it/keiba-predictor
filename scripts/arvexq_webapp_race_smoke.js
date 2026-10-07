@@ -5,7 +5,7 @@ const timeout = Number(process.env.ARVEXQ_SMOKE_TIMEOUT || 20000);
 const browserName = String(process.env.ARVEXQ_BROWSER || 'chromium').toLowerCase();
 const browserType = browserName === 'webkit' ? webkit : chromium;
 const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(base);
-const resetMarker = 'arvexq-hard-reset-v329-racecard-stable-20261007';
+const resetMarker = 'arvexq-hard-reset-v329-racecard-direct-20261007b';
 const swReloadMarker = 'v329-racecard-stable-20261007';
 
 (async () => {
