@@ -74,22 +74,19 @@ function detailCacheKey(id){return "arvexq:"+String(window.ARVEXQ_BUILD||"dev")+
 function loadDetailCache(id){try{var raw=localStorage.getItem(detailCacheKey(id));if(!raw)return null;var x=JSON.parse(raw);if(!x||!x.row)return null;var age=Date.now()-n(x.ts);if(x.row.date>=today()&&age>2*60000)return null;var r=x.row;if(!raceDisplayCoreReady(r,r))return null;return r}catch(e){return null}}
 function saveDetailCache(id,row){try{if(!id||!row||!raceDisplayCoreReady(row,row))return;localStorage.setItem(detailCacheKey(id),JSON.stringify({ts:Date.now(),row:row}))}catch(e){}}
 function installPwaCache(){
+  // Online-first stability: stale service workers were intercepting fresh v329
+  // assets/API navigation on iPhone. Unregister them and use normal HTTP cache.
   try{
-    if(!("serviceWorker" in navigator))return;
-    var reloading=false;
-    navigator.serviceWorker.addEventListener("controllerchange",function(){
-      if(reloading)return;
-      reloading=true;
-      try{
-        if(localStorage.getItem("arvexq-sw-reload")!=="v329-racecard-stable-20261007"){
-          localStorage.setItem("arvexq-sw-reload","v329-racecard-stable-20261007");
-          location.reload()
-        }
-      }catch(e){}
-    });
-    navigator.serviceWorker.register("/sw-v329-reset.js",{scope:"/"}).then(function(reg){
-      try{reg.update()}catch(e){}
-    }).catch(function(){})
+    if("serviceWorker" in navigator){
+      navigator.serviceWorker.getRegistrations().then(function(rs){
+        return Promise.all(rs.map(function(r){try{return r.unregister()}catch(e){return false}}))
+      }).catch(function(){})
+    }
+    if("caches" in window){
+      caches.keys().then(function(keys){
+        return Promise.all(keys.map(function(k){return caches.delete(k)}))
+      }).catch(function(){})
+    }
   }catch(e){}
 }
 function today(){var d=new Date(Date.now()+9*3600000);return d.toISOString().slice(0,10)}
@@ -3268,18 +3265,9 @@ function load(force){
       return rows
     })
     .catch(function(){
-      return fetch(
-        '/api/v1/races?date='+encodeURIComponent(d)
-        +'&circuit=&bundle=0&v=131&t='+Date.now(),
-        {cache:'no-store'}
-      )
-      .then(function(res){
-        if(!res.ok)throw Error('render-list '+res.status);
-        return res.json()
-      })
-      .then(function(body){
-        return Array.isArray(body)?body:(body.races||[])
-      })
+      // Frontend Worker has no /api/v1 backend. Do not fall through to a
+      // same-origin 404/CORS path; keep the current list/cache and retry D1.
+      return null
     })
     .then(function(rows){
       if(rows==null)return;
