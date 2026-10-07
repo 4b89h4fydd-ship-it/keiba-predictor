@@ -314,7 +314,154 @@ function generateSimulations(r,rows,sc,suit,count){var runs=[],stats={},scenario
 function avgOrder(rows,sim,key){var prop=key==="start"?"avgStart":(key==="corner"?"avgCorner":"avgFinish"),sm={};for(var i=0;i<sim.summary.length;i++)sm[sim.summary[i].no]=sim.summary[i][prop];return rows.slice().sort(function(a,b){return sm[n(a.horse.horseNumber)]-sm[n(b.horse.horseNumber)]})}
 function packScenarioStage(r,rows,scoreMap,laneMap,stage){var a=rows.slice().sort(function(x,y){return scoreMap[n(y.horse.horseNumber)]-scoreMap[n(x.horse.horseNumber)]||n(x.horse.horseNumber)-n(y.horse.horseNumber)}),lead=a.length?scoreMap[n(a[0].horse.horseNumber)]:0,out=[],i,x,no,diff,rankGap,scoreGap,lane;for(i=0;i<a.length;i++){x=a[i];no=n(x.horse.horseNumber);diff=Math.max(0,lead-scoreMap[no]);rankGap=(stage<=1?.010:(stage<=3?.013:.016))*i;scoreGap=diff*(stage<=1?.06:(stage<=3?.08:.10));lane=laneMap&&laneMap[no]!=null?laneMap[no]:Math.round((x.draw-.5)*4);if(i>0&&i%3===0)lane+=1;if(i>0&&i%4===0)lane-=1;out.push({no:no,gap:clamp(rankGap+scoreGap,0,.34),lane:clamp(lane,-3,3),score:scoreMap[no]})}return out}
 function rowsFromPack(rows,pack){var map={};for(var i=0;i<rows.length;i++)map[n(rows[i].horse.horseNumber)]=rows[i];return pack.map(function(z){return map[n(z.no)]}).filter(Boolean)}
-function scenarioPlan(r,rows,sc,suit,pressure,arr){var scenario=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],code=scenario.code;pressure=pressure||pressureInfo(rows);arr=arr||frontArrangement(rows,pressure);var p=pressure,ct=courseTraits(r),S=[{},{},{},{},{},{}],L=[{},{},{},{},{},{}],i,x,no,q,scfit,markScore={},leadLoad;for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);q=p[no]||{};leadLoad=x.goProb*(.045+.055*x.needLead)+x.frontCost*.13;S[0][no]=x.breakSkill*.20+x.ten*.20+x.goProb*.22+x.leaderScore*.20+x.needLead*.06+x.jockeyFront*.04+(q.freeOuter||0)*.05+(q.lineEndRelief||0)*.04-x.frontCost*.08;L[0][no]=clamp(Math.round((x.draw-.5)*5),-3,3);S[1][no]=S[0][no]*.40+x.goProb*.17+x.holdFront*.13+x.turnSkill*.11+x.flexibility*.06+x.ability*.08-x.frontCost*.09-x.outerStress*.05-(q.lineMiddle||0)*.035+(q.lineEndRelief||0)*.025;L[1][no]=clamp(L[0][no]+(x.edge&&x.goProb>.55?-1:0)+(q.sandwich&&x.flexibility<.45?1:0),-3,3);scfit=scenarioSuit(x,code,p);S[2][no]=S[1][no]*.31+x.ability*.16+x.holdFront*.15+x.stamina*.13+x.stalk*.07+x.mid*.04+scfit*.11-(code==='C'?leadLoad*.12:leadLoad*.05)+(code==='A'?x.goProb*.06:0)+(x.canYield&&x.needLead>.45?.008:0);L[2][no]=clamp(L[1][no]+(x.move>.52&&x.goProb<.46?1:0),-3,3);S[3][no]=S[2][no]*.27+x.ability*.16+x.move*.16+x.turnSkill*.11+scfit*.14+x.latePower*.09+x.holdFront*.04-(x.fade*x.goProb)*(code==='C'?.10:.045)+(code==='C'?x.collapseBeneficiary*.055:0);L[3][no]=clamp(L[2][no]+(x.move>.56?1:0),-3,3);S[4][no]=S[3][no]*.24+scfit*.20+x.ability*.18+x.holdFront*.11+x.move*.10+x.latePower*.10+(1-x.fade)*.05-(q.sandwich||0)*.025-(q.lineMiddle||0)*.018+(code==='C'?x.collapseBeneficiary*.06:0);L[4][no]=clamp(L[3][no]+(x.latePower>.61?1:0),-3,3);var su=suit[no]||{rankScore:.5},positionCarry=clamp(S[4][no],0,1),fadeEvidence=clamp(x.fade*.45+x.frontCost*.28+(q.sandwich||0)*.17+(q.lineMiddle||0)*.10,0,1),holdEvidence=clamp(x.holdFront*.38+x.frontStay*.34+(1-x.fade)*.18+x.ability*.10,0,1);markScore[no]=positionCarry*.43+su.rankScore*.28+x.ability*.09+x.latePower*.07+x.stamina*.04+x.coverage*.02+holdEvidence*.07-fadeEvidence*.06;if(code==='A')markScore[no]+=x.frontStay*.055;if(code==='C')markScore[no]+=x.comeFromBehind*.035+x.collapseBeneficiary*.030;S[5][no]=markScore[no];L[5][no]=L[4][no]}var turn4Order=rows.slice().sort(function(a,b){return n(S[4][n(b.horse.horseNumber)])-n(S[4][n(a.horse.horseNumber)])}),turn4Rank={};turn4Order.forEach(function(z,idx){turn4Rank[n(z.horse.horseNumber)]=idx+1});for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);q=p[no]||{};var rank4=n(turn4Rank[no],rows.length),continuity=rows.length>1?1-(rank4-1)/(rows.length-1):1,collapse=clamp(x.fade*.52+x.frontCost*.24+(q.sandwich||0)*.14+(q.lineMiddle||0)*.10,0,1),carryWeight=.10+(1-collapse)*.10;S[5][no]=clamp(S[5][no]*(1-carryWeight)+continuity*carryWeight,0,1)}var labels=['スタート','1コーナー','向正面','3コーナー','4コーナー','直線'],packs=[],stages=[];for(i=0;i<6;i++){packs[i]=packScenarioStage(r,rows,S[i],L[i],i);stages.push({key:['start','first','back','turn3','turn4','straight'][i],label:labels[i],pack:packs[i]})}return{scenario:scenario,stages:stages,start:rowsFromPack(rows,packs[0]),corner:rowsFromPack(rows,packs[4]),straight:rowsFromPack(rows,packs[5]),markScore:markScore}}
+function eventOrderPack(rows,order,laneMap,stage){
+  var field=Math.max(1,order.length),out=[];
+  for(var i=0;i<order.length;i++){
+    var x=order[i],no=n(x.horse.horseNumber),lane=laneMap&&laneMap[no]!=null?laneMap[no]:Math.round((x.draw-.5)*4),
+        pos=field<=1?1:1-i/(field-1),gap=clamp((stage<=1?.012:(stage<=3?.016:.020))*i,0,.34);
+    out.push({no:no,gap:gap,lane:clamp(lane,-3,3),score:pos})
+  }
+  return out
+}
+function scenarioPlan(r,rows,sc,suit,pressure,arr){
+  var scenario=sc.slice().sort(function(a,b){return b.prob-a.prob})[0]||{code:'B',title:'平均',prob:1},code=scenario.code;
+  pressure=pressure||pressureInfo(rows);arr=arr||frontArrangement(rows,pressure);
+  var p=pressure,lanes={},i,x,no,q;
+  rows.forEach(function(z){lanes[n(z.horse.horseNumber)]=clamp(Math.round((z.draw-.5)*5),-3,3)});
+
+  function lex(list,keys){
+    return list.slice().sort(function(a,b){
+      for(var k=0;k<keys.length;k++){
+        var fn=keys[k],av=n(fn(a),0),bv=n(fn(b),0);
+        if(bv!==av)return bv-av
+      }
+      return n(a.horse.horseNumber)-n(b.horse.horseNumber)
+    })
+  }
+  function uniq(groups){
+    var seen={},out=[];
+    groups.forEach(function(g){(g||[]).forEach(function(z){var k=n(z.horse.horseNumber);if(!seen[k]){seen[k]=1;out.push(z)}})});
+    rows.forEach(function(z){var k=n(z.horse.horseNumber);if(!seen[k]){seen[k]=1;out.push(z)}});
+    return out
+  }
+  function idx(order,row){return order.indexOf(row)}
+  function move(order,row,delta){
+    var i=idx(order,row);if(i<0||!delta)return;
+    var ni=clamp(i+delta,0,order.length-1);
+    if(ni===i)return;
+    order.splice(i,1);order.splice(ni,0,row)
+  }
+  function moveTo(order,row,target){
+    var i=idx(order,row);if(i<0)return;
+    target=clamp(target,0,order.length-1);
+    if(i===target)return;
+    order.splice(i,1);order.splice(target,0,row)
+  }
+  function topRank(order,row){var i=idx(order,row);return i<0?999:i+1}
+  function isFront(z){return z.goProb>=.50||z.expected==='逃げ候補'||z.expected==='先行'}
+  function isStalk(z){return z.expected==='好位'||z.stalk>=.30}
+  function isCloser(z){return z.expected==='後方'||z.close>=.38||z.comeFromBehind>=.58}
+
+  // START: choose roles lexicographically, not by one combined score.
+  var leaderPool=(arr.leadCandidates||[]).length?(arr.leadCandidates||[]):rows.filter(function(z){return z.goProb>=.50});
+  leaderPool=lex(leaderPool,[function(z){return z.goProb},function(z){return z.needLead},function(z){return z.breakSkill},function(z){return z.ten}]);
+  var leader=leaderPool[0]||lex(rows,[function(z){return z.goProb},function(z){return z.breakSkill}])[0]||null;
+  var front=lex(rows.filter(function(z){return z!==leader&&isFront(z)}),[function(z){return z.goProb},function(z){return z.ten},function(z){return z.needLead}]);
+  var stalk=lex(rows.filter(function(z){return z!==leader&&!isFront(z)&&isStalk(z)}),[function(z){return z.stalk},function(z){return z.posCons},function(z){return z.breakSkill}]);
+  var middle=lex(rows.filter(function(z){return z!==leader&&!isFront(z)&&!isStalk(z)&&!isCloser(z)}),[function(z){return z.mid},function(z){return z.posCons}]);
+  var rear=lex(rows.filter(function(z){return z!==leader&&!isFront(z)&&!isStalk(z)&&isCloser(z)}),[function(z){return z.close},function(z){return z.latePower}]);
+  var orders=[];
+  orders[0]=uniq([[leader],front,stalk,middle,rear]);
+
+  // FIRST TURN: resolve the actual fight for position. A horse only loses ground
+  // when there is a concrete pressure / draw / flexibility reason.
+  orders[1]=orders[0].slice();
+  orders[1].slice(0,Math.min(5,orders[1].length)).forEach(function(z){
+    q=p[n(z.horse.horseNumber)]||{};
+    if(q.sandwich&&z.flexibility<.48)move(orders[1],z,1);
+    if(z.outerStress>=.58&&z.goProb>=.46)move(orders[1],z,1);
+    if(q.lineMiddle&&z.needLead>=.58&&z.flexibility<.45)move(orders[1],z,1)
+  });
+  if(leader&&topRank(orders[1],leader)>2&&leader.goProb>=.62&&leader.breakSkill>=.52)moveTo(orders[1],leader,0);
+
+  // BACKSTRETCH: mostly preserve established positions. Only obvious over-racing /
+  // early-pressure horses concede a place; flexible stalkers can tuck in.
+  orders[2]=orders[1].slice();
+  orders[2].slice(0,Math.min(6,orders[2].length)).forEach(function(z){
+    q=p[n(z.horse.horseNumber)]||{};
+    if(z.fade>=.58&&z.frontCost>=.14&&z.needLead>=.50)move(orders[2],z,1);
+    else if(z.canYield&&z.needLead>=.45&&topRank(orders[2],z)<=3&&q.conflict>=.55)move(orders[2],z,1)
+  });
+
+  // 3C: movers begin advancing. They gain only a small number of positions per
+  // phase; this is a transition, not a wholesale re-ranking.
+  orders[3]=orders[2].slice();
+  var movers3=lex(rows.filter(function(z){return z.move>=.55&&z.latePower>=.50&&topRank(orders[3],z)>3}),[
+    function(z){return z.move},function(z){return z.latePower},function(z){return z.comeFromBehind}
+  ]);
+  movers3.slice(0,code==='C'?3:2).forEach(function(z){move(orders[3],z,code==='C'?-2:-1)});
+  orders[3].slice(0,Math.min(5,orders[3].length)).forEach(function(z){
+    q=p[n(z.horse.horseNumber)]||{};
+    if(z.fade>=.62&&z.frontCost>=.15&&(q.sandwich||q.conflict>=.60))move(orders[3],z,1)
+  });
+
+  // 4C: commit moves, but maintain continuity. A closer cannot teleport from last
+  // to first in one step, and a leader does not collapse without fatigue evidence.
+  orders[4]=orders[3].slice();
+  var movers4=lex(rows.filter(function(z){return z.move>=.58&&z.latePower>=.56&&topRank(orders[4],z)>2}),[
+    function(z){return z.move},function(z){return z.latePower},function(z){return z.comeFromBehind}
+  ]);
+  movers4.slice(0,code==='C'?3:2).forEach(function(z){move(orders[4],z,code==='C'?-2:-1)});
+  orders[4].slice(0,Math.min(5,orders[4].length)).forEach(function(z){
+    q=p[n(z.horse.horseNumber)]||{};
+    var severe=z.fade>=.68&&z.frontCost>=.18&&(q.sandwich||q.conflict>=.65);
+    if(severe)move(orders[4],z,1)
+  });
+
+  // STRAIGHT: resolve hold / fade / pass events. Position changes require a reason.
+  orders[5]=orders[4].slice();
+  var frontAt4=orders[4].slice(0,Math.min(4,orders[4].length));
+  frontAt4.forEach(function(z){
+    q=p[n(z.horse.horseNumber)]||{};
+    var severeFade=z.fade>=.70&&(z.frontCost>=.18||q.conflict>=.70||q.sandwich),
+        moderateFade=z.fade>=.58&&(z.frontCost>=.12||q.conflict>=.52),
+        strongHold=z.frontStay>=.66&&z.holdFront>=.56&&z.fade<.52;
+    if(severeFade)move(orders[5],z,code==='C'?3:2);
+    else if(moderateFade)move(orders[5],z,1);
+    else if(strongHold&&topRank(orders[5],z)>topRank(orders[4],z))moveTo(orders[5],z,topRank(orders[4],z)-1)
+  });
+
+  var closers=lex(rows.filter(function(z){return isCloser(z)&&z.latePower>=.56&&z.comeFromBehind>=.56}),[
+    function(z){return z.comeFromBehind},function(z){return z.latePower},function(z){return z.move}
+  ]);
+  closers.slice(0,code==='C'?3:2).forEach(function(z){
+    var gain=(z.comeFromBehind>=.68&&z.latePower>=.64)?3:2;
+    if(code==='A')gain=Math.max(1,gain-1);
+    move(orders[5],z,-gain)
+  });
+
+  // Genuine escape ability protects the leader. This is a rule-based hold, not a score bonus.
+  if(leader){
+    q=p[n(leader.horse.horseNumber)]||{};
+    var leaderCollapse=leader.fade>=.68&&(leader.frontCost>=.18||q.conflict>=.68||q.sandwich),
+        leaderHold=leader.frontStay>=.64&&leader.holdFront>=.54&&leader.fade<.55;
+    if(leaderHold&&!leaderCollapse){
+      var cap=(code==='C'&&leader.frontStay<.72)?2:1;
+      if(topRank(orders[5],leader)>cap)moveTo(orders[5],leader,cap-1)
+    }
+  }
+
+  // Build display stages from actual state order. score is only a normalized
+  // screen-position rank for downstream compatibility; it is NOT the pace model.
+  var labels=['スタート','1コーナー','向正面','3コーナー','4コーナー','直線'],
+      keys=['start','first','back','turn3','turn4','straight'],packs=[],stages=[],markScore={};
+  for(i=0;i<6;i++){
+    packs[i]=eventOrderPack(rows,orders[i],lanes,i);
+    stages.push({key:keys[i],label:labels[i],pack:packs[i],model:'event-transition-v1'})
+  }
+  orders[5].forEach(function(z,idx){markScore[n(z.horse.horseNumber)]=orders[5].length<=1?1:1-idx/(orders[5].length-1)});
+  return{scenario:scenario,stages:stages,start:orders[0],corner:orders[4],straight:orders[5],markScore:markScore,model:'event-transition-v1'}
+}
 function gradeClass(g){return g==='S'?'grade-s':(g==='A'?'grade-a':(g==='B'?'grade-b':'grade-c'))}
 function predictionProfile(r){
   var mode=raceMode(r);
@@ -1224,7 +1371,7 @@ function predict(r){
   // Second pass: refresh the displayed outcome with the now-final P1/P2/P3 decision roles.
   var outcome=paceOutcomeModel(r,draft),cov=mean(rows.map(function(x){return x.coverage}));
   var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,outcome:outcome,
-    engineVersion:'arvexq-edge-2026.10-v55-page-flow-continuity',markEngineVersion:'v319-flow-continuity',
+    engineVersion:'arvexq-edge-2026.10-v56-event-pace',markEngineVersion:'v319-flow-continuity',
     researchAudit:{expertAIConsensusV317:true,marketBlindFactorsV317:true,podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true,diagnosisPaceOutcomeLinkedV318:true,marksLinkedToOutcomeV318:true,betsLinkedToOutcomeV318:true}};
   Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
   return result
