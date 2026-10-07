@@ -1324,16 +1324,19 @@ function edgeFetchJson(url,timeoutMs){
 }
 function edgeDayRaceFallback(id,date,cached){
   date=String(date||state.date||today());
-  return edgeFetchJson('https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='+encodeURIComponent(date)+'&details=1&t='+Date.now(),7000)
+  // Do not request the full-day details bundle here. That route is large and
+  // can fail CORS/503 under load. Retry the single race only.
+  return new Promise(function(resolve){setTimeout(resolve,220)})
+    .then(function(){return edgeFetchJson(edgeRaceUrl(id),9000)})
     .then(function(body){
-      var details=(body&&body.details)||[],summaries=(body&&body.races)||[],d=null,summary=null,i;
-      for(i=0;i<details.length;i++)if(String(details[i]&&details[i].id||'')===String(id)){d=details[i];break}
-      for(i=0;i<summaries.length;i++)if(String(summaries[i]&&summaries[i].id||'')===String(id)){summary=summaries[i];break}
-      var merged=mergeRaceReflection(cached,d,null,summary||null);
-      if(!raceDisplayCoreReady(merged,summary||merged))return raceDisplayCoreReady(cached,cached)?cached:null;
+      var d=body&&body.detail?body.detail:null,odds=(body&&body.odds)||[],
+          row=(state.races||[]).find(function(x){return String(x&&x.id||'')===String(id)})||null,
+          summary=(body&&body.summary)||row||{};
+      var merged=mergeRaceReflection(cached,d,odds,summary);
+      if(!raceDisplayCoreReady(merged,summary||row||merged))return raceDisplayCoreReady(cached,cached)?cached:null;
       instantTrackDetails[String(id)]=merged;saveDetailCache(id,merged);return merged
     })
-    .catch(function(){return cached||null})
+    .catch(function(){return raceDisplayCoreReady(cached,cached)?cached:null})
 }
 function fetchEdgeRace(id,forceNetwork){
   if(!id)return Promise.resolve(null);
@@ -3221,9 +3224,12 @@ function load(force){
   function requestDetails(attempt){
     attempt=n(attempt,0);
     if(seq!==state.requestSeq||state.date!==d||detailsInFlight)return;
+    var ids=(state.races||[]).filter(function(r){return r&&r.id}).map(function(r){return String(r.id)});
+    if(!ids.length)return;
     detailsInFlight=true;
     selectedRacePreload.date=d;selectedRacePreload.fullLoading=true;selectedRacePreload.lastError='';
-    selectedRacePreload.expectedCount=(state.races||[]).filter(function(r){return r&&r.id}).length;
+    selectedRacePreload.expectedCount=ids.length;
+
     function scheduleTopRefresh(){
       if(selectedRacePreload.timer){clearTimeout(selectedRacePreload.timer);selectedRacePreload.timer=null}
       if(d===today())selectedRacePreload.timer=setTimeout(function(){
@@ -3231,41 +3237,42 @@ function load(force){
         if(seq===state.requestSeq&&state.date===d&&!state.race&&!state.track&&!state.picker)requestDetails(0)
       },300000)
     }
-    fetch('https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='+encodeURIComponent(d)+'&details=1&t='+Date.now(),{cache:'no-store'})
-      .then(function(res){if(!res.ok)throw Error('cloudflare-details '+res.status);return res.json()})
-      .then(function(body){
+
+    var cursor=0,loaded=0,analysisReady=0,failed=0,summaryBy={};
+    (state.races||[]).forEach(function(x){if(x&&x.id)summaryBy[String(x.id)]=x});
+
+    function worker(){
+      if(cursor>=ids.length)return Promise.resolve();
+      var id=ids[cursor++];
+      return fetchEdgeRace(id,attempt>0)
+        .then(function(z){
+          if(seq!==state.requestSeq||state.date!==d)return;
+          if(z&&raceDisplayCoreReady(z,summaryBy[id]||z)){
+            loaded++;
+            instantTrackDetails[id]=mergeRaceReflection(instantTrackDetails[id]||loadDetailCache(id)||null,z,null,summaryBy[id]||null);
+            saveDetailCache(id,instantTrackDetails[id]);
+            if(isFinal(z)||diagnosisCurrent(z))analysisReady++
+          }else failed++
+        })
+        .catch(function(){failed++})
+        .then(worker)
+    }
+
+    var workers=[],concurrency=Math.min(4,ids.length);
+    for(var i=0;i<concurrency;i++)workers.push(worker());
+    Promise.all(workers)
+      .then(function(){
         if(seq!==state.requestSeq||state.date!==d)return;
-        var details=(body&&body.details)||[],summaryRows=(body&&body.races)||[];
-        if(summaryRows.length){
-          var oldBy={};(state.races||[]).forEach(function(x){if(x&&x.id)oldBy[String(x.id)]=x});
-          state.races=summaryRows.map(function(z){
-            var old=oldBy[String(z.id)]||{},out=Object.assign({},old);
-            Object.keys(z||{}).forEach(function(k){if(reflectUseful(z[k]))out[k]=z[k]});
-            return out
-          });
-          saveRaceCache(d,'__ALL__',state.races)
-        }
-        var summaryBy={};(state.races||[]).forEach(function(x){if(x&&x.id)summaryBy[String(x.id)]=x});
-        details.forEach(function(z){
-          if(!z||!z.id)return;
-          var id=String(z.id),old=instantTrackDetails[id]||loadDetailCache(id)||null;
-          instantTrackDetails[id]=mergeRaceReflection(old,z,null,summaryBy[id]||null)
-        });
-        var ids=(state.races||[]).filter(function(r){return r&&r.id}).map(function(r){return String(r.id)}),loaded=0,analysisReady=0;
-        ids.forEach(function(id){var z=instantTrackDetails[id];if(z&&raceDisplayCoreReady(z,summaryBy[id]||z)){loaded++;if(isFinal(z)||diagnosisCurrent(z))analysisReady++}});
-        selectedRacePreload.expectedCount=ids.length||n(body&&body.raceCount,0);
         selectedRacePreload.loadedCount=loaded;
-        selectedRacePreload.fullLoaded=!!ids.length&&loaded>=ids.length;
+        selectedRacePreload.fullLoaded=loaded>=ids.length;
         selectedRacePreload.fullLoading=false;
         selectedRacePreload.analysisReady=analysisReady;
+        selectedRacePreload.lastError=failed?('race-detail failures '+failed):'';
         lastDetailsAt=Date.now();
         prebuildSpecialForecastPlans();
-        render();scheduleTopRefresh()
-      })
-      .catch(function(err){
-        if(seq!==state.requestSeq||state.date!==d)return;
-        selectedRacePreload.fullLoading=false;selectedRacePreload.lastError=String(err&&err.message||err||'');
-        if(attempt<1)setTimeout(function(){requestDetails(attempt+1)},900);else render()
+        render();
+        scheduleTopRefresh();
+        if(failed&&attempt<1)setTimeout(function(){requestDetails(1)},1200)
       })
       .finally(function(){detailsInFlight=false})
   }
