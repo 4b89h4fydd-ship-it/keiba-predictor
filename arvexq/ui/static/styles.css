@@ -2790,3 +2790,80 @@ details.smart-fixed-picks[open]>.smart-fixed-picks-head .smart-fixed-summary-rig
   .smart-shell>.smart-race-topbar + .smart-main{padding-top:calc(66px + env(safe-area-inset-top))!important}
   .arv-pick-circuit-btn{min-height:66px;padding:9px 11px}.arv-pick-circuit-btn b{font-size:17px}
 }
+
+
+/* v331 — horse-name page navigation + readable pace text */
+.racecard-row .rc-horse-name{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  padding:2px 0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#72c7ff!important;
+  font:inherit!important;
+  font-size:17px!important;
+  font-weight:900!important;
+  line-height:1.22!important;
+  text-align:left!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+  cursor:pointer!important;
+  pointer-events:auto!important;
+  position:relative!important;
+  z-index:2!important;
+}
+.rc-horse-top{
+  align-items:flex-start!important;
+  flex-wrap:wrap!important;
+  row-gap:3px!important;
+}
+.rc-bodyweight{
+  flex:0 0 auto!important;
+  margin-top:3px!important;
+}
+.pace-text-timeline .ai-stage-event{
+  padding:14px 15px!important;
+}
+.pace-text-timeline .ai-stage-event>div:first-child{
+  font-size:16px!important;
+}
+.pace-text-timeline .ai-stage-event>div:last-child{
+  font-size:17px!important;
+  line-height:1.8!important;
+}
+@media(max-width:430px){
+  .racecard-row{
+    grid-template-columns:30px 42px minmax(0,1fr) 52px 42px!important;
+  }
+  .rc-horse{
+    padding-left:6px!important;
+    padding-right:5px!important;
+  }
+  .racecard-row .rc-horse-name{
+    font-size:16px!important;
+  }
+  .rc-bodyweight{
+    font-size:10px!important;
+  }
+  .pace-text-timeline .ai-stage-event>div:first-child{
+    font-size:16px!important;
+  }
+  .pace-text-timeline .ai-stage-event>div:last-child{
+    font-size:17px!important;
+  }
+}
+@media(max-width:360px){
+  .racecard-row{
+    grid-template-columns:28px 40px minmax(0,1fr) 48px 40px!important;
+  }
+  .racecard-row .rc-horse-name{
+    font-size:15.5px!important;
+  }
+}

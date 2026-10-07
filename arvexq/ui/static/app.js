@@ -1474,7 +1474,7 @@ function predict(r){
   // Second pass: refresh the displayed outcome with the now-final P1/P2/P3 decision roles.
   var outcome=paceOutcomeModel(r,draft),cov=mean(rows.map(function(x){return x.coverage}));
   var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext,outcome:outcome,
-    engineVersion:'arvexq-edge-2026.10-v58-mineta-relative-pace',markEngineVersion:'v319-flow-continuity',
+    engineVersion:'arvexq-edge-2026.10-v59-page-nav-arrow-pace',markEngineVersion:'v319-flow-continuity',
     researchAudit:{expertAIConsensusV317:true,marketBlindFactorsV317:true,podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true,diagnosisPaceOutcomeLinkedV318:true,marksLinkedToOutcomeV318:true,betsLinkedToOutcomeV318:true}};
   Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
   return result
@@ -1705,11 +1705,21 @@ function renderPredictionPending(r){
     },30)
   }
   if(!state.openPanel)state.openPanel='entry';
+  if(state.subPage==='horse'){
+    var hh=(r.horses||[]).find(function(z){return n(z.horseNumber)===n(state.detailHorseNo)})||{};
+    return '<div class="smart-shell">'+raceSubpageTopBar(r,horseDisplayName(r,hh))+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">馬情報を取得中です。</div></section></main>'+cinematicFooter()+'</div>'
+  }
+  if(state.subPage==='bets')return '<div class="smart-shell">'+raceSubpageTopBar(r,'買い目')+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">買い目を計算中です。</div></section></main>'+cinematicFooter()+'</div>';
   var content=state.openPanel==='entry'?safeEntryPanel(r,{rows:[]}):(state.openPanel==='result'?resultPanel(r):pendingDetailPanel(r));
   return '<div class="smart-shell">'+smartRaceTopBar(r)+'<main class="smart-main smart-race-page">'+smartRaceHead(r)+cinematicTabs(r)+raceDetailNotice(r)+'<div class="smart-race-content">'+content+'</div></main>'+cinematicFooter()+'</div>'
 }
 function renderPartialRace(r){
   if(!state.openPanel)state.openPanel='entry';
+  if(state.subPage==='horse'){
+    var h=(r.horses||[]).find(function(z){return n(z.horseNumber)===n(state.detailHorseNo)})||{};
+    return '<div class="smart-shell">'+raceSubpageTopBar(r,horseDisplayName(r,h))+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">馬情報を取得中です。</div></section></main>'+cinematicFooter()+'</div>'
+  }
+  if(state.subPage==='bets')return '<div class="smart-shell">'+raceSubpageTopBar(r,'買い目')+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">買い目を計算中です。</div></section></main>'+cinematicFooter()+'</div>';
   return '<div class="smart-shell">'+smartRaceTopBar(r)+'<main class="smart-main smart-race-page">'+smartRaceHead(r)+cinematicTabs(r)+raceDetailNotice(r)+'<div class="smart-race-content">'+pendingDetailPanel(r)+'</div></main>'+cinematicFooter()+'</div>'
 }
 function fetchRacecardOnly(id){
@@ -2856,7 +2866,7 @@ function returnToToday(){
   if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}
   if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}
   if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}
-  state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=today();state.openPanel=null;state.race=null;state.track=null;state.picker=false;state.horseModalNo=null;state.detailHorseNo=null;state.subPage=null;state.subPageReturnPanel=null;state.scenarioCode=null;state.paceStage=0;
+  state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=today();state.openPanel=null;state.race=null;state.track=null;state.picker=false;state.horseModalNo=null;state.detailHorseNo=null;state.subPage=null;state.subPageReturnPanel=null;state.subPage=null;state.subPageReturnPanel=null;state.scenarioCode=null;state.paceStage=0;
   window.scrollTo(0,0);load()
 }
 function smartHomeHero(){
@@ -3305,6 +3315,8 @@ function renderRace(){
     state.openPanel='entry'
   }
   if(!state.openPanel)state.openPanel='entry';
+  if(state.subPage==='horse')return horseDetailPage(r,p);
+  if(state.subPage==='bets')return betDetailPage(r,p);
   var top=(p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0];
   if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=top?top.code:null;
   var content='';
@@ -3316,7 +3328,7 @@ function renderRace(){
     content='<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2><div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'+
       (r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
         var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),odds=(h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0)?((Math.round(n(h.winOdds)*10)/10).toFixed(1)):'取得中',pop=n(h.popularity)>0?n(h.popularity)+'人気':'更新中',bw=(h.bodyWeight!=null&&h.bodyWeight!==''&&n(h.bodyWeight)>0)?String(h.bodyWeight)+'kg':'計量待ち',cw=(h.carriedWeight!=null&&h.carriedWeight!=='')?String(h.carriedWeight).replace(/\.0$/,'')+'kg':'—';
-        return '<div class="racecard-row"><span class="rc-check-cell"></span><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span><span class="rc-horse"><span class="rc-horse-top"><b class="rc-horse-name">'+esc(h.name||'馬名取得中')+'</b><small class="rc-bodyweight '+(bw==='計量待ち'?'pending':'')+'">'+esc(bw)+'</small></span><span class="rc-jockey">'+esc(h.jockey||'騎手取得中')+' / '+esc(cw)+'</span></span><span class="rc-odds"><span class="odd '+(n(h.winOdds)>0&&n(h.winOdds)<10?'single':'')+'">'+esc(odds)+'</span><span class="pop">'+esc(pop)+'</span></span></div>'
+        return '<div class="racecard-row"><span class="rc-check-cell"></span><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span><span class="rc-horse"><span class="rc-horse-top"><button type="button" class="rc-horse-name" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く">'+esc(horseDisplayName(r,h))+'</button><small class="rc-bodyweight '+(bw==='計量待ち'?'pending':'')+'">'+esc(bw)+'</small></span><span class="rc-jockey">'+esc(h.jockey||'騎手取得中')+' / '+esc(cw)+'</span></span><span class="rc-odds"><span class="odd '+(n(h.winOdds)>0&&n(h.winOdds)<10?'single':'')+'">'+esc(odds)+'</span><span class="pop">'+esc(pop)+'</span></span></div>'
       }).join('')+
       '</div></section></div>'
   }
@@ -3370,7 +3382,7 @@ function runnerStyleSection(r,p){
         +'<span class="rc-check-cell"><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span></span>'
         +'<span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span>'
         +'<span class="rc-horse">'
-          +'<span class="rc-horse-top"><button type="button" class="rc-horse-name" data-horse-open="'+esc(h.horseNumber)+'" style="appearance:none;border:0;background:none;padding:0;color:inherit;font:inherit;font-weight:800;text-align:left;cursor:pointer">'+esc(horseDisplayName(r,h))+'</button>'+(scratch?'<small class="rc-scratch">'+esc(st)+'</small>':'<small class="rc-bodyweight '+(bw?'':'pending')+'">'+(bw?('馬体重 '+esc(bw)):(refbw?('前走 '+esc(refbw)+'kg'):'計量待ち'))+'</small>')+'</span>'
+          +'<span class="rc-horse-top"><button type="button" class="rc-horse-name" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く" style="appearance:none;border:0;background:none;padding:0;color:inherit;font:inherit;font-weight:800;text-align:left;cursor:pointer">'+esc(horseDisplayName(r,h))+'</button>'+(scratch?'<small class="rc-scratch">'+esc(st)+'</small>':'<small class="rc-bodyweight '+(bw?'':'pending')+'">'+(bw?('馬体重 '+esc(bw)):(refbw?('前走 '+esc(refbw)+'kg'):'計量待ち'))+'</small>')+'</span>'
           +'<span class="rc-horse-meta"><span class="rc-meta-left"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span></span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">斤量 '+esc(carriedWeightText(h))+'</span></span>'
         +'</span>'
         +'<span class="rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</span>'
@@ -3410,7 +3422,7 @@ function paceStageNarrative(p,key){
     if(middle.length>=2)text.push('中団は'+paceNosText(middle)+'が一団');
     else if(middle.length===1)text.push('中団に'+paceNosText(middle));
     if(tail&&n(tail.horse.horseNumber)!==leadNo)text.push('しんがりは'+n(tail.horse.horseNumber));
-    return text.join('。')+'。'
+    return text.join(' → ')
   }
 
   if(key==='turn3'){
@@ -3421,7 +3433,7 @@ function paceStageNarrative(p,key){
     var hold=order.filter(function(x){return n(x.horse.horseNumber)!==leadNo&&x.move<.52&&x.comeFromBehind>=.52}).slice(-2);
     if(hold.length)text.push(paceNosText(hold)+'はまだ脚をためる');
     if(tail)text.push(n(tail.horse.horseNumber)+'は後方待機');
-    return text.join('。')+'。'
+    return text.join(' → ')
   }
 
   if(key==='turn4'){
@@ -3432,7 +3444,7 @@ function paceStageNarrative(p,key){
     if(attack.length)text.push(paceNosText(attack)+'は差し・追い込み態勢');
     if(droppers.length)text.push(paceNosText(droppers.slice(0,2))+'は手応え注意');
     if(tail)text.push('最後方'+n(tail.horse.horseNumber)+'も直線勝負');
-    return text.join('。')+'。'
+    return text.join(' → ')
   }
 
   if(key==='straight'){
@@ -3448,7 +3460,7 @@ function paceStageNarrative(p,key){
     if(stalkAttack.length)text.push(paceNosText(stalkAttack)+'は脚をためて差しを狙う');
     if(closers.length)text.push(paceNosText(closers)+'が追い込みを仕掛ける');
     if(tail&&closers.indexOf(tail)>=0)text.push('しんがり'+n(tail.horse.horseNumber)+'も大外から追い込み');
-    return text.join('。')+'。'
+    return text.join(' → ')
   }
   return ''
 }
@@ -3456,9 +3468,9 @@ function paceStructureSection(r,p){
   var ctx=p&&p.minetaContext;if(!ctx)return'';
   var lead=(ctx.leadNos||[]).join('・')||'—',label=ctx.band==='前少なめ'?'前が少ない構成':(ctx.band==='前多め'?'先行争いが濃い構成':'中間の構成');
   return '<section class="ai-stage-event" style="margin:10px 0;padding:11px 13px;border:1px solid rgba(120,170,255,.22);border-radius:12px;background:rgba(8,18,36,.45)">'
-    +'<div style="font-size:13px;font-weight:800;color:#8de9ff">'+esc(label)+'</div>'
-    +'<div style="margin-top:6px;font-size:12px;line-height:1.7">先行占有 '+Math.round(ctx.rawOcc*100)+'%　/　距離補正後 '+Math.round(ctx.adjustedOcc*100)+'%　/　後方占有 '+Math.round(ctx.rearOcc*100)+'%　/　ハナ候補 '+esc(lead)+'</div>'
-    +'<div class="muted" style="margin-top:5px;font-size:11px">'+esc(minetaStructureText(ctx))+'</div></section>'
+    +'<div style="font-size:15px;font-weight:900;color:#8de9ff">'+esc(label)+'</div>'
+    +'<div style="margin-top:7px;font-size:14px;line-height:1.75">先行占有 '+Math.round(ctx.rawOcc*100)+'%　/　距離補正後 '+Math.round(ctx.adjustedOcc*100)+'%　/　後方占有 '+Math.round(ctx.rearOcc*100)+'%　/　ハナ候補 '+esc(lead)+'</div>'
+    +'<div class="muted" style="margin-top:6px;font-size:13px;line-height:1.65">'+esc(minetaStructureText(ctx))+'</div></section>'
 }
 function paceNarrativeCards(r,p){
   var stages=[
@@ -3469,8 +3481,8 @@ function paceNarrativeCards(r,p){
   ];
   return '<div class="pace-text-timeline">'+stages.map(function(z){
     return '<section class="ai-stage-event" style="margin:10px 0;padding:13px 14px;border:1px solid rgba(120,170,255,.24);border-radius:12px;background:rgba(8,18,36,.50)">'
-      +'<div style="font-size:14px;font-weight:800;color:#8de9ff;margin-bottom:7px">'+z[1]+'</div>'
-      +'<div style="font-size:14px;line-height:1.75">'+esc(paceStageNarrative(p,z[0]))+'</div>'
+      +'<div style="font-size:16px;font-weight:900;color:#8de9ff;margin-bottom:8px">'+z[1]+'</div>'
+      +'<div style="font-size:17px;line-height:1.75;font-weight:700">'+esc(paceStageNarrative(p,z[0]))+'</div>'
       +'</section>'
   }).join('')+'</div>'
 }
