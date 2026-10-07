@@ -1168,6 +1168,16 @@ function integratedGrades(r,rows){
 
 function applyServerAuthoritativeMarks(rows,r){
   rows=rows||[];r=r||{};
+  var frontendGate=r.honmeiDecisionFrontend||{},engine=String(r.markEngineVersion||''),i,x,no,mark;
+  for(i=0;i<(r.horses||[]).length;i++){
+    var he=((r.horses[i]||{}).integratedEvaluation||{});
+    if(he.markEngineVersion)engine+=' '+String(he.markEngineVersion)
+  }
+  // A v4 lock may contain the old forced ◎. When the new frontend consensus gate
+  // withholds ◎, do not let that legacy snapshot overwrite the live v5 decision.
+  // The immutable preRacePrediction object itself is never changed and remains the
+  // source for historical accuracy audits.
+  if(frontendGate.eligible===false&&engine.indexOf('arvexq-four-pillar-marks-v5')<0)return false;
   var byNo={},lock=r.preRacePrediction||{},locked=Array.isArray(lock.horses)?lock.horses:[],i,x,no,mark;
   for(i=0;i<locked.length;i++){x=locked[i]||{};no=n(x.horseNumber,0);mark=String(x.mark||'');if(no&&mark)byNo[no]=mark}
   if(!Object.keys(byNo).length){
