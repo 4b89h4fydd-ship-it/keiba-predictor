@@ -81,8 +81,8 @@ function installPwaCache(){
       if(reloading)return;
       reloading=true;
       try{
-        if(localStorage.getItem("arvexq-sw-reload")!=="v328-safari-runtime-20261006"){
-          localStorage.setItem("arvexq-sw-reload","v328-safari-runtime-20261006");
+        if(localStorage.getItem("arvexq-sw-reload")!=="v328-racecard-priority-20261007"){
+          localStorage.setItem("arvexq-sw-reload","v328-racecard-priority-20261007");
           location.reload()
         }
       }catch(e){}
