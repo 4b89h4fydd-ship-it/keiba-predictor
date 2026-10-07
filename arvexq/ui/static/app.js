@@ -186,7 +186,7 @@ function sameDayCorrectionProfileV313(r,rows){
     var d=resultDetailForTrend(z),fs=((d&&d.result||{}).finishers||[]).filter(function(x){return n(x&&x.finish)>0}).sort(function(a,b){return n(a.finish)-n(b.finish)}).slice(0,3);
     if(fs.length<3)return;
     completed++;source.push(n(z.raceNumber));
-    var marks=aiStoredMarks(d),marked={};marks.forEach(function(x){if(['◎','○','▲','☆+','☆','△','注+','注'].indexOf(String(x.mark||''))>=0)marked[n(x.no)]=1});
+    var marks=aiStoredMarks(d),marked={};marks.forEach(function(x){if(['◎','○','▲','☆+','☆','△','注'].indexOf(String(x.mark||''))>=0)marked[n(x.no)]=1});
     var comparable=Object.keys(marked).length>0;if(comparable){markRaces++;var all=fs.every(function(f){return !!marked[n(f.horseNumber)]});if(all)fullHit++}
     var field=Math.max(1,n(d.fieldSize,(d.horses||[]).length||fs.length)),frontCut=Math.max(2,Math.ceil(field*.25)),lateCut=Math.max(frontCut+1,Math.ceil(field*.55));
     fs.forEach(function(f){
@@ -1387,28 +1387,27 @@ function assignPredictionMarks(rows,r){
   var hardRecallRace=!stable||conf<(centralRace?.70:.64)||(dayCorr.active&&dayCorr.deficit>=.22),
       targetMarks=Math.min(field,field>=12?7:(field>=10&&hardRecallRace?7:(field>=7?6:Math.min(field,5))));
   var diversityPool=rows.filter(function(z){return selected.indexOf(z)<0&&n(z.edgeEvidence,n(z.coverage,.5))>=.22&&(n(z.recallDiversityHits)>=2||n(z.recallDiversityBest)<=2)&&n(z.podiumRecallScore)>=.36}).sort(function(a,b){return n(b.recallDiversityScore)-n(a.recallDiversityScore)||n(b.p3RecallScore)-n(a.p3RecallScore)});
-  if(selected.length<targetMarks&&diversityPool.length){var dv=diversityPool[0];take(dv,'注+');dv.attentionReason='独立根拠の拾い漏れ防止｜'+n(dv.recallDiversityHits)+'軸上位 / P3 '+Math.round(n(dv.p3RecallScore)*100)}
+  if(selected.length<targetMarks&&diversityPool.length){var dv=diversityPool[0];take(dv,'注');dv.attentionReason='独立根拠の拾い漏れ防止｜'+n(dv.recallDiversityHits)+'軸上位 / P3 '+Math.round(n(dv.p3RecallScore)*100)}
   var coveragePool=rows.filter(function(z){return selected.indexOf(z)<0}).sort(function(a,b){
     var ar=Math.min(n(a.p2RecallRank,99),n(a.p3RecallRank,99),n(a.axisRank,99)),br=Math.min(n(b.p2RecallRank,99),n(b.p3RecallRank,99),n(b.axisRank,99));
     var au=n(a.podiumRecallScore)*.56+n(a.p2RecallScore)*.17+n(a.p3RecallScore)*.20+n(a.edgeEvidence,n(a.coverage,.5))*.07+(ar<=5?.05:0),
         bu=n(b.podiumRecallScore)*.56+n(b.p2RecallScore)*.17+n(b.p3RecallScore)*.20+n(b.edgeEvidence,n(b.coverage,.5))*.07+(br<=5?.05:0);
     return bu-au||ar-br||n(b.axisProbability)-n(a.axisProbability)
   });
-  var alertLabels=selected.some(function(z){return z.predMark==='注+'})?['注']:['注+','注'],ci=0;
+  var alertLabels=selected.some(function(z){return z.predMark==='注'})?[]:['注'],ci=0;
   while(selected.length<targetMarks&&ci<coveragePool.length&&alertLabels.length){
     var z=coveragePool[ci++],eligible=(n(z.podiumRecallScore)>=.43||n(z.p2RecallRank)<=5||n(z.p3RecallRank)<=6||n(z.axisRank)<=6);
     if(!eligible)continue;
-    var strong=n(z.podiumRecallScore)>=.56&&(n(z.p2RecallRank)<=4||n(z.p3RecallRank)<=4||scenario(z)>=.58||liveBias(z)>=.68),mark;
-    if(strong&&alertLabels.indexOf('注+')>=0)mark='注+';else if(alertLabels.indexOf('注')>=0)mark='注';else mark=alertLabels[0];
-    alertLabels.splice(alertLabels.indexOf(mark),1);take(z,mark);z.attentionReason=(mark==='注+'?'複数役で上位圏まで警戒':'候補完全包含の最終ガード')+'｜P2 '+Math.round(n(z.p2RecallScore)*100)+' / P3 '+Math.round(n(z.p3RecallScore)*100)
+    var mark='注';
+    alertLabels.length=0;take(z,mark);z.attentionReason='候補完全包含の最終ガード｜P2 '+Math.round(n(z.p2RecallScore)*100)+' / P3 '+Math.round(n(z.p3RecallScore)*100)
   }
   // v316 shadow swap: only the lowest alert lane can be replaced. Core marks
   // (◎○▲☆+☆△) are never rewritten by this guard.
   var shadowPool=rows.filter(function(z){return selected.indexOf(z)<0&&n(z.recallDiversityHits)>=2&&n(z.edgeEvidence,n(z.coverage,.5))>=.24}).sort(function(a,b){return n(b.recallDiversityScore)-n(a.recallDiversityScore)}),
-      weakPool=selected.filter(function(z){return z.predMark==='注'||z.predMark==='注+'}).sort(function(a,b){return n(a.recallDiversityScore)-n(b.recallDiversityScore)});
+      weakPool=selected.filter(function(z){return z.predMark==='注'}).sort(function(a,b){return n(a.recallDiversityScore)-n(b.recallDiversityScore)});
   if(shadowPool.length&&weakPool.length){var sh=shadowPool[0],wk=weakPool[0];if(n(sh.recallDiversityScore)>=n(wk.recallDiversityScore)+.055){var mk=wk.predMark;wk.predMark='';selected.splice(selected.indexOf(wk),1);take(sh,mk);sh.attentionReason='最終シャドー救済｜独立'+n(sh.recallDiversityHits)+'軸で上位'}}
   if(dayCorr.active){selected.forEach(function(z){if(n(z.sameDayMarkBoost)>.012){z.attentionReason=(z.attentionReason?z.attentionReason+'｜':'')+'当日'+dayCorr.flowLabel+'補正'}})}
-  var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注+':7,'注':8};rows.slice().sort(function(a,b){return n(order[a.predMark],99)-n(order[b.predMark],99)||n(b.axisProbability)-n(a.axisProbability)||p1(b)-p1(a)}).forEach(function(z,idx){z.predRank=idx+1});
+  var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};rows.slice().sort(function(a,b){return n(order[a.predMark],99)-n(order[b.predMark],99)||n(b.axisProbability)-n(a.axisProbability)||p1(b)-p1(a)}).forEach(function(z,idx){z.predRank=idx+1});
   if(winLeader){winLeader.circuitMethod=method.id;winLeader.sameDayCorrection=dayCorr;winLeader.axisReason=method.id+' / 共通因子7＋相対比較 / '+winLeader.winDecisionReason+' / P1差 '+(p1Gap*100).toFixed(1)+'pt / 独立1着 '+(n(winLeader.winEvidenceProbability)*100).toFixed(1)+'% / 対戦 '+(n(winLeader.pairwiseWinRate)*100).toFixed(1)+'% / 統合 '+(n(winLeader.winnerConsensusProbability)*100).toFixed(1)+'% / 軸信頼 '+Math.round(conf*100)+'/100'+(dayCorr.active?' / 当日'+dayCorr.flowLabel+'補正 '+Math.round(dayCorr.evidence*100)+'/100':'')}
 }
 
@@ -1512,7 +1511,7 @@ function predict(r){
   // Second pass: refresh the displayed outcome with the now-final P1/P2/P3 decision roles.
   var outcome=paceOutcomeModel(r,draft),cov=mean(rows.map(function(x){return x.coverage}));
   var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext,outcome:outcome,
-    engineVersion:'arvexq-edge-2026.10-v60-mineta-event-rules',markEngineVersion:'v319-flow-continuity',
+    engineVersion:'arvexq-edge-2026.10-v61-pace-pages-clean',markEngineVersion:'v319-flow-continuity',
     researchAudit:{expertAIConsensusV317:true,marketBlindFactorsV317:true,podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true,diagnosisPaceOutcomeLinkedV318:true,marksLinkedToOutcomeV318:true,betsLinkedToOutcomeV318:true}};
   Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
   return result
@@ -1552,8 +1551,8 @@ function runnerDetailBody(r,p,x){
   }
   var ability=n(rf.ability,x.ability),form=n(rf.form,x.resultsScore),klass=n(rf.classLevel,x.levelFit),
       suit=n(rf.suitability,mean([n(x.distFit,.5),n(x.trackFit,.5),n(x.condFit,.5)])),pace=n(rf.pace,n(x.paceScore,50)/100);
-  return '<div class="horse-detail"><div class="horse-detail-identity">'+badge(h)+'<div class="horse-detail-identity-text"><strong>'+esc(displayName)+'</strong><span>'+esc(h.sex||'—')+esc(h.age||'—')+'　'+esc(h.jockey||'騎手不明')+'　'+esc(carriedWeightText(h))+'</span></div></div>'+
-    '<div class="runner-overall-box"><div class="runner-overall-head"><span class="label">AI総合評価</span><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><span class="runner-overall-mark" data-ai-mark="'+esc(x.predMark||'')+'">'+esc(x.predMark||'—')+'</span><button type="button" class="runner-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</button><span class="runner-overall-score">総合 '+esc(overallScoreText(x))+'</span></div>'+
+  return '<div class="horse-detail">'
+    +'<div class="runner-overall-box"><div class="runner-overall-head"><span class="label">AI総合評価</span><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><span class="runner-overall-mark" data-ai-mark="'+esc(x.predMark||'')+'">'+esc(x.predMark||'—')+'</span><span class="runner-overall-score">総合 '+esc(overallScoreText(x))+'</span></div>'+
     '<div class="overall-reasons"><i class="good">'+esc(role)+'</i>'+(reasons.length?reasons.map(function(z){var warn=String(z).indexOf('注意')>=0||String(z).indexOf('不足')>=0;return '<i class="'+(warn?'warn':'good')+'">'+esc(z)+'</i>'}).join(''):'')+'</div></div>'+
     '<div class="detail-heading">基本情報</div><div class="horse-info-grid"><div class="horse-info-cell"><small>馬番 / 枠</small><b>'+esc(h.horseNumber)+'番 / '+esc(h.frameNumber||frame(h))+'枠</b></div><div class="horse-info-cell"><small>性齢 / 斤量</small><b>'+esc(h.sex||'—')+esc(h.age||'—')+' / '+esc(carriedWeightText(h))+'</b></div><div class="horse-info-cell"><small>脚質</small><b>'+esc(styleTxt)+'</b></div><div class="horse-info-cell"><small>騎手</small><b>'+esc(h.jockey||'—')+'</b></div><div class="horse-info-cell"><small>調教師</small><b>'+esc(h.trainer||'—')+'</b></div><div class="horse-info-cell"><small>馬体重</small><b>'+(bodyTxt?esc(bodyTxt):'—')+'</b></div></div>'+
     '<div class="detail-heading">能力・実績・適性</div><div class="horse-info-grid">'+scoreCell('能力',ability)+scoreCell('近況・実績',form)+scoreCell('相手レベル',klass)+scoreCell('条件適性',suit)+scoreCell('展開適性',pace)+scoreCell('データ充足',x.coverage)+'</div>'+
@@ -2287,7 +2286,7 @@ function buildAiBetPlan(r,p){
     var ec=compactCombos(exactaRank,strongGate?2:1,strongGate?.68:.78,1);if(ec.length)items.push({level:strongGate?'本線':'通常',kind:'馬単',combos:ec,confidence:strongGate?'高':'中',modelScore:0});
     var qc=compactCombos(quinellaRank,2,strongGate?.70:.78,1);if(qc.length)items.push({level:strongGate?'本線':'通常',kind:'馬連',combos:qc,confidence:strongGate?'高':'中',modelScore:0});
     var wc=compactCombos(wideRank,2,strongGate?.74:.82,1);if(wc.length)items.push({level:strongGate?'本線':'通常',kind:'ワイド',combos:wc,confidence:strongGate?'高':'中',modelScore:0});
-    var tc=compactCombos(trioRank,strongGate?3:2,strongGate?.60:.72,strongGate?2:1),rescue3=thirdRescueCandidateV312(r,rows,[]),recallGuard=rows.filter(function(z){return ['△','注+','注'].indexOf(String(z.predMark||''))>=0}).sort(function(a,b){return n(b.p3RecallScore)-n(a.p3RecallScore)||n(b.recallDiversityScore)-n(a.recallDiversityScore)})[0]||null;if(rescue3)appendRescueRankedV312(tc,trioRank,no(rescue3),1,strongGate?.34:.40,false);if(recallGuard&&(!rescue3||no(recallGuard)!==no(rescue3)))appendRescueRankedV312(tc,trioRank,no(recallGuard),1,strongGate?.31:.36,false);if(tc.length)items.push({level:strongGate?'押さえ':'通常',kind:'3連複',combos:tc,confidence:strongGate?'高':'中',modelScore:0});
+    var tc=compactCombos(trioRank,strongGate?3:2,strongGate?.60:.72,strongGate?2:1),rescue3=thirdRescueCandidateV312(r,rows,[]),recallGuard=rows.filter(function(z){return ['△','注'].indexOf(String(z.predMark||''))>=0}).sort(function(a,b){return n(b.p3RecallScore)-n(a.p3RecallScore)||n(b.recallDiversityScore)-n(a.recallDiversityScore)})[0]||null;if(rescue3)appendRescueRankedV312(tc,trioRank,no(rescue3),1,strongGate?.34:.40,false);if(recallGuard&&(!rescue3||no(recallGuard)!==no(rescue3)))appendRescueRankedV312(tc,trioRank,no(recallGuard),1,strongGate?.31:.36,false);if(tc.length)items.push({level:strongGate?'押さえ':'通常',kind:'3連複',combos:tc,confidence:strongGate?'高':'中',modelScore:0});
   }
   var triGate=canIssue&&strongGate&&triTop>=.018&&triRatio>=1.06&&triTop6>=.080&&orderConfidence>=.34;
   if(triGate){var triMax=orderConfidence>=.52?4:6,triCut=orderConfidence>=.52?.56:.46,t3=compactCombos(tri,triMax,triCut,2);if(rescue3)appendRescueRankedV312(t3,tri,no(rescue3),orderConfidence>=.52?1:2,.27,true);if(recallGuard&&(!rescue3||no(recallGuard)!==no(rescue3)))appendRescueRankedV312(t3,tri,no(recallGuard),1,.24,true);if(t3.length)items.push({level:'3連単チャレンジ',kind:'3連単',combos:t3,confidence:orderConfidence>=.52?'高':'中',modelScore:0});}
@@ -2330,7 +2329,7 @@ function aiBetRecommendation(r,p){
   var vote=officialRaceLinks(r).vote,rows=(plan.items||[]).map(function(z){return '<div class="ai-bet-row level-'+(z.level==='本線'?'main':z.level==='押さえ'?'cover':z.level==='強気'?'attack':'trifecta')+'"><span class="ai-bet-level">'+esc(z.level)+'</span><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点'+(z.confidence?' / '+esc(z.confidence):'')+'</em></div>'}).join('');
   if(plan.decision==='見送り')rows='<div class="ai-bet-row level-cover"><span class="ai-bet-level">見送り</span><b>全券種</b><strong>無理に買わない</strong><em>'+esc(plan.betQuality||0)+'/100</em></div>';
   if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')rows+='<div class="ai-bet-row level-trifecta"><span class="ai-bet-level">3連単</span><b>検討済み</b><strong>順序信頼不足で見送り</strong><em>'+esc(plan.orderScore||0)+'/100</em></div>';
-  return '<div class="ai-bet-box"><div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div><div class="ai-bet-meta"><span><b>'+esc(plan.scenario)+'</b> '+Math.round(n(plan.scenarioProb)*100)+'%</span><span>信頼 <b>'+esc(plan.betQuality||0)+'</b>/100</span><span>'+esc(plan.fixedAt?'発走前固定':'暫定・更新あり')+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><div class="bet-mark-guide"><b>印の見方</b><div class="bet-mark-grid"><span><i>◎</i>1着本命</span><span><i>○</i>1着対抗・2着本線</span><span><i>▲</i>1〜3着の有力馬</span><span><i>☆+</i>強穴・1着まで</span><span><i>☆</i>基本3着の能力穴</span><span><i>△</i>押さえ・3着候補</span><span><i>注+</i>条件ハマりで2着以上</span><span><i>注</i>特殊条件・展開ハマり待ち</span></div></div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">現行：中央/地方を別エンジンで評価し、能力・相手レベル・近況・展開/ラップ・条件適性・騎手/厩舎/状態・血統・全頭相対比較を統合。当日の同場傾向は弱い補正に限定し、1〜3着の全頭包含を最優先KPIに維持します。</small></div>'
+  return '<div class="ai-bet-box"><div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div><div class="ai-bet-meta"><span><b>'+esc(plan.scenario)+'</b> '+Math.round(n(plan.scenarioProb)*100)+'%</span><span>信頼 <b>'+esc(plan.betQuality||0)+'</b>/100</span><span>'+esc(plan.fixedAt?'発走前固定':'暫定・更新あり')+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><div class="bet-mark-guide"><b>印の見方</b><div class="bet-mark-grid"><span><i>◎</i>1着本命</span><span><i>○</i>1着対抗・2着本線</span><span><i>▲</i>1〜3着の有力馬</span><span><i>☆+</i>強穴・1着まで</span><span><i>☆</i>基本3着の能力穴</span><span><i>△</i>押さえ・3着候補</span> <span><i>注</i>特殊条件・展開ハマり待ち</span></div></div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">現行：中央/地方を別エンジンで評価し、能力・相手レベル・近況・展開/ラップ・条件適性・騎手/厩舎/状態・血統・全頭相対比較を統合。当日の同場傾向は弱い補正に限定し、1〜3着の全頭包含を最優先KPIに維持します。</small></div>'
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
@@ -2341,7 +2340,7 @@ function diagnosisPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse&&a.horse.horseNumber,999)-n(b.horse&&b.horse.horseNumber,999)});
   var details='<div class="diagnosis-merged-list">'+rows.map(function(x,i){
     var h=x.horse,e=x.evaluation||{},confidence=esc(e.confidence||'低'),rank=n(x.overallRank,i+1),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,bwLabel=bw?bw:(refbw?('前走 '+refbw+'kg'):(isFinal(r)?'結果確認中':'計量待ち'));
-    var reason=(x.overallReasons||[]).join(' / ')+(n(x.bombScore)>=65?' / BOMB '+n(x.bombScore)+' EDGE '+n(x.edgeScore)+' '+(x.upsetReasons||[]).slice(0,2).join('・'):'')+((x.predMark==='注'||x.predMark==='注+')&&x.attentionReason?' / 注目理由 '+x.attentionReason:'');
+    var reason=(x.overallReasons||[]).join(' / ')+(n(x.bombScore)>=65?' / BOMB '+n(x.bombScore)+' EDGE '+n(x.edgeScore)+' '+(x.upsetReasons||[]).slice(0,2).join('・'):'')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:'');
     return '<article class="horse-card diagnosis-merged-row">'
       +'<div class="diagnosis-merged-head">'
         +'<span class="diag-check-cell"><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span></span>'
@@ -2496,8 +2495,8 @@ function aiDailyOne(detail){
   var finishers=(detail.result&&detail.result.finishers||[]).filter(function(x){return n(x.finish)>0}).sort(function(a,b){return n(a.finish)-n(b.finish)});if(!finishers.length)return null;
   var winner=n(finishers[0].horseNumber),top3={};finishers.slice(0,3).forEach(function(x){top3[n(x.horseNumber)]=1});
   var marks=aiStoredMarks(detail);if(!marks.length)return null;
-  var hon=marks.find(function(x){return x.mark==='◎'}),marked={};marks.forEach(function(x){if(['◎','○','▲','☆+','☆','△','注+','注'].indexOf(x.mark)>=0)marked[x.no]=x.mark});
-  var holePlace=marks.some(function(x){return (x.mark==='☆'||x.mark==='☆+'||x.mark==='注'||x.mark==='注+')&&top3[x.no]});
+  var hon=marks.find(function(x){return x.mark==='◎'}),marked={};marks.forEach(function(x){if(['◎','○','▲','☆+','☆','△','注'].indexOf(x.mark)>=0)marked[x.no]=x.mark});
+  var holePlace=marks.some(function(x){return (x.mark==='☆'||x.mark==='☆+'||x.mark==='注')&&top3[x.no]});
   var ranked=marks.slice().sort(function(a,b){return n(b.p)-n(a.p)||n(a.no)-n(b.no)}),wr=ranked.findIndex(function(x){return x.no===winner})+1,wrow=marks.find(function(x){return x.no===winner}),audit=detail.predictionAudit||{};
   var winHit=!!(hon&&hon.no===winner),markHit=!!marked[winner],confidence=n(audit.winnerConfidence,hon&&hon.confidence),reason=String(audit.reason||'');
   var podiumNos=finishers.slice(0,3).map(function(x){return n(x.horseNumber)}).filter(function(x){return x>0}),markedPodiumCount=podiumNos.filter(function(no){return !!marked[no]}).length,fullPodiumHit=podiumNos.length===3&&markedPodiumCount===3,circuit=String(detail.circuit||'');
@@ -2632,7 +2631,7 @@ function smartPreviousAiStats(){
   if(s.error)return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>'+esc(s.error)+'</small></div></section>';
   if(!s.total)return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>前日のレースデータなし</small></div></section>';
   function rate(hit){return Math.round(hit/s.total*100)}
-  function markText(row){var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注+':7,'注':8};var txt=(row.marks||[]).slice().sort(function(a,b){return n(order[a.mark],99)-n(order[b.mark],99)||n(a.no)-n(b.no)}).map(function(x){return x.mark+x.no}).join(' ');return txt||'印なし'}
+  function markText(row){var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};var txt=(row.marks||[]).slice().sort(function(a,b){return n(order[a.mark],99)-n(order[b.mark],99)||n(a.no)-n(b.no)}).map(function(x){return x.mark+x.no}).join(' ');return txt||'印なし'}
   var rows=(s.rows||[]).map(function(x){
     var result=(x.podiumNos||[]).slice(0,3).join('-')||'—',cls=x.fullPodiumHit?'hit':(x.markHit?'partial':'miss'),judge;
     if(x.loadError)judge='詳細取得失敗';
@@ -2950,7 +2949,7 @@ function smartHomeHub(){
   '</section>'
 }
 function aiStatsMarkText(row){
-  var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注+':7,'注':8};
+  var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
   return (row.marks||[]).slice().sort(function(a,b){return n(order[a.mark],99)-n(order[b.mark],99)||n(a.no)-n(b.no)}).map(function(x){return x.mark+x.no}).join(' ')||'印なし'
 }
 function aiStatsRaceRow(x){
@@ -3337,9 +3336,15 @@ function horseDetailPage(r,p){
   var rows=sortedHorseRows(p.rows||[]),no=n(state.detailHorseNo,0),idx=rows.findIndex(function(z){return n(z.horse&&z.horse.horseNumber)===no});
   if(idx<0&&rows.length){idx=0;state.detailHorseNo=n(rows[0].horse.horseNumber)}
   var x=idx>=0?rows[idx]:null,h=x&&x.horse||null,title=h?horseDisplayName(r,h):'馬詳細';
-  return '<div class="smart-shell">'+raceSubpageTopBar(r,title)
-    +'<main class="smart-main smart-race-page"><section class="card">'
-    +(x?('<div class="detail-nav-v223"><button type="button" data-detail-prev="1" aria-label="前の馬">‹</button>'+badge(h)+'<strong class="detail-name-v223">'+esc(title)+'</strong><button type="button" data-detail-next="1" aria-label="次の馬">›</button><span class="detail-count-v223">'+(idx+1)+'/'+rows.length+'頭</span></div>'+runnerDetailBody(r,p,x)):'<div class="empty">馬情報を取得中です。</div>')
+  return '<div class="smart-shell horse-detail-page-shell">'
+    +'<header class="smart-topbar smart-topbar-clean smart-race-topbar horse-detail-topbar">'
+      +'<button type="button" class="horse-detail-step" data-detail-prev="1" aria-label="前の馬">‹</button>'
+      +'<div class="horse-detail-top-title"><strong>'+(h?esc(h.horseNumber)+'　'+esc(title):'馬詳細')+'</strong><small>'+esc(r.track)+' '+esc(r.raceNumber)+'R</small></div>'
+      +'<button type="button" class="horse-detail-step" data-detail-next="1" aria-label="次の馬">›</button>'
+      +'<button type="button" class="smart-race-close horse-detail-close" data-action="close-race-subpage" aria-label="出走表へ戻る">×</button>'
+    +'</header>'
+    +'<main class="smart-main smart-race-page horse-detail-page"><section class="card">'
+    +(x?runnerDetailBody(r,p,x):'<div class="empty">馬情報を取得中です。</div>')
     +'</section></main>'+cinematicFooter()+'</div>'
 }
 function betDetailPage(r,p){
@@ -3427,15 +3432,16 @@ function runnerStyleSection(r,p){
     +'<div class="racecard-table">'
     +(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
       var scratch=isScratchHorse(h),x=(p.rows||[]).find(function(z){return n(z.horse.horseNumber)===n(h.horseNumber)});
-      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,st=String(h.status||(h.scratched||h.withdrawn?'出走取消':'欠場')),
-          body=scratch?st:(bw?bw:(refbw?('前走 '+refbw+'kg'):'計量待ち'));
+      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),curBw=currentBodyWeight(h),bwCh=currentBodyWeightChange(h),refbw=!curBw?referenceBodyWeight(h):0,st=String(h.status||(h.scratched||h.withdrawn?'出走取消':'欠場')),
+          bodyMain=scratch?st:(curBw?(curBw+'kg'):(refbw?('前走 '+refbw+'kg'):'計量待ち')),
+          bodyChange=(!scratch&&curBw&&bwCh!=null)?('('+(bwCh>0?'+':'')+bwCh+')'):'';
       return '<div class="racecard-row rc-racecard-v336'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
         +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</span></div>'
         +'<button type="button" class="rc-v336-number" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く"><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span></button>'
         +'<div class="rc-v336-info">'
           +'<button type="button" class="rc-horse-main" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く">'
             +'<span class="rc-horse-name">'+esc(horseDisplayName(r,h))+'</span>'
-            +'<span class="rc-v336-meta"><span class="rc-sexage">'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">'+esc(carriedWeightText(h))+'</span><small class="rc-bodyweight '+(scratch?'rc-scratch':(bw?'':'pending'))+'">'+esc(body)+'</small></span>'
+            +'<span class="rc-v336-meta"><span class="rc-sexage">'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span class="carry">'+esc(carriedWeightText(h))+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span><small class="rc-bodyweight '+(scratch?'rc-scratch':(curBw?'':'pending'))+'"><b>'+esc(bodyMain)+'</b>'+(bodyChange?'<span>'+esc(bodyChange)+'</span>':'')+'</small></span>'
           +'</button>'
           +'<span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'" aria-label="チェック">'+horseCheckGlyph(r,h.horseNumber)+'</span>'
         +'</div>'
@@ -3556,12 +3562,11 @@ function paceStageConfig(idx){
   return Object.assign({index:idx},PACE_STAGE_PAGES[idx])
 }
 function paceStageMenu(r,p){
-  return '<div class="pace-stage-menu" role="navigation" aria-label="展開予想の4局面">'
+  return '<div class="pace-stage-menu" role="navigation" aria-label="展開予想の4局面"><div class="pace-stage-menu-group">'
     +PACE_STAGE_PAGES.map(function(z,idx){
-      var sub=z.key==='start'?'ハナ争い→収まり':(z.key==='straight'?'勝ち切る馬まで':'隊列変化を予測');
-      return '<button type="button" class="pace-stage-menu-btn" data-pace-open="'+idx+'"><span><b>'+esc(z.label)+'</b><small>'+esc(z.detail)+'</small></span><em>'+esc(sub)+'</em><i>›</i></button>'
+      return '<button type="button" class="pace-stage-menu-btn" data-pace-open="'+idx+'"><b>'+esc(z.label)+'</b><small>'+esc(z.detail)+'</small><i>›</i></button>'
     }).join('')
-    +'</div>'
+    +'</div></div>'
 }
 function openPaceStagePage(idx){
   state.paceStage=clamp(n(idx,0),0,PACE_STAGE_PAGES.length-1);
@@ -3613,21 +3618,15 @@ function paceFormationDiagram(r,p,cfg){
     +'</section>'
 }
 function paceStageEvidence(p,cfg){
-  var rows=paceStageRows(p,cfg.visualKey),seen={},bits=[],ctx=p&&p.minetaContext||null;
-  rows.slice(0,6).forEach(function(x){(x.minetaNotes||[]).forEach(function(note){note=String(note||'');if(note&&!seen[note]){seen[note]=1;bits.push(note)}})});
-  var phase=cfg.key==='start'?'ハナ争いと2番手以降の収まりを分けて判定':(cfg.key==='turn3'?'向正面までの位置を土台に、進出根拠がある馬だけ前へ動かす':(cfg.key==='turn4'?'3Cの隊列を引き継ぎ、仕掛け・失速イベントがある馬だけ動かす':'4Cの位置から前残り・失速・差し脚のイベントで決着を判定'));
-  var ctxText=ctx?('先行占有 '+Math.round(ctx.rawOcc*100)+'% / 距離補正後 '+Math.round(ctx.adjustedOcc*100)+'% / 後方占有 '+Math.round(ctx.rearOcc*100)+'%'):'先行占有率を計算中';
-  return '<section class="pace-stage-explain"><h2>'+esc(cfg.detail)+'の読み</h2>'
+  return '<section class="pace-stage-explain"><h2>'+esc(cfg.detail)+'</h2>'
     +'<p class="pace-stage-narrative">'+esc(paceStageNarrative(p,cfg.key))+'</p>'
-    +'<div class="pace-stage-rule"><b>展開根拠</b><p>'+esc(phase)+'。'+esc(ctxText)+'。</p>'
-      +(bits.length?'<div class="pace-rule-tags">'+bits.slice(0,6).map(function(z){return '<span>'+esc(z)+'</span>'}).join('')+'</div>':'')
-    +'</div></section>'
+    +'</section>'
 }
 function paceStagePage(r,p){
   var cfg=paceStageConfig(state.paceStage);
   return '<div class="smart-shell pace-stage-shell">'+paceStageTopBar(r,cfg)
     +'<main class="smart-main smart-race-page pace-stage-page">'+paceStageJumpNav(cfg.index)
-      +paceFormationDiagram(r,p,cfg)+paceStageEvidence(p,cfg)+(cfg.key==='straight'?paceOutcomeSection(r,p):'')
+      +paceStageEvidence(p,cfg)+paceFormationDiagram(r,p,cfg)
     +'</main>'+cinematicFooter()+'</div>'
 }
 function paceStagePendingPage(r){
@@ -3689,8 +3688,8 @@ function paceOutcomeSection(r,p){
 }
 function paceBoard(r,p){
   return '<section class="card ai-flow-card pace-stage-menu-card">'
-    +'<div class="ai-flow-head"><span class="ai-flow-bars"><i></i><i></i><i></i></span><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div><div class="ai-flow-sub">4局面から選択。押すと隊列図＋説明文を別ページで表示します。</div></div></div>'
-    +paceStructureSection(r,p)
+    +'<div class="ai-flow-head"><span class="ai-flow-bars"><i></i><i></i><i></i></span><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div><div class="ai-flow-sub">展開結論を確認し、4局面から直接開けます。</div></div></div>'
+    +paceOutcomeSection(r,p)
     +paceStageMenu(r,p)
     +'</section>'
 }
