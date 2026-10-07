@@ -3745,3 +3745,177 @@ details.smart-fixed-picks[open]>.smart-fixed-picks-head .smart-fixed-summary-rig
   .pace-stage-menu-btn small{font-size:7.5px!important}
   .horse-detail-page .horse-info-cell b{font-size:13px!important}
 }
+
+
+/* v337 — width alignment, compact live/results, scratch odds */
+.smart-home{
+  width:100%!important;
+  max-width:920px!important;
+  overflow-x:hidden!important;
+}
+.smart-home .smart-home-hero{
+  width:min(904px,calc(100vw - 16px))!important;
+  max-width:calc(100vw - 16px)!important;
+  margin:0!important;
+  border-radius:0 0 14px 14px!important;
+  box-sizing:border-box!important;
+}
+.smart-home .smart-home-main{
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding-left:8px!important;
+  padding-right:8px!important;
+}
+.smart-home .smart-home-main>*{
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+.smart-home-subpage{
+  overflow-x:hidden!important;
+}
+.smart-live-section,
+.smart-live-circuit{
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+.smart-live-circuit{margin-top:6px!important}
+.smart-live-strip{
+  width:100%!important;
+  max-width:100%!important;
+  gap:6px!important;
+  padding:0 0 3px!important;
+  margin:0!important;
+  scroll-padding:0!important;
+  box-sizing:border-box!important;
+}
+.smart-live-strip .smart-live-card{
+  flex:0 0 calc((100% - 12px)/3)!important;
+  max-width:calc((100% - 12px)/3)!important;
+  min-width:0!important;
+  padding:7px 5px!important;
+  box-sizing:border-box!important;
+}
+.smart-live-card small,
+.smart-live-card b,
+.smart-live-card em{
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+.smart-race-head-v222 .smart-race-head-layout{
+  grid-template-columns:minmax(0,1fr) 112px!important;
+  gap:6px!important;
+}
+.smart-race-head-v222 .smart-race-left-stack{
+  justify-content:center!important;
+  gap:0!important;
+}
+.smart-race-head-v222 .smart-official-actions,
+.smart-official-vote-only,
+.smart-official-btn.vote{
+  display:none!important;
+}
+.smart-race-head-v222 .smart-race-result-side{
+  min-width:112px!important;
+  width:112px!important;
+  gap:2px!important;
+}
+.smart-race-head-v222 .smart-race-result-side .smart-inline-result{
+  width:112px!important;
+  min-width:112px!important;
+  min-height:48px!important;
+  padding:5px 4px!important;
+  border-radius:9px!important;
+  gap:2px!important;
+}
+.smart-race-head-v222 .smart-race-result-side .smart-inline-result span{font-size:11px!important}
+.smart-race-head-v222 .smart-race-result-side .smart-inline-result strong{font-size:15px!important}
+
+.result-panel-compact{
+  padding:9px!important;
+}
+.result-panel-compact>h2{
+  margin:0 0 7px!important;
+}
+.result-panel-compact .result-row{
+  padding:5px 0!important;
+  gap:5px!important;
+}
+.result-panel-compact>.card,
+.result-panel-compact .result-wait-card{
+  margin:7px 0 0!important;
+  padding:8px 9px!important;
+  min-height:0!important;
+}
+.result-panel-compact .section-title{
+  margin-bottom:4px!important;
+}
+.result-status-compact{
+  margin:0!important;
+  padding:8px 9px!important;
+  min-height:0!important;
+  border-radius:8px!important;
+}
+
+.racecard-row.scratched,
+.racecard-row.scratched:nth-child(even),
+.rc-racecard-v336.scratched{
+  opacity:.72!important;
+  filter:saturate(.32)!important;
+  background:#20272b!important;
+}
+.racecard-row.scratched .rc-horse-name{
+  color:#aeb9c0!important;
+  opacity:1!important;
+}
+.racecard-row.scratched .rc-v336-odds{
+  background:#1b2226!important;
+}
+.rc-v336-odds .scratch-odds,
+.rc-odds .scratch-odds{
+  color:#b9c1c6!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  letter-spacing:.04em!important;
+}
+.rc-v336-odds .scratch-note,
+.rc-odds .scratch-note{
+  margin-top:5px!important;
+  color:#7f8b92!important;
+  font-size:8.5px!important;
+  font-weight:750!important;
+}
+
+@media(max-width:430px){
+  .smart-home .smart-home-hero{
+    width:calc(100vw - 12px)!important;
+    max-width:calc(100vw - 12px)!important;
+  }
+  .smart-home .smart-home-main{
+    padding-left:6px!important;
+    padding-right:6px!important;
+  }
+  .smart-live-strip{gap:5px!important}
+  .smart-live-strip .smart-live-card{
+    flex-basis:calc((100% - 10px)/3)!important;
+    max-width:calc((100% - 10px)/3)!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+  }
+  .smart-race-head-v222 .smart-race-head-layout{
+    grid-template-columns:minmax(0,1fr) 104px!important;
+  }
+  .smart-race-head-v222 .smart-race-result-side{
+    min-width:104px!important;
+    width:104px!important;
+  }
+  .smart-race-head-v222 .smart-race-result-side .smart-inline-result{
+    width:104px!important;
+    min-width:104px!important;
+    min-height:44px!important;
+  }
+}
