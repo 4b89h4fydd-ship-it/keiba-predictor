@@ -1452,7 +1452,7 @@ function applyServerAuthoritativeMarks(rows,r){
 }
 function predict(r){
   if(r._prediction)return r._prediction;
-  var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),
+  var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),minetaContext=rows.minetaContext||minetaRaceContext(rows,modelRace),
       tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,
       sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;
   assignOverallGrades(modelRace,rows,suit,sc,pressure);
@@ -1465,7 +1465,7 @@ function predict(r){
   }
   var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],
       plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),
-      draft={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,pressure:pressure,arrangement:arrangement,profile:profile};
+      draft={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext};
   // First pass: produce a market-independent race-outcome view from diagnosis + pace.
   // assignPredictionMarks consumes these scores, so marks are no longer decided before the pace conclusion.
   paceOutcomeModel(r,draft);
@@ -1473,8 +1473,8 @@ function predict(r){
   applyServerAuthoritativeMarks(rows,modelRace);
   // Second pass: refresh the displayed outcome with the now-final P1/P2/P3 decision roles.
   var outcome=paceOutcomeModel(r,draft),cov=mean(rows.map(function(x){return x.coverage}));
-  var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,outcome:outcome,
-    engineVersion:'arvexq-edge-2026.10-v57-text-pace',markEngineVersion:'v319-flow-continuity',
+  var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext,outcome:outcome,
+    engineVersion:'arvexq-edge-2026.10-v58-mineta-relative-pace',markEngineVersion:'v319-flow-continuity',
     researchAudit:{expertAIConsensusV317:true,marketBlindFactorsV317:true,podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true,diagnosisPaceOutcomeLinkedV318:true,marksLinkedToOutcomeV318:true,betsLinkedToOutcomeV318:true}};
   Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
   return result
@@ -1519,7 +1519,7 @@ function runnerDetailBody(r,p,x){
     '<div class="overall-reasons"><i class="good">'+esc(role)+'</i>'+(reasons.length?reasons.map(function(z){var warn=String(z).indexOf('注意')>=0||String(z).indexOf('不足')>=0;return '<i class="'+(warn?'warn':'good')+'">'+esc(z)+'</i>'}).join(''):'')+'</div></div>'+
     '<div class="detail-heading">基本情報</div><div class="horse-info-grid"><div class="horse-info-cell"><small>馬番 / 枠</small><b>'+esc(h.horseNumber)+'番 / '+esc(h.frameNumber||frame(h))+'枠</b></div><div class="horse-info-cell"><small>性齢 / 斤量</small><b>'+esc(h.sex||'—')+esc(h.age||'—')+' / '+esc(carriedWeightText(h))+'</b></div><div class="horse-info-cell"><small>脚質</small><b>'+esc(styleTxt)+'</b></div><div class="horse-info-cell"><small>騎手</small><b>'+esc(h.jockey||'—')+'</b></div><div class="horse-info-cell"><small>調教師</small><b>'+esc(h.trainer||'—')+'</b></div><div class="horse-info-cell"><small>馬体重</small><b>'+(bodyTxt?esc(bodyTxt):'—')+'</b></div></div>'+
     '<div class="detail-heading">能力・実績・適性</div><div class="horse-info-grid">'+scoreCell('能力',ability)+scoreCell('近況・実績',form)+scoreCell('相手レベル',klass)+scoreCell('条件適性',suit)+scoreCell('展開適性',pace)+scoreCell('データ充足',x.coverage)+'</div>'+
-    '<div class="detail-heading">脚質・今回の勝ち筋</div><div class="horse-info-grid"><div class="horse-info-cell"><small>逃げ率</small><b>'+esc(sp[0])+'%</b></div><div class="horse-info-cell"><small>先行率</small><b>'+esc(sp[1])+'%</b></div><div class="horse-info-cell"><small>差し率</small><b>'+esc(sp[2])+'%</b></div><div class="horse-info-cell"><small>追込率</small><b>'+esc(sp[3])+'%</b></div><div class="horse-info-cell"><small>前残り力</small><b>'+pct(x.frontStay)+'</b></div><div class="horse-info-cell"><small>差し込み力</small><b>'+pct(x.comeFromBehind)+'</b></div></div>'+
+    '<div class="detail-heading">脚質・今回の勝ち筋</div>'+(x.minetaNotes&&x.minetaNotes.length?'<div class="muted" style="margin:-2px 0 8px;font-size:11px">今回位置：'+esc(x.expected||'不明')+'｜'+esc(x.minetaNotes.join('・'))+'</div>':'')+'<div class="horse-info-grid"><div class="horse-info-cell"><small>逃げ率</small><b>'+esc(sp[0])+'%</b></div><div class="horse-info-cell"><small>先行率</small><b>'+esc(sp[1])+'%</b></div><div class="horse-info-cell"><small>差し率</small><b>'+esc(sp[2])+'%</b></div><div class="horse-info-cell"><small>追込率</small><b>'+esc(sp[3])+'%</b></div><div class="horse-info-cell"><small>前残り力</small><b>'+pct(x.frontStay)+'</b></div><div class="horse-info-cell"><small>差し込み力</small><b>'+pct(x.comeFromBehind)+'</b></div></div>'+
     '<div class="recent-list-title">近走データ（直近5走）</div>'+(recent.length?recent.map(function(rr){var rid=rr.raceId||((r.circuit==='地方'&&rr.date&&rr.track&&n(rr.raceNumber))?('nar-'+rr.date+'-'+rr.track+'-'+String(n(rr.raceNumber)).padStart(2,'0')):'');return '<div class="recent"><div class="recent-head"><b>'+esc(rr.date||'—')+' '+esc(rr.track||'—')+' '+(n(rr.raceNumber)?esc(rr.raceNumber)+'R ':'')+esc(rr.distance||'—')+'m</b><strong>'+esc(rr.finish||rr.finishPosition||'—')+'着</strong></div><div>'+fmtTime(rr.timeSeconds)+'　'+esc(rr.condition||'不明')+' / '+esc(rr.weather||'不明')+'</div><div class="muted">'+(rr.title?esc(rr.title)+'　':'')+'通過 '+esc((rr.cornerPositions||[]).join('-')||'—')+'　頭数 '+esc(rr.fieldSize||'—')+(saneCarriedWeightValue(rr.carriedWeight,rr.bodyWeight)?'　斤量 '+esc(String(saneCarriedWeightValue(rr.carriedWeight,rr.bodyWeight)).replace(/\.0$/,''))+'kg':'')+(rr.jockey?'　騎手 '+esc(rr.jockey):'')+'</div>'+(rid?'<button type="button" class="recent-open" data-past-race="'+esc(rid)+'">この過去レースを見る</button>':'')+'</div>'}).join(''):'<div class="empty compact">過去データを確認できませんでした</div>')+'</div>'
 }
 function horseModal(r,p){var no=n(state.horseModalNo,0);if(!no)return'';var rows=sortedHorseRows(p.rows),idx=-1,i;for(i=0;i<rows.length;i++)if(n(rows[i].horse.horseNumber)===no){idx=i;break}if(idx<0)return'';var x=rows[idx],h=x.horse,displayName=horseDisplayName(r,h),bodyTxt=horseBodyWeightText(h),styleTxt=x.expected||x.pastStyle||'不明';return'<div class="horse-modal-layer"><div class="horse-modal-backdrop" data-horse-close="1"></div><section class="horse-modal" role="dialog" aria-modal="true"><div class="horse-modal-head"><button type="button" class="horse-modal-nav" data-horse-prev="1">‹</button><div class="horse-modal-title"><div class="horse-modal-title-top">'+badge(h)+'<div style="min-width:0"><div class="horse-modal-name">'+esc(displayName)+'</div>'+(bodyTxt?'<div class="runner-weight-inline">('+esc(bodyTxt)+')</div>':'')+'</div></div><div class="horse-modal-meta"><span>'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span>'+esc(styleTxt)+'</span><span>'+esc(h.jockey||'騎手不明')+'</span><span>'+esc(carriedWeightText(h))+'</span></div><div class="horse-modal-sidechips"><span class="horse-modal-chip grade">総合評価 '+esc(x.overallGrade||'C')+'</span><span class="horse-modal-chip">総合点 '+esc(overallScoreText(x))+'</span><span class="horse-modal-chip mark" data-ai-mark="'+esc(x.predMark||'')+'">予想印 '+esc(x.predMark||'—')+'</span><button type="button" class="horse-modal-chip horse-check-chip '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+' チェック</button></div><div class="horse-modal-counter">'+(idx+1)+' / '+rows.length+' 頭</div></div><button type="button" class="horse-modal-nav" data-horse-next="1">›</button><button type="button" class="horse-modal-close" data-horse-close="1">×</button></div><div class="horse-modal-swipe">画面左半分タップ＝前の馬　／　右半分タップ＝次の馬</div><div id="horse-modal-panel" class="horse-modal-body">'+runnerDetailBody(r,p,x)+'</div></section></div>'}
@@ -3452,6 +3452,14 @@ function paceStageNarrative(p,key){
   }
   return ''
 }
+function paceStructureSection(r,p){
+  var ctx=p&&p.minetaContext;if(!ctx)return'';
+  var lead=(ctx.leadNos||[]).join('・')||'—',label=ctx.band==='前少なめ'?'前が少ない構成':(ctx.band==='前多め'?'先行争いが濃い構成':'中間の構成');
+  return '<section class="ai-stage-event" style="margin:10px 0;padding:11px 13px;border:1px solid rgba(120,170,255,.22);border-radius:12px;background:rgba(8,18,36,.45)">'
+    +'<div style="font-size:13px;font-weight:800;color:#8de9ff">'+esc(label)+'</div>'
+    +'<div style="margin-top:6px;font-size:12px;line-height:1.7">先行占有 '+Math.round(ctx.rawOcc*100)+'%　/　距離補正後 '+Math.round(ctx.adjustedOcc*100)+'%　/　後方占有 '+Math.round(ctx.rearOcc*100)+'%　/　ハナ候補 '+esc(lead)+'</div>'
+    +'<div class="muted" style="margin-top:5px;font-size:11px">'+esc(minetaStructureText(ctx))+'</div></section>'
+}
 function paceNarrativeCards(r,p){
   var stages=[
     ['start','スタート'],
@@ -3470,47 +3478,40 @@ function activeScenarioPlan(p){return p&&p.plan?p.plan:null}
 function visiblePaceStages(plan){var wanted={start:1,turn3:1,turn4:1,straight:1};return ((plan&&plan.stages)||[]).filter(function(s){return !!wanted[String(s&&s.key||'')]})}
 function scenarioProbabilitySection(p){return''}
 function paceOutcomeModel(r,p){
-  var rows=(p&&p.rows||[]).slice(),plan=activeScenarioPlan(p)||p.plan||{},stages=visiblePaceStages(plan),straight=stages.find(function(s){return s&&s.key==='straight'})||stages[stages.length-1]||{},pack=straight.pack||[],byNo={},stageScore={},i;
+  var rows=(p&&p.rows||[]).slice(),plan=activeScenarioPlan(p)||p.plan||{},stages=visiblePaceStages(plan),
+      straight=stages.find(function(s){return s&&s.key==='straight'})||stages[stages.length-1]||{},pack=straight.pack||[],byNo={},i;
   rows.forEach(function(x){byNo[n(x.horse&&x.horse.horseNumber)]=x});
-  pack.forEach(function(z){stageScore[n(z.no)]=n(z.score)});
   if(!rows.length)return null;
-  var stageVals=rows.map(function(x){return n(stageScore[n(x.horse.horseNumber)],0)}),
-      winVals=rows.map(function(x){return n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.p1Probability))) }),
-      p2Vals=rows.map(function(x){return n(x.p2RecallScore,n(x.p2Probability))}),
-      p3Vals=rows.map(function(x){return n(x.p3RecallScore,n(x.p3Probability))}),
-      day=sameDayCorrectionProfileV313(r,rows)||{active:false,flowLabel:'中立',byNo:{}},sc=plan.scenario||{},arr=p.arrangement||{},leader=(arr.leadCandidates||[])[0]||null;
-  function rel(vals,v){return normalize(vals,v)}
+  var order=pack.map(function(z){return byNo[n(z.no)]}).filter(Boolean);
+  rows.forEach(function(x){if(order.indexOf(x)<0)order.push(x)});
+  var day=sameDayCorrectionProfileV313(r,rows)||{active:false,flowLabel:'中立',byNo:{}},sc=plan.scenario||{},arr=p.arrangement||{},
+      leader=(arr.leadCandidates||[])[0]||((plan.start||[])[0])||null,field=Math.max(1,order.length),rankByNo={};
+  order.forEach(function(x,idx){rankByNo[n(x.horse.horseNumber)]=idx+1});
   rows.forEach(function(x){
-    var no=n(x.horse.horseNumber),dc=(day.byNo||{})[no]||{},sv=n(stageScore[no],0),wv=n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.p1Probability))),
-        p2=n(x.p2RecallScore,n(x.p2Probability)),p3=n(x.p3RecallScore,n(x.p3Probability)),pod=n(x.podiumRecallScore,Math.max(p2,p3)),
-        biasWin=clamp(.5+n(dc.winBoost,0)*18+n(dc.markBoost,0)*5,0,1),
-        biasP2=clamp(.5+n(dc.p2Boost,0)*10+n(dc.markBoost,0)*4,0,1),
-        biasP3=clamp(.5+n(dc.p3Boost,0)*8+n(dc.markBoost,0)*3,0,1);
-    x._paceOutcomeFirst=clamp(rel(stageVals,sv)*.44+rel(winVals,wv)*.34+n(x.overallRaw,.5)*.12+biasWin*.10,0,1);
-    x._paceOutcomeSecond=clamp(rel(stageVals,sv)*.27+rel(p2Vals,p2)*.46+pod*.17+biasP2*.10,0,1);
-    x._paceOutcomeThird=clamp(rel(stageVals,sv)*.22+rel(p3Vals,p3)*.48+pod*.20+biasP3*.10,0,1);x.paceOutcomeFirst=x._paceOutcomeFirst;x.paceOutcomeSecond=x._paceOutcomeSecond;x.paceOutcomeThird=x._paceOutcomeThird
+    var no=n(x.horse.horseNumber),rank=n(rankByNo[no],field),pos=field<=1?1:1-(rank-1)/(field-1),dc=(day.byNo||{})[no]||{},
+        win=n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.p1Probability,.5))),
+        p2=n(x.p2RecallScore,n(x.p2Probability,.5)),p3=n(x.p3RecallScore,n(x.p3Probability,.5));
+    x._paceOutcomeFirst=clamp(pos*.58+win*.22+n(x.ability,.5)*.10+n(x.frontStay,.5)*.05+n(x.comeFromBehind,.5)*.05+n(dc.winBoost,0)*2,0,1);
+    x._paceOutcomeSecond=clamp(pos*.42+p2*.33+n(x.posCons,.5)*.10+n(x.latePower,.5)*.08+n(x.frontStay,.5)*.07+n(dc.p2Boost,0)*2,0,1);
+    x._paceOutcomeThird=clamp(pos*.34+p3*.36+n(x.latePower,.5)*.12+n(x.move,.2)*.08+n(x.posCons,.5)*.10+n(dc.p3Boost,0)*2,0,1);
+    x.paceOutcomeFirst=x._paceOutcomeFirst;x.paceOutcomeSecond=x._paceOutcomeSecond;x.paceOutcomeThird=x._paceOutcomeThird
   });
-  var first=rows.slice().sort(function(a,b){return b._paceOutcomeFirst-a._paceOutcomeFirst||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),
-      second=rows.slice().sort(function(a,b){return b._paceOutcomeSecond-a._paceOutcomeSecond||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),
-      third=rows.slice().sort(function(a,b){return b._paceOutcomeThird-a._paceOutcomeThird||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),
-      top=first[0],runner=first[1],margin=top&&runner?top._paceOutcomeFirst-runner._paceOutcomeFirst:1,
-      firstGroup=first.slice(0,margin<=.055?2:1),secondGroup=second.slice(0,Math.min(3,second.length)),thirdGroup=third.slice(0,Math.min(4,third.length)),
-      leaderNo=n(leader&&leader.horse&&leader.horse.horseNumber),winnerNo=n(top&&top.horse&&top.horse.horseNumber),leaderRow=byNo[leaderNo]||null,
-      winnerStyle=String(top&&(top.expected||top.pastStyle)||''),verdict='好位抜け出し';
+  var top=order[0]||null,firstGroup=top?[top]:[],secondGroup=order.slice(1,Math.min(4,order.length)),thirdGroup=order.slice(2,Math.min(6,order.length)),
+      leaderNo=n(leader&&leader.horse&&leader.horse.horseNumber),winnerNo=n(top&&top.horse&&top.horse.horseNumber),leaderRow=byNo[leaderNo]||leader||null,
+      winnerStyle=String(top&&(top.expected||top.pastStyle)||''),verdict='好位抜け出し',ctx=p.minetaContext||null;
   if(top){
     if(winnerNo===leaderNo&&n(top.frontStay)>=Math.max(.52,n(top.comeFromBehind)-.03))verdict='逃げ切り';
-    else if((winnerStyle.indexOf('追')>=0||n(top.rawClose)>=.48||n(top.close)>=.48)&&n(top.comeFromBehind)>=.60)verdict='追い込み';
-    else if(n(top.comeFromBehind)>=n(top.frontStay)+.04||String(sc.code||'')==='C'||winnerStyle.indexOf('差')>=0||winnerStyle.indexOf('後方')>=0)verdict='差し切り';
-    else if(n(top.goProb)>=.46||winnerStyle.indexOf('先行')>=0||winnerStyle.indexOf('好位')>=0)verdict='先行押し切り'
+    else if(winnerStyle.indexOf('後方')>=0||winnerStyle.indexOf('追')>=0)verdict='追い込み';
+    else if(winnerStyle.indexOf('中団')>=0||winnerStyle.indexOf('差')>=0||n(top.comeFromBehind)>=n(top.frontStay)+.05)verdict='差し切り';
+    else if(winnerStyle.indexOf('先行')>=0||winnerStyle.indexOf('好位')>=0)verdict='先行押し切り'
   }
-  var leadText=leaderRow?rowName(leaderRow):'不明',winnerText=top?rowName(top):'不明',leadRank=leaderRow?first.indexOf(leaderRow)+1:0,
-      reason=[];
-  reason.push('ハナ想定 '+leadText);
+  var leadRank=leaderRow?order.indexOf(leaderRow)+1:0,reason=[];
+  reason.push('ハナ想定 '+(leaderRow?rowName(leaderRow):'不明'));
+  if(ctx)reason.push(minetaStructureText(ctx));
   if(day.active)reason.push('当日バイアス '+day.flowLabel);
-  reason.push('基本展開 '+String(sc.title||'平均'));
-  if(winnerNo===leaderNo)reason.push('直線評価でも先頭維持');
-  else if(leaderRow)reason.push('逃げ馬は最終'+leadRank+'番手評価、'+winnerText+'が逆転');
-  return{verdict:verdict,leader:leaderRow,winner:top,first:firstGroup,second:secondGroup,third:thirdGroup,margin:margin,day:day,scenario:sc,reason:reason.join('｜')}
+  if(winnerNo===leaderNo)reason.push('局面遷移で先頭を維持');
+  else if(leaderRow)reason.push('逃げ馬はラスト'+leadRank+'番手、'+(top?rowName(top):'不明')+'が前へ');
+  return{verdict:verdict,leader:leaderRow,winner:top,first:firstGroup,second:secondGroup,third:thirdGroup,margin:0,day:day,scenario:sc,reason:reason.join('｜'),order:order}
 }
 function paceOutcomeNums(list){return(list||[]).map(function(x){return n(x.horse&&x.horse.horseNumber)}).filter(Boolean).join('・')||'—'}
 function paceOutcomeSection(r,p){
@@ -3528,6 +3529,7 @@ function paceBoard(r,p){
   return '<section class="card ai-flow-card">'
     +'<div class="ai-flow-head"><span class="ai-flow-bars"><i></i><i></i><i></i></span><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div><div class="ai-flow-sub">スタートからラストまで、誰が行く・ためる・動く・残るかを局面ごとに文章で予測</div></div></div>'
     +paceOutcomeSection(r,p)
+    +paceStructureSection(r,p)
     +paceNarrativeCards(r,p)
     +'</section>'
 }
