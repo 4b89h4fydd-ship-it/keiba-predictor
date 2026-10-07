@@ -60,6 +60,23 @@ def evaluate_honmei_gate(
     pace_families = _iv(family_counts.get("pace"))
     circuit = str((race or {}).get("circuit") or "")
     central = circuit in {"中央", "JRA"}
+    prepared = (race or {}).get("preparedMeta") if isinstance((race or {}).get("preparedMeta"), dict) else {}
+    supplemental = prepared.get("supplementalSearch") if isinstance(prepared.get("supplementalSearch"), dict) else {}
+    central_supplemented = supplemental.get("version") == "arvexq-multi-source-fallback-v1"
+    history = horse.get("recentRaces") or horse.get("allPastRuns") or []
+    central_complete_runs = 0
+    for run in history[:5]:
+        if not isinstance(run, dict):
+            continue
+        try:
+            finish = int(float(run.get("finish") or run.get("finishPosition") or run.get("rank") or 0))
+            field = int(float(run.get("fieldSize") or 0))
+            seconds = float(run.get("timeSeconds") or 0)
+            distance = int(float(run.get("distance") or 0))
+        except (TypeError, ValueError):
+            continue
+        if finish > 0 and field > 1 and seconds > 0 and distance > 0:
+            central_complete_runs += 1
 
     win_gap = _fv(summary.get("winnerGap"))
     pairwise_wins = _iv(leader.get("pairwiseWins"))
@@ -85,6 +102,8 @@ def evaluate_honmei_gate(
         # recent-run fields) produced false confidence. Central ◎ automatically
         # resumes only when the richer evidence families are actually present.
         checks.update({
+            "centralSupplemented": central_supplemented,
+            "centralFiveRunsComplete": central_complete_runs >= 5,
             "centralAbilityDepth": ability_families >= 3,
             "centralRecordDepth": record_families >= 4,
             "centralSuitabilityDepth": suitability_families >= 2,
@@ -115,5 +134,7 @@ def evaluate_honmei_gate(
         },
         "circuit": circuit,
         "centralEvidenceGate": central,
+        "centralSupplemented": central_supplemented,
+        "centralCompleteRuns": central_complete_runs,
         "sample": sample,
     }

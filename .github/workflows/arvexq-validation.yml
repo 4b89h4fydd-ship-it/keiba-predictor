@@ -186,9 +186,14 @@ jobs:
           ]
           rich_summary={'winnerHorseNumber':1,'winnerGap':0.05}
           assert evaluate_honmei_gate(rich_rows,rich_summary,{'circuit':'地方'})['eligible']
-          assert evaluate_honmei_gate(rich_rows,rich_summary,{'circuit':'中央'})['eligible']
+          central_race={'circuit':'中央','preparedMeta':{'supplementalSearch':{'version':'arvexq-multi-source-fallback-v1'}}}
+          central_runs=[{'date':f'2026-09-{20-i:02d}','finish':i%3+1,'fieldSize':12,'timeSeconds':95.0+i,'distance':1600} for i in range(5)]
+          rich_rows[0]['horse']['recentRaces']=central_runs
+          assert evaluate_honmei_gate(rich_rows,rich_summary,central_race)['eligible']
+          unsupp=copy.deepcopy(central_race);unsupp['preparedMeta']={}
+          assert not evaluate_honmei_gate(rich_rows,rich_summary,unsupp)['eligible']
           thin=copy.deepcopy(rich_rows);thin[0]['evidenceFamilyCounts']['pace']=1
-          assert not evaluate_honmei_gate(thin,rich_summary,{'circuit':'中央'})['eligible']
+          assert not evaluate_honmei_gate(thin,rich_summary,central_race)['eligible']
 
           old_final={'status':'確定','finishers':[{'finish':1,'horseNumber':1},{'finish':2,'horseNumber':2},{'finish':3,'horseNumber':3}]}
           flash={'status':'速報','finishers':[{'finish':1,'horseNumber':9}]}
