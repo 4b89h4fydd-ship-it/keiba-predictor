@@ -242,11 +242,16 @@ function minetaPastProfile(h,r){
     moveHistory:moveDen?moveW/moveDen:0,midRaceLead:leadDen?leadW/leadDen:0,rearHistory:rearDen?rearW/rearDen:0}
 }
 function minetaRaceContext(rows,r){
-  rows=rows||[];var active=rows.filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)}),field=Math.max(1,active.length),raw=0,adjusted=0,rear=0,leadPool=[];
+  rows=rows||[];var active=rows.filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)}),field=Math.max(1,active.length),raw=0,adjusted=0,rear=0,leadPool=[],
+      av=active.map(function(x){return n(x.ability,.5)}).sort(function(a,b){return a-b}),abilityMed=av.length?av[Math.floor(av.length/2)]:.5;
   active.forEach(function(z){
     var p=z.minetaPast||minetaPastProfile(z.horse,r);z.minetaPast=p;
-    var early=!!p.prevEarly,adjustedEarly=early||(!!z.lengthen&&p.samples>0);
-    z.minetaEarlyIntent=adjustedEarly;z.minetaRawEarly=early;
+    var early=!!p.prevEarly,
+        forwardEvidence=!!p.prevLeader||p.bucket==='準先行'||p.midRaceLead>=.20||p.moveHistory>=.35||
+          (n(z.ten,.5)>=.58&&n(z.breakSkill,.5)>=.52)||
+          (n(z.ability,.5)>=abilityMed&&p.rearHistory<.45&&n(z.positionTrend,.5)>=.50),
+        adjustedEarly=early||(!!z.lengthen&&p.samples>0&&forwardEvidence&&p.rearHistory<.70);
+    z.minetaEarlyIntent=adjustedEarly;z.minetaRawEarly=early;z.minetaLengthenForward=!!(adjustedEarly&&!early);
     if(early)raw++;if(adjustedEarly)adjusted++;if(p.prevRear)rear++
   });
   leadPool=active.filter(function(z){var q=z.minetaPast||{};return q.prevLeader||q.prevEarly||z.rawFront>=.18||z.goProbBase>=.50||z.lengthen}).sort(function(a,b){
@@ -271,7 +276,8 @@ function minetaAssignRoles(rows,r,ctx,pressure){
   var byNo={},abilityVals=rows.map(function(z){return n(z.ability,.5)}).sort(function(a,b){return a-b}),abilityMed=abilityVals.length?abilityVals[Math.floor(abilityVals.length/2)]:.5;
   rows.forEach(function(z){byNo[n(z.horse.horseNumber)]=z});
   rows.forEach(function(x){
-    var no=n(x.horse.horseNumber),p=x.minetaPast||minetaPastProfile(x.horse,r),q=pressure[no]||{},left=byNo[no-1],right=byNo[no+1],role='不明',notes=[];
+    var no=n(x.horse.horseNumber),p=x.minetaPast||minetaPastProfile(x.horse,r),q=pressure[no]||{},
+        left=byNo[no-1],left2=byNo[no-2],right=byNo[no+1],right2=byNo[no+2],role='不明',notes=[];
     if(!p.samples){x.expected='不明';x.minetaRole='不明';x.minetaNotes=['過去走不足'];return}
     if(p.prevLeader&&n(x.rawFront,x.front)>=.12)role='逃げ候補';
     else if(p.prevEarly||p.bucket==='先行')role='先行';
@@ -280,15 +286,23 @@ function minetaAssignRoles(rows,r,ctx,pressure){
     else role='後方';
 
     if(p.midRaceLead>=.20||p.moveHistory>=.35){if(role==='後方')role='中団';else if(role==='中団'&&n(x.ability)>=abilityMed)role='好位';notes.push(p.midRaceLead>=.20?'道中先頭歴':'道中進出歴')}
-    if(x.lengthen){if(role==='後方'&&(n(x.move)>=.28||n(x.ability)>=abilityMed))role='中団';else if(role==='中団'&&ctx.rawOcc<=.33)role='好位';notes.push('距離延長で位置前進余地')}
+    if(x.lengthen&&x.minetaLengthenForward){if(role==='後方'&&(n(x.move)>=.28||n(x.ability)>=abilityMed))role='中団';else if(role==='中団'&&ctx.rawOcc<=.33)role='好位';notes.push('距離延長＋前進根拠あり')}
     if(x.shorten&&ctx.rawOcc>=.45){if(role==='好位'&&!p.prevEarly)role='中団';if(role==='中団'&&n(x.rawClose,x.close)>=.35)role='後方';notes.push('前多め＋距離短縮で脚ため')}
     if(ctx.rawOcc<=.25&&ctx.rearOcc>=.45){if(role==='中団'&&(n(x.ability)>=abilityMed||n(x.move)>=.30))role='好位';else if(role==='後方'&&n(x.move)>=.45)role='中団';notes.push('後方馬多く相対的に前')}
 
     x.minetaEscapeOutside=!!(left&&n(left.minetaLeadRank,0)>0&&n(left.minetaLeadRank)<=2&&!x.minetaEarlyIntent);
+    x.minetaStrongLeaderOutside=!!(left&&n(left.minetaLeadRank,0)===1&&n(left.ability,.5)>=abilityMed&&!x.minetaEarlyIntent);
     x.minetaEscapeSandwich=!!(left&&right&&left.minetaEarlyIntent&&right.minetaEarlyIntent&&!x.minetaEarlyIntent);
     x.minetaSameStyleCrowd=!!((left&&left.minetaPast&&left.minetaPast.bucket===p.bucket)||(right&&right.minetaPast&&right.minetaPast.bucket===p.bucket));
-    if(x.minetaEscapeSandwich)notes.push('逃げ挟み');else if(x.minetaEscapeOutside)notes.push('強い先行馬の外');
+    x.minetaDifferentStyleNeighbor=!!(
+      (left&&left2&&left.minetaPast&&left2.minetaPast&&left.minetaPast.bucket===left2.minetaPast.bucket&&left.minetaPast.bucket!==p.bucket)||
+      (right&&right2&&right.minetaPast&&right2.minetaPast&&right.minetaPast.bucket===right2.minetaPast.bucket&&right.minetaPast.bucket!==p.bucket)
+    );
+    if(x.minetaEscapeSandwich)notes.push('逃げ挟み');
+    if(x.minetaStrongLeaderOutside)notes.push('強い先行馬の外');
+    else if(x.minetaEscapeOutside)notes.push('逃げ馬の外');
     if(x.minetaSameStyleCrowd)notes.push('同脚質並び');
+    if(x.minetaDifferentStyleNeighbor)notes.push('同脚質の塊の隣');
     if(p.prevEarly)notes.push('前走3番手以内');
     if(ctx.rawOcc>=.45&&x.minetaEarlyIntent&&x.outer)notes.push('前多め＋外で先行負荷');
     if(ctx.firstTurn<300&&x.minetaEarlyIntent&&x.inner)notes.push('初角近く内で先行しやすい');
@@ -303,17 +317,20 @@ function minetaAssignRoles(rows,r,ctx,pressure){
     else if(role==='中団')x.goProb=Math.min(n(x.goProb),.44);
     else if(role==='後方')x.goProb=Math.min(n(x.goProb),.34);
     if(x.minetaEscapeOutside){x.flexibility=clamp(n(x.flexibility,.5)+.05,0,1);x.trafficTol=clamp(n(x.trafficTol,.5)+.05,0,1)}
+    if(x.minetaStrongLeaderOutside){x.latePower=clamp(n(x.latePower,.5)+.035,0,1);x.move=clamp(n(x.move,.2)+.035,0,1)}
     if(x.minetaEscapeSandwich){x.trafficTol=clamp(n(x.trafficTol,.5)+.08,0,1);x.latePower=clamp(n(x.latePower,.5)+.04,0,1)}
-    if(x.minetaSameStyleCrowd&&!x.minetaEscapeOutside&&!x.minetaEscapeSandwich)x.frontCost=clamp(n(x.frontCost,0)+.025,0,.30)
+    if(x.minetaDifferentStyleNeighbor){x.flexibility=clamp(n(x.flexibility,.5)+.035,0,1);x.trafficTol=clamp(n(x.trafficTol,.5)+.035,0,1)}
+    if(ctx.firstTurn<300&&x.minetaEarlyIntent&&x.inner){x.goProb=clamp(n(x.goProb,.5)+.04,0,1);x.frontStay=clamp(n(x.frontStay,.5)+.025,0,1)}
+    if(x.minetaSameStyleCrowd&&!x.minetaEscapeOutside&&!x.minetaEscapeSandwich&&!x.minetaDifferentStyleNeighbor)x.frontCost=clamp(n(x.frontCost,0)+.025,0,.30)
   });
   return ctx
 }
 function minetaStructureText(ctx){
   if(!ctx)return'';
   var bits=['先行占有 '+Math.round(ctx.rawOcc*100)+'%','距離補正後 '+Math.round(ctx.adjustedOcc*100)+'%','後方占有 '+Math.round(ctx.rearOcc*100)+'%'];
-  if(ctx.band==='前少なめ')bits.push('前・好位と強い先行馬の外を重視');
-  else if(ctx.band==='前多め')bits.push('内・距離短縮・行き切り・差し巻き返しを重視');
-  else bits.push('隊列と並びを重視');
+  if(ctx.band==='前少なめ')bits.push('前残りだけでなく強い先行馬を目標にする外の馬も重視');
+  else if(ctx.band==='前多め')bits.push('競り合い消耗・内外・同脚質並び・差し巻き返しを重視');
+  else bits.push('隊列・並び・逃げ挟み・同脚質の塊の隣を重視');
   return bits.join('｜')
 }
 function recentDistance(h){var rr=(h.recentRaces||[])[0];return rr?n(rr.distance):0}
@@ -500,7 +517,8 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
     var explicitRetreat=(z.fade>=.58&&z.frontCost>=.14)||(z.outerStress>=.68&&z.goProb>=.46)||
       (q.lineMiddle&&z.needLead>=.66&&z.flexibility<.40)||(q.sandwich&&z.flexibility<.38);
     if(explicitRetreat)move(orders[1],z,1);
-    if(z.minetaEscapeOutside&&z.expected!=='逃げ候補'&&q.conflict<.55)move(orders[1],z,-1)
+    if(z.minetaEscapeOutside&&z.expected!=='逃げ候補'&&q.conflict<.55)move(orders[1],z,-1);
+    if(z.minetaDifferentStyleNeighbor&&q.conflict<.55)move(orders[1],z,-1)
   });
   if(leader&&topRank(orders[1],leader)>1)moveTo(orders[1],leader,0);
 
@@ -557,6 +575,8 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
   closers.slice(0,code==='C'?3:2).forEach(function(z){
     var gain=(z.comeFromBehind>=.68&&z.latePower>=.64)?3:2;
     if(z.minetaEscapeSandwich)gain+=1;
+    if(z.minetaStrongLeaderOutside)gain+=1;
+    if(z.minetaDifferentStyleNeighbor&&z.trafficTol>=.55)gain+=1;
     if(code==='A')gain=Math.max(1,gain-1);
     move(orders[5],z,-gain)
   });
@@ -1492,7 +1512,7 @@ function predict(r){
   // Second pass: refresh the displayed outcome with the now-final P1/P2/P3 decision roles.
   var outcome=paceOutcomeModel(r,draft),cov=mean(rows.map(function(x){return x.coverage}));
   var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext,outcome:outcome,
-    engineVersion:'arvexq-edge-2026.10-v59-page-nav-arrow-pace',markEngineVersion:'v319-flow-continuity',
+    engineVersion:'arvexq-edge-2026.10-v60-mineta-event-rules',markEngineVersion:'v319-flow-continuity',
     researchAudit:{expertAIConsensusV317:true,marketBlindFactorsV317:true,podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true,diagnosisPaceOutcomeLinkedV318:true,marksLinkedToOutcomeV318:true,betsLinkedToOutcomeV318:true}};
   Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
   return result
