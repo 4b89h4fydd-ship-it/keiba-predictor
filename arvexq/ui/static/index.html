@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <meta name="arvexq-ui-structure" content="diagnosis-horse-detail-v1">
 <link rel="manifest" href="/manifest-arvexq-v175.webmanifest">
-<link rel="stylesheet" href="/styles-arvexq-v328.css?rev=20261007-racecard-priority">
+<link rel="stylesheet" href="/styles-arvexq-v329.css">
 <style>.smart-special-picks .fixed-pick-box-body{display:block!important}</style>
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v175-192.png">
@@ -18,14 +18,14 @@
 <link rel="apple-touch-icon-precomposed" sizes="180x180" href="/arvexq-touch-v175.png?v=175">
 <script>
 (function(){
-  var tag="arvexq-hard-reset-v328-racecard-priority-20261007";
+  var tag="arvexq-hard-reset-v329-racecard-stable-20261007";
   try{
     if(localStorage.getItem(tag)==="1")return;
     localStorage.setItem(tag,"1");
     Promise.resolve().then(async function(){
       try{if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}}catch(_e){}
       try{if("serviceWorker" in navigator){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(r){return r.unregister()}))}}catch(_e){}
-      var u=new URL(location.href);u.searchParams.set("arvexq_build","v328-racecard-priority");u.searchParams.set("_",Date.now());location.replace(u.toString());
+      var u=new URL(location.href);u.searchParams.set("arvexq_build","v329");u.searchParams.set("_",Date.now());location.replace(u.toString());
     });
   }catch(_e){}
 })();
@@ -33,6 +33,6 @@
 </head>
 <body>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script src="/app-v328.js?rev=20261007-racecard-priority"></script>
+<script src="/app-v329.js"></script>
 </body>
 </html>
