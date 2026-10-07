@@ -3324,8 +3324,6 @@ function renderRace(){
     state.openPanel='entry'
   }
   if(!state.openPanel)state.openPanel='entry';
-  if(state.subPage==='horse')return horseDetailPage(r,p);
-  if(state.subPage==='bets')return betDetailPage(r,p);
   var top=(p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0];
   if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=top?top.code:null;
   var content='';
