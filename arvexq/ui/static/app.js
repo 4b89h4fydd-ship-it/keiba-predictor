@@ -1722,12 +1722,14 @@ function minimalRacecardPanel(r){
         var scratch=isScratchHorse(h),fr=clamp(n(h.frameNumber,h.horseNumber),1,8),
             odds=scratch?'取消':((h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0)?((Math.round(n(h.winOdds)*10)/10).toFixed(1)):'取得中'),
             pop=scratch?'出走取消':(n(h.popularity)>0?n(h.popularity)+'人気':'更新中'),
-            bw=(h.bodyWeight!=null&&h.bodyWeight!==''&&n(h.bodyWeight)>0)?String(h.bodyWeight)+'kg':(scratch?'—':'計量待ち'),
+            curBw=currentBodyWeight(h),bwCh=currentBodyWeightChange(h),
+            bw=curBw?(String(curBw)+'kg'):(scratch?'—':'計量待ち'),
+            bwDelta=(!scratch&&curBw&&bwCh!=null)?('('+(bwCh>0?'+':'')+bwCh+')'):'',
             cw=(h.carriedWeight!=null&&h.carriedWeight!=='')?String(h.carriedWeight).replace(/\.0$/,'')+'kg':'—';
         return '<div class="racecard-row rc-racecard-v336'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-          +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark">—</span></div>'
+          +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark">—</span><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'" aria-label="チェック">'+horseCheckGlyph(r,h.horseNumber)+'</span></div>'
           +'<button type="button" class="rc-v336-number" data-horse-open="'+esc(h.horseNumber)+'"><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span></button>'
-          +'<div class="rc-v336-info"><button type="button" class="rc-horse-main" data-horse-open="'+esc(h.horseNumber)+'"><span class="rc-horse-name">'+esc(horseDisplayName(r,h))+'</span><span class="rc-v336-meta"><span class="rc-sexage">'+esc((h.sex||'—')+(h.age||'—'))+'</span><span class="jockey">'+esc(h.jockey||'騎手取得中')+'</span><span class="carry">'+esc(cw)+'</span><small class="rc-bodyweight '+(bw==='計量待ち'?'pending':'')+'">'+esc(bw)+'</small></span></button></div>'
+          +'<div class="rc-v336-info"><button type="button" class="rc-horse-main" data-horse-open="'+esc(h.horseNumber)+'"><span class="rc-horse-name">'+esc(horseDisplayName(r,h))+'</span><span class="rc-v336-meta"><span class="rc-sexage">'+esc((h.sex||'—')+(h.age||'—'))+'</span><span class="jockey">'+esc(h.jockey||'騎手取得中')+'</span><span class="carry">'+esc(cw)+'</span><small class="rc-bodyweight '+(bw==='計量待ち'?'pending':'')+'"><b>'+esc(bw)+'</b>'+(bwDelta?'<span>'+esc(bwDelta)+'</span>':'')+'</small></span></button></div>'
           +'<div class="rc-v336-odds rc-odds"><span class="odd '+(scratch?'scratch-odds':(n(h.winOdds)>0&&n(h.winOdds)<10?'single':''))+'">'+esc(odds)+'</span><span class="pop '+(scratch?'scratch-note':'')+'">'+esc(pop)+'</span></div>'
         +'</div>'
       }).join('')+
@@ -3444,14 +3446,13 @@ function runnerStyleSection(r,p){
           bodyMain=curBw?(curBw+'kg'):(refbw?('前走 '+refbw+'kg'):(scratch?'—':'計量待ち')),
           bodyChange=(!scratch&&curBw&&bwCh!=null)?('('+(bwCh>0?'+':'')+bwCh+')'):'';
       return '<div class="racecard-row rc-racecard-v336'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-        +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</span></div>'
+        +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</span><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'" aria-label="チェック">'+horseCheckGlyph(r,h.horseNumber)+'</span></div>'
         +'<button type="button" class="rc-v336-number" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く"><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span></button>'
         +'<div class="rc-v336-info">'
           +'<button type="button" class="rc-horse-main" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く">'
             +'<span class="rc-horse-name">'+esc(horseDisplayName(r,h))+'</span>'
             +'<span class="rc-v336-meta"><span class="rc-sexage">'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span class="carry">'+esc(carriedWeightText(h))+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span><small class="rc-bodyweight '+(scratch?'rc-scratch':(curBw?'':'pending'))+'"><b>'+esc(bodyMain)+'</b>'+(bodyChange?'<span>'+esc(bodyChange)+'</span>':'')+'</small></span>'
           +'</button>'
-          +'<span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'" aria-label="チェック">'+horseCheckGlyph(r,h.horseNumber)+'</span>'
         +'</div>'
         +'<div class="rc-v336-odds rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</div>'
         +'</div>'
@@ -3570,11 +3571,11 @@ function paceStageConfig(idx){
   return Object.assign({index:idx},PACE_STAGE_PAGES[idx])
 }
 function paceStageMenu(r,p){
-  return '<div class="pace-stage-menu" role="navigation" aria-label="展開予想の4局面"><div class="pace-stage-menu-group">'
-    +PACE_STAGE_PAGES.map(function(z,idx){
-      return '<button type="button" class="pace-stage-menu-btn" data-pace-open="'+idx+'"><b>'+esc(z.label)+'</b><small>'+esc(z.detail)+'</small><i>›</i></button>'
-    }).join('')
-    +'</div></div>'
+  return '<div class="pace-stage-menu pace-stage-entry" role="navigation" aria-label="4局面展開">'
+    +'<button type="button" class="pace-stage-entry-btn" data-pace-open="0">'
+      +'<span class="pace-stage-entry-copy"><b>4局面展開</b><small>スタート → 3C → 4C → ラスト</small></span>'
+      +'<span class="pace-stage-entry-sub">隊列図＋説明を見る</span><i>›</i>'
+    +'</button></div>'
 }
 function openPaceStagePage(idx){
   state.paceStage=clamp(n(idx,0),0,PACE_STAGE_PAGES.length-1);
