@@ -3018,14 +3018,14 @@ function smartDailyAiStatsPage(){
   return '<div class="smart-shell">'+smartTopBar(true,'本日のAI成績','全レース → 開催場 → 各レース')+'<main class="smart-main smart-home-subpage"><section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>全レースAI成績</b><small>'+total+'レース</small></div><div class="smart-ai-daily-grid"><div><small>AI印内1着</small><strong>'+rate(s.markHits)+'%</strong><em>'+s.markHits+'/'+total+'</em></div><div><small>◎1着</small><strong>'+rate(s.winHits)+'%</strong><em>'+s.winHits+'/'+total+'</em></div><div><small>印内3頭完全</small><strong>'+rate(s.fullPodiumHits)+'%</strong><em>'+s.fullPodiumHits+'/'+total+'</em></div></div></section><section class="arv-ai-venues"><div class="smart-section-title"><div><b>開催場ごとのAI成績</b><small>開催場を押すと各レースへ</small></div></div>'+(venues||'<div class="smart-empty">成績を集計中です</div>')+'</section></main>'+cinematicFooter()+'</div>'
 }
 function homeCircuitChooser(title,kind){
-  var rows=(state.races||[]),counts=homePickCounts(kind),buttons='',pending=kind==='selected'&&!selectedRaceLoadStatus().complete;
-  if(rows.length){
-    ['中央','地方'].forEach(function(circuit){
-      var count=circuit==='中央'?counts.central:counts.local;
-      buttons+='<button type="button" class="arv-pick-circuit-btn" data-pick-circuit="'+circuit+'" aria-label="'+esc(circuit+' '+count+'件の'+title)+'"><span><small>'+esc(title)+'</small><b>'+esc(circuit)+'</b><em class="arv-pick-count">'+count+'件</em>'+(pending?'<small class="arv-pick-count-pending">選定中</small>':'')+'</span><strong>›</strong></button>'
-    })
-  }
-  return '<section class="arv-pick-circuit-page"><div class="smart-section-title"><div><b>'+esc(title)+'</b><small>中央・地方ごとの該当件数</small></div></div><div class="arv-pick-circuit-grid">'+(buttons||'<div class="smart-empty">開催情報を取得中です</div>')+'</div></section>'
+  var rows=(state.races||[]),counts=homePickCounts(kind),buttons='',loading=!rows.length,
+      pending=kind==='selected'&&!selectedRaceLoadStatus().complete;
+  ['中央','地方'].forEach(function(circuit){
+    var count=circuit==='中央'?counts.central:counts.local,
+        status=loading?'取得中':(pending?'選定中':'');
+    buttons+='<button type="button" class="arv-pick-circuit-btn" data-pick-circuit="'+circuit+'" aria-label="'+esc(circuit+' '+count+'件の'+title)+'"><span><small>'+esc(title)+'</small><b>'+esc(circuit)+'</b><em class="arv-pick-count">'+count+'件</em>'+(status?'<small class="arv-pick-count-pending">'+status+'</small>':'')+'</span><strong>›</strong></button>'
+  });
+  return '<section class="arv-pick-circuit-page"><div class="smart-section-title"><div><b>'+esc(title)+'</b><small>中央・地方ごとの該当件数</small></div></div><div class="arv-pick-circuit-grid">'+buttons+'</div></section>'
 }
 function selectedCircuitPage(circuit){
   var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>厳選 '+esc(t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
