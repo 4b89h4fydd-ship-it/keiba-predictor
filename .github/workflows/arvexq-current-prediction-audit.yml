@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'app.py'
+      - 'arvexq/prediction/**'
       - 'scripts/arvexq_fix_jra_history_quality.py'
       - 'scripts/arvexq_current_prediction_audit.py'
       - 'scripts/arvexq_central_data_quality_audit.py'
