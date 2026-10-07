@@ -2738,7 +2738,7 @@ function smartRaceHead(r){
 function renderRaceLoading(){
   var row=state.races.find(function(x){return String(x.id)===String(state.raceLoading)});
   return '<div class="smart-shell">'+
-    row?smartRaceTopBar(row):smartTopBar(true,state.track||'レース','レース詳細')+
+    (row?smartRaceTopBar(row):smartTopBar(true,state.track||'レース','レース詳細'))+
     '<main class="smart-main smart-race-page">'+
       (row?smartRaceHead(row):'')+
       '<div class="smart-loading"><span class="smart-loading-dot"></span><b>'+(state.error?'レース詳細の同期待ち':'レース詳細を読み込み中')+'</b><small>'+(state.error?esc(state.error):'選択したレースだけ取得しています。開催場一覧は先に表示します。')+'</small>'+(state.error&&row?'<button type="button" class="smart-refresh" data-race="'+esc(row.id)+'">再試行</button>':'')+'</div>'+
