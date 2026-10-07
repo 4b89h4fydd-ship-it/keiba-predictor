@@ -48,6 +48,7 @@ function courseStageFrac(r,st){
 var app=document.getElementById("app");
 var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,detailSeq:0,raceReturnPicker:false,historyTimer:null,raceStack:[],historyPrefetch:{},paceStage:0,horseModalNo:null,detailHorseNo:null,collectingHorse:null,collectTimer:null,scenarioCode:null,analysisSaved:{},openPanel:null,oddsBusy:false,oddsRefreshAt:{},oddsTimer:null,environmentTimer:null,environmentBusy:false,bootstrapReady:false,bootstrapProgress:null,resultTimer:null};
 var dailyAiStats={date:"",loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,fullPodiumHits:0,centralPodiumHits:0,centralPodiumTotal:0,localPodiumHits:0,localPodiumTotal:0,markedPodiumSum:0,holePlaceHits:0,top2Hits:0,top3Hits:0,candidateOrderMisses:0,candidateMisses:0,highConfHits:0,highConfTotal:0,brierSum:0,logLossSum:0,reasons:{},error:""},dailyAiStatsJob=0;
+var previousAiStats={date:"",loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,fullPodiumHits:0,markedPodiumSum:0,rows:[],error:""},previousAiStatsJob=0;
 var liveCenterOpen=false,liveCenterTrack="",liveCenterCircuit="";
 
 function cacheKey(d,c){return "arvexq:"+String(window.ARVEXQ_BUILD||"dev")+":races:"+d+":"+(c||state.circuit||"")}
@@ -92,6 +93,7 @@ function installPwaCache(){
   }catch(e){}
 }
 function today(){var d=new Date(Date.now()+9*3600000);return d.toISOString().slice(0,10)}
+function previousDateKey(iso){var p=String(iso||today()).split('-'),y=n(p[0]),m=n(p[1]),d=n(p[2]);if(!y||!m||!d)return'';return new Date(Date.UTC(y,m-1,d)-86400000).toISOString().slice(0,10)}
 function esc(v){return String(v==null?"":v).replace(/[&<>\"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]})}
 function n(v,d){var x=Number(v);return isFinite(x)?x:(d||0)}
 function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
@@ -1995,7 +1997,7 @@ function aiDailyOne(detail){
   if(!fullPodiumHit&&markedPodiumCount===2)reason=reason||'印内3頭完全包含で1頭抜け';
   var brier=n(audit.brier,0),logLoss=n(audit.logLoss,0);
   if(!brier&&wrow){marks.forEach(function(x){var y=x.no===winner?1:0;brier+=Math.pow(n(x.p)-y,2)});logLoss=-Math.log(Math.max(1e-9,n(wrow.p)))}
-  return {winHit:winHit,markHit:markHit,fullPodiumHit:fullPodiumHit,markedPodiumCount:markedPodiumCount,circuit:circuit,holePlace:holePlace,top2:wr>0&&wr<=2,top3:wr>0&&wr<=3,candidateOrderMiss:!winHit&&markHit,candidateMiss:!markHit,highConf:confidence>=.70,highConfHit:confidence>=.70&&winHit,brier:brier,logLoss:logLoss,reason:reason,winnerMark:String(marked[winner]||'')}
+  return {raceId:String(detail.id||''),track:String(detail.track||''),raceNumber:n(detail.raceNumber),title:String(detail.title||''),winHit:winHit,markHit:markHit,fullPodiumHit:fullPodiumHit,markedPodiumCount:markedPodiumCount,circuit:circuit,holePlace:holePlace,top2:wr>0&&wr<=2,top3:wr>0&&wr<=3,candidateOrderMiss:!winHit&&markHit,candidateMiss:!markHit,highConf:confidence>=.70,highConfHit:confidence>=.70&&winHit,brier:brier,logLoss:logLoss,reason:reason,winner:winner,winnerMark:String(marked[winner]||''),podiumNos:podiumNos,marks:marks.filter(function(x){return !!String(x.mark||'')}).map(function(x){return{no:x.no,mark:x.mark}})}
 }
 function resetDailyAiStats(date){dailyAiStats={date:date||'',loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,fullPodiumHits:0,centralPodiumHits:0,centralPodiumTotal:0,localPodiumHits:0,localPodiumTotal:0,markedPodiumSum:0,holePlaceHits:0,top2Hits:0,top3Hits:0,candidateOrderMisses:0,candidateMisses:0,highConfHits:0,highConfTotal:0,brierSum:0,logLossSum:0,reasons:{},error:''}}
 function scheduleDailyAiStats(){
@@ -2033,6 +2035,70 @@ function scheduleDailyAiStats(){
     dailyAiStats.reasons={};results.forEach(function(x){if(x.winHit)return;var k=x.reason||'その他';dailyAiStats.reasons[k]=(dailyAiStats.reasons[k]||0)+1});
     render()
   }).catch(function(){if(token!==dailyAiStatsJob)return;dailyAiStats.loading=false;dailyAiStats.done=true;dailyAiStats.error='集計できませんでした';render()})
+}
+
+function resetPreviousAiStats(date){previousAiStats={date:date||'',loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,fullPodiumHits:0,markedPodiumSum:0,rows:[],error:''}}
+function schedulePreviousAiStats(){
+  var targetDate=previousDateKey(today());
+  if(!targetDate)return;
+  if(previousAiStats.date!==targetDate)resetPreviousAiStats(targetDate);
+  if(previousAiStats.loading||previousAiStats.done)return;
+  var token=++previousAiStatsJob;previousAiStats.loading=true;previousAiStats.error='';render();
+  edgeFetchJson('https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='+encodeURIComponent(targetDate)+'&details=0&t='+Date.now(),9000)
+    .then(function(body){
+      if(token!==previousAiStatsJob)return null;
+      var rows=Array.isArray(body)?body:((body&&body.races)||[]);
+      rows=rows.filter(function(r){return r&&r.id});
+      previousAiStats.finalCount=rows.length;
+      var cursor=0,results=[],workers=[];
+      function worker(){
+        if(token!==previousAiStatsJob||cursor>=rows.length)return Promise.resolve();
+        var row=rows[cursor++],id=String(row.id||'');
+        return edgeFetchJson(edgeRaceUrl(id),9000)
+          .then(function(body){
+            var d=body&&body.detail?body.detail:null;
+            if(d){
+              if(!d.track)d.track=row.track;if(!d.raceNumber)d.raceNumber=row.raceNumber;if(!d.title)d.title=row.title;if(!d.circuit)d.circuit=row.circuit;
+              var z=aiDailyOne(d);if(z)results.push(z)
+            }
+          }).catch(function(){}).then(worker)
+      }
+      for(var i=0;i<Math.min(4,rows.length);i++)workers.push(worker());
+      return Promise.all(workers).then(function(){return results})
+    })
+    .then(function(results){
+      if(token!==previousAiStatsJob||!results)return;
+      results.sort(function(a,b){var c=String(a.circuit||'').localeCompare(String(b.circuit||''),'ja');if(c)return c;var t=String(a.track||'').localeCompare(String(b.track||''),'ja');return t||n(a.raceNumber)-n(b.raceNumber)});
+      previousAiStats.loading=false;previousAiStats.done=true;previousAiStats.rows=results;previousAiStats.total=results.length;
+      previousAiStats.winHits=results.filter(function(x){return x.winHit}).length;
+      previousAiStats.markHits=results.filter(function(x){return x.markHit}).length;
+      previousAiStats.fullPodiumHits=results.filter(function(x){return x.fullPodiumHit}).length;
+      previousAiStats.markedPodiumSum=results.reduce(function(a,x){return a+n(x.markedPodiumCount)},0);
+      render()
+    })
+    .catch(function(err){
+      if(token!==previousAiStatsJob)return;
+      previousAiStats.loading=false;previousAiStats.done=true;previousAiStats.error=String(err&&err.message||'前日AI成績を取得できませんでした');render()
+    })
+}
+function smartPreviousAiStats(){
+  var s=previousAiStats,date=s.date||previousDateKey(today()),p=String(date||'').split('-'),label=(n(p[1])&&n(p[2]))?(n(p[1])+'月'+n(p[2])+'日'):'前日';
+  if(!s.done&&!s.loading){setTimeout(schedulePreviousAiStats,0);return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日のAI成績</b><small>全レース集計準備中</small></div></section>'}
+  if(s.loading)return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>AI印を付けた全レースを集計中…</small></div></section>';
+  if(s.error)return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>'+esc(s.error)+'</small></div></section>';
+  if(!s.total)return '<section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>事前AI印が保存された確定レースなし</small></div></section>';
+  function rate(hit){return Math.round(hit/s.total*100)}
+  function markText(row){var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注+':7,'注':8};return (row.marks||[]).slice().sort(function(a,b){return n(order[a.mark],99)-n(order[b.mark],99)||n(a.no)-n(b.no)}).map(function(x){return x.mark+x.no}).join(' ')}
+  var rows=(s.rows||[]).map(function(x){
+    var result=(x.podiumNos||[]).slice(0,3).join('-')||'—',cls=x.fullPodiumHit?'hit':(x.markHit?'partial':'miss'),
+        judge=x.fullPodiumHit?'3頭完全':(x.markHit?'1着印内':'1着印外');
+    return '<div class="smart-ai-race-row '+cls+'"><span class="smart-ai-race-name"><b>'+esc(x.track)+' '+esc(x.raceNumber)+'R</b><small>'+esc(x.title||'')+'</small></span><span class="smart-ai-race-marks">'+esc(markText(x))+'</span><span class="smart-ai-race-result">結果 '+esc(result)+'</span><strong>'+esc(judge)+'</strong></div>'
+  }).join('');
+  return '<section class="smart-ai-daily smart-ai-previous"><div class="smart-ai-daily-head"><b>前日 '+esc(label)+' のAI成績</b><small>AI印を付けた全'+s.total+'レース</small></div><div class="smart-ai-daily-grid">'+
+    '<div><small>AI印内1着</small><strong>'+rate(s.markHits)+'%</strong><em>'+s.markHits+'/'+s.total+'</em></div>'+
+    '<div><small>◎1着</small><strong>'+rate(s.winHits)+'%</strong><em>'+s.winHits+'/'+s.total+'</em></div>'+
+    '<div><small>印内3頭完全</small><strong>'+rate(s.fullPodiumHits)+'%</strong><em>'+s.fullPodiumHits+'/'+s.total+'</em></div>'+
+  '</div><div class="smart-ai-race-list">'+rows+'</div><p>※分母は前日に発走前AI印が保存され、結果確定した全レース。厳選レースだけではなく、印を付けたレースを全部表示します。</p></section>'
 }
 function aiStatsDayTitle(){
   if(state.date===today())return '本日のAI成績';
@@ -2328,6 +2394,7 @@ function renderHome(){
       smartPageControls()+
       smartSelectedRaces()+
       smartSpecialForecastRaces()+
+      smartPreviousAiStats()+
       smartDailyAiStats()+
       (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
       smartLiveRaceSection()+
@@ -3140,6 +3207,7 @@ function load(force){
   }
 
   setTimeout(scheduleDailyAiStats,900);
+  setTimeout(schedulePreviousAiStats,1100);
   function startDetails(){if(detailsStarted)return;detailsStarted=true;setTimeout(function(){requestDetails(0)},80)}
   // If summaries were already painted from cache, allow selection preload after first paint.
   setTimeout(function(){if(state.races.length)startDetails()},450);
