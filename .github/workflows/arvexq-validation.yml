@@ -50,6 +50,8 @@ jobs:
       - name: Python syntax
         run: |
           python -m py_compile app.py build_static.py \
+            arvexq/prediction/honmei_gate.py \
+            arvexq/prediction/final_marks.py \
             arvexq/pipeline/fingerprints.py \
             scripts/arvexq_prefetch.py \
             scripts/arvexq_live_sync.py \
