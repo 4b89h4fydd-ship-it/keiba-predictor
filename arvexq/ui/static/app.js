@@ -1716,24 +1716,43 @@ function pendingDetailPanel(r){
   if(key==='result'&&hasAnyResultData(r))return resultPanel(r);
   return '<section class="card" data-section-state="'+esc(status)+'"><h2>'+esc(labels[key]||'出走表')+'</h2><p role="status">'+(status==='empty'?'出走馬0頭を確認しました。':(status==='error'?'この項目を取得できませんでした。取得済みの情報は表示を継続します。':'この項目を取得中です。'))+'</p>'+(status==='error'?'<button type="button" data-detail-retry="'+esc(r.id)+'">再試行</button>':'')+'</section>'
 }
+function racecardOddsHtml(h){
+  if(isScratchHorse(h))return '<span class="odd scratch-odds">取消</span><span class="pop scratch-note">出走取消</span>';
+  var valid=h&&h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0,
+      value=valid?n(h.winOdds):0,pop=n(h&&h.popularity,0),
+      forecast=!!(h&&h.oddsForecast)||/予想|forecast/i.test(String(h&&h.oddsSource||''));
+  return '<span class="odd '+(value>0&&value<10?'single':'')+'">'+esc(valid?(Math.round(value*10)/10).toFixed(1):'取得中')+'</span>'
+    +'<span class="pop">'+(forecast?'予想 ':'')+(pop>0?esc(pop)+'人気':(valid?'参考':'更新中'))+'</span>';
+}
+function racecardEntryRow(r,h,x){
+  if(!h||n(h.horseNumber)<=0)return'';
+  var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
+      fr=clamp(n(h.frameNumber,no),1,8),curBw=currentBodyWeight(h),
+      deltaValue=currentBodyWeightChange(h),pastBw=!curBw?referenceBodyWeight(h):0,
+      weightMain=scratch?'—':(curBw?String(curBw):(pastBw?('前'+pastBw):'—')),
+      weightDelta=(!scratch&&curBw&&deltaValue!=null)?('('+(deltaValue>0?'+':'')+deltaValue+')'):'',
+      weightHint=curBw?'馬体重':(pastBw?'前走馬体重':'馬体重未計量'),
+      disabled=scratch?' disabled aria-disabled="true"':'',
+      openAttr=scratch?'':(' data-horse-open="'+esc(no)+'"'),
+      detailLabel=' aria-label="'+esc(name)+'の詳細を開く"';
+  return '<div class="racecard-row rc-racecard-v336 rc-racecard-v339'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
+    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</span></div>'
+    +'<button type="button" class="rc-v336-number"'+openAttr+detailLabel+disabled+'><span class="rc-number frame'+fr+'">'+esc(no)+'</span></button>'
+    +'<div class="rc-v336-info"><button type="button" class="rc-horse-main"'+openAttr+detailLabel+disabled+'>'
+      +'<span class="rc-horse-name">'+esc(name)+'</span>'
+      +'<span class="rc-v336-meta"><span class="rc-sexage">'+esc(h.sex||'—')+esc(h.age||'—')+'</span>'
+      +'<span class="carry">'+esc(carriedWeightText(h))+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span></span>'
+    +'</button></div>'
+    +'<div class="rc-v339-weight'+(curBw?'':' pending')+'" aria-label="'+esc(weightHint)+'">'
+      +'<b>'+esc(weightMain)+'</b><span class="rc-weight-delta">'+esc(weightDelta||'　')+'</span>'
+    +'</div>'
+    +'<div class="rc-v336-odds rc-odds" data-odds-no="'+esc(no)+'">'+racecardOddsHtml(h)+'</div>'
+    +'</div>';
+}
 function minimalRacecardPanel(r){
-  return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2><div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'+
-      (r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
-        var scratch=isScratchHorse(h),fr=clamp(n(h.frameNumber,h.horseNumber),1,8),
-            odds=scratch?'取消':((h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0)?((Math.round(n(h.winOdds)*10)/10).toFixed(1)):'取得中'),
-            pop=scratch?'出走取消':(n(h.popularity)>0?n(h.popularity)+'人気':'更新中'),
-            curBw=currentBodyWeight(h),bwCh=currentBodyWeightChange(h),
-            bw=curBw?(String(curBw)+'kg'):(scratch?'—':'計量待ち'),
-            bwDelta=(!scratch&&curBw&&bwCh!=null)?('('+(bwCh>0?'+':'')+bwCh+')'):'',
-            cw=(h.carriedWeight!=null&&h.carriedWeight!=='')?String(h.carriedWeight).replace(/\.0$/,'')+'kg':'—';
-        return '<div class="racecard-row rc-racecard-v336'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-          +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark">—</span><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'" aria-label="チェック">'+horseCheckGlyph(r,h.horseNumber)+'</span></div>'
-          +'<button type="button" class="rc-v336-number" data-horse-open="'+esc(h.horseNumber)+'"><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span></button>'
-          +'<div class="rc-v336-info"><button type="button" class="rc-horse-main" data-horse-open="'+esc(h.horseNumber)+'"><span class="rc-horse-name">'+esc(horseDisplayName(r,h))+'</span><span class="rc-v336-meta"><span class="rc-sexage">'+esc((h.sex||'—')+(h.age||'—'))+'</span><span class="jockey">'+esc(h.jockey||'騎手取得中')+'</span><span class="carry">'+esc(cw)+'</span><small class="rc-bodyweight '+(bw==='計量待ち'?'pending':'')+'"><b>'+esc(bw)+'</b>'+(bwDelta?'<span>'+esc(bwDelta)+'</span>':'')+'</small></span></button></div>'
-          +'<div class="rc-v336-odds rc-odds"><span class="odd '+(scratch?'scratch-odds':(n(h.winOdds)>0&&n(h.winOdds)<10?'single':''))+'">'+esc(odds)+'</span><span class="pop '+(scratch?'scratch-note':'')+'">'+esc(pop)+'</span></div>'
-        +'</div>'
-      }).join('')+
-      '</div></section></div>'
+  return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2><div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'
+    +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){return racecardEntryRow(r,h,null)}).join('')
+    +'</div></section></div>';
 }
 function safeEntryPanel(r,p){
   try{return runnerStyleSection(r,p)}catch(error){
@@ -3429,35 +3448,19 @@ function styleCell(label,val,active,cls){var unk=val==null||!isFinite(Number(val
 function positionBucket(x){if(x.expected==="逃げ候補")return"逃げ候補";if(x.expected==="先行")return"先行";if(x.expected==="好位")return"好位";if(x.expected==="後方")return"後方";if(x.expected==="不明")return"不明";return"中団"}
 function stylePositionMap(r,p){var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)}),labels=['逃げ候補','先行','好位','中団','後方','不明'],field=Math.max(1,(r.horses||[]).length),html='<div class="style-position-map"><div class="style-map-axis"><span>内枠</span><b>脚質マップ＋枠順</b><span>外枠</span></div>';for(var j=0;j<labels.length;j++){var lab=labels[j];html+='<div class="style-lane"><div class="style-lane-label">'+lab+'</div><div class="style-lane-track">';for(var i=0;i<rows.length;i++){var x=rows[i],h=x.horse;if(positionBucket(x)!==lab)continue;var left=field<=1?50:6+(n(h.horseNumber)-1)/Math.max(1,field-1)*88,shift=x.pastStyle!==x.expected&&!(x.pastStyle==='先行'&&x.expected==='好位');html+='<span class="style-map-horse'+(shift?' shifted':'')+'" style="left:'+left+'%" title="'+esc(h.name)+'｜過去 '+esc(x.pastStyle)+' → 今回 '+esc(x.expected)+'｜'+esc(x.frontLineRole||'')+'">'+badge(h)+'</span>'}html+='</div></div>'}html+='<div class="style-map-note"><b>水色縁</b>＝過去脚質から今回条件で位置想定が動いた馬。馬番順で内→外を維持。</div>';html+='<div class="style-map-rate-list">'+rows.map(function(x){var h=x.horse,ps=styleDisplayPcts(x),fade=x.styleSamples?Math.round(x.fade*100):null;function cell(l,v,cls){return'<span class="style-map-rate-cell '+(cls||'')+'">'+l+'<strong class="'+(cls==='fade'&&v!=null&&v>=55?'high':'')+'">'+(v==null?'—':v+'%')+'</strong></span>'}return'<div class="style-map-rate-row"><span class="style-map-rate-horse">'+badge(h)+'<b>'+esc(h.name||'')+'</b></span>'+cell('逃',ps[0])+cell('先',ps[1])+cell('差',ps[2])+cell('追',ps[3])+cell('下',fade,'fade')+'</div>'}).join('')+'</div>';var arr=p.arrangement||{};html+='<div class="style-map-summary"><b>先行列：</b>'+esc(arr.pattern||'—')+'　<b>配置：</b>'+esc(arr.concentrationText||'—')+'　<b>初角まで：</b>'+Math.round(firstTurnDistance(r))+'m'+((r.firstTurnDistance||r.startToFirstTurn||r.firstCornerDistance||r.firstCornerMeters)?'':'（コース推定）')+'</div></div>';return html}
 function runnerStyleSection(r,p){
-  function oddsCells(h){
-    if(isScratchHorse(h))return '<span class="odd scratch-odds">取消</span><span class="pop scratch-note">出走取消</span>';
-    var ok=h&&h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0,o=ok?n(h.winOdds):0,pop=n(h&&h.popularity,0),forecast=!!(h&&h.oddsForecast)||/予想|forecast/i.test(String(h&&h.oddsSource||''));
-    var os=ok?(Math.round(o*10)/10).toFixed(1):'取得中';
-    return '<span class="odd '+(o>0&&o<10?'single':'')+'">'+esc(os)+'</span><span class="pop">'+(forecast?'予想 ':'')+(pop>0?esc(pop)+'人気':(ok?'参考':'更新中'))+'</span>';
-  }
-  var diagnosisReady=diagnosisCurrent(r),cadenceText=(raceBodyWeightComplete(r)&&raceOddsComplete(r))?'オッズ・馬体重取得済み':'オッズ・馬体重を自動取得',dayCorr=sameDayCorrectionProfileV313(r,p.rows||[]),dayNote=dayCorr.active?('<div class="diagnosis-refresh-note" style="margin:7px 0"><b>当日補正 ON</b>　前'+dayCorr.completed+'R反映 / '+(dayCorr.markRaces?('印内3頭 '+Math.round(dayCorr.coverage*100)+'%'):'印比較待ち')+' / '+esc(dayCorr.flowLabel)+'傾向　<small>同場の発走済みレースだけで後半の印を微調整</small></div>'):'';
+  var diagnosisReady=diagnosisCurrent(r),
+      cadenceText=(raceBodyWeightComplete(r)&&raceOddsComplete(r))?'オッズ・馬体重取得済み':'オッズ・馬体重を自動取得',
+      dayCorr=sameDayCorrectionProfileV313(r,p.rows||[]),
+      dayNote=dayCorr.active?('<div class="diagnosis-refresh-note" style="margin:7px 0"><b>当日補正 ON</b>　前'+dayCorr.completed+'R反映 / '+(dayCorr.markRaces?('印内3頭 '+Math.round(dayCorr.coverage*100)+'%'):'印比較待ち')+' / '+esc(dayCorr.flowLabel)+'傾向　<small>同場の発走済みレースだけで後半の印を微調整</small></div>'):'';
   return '<section class="card"><h2>出走表</h2><button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
     +dayNote
     +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">'+(r._entryOnly?'出走表を先に表示しています。履歴・能力評価を取得中です。':'取得済みデータでAI評価を先に計算中。更新後は馬名タップの詳細と展開予想へ反映します。')+'</div>':'')
     +'<div class="racecard-table">'
-    +(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
-      var scratch=isScratchHorse(h),x=(p.rows||[]).find(function(z){return n(z.horse.horseNumber)===n(h.horseNumber)});
-      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),curBw=currentBodyWeight(h),bwCh=currentBodyWeightChange(h),refbw=!curBw?referenceBodyWeight(h):0,st=String(h.status||(h.scratched||h.withdrawn?'出走取消':'欠場')),
-          bodyMain=curBw?(curBw+'kg'):(refbw?('前走 '+refbw+'kg'):(scratch?'—':'計量待ち')),
-          bodyChange=(!scratch&&curBw&&bwCh!=null)?('('+(bwCh>0?'+':'')+bwCh+')'):'';
-      return '<div class="racecard-row rc-racecard-v336'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-        +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</span><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'" aria-label="チェック">'+horseCheckGlyph(r,h.horseNumber)+'</span></div>'
-        +'<button type="button" class="rc-v336-number" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く"><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span></button>'
-        +'<div class="rc-v336-info">'
-          +'<button type="button" class="rc-horse-main" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く">'
-            +'<span class="rc-horse-name">'+esc(horseDisplayName(r,h))+'</span>'
-            +'<span class="rc-v336-meta"><span class="rc-sexage">'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span class="carry">'+esc(carriedWeightText(h))+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span><small class="rc-bodyweight '+(scratch?'rc-scratch':(curBw?'':'pending'))+'"><b>'+esc(bodyMain)+'</b>'+(bodyChange?'<span>'+esc(bodyChange)+'</span>':'')+'</small></span>'
-          +'</button>'
-        +'</div>'
-        +'<div class="rc-v336-odds rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</div>'
-        +'</div>'
+    +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
+      var x=(p.rows||[]).find(function(z){return z&&z.horse&&n(z.horse.horseNumber)===n(h.horseNumber)});
+      return racecardEntryRow(r,h,x);
     }).join('')
-    +'</div></section>'
+    +'</div></section>';
 }
 function rowName(x){return x&&x.horse?(x.horse.horseNumber+' '+x.horse.name):'—'}
 function paceStageRows(p,key){
