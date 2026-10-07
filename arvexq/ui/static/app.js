@@ -3315,8 +3315,6 @@ function renderRace(){
     state.openPanel='entry'
   }
   if(!state.openPanel)state.openPanel='entry';
-  if(state.subPage==='horse')return horseDetailPage(r,p);
-  if(state.subPage==='bets')return betDetailPage(r,p);
   var top=(p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)})[0];
   if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=top?top.code:null;
   var content='';
@@ -3328,7 +3326,7 @@ function renderRace(){
     content='<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2><div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'+
       (r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
         var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),odds=(h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0)?((Math.round(n(h.winOdds)*10)/10).toFixed(1)):'取得中',pop=n(h.popularity)>0?n(h.popularity)+'人気':'更新中',bw=(h.bodyWeight!=null&&h.bodyWeight!==''&&n(h.bodyWeight)>0)?String(h.bodyWeight)+'kg':'計量待ち',cw=(h.carriedWeight!=null&&h.carriedWeight!=='')?String(h.carriedWeight).replace(/\.0$/,'')+'kg':'—';
-        return '<div class="racecard-row"><span class="rc-check-cell"></span><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span><span class="rc-horse"><span class="rc-horse-top"><button type="button" class="rc-horse-name" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く">'+esc(horseDisplayName(r,h))+'</button><small class="rc-bodyweight '+(bw==='計量待ち'?'pending':'')+'">'+esc(bw)+'</small></span><span class="rc-jockey">'+esc(h.jockey||'騎手取得中')+' / '+esc(cw)+'</span></span><span class="rc-odds"><span class="odd '+(n(h.winOdds)>0&&n(h.winOdds)<10?'single':'')+'">'+esc(odds)+'</span><span class="pop">'+esc(pop)+'</span></span></div>'
+        return '<div class="racecard-row"><span class="rc-check-cell"></span><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span><span class="rc-horse"><span class="rc-horse-top"><b class="rc-horse-name">'+esc(h.name||'馬名取得中')+'</b><small class="rc-bodyweight '+(bw==='計量待ち'?'pending':'')+'">'+esc(bw)+'</small></span><span class="rc-jockey">'+esc(h.jockey||'騎手取得中')+' / '+esc(cw)+'</span></span><span class="rc-odds"><span class="odd '+(n(h.winOdds)>0&&n(h.winOdds)<10?'single':'')+'">'+esc(odds)+'</span><span class="pop">'+esc(pop)+'</span></span></div>'
       }).join('')+
       '</div></section></div>'
   }
