@@ -1,0 +1,37 @@
+name: ARVEXQ Honmei Gate Sweep
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_honmei_gate_sweep.py'
+      - '.github/workflows/arvexq-honmei-gate-sweep.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile
+        run: python -m py_compile scripts/arvexq_honmei_gate_sweep.py
+      - name: Sweep honmei gates
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_DAYS: '7'
+          ARVEXQ_END_DATE: '2026-10-05'
+        run: python scripts/arvexq_honmei_gate_sweep.py | tee honmei-gate-sweep.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-honmei-gate-sweep
+          path: honmei-gate-sweep.log
+          if-no-files-found: error
+          retention-days: 14
