@@ -1,5 +1,5 @@
 import legacyWorker from "./worker.js";
-import { readRacecard } from "./racecard.js";
+import { readRacecard, readRaceDisplay } from "./racecard.js";
 
 const SCRATCH_RE = /(?:出走取消|取消|競走除外|競走取消|除外|SCRATCHED)/i;
 const CORS_ALLOW_HEADERS = "content-type, authorization, x-sync-token, cache-control, pragma, accept";
@@ -154,6 +154,12 @@ export default {
       try { raceId = decodeURIComponent(url.pathname.slice("/api/racecard/".length)); }
       catch { return withCors(new Response('{"ok":false,"error":"invalid race_id"}', {status:400,headers:{"content-type":"application/json"}}), request); }
       return withCors(await readRacecard(env, raceId), request);
+    }
+    if (request.method === "GET" && url.pathname.startsWith("/api/race/") && url.searchParams.get("view") === "display") {
+      let raceId;
+      try { raceId = decodeURIComponent(url.pathname.slice("/api/race/".length)); }
+      catch { return withCors(new Response('{"ok":false,"error":"invalid race_id"}', {status:400,headers:{"content-type":"application/json"}}), request); }
+      return withCors(await readRaceDisplay(env, raceId), request);
     }
     let response = await legacyWorker.fetch(request, env, ctx);
     if (request.method === "GET") {

@@ -61,3 +61,32 @@ export async function readRacecard(env, raceId) {
     return response({ok:false,error:'racecard temporarily unavailable',race_id:raceId},503);
   }
 }
+
+// Opt-in UI view. Keep the legacy response and stored prediction snapshot intact.
+export const DISPLAY_SQL = `SELECT
+  json_remove(payload, '$.massFeatureSnapshot') AS payload,
+  analysis_ready, updated_at
+  FROM race_details WHERE race_id = ? AND json_valid(payload) = 1 LIMIT 1`;
+export async function readRaceDisplay(env, raceId) {
+  const response = (body, status = 200) => new Response(JSON.stringify(body), {
+    status, headers: {'content-type':'application/json; charset=utf-8','cache-control':'no-store'}
+  });
+  if (!raceId) return response({ok:false,error:'race_id is required'},400);
+  try {
+    const row = await env.DB.prepare(DISPLAY_SQL).bind(raceId).first();
+    if (!row) return response({ok:false,error:'race not found',race_id:raceId},404);
+    const detail = JSON.parse(row.payload);
+    let odds = [];
+    try {
+      const result = await env.DB.prepare(`SELECT horse_no, win_odds, popularity,
+        body_weight, body_weight_change, horse_status, updated_at
+        FROM odds_current WHERE race_id = ? ORDER BY horse_no`).bind(raceId).all();
+      odds = result.results || [];
+    } catch { /* The roster/history response does not depend on odds availability. */ }
+    return response({ok:true,race_id:raceId,detail,summary:{id:raceId,date:detail.date,
+      track:detail.track,raceNumber:detail.raceNumber},analysis_ready:!!row.analysis_ready,
+      detail_updated_at:row.updated_at,odds});
+  } catch {
+    return response({ok:false,error:'race detail temporarily unavailable',race_id:raceId},503);
+  }
+}
