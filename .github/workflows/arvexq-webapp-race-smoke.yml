@@ -136,7 +136,7 @@ jobs:
                 await page.locator('.arv-pick-circuit-page').waitFor({state:'visible',timeout:20000});
                 const circuits=page.locator('button.arv-pick-circuit-btn');
                 const count=await circuits.count();
-                assert.ok(count===0||count===2,'expected both central/local choices or loading');
+                assert.equal(count,2,'central and local must always show counts, including when loading');
                 if(count===2){
                   assert.deepEqual(await circuits.locator('b').allInnerTexts(),['中央','地方']);
                   const totals=await circuits.locator('em.arv-pick-count').allInnerTexts();
