@@ -60,7 +60,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     if not ranked_rows:
         return detail
     multi_head_summary = attach_multi_head_signals(ranked_rows)
-    honmei_decision = evaluate_honmei_gate(ranked_rows, multi_head_summary)
+    honmei_decision = evaluate_honmei_gate(ranked_rows, multi_head_summary, detail)
     detail["honmeiDecision"] = honmei_decision
     ranked = [row["horse"] for row in ranked_rows]
 

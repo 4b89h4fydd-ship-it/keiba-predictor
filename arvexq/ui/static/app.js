@@ -1000,7 +1000,7 @@ function assignPredictionMarks(rows,r){
       stable=!!winLeader&&conf>=stableFloor&&consensusSupports&&(rawAgreement||consMargin>=Math.max(.006,marginFloor)),
       honmeiMargin=Math.max(.008,uniform*(centralRace?.08:.06)),
       honmeiP1Gap=Math.max(.005,uniform*(centralRace?.05:.04)),
-      honmeiEligible=!!winLeader&&stable&&rawAgreement&&conf>=(centralRace?.70:.64)&&consMargin>=honmeiMargin&&p1Gap>=honmeiP1Gap&&n(winLeader.winEvidenceRank,99)<=2&&n(winLeader.pairwiseRank,99)<=2&&evLeader>=(centralRace?.42:.34);
+      honmeiEligible=!centralRace&&!!winLeader&&stable&&rawAgreement&&conf>=.64&&consMargin>=honmeiMargin&&p1Gap>=honmeiP1Gap&&n(winLeader.winEvidenceRank,99)<=2&&n(winLeader.pairwiseRank,99)<=2&&evLeader>=.34;
   r.honmeiDecisionFrontend={version:'arvexq-honmei-frontend-gate-v1',eligible:honmeiEligible,horseNumber:n(winLeader&&winLeader.horse&&winLeader.horse.horseNumber),confidence:conf,consensusMargin:consMargin,p1Gap:p1Gap,evidence:evLeader,rawAgreement:rawAgreement};
   // Decision distribution is what ordered tickets/strict selection use. If the
   // independent consensus is unstable, fall back to P1 instead of forcing a false precision.

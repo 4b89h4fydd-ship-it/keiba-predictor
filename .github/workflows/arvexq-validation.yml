@@ -177,6 +177,19 @@ jobs:
           assert enriched['preparedMeta']['supplementalSearch']['failures']
           assert enriched['horses'][0]['name']=='テスト馬'
 
+          from arvexq.prediction.honmei_gate import evaluate_honmei_gate
+          rich_rows=[
+              {'horse':{'horseNumber':1},'pillarRanks':{'ability':1,'record':1,'suitability':1,'pace':1},'primaryPillarCoverage':4,'sample':5,
+               'evidenceFamilyCounts':{'ability':3,'record':4,'suitability':2,'pace':2},'pairwiseWins':5,'multiHead':{'winRank':1,'strengthRank':1}},
+              {'horse':{'horseNumber':2},'pillarRanks':{'ability':2,'record':2,'suitability':2,'pace':2},'primaryPillarCoverage':4,'sample':5,
+               'evidenceFamilyCounts':{'ability':3,'record':4,'suitability':2,'pace':2},'pairwiseWins':3,'multiHead':{'winRank':2,'strengthRank':2}},
+          ]
+          rich_summary={'winnerHorseNumber':1,'winnerGap':0.05}
+          assert evaluate_honmei_gate(rich_rows,rich_summary,{'circuit':'地方'})['eligible']
+          assert evaluate_honmei_gate(rich_rows,rich_summary,{'circuit':'中央'})['eligible']
+          thin=copy.deepcopy(rich_rows);thin[0]['evidenceFamilyCounts']['pace']=1
+          assert not evaluate_honmei_gate(thin,rich_summary,{'circuit':'中央'})['eligible']
+
           old_final={'status':'確定','finishers':[{'finish':1,'horseNumber':1},{'finish':2,'horseNumber':2},{'finish':3,'horseNumber':3}]}
           flash={'status':'速報','finishers':[{'finish':1,'horseNumber':9}]}
           assert live._merge_result(old_final,flash)==old_final

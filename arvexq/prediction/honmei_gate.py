@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-GATE_VERSION = "arvexq-honmei-consensus-gate-v1"
+GATE_VERSION = "arvexq-honmei-consensus-gate-v2"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
 
 
@@ -24,6 +24,7 @@ def _fv(value: Any) -> float | None:
 def evaluate_honmei_gate(
     ranked_rows: list[dict[str, Any]],
     multi_head_summary: dict[str, Any] | None,
+    race: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Decide whether ARVEXQ is allowed to publish an ◎.
 
@@ -53,6 +54,12 @@ def evaluate_honmei_gate(
     sample = _iv(leader.get("sample"))
     family_counts = leader.get("evidenceFamilyCounts") or {}
     primary_families = sum(_iv(family_counts.get(p)) for p in PRIMARY_PILLARS)
+    ability_families = _iv(family_counts.get("ability"))
+    record_families = _iv(family_counts.get("record"))
+    suitability_families = _iv(family_counts.get("suitability"))
+    pace_families = _iv(family_counts.get("pace"))
+    circuit = str((race or {}).get("circuit") or "")
+    central = circuit in {"中央", "JRA"}
 
     win_gap = _fv(summary.get("winnerGap"))
     pairwise_wins = _iv(leader.get("pairwiseWins"))
@@ -63,13 +70,27 @@ def evaluate_honmei_gate(
             _iv(summary.get("winnerHorseNumber")) == horse_no
             and _iv(multi.get("winRank"), 999) == 1
         ),
-        "strengthHeadSupport": _iv(multi.get("strengthRank"), 999) <= 2,
+        # 7-day replay + held-out final two days: rank-1 baseline strength and
+        # all four pillars in the top 3 were materially more stable than the
+        # previous <=2 / 3-of-4 gate.
+        "strengthHeadSupport": _iv(multi.get("strengthRank"), 999) == 1,
         "allPrimaryPillarsPresent": primary_coverage >= 4,
-        "pillarConsensus": pillar_top3 >= 3,
+        "pillarConsensus": pillar_top3 >= 4,
         "positiveWinHeadGap": win_gap is not None and win_gap > 0.0,
         "pairwiseSeparation": runner is None or pairwise_wins > runner_pairwise_wins,
-        "minimumRaceEvidence": sample >= 2 and primary_families >= 4,
+        "minimumRaceEvidence": sample >= 5 and primary_families >= 8 and pace_families >= 1,
     }
+    if central:
+        # Historical JRA audit showed thin evidence (missing class/sectional/complete
+        # recent-run fields) produced false confidence. Central ◎ automatically
+        # resumes only when the richer evidence families are actually present.
+        checks.update({
+            "centralAbilityDepth": ability_families >= 3,
+            "centralRecordDepth": record_families >= 4,
+            "centralSuitabilityDepth": suitability_families >= 2,
+            "centralPaceDepth": pace_families >= 2,
+            "centralEvidenceDepth": primary_families >= 11,
+        })
     failed = [name for name, ok in checks.items() if not ok]
     eligible = not failed
 
@@ -86,5 +107,13 @@ def evaluate_honmei_gate(
         "primaryPillarCoverage": primary_coverage,
         "pillarTop3Count": pillar_top3,
         "primaryEvidenceFamilies": primary_families,
+        "evidenceFamilies": {
+            "ability": ability_families,
+            "record": record_families,
+            "suitability": suitability_families,
+            "pace": pace_families,
+        },
+        "circuit": circuit,
+        "centralEvidenceGate": central,
         "sample": sample,
     }
