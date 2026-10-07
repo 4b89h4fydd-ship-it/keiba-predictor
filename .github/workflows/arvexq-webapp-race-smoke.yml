@@ -56,6 +56,45 @@ jobs:
           assert 'getRegistrations' in s
           print('STATIC_SAFARI_GUARDS_OK')
           PY
+      - name: Home alerts and counts — positive and zero cases
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+          const styles=fs.readFileSync('arvexq/ui/static/styles.css','utf8');
+          function extract(name){
+            const start=src.indexOf('function '+name+'(');
+            assert.ok(start>=0,'function missing '+name);
+            const end=src.indexOf('\n}',start);
+            assert.ok(end>start,'function end missing '+name);
+            return src.slice(start,end+2);
+          }
+          const make=new Function('state','selectedRaceCandidates','specialForecastRaceCandidates','allTodayRacesFinished','smartLiveRaceSection','esc','selectedRaceLoadStatus',
+            ['homePickCounts','homePickAlert','smartHomeHub','homeCircuitChooser'].map(extract).join('\n')+
+            '\nreturn {smartHomeHub,homeCircuitChooser,homePickAlert,homePickCounts};');
+          const state={races:[{id:'race1',circuit:'中央'},{id:'race2',circuit:'地方'}],loading:false};
+          const esc=s=>String(s);
+          function harness(selected,special){
+            return make(state,c=>selected.filter(x=>x.circuit===c),()=>special,()=>false,()=>'',esc,()=>({complete:true}))
+          }
+          const positive=harness([{circuit:'中央'},{circuit:'地方'},{circuit:'地方'}],[{circuit:'地方'}]);
+          const home=positive.smartHomeHub();
+          assert.equal((home.match(/class="arv-home-alert"/g)||[]).length,2);
+          const chooser=positive.homeCircuitChooser('厳選レース','selected');
+          assert.match(chooser,/中央/);assert.match(chooser,/地方/);
+          assert.match(chooser,/>1件</);assert.match(chooser,/>2件</);
+          assert.equal((chooser.match(/class="arv-pick-count"/g)||[]).length,2);
+          assert.match(positive.homeCircuitChooser('特別予想','special'),/>1件</);
+          assert.equal((harness([],[]).smartHomeHub().match(/class="arv-home-alert"/g)||[]).length,0);
+          state.races=[];
+          const loading=harness([],[]).homeCircuitChooser('厳選レース','selected');
+          assert.equal((loading.match(/class="arv-pick-count"/g)||[]).length,2);
+          assert.match(loading,/取得中/);
+          assert.match(styles,/color:#ff354f!important/);
+          console.log('HOME_ALERT_POSITIVE_ZERO_AND_COUNTS_PASS');
+          NODE
       - name: Edge API diagnostic
         continue-on-error: true
         shell: bash
