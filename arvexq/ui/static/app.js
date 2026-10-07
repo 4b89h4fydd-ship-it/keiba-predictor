@@ -2043,6 +2043,12 @@ function schedulePreviousAiStats(){
   if(!targetDate)return;
   if(previousAiStats.date!==targetDate)resetPreviousAiStats(targetDate);
   if(previousAiStats.loading||previousAiStats.done)return;
+  // Race opening/current-day preload always has priority over yesterday's audit.
+  if(state.raceLoading||state.race||state.track||state.picker)return;
+  if(state.date===today()&&!selectedRacePreload.fullLoaded){
+    setTimeout(function(){if(!previousAiStats.done&&!previousAiStats.loading)schedulePreviousAiStats()},2500);
+    return
+  }
   var token=++previousAiStatsJob;previousAiStats.loading=true;previousAiStats.error='';render();
   edgeFetchJson('https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='+encodeURIComponent(targetDate)+'&details=0&t='+Date.now(),9000)
     .then(function(body){
@@ -2081,7 +2087,8 @@ function schedulePreviousAiStats(){
           .catch(function(){results[idx].loadError=true})
           .then(worker)
       }
-      for(var i=0;i<Math.min(4,rows.length);i++)workers.push(worker());
+      // Keep yesterday's audit strictly low priority: one request at a time.
+      if(rows.length)workers.push(worker());
       return Promise.all(workers).then(function(){return results})
     })
     .then(function(results){
@@ -2955,6 +2962,11 @@ function diagnosisCurrent(r){
 }
 function openRace(id,keepStack,skipHistory,preservePanel){
   if(!id)return;
+  if(previousAiStats.loading){
+    ++previousAiStatsJob;
+    previousAiStats.loading=false;
+    previousAiStats.done=false;
+  }
   if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}
   state.oddsBusy=false;
   if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}
@@ -3228,7 +3240,6 @@ function load(force){
   }
 
   setTimeout(scheduleDailyAiStats,900);
-  setTimeout(schedulePreviousAiStats,1100);
   function startDetails(){if(detailsStarted)return;detailsStarted=true;setTimeout(function(){requestDetails(0)},80)}
   // If summaries were already painted from cache, allow selection preload after first paint.
   setTimeout(function(){if(state.races.length)startDetails()},450);
