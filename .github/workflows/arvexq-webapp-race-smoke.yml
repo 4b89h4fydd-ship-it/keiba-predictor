@@ -99,6 +99,61 @@ jobs:
         run: |
           npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium webkit
+      - name: Production top red alert and circuit-count navigation
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const {chromium,webkit,devices}=require('playwright');
+          const app=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+          const css=fs.readFileSync('arvexq/ui/static/styles.css','utf8');
+          ['function homePickCounts(kind)','function homePickAlert(counts)','homePickAlert(selectedCounts)','homePickAlert(specialCounts)','class="arv-pick-count"'].forEach(term=>assert.ok(app.includes(term),'missing '+term));
+          assert.ok(css.includes('.arv-home-hub-btn .arv-home-alert'));
+          const base='https://kraizweb1.4b89h4fydd.workers.dev';
+          async function check(type,name){
+            const browser=await type.launch({headless:true});
+            try{
+              const page=await browser.newPage({...devices['iPhone 15 Pro'],locale:'ja-JP'});
+              const failures=[];
+              page.on('pageerror',e=>failures.push(String(e)));
+              const root=base+'/?home-check='+Date.now()+'-'+name;
+              await page.goto(root,{waitUntil:'domcontentloaded',timeout:45000});
+              const homes=page.locator('button[data-home-page="selected"],button[data-home-page="special"]');
+              await homes.first().waitFor({state:'visible',timeout:45000});
+              assert.equal(await homes.count(),2,'top buttons missing');
+              for(const kind of ['selected','special']){
+                await page.goto(root+'&kind='+kind,{waitUntil:'domcontentloaded',timeout:45000});
+                const trigger=page.locator('button[data-home-page="'+kind+'"]');
+                await trigger.waitFor({state:'visible',timeout:45000});
+                const markers=trigger.locator('.arv-home-alert');
+                assert.ok((await markers.count())<=1,'duplicate red alert');
+                if(await markers.count()){
+                  assert.equal((await markers.innerText()).trim(),'!');
+                  assert.ok((await markers.evaluate(el=>getComputedStyle(el).color)).includes('255'),'alert not red');
+                }
+                await trigger.click();
+                await page.locator('.arv-pick-circuit-page').waitFor({state:'visible',timeout:20000});
+                const circuits=page.locator('button.arv-pick-circuit-btn');
+                const count=await circuits.count();
+                assert.ok(count===0||count===2,'expected both central/local choices or loading');
+                if(count===2){
+                  assert.deepEqual(await circuits.locator('b').allInnerTexts(),['中央','地方']);
+                  const totals=await circuits.locator('em.arv-pick-count').allInnerTexts();
+                  assert.equal(totals.length,2,'missing counts');
+                  totals.forEach(t=>assert.ok(/^\d+件$/.test(t),'invalid count '+t));
+                  await circuits.first().click();
+                  await page.locator('.arv-direct-picks').waitFor({state:'visible',timeout:20000});
+                }
+                console.log('HOME_PICK_'+kind.toUpperCase()+'_PASS '+name+' circuits='+count);
+              }
+              const fatal=failures.filter(e=>/Cannot read properties of undefined|ReferenceError|SyntaxError/i.test(e));
+              assert.equal(fatal.length,0,'runtime errors: '+fatal.join('; '));
+              await page.close();
+            } finally {await browser.close()}
+          }
+          (async()=>{await check(chromium,'chromium');await check(webkit,'webkit')})().catch(e=>{console.error(e);process.exit(1)});
+          NODE
       - name: Offline race detail resilience
         run: node scripts/arvexq_detail_resilience_smoke.js
       - name: Verify Cloudflare Worker production v329
