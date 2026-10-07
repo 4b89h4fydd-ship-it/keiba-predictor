@@ -2727,3 +2727,10 @@ details.smart-fixed-picks[open]>.smart-fixed-picks-head .smart-fixed-summary-rig
 .smart-special-picks .special-fold-icon{display:inline-block;font-style:normal;font-size:20px;line-height:1;transform:rotate(90deg);transition:transform .15s ease}
 .smart-special-picks:not([open]) .special-fold-icon{transform:rotate(0deg)}
 .smart-special-picks:not([open]) .smart-fixed-pick-grid{display:none!important}
+
+/* Race detail only: preserve the title across two lines without touching start time. */
+.smart-race-page .smart-race-title-stack{flex:1;min-width:0!important}
+.smart-race-page .smart-race-title-stack h1{white-space:normal!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;text-overflow:clip!important;overflow-wrap:anywhere!important;line-height:1.2!important;margin:0!important}
+.smart-race-page .smart-race-result-side{flex-shrink:0!important}
+
+.smart-race-page .smart-race-full-title{display:block!important;width:100%;margin-bottom:5px!important}

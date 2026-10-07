@@ -99,6 +99,8 @@ jobs:
         run: |
           npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium webkit
+      - name: Offline race detail resilience
+        run: node scripts/arvexq_detail_resilience_smoke.js
       - name: Verify Cloudflare Worker production v329
         shell: bash
         run: |
