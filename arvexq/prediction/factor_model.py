@@ -5,7 +5,7 @@ from typing import Any, Iterable
 
 from arvexq.core.runner_status import is_inactive_runner
 
-MODEL_VERSION = "arvexq-four-pillar-consensus-v4"
+MODEL_VERSION = "arvexq-four-pillar-consensus-v5"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
 
 # Correlated measurements from the same underlying observation are collapsed first.
@@ -13,7 +13,9 @@ PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
 # it produced peak/median, career/recent and win/top3 statistics at the same time.
 SIGNAL_FAMILIES = {
     "ability": (
-        ("ability_speed_peak", "ability_speed_median"),
+        # Direct published speed indices and derived metres/second are different
+        # scales. Keep them in one correlated family but never mix their raw values.
+        ("ability_speed_index_peak", "ability_speed_index_median", "ability_clock_speed_peak", "ability_clock_speed_median"),
         ("ability_peak_finish",),
         ("ability_sectional",),
         ("ability_true_run",),
@@ -88,10 +90,17 @@ def _finish_quality(run: dict[str, Any]) -> float | None:
     return max(0.0, min(1.0, 1.0 - (finish - 1.0) / (field - 1.0)))
 
 
-def _speed_raw(run: dict[str, Any]) -> float | None:
-    direct = _f(run.get("speedIndex"))
-    if direct is not None:
-        return direct
+def _speed_index(run: dict[str, Any]) -> float | None:
+    """Published/normalised speed index only. Never mix with raw m/s."""
+    return _f(run.get("speedIndex"))
+
+
+def _clock_speed(run: dict[str, Any]) -> float | None:
+    """Derived average metres/second only.
+
+    This is intentionally separate from speedIndex because their numerical scales
+    are incompatible (e.g. index 80-100 vs roughly 15-19 m/s).
+    """
     seconds = _f(run.get("timeSeconds"))
     distance = _f(run.get("distance"))
     if seconds and seconds > 0 and distance and distance > 0:
@@ -139,8 +148,10 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
     qualities = [_finish_quality(r) for r in runs]
     valid_q = [q for q in qualities if q is not None]
     recent_q = [q for q in qualities[:5] if q is not None]
-    speeds = [_speed_raw(r) for r in runs]
-    valid_speeds = [s for s in speeds if s is not None]
+    speed_indices = [_speed_index(r) for r in runs]
+    valid_speed_indices = [v for v in speed_indices if v is not None]
+    clock_speeds = [_clock_speed(r) for r in runs]
+    valid_clock_speeds = [v for v in clock_speeds if v is not None]
 
     wins = top3 = completed = 0
     levels: list[float] = []
@@ -190,8 +201,10 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
         class_edge = (sum(prizes) / len(prizes)) / current_prize
 
     return {
-        "ability_speed_peak": max(valid_speeds) if valid_speeds else None,
-        "ability_speed_median": median(valid_speeds) if valid_speeds else None,
+        "ability_speed_index_peak": max(valid_speed_indices) if valid_speed_indices else None,
+        "ability_speed_index_median": median(valid_speed_indices) if valid_speed_indices else None,
+        "ability_clock_speed_peak": max(valid_clock_speeds) if valid_clock_speeds else None,
+        "ability_clock_speed_median": median(valid_clock_speeds) if valid_clock_speeds else None,
         "ability_peak_finish": max(valid_q) if valid_q else None,
         "ability_sectional": _first(_unit(audit.get("sectional")), _component(horse, "lapScore")),
         "ability_true_run": _unit(audit.get("trueRun")),
@@ -322,6 +335,10 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
         row["primaryPillarCoverage"] = sum(counts[p] > 0 for p in PRIMARY_PILLARS)
         for pillar in (*PRIMARY_PILLARS, "support"):
             row[pillar] = scores[pillar]
+        # Ability + actual record form the foundation. Suitability and pace may
+        # separate otherwise similar horses, but weak support metadata must not
+        # overturn a tie between proven strength and setup alone.
+        row["foundationStrength"] = _pillar([scores.get("ability"), scores.get("record")])
 
     # If the new model has no primary evidence at all, do not manufacture a ranking.
     # The caller can keep the existing prediction or flag the race as data-insufficient.
@@ -329,12 +346,15 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
         return []
 
     pillar_ranks = {pillar: _rank_map(rows, pillar) for pillar in (*PRIMARY_PILLARS, "support")}
+    foundation_ranks = _rank_map(rows, "foundationStrength")
     for row in rows:
         row["pillarRanks"] = {pillar: pillar_ranks[pillar][id(row)] for pillar in pillar_ranks}
+        row["foundationRank"] = foundation_ranks[id(row)]
         row["primaryRankSum"] = sum(row["pillarRanks"][p] for p in PRIMARY_PILLARS)
         row["pairwiseWins"] = 0
         row["pairwiseLosses"] = 0
         row["pairwiseTies"] = 0
+        row["foundationTieBreakWins"] = 0
         row["supportTieBreakWins"] = 0
 
     for i in range(len(rows)):
@@ -359,21 +379,31 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
                 b["pairwiseWins"] += 1
                 a["pairwiseLosses"] += 1
             else:
-                sa, sb = a["support"], b["support"]
-                # Support is a tie-break only when primary evidence was actually compared.
-                if compared > 0 and sa is not None and sb is not None and sa != sb:
-                    winner, loser = (a, b) if sa > sb else (b, a)
+                # A 2-2 primary split means ability+record can be opposed by
+                # suitability+pace. Resolve that first with baseline strength,
+                # not pedigree/draw/connections/support noise.
+                fa, fb = a.get("foundationStrength"), b.get("foundationStrength")
+                if compared > 0 and fa is not None and fb is not None and fa != fb:
+                    winner, loser = (a, b) if fa > fb else (b, a)
                     winner["pairwiseWins"] += 1
                     loser["pairwiseLosses"] += 1
-                    winner["supportTieBreakWins"] += 1
+                    winner["foundationTieBreakWins"] += 1
                 else:
-                    a["pairwiseTies"] += 1
-                    b["pairwiseTies"] += 1
+                    sa, sb = a["support"], b["support"]
+                    if compared > 0 and sa is not None and sb is not None and sa != sb:
+                        winner, loser = (a, b) if sa > sb else (b, a)
+                        winner["pairwiseWins"] += 1
+                        loser["pairwiseLosses"] += 1
+                        winner["supportTieBreakWins"] += 1
+                    else:
+                        a["pairwiseTies"] += 1
+                        b["pairwiseTies"] += 1
 
     rows.sort(
         key=lambda r: (
             -r["pairwiseWins"],
             r["pairwiseLosses"],
+            r["foundationRank"],
             -r["primaryPillarCoverage"],
             r["primaryRankSum"],
             r["pillarRanks"]["support"],
