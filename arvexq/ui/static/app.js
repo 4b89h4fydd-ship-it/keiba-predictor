@@ -1721,7 +1721,12 @@ function minimalRacecardPanel(r){
   return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2><div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'+
       (r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
         var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),odds=(h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0)?((Math.round(n(h.winOdds)*10)/10).toFixed(1)):'取得中',pop=n(h.popularity)>0?n(h.popularity)+'人気':'更新中',bw=(h.bodyWeight!=null&&h.bodyWeight!==''&&n(h.bodyWeight)>0)?String(h.bodyWeight)+'kg':'計量待ち',cw=(h.carriedWeight!=null&&h.carriedWeight!=='')?String(h.carriedWeight).replace(/\.0$/,'')+'kg':'—';
-        return '<div class="racecard-row rc-racecard-4box"><span class="rc-mark-box rc-ai-mark">—</span><span class="rc-check-box"></span><button type="button" class="rc-horse-main" data-horse-open="'+esc(h.horseNumber)+'"><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span><span class="rc-horse-name">'+esc(horseDisplayName(r,h))+'</span><small class="rc-bodyweight '+(bw==='計量待ち'?'pending':'')+'">'+esc(bw)+'</small><span class="rc-sexage">'+esc((h.sex||'—')+(h.age||'—'))+'</span><span class="jockey">'+esc(h.jockey||'騎手取得中')+'</span><span class="carry">'+esc(cw)+'</span></button><span class="rc-odds"><span class="odd '+(n(h.winOdds)>0&&n(h.winOdds)<10?'single':'')+'">'+esc(odds)+'</span><span class="pop">'+esc(pop)+'</span></span></div>'
+        return '<div class="racecard-row rc-racecard-v336">'
+          +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark">—</span></div>'
+          +'<button type="button" class="rc-v336-number" data-horse-open="'+esc(h.horseNumber)+'"><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span></button>'
+          +'<div class="rc-v336-info"><button type="button" class="rc-horse-main" data-horse-open="'+esc(h.horseNumber)+'"><span class="rc-horse-name">'+esc(horseDisplayName(r,h))+'</span><span class="rc-v336-meta"><span class="rc-sexage">'+esc((h.sex||'—')+(h.age||'—'))+'</span><span class="jockey">'+esc(h.jockey||'騎手取得中')+'</span><span class="carry">'+esc(cw)+'</span><small class="rc-bodyweight '+(bw==='計量待ち'?'pending':'')+'">'+esc(bw)+'</small></span></button></div>'
+          +'<div class="rc-v336-odds rc-odds"><span class="odd '+(n(h.winOdds)>0&&n(h.winOdds)<10?'single':'')+'">'+esc(odds)+'</span><span class="pop">'+esc(pop)+'</span></div>'
+        +'</div>'
       }).join('')+
       '</div></section></div>'
 }
@@ -3422,19 +3427,19 @@ function runnerStyleSection(r,p){
     +'<div class="racecard-table">'
     +(r.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
       var scratch=isScratchHorse(h),x=(p.rows||[]).find(function(z){return n(z.horse.horseNumber)===n(h.horseNumber)});
-      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,st=String(h.status||(h.scratched||h.withdrawn?'出走取消':'欠場'));
-      return '<div class="racecard-row rc-racecard-4box'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-        +'<span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</span>'
-        +'<span class="rc-check-box"><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span></span>'
-        +'<button type="button" class="rc-horse-main" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く">'
-          +'<span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span>'
-          +'<span class="rc-horse-name">'+esc(horseDisplayName(r,h))+'</span>'
-          +(scratch?'<small class="rc-bodyweight rc-scratch">'+esc(st)+'</small>':'<small class="rc-bodyweight '+(bw?'':'pending')+'">'+(bw?esc(bw):(refbw?('前走 '+esc(refbw)+'kg'):'計量待ち'))+'</small>')
-          +'<span class="rc-sexage">'+esc(h.sex||'—')+esc(h.age||'—')+'</span>'
-          +'<span class="jockey">'+esc(h.jockey||'—')+'</span>'
-          +'<span class="carry">'+esc(carriedWeightText(h))+'</span>'
-        +'</button>'
-        +'<span class="rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</span>'
+      var fr=clamp(n(h.frameNumber,h.horseNumber),1,8),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,st=String(h.status||(h.scratched||h.withdrawn?'出走取消':'欠場')),
+          body=scratch?st:(bw?bw:(refbw?('前走 '+refbw+'kg'):'計量待ち'));
+      return '<div class="racecard-row rc-racecard-v336'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
+        +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</span></div>'
+        +'<button type="button" class="rc-v336-number" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く"><span class="rc-number frame'+fr+'">'+esc(h.horseNumber)+'</span></button>'
+        +'<div class="rc-v336-info">'
+          +'<button type="button" class="rc-horse-main" data-horse-open="'+esc(h.horseNumber)+'" aria-label="'+esc(horseDisplayName(r,h))+'の詳細を開く">'
+            +'<span class="rc-horse-name">'+esc(horseDisplayName(r,h))+'</span>'
+            +'<span class="rc-v336-meta"><span class="rc-sexage">'+esc(h.sex||'—')+esc(h.age||'—')+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span><span class="carry">'+esc(carriedWeightText(h))+'</span><small class="rc-bodyweight '+(scratch?'rc-scratch':(bw?'':'pending'))+'">'+esc(body)+'</small></span>'
+          +'</button>'
+          +'<span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'" aria-label="チェック">'+horseCheckGlyph(r,h.horseNumber)+'</span>'
+        +'</div>'
+        +'<div class="rc-v336-odds rc-odds" data-odds-no="'+esc(h.horseNumber)+'">'+oddsCells(h)+'</div>'
         +'</div>'
     }).join('')
     +'</div></section>'
