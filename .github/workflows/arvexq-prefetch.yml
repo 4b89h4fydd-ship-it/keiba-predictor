@@ -17,6 +17,9 @@ name: ARVEXQ Full Prefetch
       - scripts/arvexq_select_prefetch_repairs.py
       - scripts/arvexq_sqlite_health.py
       - arvexq/pipeline/fingerprints.py
+      - arvexq/prediction/**
+      - arvexq/ingest/**
+      - arvexq/databanks/**
       - .github/workflows/arvexq-prefetch.yml
   schedule:
     # Early discovery plus periodic refreshes while JRA/NAR cards/results change.
