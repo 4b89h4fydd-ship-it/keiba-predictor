@@ -29,7 +29,21 @@ function retry(){state.loading=false;load(true)}
 function injectStyle(){if(document.getElementById("arvexq-previous-ai-style"))return;var st=document.createElement("style");st.id="arvexq-previous-ai-style";st.textContent='.arv-prev-shell{margin:12px 0;border:1px solid rgba(96,165,250,.20);border-radius:16px;background:linear-gradient(180deg,rgba(15,23,42,.96),rgba(8,15,29,.98));overflow:hidden}.arv-prev-head,.arv-prev-venue-head{width:100%;border:0;background:transparent;color:#e5eefc;display:flex;align-items:center;gap:10px;text-align:left}.arv-prev-head{padding:14px 15px}.arv-prev-head.static{display:flex}.arv-prev-head>span:first-child,.arv-prev-venue-head>span:first-child{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.arv-prev-head b,.arv-prev-venue-head b{font-size:14px}.arv-prev-head small,.arv-prev-venue-head small,.arv-prev-section-title small{font-size:11px;color:#8ca0bd}.arv-prev-head-score{font-weight:900;font-size:13px;color:#9ec5ff}.arv-prev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:0 12px 12px}.arv-prev-grid>div{padding:10px 7px;border-radius:11px;background:rgba(30,41,59,.72);display:flex;flex-direction:column;align-items:center}.arv-prev-grid small{font-size:10px;color:#9fb0c8}.arv-prev-grid strong{font-size:18px}.arv-prev-grid em{font-size:10px;color:#94a3b8;font-style:normal}.arv-prev-section-title{padding:10px 14px 7px;border-top:1px solid rgba(148,163,184,.12);display:flex;justify-content:space-between;gap:8px;align-items:end}.arv-prev-section-title b{font-size:13px}.arv-prev-venue{border-top:1px solid rgba(148,163,184,.10)}.arv-prev-venue-head{padding:12px 14px}.arv-prev-venue-rate{font-size:11px;color:#c8d6ea}.arv-prev-race-list{padding:0 10px 10px}.arv-prev-race{padding:9px 10px;border-radius:10px;background:rgba(15,23,42,.72);margin-top:6px}.arv-prev-race.hit{box-shadow:inset 3px 0 0 rgba(74,222,128,.8)}.arv-prev-race.partial{box-shadow:inset 3px 0 0 rgba(250,204,21,.75)}.arv-prev-race.miss{box-shadow:inset 3px 0 0 rgba(148,163,184,.4)}.arv-prev-race-main,.arv-prev-race-sub{display:flex;gap:8px;align-items:center}.arv-prev-race-main b{min-width:28px}.arv-prev-race-main span{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.arv-prev-race-sub{margin-top:5px;flex-wrap:wrap;font-size:10px;color:#9fb0c8}.arv-prev-race-sub strong{margin-left:auto;color:#dbeafe}.arv-prev-retry{margin:10px 12px 13px;width:calc(100% - 24px);padding:10px;border-radius:10px;border:1px solid rgba(96,165,250,.3);background:rgba(30,64,175,.16);color:#dbeafe;font-weight:800}@media(max-width:390px){.arv-prev-grid{gap:5px}.arv-prev-grid small{font-size:9px}.arv-prev-head{padding:13px 12px}.arv-prev-venue-rate{font-size:10px}}';document.head.appendChild(st)}
 document.addEventListener("click",function(e){var all=e.target.closest&&e.target.closest("[data-arv-prev-all]");if(all){state.allOpen=!state.allOpen;renderAll();if(!state.loaded&&!state.loading)load(false);return}var venue=e.target.closest&&e.target.closest("[data-arv-prev-venue]");if(venue){var key=venue.getAttribute("data-arv-prev-venue")||"";state.venueOpen[key]=!state.venueOpen[key];renderAll();return}var retryBtn=e.target.closest&&e.target.closest("[data-arv-prev-retry]");if(retryBtn){retry();return}},true);
 injectStyle();
-var mo=new MutationObserver(function(){renderAll();if(!state.started&&document.querySelector("#arvexq-previous-ai-stats")){state.started=true;setTimeout(function(){load(false)},1200)}});mo.observe(document.documentElement,{subtree:true,childList:true});
-renderAll();
-if(document.querySelector("#arvexq-previous-ai-stats")){state.started=true;setTimeout(function(){load(false)},1200)}
+function mountPreviousAi(){
+  var root=document.querySelector("#arvexq-previous-ai-stats");
+  if(!root)return;
+  renderInto(root);
+  if(!state.started){
+    state.started=true;
+    setTimeout(function(){load(false)},1200)
+  }
+}
+var host=document.getElementById("app");
+if(host){
+  var mo=new MutationObserver(function(){mountPreviousAi()});
+  // Watch only direct app view replacements. Do not observe this module's own
+  // nested rendering; that caused a self-triggering MutationObserver loop.
+  mo.observe(host,{childList:true})
+}
+mountPreviousAi();
 })();
