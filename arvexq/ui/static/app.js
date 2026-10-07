@@ -2553,13 +2553,16 @@ function allTodayRacesFinished(){
   return rows.length>0&&rows.every(function(r){return isFinal(r)})
 }
 function smartHomeHub(){
-  var hasCentral=state.races.some(function(x){return x.circuit==='中央'}),hasLocal=state.races.some(function(x){return x.circuit==='地方'}),finished=allTodayRacesFinished(),circuits='';
+  var hasCentral=state.races.some(function(x){return x.circuit==='中央'}),hasLocal=state.races.some(function(x){return x.circuit==='地方'}),finished=allTodayRacesFinished(),circuits='',middle='';
   if(hasCentral)circuits+='<button type="button" class="arv-home-hub-btn" data-home-page="central"><b>中央</b><span>開催場 ›</span></button>';
   if(hasLocal)circuits+='<button type="button" class="arv-home-hub-btn" data-home-page="local"><b>地方</b><span>開催場 ›</span></button>';
   if(!circuits)circuits='<div class="arv-home-hub-loading">開催情報を取得中</div>';
+  middle=finished
+    ?'<div class="arv-home-hub-row single"><button type="button" class="arv-home-hub-btn primary" data-home-page="ai-stats"><b>本日のAI成績</b><span>開催場ごとの成績 ›</span></button></div>'
+    :smartLiveRaceSection();
   return '<section class="arv-home-hub">'+
     '<div class="arv-home-hub-row circuits '+(!hasCentral&&hasLocal?'single':'')+'">'+circuits+'</div>'+
-    '<div class="arv-home-hub-row single"><button type="button" class="arv-home-hub-btn primary" data-home-page="'+(finished?'ai-stats':'realtime')+'"><b>'+(finished?'本日のAI成績':'リアルタイム')+'</b><span>'+(finished?'開催場ごとの成績 ›':'各会場 ›')+'</span></button></div>'+
+    middle+
     '<div class="arv-home-hub-row"><button type="button" class="arv-home-hub-btn" data-home-page="selected"><b>厳選レース</b><span>›</span></button><button type="button" class="arv-home-hub-btn" data-home-page="special"><b>特別予想</b><span>›</span></button></div>'+
   '</section>'
 }
@@ -3212,11 +3215,11 @@ function updatePullRefreshIndicator(){
   el.className='arv-pull-refresh visible'+(pullRefresh.ready?' ready':'');
   el.style.setProperty('--pull-y',y+'px');
   var label=el.querySelector('b');
-  if(label)label.textContent=pullRefresh.ready?'離して更新':(pullRefresh.distance>=82?(elapsed<1000?'そのまま少しキープ':'離して更新'):'下に引いて更新')
+  if(label)label.textContent=pullRefresh.ready?'離して更新':'下に引いて更新'
 }
 function finishPullRefresh(){
   if(!pullRefresh.refreshing)return;
-  pullRefresh.refreshing=false;pullRefresh.tracking=false;pullRefresh.ready=false;pullRefresh.distance=0;
+  pullRefresh.refreshing=false;pullRefresh.tracking=false;pullRefresh.ready=false;pullRefresh.distance=0;pullRefresh.hideTimer=null;
   updatePullRefreshIndicator()
 }
 function startPullRefresh(){
@@ -3225,7 +3228,7 @@ function startPullRefresh(){
   updatePullRefreshIndicator();
   try{reloadCurrent()}catch(e){}
   if(pullRefresh.hideTimer)clearTimeout(pullRefresh.hideTimer);
-  pullRefresh.hideTimer=setTimeout(finishPullRefresh,2500)
+  pullRefresh.hideTimer=setTimeout(finishPullRefresh,1200)
 }
 function installPullRefresh(){
   var active=null;
@@ -3243,7 +3246,7 @@ function installPullRefresh(){
     var dy=t.clientY-active.y,dx=Math.abs(t.clientX-active.x);
     if(dy<=0||dx>Math.max(24,dy*.75)){pullRefresh.tracking=false;active=null;updatePullRefreshIndicator();return}
     pullRefresh.distance=dy;
-    pullRefresh.ready=dy>=82&&(Date.now()-active.time)>=1000;
+    pullRefresh.ready=dy>=72;
     if(dy>8&&e.cancelable)e.preventDefault();
     updatePullRefreshIndicator()
   },{passive:false});
@@ -3256,8 +3259,6 @@ function installPullRefresh(){
   document.addEventListener('touchcancel',function(){active=null;pullRefresh.tracking=false;pullRefresh.ready=false;pullRefresh.distance=0;updatePullRefreshIndicator()},{passive:true})
 }
 function reloadCurrent(){
-  if(state.loading)return;
-
   if(state.race&&state.race.id){
     openRace(state.race.id,true,true,true);return
   }
