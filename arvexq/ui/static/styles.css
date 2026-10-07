@@ -4401,3 +4401,34 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
   .rc-racecard-v339 .rc-v336-meta>*{font-size:9.5px!important}
   .rc-racecard-v339 .rc-v339-weight b{font-size:12px!important}
 }
+
+
+/* v336 — top-only red alerts and per-circuit pick counts */
+.arv-home-hub-btn .arv-home-end{
+  display:inline-flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto;
+  color:#9ebbd2;font-size:13px;line-height:1
+}
+.arv-home-hub-btn .arv-home-end i{
+  font-style:normal;font-size:18px;font-weight:600;color:#9ebbd2
+}
+.arv-home-hub-btn .arv-home-alert{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:20px!important;height:20px!important;min-width:20px!important;
+  padding:0!important;border-radius:50%!important;
+  border:1px solid rgba(255,192,192,.8)!important;background:#cf2335!important;
+  color:#fff!important;font-size:15px!important;font-weight:950!important;
+  box-shadow:0 0 11px rgba(230,41,64,.42);
+  line-height:1!important
+}
+.arv-pick-circuit-btn .arv-pick-count{
+  display:block;margin-top:2px;font-size:19px;font-weight:950;
+  color:#e2f8ff;font-style:normal;line-height:1.25
+}
+.arv-pick-circuit-btn .arv-pick-count-pending{
+  color:#a1b7c2;font-size:10px;font-weight:800
+}
+@media(max-width:390px){
+  .arv-home-hub-btn .arv-home-end{gap:5px}
+  .arv-home-hub-btn .arv-home-alert{width:19px!important;height:19px!important;min-width:19px!important}
+  .arv-pick-circuit-btn .arv-pick-count{font-size:17px}
+}
