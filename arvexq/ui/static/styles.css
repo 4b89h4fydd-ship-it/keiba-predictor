@@ -2735,3 +2735,15 @@ details.smart-fixed-picks[open]>.smart-fixed-picks-head .smart-fixed-summary-rig
 
 .smart-race-page .smart-race-full-title{display:block!important;width:100%;margin-bottom:5px!important}
 .smart-shell>.horse-modal-layer{z-index:300!important}
+
+/* v330 compact home hub */
+.arv-home-hub{display:grid;gap:8px;margin:8px 0 14px}
+.arv-home-hub-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.arv-home-hub-row.single,.arv-home-hub-row.circuits.single{grid-template-columns:1fr}
+.arv-home-hub-btn{appearance:none;-webkit-appearance:none;min-height:54px;border:1px solid rgba(96,165,250,.18);border-radius:13px;background:linear-gradient(180deg,rgba(13,28,54,.96),rgba(7,17,35,.98));color:#eef6ff;padding:9px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;box-shadow:0 7px 20px rgba(0,0,0,.13)}
+.arv-home-hub-btn b{font-size:14px;letter-spacing:.02em}.arv-home-hub-btn span{font-size:9px;color:#8fa9c8;white-space:nowrap}
+.arv-home-hub-btn.primary{min-height:49px;border-color:rgba(68,180,255,.30);box-shadow:inset 0 0 18px rgba(24,112,214,.08),0 7px 20px rgba(0,0,0,.13)}
+.arv-home-hub-loading{grid-column:1/-1;padding:12px;border-radius:12px;border:1px solid rgba(96,165,250,.14);color:#8fa9c8;font-size:11px;text-align:center}
+.smart-home-subpage{padding-top:12px}.smart-home-subpage .smart-fixed-picks,.smart-home-subpage .smart-live-section{margin-top:0}
+.arv-ai-venues{margin-top:10px}.arv-ai-venue-card{appearance:none;-webkit-appearance:none;width:100%;border:1px solid rgba(96,165,250,.16);border-radius:12px;background:rgba(10,23,44,.96);color:#eef6ff;padding:11px 12px;margin-top:7px;display:grid;grid-template-columns:minmax(0,1fr) auto 14px;gap:8px;align-items:center;text-align:left}.arv-ai-venue-card span{display:flex;flex-direction:column;min-width:0}.arv-ai-venue-card small{font-size:9px;color:#8299b8}.arv-ai-venue-card b{font-size:14px}.arv-ai-venue-card em{font-size:10px;color:#a9bed8;font-style:normal}.arv-ai-venue-card strong{font-size:18px;font-weight:400}
+@media(max-width:390px){.arv-home-hub{gap:6px}.arv-home-hub-row{gap:6px}.arv-home-hub-btn{min-height:49px;padding:8px 9px}.arv-home-hub-btn b{font-size:13px}.arv-home-hub-btn span{font-size:8px}}
