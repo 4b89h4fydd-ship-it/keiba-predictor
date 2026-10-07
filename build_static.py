@@ -176,6 +176,13 @@ for name in ("manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifes
 for legacy_sw in ("v328", "v327", "v326", "v325", "v324", "v323", "v322", "v321", "v320", "v319", "v318"):
     (DIST / f"sw-{legacy_sw}-reset.js").write_text(sw, encoding="utf-8")
 
+# Independent UI feature modules kept outside the main app bundle.
+for extra_asset in ("previous_ai_results.js",):
+    src = STATIC / extra_asset
+    if not src.is_file():
+        raise RuntimeError(f"extra UI asset not found: {src}")
+    shutil.copy2(src, DIST / extra_asset)
+
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
 model_version = strings.get("AI_EVALUATION_VERSION", "").removeprefix("evidence-")
 (DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"four-pillar-authoritative","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
@@ -208,6 +215,7 @@ headers=[
     f"/app-{BUILD_VERSION}.js","  Cache-Control: no-cache, must-revalidate",
     f"/arvexq-app-{BUILD_VERSION}.js","  Cache-Control: no-cache, must-revalidate",
     f"/styles-arvexq-{BUILD_VERSION}.css","  Cache-Control: no-cache, must-revalidate",
+    "/previous_ai_results.js","  Cache-Control: no-cache, must-revalidate",
     "/arvexq-racing-hero.webp","  Cache-Control: public, max-age=604800",
     "/arvexq-racing-detail.webp","  Cache-Control: public, max-age=604800",
     "/hero-horse.webp","  Cache-Control: public, max-age=604800",

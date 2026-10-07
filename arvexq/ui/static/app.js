@@ -2526,7 +2526,7 @@ function renderHome(){
       smartPageControls()+
       smartSelectedRaces()+
       smartSpecialForecastRaces()+
-      smartPreviousAiStats()+
+      '<div id="arvexq-previous-ai-stats"></div>'+ 
       smartDailyAiStats()+
       (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
       smartLiveRaceSection()+
@@ -2852,7 +2852,7 @@ function renderRaceLoading(){
     (row?smartRaceTopBar(row):smartTopBar(true,state.track||'レース','レース詳細'))+
     '<main class="smart-main smart-race-page">'+
       (row?smartRaceHead(row):'')+
-      '<div class="smart-loading"><span class="smart-loading-dot"></span><b>'+(state.error?'レース詳細の同期待ち':'レース詳細を読み込み中')+'</b><small>'+(state.error?esc(state.error):'選択したレースだけ取得しています。開催場一覧は先に表示します。')+'</small>'+(state.error&&row?'<button type="button" class="smart-refresh" data-race="'+esc(row.id)+'">再試行</button>':'')+'</div>'+
+      '<div class="smart-loading"><span class="smart-loading-dot"></span><b>'+(state.error?'取得済み情報を維持して再取得中':'レース情報を読み込み中')+'</b><small>'+(state.error?'通信が不安定でも画面は閉じません。取得できた情報から表示を続けます。':'選択したレースだけ取得しています。開催場一覧は先に表示します。')+'</small>'+(state.error&&row?'<button type="button" class="smart-refresh" data-race="'+esc(row.id)+'">再取得</button>':'')+'</div>'+
     '</main>'+cinematicFooter()+
   '</div>'
 }
@@ -3146,7 +3146,33 @@ function refreshRaceAfterCollect(id,attempt){reloadCurrent()}
 function collectRaceInfo(no){reloadCurrent()}
 function stopTimer(){if(state.timer){clearTimeout(state.timer);state.timer=null}if(state.anim){cancelAnimationFrame(state.anim);state.anim=null}state.simRunning=false}
 function drawPaceStage(idx){if(!state.race||!state.pred)return;var plan=activeScenarioPlan(state.pred);if(!plan||!plan.stages)return;var stages=visiblePaceStages(plan),st=stages[clamp(idx,0,stages.length-1)],r=state.race,board=document.getElementById('pace-board');if(!st||!board)return;state.paceStage=clamp(idx,0,stages.length-1);var order=[],i,z,chip,left,top,rank,rowIdx;for(i=0;i<st.pack.length;i++){z=st.pack[i];rank=i;rowIdx=rank%4;chip=board.querySelector('[data-horse="'+z.no+'"]');if(!chip)continue;left=clamp(90-rank*5.9-n(z.gap)*58,8,92);top=clamp(16+rowIdx*20+n(z.lane)*2.4,12,88);chip.style.left=left+'%';chip.style.top=top+'%';order.push(z.no)}var label=st.key==='turn3'?'3C':(st.key==='turn4'?'4C':st.label),ob=document.getElementById('course-order');if(ob)ob.innerHTML='<b>'+esc(label)+'</b><span>'+order.map(function(no){var h=horseByNo(r,no);return esc(no)+(h?' '+esc(h.name):'')}).join(' → ')+'</span>';var ev=document.getElementById('pace-event');if(ev)ev.innerHTML=stageNarrative(state.pred,idx);var bs=document.querySelectorAll('[data-pace-stage]');for(i=0;i<bs.length;i++)bs[i].className=n(bs[i].getAttribute('data-pace-stage'))===idx?'active':''}
-function render(){var savedY=window.scrollY;syncLocation();stopTimer();try{var view=state.raceLoading?renderRaceLoading():(state.race?renderRace():(state.picker?renderPicker():(state.track?renderVenue():renderHome())));app.innerHTML=view+smartTodayReturn();syncLiveCenterOverlay();bind();if(entryDataAvailable(state.race)&&state.race._prediction){initPaceBoard();scheduleResultRefresh();ensureAutoOdds(state.race);scheduleRaceBiasRefresh(700)}else if(state.track&&!state.picker){scheduleVenueTrendRefresh(350)}window.scrollTo(0,savedY)}catch(e){app.innerHTML='<div class="notice" style="margin:20px">表示エラー：'+esc(e&&e.message||e)+'<br><button onclick="location.reload()">再読み込み</button></div>'}}
+function render(){
+  var savedY=window.scrollY;
+  syncLocation();stopTimer();
+  try{
+    var view=state.raceLoading?renderRaceLoading():(state.race?renderRace():(state.picker?renderPicker():(state.track?renderVenue():renderHome())));
+    app.innerHTML=view+smartTodayReturn();
+    arvexqBootPainted=true;
+    syncLiveCenterOverlay();
+    bind();
+    if(entryDataAvailable(state.race)&&state.race._prediction){initPaceBoard();scheduleResultRefresh();ensureAutoOdds(state.race);scheduleRaceBiasRefresh(700)}
+    else if(state.track&&!state.picker){scheduleVenueTrendRefresh(350)}
+    window.scrollTo(0,savedY)
+  }catch(e){
+    try{console.error('ARVEXQ render recovery',e)}catch(_e){}
+    try{
+      if(app){
+        var old=app.querySelector('#arvexq-runtime-recovery');if(old)old.remove();
+        var note=document.createElement('div');note.id='arvexq-runtime-recovery';note.className='diagnosis-refresh-note busy';
+        note.setAttribute('role','status');note.style.margin='8px 12px';
+        note.textContent='一部データを再取得中です。表示できている情報はそのまま維持します。';
+        app.insertBefore(note,app.firstChild);
+        try{bind()}catch(_bindError){}
+        setTimeout(function(){try{if(note&&note.parentNode)note.parentNode.removeChild(note)}catch(_removeError){}},2200)
+      }
+    }catch(_uiError){}
+  }
+}
 function canGoBack(){return !!(state.horseModalNo||state.raceLoading||state.race||state.picker||state.track)}
 function goBack(){
     if(!canGoBack())return;
