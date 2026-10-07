@@ -26,6 +26,7 @@ if str(ROOT) not in sys.path:
 
 import app
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
+from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 
 JST = timezone(timedelta(hours=9))
 
@@ -169,6 +170,23 @@ def _seed_snapshot(detail: dict[str, Any] | None) -> None:
         print("FULL_PREFETCH_SEED_WARN", detail.get("id"), type(exc).__name__, exc)
 
 
+def _supplement_missing(detail: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Search every registered provider before accepting a thin prediction input."""
+    if not isinstance(detail, dict) or not detail.get("id"):
+        return detail
+    if str(os.getenv("ARVEXQ_SUPPLEMENT_MISSING", "1")).strip().lower() in {"0", "false", "off", "no"}:
+        return detail
+    try:
+        return enrich_race_missing_sync(
+            detail,
+            history_limit=5,
+            max_parallel_horses=int(os.getenv("ARVEXQ_SUPPLEMENT_HORSE_WORKERS", "4") or 4),
+        )
+    except Exception as exc:
+        print("FULL_PREFETCH_SUPPLEMENT_WARN", detail.get("id"), type(exc).__name__, exc)
+        return detail
+
+
 def _ensure_analysis(rid: str, current: dict[str, Any] | None) -> tuple[dict[str, Any] | None, str]:
     """Run app.py diagnosis and keep its returned JSON even if SQLite persistence fails."""
     raw_before = _raw_snapshot(rid)
@@ -261,6 +279,7 @@ def prepare(
         raw = _raw_snapshot(rid)
         current = _merge_detail(by_id.get(rid), raw)
         if _card_usable(current):
+            current = _supplement_missing(current)
             return rid, current, ""
         try:
             prepared = app._prepare_race_snapshot(rid, force=True)
@@ -271,7 +290,8 @@ def prepare(
         # If RaceDB save failed, keep the returned prepared card authoritative.
         latest = _merge_detail(current, _raw_snapshot(rid))
         latest = _merge_detail(latest, detail)
-        if latest.get("id"):
+        latest = _supplement_missing(latest)
+        if latest and latest.get("id"):
             return rid, latest, ""
         return rid, None, "no usable snapshot after card preparation"
 
@@ -298,6 +318,7 @@ def prepare(
     analysis_targets = []
     for rid in ids:
         detail = _merge_detail(by_id.get(rid), _raw_snapshot(rid))
+        detail = _supplement_missing(detail)
         if detail:
             by_id[rid] = detail
         if _card_usable(detail):

@@ -53,6 +53,9 @@ jobs:
             arvexq/prediction/honmei_gate.py \
             arvexq/prediction/final_marks.py \
             arvexq/pipeline/fingerprints.py \
+            arvexq/ingest/orchestrator.py \
+            arvexq/ingest/fallback_enrichment.py \
+            arvexq/databanks/legacy_bridge.py \
             scripts/arvexq_prefetch.py \
             scripts/arvexq_live_sync.py \
             scripts/arvexq_result_repair.py \
@@ -150,6 +153,29 @@ jobs:
           assert analysis_input_hash(merged)!=analysis_input_hash(base)
           odds_only=copy.deepcopy(base);odds_only['horses'][0]['winOdds']=99.9
           assert analysis_input_hash(odds_only)==analysis_input_hash(base)
+
+          # Missing evidence must fan out across all providers. A broken source may
+          # not prevent a later source from filling history, and target-day rows
+          # must never leak into pre-race evidence.
+          from arvexq.databanks.registry import DataBankRegistry, DataSource, SourceCapabilities
+          from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
+          reg=DataBankRegistry()
+          def broken_history(horse,race,limit=5):
+              raise RuntimeError('source down')
+          def backup_history(horse,race,limit=5):
+              return {'recentRaces':[
+                  {'date':'2026-09-20','track':'園田','distance':1400,'finish':2,'fieldSize':10},
+                  {'date':'2026-10-04','track':'園田','distance':1400,'finish':1,'fieldSize':10},
+              ]}
+          reg.register(DataSource('broken','NAR',10,SourceCapabilities(horse_history=True),{'horse_history':broken_history}))
+          reg.register(DataSource('backup','NAR',20,SourceCapabilities(horse_history=True),{'horse_history':backup_history}))
+          enriched=enrich_race_missing_sync(copy.deepcopy(base),bank_registry=reg,history_limit=5,max_parallel_horses=2)
+          eruns=enriched['horses'][0]['recentRaces']
+          assert any(r.get('date')=='2026-09-20' for r in eruns)
+          assert not any(r.get('date')>='2026-10-04' for r in eruns)
+          assert 'backup' in enriched['horses'][0].get('_supplementalSources',[])
+          assert enriched['preparedMeta']['supplementalSearch']['failures']
+          assert enriched['horses'][0]['name']=='テスト馬'
 
           old_final={'status':'確定','finishers':[{'finish':1,'horseNumber':1},{'finish':2,'horseNumber':2},{'finish':3,'horseNumber':3}]}
           flash={'status':'速報','finishers':[{'finish':1,'horseNumber':9}]}

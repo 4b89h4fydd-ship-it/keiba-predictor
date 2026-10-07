@@ -18,7 +18,11 @@ class FetchResult:
 
 
 async def _call(fetcher, *args, **kwargs):
-    value = fetcher(*args, **kwargs)
+    # Most legacy fetchers are synchronous urllib/HTML parsers. Run them in a
+    # worker thread so one slow source cannot serialise every other fallback.
+    if inspect.iscoroutinefunction(fetcher):
+        return await fetcher(*args, **kwargs)
+    value = await asyncio.to_thread(fetcher, *args, **kwargs)
     if inspect.isawaitable(value):
         return await value
     return value
