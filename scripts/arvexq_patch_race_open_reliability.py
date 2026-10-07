@@ -125,11 +125,11 @@ text = replace_function(text, 'raceDisplayCoreReady', RACE_READY)
 text = replace_function(text, 'renderRace', RENDER_RACE)
 
 old_footer = "function cinematicFooter(){return '<footer class=\"cinematic-footer\"><b>ARVEXQ</b><span>ARTIFICIAL RACING INTELLIGENCE</span><small>TACTICAL ENGINE · BUILD v326</small></footer>'}"
-new_footer = "function cinematicFooter(){return '<footer class=\"cinematic-footer\"><b>ARVEXQ</b><span>ARTIFICIAL RACING INTELLIGENCE</span><small>TACTICAL ENGINE · BUILD '+esc(window.ARVEXQ_BUILD||'v328')+'</small></footer>'}"
+new_footer = "function cinematicFooter(){return '<footer class=\"cinematic-footer\"><b>ARVEXQ</b><span>ARTIFICIAL RACING INTELLIGENCE</span><small>TACTICAL ENGINE · BUILD '+esc(window.ARVEXQ_BUILD||'v329')+'</small></footer>'}"
 if old_footer in text:
     text = text.replace(old_footer, new_footer, 1)
 elif new_footer not in text and 'BUILD v326</small></footer>' in text:
-    text = text.replace('BUILD v326</small></footer>', "BUILD '+esc(window.ARVEXQ_BUILD||'v328')+'</small></footer>", 1)
+    text = text.replace('BUILD v326</small></footer>', "BUILD '+esc(window.ARVEXQ_BUILD||'v329')+'</small></footer>", 1)
 
 required = [
     'function specialForecastRaceCandidates()',
@@ -139,8 +139,7 @@ required = [
     'n(rd.bodyWeight,0)>=.70',
     'n(rd.environment,0)>=1',
     "plan.lockPolicy='v327-final-input-window-30m'",
-    'window.ARVEXQ_BUILD="v328";',
-    '/sw-v328-reset.js',
+    'window.ARVEXQ_BUILD="v329";',
     'function courseProfile(r){\n  r=r||{};',
     'function courseStageFrac(r,st){\n  r=r||{};',
     "state.openPanel='entry';\n    content='<div id=\"section-entry\"",
