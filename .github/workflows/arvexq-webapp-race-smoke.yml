@@ -1,4 +1,4 @@
-# v328 iPhone-class race-open verification against actual Cloudflare Worker app
+# v329 iPhone-class race-open verification against actual Cloudflare Worker app
 name: ARVEXQ Webapp Race Smoke
 
 on:
@@ -36,7 +36,7 @@ jobs:
           python build_static.py
           BUILD="$(tr -d '\r\n' < dist/build-version.txt)"
           echo "BUILD=$BUILD" >> "$GITHUB_ENV"
-          test "$BUILD" = "v328"
+          test "$BUILD" = "v329"
           test -s dist/index.html
           test -s "dist/app-$BUILD.js"
           test -s "dist/styles-arvexq-$BUILD.css"
@@ -51,8 +51,8 @@ jobs:
               start=s.index(f'function {fn}(')
               end=s.index('\n}',start)+2
               assert 'r=r||{};' in s[start:end], fn
-          assert 'window.ARVEXQ_BUILD="v328";' in s
-          assert '/sw-v328-reset.js' in s
+          assert 'window.ARVEXQ_BUILD="v329";' in s
+          assert '/sw-v329-reset.js' in s
           print('STATIC_SAFARI_GUARDS_OK')
           PY
       - name: Edge API diagnostic
@@ -98,7 +98,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium webkit
-      - name: Verify Cloudflare Worker production v328
+      - name: Verify Cloudflare Worker production v329
         shell: bash
         run: |
           PROD='https://kraizweb1.4b89h4fydd.workers.dev'
@@ -112,7 +112,7 @@ jobs:
               if grep -qi 'text/html' "$headers" && grep -qi '<html' "$body" && ! grep -q '"service":"KRAIZ API"' "$body"; then
                 version="$(curl -fsS --max-time 8 -H 'Cache-Control: no-cache' "$PROD/version.json?ci=$GITHUB_SHA-$i" 2>/dev/null || true)"
                 echo "production version attempt $i: ${version:-<no-response>}"
-                if printf '%s' "$version" | grep -q '"build":"v328"'; then ok=1; break; fi
+                if printf '%s' "$version" | grep -q '"build":"v329"'; then ok=1; break; fi
               else
                 echo 'ERROR: production root is not the ARVEXQ HTML app'
                 head -c 300 "$body" || true
@@ -123,10 +123,10 @@ jobs:
           done
           test "$ok" = "1"
           echo "PROD_BASE=$PROD" >> "$GITHUB_ENV"
-          curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "$PROD/app-v328.js?ci=$GITHUB_SHA" >/tmp/prod-app.js
+          curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "$PROD/app-v329.js?ci=$GITHUB_SHA" >/tmp/prod-app.js
           grep -q 'function courseProfile(r)' /tmp/prod-app.js
           grep -A3 'function courseProfile(r)' /tmp/prod-app.js | grep -q 'r=r||{}'
-          curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "$PROD/sw-v328-reset.js?ci=$GITHUB_SHA" >/tmp/prod-sw.js
+          curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "$PROD/sw-v329-reset.js?ci=$GITHUB_SHA" >/tmp/prod-sw.js
           test -s /tmp/prod-sw.js
       - name: Production Chromium click smoke
         id: prod_chromium
