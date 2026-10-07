@@ -3331,3 +3331,209 @@ details.smart-fixed-picks[open]>.smart-fixed-picks-head .smart-fixed-summary-rig
   .pace-stage-narrative{font-size:15.5px}
   .pace-horse-dot{width:28px;height:28px;font-size:12px}
 }
+
+
+/* v336 — explicit 4-column racecard: mark | horse number | horse info | odds */
+.racecard-row.rc-racecard-v336{
+  display:grid!important;
+  grid-template-columns:44px 50px minmax(0,1fr) 64px!important;
+  min-height:72px!important;
+  margin:0 0 7px!important;
+  padding:0!important;
+  align-items:stretch!important;
+  overflow:hidden!important;
+  border:1px solid #50606b!important;
+  border-radius:10px!important;
+  background:#1c252b!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.025)!important;
+}
+.rc-racecard-v336 .rc-v336-mark,
+.rc-racecard-v336 .rc-v336-number,
+.rc-racecard-v336 .rc-v336-info,
+.rc-racecard-v336 .rc-v336-odds{
+  min-width:0!important;
+  min-height:72px!important;
+  box-sizing:border-box!important;
+}
+.rc-racecard-v336 .rc-v336-mark{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-right:1px solid #5a6973!important;
+  background:#151d22!important;
+}
+.rc-racecard-v336 .rc-mark-box{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:72px!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  font-size:24px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+}
+.rc-racecard-v336 .rc-v336-number{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:72px!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-right:1px solid #5a6973!important;
+  border-radius:0!important;
+  background:#202b31!important;
+  color:inherit!important;
+  touch-action:manipulation!important;
+}
+.rc-racecard-v336 .rc-v336-number:active{filter:brightness(1.16)}
+.rc-racecard-v336 .rc-number{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:38px!important;
+  height:50px!important;
+  min-width:38px!important;
+  border-radius:7px!important;
+  font-size:21px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.42)!important;
+}
+.rc-racecard-v336 .rc-v336-info{
+  position:relative!important;
+  display:block!important;
+  border-right:1px solid #5a6973!important;
+  background:#20282e!important;
+}
+.rc-racecard-v336 .rc-horse-main{
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  display:grid!important;
+  grid-template-rows:38px 34px!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:72px!important;
+  padding:0 30px 0 0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:inherit!important;
+  text-align:left!important;
+  touch-action:manipulation!important;
+}
+.rc-racecard-v336 .rc-horse-main:active{background:#27343c!important}
+.rc-racecard-v336 .rc-horse-name{
+  display:flex!important;
+  align-items:center!important;
+  min-width:0!important;
+  padding:0 8px!important;
+  color:#8bd2ff!important;
+  font-size:17px!important;
+  font-weight:1000!important;
+  line-height:1.1!important;
+  letter-spacing:-.015em!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.rc-racecard-v336 .rc-v336-meta{
+  display:grid!important;
+  grid-template-columns:44px minmax(62px,1fr) 46px 70px!important;
+  align-items:center!important;
+  min-width:0!important;
+  border-top:1px solid #3d4b54!important;
+  color:#d8e2e8!important;
+}
+.rc-racecard-v336 .rc-v336-meta>*{
+  display:flex!important;
+  align-items:center!important;
+  min-width:0!important;
+  height:34px!important;
+  padding:0 6px!important;
+  border-right:1px solid #39464f!important;
+  font-size:11.5px!important;
+  font-weight:850!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  box-sizing:border-box!important;
+}
+.rc-racecard-v336 .rc-v336-meta>*:last-child{border-right:0!important}
+.rc-racecard-v336 .rc-sexage{justify-content:center!important;color:#f0f4f6!important}
+.rc-racecard-v336 .jockey{color:#8fd3ff!important}
+.rc-racecard-v336 .carry{justify-content:center!important;color:#ffe9a1!important}
+.rc-racecard-v336 .rc-bodyweight{justify-content:flex-end!important;color:#79e1b8!important}
+.rc-racecard-v336 .rc-bodyweight.pending{color:#ddb773!important}
+.rc-racecard-v336 .rc-horse-check{
+  position:absolute!important;
+  top:7px!important;
+  right:5px!important;
+  z-index:3!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  padding:0!important;
+  border:1px solid #485d6b!important;
+  border-radius:6px!important;
+  background:#172129!important;
+  font-size:13px!important;
+  line-height:1!important;
+}
+.rc-racecard-v336 .rc-v336-odds{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0 3px!important;
+  background:#141c21!important;
+  text-align:center!important;
+}
+.rc-racecard-v336 .rc-v336-odds .odd{
+  font-size:18px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+}
+.rc-racecard-v336 .rc-v336-odds .pop{
+  margin-top:7px!important;
+  font-size:10.5px!important;
+  line-height:1!important;
+  font-weight:850!important;
+  white-space:nowrap!important;
+}
+.rc-racecard-v336.scratched{opacity:.46!important;filter:saturate(.45)!important}
+@media(max-width:430px){
+  .racecard-row.rc-racecard-v336{grid-template-columns:40px 46px minmax(0,1fr) 58px!important;min-height:68px!important}
+  .rc-racecard-v336 .rc-v336-mark,.rc-racecard-v336 .rc-v336-number,.rc-racecard-v336 .rc-v336-info,.rc-racecard-v336 .rc-v336-odds{min-height:68px!important}
+  .rc-racecard-v336 .rc-mark-box{min-height:68px!important;font-size:22px!important}
+  .rc-racecard-v336 .rc-v336-number{min-height:68px!important}
+  .rc-racecard-v336 .rc-number{width:35px!important;height:46px!important;min-width:35px!important;font-size:19px!important}
+  .rc-racecard-v336 .rc-horse-main{grid-template-rows:36px 32px!important;min-height:68px!important;padding-right:27px!important}
+  .rc-racecard-v336 .rc-horse-name{padding:0 6px!important;font-size:16px!important}
+  .rc-racecard-v336 .rc-v336-meta{grid-template-columns:38px minmax(50px,1fr) 40px 58px!important}
+  .rc-racecard-v336 .rc-v336-meta>*{height:32px!important;padding:0 4px!important;font-size:10.5px!important}
+  .rc-racecard-v336 .rc-horse-check{top:6px!important;right:4px!important;width:22px!important;height:22px!important;min-width:22px!important;font-size:12px!important}
+  .rc-racecard-v336 .rc-v336-odds .odd{font-size:17px!important}
+  .rc-racecard-v336 .rc-v336-odds .pop{font-size:10px!important}
+}
+@media(max-width:360px){
+  .racecard-row.rc-racecard-v336{grid-template-columns:36px 42px minmax(0,1fr) 54px!important}
+  .rc-racecard-v336 .rc-number{width:32px!important;height:44px!important;min-width:32px!important;font-size:18px!important}
+  .rc-racecard-v336 .rc-horse-name{font-size:15px!important}
+  .rc-racecard-v336 .rc-v336-meta{grid-template-columns:34px minmax(42px,1fr) 36px 52px!important}
+  .rc-racecard-v336 .rc-v336-meta>*{font-size:9.8px!important;padding:0 3px!important}
+}
