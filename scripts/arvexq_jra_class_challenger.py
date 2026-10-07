@@ -109,7 +109,7 @@ def main() -> None:
                     ch["equal"] += 1
 
     out = {
-        "version": "arvexq-jra-class-challenger-v1",
+        "version": "arvexq-jra-class-challenger-v2",
         "start": dates[0],
         "end": dates[-1],
         "races": races,
