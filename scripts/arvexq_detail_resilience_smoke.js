@@ -50,8 +50,8 @@ const instrumented = source.replace(boot, `
  assert.equal(await t.page.locator('.smart-race-title-stack h1').textContent(),base.title);
  assert.ok((await t.page.locator('.smart-race-meta').textContent()).includes('2000m'));
  assert.ok((await t.page.locator('.smart-race-meta').textContent()).includes('頭数取得中'));
- assert.equal(await t.page.locator('.race-nav-v230-btn').count(),2);
- assert.deepEqual(await t.page.locator('.race-nav-v230-top .race-nav-v230-label').allTextContents(),['出走表','展開予想']);
+ assert.equal(await t.page.locator('.race-nav-v230-top .race-nav-v230-btn').count(),3);
+ assert.deepEqual(await t.page.locator('.race-nav-v230-top .race-nav-v230-label').allTextContents(),['出走表','展開予想','買い目']);
  await t.page.waitForFunction(id=>testDetail.detailState(id).entry==='error'&&!testDetail.detailState(id).busy,id);
  assert.equal(t.requests.length,3);assert.ok(t.requests[1].at-t.requests[0].at>=900);assert.ok(t.requests[2].at-t.requests[1].at>=1900);
  assert.equal(await t.page.locator('.notice,.smart-loading').count(),0);
@@ -60,7 +60,12 @@ const instrumented = source.replace(boot, `
  assert.equal(await t.page.evaluate(()=>localStorage.getItem('unrelated-cache')),'keep');
  assert.ok(t.requests.every(x=>decodeURIComponent(new URL(x.url).pathname)==='/api/race/'+id));
  await t.page.waitForFunction(()=>testDetail.prediction()!=null);
- // Current UI has entry/pace tabs and a dedicated horse-detail subpage.
+ // Entry, pace and bet are separate tabs; the bet opens a dedicated subpage.
+ await t.page.locator('[data-panel="bets"]').click();
+ await t.page.waitForSelector('.bet-detail-page-shell');
+ assert.equal(await t.page.locator('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent(),'買い目');
+ await t.page.locator('[data-action="close-race-subpage"]').first().click();
+ await t.page.waitForSelector('.race-nav-v230-top .race-nav-v230-btn');
  await t.page.locator('.rc-horse-main[data-horse-open="2"]').click();
  await t.page.waitForSelector('.horse-detail-page .recent');
  assert.equal(await t.page.locator('.horse-detail-page .recent').count(),Math.min(5,(detail.horses.find(h=>h.horseNumber===2).recentRaces||[]).length));
@@ -70,7 +75,7 @@ const instrumented = source.replace(boot, `
  const rects=await t.page.locator('.race-nav-v230-top .race-nav-v230-btn').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return [r.width,r.height,s.padding,s.fontSize,s.lineHeight,s.boxSizing]}));assert.deepEqual(rects[0],rects[1]);
  const layout=await t.page.evaluate(()=>{const h=document.querySelector('.smart-race-title-stack h1'),time=document.querySelector('.smart-race-result-side');return {title:h.getBoundingClientRect().toJSON(),time:time.getBoundingClientRect().toJSON(),lineHeight:parseFloat(getComputedStyle(h).lineHeight),clamp:getComputedStyle(h).webkitLineClamp}});
  assert.equal(layout.clamp,'2');assert.ok(layout.title.height<=layout.lineHeight*2+1);assert.ok(layout.title.bottom<=layout.time.top+1||layout.title.right<=layout.time.left+1);
- console.log('503 x3 -> summary stays visible -> fresh retry recovers roster, diagnosis; equal tabs and 2-line title PASS');
+ console.log('503 x3 -> summary stays visible -> retry restores roster; 3 equal tabs, bet page and 2-line title PASS');
  await t.page.close();
  const card={...base,fieldSize:detail.horses.length,horses:detail.horses.map(h=>({horseNumber:h.horseNumber,name:h.name,frameNumber:h.frameNumber,jockey:h.jockey,sex:h.sex,age:h.age,carriedWeight:h.carriedWeight}))};
  let recoverFull=false;
