@@ -27,6 +27,8 @@ if str(ROOT) not in sys.path:
 import app
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
+from arvexq.databanks.authorized_feeds import register_authorized_history_feeds
+from arvexq.databanks.registry import registry as source_registry
 
 JST = timezone(timedelta(hours=9))
 
@@ -432,6 +434,14 @@ def main() -> int:
         default=int(os.getenv("ARVEXQ_PREFETCH_ANALYSIS_WORKERS", "1")),
     )
     args = parser.parse_args()
+    # The heavy prefetch lane always registers configured licensed feeds, even
+    # when a legacy app startup path skipped optional source registration.
+    try:
+        connected = register_authorized_history_feeds(source_registry)
+        if connected:
+            print("AUTHORIZED_HISTORY_FEEDS_ACTIVE", len(connected), sorted(connected))
+    except ValueError as exc:
+        print("AUTHORIZED_HISTORY_FEEDS_CONFIG_WARN", str(exc))
     return prepare(
         args.bundle,
         args.payload,
