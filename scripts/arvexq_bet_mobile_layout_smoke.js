@@ -29,6 +29,33 @@ const html=renderer(esc,n,()=>plan,()=>({vote:''}),
 assert.match(html,/smart-race-subpage-topbar/);
 assert.match(html,/bet-detail-page-shell/);
 assert.match(html,/内部評価/);
+function extractFunction(name){
+  const a=src.indexOf('function '+name+'('),b=src.indexOf('\n}',a);
+  assert.ok(a>=0&&b>a,'missing function '+name);
+  return src.slice(a,b+2);
+}
+const navFactory=new Function('state',extractFunction('cinematicTabs')+'\nreturn cinematicTabs;');
+const navHtml=navFactory({openPanel:'entry'})({});
+assert.equal((navHtml.match(/data-panel="/g)||[]).length,3);
+assert.match(navHtml,/data-panel="bets"/);
+const stagePages=[
+  {key:'start',visualKey:'first',label:'スタート',index:0},
+  {key:'turn3',visualKey:'turn3',label:'3C',index:1},
+  {key:'turn4',visualKey:'turn4',label:'4C',index:2},
+  {key:'straight',visualKey:'straight',label:'ラスト',index:3},
+];
+const diagramFactory=new Function('paceStagePack','n','clamp','esc','PACE_STAGE_PAGES',
+  extractFunction('paceFormationDiagram')+'\nreturn paceFormationDiagram;');
+const diagrams=stagePages.map((cfg)=>{
+  return diagramFactory(
+    ()=>[1,2,3,4,5].map((no,i)=>({no,lane:i-2})),
+    n,(v,a,b)=>Math.max(a,Math.min(b,v)),esc,stagePages
+  )({horses:[1,2,3,4,5].map(no=>({horseNumber:no,frameNumber:no,name:'テスト馬'+no}))},{},cfg);
+});
+assert.deepEqual(diagrams.map(x=>Number((x.match(/data-pace-next="(\d+)"/)||[])[1])),[1,2,3,0]);
+assert.ok(!src.includes('data-action="open-bets-page" class="race-nav-v230-btn active"'));
+assert.ok(src.includes("els=document.querySelectorAll('[data-pace-next]')"));
+
 async function test(type,label){
   const browser=await type.launch({headless:true});
   try{
@@ -65,7 +92,27 @@ async function test(type,label){
         assert.ok(pill.x>=result.box.x-e&&pill.right<=result.box.right+e,
           label+' '+width+' metadata off-screen '+JSON.stringify(result));
       }
-      console.log('BET_MOBILE_LAYOUT_OK '+label+' '+width+'px');
+      // Three race tabs plus tappable formation are also checked at every width.
+      for(let stage=0;stage<4;stage++){
+        const app='<div class="smart-shell"><main class="smart-main smart-race-page">'+navHtml+diagrams[stage]+'</main></div>';
+        await page.setContent('<!doctype html><html lang="ja"><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>'+app+'</body></html>');
+        await page.addStyleTag({content:css});
+        const resultStage=await page.evaluate(()=>{
+          const el=document.querySelector('.pace-formation-next');
+          const tabs=[...document.querySelectorAll('.race-nav-v230-top .race-nav-v230-btn')];
+          return {width:innerWidth,scroll:document.documentElement.scrollWidth,
+            next:el&&Number(el.getAttribute('data-pace-next')),
+            buttonWidth:el&&el.getBoundingClientRect().width,
+            tabWidths:tabs.map(t=>t.getBoundingClientRect().width)};
+        });
+        assert.equal(resultStage.next,(stage+1)%4,label+' '+width+' stage cycle '+stage);
+        assert.equal(resultStage.tabWidths.length,3);
+        assert.ok(resultStage.tabWidths.every(w=>w>60),label+' '+width+' tab labels too narrow');
+        assert.ok(resultStage.buttonWidth>200,label+' '+width+' diagram too narrow');
+        assert.ok(resultStage.scroll<=resultStage.width+2,label+' '+width+' stage overflow '+JSON.stringify(resultStage));
+      }
+      console.log('BET_STAGE_TABS_CYCLE_LAYOUT_OK '+label+' '+width+'px');
+            console.log('BET_MOBILE_LAYOUT_OK '+label+' '+width+'px');
       await context.close();
     }
   }finally{await browser.close();}
