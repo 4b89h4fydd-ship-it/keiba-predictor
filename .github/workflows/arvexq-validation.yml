@@ -9,6 +9,7 @@ name: ARVEXQ Validation
       - build_static.py
       - arvexq/**
       - scripts/**
+      - tests/**
       - .github/workflows/arvexq-*.yml
       - requirements.txt
   push:
@@ -18,6 +19,7 @@ name: ARVEXQ Validation
       - build_static.py
       - arvexq/**
       - scripts/**
+      - tests/**
       - .github/workflows/arvexq-*.yml
       - requirements.txt
 
