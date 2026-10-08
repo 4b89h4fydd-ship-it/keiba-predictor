@@ -100,6 +100,16 @@ const swReloadMarker = 'v329-racecard-stable-20261007';
 
     const racecard = page.locator('.racecard-table').first();
     await racecard.waitFor({ state: 'visible', timeout });
+    try {
+      // The table shell can appear before the asynchronously fetched roster.
+      await racecard.locator('.racecard-row').first().waitFor({ state: 'visible', timeout });
+    } catch (err) {
+      const current = await page.locator('body').innerText();
+      throw new Error('racecard rows unavailable after ' + timeout + 'ms for ' + raceId +
+        '; httpFailures=' + JSON.stringify(httpFailures) +
+        '; pageErrors=' + JSON.stringify(pageErrors) +
+        '; body=' + current.slice(0, 1400), { cause: err });
+    }
     const racecardRows = await racecard.locator('.racecard-row').count();
     if (racecardRows < 1) throw new Error('racecard rendered without runner rows: ' + bodyText.slice(0, 1000));
     console.log(`RACECARD_VISIBLE rows=${racecardRows} race=${raceId}`);

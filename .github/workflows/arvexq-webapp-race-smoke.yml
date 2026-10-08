@@ -200,6 +200,7 @@ jobs:
       - name: Offline race detail resilience
         run: node scripts/arvexq_detail_resilience_smoke.js
       - name: Verify Cloudflare Worker production v329
+        if: always()
         shell: bash
         run: |
           PROD='https://kraizweb1.4b89h4fydd.workers.dev'
@@ -230,12 +231,13 @@ jobs:
           curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "$PROD/sw-v329-reset.js?ci=$GITHUB_SHA" >/tmp/prod-sw.js
           test -s /tmp/prod-sw.js
       - name: Production Chromium click smoke
+        if: ${{ always() && env.PROD_BASE != '' }}
         id: prod_chromium
         shell: bash
         run: |
           ARVEXQ_BASE_URL="$PROD_BASE" ARVEXQ_SMOKE_TIMEOUT=30000 ARVEXQ_BROWSER=chromium node scripts/arvexq_webapp_race_smoke.js
       - name: Production WebKit Safari click smoke
-        if: always()
+        if: ${{ always() && env.PROD_BASE != '' }}
         shell: bash
         run: |
           test -n "$PROD_BASE"

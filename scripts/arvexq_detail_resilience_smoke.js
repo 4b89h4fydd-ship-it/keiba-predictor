@@ -49,7 +49,8 @@ const instrumented = source.replace(boot, `
  assert.equal(await t.page.locator('.smart-race-title-stack h1').textContent(),base.title);
  assert.ok((await t.page.locator('.smart-race-meta').textContent()).includes('2000m'));
  assert.ok((await t.page.locator('.smart-race-meta').textContent()).includes('頭数取得中'));
- assert.equal(await t.page.locator('.race-nav-v230-btn').count(),4);
+ assert.equal(await t.page.locator('.race-nav-v230-btn').count(),2);
+ assert.deepEqual(await t.page.locator('.race-nav-v230-top .race-nav-v230-label').allTextContents(),['出走表','展開予想']);
  await t.page.waitForFunction(id=>testDetail.detailState(id).entry==='error'&&!testDetail.detailState(id).busy,id);
  assert.equal(t.requests.length,3);assert.ok(t.requests[1].at-t.requests[0].at>=900);assert.ok(t.requests[2].at-t.requests[1].at>=1900);
  assert.equal(await t.page.locator('.notice,.smart-loading').count(),0);
