@@ -3618,7 +3618,7 @@ function smartHomeHub(){
       selectedCounts=homePickCounts('selected'),specialCounts=homePickCounts('special');
   if(hasCentral)circuits+='<button type="button" class="arv-home-hub-btn" data-home-page="central"><b>中央</b><span>開催場 ›</span></button>';
   if(hasLocal)circuits+='<button type="button" class="arv-home-hub-btn" data-home-page="local"><b>地方</b><span>開催場 ›</span></button>';
-  if(!circuits)circuits='<div class="arv-home-hub-loading">開催情報を取得中</div>';
+  if(!circuits)circuits='<div class="arv-home-hub-loading">'+(state.error?'開催情報の公開待ち・自動再取得中':'開催情報を取得中')+'</div>';
   middle=finished
     ?'<div class="arv-home-hub-row single"><button type="button" class="arv-home-hub-btn primary" data-home-page="ai-stats"><b>本日のAI成績</b><span>開催場ごとの成績 ›</span></button></div>'
     :smartLiveRaceSection();
@@ -4904,8 +4904,22 @@ function load(force){
       return null
     })
     .then(function(rows){
-      if(rows==null)return;
       if(seq!==state.requestSeq||state.date!==d)return;
+      if(!Array.isArray(rows)||!rows.length){
+        // Never leave an iPhone open on the initial empty D1 day forever:
+        // the first official schedule can be published after app startup.
+        if(!state.races.length){
+          state.loading=false;
+          state.error='開催一覧はサーバー公開待ち・自動再取得中';
+          render();
+          var retryDelay=attempt<8?Math.min(12000,1500*(attempt+1)):45000;
+          setTimeout(function(){
+            if(seq===state.requestSeq&&state.date===d&&document.visibilityState!=='hidden')
+              requestList(Math.min(8,attempt+1))
+          },retryDelay)
+        }
+        return
+      }
 
       if(rows.length){
         var old={};
