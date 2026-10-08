@@ -65,8 +65,10 @@ def evaluate_honmei_gate(
         strength = max(0., min(1., _fv(mh.get("strengthScore"))))
         spread = max(values) - min(values) if coverage == 4 else 1.
         relative_rank = 1. - (max(1, _iv(row.get("rank"), field)) - 1) / max(1, field - 1)
-        score = (.30 * recent_score + .24 * relative_rank + .20 * mean_pillar
-                 + .16 * strength + .10 * (1. - max(0., min(1., spread))))
+        # Top-three repeatability outranks single-win dominance, especially
+        # when a small field exaggerates differences in ordinal factor rank.
+        score = (.38 * recent_score + .12 * relative_rank + .25 * mean_pillar
+                 + .15 * strength + .10 * (1. - max(0., min(1., spread))))
         option = {
             "horseNumber": _iv(h.get("horseNumber")), "score": round(score, 6),
             "factorRank": _iv(row.get("rank"), 999),

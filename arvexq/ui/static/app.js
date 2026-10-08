@@ -1516,8 +1516,8 @@ function assignPredictionMarks(rows,r){
   }
   var podiumAxis=rows.map(function(z,i){
     var h=axisHistory(z),roles=(p1(z)+n(z.p2Probability)+n(z.p3Probability))/(3*uniform),
-        score=clamp(.34*clamp(roles/1.6,0,1)+.22*n(research[i].place,.5)+
-          .17*h.rate+.15*robust(z)+.12*(1-fragile(z)),0,1);
+        score=clamp(.25*clamp(roles/1.6,0,1)+.20*n(research[i].place,.5)+
+          .33*h.rate+.12*robust(z)+.10*(1-fragile(z)),0,1);
     z.podiumAxisScore=score;z.podiumAxisHistory=h;return z;
   }).sort(function(a,b){return n(b.podiumAxisScore)-n(a.podiumAxisScore)||
     n(b.axisProbability)-n(a.axisProbability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
