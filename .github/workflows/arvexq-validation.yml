@@ -88,6 +88,7 @@ jobs:
         run: |
           node --check scripts/arvexq_pace_transition_smoke.js
           node scripts/arvexq_pace_transition_smoke.js
+          node scripts/arvexq_pace_evidence_bet_gate_smoke.js
 
       - name: Prefetch racecard delivery regression
         run: |
