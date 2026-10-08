@@ -84,6 +84,10 @@ jobs:
           node --check arvexq/ui/static/app.js
           node scripts/arvexq_bet_mark_alignment_smoke.js
 
+      - name: Prefetch racecard delivery regression
+        run: |
+          python -m unittest discover -s tests -p 'test_prefetch_racecard_delivery.py' -v
+
       - name: Architecture and operations guard
         run: |
           python - <<'PY'
