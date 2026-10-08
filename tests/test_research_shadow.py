@@ -70,6 +70,12 @@ class ResearchShadowTests(unittest.TestCase):
         self.assertEqual(features["history::matched_clock_context::w5::clock_speed::count"],2.)
         self.assertLess(features["history::matched_clock_context::w5::clock_speed::mean"],20.)
 
+    def test_podium_head_is_available_in_lightweight_runtime(self):
+        from inspect import getsource
+        from arvexq.prediction.mass_model_runtime import MassModelRuntime
+        self.assertIn('"podium"',getsource(MassModelRuntime.predict_heads))
+        self.assertIn('"win"',getsource(MassModelRuntime.predict_heads))
+
     def test_podium_model_head_is_independent_of_win(self):
         self.assertEqual(HEAD_SPECS["podium"].label,"labelTop3")
         self.assertEqual(HEAD_SPECS["win"].label,"labelWin")

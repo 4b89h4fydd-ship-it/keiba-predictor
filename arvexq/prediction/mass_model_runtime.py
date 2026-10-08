@@ -77,6 +77,6 @@ class MassModelRuntime:
     def predict_heads(self, features: dict[str, float]) -> dict[str, float]:
         return {
             head: self.load_head(head).predict(features)
-            for head in ("ability", "win", "value", "danger")
+            for head in ("ability", "win", "podium", "value", "danger")
             if (self.runtime_dir / f"{head}.manifest.json").exists()
         }
