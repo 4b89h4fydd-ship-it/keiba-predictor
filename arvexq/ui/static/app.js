@@ -2250,11 +2250,10 @@ function alignBetPlanToOutcome(plan,r,p){
 function alignBetPlanToMarks(plan,r,p){
   if(!plan||!p||!Array.isArray(plan.items)||!plan.items.length||plan.fixedAt)return plan;
   var rows=(p.rows||[]).filter(function(z){return z&&z.horse&&!isScratchHorse(z.horse)}),
-      markRows={},noToMark={},changed=[],axisNo=0;
+      markRows={},changed=[],axisNo=0;
   rows.forEach(function(z){
     var no=n(z.horse.horseNumber,0),mark=String(z.predMark||'').replace(/＋/g,'+');
     if(!no||!mark)return;
-    noToMark[no]=mark;
     if(!markRows[mark])markRows[mark]=[];
     markRows[mark].push(z);
     if(mark==='◎')axisNo=no
@@ -2273,23 +2272,6 @@ function alignBetPlanToMarks(plan,r,p){
       // Preserve the exact point count. At two points ○ and ☆+ take the
       // two second-place lanes before a ☆ third-place specialist.
       updated=seconds.slice(0,updated.length).map(function(no){return [axisNo,no]});
-    }else if(item.kind==='3連複'&&leaders('☆+').length){
-      // Replace only a weak ☆ lane in a combo already containing ◎ and ○/▲.
-      // Do not invent extra tickets or disturb a valid 3rd-place ☆ when it
-      // would duplicate an existing strong-plus combination.
-      var plusNo=leaders('☆+')[0],seen={};
-      updated.forEach(function(c){seen[c.slice().sort(function(a,b){return a-b}).join('-')]=1});
-      updated=updated.map(function(c){
-        if(c.length!==3||c.indexOf(axisNo)<0||c.indexOf(plusNo)>=0)return c;
-        var core=c.some(function(no){return no!==axisNo&&(noToMark[no]==='○'||noToMark[no]==='▲')}),
-            oldNo=c.filter(function(no){return noToMark[no]==='☆'})[0];
-        if(!core||!oldNo)return c;
-        var proposed=c.map(function(no){return no===oldNo?plusNo:no}).sort(function(a,b){return a-b}),
-            newKey=proposed.join('-');
-        if(seen[newKey])return c;
-        seen[newKey]=1;
-        return proposed
-      });
     }
     if(!same(original,updated)){
       item.combos=updated;item.points=updated.length;item.combo=betComboText(item.kind,updated);
@@ -2299,7 +2281,7 @@ function alignBetPlanToMarks(plan,r,p){
   });
   if(changed.length){
     plan.markAlignment={version:'v341-roles-before-display',axis:axisNo,secondCandidates:seconds.slice(0,4),changedKinds:changed};
-    plan.reason='表示印との照合で'+changed.join('・')+'の候補を修正。○は2着本線、☆+は1着逆転・2着候補、☆は原則3着役として扱います。変更した組み合わせの確率は別途再検証が必要です。'+String(plan.reason||'');
+    plan.reason='表示印との照合で'+changed.join('・')+'の相手候補を修正。○は2着本線、☆+は1着逆転・2着候補、☆は原則3着役として扱います。3連複などの3着適性候補は元の着順分布を維持します。'+String(plan.reason||'');
   }
   return plan
 }
