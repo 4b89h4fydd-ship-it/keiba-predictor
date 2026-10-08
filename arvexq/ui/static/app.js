@@ -3098,36 +3098,45 @@ function smartVenueCards(){
 }
 
 function aiStoredMarks(detail){
-  // v261: prefer the immutable server-side pre-race lock. Fallback only supports
-  // older saved races that predate the lock.
-  var lock=detail&&detail.preRacePrediction||{},locked=Array.isArray(lock.horses)?lock.horses:[];
-  if(locked.length)return locked.map(function(x){return{no:n(x.horseNumber),mark:String(x.mark||''),p:n(x.decisionProbability),axes:x.axes||{},confidence:n(lock.winnerConfidence),stable:!!lock.winnerStable}}).filter(function(x){return x.no>0});
-  var rows=[];(detail&&detail.horses||[]).forEach(function(h){var e=h&&h.integratedEvaluation||{},mark=String(e.mark||'');if(mark)rows.push({no:n(h.horseNumber),mark:mark,p:n(e.winnerConsensusProbability),axes:(e.v218Audit||e.v217Audit||{}),confidence:n(e.axisConfidence),stable:!!e.winnerDecisionStable})});return rows
+  // Only verifiable pre-off snapshots count. Live horse evaluation is not evidence.
+  var server=serverFrozenPrediction(detail),local=server?null:loadFrozenMarks(detail),saved=[];
+  if(server)saved=server.horses.map(function(x){return {no:n(x.horseNumber),mark:String(x.mark||''),p:n(x.decisionProbability,0),confidence:n(server.winnerConfidence,0)}});
+  else if(local){
+    var off=Date.parse(String(detail.date||'')+'T'+String(detail.scheduledStartTime||detail.startTime||'').slice(0,5)+':00+09:00'),at=Date.parse(String(local.fixedAt||''));
+    if(isFinite(off)&&isFinite(at)&&at<off)saved=local.marks.map(function(x){return {no:n(x.no),mark:String(x.mark||''),p:0,confidence:0}});
+  }
+  return saved.filter(function(x){return x.no>0})
 }
 function aiDailyOne(detail){
   if(!detail||!isFinal(detail))return null;
-  var finishers=(detail.result&&detail.result.finishers||[]).filter(function(x){return n(x.finish)>0}).sort(function(a,b){return n(a.finish)-n(b.finish)});if(!finishers.length)return null;
-  var winner=n(finishers[0].horseNumber),top3={};finishers.slice(0,3).forEach(function(x){top3[n(x.horseNumber)]=1});
+  var fs=((detail.result||{}).finishers||[]).filter(function(x){return n(x.finish)>0}).sort(function(a,b){return n(a.finish)-n(b.finish)}).slice(0,3),
+      nums=fs.map(function(x){return n(x.horseNumber)});
+  if(fs.map(function(x){return n(x.finish)}).join(',')!=='1,2,3'||nums.some(function(v){return v<1})||new Set(nums).size!==3)return null;
   var marks=aiStoredMarks(detail);if(!marks.length)return null;
   var hon=marks.find(function(x){return x.mark==='◎'}),marked={};marks.forEach(function(x){if(['◎','○','▲','☆+','☆','△','注'].indexOf(x.mark)>=0)marked[x.no]=x.mark});
-  var holePlace=marks.some(function(x){return (x.mark==='☆'||x.mark==='☆+'||x.mark==='注')&&top3[x.no]});
-  var ranked=marks.slice().sort(function(a,b){return n(b.p)-n(a.p)||n(a.no)-n(b.no)}),wr=ranked.findIndex(function(x){return x.no===winner})+1,wrow=marks.find(function(x){return x.no===winner}),audit=detail.predictionAudit||{};
-  var winHit=!!(hon&&hon.no===winner),markHit=!!marked[winner],confidence=n(audit.winnerConfidence,hon&&hon.confidence),reason=String(audit.reason||'');
-  var podiumNos=finishers.slice(0,3).map(function(x){return n(x.horseNumber)}).filter(function(x){return x>0}),markedPodiumCount=podiumNos.filter(function(no){return !!marked[no]}).length,fullPodiumHit=podiumNos.length===3&&markedPodiumCount===3,circuit=String(detail.circuit||'');
-  if(!reason&&!winHit)reason=markHit?'候補内の1着順位付け':'候補抽出';
-  if(!fullPodiumHit&&markedPodiumCount===2)reason=reason||'印内3頭完全包含で1頭抜け';
-  var brier=n(audit.brier,0),logLoss=n(audit.logLoss,0);
-  if(!brier&&wrow){marks.forEach(function(x){var y=x.no===winner?1:0;brier+=Math.pow(n(x.p)-y,2)});logLoss=-Math.log(Math.max(1e-9,n(wrow.p)))}
-  return {raceId:String(detail.id||''),track:String(detail.track||''),raceNumber:n(detail.raceNumber),title:String(detail.title||''),winHit:winHit,markHit:markHit,fullPodiumHit:fullPodiumHit,markedPodiumCount:markedPodiumCount,circuit:circuit,holePlace:holePlace,top2:wr>0&&wr<=2,top3:wr>0&&wr<=3,candidateOrderMiss:!winHit&&markHit,candidateMiss:!markHit,highConf:confidence>=.70,highConfHit:confidence>=.70&&winHit,brier:brier,logLoss:logLoss,reason:reason,winner:winner,winnerMark:String(marked[winner]||''),podiumNos:podiumNos,marks:marks.filter(function(x){return !!String(x.mark||'')}).map(function(x){return{no:x.no,mark:x.mark}})}
+  var winner=nums[0],podium={},markedCount=nums.filter(function(no){return !!marked[no]}).length;
+  nums.forEach(function(no){podium[no]=1});
+  var honPlaceHit=!!(hon&&podium[hon.no]),winHit=!!(hon&&hon.no===winner),markHit=!!marked[winner],fullPodiumHit=markedCount===3,
+      frozenBet=frozenAiBetForRace(detail),triItems=((frozenBet&&frozenBet.items)||[]).filter(function(x){return x.kind==='3連単'&&Array.isArray(x.combos)&&x.combos.length>0}),
+      triEligible=triItems.length>0,triHit=triItems.some(function(x){return betItemHit(x,nums)}),
+      ranked=marks.filter(function(x){return n(x.p,0)>0}).slice().sort(function(a,b){return n(b.p)-n(a.p)}),
+      wr=ranked.findIndex(function(x){return x.no===winner})+1;
+  return {raceId:String(detail.id||''),track:String(detail.track||''),raceNumber:n(detail.raceNumber),title:String(detail.title||''),circuit:String(detail.circuit||''),
+    winHit:winHit,honPlaceHit:honPlaceHit,markHit:markHit,fullPodiumHit:fullPodiumHit,triEligible:triEligible,triHit:triHit,
+    markedPodiumCount:markedCount,holePlace:marks.some(function(x){return ['☆','☆+','注'].indexOf(x.mark)>=0&&podium[x.no]}),
+    top2:wr>0&&wr<=2,top3:wr>0&&wr<=3,candidateOrderMiss:!winHit&&markHit,candidateMiss:!markHit,
+    highConf:!!(hon&&hon.confidence>=.70),highConfHit:!!(hon&&hon.confidence>=.70&&winHit),brier:0,logLoss:0,
+    reason:winHit?'◎1着':(markHit?'印内の1着順位':'1着候補外'),
+    winner:winner,winnerMark:String(marked[winner]||''),podiumNos:nums,marks:marks.filter(function(x){return !!x.mark}).map(function(x){return {no:x.no,mark:x.mark}}),
+    hasMarks:true,resultReady:true,eligible:true,betSaved:!!frozenBet}
 }
-function resetDailyAiStats(date){dailyAiStats={date:date||'',loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,fullPodiumHits:0,centralPodiumHits:0,centralPodiumTotal:0,localPodiumHits:0,localPodiumTotal:0,markedPodiumSum:0,holePlaceHits:0,top2Hits:0,top3Hits:0,candidateOrderMisses:0,candidateMisses:0,highConfHits:0,highConfTotal:0,brierSum:0,logLossSum:0,reasons:{},rows:[],error:''}}
+function resetDailyAiStats(date){dailyAiStats={date:date||'',loading:false,done:false,total:0,finalCount:0,winHits:0,honPlaceHits:0,triHits:0,triTotal:0,markHits:0,fullPodiumHits:0,centralPodiumHits:0,centralPodiumTotal:0,localPodiumHits:0,localPodiumTotal:0,markedPodiumSum:0,holePlaceHits:0,top2Hits:0,top3Hits:0,candidateOrderMisses:0,candidateMisses:0,highConfHits:0,highConfTotal:0,brierSum:0,logLossSum:0,reasons:{},rows:[],error:''}}
 function scheduleDailyAiStats(){
   if(dailyAiStats.date!==state.date)resetDailyAiStats(state.date);
   if(dailyAiStats.loading)return;
   var targetDate=state.date,dayRaces=(state.races||[]).filter(function(r){return r&&r.id});
-  var allFinished=dayRaces.length>0&&dayRaces.every(function(r){return isFinal(r)});
-  if(!allFinished){dailyAiStats.done=false;dailyAiStats.total=0;dailyAiStats.finalCount=0;return}
-  var finals=dayRaces.slice();
+  var finals=dayRaces.filter(function(r){return isFinal(r)});
+  if(!finals.length){dailyAiStats.done=false;dailyAiStats.total=0;dailyAiStats.finalCount=0;return}
   if(dailyAiStats.done&&dailyAiStats.finalCount===finals.length)return;
   var token=++dailyAiStatsJob,cursor=0,results=[];dailyAiStats.loading=true;dailyAiStats.done=false;dailyAiStats.error='';
   render();
@@ -3140,16 +3149,19 @@ function scheduleDailyAiStats(){
         z.hasMarks=true;z.resultReady=true;z.loadError=false;results.push(z)
       }else{
         var fs=(d&&d.result&&d.result.finishers||[]).filter(function(x){return n(x.finish)>0}).sort(function(a,b){return n(a.finish)-n(b.finish)}),marks=aiStoredMarks(d||{});
-        results.push({raceId:String(row.id||''),track:String((d&&d.track)||row.track||''),raceNumber:n((d&&d.raceNumber)||row.raceNumber),title:String((d&&d.title)||row.title||''),circuit:String((d&&d.circuit)||row.circuit||''),winHit:false,markHit:false,fullPodiumHit:false,markedPodiumCount:0,holePlace:false,top2:false,top3:false,candidateOrderMiss:false,candidateMiss:!marks.length,highConf:false,highConfHit:false,brier:0,logLoss:0,reason:marks.length?'結果集計対象外':'印なし',winner:n(fs[0]&&fs[0].horseNumber),winnerMark:'',podiumNos:fs.slice(0,3).map(function(x){return n(x.horseNumber)}).filter(function(x){return x>0}),marks:marks.filter(function(x){return !!String(x.mark||'')}).map(function(x){return{no:x.no,mark:x.mark}}),hasMarks:marks.length>0,resultReady:fs.length>0,loadError:false})
+        results.push({raceId:String(row.id||''),track:String((d&&d.track)||row.track||''),raceNumber:n((d&&d.raceNumber)||row.raceNumber),title:String((d&&d.title)||row.title||''),circuit:String((d&&d.circuit)||row.circuit||''),winHit:false,markHit:false,fullPodiumHit:false,markedPodiumCount:0,holePlace:false,top2:false,top3:false,candidateOrderMiss:false,candidateMiss:!marks.length,highConf:false,highConfHit:false,brier:0,logLoss:0,reason:marks.length?'結果未取得':'発走前予想未保存',winner:n(fs[0]&&fs[0].horseNumber),winnerMark:'',podiumNos:fs.slice(0,3).map(function(x){return n(x.horseNumber)}).filter(function(x){return x>0}),marks:marks.filter(function(x){return !!String(x.mark||'')}).map(function(x){return{no:x.no,mark:x.mark}}),hasMarks:marks.length>0,resultReady:fs.some(function(x){return n(x.finish)===3}),eligible:false,triEligible:false,triHit:false,loadError:false})
       }
     }).catch(function(){
-      results.push({raceId:String(row.id||''),track:String(row.track||''),raceNumber:n(row.raceNumber),title:String(row.title||''),circuit:String(row.circuit||''),marks:[],podiumNos:[],winHit:false,markHit:false,fullPodiumHit:false,markedPodiumCount:0,hasMarks:false,resultReady:false,loadError:true})
+      results.push({raceId:String(row.id||''),track:String(row.track||''),raceNumber:n(row.raceNumber),title:String(row.title||''),circuit:String(row.circuit||''),marks:[],podiumNos:[],winHit:false,markHit:false,fullPodiumHit:false,markedPodiumCount:0,hasMarks:false,resultReady:false,eligible:false,triEligible:false,triHit:false,loadError:true})
     }).then(worker)
   }
   Promise.all([worker(),worker()]).then(function(){
     if(token!==dailyAiStatsJob||state.date!==targetDate)return;
     results.sort(function(a,b){var c=String(a.circuit||'').localeCompare(String(b.circuit||''),'ja');if(c)return c;var t=String(a.track||'').localeCompare(String(b.track||''),'ja');return t||n(a.raceNumber)-n(b.raceNumber)});
-    dailyAiStats.loading=false;dailyAiStats.done=true;dailyAiStats.rows=results;dailyAiStats.total=results.length;dailyAiStats.finalCount=finals.length;
+    dailyAiStats.loading=false;dailyAiStats.done=true;dailyAiStats.rows=results;dailyAiStats.total=results.filter(function(x){return x.eligible}).length;dailyAiStats.finalCount=finals.length;
+    dailyAiStats.honPlaceHits=results.filter(function(x){return x.eligible&&x.honPlaceHit}).length;
+    dailyAiStats.triTotal=results.filter(function(x){return x.eligible&&x.triEligible}).length;
+    dailyAiStats.triHits=results.filter(function(x){return x.eligible&&x.triEligible&&x.triHit}).length;
     dailyAiStats.winHits=results.filter(function(x){return x.winHit}).length;
     dailyAiStats.markHits=results.filter(function(x){return x.markHit}).length;
     dailyAiStats.fullPodiumHits=results.filter(function(x){return x.fullPodiumHit}).length;
