@@ -5,7 +5,13 @@ const timeout = Number(process.env.ARVEXQ_SMOKE_TIMEOUT || 20000);
 const browserName = String(process.env.ARVEXQ_BROWSER || 'chromium').toLowerCase();
 const browserType = browserName === 'webkit' ? webkit : chromium;
 const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(base);
-const resetMarker = 'arvexq-hard-reset-v329-racecard-direct-20261007b';
+// Track the real index.html migration key: an outdated smoke fixture can
+// otherwise trigger a deliberate first-visit redirect in WebKit.
+const fs = require('node:fs');
+const html = fs.readFileSync('arvexq/ui/static/index.html','utf8');
+const markerMatch = html.match(/var tag="(arvexq-hard-reset-[^"]+)"/);
+if (!markerMatch) throw new Error('index.html hard-reset marker not found');
+const resetMarker = markerMatch[1];
 const swReloadMarker = 'v329-racecard-stable-20261007';
 
 (async () => {

@@ -152,6 +152,9 @@ jobs:
           const {chromium,webkit,devices}=require('playwright');
           const app=fs.readFileSync('arvexq/ui/static/app.js','utf8');
           const css=fs.readFileSync('arvexq/ui/static/styles.css','utf8');
+          const index=fs.readFileSync('arvexq/ui/static/index.html','utf8');
+          const marker=index.match(/var tag="(arvexq-hard-reset-[^"]+)"/);
+          assert.ok(marker,'missing hard-reset version marker');
           ['function homePickCounts(kind)','function homePickAlert(counts)','homePickAlert(selectedCounts)','homePickAlert(specialCounts)','class="arv-pick-count"'].forEach(term=>assert.ok(app.includes(term),'missing '+term));
           assert.ok(css.includes('.arv-home-hub-btn .arv-home-alert'));
           const base='https://kraizweb1.4b89h4fydd.workers.dev';
@@ -159,6 +162,9 @@ jobs:
             const browser=await type.launch({headless:true});
             try{
               const page=await browser.newPage({...devices['iPhone 15 Pro'],locale:'ja-JP'});
+              // The initial PWA migration intentionally reloads a fresh browser.
+              // Seed its current marker so UI navigation tests do not race it.
+              await page.addInitScript(k=>{try{localStorage.setItem(k,'1')}catch(_){}},marker[1]);
               const failures=[];
               page.on('pageerror',e=>failures.push(String(e)));
               const root=base+'/?home-check='+Date.now()+'-'+name;
