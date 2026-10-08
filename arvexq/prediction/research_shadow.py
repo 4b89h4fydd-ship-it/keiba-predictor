@@ -159,6 +159,11 @@ def build_shadow(detail: dict[str, Any]) -> dict[str, Any]:
             int(_number(h.get("horseNumber")) or 0)>0]
     evidence=[horse_evidence(h,detail) for h in active]
     pressure=[e["frontStartRate"] for e in evidence if e["frontStartRate"] is not None]
+    credible=sum(e["historyCount"]>=2 and e["sampledStages"]["start"]>=1 for e in evidence)
+    min_credible=max(3,math.ceil(.60*len(active)))
+    # An arbitrary neutral for a horse lacking any history must never be
+    # published as a statistically meaningful order probability.
+    sufficient=len(active)>=3 and credible>=min_credible
     lead_count=sum((1 if e["frontStartRate"]>=.6 else 0) for e in evidence
                    if e["frontStartRate"] is not None)
     weights=[]
@@ -169,7 +174,7 @@ def build_shadow(detail: dict[str, Any]) -> dict[str, Any]:
         # Subjective *shadow* scoring, not calibrated probability.
         value=sum(parts)/len(parts) if parts else .5
         weights.append(math.exp(2.2*(value-.5)))
-    roles,triples=ordered_probabilities(weights)
+    roles,triples=ordered_probabilities(weights) if sufficient else ([],[])
     rows=[{"horseNumber":int(_number(h.get("horseNumber")) or 0),
            "evidence":ev,
            "uncalibrated":{k:round(v,9) for k,v in role.items()} if roles else None}
@@ -181,6 +186,9 @@ def build_shadow(detail: dict[str, Any]) -> dict[str, Any]:
     payload={"version":VERSION,"raceId":str(detail.get("id") or ""),
              "date":race_date,"source":"pre-off historical runs only",
              "mode":"research-only-not-for-betting",
+             "evidenceSufficientForShadow":sufficient,
+             "evidenceCoverage":{"credibleHorseCount":credible,"minimumCredibleRequired":min_credible,
+                                 "eligibleRunnerCount":len(active)},
              "pressure": {"credibleHistoryHorses":len(pressure),
                           "possibleLeadContenders":lead_count,
                           "historicalFrontRateMean":_avg(pressure)},

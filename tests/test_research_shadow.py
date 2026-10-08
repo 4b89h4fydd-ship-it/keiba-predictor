@@ -49,6 +49,13 @@ class ResearchShadowTests(unittest.TestCase):
         self.assertEqual(len(triples),24)
         self.assertAlmostEqual(sum(x["score"] for x in triples),1.,places=9)
 
+    def test_insufficient_historical_coverage_cannot_fake_ordered_odds(self):
+        r={**self.race,"horses":[{"horseNumber":1}, {"horseNumber":2}, {"horseNumber":3}]}
+        shadow=build_shadow(r)
+        self.assertFalse(shadow["evidenceSufficientForShadow"])
+        self.assertTrue(all(row["uncalibrated"] is None for row in shadow["rows"]))
+        self.assertEqual(shadow["orderedTrifectaShadow"],[])
+
     def test_missing_history_is_not_replaced_with_fake_quality(self):
         result=horse_evidence({"horseNumber":1},self.race)
         self.assertIsNone(result["closingPercentile"])
