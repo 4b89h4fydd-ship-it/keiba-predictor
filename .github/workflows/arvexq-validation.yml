@@ -119,7 +119,7 @@ jobs:
           prefetch_required=['_build_fast_diagnosis_snapshot(','allow_network=True','deep_context=True','_merge_detail(','memory-authoritative']
           missing=[x for x in prefetch_required if x not in prefetch]
           if missing:raise SystemExit('prefetch must explicitly materialize and retain diagnosis: '+repr(missing))
-          workflow_required=['missing_analysis_count','analysisCount','proceeding to D1 repair','D1_MISSING_CARDS','ARVEXQ_PREFETCH_WORKERS: "1"','ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "1"','Validate restored SQLite cache','arvexq_sqlite_health.py']
+          workflow_required=['missing_analysis_count','analysisCount','proceeding to D1 repair','D1_MISSING_CARDS','ARVEXQ_PREFETCH_WORKERS: "1"','ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "1"','Validate restored SQLite cache','Stop bootstrap server to release SQLite writers','arvexq_sqlite_health.py']
           missing=[x for x in workflow_required if x not in prefetch_workflow]
           if missing:raise SystemExit('prefetch workflow correctness guard missing: '+repr(missing))
           if 'exit 1' in prefetch_workflow.split('if [ "$MISSING_CARD" -gt 0 ] || [ "$MISSING_ANALYSIS" -gt 0 ]; then',1)[-1].split('fi',1)[0]:

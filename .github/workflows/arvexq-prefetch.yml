@@ -127,6 +127,19 @@ jobs:
             exit 0
           fi
 
+      - name: Stop bootstrap server to release SQLite writers
+        run: |
+          # Bootstrap HTTP discovery has finished; diagnosis uses app.py directly.
+          # A concurrent Uvicorn background writer was locking the same RaceDB.
+          if [ -f /tmp/arvexq-prefetch.pid ]; then
+            PID=$(cat /tmp/arvexq-prefetch.pid)
+            kill "$PID" 2>/dev/null || true
+            for i in $(seq 1 12); do
+              if ! kill -0 "$PID" 2>/dev/null; then break; fi
+              sleep 1
+            done
+          fi
+
       - name: Precompute all race cards and analysis
         run: |
           RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
