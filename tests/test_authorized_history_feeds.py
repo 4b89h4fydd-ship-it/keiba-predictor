@@ -143,6 +143,74 @@ class AuthorizedHistoryRuntimeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(meta["measuredHorseFirst3FProviderCount"], 1)
         self.assertNotIn("horseFirst3FSeconds", h["recentRaces"][0], "input is unchanged")
 
+    async def test_individual_first_furlong_and_gate_times_require_authorized_provenance(self):
+        reg = DataBankRegistry()
+        partner = spec()
+        partner["horse_early_timing"] = True
+        register_authorized_history_feeds(
+            reg, config=json.dumps([partner]),
+            environ={"ARVEXQ_FAKE_TOKEN": "secret"},
+        )
+        horse = {"horseId": "horse-100", "name": "sample"}
+        race = {"date": "2026-10-08", "circuit": "中央"}
+        samples = [
+            dict(runner("2026-09-30", 2), earlyTiming={
+                "sourceKind": "individual_sensor", "sourceRef": "provider:sensor:001",
+                "first200mSeconds": 12.8, "gateReactionSeconds": 0.32,
+                "acceleration0to100Mps2": 2.8,
+            }),
+            dict(runner("2026-09-24", 3), earlyTiming={
+                "sourceKind": "video_estimate", "sourceRef": "review:race:002",
+                "first200mSeconds": 13.5, "gateReactionSeconds": 0.5,
+            }),
+            dict(runner("2026-09-18", 2), earlyTiming={
+                "sourceKind": "official_race_lap", "sourceRef": "jra:race:003",
+                "first200mSeconds": 12.0,
+            }),
+            dict(runner("2026-09-12", 2), earlyTiming={
+                "sourceKind": "individual_sensor", "sourceRef": "",
+                "first200mSeconds": 11.0,
+            }),
+            dict(runner("2026-09-06", 2), earlyTiming={
+                "sourceKind": "individual_sensor", "sourceRef": "provider:004",
+                "first200mSeconds": 999.0, "gateReactionSeconds": -1,
+            }),
+            dict(runner("2026-10-09", 2), earlyTiming={
+                "sourceKind": "individual_sensor", "sourceRef": "future",
+                "first200mSeconds": 12.0,
+            }),
+        ]
+        with patch.dict(os.environ, {"ARVEXQ_FAKE_TOKEN": "secret"}), patch(
+            "urllib.request.urlopen",
+            return_value=HttpResponse({"horseId":"horse-100", "recentRaces": samples}),
+        ):
+            results = await fetch_domain(
+                "horse_history", horse, race, 5, circuit="JRA", bank_registry=reg
+            )
+        self.assertTrue(results[0].ok)
+        rows = results[0].data["recentRaces"]
+        self.assertEqual(len(rows), 5)
+        self.assertEqual(rows[0]["earlyTiming"]["first200mSeconds"], 12.8)
+        self.assertEqual(rows[0]["earlyTiming"]["gateReactionSeconds"], .32)
+        self.assertEqual(rows[1]["earlyTiming"]["sourceKind"], "video_estimate")
+        self.assertTrue(all("earlyTiming" not in z for z in rows[2:]))
+
+        # The exact same JSON is rejected if the provider did not contract for it.
+        no_timing = spec(name="partner_no_timing")
+        plain = DataBankRegistry()
+        register_authorized_history_feeds(
+            plain, config=json.dumps([no_timing]),
+            environ={"ARVEXQ_FAKE_TOKEN": "secret"},
+        )
+        with patch.dict(os.environ, {"ARVEXQ_FAKE_TOKEN": "secret"}), patch(
+            "urllib.request.urlopen",
+            return_value=HttpResponse({"horseId":"horse-100", "recentRaces": samples}),
+        ):
+            results = await fetch_domain(
+                "horse_history", horse, race, 5, circuit="JRA", bank_registry=plain
+            )
+        self.assertTrue(all("earlyTiming" not in row for row in results[0].data["recentRaces"]))
+
     async def test_bad_provider_is_isolated_and_no_wrong_horse_merge(self):
         reg = DataBankRegistry()
         reg.register(DataSource(
