@@ -83,7 +83,36 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
         import app
         build = app._build_prerace_prediction
     try:
-        working = assign(copy.deepcopy(detail))
+        # Rank ONLY active starters. Ranking a complete roster first silently
+        # lets a cancelled runner consume ◎/○ and distort every other mark.
+        # Keep the full original roster for the racecard and result collectors.
+        working = copy.deepcopy(detail)
+        starters = copy.deepcopy(active)
+        core_input = copy.deepcopy(working)
+        core_input["horses"] = starters
+        ranked = assign(core_input)
+        if not isinstance(ranked, dict):
+            return {"status": "incomplete-prediction"}
+        ranked_horses = {
+            int(h.get("horseNumber") or 0): h
+            for h in (ranked.get("horses") or [])
+            if isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0
+        }
+        for horse in (working.get("horses") or []):
+            no = int(horse.get("horseNumber") or 0)
+            if no in ranked_horses:
+                evaluated = ranked_horses[no].get("integratedEvaluation")
+                if not isinstance(evaluated, dict):
+                    return {"status": "no-evaluation"}
+                horse["integratedEvaluation"] = copy.deepcopy(evaluated)
+            elif no > 0:
+                old = dict(horse.get("integratedEvaluation") or {})
+                old["mark"] = ""
+                horse["integratedEvaluation"] = old
+        for key in ("honmeiDecision", "factorRanking", "markEngineVersion",
+                    "predictionModelVersion", "winConfidenceEvidence"):
+            if key in ranked:
+                working[key] = copy.deepcopy(ranked[key])
         lock = build(working)
         if not isinstance(lock, dict) or int(lock.get("markCount") or 0) < 3:
             return {"status": "incomplete-prediction"}

@@ -172,6 +172,28 @@ class ServerSealTests(unittest.TestCase):
         result = restore_seal(stored["detail"], modified)
         self.assertEqual(result["preRacePrediction"], before)
 
+    def test_scratch_excluded_from_core_rank_without_deleting_racecard(self):
+        from scripts.arvexq_freeze_predictions import prepare_seal
+        d = deepcopy(self.d)
+        d["horses"].insert(0,{
+            "horseNumber": 4, "name": "CANCELLED", "status": "出走取消",
+            "scratched": True, "recentRaces": [{"finish": 1}],
+            "integratedEvaluation": {"mark": "◎", "grade": "S"}})
+        seen = []
+        def assign_core(data):
+            seen.extend(h["horseNumber"] for h in data["horses"])
+            for h, mark in zip(data["horses"],("◎", "○", "▲")):
+                h["integratedEvaluation"]["mark"] = mark
+            return data
+        result = prepare_seal(d, now=self.now, assign=assign_core,
+                              build=lambda wd: forecast(wd,self.now))
+        self.assertEqual(result["status"], "sealed")
+        self.assertEqual(seen, [1,2,3])
+        self.assertEqual(len(result["detail"]["horses"]),4)
+        locked = result["detail"]["preRacePrediction"]["horses"]
+        self.assertNotIn(4,[r["horseNumber"] for r in locked])
+        self.assertEqual(result["detail"]["horses"][0]["integratedEvaluation"]["mark"],"")
+
     def test_existing_sealed_marks_survive_ticket_backfill_before_off(self):
         from scripts.arvexq_freeze_predictions import prepare_seal
         d = seal_detail(self.d, forecast(self.d,self.now),self.now)
