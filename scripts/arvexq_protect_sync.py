@@ -82,13 +82,43 @@ def guard(body: dict[str, Any], read=fetch_current, *, base: str) -> dict[str, A
     return out
 
 
+def verify_published(body: dict[str, Any], *, base: str, read=fetch_current) -> list[str]:
+    """Detect a concurrent D1 sync that removed or rewrote a pre-race seal.
+
+    This is not a substitute for an atomic Worker-side compare-and-swap,
+    but it makes lost archives observable rather than silently claiming success.
+    """
+    verified: list[str] = []
+    for detail in body.get("details") or []:
+        if not isinstance(detail, dict) or not detail.get("id"):
+            continue
+        lock = sealed_lock(detail)
+        if not lock:
+            continue
+        rid = str(detail["id"])
+        actual = read(base, rid)
+        current = sealed_lock(actual or {})
+        if not current or current != lock:
+            raise RuntimeError("D1_SEAL_POST_VERIFY_MISMATCH " + rid)
+        bet = detail.get("preRaceBet")
+        if isinstance(bet, dict) and (actual or {}).get("preRaceBet") != bet:
+            raise RuntimeError("D1_PRE_RACE_BET_POST_VERIFY_MISMATCH " + rid)
+        verified.append(rid)
+    return verified
+
+
 def main() -> int:
     p=argparse.ArgumentParser()
     p.add_argument("--file", required=True)
+    p.add_argument("--verify-post", action="store_true")
     p.add_argument("--api-base", default=os.getenv("CLOUDFLARE_API_BASE", "https://kraiz-api.4b89h4fydd.workers.dev"))
     args=p.parse_args()
     path=Path(args.file)
     body=json.loads(path.read_text(encoding="utf-8"))
+    if args.verify_post:
+        verified = verify_published(body, base=args.api_base)
+        print("D1_SEAL_POST_VERIFY_OK", len(verified), ",".join(verified[:10]))
+        return 0
     changed=guard(body, base=args.api_base)
     # Atomic rewrite: never send a partially guarded batch.
     tmp=path.with_name(path.name+".sealed.tmp")

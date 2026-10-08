@@ -227,6 +227,8 @@ jobs:
               --data-binary @"$file" > /dev/null; then
               echo "::warning::D1 batch failed: $(basename "$file")"
               FAILED_BATCHES=$((FAILED_BATCHES + 1))
+            else
+              PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"
             fi
           done
           echo "D1 prefetch push finished: failed_batches=$FAILED_BATCHES; checking all race IDs and rosters next"

@@ -141,6 +141,7 @@ jobs:
               -H "content-type: application/json" \
               -H "x-sync-token: $SYNC_TOKEN" \
               --data-binary @"$file" > /dev/null
+            PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"
           done
           echo "D1 live batched push OK"
 

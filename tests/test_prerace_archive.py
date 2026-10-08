@@ -198,6 +198,17 @@ class ServerSealTests(unittest.TestCase):
         self.assertNotIn(4,[r["horseNumber"] for r in locked])
         self.assertEqual(result["detail"]["horses"][0]["integratedEvaluation"]["mark"],"")
 
+    def test_post_sync_detects_race_condition_erasure(self):
+        from scripts.arvexq_protect_sync import verify_published
+        original = seal_detail(self.d,forecast(self.d,self.now),self.now)
+        good = lambda base,rid: deepcopy(original)
+        self.assertEqual(verify_published({"details":[original]},base="test",read=good),
+                         [self.d["id"]])
+        bad = lambda base,rid: {"id":self.d["id"],"date":self.d["date"],
+                                "startTime":self.d["startTime"]}
+        with self.assertRaisesRegex(RuntimeError,"POST_VERIFY_MISMATCH"):
+            verify_published({"details":[original]},base="test",read=bad)
+
     def test_existing_sealed_marks_survive_ticket_backfill_before_off(self):
         from scripts.arvexq_freeze_predictions import prepare_seal
         d = seal_detail(self.d, forecast(self.d,self.now),self.now)
