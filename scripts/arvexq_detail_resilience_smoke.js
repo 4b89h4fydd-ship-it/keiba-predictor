@@ -19,6 +19,7 @@ const instrumented = source.replace(boot, `
     saveDetailCache,loadDetailCache,detailCacheKey,raceHeadCountText,
     failPrediction:function(){predict=function(){throw Error('diagnosis test failure')}},
     failDiagnosisPanel:function(){diagnosisPanel=function(){throw Error('diagnosis panel failure')}},
+    failPacePanel:function(){pacePanel=function(){throw Error('pace panel failure')}},
     prediction:function(){return state.pred}};
 `);
 (async()=>{
@@ -54,16 +55,17 @@ const instrumented = source.replace(boot, `
  await t.page.waitForFunction(id=>testDetail.detailState(id).entry==='error'&&!testDetail.detailState(id).busy,id);
  assert.equal(t.requests.length,3);assert.ok(t.requests[1].at-t.requests[0].at>=900);assert.ok(t.requests[2].at-t.requests[1].at>=1900);
  assert.equal(await t.page.locator('.notice,.smart-loading').count(),0);
- recovered=true;await t.page.locator('[data-detail-retry]').first().click();await t.page.waitForSelector('.racecard-row');
+ recovered=true;await t.page.evaluate(id=>testDetail.openRace(id,true,true,true),id);await t.page.waitForSelector('.racecard-row');
  assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);
  assert.equal(await t.page.evaluate(()=>localStorage.getItem('unrelated-cache')),'keep');
  assert.ok(t.requests.every(x=>decodeURIComponent(new URL(x.url).pathname)==='/api/race/'+id));
  await t.page.waitForFunction(()=>testDetail.prediction()!=null);
- await t.page.locator('[data-panel="diagnosis"]').click();await t.page.waitForSelector('.diagnosis-merged-row');
- assert.equal(await t.page.locator('.diagnosis-merged-row').count(),detail.horses.length);
- await t.page.locator('.diagnosis-horse-main[data-horse-open="2"]').click();await t.page.waitForSelector('.horse-modal-body .recent');
- assert.equal(await t.page.locator('.horse-modal-body .recent').count(),Math.min(5,(detail.horses.find(h=>h.horseNumber===2).recentRaces||[]).length));
- await t.page.locator('.horse-modal-close').click();
+ // Current UI has entry/pace tabs and a dedicated horse-detail subpage.
+ await t.page.locator('.rc-horse-main[data-horse-open="2"]').click();
+ await t.page.waitForSelector('.horse-detail-page .recent');
+ assert.equal(await t.page.locator('.horse-detail-page .recent').count(),Math.min(5,(detail.horses.find(h=>h.horseNumber===2).recentRaces||[]).length));
+ await t.page.locator('[data-action="close-race-subpage"]').click();
+ await t.page.locator('[data-panel="pace"]').click();await t.page.waitForSelector('#section-pace');
  await t.page.locator('[data-panel="entry"]').click();
  const rects=await t.page.locator('.race-nav-v230-top .race-nav-v230-btn').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return [r.width,r.height,s.padding,s.fontSize,s.lineHeight,s.boxSizing]}));assert.deepEqual(rects[0],rects[1]);
  const layout=await t.page.evaluate(()=>{const h=document.querySelector('.smart-race-title-stack h1'),time=document.querySelector('.smart-race-result-side');return {title:h.getBoundingClientRect().toJSON(),time:time.getBoundingClientRect().toJSON(),lineHeight:parseFloat(getComputedStyle(h).lineHeight),clamp:getComputedStyle(h).webkitLineClamp}});
@@ -82,13 +84,15 @@ const instrumented = source.replace(boot, `
  await t.page.waitForFunction(id=>!!testDetail.detailState(id).error&&!testDetail.detailState(id).busy,id);
  assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);
  assert.equal(await t.page.locator('.notice,.smart-loading').count(),0);
- await t.page.locator('[data-panel="diagnosis"]').click();assert.equal(await t.page.locator('[data-section-state="error"]').count(),1);
+ assert.ok(await t.page.evaluate(id=>!!testDetail.detailState(id).error,id),'detail outage must be recorded');
+ await t.page.locator('[data-panel="pace"]').click();
  await t.page.locator('[data-panel="entry"]').click();assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);
  assert.equal(await t.page.evaluate(()=>testDetail.state.race._entryOnly),true);
- recoverFull=true;await t.page.locator('[data-detail-retry]').first().click();
+ recoverFull=true;await t.page.evaluate(id=>testDetail.openRace(id,true,true,true),id);
  await t.page.waitForFunction(()=>testDetail.state.race._entryOnly===false&&testDetail.prediction()!=null);
- await t.page.locator('[data-panel="diagnosis"]').click();await t.page.waitForSelector('.diagnosis-merged-row');
- assert.equal(await t.page.locator('.diagnosis-merged-row').count(),detail.horses.length);
+ await t.page.locator('.rc-horse-main[data-horse-open="2"]').click();await t.page.waitForSelector('.horse-detail-page .recent');
+ assert.equal(await t.page.locator('.horse-detail-page .recent').count(),5);
+ await t.page.locator('[data-action="close-race-subpage"]').click();
  console.log('Independent compact roster + odds survive outage; full recovery clears compact flag PASS');await t.page.close();
  t=await setup(route=>route.fulfill({status:503,body:'outage'}));
  await t.page.evaluate(({id,detail})=>{localStorage.setItem(testDetail.detailCacheKey(id),JSON.stringify({ts:Date.now()-3600000,row:detail}));testDetail.openRace(id)}, {id,detail});
@@ -98,15 +102,16 @@ const instrumented = source.replace(boot, `
  const thin={...detail,horses:detail.horses.map(h=>({...h,winOdds:null,popularity:null,recentRaces:[],allPastRuns:[]})),preparedMeta:{}};
  t=await setup(route=>route.fulfill({json:{ok:true,detail:thin,summary:base,odds:[]}}));
  await t.page.evaluate(id=>{testDetail.failPrediction();testDetail.openRace(id)},id);await t.page.waitForSelector('.racecard-row');
- await t.page.waitForFunction(id=>testDetail.detailState(id).diagnosis==='error',id);
- await t.page.locator('[data-panel="diagnosis"]').click();assert.equal(await t.page.locator('[data-section-state="error"]').count(),1);
- await t.page.locator('[data-panel="entry"]').click();assert.equal(await t.page.locator('.racecard-row').count(),thin.horses.length);
+ await t.page.waitForFunction(()=>testDetail.state.race&&testDetail.state.race.horses.length===2);
+ assert.equal(await t.page.locator('.racecard-row').count(),thin.horses.length);
+ assert.ok((await t.page.locator('body').innerText()).includes('AI解析'),'analysis failure should be announced without hiding entries');
  assert.equal(await t.page.locator('.notice').count(),0);console.log('Missing odds/history and diagnosis exception cannot hide roster PASS');await t.page.close();
  t=await setup(route=>route.fulfill({json:{ok:true,detail,summary:base,odds:'invalid',analysis_ready:true}}));
  await t.page.evaluate(id=>testDetail.openRace(id),id);await t.page.waitForSelector('.racecard-row');await t.page.waitForFunction(()=>testDetail.prediction()!=null);
- await t.page.evaluate(()=>testDetail.failDiagnosisPanel());await t.page.locator('[data-panel="diagnosis"]').click();
- assert.equal(await t.page.locator('[data-section-state="error"]').count(),1);await t.page.locator('[data-panel="entry"]').click();
- assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);console.log('Malformed odds array and failed diagnosis presenter isolated PASS');await t.page.close();
+ await t.page.evaluate(()=>testDetail.failPacePanel());await t.page.locator('[data-panel="pace"]').click();
+ assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);
+ assert.ok((await t.page.locator('body').innerText()).includes('AI解析'),'pace presenter failure must preserve racecard');
+ console.log('Malformed odds array and failed pace presenter isolated PASS');await t.page.close();
  t=await setup(route=>route.fulfill({json:{ok:true,detail:{...base,fieldSize:0,horses:[]},summary:base}}));
  await t.page.evaluate(id=>testDetail.openRace(id),id);await t.page.waitForFunction(id=>testDetail.detailState(id).entry==='empty',id);
  assert.ok((await t.page.locator('.smart-race-meta').textContent()).includes('0頭'));console.log('Explicit confirmed zero entries only -> empty PASS');await t.page.close();
