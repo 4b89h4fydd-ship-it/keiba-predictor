@@ -43,6 +43,10 @@ const cancelled=make(['△','◎','▲','○']);
 cancelled.rows[0].horse.scratched=true;
 fn.applyFrozenMarks(race,cancelled);
 assert.equal(cancelled.rows[0].predMark,'','cancelled horse must not retain publishable mark');
+const resultWithoutClock={...race,startTime:'',result:{status:'確定',
+  finishers:[{horseNumber:3,finish:1}]}};
+assert.equal(fn.raceMarkClock(resultWithoutClock).started,true,
+ 'published result must always suppress prediction regardless of missing clock');
 const onOtherDevice={...race,id:'nar-2026-10-08-大井-12',startTime:'20:10'};
 const postResult=fn.applyFrozenMarks(onOtherDevice,make(['◎','○','▲','☆']));
 assert.equal(postResult.markFreeze.source,'missing-prerace');
