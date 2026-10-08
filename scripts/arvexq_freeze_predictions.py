@@ -10,6 +10,7 @@ import argparse
 import copy
 import json
 import os
+import subprocess
 import time
 import urllib.parse
 import urllib.request
@@ -90,6 +91,30 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
         return {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
 
 
+def capture_original_bet(detail: dict[str, Any], now: datetime) -> dict[str, Any]:
+    """Execute the actual client betting core before the off, never on results."""
+    post = post_at(detail)
+    if not post or now.astimezone(JST) >= post:
+        raise ValueError("refusing post-off ticket generation")
+    command = ["node", "scripts/arvexq_capture_prerace_bet.js"]
+    process = subprocess.run(
+        command, input=json.dumps(detail, ensure_ascii=False),
+        text=True, capture_output=True, timeout=22,
+        env={**os.environ, "TZ": "Asia/Tokyo"},
+    )
+    if process.returncode:
+        raise RuntimeError("bet capture failed: " + process.stderr[-900:])
+    result = json.loads(process.stdout.strip())
+    if not isinstance(result, dict) or not isinstance(result.get("items"), list):
+        raise ValueError("bet capture returned no ticket model")
+    result["raceId"] = str(detail["id"])
+    result["fixedAt"] = now.isoformat(timespec="seconds")
+    result["fixedBeforePost"] = True
+    result["fixedMinutesBeforePost"] = int((post - now).total_seconds() // 60)
+    result["lockPolicy"] = "server-js-ticket-v1-no-post-hoc"
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--api-base", default=os.getenv("CLOUDFLARE_API_BASE", "https://kraiz-api.4b89h4fydd.workers.dev"))
@@ -132,6 +157,18 @@ def main() -> int:
             if result["status"] != "sealed":
                 return {"id": rid, **{k: v for k, v in result.items() if k not in ("detail",)}}
             detail = result["detail"]
+            try:
+                detail["preRaceBet"] = capture_original_bet(detail, now=datetime.now(JST))
+            except Exception as exc:
+                # Explicit immutable non-recommendation, never forged tickets.
+                detail["preRaceBet"] = {
+                    "raceId": rid, "fixedAt": datetime.now(JST).isoformat(timespec="seconds"),
+                    "decision": "見送り", "items": [], "betQuality": 0,
+                    "trifectaReviewed": True, "trifectaDecision": "見送り",
+                    "reason": "買い目モデル取得不可。発走後の再計算は実施しません。",
+                    "captureError": f"{type(exc).__name__}: {exc}"[:250],
+                    "lockPolicy": "server-js-ticket-v1-fallback",
+                }
             payload = {
                 "summaries": [], "details": [detail],
                 "meta": {"source": "github-actions-prerace-seal-v1",
@@ -140,7 +177,8 @@ def main() -> int:
             request_json(base + "/api/sync", payload=payload, token=token, retries=4)
             verified = detail_from(request_json(url + "?verify=" + str(time.time_ns())), rid)
             stamp = (verified or {}).get("preRacePrediction") or {}
-            if stamp.get("sealRevision") != result["revision"] or not sealed_lock(verified or {}):
+            bet = (verified or {}).get("preRaceBet") or {}
+            if stamp.get("sealRevision") != result["revision"] or not sealed_lock(verified or {}) or (not bet.get("fixedAt") or str(bet.get("raceId") or "") != rid):
                 return {"id": rid, "status": "verification-failed"}
             return {"id": rid, "status": "sealed", "revision": result["revision"]}
         except Exception as exc:

@@ -41,7 +41,9 @@ jobs:
           cache-dependency-path: requirements.txt
       - run: python -m pip install -q -r requirements.txt
       - name: Server seal unit regressions
-        run: python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
+        run: |
+          node --check scripts/arvexq_capture_prerace_bet.js
+          python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
       - name: Seal upcoming races into Cloudflare D1
         run: PYTHONPATH=. python scripts/arvexq_freeze_predictions.py --audit prerace-freeze-report.json --ahead-minutes 35
       - name: Upload seal audit

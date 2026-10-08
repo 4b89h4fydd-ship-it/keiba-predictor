@@ -87,6 +87,20 @@ class ServerSealTests(unittest.TestCase):
         self.assertEqual(protected["details"][0]["preRacePrediction"],d["preRacePrediction"])
         self.assertEqual(protected["details"][0]["result"]["status"],"確定")
 
+    def test_same_js_betting_core_is_archiveable(self):
+        from scripts.arvexq_freeze_predictions import capture_original_bet
+        import shutil
+        if shutil.which("node") is None:
+            self.skipTest("Node unavailable")
+        d = seal_detail(self.d, forecast(self.d, self.now), self.now)
+        bet = capture_original_bet(d, self.now)
+        self.assertEqual(bet["raceId"], self.d["id"])
+        self.assertTrue(bet["fixedBeforePost"])
+        self.assertIsInstance(bet["items"], list)
+        self.assertIn("jsHash", bet)
+        with self.assertRaises(ValueError):
+            capture_original_bet(d, self.now + timedelta(minutes=21))
+
     def test_cross_race_id_is_rejected(self):
         d = deepcopy(self.d)
         d["id"] += "-other"
