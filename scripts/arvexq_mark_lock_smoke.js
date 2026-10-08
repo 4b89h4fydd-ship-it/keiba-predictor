@@ -48,4 +48,6 @@ assert.ok(postResult.rows.every(z=>z.predMark===''),'no post-hoc prediction with
 assert.match(src,/if\(started&&!Object\.keys\(byNo\)\.length\)return false/,'post-race cannot apply rerun mark');
 assert.match(src,/if\(raceMarkClock\(r\)\.started\)/,'post-start must use archived read-only path');
 assert.match(src,/if\(changed\)\{saveDetailCache\(id,state\.race\);render\(\)\}/,'odds-only refresh must not blindly reset');
+assert.match(src,/resultPublished=isFinal\(r\)\|\|isFlash\(r\)\|\|hasAnyResultData\(r\)/,
+  'official results must stop prediction even without a scheduled start time');
 console.log('ARVEXQ_MARK_FREEZE_OK late_update=stable historical_no_posthoc scratch=safe');

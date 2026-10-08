@@ -1671,8 +1671,12 @@ function integratedGrades(r,rows){
 // refresh and the mutable winner model.  The server pre-race archive is preferred
 // after the off.  A local device freeze is recorded BEFORE the scheduled start.
 function raceMarkClock(r){
-  var date=String(r&&r.date||''),post=mins(r&&r.startTime),current=today();
-  return {valid:!!date&&post<9999,started:!!date&&(date<current||(date===current&&nowMins()>=post)),
+  var date=String(r&&r.date||''),post=mins(r&&r.startTime),current=today(),
+      status=String(r&&r.raceStatus||''),
+      resultPublished=isFinal(r)||isFlash(r)||hasAnyResultData(r)||
+        /^(?:発走済|発走中|発走$|進行中|確定|速報|終了)/.test(status);
+  return {valid:!!date&&post<9999,
+    started:resultPublished||!!date&&(date<current||(date===current&&post<9999&&nowMins()>=post)),
     remaining:date===current?post-nowMins():9999};
 }
 function markFreezeKey(r){return 'arvexq:marks:frozen:v345:'+String(r&&r.date||'')+':'+String(r&&r.id||'')}
