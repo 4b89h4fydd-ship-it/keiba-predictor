@@ -96,15 +96,15 @@ def main() -> int:
     for detail in wanted:
         rid = str(detail.get("id") or "")
         old = current_by_id.get(rid)
+        new_roster = named_roster(detail)
+        old_roster = named_roster(old)
+        # Even a rich cached race must not be downgraded when the new source
+        # loses a horse or supplies conflicting race numbers.
+        if old_roster and not set(old_roster).issubset(new_roster):
+            reasons.append({"race_id": rid, "reason": "source_roster_missing_known_horses"})
+            continue
         reason = repair_reason(detail, old)
         if reason:
-            new_roster = named_roster(detail)
-            old_roster = named_roster(old)
-            # Never drop a horse seen in D1 even when a newer source is thinner
-            # or has a different set of horse numbers for the same race ID.
-            if old_roster and not set(old_roster).issubset(new_roster):
-                reasons.append({"race_id": rid, "reason": "source_roster_missing_known_horses"})
-                continue
             if len(new_roster) < 2:
                 reasons.append({"race_id": rid, "reason": "source_missing_named_runners"})
                 continue
