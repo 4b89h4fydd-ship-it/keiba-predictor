@@ -10,6 +10,7 @@ on:
       - 'wrangler.toml'
       - 'app.py'
       - 'scripts/arvexq_webapp_race_smoke.js'
+      - 'scripts/arvexq_detail_resilience_smoke.js'
       - '.github/workflows/arvexq-webapp-race-smoke.yml'
   workflow_dispatch:
 
