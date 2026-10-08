@@ -194,7 +194,29 @@ jobs:
             --report current-d1-report.json \
             --workers 4 \
             --retries 6 \
-            --allow-missing-details
+            --allow-missing-details \
+            --allow-empty-day
+          # On a newly opened racing date, publish lightweight summaries first.
+          # The race list must not depend on slower roster/AI-detail materialization.
+          EXISTING=$(jq '.races // [] | length' current-d1.json)
+          if [ "$EXISTING" -eq 0 ]; then
+            PREPARED=$(jq '.summaries // [] | length' prefetch-payload.json)
+            if [ "$PREPARED" -le 0 ]; then
+              echo "::error::No officially prepared summaries for first D1 publication"
+              exit 1
+            fi
+            jq -n --slurpfile data prefetch-payload.json \
+              '{summaries: $data[0].summaries,details: [],meta: {source:"arvexq-cold-start-race-summaries-v1",sync_batch:true,sync_batch_kind:"summaries"}}' \
+              > initial-day-summaries.json
+            echo "D1 initial race list publishing summaries=$PREPARED"
+            curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
+              --connect-timeout 10 --max-time 40 -X POST \
+              "$CLOUDFLARE_API_BASE/api/sync" \
+              -H "content-type: application/json" \
+              -H "x-sync-token: $SYNC_TOKEN" \
+              --data-binary @initial-day-summaries.json > /dev/null
+            echo "D1_COLD_START_SUMMARIES_PUBLISHED $PREPARED"
+          fi
           python scripts/arvexq_select_prefetch_repairs.py \
             --prepared prefetch-payload.json \
             --current current-d1.json \
