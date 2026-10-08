@@ -3775,6 +3775,12 @@ function paceStageNarrative(p,key){
         tailSettled=settled[settled.length-1]||tail;
     if(contenders.length>=2)text.push(paceNosText(contenders)+'がハナ争い');
     text.push(n(settledLeader&&settledLeader.horse&&settledLeader.horse.horseNumber)+'がハナ');
+    // Expose the data behind the claim; first-corner occupancy is NOT measured
+    // gate reaction or first-1F time. Show sample sizes to avoid false certainty.
+    contenders.slice(0,Math.min(3,contenders.length)).forEach(function(z){
+      var ph=z.minetaPast||minetaPastProfile(z.horse,state.race||{}),cnt=n(ph.firstCornerSamples,0);
+      if(cnt)text.push(n(z.horse.horseNumber)+'の近走初角先頭 '+Math.round(n(ph.leadRate)*100)+'%（'+cnt+'走）');
+    });
     if(secondLine.length)text.push('2番手集団 '+paceNosText(secondLine));
     if(nextLine.length)text.push('その後ろ '+paceNosText(nextLine));
     if(midSettled.length>=2)text.push('中団 '+paceNosText(midSettled));
@@ -3914,6 +3920,7 @@ function paceFormationDiagram(r,p,cfg){
 function paceStageEvidence(p,cfg){
   return '<section class="pace-stage-explain"><h2>'+esc(cfg.detail)+'</h2>'
     +'<p class="pace-stage-narrative">'+esc(paceStageNarrative(p,cfg.key))+'</p>'
+    +(cfg.key==='start'?'<p class="muted">先行根拠は近走の初角通過順位。テン1F実測時計・ゲート反応時間を測定した数値ではありません。</p>':'')
     +'</section>'
 }
 function paceStagePage(r,p){
@@ -3940,7 +3947,7 @@ function paceOutcomeModel(r,p){
   var order=pack.map(function(z){return byNo[n(z.no)]}).filter(Boolean);
   rows.forEach(function(x){if(order.indexOf(x)<0)order.push(x)});
   var day=sameDayCorrectionProfileV313(r,rows)||{active:false,flowLabel:'中立',byNo:{}},sc=plan.scenario||{},arr=p.arrangement||{},
-      leader=(arr.leadCandidates||[])[0]||((plan.start||[])[0])||null,field=Math.max(1,order.length),rankByNo={};
+      leader=((plan.start||[])[0])||(arr.leadCandidates||[])[0]||null,field=Math.max(1,order.length),rankByNo={};
   order.forEach(function(x,idx){rankByNo[n(x.horse.horseNumber)]=idx+1});
   rows.forEach(function(x){
     var no=n(x.horse.horseNumber),rank=n(rankByNo[no],field),pos=field<=1?1:1-(rank-1)/(field-1),dc=(day.byNo||{})[no]||{},
