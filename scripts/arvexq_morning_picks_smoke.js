@@ -9,7 +9,7 @@ function take(name){
   assert(a>=0&&b>a,'missing '+name);
   return src.slice(a,b+2);
 }
-const code=['morningPickReady','selectedRaceCandidates','specialForecastRaceCandidates']
+const code=['morningPickOf','morningPickReady','selectedRaceCandidates','specialForecastRaceCandidates']
   .map(take).join('\n')+'\nreturn {morningPickReady,selectedRaceCandidates,specialForecastRaceCandidates};';
 const state={races:[
   {id:'one',date:'2026-10-10',circuit:'中央',track:'東京',raceNumber:1,startTime:'10:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:true,morningSelectedScore:86,morningSpecial:false},
