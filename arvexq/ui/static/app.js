@@ -125,8 +125,66 @@ function weightedRate(vals,weights,def){var s=0,w=0,i;for(i=0;i<vals.length;i++)
 function raceField(rr){return Math.max(4,n(rr&&rr.fieldSize,12))}
 function firstCornerNorm(rr){var p=rr&&rr.cornerPositions||[],x=n(p[0],0);if(!x)return null;return clamp(1-(x-1)/Math.max(1,raceField(rr)-1),0,1)}
 function lastCornerNorm(rr){var p=rr&&rr.cornerPositions||[],x=n(p[p.length-1],0);if(!x)return null;return clamp(1-(x-1)/Math.max(1,raceField(rr)-1),0,1)}
-function styleRates(h,r){var pc=h&&h.precomputedMetrics&&h.precomputedMetrics.style;if(pc&&n(pc.samples)>0)return{front:n(pc.front),stalk:n(pc.stalk),mid:n(pc.mid),close:n(pc.close),early3:n(pc.early3),moved3:n(pc.moved3),ten:n(pc.ten,.5),samples:n(pc.samples),unknown:false};var rs=(h.allPastRuns||h.recentRaces||[]),rw=recencyWeights(rs.length),c=[0,0,0,0],den=0,earlyDen=0,early3=0,moved3=0,tempoVals=[],tempoW=[],i,rr,p,pos,fs,norm,ww,delta,rel,j,bestLater;for(i=0;i<rs.length;i++){rr=rs[i];p=rr.cornerPositions||[];pos=n(p[0],0);if(!pos)continue;fs=raceField(rr);norm=(pos-1)/Math.max(1,fs-1);delta=Math.abs(n(rr.distance)-n(r&&r.distance));rel=1;if(delta<=100)rel*=1.22;else if(delta<=300)rel*=1.08;else if(delta>=700)rel*=.74;if(r&&rr.track===r.track)rel*=1.10;if(r&&sameCondition(rr.condition,r.condition))rel*=1.05;ww=rw[i]*rel;den+=ww;earlyDen+=ww;if(pos===1)c[0]+=ww;else if(pos<=3||norm<=.22)c[1]+=ww;else if(norm<=.62)c[2]+=ww;else c[3]+=ww;if(pos<=3)early3+=ww;bestLater=99;for(j=1;j<p.length;j++){var z=n(p[j],0);if(z&&z<bestLater)bestLater=z}if(pos>3&&bestLater<=3)moved3+=ww;tempoVals.push(clamp(1-(pos-1)/Math.max(3,fs-1),0,1));tempoW.push(ww)}if(!den)return{front:0,stalk:0,mid:0,close:0,early3:0,moved3:0,ten:.5,samples:0,unknown:true};return{front:c[0]/den,stalk:c[1]/den,mid:c[2]/den,close:c[3]/den,early3:earlyDen?early3/earlyDen:0,moved3:earlyDen?moved3/earlyDen:0,ten:weightedRate(tempoVals,tempoW,.5),samples:tempoVals.length,unknown:false}}
-function tenScore(h,r){var rt=styleRates(h,r),rs=(h.allPastRuns||h.recentRaces||[]),w=recencyWeights(rs.length),v=[],ws=[],i,rr,p,fs,delta,rel;for(i=0;i<rs.length;i++){rr=rs[i];p=rr.cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rr);delta=Math.abs(n(rr.distance)-n(r&&r.distance));rel=delta<=100?1.18:(delta<=300?1.05:.88);v.push(clamp(1-(n(p[0])-1)/Math.max(3,fs-1),0,1));ws.push((w[i]||1)*rel)}return clamp(weightedRate(v,ws,rt.ten)*.72+rt.front*.18+rt.early3*.10,0,1)}
+// Consistent pre-race window: deduplicate first, then take the newest five
+// starts. A sixth (older) race cannot substitute for a missing first corner.
+function historicalWindow(h,r){
+  var target=String(r&&r.date||'').replace(/\//g,'-').slice(0,10),
+      seen={},out=[];
+  if(!/^\d{4}-\d\d-\d\d$/.test(target))return[];
+  [].concat(h&&h.recentRaces||[],h&&h.allPastRuns||[]).forEach(function(rr){
+    if(!rr||typeof rr!=='object')return;
+    var d=String(rr.date||rr.raceDate||'').replace(/\//g,'-').slice(0,10),
+        no=n(rr.raceNumber,n(rr.raceNo,0)),
+        key=[d,String(rr.track||''),n(rr.distance,0),no].join('|');
+    if(!/^\d{4}-\d\d-\d\d$/.test(d)||d>=target)return;
+    if(!seen[key]){
+      seen[key]=Object.assign({},rr,{date:d});out.push(seen[key]);return
+    }
+    var old=seen[key],a=rr.cornerPositions||[],b=old.cornerPositions||[];
+    if(a.filter(function(v){return n(v)>0}).length>b.filter(function(v){return n(v)>0}).length)
+      old.cornerPositions=a.slice();
+    if(!n(old.finish)&&n(rr.finish))old.finish=rr.finish
+  });
+  out.sort(function(a,b){return b.date.localeCompare(a.date)||
+    n(b.raceNumber,n(b.raceNo,0))-n(a.raceNumber,n(a.raceNo,0))});
+  return out.slice(0,5)
+}
+function validFirstCorner(rr){
+  var p=n(rr&&rr.cornerPositions&&rr.cornerPositions[0],0),field=n(rr&&rr.fieldSize,0);
+  return Number.isInteger(p)&&p>=1&&(!field||p<=field)
+}
+function styleRates(h,r){
+  var rs=historicalWindow(h,r),w=recencyWeights(rs.length),a=[0,0,0,0],
+      den=0,early3=0,moved3=0,ten=0,samples=0;
+  rs.forEach(function(rr,i){
+    if(!validFirstCorner(rr))return;
+    var first=n(rr.cornerPositions[0]),fs=raceField(rr),
+        norm=(first-1)/Math.max(1,fs-1),delta=Math.abs(n(rr.distance)-n(r.distance)),
+        rel=1,last=(rr.cornerPositions||[]).slice(1);
+    if(delta<=100)rel*=1.22;
+    else if(delta<=300)rel*=1.08;
+    else if(delta>=700)rel*=.74;
+    if(rr.track===r.track)rel*=1.10;
+    if(rr.condition&&r.condition&&sameCondition(rr.condition,r.condition))rel*=1.05;
+    var weight=w[i]*rel;den+=weight;samples++;
+    if(first===1)a[0]+=weight;
+    else if(first<=3||norm<=.22)a[1]+=weight;
+    else if(norm<=.62)a[2]+=weight;
+    else a[3]+=weight;
+    if(first<=3)early3+=weight;
+    if(first>3&&last.some(function(v){return n(v)>0&&n(v)<=3}))moved3+=weight;
+    ten+=weight*clamp(1-(first-1)/Math.max(3,fs-1),0,1)
+  });
+  if(!den)return{front:0,stalk:0,mid:0,close:0,early3:0,moved3:0,
+    ten:.5,samples:0,availableRuns:rs.length,unknown:true,source:'recent5'};
+  return{front:a[0]/den,stalk:a[1]/den,mid:a[2]/den,close:a[3]/den,
+    early3:early3/den,moved3:moved3/den,ten:ten/den,samples:samples,
+    availableRuns:rs.length,unknown:false,source:'recent5'}
+}
+function tenScore(h,r){
+  // First-corner position proxy: not a measured individual opening furlong.
+  var x=styleRates(h,r);return x.samples?clamp(x.ten,0,1):.5
+}
 function firstThreeType(h){var rr=(h.recentRaces||[])[0],p=rr&&rr.cornerPositions||[],j;if(!p.length)return"不明";if(n(p[0])>0&&n(p[0])<=3)return"最初から前";for(j=1;j<p.length;j++)if(n(p[j])>0&&n(p[j])<=3)return"途中から上昇";return"前走は中後方"}
 function fadeRate(h){var rs=(h.allPastRuns||h.recentRaces||[]),w=recencyWeights(rs.length),e=0,f=0,i,p,first,last,fin,fs,ww,sev;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];first=n(p[0]);if(!first||first>4)continue;ww=w[i];fs=raceField(rs[i]);e+=ww;last=n(p[p.length-1]);fin=n(rs[i].finish);sev=0;if(last)sev=Math.max(sev,clamp((last-first)/Math.max(3,fs-1)*2.2,0,1));if(fin)sev=Math.max(sev,clamp((fin-first)/Math.max(3,fs-1)*1.8,0,1));if((last&&last>=first+2)||(fin&&fin>=first+3))sev=Math.max(sev,.55);f+=ww*sev}return e?clamp(f/e,0,1):.25}
 function moveRate(h){var rs=(h.allPastRuns||h.recentRaces||[]),w=recencyWeights(rs.length),e=0,g=0,i,p,a,b,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(p.length<2)continue;a=n(p[0]);b=n(p[p.length-1]);if(!a||!b)continue;ww=w[i];e+=ww;if(b<=a-2)g+=ww}return e?g/e:.2}
@@ -226,23 +284,7 @@ function earlyOcc(r){var hs=r.horses||[],nums=[],early=[],moved=[],i,rr,p,j,hit;
 // Use only prior races for early-position evidence. A takeover at 3C/4C is
 // never treated as a fast start. Neither odds nor post-race target data enter.
 function paceHistoryRuns(h,r){
-  var date=String(r&&r.date||''),seen={},out=[],all=[].concat(h&&h.recentRaces||[],h&&h.allPastRuns||[]);
-  all.forEach(function(rr){
-    if(!rr||typeof rr!=='object')return;
-    var d=String(rr.date||rr.raceDate||'');
-    if(!d||(date&&d>=date))return;
-    var raceNo=n(rr.raceNumber,n(rr.raceNo,0)),
-        key=[d,String(rr.track||''),n(rr.distance,0),raceNo].join('|');
-    var corners=Array.isArray(rr.cornerPositions)?rr.cornerPositions:[],
-        pos=n(corners[0],0),field=n(rr.fieldSize,0);
-    if(!Number.isInteger(pos)||pos<=0||(field>0&&pos>field))return;
-    if(!seen[key]){seen[key]=rr;out.push(rr)}
-    else if((rr.cornerPositions||[]).length>(seen[key].cornerPositions||[]).length){
-      var ix=out.indexOf(seen[key]);seen[key]=rr;if(ix>=0)out[ix]=rr
-    }
-  });
-  out.sort(function(a,b){return String(b.date||b.raceDate||'').localeCompare(String(a.date||a.raceDate||''))});
-  return out.slice(0,5)
+  return historicalWindow(h,r).filter(validFirstCorner)
 }
 function minetaPastProfile(h,r){
   var rs=paceHistoryRuns(h,r),last=rs[0]||null,
