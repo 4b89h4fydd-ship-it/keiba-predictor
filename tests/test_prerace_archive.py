@@ -185,8 +185,12 @@ class ServerSealTests(unittest.TestCase):
             for h, mark in zip(data["horses"],("◎", "○", "▲")):
                 h["integratedEvaluation"]["mark"] = mark
             return data
+        def build_active(wd):
+            active = deepcopy(wd)
+            active["horses"] = [h for h in wd["horses"] if not h.get("scratched")]
+            return forecast(active,self.now)
         result = prepare_seal(d, now=self.now, assign=assign_core,
-                              build=lambda wd: forecast(wd,self.now))
+                              build=build_active)
         self.assertEqual(result["status"], "sealed")
         self.assertEqual(seen, [1,2,3])
         self.assertEqual(len(result["detail"]["horses"]),4)
