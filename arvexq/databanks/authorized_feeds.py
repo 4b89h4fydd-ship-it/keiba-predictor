@@ -6,7 +6,8 @@ ARVEXQ_AUTHORIZED_HISTORY_FEEDS_JSON without changing prediction/UI code.
 
 Format: [{"name":"partner-id","circuit":"JRA|NAR|both",
           "url":"https://licensed-provider.example/api/history",
-          "token_env":"ARVEXQ_PARTNER_TOKEN","priority":25}]
+          "token_env":"ARVEXQ_PARTNER_TOKEN","priority":25,
+          "horse_first3f":true}]
 
 Request (GET): horseId, horseName, raceDate, limit, circuit.
 Response JSON: {"horseId": "...", "horseName": "...",
@@ -79,6 +80,7 @@ def configured_feeds(config: str | None = None, *, environ: Mapping[str, str] | 
         result.append({
             "name": name, "circuit": circuit, "url": endpoint,
             "token_env": token_env, "priority": priority, "enabled": enabled,
+            "horse_first3f": item.get("horse_first3f") is True,
         })
     return result
 
@@ -126,7 +128,19 @@ def _request_history(config: dict[str, Any], horse: dict[str, Any], race: dict[s
                     continue
                 d = str(row.get("date") or row.get("raceDate") or "")
                 if d and d < date:
-                    valid.append(row)
+                    item = dict(row)
+                    # Only an explicitly declared per-horse measurement can
+                    # populate this field. Do not use a race-level opening 3F.
+                    if config.get("horse_first3f") and item.get("horseFirst3FSeconds") in (None, ""):
+                        value = item.get("first3FSeconds")
+                        try:
+                            seconds = float(value)
+                        except (TypeError, ValueError):
+                            seconds = 0.0
+                        if 15 <= seconds <= 90:
+                            item["horseFirst3FSeconds"] = seconds
+                            item["horseEarly3FSource"] = config["name"]
+                    valid.append(item)
             out[key] = valid
     return out
 
@@ -154,6 +168,7 @@ def register_authorized_history_feeds(
             name=feed["name"], circuit=feed["circuit"], priority=feed["priority"],
             capabilities=SourceCapabilities(horse_history=True),
             fetchers={"horse_history": fetch},
+            supplement_complete_history=feed["horse_first3f"],
         ))
         registered.append(feed["name"])
     return registered
