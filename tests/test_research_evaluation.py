@@ -14,6 +14,8 @@ class ResearchEvaluationTests(unittest.TestCase):
         for no in (1,2,3,4):
             d["horses"].append({"horseNumber":no,"name":f"H{no}",
               "recentRaces":[{"date":"2026-09-29","finish":no,"fieldSize":10,
+                              "cornerPositions":[no,no,no,no]},
+                             {"date":"2026-09-12","finish":no,"fieldSize":10,
                               "cornerPositions":[no,no,no,no]}]})
         lock={"raceId":d["id"],"raceDate":d["date"],
               "capturedAtEpoch":int(now.timestamp()),
