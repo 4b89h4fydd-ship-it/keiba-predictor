@@ -4478,3 +4478,41 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
   .racecard-row.rc-racecard-v336.rc-racecard-v339 .rc-mark-stack .rc-mark-top{font-size:17px!important}
   .racecard-row.rc-racecard-v336.rc-racecard-v339 .rc-mark-stack .rc-mark-bottom{font-size:12px!important}
 }
+
+
+/* v342 — persisted explanations for AI ticket vs marks */
+.ai-bet-why{
+  margin:12px 0 14px;
+  padding:13px 14px;
+  border:1px solid #416582;
+  border-radius:12px;
+  background:linear-gradient(155deg,rgba(17,44,65,.90),rgba(9,23,37,.95));
+  color:#d9eaf5;
+  font-size:13px;
+  line-height:1.6;
+}
+.ai-bet-why>b{
+  display:block;
+  margin:0 0 9px;
+  color:#d9f3ff;
+  font-size:16px;
+  font-weight:900;
+}
+.ai-bet-why p{
+  margin:0;
+  padding:9px 0;
+  border-top:1px solid rgba(104,147,175,.24);
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.ai-bet-why small{
+  display:block;
+  margin-top:8px;
+  color:#97b1c3;
+  font-size:10.5px;
+  line-height:1.65;
+}
+@media(max-width:430px){
+  .ai-bet-why{margin:11px 0 12px;padding:11px 12px;font-size:12px}
+  .ai-bet-why>b{font-size:15px}
+}
