@@ -134,13 +134,38 @@ jobs:
         run: |
           python - <<'PY'
           import json, os, time, urllib.parse, urllib.request
+          from datetime import datetime, timedelta, timezone
           from pathlib import Path
 
           base=os.environ['CLOUDFLARE_API_BASE'].rstrip('/')
           report=json.loads(Path('result-repair-report.json').read_text(encoding='utf-8'))
           repaired=[str(x) for x in (report.get('repaired') or [])]
-          unresolved=[str((x or {}).get('race_id') or '') for x in (report.get('result_missing') or [])]
-          payout_missing=[str((x or {}).get('race_id') or '') for x in (report.get('payout_missing') or [])]
+          # Official results often arrive several minutes after the scheduled start.
+          # Preserve the missing-result audit; only fail the job when it is overdue.
+          jst=timezone(timedelta(hours=9))
+          now=datetime.now(jst)
+          grace_minutes=15
+          deferred=[]
+          def overdue_ids(entries,kind):
+              due=[]
+              for item in entries or []:
+                  item=item if isinstance(item,dict) else {}
+                  rid=str(item.get('race_id') or '')
+                  day=str(item.get('date') or report.get('date') or os.getenv('SYNC_DATE') or '')
+                  start=str(item.get('start_time') or '')
+                  age=None
+                  try:
+                      dt=datetime.strptime(day+' '+start,'%Y-%m-%d %H:%M').replace(tzinfo=jst)
+                      age=(now-dt).total_seconds()/60
+                  except (TypeError, ValueError):
+                      pass
+                  if age is not None and 0 <= age < grace_minutes:
+                      deferred.append((kind,rid,round(age,1)))
+                  else:
+                      due.append(rid)
+              return due
+          unresolved=overdue_ids(report.get('result_missing'),'result')
+          payout_missing=overdue_ids(report.get('payout_missing'),'payout')
           missing=[]
           for n,rid in enumerate(repaired,1):
               url=base+'/api/race/'+urllib.parse.quote(rid,safe='')+'?t='+str(int(time.time()*1000)+n)
@@ -162,9 +187,11 @@ jobs:
               podium_ok=1 in finishes and sum(1 for finish in finishes if finish<=3)>=3
               if str(result.get('status') or '')!='確定' or not podium_ok or not (result.get('payouts') or []):
                   missing.append((rid,err,str(result.get('status') or ''),finishes[:5],len(result.get('payouts') or [])))
-          print('D1_RESULT_VERIFY repaired=',len(repaired),'not_visible=',len(missing),'result_missing=',len(unresolved),'payout_missing=',len(payout_missing))
+          print('D1_RESULT_VERIFY repaired=',len(repaired),'not_visible=',len(missing),'result_missing_due=',len(unresolved),'payout_missing_due=',len(payout_missing),'recently_started_pending=',len(deferred))
           for item in missing[:20]:
               print('D1_RESULT_NOT_VISIBLE',item)
+          for kind,rid,minutes_since_start in deferred[:30]:
+              print('D1_RESULT_DEFERRED',kind,rid,'minutes_since_start=',minutes_since_start,'grace=',grace_minutes)
           if missing or unresolved or payout_missing:
               raise SystemExit('result repair incomplete: unresolved='+','.join(unresolved)+' payout_missing='+','.join(payout_missing)+' not_visible='+','.join(x[0] for x in missing))
           PY
