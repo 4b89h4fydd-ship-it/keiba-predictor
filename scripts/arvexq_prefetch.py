@@ -28,6 +28,7 @@ import app
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 from arvexq.databanks.authorized_feeds import register_authorized_history_feeds
+from arvexq.databanks.nar_official_csv import register_nar_official_archive
 from arvexq.databanks.registry import registry as source_registry
 
 JST = timezone(timedelta(hours=9))
@@ -442,6 +443,14 @@ def main() -> int:
             print("AUTHORIZED_HISTORY_FEEDS_ACTIVE", len(connected), sorted(connected))
     except ValueError as exc:
         print("AUTHORIZED_HISTORY_FEEDS_CONFIG_WARN", str(exc))
+    try:
+        official = register_nar_official_archive(source_registry)
+        if official:
+            print("NAR_OFFICIAL_CSV_LOADED", "races=", official.race_count,
+                  "horses=", sum(len(v) for v in official.by_name.values()))
+    except (OSError, ValueError, KeyError) as exc:
+        # A corrupt/missing monthly ZIP does not block the race card or other sources.
+        print("NAR_OFFICIAL_CSV_WARN", type(exc).__name__, str(exc))
     return prepare(
         args.bundle,
         args.payload,
