@@ -161,10 +161,10 @@ jobs:
           RACES=$(jq '.meta.race_count // 0' prefetch-payload.json)
           analysisCount=$((RACES - MISSING_ANALYSIS))
           echo "analysisCount=$analysisCount races=$RACES"
+          # A missing AI diagnosis must not prevent every racecard from reaching D1.
           if [ "$MISSING_CARD" -gt 0 ] || [ "$MISSING_ANALYSIS" -gt 0 ]; then
-            echo "::error::FULL PREFETCH incomplete: missing_card=$MISSING_CARD missing_analysis=$MISSING_ANALYSIS"
+            echo "::warning::FULL PREFETCH incomplete: missing_card=$MISSING_CARD missing_analysis=$MISSING_ANALYSIS; proceeding to D1 repair"
             jq '{missing_card,missing_analysis,analysis_errors,card_errors}' prefetch-report.json
-            exit 1
           fi
 
       - name: Select only missing or thin D1 details
@@ -238,19 +238,32 @@ jobs:
           from pathlib import Path
           day=json.loads(Path('verified-day.json').read_text(encoding='utf-8'))
           details=[d for d in (day.get('details') or []) if isinstance(d,dict)]
-          thin=[]
-          for d in details:
-              rid=str(d.get('id') or '')
-              horses=d.get('horses') or []
+          prepared=json.loads(Path('prefetch-payload.json').read_text(encoding='utf-8'))
+          expected={str(d.get('id')):d for d in (prepared.get('details') or []) if isinstance(d,dict) and d.get('id')}
+          returned={str(d.get('id')):d for d in details}
+          missing_cards=[]
+          missing_analysis=[]
+          for rid,old in expected.items():
+              d=returned.get(rid)
+              if not d:
+                  missing_cards.append((rid,'missing D1 record'))
+                  continue
+              horses=[h for h in (d.get('horses') or []) if isinstance(h,dict)]
+              good=[h for h in horses if str(h.get('name') or '').strip() and int(h.get('horseNumber') or 0)>0]
+              prepared_horses=[h for h in (old.get('horses') or []) if isinstance(h,dict) and int(h.get('horseNumber') or 0)>0]
+              numbers=[int(h.get('horseNumber') or 0) for h in good]
+              if len(good)<2 or len(good)<len(prepared_horses) or len(numbers)!=len(set(numbers)):
+                  missing_cards.append((rid,f'prepared={len(prepared_horses)} D1_named={len(good)} unique={len(set(numbers))}'))
               pm=d.get('preparedMeta') if isinstance(d.get('preparedMeta'),dict) else {}
               has_analysis=bool(pm.get('diagnosisReady')) or any(d.get(k) not in (None,'',[],{}) for k in ('preRacePrediction','aiEvaluation','pace','pacePrediction','volatility'))
-              if len([h for h in horses if isinstance(h,dict)]) < 2 or not has_analysis:
-                  thin.append(rid)
-          analysisCount=len(details)-len(thin)
-          print('D1_PREFETCH_DETAIL_VERIFY details=',len(details),'analysisCount=',analysisCount,'thin=',len(thin))
-          if thin:
-              print('D1_THIN',thin[:20])
-              raise SystemExit('D1 is missing prepared analysis for '+str(len(thin))+' race(s)')
+              if not has_analysis:
+                  missing_analysis.append(rid)
+          print('D1_PREFETCH_DETAIL_VERIFY expected=',len(expected),'received=',len(returned),'missing_cards=',len(missing_cards),'missing_analysis=',len(missing_analysis))
+          if missing_analysis:
+              print('::warning::D1 analysis unavailable for '+str(len(missing_analysis))+' races: '+str(missing_analysis[:20]))
+          if missing_cards:
+              print('D1_MISSING_CARDS',missing_cards[:25])
+              raise SystemExit('D1 racecard delivery incomplete: '+str(len(missing_cards))+' races')
           PY
 
       - name: Stop ARVEXQ
