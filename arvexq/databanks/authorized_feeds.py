@@ -7,13 +7,19 @@ ARVEXQ_AUTHORIZED_HISTORY_FEEDS_JSON without changing prediction/UI code.
 Format: [{"name":"partner-id","circuit":"JRA|NAR|both",
           "url":"https://licensed-provider.example/api/history",
           "token_env":"ARVEXQ_PARTNER_TOKEN","priority":25,
-          "horse_first3f":true}]
+          "horse_first3f":true,"horse_early_timing":true}]
 
 Request (GET): horseId, horseName, raceDate, limit, circuit.
 Response JSON: {"horseId": "...", "horseName": "...",
                 "recentRaces":[{"date":"2026-09-01", "track":"大井",
                  "distance":1400,"raceNumber":7,"cornerPositions":[2,2,3,3],
-                 "first3FSeconds":36.8,...}], "allPastRuns":[...]}
+                 "first3FSeconds":36.8,
+                 "earlyTiming":{"sourceKind":"individual_sensor",
+                 "sourceRef":"provider:sample-record-id",
+                 "first200mSeconds":13.4,
+                 "gateReactionSeconds":0.32,
+                 "acceleration0to100Mps2":2.8},...}],
+                "allPastRuns":[...]}
 Optional fields must represent actual source observations; never infer a horse's
 first 3F from the race's collective first 3F. Historical cutoff is enforced by
 the downstream _merge_runs too.
@@ -81,8 +87,38 @@ def configured_feeds(config: str | None = None, *, environ: Mapping[str, str] | 
             "name": name, "circuit": circuit, "url": endpoint,
             "token_env": token_env, "priority": priority, "enabled": enabled,
             "horse_first3f": item.get("horse_first3f") is True,
+            "horse_early_timing": item.get("horse_early_timing") is True,
         })
     return result
+
+
+def _validated_early_timing(data: Any) -> dict[str, Any] | None:
+    """Accept licensed horse observations only, never a race leader sectional."""
+    if not isinstance(data, dict):
+        return None
+    kind = str(data.get("sourceKind") or "")
+    reference = str(data.get("sourceRef") or "").strip()
+    if kind not in {"individual_sensor", "video_estimate"} or not reference:
+        return None
+    clean: dict[str, Any] = {"sourceKind": kind, "sourceRef": reference[:400]}
+    intervals = {
+        "first200mSeconds": (7.0, 25.0),
+        "gateReactionSeconds": (0.05, 3.0),
+        "acceleration0to100Mps2": (0.1, 10.0),
+    }
+    for key, (minimum, maximum) in intervals.items():
+        val = data.get(key)
+        if val is None or val == "":
+            continue
+        try:
+            value = float(val)
+        except (TypeError, ValueError):
+            continue
+        if minimum <= value <= maximum:
+            clean[key] = value
+    if not any(key in clean for key in intervals):
+        return None
+    return clean
 
 
 def _request_history(config: dict[str, Any], horse: dict[str, Any], race: dict[str, Any], limit: int) -> dict[str, Any]:
@@ -140,6 +176,14 @@ def _request_history(config: dict[str, Any], horse: dict[str, Any], race: dict[s
                         if 15 <= seconds <= 90:
                             item["horseFirst3FSeconds"] = seconds
                             item["horseEarly3FSource"] = config["name"]
+                    # Permit individual timing only from explicitly contracted
+                    # horse-level feeds, with nonempty provenance and plausible
+                    # numeric bounds. A race's first-1F lap cannot substitute.
+                    timing = _validated_early_timing(item.get("earlyTiming")) if config.get("horse_early_timing") else None
+                    if timing:
+                        item["earlyTiming"] = timing
+                    else:
+                        item.pop("earlyTiming", None)
                     valid.append(item)
             out[key] = valid
     return out
@@ -168,7 +212,7 @@ def register_authorized_history_feeds(
             name=feed["name"], circuit=feed["circuit"], priority=feed["priority"],
             capabilities=SourceCapabilities(horse_history=True),
             fetchers={"horse_history": fetch},
-            supplement_complete_history=feed["horse_first3f"],
+            supplement_complete_history=feed["horse_first3f"] or feed["horse_early_timing"],
         ))
         registered.append(feed["name"])
     return registered
