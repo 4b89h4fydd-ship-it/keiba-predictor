@@ -3594,23 +3594,39 @@ function aiStatsMarkText(row){
   var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
   return (row.marks||[]).slice().sort(function(a,b){return n(order[a.mark],99)-n(order[b.mark],99)||n(a.no)-n(b.no)}).map(function(x){return x.mark+x.no}).join(' ')||'印なし'
 }
+function aiStatsCell(label,rows,key,filter){
+  var eligible=rows.filter(function(x){return x.eligible&&(!filter||filter(x))}),hits=eligible.filter(function(x){return !!x[key]}).length;
+  return '<div><small>'+esc(label)+'</small><strong>'+(eligible.length?Math.round(hits/eligible.length*100)+'%':'—')+'</strong><em>'+hits+'/'+eligible.length+'</em></div>'
+}
+function aiStatsMetrics(rows){
+  return '<div class="smart-ai-daily-grid arv-ai-metrics">'
+    +aiStatsCell('◎3着以内',rows,'honPlaceHit')
+    +aiStatsCell('◎1着',rows,'winHit')
+    +aiStatsCell('印内1着',rows,'markHit')
+    +aiStatsCell('印内3頭完全包含',rows,'fullPodiumHit')
+    +aiStatsCell('3連単的中',rows,'triHit',function(x){return x.triEligible})
+    +'</div>'
+}
 function aiStatsRaceRow(x){
-  var result=(x.podiumNos||[]).slice(0,3).join('-')||'—',cls=x.fullPodiumHit?'hit':(x.markHit?'partial':'miss'),judge=x.loadError?'再取得待ち':(!x.resultReady?'結果未取得':(!x.hasMarks?'印なし':(x.fullPodiumHit?'3頭完全':(x.markHit?'1着印内':'1着印外'))));
-  return '<div class="smart-ai-race-row '+cls+'"><span class="smart-ai-race-name"><b>'+esc(x.raceNumber)+'R</b><small>'+esc(x.title||'')+'</small></span><span class="smart-ai-race-marks">'+esc(aiStatsMarkText(x))+'</span><span class="smart-ai-race-result">結果 '+esc(result)+'</span><strong>'+esc(judge)+'</strong></div>'
+  var result=(x.podiumNos||[]).slice(0,3).join('-')||'—',
+      cls=!x.eligible?'pending':(x.fullPodiumHit?'hit':(x.markHit?'partial':'miss')),
+      judge=x.loadError?'再取得待ち':(!x.resultReady?'結果未取得':(!x.hasMarks?'発走前予想未保存':(x.fullPodiumHit?'3頭完全包含':(x.markHit?'1着印内':'1着印外'))));
+  var detail=x.eligible?'<small>◎3着内 '+(x.honPlaceHit?'○':'×')+' ／ ◎1着 '+(x.winHit?'○':'×')+' ／ 印内1着 '+(x.markHit?'○':'×')+' ／ 印内3頭 '+(x.fullPodiumHit?'○':'×')+' ／ 3連単 '+(x.triEligible?(x.triHit?'的中':'不的中'):'未保存・対象外')+'</small>':'<small>集計対象外（不的中には算入しません）</small>';
+  return '<div class="smart-ai-race-row '+cls+'"><span class="smart-ai-race-name"><b>'+esc(x.raceNumber)+'R</b><small>'+esc(x.title||'')+'</small></span><span class="smart-ai-race-marks">'+esc(aiStatsMarkText(x))+'</span><span class="smart-ai-race-result">結果 '+esc(result)+'</span><strong>'+esc(judge)+'</strong>'+detail+'</div>'
 }
 function smartDailyAiStatsPage(){
   var s=dailyAiStats;if(s.date!==state.date)resetDailyAiStats(state.date),s=dailyAiStats;
   if(!s.done&&!s.loading)setTimeout(scheduleDailyAiStats,0);
   if(state.aiStatsTrack){
     var rows=(s.rows||[]).filter(function(x){return String(x.track||'')===String(state.aiStatsTrack||'')});
-    return '<div class="smart-shell">'+smartTopBar(true,state.aiStatsTrack+' AI成績','本日の各レース')+'<main class="smart-main smart-home-subpage"><section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>'+esc(state.aiStatsTrack)+'</b><small>'+rows.length+'レース</small></div><div class="smart-ai-race-list">'+(rows.length?rows.map(aiStatsRaceRow).join(''):'<div class="smart-empty">成績を集計中です</div>')+'</div></section></main>'+cinematicFooter()+'</div>'
+    return '<div class="smart-shell">'+smartTopBar(true,state.aiStatsTrack+' AI成績','発走前の保存予想のみ')+'<main class="smart-main smart-home-subpage"><section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>'+esc(state.aiStatsTrack)+'</b><small>集計対象 '+rows.filter(function(x){return x.eligible}).length+' / '+rows.length+'レース</small></div>'+aiStatsMetrics(rows)+'<div class="smart-ai-race-list">'+(rows.length?rows.map(aiStatsRaceRow).join(''):'<div class="smart-empty">確定レースを集計中です</div>')+'</div></section></main>'+cinematicFooter()+'</div>'
   }
-  if(s.loading&&!s.total)return '<div class="smart-shell">'+smartTopBar(true,'本日のAI成績','全レース集計')+'<main class="smart-main smart-home-subpage"><div class="smart-loading"><span class="smart-loading-dot"></span><b>AI成績を集計中</b></div></main>'+cinematicFooter()+'</div>';
-  var total=n(s.total),rate=function(hit){return total?Math.round(hit/total*100):0},groups={},keys=[];
+  if(s.loading&&!s.rows.length)return '<div class="smart-shell">'+smartTopBar(true,'本日のAI成績','保存済み予想を照合')+'<main class="smart-main smart-home-subpage"><div class="smart-loading"><span class="smart-loading-dot"></span><b>AI成績を集計中</b></div></main>'+cinematicFooter()+'</div>';
+  var groups={},keys=[];
   (s.rows||[]).forEach(function(x){var k=String(x.circuit||'')+'|'+String(x.track||'');if(!groups[k]){groups[k]={circuit:x.circuit||'',track:x.track||'',rows:[]};keys.push(k)}groups[k].rows.push(x)});
   keys.sort(function(a,b){var x=groups[a],y=groups[b],c=String(x.circuit).localeCompare(String(y.circuit),'ja');return c||String(x.track).localeCompare(String(y.track),'ja')});
-  var venues=keys.map(function(k){var g=groups[k],hits=g.rows.filter(function(x){return x.markHit}).length;return '<button type="button" class="arv-ai-venue-card" data-ai-stats-track="'+esc(g.track)+'"><span><small>'+esc(g.circuit)+'</small><b>'+esc(g.track)+'</b></span><em>'+hits+'/'+g.rows.length+' 1着印内</em><strong>›</strong></button>'}).join('');
-  return '<div class="smart-shell">'+smartTopBar(true,'本日のAI成績','全レース → 開催場 → 各レース')+'<main class="smart-main smart-home-subpage"><section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>全レースAI成績</b><small>'+total+'レース</small></div><div class="smart-ai-daily-grid"><div><small>AI印内1着</small><strong>'+rate(s.markHits)+'%</strong><em>'+s.markHits+'/'+total+'</em></div><div><small>◎1着</small><strong>'+rate(s.winHits)+'%</strong><em>'+s.winHits+'/'+total+'</em></div><div><small>印内3頭完全</small><strong>'+rate(s.fullPodiumHits)+'%</strong><em>'+s.fullPodiumHits+'/'+total+'</em></div></div></section><section class="arv-ai-venues"><div class="smart-section-title"><div><b>開催場ごとのAI成績</b><small>開催場を押すと各レースへ</small></div></div>'+(venues||'<div class="smart-empty">成績を集計中です</div>')+'</section></main>'+cinematicFooter()+'</div>'
+  var venues=keys.map(function(k){var g=groups[k],eligible=g.rows.filter(function(x){return x.eligible}),hits=eligible.filter(function(x){return x.honPlaceHit}).length;return '<button type="button" class="arv-ai-venue-card" data-ai-stats-track="'+esc(g.track)+'"><span><small>'+esc(g.circuit)+'</small><b>'+esc(g.track)+'</b></span><em>◎3着内 '+hits+'/'+eligible.length+'（対象 '+eligible.length+'R）</em><strong>›</strong></button>'}).join('');
+  return '<div class="smart-shell">'+smartTopBar(true,'本日のAI成績','発走前固定の予想だけ')+'<main class="smart-main smart-home-subpage"><section class="smart-ai-daily"><div class="smart-ai-daily-head"><b>全レースAI成績</b><small>集計対象 '+s.total+' / 確定 '+s.finalCount+'レース</small></div>'+aiStatsMetrics(s.rows||[])+'<p class="muted">結果未取得・発走前予想未保存は分母から除外。3連単は発走前に3連単買い目を保存したレースだけが対象です。</p></section><section class="arv-ai-venues"><div class="smart-section-title"><div><b>開催場ごとのAI成績</b><small>開催場を押すと各レースへ</small></div></div>'+(venues||'<div class="smart-empty">確定レースを集計中です</div>')+'</section></main>'+cinematicFooter()+'</div>'
 }
 function homeCircuitChooser(title,kind){
   var rows=(state.races||[]),counts=homePickCounts(kind),buttons='',loading=!rows.length,
