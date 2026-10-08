@@ -1714,10 +1714,21 @@ function immutableArchivedPrediction(r){
   saved.forEach(function(q){byNo[n(q.horseNumber||q.no,0)]=q});
   var rows=(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).map(function(h){
     var snap=byNo[n(h.horseNumber)]||{},ev=snap.lockedEvaluation||{},
-        mark=isScratchHorse(h)?'':String(snap.mark||'');
+        mark=isScratchHorse(h)?'':String(snap.mark||''),
+        history=(h.recentRaces||h.allPastRuns||[]).slice(0,5),finishEvidence={holdWins:0,holdSamples:0,closingWins:0,closingSamples:0};
+    history.forEach(function(run){
+      var cp=run.cornerPositions||[],first=n(cp[0],0),last=n(cp[cp.length-1],0),
+          finish=n(run.finish,n(run.finishPosition,0));
+      if(first>0&&first<=4&&last>0){finishEvidence.holdSamples++;
+        if(last<=4&&finish>0&&finish<=4)finishEvidence.holdWins++}
+      if(last>=4&&finish>0){finishEvidence.closingSamples++;
+        if(finish<=3)finishEvidence.closingWins++}
+    });
     return{horse:h,predMark:mark,predRank:order[mark]||999,markFrozen:!!saved.length,
-      overallRaw:n(ev.score,0),overallGrade:String(ev.grade||'C'),overallScore:n(ev.score,0),
-      overallScoreExact:n(ev.score,0),p1Probability:n(snap.p1Probability,0),
+      hasFrozenEvaluation:ev.score!=null,
+      overallRaw:ev.score!=null?n(ev.score):null,overallGrade:String(ev.grade||'—'),
+      overallScore:ev.score!=null?n(ev.score):null,overallScoreExact:ev.score!=null?n(ev.score):null,
+      finishEvidence:finishEvidence,p1Probability:n(snap.p1Probability,0),
       p2Probability:n(snap.p2Probability,0),p3Probability:n(snap.p3Probability,0),
       winnerDecisionProbability:n(snap.decisionProbability,0),
       singleWinSuitable:!isScratchHorse(h)&&!!(snap.singleWinSuitable||snap.single),
@@ -1886,7 +1897,7 @@ function horseDisplayName(r,h){
 }
 function runnerDetailBody(r,p,x){
   var h=x.horse,displayName=horseDisplayName(r,h),recent=(h.recentRaces||h.allPastRuns||[]).slice(0,5),reasons=(x.overallReasons||[]).slice(0,4),bodyTxt=horseBodyWeightText(h),styleTxt=x.expected||x.pastStyle||'不明',
-      rf=x.researchFactors||{},sp=styleDisplayPcts(x),out=(p&&p.outcome)||paceOutcomeModel(r,p),no=n(h.horseNumber),role='相手候補';
+      rf=x.researchFactors||{},sp=styleDisplayPcts(x),out=(p&&p.outcome)||(raceMarkClock(r).started?null:paceOutcomeModel(r,p)),no=n(h.horseNumber),role=raceMarkClock(r).started?'発走前保存情報':'相手候補';
   function pct(v){v=clamp(n(v,.5),0,1);return Math.round(v*100)}
   function scoreCell(label,v){return '<div class="horse-info-cell"><small>'+esc(label)+'</small><b>'+pct(v)+'</b></div>'}
   if(out){
@@ -2342,7 +2353,7 @@ function ensureAutoOdds(r){
     if(state.race&&String(state.race.id)===String(r.id))refreshOddsOnly(false)
   },delay)
 }
-function overallScoreText(x){var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
+function overallScoreText(x){if(x&&x.hasFrozenEvaluation===false)return '—';var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
 function aiBetStoreKey(id){return 'arvexq:prebet:v300:'+String(id||'')}
 function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){['v218','v217','v215','v213','v212','v211','v210','v207','v205','v181','v180'].forEach(function(v){keys.push('arvexq:prebet:'+v+':'+String(id||''))})}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
 function saveStoredAiBet(r,plan){
@@ -2910,7 +2921,7 @@ function aiBetRecommendation(r,p){
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は全レース固定ではありません。能力・実績・適性・展開の4本柱と独立1着評価が一致し、上位差まで確認できた時だけ◎を出します。分離不足のレースは◎保留のまま、○▲☆△で候補を表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は3着以内への安定性を重視した馬券の軸。単勝向きとは別判定。発走後の正式印は保存済み予想だけを表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
