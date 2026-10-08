@@ -4653,3 +4653,29 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
 
 /* v345: the published pre-race mark set is immutable from the final window. */
 .rc-mark-freeze-note{font-size:10px;color:#d3c18a;letter-spacing:0;white-space:normal}
+
+
+/* v330: three readable tabs; unchanged home layout */
+.race-nav-v230-top{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+.race-nav-v230-top>.race-nav-v230-btn{width:100%!important;min-width:0!important;font-size:clamp(12px,3.5vw,16px)!important;padding:0 3px!important;gap:2px!important}
+.race-nav-v230-top .race-nav-v230-caret{font-size:clamp(15px,4.2vw,21px)!important}
+.pace-formation-next{display:block;width:100%;padding:0;margin:0;border:0;border-radius:12px;background:transparent;color:inherit;font:inherit;text-align:inherit;cursor:pointer;touch-action:manipulation}
+.pace-formation-next:focus-visible{outline:3px solid #7cd5ff;outline-offset:3px}
+.pace-formation-next .pace-formation-track{pointer-events:none}
+.pace-formation-tap-hint{padding:10px 4px 5px;text-align:center;color:#9cd8ee;font-size:12px;font-weight:800}
+.ai-bet-lock-notice{border:1px solid #d2a660;background:#302419;color:#fff1d1;border-radius:9px;padding:9px 11px;font-size:12px;line-height:1.6}
+.arv-ai-metrics{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
+.arv-ai-metrics>div{min-width:0!important;min-height:70px;padding:10px 7px!important}
+.arv-ai-metrics>div:last-child{grid-column:1/-1}
+.arv-ai-metrics small{display:block;font-size:11px!important;white-space:normal;line-height:1.4}
+.arv-ai-metrics strong{display:block;font-size:23px!important}
+.smart-ai-race-row{min-width:0!important;grid-template-columns:minmax(63px,.6fr) minmax(0,1fr) auto!important}
+.smart-ai-race-row>small{grid-column:1/-1!important;font-size:11px;line-height:1.6;color:#a5d3e9;white-space:normal;overflow-wrap:anywhere}
+.smart-ai-race-row.pending{opacity:.78}
+.smart-ai-race-row .smart-ai-race-marks{min-width:0;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:370px){
+  .race-nav-v230-top{gap:4px!important}
+  .race-nav-v230-top>.race-nav-v230-btn{font-size:12px!important;padding:0 2px!important}
+  .arv-ai-metrics strong{font-size:20px!important}
+  .smart-ai-race-row{grid-template-columns:60px minmax(0,1fr) auto!important;gap:4px!important;font-size:10px}
+}
