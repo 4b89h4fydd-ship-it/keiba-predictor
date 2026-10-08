@@ -47,6 +47,34 @@ class ResearchEvaluationTests(unittest.TestCase):
         d["result"]["status"]="速報"
         self.assertIsNone(evaluate_race(d))
 
+    def test_temporal_calibration_rejects_same_day_split(self):
+        from arvexq.prediction.research_evaluation import temporal_calibration
+        rows=[]
+        for i in range(10):
+            x=evaluate_race(self.d)
+            x["raceId"]=f"same-day-{i}"
+            rows.append(x)
+        result=temporal_calibration(rows,min_races=10)
+        self.assertFalse(result["eligible"])
+        self.assertEqual(result["reason"],"no-strict-chronological-day-boundary")
+
+    def test_strict_time_split_separates_train_and_future_results(self):
+        from arvexq.prediction.research_evaluation import temporal_calibration
+        from datetime import timedelta
+        origin=datetime(2026,9,1)
+        rows=[]
+        for i in range(10):
+            x=evaluate_race(self.d)
+            x["raceId"]=f"fresh-race-{i}"
+            x["date"]=(origin+timedelta(days=i)).date().isoformat()
+            rows.append(x)
+        result=temporal_calibration(rows,min_races=10)
+        self.assertTrue(result["eligible"],result)
+        self.assertLess(result["winner"]["trainEndDate"],result["winner"]["testStartDate"])
+        self.assertEqual(result["winner"]["trainRaces"],7)
+        self.assertEqual(result["winner"]["testRaces"],3)
+        self.assertFalse(result["promotionEligible"])
+
     def test_research_cannot_auto_promote_or_claim_roi(self):
         info=summarize([evaluate_race(self.d)],min_races=1)
         self.assertFalse(info["promotionEligible"])

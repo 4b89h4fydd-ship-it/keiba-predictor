@@ -99,11 +99,72 @@ def evaluate_race(detail: dict[str, Any]) -> dict[str, Any] | None:
         "shadowBrierWin":round(brier,8),"shadowBrierTop3":round(podium_brier,8),
         "lockedHonmei":honmei,
         "lockedHonmeiTop3":honmei in actual if honmei else None,
+        "horseRoles":[{"horseNumber":no,"winRaw":float(probs[i]["p1"]),
+                        "podiumRaw":float(probs[i]["top3"]),
+                        "won":int(no==actual[0]),"podium":int(no in actual)}
+                        for i,no in enumerate(ids)],
         "baselineWinHorse":int(lock.get("winnerNo") or 0),
         "baselineWinnerCorrect":int(lock.get("winnerNo") or 0)==actual[0]
             if lock.get("winnerNo") else None,
         "version":VERSION,
     }
+
+
+
+
+def temporal_calibration(reports: list[dict[str, Any]], min_races: int=100) -> dict[str, Any]:
+    """Train-bin shrinkage on earlier entire races; evaluate on later races.
+
+    This is a research diagnostic, not a production probability calibrator.
+    A chronological split without race mixing prevents target leakage.
+    """
+    rows=sorted([r for r in reports if isinstance(r,dict) and r.get("horseRoles")],
+                key=lambda r:(str(r.get("date") or ""),str(r.get("raceId") or "")))
+    if len(rows)<min_races or len(set(r["raceId"] for r in rows))!=len(rows):
+        return {"eligible":False,"reason":"insufficient-or-duplicate-frozen-races",
+                "raceCount":len(rows),"minRaces":min_races}
+    split=int(len(rows)*.7)
+    train,test=rows[:split],rows[split:]
+    if not train or not test or train[-1]["date"]>=test[0]["date"]:
+        return {"eligible":False,"reason":"no-strict-chronological-day-boundary",
+                "raceCount":len(rows),"minRaces":min_races}
+    summary={}
+    for raw,label in (("winRaw","won"),("podiumRaw","podium")):
+        bins=[{"n":0,"hits":0.,"raw":0.} for _ in range(10)]
+        for race in train:
+            for h in race["horseRoles"]:
+                p=max(0.,min(1.,float(h[raw])))
+                b=min(9,int(p*10))
+                bins[b]["n"]+=1
+                bins[b]["hits"]+=float(h[label])
+                bins[b]["raw"]+=p
+        before=after=0.;samples=0;calibration_bins=[]
+        for b,stat in enumerate(bins):
+            prior=stat["raw"]/stat["n"] if stat["n"] else (b+.5)/10.
+            # Shrink rare cells toward the train-bin raw mean.
+            fitted=(stat["hits"]+20.*prior)/(stat["n"]+20.)
+            calibration_bins.append({"bin":b,"trainRows":stat["n"],
+                                    "trainActualRate":stat["hits"]/stat["n"] if stat["n"] else None,
+                                    "estimatedRate":fitted})
+        for race in test:
+            for h in race["horseRoles"]:
+                p=max(0.,min(1.,float(h[raw])))
+                y=float(h[label])
+                cp=calibration_bins[min(9,int(p*10))]["estimatedRate"]
+                before+=(p-y)**2;after+=(cp-y)**2;samples+=1
+        summary[label]={
+            "trainRaces":len(train),"testRaces":len(test),
+            "testHorseRows":samples,
+            "rawHoldoutBrier":round(before/samples,7) if samples else None,
+            "calibratedHoldoutBrier":round(after/samples,7) if samples else None,
+            "holdoutBrierImprovement":round((before-after)/samples,7) if samples else None,
+            "trainEndDate":train[-1]["date"],"testStartDate":test[0]["date"],
+            "bins":calibration_bins,
+        }
+    return {"eligible":True,"promotionEligible":False,
+            "version":"arvexq-temporal-bin-calibration-research-v1",
+            "winner":summary["won"],"topThree":summary["podium"],
+            "warning":"Only train-period race results fit bins; no post-off inputs at prediction time, no production deployment."}
 
 
 def summarize(reports: list[dict[str, Any]], min_races: int=100) -> dict[str, Any]:
@@ -143,5 +204,6 @@ def summarize(reports: list[dict[str, Any]], min_races: int=100) -> dict[str, An
         "readiness":("insufficient-genuine-frozen-races" if n<min_races else
                      "candidate-for-further-calibration-and-forward-validation"),
         "minimumRacesBeforeReview":min_races,
+        "temporalCalibration":temporal_calibration(rows,min_races=min_races),
         "warning":"Research scores are NOT calibrated probabilities, purchase odds, forecasts approved for publication, or proof of positive ROI.",
     }
