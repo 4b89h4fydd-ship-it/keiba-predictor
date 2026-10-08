@@ -128,12 +128,15 @@ function lastCornerNorm(rr){var p=rr&&rr.cornerPositions||[],x=n(p[p.length-1],0
 // Consistent pre-race window: deduplicate first, then take the newest five
 // starts. A sixth (older) race cannot substitute for a missing first corner.
 function historicalWindow(h,r){
-  var target=String(r&&r.date||'').replace(/\//g,'-').slice(0,10),
-      seen={},out=[];
+  function normDate(v){
+    var t=String(v||'').replace(/\//g,'-').slice(0,10);
+    return /^\d{8}$/.test(t)?t.slice(0,4)+'-'+t.slice(4,6)+'-'+t.slice(6,8):t
+  }
+  var target=normDate(r&&r.date),seen={},out=[];
   if(!/^\d{4}-\d\d-\d\d$/.test(target))return[];
   [].concat(h&&h.recentRaces||[],h&&h.allPastRuns||[]).forEach(function(rr){
     if(!rr||typeof rr!=='object')return;
-    var d=String(rr.date||rr.raceDate||'').replace(/\//g,'-').slice(0,10),
+    var d=normDate(rr.date||rr.raceDate),
         no=n(rr.raceNumber,n(rr.raceNo,0)),
         key=[d,String(rr.track||''),n(rr.distance,0),no].join('|');
     if(!/^\d{4}-\d\d-\d\d$/.test(d)||d>=target)return;
@@ -186,13 +189,13 @@ function tenScore(h,r){
   var x=styleRates(h,r);return x.samples?clamp(x.ten,0,1):.5
 }
 function firstThreeType(h,r){var rr=historicalWindow(h,r)[0],p=rr&&rr.cornerPositions||[],j;if(!p.length)return"不明";if(n(p[0])>0&&n(p[0])<=3)return"最初から前";for(j=1;j<p.length;j++)if(n(p[j])>0&&n(p[j])<=3)return"途中から上昇";return"前走は中後方"}
-function fadeRate(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),e=0,f=0,i,p,first,last,fin,fs,ww,sev;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];first=n(p[0]);if(!first||first>4)continue;ww=w[i];fs=raceField(rs[i]);e+=ww;last=n(p[p.length-1]);fin=n(rs[i].finish);sev=0;if(last)sev=Math.max(sev,clamp((last-first)/Math.max(3,fs-1)*2.2,0,1));if(fin)sev=Math.max(sev,clamp((fin-first)/Math.max(3,fs-1)*1.8,0,1));if((last&&last>=first+2)||(fin&&fin>=first+3))sev=Math.max(sev,.55);f+=ww*sev}return e?clamp(f/e,0,1):.25}
+function fadeRate(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),e=0,f=0,i,p,first,last,fin,fs,ww,sev;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];first=n(p[0]);if(!first||first>4)continue;ww=w[i];fs=raceField(rs[i]);last=n(p[p.length-1]);fin=n(rs[i].finish);if(!last&&!fin)continue;e+=ww;sev=0;if(last)sev=Math.max(sev,clamp((last-first)/Math.max(3,fs-1)*2.2,0,1));if(fin)sev=Math.max(sev,clamp((fin-first)/Math.max(3,fs-1)*1.8,0,1));if((last&&last>=first+2)||(fin&&fin>=first+3))sev=Math.max(sev,.55);f+=ww*sev}return e?clamp(f/e,0,1):.25}
 function moveRate(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),e=0,g=0,i,p,a,b,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(p.length<2)continue;a=n(p[0]);b=n(p[p.length-1]);if(!a||!b)continue;ww=w[i];e+=ww;if(b<=a-2)g+=ww}return e?g/e:.2}
-function holdRate(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),e=0,g=0,i,p,a,b,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);b=n(p[p.length-1]);if(!a||a>4)continue;ww=w[i];e+=ww;if((b&&b<=4)||n(rs[i].finish)<=4)g+=ww}return e?g/e:.5}
+function holdRate(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),e=0,g=0,i,p,a,b,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);b=n(p[p.length-1]);if(!a||a>4)continue;ww=w[i];e+=ww;if((b&&b<=4)||(n(rs[i].finish)>0&&n(rs[i].finish)<=4))g+=ww}return e?g/e:.5}
 function yieldFlex(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),e=0,g=0,i,p,a,fin,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);fin=n(rs[i].finish);if(!a||a===1||a>5)continue;ww=w[i];e+=ww;if(fin>0&&fin<=4)g+=ww}return e?g/e:.45}
 
-function breakReliability(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),v=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);v.push(clamp(1-(n(p[0])-1)/Math.max(3,fs-1),0,1))}return weightedRate(v,w,.5)}
-function lateGainScore(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),v=[],i,p,a,b,fin,fs,g;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!p.length)continue;a=n(p[p.length-1]);fin=n(rs[i].finish);fs=raceField(rs[i]);if(!a||!fin)continue;g=(a-fin)/Math.max(3,fs-1);v.push(clamp(.5+g*1.8,0,1))}return weightedRate(v,w,.5)}
+function breakReliability(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),v=[],ws=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);v.push(clamp(1-(n(p[0])-1)/Math.max(3,fs-1),0,1));ws.push(w[i])}return weightedRate(v,ws,.5)}
+function lateGainScore(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),v=[],ws=[],i,p,a,b,fin,fs,g;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!p.length)continue;a=n(p[p.length-1]);fin=n(rs[i].finish);fs=raceField(rs[i]);if(!a||!fin)continue;g=(a-fin)/Math.max(3,fs-1);v.push(clamp(.5+g*1.8,0,1));ws.push(w[i])}return weightedRate(v,ws,.5)}
 function positionConsistency(h,r){var rs=historicalWindow(h,r),vals=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);vals.push((n(p[0])-1)/Math.max(3,fs-1))}if(vals.length<2)return.5;var m=mean(vals),vv=0;for(i=0;i<vals.length;i++)vv+=(vals[i]-m)*(vals[i]-m);vv/=vals.length;return clamp(1-Math.sqrt(vv)*2.1,0,1)}
 function positionTrend(h,r){var rs=historicalWindow(h,r),vals=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);vals.push(clamp(1-(n(p[0])-1)/Math.max(3,fs-1),0,1))}if(vals.length<3)return 0;var cut=Math.min(2,vals.length-1),recent=mean(vals.slice(0,cut)),older=mean(vals.slice(cut));return clamp(recent-older,-.45,.45)}
 // Prior-race 4C-to-finish outcomes, independent of initial running-style classification.
