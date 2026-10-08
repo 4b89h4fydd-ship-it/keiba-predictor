@@ -3705,7 +3705,7 @@ function mergeResultHorseFields(r){
   return r
 }
 function raceSubpageTopBar(r,title){
-  return '<header class="smart-topbar smart-topbar-clean smart-race-topbar">'
+  return '<header class="smart-topbar smart-topbar-clean smart-race-topbar smart-race-subpage-topbar">'
     +'<button type="button" class="smart-race-step prev" data-action="close-race-subpage" aria-label="レースへ戻る">&lt;</button>'
     +'<div class="smart-head-copy smart-head-copy-clean smart-race-head-copy"><strong>'+esc(title||'詳細')+'</strong><small>'+esc(r.track)+' '+esc(r.raceNumber)+'R</small></div>'
     +'<button type="button" class="smart-race-close" data-action="close-race-subpage" aria-label="閉じる">×</button>'
@@ -3727,7 +3727,7 @@ function horseDetailPage(r,p){
     +'</section></main>'+cinematicFooter()+'</div>'
 }
 function betDetailPage(r,p){
-  return '<div class="smart-shell">'+raceSubpageTopBar(r,'買い目')
+  return '<div class="smart-shell bet-detail-page-shell">'+raceSubpageTopBar(r,'買い目')
     +'<main class="smart-main smart-race-page"><section class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section></main>'
     +cinematicFooter()+'</div>'
 }
