@@ -112,6 +112,25 @@ def _needs_history(horse: dict[str, Any], *, cutoff: str, limit: int) -> bool:
     return len(runs) < limit or _first_corner_coverage(horse, cutoff, limit) < min(3, len(runs))
 
 
+def _measured_horse_first3f_count(horse: dict[str, Any], cutoff: str = "", limit: int = 5) -> int:
+    """Observed individual early-3F time only; never race-level pace figures."""
+    runs = _merge_runs(
+        horse.get("recentRaces") or [],
+        horse.get("allPastRuns") or [],
+        cutoff=cutoff,
+        limit=limit,
+    )
+    valid = 0
+    for row in runs:
+        try:
+            secs = float(row.get("horseFirst3FSeconds") or 0)
+        except (TypeError, ValueError):
+            secs = 0
+        if 15 <= secs <= 90:
+            valid += 1
+    return valid
+
+
 def _needs_pedigree(horse: dict[str, Any]) -> bool:
     p = horse.get("pedigree") if isinstance(horse.get("pedigree"), dict) else {}
     return not (
@@ -212,19 +231,27 @@ async def enrich_race_missing(
     sem = asyncio.Semaphore(max(1, int(max_parallel_horses or 1)))
     failures: list[dict[str, str]] = []
     changed_horses = 0
+    measured_feeds = {
+        src.name for src in bank_registry.providers("horse_history", circuit=circuit)
+        if src.supplement_complete_history
+    }
 
     async def one(horse: dict[str, Any]) -> bool:
         changed = False
         async with sem:
-            domains: list[str] = []
+            domains: list[tuple[str, set[str] | None]] = []
             if _needs_history(horse, cutoff=cutoff, limit=history_limit):
-                domains.append("horse_history")
+                domains.append(("horse_history", None))
+            elif measured_feeds and _measured_horse_first3f_count(horse, cutoff, history_limit) < 2:
+                # Full corner history still lacks measured per-horse early splits:
+                # ask only the licensed split providers, not every official adapter.
+                domains.append(("horse_history", measured_feeds))
             if _needs_pedigree(horse):
-                domains.append("pedigree")
+                domains.append(("pedigree", None))
             if _needs_connections(horse):
-                domains.append("jockey_trainer")
+                domains.append(("jockey_trainer", None))
 
-            for domain in domains:
+            for domain, only_sources in domains:
                 results = await fetch_domain(
                     domain,
                     horse,
@@ -232,6 +259,7 @@ async def enrich_race_missing(
                     history_limit,
                     circuit=circuit,
                     bank_registry=bank_registry,
+                    only_sources=only_sources,
                 )
                 for result in results:
                     if not result.ok:
@@ -258,6 +286,11 @@ async def enrich_race_missing(
         "searchedHorses": len(horses),
         "changedHorses": changed_horses,
         "historyCompleteHorses": sum(_history_count(h) >= history_limit for h in horses),
+        "measuredHorseFirst3FReadyHorses": sum(
+            _measured_horse_first3f_count(h, cutoff, history_limit) >= 2
+            for h in horses
+        ),
+        "measuredHorseFirst3FProviderCount": len(measured_feeds),
         "firstCornerEvidenceReadyHorses": sum(
             _first_corner_coverage(h, cutoff, history_limit) >= min(3, history_limit)
             for h in horses
