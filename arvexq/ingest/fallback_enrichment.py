@@ -44,8 +44,27 @@ def _merge_runs(existing: Any, incoming: Any, *, cutoff: str = "", limit: int = 
         row = merged[key]
         for field, value in raw.items():
             if field == "cornerPositions":
-                if isinstance(value, list) and len(value) > len(row.get(field) or []):
-                    row[field] = copy.deepcopy(value)
+                # Five runs with incomplete first-turn positions are NOT five
+                # usable pace samples. Fill missing positions from a fallback
+                # source without erasing already known official positions.
+                if isinstance(value, list) and value:
+                    old_positions = row.get(field) if isinstance(row.get(field), list) else []
+                    max_count = max(len(value), len(old_positions))
+                    positions = []
+                    for idx in range(max_count):
+                        old = old_positions[idx] if idx < len(old_positions) else None
+                        new = value[idx] if idx < len(value) else None
+                        try:
+                            valid_old = float(old) > 0
+                        except (TypeError, ValueError):
+                            valid_old = False
+                        try:
+                            valid_new = float(new) > 0
+                        except (TypeError, ValueError):
+                            valid_new = False
+                        positions.append(old if valid_old else (new if valid_new else old))
+                    if positions != old_positions:
+                        row[field] = positions
             elif not _present(row.get(field)) and _present(value):
                 row[field] = copy.deepcopy(value)
     rows = [merged[k] for k in order]
@@ -56,6 +75,41 @@ def _merge_runs(existing: Any, incoming: Any, *, cutoff: str = "", limit: int = 
 def _history_count(horse: dict[str, Any]) -> int:
     runs = horse.get("allPastRuns") or horse.get("recentRaces") or []
     return len([r for r in runs if isinstance(r, dict)])
+
+
+def _first_corner_coverage(horse: dict[str, Any], cutoff: str = "", limit: int = 5) -> int:
+    """Count *historically valid* first-turn observations, not merely run rows."""
+    runs = _merge_runs(
+        horse.get("recentRaces") or [],
+        horse.get("allPastRuns") or [],
+        cutoff=cutoff,
+        limit=limit,
+    )
+    good = 0
+    for row in runs:
+        corners = row.get("cornerPositions")
+        if not isinstance(corners, list) or not corners:
+            continue
+        try:
+            first = int(corners[0])
+            field = int(row.get("fieldSize") or 0)
+        except (ValueError, TypeError):
+            continue
+        if first > 0 and (field <= 0 or first <= field):
+            good += 1
+    return good
+
+
+def _needs_history(horse: dict[str, Any], *, cutoff: str, limit: int) -> bool:
+    # Requery even with five run rows if those rows lack useful early-pace data.
+    # An additional source might be able to supply the missing corner places.
+    runs = _merge_runs(
+        horse.get("recentRaces") or [],
+        horse.get("allPastRuns") or [],
+        cutoff=cutoff,
+        limit=limit,
+    )
+    return len(runs) < limit or _first_corner_coverage(horse, cutoff, limit) < min(3, len(runs))
 
 
 def _needs_pedigree(horse: dict[str, Any]) -> bool:
@@ -163,7 +217,7 @@ async def enrich_race_missing(
         changed = False
         async with sem:
             domains: list[str] = []
-            if _history_count(horse) < history_limit:
+            if _needs_history(horse, cutoff=cutoff, limit=history_limit):
                 domains.append("horse_history")
             if _needs_pedigree(horse):
                 domains.append("pedigree")
@@ -204,6 +258,16 @@ async def enrich_race_missing(
         "searchedHorses": len(horses),
         "changedHorses": changed_horses,
         "historyCompleteHorses": sum(_history_count(h) >= history_limit for h in horses),
+        "firstCornerEvidenceReadyHorses": sum(
+            _first_corner_coverage(h, cutoff, history_limit) >= min(3, history_limit)
+            for h in horses
+        ),
+        "firstCornerSamplesByHorse": {
+            str(h.get("horseNumber") or index + 1): _first_corner_coverage(
+                h, cutoff, history_limit
+            )
+            for index, h in enumerate(horses)
+        },
         "providers": bank_registry.capability_map(),
         "failures": failures[:20],
     }
