@@ -10,7 +10,9 @@ import argparse
 import copy
 import json
 import os
+import re
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -30,11 +32,35 @@ def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
             with urllib.request.urlopen(req, timeout=25) as response:
                 data = json.loads(response.read().decode("utf-8"))
             break
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                # No D1 race detail is expected at the start of a new day.
+                # Require an independently successful date-scoped day response;
+                # do not convert arbitrary 404s (bad routes/outages) to absence.
+                match = re.search(r"20\\d{2}-\\d{2}-\\d{2}", rid)
+                if not match:
+                    raise RuntimeError("D1 seal-guard cannot verify 404 without race date") from exc
+                date = match.group(0)
+                day_url = base.rstrip("/") + "/api/day?date=" + urllib.parse.quote(date) + "&details=0"
+                try:
+                    day_req = urllib.request.Request(
+                        day_url, headers={"accept": "application/json", "user-agent": "ARVEXQ-SealGuard/1"}
+                    )
+                    with urllib.request.urlopen(day_req, timeout=25) as response:
+                        day = json.loads(response.read().decode("utf-8"))
+                    if not isinstance(day, dict) or not isinstance(day.get("races"), list):
+                        raise ValueError("unverifiable D1 day response")
+                    if day.get("date") and str(day["date"]) != date:
+                        raise ValueError("D1 day date mismatch")
+                except Exception as day_exc:
+                    raise RuntimeError("D1 seal-guard 404 cannot be confirmed as a missing race") from day_exc
+                return None
+            failure = exc
         except Exception as exc:
             failure = exc
-            if attempt == 4:
-                raise RuntimeError("D1 seal-guard lookup failed closed: "+str(failure)) from exc
-            time.sleep(min(5.0, 0.6*(2**attempt)))
+        if attempt == 4:
+            raise RuntimeError("D1 seal-guard lookup failed closed: "+str(failure)) from failure
+        time.sleep(min(5.0, 0.6*(2**attempt)))
     if not isinstance(data, dict):
         raise RuntimeError("invalid D1 response")
     for item in (data.get("detail"), data.get("race"), data):
