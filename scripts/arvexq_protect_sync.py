@@ -22,8 +22,19 @@ from arvexq.prediction.prerace_archive import pre_off, restore_seal, sealed_lock
 def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
     url = base.rstrip("/") + "/api/race/" + urllib.parse.quote(rid, safe="") + "?sealguard=" + str(time.time_ns())
     req = urllib.request.Request(url, headers={"accept": "application/json", "user-agent": "ARVEXQ-SealGuard/1"})
-    with urllib.request.urlopen(req, timeout=25) as response:
-        data = json.loads(response.read().decode("utf-8"))
+    # Worker/D1 503s are sometimes transient. Retry boundedly, but never
+    # treat a failed read as 'no previous archive' (that would allow erasure).
+    failure = None
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(req, timeout=25) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            break
+        except Exception as exc:
+            failure = exc
+            if attempt == 4:
+                raise RuntimeError("D1 seal-guard lookup failed closed: "+str(failure)) from exc
+            time.sleep(min(5.0, 0.6*(2**attempt)))
     if not isinstance(data, dict):
         raise RuntimeError("invalid D1 response")
     for item in (data.get("detail"), data.get("race"), data):

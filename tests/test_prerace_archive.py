@@ -117,6 +117,54 @@ class ServerSealTests(unittest.TestCase):
         self.assertTrue(a["ticketsHit"])
         self.assertEqual(a["markedPodiumCount"],3)
 
+    def test_server_sync_roundtrip_before_post_and_no_second_archive(self):
+        """The scheduled job sends a pre-off lock and rereads the exact D1 revision."""
+        from unittest.mock import patch
+        from tempfile import TemporaryDirectory
+        from pathlib import Path
+        import json
+        import os
+        import sys
+        from scripts import arvexq_freeze_predictions as runner
+        now = datetime.now(JST)
+        current = race(now, minutes=20)
+        stored = {"detail": deepcopy(current), "posts": 0, "queries": 0}
+        def fake_http(url, *, payload=None, token="", retries=3):
+            if "/api/day?" in url:
+                return {"races": [current]}
+            if "/api/race/" in url:
+                stored["queries"] += 1
+                return {"ok": True, "detail": deepcopy(stored["detail"])}
+            if url.endswith("/api/sync"):
+                self.assertEqual(token, "secret-for-test")
+                self.assertEqual(len(payload["details"]), 1)
+                stored["posts"] += 1
+                stored["detail"] = deepcopy(payload["details"][0])
+                return {"ok": True}
+            raise AssertionError(url)
+        def fake_prepare(d, now):
+            sealed = seal_detail(d, forecast(d, now), now)
+            return {"status": "sealed", "detail": sealed,
+                    "revision": sealed["preRacePrediction"]["sealRevision"]}
+        with TemporaryDirectory() as td:
+            dest = str(Path(td) / "audit.json")
+            with patch.dict(os.environ, {"SYNC_TOKEN": "secret-for-test"}), \
+                 patch.object(runner, "request_json", side_effect=fake_http), \
+                 patch.object(runner, "prepare_seal", side_effect=fake_prepare), \
+                 patch.object(runner, "capture_original_bet", return_value={
+                     "raceId": current["id"], "fixedAt": now.isoformat(),
+                     "decision": "見送り", "items": []}), \
+                 patch.object(sys, "argv", ["runner", "--audit", dest]):
+                self.assertEqual(runner.main(), 0)
+                report = json.loads(Path(dest).read_text(encoding="utf-8"))
+        self.assertEqual(stored["posts"], 1)
+        self.assertEqual(report["sealed"], [current["id"]])
+        before = deepcopy(stored["detail"]["preRacePrediction"])
+        modified = deepcopy(stored["detail"])
+        modified["horses"][1]["integratedEvaluation"]["mark"] = "△"
+        result = restore_seal(stored["detail"], modified)
+        self.assertEqual(result["preRacePrediction"], before)
+
     def test_cross_race_id_is_rejected(self):
         d = deepcopy(self.d)
         d["id"] += "-other"
