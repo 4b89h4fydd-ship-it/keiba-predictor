@@ -34,6 +34,10 @@ const window=model.historicalWindow(h,target);
 assert.equal(window.length,5,'exactly newest five starts before target');
 assert.equal(window[0].date,'2026-09-30');
 assert.equal(window[4].date,'2026-09-10');
+const duplicate={recentRaces:[{...run('2026-09-30',1,1,2),cornerPositions:[1,null,1]}],
+ allPastRuns:[{...run('2026-09-30',1,1,2),cornerPositions:[null,2,3,4]}]};
+assert.deepEqual(model.historicalWindow(duplicate,target)[0].cornerPositions,[1,2,1,4],
+ 'multiple sources fill missing corners without overwriting known first corner');
 const rates=model.styleRates(h,target);
 assert.equal(rates.samples,5);
 assert.equal(rates.availableRuns,5);
@@ -41,6 +45,8 @@ assert.ok(rates.front>.2&&rates.front<.7,'source-backed front share, not stale p
 assert.ok(Math.abs(rates.front+rates.stalk+rates.mid+rates.close-1)<1e-10);
 const finish=model.finishingEvidence(h,target);
 assert.equal(finish.holdSamples,3);
+assert.equal(finish.holdWins,2);
+assert.equal(finish.closingWins,2);
 assert.equal(finish.closingSamples,2);
 assert.ok(finish.hold>0&&finish.hold<1,'front failure included, older victory excluded');
 assert.equal(finish.closing,1,'last-corner trailing horse twice converted to top 3');
