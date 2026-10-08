@@ -200,17 +200,22 @@ jobs:
             --out-dir prefetch-sync-batches
           COUNT=$(find prefetch-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
           echo "D1 prefetch batches=$COUNT"
+          FAILED_BATCHES=0
           for file in prefetch-sync-batches/batch-*.json; do
             BYTES=$(wc -c < "$file" | tr -d ' ')
             echo "POST $(basename "$file") bytes=$BYTES"
-            curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
+            # A failure for one race must not prevent other races being published.
+            if ! curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
               --connect-timeout 10 --max-time 40 -X POST \
               "$CLOUDFLARE_API_BASE/api/sync" \
               -H "content-type: application/json" \
               -H "x-sync-token: $SYNC_TOKEN" \
-              --data-binary @"$file" > /dev/null
+              --data-binary @"$file" > /dev/null; then
+              echo "::warning::D1 batch failed: $(basename "$file")"
+              FAILED_BATCHES=$((FAILED_BATCHES + 1))
+            fi
           done
-          echo "D1 prefetch repair push OK"
+          echo "D1 prefetch push finished: failed_batches=$FAILED_BATCHES; checking all race IDs and rosters next"
 
       - name: Verify prepared day and analysis from D1
         run: |
@@ -241,7 +246,10 @@ jobs:
           prepared=json.loads(Path('prefetch-payload.json').read_text(encoding='utf-8'))
           expected={str(d.get('id')):d for d in (prepared.get('details') or []) if isinstance(d,dict) and d.get('id')}
           returned={str(d.get('id')):d for d in details}
-          missing_cards=[]
+          expected_ids={str(r.get('id')) for r in (prepared.get('summaries') or []) if isinstance(r,dict) and r.get('id')}
+          actual_ids={str(r.get('id')) for r in (day.get('races') or []) if isinstance(r,dict) and r.get('id')}
+          missing_summary_ids=sorted(expected_ids-actual_ids)
+          missing_cards=[(rid,'missing D1 summary') for rid in missing_summary_ids]
           missing_analysis=[]
           for rid,old in expected.items():
               d=returned.get(rid)
@@ -252,8 +260,9 @@ jobs:
               good=[h for h in horses if str(h.get('name') or '').strip() and int(h.get('horseNumber') or 0)>0]
               prepared_horses=[h for h in (old.get('horses') or []) if isinstance(h,dict) and int(h.get('horseNumber') or 0)>0]
               numbers=[int(h.get('horseNumber') or 0) for h in good]
-              if len(good)<2 or len(good)<len(prepared_horses) or len(numbers)!=len(set(numbers)):
-                  missing_cards.append((rid,f'prepared={len(prepared_horses)} D1_named={len(good)} unique={len(set(numbers))}'))
+              expected_numbers={int(h.get('horseNumber') or 0) for h in prepared_horses}
+              if len(good)<2 or not expected_numbers.issubset(set(numbers)) or len(numbers)!=len(set(numbers)):
+                  missing_cards.append((rid,f'expected_numbers={sorted(expected_numbers)} D1_numbers={sorted(set(numbers))}'))
               pm=d.get('preparedMeta') if isinstance(d.get('preparedMeta'),dict) else {}
               has_analysis=bool(pm.get('diagnosisReady')) or any(d.get(k) not in (None,'',[],{}) for k in ('preRacePrediction','aiEvaluation','pace','pacePrediction','volatility'))
               if not has_analysis:
