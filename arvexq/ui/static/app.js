@@ -1362,7 +1362,7 @@ function strictSelectedRaceProfile(r,p){
   var d=Math.max(1,topRows.length);evidence/=d;trueRun/=d;conditions/=d;positionScenario/=d;
   var leader=ranked[0]||{},winnerStable=!!leader.winnerDecisionStable,winnerConf=clamp(n(leader.axisConfidence),0,1),uniform=1/Math.max(1,field),
       qReady=clamp((ready.prediction-.50)/.36,0,1),qTop3=clamp((top3-.50)/.30,0,1),qMargin=clamp(margin/.11,0,1),qEnt=clamp((.94-ent)/.28,0,1),qScenario=clamp((scenarioProb-.20)/.36,0,1),qEvidence=clamp((evidence-.30)/.48,0,1),qWin=clamp((winnerConf-.46)/.40,0,1),qTrue=clamp((trueRun-.40)/.32,0,1),qCond=clamp((conditions-.40)/.32,0,1),qPos=clamp((positionScenario-.40)/.32,0,1);
-  var authAxis=rows.filter(function(z){return z&&z.predMark==='◎'})[0]||null,authAxisNo=n(authAxis&&authAxis.horse&&authAxis.horse.horseNumber),mh=((leader.horse||{}).integratedEvaluation||{}).multiHead||{},mhSummary=(r&&r.multiHeadSummary)||{},mhReady=String(mhSummary.modelVersion||'').indexOf('arvexq-multi-head-')===0,leaderNo=n(leader.horse&&leader.horse.horseNumber),mhWinner=n(mhSummary.winnerHorseNumber),authAgree=!authAxisNo||leaderNo===authAxisNo,mhAgree=authAgree&&(!mhReady||(mhWinner>0&&leaderNo===mhWinner&&n(mh.winRank,999)===1&&n(mhSummary.winnerGap,0)>0));
+  var authAxis=rows.filter(function(z){return z&&z.predMark==='◎'})[0]||null,authAxisNo=n(authAxis&&authAxis.horse&&authAxis.horse.horseNumber),mh=((leader.horse||{}).integratedEvaluation||{}).multiHead||{},mhSummary=(r&&r.multiHeadSummary)||{},mhReady=String(mhSummary.modelVersion||'').indexOf('arvexq-multi-head-')===0,leaderNo=n(leader.horse&&leader.horse.horseNumber),mhWinner=n(mhSummary.winnerHorseNumber),authAgree=!authAxisNo||leaderNo===authAxisNo,mhAgree=!mhReady||(mhWinner>0&&leaderNo===mhWinner&&n(mh.winRank,999)===1&&n(mhSummary.winnerGap,0)>0);
   var score=Math.round(clamp(qReady*.14+qTop3*.17+qMargin*.15+qEnt*.10+qScenario*.09+qEvidence*.10+qWin*.13+qTrue*.05+qCond*.04+qPos*.03,0,1)*100),
       hard=(ready.prediction>=g.ready&&cov>=g.cov&&top3>=g.top3&&evidence>=g.evidence&&scenarioProb>=g.scenario&&winnerStable&&winnerConf>=g.confidence),
       separation=(top>=Math.max(g.top,uniform*g.uniform)||margin>=g.margin),hasHonmei=rows.some(function(z){return z&&z.predMark==='◎'}),selected=hard&&separation&&score>=g.score&&mhAgree&&hasHonmei;
@@ -1442,10 +1442,7 @@ function assignPredictionMarks(rows,r){
       consensusTop=consensus[0]||winLeader,consensusSupports=!!winLeader&&n(winLeader.winnerConsensusProbability)>=n(consensusTop&&consensusTop.winnerConsensusProbability)*.985,
       stableFloor=centralRace?.64:.56,marginFloor=uniform*(centralRace?.075:.050),
       stable=!!winLeader&&conf>=stableFloor&&consensusSupports&&(rawAgreement||consMargin>=Math.max(.006,marginFloor)),
-      honmeiMargin=Math.max(.008,uniform*(centralRace?.08:.06)),
-      honmeiP1Gap=Math.max(.005,uniform*(centralRace?.05:.04)),
-      honmeiEligible=!centralRace&&!!winLeader&&stable&&rawAgreement&&conf>=.64&&consMargin>=honmeiMargin&&p1Gap>=honmeiP1Gap&&n(winLeader.winEvidenceRank,99)<=2&&n(winLeader.pairwiseRank,99)<=2&&evLeader>=.34;
-  r.honmeiDecisionFrontend={version:'arvexq-honmei-frontend-gate-v1',eligible:honmeiEligible,horseNumber:n(winLeader&&winLeader.horse&&winLeader.horse.horseNumber),confidence:conf,consensusMargin:consMargin,p1Gap:p1Gap,evidence:evLeader,rawAgreement:rawAgreement};
+      honmeiEligible=false; // independently selected below using top-three evidence
   // Decision distribution is what ordered tickets/strict selection use. If the
   // independent consensus is unstable, fall back to P1 instead of forcing a false precision.
   var decisionProb=rows.map(function(z){return stable?n(z.winnerConsensusProbability):p1(z)}),ds=decisionProb.reduce(function(a,b){return a+b},0)||1;decisionProb=decisionProb.map(function(v){return v/ds});
@@ -1507,14 +1504,40 @@ function assignPredictionMarks(rows,r){
   var dimMaps=[dimRank(function(z){return n((z.researchFactors||{}).ability,.5)}),dimRank(function(z){return n((z.researchFactors||{}).form,.5)}),dimRank(function(z){return n((z.researchFactors||{}).pace,.5)}),dimRank(function(z){return n((z.researchFactors||{}).suitability,.5)}),dimRank(function(z){return n((z.researchFactors||{}).connections,.5)})];
   rows.forEach(function(z){var no=n(z.horse.horseNumber),rs=dimMaps.map(function(m){return n(m[no],99)}),hits=rs.filter(function(v){return v<=4}).length,best=Math.min.apply(null,rs);z.recallDiversityHits=hits;z.recallDiversityBest=best;z.recallDiversityScore=clamp(n(z.podiumRecallScore)*.52+n(z.p3RecallScore)*.18+n(z.p2RecallScore)*.10+robust(z)*.10+(hits/5)*.08+(best<=2?.04:0),0,1)});
 
-  // ◎ is no longer mandatory. Publish it only when the independent winner
-  // signals agree and there is measurable separation from the runner-up.
-  if(honmeiEligible){
-    take(winLeader||sorted[0],'◎')
-  }else if(winLeader){
-    winLeader.honmeiWithheld=true;
-    winLeader.attentionReason='◎保留｜1着候補の分離不足'
+  // v344: ◎ is a stable top-three axis, not a win-only prediction.
+  function axisHistory(z){
+    var list=(z.horse.recentRaces||z.horse.allPastRuns||[]),starts=0,top3=0;
+    list.slice(0,5).forEach(function(run){
+      var finish=n(run.finish,n(run.finishPosition,n(run.rank,0))),field=n(run.fieldSize,0);
+      if(finish<1||field<2||finish>field)return;
+      starts++;if(finish<=3)top3++;
+    });
+    return {starts:starts,top3:top3,rate:starts?top3/starts:0};
   }
+  var podiumAxis=rows.map(function(z,i){
+    var h=axisHistory(z),roles=(p1(z)+n(z.p2Probability)+n(z.p3Probability))/(3*uniform),
+        score=clamp(.34*clamp(roles/1.6,0,1)+.22*n(research[i].place,.5)+
+          .17*h.rate+.15*robust(z)+.12*(1-fragile(z)),0,1);
+    z.podiumAxisScore=score;z.podiumAxisHistory=h;return z;
+  }).sort(function(a,b){return n(b.podiumAxisScore)-n(a.podiumAxisScore)||
+    n(b.axisProbability)-n(a.axisProbability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
+  var axisLeader=podiumAxis[0]||null,axisNext=podiumAxis[1]||null,
+      axisGap=n(axisLeader&&axisLeader.podiumAxisScore)-n(axisNext&&axisNext.podiumAxisScore),
+      axisH=axisLeader&&axisLeader.podiumAxisHistory||{starts:0,top3:0,rate:0},
+      axisData=n(axisLeader&&axisLeader.edgeEvidence,n(axisLeader&&axisLeader.coverage,0));
+  honmeiEligible=!!axisLeader&&!!axisNext&&!isScratchHorse(axisLeader.horse)&&
+    n(axisLeader.podiumAxisScore)>=.60&&axisGap>=.02&&
+    n(axisLeader.axisRank,99)<=3&&n(axisLeader.podiumRecallRank,99)<=3&&
+    axisH.starts>=3&&axisH.top3>=2&&axisH.rate>=.40&&
+    axisData>=.30&&n(axisLeader.coverage,0)>=.40;
+  rows.forEach(function(z){z.podiumAxisEligible=honmeiEligible&&z===axisLeader});
+  r.honmeiDecisionFrontend={version:'arvexq-podium-axis-frontend-v2',
+    eligible:honmeiEligible,horseNumber:n(axisLeader&&axisLeader.horse&&axisLeader.horse.horseNumber),
+    axisScore:n(axisLeader&&axisLeader.podiumAxisScore),axisGap:axisGap,
+    historyRuns:axisH.starts,historyTop3:axisH.top3,
+    reason:honmeiEligible?'podium-axis-passed':'podium-axis-withheld'};
+  if(honmeiEligible)take(axisLeader,'◎');
+  else if(axisLeader){axisLeader.honmeiWithheld=true;axisLeader.attentionReason='◎保留｜3着内安定性またはデータ根拠不足'}
   var secondPick=p2Recall.find(function(z){return selected.indexOf(z)<0})||sorted.find(function(z){return selected.indexOf(z)<0});
   take(secondPick,'○');
   var thirdCore=podiumRecall.find(function(z){return selected.indexOf(z)<0&&(n(z.p2RecallRank)<=5||n(z.p3RecallRank)<=5||n(z.axisRank)<=4)})||podiumRecall.find(function(z){return selected.indexOf(z)<0});
@@ -1647,7 +1670,6 @@ function integratedGrades(r,rows){
 function applyServerAuthoritativeMarks(rows,r){
   rows=rows||[];r=r||{};
   var rd=String(r.date||''),st=mins(r.startTime),started=isFinal(r)||(rd&&rd<today())||(rd===today()&&st<9999&&nowMins()>=st);
-  if(!started)return false;
   var frontendGate=r.honmeiDecisionFrontend||{},engine=String(r.markEngineVersion||''),i,x,no,mark;
   for(i=0;i<(r.horses||[]).length;i++){
     var he=((r.horses[i]||{}).integratedEvaluation||{});
@@ -1657,9 +1679,12 @@ function applyServerAuthoritativeMarks(rows,r){
   // withholds ◎, do not let that legacy snapshot overwrite the live v5 decision.
   // The immutable preRacePrediction object itself is never changed and remains the
   // source for historical accuracy audits.
-  if(frontendGate.eligible===false&&engine.indexOf('arvexq-four-pillar-marks-v5')<0)return false;
+  var podiumEngine=engine.indexOf('arvexq-four-pillar-marks-v6')>=0;
+  // Only v6 is allowed to replace a live pre-race frontend decision.
+  // After the race, frozen pre-race marks continue to take precedence.
+  if(!started&&!podiumEngine)return false;
   var byNo={},lock=r.preRacePrediction||{},locked=Array.isArray(lock.horses)?lock.horses:[],i,x,no,mark;
-  for(i=0;i<locked.length;i++){x=locked[i]||{};no=n(x.horseNumber,0);mark=String(x.mark||'');if(no&&mark)byNo[no]=mark}
+  if(started)for(i=0;i<locked.length;i++){x=locked[i]||{};no=n(x.horseNumber,0);mark=String(x.mark||'');if(no&&mark)byNo[no]=mark}
   if(!Object.keys(byNo).length){
     for(i=0;i<(r.horses||[]).length;i++){
       x=r.horses[i]||{};var e=x.integratedEvaluation||{};no=n(x.horseNumber,0);mark=String(e.mark||'');

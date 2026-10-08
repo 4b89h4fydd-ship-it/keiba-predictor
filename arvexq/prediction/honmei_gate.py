@@ -2,23 +2,38 @@ from __future__ import annotations
 
 from typing import Any
 
-GATE_VERSION = "arvexq-honmei-consensus-gate-v2"
+GATE_VERSION = "arvexq-podium-axis-gate-v3"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
 
 
-def _iv(value: Any, default: int = 0) -> int:
+def _iv(v: Any, default: int = 0) -> int:
     try:
-        return int(value)
+        return int(v)
     except (TypeError, ValueError):
         return default
 
 
-def _fv(value: Any) -> float | None:
+def _fv(v: Any, default: float = 0.0) -> float:
     try:
-        out = float(value)
+        out = float(v)
+        return out if out == out and abs(out) != float("inf") else default
     except (TypeError, ValueError):
-        return None
-    return out if out == out else None
+        return default
+
+
+def _historical_top3(horse: dict[str, Any]) -> tuple[int, int, float]:
+    runs = horse.get("recentRaces") or horse.get("allPastRuns") or []
+    count = top3 = 0
+    for run in runs[:5]:
+        if not isinstance(run, dict):
+            continue
+        finish = _iv(run.get("finish") or run.get("finishPosition") or run.get("rank"))
+        field = _iv(run.get("fieldSize"))
+        if field < 2 or finish <= 0 or finish > field:
+            continue
+        count += 1
+        top3 += int(finish <= 3)
+    return count, top3, (top3 + .5) / (count + 1)
 
 
 def evaluate_honmei_gate(
@@ -26,115 +41,74 @@ def evaluate_honmei_gate(
     multi_head_summary: dict[str, Any] | None,
     race: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Decide whether ARVEXQ is allowed to publish an ◎.
+    """Independent top-three betting-axis gate. Scores are not hit probabilities.
 
-    This is intentionally a structural-consensus gate, not a fabricated win
-    probability. A race may still have a top-ranked horse while ◎ is withheld.
-    That is preferable to presenting weak separation as a strong honmei call.
+    Use actual pre-race evidence, not odds or the win-only ranking. Do not
+    force a selection when top-three consistency or separation is weak.
     """
-    if not ranked_rows:
-        return {
-            "version": GATE_VERSION,
-            "eligible": False,
-            "horseNumber": 0,
-            "reason": "ranking-unavailable",
-            "failed": ["ranking"],
-        }
-
-    leader = ranked_rows[0]
-    runner = ranked_rows[1] if len(ranked_rows) > 1 else None
-    horse = leader.get("horse") or {}
-    horse_no = _iv(horse.get("horseNumber"))
-    multi = leader.get("multiHead") or {}
-    summary = multi_head_summary or {}
-
-    pillar_ranks = leader.get("pillarRanks") or {}
-    pillar_top3 = sum(_iv(pillar_ranks.get(p), 999) <= 3 for p in PRIMARY_PILLARS)
-    primary_coverage = _iv(leader.get("primaryPillarCoverage"))
-    sample = _iv(leader.get("sample"))
-    family_counts = leader.get("evidenceFamilyCounts") or {}
-    primary_families = sum(_iv(family_counts.get(p)) for p in PRIMARY_PILLARS)
-    ability_families = _iv(family_counts.get("ability"))
-    record_families = _iv(family_counts.get("record"))
-    suitability_families = _iv(family_counts.get("suitability"))
-    pace_families = _iv(family_counts.get("pace"))
+    if len(ranked_rows) < 2:
+        return {"version": GATE_VERSION, "eligible": False, "horseNumber": 0,
+                "reason": "insufficient-field", "failed": ["field"]}
     circuit = str((race or {}).get("circuit") or "")
     central = circuit in {"中央", "JRA"}
-    prepared = (race or {}).get("preparedMeta") if isinstance((race or {}).get("preparedMeta"), dict) else {}
-    supplemental = prepared.get("supplementalSearch") if isinstance(prepared.get("supplementalSearch"), dict) else {}
-    central_supplemented = supplemental.get("version") == "arvexq-multi-source-fallback-v1"
-    history = horse.get("recentRaces") or horse.get("allPastRuns") or []
-    central_complete_runs = 0
-    for run in history[:5]:
-        if not isinstance(run, dict):
-            continue
-        try:
-            finish = int(float(run.get("finish") or run.get("finishPosition") or run.get("rank") or 0))
-            field = int(float(run.get("fieldSize") or 0))
-            seconds = float(run.get("timeSeconds") or 0)
-            distance = int(float(run.get("distance") or 0))
-        except (TypeError, ValueError):
-            continue
-        if finish > 0 and field > 1 and seconds > 0 and distance > 0:
-            central_complete_runs += 1
-
-    win_gap = _fv(summary.get("winnerGap"))
-    pairwise_wins = _iv(leader.get("pairwiseWins"))
-    runner_pairwise_wins = _iv((runner or {}).get("pairwiseWins"))
-
+    field = len(ranked_rows)
+    options: list[dict[str, Any]] = []
+    for row in ranked_rows:
+        h = row.get("horse") or {}
+        families = row.get("evidenceFamilyCounts") or {}
+        pillar_ranks = row.get("pillarRanks") or {}
+        values = [row.get(p) for p in PRIMARY_PILLARS]
+        coverage = sum(v is not None for v in values)
+        mean_pillar = sum(_fv(v) for v in values if v is not None) / max(1, coverage)
+        mh = row.get("multiHead") or {}
+        nr, n3, recent_score = _historical_top3(h)
+        strength = max(0., min(1., _fv(mh.get("strengthScore"))))
+        spread = max(values) - min(values) if coverage == 4 else 1.
+        relative_rank = 1. - (max(1, _iv(row.get("rank"), field)) - 1) / max(1, field - 1)
+        score = (.30 * recent_score + .24 * relative_rank + .20 * mean_pillar
+                 + .16 * strength + .10 * (1. - max(0., min(1., spread))))
+        option = {
+            "horseNumber": _iv(h.get("horseNumber")), "score": round(score, 6),
+            "factorRank": _iv(row.get("rank"), 999),
+            "strengthRank": _iv(mh.get("strengthRank"), 999),
+            "sample": _iv(row.get("sample")), "coverage": coverage,
+            "families": sum(_iv(families.get(p)) for p in PRIMARY_PILLARS),
+            "paceFamilies": _iv(families.get("pace")),
+            "pillarSupport": sum(_iv(pillar_ranks.get(p), 999) <= min(field, 5) for p in PRIMARY_PILLARS),
+            "validRuns": nr, "recentTop3": n3,
+            "recentTop3Rate": n3 / nr if nr else 0.,
+            "evidenceFamilies": {p: _iv(families.get(p)) for p in PRIMARY_PILLARS},
+        }
+        options.append(option)
+    options.sort(key=lambda x: (-x["score"], x["factorRank"], x["horseNumber"]))
+    winner, next_horse = options[:2]
+    gap = winner["score"] - next_horse["score"]
+    families = winner["evidenceFamilies"]
     checks = {
-        "coreWinHeadAgreement": (
-            _iv(summary.get("winnerHorseNumber")) == horse_no
-            and _iv(multi.get("winRank"), 999) == 1
-        ),
-        # 7-day replay + held-out final two days: rank-1 baseline strength and
-        # all four pillars in the top 3 were materially more stable than the
-        # previous <=2 / 3-of-4 gate.
-        "strengthHeadSupport": _iv(multi.get("strengthRank"), 999) == 1,
-        "allPrimaryPillarsPresent": primary_coverage >= 4,
-        "pillarConsensus": pillar_top3 >= 4,
-        "positiveWinHeadGap": win_gap is not None and win_gap > 0.0,
-        "pairwiseSeparation": runner is None or pairwise_wins > runner_pairwise_wins,
-        "minimumRaceEvidence": sample >= 5 and primary_families >= 8 and pace_families >= 1,
+        "qualifiedRunner": winner["horseNumber"] > 0,
+        "abilitySupported": winner["factorRank"] <= 3 and winner["strengthRank"] <= 3,
+        "completePillars": winner["coverage"] == 4 and winner["pillarSupport"] >= 3,
+        "historicalPodium": winner["validRuns"] >= 3 and winner["recentTop3"] >= 2
+                            and winner["recentTop3Rate"] >= .4,
+        "evidenceDepth": winner["sample"] >= 3 and winner["families"] >= 7
+                         and winner["paceFamilies"] >= 1,
+        "axisScore": winner["score"] >= .57,
+        "axisSeparation": gap >= .018,
     }
     if central:
-        # Historical JRA audit showed thin evidence (missing class/sectional/complete
-        # recent-run fields) produced false confidence. Central ◎ automatically
-        # resumes only when the richer evidence families are actually present.
-        checks.update({
-            "centralSupplemented": central_supplemented,
-            "centralFiveRunsComplete": central_complete_runs >= 5,
-            "centralAbilityDepth": ability_families >= 3,
-            "centralRecordDepth": record_families >= 4,
-            "centralSuitabilityDepth": suitability_families >= 2,
-            "centralPaceDepth": pace_families >= 2,
-            "centralEvidenceDepth": primary_families >= 11,
-        })
-    failed = [name for name, ok in checks.items() if not ok]
-    eligible = not failed
-
+        checks["centralHistory"] = winner["validRuns"] >= 3
+        checks["centralEvidence"] = (winner["families"] >= 9
+                                    and families["ability"] >= 2
+                                    and families["record"] >= 2
+                                    and families["pace"] >= 2)
+    failed = [k for k, ok in checks.items() if not ok]
     return {
-        "version": GATE_VERSION,
-        "eligible": eligible,
-        "horseNumber": horse_no,
-        "reason": "honmei-consensus-passed" if eligible else "honmei-withheld",
-        "failed": failed,
-        "checks": checks,
-        "winHeadGap": win_gap,
-        "pairwiseWins": pairwise_wins,
-        "runnerPairwiseWins": runner_pairwise_wins,
-        "primaryPillarCoverage": primary_coverage,
-        "pillarTop3Count": pillar_top3,
-        "primaryEvidenceFamilies": primary_families,
-        "evidenceFamilies": {
-            "ability": ability_families,
-            "record": record_families,
-            "suitability": suitability_families,
-            "pace": pace_families,
-        },
-        "circuit": circuit,
-        "centralEvidenceGate": central,
-        "centralSupplemented": central_supplemented,
-        "centralCompleteRuns": central_complete_runs,
-        "sample": sample,
+        "version": GATE_VERSION, "eligible": not failed,
+        "horseNumber": winner["horseNumber"],
+        "reason": "podium-axis-passed" if not failed else "axis-withheld",
+        "checks": checks, "failed": failed,
+        "axisScore": winner["score"], "runnerUpAxisScore": next_horse["score"],
+        "axisMargin": round(gap, 6),
+        "axisMeaning": "relative-top3-axis-strength-not-hit-probability",
+        "axisCandidates": options[:5], "circuit": circuit,
     }

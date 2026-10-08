@@ -6,7 +6,7 @@ from arvexq.prediction.factor_model import MODEL_VERSION, PRIMARY_PILLARS, rank_
 from arvexq.prediction.multi_head import MODEL_VERSION as MULTI_HEAD_MODEL_VERSION, attach_multi_head_signals
 from arvexq.prediction.honmei_gate import evaluate_honmei_gate
 
-MARK_ENGINE_VERSION = "arvexq-four-pillar-marks-v5"
+MARK_ENGINE_VERSION = "arvexq-four-pillar-marks-v6"
 CORE_MARKS = ("◎", "○", "▲")
 LOWER_MARKS = ("☆+", "☆", "△", "注")
 
@@ -63,6 +63,8 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     honmei_decision = evaluate_honmei_gate(ranked_rows, multi_head_summary, detail)
     detail["honmeiDecision"] = honmei_decision
     ranked = [row["horse"] for row in ranked_rows]
+    axis_no = int(honmei_decision.get("horseNumber") or 0) if honmei_decision.get("eligible") else 0
+    axis_horse = next((h for h in ranked if int(h.get("horseNumber") or 0) == axis_no), None)
 
     for horse in horses:
         e = horse.setdefault("integratedEvaluation", {})
@@ -106,6 +108,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         e["upsideCandidate"] = bool(multi_head.get("upsideCandidate"))
         e["honmeiEligible"] = bool(honmei_decision.get("eligible") and int(horse.get("horseNumber") or 0) == int(honmei_decision.get("horseNumber") or 0))
         e["honmeiGateVersion"] = honmei_decision.get("version")
+        e["podiumAxisScore"] = next((q["score"] for q in honmei_decision.get("axisCandidates", []) if q["horseNumber"] == int(horse.get("horseNumber") or 0)), None)
         horse["abilityEvidence"] = evidence
         detail["factorRanking"].append(
             {
@@ -115,21 +118,15 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             }
         )
 
-    if honmei_decision.get("eligible"):
-        core_assignments = (("◎", ranked[0]),)
-        if len(ranked) > 1:
-            core_assignments += (("○", ranked[1]),)
-        if len(ranked) > 2:
-            core_assignments += (("▲", ranked[2]),)
-        remaining_rows = ranked_rows[3:]
-    else:
-        # Weakly separated races no longer manufacture a honmei. Keep the best
-        # contender visible as ○ and preserve the rest of the coverage ladder.
-        core_assignments = (("○", ranked[0]),)
-        if len(ranked) > 1:
-            core_assignments += (("▲", ranked[1]),)
-        remaining_rows = ranked_rows[2:]
-
+    # ◎ is top-three axis, so it may differ from the winner-model leader.
+    remaining_rows = [row for row in ranked_rows if row["horse"] is not axis_horse]
+    core_assignments = ()
+    if axis_horse is not None:
+        core_assignments += (("◎", axis_horse),)
+    if remaining_rows:
+        core_assignments += (("○", remaining_rows.pop(0)["horse"]),)
+    if remaining_rows:
+        core_assignments += (("▲", remaining_rows.pop(0)["horse"]),)
     for mark, horse in core_assignments:
         horse["integratedEvaluation"]["mark"] = mark
     plus = _plus_candidate(remaining_rows)
@@ -159,7 +156,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     detail["multiHeadModelVersion"] = MULTI_HEAD_MODEL_VERSION
     detail["multiHeadSummary"] = multi_head_summary
     detail["markMethod"] = (
-        "core=validated four-pillar-v4 majority + honmei consensus gate; "
+        "core=four-pillar consensus + independent top-three axis; "
         "heads=strength(ability+record), win(ability+record+suitability+pace), "
         "upside(suitability+pace+support), market-risk(popularity-vs-model); "
         "support=pedigree+weather/going+bias+draw+body/weight+condition-change+freshness+age/sex+jockey+trainer"
