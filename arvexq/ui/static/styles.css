@@ -4516,3 +4516,103 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
   .ai-bet-why{margin:11px 0 12px;padding:11px 12px;font-size:12px}
   .ai-bet-why>b{font-size:15px}
 }
+
+/* v342: iPhone AI-bet subpage — three controls, never the five-column race bar.
+   Leave the safe-area on this header only; do not add a second body inset. */
+.smart-shell > .smart-race-subpage-topbar{
+  display:grid!important;
+  grid-template-columns:44px minmax(0,1fr) 44px!important;
+  align-items:center!important;
+  justify-items:stretch!important;
+  column-gap:9px!important;
+  top:0!important;
+  min-height:calc(62px + env(safe-area-inset-top, 0px))!important;
+  padding:calc(7px + env(safe-area-inset-top, 0px)) 12px 7px!important;
+  box-sizing:border-box!important;
+}
+.smart-shell > .smart-race-subpage-topbar .smart-race-step,
+.smart-shell > .smart-race-subpage-topbar .smart-race-close{
+  width:44px!important;min-width:0!important;
+  height:44px!important;min-height:44px!important;
+  grid-column:auto!important;
+}
+.smart-shell > .smart-race-subpage-topbar .smart-race-head-copy{
+  grid-column:2!important;grid-row:1!important;
+  min-width:0!important;width:100%!important;
+  overflow:hidden!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+}
+.smart-shell > .smart-race-subpage-topbar .smart-race-head-copy strong{
+  display:block!important;
+  width:100%!important;max-width:100%!important;
+  font-size:19px!important;line-height:1.25!important;
+  white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important;
+  text-align:center!important;
+}
+.smart-shell > .smart-race-subpage-topbar .smart-race-close{
+  grid-column:3!important;grid-row:1!important;
+}
+.bet-detail-page-shell > .smart-race-page{
+  min-width:0!important;
+  padding-top:calc(74px + env(safe-area-inset-top, 0px))!important;
+}
+.bet-detail-page-shell .bet-card-clean,
+.bet-detail-page-shell .ai-bet-box,
+.bet-detail-page-shell .ai-bet-head,
+.bet-detail-page-shell .ai-bet-list,
+.bet-detail-page-shell .ai-bet-row,
+.bet-detail-page-shell .ai-bet-meta{
+  min-width:0!important;max-width:100%!important;
+  box-sizing:border-box!important;
+}
+.bet-detail-page-shell .ai-bet-head-v224{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;gap:8px!important;
+}
+.bet-detail-page-shell .ai-bet-title{grid-column:1;min-width:0!important}
+.bet-detail-page-shell .ai-bet-brand{grid-column:2!important;grid-row:1!important}
+.bet-detail-page-shell .ai-bet-meta{
+  grid-column:1/-1!important;grid-row:2!important;
+  display:grid!important;
+  grid-template-columns:max-content minmax(0,1fr)!important;
+  gap:6px!important;
+  overflow:visible!important;
+}
+.bet-detail-page-shell .ai-bet-meta>span{
+  min-width:0!important;max-width:100%!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  line-height:1.35!important;
+  justify-content:center!important;text-align:center!important;
+}
+.bet-detail-page-shell .ai-bet-meta>span:nth-child(3){
+  grid-column:1/-1!important;
+}
+.bet-detail-page-shell .ai-bet-row{
+  overflow-wrap:anywhere!important;
+}
+.bet-detail-page-shell .ai-bet-row strong{
+  min-width:0!important;
+  overflow-wrap:anywhere!important;
+}
+@media(max-width:430px){
+  .smart-shell > .smart-race-subpage-topbar{
+    grid-template-columns:42px minmax(0,1fr) 42px!important;
+    column-gap:6px!important;
+    padding-left:10px!important;padding-right:10px!important;
+  }
+  .smart-shell > .smart-race-subpage-topbar .smart-race-close,
+  .smart-shell > .smart-race-subpage-topbar .smart-race-step{
+    width:42px!important;height:42px!important;min-height:42px!important;
+  }
+  .bet-detail-page-shell .ai-bet-box{padding:10px!important}
+  .bet-detail-page-shell .ai-bet-meta{
+    grid-template-columns:max-content minmax(0,1fr)!important;
+  }
+  .bet-detail-page-shell .ai-bet-meta>span{font-size:11px!important;padding:6px!important}
+}
+@media(max-width:340px){
+  .bet-detail-page-shell .ai-bet-meta{grid-template-columns:minmax(0,1fr)!important}
+  .bet-detail-page-shell .ai-bet-meta>span:nth-child(3){grid-column:1!important}
+}
