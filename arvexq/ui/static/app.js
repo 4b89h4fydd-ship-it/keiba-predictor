@@ -223,30 +223,67 @@ function sameDayTrendSignatureV313(r,rows){
 function stylePoint(rt){return rt.front+2*rt.stalk+3*rt.mid+4*rt.close}
 function styleName(pt){if(pt<1.65)return"逃げ";if(pt<2.35)return"先行";if(pt<3.15)return"差し";return"追込"}
 function earlyOcc(r){var hs=r.horses||[],nums=[],early=[],moved=[],i,rr,p,j,hit;for(i=0;i<hs.length;i++){rr=(hs[i].recentRaces||[])[0];if(!rr)continue;p=rr.cornerPositions||[];hit=false;for(j=0;j<p.length;j++)if(n(p[j])>0&&n(p[j])<=3){hit=true;break}if(hit){nums.push(n(hs[i].horseNumber));if(n(p[0])<=3)early.push(n(hs[i].horseNumber));else moved.push(n(hs[i].horseNumber))}}return{nums:nums,early:early,moved:moved,rate:hs.length?nums.length/hs.length:0}}
+// Use only prior races for early-position evidence. A takeover at 3C/4C is
+// never treated as a fast start. Neither odds nor post-race target data enter.
+function paceHistoryRuns(h,r){
+  var date=String(r&&r.date||''),seen={},out=[],all=[].concat(h&&h.recentRaces||[],h&&h.allPastRuns||[]);
+  all.forEach(function(rr){
+    if(!rr||typeof rr!=='object')return;
+    var d=String(rr.date||rr.raceDate||'');
+    if(!d||(date&&d>=date))return;
+    var raceNo=n(rr.raceNumber,n(rr.raceNo,0)),
+        key=[d,String(rr.track||''),n(rr.distance,0),raceNo].join('|');
+    var corners=Array.isArray(rr.cornerPositions)?rr.cornerPositions:[],
+        pos=n(corners[0],0),field=n(rr.fieldSize,0);
+    if(!Number.isInteger(pos)||pos<=0||(field>0&&pos>field))return;
+    if(!seen[key]){seen[key]=rr;out.push(rr)}
+    else if((rr.cornerPositions||[]).length>(seen[key].cornerPositions||[]).length){
+      var ix=out.indexOf(seen[key]);seen[key]=rr;if(ix>=0)out[ix]=rr
+    }
+  });
+  out.sort(function(a,b){return String(b.date||b.raceDate||'').localeCompare(String(a.date||a.raceDate||''))});
+  return out.slice(0,5)
+}
 function minetaPastProfile(h,r){
-  var rs=(h&&((h.recentRaces&&h.recentRaces.length)?h.recentRaces:h.allPastRuns)||[]).slice(0,5),last=rs[0]||null,
+  var rs=paceHistoryRuns(h,r),last=rs[0]||null,
       lp=(last&&last.cornerPositions||[]).map(function(v){return n(v,0)}).filter(function(v){return v>0}),
-      field=last?raceField(last):12,first=lp.length?lp[0]:0,prevEarly=false,prevLeader=false,prevRear=false,
-      w=recencyWeights(rs.length),moveW=0,moveDen=0,leadW=0,leadDen=0,rearW=0,rearDen=0,i,rr,p,j,best,ww,fs,midLead;
-  if(lp.length){prevEarly=first<=3;prevLeader=first===1;prevRear=first>=Math.max(6,Math.ceil(field*.66))}
+      field=last?raceField(last):12,first=lp.length?lp[0]:0,prevEarly=first>0&&first<=3,prevLeader=first===1,
+      prevRear=first>=Math.max(6,Math.ceil(field*.66)),w=recencyWeights(rs.length),
+      moveW=0,moveDen=0,leadW=0,leadDen=0,earlyW=0,rearW=0,rearDen=0,i,rr,p,j,best,ww,fs,midLead;
   for(i=0;i<rs.length;i++){
-    rr=rs[i]||{};p=(rr.cornerPositions||[]).map(function(v){return n(v,0)}).filter(function(v){return v>0});if(!p.length)continue;
-    ww=w[i]||1;fs=raceField(rr);best=99;for(j=1;j<p.length;j++)if(p[j]<best)best=p[j];
+    rr=rs[i]||{};p=(rr.cornerPositions||[]).map(function(v){return n(v,0)}).filter(function(v){return v>0});
+    if(!p.length)continue;
+    fs=raceField(rr);ww=(w[i]||1)*(String(rr.track||'')===String(r&&r.track||'')?1.10:1)*
+      (Math.abs(n(rr.distance,0)-n(r&&r.distance,0))<=200?1.12:1);
+    best=99;for(j=1;j<p.length;j++)if(p[j]<best)best=p[j];
     moveDen+=ww;if(p[0]>3&&best<=Math.max(3,p[0]-2))moveW+=ww;
-    leadDen+=ww;midLead=p[0]>1&&p.slice(1).some(function(v){return v===1});if(midLead)leadW+=ww;
-    rearDen+=ww;if(p.some(function(v){return v>=10})||p[0]>=Math.max(6,Math.ceil(fs*.66)))rearW+=ww
+    leadDen+=ww;if(p[0]===1)leadW+=ww;if(p[0]<=3)earlyW+=ww;
+    midLead=p[0]>1&&p.slice(1).some(function(v){return v===1});if(midLead)moveW+=ww*.25;
+    rearDen+=ww;if(p[0]>=Math.max(6,Math.ceil(fs*.66)))rearW+=ww
   }
   var norm=first?((first-1)/Math.max(1,field-1)):1,bucket='不明';
   if(lp.length){if(prevEarly)bucket='先行';else if(norm<=.38)bucket='準先行';else if(norm<=.68)bucket='準後方';else bucket='後方'}
-  return{samples:rs.length,prevEarly:prevEarly,prevLeader:prevLeader,prevRear:prevRear,firstPos:first,lastPositions:lp,bucket:bucket,
-    moveHistory:moveDen?moveW/moveDen:0,midRaceLead:leadDen?leadW/leadDen:0,rearHistory:rearDen?rearW/rearDen:0}
+  // Recompute true midrace-takeover share separately from 3C move rate.
+  var midLeadW=0;for(i=0;i<rs.length;i++){
+    rr=rs[i];p=rr.cornerPositions||[];
+    if(n(p[0],0)>1&&p.slice(1).some(function(v){return n(v,0)===1})){
+      ww=(w[i]||1)*(String(rr.track||'')===String(r&&r.track||'')?1.10:1)*
+        (Math.abs(n(rr.distance,0)-n(r&&r.distance,0))<=200?1.12:1);
+      midLeadW+=ww
+    }
+  }
+  return{samples:rs.length,firstCornerSamples:rs.length,prevEarly:prevEarly,prevLeader:prevLeader,
+    prevRear:prevRear,firstPos:first,lastPositions:lp,bucket:bucket,
+    leadRate:leadDen?leadW/leadDen:0,earlyRate:leadDen?earlyW/leadDen:0,
+    moveHistory:moveDen?moveW/moveDen:0,midRaceLead:leadDen?midLeadW/leadDen:0,
+    rearHistory:rearDen?rearW/rearDen:0}
 }
 function minetaRaceContext(rows,r){
   rows=rows||[];var active=rows.filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)}),field=Math.max(1,active.length),raw=0,adjusted=0,rear=0,leadPool=[],
       av=active.map(function(x){return n(x.ability,.5)}).sort(function(a,b){return a-b}),abilityMed=av.length?av[Math.floor(av.length/2)]:.5;
   active.forEach(function(z){
     var p=z.minetaPast||minetaPastProfile(z.horse,r);z.minetaPast=p;
-    var early=!!p.prevEarly,
+    var early=!!p.prevEarly||(p.firstCornerSamples>=2&&n(p.earlyRate)>=.48),
         forwardEvidence=!!p.prevLeader||p.bucket==='準先行'||p.midRaceLead>=.20||p.moveHistory>=.35||
           (n(z.ten,.5)>=.58&&n(z.breakSkill,.5)>=.52)||
           (n(z.ability,.5)>=abilityMed&&p.rearHistory<.45&&n(z.positionTrend,.5)>=.50),
@@ -254,10 +291,10 @@ function minetaRaceContext(rows,r){
     z.minetaEarlyIntent=adjustedEarly;z.minetaRawEarly=early;z.minetaLengthenForward=!!(adjustedEarly&&!early);
     if(early)raw++;if(adjustedEarly)adjusted++;if(p.prevRear)rear++
   });
-  leadPool=active.filter(function(z){var q=z.minetaPast||{};return q.prevLeader||q.prevEarly||z.rawFront>=.18||z.goProbBase>=.50||z.lengthen}).sort(function(a,b){
+  leadPool=active.filter(function(z){var q=z.minetaPast||{};return (q.prevLeader&&n(q.earlyRate)>=.25)||(q.firstCornerSamples>=2&&n(q.leadRate)>=.22)||z.rawFront>=.18||z.goProbBase>=.50||z.lengthen}).sort(function(a,b){
     var ap=a.minetaPast||{},bp=b.minetaPast||{};
-    if(!!bp.prevLeader!==!!ap.prevLeader)return bp.prevLeader?1:-1;
-    if(!!bp.prevEarly!==!!ap.prevEarly)return bp.prevEarly?1:-1;
+    if(n(bp.leadRate)!==n(ap.leadRate))return n(bp.leadRate)-n(ap.leadRate);
+    if(n(bp.earlyRate)!==n(ap.earlyRate))return n(bp.earlyRate)-n(ap.earlyRate);
     if(!!b.lengthen!==!!a.lengthen)return b.lengthen?1:-1;
     if(n(b.rawFront)!==n(a.rawFront))return n(b.rawFront)-n(a.rawFront);
     if(n(b.ten)!==n(a.ten))return n(b.ten)-n(a.ten);
@@ -279,7 +316,8 @@ function minetaAssignRoles(rows,r,ctx,pressure){
     var no=n(x.horse.horseNumber),p=x.minetaPast||minetaPastProfile(x.horse,r),q=pressure[no]||{},
         left=byNo[no-1],left2=byNo[no-2],right=byNo[no+1],right2=byNo[no+2],role='不明',notes=[];
     if(!p.firstPos){x.expected='不明';x.minetaRole='不明';x.minetaNotes=['初角通過順位不足'];return}
-    if(p.prevLeader&&n(x.rawFront,x.front)>=.12)role='逃げ候補';
+    if((p.firstCornerSamples>=2&&p.leadRate>=.26)||
+       (p.prevLeader&&n(x.rawFront,x.front)>=.22))role='逃げ候補';
     else if(p.prevEarly||p.bucket==='先行')role='先行';
     else if(p.bucket==='準先行')role='好位';
     else if(p.bucket==='準後方')role='中団';
@@ -509,7 +547,7 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
       var past=z.minetaPast||{},sample=clamp(n(z.styleSamples,0)/3,0,1);
       return n(z.goProb,.5)*.25+n(z.breakSkill,.5)*.21+n(z.ten,.5)*.18+
         n(z.needLead,.5)*.12+n(z.jockeyFront,0)*.04+
-        (past.prevLeader?.14:(past.prevEarly?.07:0))*sample+
+        (n(past.leadRate)*.12+n(past.earlyRate)*.045+(past.prevLeader?.04:0))*sample+
         n(z.holdFront,.5)*.06+n(z.minetaLeadRank,0)*-.002
     }
     return score(b)-score(a)||n(a.horse.horseNumber)-n(b.horse.horseNumber)
