@@ -33,10 +33,13 @@ async def fetch_domain(
     *args,
     circuit: str | None = None,
     bank_registry: DataBankRegistry = registry,
+    only_sources: set[str] | None = None,
     **kwargs,
 ) -> list[FetchResult]:
-    """Fetch one data domain from all capable sources without one failure killing the rest."""
+    """Fetch from all capable sources or a targeted group, isolating failures."""
     providers = bank_registry.providers(domain, circuit=circuit)
+    if only_sources is not None:
+        providers = [p for p in providers if p.name in only_sources]
     if not providers:
         return []
 
