@@ -107,6 +107,42 @@ class AuthorizedHistoryRuntimeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(results[0].data["recentRaces"]), 1)
         self.assertEqual(results[0].data["recentRaces"][0]["cornerPositions"][0], 2)
 
+    async def test_measured_horse_3f_enriches_full_corner_history_without_refetching_official(self):
+        reg = DataBankRegistry()
+        called = []
+        def official(*args):
+            called.append("official")
+            return {"recentRaces": []}
+        reg.register(DataSource(
+            name="jra_official", circuit="JRA", priority=10,
+            capabilities=SourceCapabilities(horse_history=True),
+            fetchers={"horse_history": official},
+        ))
+        partner = spec()
+        partner["horse_first3f"] = True
+        register_authorized_history_feeds(
+            reg, config=json.dumps([partner]),
+            environ={"ARVEXQ_FAKE_TOKEN": "secret"},
+        )
+        past = [runner(f"2026-09-{d:02}", 2) for d in (30, 24, 18, 12, 6)]
+        h = {"horseId": "horse-100", "name": "sample", "recentRaces": past}
+        observations = [dict(past[0], first3FSeconds=36.8),
+                        dict(past[1], first3FSeconds=36.5)]
+        with patch.dict(os.environ, {"ARVEXQ_FAKE_TOKEN": "secret"}), patch(
+            "urllib.request.urlopen",
+            return_value=HttpResponse({"horseId":"horse-100", "recentRaces": observations}),
+        ):
+            detail = {"date": "2026-10-08", "circuit": "中央", "horses": [h]}
+            done = await enrich_race_missing(detail, bank_registry=reg)
+        self.assertEqual(called, [], "official source must not refetch complete corners")
+        rows = done["horses"][0]["recentRaces"]
+        self.assertAlmostEqual(rows[0]["horseFirst3FSeconds"], 36.8)
+        self.assertAlmostEqual(rows[1]["horseFirst3FSeconds"], 36.5)
+        meta = done["preparedMeta"]["supplementalSearch"]
+        self.assertEqual(meta["measuredHorseFirst3FReadyHorses"], 1)
+        self.assertEqual(meta["measuredHorseFirst3FProviderCount"], 1)
+        self.assertNotIn("horseFirst3FSeconds", h["recentRaces"][0], "input is unchanged")
+
     async def test_bad_provider_is_isolated_and_no_wrong_horse_merge(self):
         reg = DataBankRegistry()
         reg.register(DataSource(
