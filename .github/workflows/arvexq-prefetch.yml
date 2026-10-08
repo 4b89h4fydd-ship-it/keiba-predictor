@@ -317,6 +317,18 @@ jobs:
               has_analysis=bool(pm.get('diagnosisReady')) or any(d.get(k) not in (None,'',[],{}) for k in ('preRacePrediction','aiEvaluation','pace','pacePrediction','volatility'))
               if not has_analysis:
                   missing_analysis.append(rid)
+          # Morning selections are historical commitments, not live predictions.
+          # A Worker that strips these fields must fail verification visibly.
+          proposed={str(r.get('id')):r for r in (prepared.get('summaries') or []) if isinstance(r,dict) and r.get('id')}
+          published={str(r.get('id')):r for r in (day.get('races') or []) if isinstance(r,dict) and r.get('id')}
+          morning_keys=('morningPickVersion','morningPickFixedAt','morningSelected','morningSelectedScore','morningSpecial')
+          frozen={rid:r for rid,r in proposed.items() if r.get('morningPickVersion')=='v1' and r.get('morningPickFixedAt')}
+          inconsistent=[rid for rid,r in frozen.items()
+                        if not isinstance(published.get(rid),dict) or
+                        any(published[rid].get(key)!=r.get(key) for key in morning_keys)]
+          print('D1_MORNING_PICKS_VERIFY fixed=',len(frozen),'inconsistent=',len(inconsistent))
+          if inconsistent:
+              raise SystemExit('D1 stripped/rewrote frozen morning selections: '+str(inconsistent[:12]))
           print('D1_PREFETCH_DETAIL_VERIFY expected=',len(expected),'received=',len(returned),'missing_cards=',len(missing_cards),'missing_analysis=',len(missing_analysis))
           if missing_analysis:
               print('::warning::D1 analysis unavailable for '+str(len(missing_analysis))+' races: '+str(missing_analysis[:20]))
