@@ -101,6 +101,22 @@ class ServerSealTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             capture_original_bet(d, self.now + timedelta(minutes=21))
 
+    def test_result_audit_preserves_podium_vs_trifecta_distinction(self):
+        from arvexq.prediction.prerace_archive import evaluate_frozen_result
+        d = seal_detail(self.d, forecast(self.d,self.now),self.now)
+        d["result"]={"status":"確定","finishers":[
+            {"finish":1,"horseNumber":3},{"finish":2,"horseNumber":1},
+            {"finish":3,"horseNumber":2}]}
+        d["preRaceBet"]={"items":[{"kind":"3連単","combos":[[2,1,3]]},
+                                        {"kind":"ワイド","combos":[[1,2]]}]}
+        a=evaluate_frozen_result(d)
+        self.assertTrue(a["honmeiTop3Hit"])
+        self.assertFalse(a["honmeiWinHit"])
+        self.assertTrue(a["allThreeMarked"])
+        self.assertFalse(a["trifectaHit"])
+        self.assertTrue(a["ticketsHit"])
+        self.assertEqual(a["markedPodiumCount"],3)
+
     def test_cross_race_id_is_rejected(self):
         d = deepcopy(self.d)
         d["id"] += "-other"

@@ -157,6 +157,8 @@ def main() -> int:
             if result["status"] != "sealed":
                 return {"id": rid, **{k: v for k, v in result.items() if k not in ("detail",)}}
             detail = result["detail"]
+            if datetime.now(JST) >= post_at(detail):
+                return {"id": rid, "status": "started-no-new-lock"}
             try:
                 detail["preRaceBet"] = capture_original_bet(detail, now=datetime.now(JST))
             except Exception as exc:
@@ -169,6 +171,8 @@ def main() -> int:
                     "captureError": f"{type(exc).__name__}: {exc}"[:250],
                     "lockPolicy": "server-js-ticket-v1-fallback",
                 }
+            if datetime.now(JST) >= post_at(detail):
+                return {"id": rid, "status": "started-no-new-lock"}
             payload = {
                 "summaries": [], "details": [detail],
                 "meta": {"source": "github-actions-prerace-seal-v1",

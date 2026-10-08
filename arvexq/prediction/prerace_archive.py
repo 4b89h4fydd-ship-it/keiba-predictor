@@ -131,3 +131,61 @@ def seal_detail(detail: dict[str, Any], lock: dict[str, Any], now: datetime) -> 
     })
     out["preparedMeta"] = pm
     return out
+
+def evaluate_frozen_result(detail: dict[str, Any]) -> dict[str, Any] | None:
+    """Evaluate a stored pre-off opinion against final order, never relabel it.
+
+    Separate axis top-three accuracy, winning accuracy, podium coverage and
+    ticket correctness. No metric is populated from post-race recomputation.
+    """
+    lock = sealed_lock(detail)
+    result = detail.get("result") or {}
+    if not lock or str(result.get("status") or "") != "確定":
+        return None
+    finish = [f for f in result.get("finishers") or []
+              if isinstance(f, dict) and int(f.get("finish") or 0) > 0]
+    finish.sort(key=lambda q: (int(q.get("finish") or 99), int(q.get("horseNumber") or 99)))
+    podium = [int(f.get("horseNumber") or 0) for f in finish[:3]]
+    if len(podium) < 3 or not all(podium):
+        return None
+    marks = {int(h["horseNumber"]): str(h.get("mark") or "")
+             for h in lock.get("horses") or []}
+    marked = {n for n, m in marks.items() if m and m in MARKS}
+    hon = next((n for n, m in marks.items() if m == "◎"), None)
+    bet = detail.get("preRaceBet") or {}
+    tickets = []
+    for item in bet.get("items") or []:
+        if not isinstance(item, dict):
+            continue
+        kind = str(item.get("kind") or "")
+        combos = item.get("combos") or []
+        hit = False
+        for raw in combos:
+            try:
+                combo = [int(n) for n in raw]
+            except (ValueError, TypeError):
+                continue
+            if (kind == "単勝" and combo[:1] == podium[:1]
+                or kind == "馬単" and combo[:2] == podium[:2]
+                or kind == "馬連" and len(combo) == 2 and set(combo) == set(podium[:2])
+                or kind == "ワイド" and len(combo) == 2 and len(set(combo)) == 2
+                   and set(combo).issubset(set(podium))
+                or kind == "3連複" and len(combo) == 3 and set(combo) == set(podium)
+                or kind == "3連単" and combo[:3] == podium and len(combo) == 3):
+                hit = True
+        tickets.append({"kind": kind, "hit": hit, "points": len(combos)})
+    return {
+        "version": "arvexq-frozen-result-audit-v1",
+        "raceId": str(detail.get("id") or ""),
+        "revision": lock.get("sealRevision") or lock.get("revision") or "",
+        "top3Finishers": podium,
+        "honmeiPresent": hon is not None,
+        "honmeiHorseNumber": hon or 0,
+        "honmeiTop3Hit": bool(hon in podium) if hon else False,
+        "honmeiWinHit": bool(hon == podium[0]) if hon else False,
+        "markedPodiumCount": sum(no in marked for no in podium),
+        "allThreeMarked": all(no in marked for no in podium),
+        "ticketEvaluations": tickets,
+        "trifectaHit": any(t["kind"] == "3連単" and t["hit"] for t in tickets),
+        "ticketsHit": any(t["hit"] for t in tickets),
+    }
