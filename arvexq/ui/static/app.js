@@ -148,6 +148,7 @@ function historicalWindow(h,r){
     // Prefer the earlier source's observed places; fill absent positions from
     // another feed without discarding a verified first corner.
     a.forEach(function(v,j){if(n(b[j],0)<=0&&n(v,0)>0)b[j]=v});
+    if(!old.earlyTiming&&rr.earlyTiming&&typeof rr.earlyTiming==='object')old.earlyTiming=rr.earlyTiming;
     if(b.length)old.cornerPositions=b;
     if(!n(old.finish)&&n(rr.finish))old.finish=rr.finish
   });
@@ -186,6 +187,43 @@ function styleRates(h,r){
   return{front:a[0]/den,stalk:a[1]/den,mid:a[2]/den,close:a[3]/den,
     early3:early3/den,moved3:moved3/den,ten:ten/den,samples:samples,
     availableRuns:rs.length,unknown:false,source:'recent5'}
+}
+function horseEarlyTimingProfile(h,r){
+  // This is a pre-race, five-run evidence adapter. Race-wide leader laps and
+  // unreferenced estimates must never become individual measured values.
+  var runs=historicalWindow(h,r),samples=[],weights=recencyWeights(runs.length),i;
+  for(i=0;i<runs.length;i++){
+    var raw=runs[i]&&runs[i].earlyTiming||{},kind=String(raw.sourceKind||''),
+        source=String(raw.sourceRef||'').trim(),a=Number(raw.first200mSeconds),
+        g=Number(raw.gateReactionSeconds),acc=Number(raw.acceleration0to100Mps2),
+        has200=raw.first200mSeconds!=null&&isFinite(a)&&a>=7&&a<=25,
+        hasGate=raw.gateReactionSeconds!=null&&isFinite(g)&&g>=.05&&g<=3,
+        hasAcc=raw.acceleration0to100Mps2!=null&&isFinite(acc)&&acc>=.1&&acc<=10;
+    if((kind!=='individual_sensor'&&kind!=='video_estimate')||!source||(!has200&&!hasGate&&!hasAcc))continue;
+    // Visual estimates remain estimates even if derived from a frame index.
+    samples.push({kind:kind,source:source,date:String(runs[i].date||''),weight:(weights[i]||1)*(kind==='individual_sensor'?1:.55),
+      first200mSeconds:has200?a:null,gateReactionSeconds:hasGate?g:null,acceleration0to100Mps2:hasAcc?acc:null});
+  }
+  function weighted(key,transform){
+    var sum=0,w=0; samples.forEach(function(z){if(z[key]==null)return;sum+=z.weight*transform(z[key]);w+=z.weight});return{score:w?clamp(sum/w,0,1):null,weight:w}
+  }
+  // Capped qualitative normalization, NOT a calibrated speed probability.
+  var first=weighted('first200mSeconds',function(v){return(16.2-v)/5.2}),
+      gate=weighted('gateReactionSeconds',function(v){return(1-v)/.85}),
+      accel=weighted('acceleration0to100Mps2',function(v){return v/5.5}),
+      scores=[],ws=[];
+  if(first.score!=null){scores.push(first.score);ws.push(.72)}
+  if(gate.score!=null){scores.push(gate.score);ws.push(.18)}
+  if(accel.score!=null){scores.push(accel.score);ws.push(.10)}
+  var sum=ws.reduce(function(a,b){return a+b},0),value=sum?scores.reduce(function(a,v,i){return a+v*ws[i]},0)/sum:null,
+      reliability=Math.min(1,samples.reduce(function(a,z){return a+z.weight},0)/2),
+      timingWeight=value==null?0:clamp(.14+.23*reliability,0,.37),
+      gateWeight=gate.score==null?0:clamp(.12+.23*reliability,0,.35);
+  return{samples:samples,sourceKind:samples.some(function(x){return x.kind==='individual_sensor'})?'individual_sensor':(samples.length?'video_estimate':'none'),
+    first200Score:first.score,gateScore:gate.score,accelerationScore:accel.score,
+    timingScore:value,timingWeight:timingWeight,gateWeight:gateWeight,
+    measuredSamples:samples.filter(function(x){return x.kind==='individual_sensor'}).length,
+    videoSamples:samples.filter(function(x){return x.kind==='video_estimate'}).length}
 }
 function tenScore(h,r){
   // First-corner position proxy: not a measured individual opening furlong.
@@ -486,7 +524,7 @@ function bodyWeightConditionScore(h){
 }
 function conditionFit(h,r){var pc=h&&h.precomputedMetrics&&h.precomputedMetrics.fit;if(pc&&pc.counts)return pc;var c=contextualRuns(h,r);return{track:listQuality(c.track,n(r.distance)),distance:listQuality(c.distance,n(r.distance)),condition:listQuality(c.condition,n(r.distance)),weather:listQuality(c.weather,n(r.distance)),season:listQuality(c.season,n(r.distance)),level:listQuality(c.level,n(r.distance)),counts:{track:c.track.length,distance:c.distance.length,condition:c.condition.length,weather:c.weather.length,season:c.season.length,level:c.level.length}}}
 function confidenceBlend(score,count){var q=clamp(n(count)/3,0,1);return .5*(1-q)+score*q}
-function buildRows(r){var hs=r.horses||[],tmp=[],speeds=[],prizes=[],i,h,rt,pt,sr,fit,ct=courseTraits(r),cp=courseProfile(r),field=Math.max(1,hs.length);for(i=0;i<hs.length;i++){h=hs[i];rt=styleRates(h,r);pt=rt.samples?stylePoint(rt):9;sr=speedRaw(h,n(r.distance));fit=conditionFit(h,r);var cf=rt.samples?rt.front:.08,cs=rt.samples?rt.stalk:.28,cm=rt.samples?rt.mid:.40,cc=rt.samples?rt.close:.24,ce=rt.samples?rt.early3:.24,cmo=rt.samples?rt.moved3:.08;tmp.push({horse:h,front:cf,stalk:cs,mid:cm,close:cc,rawFront:rt.front,rawStalk:rt.stalk,rawMid:rt.mid,rawClose:rt.close,early3:ce,moved3:cmo,styleSamples:rt.samples,styleUnknown:!rt.samples,ten:tenScore(h,r),fade:fadeRate(h,r),move:moveRate(h,r),hold:holdRate(h,r),yieldFlex:yieldFlex(h,r),breakRel:breakReliability(h,r),lateGain:lateGainScore(h,r),posCons:positionConsistency(h,r),collapse:earlyCollapseSeverity(h,r),finishEvidence:finishingEvidence(h,r),score:pt,pastStyle:rt.samples?styleName(pt):"履歴なし",expected:rt.samples?styleName(pt):"不明",speedRaw:sr,fit:fit});speeds.push(sr);prizes.push(n(h.prizeMoneyAtRace))}
+function buildRows(r){var hs=r.horses||[],tmp=[],speeds=[],prizes=[],i,h,rt,pt,sr,fit,ct=courseTraits(r),cp=courseProfile(r),field=Math.max(1,hs.length);for(i=0;i<hs.length;i++){h=hs[i];rt=styleRates(h,r);pt=rt.samples?stylePoint(rt):9;sr=speedRaw(h,n(r.distance));fit=conditionFit(h,r);var earlyTiming=horseEarlyTimingProfile(h,r),proxyTen=tenScore(h,r),proxyBreak=breakReliability(h,r),actualTen=earlyTiming.timingScore==null?proxyTen:clamp(proxyTen*(1-earlyTiming.timingWeight)+earlyTiming.timingScore*earlyTiming.timingWeight,0,1),actualBreak=earlyTiming.gateScore==null?proxyBreak:clamp(proxyBreak*(1-earlyTiming.gateWeight)+earlyTiming.gateScore*earlyTiming.gateWeight,0,1),cf=rt.samples?rt.front:.08,cs=rt.samples?rt.stalk:.28,cm=rt.samples?rt.mid:.40,cc=rt.samples?rt.close:.24,ce=rt.samples?rt.early3:.24,cmo=rt.samples?rt.moved3:.08;tmp.push({horse:h,front:cf,stalk:cs,mid:cm,close:cc,rawFront:rt.front,rawStalk:rt.stalk,rawMid:rt.mid,rawClose:rt.close,early3:ce,moved3:cmo,styleSamples:rt.samples,styleUnknown:!rt.samples,earlyTimingProfile:earlyTiming,ten:actualTen,fade:fadeRate(h,r),move:moveRate(h,r),hold:holdRate(h,r),yieldFlex:yieldFlex(h,r),breakRel:actualBreak,lateGain:lateGainScore(h,r),posCons:positionConsistency(h,r),collapse:earlyCollapseSeverity(h,r),finishEvidence:finishingEvidence(h,r),score:pt,pastStyle:rt.samples?styleName(pt):"履歴なし",expected:rt.samples?styleName(pt):"不明",speedRaw:sr,fit:fit});speeds.push(sr);prizes.push(n(h.prizeMoneyAtRace))}
 for(i=0;i<tmp.length;i++){var x=tmp[i],hh=x.horse,rf=recentFirst(hh),rd=recentDistance(hh),distChange=rd?rd-n(r.distance):0,shorten=distChange>=150?1:0,lengthen=distChange<=-150?1:0,lengthenScale=rd?clamp((n(r.distance)-rd)/600,0,1):0,no=n(hh.horseNumber),draw=(no-1)/Math.max(1,field-1),outer=draw>.70?1:0,edge=no===field?1:0,inner=draw<.28?1:0,recentEarly=(rf<99?clamp((8-rf)/7,0,1):.5),posTrend=positionTrend(hh,r),jp=hh.jockeyProfile||{},jockeyFront=n(jp.early3Rate,0),leadHabit=n(jp.leaderRate,0),needLead=clamp(x.front*.78+Math.max(0,x.front-x.stalk)*.48+leadHabit*.10,0,1),flexibility=clamp(x.yieldFlex*.58+x.stalk*.25+x.mid*.12+(1-needLead)*.05,0,1),shortenBoost=shorten*(x.front*.12+x.stalk*.08+x.ten*.07),shortenPenalty=shorten*Math.max(0,.52-x.ten)*.18,lengthenBoost=lengthen*(x.stalk*.07+x.mid*.11+x.close*.05+(1-x.ten)*.055)+lengthenScale*.045,firstTurnRush=clamp(1-firstTurnDistance(r)/650,0,1),outerStress=outer*firstTurnRush*ct.turnLoad*(edge?.45:1),drawAdj=inner*ct.turnLoad*.055+edge*(1-ct.outerLoad)*.055-outerStress*.095,jf=hh.jockeyProfile?roleProfileScore(hh.jockeyProfile):genericRoleScore(hh.jockeyStats),tf=hh.trainerProfile?roleProfileScore(hh.trainerProfile):genericRoleScore(hh.trainerStats),trackFit=confidenceBlend(x.fit.track,x.fit.counts.track),distFit=confidenceBlend(x.fit.distance,x.fit.counts.distance),condFit=confidenceBlend(x.fit.condition,x.fit.counts.condition),weatherFit=confidenceBlend(x.fit.weather,x.fit.counts.weather),seasonFit=confidenceBlend(x.fit.season,x.fit.counts.season),levelFit=confidenceBlend(x.fit.level,x.fit.counts.level),speed=normalize(speeds,x.speedRaw),prize=normalize(prizes,n(hh.prizeMoneyAtRace)),baseAbility=recentFinishScore(hh)*.20+speed*.18+distFit*.11+trackFit*.08+condFit*.07+levelFit*.10+prize*.06+jf*.07+tf*.035+seasonFit*.02+weatherFit*.015+weightScore(hh)*.025+bodyWeightConditionScore(hh)*.040+ageSexScore(hh,r)*.025+x.lateGain*.025,dataN=Math.min(8,(hh.recentRaces||[]).length),coverage=clamp(dataN/5,0,1)*.60+clamp((x.fit.counts.distance+x.fit.counts.track)/4,0,1)*.22+clamp(n(jp.starts)/30,0,1)*.18,frontIntent=clamp(x.front*.36+x.stalk*.17+x.ten*.18+x.early3*.10+jockeyFront*.07+leadHabit*.05+needLead*.07+posTrend*.10,0,1.25),goBase=clamp(frontIntent+shortenBoost+lengthenBoost+drawAdj-shortenPenalty,0,1.25);x.forward=frontIntent;x.goProbBase=clamp(goBase*.72+x.breakRel*.14+x.ten*.14,0,1);x.goProb=x.goProbBase;x.needLead=needLead;x.flexibility=flexibility;x.positionTrend=posTrend;x.ability=clamp(baseAbility*.90+x.posCons*.035+(1-x.collapse)*.035+x.lateGain*.03,0,1);x.speedScore=speed;x.prizeScore=prize;x.jockeyScore=jf;x.trainerScore=tf;x.trackFit=trackFit;x.distFit=distFit;x.condFit=condFit;x.weatherFit=weatherFit;x.seasonFit=seasonFit;x.levelFit=levelFit;x.weightSuit=weightScore(hh);x.bodyWeightSuit=bodyWeightConditionScore(hh);x.bodyWeightKnown=!!currentBodyWeight(hh);x.ageSexSuit=ageSexScore(hh,r);x.coverage=coverage;x.draw=draw;x.outer=outer;x.edge=edge;x.inner=inner;x.outerStress=outerStress;x.shorten=shorten;x.lengthen=lengthen;x.lengthenScale=lengthenScale;x.leadVacancyBoost=0;x.distanceChange=distChange;x.course=ct;x.jockeyFront=jockeyFront;x.stamina=clamp((1-x.fade)*.35+x.hold*.26+distFit*.15+x.posCons*.10+x.ability*.09+(rd>n(r.distance)?.05:0),0,1);x.holdFront=clamp(x.hold*.33+(1-x.fade)*.30+x.stamina*.15+x.ability*.12+distFit*.06+ct.frontBias*.04,0,1);x.latePower=clamp(x.lateGain*.32+x.move*.13+x.close*.10+x.mid*.05+x.ability*.20+(1-x.fade)*.08+(.5+(x.finishEvidence.closing-.5)*Math.min(1,x.finishEvidence.closingSamples/3))*.12,0,1);x.turnSkill=clamp(trackFit*.22+x.move*.18+x.flexibility*.18+x.posCons*.16+(1-ct.turnLoad)*.06+x.ability*.20,0,1);x.breakSkill=clamp(x.breakRel*.32+x.ten*.30+x.goProbBase*.20+recentEarly*.10+jockeyFront*.08,0,1);x.trafficTol=clamp(x.flexibility*.34+x.move*.24+x.posCons*.18+x.turnSkill*.18+x.lateGain*.06,0,1)}
 for(i=0;i<tmp.length;i++){var lx=tmp[i],le=lx.horse&&lx.horse.integratedEvaluation||{},lc=le.components||{},rawLap=(lc.lapScore!=null?lc.lapScore:(lx.horse&&lx.horse.lapScore));lx.lapScore=clamp(n(rawLap,.5),0,1);lx.sectionalSamples=n(lx.horse&&lx.horse.officialSectionalSamples,0)}
 var minetaCtx=minetaRaceContext(tmp,r),clearFrontCount=tmp.filter(function(z){return z.minetaEarlyIntent||n(z.goProbBase)>=.53}).length;
@@ -4129,6 +4167,11 @@ function paceStageNarrative(p,key){
     contenders.slice(0,Math.min(3,contenders.length)).forEach(function(z){
       var ph=z.minetaPast||minetaPastProfile(z.horse,state.race||{}),cnt=n(ph.firstCornerSamples,0);
       if(cnt)text.push(n(z.horse.horseNumber)+'の近走初角先頭 '+Math.round(n(ph.leadRate)*100)+'%（'+cnt+'走）');
+      var timing=z.earlyTimingProfile||{},observed=(timing.samples||[]).filter(function(e){return e.first200mSeconds!=null||e.gateReactionSeconds!=null});
+      if(observed.length){
+        var one=observed[0],kind=one.kind==='individual_sensor'?'個別センサー':'映像推定';
+        text.push(n(z.horse.horseNumber)+'の'+kind+'（'+one.date+'）：'+(one.first200mSeconds!=null?'個別テン1F '+one.first200mSeconds.toFixed(2)+'秒':'テン1F未取得')+(one.gateReactionSeconds!=null?'、ゲート反応 '+one.gateReactionSeconds.toFixed(2)+'秒':'')+'。取得元 '+one.source)
+      }
     });
     if(secondLine.length)text.push('2番手集団 '+paceNosText(secondLine));
     if(nextLine.length)text.push('その後ろ '+paceNosText(nextLine));
@@ -4270,7 +4313,7 @@ function paceFormationDiagram(r,p,cfg){
 function paceStageEvidence(p,cfg){
   return '<section class="pace-stage-explain"><h2>'+esc(cfg.detail)+'</h2>'
     +'<p class="pace-stage-narrative">'+esc(paceStageNarrative(p,cfg.key))+'</p>'
-    +(cfg.key==='start'?'<p class="muted">先行根拠は近走の初角通過順位。テン1F実測時計・ゲート反応時間を測定した数値ではありません。</p>':'')
+    +(cfg.key==='start'?'<p class="muted">先行の基本根拠は過去5走の初角位置。取得元付きの個別テン1F・ゲート反応・初動加速データがある場合のみ弱い補正に使用します。個別センサーは提供測定値、映像解析は推定値、公式レースラップは先頭馬の区間時計です。データが無い馬は実測値を表示しません。</p>':'')
     +'</section>'
 }
 function paceStagePage(r,p){
