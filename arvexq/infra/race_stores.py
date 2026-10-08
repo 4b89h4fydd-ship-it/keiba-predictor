@@ -74,7 +74,7 @@ SOURCE = (
     '            old=conn.execute("SELECT payload FROM prepared_races WHERE race_id=?",(race_id,)).fetchone()\n'
     '            if old:\n'
     '                previous=json.loads(old[0])\n'
-    '                if isinstance(previous.get("preRacePrediction"),dict) and (_prediction_clock_state(detail)[0]=="started" or not isinstance(detail.get("preRacePrediction"),dict)):\n'
+    '                if isinstance(previous.get("preRacePrediction"),dict) and (_arvexq_sealed_lock(previous) or _prediction_clock_state(detail)[0]=="started" or not isinstance(detail.get("preRacePrediction"),dict)):\n'
     '                    detail["preRacePrediction"]=previous["preRacePrediction"]\n'
     '                    previous_mass=frozen_mass_fields(previous)\n'
     '                    if previous_mass:apply_mass_prerace_fields(detail,previous_mass)\n'
@@ -348,7 +348,7 @@ SOURCE = (
     '            if old:\n'
     '                try:previous=json.loads(old[0])\n'
     '                except Exception:previous={}\n'
-    '                if isinstance(previous.get("preRacePrediction"),dict) and (_prediction_clock_state(detail)[0]=="started" or not isinstance(detail.get("preRacePrediction"),dict)):\n'
+    '                if isinstance(previous.get("preRacePrediction"),dict) and (_arvexq_sealed_lock(previous) or _prediction_clock_state(detail)[0]=="started" or not isinstance(detail.get("preRacePrediction"),dict)):\n'
     '                    detail["preRacePrediction"]=previous["preRacePrediction"]\n'
     '            snapshot_payload=_compact_display_snapshot(detail)\n'
     '            payload=json.dumps(snapshot_payload,ensure_ascii=False,separators=(",",":"),default=str)\n'
@@ -540,5 +540,7 @@ SOURCE = (
 )
 
 def install_race_stores(namespace: dict) -> None:
+    from arvexq.prediction.prerace_archive import sealed_lock
+    namespace['_arvexq_sealed_lock'] = sealed_lock
     code = compile(SOURCE, '<arvexq:race_stores>', 'exec')
     exec(code, namespace, namespace)

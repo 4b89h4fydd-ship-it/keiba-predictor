@@ -3872,7 +3872,7 @@ WINNER_LEARNING_VERSION = "arvexq-winner-learning-v309-circuit-date-blocked"
 WINNER_LEARNING_MIN_RACES = max(100, int(os.getenv("WINNER_LEARNING_MIN_RACES", "120")))
 WINNER_LEARNING_MIN_DAYS = max(6, int(os.getenv("WINNER_LEARNING_MIN_DAYS", "8")))
 WINNER_LEARNING_MIN_DATA_QUALITY = max(0.25, min(0.85, float(os.getenv("WINNER_LEARNING_MIN_DATA_QUALITY", "0.45"))))
-PRERACE_FREEZE_MINUTES = max(1, min(20, int(os.getenv("PRERACE_FREEZE_MINUTES", "5"))))
+PRERACE_FREEZE_MINUTES = max(1, min(20, int(os.getenv("PRERACE_FREEZE_MINUTES", "10"))))
 _WINNER_LEARNING_CACHE = {}
 _WINNER_LEARNING_LOCK = threading.Lock()
 
@@ -4128,17 +4128,12 @@ def _build_prerace_prediction(detail:dict)->dict|None:
         p3=_prob_vector([float(e.get("p3Score") or 0) for e in evals])
         cons=_prob_vector([float(e.get("winnerConsensusProbability") or 0) for e in evals])
     else:return None
+    # ◎ is a betting-axis opinion for a top-three finish, not the top P1 head.
+    # No forced ◎ and no swapping P1 values to match an axis selection.
     hon_idx=next((i for i,e in enumerate(evals) if str(e.get("mark") or "")=="◎"),None)
-    if hon_idx is None:
-        hon_idx=max(range(len(horses)),key=lambda i:p1[i])
-    hon_e=evals[hon_idx]
-    stable=bool(hon_e.get("winnerDecisionStable"))
-    decision=list(cons if stable and any(cons) else p1)
-    # The stored mark is the actual decision. Keep the probability ranking aligned
-    # with it without fabricating a large gap.
-    top_i=max(range(len(decision)),key=lambda i:decision[i]) if decision else hon_idx
-    if decision and top_i!=hon_idx and decision[top_i]>decision[hon_idx]:
-        decision[top_i],decision[hon_idx]=decision[hon_idx],decision[top_i]
+    decision=list(cons if any(cons) else p1)
+    win_idx=max(range(len(decision)),key=lambda i:decision[i])
+    win_e=evals[win_idx]
     rows=[]
     completeness=[]
     for i,(h,e) in enumerate(zip(horses,evals)):
@@ -4161,8 +4156,10 @@ def _build_prerace_prediction(detail:dict)->dict|None:
         "raceId":str(detail.get("id") or ""),"raceDate":str(detail.get("date") or ""),"circuit":str(detail.get("circuit") or ""),
         "track":str(detail.get("track") or ""),"raceNumber":int(detail.get("raceNumber") or 0),"startTime":str(detail.get("startTime") or ""),
         "capturedAtEpoch":now,"capturedAtJst":_now_jst().isoformat(timespec="seconds"),"minutesToPost":minutes,
-        "winnerNo":int(horses[hon_idx].get("horseNumber") or 0),"winnerProbability":round(decision[hon_idx],8),
-        "winnerConfidence":round(float(hon_e.get("axisConfidence") or 0),8),"winnerStable":stable,
+        "winnerNo":int(horses[win_idx].get("horseNumber") or 0),"winnerProbability":round(decision[win_idx],8),
+        "honmeiHorseNumber":int(horses[hon_idx].get("horseNumber") or 0) if hon_idx is not None else 0,
+        "winnerConfidence":round(float(win_e.get("axisConfidence") or 0),8),
+        "winnerStable":bool(win_e.get("winnerDecisionStable")),
         "fieldSize":len(rows),"markCount":mark_count,"dataQuality":quality,"horses":rows,
         "marketIndependent":True,"oddsStored":False,"status":"pre-race",
         "frozen":bool(state=="pre" and minutes is not None and minutes<=PRERACE_FREEZE_MINUTES),
