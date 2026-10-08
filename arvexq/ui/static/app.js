@@ -2441,24 +2441,12 @@ function aiBetExplanationHtml(plan){
 function paceEvidenceProfile(r,p){
   var entries=((p&&p.rows)||[]).filter(function(z){return z&&z.horse&&!isScratchHorse(z.horse)}),
       date=String((r&&r.date)||''),counts={},valid=0,leaderNos={},i;
-  function priorRuns(h){
-    var list=(h.allPastRuns&&h.allPastRuns.length?h.allPastRuns:h.recentRaces)||[];
-    return list.filter(function(rr){
-      var d=String((rr&&(rr.date||rr.raceDate))||'');
-      // Only provably earlier races. Do not leak target-day/future results.
-      return rr&&d&&date&&d<date
-    }).slice(0,5)
-  }
-  function firstPosition(rn){
-    var positions=rn.cornerPositions||[],pos=Array.isArray(positions)?n(positions[0],0):0;
-    var field=n(rn.fieldSize,0);
-    return Number.isInteger(pos)&&pos>=1&&(!field||pos<=field)?pos:0
-  }
+  // Use the exact same five-race, de-duplicated pre-race source as the
+  // development engine. A stored five-row history may have zero valid corners.
   entries.forEach(function(z){
-    var no=n(z.horse.horseNumber,0),runs=priorRuns(z.horse),
-        usable=runs.filter(function(rr){return firstPosition(rr)>0}).length;
-    counts[no]={history:runs.length,earlyPositions:usable};
-    if(usable>=2)valid++
+    var no=n(z.horse.horseNumber,0),runs=paceHistoryRuns(z.horse,r);
+    counts[no]={history:runs.length,earlyPositions:runs.length};
+    if(runs.length>=2)valid++
   });
   ((p&&p.arrangement&&p.arrangement.leadCandidates)||[]).slice(0,2).forEach(function(z){
     var no=n(z&&z.horse&&z.horse.horseNumber,0);if(no)leaderNos[no]=1
