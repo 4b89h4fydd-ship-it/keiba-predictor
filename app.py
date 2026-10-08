@@ -4248,6 +4248,13 @@ def _compact_display_snapshot(detail: dict) -> dict:
     """Display JSON only; full career remains in RaceDB.past_runs."""
     if not isinstance(detail,dict):return detail
     detail=_attach_prerace_audit(detail)
+    try:
+        from arvexq.prediction.prerace_archive import evaluate_frozen_result
+        frozen_audit=evaluate_frozen_result(detail)
+        if frozen_audit:
+            detail["frozenPredictionAudit"]=frozen_audit
+    except Exception as exc:
+        print("Frozen forecast audit unavailable",detail.get("id"),type(exc).__name__)
     out=dict(detail)
     horses=[]
     for h in detail.get("horses",[]) or []:

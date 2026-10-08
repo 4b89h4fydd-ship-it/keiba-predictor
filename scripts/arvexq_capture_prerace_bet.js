@@ -36,10 +36,12 @@ try{
  const result=exported.buildAiBetPlan(race,prediction);
  if(!result){console.log(JSON.stringify({...status,decision:'見送り',
    reason:'現行買い目エンジンの購入条件未達。発走後に再計算しません。',
-   items:[],betQuality:0,trifectaReviewed:true,trifectaDecision:'見送り',trifectaReason:'入力または条件不足'}));
+   items:[],singleWinHorseNumber:(prediction.rows||[]).find(x=>x&&x.singleWinSuitable)?.horse?.horseNumber||0,
+   betQuality:0,trifectaReviewed:true,trifectaDecision:'見送り',trifectaReason:'入力または条件不足'}));
  }else{
    const out=JSON.parse(JSON.stringify(result));
    out.version=status.version;out.jsHash=status.jsHash;
+   out.singleWinHorseNumber=(prediction.rows||[]).find(x=>x&&x.singleWinSuitable)?.horse?.horseNumber||0;
    console.log(JSON.stringify(out));
  }
 }catch(error){console.error('SERVER_JS_BET_FAILED',String(error&&error.stack||error));process.exit(2)}

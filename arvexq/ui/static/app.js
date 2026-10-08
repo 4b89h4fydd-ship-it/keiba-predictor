@@ -1731,7 +1731,8 @@ function immutableArchivedPrediction(r){
       finishEvidence:finishEvidence,p1Probability:n(snap.p1Probability,0),
       p2Probability:n(snap.p2Probability,0),p3Probability:n(snap.p3Probability,0),
       winnerDecisionProbability:n(snap.decisionProbability,0),
-      singleWinSuitable:!isScratchHorse(h)&&!!(snap.singleWinSuitable||snap.single),
+      singleWinSuitable:!isScratchHorse(h)&&(!!(snap.singleWinSuitable||snap.single)||
+        (lock&&n((r.preRaceBet||{}).singleWinHorseNumber)===n(h.horseNumber))),
       expected:'不明',pastStyle:'不明',styleSamples:0,coverage:0,rawFront:0,
       rawStalk:0,rawMid:0,rawClose:0,fade:0,frontStay:0,comeFromBehind:0,
       collapseBeneficiary:0,paceScore:0,posCons:0,latePower:0,
@@ -1767,7 +1768,9 @@ function applyFrozenMarks(r,p){
       var q=remote[n(z.horse&&z.horse.horseNumber)]||{},scratched=isScratchHorse(z.horse);
       z.computedLiveMark=String(z.predMark||'');z.predMark=scratched?'':String(q.mark||'');
       z.predRank=order[z.predMark]||999;z.markFrozen=true;
-      z.singleWinSuitable=!scratched&&!!q.singleWinSuitable;
+      z.singleWinSuitable=!scratched&&(!!q.singleWinSuitable||
+        (n((r.preRaceBet||{}).singleWinHorseNumber,0)>0&&
+         n((r.preRaceBet||{}).singleWinHorseNumber)===n(z.horse&&z.horse.horseNumber)));
       if(q.lockedEvaluation){
         z.overallScore=n(q.lockedEvaluation.score,z.overallScore);
         z.overallScoreExact=n(q.lockedEvaluation.score,z.overallScoreExact);
