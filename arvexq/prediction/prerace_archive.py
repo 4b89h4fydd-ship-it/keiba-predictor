@@ -123,6 +123,13 @@ def seal_detail(detail: dict[str, Any], lock: dict[str, Any], now: datetime) -> 
     }, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode()
     record["sealRevision"] = hashlib.sha256(raw).hexdigest()
     out["preRacePrediction"] = record
+    # Pure shadow analysis of pre-off data; no impact on final marks or bets.
+    # If it fails, the original authoritative seal still remains valid.
+    try:
+        from arvexq.prediction.research_shadow import build_shadow
+        out["researchShadow"] = build_shadow(out)
+    except (TypeError, ValueError, ArithmeticError):
+        out["researchShadowUnavailable"] = True
     pm = dict(out.get("preparedMeta") or {})
     pm.update({
         "preRaceSealVersion": SEALED_VERSION,

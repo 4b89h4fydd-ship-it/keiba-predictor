@@ -68,11 +68,13 @@ def _top3_popular(row: dict[str, Any]) -> bool:
 HEAD_SPECS: dict[str, HeadSpec] = {
     "ability": HeadSpec("ability", "binary", "labelWin", _ability_feature, lambda row: True),
     "win": HeadSpec("win", "binary", "labelWin", _all_prerace_non_market, lambda row: True),
+    # Research-only calibrated separately, never a synonym for win.
+    "podium": HeadSpec("podium", "binary", "labelTop3", _all_prerace_non_market, lambda row: True),
     "value": HeadSpec("value", "regression", "marketResidual", _value_feature, _has_popularity),
     "danger": HeadSpec("danger", "binary", "labelDanger", _danger_feature, _top3_popular),
 }
 
-HEAD_FEATURE_LIMITS = {"ability": 5000, "win": 8000, "value": 8000, "danger": 6000}
+HEAD_FEATURE_LIMITS = {"ability": 5000, "win": 8000, "podium": 8000, "value": 8000, "danger": 6000}
 
 
 def _target(row: dict[str, Any], spec: HeadSpec) -> float:

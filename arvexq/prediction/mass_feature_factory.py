@@ -7,7 +7,7 @@ from typing import Any, Callable, Iterable
 
 from arvexq.prediction.jra_class_evidence import class_ordinal
 
-FEATURE_SCHEMA_VERSION = "arvexq-mass-features-v1"
+FEATURE_SCHEMA_VERSION = "arvexq-mass-features-v2-temporal-and-speed-separation"
 
 # This module is intentionally isolated from factor_model.py/final_marks.py.
 # It generates only pre-race features. It does not read the current race result,
@@ -108,9 +108,11 @@ def _finish_quality(run: dict[str, Any]) -> float | None:
 
 
 def _speed(run: dict[str, Any]) -> float | None:
-    direct = _f(run.get("speedIndex"))
-    if direct is not None:
-        return direct
+    """Published index only; never merge with metres/second."""
+    return _f(run.get("speedIndex"))
+
+
+def _clock_speed(run: dict[str, Any]) -> float | None:
     seconds = _f(run.get("timeSeconds"))
     distance = _f(run.get("distance"))
     if seconds and seconds > 0 and distance and distance > 0:
@@ -210,6 +212,7 @@ RUN_METRICS: dict[str, Callable[[dict[str, Any]], float | None]] = {
     "top2_flag": _top2_flag,
     "top3_flag": _top3_flag,
     "speed": _speed,
+    "clock_speed": _clock_speed,
     "early_speed": _early_speed,
     "late_speed": _late_speed,
     "position_quality": _position_quality,
@@ -248,9 +251,20 @@ def _race_context(race: dict[str, Any]) -> RaceContext:
     )
 
 
-def _runs(horse: dict[str, Any]) -> list[dict[str, Any]]:
+def _runs(horse: dict[str, Any], race_date: str = "") -> list[dict[str, Any]]:
     rows = horse.get("allPastRuns") or horse.get("recentRaces") or []
-    return [row for row in rows if isinstance(row, dict)]
+    out = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        history_date = str(row.get("date") or row.get("raceDate") or "")[:10]
+        # No future/same-day leakage into the previous-start training features.
+        # Historical missing dates are permitted for backwards compatibility,
+        # but labelled snapshots are generated only from genuine pre-off captures.
+        if race_date and history_date and history_date >= race_date:
+            continue
+        out.append(row)
+    return out
 
 
 def _filter_sets(runs: list[dict[str, Any]], ctx: RaceContext) -> dict[str, list[dict[str, Any]]]:
@@ -384,7 +398,7 @@ def build_horse_features(horse: dict[str, Any], race: dict[str, Any]) -> dict[st
     Missing evidence is omitted instead of filled with fake neutral values.
     """
     ctx = _race_context(race)
-    runs = _runs(horse)
+    runs = _runs(horse, str(race.get("date") or ""))
     features = _static_features(horse, race)
     subsets = _filter_sets(runs, ctx)
 
