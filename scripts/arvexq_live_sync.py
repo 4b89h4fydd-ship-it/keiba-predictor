@@ -28,6 +28,7 @@ if str(ROOT) not in sys.path:
 
 import app
 from arvexq.pipeline.fingerprints import analysis_input_hash
+from arvexq.ingest.official_changes import collect_nar_changes
 
 JST = timezone(timedelta(hours=9))
 D1_BASE = os.getenv("CLOUDFLARE_API_BASE", "https://kraiz-api.4b89h4fydd.workers.dev").rstrip("/")
@@ -122,8 +123,48 @@ def _merge_horses(base: list[Any], fresh: list[Any]) -> list[dict[str, Any]]:
             by_no[no] = row
         for key in LIVE_HORSE_FIELDS:
             if key in raw and raw.get(key) not in (None, ""):
+                if key == "scratched" and row.get("scratched") is True and raw[key] is False:
+                    continue  # Older provider updates must not revive a withdrawn horse.
+                if key == "status" and (row.get("scratched") is True) and (
+                    str(row.get("status") or "") in {"出走取消", "競走除外", "取消", "除外", "欠場"}
+                ) and str(raw[key]) not in {"出走取消", "競走除外", "取消", "除外", "欠場"}:
+                    continue
                 row[key] = copy.deepcopy(raw[key])
     return base_rows
+
+
+def apply_official_scratch_changes(
+    detail: dict[str, Any] | None, changes: dict[int, str]
+) -> tuple[dict[str, Any] | None, list[int]]:
+    """Overlay explicit official withdrawals without discarding history or analysis.
+
+    Non-scratch status information from slower odds providers is never allowed
+    to re-enable an officially withdrawn runner.
+    """
+    if not isinstance(detail, dict) or not changes:
+        return detail, []
+    out = copy.deepcopy(detail)
+    applied: list[int] = []
+    for horse in out.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        no = int(horse.get("horseNumber") or 0)
+        status = changes.get(no)
+        if not status:
+            continue
+        if (horse.get("status") != status or horse.get("scratched") is not True
+                or horse.get("winOdds") is not None or horse.get("popularity") is not None):
+            applied.append(no)
+        horse["status"] = status
+        horse["scratched"] = True
+        horse["withdrawn"] = True
+        horse["winOdds"] = None
+        horse["popularity"] = None
+        horse["oddsForecast"] = False
+        horse["scratchSource"] = "NAR公式変更情報"
+    if applied:
+        out["scratchUpdatedAtEpoch"] = int(time.time())
+    return out, applied
 
 
 def _merge_result(old: Any, new: Any) -> dict[str, Any]:
@@ -380,6 +421,15 @@ def main() -> int:
     now_min = now.hour * 60 + now.minute
     row_by_id = {str(r["id"]): r for r in rows}
     targets = choose_targets(rows, now_min)
+    # RaceList 変更情報 is venue-wide. Capture cancellations even when their
+    # races are more than an hour away or have left the rolling live window.
+    tracks = {str(r.get("track")): str(app.NAR_BABA_CODES.get(str(r.get("track")) or "") or "")
+              for r in rows if r.get("circuit") == "地方" and r.get("track")}
+    official_changes = collect_nar_changes(now.strftime("%Y-%m-%d"), tracks)
+    valid_ids = set(row_by_id)
+    for rid in official_changes:
+        if rid in valid_ids and rid not in targets:
+            targets.append(rid)
 
     base_by_id: dict[str, dict[str, Any]] = dict(bundled_by_id)
     missing_for_d1 = [rid for rid in targets if rid not in base_by_id]
@@ -427,6 +477,16 @@ def main() -> int:
             if analysis_changed:
                 reanalyzed.append(rid)
             if isinstance(d, dict) and d.get("id"):
+                d, updated = apply_official_scratch_changes(d, official_changes.get(rid, {}))
+                if updated:
+                    print("OFFICIAL_SCRATCH_APPLIED", rid, ",".join(map(str, updated)))
+                    # Mark analysis stale; the frontend re-evaluates with inactive
+                    # runners excluded. Do not recompute or rewrite locked bets here.
+                    pm = dict(d.get("preparedMeta") or {})
+                    pm["analysisInputChangedAtEpoch"] = int(time.time())
+                    d["preparedMeta"] = pm
+                    if rid not in reanalyzed:
+                        reanalyzed.append(rid)
                 refreshed[rid] = d
                 odds_current.extend(horse_live_rows(d))
                 if detail_safe_for_replace(d):
@@ -464,6 +524,8 @@ def main() -> int:
         "thin_detail_skipped": sorted(skipped_thin),
         "missing_d1_base": sorted(missing_base),
         "errors": errors,
+        "official_cancellations": {rid: {str(no): status for no, status in horses.items()}
+                                   for rid, horses in official_changes.items() if rid in valid_ids},
         "targetCount": len(targets),
         "updatedCount": len(refreshed),
     }

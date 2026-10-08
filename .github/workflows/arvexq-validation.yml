@@ -100,6 +100,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_early_pace_enrichment.py' -v
           python -m unittest discover -s tests -p 'test_authorized_history_feeds.py' -v
           python -m unittest discover -s tests -p 'test_nar_official_csv.py' -v
+          python -m unittest discover -s tests -p 'test_official_changes.py' -v
 
       - name: Architecture and operations guard
         run: |
