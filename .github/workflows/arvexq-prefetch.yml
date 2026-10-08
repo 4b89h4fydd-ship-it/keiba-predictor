@@ -12,6 +12,7 @@ name: ARVEXQ Full Prefetch
     paths:
       - app.py
       - scripts/arvexq_prefetch.py
+      - scripts/arvexq_morning_picks.js
       - scripts/arvexq_sync_batches.py
       - scripts/arvexq_fetch_d1_bundle.py
       - scripts/arvexq_protect_sync.py
@@ -180,6 +181,14 @@ jobs:
             echo "::warning::FULL PREFETCH incomplete: missing_card=$MISSING_CARD missing_analysis=$MISSING_ANALYSIS; proceeding to D1 repair"
             jq '{missing_card,missing_analysis,analysis_errors,card_errors}' prefetch-report.json
           fi
+
+      - name: Freeze morning selected and special predictions for all races
+        run: |
+          # The same UI analysis logic runs headlessly on the full prepared day.
+          # Once the first post has passed we never backfill a new morning pick.
+          node --check scripts/arvexq_morning_picks.js
+          node scripts/arvexq_morning_picks.js prefetch-payload.json prefetch-morning.json
+          mv prefetch-morning.json prefetch-payload.json
 
       - name: Select only missing or thin D1 details
         run: |
