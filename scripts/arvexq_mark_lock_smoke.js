@@ -46,5 +46,6 @@ const postResult=fn.applyFrozenMarks(onOtherDevice,make(['◎','○','▲','☆'
 assert.equal(postResult.markFreeze.source,'missing-prerace');
 assert.ok(postResult.rows.every(z=>z.predMark===''),'no post-hoc prediction without a recorded pre-off mark');
 assert.match(src,/if\(started&&!Object\.keys\(byNo\)\.length\)return false/,'post-race cannot apply rerun mark');
+assert.match(src,/if\(raceMarkClock\(r\)\.started\)/,'post-start must use archived read-only path');
 assert.match(src,/if\(changed\)\{saveDetailCache\(id,state\.race\);render\(\)\}/,'odds-only refresh must not blindly reset');
 console.log('ARVEXQ_MARK_FREEZE_OK late_update=stable historical_no_posthoc scratch=safe');
