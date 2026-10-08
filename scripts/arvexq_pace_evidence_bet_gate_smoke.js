@@ -11,8 +11,11 @@ const n=(v,f=0)=>{
   if(v===null||v===undefined||v==='')return f;
   const x=Number(v);return Number.isFinite(x)?x:f;
 };
-const api=new Function('n','isScratchHorse',src.slice(start,end)+
-  '\nreturn {paceEvidenceProfile,gateBetByPaceEvidence};')(n,h=>!!h.scratched);
+const completeReadiness={prediction:.92,card:1,history:1,actualOdds:1,
+  bodyWeight:1,environment:1,analysis:.85};
+const api=new Function('n','isScratchHorse','dataReadinessProfile',src.slice(start,end)+
+  '\nreturn {paceEvidenceProfile,gateBetByPaceEvidence};')(
+    n,h=>!!h.scratched,(race,p)=>p.readiness||completeReadiness);
 const race={id:'nar-2026-10-08-大井-04',date:'2026-10-08',circuit:'地方',track:'大井'};
 function row(no,positions=3,options={}){
   const runs=Array.from({length:positions},(_,i)=>({
@@ -33,6 +36,14 @@ assert.equal(api.paceEvidenceProfile(race,sufficient).ready,true,'full historica
 const approved=api.gateBetByPaceEvidence(plan(),race,sufficient);
 assert.equal(approved.decision,'強く買う','do not blank strong signal with sufficient source evidence');
 assert.equal(approved.items.length,1);
+const noOdds=prediction([1,2,3,4,5].map(no=>row(no)));
+noOdds.readiness={...completeReadiness,actualOdds:0};
+const blockedOdds=api.gateBetByPaceEvidence(plan(),race,noOdds);
+assert.equal(blockedOdds.decision,'見送り','forecast odds are insufficient to buy');
+assert.ok(blockedOdds.betInputGate.missing.includes('実オッズ'));
+const noWeights=prediction([1,2,3,4,5].map(no=>row(no)));
+noWeights.readiness={...completeReadiness,bodyWeight:0};
+assert.equal(api.gateBetByPaceEvidence(plan(),race,noWeights).decision,'見送り');
 const tooThin=prediction([row(1,0),row(2,1),row(3,3),row(4,3),row(5,3)]);
 const gated=api.gateBetByPaceEvidence(plan(),race,tooThin);
 assert.equal(gated.decision,'見送り');
@@ -52,4 +63,4 @@ assert.ok(src.includes('vp=gateBetByPaceEvidence(vp,r,p)'),'regional bet path ne
 assert.ok(src.includes('plan=gateBetByPaceEvidence(plan,r,p)'),'central bet path needs pace gate');
 assert.ok(src.indexOf('vp=gateBetByPaceEvidence(vp,r,p)')<src.indexOf('vp=forceMandatoryTrifecta(vp,r,p)'));
 assert.ok(src.indexOf('plan=gateBetByPaceEvidence(plan,r,p)')<src.indexOf('plan=forceMandatoryTrifecta(plan,r,p)'));
-console.log('PACE_BET_GATE_OK sparse=fails future=excluded scratches=excluded complete=unchanged historical=immutable');
+console.log('PACE_BET_GATE_OK sparse=fails odds=required weights=required future=excluded scratches=excluded complete=unchanged historical=immutable');
