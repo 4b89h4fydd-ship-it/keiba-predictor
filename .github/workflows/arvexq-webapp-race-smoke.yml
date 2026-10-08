@@ -193,7 +193,23 @@ jobs:
                   assert.equal(totals.length,2,'missing counts');
                   totals.forEach(t=>assert.ok(/^\d+件$/.test(t),'invalid count '+t));
                   await circuits.first().click();
-                  await page.locator('.arv-direct-picks').waitFor({state:'visible',timeout:20000});
+                  try{
+                    await page.locator('.arv-direct-picks').waitFor({state:'visible',timeout:12000});
+                  }catch(err){
+                    // Identify whether iPhone WebKit has dropped a navigation,
+                    // encountered a runtime exception, or been rerendered by
+                    // the asynchronous day/race snapshot update.
+                    const diagnostic=await page.evaluate(()=>({
+                      selected:!!document.querySelector('.arv-direct-picks'),
+                      circuitChooser:!!document.querySelector('.arv-pick-circuit-page'),
+                      heading:(document.querySelector('h1,h2,.smart-topbar')||{}).innerText||'',
+                      buttons:[...document.querySelectorAll('[data-pick-circuit]')].map(el=>el.getAttribute('data-pick-circuit')),
+                      url:location.href,
+                    }));
+                    console.log('HOME_PICK_NAV_DIAGNOSTIC '+name+' '+kind,JSON.stringify(diagnostic),
+                      'errors='+JSON.stringify(failures.slice(-8)));
+                    throw err;
+                  }
                 }
                 console.log('HOME_PICK_'+kind.toUpperCase()+'_PASS '+name+' circuits='+count);
               }
