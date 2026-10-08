@@ -15,6 +15,7 @@ HISTORY_SUBSETS = {
     "same_surface",
     "same_condition",
     "same_track_surface",
+    "matched_clock_context",
     "distance_200",
     "same_track_distance_200",
     "same_surface_distance_200",

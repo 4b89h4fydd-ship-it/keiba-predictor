@@ -59,8 +59,9 @@ class ResearchShadowTests(unittest.TestCase):
         self.assertEqual(features["history::all::w5::run_count"],2.)
         self.assertEqual(features["history::all::w5::speed::count"],1.)
         self.assertEqual(features["history::all::w5::speed::last"],87.)
-        self.assertEqual(features["history::all::w5::clock_speed::count"],2.)
-        self.assertLess(features["history::all::w5::clock_speed::mean"],20.)
+        self.assertNotIn("history::all::w5::clock_speed::count",features)
+        self.assertEqual(features["history::matched_clock_context::w5::clock_speed::count"],2.)
+        self.assertLess(features["history::matched_clock_context::w5::clock_speed::mean"],20.)
 
     def test_podium_model_head_is_independent_of_win(self):
         self.assertEqual(HEAD_SPECS["podium"].label,"labelTop3")

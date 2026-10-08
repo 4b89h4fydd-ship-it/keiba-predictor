@@ -282,6 +282,15 @@ def _filter_sets(runs: list[dict[str, Any]], ctx: RaceContext) -> dict[str, list
         and _s(r.get("track")) == ctx.track
         and _s(r.get("surface")) == ctx.surface
     ]
+    # Raw metres/second observations are non-comparable across racing conditions.
+    # Only matched track, surface, going and near-distance evidence is retained.
+    if (ctx.track and ctx.surface and ctx.condition and ctx.distance is not None):
+        out["matched_clock_context"] = [
+            r for r in out["same_track_surface"]
+            if _s(r.get("condition",r.get("going")))==ctx.condition
+            and _distance(r) is not None
+            and abs(float(_distance(r))-ctx.distance)<=100
+        ]
     out["same_surface_condition"] = [
         r
         for r in runs
@@ -412,6 +421,8 @@ def build_horse_features(horse: dict[str, Any], race: dict[str, Any]) -> dict[st
             wname = "all" if window is None else str(window)
             features[f"history::{subset_name}::w{wname}::run_count"] = float(len(rows))
             for metric_name, fn in RUN_METRICS.items():
+                if metric_name == "clock_speed" and subset_name != "matched_clock_context":
+                    continue
                 stats = _aggregate_metric(rows, fn)
                 for stat_name, value in stats.items():
                     features[f"history::{subset_name}::w{wname}::{metric_name}::{stat_name}"] = value
