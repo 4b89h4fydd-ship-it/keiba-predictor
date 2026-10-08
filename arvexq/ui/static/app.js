@@ -3390,24 +3390,33 @@ function computeMorningRaceCandidates(circuit){
   }catch(e){}});
   return eliteSelectedRaceCut(Object.keys(map).map(function(k){return map[k]}))
 }
+function morningPickOf(r){
+  if(!r)return null;
+  var v=r.volatility&&r.volatility.morningPicks,
+      e=r.environmentMeta&&r.environmentMeta.morningPicks,
+      m=v&&v.version==='v1'&&v.fixedAt?v:(e&&e.version==='v1'&&e.fixedAt?e:null);
+  if(m)return m;
+  if(r.morningPickVersion==='v1'&&r.morningPickFixedAt)return {
+    version:'v1',fixedAt:String(r.morningPickFixedAt),
+    selected:r.morningSelected===true,selectedScore:n(r.morningSelectedScore,0),
+    special:r.morningSpecial===true,scope:n(r.morningPickScope,0)
+  };
+  return null
+}
 function morningPickReady(){
-  return (state.races||[]).some(function(r){
-    return r&&r.morningPickVersion==='v1'&&
-      typeof r.morningSelected==='boolean'&&
-      typeof r.morningSpecial==='boolean'&&
-      !!r.morningPickFixedAt
-  })
+  return (state.races||[]).some(function(r){return !!morningPickOf(r)})
 }
 function selectedRaceCandidates(circuit){
-  // Only the dated morning manifest determines membership. Never recalculate
-  // selections from updating odds, results or diagnosis on a visitor's device.
+  // A live update can refresh runner data, never race-list membership.
   return (state.races||[]).filter(function(r){
-    return r&&r.id&&r.morningPickVersion==='v1'&&r.morningSelected===true&&
-      (!circuit||String(r.circuit||'')===String(circuit))
+    var m=morningPickOf(r);
+    return !!(r&&r.id&&m&&m.selected===true&&
+      (!circuit||String(r.circuit||'')===String(circuit)))
   }).map(function(r){
+    var m=morningPickOf(r);
     return {race:r,tags:['厳選'],selection:{
-      selected:true,score:n(r.morningSelectedScore,0),
-      reason:'朝の事前選定固定',fixedAt:String(r.morningPickFixedAt||'')
+      selected:true,score:n(m&&m.selectedScore,0),
+      reason:'朝の事前選定固定',fixedAt:String(m&&m.fixedAt||'')
     }}
   }).sort(raceChronologicalCompare)
 }
@@ -3462,9 +3471,8 @@ function computeMorningSpecialRaceCandidates(){
 }
 function specialForecastRaceCandidates(){
   return (state.races||[]).filter(function(r){
-    if(!r||!r.id)return false;
-    var title=String(r.title||'');
-    return raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))
+    var m=morningPickOf(r);
+    return !!(r&&r.id&&m&&m.special===true)
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceTag(r){
@@ -4854,7 +4862,11 @@ function mergeBootstrap(body){
   rows.forEach(function(r){
     var d=instantTrackDetails[String(r.id)];
     if(d){
-      if(d.volatility)r.volatility=d.volatility;
+      if(d.volatility){
+        var morning=morningPickOf(r);
+        r.volatility=Object.assign({},d.volatility);
+        if(morning)r.volatility.morningPicks=morning
+      }
       if(d.weather&&d.weather!=='不明')r.weather=d.weather;
       if(d.condition&&d.condition!=='不明')r.condition=d.condition;
       if(d.oddsUpdatedAt)r.oddsUpdatedAt=d.oddsUpdatedAt
@@ -4959,7 +4971,12 @@ function load(force){
         rows.forEach(function(r){
           var z=old[String(r.id)];
           if(!z)return;
-          ['volatility','weather','condition','oddsUpdatedAt','environmentMeta']
+          var prior=morningPickOf(z),fresh=morningPickOf(r);
+          if(prior&&!fresh){
+            r.volatility=Object.assign({},r.volatility||{},{morningPicks:prior});
+            r.environmentMeta=Object.assign({},r.environmentMeta||{},{morningPicks:prior})
+          }
+          ['weather','condition','oddsUpdatedAt']
             .forEach(function(k){
               if(z[k]!=null&&z[k]!==''&&z[k]!=='不明')r[k]=z[k]
             })
