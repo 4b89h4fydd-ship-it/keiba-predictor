@@ -138,6 +138,10 @@ jobs:
         run: |
           npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium webkit
+      - name: Offline iPhone AI-bet header and horizontal-clipping regression
+        run: |
+          node --check scripts/arvexq_bet_mobile_layout_smoke.js
+          node scripts/arvexq_bet_mobile_layout_smoke.js
       - name: Production top red alert and circuit-count navigation
         shell: bash
         run: |
