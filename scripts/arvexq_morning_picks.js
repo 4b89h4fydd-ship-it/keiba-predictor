@@ -52,15 +52,29 @@ const specials=new Set(special.map(x=>String(x.id)));
 const fixedAt=now.toISOString();
 const status={morningPickVersion:'v1',morningPickFixedAt:fixedAt,morningPickScope:rows.length};
 for(const r of rows){
+  const decision={
+    version:'v1',fixedAt,scope:rows.length,
+    selected:selectionById.has(String(r.id)),
+    selectedScore:selectionById.get(String(r.id))||0,
+    special:specials.has(String(r.id)),
+  };
   Object.assign(r,status,{
-    morningSelected:selectionById.has(String(r.id)),
-    morningSelectedScore:selectionById.get(String(r.id))||0,
-    morningSpecial:specials.has(String(r.id)),
+    morningSelected:decision.selected,
+    morningSelectedScore:decision.selectedScore,
+    morningSpecial:decision.special,
   });
+  // A public D1 summary upsert currently whitelists unknown top-level keys.
+  // Put the manifest inside the existing structured summary metadata as well.
+  r.volatility={...(r.volatility||{}),morningPicks:decision};
+  r.environmentMeta={...(r.environmentMeta||{}),morningPicks:decision};
 }
 for(const d of payload.details||[]){
   const r=rows.find(x=>String(x.id)===String(d.id));
-  if(r)for(const key of ['morningPickVersion','morningPickFixedAt','morningPickScope','morningSelected','morningSelectedScore','morningSpecial'])d[key]=r[key];
+  if(r){
+    for(const key of ['morningPickVersion','morningPickFixedAt','morningPickScope','morningSelected','morningSelectedScore','morningSpecial'])d[key]=r[key];
+    d.volatility={...(d.volatility||{}),morningPicks:r.volatility.morningPicks};
+    d.environmentMeta={...(d.environmentMeta||{}),morningPicks:r.volatility.morningPicks};
+  }
 }
 fs.writeFileSync(output,JSON.stringify(payload));
 console.log('MORNING_PICKS_FROZEN','date='+day,'races='+rows.length,
