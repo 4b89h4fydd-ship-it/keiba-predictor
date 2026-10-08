@@ -94,6 +94,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_prefetch_racecard_delivery.py' -v
           python -m unittest discover -s tests -p 'test_early_pace_enrichment.py' -v
+          python -m unittest discover -s tests -p 'test_authorized_history_feeds.py' -v
 
       - name: Architecture and operations guard
         run: |
