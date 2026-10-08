@@ -1667,6 +1667,72 @@ function integratedGrades(r,rows){
   })
 }
 
+// v345: immutable *displayed* marks, independent of live odds, body weight
+// refresh and the mutable winner model.  The server pre-race archive is preferred
+// after the off.  A local device freeze is recorded BEFORE the scheduled start.
+function raceMarkClock(r){
+  var date=String(r&&r.date||''),post=mins(r&&r.startTime),current=today();
+  return {valid:!!date&&post<9999,started:!!date&&(date<current||(date===current&&nowMins()>=post)),
+    remaining:date===current?post-nowMins():9999};
+}
+function markFreezeKey(r){return 'arvexq:marks:frozen:v345:'+String(r&&r.date||'')+':'+String(r&&r.id||'')}
+function loadFrozenMarks(r){
+  try{
+    if(!r||!r.id)return null;
+    var record=JSON.parse(localStorage.getItem(markFreezeKey(r))||'null');
+    if(!record||record.version!=='v345'||String(record.raceId)!==String(r.id)||
+      String(record.date)!==String(r.date)||!Array.isArray(record.marks)||record.marks.length<3)return null;
+    var seen={};
+    for(var i=0;i<record.marks.length;i++){
+      var x=record.marks[i],no=n(x.no,0),mark=String(x.mark||'');
+      if(no<1||seen[no]||['','◎','○','▲','☆+','☆','△','注'].indexOf(mark)<0)return null;
+      seen[no]=1;
+    }
+    return record;
+  }catch(e){return null}
+}
+function applyFrozenMarks(r,p){
+  if(!r||!p||!Array.isArray(p.rows))return p;
+  var clock=raceMarkClock(r),record=loadFrozenMarks(r);
+  if(!record&&clock.valid&&!clock.started&&clock.remaining>=0&&clock.remaining<=10){
+    var rows=p.rows.filter(function(z){return z&&z.horse&&!isScratchHorse(z.horse)}),
+        marked=rows.filter(function(z){return !!String(z.predMark||'')}).length;
+    // Prevent a partial racecard or thin data from locking misleading marks.
+    if(!r._entryOnly&&rows.length>=3&&rows.length>=(r.horses||[]).filter(function(h){return !isScratchHorse(h)}).length&&
+      marked>=3&&n(p.coverage,0)>=.35){
+      record={version:'v345',raceId:String(r.id),date:String(r.date),fixedAt:new Date().toISOString(),
+        fixedMinutesBeforePost:clock.remaining,
+        marks:rows.map(function(z){return {no:n(z.horse.horseNumber),mark:String(z.predMark||''),
+          single:!!z.singleWinSuitable}})};
+      try{localStorage.setItem(markFreezeKey(r),JSON.stringify(record))}
+      catch(e){record=null}
+    }
+  }
+  if(record){
+    var byNo={};record.marks.forEach(function(z){byNo[n(z.no)]=z});
+    var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
+    p.rows.forEach(function(z){
+      var no=n(z.horse&&z.horse.horseNumber),snap=byNo[no],scratched=isScratchHorse(z.horse);
+      z.computedLiveMark=String(z.predMark||'');
+      z.predMark=!scratched&&snap?String(snap.mark||''):'';
+      z.predRank=order[z.predMark]||999;
+      z.singleWinSuitable=!scratched&&!!(snap&&snap.single);
+      z.markFrozen=true;
+    });
+    p.markFreeze={source:'local-prepost',fixedAt:record.fixedAt,minutesBeforePost:record.fixedMinutesBeforePost};
+  }else if(clock.started){
+    var frozen=Array.isArray(r.preRacePrediction&&r.preRacePrediction.horses)?
+      r.preRacePrediction.horses:[];
+    if(frozen.length){
+      p.markFreeze={source:'server-prerace',fixedAt:String(r.preRacePrediction.fixedAt||'')};
+    }else{
+      // Never publish a newly calculated post-result mark as a pre-race forecast.
+      p.rows.forEach(function(z){z.computedLiveMark=String(z.predMark||'');z.predMark='';z.predRank=999;z.singleWinSuitable=false});
+      p.markFreeze={source:'missing-prerace'};
+    }
+  }else p.markFreeze={source:'provisional'};
+  return p;
+}
 function applyServerAuthoritativeMarks(rows,r){
   rows=rows||[];r=r||{};
   var rd=String(r.date||''),st=mins(r.startTime),started=isFinal(r)||(rd&&rd<today())||(rd===today()&&st<9999&&nowMins()>=st);
@@ -1685,6 +1751,8 @@ function applyServerAuthoritativeMarks(rows,r){
   if(!started&&!podiumEngine)return false;
   var byNo={},lock=r.preRacePrediction||{},locked=Array.isArray(lock.horses)?lock.horses:[],i,x,no,mark;
   if(started)for(i=0;i<locked.length;i++){x=locked[i]||{};no=n(x.horseNumber,0);mark=String(x.mark||'');if(no&&mark)byNo[no]=mark}
+  // Never relabel a completed race from post-race integratedEvaluation.
+  if(started&&!Object.keys(byNo).length)return false;
   if(!Object.keys(byNo).length){
     for(i=0;i<(r.horses||[]).length;i++){
       x=r.horses[i]||{};var e=x.integratedEvaluation||{};no=n(x.horseNumber,0);mark=String(e.mark||'');
@@ -1703,7 +1771,7 @@ function applyServerAuthoritativeMarks(rows,r){
   return true
 }
 function predict(r){
-  if(r._prediction)return r._prediction;
+  if(r._prediction)return applyFrozenMarks(r,r._prediction);
   var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),minetaContext=rows.minetaContext||minetaRaceContext(rows,modelRace),
       tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,
       sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;
@@ -1729,6 +1797,7 @@ function predict(r){
   var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext,outcome:outcome,
     engineVersion:'arvexq-edge-2026.10-v61-pace-pages-clean',markEngineVersion:'v319-flow-continuity',
     researchAudit:{expertAIConsensusV317:true,marketBlindFactorsV317:true,podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true,diagnosisPaceOutcomeLinkedV318:true,marksLinkedToOutcomeV318:true,betsLinkedToOutcomeV318:true}};
+  applyFrozenMarks(r,result);
   Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
   return result
 }
@@ -1953,8 +2022,11 @@ function racecardMarkDisplay(mark){
   }
   return esc(raw);
 }
-function racecardMarkLegend(){
-  return '<div class="rc-mark-legend"><b>◎</b> 馬券の軸　<span class="rc-legend-single">単</span> 単勝向き（1着狙い）</div>'
+function racecardMarkLegend(r){
+  var stored=loadFrozenMarks(r),clock=raceMarkClock(r),
+      server=!!(r&&r.preRacePrediction&&Array.isArray(r.preRacePrediction.horses)&&r.preRacePrediction.horses.length),
+      status=stored?'発走前の印を固定済み':(clock.started?(server?'発走前保存印':'発走前印の保存なし'):'印は発走10分前から固定');
+  return '<div class="rc-mark-legend"><b>◎</b> 馬券の軸　<span class="rc-legend-single">単</span> 単勝向き（1着狙い） <span class="rc-mark-freeze-note">'+esc(status)+'</span></div>'
 }
 function racecardEntryRow(r,h,x){
   if(!h||n(h.horseNumber)<=0)return'';
@@ -1982,7 +2054,7 @@ function racecardEntryRow(r,h,x){
     +'</div>';
 }
 function minimalRacecardPanel(r){
-  return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2>'+racecardMarkLegend()+'<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'
+  return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'
     +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){return racecardEntryRow(r,h,null)}).join('')
     +'</div></section></div>';
 }
@@ -2040,7 +2112,7 @@ function fetchSelectedRaceOdds(id,seq){
     if(seq!==state.detailSeq||!state.race||String(state.race.id)!==String(id))return;
     var changed=mergeOddsPayload({horses:body.odds.map(edgeOddsRow)});
     updateDetailSections(id,state.race,false);
-    if(changed){delete state.race._prediction;state.pred=null;saveDetailCache(id,state.race);render()}
+    if(changed){saveDetailCache(id,state.race);render()}
   }).catch(function(error){
     traceRaceDetail(id,'odds-failed',{url:url,message:String(error&&error.message||error)});
     if(seq===state.detailSeq&&state.race&&String(state.race.id)===String(id)&&!raceHasOdds(state.race)){detailState(id).odds='error';render()}
@@ -2155,6 +2227,16 @@ function raceOddsComplete(r){
   return !!hs.length&&got===hs.length
 }
 function raceBodyWeightComplete(r){var hs=(r&&r.horses||[]).filter(function(h){return !isScratchHorse(h)&&n(h.horseNumber)>0}),got=hs.filter(function(h){return currentBodyWeight(h)>250}).length;return !!hs.length&&got===hs.length}
+function markRelevantInputSignature(r){
+  if(!r)return'';
+  var horses=(r.horses||[]).map(function(h){
+    var x=Object.assign({},h);
+    ['winOdds','popularity','oddsForecast','oddsSource','oddsUpdatedAt','marketUpdatedAt'].forEach(function(k){delete x[k]});
+    return x;
+  });
+  return JSON.stringify([r.date,r.startTime,r.distance,r.surface,r.weather,r.condition,
+    r.fieldSize,r.markEngineVersion,r.preRacePrediction, horses]);
+}
 function refreshOddsOnly(force){
   if(state.race&&detailState(state.race.id).busy)return Promise.resolve(false);
   if(!state.race||state.oddsBusy)return Promise.resolve(false);
@@ -2163,14 +2245,21 @@ function refreshOddsOnly(force){
   var status=document.getElementById('odds-status');if(status)status.textContent=' 最新データ確認中…';
   return fetchEdgeRace(id,true).then(function(fresh){
     if(!fresh||!state.race||String(state.race.id)!==id)return false;
-    var before='';try{before=JSON.stringify(state.race)}catch(e){}
-    var next=applySummaryEnvironment(mergeRaceReflection(state.race,fresh,null,null)),after='';try{after=JSON.stringify(next)}catch(e){}
+    var previous=state.race,previousPrediction=previous._prediction,
+        inputBefore=markRelevantInputSignature(previous),before='';try{before=JSON.stringify(previous)}catch(e){}
+    var next=applySummaryEnvironment(mergeRaceReflection(previous,fresh,null,null)),after='';try{after=JSON.stringify(next)}catch(e){}
     var changed=!before||!after||before!==after;
     if(changed){
+      // Odds/popularity changes do not alter the AI forecast.
+      var newInput=markRelevantInputSignature(next),sameInputs=inputBefore===newInput;
       state.race=next;
       instantTrackDetails[id]=next;
-      try{delete state.race._prediction}catch(e){}
-      state.pred=null;
+      if(sameInputs&&previousPrediction){
+        Object.defineProperty(next,'_prediction',{value:previousPrediction,configurable:true,writable:true,enumerable:false});
+      }else{
+        try{delete state.race._prediction}catch(e){}
+        state.pred=null;
+      }
       saveDetailCache(id,state.race);
       render()
     }else{
@@ -3873,7 +3962,7 @@ function runnerStyleSection(r,p){
       cadenceText=(raceBodyWeightComplete(r)&&raceOddsComplete(r))?'オッズ・馬体重取得済み':'オッズ・馬体重を自動取得',
       dayCorr=sameDayCorrectionProfileV313(r,p.rows||[]),
       dayNote=dayCorr.active?('<div class="diagnosis-refresh-note" style="margin:7px 0"><b>当日補正 ON</b>　前'+dayCorr.completed+'R反映 / '+(dayCorr.markRaces?('印内3頭 '+Math.round(dayCorr.coverage*100)+'%'):'印比較待ち')+' / '+esc(dayCorr.flowLabel)+'傾向　<small>同場の発走済みレースだけで後半の印を微調整</small></div>'):'';
-  return '<section class="card"><h2>出走表</h2>'+racecardMarkLegend()+'<button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
+  return '<section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
     +dayNote
     +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">'+(r._entryOnly?'出走表を先に表示しています。履歴・能力評価を取得中です。':'取得済みデータでAI評価を先に計算中。更新後は馬名タップの詳細と展開予想へ反映します。')+'</div>':'')
     +'<div class="racecard-table">'

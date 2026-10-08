@@ -4650,3 +4650,6 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
   .rc-racecard-v339 .rc-single-tip{width:19px!important}
   .rc-mark-legend{font-size:10px}
 }
+
+/* v345: the published pre-race mark set is immutable from the final window. */
+.rc-mark-freeze-note{font-size:10px;color:#d3c18a;letter-spacing:0;white-space:normal}
