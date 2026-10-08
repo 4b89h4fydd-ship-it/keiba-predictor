@@ -215,6 +215,7 @@ jobs:
           echo "D1 prefetch batches=$COUNT"
           FAILED_BATCHES=0
           for file in prefetch-sync-batches/batch-*.json; do
+            PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$CLOUDFLARE_API_BASE"
             BYTES=$(wc -c < "$file" | tr -d ' ')
             echo "POST $(basename "$file") bytes=$BYTES"
             # A failure for one race must not prevent other races being published.

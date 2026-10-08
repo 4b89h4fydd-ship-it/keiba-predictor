@@ -76,6 +76,17 @@ class ServerSealTests(unittest.TestCase):
         result2 = prepare_seal(result["detail"], now=self.now + timedelta(minutes=1))
         self.assertEqual(result2["status"], "already-sealed")
 
+    def test_sync_guard_never_erases_server_lock(self):
+        from scripts.arvexq_protect_sync import guard
+        d = seal_detail(self.d, forecast(self.d, self.now), self.now)
+        update = deepcopy(d)
+        update.pop("preRacePrediction")
+        update["result"] = {"status": "確定"}
+        protected = guard({"details": [update]}, base="test",
+                          read=lambda base, rid: deepcopy(d))
+        self.assertEqual(protected["details"][0]["preRacePrediction"],d["preRacePrediction"])
+        self.assertEqual(protected["details"][0]["result"]["status"],"確定")
+
     def test_cross_race_id_is_rejected(self):
         d = deepcopy(self.d)
         d["id"] += "-other"

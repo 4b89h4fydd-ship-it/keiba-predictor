@@ -133,6 +133,7 @@ jobs:
           COUNT=$(find live-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
           echo "D1 live batches=$COUNT"
           for file in live-sync-batches/batch-*.json; do
+            PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$CLOUDFLARE_API_BASE"
             BYTES=$(wc -c < "$file" | tr -d ' ')
             echo "POST $(basename "$file") bytes=$BYTES"
             curl --fail-with-body --retry 3 --retry-all-errors --retry-delay 1 --retry-max-time 45 \
