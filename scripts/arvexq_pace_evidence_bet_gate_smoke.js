@@ -13,7 +13,7 @@ const n=(v,f=0)=>{
 };
 const completeReadiness={prediction:.92,card:1,history:1,actualOdds:1,
   bodyWeight:1,environment:1,analysis:.85};
-const sourceHistory=src.slice(src.indexOf('function paceHistoryRuns('),src.indexOf('function minetaPastProfile('));
+const sourceHistory=src.slice(src.indexOf('function historicalWindow('),src.indexOf('function minetaPastProfile('));
 const api=new Function('n','isScratchHorse','dataReadinessProfile',sourceHistory+src.slice(start,end)+
   '\nreturn {paceEvidenceProfile,gateBetByPaceEvidence};')(
     n,h=>!!h.scratched,(race,p)=>p.readiness||completeReadiness);
