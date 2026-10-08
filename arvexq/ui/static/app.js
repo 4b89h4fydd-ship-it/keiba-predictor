@@ -3461,10 +3461,10 @@ function computeMorningSpecialRaceCandidates(){
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceCandidates(){
-  // Publication contains the first complete morning snapshot. This choice
-  // cannot grow or rotate after odds, result or race-name updates.
   return (state.races||[]).filter(function(r){
-    return r&&r.id&&r.morningPickVersion==='v1'&&r.morningSpecial===true
+    if(!r||!r.id)return false;
+    var title=String(r.title||'');
+    return raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceTag(r){
