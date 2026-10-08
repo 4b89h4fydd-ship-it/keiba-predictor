@@ -14,7 +14,7 @@ const n=(v,f=0)=>{
 };
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const past=new Function('n','clamp','recencyWeights','raceField',
-  extract('function paceHistoryRuns(','function minetaRaceContext(')+'\nreturn minetaPastProfile;')(
+  extract('function historicalWindow(','function minetaRaceContext(')+'\nreturn minetaPastProfile;')(
     n,clamp,count=>Array.from({length:count},(_,i)=>Math.pow(.85,i)),r=>n(r.fieldSize,12));
 const takeover=past({recentRaces:[{date:'2026-09-30',track:'大井',distance:1400,fieldSize:12,cornerPositions:[6,1,1,1]}]},{date:'2026-10-08',track:'大井',distance:1400});
 assert.equal(takeover.prevLeader,false,'midrace takeover cannot be a start lead');
