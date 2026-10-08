@@ -1,0 +1,47 @@
+name: ARVEXQ Daily Pre-Race Archive Audit
+
+"on":
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Audit date YYYY-MM-DD (blank = yesterday JST)"
+        required: false
+        type: string
+  schedule:
+    # JST 00:30 next day. Read-only audit; never creates post-race predictions.
+    - cron: "30 15 * * *"
+
+concurrency:
+  group: arvexq-daily-prerace-audit
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  archive-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    env:
+      CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit-test immutable archive and nightly audit
+        run: |
+          python -m unittest discover -s tests -p 'test_daily_archive_audit.py' -v
+      - name: Audit full previous racing day
+        run: |
+          TARGET="${{ github.event.inputs.date }}"
+          if [ -z "$TARGET" ]; then TARGET="$(TZ=Asia/Tokyo date -d 'yesterday' +%F)"; fi
+          PYTHONPATH=. python scripts/arvexq_daily_archive_audit.py \
+            --date "$TARGET" --report archive-day-audit.json --workers 3
+      - name: Preserve complete nightly audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-prerace-day-audit-${{ github.run_id }}
+          path: archive-day-audit.json
+          if-no-files-found: warn
