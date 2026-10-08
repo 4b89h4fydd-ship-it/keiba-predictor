@@ -5,6 +5,7 @@ import copy
 from typing import Any
 
 from arvexq.databanks.registry import DataBankRegistry, registry
+from arvexq.databanks.authorized_feeds import _validated_early_timing
 from arvexq.ingest.orchestrator import FetchResult, fetch_domain
 
 
@@ -131,6 +132,15 @@ def _measured_horse_first3f_count(horse: dict[str, Any], cutoff: str = "", limit
     return valid
 
 
+def _horse_early_timing_count(horse: dict[str, Any], cutoff: str = "", limit: int = 5) -> int:
+    """Count dated, sourced horse-specific timing records, not race leader laps."""
+    runs = _merge_runs(
+        horse.get("recentRaces") or [], horse.get("allPastRuns") or [],
+        cutoff=cutoff, limit=limit,
+    )
+    return sum(_validated_early_timing(row.get("earlyTiming")) is not None for row in runs)
+
+
 def _needs_pedigree(horse: dict[str, Any]) -> bool:
     p = horse.get("pedigree") if isinstance(horse.get("pedigree"), dict) else {}
     return not (
@@ -242,7 +252,7 @@ async def enrich_race_missing(
             domains: list[tuple[str, set[str] | None]] = []
             if _needs_history(horse, cutoff=cutoff, limit=history_limit):
                 domains.append(("horse_history", None))
-            elif measured_feeds and _measured_horse_first3f_count(horse, cutoff, history_limit) < 2:
+            elif measured_feeds and (_measured_horse_first3f_count(horse, cutoff, history_limit) < 2 or _horse_early_timing_count(horse, cutoff, history_limit) < 2):
                 # Full corner history still lacks measured per-horse early splits:
                 # ask only the licensed split providers, not every official adapter.
                 domains.append(("horse_history", measured_feeds))
@@ -291,6 +301,10 @@ async def enrich_race_missing(
             for h in horses
         ),
         "measuredHorseFirst3FProviderCount": len(measured_feeds),
+        "individualEarlyTimingReadyHorses": sum(
+            _horse_early_timing_count(h, cutoff, history_limit) >= 2 for h in horses
+        ),
+        "individualEarlyTimingProviderCount": len(measured_feeds),
         "firstCornerEvidenceReadyHorses": sum(
             _first_corner_coverage(h, cutoff, history_limit) >= min(3, history_limit)
             for h in horses
