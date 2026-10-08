@@ -68,7 +68,7 @@ def repair_reason(prepared: Any, existing: Any) -> str:
         return "race_id_mismatch"
     new = named_roster(prepared)
     old = named_roster(existing)
-    if len(new) >= len(old) and (not old.keys() <= new.keys() or len(new) > len(old)):
+    if len(new) > len(old) and set(old).issubset(new):
         return "roster_incomplete"
     if not rich(existing):
         return "thin"
@@ -98,9 +98,15 @@ def main() -> int:
         old = current_by_id.get(rid)
         reason = repair_reason(detail, old)
         if reason:
-            # A damaged source must not erase a larger D1 roster.
-            if old and len(named_roster(detail)) < len(named_roster(old)):
-                reasons.append({"race_id": rid, "reason": "source_roster_smaller_not_replaced"})
+            new_roster = named_roster(detail)
+            old_roster = named_roster(old)
+            # Never drop a horse seen in D1 even when a newer source is thinner
+            # or has a different set of horse numbers for the same race ID.
+            if old_roster and not set(old_roster).issubset(new_roster):
+                reasons.append({"race_id": rid, "reason": "source_roster_missing_known_horses"})
+                continue
+            if len(new_roster) < 2:
+                reasons.append({"race_id": rid, "reason": "source_missing_named_runners"})
                 continue
             selected.append(detail)
             reasons.append({"race_id": rid, "reason": reason})
