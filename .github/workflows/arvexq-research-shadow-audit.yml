@@ -1,0 +1,58 @@
+name: ARVEXQ Research Shadow Evaluation
+
+"on":
+  workflow_dispatch:
+    inputs:
+      days:
+        required: false
+        description: "Completed historical days to compare"
+        default: "14"
+      end_date:
+        required: false
+        description: "Last completed day, YYYY-MM-DD"
+        default: ""
+  schedule:
+    # Nightly 01:15 JST: read-only sealed forecast + official result comparison.
+    - cron: "15 16 * * *"
+  push:
+    branches: [main]
+    paths:
+      - arvexq/prediction/research_shadow.py
+      - arvexq/prediction/research_evaluation.py
+      - scripts/arvexq_research_shadow_audit.py
+      - .github/workflows/arvexq-research-shadow-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-research-shadow-audit
+  cancel-in-progress: true
+
+jobs:
+  shadow-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Research evidence and evaluation unit tests
+        run: |
+          python -m unittest discover -s tests -p 'test_research_shadow.py' -v
+          python -m unittest discover -s tests -p 'test_research_evaluation.py' -v
+      - name: Evaluate genuine frozen races without changing marks
+        env:
+          DAYS: ${{ inputs.days || '14' }}
+          END_DATE: ${{ inputs.end_date || '' }}
+        run: |
+          PYTHONPATH=. python scripts/arvexq_research_shadow_audit.py \
+            --days "$DAYS" --end-date "$END_DATE" --out research-shadow-evaluation.json
+      - name: Preserve research audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-research-shadow-${{ github.run_id }}
+          path: research-shadow-evaluation.json
+          if-no-files-found: warn

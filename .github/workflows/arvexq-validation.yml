@@ -106,6 +106,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_podium_axis_gate.py' -v
           python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
           python -m unittest discover -s tests -p 'test_research_shadow.py' -v
+          python -m unittest discover -s tests -p 'test_research_evaluation.py' -v
           python -m unittest discover -s tests -p 'test_daily_archive_audit.py' -v
 
       - name: Architecture and operations guard
