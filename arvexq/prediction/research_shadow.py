@@ -11,7 +11,7 @@ import math
 from statistics import median
 from typing import Any
 
-VERSION = "arvexq-research-shadow-v1"
+VERSION = "arvexq-research-shadow-v2-distinct-order-roles"
 
 
 def _number(value: Any) -> float | None:
@@ -120,15 +120,25 @@ def horse_evidence(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any
     }
 
 
-def ordered_probabilities(weights: list[float]) -> tuple[list[dict[str,float]],list[dict[str,float]]]:
-    """Enumerate P(first, second, third) via Plackett-Luce (uncalibrated).
+def ordered_probabilities(
+    weights: list[float], second_weights: list[float] | None = None,
+    third_weights: list[float] | None = None,
+) -> tuple[list[dict[str,float]],list[dict[str,float]]]:
+    """Enumerate stage-role-conditioned ordered finishes (uncalibrated).
 
-    The complete field is normalized exactly, so each role sums to 1 and
-    top-three marginals total 3. The first-place softmax is not a measured win rate.
+    Separate pre-off evidence heads can rank P1, P2 and P3 differently.
+    This is a Plackett-Luce-style sequential conditional distribution; no
+    fitted Harville exponent is claimed until walk-forward tuning is possible.
     """
-    if len(weights)<3 or any(not math.isfinite(w) or w<=0 for w in weights):
+    second_weights=weights if second_weights is None else second_weights
+    third_weights=weights if third_weights is None else third_weights
+    n=len(weights)
+    if n<3 or len(second_weights)!=n or len(third_weights)!=n or any(
+        not math.isfinite(w) or w<=0 for seq in (weights,second_weights,third_weights) for w in seq
+    ):
         return [], []
-    n=len(weights);total=sum(weights)
+    total=sum(weights)
+    second_total=sum(second_weights);third_total=sum(third_weights)
     p1=[0.]*n;p2=[0.]*n;p3=[0.]*n
     triples=[]
     for i in range(n):
@@ -136,11 +146,11 @@ def ordered_probabilities(weights: list[float]) -> tuple[list[dict[str,float]],l
         p1[i]=x
         for j in range(n):
             if i==j:continue
-            y=weights[j]/(total-weights[i])
+            y=second_weights[j]/(second_total-second_weights[i])
             p2[j]+=x*y
             for k in range(n):
                 if k==i or k==j:continue
-                z=weights[k]/(total-weights[i]-weights[j])
+                z=third_weights[k]/(third_total-third_weights[i]-third_weights[j])
                 p=x*y*z
                 p3[k]+=p
                 triples.append({"first":i,"second":j,"third":k,"score":p})
@@ -166,15 +176,27 @@ def build_shadow(detail: dict[str, Any]) -> dict[str, Any]:
     sufficient=len(active)>=3 and credible>=min_credible
     lead_count=sum((1 if e["frontStartRate"]>=.6 else 0) for e in evidence
                    if e["frontStartRate"] is not None)
-    weights=[]
-    for e in evidence:
-        parts=[e[k] for k in ("startPositionStrength","fourCornerStrength",
-                            "finishStrength","lastStageGain","closingPercentile")
-               if e[k] is not None]
-        # Subjective *shadow* scoring, not calibrated probability.
-        value=sum(parts)/len(parts) if parts else .5
-        weights.append(math.exp(2.2*(value-.5)))
-    roles,triples=ordered_probabilities(weights) if sufficient else ([],[])
+    # Three separate role heads: winning needs start/4C position and finishing,
+    # second retains 4C consistency, third emphasises late recovery/closing.
+    # All weights are pre-specified experimental priors, NOT learned coefficients.
+    role_weights={
+        "P1":{"startPositionStrength":.22,"fourCornerStrength":.22,
+              "finishStrength":.32,"lastStageGain":.08,"closingPercentile":.16},
+        "P2":{"startPositionStrength":.12,"fourCornerStrength":.30,
+              "finishStrength":.24,"lastStageGain":.20,"closingPercentile":.14},
+        "P3":{"startPositionStrength":.05,"fourCornerStrength":.16,
+              "finishStrength":.22,"lastStageGain":.22,"closingPercentile":.35},
+    }
+    heads={}
+    for head,groups in role_weights.items():
+        heads[head]=[]
+        for evidence_row in evidence:
+            weighted=[(evidence_row[k],v) for k,v in groups.items()
+                      if evidence_row.get(k) is not None]
+            value=sum(score*weight for score,weight in weighted)/sum(
+                weight for _,weight in weighted) if weighted else .5
+            heads[head].append(math.exp(2.2*(value-.5)))
+    roles,triples=ordered_probabilities(heads["P1"],heads["P2"],heads["P3"]) if sufficient else ([],[])
     rows=[{"horseNumber":int(_number(h.get("horseNumber")) or 0),
            "evidence":ev,
            "uncalibrated":{k:round(v,9) for k,v in role.items()} if roles else None}

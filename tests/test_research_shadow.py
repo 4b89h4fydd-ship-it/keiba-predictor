@@ -56,6 +56,17 @@ class ResearchShadowTests(unittest.TestCase):
         self.assertTrue(all(row["uncalibrated"] is None for row in shadow["rows"]))
         self.assertEqual(shadow["orderedTrifectaShadow"],[])
 
+    def test_second_and_third_roles_are_independent_of_first_win_head(self):
+        base, _ = ordered_probabilities([4.,2.,1.,1.])
+        conditioned, triples = ordered_probabilities(
+            [4.,2.,1.,1.],[1.,1.,5.,1.],[1.,1.,1.,5.])
+        self.assertEqual([x["p1"] for x in base],[x["p1"] for x in conditioned])
+        self.assertNotEqual([x["p2"] for x in base],[x["p2"] for x in conditioned])
+        self.assertNotEqual([x["p3"] for x in base],[x["p3"] for x in conditioned])
+        for name in ("p1","p2","p3"):
+            self.assertAlmostEqual(sum(x[name] for x in conditioned),1.)
+        self.assertAlmostEqual(sum(x["score"] for x in triples),1.)
+
     def test_missing_history_is_not_replaced_with_fake_quality(self):
         result=horse_evidence({"horseNumber":1},self.race)
         self.assertIsNone(result["closingPercentile"])
