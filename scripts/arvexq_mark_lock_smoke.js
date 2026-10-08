@@ -11,11 +11,13 @@ function extract(a,b){
 const storage=new Map(),localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
 let minute=19*60+58;
 const n=(v,d=0)=>v==null||!Number.isFinite(Number(v))?d:Number(v);
-const fn=new Function('localStorage','mins','today','nowMins','n','isScratchHorse','esc',
+const fn=new Function('localStorage','mins','today','nowMins','n','isScratchHorse','esc','isFinal','isFlash','hasAnyResultData',
   extract('raceMarkClock','applyServerAuthoritativeMarks')+
   'return {raceMarkClock,markFreezeKey,loadFrozenMarks,applyFrozenMarks};')(
     localStorage,t=>Number(t.slice(0,2))*60+Number(t.slice(3)),
-    ()=>'2026-10-08',()=>minute,n,h=>!!h.scratched,v=>String(v));
+    ()=>'2026-10-08',()=>minute,n,h=>!!h.scratched,v=>String(v),
+    r=>r?.result?.status==='確定',r=>r?.result?.status==='速報',
+    r=>Array.isArray(r?.result?.finishers)&&r.result.finishers.some(x=>x.finish>0));
 const race={id:'nar-2026-10-08-大井-11',date:'2026-10-08',startTime:'20:10',
   horses:Array.from({length:4},(_,i)=>({horseNumber:i+1}))};
 function make(marks){
