@@ -1743,7 +1743,7 @@ function racecardEntryRow(r,h,x){
       openAttr=scratch?'':(' data-horse-open="'+esc(no)+'"'),
       detailLabel=' aria-label="'+esc(name)+'の詳細を開く"';
   return '<div class="racecard-row rc-racecard-v336 rc-racecard-v339'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'" aria-label="'+esc(String(x&&x.predMark||'—').replace(/\\+/g,'＋'))+'">'+racecardMarkDisplay(x&&x.predMark)+'</span></div>'
+    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'" aria-label="'+esc(String(x&&x.predMark||'—').replace(/\+/g,'＋'))+'">'+racecardMarkDisplay(x&&x.predMark)+'</span></div>'
     +'<button type="button" class="rc-v336-number"'+openAttr+detailLabel+disabled+'><span class="rc-number frame'+fr+'">'+esc(no)+'</span></button>'
     +'<div class="rc-v336-info"><button type="button" class="rc-horse-main"'+openAttr+detailLabel+disabled+'>'
       +'<span class="rc-horse-name">'+esc(name)+'</span>'
