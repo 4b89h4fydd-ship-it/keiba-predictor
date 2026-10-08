@@ -143,6 +143,8 @@ def register_authorized_history_feeds(
     for feed in feeds:
         if not feed["enabled"]:
             continue
+        if registry.get(feed["name"]) is not None:
+            raise ValueError("Authorized feed name collides with an existing provider")
         # The request handler obtains its token at request time so secret
         # values are never captured in registered closures or source metadata.
         def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5, *, _feed=feed):
