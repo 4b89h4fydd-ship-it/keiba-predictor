@@ -143,9 +143,12 @@ function historicalWindow(h,r){
     if(!seen[key]){
       seen[key]=Object.assign({},rr,{date:d});out.push(seen[key]);return
     }
-    var old=seen[key],a=rr.cornerPositions||[],b=old.cornerPositions||[];
-    if(a.filter(function(v){return n(v)>0}).length>b.filter(function(v){return n(v)>0}).length)
-      old.cornerPositions=a.slice();
+    var old=seen[key],a=Array.isArray(rr.cornerPositions)?rr.cornerPositions:[],
+        b=Array.isArray(old.cornerPositions)?old.cornerPositions.slice():[];
+    // Prefer the earlier source's observed places; fill absent positions from
+    // another feed without discarding a verified first corner.
+    a.forEach(function(v,j){if(n(b[j],0)<=0&&n(v,0)>0)b[j]=v});
+    if(b.length)old.cornerPositions=b;
     if(!n(old.finish)&&n(rr.finish))old.finish=rr.finish
   });
   out.sort(function(a,b){return b.date.localeCompare(a.date)||
