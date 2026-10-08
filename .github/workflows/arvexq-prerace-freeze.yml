@@ -43,7 +43,7 @@ jobs:
       - name: Server seal unit regressions
         run: python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
       - name: Seal upcoming races into Cloudflare D1
-        run: python scripts/arvexq_freeze_predictions.py --audit prerace-freeze-report.json --ahead-minutes 35
+        run: PYTHONPATH=. python scripts/arvexq_freeze_predictions.py --audit prerace-freeze-report.json --ahead-minutes 35
       - name: Upload seal audit
         if: always()
         uses: actions/upload-artifact@v4
