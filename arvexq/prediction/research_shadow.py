@@ -152,7 +152,7 @@ def ordered_probabilities(weights: list[float]) -> tuple[list[dict[str,float]],l
 
 def build_shadow(detail: dict[str, Any]) -> dict[str, Any]:
     """Attach a small immutable shadow to the first genuinely pre-off seal only."""
-    from arvexq.ingest.official_changes import is_inactive_runner
+    from arvexq.core.runner_status import is_inactive_runner
     race_date=str(detail.get("date") or "")
     active=[h for h in detail.get("horses") or []
             if isinstance(h,dict) and not is_inactive_runner(h) and
