@@ -73,8 +73,15 @@ class ServerSealTests(unittest.TestCase):
         record = result["detail"]["preRacePrediction"]
         self.assertEqual(record["horses"][1]["lockedEvaluation"]["score"], 80)
         self.assertEqual(record["freezePolicy"], SEALED_VERSION)
+        # A prior sealed snapshot without a ticket is preserved and queued
+        # for ticket capture while the race is still in the pre-off window.
         result2 = prepare_seal(result["detail"], now=self.now + timedelta(minutes=1))
-        self.assertEqual(result2["status"], "already-sealed")
+        self.assertEqual(result2["status"], "sealed")
+        self.assertEqual(result2["detail"]["preRacePrediction"], record)
+        complete = deepcopy(result["detail"])
+        complete["preRaceBet"] = {"raceId": self.d["id"],
+                                  "fixedAt": self.now.isoformat(), "items": []}
+        self.assertEqual(prepare_seal(complete,now=self.now+timedelta(minutes=1))["status"],"already-sealed")
 
     def test_sync_guard_never_erases_server_lock(self):
         from scripts.arvexq_protect_sync import guard
