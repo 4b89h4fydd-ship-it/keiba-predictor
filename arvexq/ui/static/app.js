@@ -228,7 +228,7 @@ function minetaPastProfile(h,r){
       lp=(last&&last.cornerPositions||[]).map(function(v){return n(v,0)}).filter(function(v){return v>0}),
       field=last?raceField(last):12,first=lp.length?lp[0]:0,prevEarly=false,prevLeader=false,prevRear=false,
       w=recencyWeights(rs.length),moveW=0,moveDen=0,leadW=0,leadDen=0,rearW=0,rearDen=0,i,rr,p,j,best,ww,fs,midLead;
-  if(lp.length){prevEarly=lp.some(function(v){return v<=3});prevLeader=lp.some(function(v){return v===1});prevRear=lp.some(function(v){return v>=10})||(first>=Math.max(6,Math.ceil(field*.66)))}
+  if(lp.length){prevEarly=first<=3;prevLeader=first===1;prevRear=first>=Math.max(6,Math.ceil(field*.66))}
   for(i=0;i<rs.length;i++){
     rr=rs[i]||{};p=(rr.cornerPositions||[]).map(function(v){return n(v,0)}).filter(function(v){return v>0});if(!p.length)continue;
     ww=w[i]||1;fs=raceField(rr);best=99;for(j=1;j<p.length;j++)if(p[j]<best)best=p[j];
@@ -278,7 +278,7 @@ function minetaAssignRoles(rows,r,ctx,pressure){
   rows.forEach(function(x){
     var no=n(x.horse.horseNumber),p=x.minetaPast||minetaPastProfile(x.horse,r),q=pressure[no]||{},
         left=byNo[no-1],left2=byNo[no-2],right=byNo[no+1],right2=byNo[no+2],role='不明',notes=[];
-    if(!p.samples){x.expected='不明';x.minetaRole='不明';x.minetaNotes=['過去走不足'];return}
+    if(!p.firstPos){x.expected='不明';x.minetaRole='不明';x.minetaNotes=['初角通過順位不足'];return}
     if(p.prevLeader&&n(x.rawFront,x.front)>=.12)role='逃げ候補';
     else if(p.prevEarly||p.bucket==='先行')role='先行';
     else if(p.bucket==='準先行')role='好位';
@@ -443,7 +443,27 @@ function eventOrderPack(rows,order,laneMap,stage){
 function scenarioPlan(r,rows,sc,suit,pressure,arr){
   var scenario=sc.slice().sort(function(a,b){return b.prob-a.prob})[0]||{code:'B',title:'平均',prob:1},code=scenario.code;
   pressure=pressure||pressureInfo(rows);arr=arr||frontArrangement(rows,pressure);
-  var p=pressure,lanes={},i,x,no,q;
+  var p=pressure,lanes={},i,x,no,q,ct=courseTraits(r),
+      firstRush=clamp(1-firstTurnDistance(r)/650,0,1),
+      longDistance=clamp((n(r.distance,1400)-1400)/1200,0,1),
+      frontRunners=(arr.front||[]).length,hardLeaders=Math.max(0,n(arr.hardLeadCount,0)-1),
+      paceHeat=clamp(Math.max(0,frontRunners-1)*.060+hardLeaders*.095+
+        (arr.middleFront||[]).length*.035+firstRush*Math.max(0,frontRunners-2)*.028,0,.65);
+  function exposure(z){
+    var qq=p[n(z.horse.horseNumber)]||{};
+    return clamp(paceHeat*(.18+n(z.goProb,.5)*.28+n(z.needLead,.3)*.18+
+      n(qq.conflict,0)*.22+n(z.frontCost,0)*.55)*(1+longDistance*.35),0,.52)
+  }
+  // Pre-race pace and ability only: neither odds nor results enter here.
+  function finishStrength(z){
+    var early=exposure(z),fade=n(z.fade,.25),late=n(z.latePower,.5);
+    return n(z.ability,.5)*.27+n(z.stamina,.5)*.18+late*.21+
+      n(z.comeFromBehind,.5)*.12+n(z.holdFront,.5)*.12+
+      n(z.lateGain,.5)*.05+n(z.trafficTol,.5)*.05-
+      early*.42-fade*(.055+early*.20)+
+      (code==='A'?n(z.frontStay,.5)*.07:0)+
+      (code==='C'?late*.05:0)
+  }
   rows.forEach(function(z){lanes[n(z.horse.horseNumber)]=clamp(Math.round((z.draw-.5)*5),-3,3)});
 
   function lex(list,keys){
@@ -483,7 +503,17 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
   // A horse strong enough to be named in the lead battle cannot jump straight to midfield
   // unless a concrete retreat / pressure event occurs.
   var leaderPool=(arr.leadCandidates||[]).length?(arr.leadCandidates||[]):rows.filter(function(z){return z.goProb>=.50});
-  leaderPool=lex(leaderPool,[function(z){return z.goProb},function(z){return z.needLead},function(z){return z.breakSkill},function(z){return z.ten}]);
+  // Real first-corner lead and break/ten evidence decide the front battle.
+  leaderPool=leaderPool.slice().sort(function(a,b){
+    function score(z){
+      var past=z.minetaPast||{},sample=clamp(n(z.styleSamples,0)/3,0,1);
+      return n(z.goProb,.5)*.25+n(z.breakSkill,.5)*.21+n(z.ten,.5)*.18+
+        n(z.needLead,.5)*.12+n(z.jockeyFront,0)*.04+
+        (past.prevLeader?.14:(past.prevEarly?.07:0))*sample+
+        n(z.holdFront,.5)*.06+n(z.minetaLeadRank,0)*-.002
+    }
+    return score(b)-score(a)||n(a.horse.horseNumber)-n(b.horse.horseNumber)
+  });
   var leader=leaderPool[0]||lex(rows,[function(z){return z.goProb},function(z){return z.breakSkill}])[0]||null,
       leadBattlers=leaderPool.filter(function(z){return z!==leader}),
       front=lex(rows.filter(function(z){return z!==leader&&leadBattlers.indexOf(z)<0&&isFront(z)}),[function(z){return z.goProb},function(z){return z.ten},function(z){return z.needLead}]),
@@ -535,9 +565,13 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
   // phase; this is a transition, not a wholesale re-ranking.
   orders[3]=orders[2].slice();
   var movers3=lex(rows.filter(function(z){return z.move>=.55&&z.latePower>=.50&&topRank(orders[3],z)>3}),[
-    function(z){return z.move},function(z){return z.latePower},function(z){return z.comeFromBehind}
+    function(z){return z.move*.40+n(z.turnSkill,.5)*.22+z.latePower*.23+n(z.ability,.5)*.15},
+    function(z){return z.comeFromBehind}
   ]);
-  movers3.slice(0,code==='C'?3:2).forEach(function(z){move(orders[3],z,code==='C'?-2:-1)});
+  movers3.slice(0,code==='C'?3:2).forEach(function(z){
+    var gain=(code==='C'&&paceHeat>=.22&&n(z.turnSkill,.5)>=.56)?2:1;
+    move(orders[3],z,-gain)
+  });
   orders[3].slice(0,Math.min(5,orders[3].length)).forEach(function(z){
     q=p[n(z.horse.horseNumber)]||{};
     if(z.fade>=.62&&z.frontCost>=.15&&(q.sandwich||q.conflict>=.60))move(orders[3],z,1)
@@ -547,9 +581,13 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
   // to first in one step, and a leader does not collapse without fatigue evidence.
   orders[4]=orders[3].slice();
   var movers4=lex(rows.filter(function(z){return z.move>=.58&&z.latePower>=.56&&topRank(orders[4],z)>2}),[
-    function(z){return z.move},function(z){return z.latePower},function(z){return z.comeFromBehind}
+    function(z){return z.move*.38+z.latePower*.30+n(z.turnSkill,.5)*.17+n(z.ability,.5)*.15},
+    function(z){return z.comeFromBehind}
   ]);
-  movers4.slice(0,code==='C'?3:2).forEach(function(z){move(orders[4],z,code==='C'?-2:-1)});
+  movers4.slice(0,code==='C'?3:2).forEach(function(z){
+    var gain=(code==='C'&&paceHeat>=.20&&ct.moveRoom>=.45)?2:1;
+    move(orders[4],z,-gain)
+  });
   orders[4].slice(0,Math.min(5,orders[4].length)).forEach(function(z){
     q=p[n(z.horse.horseNumber)]||{};
     var severe=z.fade>=.68&&z.frontCost>=.18&&(q.sandwich||q.conflict>=.65);
@@ -561,9 +599,10 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
   var frontAt4=orders[4].slice(0,Math.min(4,orders[4].length));
   frontAt4.forEach(function(z){
     q=p[n(z.horse.horseNumber)]||{};
-    var severeFade=z.fade>=.70&&(z.frontCost>=.18||q.conflict>=.70||q.sandwich),
-        moderateFade=z.fade>=.58&&(z.frontCost>=.12||q.conflict>=.52),
-        strongHold=z.frontStay>=.66&&z.holdFront>=.56&&z.fade<.52;
+    var stress=exposure(z),
+        severeFade=z.fade>=.67&&(stress>=.19||z.frontCost>=.18||q.conflict>=.70||q.sandwich),
+        moderateFade=z.fade>=.56&&(stress>=.13||z.frontCost>=.12||q.conflict>=.52),
+        strongHold=z.frontStay>=.66&&z.holdFront>=.56&&z.fade<.52&&stress<.24;
     if(severeFade)move(orders[5],z,code==='C'?3:2);
     else if(moderateFade)move(orders[5],z,1);
     else if(strongHold&&topRank(orders[5],z)>topRank(orders[4],z))moveTo(orders[5],z,topRank(orders[4],z)-1)
@@ -572,21 +611,30 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
   var closers=lex(rows.filter(function(z){return isCloser(z)&&z.latePower>=.56&&z.comeFromBehind>=.56}),[
     function(z){return z.comeFromBehind},function(z){return z.latePower},function(z){return z.move}
   ]);
-  closers.slice(0,code==='C'?3:2).forEach(function(z){
-    var gain=(z.comeFromBehind>=.68&&z.latePower>=.64)?3:2;
-    if(z.minetaEscapeSandwich)gain+=1;
-    if(z.minetaStrongLeaderOutside)gain+=1;
-    if(z.minetaDifferentStyleNeighbor&&z.trafficTol>=.55)gain+=1;
-    if(code==='A')gain=Math.max(1,gain-1);
-    move(orders[5],z,-gain)
+  // Runners have finite overtaking capacity: each pass needs superiority to
+  // the horse directly ahead. No fixed -5 rank leap or magic lead restoration.
+  var straightRoom=clamp(ct.straight*.68+ct.moveRoom*.32,0,1);
+  closers.slice(0,code==='C'?3:2).sort(function(a,b){return finishStrength(b)-finishStrength(a)}).forEach(function(z){
+    var cap=1+(straightRoom>=.58?1:0)+(n(z.latePower,0)>=.69&&straightRoom>=.55?1:0);
+    if(code==='A')cap=Math.max(1,cap-1);
+    if(code==='C'&&paceHeat>=.26&&straightRoom>=.58)cap+=1;
+    for(var pass=0;pass<cap;pass++){
+      var at=orders[5].indexOf(z);if(at<=0)break;
+      var rival=orders[5][at-1];
+      var gap=topRank(orders[4],z)-topRank(orders[4],rival);
+      var required=.018+Math.max(0,gap-2)*.010+(code==='A'?.020:0);
+      if(finishStrength(z)<finishStrength(rival)+required)break;
+      move(orders[5],z,-1)
+    }
   });
-
-  // Genuine escape ability protects the leader. This is a rule-based hold, not a score bonus.
   if(leader){
     q=p[n(leader.horse.horseNumber)]||{};
-    var leaderCollapse=leader.fade>=.68&&(leader.frontCost>=.18||q.conflict>=.68||q.sandwich),
-        leaderHold=leader.frontStay>=.64&&leader.holdFront>=.54&&leader.fade<.55;
-    if(leaderHold&&!leaderCollapse){
+    var leaderCollapse=leader.fade>=.66&&(exposure(leader)>=.19||leader.frontCost>=.18||q.conflict>=.68||q.sandwich),
+        leaderHold=leader.frontStay>=.64&&leader.holdFront>=.54&&leader.fade<.55&&exposure(leader)<.24,
+        challenger=orders[5].slice(0,Math.max(1,topRank(orders[5],leader)-1)).some(function(z){
+          return finishStrength(z)>finishStrength(leader)+.025
+        });
+    if(leaderHold&&!leaderCollapse&&!challenger){
       var cap=(code==='C'&&leader.frontStay<.72)?2:1;
       if(topRank(orders[5],leader)>cap)moveTo(orders[5],leader,cap-1)
     }
@@ -598,10 +646,10 @@ function scenarioPlan(r,rows,sc,suit,pressure,arr){
       keys=['start','first','back','turn3','turn4','straight'],packs=[],stages=[],markScore={};
   for(i=0;i<6;i++){
     packs[i]=eventOrderPack(rows,orders[i],lanes,i);
-    stages.push({key:keys[i],label:labels[i],pack:packs[i],model:'event-transition-v1'})
+    stages.push({key:keys[i],label:labels[i],pack:packs[i],model:'event-transition-v2'})
   }
   orders[5].forEach(function(z,idx){markScore[n(z.horse.horseNumber)]=orders[5].length<=1?1:1-idx/(orders[5].length-1)});
-  return{scenario:scenario,stages:stages,start:orders[0],corner:orders[4],straight:orders[5],markScore:markScore,model:'event-transition-v1'}
+  return{scenario:scenario,stages:stages,start:orders[0],corner:orders[4],straight:orders[5],markScore:markScore,model:'event-transition-v2'}
 }
 function gradeClass(g){return g==='S'?'grade-s':(g==='A'?'grade-a':(g==='B'?'grade-b':'grade-c'))}
 function predictionProfile(r){
