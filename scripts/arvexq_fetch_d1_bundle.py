@@ -87,6 +87,26 @@ def main() -> int:
                 errors[rid] = error
                 print("D1_DETAIL_FETCH_ERROR", rid, error)
 
+    # The Worker occasionally returns HTTP 503 for a few large cards while
+    # a broad 8-worker scan is ongoing. Recover those IDs sequentially rather
+    # than declaring the entire day incomplete after the first parallel pass.
+    transient = [
+        rid for rid in ids if rid in errors
+        and any(token in errors[rid] for token in ("HTTP Error 503", "HTTP Error 502", "HTTP Error 429", "timed out"))
+    ]
+    for rid in transient:
+        print("D1_DETAIL_SERIAL_RETRY", rid)
+        try:
+            _, detail, error = fetch_one(rid)
+            if detail is not None:
+                details_by_id[rid] = detail
+                errors.pop(rid, None)
+                print("D1_DETAIL_SERIAL_RECOVERED", rid)
+            elif error:
+                errors[rid] = error
+        except Exception as exc:
+            errors[rid] = f"serial retry {type(exc).__name__}: {exc}"
+
     details = [details_by_id[rid] for rid in ids if rid in details_by_id]
     out = dict(day)
     out["date"] = out.get("date") or args.date

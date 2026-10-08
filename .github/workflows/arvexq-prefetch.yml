@@ -192,7 +192,8 @@ jobs:
             --date "$TARGET_DATE" \
             --out current-d1.json \
             --report current-d1-report.json \
-            --workers 8 \
+            --workers 4 \
+            --retries 6 \
             --allow-missing-details
           python scripts/arvexq_select_prefetch_repairs.py \
             --prepared prefetch-payload.json \
@@ -244,7 +245,8 @@ jobs:
             --date "$TARGET_DATE" \
             --out verified-day.json \
             --report verified-d1-report.json \
-            --workers 8 \
+            --workers 4 \
+            --retries 6 \
             --allow-missing-details
           ACTUAL=$(jq '.races // [] | length' verified-day.json)
           DETAILS=$(jq '.details // [] | length' verified-day.json)
