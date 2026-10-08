@@ -58,6 +58,7 @@ jobs:
             arvexq/ingest/orchestrator.py \
             arvexq/ingest/fallback_enrichment.py \
             arvexq/databanks/legacy_bridge.py \
+            arvexq/databanks/nar_official_csv.py \
             scripts/arvexq_prefetch.py \
             scripts/arvexq_live_sync.py \
             scripts/arvexq_result_repair.py \
@@ -97,6 +98,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_prefetch_racecard_delivery.py' -v
           python -m unittest discover -s tests -p 'test_early_pace_enrichment.py' -v
           python -m unittest discover -s tests -p 'test_authorized_history_feeds.py' -v
+          python -m unittest discover -s tests -p 'test_nar_official_csv.py' -v
 
       - name: Architecture and operations guard
         run: |
