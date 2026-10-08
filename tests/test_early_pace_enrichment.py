@@ -85,6 +85,30 @@ class EarlyPaceSourceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(calls, [])
         self.assertEqual(enriched["preparedMeta"]["supplementalSearch"]["firstCornerEvidenceReadyHorses"],1)
 
+    async def test_individual_timing_coverage_requires_source_and_prior_date(self):
+        from arvexq.ingest.fallback_enrichment import _horse_early_timing_count
+        old = [
+            dict(run(30, [1, 2]), earlyTiming={
+                "sourceKind": "individual_sensor", "sourceRef": "provider:123",
+                "first200mSeconds": 12.9
+            }),
+            dict(run(24, [2, 2]), earlyTiming={
+                "sourceKind": "official_race_lap", "sourceRef": "jra:race:123",
+                "first200mSeconds": 12.2
+            }),
+            dict(run(18, [1, 2]), earlyTiming={
+                "sourceKind": "video_estimate", "sourceRef": "video:456",
+                "gateReactionSeconds": 0.4
+            }),
+            {"date":"2026-10-09", "track":"大井", "distance":1400,
+             "raceNumber":4, "earlyTiming":{
+                 "sourceKind":"individual_sensor", "sourceRef":"future",
+                 "first200mSeconds":10.0}},
+        ]
+        self.assertEqual(_horse_early_timing_count(
+            {"recentRaces":old}, "2026-10-08", 5
+        ), 2)
+
     async def test_future_run_cannot_satisfy_corner_evidence(self):
         horse={"horseNumber":3,"recentRaces":[run(30,[None,2]),{
             "date":"2026-10-09","track":"大井","distance":1400,
