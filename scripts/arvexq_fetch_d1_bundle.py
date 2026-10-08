@@ -53,6 +53,7 @@ def main() -> int:
     p.add_argument("--timeout", type=float, default=25.0)
     p.add_argument("--retries", type=int, default=4)
     p.add_argument("--allow-missing-details", action="store_true")
+    p.add_argument("--allow-empty-day", action="store_true", help="Accept an explicitly empty D1 day for cold-start publication")
     args = p.parse_args()
 
     base = args.api_base.rstrip("/")
@@ -60,7 +61,22 @@ def main() -> int:
     day = get_json(day_url, args.timeout, args.retries)
     races = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id")]
     if not races:
-        raise SystemExit(f"D1 returned no races for {args.date}")
+        # A newly opened calendar day has no D1 summaries yet. Full Prefetch
+        # must publish its locally prepared official race list, not abort here.
+        # Network errors / invalid API responses still fail closed.
+        if not args.allow_empty_day or not isinstance(day.get("races"), list):
+            raise SystemExit(f"D1 returned no races for {args.date}")
+        observed_date = str(day.get("date") or "")
+        if observed_date and observed_date != args.date:
+            raise SystemExit(f"D1 returned mismatched date {observed_date} for {args.date}")
+        empty = {"date": args.date, "races": [], "details": []}
+        Path(args.out).write_text(json.dumps(empty, ensure_ascii=False), encoding="utf-8")
+        report = {"date": args.date, "race_count": 0, "detail_count": 0,
+                  "missing_detail_count": 0, "missing_details": [], "empty_day": True}
+        if args.report:
+            Path(args.report).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        print("D1_EMPTY_DAY_READY_FOR_INITIAL_PUBLICATION", args.date)
+        return 0
 
     ids = [str(r["id"]) for r in races]
     details_by_id: dict[str, dict[str, Any]] = {}
