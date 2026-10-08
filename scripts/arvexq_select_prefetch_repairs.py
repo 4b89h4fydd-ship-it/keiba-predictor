@@ -74,6 +74,19 @@ def repair_reason(prepared: Any, existing: Any) -> str:
         return "thin"
     return ""
 
+MORNING_FIELDS = ("morningPickVersion", "morningPickFixedAt", "morningPickScope",
+                  "morningSelected", "morningSelectedScore", "morningSpecial")
+
+
+def keep_original_morning_picks(fresh: dict[str, Any], prior: dict[str, Any] | None) -> dict[str, Any]:
+    """The first published morning decision always wins over later prefetches."""
+    row = dict(fresh)
+    if isinstance(prior, dict) and prior.get("morningPickVersion") == "v1" and prior.get("morningPickFixedAt"):
+        for key in MORNING_FIELDS:
+            row[key] = prior.get(key)
+    return row
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--prepared", required=True)
@@ -84,12 +97,24 @@ def main() -> int:
 
     prepared = read(args.prepared)
     current = read(args.current)
+    current_summaries = {
+        str(r.get("id")): r for r in (current.get("races") or [])
+        if isinstance(r, dict) and r.get("id")
+    }
+    prepared["summaries"] = [
+        keep_original_morning_picks(r, current_summaries.get(str(r.get("id") or "")))
+        for r in (prepared.get("summaries") or []) if isinstance(r, dict)
+    ]
     current_by_id = {
         str(d.get("id")): d
         for d in (current.get("details") or [])
         if isinstance(d, dict) and d.get("id")
     }
-    wanted = [d for d in (prepared.get("details") or []) if isinstance(d, dict) and d.get("id")]
+    wanted = [
+        keep_original_morning_picks(d, current_by_id.get(str(d.get("id"))))
+        for d in (prepared.get("details") or [])
+        if isinstance(d, dict) and d.get("id")
+    ]
 
     selected: list[dict[str, Any]] = []
     reasons: list[dict[str, str]] = []
