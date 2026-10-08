@@ -102,6 +102,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_authorized_history_feeds.py' -v
           python -m unittest discover -s tests -p 'test_nar_official_csv.py' -v
           python -m unittest discover -s tests -p 'test_official_changes.py' -v
+          python -m unittest discover -s tests -p 'test_podium_axis_gate.py' -v
 
       - name: Architecture and operations guard
         run: |
@@ -203,23 +204,32 @@ jobs:
           assert enriched['preparedMeta']['supplementalSearch']['failures']
           assert enriched['horses'][0]['name']=='テスト馬'
 
+          # v344: ◎ requires a stable recent top-three history; it is not a
+          # synonym for the top-ranked winner. No blanket JRA ban.
           from arvexq.prediction.honmei_gate import evaluate_honmei_gate
           rich_rows=[
-              {'horse':{'horseNumber':1},'pillarRanks':{'ability':1,'record':1,'suitability':1,'pace':1},'primaryPillarCoverage':4,'sample':5,
-               'evidenceFamilyCounts':{'ability':3,'record':4,'suitability':2,'pace':2},'pairwiseWins':5,'multiHead':{'winRank':1,'strengthRank':1}},
-              {'horse':{'horseNumber':2},'pillarRanks':{'ability':2,'record':2,'suitability':2,'pace':2},'primaryPillarCoverage':4,'sample':5,
-               'evidenceFamilyCounts':{'ability':3,'record':4,'suitability':2,'pace':2},'pairwiseWins':3,'multiHead':{'winRank':2,'strengthRank':2}},
+              {'horse':{'horseNumber':1,'recentRaces':[{'finish':f,'fieldSize':12} for f in [1,8,9,9,8]]},
+               'rank':1,'ability':.82,'record':.82,'suitability':.80,'pace':.85,
+               'pillarRanks':{'ability':1,'record':1,'suitability':1,'pace':1},'sample':5,
+               'evidenceFamilyCounts':{'ability':3,'record':4,'suitability':2,'pace':2},
+               'multiHead':{'winRank':1,'strengthRank':1,'strengthScore':.76}},
+              {'horse':{'horseNumber':2,'recentRaces':[{'finish':f,'fieldSize':12} for f in [2,2,3,2,4]]},
+               'rank':2,'ability':.80,'record':.79,'suitability':.78,'pace':.77,
+               'pillarRanks':{'ability':2,'record':2,'suitability':2,'pace':2},'sample':5,
+               'evidenceFamilyCounts':{'ability':3,'record':4,'suitability':2,'pace':2},
+               'multiHead':{'winRank':2,'strengthRank':2,'strengthScore':.75}},
           ]
           rich_summary={'winnerHorseNumber':1,'winnerGap':0.05}
-          assert evaluate_honmei_gate(rich_rows,rich_summary,{'circuit':'地方'})['eligible']
-          central_race={'circuit':'中央','preparedMeta':{'supplementalSearch':{'version':'arvexq-multi-source-fallback-v1'}}}
-          central_runs=[{'date':f'2026-09-{20-i:02d}','finish':i%3+1,'fieldSize':12,'timeSeconds':95.0+i,'distance':1600} for i in range(5)]
-          rich_rows[0]['horse']['recentRaces']=central_runs
-          assert evaluate_honmei_gate(rich_rows,rich_summary,central_race)['eligible']
-          unsupp=copy.deepcopy(central_race);unsupp['preparedMeta']={}
-          assert not evaluate_honmei_gate(rich_rows,rich_summary,unsupp)['eligible']
-          thin=copy.deepcopy(rich_rows);thin[0]['evidenceFamilyCounts']['pace']=1
-          assert not evaluate_honmei_gate(thin,rich_summary,central_race)['eligible']
+          local_axis=evaluate_honmei_gate(rich_rows,rich_summary,{'circuit':'地方'})
+          assert local_axis['eligible'] and local_axis['horseNumber']==2, local_axis
+          central_axis=evaluate_honmei_gate(rich_rows,rich_summary,{'circuit':'中央'})
+          assert central_axis['eligible'] and central_axis['horseNumber']==2, central_axis
+          missing=copy.deepcopy(rich_rows)
+          missing[1]['horse']['recentRaces']=[]
+          assert not evaluate_honmei_gate(missing,rich_summary,{'circuit':'地方'})['eligible']
+          thin=copy.deepcopy(rich_rows)
+          thin[1]['evidenceFamilyCounts']['pace']=1
+          assert not evaluate_honmei_gate(thin,rich_summary,{'circuit':'中央'})['eligible']
 
           old_final={'status':'確定','finishers':[{'finish':1,'horseNumber':1},{'finish':2,'horseNumber':2},{'finish':3,'horseNumber':3}]}
           flash={'status':'速報','finishers':[{'finish':1,'horseNumber':9}]}
