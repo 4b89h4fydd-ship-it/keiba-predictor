@@ -3434,7 +3434,7 @@ function fixedPickLoadStatus(circuit){
 function fixedPickEmpty(kind,circuit){
   if(!morningPickReady())return '<div class="fixed-pick-empty"><b>朝の選定未確定</b><small>全レースを朝に一度だけ判定。発走後に選定を追加しません。</small></div>';
   var st=fixedPickLoadStatus(circuit),label='厳選判定';
-  if(!st.complete)return '<div class="fixed-pick-empty"><b>選定中</b><small>'+label+'用データ '+st.loaded+'/'+st.expected+'</small></div>';
+  // Missing late detail data must not change the already published morning list.
   return '<div class="fixed-pick-empty"><b>該当なし</b><small>'+label+'基準を通過したレースなし</small></div>'
 }
 function fixedSelectedBox(circuit,picks){
@@ -3697,10 +3697,10 @@ function smartDailyAiStatsPage(){
 }
 function homeCircuitChooser(title,kind){
   var rows=(state.races||[]),counts=homePickCounts(kind),buttons='',loading=!rows.length,
-      pending=kind==='selected'&&!selectedRaceLoadStatus().complete;
+      pending=!morningPickReady();
   ['中央','地方'].forEach(function(circuit){
     var count=circuit==='中央'?counts.central:counts.local,
-        status=loading?'取得中':(pending?'選定中':'');
+        status=loading?'取得中':(pending?'朝の判定待ち':'朝の確定選定');
     buttons+='<button type="button" class="arv-pick-circuit-btn" data-pick-circuit="'+circuit+'" aria-label="'+esc(circuit+' '+count+'件の'+title)+'"><span><small>'+esc(title)+'</small><b>'+esc(circuit)+'</b><em class="arv-pick-count">'+count+'件</em>'+(status?'<small class="arv-pick-count-pending">'+status+'</small>':'')+'</span><strong>›</strong></button>'
   });
   return '<section class="arv-pick-circuit-page"><div class="smart-section-title"><div><b>'+esc(title)+'</b><small>中央・地方ごとの該当件数</small></div></div><div class="arv-pick-circuit-grid">'+buttons+'</div></section>'
