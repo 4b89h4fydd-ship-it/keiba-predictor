@@ -1724,6 +1724,13 @@ function racecardOddsHtml(h){
   return '<span class="odd '+(value>0&&value<10?'single':'')+'">'+esc(valid?(Math.round(value*10)/10).toFixed(1):'取得中')+'</span>'
     +'<span class="pop">'+(forecast?'予想 ':'')+(pop>0?esc(pop)+'人気':(valid?'参考':'更新中'))+'</span>';
 }
+function racecardMarkDisplay(mark){
+  var raw=String(mark||'—').trim(),pair=/^([◎○▲☆△注])([+＋])$/.exec(raw);
+  if(pair){
+    return '<span class="rc-mark-stack" aria-hidden="true"><span class="rc-mark-top">'+esc(pair[1])+'</span><span class="rc-mark-bottom">＋</span></span>';
+  }
+  return esc(raw);
+}
 function racecardEntryRow(r,h,x){
   if(!h||n(h.horseNumber)<=0)return'';
   var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
@@ -1736,7 +1743,7 @@ function racecardEntryRow(r,h,x){
       openAttr=scratch?'':(' data-horse-open="'+esc(no)+'"'),
       detailLabel=' aria-label="'+esc(name)+'の詳細を開く"';
   return '<div class="racecard-row rc-racecard-v336 rc-racecard-v339'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'">'+esc(x&&x.predMark||'—')+'</span></div>'
+    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'" aria-label="'+esc(String(x&&x.predMark||'—').replace(/\\+/g,'＋'))+'">'+racecardMarkDisplay(x&&x.predMark)+'</span></div>'
     +'<button type="button" class="rc-v336-number"'+openAttr+detailLabel+disabled+'><span class="rc-number frame'+fr+'">'+esc(no)+'</span></button>'
     +'<div class="rc-v336-info"><button type="button" class="rc-horse-main"'+openAttr+detailLabel+disabled+'>'
       +'<span class="rc-horse-name">'+esc(name)+'</span>'
