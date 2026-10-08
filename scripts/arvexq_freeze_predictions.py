@@ -54,11 +54,17 @@ def detail_from(body: dict, rid: str) -> dict | None:
 
 def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dict:
     """Pure testable decision core; does not mutate or publish any race."""
-    if sealed_lock(detail):
-        return {"status": "already-sealed", "detail": detail}
     post = post_at(detail)
     if not post or now.astimezone(JST) >= post:
-        return {"status": "started-no-new-lock"}
+        return {"status": "already-sealed" if sealed_lock(detail) else "started-no-new-lock"}
+    existing = sealed_lock(detail)
+    if existing:
+        if isinstance(detail.get("preRaceBet"), dict) and detail["preRaceBet"].get("fixedAt"):
+            return {"status": "already-sealed", "detail": detail}
+        # A previous valid snapshot may precede this feature; preserve its
+        # original opinions, and capture a ticket only while still pre-off.
+        return {"status": "sealed", "detail": copy.deepcopy(detail),
+                "revision": existing.get("sealRevision")}
     if not isinstance(detail.get("horses"), list):
         return {"status": "missing-roster"}
     active = [h for h in detail["horses"] if isinstance(h, dict)
@@ -131,6 +137,7 @@ def main() -> int:
     day_body = request_json(f"{base}/api/day?date={day}&details=0&t={int(time.time())}")
     races = [r for r in (day_body.get("races") or []) if isinstance(r, dict) and r.get("id")]
     due = []
+    recently_started = []
     for r in races:
         post = post_at(r)
         if not post:
@@ -138,11 +145,14 @@ def main() -> int:
         minutes = (post - now).total_seconds() / 60
         if 0 < minutes <= max(5, args.ahead_minutes):
             due.append(r)
+        elif -20 <= minutes <= 0:
+            recently_started.append(r)
     due.sort(key=lambda r: (str(r.get("startTime") or ""), str(r.get("id") or "")))
     report: dict[str, Any] = {
         "version": "v1", "at": now.isoformat(timespec="seconds"), "day": day,
         "races_seen": len(races), "due_count": len(due),
-        "sealed": [], "already_sealed": [], "missing": [], "errors": [],
+        "sealed": [], "already_sealed": [], "missing": [],
+        "missed_after_post": [], "urgent_missing": [], "errors": [],
     }
 
     def execute(row: dict) -> dict:
@@ -201,11 +211,29 @@ def main() -> int:
                     report["errors"].append(row)
                 else:
                     report["missing"].append(row)
+    # Fail visibly for a race that passed the post without a genuine archive.
+    # Never retroactively fill the gap, even if the official result is known.
+    for row in recently_started:
+        rid = str(row["id"])
+        try:
+            body = request_json(base + "/api/race/" + urllib.parse.quote(rid, safe="")
+                                + "?audit=" + str(time.time_ns()))
+            d = detail_from(body, rid)
+            if not d or not sealed_lock(d):
+                report["missed_after_post"].append(rid)
+        except Exception as exc:
+            report["errors"].append({"id": rid, "status": "audit-read-error",
+                                     "error": f"{type(exc).__name__}: {exc}"})
+    for item in report["missing"]:
+        match = next((r for r in due if str(r["id"]) == item["id"]), None)
+        post = post_at(match) if match else None
+        if post and (post - datetime.now(JST)).total_seconds() <= 7*60:
+            report["urgent_missing"].append(item)
     Path(args.audit).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print("PRERACE_SEAL_AUDIT", json.dumps({
-        k: report[k] for k in ("races_seen", "due_count", "sealed", "already_sealed", "missing", "errors")
+        k: report[k] for k in ("races_seen", "due_count", "sealed", "already_sealed", "missing", "urgent_missing", "missed_after_post", "errors")
     }, ensure_ascii=False))
-    if report["errors"]:
+    if report["errors"] or report["urgent_missing"] or report["missed_after_post"]:
         return 2
     # Missing race models are logged, not invented; an audit remains available.
     # A completely empty day during scheduled racing signals a failed discovery.

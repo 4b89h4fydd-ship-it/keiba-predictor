@@ -165,6 +165,13 @@ class ServerSealTests(unittest.TestCase):
         result = restore_seal(stored["detail"], modified)
         self.assertEqual(result["preRacePrediction"], before)
 
+    def test_existing_sealed_marks_survive_ticket_backfill_before_off(self):
+        from scripts.arvexq_freeze_predictions import prepare_seal
+        d = seal_detail(self.d, forecast(self.d,self.now),self.now)
+        result = prepare_seal(d,now=self.now+timedelta(minutes=1))
+        self.assertEqual(result["status"],"sealed")
+        self.assertEqual(result["detail"]["preRacePrediction"],d["preRacePrediction"])
+
     def test_cross_race_id_is_rejected(self):
         d = deepcopy(self.d)
         d["id"] += "-other"
