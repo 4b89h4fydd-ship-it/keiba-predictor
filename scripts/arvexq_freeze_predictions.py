@@ -204,11 +204,12 @@ def main() -> int:
                 # Explicit immutable non-recommendation, never forged tickets.
                 detail["preRaceBet"] = {
                     "raceId": rid, "fixedAt": datetime.now(JST).isoformat(timespec="seconds"),
-                    "decision": "見送り", "items": [], "betQuality": 0,
-                    "trifectaReviewed": True, "trifectaDecision": "見送り",
-                    "reason": "買い目モデル取得不可。発走後の再計算は実施しません。",
+                    "decision": "未取得", "items": [], "betQuality": None,
+                    "trifectaReviewed": False, "trifectaDecision": "未取得",
+                    "reason": "買い目の計算に失敗。見送り判断ではありません。発走後の後付けはしません。",
+                    "captureStatus": "failed",
                     "captureError": f"{type(exc).__name__}: {exc}"[:250],
-                    "lockPolicy": "server-js-ticket-v1-fallback",
+                    "lockPolicy": "server-js-ticket-v1-unavailable",
                 }
             if datetime.now(JST) >= post_at(detail):
                 return {"id": rid, "status": "started-no-new-lock"}
