@@ -25,7 +25,7 @@ if(!Number.isFinite(earliest)||now.getTime()>=earliest){save('NOT_RECONSTRUCTED_
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 if(!root.includes(boot))throw Error('morning picker boot entry missing');
-const source=root.replace(boot,'window.__morningPicks={state,selectedRaceCandidates,specialForecastRaceCandidates,add:function(k,v){instantTrackDetails[k]=v;}};');
+const source=root.replace(boot,'window.__morningPicks={state,selectedRaceCandidates:computeMorningRaceCandidates,specialForecastRaceCandidates:computeMorningSpecialRaceCandidates,add:function(k,v){instantTrackDetails[k]=v;}};');
 const items=new Map(),store={getItem:k=>items.get(k)||null,setItem:(k,v)=>items.set(k,String(v)),removeItem:k=>items.delete(k)};
 const document={getElementById:()=>({innerHTML:''}),addEventListener:()=>{},querySelector:()=>null,querySelectorAll:()=>[],visibilityState:'hidden'};
 const window={addEventListener:()=>{},innerWidth:390,location:{href:'https://morning.invalid/'},navigator:{standalone:false},localStorage:store,document};
