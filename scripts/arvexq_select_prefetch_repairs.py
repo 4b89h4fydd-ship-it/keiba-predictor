@@ -78,12 +78,43 @@ MORNING_FIELDS = ("morningPickVersion", "morningPickFixedAt", "morningPickScope"
                   "morningSelected", "morningSelectedScore", "morningSpecial")
 
 
+def _morning_from(row: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not isinstance(row, dict):
+        return None
+    for field in ("volatility", "environmentMeta"):
+        node = row.get(field) if isinstance(row.get(field), dict) else {}
+        manifest = node.get("morningPicks")
+        if isinstance(manifest, dict) and manifest.get("version") == "v1" and manifest.get("fixedAt"):
+            return manifest
+    if row.get("morningPickVersion") == "v1" and row.get("morningPickFixedAt"):
+        return {
+            "version": "v1",
+            "fixedAt": row["morningPickFixedAt"],
+            "scope": row.get("morningPickScope"),
+            "selected": bool(row.get("morningSelected")),
+            "selectedScore": row.get("morningSelectedScore") or 0,
+            "special": bool(row.get("morningSpecial")),
+        }
+    return None
+
+
 def keep_original_morning_picks(fresh: dict[str, Any], prior: dict[str, Any] | None) -> dict[str, Any]:
-    """The first published morning decision always wins over later prefetches."""
+    """First server-published manifest wins; later odds/detail updates cannot change it."""
     row = dict(fresh)
-    if isinstance(prior, dict) and prior.get("morningPickVersion") == "v1" and prior.get("morningPickFixedAt"):
-        for key in MORNING_FIELDS:
-            row[key] = prior.get(key)
+    manifest = _morning_from(prior) or _morning_from(row)
+    if manifest:
+        fields = {
+            "morningPickVersion": "v1",
+            "morningPickFixedAt": manifest["fixedAt"],
+            "morningPickScope": manifest.get("scope"),
+            "morningSelected": manifest.get("selected") is True,
+            "morningSelectedScore": manifest.get("selectedScore") or 0,
+            "morningSpecial": manifest.get("special") is True,
+        }
+        row.update(fields)
+        for field in ("volatility", "environmentMeta"):
+            row[field] = {**(row.get(field) if isinstance(row.get(field), dict) else {}),
+                          "morningPicks": manifest}
     return row
 
 
@@ -111,7 +142,9 @@ def main() -> int:
         if isinstance(d, dict) and d.get("id")
     }
     wanted = [
-        keep_original_morning_picks(d, current_by_id.get(str(d.get("id"))))
+        keep_original_morning_picks(
+            d, current_by_id.get(str(d.get("id"))) or current_summaries.get(str(d.get("id")))
+        )
         for d in (prepared.get("details") or [])
         if isinstance(d, dict) and d.get("id")
     ]
