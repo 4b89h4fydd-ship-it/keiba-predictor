@@ -98,6 +98,63 @@ class ServerSealTests(unittest.TestCase):
                                   "fixedAt": self.now.isoformat(), "items": []}
         self.assertEqual(prepare_seal(complete,now=self.now+timedelta(minutes=1))["status"],"already-sealed")
 
+    def test_d1_seal_guard_can_insert_new_race_only_with_verified_day(self):
+        import io
+        import json
+        import urllib.error
+        from unittest.mock import patch
+        from scripts.arvexq_protect_sync import fetch_current
+
+        def from_remote(req, timeout=25):
+            url = str(req.full_url)
+            if "/api/race/" in url:
+                raise urllib.error.HTTPError(url, 404, "race not found", {}, None)
+            if "/api/day?" in url:
+                return io.BytesIO(json.dumps({
+                    "date": "2026-10-09", "races": [],
+                }).encode())
+            raise AssertionError("unexpected endpoint " + url)
+
+        with patch("urllib.request.urlopen", side_effect=from_remote):
+            self.assertIsNone(fetch_current("https://unit.test", "nar-2026-10-09-大井-01"))
+
+        def invalid_remote(req, timeout=25):
+            if "/api/race/" in str(req.full_url):
+                raise urllib.error.HTTPError(str(req.full_url), 404, "not found", {}, None)
+            return io.BytesIO(json.dumps({"date": "2026-10-09", "races": None}).encode())
+
+        with patch("urllib.request.urlopen", side_effect=invalid_remote):
+            with self.assertRaisesRegex(RuntimeError, "cannot be confirmed"):
+                fetch_current("https://unit.test", "nar-2026-10-09-大井-01")
+
+    def test_d1_empty_day_requires_explicit_cold_start(self):
+        import json
+        import sys
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+        from scripts import arvexq_fetch_d1_bundle as bundle
+
+        with TemporaryDirectory() as tmp:
+            output = str(Path(tmp) / "day.json")
+            report = str(Path(tmp) / "report.json")
+            args = ["fetch-d1", "--api-base", "https://unit.test",
+                    "--date", "2026-10-09", "--out", output,
+                    "--report", report, "--allow-empty-day"]
+            with patch.object(sys, "argv", args), patch.object(bundle, "get_json", return_value={
+                "date": "2026-10-09", "races": [],
+            }):
+                self.assertEqual(bundle.main(), 0)
+            self.assertEqual(json.loads(Path(output).read_text())["races"], [])
+            self.assertTrue(json.loads(Path(report).read_text())["empty_day"])
+
+            args.remove("--allow-empty-day")
+            with patch.object(sys, "argv", args), patch.object(bundle, "get_json", return_value={
+                "date": "2026-10-09", "races": [],
+            }):
+                with self.assertRaises(SystemExit):
+                    bundle.main()
+
     def test_sync_guard_never_erases_server_lock(self):
         from scripts.arvexq_protect_sync import guard
         d = seal_detail(self.d, forecast(self.d, self.now), self.now)
