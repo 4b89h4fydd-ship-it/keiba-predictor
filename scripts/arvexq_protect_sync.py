@@ -37,7 +37,7 @@ def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
                 # No D1 race detail is expected at the start of a new day.
                 # Require an independently successful date-scoped day response;
                 # do not convert arbitrary 404s (bad routes/outages) to absence.
-                match = re.search(r"20\\d{2}-\\d{2}-\\d{2}", rid)
+                match = re.search(r"20\d{2}-\d{2}-\d{2}", rid)
                 if not match:
                     raise RuntimeError("D1 seal-guard cannot verify 404 without race date") from exc
                 date = match.group(0)
