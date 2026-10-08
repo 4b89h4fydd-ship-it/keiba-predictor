@@ -79,6 +79,11 @@ jobs:
           if missing:raise SystemExit('missing current assets: '+','.join(missing))
           PY
 
+      - name: Betting marks and ticket reconciliation regression
+        run: |
+          node --check arvexq/ui/static/app.js
+          node scripts/arvexq_bet_mark_alignment_smoke.js
+
       - name: Architecture and operations guard
         run: |
           python - <<'PY'
