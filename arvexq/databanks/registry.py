@@ -28,6 +28,9 @@ class DataSource:
     priority: int
     capabilities: SourceCapabilities
     fetchers: dict[str, Fetcher] = field(default_factory=dict)
+    # Optional licensed provider delivers individual pre-race sectional evidence
+    # even when the five historical corner positions are already complete.
+    supplement_complete_history: bool = False
 
     def supports(self, domain: str) -> bool:
         return bool(getattr(self.capabilities, domain, False)) and domain in self.fetchers
