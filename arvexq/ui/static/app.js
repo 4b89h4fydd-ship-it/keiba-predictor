@@ -2396,6 +2396,68 @@ function aiBetExplanationHtml(plan){
     +d.lines.map(function(line){return '<p>'+esc(line)+'</p>'}).join('')
     +'<small>'+esc(d.note||'')+'</small></section>'
 }
+// Gate purchasable tickets separately from prediction display. A first-corner
+// placing is a historical early-position proxy, NOT measured first-1F speed.
+function paceEvidenceProfile(r,p){
+  var entries=((p&&p.rows)||[]).filter(function(z){return z&&z.horse&&!isScratchHorse(z.horse)}),
+      date=String((r&&r.date)||''),counts={},valid=0,leaderNos={},i;
+  function priorRuns(h){
+    var list=(h.allPastRuns&&h.allPastRuns.length?h.allPastRuns:h.recentRaces)||[];
+    return list.filter(function(rr){
+      var d=String((rr&&(rr.date||rr.raceDate))||'');
+      // Only provably earlier races. Do not leak target-day/future results.
+      return rr&&d&&date&&d<date
+    }).slice(0,5)
+  }
+  function firstPosition(rn){
+    var positions=rn.cornerPositions||[],pos=Array.isArray(positions)?n(positions[0],0):0;
+    var field=n(rn.fieldSize,0);
+    return Number.isInteger(pos)&&pos>=1&&(!field||pos<=field)?pos:0
+  }
+  entries.forEach(function(z){
+    var no=n(z.horse.horseNumber,0),runs=priorRuns(z.horse),
+        usable=runs.filter(function(rr){return firstPosition(rr)>0}).length;
+    counts[no]={history:runs.length,earlyPositions:usable};
+    if(usable>=2)valid++
+  });
+  ((p&&p.arrangement&&p.arrangement.leadCandidates)||[]).slice(0,2).forEach(function(z){
+    var no=n(z&&z.horse&&z.horse.horseNumber,0);if(no)leaderNos[no]=1
+  });
+  var ranked=entries.slice().sort(function(a,b){
+    return n(b.winnerDecisionProbability,n(b.winnerConsensusProbability,n(b.p1Probability)))-
+      n(a.winnerDecisionProbability,n(a.winnerConsensusProbability,n(a.p1Probability)))
+  });
+  var top=ranked.slice(0,Math.min(3,ranked.length)),topMissing=top.filter(function(z){
+    var q=counts[n(z.horse.horseNumber)]||{};
+    return n(q.earlyPositions)<2||n(q.history)<3
+  }).map(function(z){return n(z.horse.horseNumber)});
+  var leaderMissing=Object.keys(leaderNos).filter(function(no){
+    return n((counts[no]||{}).earlyPositions)<2
+  }).map(Number);
+  var coverage=entries.length?valid/entries.length:0,
+      sufficient=entries.length>=4&&coverage>=.55&&!topMissing.length&&!leaderMissing.length;
+  var reasons=[];
+  if(coverage<.55)reasons.push('全頭の初角通過順位が不足');
+  if(topMissing.length)reasons.push('上位馬'+topMissing.join('・')+'の先行根拠不足');
+  if(leaderMissing.length)reasons.push('ハナ候補'+leaderMissing.join('・')+'の先行根拠不足');
+  if(!date)reasons.push('対象日を確認できない');
+  return{ready:sufficient,coverage:coverage,topMissing:topMissing,leaderMissing:leaderMissing,
+    observedHorses:valid,totalHorses:entries.length,reason:reasons.join('／')||'過去走の初角通過順位を確認',
+    source:'過去走初角順位による位置取り推定（実測テン1Fではない）'};
+}
+function gateBetByPaceEvidence(plan,r,p){
+  if(!plan)return plan;
+  var evidence=paceEvidenceProfile(r,p);
+  plan.paceEvidence=evidence;
+  if(evidence.ready||plan.decision==='見送り')return plan;
+  // Forecast/marks/4-stage formation are still shown. Only financial advice is gated.
+  plan.items=[];plan.decision='見送り';plan.betQuality=0;
+  plan.primaryKind='';plan.secondaryKind='';plan.trifectaDecision='見送り';
+  plan.trifectaReason='先行力の実測代替データが不足しているため3連単を見送り。';
+  plan.reason='発走前の先行・位置取り根拠が不足：'+evidence.reason+
+    '。展開予想は参考表示し、馬券の購入は推奨しません。';
+  return plan
+}
 function buildAiBetPlan(r,p){
   var started=r&&r.date===today()&&mins(r.startTime)<9999&&nowMins()>=mins(r.startTime),terminal=isFinal(r)||started,
       stored=loadStoredAiBet(r&&r.id,terminal);
@@ -2404,7 +2466,7 @@ function buildAiBetPlan(r,p){
   var rows=(p&&p.rows||[]).slice().filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)});
   if(rows.length<4)return null;
   var featured=isFeaturedBetRace(r,p),v213Ready=String(r&&r.circuit||'')==='地方'&&rows.every(function(x){var e=x&&x.horse&&x.horse.integratedEvaluation||{};return isFinite(Number(e.v218P1Utility!=null?e.v218P1Utility:(e.v217P1Utility!=null?e.v217P1Utility:e.v213P1Utility)))&&isFinite(Number(e.v213P2Utility))&&isFinite(Number(e.v213P3Utility))});
-  if(v213Ready){var vp=rebuildBetStrategyV242(buildV213AiBetPlan(r,p,rows,featured),r,p);vp=forceMandatoryTrifecta(vp,r,p);vp=alignBetPlanToOutcome(vp,r,p);vp=alignBetPlanToMarks(vp,r,p);vp=attachAiBetExplanation(vp,r,p);saveStoredAiBet(r,vp);return vp}
+  if(v213Ready){var vp=rebuildBetStrategyV242(buildV213AiBetPlan(r,p,rows,featured),r,p);vp=gateBetByPaceEvidence(vp,r,p);vp=forceMandatoryTrifecta(vp,r,p);vp=alignBetPlanToOutcome(vp,r,p);vp=alignBetPlanToMarks(vp,r,p);vp=attachAiBetExplanation(vp,r,p);saveStoredAiBet(r,vp);return vp}
   var field=rows.length,cov=n(p&&p.coverage,0),scenarios=(p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)}),mainSc=scenarios[0]||{prob:0,title:'平均'},useV207=v207UsesWinnerModel(r);
   function no(x){return x&&x.horse?n(x.horse.horseNumber):0}
   function unitSaved(x,key,fallback){var e=x&&x.horse&&x.horse.integratedEvaluation||{},v=e[key],base=v!=null?v207Unit(v,.5):clamp(n(fallback),0,1);if(key==='p1Score')return .84*base+.16*clamp(n(x.paceOutcomeFirst,.5),0,1);if(key==='p2Score')return .82*base+.18*clamp(n(x.paceOutcomeSecond,.5),0,1);if(key==='p3Score')return .82*base+.18*clamp(n(x.paceOutcomeThird,.5),0,1);return base}
@@ -2484,7 +2546,7 @@ function buildAiBetPlan(r,p){
       plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v317-consensus-rebuild',decision:decision,featuredRace:featured,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'条件付き順序集中度が3連単基準未満。',winnerModel:(String((r&&r.circuit)||'')==='中央'?'central-v317-consensus-rebuild':'local-v317-consensus-rebuild')+'+walkforward+precision-order',p2Model:useV207?'v212-role+v220-conditional':'legacy-central+v220-conditional',p3Model:'role-marginal+v220-conditional',selectionAudit:sel,exactaEvidence:captureExactaBetEvidence(exactaRank,rows),
         roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z),p:winActive(z)}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z),p:role(z,2)}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z),p:role(z,3)}}),legacyP1:legacyRows.slice(0,4).map(function(z){return{no:no(z),p:n(z.ticketLegacyP1Probability)}})},
         audit:{field:field,coverage:cov,p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:p1Entropy,exactaTop:exactaTop,exactaRatio:exactaRatio,wideTop:wideTop,wideRatio:wideRatio,quinTop:qTop,quinRatio:qRatio,trioTop:trioTop,trioRatio:trioRatio,triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderConfidence:orderConfidence,normalGate:normalGate,strongGate:strongGate,featured:featured,ticketDistribution:'sequential-joint-v300-winner-consensus'},items:items,reason:reason};
-  plan=rebuildBetStrategyV242(plan,r,p);plan=forceMandatoryTrifecta(plan,r,p);plan=alignBetPlanToOutcome(plan,r,p);plan=alignBetPlanToMarks(plan,r,p);plan=attachAiBetExplanation(plan,r,p);saveStoredAiBet(r,plan);return plan
+  plan=rebuildBetStrategyV242(plan,r,p);plan=gateBetByPaceEvidence(plan,r,p);plan=forceMandatoryTrifecta(plan,r,p);plan=alignBetPlanToOutcome(plan,r,p);plan=alignBetPlanToMarks(plan,r,p);plan=attachAiBetExplanation(plan,r,p);saveStoredAiBet(r,plan);return plan
 }
 
 function betItemHit(item,order){
