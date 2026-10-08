@@ -26,21 +26,53 @@ def meaningful(v: Any) -> bool:
     return v not in (None, "", [], {})
 
 
+def named_roster(detail: Any) -> dict[int, str]:
+    """Valid named runners keyed by the canonical horse number."""
+    result: dict[int, str] = {}
+    if not isinstance(detail, dict):
+        return result
+    for horse in detail.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        try:
+            number = int(horse.get("horseNumber") or 0)
+        except (TypeError, ValueError):
+            continue
+        name = str(horse.get("name") or "").strip()
+        if number > 0 and name:
+            result[number] = name
+    return result
+
+
 def rich(detail: Any) -> bool:
     if not isinstance(detail, dict) or not detail.get("id"):
         return False
     horses = [h for h in (detail.get("horses") or []) if isinstance(h, dict)]
-    if len(horses) < 2:
-        return False
-    if any(not str(h.get("name") or "").strip() for h in horses):
+    roster = named_roster(detail)
+    if len(roster) < 2 or len(roster) != len(horses):
         return False
     pm = detail.get("preparedMeta") if isinstance(detail.get("preparedMeta"), dict) else {}
-    analysis = bool(pm.get("diagnosisReady")) or any(
+    return bool(pm.get("diagnosisReady")) or any(
         meaningful(detail.get(k))
         for k in ("preRacePrediction", "aiEvaluation", "pace", "pacePrediction", "volatility")
     )
-    return analysis
 
+
+def repair_reason(prepared: Any, existing: Any) -> str:
+    """A rich-but-truncated D1 card also needs repair; never drop known runners."""
+    if not isinstance(prepared, dict) or not prepared.get("id"):
+        return ""
+    if existing is None:
+        return "missing"
+    if not isinstance(existing, dict) or str(existing.get("id") or "") != str(prepared["id"]):
+        return "race_id_mismatch"
+    new = named_roster(prepared)
+    old = named_roster(existing)
+    if len(new) >= len(old) and (not old.keys() <= new.keys() or len(new) > len(old)):
+        return "roster_incomplete"
+    if not rich(existing):
+        return "thin"
+    return ""
 
 def main() -> int:
     p = argparse.ArgumentParser()
@@ -64,12 +96,14 @@ def main() -> int:
     for detail in wanted:
         rid = str(detail.get("id") or "")
         old = current_by_id.get(rid)
-        if old is None:
+        reason = repair_reason(detail, old)
+        if reason:
+            # A damaged source must not erase a larger D1 roster.
+            if old and len(named_roster(detail)) < len(named_roster(old)):
+                reasons.append({"race_id": rid, "reason": "source_roster_smaller_not_replaced"})
+                continue
             selected.append(detail)
-            reasons.append({"race_id": rid, "reason": "missing"})
-        elif not rich(old):
-            selected.append(detail)
-            reasons.append({"race_id": rid, "reason": "thin"})
+            reasons.append({"race_id": rid, "reason": reason})
 
     meta = dict(prepared.get("meta") or {})
     meta.update({
