@@ -155,6 +155,12 @@ jobs:
             exit 1
           fi
 
+      - name: Verify official scratch status in D1 per affected runner
+        run: |
+          python scripts/arvexq_verify_scratch_sync.py \
+            --audit live-audit.json \
+            --api-base "$CLOUDFLARE_API_BASE"
+
       - name: Stop ARVEXQ
         if: always()
         run: |
