@@ -3774,7 +3774,6 @@ function renderRace(){
     '<main class="smart-main smart-race-page">'+
       smartRaceHead(r)+
       cinematicTabs(r)+
-      raceDetailNotice(r)+
       '<div class="smart-race-content">'+content+'</div>'+ 
     '</main>'+ 
     cinematicFooter()+
