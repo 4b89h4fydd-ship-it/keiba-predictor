@@ -45,6 +45,21 @@ class ServerSealTests(unittest.TestCase):
         self.assertEqual(preserved["preRacePrediction"], d["preRacePrediction"])
         self.assertEqual(preserved["result"]["status"], "確定")
 
+    def test_shadow_stays_as_captured_through_later_result_updates(self):
+        d = seal_detail(self.d, forecast(self.d,self.now),self.now)
+        self.assertIn("researchShadow",d)
+        old_hash = d["researchShadow"]["hash"]
+        changed = deepcopy(d)
+        changed["horses"][0]["recentRaces"].append({
+            "date":"2026-10-10","finish":1,"fieldSize":12,
+            "cornerPositions":[1,1,1,1]})
+        changed["result"]={"status":"確定","finishers":[
+            {"horseNumber":2,"finish":1}]}
+        changed["researchShadow"]={"hash":"malicious-post-hoc-recalculation"}
+        restored = restore_seal(d,changed)
+        self.assertEqual(restored["researchShadow"]["hash"],old_hash)
+        self.assertEqual(restored["result"]["status"],"確定")
+
     def test_no_post_start_creation(self):
         d = race(self.now, minutes=-1)
         with self.assertRaises(ValueError):

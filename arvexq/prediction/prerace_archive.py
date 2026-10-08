@@ -75,6 +75,10 @@ def restore_seal(existing: dict[str, Any] | None, updated: dict[str, Any] | None
     out["preRacePrediction"] = copy.deepcopy(old_lock)
     if isinstance(old.get("preRaceBet"), dict):
         out["preRaceBet"] = copy.deepcopy(old["preRaceBet"])
+    # Shadow is generated from the same original pre-off payload. Subsequent
+    # result, odds and body-weight updates must not rewrite this evidence.
+    if isinstance(old.get("researchShadow"), dict):
+        out["researchShadow"] = copy.deepcopy(old["researchShadow"])
     pm = dict(out.get("preparedMeta") or {})
     old_pm = old.get("preparedMeta") or {}
     for name in ("preRaceSealEpoch", "preRaceSealRevision", "preRaceSealVersion"):
