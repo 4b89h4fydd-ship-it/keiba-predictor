@@ -2971,7 +2971,7 @@ function copyCurrentBet(){
 }
 function aiBetRecommendation(r,p){
   var plan=buildAiBetPlan(r,p);
-  if(!plan)return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><div class="muted">'+(raceMarkClock(r).started?'発走前買い目未保存（発走後の後付け予想は作成しません）':'発走前の予想データを取得中。保存条件を満たすまでは暫定表示です。')+'</div></div>';
+  if(!plan)return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><div class="muted">'+((isFinal(r)||raceMarkClock(r).started)?'発走前買い目未保存（発走後の後付け予想は作成しません）':'発走前の予想データを取得中。保存条件を満たすまでは暫定表示です。')+'</div></div>';
   var vote=officialRaceLinks(r).vote,rows=(plan.items||[]).map(function(z){return '<div class="ai-bet-row level-'+(z.level==='本線'?'main':z.level==='押さえ'?'cover':z.level==='強気'?'attack':'trifecta')+'"><span class="ai-bet-level">'+esc(z.level)+'</span><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点'+(z.confidence?' / '+esc(z.confidence):'')+'</em></div>'}).join('');
   if(plan.decision==='見送り')rows='<div class="ai-bet-row level-cover"><span class="ai-bet-level">見送り</span><b>全券種</b><strong>無理に買わない</strong><em>'+esc(plan.betQuality||0)+'/100</em></div>';
   if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')rows+='<div class="ai-bet-row level-trifecta"><span class="ai-bet-level">3連単</span><b>検討済み</b><strong>順序信頼不足で見送り</strong><em>'+esc(plan.orderScore||0)+'/100</em></div>';
@@ -3160,7 +3160,7 @@ function aiDailyOne(detail){
       ranked=marks.filter(function(x){return n(x.p,0)>0}).slice().sort(function(a,b){return n(b.p)-n(a.p)}),
       wr=ranked.findIndex(function(x){return x.no===winner})+1;
   return {raceId:String(detail.id||''),track:String(detail.track||''),raceNumber:n(detail.raceNumber),title:String(detail.title||''),circuit:String(detail.circuit||''),
-    winHit:winHit,honPlaceHit:honPlaceHit,markHit:markHit,fullPodiumHit:fullPodiumHit,triEligible:triEligible,triHit:triHit,
+    winHit:winHit,honPlaceHit:honPlaceHit,honEligible:!!hon,markHit:markHit,fullPodiumHit:fullPodiumHit,triEligible:triEligible,triHit:triHit,
     markedPodiumCount:markedCount,holePlace:marks.some(function(x){return ['☆','☆+','注'].indexOf(x.mark)>=0&&podium[x.no]}),
     top2:wr>0&&wr<=2,top3:wr>0&&wr<=3,candidateOrderMiss:!winHit&&markHit,candidateMiss:!markHit,
     highConf:!!(hon&&hon.confidence>=.70),highConfHit:!!(hon&&hon.confidence>=.70&&winHit),brier:0,logLoss:0,
@@ -3638,8 +3638,8 @@ function aiStatsCell(label,rows,key,filter){
 }
 function aiStatsMetrics(rows){
   return '<div class="smart-ai-daily-grid arv-ai-metrics">'
-    +aiStatsCell('◎3着以内',rows,'honPlaceHit')
-    +aiStatsCell('◎1着',rows,'winHit')
+    +aiStatsCell('◎3着以内',rows,'honPlaceHit',function(x){return x.honEligible})
+    +aiStatsCell('◎1着',rows,'winHit',function(x){return x.honEligible})
     +aiStatsCell('印内1着',rows,'markHit')
     +aiStatsCell('印内3頭完全包含',rows,'fullPodiumHit')
     +aiStatsCell('3連単的中',rows,'triHit',function(x){return x.triEligible})
@@ -3649,7 +3649,7 @@ function aiStatsRaceRow(x){
   var result=(x.podiumNos||[]).slice(0,3).join('-')||'—',
       cls=!x.eligible?'pending':(x.fullPodiumHit?'hit':(x.markHit?'partial':'miss')),
       judge=x.loadError?'再取得待ち':(!x.resultReady?'結果未取得':(!x.hasMarks?'発走前予想未保存':(x.fullPodiumHit?'3頭完全包含':(x.markHit?'1着印内':'1着印外'))));
-  var detail=x.eligible?'<small>◎3着内 '+(x.honPlaceHit?'○':'×')+' ／ ◎1着 '+(x.winHit?'○':'×')+' ／ 印内1着 '+(x.markHit?'○':'×')+' ／ 印内3頭 '+(x.fullPodiumHit?'○':'×')+' ／ 3連単 '+(x.triEligible?(x.triHit?'的中':'不的中'):'未保存・対象外')+'</small>':'<small>集計対象外（不的中には算入しません）</small>';
+  var detail=x.eligible?'<small>◎3着内 '+(x.honEligible?(x.honPlaceHit?'○':'×'):'対象外')+' ／ ◎1着 '+(x.honEligible?(x.winHit?'○':'×'):'対象外')+' ／ 印内1着 '+(x.markHit?'○':'×')+' ／ 印内3頭 '+(x.fullPodiumHit?'○':'×')+' ／ 3連単 '+(x.triEligible?(x.triHit?'的中':'不的中'):'未保存・対象外')+'</small>':'<small>集計対象外（不的中には算入しません）</small>';
   return '<div class="smart-ai-race-row '+cls+'"><span class="smart-ai-race-name"><b>'+esc(x.raceNumber)+'R</b><small>'+esc(x.title||'')+'</small></span><span class="smart-ai-race-marks">'+esc(aiStatsMarkText(x))+'</span><span class="smart-ai-race-result">結果 '+esc(result)+'</span><strong>'+esc(judge)+'</strong>'+detail+'</div>'
 }
 function smartDailyAiStatsPage(){
