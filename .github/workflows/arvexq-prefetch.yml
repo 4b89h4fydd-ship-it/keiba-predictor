@@ -321,11 +321,24 @@ jobs:
           # A Worker that strips these fields must fail verification visibly.
           proposed={str(r.get('id')):r for r in (prepared.get('summaries') or []) if isinstance(r,dict) and r.get('id')}
           published={str(r.get('id')):r for r in (day.get('races') or []) if isinstance(r,dict) and r.get('id')}
-          morning_keys=('morningPickVersion','morningPickFixedAt','morningSelected','morningSelectedScore','morningSpecial')
-          frozen={rid:r for rid,r in proposed.items() if r.get('morningPickVersion')=='v1' and r.get('morningPickFixedAt')}
-          inconsistent=[rid for rid,r in frozen.items()
-                        if not isinstance(published.get(rid),dict) or
-                        any(published[rid].get(key)!=r.get(key) for key in morning_keys)]
+          def morning(row):
+              if not isinstance(row,dict):return None
+              for key in ('volatility','environmentMeta'):
+                  v=row.get(key) if isinstance(row.get(key),dict) else {}
+                  m=v.get('morningPicks')
+                  if isinstance(m,dict) and m.get('version')=='v1' and m.get('fixedAt'):
+                      return m
+              if row.get('morningPickVersion')=='v1' and row.get('morningPickFixedAt'):
+                  return dict(version='v1',fixedAt=row['morningPickFixedAt'],
+                              selected=row.get('morningSelected') is True,
+                              selectedScore=row.get('morningSelectedScore') or 0,
+                              special=row.get('morningSpecial') is True)
+              return None
+          frozen={rid:morning(r) for rid,r in proposed.items() if morning(r)}
+          keys=('version','fixedAt','selected','selectedScore','special')
+          inconsistent=[rid for rid,expected_pick in frozen.items()
+                        if not morning(published.get(rid)) or
+                        any(morning(published.get(rid)).get(key)!=expected_pick.get(key) for key in keys)]
           print('D1_MORNING_PICKS_VERIFY fixed=',len(frozen),'inconsistent=',len(inconsistent))
           if inconsistent:
               raise SystemExit('D1 stripped/rewrote frozen morning selections: '+str(inconsistent[:12]))
