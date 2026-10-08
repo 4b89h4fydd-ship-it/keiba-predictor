@@ -2242,6 +2242,67 @@ function alignBetPlanToOutcome(plan,r,p){
   plan.reason='展開結論「'+String(o.verdict||'')+'」と1〜3着役を連動。'+String(plan.reason||'');
   return plan
 }
+// Reconcile the final, still-unlocked betting ticket with the visible horse-role marks.
+// The sequential order model produces the initial candidates; this guard prevents its
+// marginal P2 ranking from silently promoting a ☆ (primarily 3rd) ahead of a
+// live ○ (2nd main) or ☆+ (1st upside and 2nd/3rd overlap).
+// Locked pre-race tickets are NEVER rewritten by this function.
+function alignBetPlanToMarks(plan,r,p){
+  if(!plan||!p||!Array.isArray(plan.items)||!plan.items.length||plan.fixedAt)return plan;
+  var rows=(p.rows||[]).filter(function(z){return z&&z.horse&&!isScratchHorse(z.horse)}),
+      markRows={},noToMark={},changed=[],axisNo=0;
+  rows.forEach(function(z){
+    var no=n(z.horse.horseNumber,0),mark=String(z.predMark||'').replace(/＋/g,'+');
+    if(!no||!mark)return;
+    noToMark[no]=mark;
+    if(!markRows[mark])markRows[mark]=[];
+    markRows[mark].push(z);
+    if(mark==='◎')axisNo=no
+  });
+  if(!axisNo)return plan;
+  function rowNo(z){return n(z&&z.horse&&z.horse.horseNumber,0)}
+  function p2(z){return n(z.ticketP2Probability,n(z.p2RecallScore,n(z.p2Probability,0)))}
+  function leaders(mark){return (markRows[mark]||[]).slice().sort(function(a,b){return p2(b)-p2(a)}).map(rowNo)}
+  function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
+  var seconds=[].concat(leaders('○'),leaders('☆+'),leaders('▲'),leaders('☆'),leaders('△')).filter(function(no){return no&&no!==axisNo});
+  (plan.items||[]).forEach(function(item){
+    var original=(item.combos||[]).map(function(c){return (c||[]).map(function(v){return n(v,0)})}),
+        updated=original.map(function(c){return c.slice()}),i;
+    if(item.kind==='馬単'&&updated.length&&updated.length<=2&&seconds.length
+      &&updated.every(function(c){return c.length===2&&c[0]===axisNo})){
+      // Preserve the exact point count. At two points ○ and ☆+ take the
+      // two second-place lanes before a ☆ third-place specialist.
+      updated=seconds.slice(0,updated.length).map(function(no){return [axisNo,no]});
+    }else if(item.kind==='3連複'&&leaders('☆+').length){
+      // Replace only a weak ☆ lane in a combo already containing ◎ and ○/▲.
+      // Do not invent extra tickets or disturb a valid 3rd-place ☆ when it
+      // would duplicate an existing strong-plus combination.
+      var plusNo=leaders('☆+')[0],seen={};
+      updated.forEach(function(c){seen[c.slice().sort(function(a,b){return a-b}).join('-')]=1});
+      updated=updated.map(function(c){
+        if(c.length!==3||c.indexOf(axisNo)<0||c.indexOf(plusNo)>=0)return c;
+        var core=c.some(function(no){return no!==axisNo&&(noToMark[no]==='○'||noToMark[no]==='▲')}),
+            oldNo=c.filter(function(no){return noToMark[no]==='☆'})[0];
+        if(!core||!oldNo)return c;
+        var proposed=c.map(function(no){return no===oldNo?plusNo:no}).sort(function(a,b){return a-b}),
+            newKey=proposed.join('-');
+        if(seen[newKey])return c;
+        seen[newKey]=1;
+        return proposed
+      });
+    }
+    if(!same(original,updated)){
+      item.combos=updated;item.points=updated.length;item.combo=betComboText(item.kind,updated);
+      item.markAligned=true;
+      changed.push(item.kind)
+    }
+  });
+  if(changed.length){
+    plan.markAlignment={version:'v341-roles-before-display',axis:axisNo,secondCandidates:seconds.slice(0,4),changedKinds:changed};
+    plan.reason='表示印との照合で'+changed.join('・')+'の候補を修正。○は2着本線、☆+は1着逆転・2着候補、☆は原則3着役として扱います。変更した組み合わせの確率は別途再検証が必要です。'+String(plan.reason||'');
+  }
+  return plan
+}
 function buildAiBetPlan(r,p){
   var started=r&&r.date===today()&&mins(r.startTime)<9999&&nowMins()>=mins(r.startTime),terminal=isFinal(r)||started,
       stored=loadStoredAiBet(r&&r.id,terminal);
@@ -2250,7 +2311,7 @@ function buildAiBetPlan(r,p){
   var rows=(p&&p.rows||[]).slice().filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)});
   if(rows.length<4)return null;
   var featured=isFeaturedBetRace(r,p),v213Ready=String(r&&r.circuit||'')==='地方'&&rows.every(function(x){var e=x&&x.horse&&x.horse.integratedEvaluation||{};return isFinite(Number(e.v218P1Utility!=null?e.v218P1Utility:(e.v217P1Utility!=null?e.v217P1Utility:e.v213P1Utility)))&&isFinite(Number(e.v213P2Utility))&&isFinite(Number(e.v213P3Utility))});
-  if(v213Ready){var vp=rebuildBetStrategyV242(buildV213AiBetPlan(r,p,rows,featured),r,p);vp=forceMandatoryTrifecta(vp,r,p);vp=alignBetPlanToOutcome(vp,r,p);saveStoredAiBet(r,vp);return vp}
+  if(v213Ready){var vp=rebuildBetStrategyV242(buildV213AiBetPlan(r,p,rows,featured),r,p);vp=forceMandatoryTrifecta(vp,r,p);vp=alignBetPlanToOutcome(vp,r,p);vp=alignBetPlanToMarks(vp,r,p);saveStoredAiBet(r,vp);return vp}
   var field=rows.length,cov=n(p&&p.coverage,0),scenarios=(p.scenarios||[]).slice().sort(function(a,b){return n(b.prob)-n(a.prob)}),mainSc=scenarios[0]||{prob:0,title:'平均'},useV207=v207UsesWinnerModel(r);
   function no(x){return x&&x.horse?n(x.horse.horseNumber):0}
   function unitSaved(x,key,fallback){var e=x&&x.horse&&x.horse.integratedEvaluation||{},v=e[key],base=v!=null?v207Unit(v,.5):clamp(n(fallback),0,1);if(key==='p1Score')return .84*base+.16*clamp(n(x.paceOutcomeFirst,.5),0,1);if(key==='p2Score')return .82*base+.18*clamp(n(x.paceOutcomeSecond,.5),0,1);if(key==='p3Score')return .82*base+.18*clamp(n(x.paceOutcomeThird,.5),0,1);return base}
@@ -2330,7 +2391,7 @@ function buildAiBetPlan(r,p){
       plan={raceId:String(r.id||''),engineVersion:'arvexq-bets-2026.10-v317-consensus-rebuild',decision:decision,featuredRace:featured,betQuality:betQuality,scenario:mainSc.title||'平均',scenarioProb:n(mainSc.prob),trifectaReviewed:true,trifectaDecision:triGate?'採用':'見送り',trifectaReason:triGate?'v220条件付き順序ゲート通過・点数圧縮。':'条件付き順序集中度が3連単基準未満。',winnerModel:(String((r&&r.circuit)||'')==='中央'?'central-v317-consensus-rebuild':'local-v317-consensus-rebuild')+'+walkforward+precision-order',p2Model:useV207?'v212-role+v220-conditional':'legacy-central+v220-conditional',p3Model:'role-marginal+v220-conditional',selectionAudit:sel,
         roles:{p1:p1Rows.slice(0,4).map(function(z){return{no:no(z),p:winActive(z)}}),p2:p2Rows.slice(0,5).map(function(z){return{no:no(z),p:role(z,2)}}),p3:p3Rows.slice(0,6).map(function(z){return{no:no(z),p:role(z,3)}}),legacyP1:legacyRows.slice(0,4).map(function(z){return{no:no(z),p:n(z.ticketLegacyP1Probability)}})},
         audit:{field:field,coverage:cov,p1Top:p1Top,p1Margin:p1Margin,top2mass:top2mass,top3mass:top3mass,entropy:p1Entropy,exactaTop:exactaTop,exactaRatio:exactaRatio,wideTop:wideTop,wideRatio:wideRatio,quinTop:qTop,quinRatio:qRatio,trioTop:trioTop,trioRatio:trioRatio,triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderConfidence:orderConfidence,normalGate:normalGate,strongGate:strongGate,featured:featured,ticketDistribution:'sequential-joint-v300-winner-consensus'},items:items,reason:reason};
-  plan=rebuildBetStrategyV242(plan,r,p);plan=forceMandatoryTrifecta(plan,r,p);plan=alignBetPlanToOutcome(plan,r,p);saveStoredAiBet(r,plan);return plan
+  plan=rebuildBetStrategyV242(plan,r,p);plan=forceMandatoryTrifecta(plan,r,p);plan=alignBetPlanToOutcome(plan,r,p);plan=alignBetPlanToMarks(plan,r,p);saveStoredAiBet(r,plan);return plan
 }
 
 function betItemHit(item,order){
@@ -2361,7 +2422,7 @@ function aiBetRecommendation(r,p){
   var vote=officialRaceLinks(r).vote,rows=(plan.items||[]).map(function(z){return '<div class="ai-bet-row level-'+(z.level==='本線'?'main':z.level==='押さえ'?'cover':z.level==='強気'?'attack':'trifecta')+'"><span class="ai-bet-level">'+esc(z.level)+'</span><b>'+esc(z.kind)+'</b><strong>'+esc(z.combo)+'</strong><em>'+esc(z.points)+'点'+(z.confidence?' / '+esc(z.confidence):'')+'</em></div>'}).join('');
   if(plan.decision==='見送り')rows='<div class="ai-bet-row level-cover"><span class="ai-bet-level">見送り</span><b>全券種</b><strong>無理に買わない</strong><em>'+esc(plan.betQuality||0)+'/100</em></div>';
   if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')rows+='<div class="ai-bet-row level-trifecta"><span class="ai-bet-level">3連単</span><b>検討済み</b><strong>順序信頼不足で見送り</strong><em>'+esc(plan.orderScore||0)+'/100</em></div>';
-  return '<div class="ai-bet-box"><div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div><div class="ai-bet-meta"><span><b>'+esc(plan.scenario)+'</b> '+Math.round(n(plan.scenarioProb)*100)+'%</span><span>信頼 <b>'+esc(plan.betQuality||0)+'</b>/100</span><span>'+esc(plan.fixedAt?'発走前固定':'暫定・更新あり')+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><div class="bet-mark-guide"><b>印の見方</b><div class="bet-mark-grid"><span><i>◎</i>1着本命</span><span><i>○</i>1着対抗・2着本線</span><span><i>▲</i>1〜3着の有力馬</span><span><i>☆+</i>強穴・1着まで</span><span><i>☆</i>基本3着の能力穴</span><span><i>△</i>押さえ・3着候補</span> <span><i>注</i>特殊条件・展開ハマり待ち</span></div></div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">現行：中央/地方を別エンジンで評価し、能力・相手レベル・近況・展開/ラップ・条件適性・騎手/厩舎/状態・血統・全頭相対比較を統合。当日の同場傾向は弱い補正に限定し、1〜3着の全頭包含を最優先KPIに維持します。</small></div>'
+  return '<div class="ai-bet-box"><div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div><div class="ai-bet-meta"><span><b>'+esc(plan.scenario)+'</b> '+Math.round(n(plan.scenarioProb)*100)+'%</span><span>信頼 <b>'+esc(plan.betQuality||0)+'</b>/100</span><span>'+esc(plan.fixedAt?'発走前固定':'暫定・更新あり')+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div><div class="ai-bet-list">'+rows+'</div><div class="bet-mark-guide"><b>印の見方</b><div class="bet-mark-grid"><span><i>◎</i>1着本命</span><span><i>○</i>1着対抗・2着本線</span><span><i>▲</i>1〜3着の有力馬</span><span><i>☆+</i>強穴・1着逆転と2着候補</span><span><i>☆</i>基本3着の能力穴</span><span><i>△</i>押さえ・3着候補</span> <span><i>注</i>特殊条件・展開ハマり待ち</span></div></div><p>'+esc(plan.reason||'')+'</p><small class="ai-bet-note">現行：中央/地方を別エンジンで評価し、能力・相手レベル・近況・展開/ラップ・条件適性・騎手/厩舎/状態・血統・全頭相対比較を統合。当日の同場傾向は弱い補正に限定し、1〜3着の全頭包含を最優先KPIに維持します。</small></div>'
 }
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
