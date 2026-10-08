@@ -95,6 +95,7 @@ jobs:
           node --check scripts/arvexq_morning_picks_smoke.js
           node scripts/arvexq_morning_picks_smoke.js
           node scripts/arvexq_morning_picks_runner_smoke.js
+          python -m unittest discover -s tests -p 'test_morning_pick_freeze.py' -v
 
       - name: Four-stage pace transition regression
         run: |
