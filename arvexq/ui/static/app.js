@@ -2449,15 +2449,26 @@ function paceEvidenceProfile(r,p){
 }
 function gateBetByPaceEvidence(plan,r,p){
   if(!plan)return plan;
-  var evidence=paceEvidenceProfile(r,p);
+  var evidence=paceEvidenceProfile(r,p),rd=dataReadinessProfile(r,p),
+      central=String(r&&r.circuit||'')==='中央',missing=[];
   plan.paceEvidence=evidence;
-  if(evidence.ready||plan.decision==='見送り')return plan;
-  // Forecast/marks/4-stage formation are still shown. Only financial advice is gated.
+  // A ticket should not be offered for purchase with forecast odds, absent
+  // body weight, missing surface/weather, or an incomplete horse card.
+  if(!evidence.ready)missing.push(evidence.reason);
+  if(n(rd.card,0)<.90)missing.push('出走表・騎手');
+  if(n(rd.history,0)<.70)missing.push('近走');
+  if(n(rd.actualOdds,0)<.65)missing.push('実オッズ');
+  if(n(rd.bodyWeight,0)<.70)missing.push('馬体重');
+  if(n(rd.environment,0)<1)missing.push('馬場・天候');
+  if(n(rd.analysis,0)<.45||n(rd.prediction,0)<(central?.68:.60))missing.push('能力診断・総合データ');
+  plan.betInputGate={ready:!missing.length,missing:missing,pace:evidence,readiness:rd};
+  if(!missing.length||plan.decision==='見送り')return plan;
+  // All-race forecasts, marks, and four-stage formation remain accessible.
   plan.items=[];plan.decision='見送り';plan.betQuality=0;
   plan.primaryKind='';plan.secondaryKind='';plan.trifectaDecision='見送り';
-  plan.trifectaReason='先行力の実測代替データが不足しているため3連単を見送り。';
-  plan.reason='発走前の先行・位置取り根拠が不足：'+evidence.reason+
-    '。展開予想は参考表示し、馬券の購入は推奨しません。';
+  plan.trifectaReason='発走前の購入判断に必要なデータ不足のため3連単を見送り。';
+  plan.reason='買い目見送り：'+missing.join('／')+
+    '。展開・全頭診断は参考予想として表示します。';
   return plan
 }
 function buildAiBetPlan(r,p){
