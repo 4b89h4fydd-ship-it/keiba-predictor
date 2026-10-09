@@ -19,6 +19,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from arvexq.ingest.career_transport import pack_detail
+from scripts.arvexq_detail_size_audit import print_size_audit
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -56,7 +57,7 @@ def main() -> int:
     # violations; never drop a race or its career archive to hide the problem.
     row_risks = []
     for detail in details:
-        row_size = len(json.dumps(detail, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+        row_size = print_size_audit(detail, max_detail_bytes=1_500_000)["totalBytes"]
         if row_size > 1_800_000:
             row_risks.append((race_id(detail), row_size))
             print("D1_DETAIL_ROW_SIZE_RISK", "race="+race_id(detail),
