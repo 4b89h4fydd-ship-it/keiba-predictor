@@ -8,6 +8,8 @@ name: ARVEXQ Server Pre-Race Seal
       - scripts/arvexq_freeze_predictions.py
       - scripts/arvexq_capture_prerace_bet.js
       - scripts/arvexq_prerace_bet_integrity.py
+      - tests/test_prerace_archive.py
+      - tests/test_prerace_bet_recovery.py
       - arvexq/ui/static/betting/**
       - arvexq/ui/static/morning/ticket_lane_classifier.js
       - arvexq/prediction/prerace_archive.py
