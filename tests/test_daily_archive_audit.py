@@ -37,6 +37,25 @@ class DailyArchiveTests(unittest.TestCase):
                          "decision":"未取得","captureStatus":"failed","items":[]}
         self.assertEqual(inspect(self.race,d)["ticket"],"capture-failed")
 
+    def test_postoff_ticket_is_invalid_not_an_auditable_return(self):
+        d = deepcopy(self.sealed)
+        d["preRaceBet"] = {
+            "fixedAt": "2026-10-08T20:01:00+09:00",
+            "decision": "通常買い",
+            "items": [{"level": "本線", "kind": "馬連", "combos": [[1, 2]]}],
+        }
+        d["result"] = {
+            "status": "確定",
+            "finishers": [
+                {"finish": 1, "horseNumber": 1},
+                {"finish": 2, "horseNumber": 2},
+                {"finish": 3, "horseNumber": 3},
+            ],
+        }
+        audit = inspect(self.race, d)
+        self.assertEqual(audit["ticket"], "invalid-postlock")
+        self.assertIsNone(audit["ticket_result"])
+
     def test_cancelled_race_can_be_excluded_without_postbackfill(self):
         r=dict(self.race,raceStatus="取止")
         self.assertEqual(inspect(r,None)["status"],"race-cancelled")
