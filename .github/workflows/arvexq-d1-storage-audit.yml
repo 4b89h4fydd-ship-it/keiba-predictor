@@ -9,11 +9,6 @@ name: ARVEXQ D1 Read-only Capacity Audit
         type: choice
         options: [unknown, free, paid]
         default: unknown
-  push:
-    branches: [main]
-    paths:
-      - scripts/arvexq_d1_storage_audit.py
-      - .github/workflows/arvexq-d1-storage-audit.yml
 
 permissions:
   contents: read
@@ -23,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_READ_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       ARVEXQ_D1_DATABASE_NAME: ${{ vars.ARVEXQ_D1_DATABASE_NAME }}
     steps:
