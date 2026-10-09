@@ -62,7 +62,7 @@ function classify(r,p,strict){
  };
  return {selected,score:selected?Math.max(0,Math.min(100,Math.round(num(a.score)))):0,
      primaryType,types,reason:selected?explanation[primaryType]:'券種別評価または基礎データ条件を満たさない',
-     modelVersion:VERSION,metrics:{field,readiness,coverage,evidence,scenario,
+     modelVersion:VERSION,metrics:{field,readiness:ready,coverage,evidence,scenario,
      roleCoverage,placeTop2,placeTop3,winnerConf,margin},
      gates:{...basic,strongPlace,clearWinner,longshot},
      note:'券種別モデル評価であり、的中率・期待配当・期待値を表しません。'};
