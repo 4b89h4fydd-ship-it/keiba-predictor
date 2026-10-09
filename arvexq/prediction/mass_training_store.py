@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from arvexq.prediction.mass_training_dataset import rows_from_frozen_snapshot
+from arvexq.prediction.mass_feature_transport import recover_mass_detail
 
 STORE_VERSION = "arvexq-mass-training-store-v1"
 
@@ -25,9 +26,15 @@ def frozen_training_rows_from_detail(detail: dict[str, Any]) -> list[dict[str, A
     """Use only the already-frozen feature snapshot; never rebuild from final detail."""
     if not isinstance(detail, dict):
         return []
-    snapshot = detail.get("massFeatureSnapshot")
     result = _confirmed_result(detail)
-    if not isinstance(snapshot, dict) or result is None:
+    if result is None:
+        return []
+    # Read the frozen pre-race evidence from its authenticated lossless
+    # archive. Never infer feature rows from the already-known finishers.
+    if not isinstance(detail.get("massFeatureSnapshot"), dict) and detail.get("massFeatureArchive"):
+        detail = recover_mass_detail(detail)
+    snapshot = detail.get("massFeatureSnapshot")
+    if not isinstance(snapshot, dict):
         return []
     if not snapshot.get("featureHash") or not snapshot.get("rows"):
         return []
@@ -74,7 +81,9 @@ def iter_frozen_training_rows(
         except Exception:
             continue
         snapshot = detail.get("massFeatureSnapshot") if isinstance(detail, dict) else None
-        feature_hash = str((snapshot or {}).get("featureHash") or "")
+        archive = detail.get("massFeatureArchive") if isinstance(detail, dict) else None
+        feature_hash = str((snapshot or {}).get("featureHash") or
+                           (archive or {}).get("featureHash") or "")
         if not feature_hash or feature_hash in seen_hashes:
             continue
         examples = frozen_training_rows_from_detail(detail)
