@@ -70,7 +70,11 @@ jobs:
 
       - name: Start lightweight fallback runtime
         run: |
-          nohup uvicorn app:app --host 127.0.0.1 --port 8000 > /tmp/arvexq-history.log 2>&1 &
+          # The bootstrap server and repair importer must NEVER write the
+          # same restored SQLite cache concurrently.
+          mkdir -p "$RUNNER_TEMP/arvexq-history-bootstrap"
+          KEIBA_DATA_DIR="$RUNNER_TEMP/arvexq-history-bootstrap" \
+            nohup python -c 'import app,uvicorn; app.last3f=None; uvicorn.run(app.app,host="127.0.0.1",port=8000)' > /tmp/arvexq-history.log 2>&1 &
           echo $! > /tmp/arvexq-history.pid
           for i in $(seq 1 25); do
             if curl -fsS --max-time 2 http://127.0.0.1:8000/health > /dev/null; then
@@ -84,9 +88,16 @@ jobs:
 
       - name: Load historical day from D1 first
         run: |
-          curl -fsS --max-time 30 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$HISTORY_DATE&details=1&t=$(date +%s)" \
-            -o history-bundle.json || true
+          # details=1 builds an oversized day JSON and intermittently 503s.
+          # Fetch small day summaries and hydrate each race separately.
+          if ! python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --date "$HISTORY_DATE" \
+            --out history-bundle.json \
+            --report history-hydration.json \
+            --workers 4 --allow-missing-details; then
+            echo "D1 history hydration unavailable; checking collector fallback"
+          fi
           RACES=$(jq '.races // [] | length' history-bundle.json 2>/dev/null || echo 0)
           echo "D1 history races=$RACES"
 
@@ -94,10 +105,11 @@ jobs:
             echo "Historical D1 day absent; discovering once from source collectors."
             curl -fsS --max-time 120 \
               "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$HISTORY_DATE&force=1" \
-              -o history-bundle.json || true
-            curl -fsS --max-time 45 \
-              "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$HISTORY_DATE" \
-              -o history-bundle.json || true
+              -o history-bootstrap.json || true
+            FALLBACK=$(jq '.races // [] | length' history-bootstrap.json 2>/dev/null || echo 0)
+            if [ "$FALLBACK" -gt 0 ]; then
+              mv history-bootstrap.json history-bundle.json
+            fi
             RACES=$(jq '.races // [] | length' history-bundle.json 2>/dev/null || echo 0)
           fi
           echo "History repair source races=$RACES"
@@ -111,11 +123,23 @@ jobs:
             exit 0
           fi
           python -m py_compile scripts/arvexq_history_repair.py
-          if ! python scripts/arvexq_history_repair.py \
-            --bundle history-bundle.json \
-            --payload history-payload.json \
-            --report history-report.json \
-            --workers 4 > history-repair.log 2>&1; then
+          # Install a bounded busy wait before import app. Run a single
+          # writer to avoid repeated nested RACEDB write conflicts.
+          if ! python - <<'PY' > history-repair.log 2>&1
+          from scripts.arvexq_sqlite_runtime_guard import install, install_app_compat
+          install()
+          import app, runpy, sys
+          install_app_compat(app)
+          sys.argv = [
+              'scripts/arvexq_history_repair.py',
+              '--bundle', 'history-bundle.json',
+              '--payload', 'history-payload.json',
+              '--report', 'history-report.json',
+              '--workers', '1',
+          ]
+          runpy.run_path('scripts/arvexq_history_repair.py', run_name='__main__')
+          PY
+          then
             echo "::error::History repair failed"
             tail -n 80 history-repair.log || true
             exit 1
@@ -129,11 +153,29 @@ jobs:
             echo "No races on $HISTORY_DATE; nothing to sync."
             exit 0
           fi
-          curl --fail-with-body --max-time 60 -X POST "$CLOUDFLARE_SYNC_URL" \
-            -H "content-type: application/json" \
-            -H "x-sync-token: $SYNC_TOKEN" \
-            --data-binary @history-payload.json > /dev/null
-          echo "D1 history repair push OK"
+          # Never POST an entire historical day to D1 (HTTP 503/body limit).
+          # Split to one detail per request and protect immutable pre-off seals.
+          python scripts/arvexq_sync_batches.py \
+            --input history-payload.json \
+            --out-dir history-sync-batches
+          COUNT=$(find history-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
+          test "$COUNT" -gt 0
+          echo "D1 history batches=$COUNT"
+          for file in history-sync-batches/batch-*.json; do
+            PYTHONPATH=. python scripts/arvexq_protect_sync.py \
+              --file "$file" --api-base "$CLOUDFLARE_API_BASE"
+            echo "HISTORY_POST $(basename "$file") bytes=$(wc -c < "$file")"
+            curl --fail-with-body --retry 4 --retry-all-errors \
+              --retry-delay 2 --retry-max-time 70 \
+              --connect-timeout 8 --max-time 35 \
+              -X POST "$CLOUDFLARE_SYNC_URL" \
+              -H "content-type: application/json" \
+              -H "x-sync-token: $SYNC_TOKEN" \
+              --data-binary @"$file" > /dev/null
+            PYTHONPATH=. python scripts/arvexq_protect_sync.py \
+              --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"
+          done
+          echo "D1 history protected batched push OK"
 
       - name: Verify repaired historical day
         run: |
@@ -141,9 +183,13 @@ jobs:
           if [ "$EXPECTED" -le 0 ]; then
             exit 0
           fi
-          curl --fail-with-body --max-time 30 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$HISTORY_DATE&details=1&t=$(date +%s)" \
-            -o history-verified.json
+          # Verify via race-scoped D1 reads, not the 45+ race details=1 response.
+          python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --date "$HISTORY_DATE" \
+            --out history-verified.json \
+            --report history-verified-report.json \
+            --workers 4
           python - <<'PY'
           import json
           from pathlib import Path
@@ -196,5 +242,8 @@ jobs:
             history-repair.log
             history-report.json
             runtime-history.log
+            history-hydration.json
+            history-verified-report.json
+            history-sync-batches/*.json
           if-no-files-found: ignore
           retention-days: 3
