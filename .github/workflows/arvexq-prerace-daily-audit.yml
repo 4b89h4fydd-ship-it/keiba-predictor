@@ -32,6 +32,7 @@ jobs:
       - name: Unit-test immutable archive and nightly audit
         run: |
           python -m unittest discover -s tests -p 'test_daily_archive_audit.py' -v
+          python -m unittest discover -s tests -p 'test_race_intelligence.py' -v
       - name: Audit full previous racing day
         run: |
           TARGET="${{ github.event.inputs.date }}"

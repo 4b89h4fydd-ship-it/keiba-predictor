@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Any
 from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock, evaluate_frozen_result, summarize_frozen_ticket_metrics
 from scripts.arvexq_fetch_d1_bundle import get_json, detail_from_response
+from arvexq.results.auto_recap import build_race_recap
+from arvexq.databanks.horse_review_bank import build_horse_review_bank
 
 
 def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any]:
@@ -25,9 +27,12 @@ def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any
         return {"race_id": rid, "status": "race-cancelled", "reason": status}
     if not isinstance(detail, dict):
         return {"race_id": rid, "status": "missing-race-detail"}
+    # This review depends on the official finishers, never on the saved forecast.
+    # Even if the pre-off prediction was missing, results can still be reviewed.
+    recap = build_race_recap(detail)
     seal = sealed_lock(detail)
     if seal is None:
-        return {"race_id": rid, "status": "missing-preoff-seal"}
+        return {"race_id": rid, "status": "missing-preoff-seal", "recap": recap}
     bet = detail.get("preRaceBet")
     if not isinstance(bet, dict) or not bet.get("fixedAt"):
         ticket = "missing"
@@ -51,6 +56,7 @@ def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any
         "captured_at_epoch": seal.get("capturedAtEpoch"),
         "race_date": detail.get("date"),
         "ticket_result": audit,
+        "recap": recap,
     }
 
 
@@ -94,6 +100,9 @@ def main() -> int:
         "unsealed_races":missing,"missing_tickets":tickets_missing,"all_races":ordered,
         "ticket_metrics": summarize_frozen_ticket_metrics(
             [r["ticket_result"] for r in ordered if isinstance(r.get("ticket_result"), dict)]),
+        "race_recaps": [r["recap"] for r in ordered if isinstance(r.get("recap"), dict)],
+        "horse_review_bank": build_horse_review_bank(
+            [r["recap"] for r in ordered if isinstance(r.get("recap"), dict)]),
     }
     Path(args.report).write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print("ARVEXQ_NIGHTLY_PRERACE_AUDIT",json.dumps({k:report[k] for k in

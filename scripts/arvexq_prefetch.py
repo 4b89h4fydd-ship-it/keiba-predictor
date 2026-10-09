@@ -26,6 +26,7 @@ if str(ROOT) not in sys.path:
 
 import app
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
+from arvexq.prediction.race_intelligence import attach_evidence
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 from arvexq.databanks.authorized_feeds import register_authorized_history_feeds
 from arvexq.databanks.nar_official_csv import register_nar_official_archive
@@ -260,7 +261,8 @@ def _decorate(detail: dict[str, Any]) -> dict[str, Any]:
     pm["cardComplete"] = _card_usable(out)
     pm["historyCoverage"] = round(with_history / max(1, len(active)), 4) if active else 0.0
     out["preparedMeta"] = pm
-    return out
+    # Read-only evidence decoration: no re-ranking, mark update, or post-race analysis.
+    return attach_evidence(out)
 
 
 def prepare(
