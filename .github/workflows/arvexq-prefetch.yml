@@ -31,6 +31,10 @@ name: ARVEXQ Full Prefetch
     - cron: "30 2 * * *"
     - cron: "30 3,5,7,9,11 * * *"
 
+permissions:
+  contents: write
+  actions: write
+
 concurrency:
   group: arvexq-full-prefetch-${{ github.event.inputs.date || 'today' }}
   # A mid-run code push must not cancel the dawn manifest publication.
@@ -190,6 +194,52 @@ jobs:
           node --check scripts/arvexq_morning_picks.js
           node scripts/arvexq_morning_picks.js prefetch-payload.json prefetch-morning.json
           mv prefetch-morning.json prefetch-payload.json
+
+      - name: Publish fixed morning race list as a Cloudflare static asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/arvexq_publish_morning_static.py --input prefetch-payload.json
+          FILE="arvexq/ui/static/morning-picks/$TARGET_DATE.json"
+          if [ ! -s "$FILE" ]; then
+            echo "::warning::Morning decision not ready before first race. No late picks created."
+            exit 0
+          fi
+          cp "$FILE" /tmp/arvexq-morning-picks.json
+          git config user.name "ARVEXQ Morning Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          if git cat-file -e "origin/main:$FILE" 2>/dev/null; then
+            echo "MORNING_ARCHIVE_ALREADY_EXISTS first version remains immutable"
+            exit 0
+          fi
+          git checkout -B publish-morning-picks origin/main
+          mkdir -p "$(dirname "$FILE")"
+          cp /tmp/arvexq-morning-picks.json "$FILE"
+          git add "$FILE"
+          git commit -m "data: freeze morning picks for $TARGET_DATE"
+          done_push=0
+          for try in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              done_push=1
+              break
+            fi
+            git fetch origin main
+            if git cat-file -e "origin/main:$FILE" 2>/dev/null; then
+              echo "MORNING_ARCHIVE_PUBLISHED_BY_ANOTHER_RUN"
+              done_push=1
+              break
+            fi
+            git rebase origin/main
+          done
+          if [ "$done_push" -ne 1 ]; then
+            echo "::error::Morning static archive could not be published"
+            exit 1
+          fi
+          # GITHUB_TOKEN push does not automatically trigger push workflows.
+          # Explicit dispatch deploys the immutable JSON to the public Worker.
+          gh workflow run arvexq-web-deploy.yml --ref main || echo "::warning::Static archive committed; Web Deploy dispatch not accepted"
+          echo "STATIC_MORNING_PICKS_ARCHIVED $FILE"
 
       - name: Select only missing or thin D1 details
         run: |
