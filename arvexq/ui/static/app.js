@@ -2174,7 +2174,7 @@ function racecardMarkDisplay(mark){
 function racecardMarkLegend(r){
   var server=serverFrozenPrediction(r),stored=server?null:loadFrozenMarks(r),clock=raceMarkClock(r),
       status=server?'サーバー発走前印・固定済み':(stored?'端末の発走前印・固定済み':(clock.started?'発走前印の保存なし':'印は発走10分前から固定'));
-  return '<div class="rc-mark-legend"><b>◎</b> 馬券の軸　<span class="rc-legend-single">単</span> 単勝向き（1着狙い） <span class="rc-mark-freeze-note">'+esc(status)+'</span></div>'
+  return '<div class="rc-mark-legend"><b>◎</b> 3着以内の軸　<span class="rc-legend-single">単</span> 単勝向き（1着狙い） <span class="rc-mark-freeze-note">'+esc(status)+'</span></div>'
 }
 function racecardEntryRow(r,h,x){
   if(!h||n(h.horseNumber)<=0)return'';
@@ -3168,6 +3168,22 @@ function copyCurrentBet(){
 function aiBetRecommendation(r,p){
   var plan=buildAiBetPlan(r,p);
   if(!plan)return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><p class="muted">'+((isFinal(r)||raceMarkClock(r).started)?'発走前買い目未保存（発走後の後付け予想は作成しません）':'発走前予想を取得中。未保存の買い目は暫定判定です。')+'</p></div>';
+  // Preserve the original recorded ticket types/marks even when it was frozen
+  // under the pre-v346 engine. Never relabel historical "通常"/"押さえ"
+  // as a v346 main/challenge/insurance decision after the off.
+  if(plan.fixedAt&&String(plan.engineVersion||plan.betStrategy||'').indexOf('three-way-v346')<0){
+    var legacyItems=(plan.items||[]).map(function(z){
+      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'
+        +esc(z.level||'旧方式')+'｜'+esc(z.kind||'券種')+'</b><span>'+esc(z.points||((z.combos||[]).length))+'点</span></div>'
+        +'<strong>'+esc(z.combo||betComboText(z.kind,z.combos||[]))+'</strong></div>'
+    }).join('');
+    return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">発走前保存済み買い目（旧方式）</div>'
+      +'<p class="arv-three-fixed">保存 '+esc(plan.fixedAt)+'</p>'
+      +(legacyItems||'<p class="arv-three-skip">'+esc(plan.decision==='未取得'?'発走前の買い目保存に失敗。予想・購入は未取得です。':plan.reason||'当時の買い目は見送りでした。')+'</p>')
+      +'<p class="arv-three-provisional">旧方式で保存された買い目は改変しません。新しい3方式への事後変換・的中結果を見た後の追加は禁止しています。</p>'
+      +(plan.postLockNotice?'<p class="ai-bet-lock-notice">'+esc(plan.postLockNotice)+'</p>':'')
+      +aiBetExplanationHtml(plan)+'</div>';
+  }
   function renderGroup(level,label,reason){
     var items=(plan.items||[]).filter(function(z){return z.level===level});
     var body=items.map(function(z){
