@@ -37,6 +37,8 @@ function render(r,p,deps){
     +'<div class="ai-bet-meta"><span>内部評価 <b>'+esc(plan.betQuality==null?'未算出':plan.betQuality)+'</b>/100（的中率ではありません）</span>'
     +'<span>'+esc(status)+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div>'
     +(plan.noAxis?'<p class="arv-three-provisional">◎なし：連対・3着内の組み合わせを比較。ワイド・馬連・3連複を検討し、馬単・3連単は見送ります。</p>':'')
+    +(plan.referenceOnly?'<p class="arv-three-provisional">通常レースの参考買い目。朝固定の厳選レースではありません。</p>':'')
+    +((plan.betWarnings||[]).length?'<p class="arv-three-provisional">条件未確認：'+esc(plan.betWarnings.join('／'))+'。オッズ・期待値を確認してから購入判断してください。</p>':'')
     +renderGroup('本線','本線｜的中重視',plan.reason)
     +renderGroup('3連単チャレンジ','3連単チャレンジ｜高配当重視',plan.trifectaReason)
     +renderGroup('保険','保険｜本線補完',plan.insuranceReason)

@@ -98,7 +98,8 @@ function composeThreeWayBetPolicy(base,r,p,deps){
     result.insuranceDecision='見送り';result.insuranceReason='券種別判定モジュールの読み込み不足';
     result.captureStatus='engine-missing';return result;
   }
-  var ctx={ready:ready,winClear:winClear,order:order,lists:lists,top:top,
+  var ctx={ready:ready,trifectaReady:!!g.trifectaReady&&!base.referenceOnly,
+     winClear:winClear,order:order,lists:lists,top:top,fieldSize:rows.length,
      runner:runner,top12:top12,top24:top24,ordered:ordered,p1:p1,add:add,hasHonmei:hasHonmei,
      result:result,reason:reason};
   global.ARVEXQBetStrategies.main(ctx);

@@ -2,12 +2,16 @@
 (function(global){
 'use strict';
 function apply(ctx){
- const {ready,lists,add,result}=ctx;
+ const {ready,lists,add,result,fieldSize}=ctx;
+ const field=Math.max(5,Number(fieldSize)||8),
+       wideFloor=Math.max(.095,9.9/(field*(field-1))),
+       quinFloor=Math.max(.075,6.6/(field*(field-1))),
+       trioFloor=Math.max(.055,27/(field*(field-1)*Math.max(1,field-2)));
  result.noAxis=true;result.primaryKind='';
  if(!ready){ctx.reason='◎なし・購入に必要なデータが不足';return false;}
- const families=[{kind:'ワイド',min:.20,cut:.69,max:3},
-                 {kind:'馬連',min:.16,cut:.72,max:2},
-                 {kind:'3連複',min:.11,cut:.72,max:3}];
+ const families=[{kind:'ワイド',min:wideFloor,cut:.69,max:3},
+                 {kind:'馬連',min:quinFloor,cut:.72,max:2},
+                 {kind:'3連複',min:trioFloor,cut:.72,max:3}];
  const choice=families.find(x=>(lists[x.kind]||[])[0]&&(lists[x.kind]||[])[0].weight>=x.min);
  if(!choice){ctx.reason='◎なし・着順を固定しない券種の相対集中度不足';return false;}
  const pool=lists[choice.kind]||[],floor=pool[0].weight*choice.cut;

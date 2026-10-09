@@ -2449,16 +2449,16 @@ function saveStoredAiBet(r,plan){
     if(!r||!r.id||!plan||isFinal(r))return;
     var st=mins(r.startTime),raceDate=String(r.date||''),todayKey=today(),started=(raceDate===todayKey&&st<9999&&nowMins()>=st);
     if(raceMarkClock(r).started||started||st>=9999||raceDate!==todayKey||loadStoredAiBet(r.id,false))return;
-    var rd=plan.dataReadiness||{},central=String(r.circuit||'')==='中央',minReady=central?.68:.60,ready=Number(rd.prediction),remain=st-nowMins(),lockWindow=30,
-        cardReady=n(rd.card,0)>=.90,historyReady=n(rd.history,0)>=.70,oddsReady=n(rd.actualOdds,0)>=.65,bodyReady=n(rd.bodyWeight,0)>=.70,environmentReady=n(rd.environment,0)>=1,analysisReady=n(rd.analysis,0)>=.45,
-        incomplete=/予想データの充足度が不足|データ充足待ち|予想データ不足|データ不足|準備中|実オッズ待ち/.test(String(plan.reason||'')+' '+String(plan.trifectaReason||''));
+    var rd=plan.dataReadiness||{},central=String(r.circuit||'')==='中央',
+        minReady=central?.62:.58,ready=Number(rd.prediction),remain=st-nowMins(),lockWindow=30,
+        gate=plan.betInputGate||{};
     if(remain>lockWindow||remain<0)return;
-    if(!isFinite(ready)||ready<minReady)return;
-    if(!cardReady||!historyReady||!oddsReady||!bodyReady||!environmentReady||!analysisReady)return;
-    if(plan.decision==='見送り'&&incomplete)return;
+    if(!isFinite(ready)||ready<minReady||gate.ready!==true)return;
+    if(n(rd.card,0)<.90||n(rd.history,0)<.55||n(rd.analysis,0)<.45)return;
     plan.raceId=String(r.id);plan.raceDate=raceDate;plan.fixedAt=new Date().toISOString();plan.fixedBeforePost=true;plan.fixedMinutesBeforePost=Math.max(0,Math.round(remain));
     plan.fixedInputReadiness={prediction:n(rd.prediction,0),card:n(rd.card,0),history:n(rd.history,0),actualOdds:n(rd.actualOdds,0),bodyWeight:n(rd.bodyWeight,0),environment:n(rd.environment,0),analysis:n(rd.analysis,0)};
-    plan.lockPolicy='v327-final-input-window-30m';
+    plan.lockPolicy='v355-prerace-model-evidence-30m';
+    plan.inputWarningsAtFreeze=(gate.warnings||[]).slice();
     localStorage.setItem(aiBetStoreKey(r.id),JSON.stringify(plan))
   }catch(e){}
 }
@@ -2495,6 +2495,8 @@ function arvexqRaceType(base,p){
 }
 function rebuildBetStrategyV242(base,r,p){
   if(!base)return base;
+  if(window.ARVEXQBetReadiness&&window.ARVEXQBetReadiness.promoteReference)
+    base=window.ARVEXQBetReadiness.promoteReference(base,r,p,dataReadinessProfile(r,p));
   var source=(base.items||[]).slice(),byKind={};
   source.forEach(function(z){if(z&&z.kind&&!byKind[z.kind])byKind[z.kind]=z});
   var a=base.audit||{},roles=base.roles||{},p1=(roles.p1||[]).slice().sort(function(x,y){return n(y.p)-n(x.p)}),
@@ -2510,7 +2512,7 @@ function rebuildBetStrategyV242(base,r,p){
       raceType=arvexqRaceType(base,p),readiness=dataReadinessProfile(r,p),
       // Special races must be forecast, not automatically recommended for purchase.
       qualityGate=selected;
-  if(readiness.prediction<(centralRace?.68:.60)||!qualityGate){base.items=[];base.decision='見送り';base.betQuality=0;base.betStrategy=centralRace?'v313-central':'v313-local';base.dataReadiness=readiness;base.reason=!qualityGate?'厳選品質ゲート未通過。メイン・重賞でも買い目の購入は推奨しません。':'予想データの充足度が不足しているため買い目を固定しません。';base.trifectaDecision='見送り';base.trifectaReason='データ充足待ち。';return base}
+  if(readiness.prediction<(centralRace?.62:.58)||!qualityGate){base.items=[];base.decision='見送り';base.betQuality=0;base.betStrategy=centralRace?'v313-central':'v313-local';base.dataReadiness=readiness;base.reason=!qualityGate?'厳選品質ゲート未通過。メイン・重賞でも買い目の購入は推奨しません。':'予想データの充足度が不足しているため買い目を固定しません。';base.trifectaDecision='見送り';base.trifectaReason='データ充足待ち。';return base}
   function ratioScore(v,lo,hi){return clamp((n(v)-lo)/Math.max(.0001,hi-lo),0,1)}
   function concentration(v,scale){return clamp(n(v)/Math.max(.0001,scale),0,1)}
   var winClarity=clamp(.58*ratioScore(p1Margin,Math.max(.006,1/field*.05),Math.max(.040,1/field*.34))+.42*ratioScore(p1Top,1/field*1.05,Math.min(.48,1/field*2.75)),0,1),
@@ -2801,28 +2803,19 @@ function paceEvidenceProfile(r,p){
     source:'過去走初角順位による位置取り推定（実測テン1Fではない）'};
 }
 function gateBetByPaceEvidence(plan,r,p){
-  if(!plan)return plan;
-  var evidence=paceEvidenceProfile(r,p),rd=dataReadinessProfile(r,p),
-      central=String(r&&r.circuit||'')==='中央',missing=[];
-  plan.paceEvidence=evidence;
-  // A ticket should not be offered for purchase with forecast odds, absent
-  // body weight, missing surface/weather, or an incomplete horse card.
-  if(!evidence.ready)missing.push(evidence.reason);
-  if(n(rd.card,0)<.90)missing.push('出走表・騎手');
-  if(n(rd.history,0)<.70)missing.push('近走');
-  if(n(rd.actualOdds,0)<.65)missing.push('実オッズ');
-  if(n(rd.bodyWeight,0)<.70)missing.push('馬体重');
-  if(n(rd.environment,0)<1)missing.push('馬場・天候');
-  if(n(rd.analysis,0)<.45||n(rd.prediction,0)<(central?.68:.60))missing.push('能力診断・総合データ');
-  plan.betInputGate={ready:!missing.length,missing:missing,pace:evidence,readiness:rd};
-  if(!missing.length||plan.decision==='見送り')return plan;
-  // All-race forecasts, marks, and four-stage formation remain accessible.
-  plan.items=[];plan.decision='見送り';plan.betQuality=0;
-  plan.primaryKind='';plan.secondaryKind='';plan.trifectaDecision='見送り';
-  plan.trifectaReason='発走前の購入判断に必要なデータ不足のため3連単を見送り。';
-  plan.reason='買い目見送り：'+missing.join('／')+
-    '。展開・全頭診断は参考予想として表示します。';
-  return plan
+ if(!plan)return plan;
+ var pace=paceEvidenceProfile(r,p),readiness=dataReadinessProfile(r,p),
+     gate=window.ARVEXQBetReadiness&&window.ARVEXQBetReadiness.evaluate?
+       window.ARVEXQBetReadiness.evaluate(r,p,pace,readiness):null;
+ if(!gate){plan.items=[];plan.decision='見送り';plan.reason='買い目判定モジュール未取得';return plan}
+ plan.paceEvidence=pace;plan.dataReadiness=readiness;plan.betInputGate=gate;
+ plan.betWarnings=gate.warnings.slice();
+ if(gate.ready||plan.decision==='見送り')return plan;
+ plan.items=[];plan.decision='見送り';plan.betQuality=0;
+ plan.primaryKind='';plan.secondaryKind='';plan.trifectaDecision='見送り';
+ plan.trifectaReason='近走・位置取り・能力などの購入判断データ不足のため3連単見送り。';
+ plan.reason='買い目見送り：'+gate.missing.join('／')+'。実オッズや馬体重の未発表だけでは見送りにしません。';
+ return plan
 }
 
 // Dedicated betting policy: /betting/three_way_engine.js

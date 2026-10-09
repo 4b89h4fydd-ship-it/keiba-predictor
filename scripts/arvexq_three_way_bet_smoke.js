@@ -25,7 +25,7 @@ const rows=weights.map((v,i)=>({
 const base=()=>({
  engineVersion:'prior-model',
  decision:'通常買い',reason:'synthetic ready',
- betInputGate:{ready:true},selectionAudit:{selected:true},
+ betInputGate:{ready:true,trifectaReady:true},selectionAudit:{selected:true},
  audit:{orderConfidence:.83},items:[
   {level:'本線',kind:'ワイド',combos:[[2,3]],points:1}
  ]});

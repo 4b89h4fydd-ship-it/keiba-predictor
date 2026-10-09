@@ -2,9 +2,9 @@
 (function(global){
 'use strict';
 function apply(ctx){
- const {ready,winClear,order,top12,top24,ordered,top,p1,add,result,hasHonmei}=ctx;
+ const {ready,winClear,order,top12,top24,ordered,top,p1,add,result,hasHonmei,trifectaReady}=ctx;
   // Every race is reviewed. Never add a mandatory trifecta for a grade/special race.
-  var triAllowed=ready&&hasHonmei&&winClear&&order>=.42&&top12>=.115&&
+  var triAllowed=ready&&trifectaReady&&hasHonmei&&winClear&&order>=.42&&top12>=.115&&
       top24>0&&top12/top24>=.54&&ordered.length>=12;
   var chosen=ordered.filter(function(z){return z.combo[0]===top.no}).slice(0,12);
   // A wider winning-field set would require over-budget coverage; abstain.
@@ -28,7 +28,7 @@ function apply(ctx){
     result.trifectaThird=Array.from(new Set(triCombos.map(function(c){return c[2]})));
   }else{
     result.trifectaDecision='見送り';
-    result.trifectaReason=!hasHonmei?'◎を置ける軸がないため3連単は見送り。':ready?(winClear?'展開・順序の集中度不足、または12点以内では有力な着順を絞れないため見送り。':'独立1着候補が十分に絞れず、固定のリスクが高いため見送り。'):ctx.reason;
+    result.trifectaReason=!hasHonmei?'◎を置ける軸がないため3連単は見送り。':!trifectaReady?'3連単の位置取り・順序根拠不足につき見送り。':ready?(winClear?'展開・順序の集中度不足、または12点以内では有力な着順を絞れないため見送り。':'独立1着候補が十分に絞れず、固定のリスクが高いため見送り。'):ctx.reason;
     result.trifectaFirst=[];result.trifectaSecond=[];result.trifectaThird=[];
   }
  return triAllowed;
