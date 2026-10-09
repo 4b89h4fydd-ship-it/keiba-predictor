@@ -10,7 +10,7 @@ function take(name){
   return src.slice(a,b+2);
 }
 const code=['morningPickOf','morningPickReady','morningPublicStatus','legacyMorningSelectionCandidates','selectedRaceCandidates','specialForecastRaceCandidates']
-  .map(take).join('\n')+'\nreturn {morningPickReady,selectedRaceCandidates,specialForecastRaceCandidates};';
+  .map(take).join('\n')+'\nreturn {morningPickReady,legacyMorningSelectionCandidates,morningPublicStatus,selectedRaceCandidates,specialForecastRaceCandidates};';
 const win={};
 new Function('window',fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8'))(win);
 const state={races:[
