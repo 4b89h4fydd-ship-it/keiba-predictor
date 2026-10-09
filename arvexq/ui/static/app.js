@@ -340,8 +340,8 @@ function sameDayCorrectionProfileV313(r,rows){
   return {active:evidence>=.18&&completed>=2,completed:completed,markRaces:markRaces,evidence:evidence,coverage:coverage,deficit:deficit,frontSignal:frontSignal,lateSignal:lateSignal,innerSignal:innerSignal,flowLabel:flow||'中立',sourceRaces:source,byNo:byNo}
 }
 function sameDayTrendSignatureV313(r,rows){
-  var a=raceLiveBias(r,rows),d=sameDayCorrectionProfileV313(r,rows);
-  return JSON.stringify([a.sourceRaces,Math.round(a.frameBias*1000),Math.round(a.frontBias*1000),Math.round(a.lateBias*1000),d.sourceRaces,Math.round(d.evidence*1000),d.markRaces,Math.round(d.coverage*1000),Math.round(d.frontSignal*1000),Math.round(d.lateSignal*1000),Math.round(d.innerSignal*1000)])
+  // Observational results are not an approved trigger for recalculating marks.
+  return 'morning-fixed-official-condition-only-v346'
 }
 function stylePoint(rt){return rt.front+2*rt.stalk+3*rt.mid+4*rt.close}
 function styleName(pt){if(pt<1.65)return"逃げ";if(pt<2.35)return"先行";if(pt<3.15)return"差し";return"追込"}
@@ -1089,7 +1089,7 @@ function appendRescueRankedV312(base,ranked,rescueNo,maxExtra,minRatio,thirdOnly
 
 function assignEdgeEngine(r,rows,suit,sc,pressure){
   pressure=pressure||{};sc=sc||[];
-  var liveBias=raceLiveBias(r,rows),field=Math.max(1,rows.length),uniform=1/field,p1Raw=[],publicRaw=[],role2Raw=[],role3Raw=[],i,x,no,su,q,fit,pace,shift,peak,trip,reset,resetLift,evidence,publicScore,p1Strength,p2Strength,p3Strength,top3Hist,winnerCore,winnerRisk,lb,liveDrawFit,liveStyleFit,
+  var observedSameDayBias=raceLiveBias(r,rows),liveBias={byNo:{},evidence:0,sourceRaces:[],mode:'observation-only-no-prediction'},field=Math.max(1,rows.length),uniform=1/field,p1Raw=[],publicRaw=[],role2Raw=[],role3Raw=[],i,x,no,su,q,fit,pace,shift,peak,trip,reset,resetLift,evidence,publicScore,p1Strength,p2Strength,p3Strength,top3Hist,winnerCore,winnerRisk,lb,liveDrawFit,liveStyleFit,
       oddsCount=0,popCount=0,actualOddsCount=0,forecastOddsCount=0,coverageAvg=mean(rows.map(function(z){return n(z.coverage)})),temp=.074+(1-coverageAvg)*.045;
   var collapse=0,front=0;
   sc.forEach(function(z){if(z.code==='C')collapse=n(z.prob);if(z.code==='A')front=n(z.prob)});
@@ -1428,7 +1428,7 @@ function assignPredictionMarks(rows,r){
   // v312: central/local winner evidence is genuinely separate.
   // Central: pace pressure / sectional / opponent class matter more, with a stronger fragility penalty.
   // Local: preserve the validated local backbone and track-position repeatability.
-  var method=v312CircuitMethod(r),centralRace=method.id==='central-v317',dayCorr=sameDayCorrectionProfileV313(r,rows)||{active:false,completed:0,markRaces:0,evidence:0,coverage:.83,deficit:0,frontSignal:0,lateSignal:0,innerSignal:0,flowLabel:'中立',sourceRaces:[],byNo:{}};
+  var method=v312CircuitMethod(r),centralRace=method.id==='central-v317',dayCorr={active:false,completed:0,markRaces:0,evidence:0,coverage:.83,deficit:0,frontSignal:0,lateSignal:0,innerSignal:0,flowLabel:'中立',sourceRaces:[],byNo:{},policy:'official-only-morning-lock'};
   var research=rows.map(function(z){return v317ConsensusFactors(z,r,centralRace)});
   rows.forEach(function(z,i){z.researchFactors=research[i].factors;z.researchFactorWeights=research[i].weights;z.researchConsensusScore=research[i].score;z.researchSparse=research[i].sparse;z.researchModel='v317-expert-ai-consensus'});
   var winEvidenceRaw=rows.map(function(z,i){
@@ -4617,7 +4617,7 @@ function paceOutcomeModel(r,p){
   if(!rows.length)return null;
   var order=pack.map(function(z){return byNo[n(z.no)]}).filter(Boolean);
   rows.forEach(function(x){if(order.indexOf(x)<0)order.push(x)});
-  var day=sameDayCorrectionProfileV313(r,rows)||{active:false,flowLabel:'中立',byNo:{}},sc=plan.scenario||{},arr=p.arrangement||{},
+  var day={active:false,flowLabel:'中立',byNo:{},policy:'past-results-do-not-revise-pace-or-marks'},sc=plan.scenario||{},arr=p.arrangement||{},
       leader=((plan.start||[])[0])||(arr.leadCandidates||[])[0]||null,field=Math.max(1,order.length),rankByNo={};
   order.forEach(function(x,idx){rankByNo[n(x.horse.horseNumber)]=idx+1});
   rows.forEach(function(x){
