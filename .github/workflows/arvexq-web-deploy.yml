@@ -87,3 +87,26 @@ jobs:
           done
           test "$ok" = "1"
           echo "ARVEXQ production verified at $PROD"
+      - name: Verify immutable morning pick archive from production
+        shell: bash
+        run: |
+          TODAY="$(TZ=Asia/Tokyo date +%F)"
+          FILE="dist/morning-picks/$TODAY.json"
+          if [ ! -s "$FILE" ]; then
+            echo "No dated morning archive present in this build; never backfill after post."
+            exit 0
+          fi
+          URL="https://kraizweb1.4b89h4fydd.workers.dev/morning-picks/$TODAY.json?verify=$GITHUB_SHA"
+          curl -fSs --retry 5 --retry-delay 2 --max-time 30 -H 'cache-control: no-cache' "$URL" -o production-morning.json
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          today=datetime.now(ZoneInfo('Asia/Tokyo')).date().isoformat()
+          want=json.loads((Path('dist/morning-picks')/(today+'.json')).read_text(encoding='utf-8'))
+          got=json.loads(Path('production-morning.json').read_text(encoding='utf-8'))
+          if want != got:
+              raise SystemExit('Production morning archive differs from published immutable JSON')
+          print('PRODUCTION_MORNING_PICKS_OK',today,'races',len(got['races']),'selected',sum(bool(x['selected']) for x in got['races']),'special',sum(bool(x['special']) for x in got['races']))
+          PY
