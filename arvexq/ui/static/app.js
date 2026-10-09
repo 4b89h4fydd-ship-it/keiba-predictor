@@ -3503,8 +3503,9 @@ function computeMorningSpecialRaceCandidates(){
 }
 function specialForecastRaceCandidates(){
   return (state.races||[]).filter(function(r){
-    var m=morningPickOf(r);
-    return !!(r&&r.id&&m&&m.special===true)
+    if(!r||!r.id)return false;
+    var title=String(r.title||'');
+    return raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceTag(r){
