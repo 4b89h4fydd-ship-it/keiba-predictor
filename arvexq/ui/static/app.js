@@ -4701,8 +4701,17 @@ function render(){
 function canGoBack(){return !!(state.subPage||state.horseModalNo||state.raceLoading||state.race||state.picker||state.track||state.homePage||state.aiStatsTrack)}
 function goBack(){
     if(!canGoBack())return;
-    if(state.subPage){state.subPage=null;state.openPanel=state.subPageReturnPanel||'entry';state.subPageReturnPanel=null;window.scrollTo(0,0);render();return}
-    if(state.horseModalNo){closeHorseModal();return}
+    if(state.subPage){
+        // A stale subPage flag must not consume the race-level × click. Only
+        // a visibly rendered child screen gets its own close navigation.
+        var nestedVisible=!!document.querySelector('[data-action="close-race-subpage"]');
+        state.subPage=null;state.openPanel=state.subPageReturnPanel||'entry';state.subPageReturnPanel=null;
+        if(nestedVisible){window.scrollTo(0,0);render();return}
+    }
+    if(state.horseModalNo){
+        if(document.querySelector('.horse-modal-layer')){closeHorseModal();return}
+        state.horseModalNo=null
+    }
     ++state.detailSeq;
     if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}
     if(state.collectTimer){clearTimeout(state.collectTimer);state.collectTimer=null}
