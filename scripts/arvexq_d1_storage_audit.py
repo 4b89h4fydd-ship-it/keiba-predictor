@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -109,7 +110,8 @@ def main() -> int:
         safe = {"missing-cloudflare-account-id", "missing-cloudflare-read-token",
                 "cloudflare-api-authorization-denied", "cloudflare-d1-api-read-failed",
                 "No readable D1 databases", "Requested D1 database not found or not accessible"}
-        reason = str(exc) if isinstance(exc, RuntimeError) and str(exc) in safe else type(exc).__name__
+        reason = ("cloudflare-http-"+str(exc.code)) if isinstance(exc, urllib.error.HTTPError) else (
+            str(exc) if isinstance(exc, RuntimeError) and str(exc) in safe else type(exc).__name__)
         print("D1_STORAGE_AUDIT_UNAVAILABLE", "reason="+reason,
               "data_preserved=true", "no_mutation=true")
         return 2
