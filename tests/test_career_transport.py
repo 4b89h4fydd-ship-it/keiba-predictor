@@ -26,7 +26,9 @@ class CareerTransportTest(unittest.TestCase):
     def test_transport_is_lossless_with_visible_five(self):
         raw=copy.deepcopy(self.horse)
         packed=pack_horse(raw,RACE["date"])
-        self.assertEqual(len(packed["allPastRuns"]),5)
+        self.assertEqual(len(packed["allPastRuns"]),28)
+        self.assertEqual(packed["careerTransport"]["compactOlderRuns"],23)
+        self.assertTrue(all("timeSeconds" in r for r in packed["allPastRuns"]))
         self.assertEqual(len(packed["recentRaces"]),5)
         self.assertEqual(packed["careerArchive"]["olderRunCount"],23)
         self.assertEqual(packed["careerTransport"]["observedRuns"],28)
