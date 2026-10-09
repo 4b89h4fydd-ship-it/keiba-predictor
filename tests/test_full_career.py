@@ -87,6 +87,25 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
             merged=merge_history(old,fresh)
         self.assertEqual(len(merged["horses"][0]["allPastRuns"]),3)
 
+    async def test_failed_full_fetch_retries_even_when_recent_five_look_complete(self):
+        reg=DataBankRegistry()
+        attempts=[]
+        def flaky(h,r,limit):
+            attempts.append(limit)
+            if len(attempts)==1:
+                raise RuntimeError("transient partner outage")
+            return {"allPastRuns":[run(8,1),run(8,12),run(8,20)]}
+        reg.register(DataSource(name="flaky",circuit="NAR",priority=1,
+            capabilities=SourceCapabilities(horse_history=True),fetchers={"horse_history":flaky}))
+        h={"horseNumber":1,"name":"sample","recentRaces":[run(9,x) for x in (1,7,12,18,24)]}
+        info={"date":"2026-10-10","circuit":"地方","horses":[h]}
+        first=await enrich_race_missing(info,bank_registry=reg,history_limit=1000)
+        self.assertEqual(first["horses"][0]["_careerHistoryAudit"]["failedProviders"],["flaky"])
+        second=await enrich_race_missing(first,bank_registry=reg,history_limit=1000)
+        self.assertEqual(attempts,[1000,1000])
+        self.assertEqual(len(second["horses"][0]["allPastRuns"]),8)
+        self.assertEqual(second["horses"][0]["_careerHistoryAudit"]["failedProviders"],[])
+
     async def test_reported_missing_is_explicit(self):
         horse={"allPastRuns":[run(9,20),run(9,1)],
                "careerStats":{"starts":12}}
