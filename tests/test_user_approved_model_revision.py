@@ -91,6 +91,18 @@ class UserModelMarkRevisionTests(unittest.TestCase):
         self.assertEqual(status,"invalid-preoff-revision")
         self.assertNotIn("modelMarkRevisions",b)
 
+    def test_revised_mark_requires_actual_d1_readback(self):
+        from scripts.arvexq_protect_sync import verify_published
+        before=race()
+        after,status=update_marks(before,now=BASE_TIME,calculate=recompute)
+        self.assertTrue(status.startswith("changed:"),status)
+        self.assertEqual(
+            verify_published({"details":[after]},base="https://test.invalid",
+                             read=lambda base,rid:deepcopy(after)), [before["id"]])
+        with self.assertRaisesRegex(RuntimeError,"D1_MODEL_MARK_REVISION_POST_VERIFY_MISMATCH"):
+            verify_published({"details":[after]},base="https://test.invalid",
+                             read=lambda base,rid:deepcopy(before))
+
     def test_untrusted_revision_does_not_survive_write_guard(self):
         d=race()
         candidate={"version":REVISION_VERSION,"approvalId":"fake",
