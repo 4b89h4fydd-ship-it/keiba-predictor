@@ -305,17 +305,23 @@ jobs:
             BYTES=$(wc -c < "$file" | tr -d ' ')
             echo "POST $(basename "$file") bytes=$BYTES"
             # A failure for one race must not prevent other races being published.
-            if ! curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
-              --connect-timeout 10 --max-time 40 -X POST \
+            RESPONSE_FILE="$(mktemp)"
+            if ! curl -sS --fail-with-body --retry 3 --retry-all-errors --retry-delay 3 --retry-max-time 70 \
+              --connect-timeout 10 --max-time 35 -X POST \
               "$CLOUDFLARE_API_BASE/api/sync" \
               -H "content-type: application/json" \
               -H "x-sync-token: $SYNC_TOKEN" \
-              --data-binary @"$file" > /dev/null; then
-              echo "::warning::D1 batch failed: $(basename "$file")"
+              --data-binary @"$file" -o "$RESPONSE_FILE"; then
+              echo "::warning::D1 batch failed: $(basename "$file") bytes=$BYTES"
+              # The response body was previously discarded. Preserve only a
+              # bounded diagnostic; never log the auth token or full payload.
+              printf 'D1_SYNC_ERROR_RESPONSE %s ' "$(basename "$file")"
+              head -c 350 "$RESPONSE_FILE" | tr '\\n' ' '; echo
               FAILED_BATCHES=$((FAILED_BATCHES + 1))
             else
               PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"
             fi
+            rm -f "$RESPONSE_FILE"
           done
           echo "D1 prefetch push finished: failed_batches=$FAILED_BATCHES; checking all race IDs and rosters next"
 
