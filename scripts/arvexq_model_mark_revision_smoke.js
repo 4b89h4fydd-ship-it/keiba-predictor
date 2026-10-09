@@ -2,7 +2,7 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const i=root.indexOf('function latestUserApprovedModelMarkRevision(r){'),
+const i=root.indexOf('function latestOfficialMarkRevision(r){'),
       j=root.indexOf('function immutableArchivedPrediction(r){',i);
 assert(i>=0&&j>i,'model mark reader has a distinct explicit approval branch');
 const source=root.slice(i,j);
