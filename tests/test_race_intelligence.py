@@ -54,7 +54,7 @@ class RaceIntelligenceTests(unittest.TestCase):
 
     def test_unverified_card_is_never_a_probability(self):
         card = evidence_card(self.horse, self.race)
-        result = weighted_experiment(card, {"speed": .2, "pace": .8})
+        result = weighted_experiment(card, {"speed": .2, "early": .8})
         self.assertIsNone(result["predictiveScore"])
         self.assertFalse(card["calibrated"])
         with self.assertRaises(ValueError):
