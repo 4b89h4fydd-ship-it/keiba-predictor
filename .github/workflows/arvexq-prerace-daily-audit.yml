@@ -47,13 +47,15 @@ jobs:
           PYTHONPATH=. python scripts/arvexq_daily_archive_audit.py \
             --date "$TARGET" --report archive-day-audit.json --workers 3
       - name: Report original-bet funnel without claiming unverified hit rates
+        if: always()
         run: |
           python - <<'PY'
           import json, os
           from pathlib import Path
           p=Path("archive-day-audit.json")
           if not p.is_file():
-              raise SystemExit("No archive audit: cannot report bet funnel")
+              print("::warning::No archive audit JSON available: cannot report bet funnel")
+              raise SystemExit(0)
           audit=json.loads(p.read_text())
           funnel=audit.get("bet_funnel") or {}
           print("PREOFF_BET_FUNNEL", json.dumps(funnel, ensure_ascii=False))
@@ -61,6 +63,8 @@ jobs:
               "### ARVEXQ pre-off ticket funnel",
               "This includes only original archived decisions; unavailable capture is not a voluntary skip.",
               f"Race count: {funnel.get('scheduledRaces', 0)}",
+              f"Archive complete: {audit.get('archive_complete', False)}",
+              f"Missing pre-off seal: {audit.get('unsealed_count', 0)}",
               f"Recorded bet decisions: {funnel.get('recordedBets', 0)}",
               f"Issued: {funnel.get('issuedRaces', 0)}; deliberate skips: {funnel.get('intentionalSkippedRaces', 0)}",
               f"Capture unavailable or invalid: {funnel.get('unavailableOrInvalidBets', 0)}",

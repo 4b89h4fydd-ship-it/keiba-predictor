@@ -135,7 +135,9 @@ def main() -> int:
            "unsealed_count","ticket_missing_count","archive_complete")},ensure_ascii=False))
     print("ARVEXQ_PREOFF_BET_FUNNEL", json.dumps(report["bet_funnel"], ensure_ascii=False))
     for row in (missing+tickets_missing)[:30]:
-        print("ARCHIVE_MISSING",row)
+        print("ARCHIVE_MISSING", {"race_id": row.get("race_id"),
+              "status": row.get("status"), "ticket": row.get("ticket"),
+              "reason": str(row.get("reason") or "")[:160]})
     # Absence of a day is a legitimate non-racing day; fail only when known
     # scheduled races lack provenance. Do not backfill a historical prediction.
     return 2 if missing or tickets_missing else 0
