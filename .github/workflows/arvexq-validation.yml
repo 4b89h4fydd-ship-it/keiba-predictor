@@ -88,6 +88,7 @@ jobs:
           node --check arvexq/ui/static/research/research_view.js
           node scripts/arvexq_research_view_smoke.js
           node scripts/arvexq_bet_mark_alignment_smoke.js
+          node --check arvexq/ui/static/betting/no_axis_strategy.js
           node scripts/arvexq_three_way_bet_smoke.js
           node scripts/arvexq_scratch_live_smoke.js
           node scripts/arvexq_mark_lock_smoke.js
@@ -122,6 +123,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_nar_official_csv.py' -v
           python -m unittest discover -s tests -p 'test_official_changes.py' -v
           python -m unittest discover -s tests -p 'test_podium_axis_gate.py' -v
+          python -m unittest discover -s tests -p 'test_honmei_gate_relaxation.py' -v
           python -m unittest discover -s tests -p 'test_honmei_gate_relaxation.py' -v
           python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
           python -m unittest discover -s tests -p 'test_research_shadow.py' -v
