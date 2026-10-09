@@ -167,6 +167,17 @@ class ServerSealTests(unittest.TestCase):
         self.assertEqual(protected["details"][0]["preRacePrediction"],d["preRacePrediction"])
         self.assertEqual(protected["details"][0]["result"]["status"],"確定")
 
+    def test_server_capture_loads_current_browser_betting_dependencies(self):
+        from pathlib import Path
+        source = Path("scripts/arvexq_capture_prerace_bet.js").read_text(encoding="utf-8")
+        for module in ("bet_readiness.js", "no_axis_strategy.js",
+                       "main_strategy.js", "trifecta_strategy.js",
+                       "insurance_strategy.js", "three_way_engine.js",
+                       "ticket_lane_classifier.js"):
+            self.assertIn(module, source, module)
+        self.assertIn("vm.runInContext(lane", source)
+        self.assertIn("vm.runInContext(engine", source)
+
     def test_same_js_betting_core_is_archiveable(self):
         from scripts.arvexq_freeze_predictions import capture_original_bet
         import shutil

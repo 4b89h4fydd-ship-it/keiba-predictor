@@ -33,12 +33,37 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_daily_archive_audit.py' -v
           python -m unittest discover -s tests -p 'test_race_intelligence.py' -v
+          python -m unittest discover -s tests -p 'test_preoff_integrity_monitor.py' -v
       - name: Audit full previous racing day
         run: |
           TARGET="${{ github.event.inputs.date }}"
           if [ -z "$TARGET" ]; then TARGET="$(TZ=Asia/Tokyo date -d 'yesterday' +%F)"; fi
           PYTHONPATH=. python scripts/arvexq_daily_archive_audit.py \
             --date "$TARGET" --report archive-day-audit.json --workers 3
+      - name: Report original-bet funnel without claiming unverified hit rates
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("archive-day-audit.json")
+          if not p.is_file():
+              raise SystemExit("No archive audit: cannot report bet funnel")
+          audit=json.loads(p.read_text())
+          funnel=audit.get("bet_funnel") or {}
+          print("PREOFF_BET_FUNNEL", json.dumps(funnel, ensure_ascii=False))
+          lines=[
+              "### ARVEXQ pre-off ticket funnel",
+              "This includes only original archived decisions; unavailable capture is not a voluntary skip.",
+              f"Race count: {funnel.get('scheduledRaces', 0)}",
+              f"Recorded bet decisions: {funnel.get('recordedBets', 0)}",
+              f"Issued: {funnel.get('issuedRaces', 0)}; deliberate skips: {funnel.get('intentionalSkippedRaces', 0)}",
+              f"Capture unavailable or invalid: {funnel.get('unavailableOrInvalidBets', 0)}",
+              f"Skip reasons: {funnel.get('skipReasons', {})}",
+              f"Observed ◎ result sample: {funnel.get('honmei', {})}",
+          ]
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
+              out.write("\n".join(lines)+"\n")
+          PY
       - name: Preserve complete nightly audit
         if: always()
         uses: actions/upload-artifact@v4

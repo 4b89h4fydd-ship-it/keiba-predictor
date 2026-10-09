@@ -58,6 +58,35 @@ class SqliteHistorySyncTests(unittest.TestCase):
         self.assertIn('if rid in changed_ids', repair)
         self.assertIn('"repaired_count": len(changed_ids)', repair)
 
+    def test_changed_history_sync_preserves_original_preoff_prediction(self):
+        from datetime import datetime
+        from arvexq.prediction.prerace_archive import JST
+        from scripts.arvexq_protect_sync import guard, verify_published
+        race_id = "nar-2026-10-10-大井-01"
+        lock = {
+            "raceId": race_id, "raceDate": "2026-10-10",
+            "capturedAtEpoch": int(datetime(2026, 10, 10, 8, 0, tzinfo=JST).timestamp()),
+            "horses": [{"horseNumber": 1, "mark": "◎"},
+                       {"horseNumber": 2, "mark": "○"}],
+            "frozen": True,
+        }
+        old = {"id": race_id, "date": "2026-10-10", "startTime": "13:00",
+               "preRacePrediction": lock,
+               "preRaceBet": {"fixedAt": "2026-10-10T08:00:00+09:00",
+                              "decision": "見送り", "items": []}}
+        changed = {"id": race_id, "date": old["date"], "startTime": old["startTime"],
+                   "result": {"status": "確定"}}
+        payload = guard({"details": [changed]}, read=lambda base, rid: old, base="https://unit.invalid")
+        published = payload["details"][0]
+        self.assertEqual(published["preRacePrediction"], lock)
+        self.assertEqual(published["preRaceBet"], old["preRaceBet"])
+        self.assertEqual(published["result"]["status"], "確定")
+        self.assertEqual(verify_published(payload, base="https://unit.invalid",
+                           read=lambda base, rid: published), [race_id])
+        with self.assertRaisesRegex(RuntimeError, "D1_SEAL_POST_VERIFY_MISMATCH"):
+            verify_published(payload, base="https://unit.invalid",
+                             read=lambda base, rid: changed)
+
     def test_split_batched_history_payload_retains_race_scope(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)

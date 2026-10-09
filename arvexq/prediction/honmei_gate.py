@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from arvexq.prediction.career_evidence import career_rates
 
 GATE_VERSION = "arvexq-podium-axis-gate-v4"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
@@ -77,6 +78,7 @@ def evaluate_honmei_gate(
             "families": sum(_iv(families.get(p)) for p in PRIMARY_PILLARS),
             "paceFamilies": _iv(families.get("pace")),
             "pillarSupport": sum(_iv(pillar_ranks.get(p), 999) <= min(field, 5) for p in PRIMARY_PILLARS),
+            "careerHistory": career_rates(h, str((race or {}).get("date") or "")),
             "validRuns": nr, "recentTop3": n3,
             "recentTop3Rate": n3 / nr if nr else 0.,
             "evidenceFamilies": {p: _iv(families.get(p)) for p in PRIMARY_PILLARS},
@@ -120,4 +122,5 @@ def evaluate_honmei_gate(
         "axisMargin": round(gap, 6),
         "axisMeaning": "relative-top3-axis-strength-not-hit-probability",
         "axisCandidates": options[:5], "circuit": circuit,
+        "allCareerEvidencePolicy": "dated-only-before-race-audit-not-yet-calibrated-for-rank",
     }

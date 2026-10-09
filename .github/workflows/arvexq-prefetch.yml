@@ -389,11 +389,13 @@ jobs:
               return None
           frozen={rid:morning(r) for rid,r in proposed.items() if morning(r)}
           keys=('version','fixedAt','selected','selectedScore','special')
-          inconsistent=[rid for rid,expected_pick in frozen.items()
-                        if not morning(published.get(rid)) or
-                        any(morning(published.get(rid)).get(key)!=expected_pick.get(key) for key in keys)]
-          print('D1_MORNING_PICKS_VERIFY fixed=',len(frozen),'inconsistent=',len(inconsistent))
-          if inconsistent:
+          omitted=[rid for rid in frozen if not morning(published.get(rid))]
+          contradictory=[rid for rid,expected_pick in frozen.items()
+                         if morning(published.get(rid)) and
+                         any(morning(published.get(rid)).get(key)!=expected_pick.get(key) for key in keys)]
+          print('D1_MORNING_PROJECTION expected=',len(frozen),
+                'schema_omitted=',len(omitted),'contradictory=',len(contradictory))
+          if omitted or contradictory:
               # The Worker deliberately drops unknown keys from D1 summaries.
               # The immutable static morning-picks/<date>.json is canonical.
               from pathlib import Path
@@ -419,6 +421,15 @@ jobs:
               print('D1_MISSING_CARDS',missing_cards[:25])
               raise SystemExit('D1 racecard delivery incomplete: '+str(len(missing_cards))+' races')
           PY
+          # A worker-side summary projection may legitimately omit morning
+          # fields. Prove static-vs-D1 race identity and record omissions vs
+          # contradictions, never rewrite a frozen selection to "fix" it.
+          MANIFEST="arvexq/ui/static/morning-picks/$TARGET_DATE.json"
+          if [ -f "$MANIFEST" ]; then
+            python scripts/arvexq_morning_d1_audit.py \
+              --manifest "$MANIFEST" --d1 verified-day.json \
+              --report morning-d1-audit.json
+          fi
 
       - name: Stop ARVEXQ
         if: always()
@@ -448,6 +459,15 @@ jobs:
           echo "--- runtime ---"
           tail -n 100 /tmp/arvexq-prefetch.log 2>/dev/null || true
           cp /tmp/arvexq-prefetch.log runtime-prefetch.log 2>/dev/null || true
+
+      - name: Preserve morning D1 consistency audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-morning-d1-consistency-${{ github.run_id }}
+          path: morning-d1-audit.json
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Upload full failure logs
         if: failure()

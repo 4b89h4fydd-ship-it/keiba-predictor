@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock, evaluate_frozen_result, summarize_frozen_ticket_metrics
+from scripts.arvexq_bet_funnel import summarize as summarize_ticket_funnel
 from scripts.arvexq_fetch_d1_bundle import get_json, detail_from_response
 from arvexq.results.auto_recap import build_race_recap
 from arvexq.databanks.horse_review_bank import build_horse_review_bank
@@ -54,8 +55,20 @@ def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any
     audit = evaluate_frozen_result(detail) if ticket == "recorded" else None
     factor_eval = evaluate_factor_challenger(detail)
     factor_sample = frozen_calibration_sample(detail)
+    input_gate = bet.get("betInputGate") if isinstance(bet, dict) else {}
+    if not isinstance(input_gate, dict):
+        input_gate = {}
     return {
         "race_id": rid, "status": "sealed", "ticket": ticket,
+        "bet_decision": str(bet.get("decision") or "") if isinstance(bet, dict) else "",
+        "bet_reason": str(bet.get("reason") or "")[:350] if isinstance(bet, dict) else "",
+        "bet_item_kinds": [str(i.get("kind") or "") for i in (bet.get("items") or [])
+                           if isinstance(i, dict)] if isinstance(bet, dict) else [],
+        "bet_input_warnings": [str(x)[:100] for x in
+                              (bet.get("betWarnings") or input_gate.get("warnings") or [])]
+                              if isinstance(bet, dict) else [],
+        "morning_primary_type": str(detail.get("morningPrimaryType") or ""),
+
         "revision": seal.get("sealRevision") or seal.get("revision") or "",
         "captured_at_epoch": seal.get("capturedAtEpoch"),
         "race_date": detail.get("date"),
@@ -106,6 +119,7 @@ def main() -> int:
         "unsealed_races":missing,"missing_tickets":tickets_missing,"all_races":ordered,
         "ticket_metrics": summarize_frozen_ticket_metrics(
             [r["ticket_result"] for r in ordered if isinstance(r.get("ticket_result"), dict)]),
+        "bet_funnel": summarize_ticket_funnel(ordered),
         "race_recaps": [r["recap"] for r in ordered if isinstance(r.get("recap"), dict)],
         "horse_review_bank": build_horse_review_bank(
             [r["recap"] for r in ordered if isinstance(r.get("recap"), dict)]),
@@ -119,6 +133,7 @@ def main() -> int:
     print("ARVEXQ_NIGHTLY_PRERACE_AUDIT",json.dumps({k:report[k] for k in
           ("date","race_count","sealed_count","cancelled_count",
            "unsealed_count","ticket_missing_count","archive_complete")},ensure_ascii=False))
+    print("ARVEXQ_PREOFF_BET_FUNNEL", json.dumps(report["bet_funnel"], ensure_ascii=False))
     for row in (missing+tickets_missing)[:30]:
         print("ARCHIVE_MISSING",row)
     # Absence of a day is a legitimate non-racing day; fail only when known

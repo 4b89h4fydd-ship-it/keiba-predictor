@@ -120,6 +120,15 @@ jobs:
           python -m py_compile scripts/arvexq_sqlite_runtime_guard.py scripts/arvexq_history_repair.py scripts/arvexq_sync_batches.py
           python -m unittest discover -s tests -p 'test_arvexq_history_sync_guard.py' -v
 
+      - name: Morning D1 integrity and immutable betting analytics regressions
+        run: |
+          python -m py_compile scripts/arvexq_bet_funnel.py scripts/arvexq_morning_d1_audit.py arvexq/prediction/career_evidence.py
+          node --check scripts/arvexq_capture_prerace_bet.js
+          python -m unittest discover -s tests -p 'test_preoff_integrity_monitor.py' -v
+          python -m unittest discover -s tests -p 'test_career_evidence.py' -v
+          python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
+          python -m unittest discover -s tests -p 'test_daily_archive_audit.py' -v
+
       - name: Prefetch racecard delivery regression
         run: |
           python -m unittest discover -s tests -p 'test_prefetch_racecard_delivery.py' -v

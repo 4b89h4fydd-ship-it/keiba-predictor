@@ -6,6 +6,9 @@ name: ARVEXQ Server Pre-Race Seal
     branches: [main]
     paths:
       - scripts/arvexq_freeze_predictions.py
+      - scripts/arvexq_capture_prerace_bet.js
+      - arvexq/ui/static/betting/**
+      - arvexq/ui/static/morning/ticket_lane_classifier.js
       - arvexq/prediction/prerace_archive.py
       - .github/workflows/arvexq-prerace-freeze.yml
   schedule:
