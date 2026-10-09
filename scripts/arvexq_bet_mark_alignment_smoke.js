@@ -62,6 +62,7 @@ const noTicket=api.attachAiBetExplanation({items:[],decision:'見送り'},race,p
 assert.ok(noTicket.betExplanation.lines.some(x=>/見送りました/.test(x)));
 assert.ok(src.includes('vp=attachAiBetExplanation(vp,r,p)'),'local model requires explanations');
 assert.ok(src.includes('plan=attachAiBetExplanation(plan,r,p)'),'central model requires explanations');
-assert.ok(src.includes('exactaEvidence:captureExactaBetEvidence(exactaRank,rows)'),'must persist real ordered scores');
+const legacyModel=fs.readFileSync('arvexq/ui/static/betting/legacy_v213_order_model.js','utf8');
+assert.ok(legacyModel.includes('exactaEvidence:captureExactaBetEvidence(exactaRank,rows)'),'dedicated ordered-role model must persist exact score evidence');
 assert.ok(src.includes('aiBetExplanationHtml(plan)'),'explanations visible on bet page');
 console.log('BET_MODEL_EXPLANATION_OK picks=unchanged differential=grounded inverted_scores=warning fixed=immutable');
