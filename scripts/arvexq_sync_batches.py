@@ -49,7 +49,20 @@ def main() -> int:
     payload = load_json(Path(args.input))
     summaries = [x for x in (payload.get("summaries") or []) if isinstance(x, dict)]
     source_details = [x for x in (payload.get("details") or []) if isinstance(x, dict) and race_id(x)]
-    details = [pack_detail(x) for x in source_details]
+    # Live deltas can contain old D1 snapshots whose feature hash was
+    # already inconsistent before this run. Preserve bytes, mark them
+    # unverified, and disallow subsequent training instead of fabricating.
+    live_delta = bool((payload.get("meta") or {}).get("live_delta"))
+    details = [pack_detail(x, preserve_unverified_legacy=live_delta)
+               for x in source_details]
+    unverified = [
+        race_id(d) for d in details
+        if (d.get("massFeatureArchive") or {}).get("originHashVerified") is False
+    ]
+    if unverified:
+        print("MASS_FEATURE_LEGACY_UNVERIFIED",
+              "count="+str(len(unverified)), "races="+",".join(unverified[:10]),
+              "training_eligible=false")
     raw_mass_bytes = sum(len(json.dumps(d.get("massFeatureSnapshot"), ensure_ascii=False,
                                         separators=(",", ":"), default=str).encode("utf-8"))
                          for d in source_details if isinstance(d.get("massFeatureSnapshot"), dict))
