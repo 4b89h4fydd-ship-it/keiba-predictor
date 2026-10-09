@@ -87,10 +87,24 @@ function ticketKinds(plan){
 }
 function requireMorningTickets(selection,plan){
  if(!selection||selection.selected!==true)return selection;
- const kinds=ticketKinds(plan),has=kinds.length>0;
- return {...selection,selected:has,ticketKinds:kinds,
-    reason:has?selection.reason+'｜朝の買い目成立：'+kinds.join('・'):
-      '朝の買い目がすべて見送り・未取得のため厳選対象外'};
+ const kinds=ticketKinds(plan);
+ // A type is publishable only when the generated ticket matches its
+ // advertised objective. This also prevents a "high-payout" label for
+ // a race whose 3連単 was declined.
+ const supported=(selection.types||[]).filter(t=>
+   t===NAMES[0]&&kinds.some(k=>['ワイド','馬連','3連複'].includes(k))||
+   t===NAMES[1]&&kinds.some(k=>['馬単','3連単'].includes(k))||
+   t===NAMES[2]&&kinds.includes('3連単'));
+ const has=supported.length>0;
+ const primaryType=supported.includes(selection.primaryType)?selection.primaryType:(supported[0]||'');
+ return {...selection,selected:has,primaryType,types:supported,
+    ticketKinds:kinds,
+    reason:has?({
+      [NAMES[0]]:'2・3着の役割分布と軸の安定性を重視',
+      [NAMES[1]]:'勝ち馬の安定性と上位差を重視',
+      [NAMES[2]]:'☆・☆+の穴馬と着順の筋を重視'
+    }[primaryType]+'｜朝の買い目成立：'+kinds.join('・')):
+      '朝の買い目がすべて見送り、または該当分類の券種が不成立のため厳選対象外'};
 }
 // Allow a quality-qualified place lane to reach the real bet engine without
 // falsely claiming the first-place winner is dominant.

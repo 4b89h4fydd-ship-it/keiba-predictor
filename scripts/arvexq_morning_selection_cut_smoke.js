@@ -45,6 +45,21 @@ const accepted=w.ARVEXQMorningTicketLanes.requireMorningTickets(winnerSelection,
 assert.equal(accepted.selected,true);
 assert.deepEqual(accepted.ticketKinds,['馬連'],'a one-point trifecta is not a valid 6–12 ticket challenge');
 assert.match(accepted.reason,/朝の買い目成立/);
+assert.equal(accepted.primaryType,'的中重視型',
+  'a place-compatible ticket retains its morning place type');
+const wrongKind=w.ARVEXQMorningTicketLanes.requireMorningTickets(
+ {...winner,selected:true,types:['勝ち馬明確型'],primaryType:'勝ち馬明確型'},{
+ decision:'通常買い',betInputGate:{ready:true},
+ items:[{level:'本線',kind:'ワイド',combos:[[1,2]]}]
+});
+assert.equal(wrongKind.selected,false,'wide alone must not claim clear winner');
+assert.deepEqual(wrongKind.types,[]);
+const noTrifecta=w.ARVEXQMorningTicketLanes.requireMorningTickets(
+ {...longshot,selected:true,types:['高配当狙い型'],primaryType:'高配当狙い型'},{
+ decision:'通常買い',betInputGate:{ready:true},
+ items:[{level:'本線',kind:'馬連',combos:[[1,2]]}]
+});
+assert.equal(noTrifecta.selected,false,'no high-payout type when trifecta is skipped');
 for(const rejected of [
   null,
   {decision:'見送り',betInputGate:{ready:true},items:[{level:'本線',kind:'ワイド',combos:[[1,2]]}]},
