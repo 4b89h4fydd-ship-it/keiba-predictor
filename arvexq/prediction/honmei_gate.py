@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from typing import Any
-from arvexq.prediction.career_evidence import career_rates
+from arvexq.prediction.career_profile import profile_career
 from arvexq.prediction.past_performance import analyze_past_performance
 
-GATE_VERSION = "arvexq-podium-axis-gate-v6-past-five-context"
+GATE_VERSION = "arvexq-podium-axis-gate-v7-full-career"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
 
 
@@ -64,18 +64,18 @@ def evaluate_honmei_gate(
         mean_pillar = sum(_fv(v) for v in values if v is not None) / max(1, coverage)
         mh = row.get("multiHead") or {}
         past = row.get("pastPerformance") or analyze_past_performance(h, race or {})
-        nr, n3, recent_score = _historical_top3(h)
-        if past["datedRuns"]:
-            nr = past["datedRuns"]
-            n3 = past["top3"]
-            recent_score = (n3 + .5) / (nr + 1)
+        nr, n3 = past["datedRuns"], past["top3"]
+        recent_score = (n3 + .5) / (nr + 1) if nr else 0.
+        career = row.get("careerProfile") or profile_career(h, race or {})
+        career_rate = _fv(career.get("top3Rate")) if career["datedRuns"] else 0.
         strength = max(0., min(1., _fv(mh.get("strengthScore"))))
         spread = max(values) - min(values) if coverage == 4 else 1.
         relative_rank = 1. - (max(1, _iv(row.get("rank"), field)) - 1) / max(1, field - 1)
         # Top-three repeatability outranks single-win dominance, especially
         # when a small field exaggerates differences in ordinal factor rank.
-        score = (.38 * recent_score + .12 * relative_rank + .25 * mean_pillar
-                 + .15 * strength + .10 * (1. - max(0., min(1., spread))))
+        score = (.32 * recent_score + .10 * career_rate + .10 * relative_rank
+                 + .25 * mean_pillar + .14 * strength
+                 + .09 * (1. - max(0., min(1., spread))))
         option = {
             "horseNumber": _iv(h.get("horseNumber")), "score": round(score, 6),
             "factorRank": _iv(row.get("rank"), 999),
@@ -85,7 +85,7 @@ def evaluate_honmei_gate(
             "families": sum(_iv(families.get(p)) for p in PRIMARY_PILLARS),
             "paceFamilies": _iv(families.get("pace")),
             "pillarSupport": sum(_iv(pillar_ranks.get(p), 999) <= min(field, 5) for p in PRIMARY_PILLARS),
-            "careerHistory": career_rates(h, str((race or {}).get("date") or "")),
+            "careerHistory": career,
             "pastPerformance": past,
             "validRuns": nr, "recentTop3": n3,
             "recentTop3Rate": n3 / nr if nr else 0.,
@@ -104,19 +104,21 @@ def evaluate_honmei_gate(
         # Two starts with one placing were previously enough for the axe;
         # require multiple independently observed podium finishes instead.
         "contextHistoryAvailable": winner["pastPerformance"]["datedRuns"] >= 3,
-        "matchingConditionEvidence": (winner["pastPerformance"]["comparableRuns"] < 2 or
-                                     winner["pastPerformance"]["comparableTop3"] >= 1),
+        "matchingConditionEvidence": (winner["careerHistory"]["comparableRuns"] < 2 or
+                                     winner["careerHistory"]["comparableTop3"] >= 1),
         "paceDoesNotRepeatedlyCollapse": "repeated-front-fade" not in winner["pastPerformance"]["riskFlags"],
         "recentFormNotDeteriorating": "recent-form-downturn" not in winner["pastPerformance"]["riskFlags"],
         "historicalPodium": (
-            winner["validRuns"] >= 3 and winner["recentTop3"] >= 2
-            and winner["recentTop3Rate"] >= .60
-            and (winner["validRuns"] < 5 or winner["recentTop3"] >= 3)
+            (winner["validRuns"] >= 3 and winner["recentTop3"] >= 2
+             and winner["recentTop3Rate"] >= .55)
+            or (winner["validRuns"] >= 3 and winner["recentTop3"] >= 1
+                and winner["careerHistory"]["datedRuns"] >= 8
+                and _fv(winner["careerHistory"]["top3Rate"]) >= .48)
         ),
         "evidenceDepth": winner["sample"] >= 3 and winner["families"] >= 9
                          and winner["paceFamilies"] >= 2,
-        "axisScore": winner["score"] >= .62,
-        "axisSeparation": gap >= .03,
+        "axisScore": winner["score"] >= .60,
+        "axisSeparation": gap >= .025,
     }
     if central:
         checks["centralHistory"] = winner["validRuns"] >= 3
@@ -133,7 +135,7 @@ def evaluate_honmei_gate(
         "axisScore": winner["score"], "runnerUpAxisScore": next_horse["score"],
         "axisMargin": round(gap, 6),
         "axisMeaning": "relative-top3-axis-strength-not-hit-probability",
-        "selectionPolicy": "contextual-five-run-v1-past-dated-before-off-not-calibrated",
+        "selectionPolicy": "full-career-plus-recent-five-v1-pre-off-not-calibrated",
         "axisCandidates": options[:5], "circuit": circuit,
-        "allCareerEvidencePolicy": "dated-only-before-race-audit-not-yet-calibrated-for-rank",
+        "allCareerEvidencePolicy": "dated-only-before-race-used-for-rank-unverified-coverage",
     }
