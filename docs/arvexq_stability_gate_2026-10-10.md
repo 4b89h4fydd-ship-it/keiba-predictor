@@ -30,3 +30,17 @@ API Worker storage code is not in the keiba-predictor repository, preventing ser
 - Production full prefetch success, complete per-horse career coverage or D1 capacity recovery.
 - Any improvement in the actual held-out pre-off ◎ place rate.
 - Elimination of Worker 1102 and API 500/503.
+
+## Production evidence after lossless feature compression
+
+Recent real-time run on October 10 prepared six changed race details:
+- Mass snapshot: 10,946,587 bytes raw to 832,664 bytes archived (7.6% of original).
+- Entire D1 sync batches: 14,419,596 bytes to 3,823,003 bytes (26.5% of original).
+- Largest race batch: 773,793 bytes. Oversize detail risks: zero in six samples.
+- Four consecutive upserts were accepted (HTTP 200) and post-write checks executed.
+- The fifth upsert returned HTTP 500, classified as storage-capacity-exhausted. Remaining writes stopped safely. **Production storage is NOT fixed yet.**
+- An existing Kyoto 1R feature snapshot had a historically inconsistent origin hash. Its original bytes were archived with originHashVerified=false and excluded from AI training; marks were not retroactively recalculated.
+- New pre-race mass features are strictly verified before archive creation.
+- The current main commit also requires D1 read-after-write validation of both mass and horse-career archive SHA-256 values.
+
+Blocking next production step: account-side D1 access, verified database backup, and the separately deployed kraiz-api Worker source are required for lossless migration of legacy oversized D1 rows, table compaction, or R2/sharded storage. The D1 capacity-read audit returned HTTP 401 with the existing deployment credential. No database deletion, VACUUM, or destructive migration has been attempted.
