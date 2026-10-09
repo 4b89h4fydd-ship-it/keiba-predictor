@@ -1,8 +1,8 @@
-/* A dated, de-duplicated five-run context gate for new pre-off ◎.
+/* A date-bounded all-career context plus recent-five form for new pre-off ◎.
  * No historical odds, post-off data, or invented observations. */
 (function(global){
 'use strict';
-const VERSION='arvexq-axis-reliability-v2-past-context';
+const VERSION='arvexq-axis-reliability-v3-full-career';
 function n(x,d=0){return x==null||x===''||!Number.isFinite(Number(x))?d:Number(x)}
 function parseDate(x){
  const v=String(x||'').trim().replace(/\//g,'-').replace(/\./g,'-');
@@ -26,7 +26,7 @@ function recent(horse,race){
    seen.add(key);entries.push({run:run,date:date,finish:finish,field:field,track:track,dist:dist});
   });
  });
- return entries.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+ return entries.sort((a,b)=>b.date.localeCompare(a.date));
 }
 function positions(x){
  if(Array.isArray(x))return x.map(v=>n(v)).filter(v=>v>0);
@@ -51,9 +51,9 @@ function analyzePast(horse,race){
         matchTrack=!!(track&&x.track===track),
         matchGoing=!!(going&&(run.condition||run.going||run['馬場状態'])&&
                    String(run.condition||run.going||run['馬場状態'])===going);
-  top3+=x.finish<=3?1:0;frontFadeCount+=fade?1:0;
+  top3+=x.finish<=3?1:0;if(i<5)frontFadeCount+=fade?1:0;
   matchedTrack+=matchTrack?1:0;matchedGoing+=matchGoing?1:0;
-  quality+=weights[i]*q;totalWeight+=weights[i];
+  if(i<5){quality+=weights[i]*q;totalWeight+=weights[i];}
   if(comparable){comparableRuns++;comparableTop3+=x.finish<=3?1:0;compareQuality+=q}
   return {date:x.date,finish:x.finish,fieldSize:x.field,firstCorner:first||null,
           comparable:comparable,top3:x.finish<=3,frontFaded:!!fade,quality:q};
@@ -61,9 +61,13 @@ function analyzePast(horse,race){
  const flags=[];
  if(comparableRuns>=2&&comparableTop3===0)flags.push('same-surface-distance-no-podium');
  if(frontFadeCount>=2)flags.push('repeated-front-fade');
- if(field>=4&&metrics.slice(0,2).every(x=>!x.top3)&&metrics.slice(2).filter(x=>x.top3).length>=2)
+ if(field>=4&&metrics.slice(0,2).every(x=>!x.top3)&&metrics.slice(2,5).filter(x=>x.top3).length>=2)
   flags.push('recent-form-downturn');
- return {version:VERSION,starts:field,datedRuns:field,top3:top3,rate:field?top3/field:0,
+ const recentStarts=Math.min(field,5),recentTop3=metrics.slice(0,5).filter(x=>x.top3).length,
+       recentRate=recentStarts?recentTop3/recentStarts:0,careerRate=field?top3/field:0;
+ return {version:VERSION,starts:field,datedRuns:field,recentStarts:recentStarts,recentTop3:recentTop3,
+         top3:top3,rate:field>5?.65*recentRate+.35*careerRate:recentRate,
+         careerTop3Rate:field?careerRate:null,careerStatus:field?'observed-subset-completeness-unverified':'missing',
          comparableRuns:comparableRuns,comparableTop3:comparableTop3,
          comparableQuality:comparableRuns?compareQuality/comparableRuns:null,
          recentFormQuality:field?quality/totalWeight:null,
@@ -73,7 +77,8 @@ function analyzePast(horse,race){
 }
 function inspect(candidate,runner){
  const h=candidate&&(candidate.podiumPastFive||candidate.podiumAxisHistory)||{},
-       starts=n(h.starts),top3=n(h.top3),rate=starts>0?top3/starts:0,
+       starts=n(h.recentStarts,n(h.starts)),top3=n(h.recentTop3,n(h.top3)),rate=starts>0?top3/starts:0,
+       careerStarts=n(h.datedRuns),careerRate=n(h.careerTop3Rate),
        gap=n(candidate&&candidate.podiumAxisScore)-n(runner&&runner.podiumAxisScore),
        evidence=n(candidate&&candidate.edgeEvidence,n(candidate&&candidate.coverage)),
        coverage=n(candidate&&candidate.coverage),
@@ -82,12 +87,13 @@ function inspect(candidate,runner){
  const checks={
    eligibleRunner:!!candidate&&!!runner&&n(candidate.horse&&candidate.horse.horseNumber)>0,
    historyVerified:starts>=3&&h.status==='dated-observed',
-   historicalPodium:starts>=3&&top3>=2&&rate>=.60&&(starts<5||top3>=3),
+   historicalPodium:(starts>=3&&top3>=2&&rate>=.55)||
+       (starts>=3&&top3>=1&&careerStarts>=8&&careerRate>=.48),
    matchingConditionEvidence:n(h.comparableRuns)<2||n(h.comparableTop3)>=1,
    noRepeatedFrontFade:!risk.includes('repeated-front-fade'),
    recentFormNotDeteriorating:!risk.includes('recent-form-downturn'),
-   axisStrength:n(candidate&&candidate.podiumAxisScore)>=.62,
-   clearSeparation:gap>=.03,
+   axisStrength:n(candidate&&candidate.podiumAxisScore)>=.60,
+   clearSeparation:gap>=.025,
    broadConsensus:n(candidate&&candidate.axisRank,99)<=2&&
                   n(candidate&&candidate.podiumRecallRank,99)<=3,
    winningChance:winRank<=3,
@@ -97,10 +103,11 @@ function inspect(candidate,runner){
  return {version:VERSION,eligible:failures.length===0,failures,checks,
    observedStarts:starts,observedTop3:top3,observedTop3Rate:rate,
    axisGap:gap,winRank:winRank,
-   pastContext:{datedRuns:starts,comparableRuns:n(h.comparableRuns),
+   pastContext:{datedRuns:careerStarts,recentRuns:starts,careerTop3Rate:careerRate,
+      comparableRuns:n(h.comparableRuns),
      comparableTop3:n(h.comparableTop3),frontFadeCount:n(h.frontFadeCount),
      riskFlags:risk.slice()},
-   disclaimer:'dated pre-off five-run evidence, not calibrated win/place probability'};
+   disclaimer:'pre-off all-career observed subset with recent-five weighting; not calibrated win/place probability'};
 }
 global.ARVEXQPodiumAxisGuard=Object.freeze({VERSION,inspect,analyzePast});
 })(window);
