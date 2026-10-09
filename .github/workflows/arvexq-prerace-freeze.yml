@@ -7,6 +7,7 @@ name: ARVEXQ Server Pre-Race Seal
     paths:
       - scripts/arvexq_freeze_predictions.py
       - scripts/arvexq_capture_prerace_bet.js
+      - scripts/arvexq_prerace_bet_integrity.py
       - arvexq/ui/static/betting/**
       - arvexq/ui/static/morning/ticket_lane_classifier.js
       - arvexq/prediction/prerace_archive.py
@@ -47,6 +48,7 @@ jobs:
         run: |
           node --check scripts/arvexq_capture_prerace_bet.js
           python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
+          python -m unittest discover -s tests -p 'test_prerace_bet_recovery.py' -v
       - name: Seal upcoming races into Cloudflare D1
         run: PYTHONPATH=. python scripts/arvexq_freeze_predictions.py --audit prerace-freeze-report.json --ahead-minutes 35
       - name: Upload seal audit

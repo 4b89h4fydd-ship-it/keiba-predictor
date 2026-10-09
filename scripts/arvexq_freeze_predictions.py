@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock, seal_detail
+from scripts.arvexq_prerace_bet_integrity import has_valid_original, record_failed_attempt
 
 
 def request_json(url: str, *, payload: dict | None = None, token: str = "", retries: int = 3) -> dict:
@@ -59,7 +60,8 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
         return {"status": "already-sealed" if sealed_lock(detail) else "started-no-new-lock"}
     existing = sealed_lock(detail)
     if existing:
-        if isinstance(detail.get("preRaceBet"), dict) and detail["preRaceBet"].get("fixedAt"):
+        if has_valid_original(detail.get("preRaceBet"),
+                              race_id=str(detail.get("id") or ""), start_at=post):
             return {"status": "already-sealed", "detail": detail}
         # A previous valid snapshot may precede this feature; preserve its
         # original opinions, and capture a ticket only while still pre-off.
@@ -194,10 +196,11 @@ def main() -> int:
             recently_started.append(r)
     due.sort(key=lambda r: (str(r.get("startTime") or ""), str(r.get("id") or "")))
     report: dict[str, Any] = {
-        "version": "v1", "at": now.isoformat(timespec="seconds"), "day": day,
+        "version": "v2", "at": now.isoformat(timespec="seconds"), "day": day,
         "races_seen": len(races), "due_count": len(due),
         "sealed": [], "already_sealed": [], "missing": [],
-        "missed_after_post": [], "urgent_missing": [], "errors": [],
+        "missed_after_post": [], "missed_bet_after_post": [],
+        "urgent_missing": [], "errors": [],
     }
 
     def execute(row: dict) -> dict:
@@ -214,19 +217,22 @@ def main() -> int:
             detail = result["detail"]
             if datetime.now(JST) >= post_at(detail):
                 return {"id": rid, "status": "started-no-new-lock"}
+            previous_bet = detail.get("preRaceBet")
+            failed_capture = False
             try:
-                detail["preRaceBet"] = capture_original_bet(detail, now=datetime.now(JST))
+                original = capture_original_bet(detail, now=datetime.now(JST))
+                if not has_valid_original(original, race_id=rid, start_at=post_at(detail)):
+                    raise ValueError("betting engine returned an invalid or late original")
+                detail["preRaceBet"] = original
+                if isinstance(previous_bet, dict) and previous_bet.get("captureStatus") == "failed":
+                    record_failed_attempt(detail, previous_bet,
+                        message=str(previous_bet.get("captureError") or "prior capture failure"),
+                        fixed_at=str(previous_bet.get("fixedAt") or ""))
             except Exception as exc:
-                # Explicit immutable non-recommendation, never forged tickets.
-                detail["preRaceBet"] = {
-                    "raceId": rid, "fixedAt": datetime.now(JST).isoformat(timespec="seconds"),
-                    "decision": "未取得", "items": [], "betQuality": None,
-                    "trifectaReviewed": False, "trifectaDecision": "未取得",
-                    "reason": "買い目の計算に失敗。見送り判断ではありません。発走後の後付けはしません。",
-                    "captureStatus": "failed",
-                    "captureError": f"{type(exc).__name__}: {exc}"[:250],
-                    "lockPolicy": "server-js-ticket-v1-unavailable",
-                }
+                failed_capture = True
+                detail["preRaceBet"] = record_failed_attempt(
+                    detail, previous_bet, message=f"{type(exc).__name__}: {exc}",
+                    fixed_at=datetime.now(JST).isoformat(timespec="seconds"))
             if datetime.now(JST) >= post_at(detail):
                 return {"id": rid, "status": "started-no-new-lock"}
             payload = {
@@ -238,8 +244,11 @@ def main() -> int:
             verified = detail_from(request_json(url + "?verify=" + str(time.time_ns())), rid)
             stamp = (verified or {}).get("preRacePrediction") or {}
             bet = (verified or {}).get("preRaceBet") or {}
-            if stamp.get("sealRevision") != result["revision"] or not sealed_lock(verified or {}) or (not bet.get("fixedAt") or str(bet.get("raceId") or "") != rid):
+            if stamp.get("sealRevision") != result["revision"] or not sealed_lock(verified or {}):
                 return {"id": rid, "status": "verification-failed"}
+            if failed_capture or not has_valid_original(bet, race_id=rid, start_at=post_at(detail)):
+                return {"id": rid, "status": "bet-capture-failed",
+                        "reason": str(bet.get("captureError") or "no valid original in D1")[:250]}
             return {"id": rid, "status": "sealed", "revision": result["revision"]}
         except Exception as exc:
             return {"id": rid, "status": "error", "error": f"{type(exc).__name__}: {exc}"}
@@ -267,6 +276,8 @@ def main() -> int:
             d = detail_from(body, rid)
             if not d or not sealed_lock(d):
                 report["missed_after_post"].append(rid)
+            elif not has_valid_original(d.get("preRaceBet"), race_id=rid, start_at=post_at(d)):
+                report["missed_bet_after_post"].append(rid)
         except Exception as exc:
             report["errors"].append({"id": rid, "status": "audit-read-error",
                                      "error": f"{type(exc).__name__}: {exc}"})
@@ -277,9 +288,9 @@ def main() -> int:
             report["urgent_missing"].append(item)
     Path(args.audit).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print("PRERACE_SEAL_AUDIT", json.dumps({
-        k: report[k] for k in ("races_seen", "due_count", "sealed", "already_sealed", "missing", "urgent_missing", "missed_after_post", "errors")
+        k: report[k] for k in ("races_seen", "due_count", "sealed", "already_sealed", "missing", "urgent_missing", "missed_after_post", "missed_bet_after_post", "errors")
     }, ensure_ascii=False))
-    if report["errors"] or report["urgent_missing"] or report["missed_after_post"]:
+    if report["errors"] or report["urgent_missing"] or report["missed_after_post"] or report["missed_bet_after_post"]:
         return 2
     # Missing race models are logged, not invented; an audit remains available.
     # A completely empty day during scheduled racing signals a failed discovery.

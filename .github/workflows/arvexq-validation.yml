@@ -125,6 +125,7 @@ jobs:
           python -m py_compile scripts/arvexq_bet_funnel.py scripts/arvexq_morning_d1_audit.py arvexq/prediction/career_evidence.py
           node --check scripts/arvexq_capture_prerace_bet.js
           python -m unittest discover -s tests -p 'test_preoff_integrity_monitor.py' -v
+          python -m unittest discover -s tests -p 'test_prerace_bet_recovery.py' -v
           python -m unittest discover -s tests -p 'test_career_evidence.py' -v
           python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
           python -m unittest discover -s tests -p 'test_daily_archive_audit.py' -v
