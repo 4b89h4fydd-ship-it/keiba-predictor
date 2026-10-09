@@ -17,7 +17,8 @@ from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock, evaluat
 from scripts.arvexq_fetch_d1_bundle import get_json, detail_from_response
 from arvexq.results.auto_recap import build_race_recap
 from arvexq.databanks.horse_review_bank import build_horse_review_bank
-from arvexq.backtest.factor_challenger_evaluation import evaluate as evaluate_factor_challenger, aggregate as aggregate_factor_challenger
+from arvexq.backtest.factor_challenger_evaluation import evaluate as evaluate_factor_challenger, aggregate as aggregate_factor_challenger, frozen_calibration_sample
+from arvexq.backtest.factor_weight_calibration import calibrate
 
 
 def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any]:
@@ -52,6 +53,7 @@ def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any
             ticket = "invalid-postlock"
     audit = evaluate_frozen_result(detail) if ticket == "recorded" else None
     factor_eval = evaluate_factor_challenger(detail)
+    factor_sample = frozen_calibration_sample(detail)
     return {
         "race_id": rid, "status": "sealed", "ticket": ticket,
         "revision": seal.get("sealRevision") or seal.get("revision") or "",
@@ -59,6 +61,7 @@ def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any
         "race_date": detail.get("date"),
         "ticket_result": audit,
         "factor_challenger_result": factor_eval,
+        "factor_weight_sample": factor_sample,
         "recap": recap,
     }
 
@@ -108,6 +111,9 @@ def main() -> int:
             [r["recap"] for r in ordered if isinstance(r.get("recap"), dict)]),
         "factor_challenger_metrics": aggregate_factor_challenger(
             [r["factor_challenger_result"] for r in ordered if isinstance(r.get("factor_challenger_result"), dict)]),
+        "factor_weight_samples": [r["factor_weight_sample"] for r in ordered if isinstance(r.get("factor_weight_sample"), dict)],
+        "factor_weight_research": calibrate(
+            [r["factor_weight_sample"] for r in ordered if isinstance(r.get("factor_weight_sample"), dict)]),
     }
     Path(args.report).write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print("ARVEXQ_NIGHTLY_PRERACE_AUDIT",json.dumps({k:report[k] for k in

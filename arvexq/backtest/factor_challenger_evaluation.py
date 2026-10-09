@@ -53,6 +53,25 @@ def evaluate(detail: dict[str, Any]) -> dict[str, Any] | None:
             "storedShadowHash": model["hash"], "usedPostoffRecalculation": False}
 
 
+def frozen_calibration_sample(detail: dict[str, Any]) -> dict[str, Any] | None:
+    # evaluate() checks a valid pre-off seal, confirmed finish and SHA-256.
+    checked = evaluate(detail)
+    if checked is None:
+        return None
+    shadow = detail["researchFactorShadow"]
+    rows = [
+        {"horseNumber": r["horseNumber"], "families": r["families"]}
+        for r in shadow.get("rows") or []
+        if isinstance(r, dict) and isinstance(r.get("families"), dict)
+    ]
+    return {
+        "source": "sealed-hash-verified-preoff-factor-shadow",
+        "raceId": checked["raceId"], "date": str(detail.get("date") or ""),
+        "winner": checked["actual"][0], "rows": rows,
+        "verifiedShadowHash": checked["storedShadowHash"],
+    }
+
+
 def aggregate(reports: list[dict[str, Any]]) -> dict[str, Any]:
     unique = {str(x["raceId"]): x for x in reports if isinstance(x, dict)
               and x.get("version") == VERSION and x.get("raceId")}

@@ -126,6 +126,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_research_evaluation.py' -v
           python -m unittest discover -s tests -p 'test_daily_archive_audit.py' -v
           python -m unittest discover -s tests -p 'test_race_intelligence.py' -v
+          python -m unittest discover -s tests -p 'test_factor_weight_calibration.py' -v
 
       - name: Architecture and operations guard
         run: |
