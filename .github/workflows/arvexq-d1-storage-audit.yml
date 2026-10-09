@@ -31,6 +31,36 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Resolve missing Cloudflare account ID without exposing tokens
+        run: |
+          if [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "D1_AUDIT_ACCOUNT_ID_CONFIGURED"
+            exit 0
+          fi
+          # With one authorized account Wrangler can discover the ID safely.
+          # Refuse ambiguous multi-account selection instead of guessing.
+          npx --yes wrangler@4 whoami --json > /tmp/arvexq-wrangler-whoami.json 2>/dev/null || {
+            echo "::error::D1_AUDIT_ACCOUNT_DISCOVERY_UNAVAILABLE"
+            exit 2
+          }
+          python - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          doc=json.loads(Path("/tmp/arvexq-wrangler-whoami.json").read_text())
+          accounts=doc.get("accounts") or []
+          if len(accounts)!=1:
+              raise SystemExit("D1_AUDIT_ACCOUNT_ID_REQUIRED: expected one accessible account; found "+str(len(accounts)))
+          account=accounts[0].get("id") or ""
+          if not re.fullmatch(r"[0-9a-f]{32}",account):
+              raise SystemExit("D1_AUDIT_INVALID_ACCOUNT_ID")
+          with open(os.environ["GITHUB_ENV"],"a",encoding="utf-8") as fh:
+              fh.write("CLOUDFLARE_ACCOUNT_ID="+account+"\n")
+          print("D1_AUDIT_ACCOUNT_ID_RESOLVED (value not logged)")
+          PY
+          rm -f /tmp/arvexq-wrangler-whoami.json
       - name: Inspect D1 storage through Cloudflare read API
         env:
           REQUESTED_PLAN: ${{ inputs.plan }}
