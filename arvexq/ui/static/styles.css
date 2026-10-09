@@ -4682,3 +4682,28 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
 
 /* Race-detail only; home layout remains unchanged. */
 .arv-mark-fix-status{display:block;max-width:100%;font-size:11px;line-height:1.5;margin-top:4px;overflow-wrap:anywhere;opacity:.87}
+
+/* v346: isolated three-way ticket page, home/top deliberately untouched. */
+.bet-detail-page-shell .arv-three-bet,
+.bet-card-clean .arv-three-bet{box-sizing:border-box;min-width:0;width:100%;max-width:100%;overflow-wrap:anywhere}
+.arv-three-bet .ai-bet-head{min-width:0}
+.arv-three-bet .ai-bet-meta{min-width:0;flex-wrap:wrap}
+.arv-three-section{box-sizing:border-box;min-width:0;margin:12px 0;padding:12px 10px;border:1px solid rgba(119,162,196,.34);border-radius:11px;background:rgba(11,24,44,.52)}
+.arv-three-section h3{margin:0 0 10px;color:#d2e9ff;font-size:15px;line-height:1.5;letter-spacing:.02em}
+.arv-three-ticket{min-width:0;padding:10px 9px;margin:6px 0;border-radius:8px;background:rgba(24,50,78,.62)}
+.arv-three-ticket-head{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:7px;color:#b5dfff;font-size:13px}
+.arv-three-ticket>strong{display:block;max-width:100%;min-width:0;color:#fff;font-size:15px;line-height:1.7;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.arv-three-ticket>p,.arv-three-skip{margin:7px 0 0;font-size:12px;line-height:1.65;color:#c2cddb;white-space:normal;overflow-wrap:anywhere}
+.arv-three-budget,.arv-three-ev,.arv-three-fixed,.arv-three-provisional,.arv-three-reason{box-sizing:border-box;max-width:100%;font-size:12px;line-height:1.65;white-space:normal;overflow-wrap:anywhere}
+.arv-three-budget{color:#f2dfab;font-weight:700}
+.arv-three-ev,.arv-three-fixed{color:#a7bacd}
+.arv-three-provisional{color:#edc889}
+.arv-three-bet .bet-mark-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.arv-three-bet .bet-mark-grid>span{min-width:0;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:430px){
+ .bet-detail-page-shell .bet-card-clean,.bet-card-clean .arv-three-bet{min-width:0;max-width:100%}
+ .arv-three-section{padding:10px 8px}
+ .arv-three-ticket{padding:9px 8px}
+ .arv-three-ticket>strong{font-size:14px}
+ .arv-three-bet .bet-mark-grid{grid-template-columns:minmax(0,1fr)}
+}
