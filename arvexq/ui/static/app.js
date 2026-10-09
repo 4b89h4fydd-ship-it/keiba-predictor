@@ -3470,10 +3470,10 @@ function computeMorningSpecialRaceCandidates(){
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceCandidates(){
+  // The dawn decision, not mutable live race metadata, determines membership.
   return (state.races||[]).filter(function(r){
-    if(!r||!r.id)return false;
-    var title=String(r.title||'');
-    return raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))
+    var m=morningPickOf(r);
+    return !!(r&&r.id&&m&&m.special===true)
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceTag(r){
