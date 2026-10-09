@@ -28,6 +28,7 @@ import app
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
 from arvexq.prediction.race_intelligence import attach_evidence
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
+from arvexq.ingest.full_career import merge_career
 from arvexq.databanks.authorized_feeds import register_authorized_history_feeds
 from arvexq.databanks.nar_official_csv import register_nar_official_archive
 from arvexq.databanks.registry import registry as source_registry
@@ -50,7 +51,7 @@ def _meaningful(value: Any) -> bool:
     return value not in (None, "", [], {})
 
 
-def _merge_horses(base: Any, fresh: Any) -> list[dict[str, Any]]:
+def _merge_horses(base: Any, fresh: Any, cutoff: str = "") -> list[dict[str, Any]]:
     """Preserve the rich card while allowing newer diagnosis/live fields to win."""
     out = [copy.deepcopy(h) for h in (base or []) if isinstance(h, dict)]
     by_no: dict[int, dict[str, Any]] = {}
@@ -79,6 +80,12 @@ def _merge_horses(base: Any, fresh: Any) -> list[dict[str, Any]]:
         for key, value in raw.items():
             if key == "horseNumber":
                 continue
+            if key in ("recentRaces", "allPastRuns") and isinstance(value, list) and cutoff:
+                union = merge_career([*(row.get("allPastRuns") or []), *(row.get("recentRaces") or [])], value, cutoff)
+                if union:
+                    row["allPastRuns"] = union
+                    row["recentRaces"] = union[:5]
+                continue
             if _meaningful(value) or key not in row:
                 row[key] = copy.deepcopy(value)
     return out
@@ -95,7 +102,7 @@ def _merge_detail(base: Any, fresh: Any) -> dict[str, Any]:
 
     for key, value in new.items():
         if key == "horses":
-            out["horses"] = _merge_horses(out.get("horses"), value)
+            out["horses"] = _merge_horses(out.get("horses"), value, str(out.get("date") or new.get("date") or ""))
             continue
         if key == "preparedMeta" and isinstance(value, dict):
             pm = dict(out.get("preparedMeta") or {})
