@@ -30,6 +30,7 @@ if str(ROOT) not in sys.path:
 import app
 from arvexq.pipeline.fingerprints import analysis_input_hash
 from arvexq.ingest.official_changes import collect_nar_changes
+from arvexq.ingest.official_course_feeds import fetch_course_events
 from arvexq.prediction.official_course_revision import pre_off_change, official_event
 
 JST = timezone(timedelta(hours=9))
@@ -216,6 +217,11 @@ def merge_live(
         horses = _merge_horses(out.get("horses") or [], fresh_horses)
         horses = _merge_horses(horses, market_horses)
         out["horses"] = horses
+
+    official = official_event(fresh.get("officialCourseCondition"))
+    if official and official["raceDate"] == str(out.get("date") or "") and official["track"] == str(out.get("track") or ""):
+        out["officialCourseCondition"] = official
+        out["condition"] = official["going"]
 
     if fresh.get("result"):
         out["result"] = _merge_result(out.get("result"), fresh.get("result"))
@@ -416,11 +422,16 @@ def apply_official_mark_revision(
         return incoming, "official-change mark error: " + type(exc).__name__ + ": " + str(exc)
 
 
+def pre_post_time_guard(row: dict[str, Any], now_min: int) -> bool:
+    return start_min(row) < 9999 and now_min < start_min(row)
+
+
 def refresh_one(
     rid: str,
     now_min: int,
     row_by_id: dict[str, dict[str, Any]],
     base: dict[str, Any] | None,
+    official_condition: dict[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any] | None, str, bool, bool]:
     errors: list[str] = []
     row = row_by_id.get(rid) or {}
@@ -437,9 +448,15 @@ def refresh_one(
 
     fresh = snapshot(rid) or pre_market
     candidate = merge_live(base, fresh, market, False)
+    if candidate and official_condition and pre_post_time_guard(row, now_min):
+        candidate["officialCourseCondition"] = copy.deepcopy(official_condition)
+        candidate["condition"] = official_condition["going"]
     candidate_hash = analysis_input_hash(candidate) if isinstance(candidate, dict) else ""
     pre_post = sm < 9999 and now_min < sm
-    market_analysis_changed = bool(pre_post and pre_market_hash and candidate_hash and pre_market_hash != candidate_hash)
+    official_updated = bool(pre_post and official_condition and
+        official_condition != ((base or {}).get("officialCourseCondition") or {}))
+    market_analysis_changed = bool(pre_post and ((pre_market_hash and candidate_hash and
+        pre_market_hash != candidate_hash) or official_updated))
 
     # Environment updater already rebuilds diagnoses for changed weather/going.
     base_hash = analysis_input_hash(base) if isinstance(base, dict) else ""
@@ -463,6 +480,9 @@ def refresh_one(
 
     analysis_changed = bool(env_analysis_changed or market_analysis_changed)
     merged = merge_live(base, fresh or snapshot(rid), market, analysis_changed)
+    if merged and pre_post and official_condition:
+        merged["officialCourseCondition"] = copy.deepcopy(official_condition)
+        merged["condition"] = official_condition["going"]
     if merged and pre_post:
         merged, official_status = apply_official_mark_revision(base, merged, datetime.now(JST))
         if official_status:
@@ -507,6 +527,14 @@ def main() -> int:
               for r in rows if r.get("circuit") == "地方" and r.get("track")}
     official_changes = collect_nar_changes(now.strftime("%Y-%m-%d"), tracks)
     valid_ids = set(row_by_id)
+    try:
+        official_conditions = fetch_course_events(now.date().isoformat(), rows, now=now)
+    except Exception as exc:
+        official_conditions = {}
+        print("OFFICIAL_COURSE_FEED_UNAVAILABLE", type(exc).__name__, str(exc))
+    for rid in official_conditions:
+        if rid in valid_ids and rid not in targets:
+            targets.append(rid)
     for rid in official_changes:
         if rid in valid_ids and rid not in targets:
             targets.append(rid)
@@ -541,7 +569,7 @@ def main() -> int:
 
     with ThreadPoolExecutor(max_workers=max(1, min(args.workers, 12))) as ex:
         futs = {
-            ex.submit(refresh_one, rid, now_min, row_by_id, base_by_id.get(rid)): rid
+            ex.submit(refresh_one, rid, now_min, row_by_id, base_by_id.get(rid), official_conditions.get(rid)): rid
             for rid in targets
         }
         for fut in as_completed(futs):
@@ -590,6 +618,7 @@ def main() -> int:
             "missing_d1_base_count": len(missing_base),
             "reanalyzed_count": len(reanalyzed),
             "environment_track_count": len(environment),
+            "official_course_event_count": len(official_conditions),
             "odds_row_count": len(odds_current),
             "error_count": len(errors),
             "live_updated_at": int(time.time()),
