@@ -7,6 +7,9 @@ name: ARVEXQ Realtime Sync
     paths:
       - app.py
       - scripts/arvexq_live_sync.py
+      - arvexq/ingest/official_course_feeds.py
+      - arvexq/prediction/official_course_revision.py
+      - scripts/arvexq_capture_course_revised_marks.js
       - scripts/arvexq_sync_batches.py
       - .github/workflows/arvexq-sync.yml
   schedule:
@@ -27,6 +30,10 @@ jobs:
       CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
       CLOUDFLARE_SYNC_URL: https://kraiz-api.4b89h4fydd.workers.dev/api/sync
       CLOUDFLARE_DAY_URL: https://kraiz-api.4b89h4fydd.workers.dev/api/day
+      # Optional licensed bridge to verifiable JRA/NAR course publications.
+      # Without credentials, never claim a bias-derived mark update.
+      ARVEXQ_OFFICIAL_COURSE_FEED_URL: ${{ vars.ARVEXQ_OFFICIAL_COURSE_FEED_URL }}
+      ARVEXQ_OFFICIAL_COURSE_FEED_TOKEN: ${{ secrets.ARVEXQ_OFFICIAL_COURSE_FEED_TOKEN }}
       KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-data
       ARVEXQ_BOOTSTRAP_WARM: "0"
       ARVEXQ_DATA_CORE: "0"
