@@ -132,12 +132,16 @@ const swReloadMarker = 'v329-racecard-stable-20261007';
 
     // The independent 買い目 screen is a child of /race. Close that child
     // first; only the race-level × should return to the venue list.
-    const subpageClose = page.locator('.bet-detail-page-shell [data-action="close-race-subpage"]').first();
-    if (await subpageClose.count()) {
-      await subpageClose.click();
-      await page.waitForFunction(() => !document.querySelector('.bet-detail-page-shell'), null, { timeout: 8000 });
-      // Location remains /race until the race-level × is pressed.
+    // Independent betting, horse-detail and pace-stage screens can all be
+    // nested under the same /race path; close child panels first.
+    for (let nested=0; nested<4; nested++) {
+      const childClose=page.locator('[data-action="close-race-subpage"]').first();
+      if (!(await childClose.count())) break;
+      await childClose.click();
+      await page.waitForFunction(() => !document.querySelector('[data-action="close-race-subpage"]'), null, {timeout:8000});
     }
+    if (await page.locator('[data-action="close-race-subpage"]').count())
+      throw new Error('nested race subpage cannot be closed before going back');
     const close = page.locator('[data-action="back"]').first();
     if (await close.count()) {
       await close.click();
