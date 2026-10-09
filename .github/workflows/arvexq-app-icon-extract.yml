@@ -1,0 +1,70 @@
+name: ARVEXQ Extract Embedded App Icons
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - scripts/arvexq_extract_app_icons.py
+      - .github/workflows/arvexq-app-icon-extract.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: arvexq-app-icon-extract
+  cancel-in-progress: false
+
+jobs:
+  modularize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Extract embedded icon binary data exactly once
+        run: |
+          python scripts/arvexq_extract_app_icons.py
+          python -m py_compile app.py build_static.py arvexq/ui/icon_assets.py
+          python build_static.py
+          python - <<'PY'
+          import base64
+          from pathlib import Path
+          from arvexq.ui.icon_assets import load_icons
+          icons=load_icons()
+          for size in ("192","512"):
+              generated=Path("dist") / f"arvexq-icon-v175-{size}.png"
+              original=base64.b64decode(icons[size])
+              assert generated.read_bytes()==original, f"icon {size} changed"
+          assert Path("app.py").stat().st_size < 500000, "app.py extraction insufficient"
+          print("APP_ICON_ASSETS_BYTE_IDENTICAL")
+          PY
+          git diff --check
+      - name: Commit isolated modularization directly to main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.py build_static.py arvexq/ui/icon_assets.py \
+                  arvexq/ui/static/arvexq-icon-source-192.png \
+                  arvexq/ui/static/arvexq-icon-source-512.png
+          git commit -m "refactor: move 659KB embedded app icons to identical PNG modules"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              echo "APP_ICON_EXTRACTION_PUBLISHED=1"
+              gh workflow run arvexq-validation.yml --ref main
+              gh workflow run arvexq-web-deploy.yml --ref main
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Failed to publish modularization safely"
+          exit 1
