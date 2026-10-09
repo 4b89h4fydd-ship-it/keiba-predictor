@@ -26,6 +26,7 @@ if str(ROOT) not in sys.path:
 
 import app
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
+from arvexq.prediction.factor_model import MODEL_VERSION as FOUR_PILLAR_MODEL_VERSION
 from arvexq.prediction.race_intelligence import attach_evidence
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 from arvexq.ingest.full_career import merge_career
@@ -149,6 +150,9 @@ def _analysis_ready(detail: dict[str, Any] | None) -> bool:
 
 def _analysis_current(detail: dict[str, Any] | None) -> bool:
     if not isinstance(detail, dict) or not _analysis_ready(detail):
+        return False
+    # A code-only model change must invalidate otherwise identical cached marks.
+    if str(detail.get("predictionModelVersion") or "") != FOUR_PILLAR_MODEL_VERSION:
         return False
     pm = detail.get("preparedMeta") if isinstance(detail.get("preparedMeta"), dict) else {}
     saved = str(pm.get("analysisInputHash") or "")
