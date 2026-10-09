@@ -3339,7 +3339,7 @@ function computeMorningRaceCandidates(circuit){
   // v304: every race on the card is evaluated first. Clock time is NEVER a
   // selection factor. A second full-card quality cut keeps only true elite races.
   all.forEach(function(r){try{
-    var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d)||d.preparedMeta&&d.preparedMeta.diagnosisReady===false)return;
+    var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d)||!d.preparedMeta||d.preparedMeta.diagnosisReady!==true)return;
     var p=predict(d),t=strictSelectedRaceProfile(d,p);if(t.selected)add(r,t)
   }catch(e){}});
   return eliteSelectedRaceCut(Object.keys(map).map(function(k){return map[k]}))
