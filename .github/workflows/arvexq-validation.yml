@@ -145,6 +145,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_podium_axis_gate.py' -v
           python -m unittest discover -s tests -p 'test_past_performance.py' -v
           python -m unittest discover -s tests -p 'test_full_career.py' -v
+          python -m unittest discover -s tests -p 'test_career_transport.py' -v
           python -m unittest discover -s tests -p 'test_honmei_gate_relaxation.py' -v
           python -m unittest discover -s tests -p 'test_honmei_gate_relaxation.py' -v
           python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
