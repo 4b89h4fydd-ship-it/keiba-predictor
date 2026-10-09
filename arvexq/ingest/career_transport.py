@@ -108,7 +108,7 @@ def recover_horse(horse: dict[str, Any], race_date: str) -> dict[str, Any]:
     return out
 
 
-def pack_detail(detail: dict[str, Any]) -> dict[str, Any]:
+def pack_detail(detail: dict[str, Any], *, preserve_unverified_legacy: bool = False) -> dict[str, Any]:
     date = str(detail.get("date") or "")
     out = copy.deepcopy(detail)
     out["horses"] = [pack_horse(h, date) if isinstance(h, dict) else h
@@ -118,4 +118,4 @@ def pack_detail(detail: dict[str, Any]) -> dict[str, Any]:
     # transport module: the model itself imports recover_horse from here.
     from arvexq.prediction.mass_feature_transport import pack_mass_detail
     # Preserve the exact frozen feature observations in a verified envelope.
-    return pack_mass_detail(out)
+    return pack_mass_detail(out, preserve_unverified_legacy=preserve_unverified_legacy)
