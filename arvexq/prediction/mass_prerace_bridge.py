@@ -50,6 +50,10 @@ def prepare_mass_prerace_fields(detail: dict[str, Any]) -> dict[str, Any]:
         return existing
     archive = existing.get("massFeatureArchive")
     if isinstance(archive, dict):
+        if archive.get("originHashVerified") is False:
+            # Preserve the precise old bytes, but never regenerate or mark them
+            # as verified evidence from the eventual race result.
+            return existing
         snapshot = restore_snapshot(archive,
                                     race_id=str(detail.get("id") or detail.get("raceId") or ""),
                                     race_date=str(detail.get("date") or ""))
