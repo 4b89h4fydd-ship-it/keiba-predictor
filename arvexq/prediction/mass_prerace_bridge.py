@@ -7,9 +7,11 @@ from arvexq.prediction.mass_feature_snapshot import (
     build_mass_feature_snapshot,
 )
 from arvexq.prediction.mass_feature_factory import FEATURE_SCHEMA_VERSION
+from arvexq.prediction.mass_feature_transport import restore_snapshot
 
 FROZEN_MASS_KEYS = (
     "massFeatureSnapshot",
+    "massFeatureArchive",
     "massFeatureSchemaVersion",
     "massFeatureSnapshotVersion",
     "massFeatureHash",
@@ -25,6 +27,11 @@ def frozen_mass_fields(detail: dict[str, Any] | None) -> dict[str, Any]:
         out.setdefault("massFeatureHash", snapshot.get("featureHash"))
         out.setdefault("massFeatureSchemaVersion", snapshot.get("schemaVersion") or FEATURE_SCHEMA_VERSION)
         out.setdefault("massFeatureSnapshotVersion", snapshot.get("snapshotVersion") or SNAPSHOT_VERSION)
+    archive = out.get("massFeatureArchive")
+    if isinstance(archive, dict):
+        out.setdefault("massFeatureHash", archive.get("featureHash"))
+        out.setdefault("massFeatureSchemaVersion", FEATURE_SCHEMA_VERSION)
+        out.setdefault("massFeatureSnapshotVersion", SNAPSHOT_VERSION)
     return out
 
 
@@ -40,6 +47,14 @@ def prepare_mass_prerace_fields(detail: dict[str, Any]) -> dict[str, Any]:
         return {}
     existing = frozen_mass_fields(detail)
     if isinstance(existing.get("massFeatureSnapshot"), dict) and existing.get("massFeatureHash"):
+        return existing
+    archive = existing.get("massFeatureArchive")
+    if isinstance(archive, dict):
+        snapshot = restore_snapshot(archive,
+                                    race_id=str(detail.get("id") or detail.get("raceId") or ""),
+                                    race_date=str(detail.get("date") or ""))
+        if snapshot.get("featureHash") != existing.get("massFeatureHash"):
+            raise ValueError("frozen mass feature archive is not the pre-race evidence")
         return existing
     snapshot = build_mass_feature_snapshot(detail)
     return {
