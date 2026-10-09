@@ -60,7 +60,7 @@ if(!Number.isFinite(earliest)||now.getTime()>=earliest){save('NOT_RECONSTRUCTED_
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const selectionModule=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js','utf8');
 const laneModule=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8');
-const betModules=['legacy_v213_order_model.js','bet_readiness.js','no_axis_strategy.js','main_strategy.js','trifecta_strategy.js',
+const betModules=['legacy_v213_order_model.js','podium_axis_guard.js','bet_readiness.js','no_axis_strategy.js','main_strategy.js','trifecta_strategy.js',
   'insurance_strategy.js','three_way_engine.js'];
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 if(!root.includes(boot))throw Error('morning picker boot entry missing');

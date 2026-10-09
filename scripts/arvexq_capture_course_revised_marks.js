@@ -14,7 +14,10 @@ URL,URLSearchParams,Date,Math,JSON,Intl,Number,String,Array,Object,Set,Map,
 Promise,RegExp,parseInt,parseFloat,isFinite,encodeURIComponent,decodeURIComponent,
 navigator:window.navigator,location:window.location,setTimeout:()=>0,clearTimeout:()=>{},
 setInterval:()=>0,clearInterval:()=>{}};
-vm.createContext(ctx);vm.runInContext(source,ctx,{timeout:12000,filename:'app.js'});
+vm.createContext(ctx);
+vm.runInContext(fs.readFileSync('arvexq/ui/static/betting/podium_axis_guard.js','utf8'),
+ ctx,{timeout:12000,filename:'podium_axis_guard.js'});
+vm.runInContext(source,ctx,{timeout:12000,filename:'app.js'});
 const detail=JSON.parse(fs.readFileSync(0,'utf8'));
 const earliest=Date.parse(String(detail.date||'')+'T'+String(detail.startTime||'').slice(0,5)+':00+09:00');
 if(!Number.isFinite(earliest)||Date.now()>=earliest)throw Error('cannot generate post-off revised marks');

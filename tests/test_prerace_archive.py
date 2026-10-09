@@ -173,7 +173,7 @@ class ServerSealTests(unittest.TestCase):
         for module in ("bet_readiness.js", "no_axis_strategy.js",
                        "main_strategy.js", "trifecta_strategy.js",
                        "insurance_strategy.js", "three_way_engine.js",
-                       "ticket_lane_classifier.js"):
+                       "ticket_lane_classifier.js", "podium_axis_guard.js"):
             self.assertIn(module, source, module)
         self.assertIn("vm.runInContext(lane", source)
         self.assertIn("vm.runInContext(engine", source)

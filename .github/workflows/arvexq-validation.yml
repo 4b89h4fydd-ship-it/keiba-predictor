@@ -88,6 +88,8 @@ jobs:
           node --check arvexq/ui/static/research/research_view.js
           node scripts/arvexq_research_view_smoke.js
           node scripts/arvexq_bet_mark_alignment_smoke.js
+          node --check arvexq/ui/static/betting/podium_axis_guard.js
+          node scripts/arvexq_podium_axis_guard_smoke.js
           node --check arvexq/ui/static/betting/no_axis_strategy.js
           node scripts/arvexq_three_way_bet_smoke.js
           node scripts/arvexq_scratch_live_smoke.js
