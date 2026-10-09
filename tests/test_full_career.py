@@ -75,6 +75,18 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(merged["horses"][0]["recentRaces"]),5)
         self.assertEqual(merged["horses"][0]["integratedEvaluation"]["mark"],"○")
 
+    async def test_history_repair_richer_roster_does_not_erase_career(self):
+        from scripts.arvexq_history_repair import merge_history
+        from unittest.mock import patch
+        old={"id":"example","date":"2026-10-10","horses":[{
+            "horseNumber":1,"name":"sample","allPastRuns":[run(6,1),run(6,12),run(7,1)],
+            "recentRaces":[run(7,1)]}]}
+        fresh={"id":"example","date":"2026-10-10","horses":[{
+            "horseNumber":1,"name":"sample","recentRaces":[run(7,1)]}]}
+        with patch("scripts.arvexq_history_repair.card_score", side_effect=[2,1]):
+            merged=merge_history(old,fresh)
+        self.assertEqual(len(merged["horses"][0]["allPastRuns"]),3)
+
     async def test_reported_missing_is_explicit(self):
         horse={"allPastRuns":[run(9,20),run(9,1)],
                "careerStats":{"starts":12}}
