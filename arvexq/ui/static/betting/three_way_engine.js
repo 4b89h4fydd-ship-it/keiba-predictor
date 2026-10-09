@@ -7,7 +7,8 @@ function composeThreeWayBetPolicy(base,r,p,deps){
   var rows=((p&&p.rows)||[]).filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)&&n(x.horse.horseNumber)>0});
   var result=Object.assign({},base),audit=base.audit||{},g=base.betInputGate||{},
       selected=!!(base.selectionAudit&&base.selectionAudit.selected),
-      ready=g.ready===true&&selected,stamp='arvexq-three-way-v346',
+      ready=g.ready===true&&selected,hasHonmei=rows.some(z=>z.predMark==='◎'),
+      stamp='arvexq-three-way-v346',
       reason=ready?'':'厳選品質または発走前データの購入条件未達';
   result.engineVersion=stamp;
   result.trifectaReviewed=true;
@@ -19,6 +20,7 @@ function composeThreeWayBetPolicy(base,r,p,deps){
   result.expectedValueReason='券種別の実配当オッズと検証済み着順確率が揃わないため、期待値・回収率は算出しません。';
   result.roleMeaning={first:'独立1着予測と展開AI',second:'1着馬を除く条件付き2着予測',third:'1・2着馬を除く条件付き3着予測'};
   result.items=[];
+  result.noAxis=!hasHonmei;
   if(rows.length<4){result.decision='見送り';result.trifectaReason='出走頭数・着順根拠が不足';result.insuranceReason='3連単不採用';return result}
   function num(x){return n(x&&x.horse&&x.horse.horseNumber,0)}
   function norm(values){var sum=values.reduce(function(a,b){return a+Math.max(0,n(b))},0);return values.map(function(v){return sum>0?Math.max(0,n(v))/sum:1/values.length})}
@@ -97,7 +99,7 @@ function composeThreeWayBetPolicy(base,r,p,deps){
     result.captureStatus='engine-missing';return result;
   }
   var ctx={ready:ready,winClear:winClear,order:order,lists:lists,top:top,
-     runner:runner,top12:top12,top24:top24,ordered:ordered,p1:p1,add:add,
+     runner:runner,top12:top12,top24:top24,ordered:ordered,p1:p1,add:add,hasHonmei:hasHonmei,
      result:result,reason:reason};
   global.ARVEXQBetStrategies.main(ctx);
   ctx.triAllowed=global.ARVEXQBetStrategies.trifecta(ctx);

@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const strategySrc=['main_strategy.js','trifecta_strategy.js','insurance_strategy.js'].map(x=>fs.readFileSync('arvexq/ui/static/betting/'+x,'utf8')).join('\n');
+const strategySrc=['no_axis_strategy.js','main_strategy.js','trifecta_strategy.js','insurance_strategy.js'].map(x=>fs.readFileSync('arvexq/ui/static/betting/'+x,'utf8')).join('\n');
 const moduleSrc=fs.readFileSync('arvexq/ui/static/betting/three_way_engine.js','utf8');
 const n=(x,f=0)=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x):f;
 const betGlobal={};
@@ -50,6 +50,16 @@ assert.equal(plan.referenceBudget.points,plan.items.reduce((t,x)=>t+x.points,0))
 const differentMarks={...prediction,rows:rows.map((x,i)=>({...x,predMark:i===0?'◎':'△'}))};
 const again=policy(base(),race,differentMarks);
 assert.deepEqual(again.items.map(x=>x.combos),plan.items.map(x=>x.combos),'marks are annotations, not ticket order');
+const noAxisPrediction={...prediction,rows:rows.map(z=>({...z,predMark:z.predMark==='◎'?'○':z.predMark}))};
+const noAxisPlan=policy(base(),race,noAxisPrediction);
+assert.equal(noAxisPlan.noAxis,true);
+assert.equal(noAxisPlan.trifectaDecision,'見送り');
+assert.ok(!noAxisPlan.items.some(z=>z.kind==='3連単'||z.kind==='馬単'),
+ 'without ◎, 1st-place-fixed bets are prohibited');
+assert.ok(noAxisPlan.items.some(z=>z.level==='本線'&&['ワイド','馬連','3連複'].includes(z.kind)),
+ 'no-axis may select a concentrated unordered ticket');
+assert.deepEqual(policy({...base(),betInputGate:{ready:false}},race,noAxisPrediction).items,[],
+ 'a missing data gate always overrides no-axis buying');
 const unsafe=policy({...base(),betInputGate:{ready:false}},race,prediction);
 assert.deepEqual(unsafe.items,[],'insufficient evidence must block every ticket');
 assert.equal(unsafe.trifectaDecision,'見送り');

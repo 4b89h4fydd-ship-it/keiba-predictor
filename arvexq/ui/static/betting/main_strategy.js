@@ -2,7 +2,13 @@
 (function(global){
 'use strict';
 function apply(ctx){
- const {ready,winClear,order,lists,top,add,result}=ctx;
+ const {ready,winClear,order,lists,top,add,result,hasHonmei}=ctx;
+ if(!hasHonmei){
+   if(global.ARVEXQNoAxisBet&&typeof global.ARVEXQNoAxisBet.apply==='function')
+     global.ARVEXQNoAxisBet.apply(ctx);
+   else {result.primaryKind='';ctx.reason='軸なし買い目モジュール未取得'}
+   return;
+ }
   // One main ticket family: place reliability and ordered certainty decide
   // the type. No multiple identical opinions through several ticket kinds.
   if(ready){

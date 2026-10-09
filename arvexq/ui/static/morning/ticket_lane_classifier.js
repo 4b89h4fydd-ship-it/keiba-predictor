@@ -2,7 +2,7 @@
    Relative model concentration is NOT a calibrated hit rate or expected return. */
 (function(global){
 'use strict';
-const VERSION='arvexq-morning-ticket-lanes-v1';
+const VERSION='arvexq-morning-ticket-lanes-v2';
 const NAMES=['的中重視型','勝ち馬明確型','高配当狙い型'];
 function num(x,d=0){return x===null||x===undefined||x===''||!Number.isFinite(Number(x))?d:Number(x)}
 function clamp(x){return Math.max(0,Math.min(1,num(x)))}
@@ -19,9 +19,8 @@ function classify(r,p,strict){
        scenario=clamp(a.scenarioProb),top3=clamp(a.top3mass),
        margin=clamp(a.margin),winnerConf=clamp(a.winnerConfidence),
        axis=rows.find(z=>z.predMark==='◎');
- const basic={field:field>=5,readiness:ready>=(isCentral?.66:.59),
-       coverage:coverage>=(isCentral?.47:.40),evidence:evidence>=(isCentral?.39:.33),
-       honmei:!!axis};
+ const basic={field:field>=5,readiness:ready>=(isCentral?.64:.57),
+       coverage:coverage>=(isCentral?.45:.38),evidence:evidence>=(isCentral?.37:.31)};
  const basicOK=Object.keys(basic).every(k=>basic[k]);
  const ranking=rows.map(z=>({no:num(z.horse.horseNumber),p2:rankedRole(z,2),p3:rankedRole(z,3)}));
  const roleCoverage=field?ranking.filter(z=>z.p2!==null&&z.p3!==null).length/field:0;
@@ -31,18 +30,19 @@ function classify(r,p,strict){
  const placeTop2=placeSum?place.slice(0,2).reduce((s,z)=>s+z.value,0)/placeSum:0;
  const placeTop3=placeSum?place.slice(0,3).reduce((s,z)=>s+z.value,0)/placeSum:0;
  const axisTop3=!!axis&&place.slice(0,3).some(z=>z.no===num(axis.horse.horseNumber));
- const strongPlace=basicOK&&roleCoverage>=.70&&axisTop3&&
-       placeTop3>=Math.max(.48,Math.min(.84,3/Math.max(field,1)*1.12))&&
-       placeTop2>=Math.max(.31,Math.min(.64,2/Math.max(field,1)*1.10))&&
-       scenario>=(isCentral?.24:.19)&&num(a.score)>=(isCentral?59:54);
- const clearWinner=basicOK&&(a.selected===true||(
+ const noAxisPlace=!axis&&roleCoverage>=.85&&placeTop3>=.54&&placeTop2>=.36;
+ const strongPlace=basicOK&&roleCoverage>=.68&&(axisTop3||noAxisPlace)&&
+       placeTop3>=Math.max(.47,Math.min(.82,3/Math.max(field,1)*1.08))&&
+       placeTop2>=Math.max(.30,Math.min(.62,2/Math.max(field,1)*1.07))&&
+       scenario>=(isCentral?.22:.17)&&num(a.score)>=(isCentral?57:52);
+ const clearWinner=basicOK&&!!axis&&(a.selected===true||(
        a.winnerStable===true&&winnerConf>=(isCentral?.65:.60)&&
        margin>=(isCentral?.035:.028)&&top3>=(isCentral?.61:.59)&&
        scenario>=(isCentral?.29:.22)&&num(a.score)>=(isCentral?66:60)&&
        a.multiHeadAgreement!==false));
  const holes=rows.filter(z=>z.predMark==='☆+'||z.predMark==='☆');
  const holeIndex=place.findIndex(z=>holes.some(h=>num(h.horse.horseNumber)===z.no));
- const longshot=basicOK&&holes.length>0&&roleCoverage>=.70&&
+ const longshot=basicOK&&!!axis&&holes.length>0&&roleCoverage>=.70&&
        holeIndex>=0&&holeIndex<=Math.min(5,field-1)&&a.winnerStable===true&&
        winnerConf>=(isCentral?.60:.56)&&margin>=(isCentral?.022:.018)&&
        scenario>=(isCentral?.29:.23)&&top3>=.55&&
@@ -56,7 +56,7 @@ function classify(r,p,strict){
        types.includes(NAMES[0])?NAMES[0]:
        types.includes(NAMES[1])?NAMES[1]:types[0]||'';
  const explanation={
-  '的中重視型':'2・3着の役割分布と軸の安定性を重視。ワイド・馬連・3連複を検討',
+  '的中重視型':'2・3着の役割分布を重視。◎なしでもワイド・馬連・3連複を検討',
   '勝ち馬明確型':'勝ち馬の安定性と上位差を重視。馬単・3連単を検討',
   '高配当狙い型':'☆・☆+の相手適性と着順の筋を評価。高配当も的中も保証しない'
  };
@@ -64,7 +64,7 @@ function classify(r,p,strict){
      primaryType,types,reason:selected?explanation[primaryType]:'券種別評価または基礎データ条件を満たさない',
      modelVersion:VERSION,metrics:{field,readiness:ready,coverage,evidence,scenario,
      roleCoverage,placeTop2,placeTop3,winnerConf,margin},
-     gates:{...basic,strongPlace,clearWinner,longshot},
+     gates:{...basic,hasHonmei:!!axis,noAxisPlace,strongPlace,clearWinner,longshot},
      note:'券種別モデル評価であり、的中率・期待配当・期待値を表しません。'};
 }
 // A public selected race must have a genuine, actionable morning recommendation.

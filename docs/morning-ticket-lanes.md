@@ -39,3 +39,6 @@ but it lacks type and actionable morning ticket evidence. The public
 separate historical area and their JSON archive is not rewritten. New
 frozen selections require type-matching saved ticketKinds. The iOS app
 asset URL and one-time PWA reset token use v353 to prevent stale JS.
+
+## v354: moderately wider criteria, and actionable no-◎ policy
+Morning place selection can qualify on strong P2/P3 role concentration without an ◎; winner-clear and high-payout types continue to require ◎. Thresholds were only slightly eased. Independent no_axis_strategy.js considers ワイド, 馬連 or 3連複, never an ordered 1st-fixed ticket, and keeps existing purchase input-quality gates. A limited short-history exception to ◎ still requires much stronger independent evidence. Changes apply to new classifications, not retroactively to frozen predictions; official race-condition amendments use separate pre-off revision records, with reason and timestamp, preserving the original.

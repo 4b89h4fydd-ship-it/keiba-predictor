@@ -1563,19 +1563,24 @@ function assignPredictionMarks(rows,r){
       axisGap=n(axisLeader&&axisLeader.podiumAxisScore)-n(axisNext&&axisNext.podiumAxisScore),
       axisH=axisLeader&&axisLeader.podiumAxisHistory||{starts:0,top3:0,rate:0},
       axisData=n(axisLeader&&axisLeader.edgeEvidence,n(axisLeader&&axisLeader.coverage,0));
+  var establishedAxisHistory=axisH.starts>=3&&axisH.top3>=2&&axisH.rate>=.40,
+      shortAxisHistory=axisH.starts>=2&&axisH.top3>=1&&axisH.rate>=.50&&
+        n(axisLeader&&axisLeader.podiumAxisScore)>=.65&&axisGap>=.035&&
+        axisData>=.45&&n(axisLeader&&axisLeader.coverage,0)>=.55;
   honmeiEligible=!!axisLeader&&!!axisNext&&!isScratchHorse(axisLeader.horse)&&
-    n(axisLeader.podiumAxisScore)>=.60&&axisGap>=.02&&
+    n(axisLeader.podiumAxisScore)>=.58&&axisGap>=.015&&
     n(axisLeader.axisRank,99)<=3&&n(axisLeader.podiumRecallRank,99)<=3&&
-    axisH.starts>=3&&axisH.top3>=2&&axisH.rate>=.40&&
+    (establishedAxisHistory||shortAxisHistory)&&
     axisData>=.30&&n(axisLeader.coverage,0)>=.40;
   rows.forEach(function(z){z.podiumAxisEligible=honmeiEligible&&z===axisLeader});
-  r.honmeiDecisionFrontend={version:'arvexq-podium-axis-frontend-v2',
+  r.honmeiDecisionFrontend={version:'arvexq-podium-axis-frontend-v3',
     eligible:honmeiEligible,horseNumber:n(axisLeader&&axisLeader.horse&&axisLeader.horse.horseNumber),
     axisScore:n(axisLeader&&axisLeader.podiumAxisScore),axisGap:axisGap,
     historyRuns:axisH.starts,historyTop3:axisH.top3,
     reason:honmeiEligible?'podium-axis-passed':'podium-axis-withheld'};
   if(honmeiEligible)take(axisLeader,'◎');
-  else if(axisLeader){axisLeader.honmeiWithheld=true;axisLeader.attentionReason='◎保留｜3着内安定性またはデータ根拠不足'}
+  else if(axisLeader){axisLeader.honmeiWithheld=true;axisLeader.attentionReason='◎保留｜'+
+    (!(establishedAxisHistory||shortAxisHistory)?'近走3着内の裏付け不足':(axisGap<.015?'上位候補が接近':'3着内軸の評価・証拠不足'))}
   var secondPick=p2Recall.find(function(z){return selected.indexOf(z)<0})||sorted.find(function(z){return selected.indexOf(z)<0});
   take(secondPick,'○');
   var thirdCore=podiumRecall.find(function(z){return selected.indexOf(z)<0&&(n(z.p2RecallRank)<=5||n(z.p3RecallRank)<=5||n(z.axisRank)<=4)})||podiumRecall.find(function(z){return selected.indexOf(z)<0});

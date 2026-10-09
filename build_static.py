@@ -103,7 +103,7 @@ if "ARVEXQ_TOUCH_ICON_180" not in binary_b64:
     raise RuntimeError("ARVEXQ_TOUCH_ICON_180 not found")
 
 BET_PATH = STATIC / "betting"
-BET_ASSETS = ("legacy_v213_order_model.js", "main_strategy.js", "trifecta_strategy.js", "insurance_strategy.js", "three_way_engine.js", "bet_view.js", "bet_ui.css")
+BET_ASSETS = ("legacy_v213_order_model.js", "no_axis_strategy.js", "main_strategy.js", "trifecta_strategy.js", "insurance_strategy.js", "three_way_engine.js", "bet_view.js", "bet_ui.css")
 for filename in BET_ASSETS:
     if not (BET_PATH / filename).is_file():
         raise RuntimeError(f"missing independent betting asset: {filename}")
@@ -141,7 +141,7 @@ js = strings["JS"]
 # Refresh unchanged v329 filenames when actual UI files change. Avoid stale
 # iPhone/PWA JS/CSS while preserving the approved top-screen composition.
 core_asset_hash = hashlib.sha256((js + "\0" + css).encode("utf-8")).hexdigest()[:12]
-index_html = index_html.replace("fix=20261009-official-mark-freeze-v352", "fix=" + core_asset_hash)
+index_html = index_html.replace("fix=20261009-no-axis-v354", "fix=" + core_asset_hash)
 manifest = strings["MANIFEST"]
 sw = strings["SW"]
 

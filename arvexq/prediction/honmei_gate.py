@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-GATE_VERSION = "arvexq-podium-axis-gate-v3"
+GATE_VERSION = "arvexq-podium-axis-gate-v4"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
 
 
@@ -90,12 +90,19 @@ def evaluate_honmei_gate(
         "qualifiedRunner": winner["horseNumber"] > 0,
         "abilitySupported": winner["factorRank"] <= 3 and winner["strengthRank"] <= 3,
         "completePillars": winner["coverage"] == 4 and winner["pillarSupport"] >= 3,
-        "historicalPodium": winner["validRuns"] >= 3 and winner["recentTop3"] >= 2
-                            and winner["recentTop3Rate"] >= .4,
+        "historicalPodium": (
+            winner["validRuns"] >= 3 and winner["recentTop3"] >= 2
+            and winner["recentTop3Rate"] >= .4
+        ) or (
+            winner["validRuns"] >= 2 and winner["recentTop3"] >= 1
+            and winner["recentTop3Rate"] >= .5
+            and winner["score"] >= .65 and gap >= .035
+            and winner["families"] >= 9 and winner["strengthRank"] <= 2
+        ),
         "evidenceDepth": winner["sample"] >= 3 and winner["families"] >= 7
                          and winner["paceFamilies"] >= 1,
-        "axisScore": winner["score"] >= .57,
-        "axisSeparation": gap >= .018,
+        "axisScore": winner["score"] >= .56,
+        "axisSeparation": gap >= .015,
     }
     if central:
         checks["centralHistory"] = winner["validRuns"] >= 3

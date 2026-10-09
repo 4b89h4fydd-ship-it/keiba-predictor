@@ -18,7 +18,7 @@ console.log('MORNING_SELECTION_UNLIMITED_OK '+x.length);
 
 function laneTest(overrides={}){
  const rows=Array.from({length:8},(_,i)=>({
-   horse:{horseNumber:i+1},predMark:i===0?'◎':i===4?'☆+':i===1?'○':'△',
+   horse:{horseNumber:i+1},predMark:i===0?(overrides.noAxis?'○':'◎'):i===4?'☆+':i===1?'○':'△',
    ticketP2Probability:[.31,.26,.18,.09,.08,.04,.025,.015][i],
    ticketP3Probability:[.25,.24,.18,.11,.10,.06,.04,.02][i]}));
  const audit={selected:false,score:64,top3mass:.69,margin:.02,
@@ -35,6 +35,14 @@ const longshot=laneTest({winnerStable:true,winnerConfidence:.70,margin:.027,scor
 assert(longshot.types.includes('高配当狙い型'));
 assert(!('hitRate' in longshot)&&!('expectedValue' in longshot));
 assert(!laneTest({readiness:{prediction:.1}}).selected);
+const noAxisPlace=laneTest({noAxis:true});
+assert(noAxisPlace.selected&&noAxisPlace.types.includes('的中重視型'),
+  'stable P2/P3 without ◎ may be a place-oriented selected candidate');
+assert(!noAxisPlace.types.includes('勝ち馬明確型')&&!noAxisPlace.types.includes('高配当狙い型'),
+  'no ◎ never earns ordered-winner classification');
+assert(w.ARVEXQMorningTicketLanes.qualifyPlaceBet(
+ {selectionAudit:{selected:false}},{_arvexqMorningLaneCandidate:noAxisPlace},null).selectionAudit.selected);
+
 // Public selection is allowed only when a real, non-skipped buy exists.
 const winnerSelection={...winner,selected:true};
 const accepted=w.ARVEXQMorningTicketLanes.requireMorningTickets(winnerSelection,{
