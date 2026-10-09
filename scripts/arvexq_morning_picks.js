@@ -11,11 +11,13 @@ const details=new Map((payload.details||[]).filter(d=>d&&d.id).map(d=>[String(d.
 const day=String((payload.meta||{}).sync_date||rows[0]?.date||'');
 const now=new Date();
 const earliest=Math.min(...rows.map(r=>Date.parse(String(r.date||day)+'T'+String(r.startTime||'').slice(0,5)+':00+09:00')));
-const complete=rows.length>0&&details.size>=rows.length&&rows.every(r=>{
-  const d=details.get(String(r.id));
-  return d&&Array.isArray(d.horses)&&d.horses.filter(h=>h&&h.name&&Number(h.horseNumber)>0).length>=3
-    &&d.preparedMeta&&d.preparedMeta.diagnosisReady===true;
+const structurallyReady=rows.length>0&&details.size>=rows.length&&rows.every(r=>{
+ const d=details.get(String(r.id));return !!(d&&Array.isArray(d.horses)&&d.horses.filter(h=>h&&h.name&&Number(h.horseNumber)>0).length>=3);
 });
+const assessed=rows.filter(r=>{const d=details.get(String(r.id));return d&&d.preparedMeta&&d.preparedMeta.diagnosisReady===true;});
+// One thin AI card no longer stalls all complete morning selections. Explicit
+// 'assessed:false' is archived for those races, never silently called rejected.
+const complete=structurallyReady&&assessed.length>=Math.max(1,Math.ceil(rows.length*.80));
 function save(reason){
   fs.writeFileSync(output,JSON.stringify(payload));
   console.log('MORNING_PICKS_'+reason,'day='+day,'races='+rows.length,'complete='+complete);
@@ -33,7 +35,7 @@ if(/^20\d{2}-\d{2}-\d{2}$/.test(day)&&fs.existsSync(existingArchive)){
       selected:m.selected===true,selectedScore:Number(m.selectedScore)||0,special:m.special===true};
     Object.assign(r,{morningPickVersion:'v1',morningPickFixedAt:archive.fixedAt,
       morningPickScope:archive.scope,morningSelected:frozen.selected,
-      morningSelectedScore:frozen.selectedScore,morningSpecial:frozen.special});
+      morningSelectedScore:frozen.selectedScore,morningSpecial:frozen.special,morningAssessed:m.assessed!==false});
     r.volatility={...(r.volatility||{}),morningPicks:frozen};
     r.environmentMeta={...(r.environmentMeta||{}),morningPicks:frozen};
   }
@@ -43,9 +45,14 @@ if(/^20\d{2}-\d{2}-\d{2}$/.test(day)&&fs.existsSync(existingArchive)){
   console.log('MORNING_PICKS_REUSED_ALREADY_FIXED',day,'races',saved.size);
   process.exit(0);
 }
-if(!complete){save('AWAITING_COMPLETE_PREOFF_DATA');process.exit(0)}
+if(!complete){save('AWAITING_SUFFICIENT_MORNING_DATA');process.exit(0)}
+// First scheduled prefetch at 05:30 is for early cards, not premature freezing.
+const jstToday=new Date(now.getTime()+9*3600000).toISOString().slice(0,10);
+const earliestMorning=Date.parse(day+'T06:15:00+09:00');
+if(day===jstToday&&now.getTime()<earliestMorning){save('BEFORE_MORNING_FREEZE_WINDOW');process.exit(0)}
 if(!Number.isFinite(earliest)||now.getTime()>=earliest){save('NOT_RECONSTRUCTED_AFTER_FIRST_OFF');process.exit(0)}
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const selectionModule=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js','utf8');
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 if(!root.includes(boot))throw Error('morning picker boot entry missing');
 const source=root.replace(boot,'window.__morningPicks={state,predict,selectedRaceCandidates:computeMorningRaceCandidates,specialForecastRaceCandidates:computeMorningSpecialRaceCandidates,add:function(k,v){instantTrackDetails[k]=v;}};');
@@ -58,6 +65,7 @@ const ctx={window,document,localStorage:store,sessionStorage:store,console,
  navigator:window.navigator,location:window.location,setTimeout:()=>0,
  clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
 vm.createContext(ctx);
+vm.runInContext(selectionModule,ctx,{timeout:12000,filename:'selection_cut.js'});
 vm.runInContext(source,ctx,{timeout:12000,filename:'app.js'});
 const model=window.__morningPicks;
 model.state.date=day;model.state.races=rows;model.state.circuit='地方';
@@ -79,12 +87,12 @@ for(const r of rows){
     version:'v1',fixedAt,scope:rows.length,
     selected:selectionById.has(String(r.id)),
     selectedScore:selectionById.get(String(r.id))||0,
-    special:specials.has(String(r.id)),
+    special:specials.has(String(r.id)),assessed:assessed.some(z=>String(z.id)===String(r.id)),
   };
   Object.assign(r,status,{
     morningSelected:decision.selected,
     morningSelectedScore:decision.selectedScore,
-    morningSpecial:decision.special,
+    morningSpecial:decision.special,morningAssessed:decision.assessed,
   });
   // A public D1 summary upsert currently whitelists unknown top-level keys.
   // Put the manifest inside the existing structured summary metadata as well.
@@ -94,7 +102,7 @@ for(const r of rows){
 for(const d of payload.details||[]){
   const r=rows.find(x=>String(x.id)===String(d.id));
   if(r){
-    for(const key of ['morningPickVersion','morningPickFixedAt','morningPickScope','morningSelected','morningSelectedScore','morningSpecial'])d[key]=r[key];
+    for(const key of ['morningPickVersion','morningPickFixedAt','morningPickScope','morningSelected','morningSelectedScore','morningSpecial','morningAssessed'])d[key]=r[key];
     d.volatility={...(d.volatility||{}),morningPicks:r.volatility.morningPicks};
     d.environmentMeta={...(d.environmentMeta||{}),morningPicks:r.volatility.morningPicks};
   }
@@ -117,4 +125,4 @@ for(const detail of payload.details||[]){
 }
 fs.writeFileSync(output,JSON.stringify(payload));
 console.log('MORNING_PICKS_FROZEN','date='+day,'races='+rows.length,
-  'selected='+selectionById.size,'special='+specials.size,'marks='+markCount,'markErrors='+markErrors,'fixedAt='+fixedAt);
+  'selected='+selectionById.size,'assessed='+assessed.length,'special='+specials.size,'marks='+markCount,'markErrors='+markErrors,'fixedAt='+fixedAt);

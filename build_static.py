@@ -109,7 +109,13 @@ for filename in BET_ASSETS:
         raise RuntimeError(f"missing independent betting asset: {filename}")
 bet_hash = hashlib.sha256(b"|".join((BET_PATH / filename).read_bytes() for filename in BET_ASSETS)).hexdigest()[:12]
 
+MORNING_MODULE = STATIC / "morning" / "selection_cut.js"
+if not MORNING_MODULE.is_file():
+    raise RuntimeError("morning selection module missing")
+morning_hash = hashlib.sha256(MORNING_MODULE.read_bytes()).hexdigest()[:12]
+
 index_html = strings["INDEX"]
+index_html = index_html.replace("__ARVEXQ_MORNING_MODULE_HASH__", morning_hash)
 index_html = index_html.replace("__ARVEXQ_BET_ASSET_FINGERPRINT__", bet_hash)
 css = strings["CSS"]
 js = strings["JS"]
@@ -190,6 +196,9 @@ for legacy_sw in ("v328", "v327", "v326", "v325", "v324", "v323", "v322", "v321"
 for filename in BET_ASSETS:
     shutil.copy2(BET_PATH / filename, DIST / "betting" / filename)
 
+(DIST / "morning").mkdir(exist_ok=True)
+shutil.copy2(MORNING_MODULE, DIST / "morning" / "selection_cut.js")
+
 # Independent UI feature modules kept outside the main app bundle.
 for extra_asset in ("previous_ai_results.js",):
     src = STATIC / extra_asset
@@ -229,6 +238,7 @@ headers=[
     f"/app-{BUILD_VERSION}.js","  Cache-Control: no-cache, must-revalidate",
     f"/arvexq-app-{BUILD_VERSION}.js","  Cache-Control: no-cache, must-revalidate",
     f"/styles-arvexq-{BUILD_VERSION}.css","  Cache-Control: no-cache, must-revalidate",
+    "/morning/*","  Cache-Control: no-cache, must-revalidate",
     "/betting/*","  Cache-Control: no-cache, must-revalidate",
     "/previous_ai_results.js","  Cache-Control: no-cache, must-revalidate",
     "/arvexq-racing-hero.webp","  Cache-Control: public, max-age=604800",

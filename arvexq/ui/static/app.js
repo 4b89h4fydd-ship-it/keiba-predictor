@@ -3410,16 +3410,11 @@ function raceChronologicalCompare(a,b){
   var tc=String(ra.track||'').localeCompare(String(rb.track||''),'ja');if(tc)return tc;
   return n(ra.raceNumber)-n(rb.raceNumber)
 }
+// Strict selection is performed in strictSelectedRaceProfile; there is no top-1 cap.
 function eliteSelectedRaceCut(rows){
-  rows=(rows||[]).slice().sort(function(a,b){
-    return n(b.selection&&b.selection.score)-n(a.selection&&a.selection.score)||
-      n(b.selection&&b.selection.winnerConfidence)-n(a.selection&&a.selection.winnerConfidence)||
-      n(b.selection&&b.selection.evidence)-n(a.selection&&a.selection.evidence)
-  });
-  if(!rows.length)return [];
-  var best=n(rows[0].selection&&rows[0].selection.score),central=String((rows[0].race&&rows[0].race.circuit)||'')==='中央',floor=Math.max(central?82:80,best-2),limit=1;
-  var elite=rows.filter(function(z){var t=z.selection||{},rd=t.readiness||{},central=String((z.race&&z.race.circuit)||'')==='中央';return n(t.score)>=floor&&n(rd.prediction)>=(central?.74:.72)&&n(t.coverage)>=(central?.60:.58)&&n(t.top3mass)>=(central?.68:.70)&&n(t.evidence)>=(central?.55:.53)&&n(t.scenarioProb)>=(central?.30:.28)&&!!t.winnerStable&&n(t.winnerConfidence)>=.72});
-  return elite.slice(0,limit).sort(raceChronologicalCompare)
+ if(!window.ARVEXQMorningSelection||!window.ARVEXQMorningSelection.allStrictQualifiers)
+   throw Error('morning selection module missing; refuse an incomplete morning freeze');
+ return window.ARVEXQMorningSelection.allStrictQualifiers(rows,{n:n,chronological:raceChronologicalCompare});
 }
 function computeMorningRaceCandidates(circuit){
   var all=(state.races||[]).filter(function(r){return r&&r.id&&(!circuit||String(r.circuit||'')===String(circuit))}),map={};
@@ -3427,7 +3422,7 @@ function computeMorningRaceCandidates(circuit){
   // v304: every race on the card is evaluated first. Clock time is NEVER a
   // selection factor. A second full-card quality cut keeps only true elite races.
   all.forEach(function(r){try{
-    var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d))return;
+    var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d)||d.preparedMeta&&d.preparedMeta.diagnosisReady===false)return;
     var p=predict(d),t=strictSelectedRaceProfile(d,p);if(t.selected)add(r,t)
   }catch(e){}});
   return eliteSelectedRaceCut(Object.keys(map).map(function(k){return map[k]}))
@@ -3441,7 +3436,7 @@ function morningPickOf(r){
   if(r.morningPickVersion==='v1'&&r.morningPickFixedAt)return {
     version:'v1',fixedAt:String(r.morningPickFixedAt),
     selected:r.morningSelected===true,selectedScore:n(r.morningSelectedScore,0),
-    special:r.morningSpecial===true,scope:n(r.morningPickScope,0)
+    special:r.morningSpecial===true,scope:n(r.morningPickScope,0),assessed:r.morningAssessed!==false
   };
   return null
 }
@@ -3486,7 +3481,8 @@ function fixedPickEmpty(kind,circuit){
   if(!morningPickReady())return '<div class="fixed-pick-empty"><b>朝の選定未確定</b><small>全レースを朝に一度だけ判定。発走後に選定を追加しません。</small></div>';
   var st=fixedPickLoadStatus(circuit),label='厳選判定';
   // Missing late detail data must not change the already published morning list.
-  return '<div class="fixed-pick-empty"><b>該当なし</b><small>'+label+'基準を通過したレースなし</small></div>'
+  var incomplete=(state.races||[]).filter(function(r){return r&&String(r.circuit||'')===String(circuit)&&morningPickOf(r)&&morningPickOf(r).assessed===false}).length;
+  return '<div class="fixed-pick-empty"><b>該当なし</b><small>'+(incomplete?('基準を満たす確定候補なし｜情報不足 '+incomplete+'レース（朝の未判定を後付けしません）'):(label+'基準を通過したレースなし'))+'</small></div>'
 }
 function fixedSelectedBox(circuit,picks){
   var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>厳選 '+esc(t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
@@ -3502,13 +3498,13 @@ function selectedRaceBetPreview(r){
 }
 function smartSelectedRaces(forceOpen){
   var central=selectedRaceCandidates('中央'),local=selectedRaceCandidates('地方'),open=forceOpen?true:!!selectedSectionsOpen.selected,total=central.length+local.length;
-  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>基準未達なら0件・本当に強い時だけ</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
+  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>朝一に全対象を判定・固定｜基準通過の全件を表示</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
 }
 function computeMorningSpecialRaceCandidates(){
   return (state.races||[]).filter(function(r){
     if(!r||!r.id)return false;
     var title=String(r.title||'');
-    return raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))
+    return isMainForecastRace(r)||raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceCandidates(){
@@ -3522,6 +3518,7 @@ function specialForecastRaceTag(r){
   var title=String(r&&r.title||'');
   if(raceIsGraded(r))return '重賞';
   if(String(r&&r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r&&r.raceNumber)===12))return '高知ファイナル';
+  if(isMainForecastRace(r))return 'メイン';
   return '特別'
 }
 function prebuildSpecialForecastPlans(){
@@ -3541,8 +3538,8 @@ function smartSpecialForecastRaces(forceOpen){
   var picks=specialForecastRaceCandidates(),body=picks.length?picks.map(function(r){
     var tag=specialForecastRaceTag(r);
     return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+tag+'</em></button>'
-  }).join(''):'<div class="fixed-pick-empty"><b>該当なし</b><small>本日の重賞・高知ファイナルなし</small></div>';
-  return '<details class="smart-fixed-picks smart-special-picks" data-special-fold="1"'+((forceOpen||state.specialForecastOpen)?' open':'')+'><summary class="smart-fixed-picks-head"><span><b>特別予想</b><small>重賞・高知ファイナル</small></span><span class="smart-fixed-summary-right"><em>'+picks.length+'レース</em><i class="special-fold-icon" aria-hidden="true">›</i></span></summary><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">'+body+'</div></div></div></details>'
+  }).join(''):'<div class="fixed-pick-empty"><b>該当なし</b><small>本日のメイン・重賞・高知ファイナルなし</small></div>';
+  return '<details class="smart-fixed-picks smart-special-picks" data-special-fold="1"'+((forceOpen||state.specialForecastOpen)?' open':'')+'><summary class="smart-fixed-picks-head"><span><b>特別予想</b><small>メイン・重賞・高知ファイナル｜朝固定</small></span><span class="smart-fixed-summary-right"><em>'+picks.length+'レース</em><i class="special-fold-icon" aria-hidden="true">›</i></span></summary><div class="smart-fixed-pick-grid"><div class="fixed-pick-box fixed-pick-circuit"><div class="fixed-pick-box-body">'+body+'</div></div></div></details>'
 }
 
 function smartDailyAiStats(){
@@ -3762,7 +3759,7 @@ function selectedCircuitPage(circuit){
 }
 function specialCircuitPage(circuit){
   var picks=specialForecastRaceCandidates().filter(function(r){return String(r.circuit||'')===String(circuit)}),body=picks.length?picks.map(function(r){return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(specialForecastRaceTag(r))+'</em></button>'}).join(''):(morningPickReady()?'<div class="fixed-pick-empty"><b>該当なし</b><small>'+esc(circuit)+'の重賞・高知ファイナルなし</small></div>':'<div class="fixed-pick-empty"><b>朝の特別予想未確定</b><small>朝の全開催確定後に一度だけ対象を固定します</small></div>');
-  return '<section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>'+esc(circuit)+' 特別予想</b><small>重賞・高知ファイナル</small></span><em>'+picks.length+'レース</em></div><div class="fixed-pick-box-body">'+body+'</div></section>'
+  return '<section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>'+esc(circuit)+' 特別予想</b><small>メイン・重賞・高知ファイナル｜朝固定</small></span><em>'+picks.length+'レース</em></div><div class="fixed-pick-box-body">'+body+'</div></section>'
 }
 function renderHomeSectionPage(){
   var page=state.homePage||'';
@@ -4907,13 +4904,13 @@ function applyMorningArchive(rows){
     var m={
       version:'v1',fixedAt:archive.fixedAt,scope:archive.scope,
       selected:frozen.selected===true,selectedScore:n(frozen.selectedScore,0),
-      special:frozen.special===true
+      special:frozen.special===true,assessed:frozen.assessed!==false
     };
     r.morningPickVersion='v1';
     r.morningPickFixedAt=archive.fixedAt;
     r.morningPickScope=archive.scope;
     r.morningSelected=m.selected;r.morningSelectedScore=m.selectedScore;
-    r.morningSpecial=m.special;
+    r.morningSpecial=m.special;r.morningAssessed=m.assessed;
     r.volatility=Object.assign({},r.volatility||{},{morningPicks:m});
     r.environmentMeta=Object.assign({},r.environmentMeta||{},{morningPicks:m})
   });
