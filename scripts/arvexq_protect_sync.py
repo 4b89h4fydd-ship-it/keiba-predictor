@@ -83,6 +83,19 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     baseline = old.get("morningMarkSnapshot")
     if isinstance(baseline, dict) and baseline.get("version") == "arvexq-morning-marks-v1":
         out["morningMarkSnapshot"] = copy.deepcopy(baseline)
+    # Frozen mass-feature evidence is an immutable pre-off training record,
+    # not a transient result. Convert a legacy raw snapshot to the lossless
+    # archive on the next safe replace and keep the original feature hash.
+    if old.get("massFeatureArchive") or old.get("massFeatureSnapshot"):
+        from arvexq.prediction.mass_feature_transport import pack_mass_detail
+        from arvexq.prediction.mass_prerace_bridge import FROZEN_MASS_KEYS
+        frozen = (pack_mass_detail(old) if isinstance(old.get("massFeatureSnapshot"), dict)
+                  and isinstance(old.get("preRacePrediction"), dict) else old)
+        for key in FROZEN_MASS_KEYS:
+            if key in frozen:
+                out[key] = copy.deepcopy(frozen[key])
+            else:
+                out.pop(key, None)
     previous_revisions = old.get("officialMarkRevisions")
     if isinstance(previous_revisions, list) and previous_revisions:
         candidate = out.get("officialMarkRevisions")
