@@ -125,6 +125,8 @@ class RaceIntelligenceTests(unittest.TestCase):
         bank = build_horse_review_bank([recap, recap])
         self.assertEqual(len(bank["horses"]["horse-unique-3"]), 1)
         self.assertNotIn("4", bank["horses"], "horse-number-only must not identify a horse globally")
+        self.assertEqual(len(bank["unlinkedObservations"]), 2)
+        self.assertEqual({x["horseNumber"] for x in bank["unlinkedObservations"]}, {2, 4})
         detail["result"]["status"] = "速報"
         self.assertIsNone(build_race_recap(detail))
 

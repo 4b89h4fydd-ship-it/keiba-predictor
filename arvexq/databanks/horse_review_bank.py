@@ -5,6 +5,7 @@ from typing import Any
 
 def build_horse_review_bank(recaps: list[dict[str, Any]]) -> dict[str, Any]:
     horses: dict[str, list[dict[str, Any]]] = {}
+    unlinked: list[dict[str, Any]] = []
     seen: set[tuple[str, str]] = set()
     for recap in recaps:
         if not isinstance(recap, dict) or recap.get("verifiedFrom") != "settled-result-payload":
@@ -15,7 +16,18 @@ def build_horse_review_bank(recaps: list[dict[str, Any]]) -> dict[str, Any]:
                 continue
             key = str(runner.get("horseId") or "")
             # Race-number-only identifiers are NOT safe to join across races.
-            if not key or not race_id:
+            if not race_id:
+                continue
+            if not key:
+                # Preserve observed facts with race-local identity, but never
+                # pretend a horse number is a global horse identifier.
+                unlinked.append({
+                    "raceId": race_id, "date": recap.get("date"),
+                    "horseNumber": runner.get("horseNumber"),
+                    "horseName": runner.get("horseName"),
+                    "finish": runner.get("finish"), "observedNote": runner.get("note"),
+                    "source": "settled-result-only", "requiresStableHorseId": True,
+                })
                 continue
             pair = (race_id, key)
             if pair in seen:
@@ -31,6 +43,7 @@ def build_horse_review_bank(recaps: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "version": "arvexq-horse-review-bank-v1",
         "horses": horses,
+        "unlinkedObservations": unlinked,
         "unlinkedWithoutStableHorseId": True,
         "predictiveCalibrationStatus": "not-tested",
     }
