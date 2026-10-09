@@ -127,6 +127,10 @@ index_html = index_html.replace("__ARVEXQ_MORNING_MODULE_HASH__", morning_hash)
 index_html = index_html.replace("__ARVEXQ_BET_ASSET_FINGERPRINT__", bet_hash)
 css = strings["CSS"]
 js = strings["JS"]
+# Refresh unchanged v329 filenames when actual UI files change. Avoid stale
+# iPhone/PWA JS/CSS while preserving the approved top-screen composition.
+core_asset_hash = hashlib.sha256((js + "\0" + css).encode("utf-8")).hexdigest()[:12]
+index_html = index_html.replace("fix=20261009-official-mark-freeze-v352", "fix=" + core_asset_hash)
 manifest = strings["MANIFEST"]
 sw = strings["SW"]
 
