@@ -151,11 +151,10 @@ jobs:
             PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$CLOUDFLARE_API_BASE"
             BYTES=$(wc -c < "$file" | tr -d ' ')
             echo "POST $(basename "$file") bytes=$BYTES"
-            curl --fail-with-body --retry 3 --retry-all-errors --retry-delay 1 --retry-max-time 45 \
-              --connect-timeout 8 --max-time 20 -X POST "$CLOUDFLARE_SYNC_URL" \
-              -H "content-type: application/json" \
-              -H "x-sync-token: $SYNC_TOKEN" \
-              --data-binary @"$file" > /dev/null
+            # Storage-full and Worker-1102 responses are permanent for this
+            # payload. Do not retry identical writes or risk seal overwrites.
+            python scripts/arvexq_d1_capacity_guard.py \
+              --file "$file" --api-base "$CLOUDFLARE_API_BASE" --max-bytes 4000000
             PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"
           done
           echo "D1 live batched push OK"
