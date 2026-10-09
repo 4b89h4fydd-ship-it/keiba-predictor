@@ -1,4 +1,29 @@
 from arvexq.services import prepare_race_detail
+from arvexq.ingest.pure_parsers import (
+    decode_csv_bytes,
+    _jra_decode,
+    _decode_site,
+    _json_horse_rows,
+    _pick,
+    _jra_run_key,
+    _jra_run_value_present,
+)
+from arvexq.prediction.pure_diagnostics import (
+    _central_detail_coverage,
+    _diagnosis_history_quality,
+    _audit_axes_from_eval,
+    _learning_date_split,
+    _pc_time_index,
+    _prob_vector,
+    _history_is_enough,
+    _pc_season,
+    _reference_weight_from_horse,
+)
+from arvexq.infra.pure_snapshots import (
+    _bundle_quality,
+    _racedb_snapshot_usable,
+    _merge_official_result,
+)
 from arvexq.databanks.legacy_bridge import register_legacy_sources
 from arvexq.ui.assets import read_asset, read_binary_asset
 #!/usr/bin/env python3
@@ -341,15 +366,6 @@ def _stable_id(*parts: object) -> int:
     return int.from_bytes(digest, "big") & 0x7FFFFFFF
 
 
-def decode_csv_bytes(raw: bytes) -> str:
-    for encoding in ("utf-8-sig", "cp932", "shift_jis", "utf-8"):
-        try:
-            return raw.decode(encoding)
-        except UnicodeDecodeError:
-            continue
-    return raw.decode("utf-8", errors="replace")
-
-
 def read_csv_from_zip(zip_bytes: bytes, suffix: str) -> list[list[str]]:
     with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
         matches = [n for n in zf.namelist() if n.lower().endswith(suffix.lower())]
@@ -487,14 +503,6 @@ JRA_HORSE_CNAME_RE = re.compile(r"pw01dud\d{12,}(?:/|%2F)[0-9A-Fa-f]{2}",re.I)
 JRA_RESULT_CNAME_RE = re.compile(r"pw01sde(?:01|10)\d{20}(?:/|%2F)[0-9A-Fa-f]{2}",re.I)
 _jra_cache_lock = threading.Lock()
 _jra_text_cache: dict[str, tuple[float,str]] = {}
-
-def _jra_decode(raw: bytes) -> str:
-    for enc in ("utf-8","cp932","shift_jis"):
-        try:
-            return raw.decode(enc)
-        except Exception:
-            pass
-    return raw.decode("utf-8","ignore")
 
 def _jra_request(url: str, cname: str | None = None, cache_sec: int = 1800) -> str:
     key=url+"|"+(cname or "")
@@ -717,25 +725,6 @@ def _jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
             out.append({"date":iso,"track":track,"title":title,"distance":dist,"surface":surface,"condition":cond or "不明","weather":"不明","fieldSize":field,"finish":finish,"timeSeconds":tm,"cornerPositions":[],"carriedWeight":cw,"jockey":jockey,"raceId":rid,"source":"JRA公式競走馬情報"})
             if len(out)>=limit:return out
     return out
-
-def _jra_run_key(r:dict)->tuple:
-    """Stable horse-start key across JRA/profile/supplemental sources.
-
-    A horse cannot run twice at the same track on the same date, so title wording
-    must not prevent two representations of the same start from being merged.
-    """
-    date=str(r.get("date") or "");track=str(r.get("track") or "");distance=int(r.get("distance") or 0)
-    if date:return (date,track,distance)
-    return (date,track,distance,str(r.get("title") or ""),str(r.get("raceId") or ""))
-
-
-def _jra_run_value_present(key:str,value)->bool:
-    if value in (None,"",[],{},"不明"):return False
-    if key in {"finish","fieldSize","distance","timeSeconds","last3FSeconds","last3FRank","last3FPercentile","carriedWeight","racePrize1","raceNumber"}:
-        try:return float(value)>0
-        except (TypeError,ValueError):return False
-    return True
-
 
 def _jra_merge_run_fields(base:dict,incoming:dict)->dict:
     """Merge duplicate starts field-by-field instead of discarding richer data."""
@@ -1503,17 +1492,6 @@ def _history_counts(horse_names: list[str], cutoff: str) -> dict:
         "underFive": [name for name, v in counts.items() if v < 5],
     }
 
-def _history_is_enough(cov: dict, months_done: int) -> bool:
-    total = int(cov.get("totalHorses") or 0)
-    if total <= 0:
-        return True
-    # v39: do not stop because "most" horses are covered.  The race prediction waits until
-    # every runner has five prior starts in the local official-history store.  A horse with
-    # fewer than five career starts can only be confirmed after the configured lookback is
-    # exhausted; until then the crawler keeps going.
-    five = int(cov.get("horsesWith5Plus") or 0)
-    return five >= total
-
 def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[str], force: bool = False) -> dict:
     max_months = max(6, min(36, int(os.getenv("NAR_ON_DEMAND_HISTORY_MONTHS", "36"))))
     with _race_history_lock:
@@ -1622,12 +1600,6 @@ def nar_race_summaries(iso_date: str) -> list[dict]:
 
 NETKEIBA_TRACK_CODES={"01":"札幌","02":"函館","03":"福島","04":"新潟","05":"東京","06":"中山","07":"中京","08":"京都","09":"阪神","10":"小倉"}
 _netkeiba_cache_lock=threading.Lock(); _netkeiba_cache={}
-
-def _decode_site(raw:bytes)->str:
-    for enc in ("utf-8","euc_jp","cp932","shift_jis"):
-        try:return raw.decode(enc)
-        except Exception:pass
-    return raw.decode("utf-8","ignore")
 
 def _netkeiba_get(url:str,timeout:float=4.0,cache_sec:int=45)->str:
     now=time.time()
@@ -2180,12 +2152,6 @@ def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
             print('NAR netkeiba odds-page fallback failed',rid,exc)
     return out
 
-def _reference_weight_from_horse(h:dict)->tuple[int|None,str]:
-    for rr in (h.get('recentRaces') or []):
-        try:w=int(rr.get('bodyWeight') or 0)
-        except Exception:w=0
-        if 250<w<800:return w,str(rr.get('date') or '')
-    return None,''
 _nar_odds_cache_lock=threading.Lock()
 _nar_odds_cache:dict[str,tuple[float,dict]]={}
 
@@ -2560,24 +2526,6 @@ def _merge_central_recent(existing: list[dict], stored: list[dict], cutoff: str,
     all_runs.sort(key=lambda x: (str(x.get("date") or ""), int(x.get("raceNumber") or 0)), reverse=True)
     return all_runs[:limit]
 
-
-def _central_detail_coverage(detail: dict) -> dict:
-    horses = detail.get("horses", []) or []
-    counts = {str(h.get("name") or ""): min(5, len(h.get("recentRaces") or [])) for h in horses if h.get("name")}
-    complete = {str(h.get("name") or ""): bool(h.get("_jraCareerComplete")) for h in horses if h.get("name")}
-    vals = list(counts.values())
-    resolved = sum(1 for name,v in counts.items() if v >= 5 or complete.get(name, False))
-    return {
-        "totalHorses": len(counts),
-        "horsesWithHistory": sum(1 for v in vals if v > 0),
-        "horsesWith4Plus": sum(1 for v in vals if v >= 4),
-        "horsesWith5Plus": sum(1 for v in vals if v >= 5),
-        "horsesResolved": resolved,
-        "horsesCareerComplete": sum(1 for name in counts if complete.get(name, False)),
-        "totalRuns": sum(vals),
-        "counts": counts,
-        "underFive": [name for name, v in counts.items() if v < 5 and not complete.get(name, False)],
-    }
 
 def _central_month_dates(year: int, month: int, cutoff: str) -> list[str]:
     last = calendar.monthrange(year, month)[1]
@@ -3078,22 +3026,6 @@ def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
         try:prize1=int(float(pm.group(1).replace(",",""))*10000)
         except (TypeError,ValueError):prize1=0
     return {"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":len(finishers),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"result":{"status":status,"finishers":finishers,"source":"JRA公式","payouts":payouts},"resultCname":result_cname,"source":"JRA公式結果"}
-def _merge_official_result(detail:dict,official:dict)->dict:
-    if not official:return detail
-    for k in ("title","distance","surface","condition","weather","fieldSize","racePrize1","startTime","scheduledStartTime","resultCname"):
-        v=official.get(k)
-        if v not in (None,"",0,"不明"):detail[k]=v
-    if official.get("result"):detail["result"]=official["result"]
-    by_no={int(h.get("horseNumber") or 0):h for h in detail.get("horses",[]) or []}
-    for f in (official.get("result") or {}).get("finishers",[]) or []:
-        no=int(f.get("horseNumber") or 0);h=by_no.get(no)
-        if not h:
-            h={"horseNumber":no,"frameNumber":f.get("frameNumber") or no,"name":f.get("name") or "","sex":f.get("sex") or "","age":f.get("age") or 0,"carriedWeight":f.get("carriedWeight") or 0,"jockey":f.get("jockey") or "","trainer":f.get("trainer") or "","recentRaces":[],"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{}}
-            detail.setdefault("horses",[]).append(h);by_no[no]=h
-        for k in ("frameNumber","name","sex","age","carriedWeight","jockey","trainer","bodyWeight","bodyWeightChange"):
-            if f.get(k) not in (None,"",0):h[k]=f.get(k)
-    detail["fieldSize"]=int(detail.get("fieldSize") or len(detail.get("horses",[]) or []));return detail
-
 def _netkeiba_race_meta(detail:dict)->dict:
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
     if not rid:return {}
@@ -3253,12 +3185,6 @@ def _safe_float(v):
 def _safe_int(v):
     x=_safe_float(v); return int(x) if x is not None else None
 
-def _pick(d,*keys):
-    if not isinstance(d,dict):return None
-    for k in keys:
-        if k in d and d.get(k) not in (None,""):return d.get(k)
-    return None
-
 def _smart_normalize_row(x:dict)->dict|None:
     if not isinstance(x,dict):return None
     no=_safe_int(_pick(x,"horseNumber","horse_no","uno","number","馬番")); name=str(_pick(x,"name","hname","horseName","馬名") or "").strip()
@@ -3268,18 +3194,6 @@ def _smart_normalize_row(x:dict)->dict|None:
     rr=_pick(x,"recentRaces","recent_races")
     if isinstance(rr,list):out["recentRaces"]=[z for z in rr if isinstance(z,dict)][:5]
     return out
-
-def _json_horse_rows(body)->list[dict]:
-    if isinstance(body,list):return [x for x in body if isinstance(x,dict)]
-    if not isinstance(body,dict):return []
-    for k in ("horses","entries","rows","data","raceEntries","values"):
-        z=body.get(k)
-        if isinstance(z,list):return [x for x in z if isinstance(x,dict)]
-        if isinstance(z,dict):
-            for kk in ("horses","entries","rows","data"):
-                zz=z.get(kk)
-                if isinstance(zz,list):return [x for x in zz if isinstance(x,dict)]
-    return []
 
 def _format_feed_url(base:str,detail:dict)->str:
     vals={"date":str(detail.get("date") or ""),"yyyymmdd":str(detail.get("date") or "").replace("-",""),"track":str(detail.get("track") or ""),"race":str(detail.get("raceNumber") or ""),"circuit":str(detail.get("circuit") or ""),"race_id":str(detail.get("id") or "")}
@@ -3811,34 +3725,6 @@ def _prediction_clock_state(detail: dict) -> tuple[str, int | None]:
     return ("pre" if nowm<post else "started"),post-nowm
 
 
-def _prob_vector(values:list[float])->list[float]:
-    clean=[]
-    for v in values:
-        try:x=max(0.0,float(v or 0))
-        except Exception:x=0.0
-        clean.append(x)
-    sm=sum(clean)
-    if sm<=0:
-        return ([1.0/len(clean)]*len(clean)) if clean else []
-    return [x/sm for x in clean]
-
-
-def _audit_axes_from_eval(e:dict)->dict:
-    a=(e or {}).get("v218Audit") or (e or {}).get("v217Audit") or {}
-    def u(key,default=.5):
-        try:return round(max(0.0,min(1.0,float(a.get(key) if a.get(key) is not None else default))),6)
-        except Exception:return default
-    pp=a.get("positionPressure") if isinstance(a.get("positionPressure"),dict) else {}
-    try:frag=max(0.0,min(1.0,float(pp.get("local") or 0)))
-    except Exception:frag=0.0
-    return {
-        "pure":u("pure"),"trueRun":u("trueRun"),"sectional":u("sectional"),
-        "positionScenario":u("positionScenario"),"conditions":u("conditions"),
-        "opponentLevel":u("opponentLevel"),"stateConsistency":u("stateConsistency"),
-        "evidence":u("evidence",.0),"sevenAxisScore":u("sevenAxisScore"),"fragility":round(frag,6),
-    }
-
-
 def _learning_probability(rows:list[dict], weights:dict, power:float=1.0, shrink:float=0.0)->list[float]:
     """Market-independent winner distribution from immutable pre-race lock fields."""
     if not rows:return []
@@ -3913,20 +3799,6 @@ def _learning_races(as_of_date:str,circuit:str)->list[dict]:
         out.append({"date":str(row["race_date"] or ""),"winnerNo":winner,"horses":horses,"dataQuality":quality,
                     "profileId":str((lock.get("learningProfile") or {}).get("profileId") or "baseline")})
     return out
-
-
-def _learning_date_split(races:list[dict])->dict:
-    """Split on whole race dates so one day's track state never straddles train/test blocks."""
-    dates=sorted({str(x.get("date") or "") for x in races if x.get("date")})
-    if len(dates)<4:return {"dates":dates,"train":races,"tune":[],"promotion":[],"shadow":[]}
-    nd=len(dates)
-    i1=max(1,min(nd-3,int(round(nd*.55))))
-    i2=max(i1+1,min(nd-2,int(round(nd*.75))))
-    i3=max(i2+1,min(nd-1,int(round(nd*.90))))
-    d1=set(dates[:i1]);d2=set(dates[i1:i2]);d3=set(dates[i2:i3]);d4=set(dates[i3:])
-    pick=lambda ds:[x for x in races if str(x.get("date") or "") in ds]
-    return {"dates":dates,"train":pick(d1),"tune":pick(d2),"promotion":pick(d3),"shadow":pick(d4),
-            "dateBlocks":{"train":sorted(d1),"tune":sorted(d2),"promotion":sorted(d3),"shadow":sorted(d4)}}
 
 
 def _learning_paired_top1(races:list[dict], base_w:dict, cand_w:dict, power:float, shrink:float)->dict:
@@ -4583,17 +4455,6 @@ def _pc_clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, float(v)))
 
 
-def _pc_season(iso_date: str) -> str:
-    try:
-        month=int(str(iso_date).split("-")[1])
-    except Exception:
-        month=0
-    if 3 <= month <= 5:return "春"
-    if 6 <= month <= 8:return "夏"
-    if 9 <= month <= 11:return "秋"
-    return "冬"
-
-
 def _pc_race_field(rr: dict) -> int:
     return max(4, int(rr.get("fieldSize") or 12))
 
@@ -4602,19 +4463,6 @@ def _pc_finish_quality(rr: dict) -> float:
     fin=int(rr.get("finish") or 0); fs=_pc_race_field(rr)
     if fin <= 0:return .45
     return _pc_clamp(1-(fin-1)/max(3,fs-1))
-
-
-def _pc_time_index(rr: dict, target_dist: int) -> float | None:
-    try:
-        sec=float(rr.get("timeSeconds") or 0); dist=int(rr.get("distance") or 0)
-    except Exception:
-        return None
-    if sec <= 0 or dist <= 0:return None
-    speed=dist/sec
-    penalty=1-min(.28,abs(dist-target_dist)/max(600,target_dist)*.55)
-    cond=str(rr.get("condition") or "")
-    adj=.985 if ("重" in cond or "不" in cond) else (.993 if "稍" in cond else 1.0)
-    return speed*penalty/adj
 
 
 def _pc_list_quality(rows: list[dict], target_dist: int) -> float:
@@ -5010,14 +4858,6 @@ def _schedule_detail_background_jobs(race_id: str, detail: dict) -> None:
 
 _racedb_refresh_lock=threading.Lock()
 _racedb_refresh_running:set[str]=set()
-
-def _racedb_snapshot_usable(detail:dict)->bool:
-    if not isinstance(detail,dict):return False
-    horses=detail.get("horses")
-    if not isinstance(horses,list) or not horses:return False
-    return all(isinstance(h,dict) and h.get("name") and int(h.get("horseNumber") or 0)>0 for h in horses)
-
-
 
 def _fast_local_race_detail(race_id:str)->dict|None:
     """First paint from local DB only. Never wait on web/history/profile lookups."""
@@ -5597,24 +5437,6 @@ def _merge_fast_history(detail:dict, history_rows:list[dict])->dict:
             h["recentRaces"]=merged[:5]
             h["allPastRuns"]=merged
     return detail
-
-
-def _diagnosis_history_quality(detail:dict)->dict:
-    horses=detail.get("horses") or []
-    total=len(horses)
-    if not total:return {"ready":False,"total":0,"withHistory":0,"runs":0}
-    if str(detail.get("analysisMode") or "")=="新馬":
-        return {"ready":True,"total":total,"withHistory":0,"runs":0,"debut":True}
-    counts=[]
-    for h in horses:
-        runs=h.get("allPastRuns") or h.get("recentRaces") or []
-        counts.append(len(runs))
-    with_history=sum(1 for c in counts if c>0)
-    runs=sum(min(c,5) for c in counts)
-    # Enough to prevent arbitrary horse-number rankings while still handling young races.
-    need=max(2,int((total*.50)+.999))
-    ready=with_history>=need and runs>=max(4,total)
-    return {"ready":ready,"total":total,"withHistory":with_history,"runs":runs,"need":need}
 
 
 def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
@@ -6243,15 +6065,6 @@ def _schedule_day_bundle_refresh(date:str,force_sources:bool=False)->None:
                 st.update({"running":False,"error":str(exc),"finishedAt":int(time.time())})
                 _site_bootstrap_state[date]=st
     threading.Thread(target=worker,daemon=True,name="day-bundle-"+date).start()
-
-def _bundle_quality(p:dict|None)->tuple:
-    p=p or {}
-    return (
-        int(p.get("raceCount") or 0),
-        int(p.get("detailCount") or 0),
-        int(p.get("generatedAtEpoch") or p.get("updatedAtEpoch") or 0),
-        int(p.get("analysisCount") or 0),
-    )
 
 def _site_bootstrap_payload(date:str,force:bool=False,wait:bool=False)->dict:
     """
