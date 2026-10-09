@@ -2113,7 +2113,7 @@ function raceDisplayCoreReady(d,row){
   if(!active.length)active=hs;
   var named=active.filter(function(h){return String(h.name||'').trim()}).length;
   // Rendering uses runner identity only. Secondary fields can continue syncing.
-  // Prediction and bet locking keep their separate strict data-readiness checks.
+  // Display readiness is separate from evidence-based model ticket readiness.
   return named>=Math.min(active.length,Math.max(1,Math.ceil(active.length*.50)))
 }
 
