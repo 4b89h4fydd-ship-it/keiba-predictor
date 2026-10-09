@@ -4,7 +4,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
 const host={};
 new Function('window',fs.readFileSync('arvexq/ui/static/betting/podium_axis_guard.js','utf8'))(host);
 const g=host.ARVEXQPodiumAxisGuard;
-assert.equal(g.VERSION,'arvexq-axis-reliability-v2-past-context');
+assert.equal(g.VERSION,'arvexq-axis-reliability-v3-full-career');
 function horse(outcomes){
  return {horseNumber:4,recentRaces:outcomes.map((finish,i)=>({
   date:'2026-09-'+String(25-i).padStart(2,'0'),track:'大井',
@@ -21,6 +21,11 @@ const race={date:'2026-10-09',track:'大井',surface:'ダート',distance:1200,c
 assert.equal(past.datedRuns,5);
 assert.equal(past.top3,4);
 assert.equal(past.comparableTop3,4);
+const career=g.analyzePast(horse([7,7,7,7,7,1,1,1]),race);
+assert.equal(career.datedRuns,8,'career must not truncate at five');
+assert.equal(career.recentStarts,5);
+assert.equal(career.top3,3);
+assert.equal(career.recentTop3,0);
 assert(g.inspect(candidate,runner).eligible,'comparable consistent horse supported');
 function reject(patch,reason){
  const r=g.inspect({...candidate,...patch},runner);
