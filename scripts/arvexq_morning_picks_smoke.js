@@ -5,7 +5,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 function take(name){
-  const a=src.indexOf('function '+name+'('),b=src.indexOf('\n}',a);
+  const a=src.lastIndexOf('function '+name+'('),b=src.indexOf('\n}',a);
   assert(a>=0&&b>a,'missing '+name);
   return src.slice(a,b+2);
 }
