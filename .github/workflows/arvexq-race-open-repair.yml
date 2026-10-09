@@ -51,7 +51,7 @@ jobs:
           assert 'jockey' not in block
           assert 'fieldSize' not in block
           assert 'named>=Math.min' in block
-          assert "plan.lockPolicy='v327-final-input-window-30m'" in s
+          assert "plan.lockPolicy='v355-prerace-model-evidence-30m'" in s
           assert "String(r.track||'')==='高知'" in s
           assert 'window.ARVEXQ_BUILD="v329";' in s
           c0=s.index('function courseProfile(r){')

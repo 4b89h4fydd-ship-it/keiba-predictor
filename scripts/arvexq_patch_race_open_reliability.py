@@ -64,7 +64,7 @@ RACE_READY = '''function raceDisplayCoreReady(d,row){
   if(!active.length)active=hs;
   var named=active.filter(function(h){return String(h.name||'').trim()}).length;
   // Rendering uses runner identity only. Secondary fields can continue syncing.
-  // Prediction and bet locking keep their separate strict data-readiness checks.
+  // Display readiness is separate from evidence-based model ticket readiness.
   return named>=Math.min(active.length,Math.max(1,Math.ceil(active.length*.50)))
 }'''
 
@@ -133,10 +133,10 @@ required = [
     'function specialForecastRaceCandidates()',
     "String(r.track||'')==='高知'",
     'lockWindow=30',
-    'n(rd.actualOdds,0)>=.65',
-    'n(rd.bodyWeight,0)>=.70',
-    'n(rd.environment,0)>=1',
-    "plan.lockPolicy='v327-final-input-window-30m'",
+    'gate.ready!==true',
+    'n(rd.history,0)<.55',
+    'n(rd.analysis,0)<.45',
+    "plan.lockPolicy='v355-prerace-model-evidence-30m'",
     'window.ARVEXQ_BUILD="v329";',
     'function courseProfile(r){\n  r=r||{};',
     'function courseStageFrac(r,st){\n  r=r||{};',
