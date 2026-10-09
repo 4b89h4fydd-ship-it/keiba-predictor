@@ -81,7 +81,8 @@ function build(r,p,rows,featured,deps){
 }
 
 
-function arvexqRaceType(base,p){
+function raceType(base,p,deps){
+  const {n,clamp}=deps;
   var a=base&&base.audit||{},field=Math.max(4,n(a.field,(p&&p.rows||[]).length)),
       p1=n(a.p1Top),margin=n(a.p1Margin),top2=n(a.top2mass),top3=n(a.top3mass),ent=clamp(n(a.entropy,.94),0,1),order=clamp(n(a.orderConfidence),0,1),code='standard',label='標準';
   if(p1>=Math.max(.28,1/field*2.45)&&margin>=Math.max(.045,1/field*.35)){code='dominant';label='1強'}
@@ -95,5 +96,5 @@ function arvexqRaceType(base,p){
 // The joint-order model may generate several ticket marginals internally, but the
 // customer-facing plan uses one primary ticket type and, only in unusually strong
 // cases, one complementary secondary type. This avoids buying the same opinion five ways.
-global.ARVEXQLegacyOrderModel=Object.freeze({build:build});
+global.ARVEXQLegacyOrderModel=Object.freeze({build:build,raceType:raceType});
 })(window);

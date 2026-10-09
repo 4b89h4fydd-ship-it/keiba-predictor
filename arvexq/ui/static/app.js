@@ -2480,6 +2480,12 @@ function buildV213AiBetPlan(r,p,rows,featured){
   captureExactaBetEvidence:captureExactaBetEvidence});
 }
 
+// Compatibility bridge: race type logic lives in the independently loaded betting module.
+function arvexqRaceType(base,p){
+  if(!window.ARVEXQLegacyOrderModel||typeof window.ARVEXQLegacyOrderModel.raceType!=='function')
+    throw Error('independent race-type strategy unavailable');
+  return window.ARVEXQLegacyOrderModel.raceType(base,p,{n:n,clamp:clamp});
+}
 function rebuildBetStrategyV242(base,r,p){
   if(!base)return base;
   var source=(base.items||[]).slice(),byKind={};
