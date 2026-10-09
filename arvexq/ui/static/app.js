@@ -3502,10 +3502,11 @@ function computeMorningSpecialRaceCandidates(){
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceCandidates(){
+  // Like elite selection, special race membership is fixed once at dawn.
+  // A new result, race title, or odds refresh must never change the list.
   return (state.races||[]).filter(function(r){
-    if(!r||!r.id)return false;
-    var title=String(r.title||'');
-    return raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))
+    var m=morningPickOf(r);
+    return !!(r&&r.id&&m&&m.special===true)
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceTag(r){
