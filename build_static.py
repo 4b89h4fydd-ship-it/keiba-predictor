@@ -141,7 +141,7 @@ js = strings["JS"]
 # Refresh unchanged v329 filenames when actual UI files change. Avoid stale
 # iPhone/PWA JS/CSS while preserving the approved top-screen composition.
 core_asset_hash = hashlib.sha256((js + "\0" + css).encode("utf-8")).hexdigest()[:12]
-index_html = index_html.replace("fix=20261009-axis-integrity-v356", "fix=" + core_asset_hash)
+index_html = index_html.replace("fix=20261009-user-approved-v357", "fix=" + core_asset_hash)
 manifest = strings["MANIFEST"]
 sw = strings["SW"]
 

@@ -98,6 +98,9 @@ jobs:
       - name: Official course revision and morning marks
         run: |
           python -m unittest discover -s tests -p 'test_official_course_revision.py' -v
+          python -m unittest discover -s tests -p 'test_user_approved_model_revision.py' -v
+          node --check scripts/arvexq_model_mark_revision_smoke.js
+          node scripts/arvexq_model_mark_revision_smoke.js
           node --check scripts/arvexq_capture_course_revised_marks.js
 
       - name: Morning race selection remains immutable

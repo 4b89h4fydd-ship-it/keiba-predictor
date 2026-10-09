@@ -113,7 +113,7 @@ def pre_off_change(detail: dict[str, Any], old: Any, new: Any, now: datetime) ->
 
 
 def latest_pre_off_marks(detail: dict[str, Any]) -> dict[str, Any] | None:
-    """Most recent truly pre-off official revision, else original morning marks."""
+    """Last verified pre-off update (official or explicit user approval), else morning marks."""
     post = post_at(detail)
     original = detail.get("morningMarkSnapshot")
     if not post or not isinstance(original, dict):
@@ -162,5 +162,15 @@ def latest_pre_off_marks(detail: dict[str, Any]) -> dict[str, Any] | None:
             seen.add(no)
         else:
             result = rev
+            best_at = at
+    # Separate provenance: an explicitly requested model update must never
+    # impersonate an official horse-racing authority or rewrite the morning original.
+    from arvexq.prediction.user_approved_model_revision import valid_revision
+    for revision in detail.get("modelMarkRevisions") or []:
+        if not valid_revision(detail, revision):
+            continue
+        at = datetime.fromisoformat(str(revision["revisedAt"]).replace("Z", "+00:00"))
+        if best_at < at < post:
+            result = revision
             best_at = at
     return result

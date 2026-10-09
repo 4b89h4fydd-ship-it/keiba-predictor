@@ -32,6 +32,8 @@ from arvexq.pipeline.fingerprints import analysis_input_hash
 from arvexq.ingest.official_changes import collect_nar_changes
 from arvexq.ingest.official_course_feeds import fetch_course_events
 from arvexq.prediction.official_course_revision import pre_off_change, official_event
+from arvexq.prediction.user_approved_model_revision import enabled as user_revision_enabled, update_marks as user_update_marks
+from arvexq.prediction.prerace_archive import post_at
 
 JST = timezone(timedelta(hours=9))
 D1_BASE = os.getenv("CLOUDFLARE_API_BASE", "https://kraiz-api.4b89h4fydd.workers.dev").rstrip("/")
@@ -491,6 +493,17 @@ def refresh_one(
                 errors.append(official_status)
             else:
                 analysis_changed = True
+    if merged and pre_post and user_revision_enabled(datetime.now(JST)):
+        before_original = copy.deepcopy((merged.get("morningMarkSnapshot") or {}))
+        merged, model_status = user_update_marks(merged, now=datetime.now(JST))
+        if model_status.startswith("changed:"):
+            print("USER_APPROVED_MODEL_MARK_REVISION", rid, model_status)
+            if merged.get("morningMarkSnapshot") != before_original:
+                raise RuntimeError("user-approved revision mutated the morning original")
+            analysis_changed = True
+        elif model_status.startswith("compute-failed") or model_status == "invalid-preoff-revision":
+            errors.append("user-model-revision:" + model_status)
+            print("USER_APPROVED_MODEL_MARK_ERROR", rid, model_status)
     if merged and analysis_changed and pre_post:
         pm = dict(merged.get("preparedMeta") or {})
         pm["analysisInputHash"] = analysis_input_hash(merged)
@@ -521,6 +534,16 @@ def main() -> int:
     now_min = now.hour * 60 + now.minute
     row_by_id = {str(r["id"]): r for r in rows}
     targets = choose_targets(rows, now_min)
+    # One explicit user approval applies only to still-unstarted races today.
+    # New days use the updated morning model instead of rewriting old archives.
+    if user_revision_enabled(now):
+        pending_model_targets = [str(r["id"]) for r in rows
+                                 if str(r.get("date") or "") == now.date().isoformat()
+                                 and post_at(r) and now < post_at(r)]
+        for rid in pending_model_targets:
+            if rid not in targets:
+                targets.append(rid)
+        print("USER_APPROVED_MODEL_TARGETS", "eligible", len(pending_model_targets))
     # RaceList 変更情報 is venue-wide. Capture cancellations even when their
     # races are more than an hour away or have left the rolling live window.
     tracks = {str(r.get("track")): str(app.NAR_BABA_CODES.get(str(r.get("track")) or "") or "")
@@ -619,6 +642,8 @@ def main() -> int:
             "reanalyzed_count": len(reanalyzed),
             "environment_track_count": len(environment),
             "official_course_event_count": len(official_conditions),
+            "user_model_revision_approval": "user-approved-past-five-from-2026-10-09-20-10-jst"
+                if user_revision_enabled(now) else "",
             "odds_row_count": len(odds_current),
             "error_count": len(errors),
             "live_updated_at": int(time.time()),

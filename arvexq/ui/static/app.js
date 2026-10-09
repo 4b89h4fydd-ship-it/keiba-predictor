@@ -1791,8 +1791,40 @@ function latestOfficialMarkRevision(r){
   });
   return latest
 }
+function latestUserApprovedModelMarkRevision(r){
+  var initial=validMorningMarkSnapshot(r);
+  if(!initial||String(r.date)!=='2026-10-09')return null;
+  var post=Date.parse(String(r.date||'')+'T'+String(r.startTime||r.scheduledStartTime||'').slice(0,5)+':00+09:00'),
+      approval=Date.parse('2026-10-09T20:10:00+09:00'),fixed=Date.parse(String(initial.fixedAt||'')),
+      expected={};
+  (initial.horses||[]).forEach(function(h){expected[n(h.horseNumber,0)]=true});
+  var count=Object.keys(expected).length,latest=null;
+  (r.modelMarkRevisions||[]).forEach(function(z){
+    if(!z||z.version!=='arvexq-user-model-mark-revision-v1'||
+       z.approvalId!=='user-approved-past-five-from-2026-10-09-20-10-jst'||
+       z.modelVersion!=='arvexq-axis-reliability-v2-past-context'||
+       String(z.raceId||'')!==String(r.id)||String(z.raceDate||'')!==String(r.date)||
+       !Array.isArray(z.horses)||z.horses.length!==count)return;
+    var at=Date.parse(String(z.revisedAt||'')),seen={},valid=true;
+    if(!isFinite(at)||at<approval||at<=fixed||at>=post)return;
+    z.horses.forEach(function(h){
+      var no=n(h&&h.horseNumber,0),mark=String(h&&h.mark||'');
+      if(!no||!expected[no]||seen[no]||['','◎','○','▲','☆+','☆','△','注'].indexOf(mark)<0)valid=false;
+      seen[no]=true
+    });
+    if(!valid)return;
+    if(!latest||Date.parse(String(latest.revisedAt||''))<at)latest=z
+  });
+  return latest
+}
+function latestAuthorizedMarkRevision(r){
+  var official=latestOfficialMarkRevision(r),model=latestUserApprovedModelMarkRevision(r);
+  if(!official)return model;
+  if(!model)return official;
+  return Date.parse(String(model.revisedAt||''))>Date.parse(String(official.revisedAt||''))?model:official
+}
 function authorizedPreOffMarks(r){
-  return latestOfficialMarkRevision(r)||validMorningMarkSnapshot(r)||serverFrozenPrediction(r)
+  return latestAuthorizedMarkRevision(r)||validMorningMarkSnapshot(r)||serverFrozenPrediction(r)
 }
 function immutableArchivedPrediction(r){
   // Does not invoke ability, pace, winner or bet calculation after the off.
@@ -1827,9 +1859,9 @@ function immutableArchivedPrediction(r){
   });
   return{rows:rows,occ:0,scenarios:[],plans:{},plan:null,coverage:0,
     pressure:0,arrangement:{},profile:{},outcome:null,
-    markFreeze:{source:latestOfficialMarkRevision(r)?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':(lock?'server-prerace':(local?'local-prepost':'missing-prerace'))),
+    markFreeze:{source:lock&&lock.version==='arvexq-user-model-mark-revision-v1'?'user-model-revision':(lock&&lock.version==='arvexq-official-mark-revision-v1'?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':(lock?'server-prerace':(local?'local-prepost':'missing-prerace')))),
       fixedAt:lock?String(lock.revisedAt||lock.fixedAt||lock.sealedAtJst||lock.capturedAtJst||''):(local?local.fixedAt:''),
-      reason:String((latestOfficialMarkRevision(r)||{}).reason||'')},
+      reason:String((lock&&lock.reason)||'')},
     engineVersion:'arvexq-archived-prerace-readonly-v346'};
 }
 function applyFrozenMarks(r,p){
@@ -1865,9 +1897,9 @@ function applyFrozenMarks(r,p){
         z.overallGrade=String(q.lockedEvaluation.grade||z.overallGrade||'C');
       }
     });
-    p.markFreeze={source:latestOfficialMarkRevision(r)?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':'server-prerace'),
+    p.markFreeze={source:server.version==='arvexq-user-model-mark-revision-v1'?'user-model-revision':(server.version==='arvexq-official-mark-revision-v1'?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':'server-prerace')),
       fixedAt:server.revisedAt||server.fixedAt||server.sealedAtJst||server.capturedAtJst||'',
-      reason:String((latestOfficialMarkRevision(r)||{}).reason||'')};
+      reason:String((lock&&lock.reason)||'')};
   }else if(record){
     var byNo={};record.marks.forEach(function(z){byNo[n(z.no)]=z});
     var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};

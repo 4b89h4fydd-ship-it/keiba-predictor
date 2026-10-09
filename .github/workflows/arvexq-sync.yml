@@ -9,6 +9,9 @@ name: ARVEXQ Realtime Sync
       - scripts/arvexq_live_sync.py
       - arvexq/ingest/official_course_feeds.py
       - arvexq/prediction/official_course_revision.py
+      - arvexq/prediction/user_approved_model_revision.py
+      - scripts/arvexq_protect_sync.py
+      - tests/test_user_approved_model_revision.py
       - scripts/arvexq_capture_course_revised_marks.js
       - scripts/arvexq_sync_batches.py
       - .github/workflows/arvexq-sync.yml

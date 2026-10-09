@@ -101,6 +101,33 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
             )
         if not allow_append:
             out["officialMarkRevisions"] = copy.deepcopy(previous_revisions)
+    # User-directed model revisions have a different trust origin from
+    # official condition revisions. Only one valid append to the original
+    # revision chain is allowed. Failed attempts never wipe earlier records.
+    previous_models = list(old.get("modelMarkRevisions") or [])
+    proposed_models = out.get("modelMarkRevisions")
+    allow_new_model = False
+    if isinstance(proposed_models, list) and len(proposed_models) == len(previous_models) + 1:
+        if proposed_models[:-1] == previous_models:
+            from datetime import datetime, timedelta
+            from arvexq.prediction.prerace_archive import JST, post_at
+            from arvexq.prediction.user_approved_model_revision import valid_revision, enabled
+            at_now = datetime.now(JST)
+            item = proposed_models[-1]
+            post = post_at(old)
+            if isinstance(item, dict) and valid_revision(old, item) and enabled(at_now):
+                submitted = datetime.fromisoformat(str(item["revisedAt"]).replace("Z", "+00:00"))
+                allow_new_model = (bool(post) and at_now < post and
+                                   not sealed_lock(old) and
+                                   not (isinstance(old.get("preRaceBet"), dict) and
+                                        old["preRaceBet"].get("fixedAt")) and
+                                   timedelta(0) <= at_now - submitted <= timedelta(minutes=8))
+    if allow_new_model:
+        out["modelMarkRevisions"] = copy.deepcopy(proposed_models)
+    elif previous_models:
+        out["modelMarkRevisions"] = copy.deepcopy(previous_models)
+    else:
+        out.pop("modelMarkRevisions", None)
     if sealed_lock(old):
         return restore_seal(old, out)
     prior = old.get("preRacePrediction")
