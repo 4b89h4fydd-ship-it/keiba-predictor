@@ -7,6 +7,7 @@ from typing import Any
 from arvexq.databanks.registry import DataBankRegistry, registry
 from arvexq.databanks.authorized_feeds import _validated_early_timing
 from arvexq.ingest.orchestrator import FetchResult, fetch_domain
+from arvexq.ingest.full_career import merge_career, audit_career, date_key
 
 
 def _present(value: Any) -> bool:
@@ -182,7 +183,18 @@ def _apply_payload(
         return False
     changed = False
 
-    for key in ("recentRaces", "allPastRuns"):
+    if domain == "horse_history" and history_limit > 5:
+        incoming = [*(payload.get("recentRaces") or []), *(payload.get("allPastRuns") or []), *(payload.get("history") or [])]
+        previous = [*(horse.get("allPastRuns") or []), *(horse.get("recentRaces") or [])]
+        all_runs = merge_career(previous, incoming, cutoff)
+        if all_runs and all_runs != horse.get("allPastRuns"):
+            horse["allPastRuns"] = all_runs
+            changed = True
+        if all_runs and all_runs[:5] != horse.get("recentRaces"):
+            horse["recentRaces"] = all_runs[:5]
+            changed = True
+
+    for key in (() if domain == "horse_history" and history_limit > 5 else ("recentRaces", "allPastRuns")):
         incoming = payload.get(key)
         if isinstance(incoming, list) and incoming:
             base = horse.get(key) or horse.get("recentRaces") or []
@@ -192,7 +204,7 @@ def _apply_payload(
                 changed = True
 
     # Some adapters return the history list under a generic key.
-    if domain == "horse_history" and isinstance(payload.get("history"), list):
+    if domain == "horse_history" and history_limit <= 5 and isinstance(payload.get("history"), list):
         merged = _merge_runs(horse.get("recentRaces") or [], payload["history"], cutoff=cutoff, limit=history_limit)
         if merged and merged != horse.get("recentRaces"):
             horse["recentRaces"] = merged
@@ -250,7 +262,8 @@ async def enrich_race_missing(
         changed = False
         async with sem:
             domains: list[tuple[str, set[str] | None]] = []
-            if _needs_history(horse, cutoff=cutoff, limit=history_limit):
+            full_search = history_limit > 5 and (horse.get("_careerHistoryAudit") or {}).get("requestedAtRaceDate") != date_key(cutoff)
+            if full_search or _needs_history(horse, cutoff=cutoff, limit=min(5, history_limit)):
                 domains.append(("horse_history", None))
             elif measured_feeds and (_measured_horse_first3f_count(horse, cutoff, history_limit) < 2 or _horse_early_timing_count(horse, cutoff, history_limit) < 2):
                 # Full corner history still lacks measured per-horse early splits:
@@ -261,6 +274,7 @@ async def enrich_race_missing(
             if _needs_connections(horse):
                 domains.append(("jockey_trainer", None))
 
+            history_sources: list[str] = []
             for domain, only_sources in domains:
                 results = await fetch_domain(
                     domain,
@@ -272,6 +286,8 @@ async def enrich_race_missing(
                     only_sources=only_sources,
                 )
                 for result in results:
+                    if domain == "horse_history":
+                        history_sources.append(result.source)
                     if not result.ok:
                         failures.append({"source": result.source, "domain": domain, "error": result.error or "failed"})
                         continue
@@ -285,6 +301,11 @@ async def enrich_race_missing(
                         cutoff=cutoff,
                         history_limit=history_limit,
                     ) or changed
+            if history_limit > 5:
+                audit = audit_career(horse, cutoff, history_limit, history_sources)
+                if audit != horse.get("_careerHistoryAudit"):
+                    horse["_careerHistoryAudit"] = audit
+                    changed = True
         return changed
 
     flags = await asyncio.gather(*(one(h) for h in horses))
@@ -295,7 +316,9 @@ async def enrich_race_missing(
         "version": "arvexq-multi-source-fallback-v1",
         "searchedHorses": len(horses),
         "changedHorses": changed_horses,
-        "historyCompleteHorses": sum(_history_count(h) >= history_limit for h in horses),
+        "historyCompleteHorses": sum((h.get("_careerHistoryAudit") or {}).get("complete") is True for h in horses),
+        "careerObservedHorses": sum(_history_count(h) > 0 for h in horses),
+        "careerIncompleteHorses": sum(not (h.get("_careerHistoryAudit") or {}).get("complete") for h in horses),
         "measuredHorseFirst3FReadyHorses": sum(
             _measured_horse_first3f_count(h, cutoff, history_limit) >= 2
             for h in horses
