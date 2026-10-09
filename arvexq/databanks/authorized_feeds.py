@@ -155,6 +155,8 @@ def _request_history(config: dict[str, Any], horse: dict[str, Any], race: dict[s
     if not h_id and h_name and received_name and received_name != h_name:
         raise ValueError("Authorized history response horseName mismatch")
     out: dict[str, Any] = {}
+    from arvexq.ingest.full_career import date_key
+    cutoff = date_key(date)
     for key in ("recentRaces", "allPastRuns"):
         rows = obj.get(key)
         if isinstance(rows, list):
@@ -162,9 +164,10 @@ def _request_history(config: dict[str, Any], horse: dict[str, Any], race: dict[s
             for row in rows:
                 if not isinstance(row, dict):
                     continue
-                d = str(row.get("date") or row.get("raceDate") or "")
-                if d and d < date:
+                d = date_key(row.get("date") or row.get("raceDate") or "")
+                if d and cutoff and d < cutoff:
                     item = dict(row)
+                    item["date"] = d
                     # Only an explicitly declared per-horse measurement can
                     # populate this field. Do not use a race-level opening 3F.
                     if config.get("horse_first3f") and item.get("horseFirst3FSeconds") in (None, ""):
