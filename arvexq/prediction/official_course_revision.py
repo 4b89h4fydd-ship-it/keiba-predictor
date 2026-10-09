@@ -110,3 +110,57 @@ def pre_off_change(detail: dict[str, Any], old: Any, new: Any, now: datetime) ->
     if reason == "公式馬場情報の初回発表" and str(((detail.get("morningMarkSnapshot") or {}).get("originalCondition") or detail.get("condition") or "")) == candidate["going"]:
         return ""
     return reason
+
+
+def latest_pre_off_marks(detail: dict[str, Any]) -> dict[str, Any] | None:
+    """Most recent truly pre-off official revision, else original morning marks."""
+    post = post_at(detail)
+    original = detail.get("morningMarkSnapshot")
+    if not post or not isinstance(original, dict):
+        return None
+    if original.get("version") != "arvexq-morning-marks-v1":
+        return None
+    if str(original.get("raceId") or "") != str(detail.get("id") or ""):
+        return None
+    if str(original.get("raceDate") or "") != str(detail.get("date") or ""):
+        return None
+    try:
+        fixed = datetime.fromisoformat(str(original.get("fixedAt") or "").replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return None
+    if fixed.tzinfo is None or fixed >= post:
+        return None
+    result = original if isinstance(original.get("horses"), list) and len(original["horses"]) >= 3 else None
+    best_at = fixed
+    for rev in detail.get("officialMarkRevisions") or []:
+        if not isinstance(rev, dict) or rev.get("version") != "arvexq-official-mark-revision-v1":
+            continue
+        if str(rev.get("raceId") or "") != str(detail.get("id") or "") or str(rev.get("raceDate") or "") != str(detail.get("date") or ""):
+            continue
+        official = official_event(rev.get("officialCourseCondition"))
+        if not official or official["raceDate"] != str(detail.get("date") or "") or official["track"] != str(detail.get("track") or ""):
+            continue
+        try:
+            at = datetime.fromisoformat(str(rev.get("revisedAt") or "").replace("Z", "+00:00"))
+            published = datetime.fromisoformat(official["publishedAt"])
+        except (ValueError, TypeError):
+            continue
+        if at.tzinfo is None or published > at or not (best_at < at < post):
+            continue
+        horses = rev.get("horses")
+        if not isinstance(horses, list) or len(horses) < 3:
+            continue
+        seen = set()
+        for horse in horses:
+            try:
+                no = int(horse["horseNumber"])
+                mark = str(horse.get("mark") or "")
+            except (KeyError, ValueError, TypeError, AttributeError):
+                break
+            if no < 1 or no in seen or mark not in {"", "◎", "○", "▲", "☆+", "☆", "△", "注"}:
+                break
+            seen.add(no)
+        else:
+            result = rev
+            best_at = at
+    return result
