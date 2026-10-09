@@ -1,61 +1,44 @@
 name: ARVEXQ Special Forecast UI
 
-on:
+"on":
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - 'scripts/arvexq_special_forecast_ui.py'
-      - 'scripts/arvexq_patch_special_races.py'
-      - 'scripts/arvexq_reconcile_prediction_paths.py'
       - 'arvexq/ui/static/app.js'
+      - 'arvexq/ui/static/styles/**'
       - 'arvexq/ui/static/styles.css'
+      - 'arvexq/ui/static/morning/**'
       - '.github/workflows/arvexq-special-forecast-ui.yml'
-  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  patch:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Apply special forecast scope and fold UI
-        run: python scripts/arvexq_special_forecast_ui.py
-      - name: Validate special forecast UI
+          node-version: '20'
+      - name: Validate special forecasts without regenerating UI
         run: |
-          python -m py_compile scripts/arvexq_special_forecast_ui.py scripts/arvexq_patch_special_races.py
           node --check arvexq/ui/static/app.js
+          node --check arvexq/ui/static/morning/selection_cut.js
           python - <<'PY'
           from pathlib import Path
           js=Path('arvexq/ui/static/app.js').read_text(encoding='utf-8')
-          css=Path('arvexq/ui/static/styles.css').read_text(encoding='utf-8')
-          src=Path('scripts/arvexq_patch_special_races.py').read_text(encoding='utf-8')
+          css='\n'.join(Path(p).read_text(encoding='utf-8') for p in (
+            'arvexq/ui/static/styles.css',
+            'arvexq/ui/static/styles/legacy_v118_v221.css',
+            'arvexq/ui/static/styles/race_v222_plus.css'))
           assert 'data-special-fold="1"' in js
-          assert "arvexq-special-forecast-open" in js
-          assert "Object.keys(groups).forEach(function(k){add(mainRaceForTrack(groups[k]))})" not in js
-          assert '<small>メイン・重賞・高知ファイナル</small>' not in js
-          assert '本日のメイン・重賞・高知ファイナルなし' not in js
+          assert 'arvexq-special-forecast-open' in js
           assert 'ARVEXQ special forecast fold v1' in css
-          assert 'data-special-fold="1"' in src
-          assert '<small>メイン・重賞・高知ファイナル</small>' not in src.split('new_render = ',1)[1].split('replace_once(old_render',1)[0]
-          print('special-forecast-ui-validated')
+          assert 'function specialForecastRaceCandidates()' in js
+          assert "return !!(r&&r.id&&m&&m.special===true)" in js
+          assert 'function computeMorningSpecialRaceCandidates()' in js
+          assert "isMainForecastRace(r)||raceIsGraded(r)" in js
+          print('SPECIAL_FORECAST_READ_ONLY_CI_OK')
           PY
-      - name: Commit generated UI and generator
-        run: |
-          TARGETS="arvexq/ui/static/app.js arvexq/ui/static/styles.css scripts/arvexq_patch_special_races.py"
-          if [ -z "$(git status --porcelain -- $TARGETS)" ]; then
-            echo 'Special forecast UI already synchronized'
-            exit 0
-          fi
-          git config user.name 'arvexq-bot'
-          git config user.email 'actions@users.noreply.github.com'
-          git add $TARGETS
-          git commit -m 'ui: persist folded special forecast scope'
-          git pull --rebase origin main
-          git push

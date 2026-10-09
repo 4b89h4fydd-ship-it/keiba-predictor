@@ -114,7 +114,15 @@ if not MORNING_MODULE.is_file():
     raise RuntimeError("morning selection module missing")
 morning_hash = hashlib.sha256(MORNING_MODULE.read_bytes()).hexdigest()[:12]
 
+STYLE_DIR = STATIC / "styles"
+STYLE_MODULES = ("legacy_v118_v221.css", "race_v222_plus.css")
+for filename in STYLE_MODULES:
+    if not (STYLE_DIR / filename).is_file():
+        raise RuntimeError(f"missing independently loaded CSS: {filename}")
+style_hash = hashlib.sha256(b"|".join((STYLE_DIR / filename).read_bytes() for filename in STYLE_MODULES)).hexdigest()[:12]
+
 index_html = strings["INDEX"]
+index_html = index_html.replace("__ARVEXQ_STYLE_MODULE_HASH__", style_hash)
 index_html = index_html.replace("__ARVEXQ_MORNING_MODULE_HASH__", morning_hash)
 index_html = index_html.replace("__ARVEXQ_BET_ASSET_FINGERPRINT__", bet_hash)
 css = strings["CSS"]
@@ -199,6 +207,11 @@ for filename in BET_ASSETS:
 (DIST / "morning").mkdir(exist_ok=True)
 shutil.copy2(MORNING_MODULE, DIST / "morning" / "selection_cut.js")
 
+# Preserve CSS cascade while serving large style groups separately.
+(DIST / "styles").mkdir(exist_ok=True)
+for filename in STYLE_MODULES:
+    shutil.copy2(STYLE_DIR / filename, DIST / "styles" / filename)
+
 # Independent UI feature modules kept outside the main app bundle.
 for extra_asset in ("previous_ai_results.js",):
     src = STATIC / extra_asset
@@ -239,6 +252,7 @@ headers=[
     f"/arvexq-app-{BUILD_VERSION}.js","  Cache-Control: no-cache, must-revalidate",
     f"/styles-arvexq-{BUILD_VERSION}.css","  Cache-Control: no-cache, must-revalidate",
     "/morning/*","  Cache-Control: no-cache, must-revalidate",
+    "/styles/*","  Cache-Control: no-cache, must-revalidate",
     "/betting/*","  Cache-Control: no-cache, must-revalidate",
     "/previous_ai_results.js","  Cache-Control: no-cache, must-revalidate",
     "/arvexq-racing-hero.webp","  Cache-Control: public, max-age=604800",
