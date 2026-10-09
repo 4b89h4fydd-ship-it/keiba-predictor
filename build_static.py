@@ -122,7 +122,7 @@ for filename in STYLE_MODULES:
 style_hash = hashlib.sha256(b"|".join((STYLE_DIR / filename).read_bytes() for filename in STYLE_MODULES)).hexdigest()[:12]
 
 RESEARCH_PATH = STATIC / "research"
-RESEARCH_ASSETS = ("research_view.js", "research_view.css")
+RESEARCH_ASSETS = ("local_evidence.js", "research_view.js", "research_view.css")
 for filename in RESEARCH_ASSETS:
     if not (RESEARCH_PATH / filename).is_file():
         raise RuntimeError(f"missing research asset: {filename}")

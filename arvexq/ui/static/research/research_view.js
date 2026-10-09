@@ -2,7 +2,9 @@
 (function(global){
 'use strict';
 function renderHorse(r,h,escapeText){
-  var esc=escapeText||function(s){return String(s)},research=h&&h.researchEvidence,
+  var esc=escapeText||function(s){return String(s)},
+      research=(h&&h.researchEvidence)||(
+        global.ARVEXQLocalEvidence&&global.ARVEXQLocalEvidence.observed(r,h)),
       factors=research&&research.factors||{},items=Array.isArray(factors.items)?factors.items:[],
       sections=research&&research.sectionals||{},runs=sections.runs||[],
       bias=r&&r.biasProvenance||{},official=bias.official||{},estimate=bias.estimated||{};
@@ -24,7 +26,8 @@ function renderHorse(r,h,escapeText){
   return '<section class="arv-research-card" aria-label="分析根拠">'
     +'<details><summary>14項目の能力根拠と区間実測（詳細）</summary>'
     +(items.length?'<div class="arv-research-grid">'+rows+'</div>':'<p>14項目の照合データ取得待ち。推定で補完しません。</p>')
-    +'<p class="arv-research-foot">各指標は計測単位が異なり、そのまま加算した数値や的中率ではありません。</p>'
+    +'<p class="arv-research-foot">各指標は計測単位が異なり、そのまま加算した数値や的中率ではありません。'
+    +(factors.version==='race-card-observed-only-v1'?'出走表・過去走から得た確認可能な範囲のみ表示。':'')+'</p>'
     +'<h4>過去走の区間実測</h4>'+(history||'<p>実測区間時計は未取得です。</p>')
     +'<p class="arv-research-foot">初角順位とテン3Fは別の指標です。異なる距離・馬場の秒数を単純比較しません。</p>'
     +'<h4>馬場情報の出典</h4><p>馬場状態 '+condition+'（'+source+'）'
