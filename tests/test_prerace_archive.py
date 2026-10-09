@@ -294,5 +294,54 @@ class ServerSealTests(unittest.TestCase):
         self.assertFalse(pre_off(forecast(self.d,self.now),d))
 
 
+    def test_real_payout_audit_and_kind_metrics_are_not_estimated(self):
+        from arvexq.prediction.prerace_archive import (
+            evaluate_frozen_result, summarize_frozen_ticket_metrics,
+        )
+        d = seal_detail(self.d, forecast(self.d, self.now), self.now)
+        d["preRaceBet"] = {
+            "raceId": d["id"], "fixedAt": self.now.isoformat(),
+            "items": [
+                {"level": "本線", "kind": "馬連", "combos": [[1, 3], [1, 2]]},
+                {"level": "3連単チャレンジ", "kind": "3連単",
+                 "combos": [[3, 1, 2], [3, 2, 1]]},
+                {"level": "保険", "kind": "ワイド", "combos": [[2, 3]]},
+            ],
+        }
+        d["result"] = {"status": "確定",
+            "finishers": [
+                {"finish": 1, "horseNumber": 3},
+                {"finish": 2, "horseNumber": 1},
+                {"finish": 3, "horseNumber": 2},
+            ],
+            "payouts": [
+                {"type": "馬連", "combination": "1-3", "amount": 1400},
+                {"type": "3連単", "combination": "3→1→2", "amount": 9800},
+                {"type": "ワイド", "combination": "2-3", "amount": 300},
+            ],
+        }
+        audit = evaluate_frozen_result(d)
+        kinds = {x["kind"]: x for x in audit["ticketEvaluations"]}
+        self.assertEqual(kinds["馬連"]["payoutYenAt100"], 1400)
+        self.assertEqual(kinds["3連単"]["payoutYenAt100"], 9800)
+        self.assertEqual(kinds["ワイド"]["payoutYenAt100"], 300)
+        self.assertTrue(all(x["hit"] for x in kinds.values()))
+        metrics = summarize_frozen_ticket_metrics([audit])["byKind"]
+        self.assertEqual(metrics["3連単"]["averagePoints"], 2.0)
+        self.assertEqual(metrics["3連単"]["flatStakeReturnRate"], 49.0)
+        self.assertEqual(metrics["馬連"]["observedHitRate"], 1.0)
+        self.assertTrue(metrics["3連単"]["completePayouts"])
+
+        unavailable = deepcopy(d)
+        unavailable["result"].pop("payouts")
+        no_payout = evaluate_frozen_result(unavailable)
+        missing = summarize_frozen_ticket_metrics([audit, no_payout])["byKind"]
+        self.assertIsNone(missing["3連単"]["flatStakeReturnRate"])
+        self.assertIsNone(missing["3連単"]["payoutYenAt100"])
+        self.assertEqual(missing["3連単"]["sampleRaces"], 2)
+        self.assertEqual(missing["3連単"]["averagePoints"], 2)
+
+
+
 if __name__ == "__main__":
     unittest.main()
