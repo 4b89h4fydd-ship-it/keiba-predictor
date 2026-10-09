@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from arvexq.core.runner_status import is_inactive_runner
+from arvexq.prediction.past_performance import observed_runs, analyze_past_performance
 
 
 def build_horse_features(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any]:
-    runs = horse.get("allPastRuns") or horse.get("recentRaces") or []
-    runs = [r for r in runs if isinstance(r, dict)][:5]
+    runs = observed_runs(horse, race)
+    past = analyze_past_performance(horse, race)
     finishes = [float(r.get("finish")) for r in runs if isinstance(r.get("finish"), (int, float)) and float(r.get("finish")) > 0]
     same_distance = [r for r in runs if r.get("distance") == race.get("distance")]
     same_track = [r for r in runs if r.get("track") and r.get("track") == race.get("track")]
@@ -17,6 +18,7 @@ def build_horse_features(horse: dict[str, Any], race: dict[str, Any]) -> dict[st
         "horseNumber": int(horse.get("horseNumber") or 0),
         "inactive": is_inactive_runner(horse),
         "historySamples": len(runs),
+        "pastPerformance": past,
         "bestFinish5": int(min(finishes)) if finishes else None,
         "averageFinish5": round(sum(finishes) / len(finishes), 3) if finishes else None,
         "sameDistanceSamples5": len(same_distance),

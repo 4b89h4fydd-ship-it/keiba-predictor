@@ -5,7 +5,8 @@ from arvexq.prediction.final_marks import apply_core_marks
 
 def sample(no, rank, finish, strength, pillars, families=(2,3,2,2)):
     horse = {"horseNumber":no, "name":"Horse"+str(no),
-             "recentRaces":[{"finish":v,"fieldSize":10} for v in finish]}
+             "recentRaces":[{"date":f"2026-09-{i+10:02d}","finish":v,"fieldSize":10}
+                            for i,v in enumerate(finish)]}
     return {"horse":horse, "rank":rank, "sample":len(finish),
             "multiHead":{"strengthRank":rank,"strengthScore":strength,"winRank":rank},
             "pillarRanks":{x:rank for x in ("ability","record","suitability","pace")},
@@ -23,17 +24,17 @@ class PodiumAxisTests(unittest.TestCase):
             sample(3,3,[7,8,8,7,9],.40,(.45,.42,.48,.39))]
         self.summary = {"winnerHorseNumber":1,"winnerGap":.1}
     def test_stable_podium_runner_can_differ_from_winner_head(self):
-        result=evaluate_honmei_gate(self.rows,self.summary,{"circuit":"地方"})
+        result=evaluate_honmei_gate(self.rows,self.summary,{"circuit":"地方","date":"2026-10-09"})
         self.assertTrue(result["eligible"],result)
         self.assertEqual(result["horseNumber"],2)
     def test_no_forced_axis_without_runs(self):
         for row in self.rows:
             row["horse"]["recentRaces"]=[]
-        result=evaluate_honmei_gate(self.rows,self.summary,{"circuit":"地方"})
+        result=evaluate_honmei_gate(self.rows,self.summary,{"circuit":"地方","date":"2026-10-09"})
         self.assertFalse(result["eligible"])
         self.assertIn("historicalPodium",result["failed"])
     def test_central_does_not_have_a_blanket_ban(self):
-        self.assertTrue(evaluate_honmei_gate(self.rows,self.summary,{"circuit":"中央"})["eligible"])
+        self.assertTrue(evaluate_honmei_gate(self.rows,self.summary,{"circuit":"中央","date":"2026-10-09"})["eligible"])
     def test_server_marks_independent_axis(self):
         with patch("arvexq.prediction.final_marks.rank_factor_model",return_value=self.rows),\
              patch("arvexq.prediction.final_marks.attach_multi_head_signals",return_value=self.summary):

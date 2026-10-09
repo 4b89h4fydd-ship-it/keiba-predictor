@@ -4,6 +4,7 @@ from statistics import median
 from typing import Any, Iterable
 
 from arvexq.core.runner_status import is_inactive_runner
+from arvexq.prediction.past_performance import analyze_past_performance, observed_runs
 
 MODEL_VERSION = "arvexq-four-pillar-consensus-v5-speed-separated"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
@@ -76,9 +77,9 @@ def _first(*values: float | None) -> float | None:
     return next((v for v in values if v is not None), None)
 
 
-def _runs(horse: dict[str, Any]) -> list[dict[str, Any]]:
-    rows = horse.get("allPastRuns") or horse.get("recentRaces") or []
-    return [r for r in rows if isinstance(r, dict)]
+def _runs(horse: dict[str, Any], race: dict[str, Any]) -> list[dict[str, Any]]:
+    # Never read post-race run history, never trust an unsorted last-five slice.
+    return observed_runs(horse, race)
 
 
 def _finish_quality(run: dict[str, Any]) -> float | None:
@@ -144,7 +145,7 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
     condition change, freshness/weight context when already measured, and connections.
     Missing data remains missing instead of being converted into a fake neutral score.
     """
-    runs = _runs(horse)
+    runs = _runs(horse, race)
     qualities = [_finish_quality(r) for r in runs]
     valid_q = [q for q in qualities if q is not None]
     recent_q = [q for q in qualities[:5] if q is not None]

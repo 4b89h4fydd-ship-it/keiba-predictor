@@ -1544,29 +1544,25 @@ function assignPredictionMarks(rows,r){
 
   // v344: ◎ is a stable top-three axis, not a win-only prediction.
   function axisHistory(z){
-    var list=(z.horse.recentRaces||z.horse.allPastRuns||[]),starts=0,top3=0;
-    list.slice(0,5).forEach(function(run){
-      var finish=n(run.finish,n(run.finishPosition,n(run.rank,0))),field=n(run.fieldSize,0);
-      if(finish<1||field<2||finish>field)return;
-      starts++;if(finish<=3)top3++;
-    });
-    return {starts:starts,top3:top3,rate:starts?top3/starts:0};
+    var module=window.ARVEXQPodiumAxisGuard,
+        history=module&&module.analyzePast?
+          module.analyzePast(z.horse,r):
+          {starts:0,top3:0,rate:0,status:'module-unavailable'};
+    z.podiumPastFive=history;
+    if(z.horse&&z.horse.integratedEvaluation)
+      z.horse.integratedEvaluation.pastPerformance=history;
+    return history;
   }
   var podiumAxis=rows.map(function(z,i){
     var h=axisHistory(z),roles=(p1(z)+n(z.p2Probability)+n(z.p3Probability))/(3*uniform),
         score=clamp(.25*clamp(roles/1.6,0,1)+.20*n(research[i].place,.5)+
-          .33*h.rate+.12*robust(z)+.10*(1-fragile(z)),0,1);
+          .26*h.rate+.07*n(h.recentFormQuality,0)+.12*robust(z)+.10*(1-fragile(z)),0,1);
     z.podiumAxisScore=score;z.podiumAxisHistory=h;return z;
   }).sort(function(a,b){return n(b.podiumAxisScore)-n(a.podiumAxisScore)||
     n(b.axisProbability)-n(a.axisProbability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
   var axisLeader=podiumAxis[0]||null,axisNext=podiumAxis[1]||null,
       axisGap=n(axisLeader&&axisLeader.podiumAxisScore)-n(axisNext&&axisNext.podiumAxisScore),
-      axisH=axisLeader&&axisLeader.podiumAxisHistory||{starts:0,top3:0,rate:0},
-      axisData=n(axisLeader&&axisLeader.edgeEvidence,n(axisLeader&&axisLeader.coverage,0));
-  var establishedAxisHistory=axisH.starts>=3&&axisH.top3>=2&&axisH.rate>=.40,
-      shortAxisHistory=axisH.starts>=2&&axisH.top3>=1&&axisH.rate>=.50&&
-        n(axisLeader&&axisLeader.podiumAxisScore)>=.65&&axisGap>=.035&&
-        axisData>=.45&&n(axisLeader&&axisLeader.coverage,0)>=.55;
+      axisH=axisLeader&&axisLeader.podiumAxisHistory||{starts:0,top3:0,rate:0};
   // Risk-first independent module: after the original ranking, demand
   // observed podium repeatability AND top-three/winner-head agreement.
   // An omitted module must never silently restore the old looser ◎ rule.
@@ -1576,18 +1572,26 @@ function assignPredictionMarks(rows,r){
   honmeiEligible=axisReview.eligible===true&&!!axisLeader&&!!axisNext&&
     !isScratchHorse(axisLeader.horse);
   rows.forEach(function(z){z.podiumAxisEligible=honmeiEligible&&z===axisLeader});
-  r.honmeiDecisionFrontend={version:'arvexq-podium-axis-frontend-v4',
+  r.honmeiDecisionFrontend={version:'arvexq-podium-axis-frontend-v5-context',
     eligible:honmeiEligible,horseNumber:n(axisLeader&&axisLeader.horse&&axisLeader.horse.horseNumber),
     axisScore:n(axisLeader&&axisLeader.podiumAxisScore),axisGap:axisGap,
     historyRuns:axisH.starts,historyTop3:axisH.top3,
     checks:axisReview.checks||{},failed:axisReview.failures||[],
-    gateVersion:axisReview.version,
+    gateVersion:axisReview.version,pastContext:axisReview.pastContext||{},
     reason:honmeiEligible?'podium-axis-passed':'podium-axis-withheld'};
   if(honmeiEligible)take(axisLeader,'◎');
-  else if(axisLeader){axisLeader.honmeiWithheld=true;axisLeader.attentionReason='◎保留｜'+
-    ((axisReview.failures||[]).includes('historicalPodium')?'近走3着内の再現不足':
-    ((axisReview.failures||[]).includes('winningChance')?'1着評価上位との不一致':
-    ((axisReview.failures||[]).includes('clearSeparation')?'軸候補の評価差不足':'独立軸ゲートで証拠不足')))}
+  else if(axisLeader){
+    axisLeader.honmeiWithheld=true;
+    var fails=axisReview.failures||[];
+    axisLeader.attentionReason='◎保留｜'+
+      (fails.includes('historyVerified')?'日付確認済みの過去走不足':
+       fails.includes('matchingConditionEvidence')?'同距離・芝ダで馬券圏内の裏付け不足':
+       fails.includes('noRepeatedFrontFade')?'先行失速の反復':
+       fails.includes('recentFormNotDeteriorating')?'直近の内容悪化':
+       fails.includes('historicalPodium')?'過去5走の3着内再現不足':
+       fails.includes('winningChance')?'1着評価上位との不一致':
+       fails.includes('clearSeparation')?'軸候補の評価差不足':'独立軸ゲートの証拠不足');
+  }
   var secondPick=p2Recall.find(function(z){return selected.indexOf(z)<0})||sorted.find(function(z){return selected.indexOf(z)<0});
   take(secondPick,'○');
   var thirdCore=podiumRecall.find(function(z){return selected.indexOf(z)<0&&(n(z.p2RecallRank)<=5||n(z.p3RecallRank)<=5||n(z.axisRank)<=4)})||podiumRecall.find(function(z){return selected.indexOf(z)<0});
