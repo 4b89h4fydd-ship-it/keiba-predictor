@@ -27,7 +27,7 @@ def _feature_hash(snapshot: dict[str, Any]) -> str:
     return hashlib.sha256(_raw(core)).hexdigest()
 
 
-def archive_snapshot(snapshot: dict[str, Any], *, race_id: str, race_date: str) -> dict[str, Any]:
+def archive_snapshot(snapshot: dict[str, Any], *, race_id: str, race_date: str, preserve_unverified_legacy: bool = False) -> dict[str, Any]:
     if not isinstance(snapshot, dict) or not snapshot.get("rows"):
         raise ValueError("mass feature snapshot has no rows")
     if str(snapshot.get("raceId") or "") != str(race_id or ""):
@@ -35,7 +35,10 @@ def archive_snapshot(snapshot: dict[str, Any], *, race_id: str, race_date: str) 
     if str(snapshot.get("date") or "") != str(race_date or ""):
         raise ValueError("mass feature snapshot date mismatch")
     feature_hash = str(snapshot.get("featureHash") or "")
-    if not feature_hash or feature_hash != _feature_hash(snapshot):
+    if not feature_hash:
+        raise ValueError("mass feature snapshot missing its original feature hash")
+    origin_valid = feature_hash == _feature_hash(snapshot)
+    if not origin_valid and not preserve_unverified_legacy:
         raise ValueError("mass feature snapshot origin hash mismatch")
     raw = _raw(snapshot)
     if len(raw) > MAX_UNCOMPRESSED_BYTES:
@@ -45,6 +48,8 @@ def archive_snapshot(snapshot: dict[str, Any], *, race_id: str, race_date: str) 
         "raceId": race_id,
         "raceDate": race_date,
         "featureHash": feature_hash,
+        "originHashVerified": origin_valid,
+        "originStatus": "verified" if origin_valid else "legacy-unverified-not-for-training",
         "rawBytes": len(raw),
         "sha256": hashlib.sha256(raw).hexdigest(),
         "horseCount": int(snapshot.get("horseCount") or len(snapshot["rows"])),
@@ -52,7 +57,7 @@ def archive_snapshot(snapshot: dict[str, Any], *, race_id: str, race_date: str) 
     }
 
 
-def restore_snapshot(archive: dict[str, Any], *, race_id: str, race_date: str) -> dict[str, Any]:
+def restore_snapshot(archive: dict[str, Any], *, race_id: str, race_date: str, allow_unverified_legacy: bool = False) -> dict[str, Any]:
     if not isinstance(archive, dict) or archive.get("encoding") != SCHEME:
         raise ValueError("unsupported mass feature archive")
     if str(archive.get("raceId") or "") != str(race_id or "") or str(archive.get("raceDate") or "") != str(race_date or ""):
@@ -75,14 +80,19 @@ def restore_snapshot(archive: dict[str, Any], *, race_id: str, race_date: str) -
         raise ValueError("invalid mass feature rows")
     if str(snapshot.get("raceId") or "") != str(race_id) or str(snapshot.get("date") or "") != str(race_date):
         raise ValueError("mass feature archived snapshot identity mismatch")
-    if snapshot.get("featureHash") != archive.get("featureHash") or _feature_hash(snapshot) != archive.get("featureHash"):
+    if snapshot.get("featureHash") != archive.get("featureHash"):
+        raise ValueError("mass feature pre-race declared hash mismatch")
+    if archive.get("originHashVerified") is False:
+        if not allow_unverified_legacy:
+            raise ValueError("legacy mass feature origin hash unverified; not eligible for training")
+    elif _feature_hash(snapshot) != archive.get("featureHash"):
         raise ValueError("mass feature pre-race hash mismatch")
     if int(snapshot.get("horseCount") or 0) != int(archive.get("horseCount") or 0):
         raise ValueError("mass feature horse count mismatch")
     return snapshot
 
 
-def pack_mass_detail(detail: dict[str, Any]) -> dict[str, Any]:
+def pack_mass_detail(detail: dict[str, Any], *, preserve_unverified_legacy: bool = False) -> dict[str, Any]:
     out = copy.deepcopy(detail)
     snapshot = out.get("massFeatureSnapshot")
     if not isinstance(snapshot, dict):
@@ -91,7 +101,8 @@ def pack_mass_detail(detail: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("cannot archive mass feature matrix without pre-off forecast")
     archive = archive_snapshot(snapshot,
                                race_id=str(out.get("id") or out.get("raceId") or ""),
-                               race_date=str(out.get("date") or ""))
+                               race_date=str(out.get("date") or ""),
+                               preserve_unverified_legacy=preserve_unverified_legacy)
     if out.get("massFeatureHash") and out["massFeatureHash"] != archive["featureHash"]:
         raise ValueError("mass feature lock hash mismatch")
     out["massFeatureArchive"] = archive
