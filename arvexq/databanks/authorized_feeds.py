@@ -129,7 +129,7 @@ def _request_history(config: dict[str, Any], horse: dict[str, Any], race: dict[s
         return {}
     qs = urllib.parse.urlencode({
         "horseId": h_id, "horseName": h_name,
-        "raceDate": date, "limit": min(5, max(1, int(limit or 5))),
+        "raceDate": date, "limit": min(1000, max(1, int(limit or 5))),
         "circuit": "JRA" if str(race.get("circuit")) in {"JRA", "中央"} else "NAR",
     })
     url = config["url"] + ("&" if "?" in config["url"] else "?") + qs
