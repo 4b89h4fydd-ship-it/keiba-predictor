@@ -262,7 +262,12 @@ async def enrich_race_missing(
         changed = False
         async with sem:
             domains: list[tuple[str, set[str] | None]] = []
-            full_search = history_limit > 5 and (horse.get("_careerHistoryAudit") or {}).get("requestedAtRaceDate") != date_key(cutoff)
+            previous_audit = horse.get("_careerHistoryAudit") or {}
+            full_search = history_limit > 5 and (
+                previous_audit.get("requestedAtRaceDate") != date_key(cutoff)
+                or bool(previous_audit.get("failedProviders"))
+                or not previous_audit.get("fetchAttempted", bool(previous_audit.get("providersAttempted")))
+            )
             if full_search or _needs_history(horse, cutoff=cutoff, limit=min(5, history_limit)):
                 domains.append(("horse_history", None))
             elif measured_feeds and (_measured_horse_first3f_count(horse, cutoff, history_limit) < 2 or _horse_early_timing_count(horse, cutoff, history_limit) < 2):
@@ -275,6 +280,7 @@ async def enrich_race_missing(
                 domains.append(("jockey_trainer", None))
 
             history_sources: list[str] = []
+            history_failed: list[str] = []
             for domain, only_sources in domains:
                 results = await fetch_domain(
                     domain,
@@ -289,6 +295,8 @@ async def enrich_race_missing(
                     if domain == "horse_history":
                         history_sources.append(result.source)
                     if not result.ok:
+                        if domain == "horse_history":
+                            history_failed.append(result.source)
                         failures.append({"source": result.source, "domain": domain, "error": result.error or "failed"})
                         continue
                     if result.data in (None, "", [], {}):
@@ -303,6 +311,8 @@ async def enrich_race_missing(
                     ) or changed
             if history_limit > 5:
                 audit = audit_career(horse, cutoff, history_limit, history_sources)
+                audit["fetchAttempted"] = bool(history_sources)
+                audit["failedProviders"] = sorted(set(history_failed))
                 if audit != horse.get("_careerHistoryAudit"):
                     horse["_careerHistoryAudit"] = audit
                     changed = True
