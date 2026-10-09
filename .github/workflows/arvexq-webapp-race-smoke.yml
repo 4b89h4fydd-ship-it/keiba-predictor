@@ -42,6 +42,9 @@ jobs:
           test -s dist/index.html
           test -s "dist/app-$BUILD.js"
           test -s "dist/styles-arvexq-$BUILD.css"
+          test -s dist/styles/legacy_v118_v221.css
+          test -s dist/styles/race_v222_plus.css
+          test -s dist/morning/selection_cut.js
           test -s "dist/sw-$BUILD-reset.js"
           grep -q "/app-$BUILD.js" dist/index.html
           grep -q "/styles-arvexq-$BUILD.css" dist/index.html
@@ -65,7 +68,7 @@ jobs:
           const assert=require('node:assert/strict');
           const fs=require('node:fs');
           const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-          const styles=fs.readFileSync('arvexq/ui/static/styles.css','utf8');
+          const styles=['styles.css','styles/legacy_v118_v221.css','styles/race_v222_plus.css'].map(x=>fs.readFileSync('arvexq/ui/static/'+x,'utf8')).join('\n');
           function extract(name){
             const start=src.indexOf('function '+name+'(');
             assert.ok(start>=0,'function missing '+name);
@@ -152,7 +155,7 @@ jobs:
           const fs=require('node:fs');
           const {chromium,webkit,devices}=require('playwright');
           const app=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-          const css=fs.readFileSync('arvexq/ui/static/styles.css','utf8');
+          const css=['styles.css','styles/legacy_v118_v221.css','styles/race_v222_plus.css'].map(x=>fs.readFileSync('arvexq/ui/static/'+x,'utf8')).join('\n');
           const index=fs.readFileSync('arvexq/ui/static/index.html','utf8');
           const marker=index.match(/var tag="(arvexq-hard-reset-[^"]+)"/);
           assert.ok(marker,'missing hard-reset version marker');
