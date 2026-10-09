@@ -68,6 +68,13 @@ jobs:
       - name: Audit giant app.py structure before modularization
         run: python scripts/arvexq_app_structure.py
 
+      - name: Modular API helpers and isolated behavior regressions
+        run: |
+          python -m py_compile arvexq/ui/icon_assets.py arvexq/prediction/legacy_model_tables.py \
+            arvexq/ingest/pure_parsers.py arvexq/prediction/pure_diagnostics.py \
+            arvexq/infra/pure_snapshots.py
+          python -m unittest discover -s tests -p 'test_app_pure_modules.py' -v
+
       - name: Static PWA build and version guard
         run: |
           python build_static.py > build-static.log 2>&1
