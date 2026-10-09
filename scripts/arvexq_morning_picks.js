@@ -25,7 +25,7 @@ if(!Number.isFinite(earliest)||now.getTime()>=earliest){save('NOT_RECONSTRUCTED_
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 if(!root.includes(boot))throw Error('morning picker boot entry missing');
-const source=root.replace(boot,'window.__morningPicks={state,selectedRaceCandidates:computeMorningRaceCandidates,specialForecastRaceCandidates:computeMorningSpecialRaceCandidates,add:function(k,v){instantTrackDetails[k]=v;}};');
+const source=root.replace(boot,'window.__morningPicks={state,predict,selectedRaceCandidates:computeMorningRaceCandidates,specialForecastRaceCandidates:computeMorningSpecialRaceCandidates,add:function(k,v){instantTrackDetails[k]=v;}};');
 const items=new Map(),store={getItem:k=>items.get(k)||null,setItem:(k,v)=>items.set(k,String(v)),removeItem:k=>items.delete(k)};
 const document={getElementById:()=>({innerHTML:''}),addEventListener:()=>{},querySelector:()=>null,querySelectorAll:()=>[],visibilityState:'hidden'};
 const window={addEventListener:()=>{},innerWidth:390,location:{href:'https://morning.invalid/'},navigator:{standalone:false},localStorage:store,document};
@@ -76,6 +76,22 @@ for(const d of payload.details||[]){
     d.environmentMeta={...(d.environmentMeta||{}),morningPicks:r.volatility.morningPicks};
   }
 }
+let markCount=0,markErrors=0;
+for(const detail of payload.details||[]){
+  if(!detail||!detail.id||detail.morningMarkSnapshot)continue;
+  try{
+    const p=model.predict(detail);
+    const active=(detail.horses||[]).filter(h=>h&&Number(h.horseNumber)>0&&!h.scratched&&!h.withdrawn&&!/取消|除外|欠場/.test(String(h.status||'')));
+    const marks=(p.rows||[]).filter(z=>z&&z.horse&&Number(z.horse.horseNumber)>0)
+      .map(z=>({horseNumber:Number(z.horse.horseNumber),mark:String(z.predMark||''),singleWinSuitable:!!z.singleWinSuitable}));
+    if(active.length<3||marks.length<active.length||marks.filter(x=>!!x.mark).length<3)continue;
+    detail.morningMarkSnapshot={version:'arvexq-morning-marks-v1',raceId:String(detail.id),
+      raceDate:String(detail.date||day),fixedAt,source:'morning-full-prefetch-original',
+      horses:marks,originalCondition:String(detail.condition||''),
+      initialOfficialCourseCondition:detail.officialCourseCondition||null};
+    markCount++;
+  }catch(e){markErrors++;console.error('MORNING_MARKS_NOT_READY',String(detail.id),String(e&&e.message||e))}
+}
 fs.writeFileSync(output,JSON.stringify(payload));
 console.log('MORNING_PICKS_FROZEN','date='+day,'races='+rows.length,
-  'selected='+selectionById.size,'special='+specials.size,'fixedAt='+fixedAt);
+  'selected='+selectionById.size,'special='+specials.size,'marks='+markCount,'markErrors='+markErrors,'fixedAt='+fixedAt);
