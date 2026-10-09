@@ -26,6 +26,16 @@ assert.equal(career.datedRuns,8,'career must not truncate at five');
 assert.equal(career.recentStarts,5);
 assert.equal(career.top3,3);
 assert.equal(career.recentTop3,0);
+const thin=horse([7,7,7,7,7]);
+thin.careerArchive={encoding:'arvexq-career-gzip-json-v1',priorRaceDate:'2026-10-09',olderRunCount:5};
+thin.integratedEvaluation={careerProfile:{version:'arvexq-observed-career-profile-v1',
+  datedRuns:10,top3:5,top3Rate:.5,comparableRuns:10,comparableTop3:5,comparableQuality:.7}};
+const bridge=g.analyzePast(thin,race);
+assert.equal(bridge.datedRuns,10,'bounded dated source archive profile should count');
+assert.equal(bridge.recentStarts,5);
+assert.equal(bridge.careerTop3Rate,.5);
+const illegal={...thin,careerArchive:{...thin.careerArchive,priorRaceDate:'2026-10-10'}};
+assert.equal(g.analyzePast(illegal,race).datedRuns,5,'never use future profile');
 assert(g.inspect(candidate,runner).eligible,'comparable consistent horse supported');
 function reject(patch,reason){
  const r=g.inspect({...candidate,...patch},runner);
