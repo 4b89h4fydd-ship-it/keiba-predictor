@@ -98,6 +98,10 @@ for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py or extracted UI assets")
 if not icons:
+    # app.py now stores original PNGs as static assets, not a huge literal.
+    from arvexq.ui.icon_assets import load_icons
+    icons = load_icons()
+if not icons:
     raise RuntimeError("ARVEXQ_ICONS not found")
 if "ARVEXQ_TOUCH_ICON_180" not in binary_b64:
     raise RuntimeError("ARVEXQ_TOUCH_ICON_180 not found")
