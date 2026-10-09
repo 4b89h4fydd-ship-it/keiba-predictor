@@ -143,12 +143,22 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         for key in ("careerArchive", "careerTransport", "_careerHistoryAudit"):
             if key in historical and key not in current:
                 current[key] = copy.deepcopy(historical[key])
+        from arvexq.ingest.career_transport import recover_horse, pack_horse
+        old_full = recover_horse(historical, race_day) if historical.get("careerArchive") else historical
+        new_full = recover_horse(current, race_day) if current.get("careerArchive") else current
         merged = merge_career(
-            [*(historical.get("allPastRuns") or []), *(historical.get("recentRaces") or [])],
-            [*(current.get("allPastRuns") or []), *(current.get("recentRaces") or [])], race_day)
+            [*(old_full.get("allPastRuns") or []), *(old_full.get("recentRaces") or [])],
+            [*(new_full.get("allPastRuns") or []), *(new_full.get("recentRaces") or [])], race_day)
         if merged:
             current["allPastRuns"] = merged
             current["recentRaces"] = merged[:5]
+            if historical.get("careerArchive") or current.get("careerArchive"):
+                # Rebuild the archive from the union. Copying only one sidecar
+                # would silently lose observations added by the other feed.
+                current.pop("careerArchive", None)
+                rebuilt = pack_horse(current, race_day)
+                current.clear()
+                current.update(rebuilt)
         prior_eval = historical.get("integratedEvaluation") or {}
         current_eval = current.get("integratedEvaluation") or {}
         if isinstance(prior_eval, dict) and isinstance(current_eval, dict) and "careerProfile" in prior_eval:
