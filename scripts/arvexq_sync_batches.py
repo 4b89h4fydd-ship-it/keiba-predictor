@@ -51,6 +51,16 @@ def main() -> int:
     career_starts = sum(int((h.get("careerTransport") or {}).get("observedRuns") or 0)
                         for d in details for h in (d.get("horses") or []) if isinstance(h, dict))
     source_bytes = Path(args.input).stat().st_size
+    # D1 currently permits at most 2,000,000 bytes per string/BLOB/row.
+    # The Worker storage schema lives outside this repository, so log potential
+    # violations; never drop a race or its career archive to hide the problem.
+    row_risks = []
+    for detail in details:
+        row_size = len(json.dumps(detail, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+        if row_size > 1_800_000:
+            row_risks.append((race_id(detail), row_size))
+            print("D1_DETAIL_ROW_SIZE_RISK", "race="+race_id(detail),
+                  "bytes="+str(row_size), "limit_if_one_row=2000000")
     odds = [x for x in (payload.get("odds_current") or []) if isinstance(x, dict)]
     meta = dict(payload.get("meta") or {})
 
@@ -121,6 +131,7 @@ def main() -> int:
         f"summaries={len(summaries)}",
         f"odds={len(odds)}",
         f"largest_bytes={largest}",
+        f"detail_row_risks={len(row_risks)}",
         f"total_bytes={total_bytes}",
     )
     return 0
