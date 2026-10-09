@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
-from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock
+from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock, evaluate_frozen_result, summarize_frozen_ticket_metrics
 from scripts.arvexq_fetch_d1_bundle import get_json, detail_from_response
 
 
@@ -35,11 +35,22 @@ def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any
         ticket = "capture-failed"
     else:
         ticket = "recorded"
+    if ticket == "recorded":
+        # All published performance must come from an authentic pre-post bet.
+        try:
+            at = datetime.fromisoformat(str(bet["fixedAt"]).replace("Z", "+00:00"))
+            post = post_at(detail)
+            if at.tzinfo is None or post is None or at >= post:
+                ticket = "invalid-postlock"
+        except (TypeError, ValueError):
+            ticket = "invalid-postlock"
+    audit = evaluate_frozen_result(detail) if ticket == "recorded" else None
     return {
         "race_id": rid, "status": "sealed", "ticket": ticket,
         "revision": seal.get("sealRevision") or seal.get("revision") or "",
         "captured_at_epoch": seal.get("capturedAtEpoch"),
         "race_date": detail.get("date"),
+        "ticket_result": audit,
     }
 
 
@@ -81,6 +92,8 @@ def main() -> int:
         "unsealed_count":len(missing),"ticket_missing_count":len(tickets_missing),
         "archive_complete":bool(races) and not missing and not tickets_missing,
         "unsealed_races":missing,"missing_tickets":tickets_missing,"all_races":ordered,
+        "ticket_metrics": summarize_frozen_ticket_metrics(
+            [r["ticket_result"] for r in ordered if isinstance(r.get("ticket_result"), dict)]),
     }
     Path(args.report).write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print("ARVEXQ_NIGHTLY_PRERACE_AUDIT",json.dumps({k:report[k] for k in
