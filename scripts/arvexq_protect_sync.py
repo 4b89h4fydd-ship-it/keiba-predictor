@@ -169,16 +169,20 @@ def verify_published(body: dict[str, Any], *, base: str, read=fetch_current) -> 
         if not isinstance(detail, dict) or not detail.get("id"):
             continue
         lock = sealed_lock(detail)
-        if not lock:
+        revised = detail.get("modelMarkRevisions") or []
+        if not lock and not revised:
             continue
         rid = str(detail["id"])
         actual = read(base, rid)
-        current = sealed_lock(actual or {})
-        if not current or current != lock:
-            raise RuntimeError("D1_SEAL_POST_VERIFY_MISMATCH " + rid)
-        bet = detail.get("preRaceBet")
-        if isinstance(bet, dict) and (actual or {}).get("preRaceBet") != bet:
-            raise RuntimeError("D1_PRE_RACE_BET_POST_VERIFY_MISMATCH " + rid)
+        if lock:
+            current = sealed_lock(actual or {})
+            if not current or current != lock:
+                raise RuntimeError("D1_SEAL_POST_VERIFY_MISMATCH " + rid)
+            bet = detail.get("preRaceBet")
+            if isinstance(bet, dict) and (actual or {}).get("preRaceBet") != bet:
+                raise RuntimeError("D1_PRE_RACE_BET_POST_VERIFY_MISMATCH " + rid)
+        if revised and (actual or {}).get("modelMarkRevisions") != revised:
+            raise RuntimeError("D1_MODEL_MARK_REVISION_POST_VERIFY_MISMATCH " + rid)
         verified.append(rid)
     return verified
 
