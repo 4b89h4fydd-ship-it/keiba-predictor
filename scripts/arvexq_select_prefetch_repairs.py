@@ -72,6 +72,13 @@ def repair_reason(prepared: Any, existing: Any) -> str:
         return "roster_incomplete"
     if not rich(existing):
         return "thin"
+    old_horses = {int(h.get("horseNumber") or 0): h for h in existing.get("horses") or [] if isinstance(h, dict)}
+    for horse in prepared.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        old_h = old_horses.get(int(horse.get("horseNumber") or 0), {})
+        if len(horse.get("allPastRuns") or []) > len(old_h.get("allPastRuns") or []):
+            return "career_history_deeper"
     return ""
 
 MORNING_FIELDS = ("morningPickVersion", "morningPickFixedAt", "morningPickScope",
