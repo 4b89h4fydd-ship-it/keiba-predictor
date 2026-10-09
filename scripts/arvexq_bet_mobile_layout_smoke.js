@@ -39,6 +39,16 @@ assert.match(html,/内部評価/);
 assert.match(html,/本線｜的中重視/);
 assert.match(html,/3連単チャレンジ｜高配当重視/);
 assert.match(html,/保険｜本線補完/);
+
+const legacyPlan={...plan,engineVersion:'arvexq-bets-old-v317',
+  fixedAt:'2026-10-08T10:20:00+09:00',
+  items:[{level:'通常',kind:'馬連',points:1,combos:[[2,6]],combo:'2 - 6'}]};
+const historical=renderer(esc,n,()=>legacyPlan,()=>({vote:''}),
+  ()=>'',()=>'')({track:'大井',raceNumber:7},{});
+assert.match(historical,/発走前保存済み買い目（旧方式）/);
+assert.match(historical,/2 - 6/,'old picks must not vanish when new sections replace legacy');
+assert.doesNotMatch(historical,/本線｜的中重視/,'old ticket is not relabelled');
+
 function extractFunction(name){
   const a=src.indexOf('function '+name+'('),b=src.indexOf('\n}',a);
   assert.ok(a>=0&&b>a,'missing function '+name);
