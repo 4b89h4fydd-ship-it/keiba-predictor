@@ -65,6 +65,10 @@ jobs:
             scripts/arvexq_history_repair.py \
             scripts/arvexq_sqlite_health.py
 
+      - name: Audit mass feature snapshot producers and consumers
+        run: |
+          git grep -n -F massFeatureSnapshot -- '*.py' '*.js' || true
+
       - name: Audit giant app.py structure before modularization
         run: python scripts/arvexq_app_structure.py
 
