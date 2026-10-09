@@ -114,6 +114,22 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
             if key in ranked:
                 working[key] = copy.deepcopy(ranked[key])
         lock = build(working)
+        if isinstance(lock, dict):
+            # Preserve the morning's original marks. Only an authenticated
+            # official-condition change may supply a later pre-off revision.
+            from arvexq.prediction.official_course_revision import latest_pre_off_marks
+            marked = latest_pre_off_marks(detail)
+            if marked:
+                marked_by_no = {int(z["horseNumber"]): str(z.get("mark") or "")
+                                for z in marked["horses"] if isinstance(z, dict)}
+                for entry in lock.get("horses") or []:
+                    no = int(entry.get("horseNumber") or 0)
+                    if no in marked_by_no:
+                        entry["mark"] = marked_by_no[no]
+                lock["markSource"] = marked.get("version")
+                lock["markFixedAt"] = marked.get("revisedAt") or marked.get("fixedAt")
+                if marked.get("reason"):
+                    lock["markRevisionReason"] = marked["reason"]
         if not isinstance(lock, dict) or int(lock.get("markCount") or 0) < 3:
             return {"status": "incomplete-prediction"}
         if sum(1 for h in active if str(h.get("name") or "").strip()) != len(active):
