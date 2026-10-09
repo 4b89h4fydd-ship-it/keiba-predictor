@@ -2889,167 +2889,13 @@ function gateBetByPaceEvidence(plan,r,p){
   return plan
 }
 
-// v346: three independent decisions; no automatic trifecta purchase.
-// These are MODEL-RELATIVE weights, not calibrated hit probabilities or EV.
+// Dedicated betting policy: /betting/three_way_engine.js
 function composeThreeWayBetPolicy(base,r,p){
-  if(!base)return base;
-  var rows=((p&&p.rows)||[]).filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)&&n(x.horse.horseNumber)>0});
-  var result=Object.assign({},base),audit=base.audit||{},g=base.betInputGate||{},
-      selected=!!(base.selectionAudit&&base.selectionAudit.selected),
-      ready=g.ready===true&&selected,stamp='arvexq-three-way-v346',
-      reason=ready?'':'厳選品質または発走前データの購入条件未達';
-  result.engineVersion=stamp;
-  result.trifectaReviewed=true;
-  result.trifectaDecision='見送り';
-  result.trifectaReason='';
-  result.insuranceDecision='見送り';
-  result.insuranceReason='';
-  result.expectedValue=null;
-  result.expectedValueReason='券種別の実配当オッズと検証済み着順確率が揃わないため、期待値・回収率は算出しません。';
-  result.roleMeaning={first:'独立1着予測と展開AI',second:'1着馬を除く条件付き2着予測',third:'1・2着馬を除く条件付き3着予測'};
-  result.items=[];
-  if(rows.length<4){result.decision='見送り';result.trifectaReason='出走頭数・着順根拠が不足';result.insuranceReason='3連単不採用';return result}
-  function num(x){return n(x&&x.horse&&x.horse.horseNumber,0)}
-  function norm(values){var sum=values.reduce(function(a,b){return a+Math.max(0,n(b))},0);return values.map(function(v){return sum>0?Math.max(0,n(v))/sum:1/values.length})}
-  function score(x,k){
-    var e=x.horse.integratedEvaluation||{},z=k===1?n(x.ticketP1Probability,n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.p1Probability,0)))):k===2?n(x.ticketP2Probability,n(x.p2Probability,n(e.p2Score,0))):n(x.ticketP3Probability,n(x.p3Probability,n(e.p3Score,0)));
-    return Math.max(.00001,z);
-  }
-  var p1=norm(rows.map(function(x){return score(x,1)})),
-      p2=norm(rows.map(function(x){return score(x,2)})),
-      p3=norm(rows.map(function(x){return score(x,3)})),
-      outcome=p&&p.outcome||{},paceKeys={first:{},second:{},third:{}};
-  ['first','second','third'].forEach(function(key){
-    (outcome[key]||[]).forEach(function(x){var no=num(x);if(no)paceKeys[key][no]=true});
-  });
-  function paceFactor(x,role){
-    var key=role===1?'first':role===2?'second':'third';
-    return Object.keys(paceKeys[key]).length?(paceKeys[key][num(x)]?1.11:.97):1;
-  }
-  // A joint ordering model: each subsequent rank is conditioned on earlier picks.
-  // Existing stage scores and pace-outcome lanes are consumed, but marks never
-  // determine first/second/third mechanically.
-  var ordered=[],i,j,k;
-  for(i=0;i<rows.length;i++){
-    var a=norm(rows.map(function(z,idx){return idx===i?0:p2[idx]*paceFactor(z,2)}));
-    for(j=0;j<rows.length;j++)if(j!==i){
-      var b=norm(rows.map(function(z,idx){return idx===i||idx===j?0:p3[idx]*paceFactor(z,3)}));
-      for(k=0;k<rows.length;k++)if(k!==i&&k!==j){
-        ordered.push({combo:[num(rows[i]),num(rows[j]),num(rows[k])],
-          weight:p1[i]*paceFactor(rows[i],1)*a[j]*b[k]});
-      }
-    }
-  }
-  var sum=ordered.reduce(function(a,b){return a+b.weight},0)||1;
-  ordered.forEach(function(z){z.weight/=sum});
-  ordered.sort(function(a,b){return b.weight-a.weight});
-  function merge(kind,combo,weight,map){
-    var key=combo.join('-');
-    if(!map[key])map[key]={combo:combo.slice(),weight:0};
-    map[key].weight+=weight;
-  }
-  var wide={},quin={},exact={},trio={};
-  ordered.forEach(function(z){
-    var a=z.combo[0],b=z.combo[1],c=z.combo[2],pair=[a,b].sort(function(x,y){return x-y});
-    merge('馬単',[a,b],z.weight,exact);
-    merge('馬連',pair,z.weight,quin);
-    merge('3連複',[a,b,c].sort(function(x,y){return x-y}),z.weight,trio);
-    merge('ワイド',pair,z.weight,wide);
-    merge('ワイド',[a,c].sort(function(x,y){return x-y}),z.weight,wide);
-    merge('ワイド',[b,c].sort(function(x,y){return x-y}),z.weight,wide);
-  });
-  function ranked(obj){return Object.keys(obj).map(function(k){return obj[k]}).sort(function(a,b){return b.weight-a.weight})}
-  var lists={'ワイド':ranked(wide),'馬連':ranked(quin),'馬単':ranked(exact),'3連複':ranked(trio)};
-  var winners=rows.map(function(x,i){return{no:num(x),weight:p1[i]}}).sort(function(a,b){return b.weight-a.weight});
-  var top=winners[0]||{no:0,weight:0},runner=winners[1]||{no:0,weight:0},
-      clarity=top.weight-runner.weight,winClear=top.weight>=.22&&clarity>=.035,
-      order=clamp(n(audit.orderConfidence),0,1),
-      top12=ordered.slice(0,12).reduce(function(a,b){return a+b.weight},0),
-      top24=ordered.slice(0,24).reduce(function(a,b){return a+b.weight},0);
-  result.threeWayAudit={winner:top.no,runnerUp:runner.no,winnerMargin:clarity,
-    orderConcentration:order,top12ModelMass:top12,top24ModelMass:top24,
-    source:'non-calibrated-relative-order-model'};
-  function add(level,kind,combos,why){
-    if(!combos.length)return;
-    var item={level:level,kind:kind,combos:combos.map(function(z){return z.slice()}),
-      points:combos.length,confidence:'モデル比較',reason:why};
-    item.combo=betComboText(kind,item.combos);
-    result.items.push(item);
-  }
-  // One main ticket family: place reliability and ordered certainty decide
-  // the type. No multiple identical opinions through several ticket kinds.
-  if(ready){
-    var kind='';
-    if(winClear&&order>=.45&&lists['馬単'][0]&&lists['馬単'][0].weight>=.075)kind='馬単';
-    else if(lists['馬連'][0]&&lists['馬連'][0].weight>=.16)kind='馬連';
-    else if(lists['3連複'][0]&&lists['3連複'][0].weight>=.12&&top.weight<.30)kind='3連複';
-    else if(lists['ワイド'][0]&&lists['ワイド'][0].weight>=.20)kind='ワイド';
-    if(kind){
-      var pool=lists[kind],max=kind==='3連複'?3:2,cut=pool[0].weight*.70,combos=[];
-      pool.some(function(z){if(combos.length>=max||combos.length>=1&&z.weight<cut)return true;combos.push(z.combo);return false});
-      add('本線',kind,combos,'着順別モデルの相対集中度・点数を比較して'+kind+'を優先。配当オッズ未検証のため数値的な期待値は未算出。');
-      result.primaryKind=kind;
-    }else{result.primaryKind='';reason='本線に適した券種の集中度が不足'}
-  }else result.primaryKind='';
-  // Every race is reviewed. Never add a mandatory trifecta for a grade/special race.
-  var triAllowed=ready&&winClear&&order>=.42&&top12>=.115&&
-      top24>0&&top12/top24>=.54&&ordered.length>=12;
-  var chosen=ordered.filter(function(z){return z.combo[0]===top.no}).slice(0,12);
-  // A wider winning-field set would require over-budget coverage; abstain.
-  var winningMass=p1.filter(function(x){return x>=top.weight*.80}).length;
-  if(winningMass>2)triAllowed=false;
-  if(chosen.length<6)triAllowed=false;
-  if(triAllowed){
-    // Add only competitive orders. A low-concentration tail is not padded to
-    // manufacture a six-ticket challenge.
-    var cutoff=chosen[0].weight*.38;
-    chosen=chosen.filter(function(z){return z.weight>=cutoff}).slice(0,12);
-    if(chosen.length<6)triAllowed=false;
-  }
-  if(triAllowed){
-    var triCombos=chosen.map(function(z){return z.combo});
-    add('3連単チャレンジ','3連単',triCombos,
-      '独立1着候補'+top.no+'、条件付き2着・3着、展開AIの局面適合、順序集中度が購入条件を通過。');
-    result.trifectaDecision='採用';
-    result.trifectaReason='1着'+top.no+'軸・2着/3着は別モデル。'+triCombos.length+'点で規定の集中度を満たすため採用。';
-    result.trifectaFirst=[top.no];result.trifectaSecond=Array.from(new Set(triCombos.map(function(c){return c[1]})));
-    result.trifectaThird=Array.from(new Set(triCombos.map(function(c){return c[2]})));
-  }else{
-    result.trifectaDecision='見送り';
-    result.trifectaReason=ready?(winClear?'展開・順序の集中度不足、または12点以内では有力な着順を絞れないため見送り。':'独立1着候補が十分に絞れず、固定のリスクが高いため見送り。'):reason;
-    result.trifectaFirst=[];result.trifectaSecond=[];result.trifectaThird=[];
-  }
-  if(triAllowed&&result.primaryKind){
-    // Hedge specifically against a different winner, not the same first-place
-    // opinion. Do not duplicate a combination already present in the main.
-    var main=result.items.filter(function(z){return z.level==='本線'})[0],
-        isDuplicate=function(kind,combo){return !!(main&&main.kind===kind&&main.combos.some(function(x){return x.join('-')===combo.join('-')}))},
-        backup=runner.no,insurance=null;
-    ['馬連','ワイド'].some(function(kind){
-      var hits=lists[kind].filter(function(z){return z.combo.indexOf(backup)>=0&&!isDuplicate(kind,z.combo)&&!(main&&main.combos.some(function(c){return c.length===2&&c.slice().sort(function(a,b){return a-b}).join('-')===z.combo.slice().sort(function(a,b){return a-b}).join('-')}))});
-      if(!hits.length)return false;
-      // Hedge against 1st reversal; still need a high-ranked complement.
-      if(hits[0].weight<(kind==='ワイド'?.13:.09))return false;
-      insurance={kind:kind,combos:[hits[0].combo]};return true
-    });
-    if(insurance){
-      add('保険',insurance.kind,insurance.combos,'3連単の1着'+top.no+'固定が崩れ、'+backup+'が勝ち負けする分岐を補完。既存本線との組み合わせ重複なし。');
-      result.insuranceDecision='採用';
-      result.insuranceReason='1着逆転の別展開を最小1点で補完';
-    }else result.insuranceReason='本線と重複するか、独立した補完根拠が不足するため見送り';
-  }else result.insuranceReason='3連単未採用、または本線不成立のため保険を追加しない';
-  result.decision=result.items.length?'通常買い':'見送り';
-  if(result.items.length&&!result.primaryKind){
-    result.items=[];result.decision='見送り';
-    result.trifectaDecision='見送り';result.trifectaReason='本線の品質条件未達につき3連単も購入対象外';
-    result.insuranceDecision='見送り';
-  }
-  var total=result.items.reduce(function(a,z){return a+z.points},0);
-  result.referenceBudget={unitYen:100,points:total,totalYen:100*total,
-    note:'100円/点の参考額。購入額・配当・期待回収率を保証しません。'};
-  result.reason=result.items.length?'本線・3連単チャレンジ・保険を独立判定。'+String(base.reason||''):reason||base.reason||'購入条件未達';
-  result.betStrategy=stamp;
-  return result
+ if(!window.ARVEXQThreeWayBet||typeof window.ARVEXQThreeWayBet.compose!=='function')
+  return Object.assign({},base,{items:[],decision:'見送り',trifectaReviewed:false,trifectaDecision:'未取得',
+   insuranceDecision:'見送り',expectedValue:null,reason:'買い目計算モジュール未取得のため購入判断を停止します。',
+   trifectaReason:'計算モジュール未取得',insuranceReason:'計算モジュール未取得',captureStatus:'engine-missing'});
+ return window.ARVEXQThreeWayBet.compose(base,r,p,{n:n,clamp:clamp,isScratchHorse:isScratchHorse,betComboText:betComboText});
 }
 
 function buildAiBetPlan(r,p){
@@ -3165,56 +3011,14 @@ function copyCurrentBet(){
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(function(){setBetCopyStatus('買い目をコピーしました')}).catch(function(){setBetCopyStatus(fallbackCopyText(text)?'買い目をコピーしました':'コピーできませんでした')})}
   else setBetCopyStatus(fallbackCopyText(text)?'買い目をコピーしました':'コピーできませんでした')
 }
+// Dedicated betting display: /betting/bet_view.js
 function aiBetRecommendation(r,p){
-  var plan=buildAiBetPlan(r,p);
-  if(!plan)return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><p class="muted">'+((isFinal(r)||raceMarkClock(r).started)?'発走前買い目未保存（発走後の後付け予想は作成しません）':'発走前予想を取得中。未保存の買い目は暫定判定です。')+'</p></div>';
-  // Preserve the original recorded ticket types/marks even when it was frozen
-  // under the pre-v346 engine. Never relabel historical "通常"/"押さえ"
-  // as a v346 main/challenge/insurance decision after the off.
-  if(plan.fixedAt&&String(plan.engineVersion||plan.betStrategy||'').indexOf('three-way-v346')<0){
-    var legacyItems=(plan.items||[]).map(function(z){
-      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'
-        +esc(z.level||'旧方式')+'｜'+esc(z.kind||'券種')+'</b><span>'+esc(z.points||((z.combos||[]).length))+'点</span></div>'
-        +'<strong>'+esc(z.combo||betComboText(z.kind,z.combos||[]))+'</strong></div>'
-    }).join('');
-    return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">発走前保存済み買い目（旧方式）</div>'
-      +'<p class="arv-three-fixed">保存 '+esc(plan.fixedAt)+'</p>'
-      +(legacyItems||'<p class="arv-three-skip">'+esc(plan.decision==='未取得'?'発走前の買い目保存に失敗。予想・購入は未取得です。':plan.reason||'当時の買い目は見送りでした。')+'</p>')
-      +'<p class="arv-three-provisional">旧方式で保存された買い目は改変しません。新しい3方式への事後変換・的中結果を見た後の追加は禁止しています。</p>'
-      +(plan.postLockNotice?'<p class="ai-bet-lock-notice">'+esc(plan.postLockNotice)+'</p>':'')
-      +aiBetExplanationHtml(plan)+'</div>';
-  }
-  function renderGroup(level,label,reason){
-    var items=(plan.items||[]).filter(function(z){return z.level===level});
-    var body=items.map(function(z){
-      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(z.kind)+'</b><span>'+esc(z.points)+'点</span></div>'
-        +'<strong>'+esc(z.combo)+'</strong><p>'+esc(z.reason||'')+'</p></div>'
-    }).join('');
-    return '<section class="arv-three-section"><h3>'+esc(label)+'</h3>'
-      +(body||'<p class="arv-three-skip">見送り：'+esc(reason||'購入条件を満たさず')+'</p>')+'</section>';
-  }
-  var total=plan.referenceBudget||{},status=plan.fixedAt?'発走前固定':'暫定・未保存',
-      explanation=aiBetExplanationHtml(plan);
-  return '<div class="ai-bet-box arv-three-bet">'
-    +'<div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div>'
-    +'<div class="ai-bet-meta"><span>内部評価 <b>'+esc(plan.betQuality==null?'未算出':plan.betQuality)+'</b>/100（的中率ではありません）</span>'
-    +'<span>'+esc(status)+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div>'
-    +renderGroup('本線','本線｜的中重視',plan.reason)
-    +renderGroup('3連単チャレンジ','3連単チャレンジ｜高配当重視',plan.trifectaReason)
-    +renderGroup('保険','保険｜本線補完',plan.insuranceReason)
-    +'<p class="arv-three-budget">合計 '+esc(total.points==null?(plan.items||[]).reduce(function(a,z){return a+n(z.points)},0):total.points)+'点'
-    +(total.totalYen!=null?'・100円/点換算 '+esc(total.totalYen)+'円':'')+'（購入額は投票時に指定）</p>'
-    +'<p class="arv-three-ev">'+esc(plan.expectedValueReason||'券種別の的中率・回収率・期待値は、保存済み実績を検証できるまで表示しません。')+'</p>'
-    +(plan.fixedAt?'<p class="arv-three-fixed">保存 '+esc(plan.fixedAt)+'</p>':'<p class="arv-three-provisional">発走前の保存が完了するまでは暫定です。発走後に買い目を新規作成しません。</p>')
-    +(plan.postLockNotice?'<p class="ai-bet-lock-notice">'+esc(plan.postLockNotice)+'</p>':'')
-    +explanation
-    +'<div class="bet-mark-guide"><b>印の見方（券種ごとに役割を再判定）</b><div class="bet-mark-grid">'
-    +'<span><i>◎</i>3着以内の軸。1着固定を意味しない</span><span><i>【単】</i>独立した1着・単勝向き評価</span>'
-    +'<span><i>○</i>連対の本線候補</span><span><i>▲</i>上位有力候補</span>'
-    +'<span><i>☆+</i>1着逆転も狙う強穴</span><span><i>☆</i>能力面の穴・相手候補</span>'
-    +'<span><i>△</i>3着・押さえ</span><span><i>注</i>条件が合うときのみ採用</span>'
-    +'</div></div><p class="arv-three-reason">'+esc(plan.reason||'')+'</p></div>'
+ if(!window.ARVEXQBetView||typeof window.ARVEXQBetView.render!=='function')
+  return '<div class="ai-bet-box"><b>買い目表示モジュール未取得</b><p>再読み込みしてください。保存済み予想は変更しません。</p></div>';
+ return window.ARVEXQBetView.render(r,p,{buildAiBetPlan:buildAiBetPlan,esc:esc,n:n,
+  isFinal:isFinal,raceMarkClock:raceMarkClock,aiBetExplanationHtml:aiBetExplanationHtml,betComboText:betComboText});
 }
+
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
   return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は3着以内への安定性を重視した馬券の軸。単勝向きとは別判定。発走後の正式印は保存済み予想だけを表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'

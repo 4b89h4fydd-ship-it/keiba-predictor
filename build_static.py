@@ -1,6 +1,7 @@
 from pathlib import Path
 import ast
 import base64
+import hashlib
 import json
 import re
 import shutil
@@ -101,7 +102,15 @@ if not icons:
 if "ARVEXQ_TOUCH_ICON_180" not in binary_b64:
     raise RuntimeError("ARVEXQ_TOUCH_ICON_180 not found")
 
+BET_PATH = STATIC / "betting"
+BET_ASSETS = ("three_way_engine.js", "bet_view.js", "bet_ui.css")
+for filename in BET_ASSETS:
+    if not (BET_PATH / filename).is_file():
+        raise RuntimeError(f"missing independent betting asset: {filename}")
+bet_hash = hashlib.sha256(b"|".join((BET_PATH / filename).read_bytes() for filename in BET_ASSETS)).hexdigest()[:12]
+
 index_html = strings["INDEX"]
+index_html = index_html.replace("__ARVEXQ_BET_ASSET_FINGERPRINT__", bet_hash)
 css = strings["CSS"]
 js = strings["JS"]
 manifest = strings["MANIFEST"]
@@ -176,6 +185,11 @@ for name in ("manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifes
 for legacy_sw in ("v328", "v327", "v326", "v325", "v324", "v323", "v322", "v321", "v320", "v319", "v318"):
     (DIST / f"sw-{legacy_sw}-reset.js").write_text(sw, encoding="utf-8")
 
+# Keep betting modules as separate browser resources, not inlined into app.js.
+(DIST / "betting").mkdir(exist_ok=True)
+for filename in BET_ASSETS:
+    shutil.copy2(BET_PATH / filename, DIST / "betting" / filename)
+
 # Independent UI feature modules kept outside the main app bundle.
 for extra_asset in ("previous_ai_results.js",):
     src = STATIC / extra_asset
@@ -215,6 +229,7 @@ headers=[
     f"/app-{BUILD_VERSION}.js","  Cache-Control: no-cache, must-revalidate",
     f"/arvexq-app-{BUILD_VERSION}.js","  Cache-Control: no-cache, must-revalidate",
     f"/styles-arvexq-{BUILD_VERSION}.css","  Cache-Control: no-cache, must-revalidate",
+    "/betting/*","  Cache-Control: no-cache, must-revalidate",
     "/previous_ai_results.js","  Cache-Control: no-cache, must-revalidate",
     "/arvexq-racing-hero.webp","  Cache-Control: public, max-age=604800",
     "/arvexq-racing-detail.webp","  Cache-Control: public, max-age=604800",

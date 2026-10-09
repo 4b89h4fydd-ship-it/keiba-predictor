@@ -3,15 +3,14 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const start=src.indexOf('function composeThreeWayBetPolicy(');
-const end=src.indexOf('function buildAiBetPlan(',start);
-assert.ok(start>=0&&end>start,'three-way engine must be on both prediction paths');
+const moduleSrc=fs.readFileSync('arvexq/ui/static/betting/three_way_engine.js','utf8');
 const n=(x,f=0)=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x):f;
-const policy=new Function('n','clamp','isScratchHorse','betComboText',
-  src.slice(start,end)+'\nreturn composeThreeWayBetPolicy;')(
-  n,(x,a,b)=>Math.max(a,Math.min(b,x)),h=>!!h.scratched,
-  (kind,cs)=>cs.map(c=>c.join(kind==='馬単'||kind==='3連単'?' → ':' - ')).join(' / ')
-);
+const betGlobal={};
+new Function('window',moduleSrc)(betGlobal);
+const policy=(base,r,p)=>betGlobal.ARVEXQThreeWayBet.compose(base,r,p,{
+ n,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),isScratchHorse:h=>!!h.scratched,
+ betComboText:(kind,cs)=>cs.map(c=>c.join(kind==='馬単'||kind==='3連単'?' → ':' - ')).join(' / ')
+});
 const weights=[
  [.55,.03,.03],[.19,.25,.13],[.11,.22,.27],[.06,.18,.24],
  [.04,.13,.17],[.025,.10,.10],[.015,.06,.04],[.01,.03,.02]
@@ -57,6 +56,7 @@ const confused=policy({...base(),audit:{orderConfidence:.03}},race,prediction);
 assert.equal(confused.trifectaDecision,'見送り','low ordering confidence blocks trifecta');
 assert.ok(confused.items.every(x=>x.level!=='3連単チャレンジ'));
 assert.ok(!src.includes('function composeThreeWayBetPolicy(r,p)'),'policy must consume audited model');
+assert.ok(src.includes('window.ARVEXQThreeWayBet.compose(base,r,p'),'bridge must invoke standalone engine');
 assert.ok(src.includes('vp=composeThreeWayBetPolicy(vp,r,p)'),'local branch');
 assert.ok(src.includes('plan=composeThreeWayBetPolicy(plan,r,p)'),'central branch');
 assert.ok(src.includes("if(stored)return immutableStoredAiBetView(r,stored)"),'saved bets take precedence');

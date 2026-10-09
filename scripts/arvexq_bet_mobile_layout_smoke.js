@@ -5,7 +5,8 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {chromium,webkit,devices}=require('playwright');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const css=fs.readFileSync('arvexq/ui/static/styles.css','utf8');
+const css=fs.readFileSync('arvexq/ui/static/styles.css','utf8')+'\n'+fs.readFileSync('arvexq/ui/static/betting/bet_ui.css','utf8');
+const betView=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8');
 function extract(start,end){
   const a=src.indexOf('function '+start+'(');
   const b=src.indexOf('function '+end+'(',a+1);
@@ -24,12 +25,13 @@ const plan={decision:'通常買い',scenario:'前残り',scenarioProb:.4,betQual
   insuranceDecision:'採用',referenceBudget:{points:15,totalYen:1500},expectedValue:null,
   expectedValueReason:'未校正の的中確率から期待値は算出しません。',
   reason:'三方式のモデル別選定。'};
-const renderer=new Function('esc','n','buildAiBetPlan','officialRaceLinks','aiBetExplanationHtml','cinematicFooter',
-  extract('aiBetRecommendation','aiMarksPanel')+
+const renderer=new Function('window','esc','n','buildAiBetPlan','officialRaceLinks','aiBetExplanationHtml','cinematicFooter',
+  betView+'\n'+
+  "function aiBetRecommendation(r,p){return window.ARVEXQBetView.render(r,p,{buildAiBetPlan,esc,n,isFinal:()=>false,raceMarkClock:()=>({started:false}),aiBetExplanationHtml,betComboText:(k,cs)=>cs.map(c=>c.join(k===\'3連単\'?\' → \':\' - \')).join(\' / \')});}\n"+
   extract('raceSubpageTopBar','horseDetailPage')+
   extract('betDetailPage','renderRace')+
   '\nreturn betDetailPage;');
-const html=renderer(esc,n,()=>plan,()=>({vote:''}),
+const html=renderer({},esc,n,()=>plan,()=>({vote:''}),
   ()=>'<section class="ai-bet-why"><b>この買い目になった理由</b><p>購入は見送り</p></section>',()=>'')(
     {track:'大井',raceNumber:7},{}
   );
@@ -43,7 +45,7 @@ assert.match(html,/保険｜本線補完/);
 const legacyPlan={...plan,engineVersion:'arvexq-bets-old-v317',
   fixedAt:'2026-10-08T10:20:00+09:00',
   items:[{level:'通常',kind:'馬連',points:1,combos:[[2,6]],combo:'2 - 6'}]};
-const historical=renderer(esc,n,()=>legacyPlan,()=>({vote:''}),
+const historical=renderer({},esc,n,()=>legacyPlan,()=>({vote:''}),
   ()=>'',()=>'')({track:'大井',raceNumber:7},{});
 assert.match(historical,/発走前保存済み買い目（旧方式）/);
 assert.match(historical,/2 - 6/,'old picks must not vanish when new sections replace legacy');
