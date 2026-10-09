@@ -159,8 +159,10 @@ def evaluate_frozen_result(detail: dict[str, Any]) -> dict[str, Any] | None:
     podium = [int(f.get("horseNumber") or 0) for f in finish[:3]]
     if len(podium) < 3 or not all(podium):
         return None
+    from arvexq.prediction.official_course_revision import latest_pre_off_marks
+    mark_snapshot = latest_pre_off_marks(detail) or lock
     marks = {int(h["horseNumber"]): str(h.get("mark") or "")
-             for h in lock.get("horses") or []}
+             for h in mark_snapshot.get("horses") or []}
     marked = {n for n, m in marks.items() if m and m in MARKS}
     hon = next((n for n, m in marks.items() if m == "◎"), None)
     bet = detail.get("preRaceBet") or {}
@@ -189,6 +191,8 @@ def evaluate_frozen_result(detail: dict[str, Any]) -> dict[str, Any] | None:
         "version": "arvexq-frozen-result-audit-v1",
         "raceId": str(detail.get("id") or ""),
         "revision": lock.get("sealRevision") or lock.get("revision") or "",
+        "marksSnapshotSource": mark_snapshot.get("version") or lock.get("freezePolicy") or "",
+        "marksRevisionAt": mark_snapshot.get("revisedAt") or mark_snapshot.get("fixedAt") or "",
         "top3Finishers": podium,
         "honmeiPresent": hon is not None,
         "honmeiHorseNumber": hon or 0,
