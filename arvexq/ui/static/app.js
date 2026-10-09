@@ -3351,12 +3351,12 @@ function computeMorningRaceCandidates(circuit){
   function add(r,t){if(!r)return;var k=String(r.id);map[k]={race:r,tags:['厳選'],selection:t}}
   // v304: every race on the card is evaluated first. Clock time is NEVER a
   // selection factor. A second full-card quality cut keeps only true elite races.
+  if(!window.ARVEXQMorningTicketLanes||typeof window.ARVEXQMorningTicketLanes.classify!=='function')
+    throw Error('morning classifier missing — do not publish an empty selection');
   all.forEach(function(r){try{
     var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d)||!d.preparedMeta||d.preparedMeta.diagnosisReady!==true)return;
     var p=predict(d),strict=strictSelectedRaceProfile(d,p);
-     if(!window.ARVEXQMorningTicketLanes||typeof window.ARVEXQMorningTicketLanes.classify!=='function')
-       throw Error('morning ticket lane classifier unavailable');
-     var t=window.ARVEXQMorningTicketLanes.classify(d,p,strict);
+    var t=window.ARVEXQMorningTicketLanes.classify(d,p,strict);
      if(t.selected)add(r,t)
   }catch(e){}});
   return eliteSelectedRaceCut(Object.keys(map).map(function(k){return map[k]}))
@@ -3423,7 +3423,7 @@ function fixedPickEmpty(kind,circuit){
   return '<div class="fixed-pick-empty"><b>該当なし</b><small>'+(incomplete?('基準を満たす確定候補なし｜情報不足 '+incomplete+'レース（朝の未判定を後付けしません）'):(label+'基準を通過したレースなし'))+'</small></div>'
 }
 function fixedSelectedBox(circuit,picks){
-  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+'｜'+esc(t.score||'—')+'点</em><small>'+esc(t.reason||'朝に選定・固定')+'</small></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
+  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝に選定・固定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+'｜'+esc(t.score||'—')+'点</em></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
   return '<details class="fixed-pick-box fixed-pick-circuit" data-selected-circuit="selected" data-pick-circuit="'+esc(circuit)+'" '+(open?'open':'')+'><summary class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><span class="fixed-pick-summary-right"><em>'+picks.length+'レース</em><i>⌄</i></span></summary><div class="fixed-pick-box-body">'+body+'</div></details>'
 }
 function selectedRaceBetPreview(r){

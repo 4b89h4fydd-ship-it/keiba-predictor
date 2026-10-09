@@ -1,8 +1,9 @@
 'use strict';
 // Synthetic regressions only. Morning picks are not calibrated hit rates.
 const assert=require('node:assert/strict'),fs=require('node:fs');
+const laneSource=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8');
 const source=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js','utf8');
-const w={};new Function('window',source)(w);
+const w={};new Function('window',laneSource)(w);new Function('window',source)(w);
 const n=(v)=>Number(v)||0,chronological=(a,b)=>a.race.startTime.localeCompare(b.race.startTime);
 const rows=[
  {race:{id:'JRA-01',raceNumber:5,startTime:'13:10'},selection:{selected:true,score:70}},
@@ -14,3 +15,24 @@ const x=w.ARVEXQMorningSelection.allStrictQualifiers(rows,{n,chronological});
 assert.deepEqual(x.map(z=>z.race.id),['NAR-01','JRA-01','NAR-02'],'all eligible races kept, no max-one cap');
 assert.equal(w.ARVEXQMorningSelection.version,'strict-unlimited-morning-v1');
 console.log('MORNING_SELECTION_UNLIMITED_OK '+x.length);
+
+function laneTest(overrides={}){
+ const rows=Array.from({length:8},(_,i)=>({
+   horse:{horseNumber:i+1},predMark:i===0?'◎':i===4?'☆+':i===1?'○':'△',
+   ticketP2Probability:[.31,.26,.18,.09,.08,.04,.025,.015][i],
+   ticketP3Probability:[.25,.24,.18,.11,.10,.06,.04,.02][i]}));
+ const audit={selected:false,score:64,top3mass:.69,margin:.02,
+   winnerConfidence:.55,winnerStable:false,scenarioProb:.43,
+   evidence:.55,readiness:{prediction:.84},...overrides};
+ return w.ARVEXQMorningTicketLanes.classify({circuit:'地方'},{rows,coverage:.70},audit);
+}
+const place=laneTest();
+assert(place.selected&&place.types.includes('的中重視型'));
+assert(!place.types.includes('勝ち馬明確型'),'P2/P3 stable without dominant winner');
+const winner=laneTest({selected:true,winnerStable:true,winnerConfidence:.81,margin:.075,score:84});
+assert(winner.selected&&winner.primaryType==='勝ち馬明確型');
+const longshot=laneTest({winnerStable:true,winnerConfidence:.70,margin:.027,score:73});
+assert(longshot.types.includes('高配当狙い型'));
+assert(!('hitRate' in longshot)&&!('expectedValue' in longshot));
+assert(!laneTest({readiness:{prediction:.1}}).selected);
+console.log('MORNING_THREE_LANES_OK');

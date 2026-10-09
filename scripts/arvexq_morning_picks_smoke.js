@@ -12,7 +12,8 @@ function take(name){
 const code=['morningPickOf','morningPickReady','selectedRaceCandidates','specialForecastRaceCandidates']
   .map(take).join('\n')+'\nreturn {morningPickReady,selectedRaceCandidates,specialForecastRaceCandidates};';
 const state={races:[
-  {id:'one',date:'2026-10-10',circuit:'中央',track:'東京',raceNumber:1,startTime:'10:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:true,morningSelectedScore:86,morningSpecial:false},
+  {id:'one',date:'2026-10-10',circuit:'中央',track:'東京',raceNumber:1,startTime:'10:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:true,morningSelectedScore:86,morningSpecial:false,
+     morningPrimaryType:'的中重視型',morningSelectedTypes:['的中重視型'],morningSelectionReason:'朝の固定分類'},
   {id:'two',date:'2026-10-10',circuit:'地方',track:'高知',raceNumber:12,startTime:'20:30',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:false,morningSelectedScore:0,morningSpecial:true},
   {id:'three',date:'2026-10-10',circuit:'地方',track:'大井',raceNumber:5,startTime:'15:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:false,morningSpecial:false},
 ]};
@@ -20,6 +21,7 @@ const helper=new Function('state','n','raceChronologicalCompare',code);
 const api=helper(state,(v,d=0)=>Number.isFinite(Number(v))?Number(v):d,(a,b)=>a.raceNumber-b.raceNumber);
 assert(api.morningPickReady());
 assert.deepEqual(api.selectedRaceCandidates().map(x=>x.race.id),['one']);
+assert.equal(api.selectedRaceCandidates()[0].selection.primaryType,'的中重視型');
 assert.deepEqual(api.specialForecastRaceCandidates().map(x=>x.id),['two']);
 state.races[0].winOdds=160;state.races[0].raceStatus='確定';
 state.races[1].title='レース名訂正';state.races[2].volatility={label:'荒'};

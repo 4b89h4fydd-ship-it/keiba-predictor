@@ -102,6 +102,7 @@ jobs:
           node --check scripts/arvexq_morning_picks.js
           node --check scripts/arvexq_morning_picks_smoke.js
           node scripts/arvexq_morning_picks_smoke.js
+          node --check arvexq/ui/static/morning/ticket_lane_classifier.js
           node scripts/arvexq_morning_selection_cut_smoke.js
           node scripts/arvexq_morning_picks_runner_smoke.js
           python -m unittest discover -s tests -p 'test_morning_pick_freeze.py' -v

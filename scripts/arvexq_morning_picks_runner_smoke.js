@@ -27,6 +27,9 @@ try{
   assert.equal(frozen.summaries.length,2);
   assert(frozen.summaries.every(r=>r.morningPickVersion==='v1'&&typeof r.morningSelected==='boolean'));
   assert.equal(frozen.summaries[1].morningSpecial,true,'grade race selected before post');
+  assert(frozen.summaries.every(r=>Array.isArray(r.morningSelectedTypes)),'public labels must be archived');
+  assert(frozen.summaries.every(r=>typeof r.morningPrimaryType==='string'));
+  assert(frozen.summaries.every(r=>typeof r.morningSelectionReason==='string'));
   assert(frozen.details.every(d=>d.morningPickFixedAt));
   // Once a complete morning card is known, a single missing AI diagnosis may
   // be archived as unassessed rather than freezing zero races for everyone.
@@ -42,6 +45,7 @@ try{
   assert.equal(partialDiagnosis.summaries.length,5);
   assert(partialDiagnosis.summaries.every(r=>r.morningPickVersion==='v1'));
   assert.equal(partialDiagnosis.summaries[4].morningAssessed,false);
+  assert.deepEqual(partialDiagnosis.summaries[4].morningSelectedTypes,[]);
   assert.equal(partialDiagnosis.summaries[4].morningSelected,false,'never promote unassessed cards');
   assert(partialDiagnosis.summaries.slice(0,4).every(r=>r.morningAssessed===true));
   const past=fixture('2025-10-01','09:00');

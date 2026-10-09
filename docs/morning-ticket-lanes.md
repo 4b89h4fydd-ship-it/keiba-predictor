@@ -1,0 +1,12 @@
+# ARVEXQ X free morning race categorization
+
+## Independent classifier
+`arvexq/ui/static/morning/ticket_lane_classifier.js` is separate from the monolithic app and loaded independently by browser and morning capture.
+
+- **的中重視型:** stable second/third role distributions and ◎ in leading place candidates; suitable for checking wide/quinella/trio, without requiring 1st-place gap.
+- **勝ち馬明確型:** clear, stable winner and scenario, or the original strict selection gate; check exacta/trifecta.
+- **高配当狙い型:** justified ☆ / ☆+ in the conditional second/third group; high payout is not guaranteed. 3連単 can still be skipped by the buying gate.
+- Common safeguards: five or more runners, known pre-off readiness and coverage, quality evidence, axis, and explicit gate. No fixed daily maximum.
+- Labels/selection reasons are published exactly once in `morning-picks/YYYY-MM-DD.json`, never reclassified after odds or results. Previously published dates are NOT backfilled; they display "厳選・旧方式".
+- Type and 0–100 internal quality score are not measured accuracy or expected profit. Existing buy/no-buy logic remains authoritative.
+- Morning membership is not updated later; special and selected races both read the immutable manifest.
