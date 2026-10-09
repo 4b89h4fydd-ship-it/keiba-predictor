@@ -392,7 +392,24 @@ jobs:
                         any(morning(published.get(rid)).get(key)!=expected_pick.get(key) for key in keys)]
           print('D1_MORNING_PICKS_VERIFY fixed=',len(frozen),'inconsistent=',len(inconsistent))
           if inconsistent:
-              raise SystemExit('D1 stripped/rewrote frozen morning selections: '+str(inconsistent[:12]))
+              # The Worker deliberately drops unknown keys from D1 summaries.
+              # The immutable static morning-picks/<date>.json is canonical.
+              from pathlib import Path
+              date=str(prepared.get('meta',{}).get('sync_date') or day.get('date') or '')
+              archive=Path('arvexq/ui/static/morning-picks')/(date+'.json')
+              if not archive.is_file():
+                  raise SystemExit('D1 stripped morning picks and static archive is missing')
+              manifest=json.loads(archive.read_text(encoding='utf-8'))
+              original={rid:(r.get('morningSelected'),r.get('morningSpecial'),r.get('morningSelectedScore') or 0)
+                        for rid,r in proposed.items() if rid in frozen}
+              static={str(r.get('id')):(r.get('selected'),r.get('special'),r.get('selectedScore') or 0)
+                      for r in (manifest.get('races') or []) if isinstance(r,dict)}
+              if (manifest.get('date')!=date or len(static)!=len(original) or
+                  static!=original):
+                  raise SystemExit('Static morning archive does not match first morning selection')
+              print('D1_MORNING_METADATA_STRIPPED_STATIC_ARCHIVE_CANONICAL',len(static))
+              # Do not fail the race card publication. Static archive is separately
+              # deployed and verified by the Cloudflare Web Deploy workflow.
           print('D1_PREFETCH_DETAIL_VERIFY expected=',len(expected),'received=',len(returned),'missing_cards=',len(missing_cards),'missing_analysis=',len(missing_analysis))
           if missing_analysis:
               print('::warning::D1 analysis unavailable for '+str(len(missing_analysis))+' races: '+str(missing_analysis[:20]))
