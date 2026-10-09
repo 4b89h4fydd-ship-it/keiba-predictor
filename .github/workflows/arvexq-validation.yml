@@ -218,6 +218,7 @@ jobs:
                        {'horseNumber':2,'name':'テスト馬2','jockey':'騎手B','carriedWeight':55.0,'recentRaces':[{'finish':2}]},
                        {'horseNumber':3,'name':'テスト馬3','jockey':'騎手C','carriedWeight':56.0,'recentRaces':[{'finish':3}]}],
             'preparedMeta':{'diagnosisReady':True},'preRacePrediction':{'mark':'◎','score':88},'predictionAudit':{'locked':True},
+            'predictionModelVersion':prefetch.FOUR_PILLAR_MODEL_VERSION,
           }
           base['preparedMeta']['analysisInputHash']=analysis_input_hash(base)
           fresh={'id':base['id'],'weather':'曇','condition':'稍重','horses':[{'horseNumber':1,'bodyWeight':486,'bodyWeightChange':6,'winOdds':2.8}]}
