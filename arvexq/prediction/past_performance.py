@@ -10,6 +10,7 @@ from datetime import date, datetime
 from typing import Any
 from arvexq.history import normalize_run
 from arvexq.ingest.full_career import merge_career
+from arvexq.ingest.career_transport import recover_horse
 
 VERSION = "arvexq-past-five-context-v1"
 KEYS = ("recentRaces", "allPastRuns", "pastRaces", "history", "runs")
@@ -55,6 +56,10 @@ def observed_runs(horse: dict[str, Any], race: dict[str, Any], limit: int | None
     cutoff = _date(race.get("date") or race.get("raceDate"))
     if cutoff is None:
         return []
+    # A D1 detail may carry older starts in the lossless gzip sidecar.
+    # Expand only for whole-career analysis; the UI's five-run lane stays fast.
+    if limit is None and isinstance(horse.get("careerArchive"), dict):
+        horse = recover_horse(horse, cutoff.isoformat())
     candidates: list[dict[str, Any]] = []
     for key in KEYS:
         if isinstance(horse.get(key), list):
