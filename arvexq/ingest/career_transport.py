@@ -12,7 +12,6 @@ import hashlib
 import json
 from typing import Any
 from arvexq.ingest.full_career import merge_career
-from arvexq.prediction.mass_feature_transport import pack_mass_detail
 
 SCHEME = "arvexq-career-gzip-json-v2"
 LEGACY_SCHEME = "arvexq-career-gzip-json-v1"
@@ -115,6 +114,8 @@ def pack_detail(detail: dict[str, Any]) -> dict[str, Any]:
     out["horses"] = [pack_horse(h, date) if isinstance(h, dict) else h
                      for h in (detail.get("horses") or [])]
     out.setdefault("preparedMeta", {})["careerTransportVersion"] = SCHEME
-    # Mass-feature evidence is immutable and required for later leakage-safe
-    # training. Preserve its entire original data in a verified gzip envelope.
+    # Avoid importing the prediction package while loading the history
+    # transport module: the model itself imports recover_horse from here.
+    from arvexq.prediction.mass_feature_transport import pack_mass_detail
+    # Preserve the exact frozen feature observations in a verified envelope.
     return pack_mass_detail(out)
