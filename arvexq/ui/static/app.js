@@ -1549,6 +1549,7 @@ function assignPredictionMarks(rows,r){
           module.analyzePast(z.horse,r):
           {starts:0,top3:0,rate:0,status:'module-unavailable'};
     z.podiumPastFive=history;
+    z.careerHistoryObserved=history.datedRuns||0;
     if(z.horse&&z.horse.integratedEvaluation)
       z.horse.integratedEvaluation.pastPerformance=history;
     return history;
@@ -1576,6 +1577,7 @@ function assignPredictionMarks(rows,r){
     eligible:honmeiEligible,horseNumber:n(axisLeader&&axisLeader.horse&&axisLeader.horse.horseNumber),
     axisScore:n(axisLeader&&axisLeader.podiumAxisScore),axisGap:axisGap,
     historyRuns:axisH.starts,historyTop3:axisH.top3,
+     recentRuns:axisH.recentStarts,recentTop3:axisH.recentTop3,
     checks:axisReview.checks||{},failed:axisReview.failures||[],
     gateVersion:axisReview.version,pastContext:axisReview.pastContext||{},
     reason:honmeiEligible?'podium-axis-passed':'podium-axis-withheld'};
@@ -1588,7 +1590,7 @@ function assignPredictionMarks(rows,r){
        fails.includes('matchingConditionEvidence')?'同距離・芝ダで馬券圏内の裏付け不足':
        fails.includes('noRepeatedFrontFade')?'先行失速の反復':
        fails.includes('recentFormNotDeteriorating')?'直近の内容悪化':
-       fails.includes('historicalPodium')?'過去5走の3着内再現不足':
+       fails.includes('historicalPodium')?'近5走・全キャリアの3着内再現不足':
        fails.includes('winningChance')?'1着評価上位との不一致':
        fails.includes('clearSeparation')?'軸候補の評価差不足':'独立軸ゲートの証拠不足');
   }
