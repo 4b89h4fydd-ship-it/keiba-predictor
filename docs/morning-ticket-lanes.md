@@ -23,3 +23,11 @@ first-write-wins: past dates are never retroactively changed. If the morning
 inputs cannot pass the existing strict purchase-readiness checks, zero public
 selected races is the safe and intentional result, not a license to fabricate
 a ticket or loosen risk safeguards.
+
+## Place-type bridge and archival
+`的中重視型` can qualify without a dominant winner; its morning-specific
+quality audit enters the real independent buying engine. The input-readiness,
+ticket-concentration and 3連単 6–12 point gates still apply.
+This lane can be recovered later pre-off only from a saved immutable archive.
+`ticketKinds` is preserved in archives and summary metadata, while the
+selection reason names the actual kinds that passed in the morning.

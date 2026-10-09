@@ -92,5 +92,19 @@ function requireMorningTickets(selection,plan){
     reason:has?selection.reason+'｜朝の買い目成立：'+kinds.join('・'):
       '朝の買い目がすべて見送り・未取得のため厳選対象外'};
 }
-global.ARVEXQMorningTicketLanes=Object.freeze({VERSION,NAMES,classify,ticketKinds,requireMorningTickets});
+// Allow a quality-qualified place lane to reach the real bet engine without
+// falsely claiming the first-place winner is dominant.
+function hasMorningPlace(r,frozen){
+ const pending=r&&r._arvexqMorningLaneCandidate;
+ return !!((pending&&pending.selected===true&&Array.isArray(pending.types)&&pending.types.includes(NAMES[0]))||
+    (frozen&&frozen.selected===true&&Array.isArray(frozen.types)&&frozen.types.includes(NAMES[0])));
+}
+function qualifyPlaceBet(base,r,frozen){
+ if(!base||!base.selectionAudit||base.selectionAudit.selected===true||!hasMorningPlace(r,frozen))return base;
+ return {...base,selectionAudit:{...base.selectionAudit,selected:true,
+    strictWinnerSelected:false,morningPlaceLane:true,
+    reason:'朝の的中重視型の券種別品質ゲート通過（勝ち馬明確型ではない）'}};
+}
+global.ARVEXQMorningTicketLanes=Object.freeze({VERSION,NAMES,classify,
+ ticketKinds,requireMorningTickets,hasMorningPlace,qualifyPlaceBet});
 })(window);

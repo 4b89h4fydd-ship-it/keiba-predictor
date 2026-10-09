@@ -35,12 +35,13 @@ if(/^20\d{2}-\d{2}-\d{2}$/.test(day)&&fs.existsSync(existingArchive)){
       selected:m.selected===true,selectedScore:Number(m.selectedScore)||0,special:m.special===true,
       assessed:m.assessed!==false,primaryType:String(m.primaryType||''),
       types:Array.isArray(m.types)?m.types.slice():[],selectionReason:String(m.selectionReason||''),
-      selectionModelVersion:String(m.selectionModelVersion||'')};
+      selectionModelVersion:String(m.selectionModelVersion||''),
+      ticketKinds:Array.isArray(m.ticketKinds)?m.ticketKinds.slice():[]};
     Object.assign(r,{morningPickVersion:'v1',morningPickFixedAt:archive.fixedAt,
       morningPickScope:archive.scope,morningSelected:frozen.selected,
       morningSelectedScore:frozen.selectedScore,morningSpecial:frozen.special,morningAssessed:frozen.assessed,
       morningPrimaryType:frozen.primaryType,morningSelectedTypes:frozen.types.slice(),
-      morningSelectionReason:frozen.selectionReason});
+      morningSelectionReason:frozen.selectionReason,morningTicketKinds:frozen.ticketKinds.slice()});
     r.volatility={...(r.volatility||{}),morningPicks:frozen};
     r.environmentMeta={...(r.environmentMeta||{}),morningPicks:frozen};
   }
@@ -103,13 +104,15 @@ for(const r of rows){
     types:Array.isArray(selectionById.get(String(r.id))?.types)?selectionById.get(String(r.id)).types.slice():[],
     selectionReason:String(selectionById.get(String(r.id))?.reason||''),
     selectionModelVersion:String(selectionById.get(String(r.id))?.modelVersion||''),
+    ticketKinds:Array.isArray(selectionById.get(String(r.id))?.ticketKinds)?
+      selectionById.get(String(r.id)).ticketKinds.slice():[],
   };
   Object.assign(r,status,{
     morningSelected:decision.selected,
     morningSelectedScore:decision.selectedScore,
     morningSpecial:decision.special,morningAssessed:decision.assessed,
     morningPrimaryType:decision.primaryType,morningSelectedTypes:decision.types,
-    morningSelectionReason:decision.selectionReason,
+    morningSelectionReason:decision.selectionReason,morningTicketKinds:decision.ticketKinds,
   });
   // A public D1 summary upsert currently whitelists unknown top-level keys.
   // Put the manifest inside the existing structured summary metadata as well.
@@ -119,7 +122,7 @@ for(const r of rows){
 for(const d of payload.details||[]){
   const r=rows.find(x=>String(x.id)===String(d.id));
   if(r){
-    for(const key of ['morningPickVersion','morningPickFixedAt','morningPickScope','morningSelected','morningSelectedScore','morningSpecial','morningAssessed','morningPrimaryType','morningSelectedTypes','morningSelectionReason'])d[key]=r[key];
+    for(const key of ['morningPickVersion','morningPickFixedAt','morningPickScope','morningSelected','morningSelectedScore','morningSpecial','morningAssessed','morningPrimaryType','morningSelectedTypes','morningSelectionReason','morningTicketKinds'])d[key]=r[key];
     d.volatility={...(d.volatility||{}),morningPicks:r.volatility.morningPicks};
     d.environmentMeta={...(d.environmentMeta||{}),morningPicks:r.volatility.morningPicks};
   }

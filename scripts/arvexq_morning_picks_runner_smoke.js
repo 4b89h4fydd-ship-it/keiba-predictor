@@ -30,6 +30,7 @@ try{
   assert(frozen.summaries.every(r=>Array.isArray(r.morningSelectedTypes)),'public labels must be archived');
   assert(frozen.summaries.every(r=>typeof r.morningPrimaryType==='string'));
   assert(frozen.summaries.every(r=>typeof r.morningSelectionReason==='string'));
+  assert(frozen.summaries.every(r=>Array.isArray(r.morningTicketKinds)));
   assert(frozen.summaries.every(r=>!r.morningSelected||/朝の買い目成立/.test(r.morningSelectionReason)),
     'no selected morning race when buying was skipped');
   assert(frozen.details.every(d=>d.morningPickFixedAt));

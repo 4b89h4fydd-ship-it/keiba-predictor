@@ -55,4 +55,15 @@ for(const rejected of [
 ]){
  assert.equal(w.ARVEXQMorningTicketLanes.requireMorningTickets(winnerSelection,rejected).selected,false);
 }
+const onlyPlace=w.ARVEXQMorningTicketLanes.qualifyPlaceBet(
+ {selectionAudit:{selected:false,score:64}},
+ {_arvexqMorningLaneCandidate:place},null);
+assert.equal(onlyPlace.selectionAudit.selected,true,
+ 'an approved place lane can enter the independent unordered-ticket gate');
+assert.equal(onlyPlace.selectionAudit.morningPlaceLane,true);
+assert.equal(w.ARVEXQMorningTicketLanes.qualifyPlaceBet(
+ {selectionAudit:{selected:false}}, {_arvexqMorningLaneCandidate:laneTest({readiness:{prediction:.1}})},null)
+ .selectionAudit.selected,false,'unqualified place cannot bypass strict selection');
+assert.equal(w.ARVEXQMorningTicketLanes.hasMorningPlace({},{
+ selected:true,types:['的中重視型']}),true,'frozen morning place lane remains eligible pre-off');
 console.log('MORNING_THREE_LANES_AND_ACTIONABLE_TICKET_GATE_OK');

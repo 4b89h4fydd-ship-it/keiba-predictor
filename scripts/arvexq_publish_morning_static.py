@@ -40,6 +40,7 @@ def morning_manifest(payload: dict) -> dict | None:
                  "primaryType": r.get("morningPrimaryType") or "",
                  "types": r.get("morningSelectedTypes") or [],
                  "selectionReason": r.get("morningSelectionReason") or "",
+                 "ticketKinds": r.get("morningTicketKinds") or [],
                  "selectionModelVersion": ((r.get("volatility") or {}).get("morningPicks") or {}).get("selectionModelVersion") or ""}
                 for r in rows
             ]}
