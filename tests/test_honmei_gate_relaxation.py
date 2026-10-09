@@ -14,7 +14,7 @@ class TestHonmeiWiden(unittest.TestCase):
     def test_short_history_no_longer_auto_qualifies_as_axis(self):
         a=row(1,1,.92,[1,6]); b=row(2,2,.61,[5,6,6],.45)
         q=evaluate_honmei_gate([a,b],None,{"circuit":"地方","date":"2026-10-09"})
-        self.assertEqual(GATE_VERSION,"arvexq-podium-axis-gate-v6-past-five-context")
+        self.assertEqual(GATE_VERSION,"arvexq-podium-axis-gate-v7-full-career")
         self.assertFalse(q["eligible"])
         self.assertIn("historicalPodium",q["failed"])
         for bad in ([1],[6,7]):
