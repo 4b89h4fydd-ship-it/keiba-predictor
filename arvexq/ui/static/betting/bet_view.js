@@ -29,6 +29,8 @@ function render(r,p,deps){
       +(plan.postLockNotice?'<p class="ai-bet-lock-notice">'+esc(plan.postLockNotice)+'</p>':'')
       +aiBetExplanationHtml(plan)+'</div>';
   }
+  var dataUnavailable=plan.decision==='データ不足'||plan.decision==='未取得'||
+      plan.dataStatus==='engine-unavailable'||plan.dataStatus==='insufficient-preoff-evidence';
   function renderGroup(level,label,reason){
     var items=(plan.items||[]).filter(function(z){return z.level===level});
     var body=items.map(function(z){
@@ -37,7 +39,7 @@ function render(r,p,deps){
         +(z.reason?'<p class="arv-three-ticket-reason">'+esc(z.reason)+'</p>':'')+'</div>'
     }).join('');
     return '<section class="arv-three-section"><h3>'+esc(label)+'</h3>'
-      +(body||'<p class="arv-three-skip">見送り：'+esc(reason||'購入条件を満たさず')+'</p>')+'</section>';
+      +(body||'<p class="arv-three-skip">'+(dataUnavailable?'データ不足・未取得：':'見送り：')+esc(dataUnavailable?(plan.dataMissing||[]).join('／')||plan.reason||reason||'発走前情報が揃っていません':reason||'購入条件を満たさず')+'</p>')+'</section>';
   }
   var total=plan.referenceBudget||{},status=plan.fixedAt?'発走前固定':'暫定・未保存',
       explanation=aiBetExplanationHtml(plan);
@@ -45,7 +47,7 @@ function render(r,p,deps){
     +'<div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div>'
     +'<div class="ai-bet-meta"><span class="arv-bet-quality"><small>内部評価（的中率ではありません）</small><b>'+esc(plan.betQuality==null?'未算出':plan.betQuality)+'<em>/100</em></b></span>'
     +'<span class="arv-bet-status">'+esc(status)+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div>'
-    +(plan.noAxis?'<p class="arv-three-provisional">◎なし：連対・3着内の組み合わせを比較。ワイド・馬連・3連複を検討し、馬単・3連単は見送ります。</p>':'')
+    +(plan.noAxis&&!dataUnavailable?'<p class="arv-three-provisional">◎なし：連対・3着内の組み合わせを比較。ワイド・馬連・3連複を検討し、馬単・3連単は見送ります。</p>':'')
     +(plan.referenceOnly?'<p class="arv-three-provisional">通常レースの参考買い目。朝固定の厳選レースではありません。</p>':'')
     +((plan.betWarnings||[]).length?'<div class="arv-three-check"><b>購入前に確認</b><p>条件未確認：'+esc(plan.betWarnings.join('／'))+'</p><small>オッズ・期待値を確認してから購入判断してください。</small></div>':'')
     +renderGroup('本線','本線｜的中重視',plan.reason)
