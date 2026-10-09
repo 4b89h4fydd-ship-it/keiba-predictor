@@ -9,6 +9,7 @@ import re
 from datetime import date, datetime
 from typing import Any
 from arvexq.history import normalize_run
+from arvexq.ingest.full_career import merge_career
 
 VERSION = "arvexq-past-five-context-v1"
 KEYS = ("recentRaces", "allPastRuns", "pastRaces", "history", "runs")
@@ -53,34 +54,24 @@ def _positions(x: Any) -> list[int]:
 def observed_runs(horse: dict[str, Any], race: dict[str, Any], limit: int | None = 5) -> list[dict[str, Any]]:
     cutoff = _date(race.get("date") or race.get("raceDate"))
     if cutoff is None:
-        return []  # Unverifiable race date, never guess whether a run is future.
-    runs: list[dict[str, Any]] = []
-    seen: set[tuple[Any, ...]] = set()
+        return []
+    candidates: list[dict[str, Any]] = []
     for key in KEYS:
-        for original in horse.get(key) or []:
-            if not isinstance(original, dict):
-                continue
-            row = normalize_run(original)
-            at = _date(row.get("date"))
-            if at is None or at >= cutoff:
-                continue
-            field = _number(row.get("fieldSize"))
-            finish = _number(row.get("finish"))
-            if field is None or field < 2 or finish is None or not (1 <= finish <= field):
-                continue
-            fingerprint = (at.isoformat(), str(row.get("track") or ""),
-                           str(row.get("distance") or ""),
-                           str(row.get("title") or ""), int(finish))
-            if fingerprint in seen:
-                continue
-            seen.add(fingerprint)
-            row.update({k: v for k, v in original.items() if k not in row})
-            row["_raceDate"] = at.isoformat()
-            row["finish"] = int(finish)
-            row["fieldSize"] = int(field)
-            runs.append(row)
-    runs.sort(key=lambda x: x["_raceDate"], reverse=True)
-    return runs if limit is None else runs[:max(0, int(limit))]
+        if isinstance(horse.get(key), list):
+            candidates.extend(horse[key])
+    rows: list[dict[str, Any]] = []
+    for original in merge_career([], candidates, cutoff.isoformat()):
+        row = normalize_run(original)
+        field = _number(row.get("fieldSize"))
+        finish = _number(row.get("finish"))
+        if field is None or field < 2 or finish is None or not (1 <= finish <= field):
+            continue
+        row.update({k: v for k, v in original.items() if k not in row})
+        row["_raceDate"] = original["date"]
+        row["finish"] = int(finish)
+        row["fieldSize"] = int(field)
+        rows.append(row)
+    return rows if limit is None else rows[:max(0, int(limit))]
 
 def analyze_past_performance(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any]:
     runs = observed_runs(horse, race)
