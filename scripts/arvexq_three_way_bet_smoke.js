@@ -64,6 +64,20 @@ const unsafe=policy({...base(),betInputGate:{ready:false}},race,prediction);
 assert.deepEqual(unsafe.items,[],'insufficient evidence must block every ticket');
 assert.equal(unsafe.trifectaDecision,'見送り');
 assert.ok(unsafe.trifectaReason,'missed challenge requires a reason');
+const insufficient=policy({...base(),betInputGate:{ready:false,missing:['近走データ']}},race,prediction);
+assert.equal(insufficient.decision,'データ不足','missing pre-off data cannot be a strategic skip');
+assert.equal(insufficient.dataStatus,'insufficient-preoff-evidence');
+assert.deepEqual(insufficient.dataMissing,['近走データ']);
+const nonselected=policy({...base(),selectionAudit:{selected:false}},race,prediction);
+assert.equal(nonselected.decision,'厳選対象外','non-selected is not the same as skipped or missing');
+const viewGlobal={};
+new Function('window',fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8'))(viewGlobal);
+const missingHtml=viewGlobal.ARVEXQBetView.render(race,prediction,{
+ buildAiBetPlan:()=>insufficient,esc:String,n,isFinal:()=>false,
+ raceMarkClock:()=>({started:false}),aiBetExplanationHtml:()=>'',betComboText:()=>''
+});
+assert.match(missingHtml,/データ不足・未取得/);
+assert.doesNotMatch(missingHtml,/見送り：/,'missing data must never be presented as discretionary abstention');
 const confused=policy({...base(),audit:{orderConfidence:.03}},race,prediction);
 assert.equal(confused.trifectaDecision,'見送り','low ordering confidence blocks trifecta');
 assert.ok(confused.items.every(x=>x.level!=='3連単チャレンジ'));
