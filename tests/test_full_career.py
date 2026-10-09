@@ -60,6 +60,21 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(out["horses"][0].get("allPastRuns"),None)
         self.assertFalse(out["horses"][0]["_careerHistoryAudit"]["complete"])
         self.assertEqual(profile_career(out["horses"][0],RACE)["datedRuns"],0)
+    async def test_prefetch_merge_preserves_all_career_when_diagnosis_is_thin(self):
+        from scripts.arvexq_prefetch import _merge_detail
+        prior=[run(6,1),run(6,12),run(6,23),run(7,1),
+               run(7,12),run(7,23),run(8,1),run(8,12)]
+        a={"date":"2026-10-10","id":"example","horses":[{
+            "horseNumber":1,"name":"sample",
+            "allPastRuns":prior,"recentRaces":prior[-5:]}]}
+        b={"date":"2026-10-10","id":"example","horses":[{
+            "horseNumber":1,"name":"sample","allPastRuns":prior[-5:],
+            "recentRaces":prior[-5:],"integratedEvaluation":{"mark":"○"}}]}
+        merged=_merge_detail(a,b)
+        self.assertEqual(len(merged["horses"][0]["allPastRuns"]),8)
+        self.assertEqual(len(merged["horses"][0]["recentRaces"]),5)
+        self.assertEqual(merged["horses"][0]["integratedEvaluation"]["mark"],"○")
+
     async def test_reported_missing_is_explicit(self):
         horse={"allPastRuns":[run(9,20),run(9,1)],
                "careerStats":{"starts":12}}
