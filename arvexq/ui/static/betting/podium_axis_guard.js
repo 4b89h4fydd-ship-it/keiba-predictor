@@ -69,9 +69,12 @@ function analyzePast(horse,race){
        archive=horse&&horse.careerArchive,
        cutoff=parseDate(race&&(race.date||race.raceDate)),
        trustSummary=!!(saved&&saved.version==='arvexq-observed-career-profile-v1'&&
-         archive&&archive.encoding==='arvexq-career-gzip-json-v1'&&
+         archive&&/^arvexq-career-gzip-json-v[12]$/.test(String(archive.encoding||''))&&
          parseDate(archive.priorRaceDate)===cutoff&&
-         n(saved.datedRuns)===field+n(archive.olderRunCount)&&
+         (n(saved.datedRuns)===field+n(archive.olderRunCount)||
+          (archive.includesRecent===true&&
+           n(archive.storedRunCount)===n(saved.datedRuns)&&
+           n(saved.datedRuns)>=field))&&
          n(saved.datedRuns)>=field&&n(saved.top3)<=n(saved.datedRuns)),
        careerStarts=trustSummary?n(saved.datedRuns):field,
        careerTop3=trustSummary?n(saved.top3):top3,
