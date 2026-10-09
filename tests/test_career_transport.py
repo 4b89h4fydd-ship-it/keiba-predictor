@@ -47,6 +47,25 @@ class CareerTransportTest(unittest.TestCase):
             recover_horse(packed,RACE["date"])
         with self.assertRaises(ValueError):
             recover_horse(packed,"2026-10-09")
+    def test_protected_d1_upsert_merges_two_archives_without_rewriting_morning(self):
+        from scripts.arvexq_protect_sync import protect_detail
+        old_horse=pack_horse(self.horse,RACE["date"])
+        newer=copy.deepcopy(self.horse)
+        newer["allPastRuns"]=self.runs[12:]+[run(9,29,1)]
+        new_horse=pack_horse(newer,RACE["date"])
+        baseline={"version":"arvexq-morning-marks-v1","raceId":"race","fixedAt":"2026-10-10T07:00:00+09:00"}
+        old={"id":"race","date":RACE["date"],"horses":[old_horse],
+             "morningMarkSnapshot":baseline}
+        incoming={"id":"race","date":RACE["date"],"horses":[new_horse],
+                  "morningMarkSnapshot":{**baseline,"fixedAt":"modified"}}
+        result=protect_detail(old,incoming)
+        self.assertEqual(result["morningMarkSnapshot"],baseline)
+        full=recover_horse(result["horses"][0],RACE["date"])
+        self.assertEqual(len(full["allPastRuns"]),29)
+        self.assertEqual(full["allPastRuns"][0]["date"],"2026-09-29")
+        self.assertEqual(full["allPastRuns"][-1]["date"],"2026-02-01")
+        self.assertEqual(result["horses"][0]["careerTransport"]["observedRuns"],29)
+
     def test_date_cutoff_and_diagnosis_survive_pack(self):
         horse=copy.deepcopy(self.horse)
         horse["allPastRuns"].append(run(10,11,1))
