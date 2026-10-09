@@ -41,6 +41,41 @@ def report(path: Path = SOURCE) -> None:
     print("APP_AUDIT_LARGEST_NODES")
     for size, first, last, kind, name in sorted(tops, reverse=True)[:70]:
         print(f"APP_NODE bytes={size:>8} lines={first:>6}-{last:<6} type={kind:<17} name={name}")
+    # Identify top-level functions that can be moved without closing over app.py
+    # globals, its FastAPI app, or database state. Python's symbol table rather
+    # than regex is used so nested function loads are included.
+    import builtins
+    import symtable
+    module_symbols = symtable.symtable(raw, str(path), "exec")
+    pure = []
+    globals_by_function = {}
+    for node in tree.body:
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if node.decorator_list:
+            continue
+        if node.args.defaults or any(x is not None for x in node.args.kw_defaults):
+            continue
+        tables = [x for x in module_symbols.get_children()
+                  if x.get_name() == node.name and x.get_lineno() == node.lineno]
+        if len(tables) != 1:
+            continue
+        pending = tables[:]
+        used = set()
+        while pending:
+            entry = pending.pop()
+            used.update(entry.get_globals())
+            pending.extend(entry.get_children())
+        externals = sorted(x for x in used if x not in vars(builtins))
+        globals_by_function[node.name] = externals
+        if not externals and node.end_lineno - node.lineno >= 4:
+            pure.append((node.end_lineno-node.lineno, node.name, node.lineno))
+    print("APP_PURE_EXTRACTION_CANDIDATES", sorted(pure, reverse=True)[:50])
+    print("APP_PURE_REVIEW_TARGETS")
+    for n in ("_parse_payouts", "_jra_parse_past_cell", "_parse_recent_cell",
+              "_jra_profile_runs", "_jra_parse_race_summary",
+              "_parse_nar_live_odds_html", "_jra_parse_result", "odds_refresh"):
+        print("APP_DEP", n, globals_by_function.get(n))
     print("APP_AUDIT_MODULE_MARKERS")
     for size, first, last, kind, name in tops:
         if kind == "Call" and name in ("exec", "eval"):
