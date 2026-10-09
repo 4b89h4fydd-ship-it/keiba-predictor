@@ -101,10 +101,12 @@ class OfficialRevisionTests(unittest.TestCase):
         revised, reason = apply_official_mark_revision(output, output, now)
         self.assertFalse(reason)
         self.assertEqual(len(revised["officialMarkRevisions"]), 1)
-        after, reason = apply_official_mark_revision(baseline, candidate,
+        post_off_candidate = {**race(), "condition": "稍重",
+                              "officialCourseCondition": observation("稍重", "09:00")}
+        after, reason = apply_official_mark_revision(baseline, post_off_candidate,
             datetime(2026, 10, 10, 10, 1, tzinfo=JST))
         self.assertFalse(reason)
-        self.assertEqual(after.get("officialMarkRevisions"), None)
+        self.assertIsNone(after.get("officialMarkRevisions"))
 
     def test_authorized_feed_poll_requires_connected_token(self):
         rows = [race()]
