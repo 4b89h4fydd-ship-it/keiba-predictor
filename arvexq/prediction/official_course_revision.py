@@ -107,6 +107,6 @@ def pre_off_change(detail: dict[str, Any], old: Any, new: Any, now: datetime) ->
     reason = meaningful_change(old, new, now=now)
     # The first official publication is not grounds for a mark change
     # if it merely confirms the going already included at the morning freeze.
-    if reason == "公式馬場情報の初回発表" and str(detail.get("condition") or "") == candidate["going"]:
+    if reason == "公式馬場情報の初回発表" and str(((detail.get("morningMarkSnapshot") or {}).get("originalCondition") or detail.get("condition") or "")) == candidate["going"]:
         return ""
     return reason
