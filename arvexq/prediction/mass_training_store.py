@@ -32,7 +32,12 @@ def frozen_training_rows_from_detail(detail: dict[str, Any]) -> list[dict[str, A
     # Read the frozen pre-race evidence from its authenticated lossless
     # archive. Never infer feature rows from the already-known finishers.
     if not isinstance(detail.get("massFeatureSnapshot"), dict) and detail.get("massFeatureArchive"):
-        detail = recover_mass_detail(detail)
+        try:
+            detail = recover_mass_detail(detail)
+        except ValueError:
+            # An existing frozen snapshot may have an invalid historical origin
+            # hash. Keep it archived but do not use it to train or inflate accuracy.
+            return []
     snapshot = detail.get("massFeatureSnapshot")
     if not isinstance(snapshot, dict):
         return []
