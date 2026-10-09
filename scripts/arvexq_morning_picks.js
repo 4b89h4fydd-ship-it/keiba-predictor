@@ -20,6 +20,29 @@ function save(reason){
   fs.writeFileSync(output,JSON.stringify(payload));
   console.log('MORNING_PICKS_'+reason,'day='+day,'races='+rows.length,'complete='+complete);
 }
+const existingArchive='arvexq/ui/static/morning-picks/'+day+'.json';
+if(/^20\\d{2}-\\d{2}-\\d{2}$/.test(day)&&fs.existsSync(existingArchive)){
+  const archive=JSON.parse(fs.readFileSync(existingArchive,'utf8'));
+  if(archive.version!=='v1'||archive.date!==day||!archive.fixedAt||
+     !Array.isArray(archive.races)||archive.races.length!==Number(archive.scope))
+    throw Error('invalid immutable morning archive: '+existingArchive);
+  const saved=new Map(archive.races.map(r=>[String(r.id),r]));
+  function restore(r){
+    const m=saved.get(String(r.id));if(!m)return;
+    const frozen={version:'v1',fixedAt:archive.fixedAt,scope:archive.scope,
+      selected:m.selected===true,selectedScore:Number(m.selectedScore)||0,special:m.special===true};
+    Object.assign(r,{morningPickVersion:'v1',morningPickFixedAt:archive.fixedAt,
+      morningPickScope:archive.scope,morningSelected:frozen.selected,
+      morningSelectedScore:frozen.selectedScore,morningSpecial:frozen.special});
+    r.volatility={...(r.volatility||{}),morningPicks:frozen};
+    r.environmentMeta={...(r.environmentMeta||{}),morningPicks:frozen};
+  }
+  rows.forEach(restore);
+  (payload.details||[]).forEach(restore);
+  fs.writeFileSync(output,JSON.stringify(payload));
+  console.log('MORNING_PICKS_REUSED_ALREADY_FIXED',day,'races',saved.size);
+  process.exit(0);
+}
 if(!complete){save('AWAITING_COMPLETE_PREOFF_DATA');process.exit(0)}
 if(!Number.isFinite(earliest)||now.getTime()>=earliest){save('NOT_RECONSTRUCTED_AFTER_FIRST_OFF');process.exit(0)}
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
