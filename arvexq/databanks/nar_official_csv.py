@@ -130,7 +130,7 @@ class NarOfficialArchive:
             return {}
         matched = [run.copy() for run, birth in self.by_name.get(normalize(horse.get("name")), [])
                    if run["date"] < cutoff and not (dob and birth and dob != birth)]
-        return {"recentRaces": matched[:min(5, max(1, int(limit)))]} if matched else {}
+        return {"recentRaces": matched[:5], "allPastRuns": matched[:max(1, int(limit))]} if matched else {}
 
 
 def register_nar_official_archive(registry: DataBankRegistry, paths=None):
