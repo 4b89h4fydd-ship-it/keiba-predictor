@@ -48,7 +48,19 @@ def main() -> int:
 
     payload = load_json(Path(args.input))
     summaries = [x for x in (payload.get("summaries") or []) if isinstance(x, dict)]
-    details = [pack_detail(x) for x in (payload.get("details") or []) if isinstance(x, dict) and race_id(x)]
+    source_details = [x for x in (payload.get("details") or []) if isinstance(x, dict) and race_id(x)]
+    details = [pack_detail(x) for x in source_details]
+    raw_mass_bytes = sum(len(json.dumps(d.get("massFeatureSnapshot"), ensure_ascii=False,
+                                        separators=(",", ":"), default=str).encode("utf-8"))
+                         for d in source_details if isinstance(d.get("massFeatureSnapshot"), dict))
+    archive_mass_bytes = sum(len(json.dumps(d.get("massFeatureArchive"), ensure_ascii=False,
+                                            separators=(",", ":"), default=str).encode("utf-8"))
+                             for d in details if isinstance(d.get("massFeatureArchive"), dict))
+    archived_mass_count = sum(bool(d.get("massFeatureArchive")) for d in details)
+    for original, prepared in zip(source_details, details):
+        if isinstance(original.get("massFeatureSnapshot"), dict):
+            if not prepared.get("massFeatureArchive") or prepared.get("massFeatureSnapshot"):
+                raise SystemExit("D1 mass-feature transfer must be lossless and archive-only")
     career_starts = sum(int((h.get("careerTransport") or {}).get("observedRuns") or 0)
                         for d in details for h in (d.get("horses") or []) if isinstance(h, dict))
     source_bytes = Path(args.input).stat().st_size
@@ -121,6 +133,11 @@ def main() -> int:
     if batch_no == 0:
         emit({"summaries": [], "details": []}, "empty")
 
+    print("MASS_FEATURE_TRANSFER_AUDIT",
+          f"archived_races={archived_mass_count}",
+          f"raw_bytes={raw_mass_bytes}",
+          f"archive_bytes={archive_mass_bytes}",
+          f"ratio={archive_mass_bytes / max(1, raw_mass_bytes):.3f}")
     print("CAREER_TRANSFER_AUDIT", f"career_starts={career_starts}",
           f"uncompressed_input_bytes={source_bytes}",
           f"packed_batches_bytes={total_bytes}",
