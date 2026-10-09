@@ -3503,9 +3503,8 @@ function computeMorningSpecialRaceCandidates(){
 }
 function specialForecastRaceCandidates(){
   return (state.races||[]).filter(function(r){
-    if(!r||!r.id)return false;
-    var title=String(r.title||'');
-    return raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))
+    var m=morningPickOf(r);
+    return !!(r&&r.id&&m&&m.special===true)
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceTag(r){
@@ -4883,6 +4882,30 @@ function hydrateInstantFromDevice(rows){
   });
   return count
 }
+function applyMorningArchive(rows){
+  var archive=state.morningArchive;
+  if(!archive||archive.date!==state.date||!Array.isArray(archive.races))return rows;
+  var picks={};
+  archive.races.forEach(function(x){if(x&&x.id)picks[String(x.id)]=x});
+  (rows||[]).forEach(function(r){
+    if(!r||!r.id)return;
+    var frozen=picks[String(r.id)];
+    if(!frozen)return;
+    var m={
+      version:'v1',fixedAt:archive.fixedAt,scope:archive.scope,
+      selected:frozen.selected===true,selectedScore:n(frozen.selectedScore,0),
+      special:frozen.special===true
+    };
+    r.morningPickVersion='v1';
+    r.morningPickFixedAt=archive.fixedAt;
+    r.morningPickScope=archive.scope;
+    r.morningSelected=m.selected;r.morningSelectedScore=m.selectedScore;
+    r.morningSpecial=m.special;
+    r.volatility=Object.assign({},r.volatility||{},{morningPicks:m});
+    r.environmentMeta=Object.assign({},r.environmentMeta||{},{morningPicks:m})
+  });
+  return rows
+}
 function mergeBootstrap(body){
   var rows=(body&&body.races)||[],details=(body&&body.details)||[],pvol={};
   state.bootstrapReady=!!(body&&body.complete===true);
@@ -4907,7 +4930,7 @@ function mergeBootstrap(body){
       r.volatility=pvol[String(r.id)]
     }
   });
-  return rows
+  return applyMorningArchive(rows)
 }
 
 
@@ -4944,7 +4967,31 @@ function load(force){
     render()
   }
 
-  setTimeout(scheduleDailyAiStats,900);
+  // Morning selections are an immutable dated static artifact, independent
+  // of live odds, late diagnosis, and mutable D1 summary schemas.
+  function requestMorningArchive(){
+    fetch('/morning-picks/'+encodeURIComponent(d)+'.json?day='+encodeURIComponent(d),{cache:'no-store'})
+      .then(function(response){return response.ok?response.json():null})
+      .then(function(payload){
+        if(seq!==state.requestSeq||state.date!==d)return;
+        if(!payload||payload.version!=='v1'||payload.date!==d||!payload.fixedAt||
+          !Array.isArray(payload.races)||payload.races.length!==n(payload.scope))return;
+        var seen={},valid=payload.races.every(function(x){
+          if(!x||!x.id||seen[x.id]||typeof x.selected!=='boolean'||typeof x.special!=='boolean')return false;
+          seen[x.id]=true;return true
+        });
+        if(!valid)return;
+        state.morningArchive=payload;
+        if(state.races&&state.races.length){
+          applyMorningArchive(state.races);
+          saveRaceCache(d,'__ALL__',state.races);
+          render()
+        }
+      }).catch(function(){/* No post-off reconstruction on missing file. */})
+  }
+  if(state.morningArchive&&state.morningArchive.date!==d)state.morningArchive=null;
+  requestMorningArchive();
+    setTimeout(scheduleDailyAiStats,900);
   function startDetails(){if(detailsStarted)return;detailsStarted=true;setTimeout(function(){requestDetails(0)},80)}
   // If summaries were already painted from cache, allow selection preload after first paint.
   setTimeout(function(){if(state.races.length)startDetails()},450);
@@ -5015,8 +5062,8 @@ function load(force){
             })
         });
 
-        state.races=rows;
-        saveRaceCache(d,'__ALL__',rows);
+        state.races=applyMorningArchive(rows);
+        saveRaceCache(d,'__ALL__',state.races);
         state.loading=false;
         render();
         startDetails();
