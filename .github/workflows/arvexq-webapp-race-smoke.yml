@@ -76,13 +76,13 @@ jobs:
             assert.ok(end>start,'function end missing '+name);
             return src.slice(start,end+2);
           }
-          const make=new Function('state','selectedRaceCandidates','specialForecastRaceCandidates','allTodayRacesFinished','smartLiveRaceSection','esc','selectedRaceLoadStatus','morningPickReady',
+          const make=new Function('state','selectedRaceCandidates','specialForecastRaceCandidates','allTodayRacesFinished','smartLiveRaceSection','esc','selectedRaceLoadStatus','morningPickReady','legacyMorningSelectionCandidates',
             ['homePickCounts','homePickAlert','smartHomeHub','homeCircuitChooser'].map(extract).join('\n')+
             '\nreturn {smartHomeHub,homeCircuitChooser,homePickAlert,homePickCounts};');
           const state={races:[{id:'race1',circuit:'中央'},{id:'race2',circuit:'地方'}],loading:false};
           const esc=s=>String(s);
           function harness(selected,special){
-            return make(state,c=>selected.filter(x=>x.circuit===c),()=>special,()=>false,()=>'',esc,()=>({complete:true}),()=>true)
+            return make(state,c=>selected.filter(x=>x.circuit===c),()=>special,()=>false,()=>'',esc,()=>({complete:true}),()=>true,()=>[])
           }
           const positive=harness([{circuit:'中央'},{circuit:'地方'},{circuit:'地方'}],[{circuit:'地方'}]);
           const home=positive.smartHomeHub();
