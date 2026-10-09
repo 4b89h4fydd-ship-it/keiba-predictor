@@ -78,6 +78,28 @@ const swReloadMarker = 'v329-racecard-stable-20261007';
     if ((await page.locator('[data-race]').count()) === 0) {
       // v330+: home -> central/local -> venue -> race. Older smoke skipped the circuit page.
       const circuit = page.locator('button[data-home-page="central"],button[data-home-page="local"]').first();
+      // A new racing date may not yet be published in D1 just after midnight JST.
+      // Exercise an archived, actually available race rather than demanding
+      // phantom current-day races or silently marking a skipped smoke as passed.
+      if (!(await circuit.count())) {
+        await page.waitForTimeout(3000);
+        if (!(await circuit.count())) {
+          const jstDay = new Date(Date.now() + 9*60*60*1000).toISOString().slice(0,10);
+          for (let daysBack=1;daysBack<=3;daysBack++) {
+            const day = new Date(jstDay+'T00:00:00Z');
+            day.setUTCDate(day.getUTCDate()-daysBack);
+            const archiveDate=day.toISOString().slice(0,10);
+            await page.goto(base+'/?date='+archiveDate+'&smoke=archived-'+browserName,
+                            {waitUntil:'domcontentloaded',timeout});
+            await page.waitForFunction(() => !document.querySelector('.boot'),null,{timeout});
+            await page.waitForTimeout(2500);
+            if (await circuit.count()) {
+              console.log('SMOKE_ARCHIVE_FALLBACK verified_date='+archiveDate+' because current date has no races');
+              break;
+            }
+          }
+        }
+      }
       await circuit.waitFor({ state: 'visible', timeout });
       await circuit.click();
       const venue = page.locator('button[data-track]').first();
