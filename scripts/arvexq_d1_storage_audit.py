@@ -25,7 +25,11 @@ def get_cloudflare_json(path: str, token: str, *, opener=urllib.request.urlopen)
     with opener(req, timeout=20) as response:
         value = json.loads(response.read(1_000_000).decode("utf-8"))
     if not isinstance(value, dict) or value.get("success") is not True:
-        raise RuntimeError("Cloudflare D1 read request failed")
+        # Safe, actionable error classification; no token, URL or response echoed.
+        codes = [str(e.get("code")) for e in value.get("errors", []) if isinstance(e, dict)] if isinstance(value, dict) else []
+        if any(c in ("10000", "10001", "9103", "9106") for c in codes):
+            raise RuntimeError("cloudflare-api-authorization-denied")
+        raise RuntimeError("cloudflare-d1-api-read-failed")
     return value
 
 
@@ -62,8 +66,10 @@ def summarize(databases: list[dict[str, Any]], *, plan: str = "unknown") -> dict
 
 def audit(account: str, token: str, *, database_name: str = "",
           plan: str = "unknown", get=get_cloudflare_json) -> dict[str, Any]:
-    if not account or not token:
-        raise RuntimeError("Cloudflare account ID or read token unavailable")
+    if not account:
+        raise RuntimeError("missing-cloudflare-account-id")
+    if not token:
+        raise RuntimeError("missing-cloudflare-read-token")
     results = get("/accounts/" + urllib.parse.quote(account, safe="") + "/d1/database?per_page=100", token)
     matches = results.get("result")
     if not isinstance(matches, list):
@@ -98,8 +104,13 @@ def main() -> int:
                      os.environ.get("CLOUDFLARE_API_TOKEN", ""),
                      database_name=args.database,plan=args.plan)
     except Exception as exc:
-        # Never echo token or a network exception carrying request headers.
-        print("D1_STORAGE_AUDIT_UNAVAILABLE", type(exc).__name__,
+        # The only detail logged is a controlled internal reason. No token,
+        # request URL, response body or network exception is ever printed.
+        safe = {"missing-cloudflare-account-id", "missing-cloudflare-read-token",
+                "cloudflare-api-authorization-denied", "cloudflare-d1-api-read-failed",
+                "No readable D1 databases", "Requested D1 database not found or not accessible"}
+        reason = str(exc) if isinstance(exc, RuntimeError) and str(exc) in safe else type(exc).__name__
+        print("D1_STORAGE_AUDIT_UNAVAILABLE", "reason="+reason,
               "data_preserved=true", "no_mutation=true")
         return 2
     for row in report["databases"]:
