@@ -86,7 +86,22 @@ def merge_history(old: dict[str, Any] | None, new: dict[str, Any] | None) -> dic
         return copy.deepcopy(old)
     out = _merge_detail(old, new)
     if card_score(new) > card_score(old):
-        out["horses"] = copy.deepcopy(new.get("horses") or [])
+        # Prefer the richer roster, but never erase earlier dated career runs.
+        source_horses = {int(h.get("horseNumber") or 0):h
+                         for h in old.get("horses") or [] if isinstance(h,dict)}
+        roster = copy.deepcopy(new.get("horses") or [])
+        from arvexq.ingest.full_career import merge_career
+        cutoff = str(out.get("date") or "")
+        for horse in roster:
+            if not isinstance(horse,dict):
+                continue
+            prior = source_horses.get(int(horse.get("horseNumber") or 0),{})
+            union = merge_career([*(prior.get("allPastRuns") or []),*(prior.get("recentRaces") or [])],
+                                 [*(horse.get("allPastRuns") or []),*(horse.get("recentRaces") or [])],cutoff)
+            if union:
+                horse["allPastRuns"] = union
+                horse["recentRaces"] = union[:5]
+        out["horses"] = roster
         for key in ("fieldSize", "title", "surface", "distance", "weather", "condition"):
             value = new.get(key)
             if value not in (None, "", 0, "不明"):
