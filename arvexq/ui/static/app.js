@@ -4062,9 +4062,11 @@ function officialRaceActions(r){
   return ''
 }
 function smartRaceHead(r){
-  var count=raceHeadCountText(r);
+  var count=raceHeadCountText(r),revision=latestOfficialMarkRevision(r),baseline=validMorningMarkSnapshot(r),
+      markState=revision?'公式馬場変更で印修正：'+String(revision.reason||''):baseline?'朝の印を固定中':'';
+  
   return '<section class="smart-race-head smart-race-head-compact smart-race-head-v222">'+
-    '<div class="smart-race-title-stack smart-race-full-title"><h1>'+esc(r.title||'レース詳細')+'</h1></div>'+
+    '<div class="smart-race-title-stack smart-race-full-title"><h1>'+esc(r.title||'レース詳細')+'</h1>'+(markState?'<small class="arv-mark-fix-status">'+esc(markState)+'</small>':'')+'</div>'+
     '<div class="smart-race-head-layout">'+
       '<div class="smart-race-left-stack">'+
         '<div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span><div class="smart-race-title-stack"><div class="smart-race-meta">'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'')+' '+esc(r.condition||'')+'　'+count+'</div></div>'+cinematicGrade(r)+'</div>'+
