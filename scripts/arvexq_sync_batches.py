@@ -48,6 +48,9 @@ def main() -> int:
     payload = load_json(Path(args.input))
     summaries = [x for x in (payload.get("summaries") or []) if isinstance(x, dict)]
     details = [pack_detail(x) for x in (payload.get("details") or []) if isinstance(x, dict) and race_id(x)]
+    career_starts = sum(int((h.get("careerTransport") or {}).get("observedRuns") or 0)
+                        for d in details for h in (d.get("horses") or []) if isinstance(h, dict))
+    source_bytes = Path(args.input).stat().st_size
     odds = [x for x in (payload.get("odds_current") or []) if isinstance(x, dict)]
     meta = dict(payload.get("meta") or {})
 
@@ -107,6 +110,10 @@ def main() -> int:
     if batch_no == 0:
         emit({"summaries": [], "details": []}, "empty")
 
+    print("CAREER_TRANSFER_AUDIT", f"career_starts={career_starts}",
+          f"uncompressed_input_bytes={source_bytes}",
+          f"packed_batches_bytes={total_bytes}",
+          f"transfer_ratio={total_bytes / max(1, source_bytes):.3f}")
     print(
         "SYNC_BATCH_AUDIT",
         f"batches={batch_no}",
