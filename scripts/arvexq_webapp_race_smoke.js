@@ -141,7 +141,17 @@ const swReloadMarker = 'v329-racecard-stable-20261007';
     const close = page.locator('[data-action="back"]').first();
     if (await close.count()) {
       await close.click();
-      await page.waitForFunction(() => location.pathname !== '/race', null, { timeout: 8000 });
+      try {
+        await page.waitForFunction(() => location.pathname !== '/race', null, { timeout: 8000 });
+      } catch (err) {
+        const snap=await page.evaluate(()=>({url:location.href,
+          title:(document.querySelector('.smart-race-head-copy,.smart-race-title')||{}).textContent||'',
+          subpage:!!document.querySelector('.bet-detail-page-shell'),
+          racecard:!!document.querySelector('.racecard-table'),
+          buttons:[...document.querySelectorAll('[data-action="back"],[data-action="close-race-subpage"]')].slice(0,6).map(el=>({kind:el.getAttribute('data-action'),text:el.textContent}))
+        }));
+        throw new Error('race-to-venue back navigation did not complete: '+JSON.stringify(snap),{cause:err});
+      }
       const backText = await page.locator('body').innerText();
       if (hasFatalUiError(backText)) throw new Error('back navigation display error: ' + backText.slice(0, 1000));
     }
