@@ -81,4 +81,7 @@ assert.equal(w.ARVEXQMorningTicketLanes.qualifyPlaceBet(
  .selectionAudit.selected,false,'unqualified place cannot bypass strict selection');
 assert.equal(w.ARVEXQMorningTicketLanes.hasMorningPlace({},{
  selected:true,types:['的中重視型']}),true,'frozen morning place lane remains eligible pre-off');
+assert.equal(w.ARVEXQMorningTicketLanes.selectionDisplayStatus({selected:true,primaryType:'的中重視型',types:['的中重視型'],ticketKinds:['ワイド']}),'actionable');
+assert.equal(w.ARVEXQMorningTicketLanes.selectionDisplayStatus({selected:true,primaryType:'',types:[],ticketKinds:[]}), 'legacy-unverified');
+assert.equal(w.ARVEXQMorningTicketLanes.selectionDisplayStatus({selected:true,primaryType:'高配当狙い型',types:['高配当狙い型'],ticketKinds:['馬連']}),'inconsistent');
 console.log('MORNING_THREE_LANES_AND_ACTIONABLE_TICKET_GATE_OK');

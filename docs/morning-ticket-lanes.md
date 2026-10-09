@@ -31,3 +31,11 @@ ticket-concentration and 3連単 6–12 point gates still apply.
 This lane can be recovered later pre-off only from a saved immutable archive.
 `ticketKinds` is preserved in archives and summary metadata, while the
 selection reason names the actual kinds that passed in the morning.
+
+## Historical visibility / first-write-wins
+The 2026-10-09 morning manifest has an old-method selected race 大井2R,
+but it lacks type and actionable morning ticket evidence. The public
+厳選 count excludes legacy/unverified picks. They remain inspectable in a
+separate historical area and their JSON archive is not rewritten. New
+frozen selections require type-matching saved ticketKinds. The iOS app
+asset URL and one-time PWA reset token use v353 to prevent stale JS.

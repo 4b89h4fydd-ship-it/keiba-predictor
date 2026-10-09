@@ -119,6 +119,20 @@ function qualifyPlaceBet(base,r,frozen){
     strictWinnerSelected:false,morningPlaceLane:true,
     reason:'朝の的中重視型の券種別品質ゲート通過（勝ち馬明確型ではない）'}};
 }
+// Historical first-write-wins archives remain intact, but unverified
+// older selections are not currently purchasable recommendations.
+function selectionDisplayStatus(m){
+ if(!m||m.selected!==true)return 'not-selected';
+ const kinds=Array.isArray(m.ticketKinds)?m.ticketKinds:[],
+       types=Array.isArray(m.types)?m.types:[],
+       supports=t=>t===NAMES[0]&&kinds.some(k=>['ワイド','馬連','3連複'].includes(k))||
+         t===NAMES[1]&&kinds.some(k=>['馬単','3連単'].includes(k))||
+         t===NAMES[2]&&kinds.includes('3連単');
+ if(!types.length||!kinds.length)return 'legacy-unverified';
+ if(!NAMES.includes(String(m.primaryType||''))||!types.includes(m.primaryType)||
+    !types.every(t=>NAMES.includes(t)&&supports(t)))return 'inconsistent';
+ return 'actionable';
+}
 global.ARVEXQMorningTicketLanes=Object.freeze({VERSION,NAMES,classify,
- ticketKinds,requireMorningTickets,hasMorningPlace,qualifyPlaceBet});
+ ticketKinds,requireMorningTickets,hasMorningPlace,qualifyPlaceBet,selectionDisplayStatus});
 })(window);

@@ -9,19 +9,25 @@ function take(name){
   assert(a>=0&&b>a,'missing '+name);
   return src.slice(a,b+2);
 }
-const code=['morningPickOf','morningPickReady','selectedRaceCandidates','specialForecastRaceCandidates']
+const code=['morningPickOf','morningPickReady','morningPublicStatus','legacyMorningSelectionCandidates','selectedRaceCandidates','specialForecastRaceCandidates']
   .map(take).join('\n')+'\nreturn {morningPickReady,selectedRaceCandidates,specialForecastRaceCandidates};';
+const win={};
+new Function('window',fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8'))(win);
 const state={races:[
   {id:'one',date:'2026-10-10',circuit:'中央',track:'東京',raceNumber:1,startTime:'10:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:true,morningSelectedScore:86,morningSpecial:false,
      morningPrimaryType:'的中重視型',morningSelectedTypes:['的中重視型'],morningSelectionReason:'朝の固定分類',morningTicketKinds:['ワイド']},
+  {id:'old',date:'2026-10-10',circuit:'地方',track:'大井',raceNumber:2,startTime:'11:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:true,morningSelectedScore:87,morningSpecial:false},
   {id:'two',date:'2026-10-10',circuit:'地方',track:'高知',raceNumber:12,startTime:'20:30',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:false,morningSelectedScore:0,morningSpecial:true},
   {id:'three',date:'2026-10-10',circuit:'地方',track:'大井',raceNumber:5,startTime:'15:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:false,morningSpecial:false},
 ]};
-const helper=new Function('state','n','raceChronologicalCompare',code);
-const api=helper(state,(v,d=0)=>Number.isFinite(Number(v))?Number(v):d,(a,b)=>a.raceNumber-b.raceNumber);
+const helper=new Function('state','n','raceChronologicalCompare','window',code);
+const api=helper(state,(v,d=0)=>Number.isFinite(Number(v))?Number(v):d,(a,b)=>a.raceNumber-b.raceNumber,win);
 assert(api.morningPickReady());
 assert.deepEqual(api.selectedRaceCandidates().map(x=>x.race.id),['one']);
 assert.equal(api.selectedRaceCandidates()[0].selection.primaryType,'的中重視型');
+assert.deepEqual(api.legacyMorningSelectionCandidates('地方').map(x=>x.id),['old']);
+assert.equal(api.morningPublicStatus(state.races[1]),'legacy-unverified');
+assert.equal(api.selectedRaceCandidates('地方').length,0);
 assert.deepEqual(api.selectedRaceCandidates()[0].selection.ticketKinds,['ワイド']);
 assert.deepEqual(api.specialForecastRaceCandidates().map(x=>x.id),['two']);
 state.races[0].winOdds=160;state.races[0].raceStatus='確定';
