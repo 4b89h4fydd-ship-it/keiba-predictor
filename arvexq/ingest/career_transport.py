@@ -13,7 +13,8 @@ import json
 from typing import Any
 from arvexq.ingest.full_career import merge_career
 
-SCHEME = "arvexq-career-gzip-json-v1"
+SCHEME = "arvexq-career-gzip-json-v2"
+LEGACY_SCHEME = "arvexq-career-gzip-json-v1"
 MAX_UNCOMPRESSED = 15_000_000
 
 # Small numeric/identity observations stay queryable on mobile; complete original
@@ -27,6 +28,7 @@ BROWSER_FIELDS = frozenset({
     "cornerPositions","passing","speedIndex","horseFirst3FSeconds",
     "jockey","carriedWeight","weight","class","className","opponentLevel",
     "bodyWeight","frameNumber","horseNumber",
+    "earlyTiming","raceLapTimes","runningStyle","course","racePrize1",
 })
 
 
@@ -46,16 +48,20 @@ def pack_horse(horse: dict[str, Any], race_date: str) -> dict[str, Any]:
     if not rows:
         return out
     recent, older = rows[:5], rows[5:]
-    out["recentRaces"] = recent
-    out["allPastRuns"] = recent + [_compact_run(run) for run in older]
-    if older:
-        raw = _serialized(older)
+    # All raw observations are stored losslessly in the sidecar. Every UI-visible
+    # row, including the newest five, is a compact but factual observation.
+    out["recentRaces"] = [_compact_run(run) for run in recent]
+    out["allPastRuns"] = [_compact_run(run) for run in rows]
+    if rows:
+        raw = _serialized(rows)
         if len(raw) > MAX_UNCOMPRESSED:
             raise ValueError("Career archive larger than permitted uncompressed budget")
         out["careerArchive"] = {
             "encoding": SCHEME,
             "priorRaceDate": race_date,
             "olderRunCount": len(older),
+            "storedRunCount": len(rows),
+            "includesRecent": True,
             "bytes": len(raw),
             "sha256": hashlib.sha256(raw).hexdigest(),
             "payload": base64.b64encode(gzip.compress(raw, compresslevel=8, mtime=0)).decode("ascii"),
@@ -76,7 +82,7 @@ def recover_horse(horse: dict[str, Any], race_date: str) -> dict[str, Any]:
     archive = out.get("careerArchive")
     if not isinstance(archive, dict):
         return out
-    if archive.get("encoding") != SCHEME or archive.get("priorRaceDate") != race_date:
+    if archive.get("encoding") not in (SCHEME, LEGACY_SCHEME) or archive.get("priorRaceDate") != race_date:
         raise ValueError("Career archive schema or race-date mismatch")
     zipped = base64.b64decode(str(archive["payload"]), validate=True)
     # Streaming bounded decompression protects against decompression bombs.
@@ -90,10 +96,11 @@ def recover_horse(horse: dict[str, Any], race_date: str) -> dict[str, Any]:
         raise ValueError("Career archive size mismatch")
     if hashlib.sha256(raw).hexdigest() != archive.get("sha256"):
         raise ValueError("Career archive digest mismatch")
-    older = json.loads(raw.decode("utf-8"))
-    if not isinstance(older, list) or len(older) != archive.get("olderRunCount"):
+    recovered = json.loads(raw.decode("utf-8"))
+    expected = archive.get("storedRunCount") if archive.get("includesRecent") is True else archive.get("olderRunCount")
+    if not isinstance(recovered, list) or len(recovered) != expected:
         raise ValueError("Career archive run count mismatch")
-    full = merge_career(out.get("allPastRuns"), older, race_date)
+    full = merge_career(out.get("allPastRuns"), recovered, race_date)
     if len(full) < int((out.get("careerTransport") or {}).get("observedRuns") or 0):
         raise ValueError("Career archive recovery incomplete")
     out["allPastRuns"] = full
