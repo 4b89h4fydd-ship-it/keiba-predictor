@@ -43,6 +43,10 @@ assert.match(html,/内部評価/);
 assert.match(html,/本線｜的中重視/);
 assert.match(html,/3連単チャレンジ｜高配当重視/);
 assert.match(html,/保険｜本線補完/);
+assert.match(html,/class="arv-three-combos"/,'tickets should be visually separated');
+assert.match(html,/class="arv-bet-quality"/,'bet confidence displayed clearly');
+assert.match(html,/【単】/);
+assert.match(html,/☆\+/);
 
 const legacyPlan={...plan,engineVersion:'arvexq-bets-old-v317',
   fixedAt:'2026-10-08T10:20:00+09:00',
@@ -104,6 +108,10 @@ async function test(type,label){
           left:{right:left.right},right:{x:right.x},box:{x:box.x,right:box.right},
           pills:pills.map(x=>({x:x.x,right:x.right})),
           tickets:[...document.querySelectorAll('.arv-three-ticket>strong')].map(e=>({x:e.getBoundingClientRect().x,right:e.getBoundingClientRect().right})),
+          combos:[...document.querySelectorAll('.arv-three-combo')].map(e=>({x:e.getBoundingClientRect().x,right:e.getBoundingClientRect().right,width:e.getBoundingClientRect().width})),
+          markBadges:[...document.querySelectorAll('.bet-mark-grid i')].filter(e=>['【単】','☆+'].includes(e.textContent)).map(e=>{
+            const b=e.getBoundingClientRect();return {text:e.textContent,width:b.width,height:b.height,whiteSpace:getComputedStyle(e).whiteSpace};
+          }),
           titleText:document.querySelector('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent};
       });
       const e=2;
@@ -114,6 +122,16 @@ async function test(type,label){
       assert.ok(result.header.top>=-e,label+' '+width+' header off-screen');
       assert.ok(result.scroll<=result.width+e,label+' '+width+' document horizontal scroll');
       for(const ticket of result.tickets){assert.ok(ticket.x>=result.box.x-e&&ticket.right<=result.box.right+e,label+' '+width+' ticket overflow '+JSON.stringify(result));}
+      assert.equal(result.markBadges.length,2,label+' '+width+' missing mark badges');
+      for(const mark of result.markBadges){
+        assert.ok(mark.width>=50&&mark.height<=45&&mark.whiteSpace==='nowrap',
+          label+' '+width+' mark badge wraps '+JSON.stringify(mark));
+      }
+      assert.ok(result.combos.length>=2,label+' '+width+' missing separate ticket combinations');
+      for(const combo of result.combos){
+        assert.ok(combo.x>=result.box.x-e&&combo.right<=result.box.right+e,
+          label+' '+width+' ticket combination off-screen '+JSON.stringify(combo));
+      }
       for(const pill of result.pills){
         assert.ok(pill.x>=result.box.x-e&&pill.right<=result.box.right+e,
           label+' '+width+' metadata off-screen '+JSON.stringify(result));
