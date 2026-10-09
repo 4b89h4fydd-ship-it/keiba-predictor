@@ -128,6 +128,32 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         out["modelMarkRevisions"] = copy.deepcopy(previous_models)
     else:
         out.pop("modelMarkRevisions", None)
+    # A market/result-only sync must never replace a richer career archive
+    # with five recent rows. This does not alter immutable prediction seals.
+    previous_by_no = {int(h.get("horseNumber") or 0): h
+                      for h in old.get("horses") or [] if isinstance(h, dict)}
+    race_day = str(out.get("date") or old.get("date") or "")
+    from arvexq.ingest.full_career import merge_career
+    for current in out.get("horses") or []:
+        if not isinstance(current, dict):
+            continue
+        historical = previous_by_no.get(int(current.get("horseNumber") or 0))
+        if not isinstance(historical, dict):
+            continue
+        for key in ("careerArchive", "careerTransport", "_careerHistoryAudit"):
+            if key in historical and key not in current:
+                current[key] = copy.deepcopy(historical[key])
+        merged = merge_career(
+            [*(historical.get("allPastRuns") or []), *(historical.get("recentRaces") or [])],
+            [*(current.get("allPastRuns") or []), *(current.get("recentRaces") or [])], race_day)
+        if merged:
+            current["allPastRuns"] = merged
+            current["recentRaces"] = merged[:5]
+        prior_eval = historical.get("integratedEvaluation") or {}
+        current_eval = current.get("integratedEvaluation") or {}
+        if isinstance(prior_eval, dict) and isinstance(current_eval, dict) and "careerProfile" in prior_eval:
+            if "careerProfile" not in current_eval:
+                current.setdefault("integratedEvaluation", {})["careerProfile"] = copy.deepcopy(prior_eval["careerProfile"])
     if sealed_lock(old):
         return restore_seal(old, out)
     prior = old.get("preRacePrediction")
