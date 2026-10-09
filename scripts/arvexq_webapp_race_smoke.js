@@ -130,6 +130,14 @@ const swReloadMarker = 'v329-racecard-stable-20261007';
       }
     }
 
+    // The independent 買い目 screen is a child of /race. Close that child
+    // first; only the race-level × should return to the venue list.
+    const subpageClose = page.locator('.bet-detail-page-shell [data-action="close-race-subpage"]').first();
+    if (await subpageClose.count()) {
+      await subpageClose.click();
+      await page.waitForFunction(() => !document.querySelector('.bet-detail-page-shell'), null, { timeout: 8000 });
+      // Location remains /race until the race-level × is pressed.
+    }
     const close = page.locator('[data-action="back"]').first();
     if (await close.count()) {
       await close.click();
