@@ -89,6 +89,11 @@ jobs:
           node scripts/arvexq_scratch_live_smoke.js
           node scripts/arvexq_mark_lock_smoke.js
 
+      - name: Official course revision and morning marks
+        run: |
+          python -m unittest discover -s tests -p 'test_official_course_revision.py' -v
+          node --check scripts/arvexq_capture_course_revised_marks.js
+
       - name: Morning race selection remains immutable
         run: |
           node --check scripts/arvexq_morning_picks.js
