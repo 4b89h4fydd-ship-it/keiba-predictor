@@ -23,6 +23,8 @@ def measured(row: dict[str, Any], keys: tuple[str, ...]) -> float | None:
 def profile(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any]:
     cutoff = str(race.get("date") or "")
     past = horse.get("allPastRuns") or horse.get("recentRaces") or []
+    past = sorted([row for row in past if isinstance(row, dict)],
+                  key=lambda row: str(row.get("date") or row.get("raceDate") or ""), reverse=True)
     output = []
     for run in past:
         if not isinstance(run, dict):

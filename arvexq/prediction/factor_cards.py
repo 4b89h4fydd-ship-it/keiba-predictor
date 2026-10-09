@@ -35,12 +35,12 @@ def evidence_card(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any]
     if cutoff:
         for key in ("allPastRuns", "recentRaces"):
             if isinstance(safe_horse.get(key), list):
-                safe_horse[key] = [
+                safe_horse[key] = sorted([
                     row for row in safe_horse[key]
                     if isinstance(row, dict)
                     and str(row.get("date") or row.get("raceDate") or "")
                     and str(row.get("date") or row.get("raceDate") or "") < cutoff
-                ]
+                ], key=lambda row: str(row.get("date") or row.get("raceDate") or ""), reverse=True)[:5]
     else:
         safe_horse["allPastRuns"] = []
         safe_horse["recentRaces"] = []
