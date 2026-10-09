@@ -5,8 +5,9 @@ from typing import Any, Iterable
 
 from arvexq.core.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import analyze_past_performance, observed_runs
+from arvexq.prediction.career_profile import profile_career
 
-MODEL_VERSION = "arvexq-four-pillar-consensus-v6-contextual-five-run"
+MODEL_VERSION = "arvexq-four-pillar-consensus-v7-full-career"
 PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
 
 # Correlated measurements from the same underlying observation are collapsed first.
@@ -24,7 +25,7 @@ SIGNAL_FAMILIES = {
         ("ability_research",),
     ),
     "record": (
-        ("record_career", "record_recent", "record_recent_context"),
+        ("record_career", "record_recent", "record_recent_context", "record_career_stability"),
         ("record_win_rate", "record_top3_rate"),
         ("record_level", "record_class_edge", "record_class_research"),
         ("record_representative",),
@@ -32,7 +33,7 @@ SIGNAL_FAMILIES = {
         ("record_form_research",),
     ),
     "suitability": (
-        ("suit_distance_history", "suit_track_history", "suit_going_history", "suit_surface_history", "suit_comparable_recent"),
+        ("suit_distance_history", "suit_track_history", "suit_going_history", "suit_surface_history", "suit_comparable_recent", "suit_comparable_career"),
         ("suit_distance_model", "suit_track_model", "suit_going_model", "suit_surface_model"),
         ("suit_research",),
     ),
@@ -79,7 +80,7 @@ def _first(*values: float | None) -> float | None:
 
 def _runs(horse: dict[str, Any], race: dict[str, Any]) -> list[dict[str, Any]]:
     # Comparable historic observations, never future/same-day data.
-    return observed_runs(horse, race)
+    return observed_runs(horse, race, limit=None)
 
 
 def _finish_quality(run: dict[str, Any]) -> float | None:
@@ -195,6 +196,7 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
             same_surface.append(quality)
 
     past = analyze_past_performance(horse, race)
+    career = profile_career(horse, race)
     audit = _audit(horse)
     research = _research(horse)
     evaluation = horse.get("integratedEvaluation") or {}
@@ -217,6 +219,7 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
         "record_recent_context": past["recentFormQuality"] if past["datedRuns"]>=3 else None,
         "record_win_rate": wins / completed if completed else None,
         "record_top3_rate": top3 / completed if completed else None,
+        "record_career_stability": career["stability"],
         "record_level": _mean(levels),
         "record_class_edge": class_edge,
         "record_representative": _component(horse, "representative"),
@@ -225,6 +228,7 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
         "record_form_research": _unit(research.get("form")),
         "suit_distance_history": _mean(same_distance),
         "suit_comparable_recent": past["comparableQuality"] if past["comparableRuns"]>=2 else None,
+        "suit_comparable_career": career["comparableQuality"] if career["comparableRuns"]>=2 else None,
         "suit_track_history": _mean(same_track),
         "suit_going_history": _mean(same_condition),
         "suit_surface_history": _mean(same_surface),
@@ -299,7 +303,8 @@ def _rank_map(rows: list[dict[str, Any]], key: str) -> dict[int, int]:
 def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) -> list[dict[str, Any]]:
     active = [h for h in horses if isinstance(h, dict) and not is_inactive_runner(h)]
     rows = [{"horse": h, "raw": collect_horse_raw_metrics(h, race),
-             "pastPerformance": analyze_past_performance(h, race)} for h in active]
+             "pastPerformance": analyze_past_performance(h, race),
+              "careerProfile": profile_career(h, race)} for h in active]
     if not rows:
         return []
 
