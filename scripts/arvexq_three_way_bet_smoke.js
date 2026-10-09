@@ -61,5 +61,15 @@ assert.ok(src.includes('vp=composeThreeWayBetPolicy(vp,r,p)'),'local branch');
 assert.ok(src.includes('plan=composeThreeWayBetPolicy(plan,r,p)'),'central branch');
 assert.ok(src.includes("if(stored)return immutableStoredAiBetView(r,stored)"),'saved bets take precedence');
 assert.ok(src.includes('if(terminal)return null'),'never create new bets post-off');
+
+const markArea=src.slice(src.indexOf('function assignPredictionMarks('),src.indexOf('function applyFrozenMarks(',src.indexOf('function assignPredictionMarks(')));
+assert.ok(markArea.includes("policy:'official-only-morning-lock'"),'mark selection must not use prior-race trends');
+assert.ok(!markArea.includes('dayCorr=sameDayCorrectionProfileV313(r,rows)'),'no prior results in marks');
+const paceArea=src.slice(src.indexOf('function paceOutcomeModel('),src.indexOf('function ',src.indexOf('function paceOutcomeModel(')+9));
+assert.ok(paceArea.includes("policy:'past-results-do-not-revise-pace-or-marks'"),'pace outcomes cannot change after a prior result');
+const factorArea=src.slice(src.indexOf('function v207',0),src.indexOf('function assignPredictionMarks('));
+assert.ok(src.includes("mode:'observation-only-no-prediction'"),'same-day track analysis observational only');
+assert.ok(src.includes("return 'morning-fixed-official-condition-only-v346'"),'results cannot trigger new marks');
+
 console.log('THREE_WAY_BET_OK selected='+plan.items.map(z=>z.level+':'+z.kind+'='+z.points).join(',')+
   ' trifecta_skip=validated evidence_gate=validated EV=not_invented');
