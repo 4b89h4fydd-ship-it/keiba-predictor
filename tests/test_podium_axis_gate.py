@@ -38,7 +38,7 @@ class PodiumAxisTests(unittest.TestCase):
     def test_server_marks_independent_axis(self):
         with patch("arvexq.prediction.final_marks.rank_factor_model",return_value=self.rows),\
              patch("arvexq.prediction.final_marks.attach_multi_head_signals",return_value=self.summary):
-            detail=apply_core_marks({"horses":[r["horse"] for r in self.rows],"circuit":"地方"})
+            detail=apply_core_marks({"horses":[r["horse"] for r in self.rows],"circuit":"地方","date":"2026-10-09"})
         marks={h["horseNumber"]:h["integratedEvaluation"]["mark"] for h in detail["horses"]}
         self.assertEqual(marks[2],"◎")
         self.assertEqual(marks[1],"○")
