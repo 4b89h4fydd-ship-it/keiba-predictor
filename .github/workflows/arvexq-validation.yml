@@ -130,6 +130,11 @@ jobs:
           node scripts/arvexq_pace_evidence_bet_gate_smoke.js
           node scripts/arvexq_six_pace_metrics_smoke.js
 
+      - name: D1 capacity fail-closed and storage safety regression
+        run: |
+          python -m py_compile scripts/arvexq_d1_capacity_guard.py
+          python -m unittest discover -s tests -p 'test_d1_capacity_guard.py' -v
+
       - name: Historical sync SQLite contention and D1 batch regressions
         run: |
           python -m py_compile scripts/arvexq_sqlite_runtime_guard.py scripts/arvexq_history_repair.py scripts/arvexq_sync_batches.py
