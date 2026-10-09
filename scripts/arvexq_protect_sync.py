@@ -78,6 +78,29 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     out = copy.deepcopy(incoming)
     if not isinstance(old, dict):
         return out
+    # The full morning prediction is a permanent, first-published record.
+    # It must survive a later live odds refresh, prefetch or result repair.
+    baseline = old.get("morningMarkSnapshot")
+    if isinstance(baseline, dict) and baseline.get("version") == "arvexq-morning-marks-v1":
+        out["morningMarkSnapshot"] = copy.deepcopy(baseline)
+    previous_revisions = old.get("officialMarkRevisions")
+    if isinstance(previous_revisions, list) and previous_revisions:
+        candidate = out.get("officialMarkRevisions")
+        allow_append = False
+        if isinstance(candidate, list) and len(candidate) > len(previous_revisions):
+            # Same immutable historical prefix, plus a newly authenticated
+            # pre-off revision justified by a real official source change.
+            from datetime import datetime
+            from arvexq.prediction.prerace_archive import JST
+            from arvexq.prediction.official_course_revision import pre_off_change
+            allow_append = (
+                candidate[:len(previous_revisions)] == previous_revisions
+                and len(candidate) == len(previous_revisions) + 1
+                and bool(pre_off_change(old, old.get("officialCourseCondition"),
+                                        out.get("officialCourseCondition"), datetime.now(JST)))
+            )
+        if not allow_append:
+            out["officialMarkRevisions"] = copy.deepcopy(previous_revisions)
     if sealed_lock(old):
         return restore_seal(old, out)
     prior = old.get("preRacePrediction")
