@@ -55,7 +55,7 @@ class PastFiveContextTests(unittest.TestCase):
         h = {"recentRaces": [
             run("2026-09-27", 9, passing=[1, 1, 2, 2]),
             run("2026-09-17", 8, passing=[2, 2, 2, 3]),
-            run("2026-09-07", 7, passing=[4, 4, 5, 5]),
+            run("2026-09-07", 7, passing=[6, 6, 6, 6]),
         ]}
         a = analyze_past_performance(h, RACE)
         self.assertEqual(a["frontFadeCount"], 2)
