@@ -1749,9 +1749,38 @@ function serverFrozenPrediction(r){
   }
   return q;
 }
+function validMorningMarkSnapshot(r){
+  var snap=r&&r.morningMarkSnapshot;
+  if(!r||!snap||snap.version!=='arvexq-morning-marks-v1'||
+      String(snap.raceId||'')!==String(r.id)||String(snap.raceDate||'')!==String(r.date)||
+      !Array.isArray(snap.horses)||snap.horses.length<3)return null;
+  var post=Date.parse(String(r.date||'')+'T'+String(r.startTime||r.scheduledStartTime||'').slice(0,5)+':00+09:00'),
+      fixed=Date.parse(String(snap.fixedAt||''));
+  return isFinite(post)&&isFinite(fixed)&&fixed<post?snap:null
+}
+function latestOfficialMarkRevision(r){
+  var initial=validMorningMarkSnapshot(r);
+  if(!initial)return null;
+  var post=Date.parse(String(r.date||'')+'T'+String(r.startTime||r.scheduledStartTime||'').slice(0,5)+':00+09:00'),
+      latest=null;
+  (r.officialMarkRevisions||[]).forEach(function(z){
+    if(!z||z.version!=='arvexq-official-mark-revision-v1'||
+        String(z.raceId||'')!==String(r.id)||String(z.raceDate||'')!==String(r.date)||
+        !Array.isArray(z.horses)||z.horses.length<3)return;
+    var at=Date.parse(String(z.revisedAt||'')),
+        announced=Date.parse(String((z.officialCourseCondition||{}).publishedAt||'')),
+        url=String((z.officialCourseCondition||{}).sourceUrl||'');
+    if(!isFinite(at)||!isFinite(announced)||at>=post||announced>at||!/^https:\/\//.test(url))return;
+    if(!latest||Date.parse(String(latest.revisedAt||''))<at)latest=z
+  });
+  return latest
+}
+function authorizedPreOffMarks(r){
+  return latestOfficialMarkRevision(r)||validMorningMarkSnapshot(r)||serverFrozenPrediction(r)
+}
 function immutableArchivedPrediction(r){
   // Does not invoke ability, pace, winner or bet calculation after the off.
-  var lock=serverFrozenPrediction(r),local=lock?null:loadFrozenMarks(r),
+  var lock=authorizedPreOffMarks(r),local=lock?null:loadFrozenMarks(r),
       saved=lock?lock.horses:(local?local.marks:[]),byNo={},order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
   saved.forEach(function(q){byNo[n(q.horseNumber||q.no,0)]=q});
   var rows=(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).map(function(h){
@@ -1782,13 +1811,14 @@ function immutableArchivedPrediction(r){
   });
   return{rows:rows,occ:0,scenarios:[],plans:{},plan:null,coverage:0,
     pressure:0,arrangement:{},profile:{},outcome:null,
-    markFreeze:{source:lock?'server-prerace':(local?'local-prepost':'missing-prerace'),
-      fixedAt:lock?String(lock.sealedAtJst||lock.capturedAtJst||''):(local?local.fixedAt:'')},
+    markFreeze:{source:latestOfficialMarkRevision(r)?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':(lock?'server-prerace':(local?'local-prepost':'missing-prerace'))),
+      fixedAt:lock?String(lock.revisedAt||lock.fixedAt||lock.sealedAtJst||lock.capturedAtJst||''):(local?local.fixedAt:''),
+      reason:String((latestOfficialMarkRevision(r)||{}).reason||'')},
     engineVersion:'arvexq-archived-prerace-readonly-v346'};
 }
 function applyFrozenMarks(r,p){
   if(!r||!p||!Array.isArray(p.rows))return p;
-  var clock=raceMarkClock(r),server=serverFrozenPrediction(r),record=server?null:loadFrozenMarks(r);
+  var clock=raceMarkClock(r),server=authorizedPreOffMarks(r),record=server?null:loadFrozenMarks(r);
   if(!server&&!record&&clock.valid&&!clock.started&&clock.remaining>=0&&clock.remaining<=10){
     var rows=p.rows.filter(function(z){return z&&z.horse&&!isScratchHorse(z.horse)}),
         marked=rows.filter(function(z){return !!String(z.predMark||'')}).length;
@@ -1819,7 +1849,9 @@ function applyFrozenMarks(r,p){
         z.overallGrade=String(q.lockedEvaluation.grade||z.overallGrade||'C');
       }
     });
-    p.markFreeze={source:'server-prerace',fixedAt:server.sealedAtJst||server.capturedAtJst||''};
+    p.markFreeze={source:latestOfficialMarkRevision(r)?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':'server-prerace'),
+      fixedAt:server.revisedAt||server.fixedAt||server.sealedAtJst||server.capturedAtJst||'',
+      reason:String((latestOfficialMarkRevision(r)||{}).reason||'')};
   }else if(record){
     var byNo={};record.marks.forEach(function(z){byNo[n(z.no)]=z});
     var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
@@ -3137,7 +3169,7 @@ function smartVenueCards(){
 
 function aiStoredMarks(detail){
   // Only verifiable pre-off snapshots count. Live horse evaluation is not evidence.
-  var server=serverFrozenPrediction(detail),local=server?null:loadFrozenMarks(detail),saved=[];
+  var server=authorizedPreOffMarks(detail),local=server?null:loadFrozenMarks(detail),saved=[];
   if(server)saved=server.horses.map(function(x){return {no:n(x.horseNumber),mark:String(x.mark||''),p:n(x.decisionProbability,0),confidence:n(server.winnerConfidence,0)}});
   else if(local){
     var off=Date.parse(String(detail.date||'')+'T'+String(detail.scheduledStartTime||detail.startTime||'').slice(0,5)+':00+09:00'),at=Date.parse(String(local.fixedAt||''));
