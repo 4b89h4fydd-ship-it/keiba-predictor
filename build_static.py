@@ -236,3 +236,12 @@ for var,filename in assets.items():
 print(f"ARVEXQ static build complete: {DIST}")
 print(f"BUILD: {BUILD_VERSION}")
 print(f"Files: {len(list(DIST.rglob('*')))}")
+
+# Daily pre-off selection archives are content-addressed by race date. Publish
+# exact immutable JSON files without altering their race membership on refresh.
+morning_dir = STATIC / "morning-picks"
+if morning_dir.is_dir():
+    target_dir = DIST / "morning-picks"
+    target_dir.mkdir(exist_ok=True)
+    for archive in morning_dir.glob("????-??-??.json"):
+        shutil.copy2(archive, target_dir / archive.name)
