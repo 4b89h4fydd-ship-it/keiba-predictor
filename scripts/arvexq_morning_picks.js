@@ -21,7 +21,7 @@ function save(reason){
   console.log('MORNING_PICKS_'+reason,'day='+day,'races='+rows.length,'complete='+complete);
 }
 const existingArchive='arvexq/ui/static/morning-picks/'+day+'.json';
-if(/^20\\d{2}-\\d{2}-\\d{2}$/.test(day)&&fs.existsSync(existingArchive)){
+if(/^20\d{2}-\d{2}-\d{2}$/.test(day)&&fs.existsSync(existingArchive)){
   const archive=JSON.parse(fs.readFileSync(existingArchive,'utf8'));
   if(archive.version!=='v1'||archive.date!==day||!archive.fixedAt||
      !Array.isArray(archive.races)||archive.races.length!==Number(archive.scope))
