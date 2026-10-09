@@ -219,7 +219,13 @@ def verify_published(body: dict[str, Any], *, base: str, read=fetch_current) -> 
             continue
         lock = sealed_lock(detail)
         revised = detail.get("modelMarkRevisions") or []
-        if not lock and not revised:
+        feature_archive = detail.get("massFeatureArchive")
+        horse_archives = {
+            int(h.get("horseNumber") or 0): h["careerArchive"]
+            for h in detail.get("horses") or []
+            if isinstance(h, dict) and isinstance(h.get("careerArchive"), dict)
+        }
+        if not lock and not revised and not feature_archive and not horse_archives:
             continue
         rid = str(detail["id"])
         actual = read(base, rid)
@@ -232,6 +238,20 @@ def verify_published(body: dict[str, Any], *, base: str, read=fetch_current) -> 
                 raise RuntimeError("D1_PRE_RACE_BET_POST_VERIFY_MISMATCH " + rid)
         if revised and (actual or {}).get("modelMarkRevisions") != revised:
             raise RuntimeError("D1_MODEL_MARK_REVISION_POST_VERIFY_MISMATCH " + rid)
+        if isinstance(feature_archive, dict):
+            stored = (actual or {}).get("massFeatureArchive") or {}
+            if (stored.get("sha256") != feature_archive.get("sha256")
+                    or stored.get("featureHash") != feature_archive.get("featureHash")
+                    or stored.get("encoding") != feature_archive.get("encoding")):
+                raise RuntimeError("D1_MASS_ARCHIVE_POST_VERIFY_MISMATCH " + rid)
+        if horse_archives:
+            stored_horses = {int(h.get("horseNumber") or 0):h
+                             for h in (actual or {}).get("horses") or [] if isinstance(h,dict)}
+            for no, archive in horse_archives.items():
+                stored = (stored_horses.get(no) or {}).get("careerArchive") or {}
+                if (stored.get("sha256") != archive.get("sha256") or
+                        stored.get("encoding") != archive.get("encoding")):
+                    raise RuntimeError("D1_CAREER_ARCHIVE_POST_VERIFY_MISMATCH "+rid+":"+str(no))
         verified.append(rid)
     return verified
 
