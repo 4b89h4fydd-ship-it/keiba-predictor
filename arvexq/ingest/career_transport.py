@@ -23,7 +23,7 @@ def _serialized(rows: list[dict[str, Any]]) -> bytes:
 
 
 def pack_horse(horse: dict[str, Any], race_date: str) -> dict[str, Any]:
-    out = copy.deepcopy(horse)
+    out = recover_horse(horse, race_date) if horse.get("careerArchive") else copy.deepcopy(horse)
     rows = merge_career(out.get("allPastRuns"), out.get("recentRaces"), race_date)
     if not rows:
         return out
