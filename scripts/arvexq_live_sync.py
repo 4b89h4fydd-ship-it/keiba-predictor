@@ -33,6 +33,7 @@ from arvexq.ingest.official_changes import collect_nar_changes
 from arvexq.ingest.official_course_feeds import fetch_course_events
 from arvexq.prediction.official_course_revision import pre_off_change, official_event
 from arvexq.prediction.user_approved_model_revision import enabled as user_revision_enabled, update_marks as user_update_marks
+from arvexq.infra.live_delta_guard import requires_full_write
 from arvexq.prediction.prerace_archive import post_at
 
 JST = timezone(timedelta(hours=9))
@@ -587,6 +588,7 @@ def main() -> int:
     errors: dict[str, str] = {}
     refreshed: dict[str, dict[str, Any]] = {}
     skipped_thin: list[str] = []
+    skipped_odds_only: list[str] = []
     missing_base: list[str] = []
     reanalyzed: list[str] = []
 
@@ -621,7 +623,14 @@ def main() -> int:
                 refreshed[rid] = d
                 odds_current.extend(horse_live_rows(d))
                 if detail_safe_for_replace(d):
-                    details.append(d)
+                    if requires_full_write(base_by_id.get(rid), d):
+                        details.append(d)
+                    else:
+                        # odds_current holds the live ticks; repeatedly replacing
+                        # a multi-MB D1 detail with the same persistent data is
+                        # wasteful and can exhaust the account database.
+                        skipped_odds_only.append(rid)
+                        print("LIVE_DETAIL_UNCHANGED_ODDS_ONLY", rid)
                 else:
                     skipped_thin.append(rid)
 
@@ -637,6 +646,7 @@ def main() -> int:
             "full_card_lane": False,
             "target_count": len(targets),
             "detail_update_count": len(details),
+            "unchanged_detail_not_rewritten_count": len(skipped_odds_only),
             "thin_detail_skipped_count": len(skipped_thin),
             "missing_d1_base_count": len(missing_base),
             "reanalyzed_count": len(reanalyzed),
@@ -656,6 +666,7 @@ def main() -> int:
         "reanalyzed": sorted(reanalyzed),
         "environment": environment,
         "thin_detail_skipped": sorted(skipped_thin),
+        "unchanged_detail_not_rewritten": sorted(skipped_odds_only),
         "missing_d1_base": sorted(missing_base),
         "errors": errors,
         "official_cancellations": {rid: {str(no): status for no, status in horses.items()}
