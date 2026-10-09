@@ -5160,5 +5160,13 @@ function fastReflectNow(){
 }
 window.addEventListener('pageshow',function(){setTimeout(fastReflectNow,120)},{passive:true});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')setTimeout(fastReflectNow,120)},{passive:true});
+// Final morning-snapshot membership guard. Keep this after all other UI
+// helper declarations so no live title/odds update can restore dynamic picks.
+function specialForecastRaceCandidates(){
+  return (state.races||[]).filter(function(r){
+    var m=morningPickOf(r);
+    return !!(r&&r.id&&m&&m.special===true)
+  }).slice().sort(raceChronologicalCompare)
+}
 installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
 })();
