@@ -2,6 +2,7 @@
 
 | Module | Responsibility |
 |---|---|
+| `arvexq/ui/static/betting/legacy_v213_order_model.js` | Conditional 1-2-3 distribution used by existing P1/P2/P3 model; no DOM or persistence |
 | `arvexq/ui/static/betting/main_strategy.js` | Standalone main-ticket kind and combinations; no reliance on displayed mark priority |
 | `arvexq/ui/static/betting/trifecta_strategy.js` | Independent first/second/third challenge gate and 6–12 point allocation |
 | `arvexq/ui/static/betting/insurance_strategy.js` | Non-overlapping backup if first place reverses, optional one-point hedge |

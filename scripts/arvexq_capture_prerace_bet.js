@@ -4,6 +4,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto');
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const strategies=['main_strategy.js','trifecta_strategy.js','insurance_strategy.js'].map(name=>({name,code:fs.readFileSync('arvexq/ui/static/betting/'+name,'utf8')}));
+const legacy=fs.readFileSync('arvexq/ui/static/betting/legacy_v213_order_model.js','utf8');
 const engine=fs.readFileSync('arvexq/ui/static/betting/three_way_engine.js','utf8');
 const view=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8');
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
@@ -24,6 +25,7 @@ const ctx={window,document:doc,localStorage:store,sessionStorage:store,console,
  clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
 vm.createContext(ctx);
 strategies.forEach(({name,code})=>vm.runInContext(code,ctx,{timeout:12000,filename:name}));
+vm.runInContext(legacy,ctx,{timeout:12000,filename:'legacy_v213_order_model.js'});
 vm.runInContext(engine,ctx,{timeout:12000,filename:'three_way_engine.js'});
 vm.runInContext(view,ctx,{timeout:12000,filename:'bet_view.js'});
 vm.runInContext(source,ctx,{timeout:12000,filename:'app.js'});
@@ -36,7 +38,7 @@ exported.state.races=[{id:race.id,date:race.date,circuit:race.circuit,track:race
  raceNumber:race.raceNumber,startTime:race.startTime,title:race.title||''}];
 exported.state.race=race;
 const status={version:'arvexq-server-exact-js-bet-v1',
- jsHash:crypto.createHash('sha256').update(root).update('\0').update(strategies.map(x=>x.code).join('\0')).update('\0').update(engine).digest('hex')};
+ jsHash:crypto.createHash('sha256').update(root).update('\0').update(legacy).update('\0').update(strategies.map(x=>x.code).join('\0')).update('\0').update(engine).digest('hex')};
 try{
  const prediction=exported.predict(race);
  const result=exported.buildAiBetPlan(race,prediction);
