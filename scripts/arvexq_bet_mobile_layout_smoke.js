@@ -14,9 +14,16 @@ function extract(start,end){
 }
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const n=(v,f=0)=>v!==null&&v!==undefined&&Number.isFinite(Number(v))?Number(v):f;
-const plan={decision:'見送り',scenario:'前残り',scenarioProb:.4,betQuality:0,
-  items:[],trifectaReviewed:true,trifectaDecision:'見送り',orderScore:0,
-  reason:'券種選択の条件を満たさなかったため買い目を見送りました。'};
+const triCombos=[[4,6,2],[4,2,6],[4,7,2],[4,2,7],[4,6,8],[4,8,6],[4,7,8],[4,8,7],[4,2,8],[4,8,2],[4,6,7],[4,7,6]];
+const plan={decision:'通常買い',scenario:'前残り',scenarioProb:.4,betQuality:72,
+  items:[
+    {level:'本線',kind:'馬連',combos:[[4,6],[4,2]],points:2,combo:'4 - 6 / 4 - 2',reason:'的中重視'},
+    {level:'3連単チャレンジ',kind:'3連単',combos:triCombos,points:12,combo:triCombos.map(c=>c.join(' → ')).join(' / '),reason:'展開AIによる着順別比較'},
+    {level:'保険',kind:'ワイド',combos:[[6,7]],points:1,combo:'6 - 7',reason:'1着固定の逆転補完'},
+  ],trifectaReviewed:true,trifectaDecision:'採用',
+  insuranceDecision:'採用',referenceBudget:{points:15,totalYen:1500},expectedValue:null,
+  expectedValueReason:'未校正の的中確率から期待値は算出しません。',
+  reason:'三方式のモデル別選定。'};
 const renderer=new Function('esc','n','buildAiBetPlan','officialRaceLinks','aiBetExplanationHtml','cinematicFooter',
   extract('aiBetRecommendation','aiMarksPanel')+
   extract('raceSubpageTopBar','horseDetailPage')+
@@ -29,6 +36,9 @@ const html=renderer(esc,n,()=>plan,()=>({vote:''}),
 assert.match(html,/smart-race-subpage-topbar/);
 assert.match(html,/bet-detail-page-shell/);
 assert.match(html,/内部評価/);
+assert.match(html,/本線｜的中重視/);
+assert.match(html,/3連単チャレンジ｜高配当重視/);
+assert.match(html,/保険｜本線補完/);
 function extractFunction(name){
   const a=src.indexOf('function '+name+'('),b=src.indexOf('\n}',a);
   assert.ok(a>=0&&b>a,'missing function '+name);
@@ -79,6 +89,7 @@ async function test(type,label){
           header:{top:header.top},title:{x:title.x,right:title.right,width:title.width},
           left:{right:left.right},right:{x:right.x},box:{x:box.x,right:box.right},
           pills:pills.map(x=>({x:x.x,right:x.right})),
+          tickets:[...document.querySelectorAll('.arv-three-ticket>strong')].map(e=>({x:e.getBoundingClientRect().x,right:e.getBoundingClientRect().right})),
           titleText:document.querySelector('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent};
       });
       const e=2;
@@ -88,6 +99,7 @@ async function test(type,label){
       assert.ok(result.title.right<=result.right.x+e,label+' '+width+' title overlaps close');
       assert.ok(result.header.top>=-e,label+' '+width+' header off-screen');
       assert.ok(result.scroll<=result.width+e,label+' '+width+' document horizontal scroll');
+      for(const ticket of result.tickets){assert.ok(ticket.x>=result.box.x-e&&ticket.right<=result.box.right+e,label+' '+width+' ticket overflow '+JSON.stringify(result));}
       for(const pill of result.pills){
         assert.ok(pill.x>=result.box.x-e&&pill.right<=result.box.right+e,
           label+' '+width+' metadata off-screen '+JSON.stringify(result));
