@@ -3,9 +3,11 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const strategySrc=['main_strategy.js','trifecta_strategy.js','insurance_strategy.js'].map(x=>fs.readFileSync('arvexq/ui/static/betting/'+x,'utf8')).join('\n');
 const moduleSrc=fs.readFileSync('arvexq/ui/static/betting/three_way_engine.js','utf8');
 const n=(x,f=0)=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x):f;
 const betGlobal={};
+new Function('window',strategySrc)(betGlobal);
 new Function('window',moduleSrc)(betGlobal);
 const policy=(base,r,p)=>betGlobal.ARVEXQThreeWayBet.compose(base,r,p,{
  n,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),isScratchHorse:h=>!!h.scratched,

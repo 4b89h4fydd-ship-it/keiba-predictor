@@ -103,7 +103,7 @@ if "ARVEXQ_TOUCH_ICON_180" not in binary_b64:
     raise RuntimeError("ARVEXQ_TOUCH_ICON_180 not found")
 
 BET_PATH = STATIC / "betting"
-BET_ASSETS = ("three_way_engine.js", "bet_view.js", "bet_ui.css")
+BET_ASSETS = ("main_strategy.js", "trifecta_strategy.js", "insurance_strategy.js", "three_way_engine.js", "bet_view.js", "bet_ui.css")
 for filename in BET_ASSETS:
     if not (BET_PATH / filename).is_file():
         raise RuntimeError(f"missing independent betting asset: {filename}")

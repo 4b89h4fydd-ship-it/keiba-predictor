@@ -87,68 +87,22 @@ function composeThreeWayBetPolicy(base,r,p,deps){
     item.combo=betComboText(kind,item.combos);
     result.items.push(item);
   }
-  // One main ticket family: place reliability and ordered certainty decide
-  // the type. No multiple identical opinions through several ticket kinds.
-  if(ready){
-    var kind='';
-    if(winClear&&order>=.45&&lists['馬単'][0]&&lists['馬単'][0].weight>=.075)kind='馬単';
-    else if(lists['馬連'][0]&&lists['馬連'][0].weight>=.16)kind='馬連';
-    else if(lists['3連複'][0]&&lists['3連複'][0].weight>=.12&&top.weight<.30)kind='3連複';
-    else if(lists['ワイド'][0]&&lists['ワイド'][0].weight>=.20)kind='ワイド';
-    if(kind){
-      var pool=lists[kind],max=kind==='3連複'?3:2,cut=pool[0].weight*.70,combos=[];
-      pool.some(function(z){if(combos.length>=max||combos.length>=1&&z.weight<cut)return true;combos.push(z.combo);return false});
-      add('本線',kind,combos,'着順別モデルの相対集中度・点数を比較して'+kind+'を優先。配当オッズ未検証のため数値的な期待値は未算出。');
-      result.primaryKind=kind;
-    }else{result.primaryKind='';reason='本線に適した券種の集中度が不足'}
-  }else result.primaryKind='';
-  // Every race is reviewed. Never add a mandatory trifecta for a grade/special race.
-  var triAllowed=ready&&winClear&&order>=.42&&top12>=.115&&
-      top24>0&&top12/top24>=.54&&ordered.length>=12;
-  var chosen=ordered.filter(function(z){return z.combo[0]===top.no}).slice(0,12);
-  // A wider winning-field set would require over-budget coverage; abstain.
-  var winningMass=p1.filter(function(x){return x>=top.weight*.80}).length;
-  if(winningMass>2)triAllowed=false;
-  if(chosen.length<6)triAllowed=false;
-  if(triAllowed){
-    // Add only competitive orders. A low-concentration tail is not padded to
-    // manufacture a six-ticket challenge.
-    var cutoff=chosen[0].weight*.38;
-    chosen=chosen.filter(function(z){return z.weight>=cutoff}).slice(0,12);
-    if(chosen.length<6)triAllowed=false;
+  // Each purchase decision is independently owned; this file only prepares
+  // the shared joint-order distribution and invokes isolated policies.
+  if(!global.ARVEXQBetStrategies||
+      !['main','trifecta','insurance'].every(function(k){return typeof global.ARVEXQBetStrategies[k]==='function'})){
+    result.items=[];result.decision='見送り';result.trifectaDecision='未取得';
+    result.trifectaReason='券種別判定モジュールの読み込み不足';
+    result.insuranceDecision='見送り';result.insuranceReason='券種別判定モジュールの読み込み不足';
+    result.captureStatus='engine-missing';return result;
   }
-  if(triAllowed){
-    var triCombos=chosen.map(function(z){return z.combo});
-    add('3連単チャレンジ','3連単',triCombos,
-      '独立1着候補'+top.no+'、条件付き2着・3着、展開AIの局面適合、順序集中度が購入条件を通過。');
-    result.trifectaDecision='採用';
-    result.trifectaReason='1着'+top.no+'軸・2着/3着は別モデル。'+triCombos.length+'点で規定の集中度を満たすため採用。';
-    result.trifectaFirst=[top.no];result.trifectaSecond=Array.from(new Set(triCombos.map(function(c){return c[1]})));
-    result.trifectaThird=Array.from(new Set(triCombos.map(function(c){return c[2]})));
-  }else{
-    result.trifectaDecision='見送り';
-    result.trifectaReason=ready?(winClear?'展開・順序の集中度不足、または12点以内では有力な着順を絞れないため見送り。':'独立1着候補が十分に絞れず、固定のリスクが高いため見送り。'):reason;
-    result.trifectaFirst=[];result.trifectaSecond=[];result.trifectaThird=[];
-  }
-  if(triAllowed&&result.primaryKind){
-    // Hedge specifically against a different winner, not the same first-place
-    // opinion. Do not duplicate a combination already present in the main.
-    var main=result.items.filter(function(z){return z.level==='本線'})[0],
-        isDuplicate=function(kind,combo){return !!(main&&main.kind===kind&&main.combos.some(function(x){return x.join('-')===combo.join('-')}))},
-        backup=runner.no,insurance=null;
-    ['馬連','ワイド'].some(function(kind){
-      var hits=lists[kind].filter(function(z){return z.combo.indexOf(backup)>=0&&!isDuplicate(kind,z.combo)&&!(main&&main.combos.some(function(c){return c.length===2&&c.slice().sort(function(a,b){return a-b}).join('-')===z.combo.slice().sort(function(a,b){return a-b}).join('-')}))});
-      if(!hits.length)return false;
-      // Hedge against 1st reversal; still need a high-ranked complement.
-      if(hits[0].weight<(kind==='ワイド'?.13:.09))return false;
-      insurance={kind:kind,combos:[hits[0].combo]};return true
-    });
-    if(insurance){
-      add('保険',insurance.kind,insurance.combos,'3連単の1着'+top.no+'固定が崩れ、'+backup+'が勝ち負けする分岐を補完。既存本線との組み合わせ重複なし。');
-      result.insuranceDecision='採用';
-      result.insuranceReason='1着逆転の別展開を最小1点で補完';
-    }else result.insuranceReason='本線と重複するか、独立した補完根拠が不足するため見送り';
-  }else result.insuranceReason='3連単未採用、または本線不成立のため保険を追加しない';
+  var ctx={ready:ready,winClear:winClear,order:order,lists:lists,top:top,
+     runner:runner,top12:top12,top24:top24,ordered:ordered,p1:p1,add:add,
+     result:result,reason:reason};
+  global.ARVEXQBetStrategies.main(ctx);
+  ctx.triAllowed=global.ARVEXQBetStrategies.trifecta(ctx);
+  global.ARVEXQBetStrategies.insurance(ctx);
+  reason=ctx.reason;
   result.decision=result.items.length?'通常買い':'見送り';
   if(result.items.length&&!result.primaryKind){
     result.items=[];result.decision='見送り';
