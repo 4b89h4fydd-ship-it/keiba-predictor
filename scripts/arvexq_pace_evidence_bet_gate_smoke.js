@@ -70,4 +70,19 @@ assert.ok(src.includes('vp=gateBetByPaceEvidence(vp,r,p)'),'regional bet path ne
 assert.ok(src.includes('plan=gateBetByPaceEvidence(plan,r,p)'),'central bet path needs pace gate');
 assert.ok(src.indexOf('vp=gateBetByPaceEvidence(vp,r,p)')<src.indexOf('vp=forceMandatoryTrifecta(vp,r,p)'));
 assert.ok(src.indexOf('plan=gateBetByPaceEvidence(plan,r,p)')<src.indexOf('plan=forceMandatoryTrifecta(plan,r,p)'));
-console.log('PACE_BET_GATE_OK sparse=fails odds=required weights=required future=excluded scratches=excluded complete=unchanged historical=immutable');
+const reference=win.ARVEXQBetReadiness.promoteReference(
+  {selectionAudit:{selected:false,score:64,evidence:.60}},race,
+  {coverage:.7,rows:sufficient.rows},completeReadiness);
+assert.equal(reference.referenceOnly,true,'routine race may have a separate reference ticket');
+assert.equal(reference.selectionAudit.selected,true,'ticket gate may independently assess a routine race');
+assert.equal(reference.selectionAudit.referenceOnly,true,'but it is NEVER an elite morning selection');
+assert.equal(win.ARVEXQBetReadiness.promoteReference(
+  {selectionAudit:{selected:false,score:12,evidence:.15}},race,
+  {coverage:.7,rows:sufficient.rows},completeReadiness).selectionAudit.selected,false,
+  'low-quality races remain skipped');
+const caution=win.ARVEXQBetReadiness.evaluate(race,sufficient,
+  api.paceEvidenceProfile(race,sufficient),{...completeReadiness,actualOdds:0,bodyWeight:0});
+assert.equal(caution.ready,true,'missing early publication is not a model ticket veto');
+assert.equal(caution.oddsVerified,false);
+assert.ok(caution.warnings.length>=2);
+console.log('PACE_BET_GATE_OK evidence=required optional_odds_and_weight=warnings future=excluded reference_only=validated');
