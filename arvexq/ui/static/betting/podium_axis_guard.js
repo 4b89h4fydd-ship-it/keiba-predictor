@@ -64,12 +64,29 @@ function analyzePast(horse,race){
  if(field>=4&&metrics.slice(0,2).every(x=>!x.top3)&&metrics.slice(2,5).filter(x=>x.top3).length>=2)
   flags.push('recent-form-downturn');
  const recentStarts=Math.min(field,5),recentTop3=metrics.slice(0,5).filter(x=>x.top3).length,
-       recentRate=recentStarts?recentTop3/recentStarts:0,careerRate=field?top3/field:0;
- return {version:VERSION,starts:field,datedRuns:field,recentStarts:recentStarts,recentTop3:recentTop3,
-         top3:top3,rate:field>5?.65*recentRate+.35*careerRate:recentRate,
-         careerTop3Rate:field?careerRate:null,careerStatus:field?'observed-subset-completeness-unverified':'missing',
-         comparableRuns:comparableRuns,comparableTop3:comparableTop3,
-         comparableQuality:comparableRuns?compareQuality/comparableRuns:null,
+       recentRate=recentStarts?recentTop3/recentStarts:0,
+       saved=horse&&horse.integratedEvaluation&&horse.integratedEvaluation.careerProfile,
+       archive=horse&&horse.careerArchive,
+       cutoff=parseDate(race&&(race.date||race.raceDate)),
+       trustSummary=!!(saved&&saved.version==='arvexq-observed-career-profile-v1'&&
+         archive&&archive.encoding==='arvexq-career-gzip-json-v1'&&
+         parseDate(archive.priorRaceDate)===cutoff&&
+         n(saved.datedRuns)===field+n(archive.olderRunCount)&&
+         n(saved.datedRuns)>=field&&n(saved.top3)<=n(saved.datedRuns)),
+       careerStarts=trustSummary?n(saved.datedRuns):field,
+       careerTop3=trustSummary?n(saved.top3):top3,
+       careerRate=careerStarts?careerTop3/careerStarts:0,
+       careerComparable=trustSummary?n(saved.comparableRuns):comparableRuns,
+       careerComparableTop3=trustSummary?n(saved.comparableTop3):comparableTop3,
+       careerComparableQuality=trustSummary?saved.comparableQuality:(comparableRuns?compareQuality/comparableRuns:null);
+ if(careerComparable>=2&&careerComparableTop3===0&&!flags.includes('same-surface-distance-no-podium'))
+     flags.push('same-surface-distance-no-podium');
+ return {version:VERSION,starts:careerStarts,datedRuns:careerStarts,recentStarts:recentStarts,recentTop3:recentTop3,
+         top3:careerTop3,rate:careerStarts>5?.65*recentRate+.35*careerRate:recentRate,
+         careerTop3Rate:careerStarts?careerRate:null,
+         careerStatus:trustSummary?'compressed-older-runs-profile-observed':(field?'observed-subset-completeness-unverified':'missing'),
+         comparableRuns:careerComparable,comparableTop3:careerComparableTop3,
+         comparableQuality:careerComparableQuality,
          recentFormQuality:field?quality/totalWeight:null,
          trackMatchedRuns:matchedTrack,goingMatchedRuns:matchedGoing,
          frontFadeCount:frontFadeCount,riskFlags:flags,
