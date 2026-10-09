@@ -183,7 +183,7 @@ def _supplement_missing(detail: dict[str, Any] | None) -> dict[str, Any] | None:
     try:
         return enrich_race_missing_sync(
             detail,
-            history_limit=5,
+            history_limit=max(6, int(os.getenv("ARVEXQ_CAREER_FETCH_LIMIT", "1000"))),
             max_parallel_horses=int(os.getenv("ARVEXQ_SUPPLEMENT_HORSE_WORKERS", "4") or 4),
         )
     except Exception as exc:
