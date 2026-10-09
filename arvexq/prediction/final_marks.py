@@ -101,6 +101,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         e["primaryPillars"] = list(PRIMARY_PILLARS)
         e["factorEvidence"] = evidence
         e["pastPerformance"] = row.get("pastPerformance", {})
+        e["careerProfile"] = row.get("careerProfile", {})
         e["multiHead"] = multi_head
         e["strengthHeadRank"] = multi_head.get("strengthRank")
         e["winHeadRank"] = multi_head.get("winRank")
@@ -157,7 +158,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     detail["multiHeadModelVersion"] = MULTI_HEAD_MODEL_VERSION
     detail["multiHeadSummary"] = multi_head_summary
     detail["markMethod"] = (
-        "core=four-pillar consensus + dated pre-off five-run context + independent top-three axis; "
+        "core=four-pillar consensus + all observed pre-off career + recent-five form + independent top-three axis; "
         "heads=strength(ability+record), win(ability+record+suitability+pace), "
         "upside(suitability+pace+support), market-risk(popularity-vs-model); "
         "support=pedigree+weather/going+bias+draw+body/weight+condition-change+freshness+age/sex+jockey+trainer"
