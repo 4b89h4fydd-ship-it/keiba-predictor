@@ -50,7 +50,7 @@ def _positions(x: Any) -> list[int]:
             continue
     return out
 
-def observed_runs(horse: dict[str, Any], race: dict[str, Any], limit: int = 5) -> list[dict[str, Any]]:
+def observed_runs(horse: dict[str, Any], race: dict[str, Any], limit: int | None = 5) -> list[dict[str, Any]]:
     cutoff = _date(race.get("date") or race.get("raceDate"))
     if cutoff is None:
         return []  # Unverifiable race date, never guess whether a run is future.
@@ -80,7 +80,7 @@ def observed_runs(horse: dict[str, Any], race: dict[str, Any], limit: int = 5) -
             row["fieldSize"] = int(field)
             runs.append(row)
     runs.sort(key=lambda x: x["_raceDate"], reverse=True)
-    return runs[:max(0, min(5, int(limit)))]
+    return runs if limit is None else runs[:max(0, int(limit))]
 
 def analyze_past_performance(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any]:
     runs = observed_runs(horse, race)
