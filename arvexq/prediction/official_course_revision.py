@@ -38,13 +38,18 @@ def official_event(value: Any) -> dict[str, Any] | None:
             return None
     except (ValueError, TypeError):
         return None
-    going = str(value.get("going") or "").replace("稍重", "稍重")
+    going = str(value.get("going") or "")
     if going not in GOING:
         return None
     surface = str(value.get("surface") or "")
     if surface not in {"芝", "ダート", "障害", "turf", "dirt", "jump"}:
         return None
+    race_date = str(value.get("raceDate") or "")
+    track = str(value.get("track") or "")
+    if len(race_date) != 10 or not track or not race_date.startswith("20"):
+        return None
     normalized = {"sourceKind": "official_course_condition",
+                  "raceDate": race_date, "track": track,
                   "sourceUrl": address, "publishedAt":instant.isoformat(),
                   "going":going, "surface":surface}
     for field, low, high in (("cushionValue",3,18),
@@ -90,4 +95,18 @@ def pre_off_change(detail: dict[str, Any], old: Any, new: Any, now: datetime) ->
     post = post_at(detail)
     if not post or now.astimezone(JST) >= post:
         return ""
-    return meaningful_change(old, new, now=now)
+    candidate = official_event(new)
+    if not candidate or candidate["raceDate"] != str(detail.get("date") or "") or candidate["track"] != str(detail.get("track") or ""):
+        return ""
+    surface = str(detail.get("surface") or "")
+    if surface and surface not in {candidate["surface"], "障害" if candidate["surface"]=="芝" else "", "jump" if candidate["surface"]=="turf" else ""}:
+        return ""
+    published = datetime.fromisoformat(candidate["publishedAt"]).astimezone(JST)
+    if published >= post:
+        return ""
+    reason = meaningful_change(old, new, now=now)
+    # The first official publication is not grounds for a mark change
+    # if it merely confirms the going already included at the morning freeze.
+    if reason == "公式馬場情報の初回発表" and str(detail.get("condition") or "") == candidate["going"]:
+        return ""
+    return reason
