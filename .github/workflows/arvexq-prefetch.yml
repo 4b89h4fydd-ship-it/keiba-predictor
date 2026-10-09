@@ -299,31 +299,33 @@ jobs:
             --out-dir prefetch-sync-batches
           COUNT=$(find prefetch-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
           echo "D1 prefetch batches=$COUNT"
+          # Capacity failure is permanent until storage is redesigned or increased.
+          # Never hammer D1 with all remaining batches after a confirmed quota
+          # error or Cloudflare Worker resource limit (1102).
           FAILED_BATCHES=0
           for file in prefetch-sync-batches/batch-*.json; do
             PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$CLOUDFLARE_API_BASE"
-            BYTES=$(wc -c < "$file" | tr -d ' ')
-            echo "POST $(basename "$file") bytes=$BYTES"
-            # A failure for one race must not prevent other races being published.
-            RESPONSE_FILE="$(mktemp)"
-            if ! curl -sS --fail-with-body --retry 3 --retry-all-errors --retry-delay 3 --retry-max-time 70 \
-              --connect-timeout 10 --max-time 35 -X POST \
-              "$CLOUDFLARE_API_BASE/api/sync" \
-              -H "content-type: application/json" \
-              -H "x-sync-token: $SYNC_TOKEN" \
-              --data-binary @"$file" -o "$RESPONSE_FILE"; then
-              echo "::warning::D1 batch failed: $(basename "$file") bytes=$BYTES"
-              # The response body was previously discarded. Preserve only a
-              # bounded diagnostic; never log the auth token or full payload.
-              printf 'D1_SYNC_ERROR_RESPONSE %s ' "$(basename "$file")"
-              head -c 350 "$RESPONSE_FILE" | tr '\\n' ' '; echo
-              FAILED_BATCHES=$((FAILED_BATCHES + 1))
-            else
+            if python scripts/arvexq_d1_capacity_guard.py \
+              --file "$file" --api-base "$CLOUDFLARE_API_BASE" --max-bytes 4000000; then
               PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"
+            else
+              status=$?
+              FAILED_BATCHES=$((FAILED_BATCHES + 1))
+              if [ "$status" -eq 20 ]; then
+                echo "::error::D1_STORAGE_OR_WORKER_CAPACITY_BLOCKED; preserving all prepared files and morning seals."
+                exit 20
+              fi
+              if [ "$FAILED_BATCHES" -ge 3 ]; then
+                echo "::error::D1_SYNC_THREE_FAILURES; circuit-breaker prevents more write load."
+                exit 21
+              fi
             fi
-            rm -f "$RESPONSE_FILE"
           done
-          echo "D1 prefetch push finished: failed_batches=$FAILED_BATCHES; checking all race IDs and rosters next"
+          if [ "$FAILED_BATCHES" -gt 0 ]; then
+            echo "::error::D1 prefetch incomplete failed_batches=$FAILED_BATCHES"
+            exit 21
+          fi
+          echo "D1 prefetch push verified all batches"
 
       - name: Verify prepared day and analysis from D1
         run: |
