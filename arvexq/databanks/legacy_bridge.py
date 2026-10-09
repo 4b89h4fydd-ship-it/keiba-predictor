@@ -33,7 +33,8 @@ def _jra_history_adapter(namespace: dict[str, Any]):
         if not cname or not date:
             return {}
         runs = profile_runs(cname, date, int(limit or 5))
-        return {"recentRaces": runs or []}
+        runs = runs or []
+        return {"recentRaces": runs[:5], "allPastRuns": runs} if int(limit or 5) > 5 else {"recentRaces": runs}
 
     return fetch
 
@@ -55,8 +56,10 @@ def _nar_store_adapters(namespace: dict[str, Any]):
         if not name or not date:
             return {}
         db = store()
+        runs = db.recent_races(name, date, int(limit or 5))
         return {
-            "recentRaces": db.recent_races(name, date, int(limit or 5)),
+            "recentRaces": runs[:5],
+            "allPastRuns": runs if int(limit or 5) > 5 else [],
             "prizeMoneyAtRace": db.prize_before(name, date),
         }
 
