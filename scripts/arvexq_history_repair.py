@@ -104,6 +104,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
     errors: dict[str, str] = {}
     result_only_repairs = 0
     card_repairs = 0
+    changed_ids: set[str] = set()
 
     def pending_ids() -> list[str]:
         return [rid for rid in ids if not history_complete(by_id.get(rid))]
@@ -138,12 +139,16 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
                     print("HISTORY_REPAIR_ERROR", rid, error)
                     continue
                 if fresh:
-                    by_id[rid] = merge_history(by_id.get(rid), fresh)
-                    _seed_base(rid, by_id[rid])
-                    if mode == "result":
-                        result_only_repairs += 1
-                    elif mode == "card":
-                        card_repairs += 1
+                    original = by_id.get(rid)
+                    merged = merge_history(original, fresh)
+                    if merged != original:
+                        by_id[rid] = merged
+                        changed_ids.add(rid)
+                        _seed_base(rid, merged)
+                        if mode == "result":
+                            result_only_repairs += 1
+                        elif mode == "card":
+                            card_repairs += 1
                     if history_complete(by_id.get(rid)):
                         errors.pop(rid, None)
         if attempt == 1 and pending_ids():
@@ -173,9 +178,14 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
             z["raceStatus"] = "確定"
         elif result.get("finishers"):
             z["raceStatus"] = "速報"
-        summaries.append(z)
+        if str(z.get("id") or "") in changed_ids:
+            summaries.append(z)
 
-    payload_details = [by_id[rid] for rid in ids if isinstance(by_id.get(rid), dict) and by_id[rid].get("id")]
+    # Send only records materially changed in this repair. D1 /api/sync is a
+    # replace-upsert, so each changed detail remains complete; never send a
+    # partial fragment or overwrite 47 unchanged archived racecards.
+    payload_details = [by_id[rid] for rid in ids if rid in changed_ids
+                       and isinstance(by_id.get(rid), dict) and by_id[rid].get("id")]
     payload = {
         "summaries": summaries,
         "details": payload_details,
@@ -185,6 +195,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
             "history_window_days": 7,
             "race_count": len(ids),
             "detail_count": len(payload_details),
+            "repaired_count": len(changed_ids),
+            "repaired_race_ids": [rid for rid in ids if rid in changed_ids],
             "result_only_repair_count": result_only_repairs,
             "card_repair_count": card_repairs,
             "missing_card_count": len(missing_card),
@@ -197,6 +209,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
     report = {
         "date": payload["meta"]["sync_date"],
         "races": len(ids),
+        "changed_race_ids": [rid for rid in ids if rid in changed_ids],
+        "unchanged_count": len(ids) - len(changed_ids),
         "result_only_repairs": result_only_repairs,
         "card_repairs": card_repairs,
         "missing_card": missing_card,
@@ -213,6 +227,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
     print(
         "HISTORY_REPAIR_AUDIT",
         "races=", len(ids),
+        "changed=", len(changed_ids),
+        "unchanged=", len(ids) - len(changed_ids),
         "resultOnly=", result_only_repairs,
         "cardRepairs=", card_repairs,
         "missingCard=", len(missing_card),

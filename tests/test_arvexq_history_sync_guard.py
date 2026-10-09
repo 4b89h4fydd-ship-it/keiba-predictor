@@ -49,6 +49,14 @@ class SqliteHistorySyncTests(unittest.TestCase):
         self.assertIn("--verify-post", wf)
         self.assertNotIn("--data-binary @history-payload.json", wf)
         self.assertNotIn('api/day?date=$HISTORY_DATE&details=1', wf)
+        self.assertIn("HISTORY_NO_CHANGES", wf)
+        self.assertIn("HISTORY_CHANGED_ONLY", wf)
+        self.assertIn("CHANGED=$(jq '.meta.repaired_count // 0'", wf)
+        repair = (ROOT / "scripts/arvexq_history_repair.py").read_text(encoding="utf-8")
+        self.assertIn("changed_ids: set[str] = set()", repair)
+        self.assertIn("if merged != original:", repair)
+        self.assertIn('if rid in changed_ids', repair)
+        self.assertIn('"repaired_count": len(changed_ids)', repair)
 
     def test_split_batched_history_payload_retains_race_scope(self):
         with tempfile.TemporaryDirectory() as tmp:

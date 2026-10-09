@@ -149,10 +149,13 @@ jobs:
       - name: Push repaired historical day to D1
         run: |
           RACES=$(jq '.meta.race_count // 0' history-payload.json)
-          if [ "$RACES" -le 0 ]; then
-            echo "No races on $HISTORY_DATE; nothing to sync."
+          REPAIRED=$(jq '.meta.repaired_count // 0' history-payload.json)
+          if [ "$RACES" -le 0 ] || [ "$REPAIRED" -le 0 ]; then
+            echo "HISTORY_NO_CHANGES date=$HISTORY_DATE races=$RACES changed=$REPAIRED; preserving D1 as-is."
             exit 0
           fi
+          test "$(jq '.details | length' history-payload.json)" -eq "$REPAIRED"
+          echo "HISTORY_CHANGED_ONLY $REPAIRED/$RACES"
           # Never POST an entire historical day to D1 (HTTP 503/body limit).
           # Split to one detail per request and protect immutable pre-off seals.
           python scripts/arvexq_sync_batches.py \
@@ -179,6 +182,11 @@ jobs:
 
       - name: Verify repaired historical day
         run: |
+          CHANGED=$(jq '.meta.repaired_count // 0' history-payload.json)
+          if [ "$CHANGED" -le 0 ]; then
+            echo "HISTORY_VERIFY_NOT_REQUIRED no changes were sent"
+            exit 0
+          fi
           EXPECTED=$(jq '.meta.race_count // 0' history-payload.json)
           if [ "$EXPECTED" -le 0 ]; then
             exit 0
