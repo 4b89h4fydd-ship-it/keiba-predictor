@@ -3026,7 +3026,7 @@ function composeThreeWayBetPolicy(base,r,p){
         isDuplicate=function(kind,combo){return !!(main&&main.kind===kind&&main.combos.some(function(x){return x.join('-')===combo.join('-')}))},
         backup=runner.no,insurance=null;
     ['馬連','ワイド'].some(function(kind){
-      var hits=lists[kind].filter(function(z){return z.combo.indexOf(backup)>=0&&!isDuplicate(kind,z.combo)});
+      var hits=lists[kind].filter(function(z){return z.combo.indexOf(backup)>=0&&!isDuplicate(kind,z.combo)&&!(main&&main.combos.some(function(c){return c.length===2&&c.slice().sort(function(a,b){return a-b}).join('-')===z.combo.slice().sort(function(a,b){return a-b}).join('-')}))});
       if(!hits.length)return false;
       // Hedge against 1st reversal; still need a high-ranked complement.
       if(hits[0].weight<(kind==='ワイド'?.13:.09))return false;
@@ -4398,7 +4398,7 @@ function runnerStyleSection(r,p){
   var diagnosisReady=diagnosisCurrent(r),
       cadenceText=(raceBodyWeightComplete(r)&&raceOddsComplete(r))?'オッズ・馬体重取得済み':'オッズ・馬体重を自動取得',
       dayCorr=sameDayCorrectionProfileV313(r,p.rows||[]),
-      dayNote=dayCorr.active?('<div class="diagnosis-refresh-note" style="margin:7px 0"><b>当日補正 ON</b>　前'+dayCorr.completed+'R反映 / '+(dayCorr.markRaces?('印内3頭 '+Math.round(dayCorr.coverage*100)+'%'):'印比較待ち')+' / '+esc(dayCorr.flowLabel)+'傾向　<small>同場の発走済みレースだけで後半の印を微調整</small></div>'):'';
+      dayNote=dayCorr.active?('<div class="diagnosis-refresh-note" style="margin:7px 0"><b>当日補正 ON</b>　前'+dayCorr.completed+'R反映 / '+(dayCorr.markRaces?('印内3頭 '+Math.round(dayCorr.coverage*100)+'%'):'印比較待ち')+' / '+esc(dayCorr.flowLabel)+'傾向　<small>当日の傾向は分析参考のみ。朝の固定印は変更しません</small></div>'):'';
   return '<section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
     +dayNote
     +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">'+(r._entryOnly?'出走表を先に表示しています。履歴・能力評価を取得中です。':'取得済みデータでAI評価を先に計算中。更新後は馬名タップの詳細と展開予想へ反映します。')+'</div>':'')
