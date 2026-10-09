@@ -13,6 +13,7 @@ import argparse
 import copy
 import json
 import os
+import subprocess
 import sys
 import time
 import urllib.parse
@@ -29,6 +30,7 @@ if str(ROOT) not in sys.path:
 import app
 from arvexq.pipeline.fingerprints import analysis_input_hash
 from arvexq.ingest.official_changes import collect_nar_changes
+from arvexq.prediction.official_course_revision import pre_off_change, official_event
 
 JST = timezone(timedelta(hours=9))
 D1_BASE = os.getenv("CLOUDFLARE_API_BASE", "https://kraiz-api.4b89h4fydd.workers.dev").rstrip("/")
@@ -344,6 +346,76 @@ def refresh_environment(rows: list[dict[str, Any]], target_ids: set[str]) -> dic
     return states
 
 
+def apply_official_mark_revision(
+    base: dict[str, Any] | None, incoming: dict[str, Any] | None,
+    now: datetime,
+) -> tuple[dict[str, Any] | None, str]:
+    """Append revisions only for a verified, meaningful pre-off official change.
+
+    Keep original marks, betting tickets, and the server seal untouched.
+    A feed that merely reports a new weather/odds value cannot change marks.
+    """
+    if not isinstance(base, dict) or not isinstance(incoming, dict):
+        return incoming, ""
+    original = base.get("morningMarkSnapshot")
+    if not isinstance(original, dict) or original.get("version") != "arvexq-morning-marks-v1":
+        return incoming, ""
+    if str(original.get("raceId") or "") != str(incoming.get("id") or ""):
+        return incoming, ""
+    previous = base.get("officialCourseCondition")
+    current = incoming.get("officialCourseCondition")
+    reason = pre_off_change(incoming, previous, current, now)
+    if not reason:
+        return incoming, ""
+    official = official_event(current)
+    if not official:
+        return incoming, ""
+    revisions = list(base.get("officialMarkRevisions") or [])
+    if any((r.get("officialCourseCondition") or {}).get("publishedAt") == official["publishedAt"]
+           for r in revisions if isinstance(r, dict)):
+        return incoming, ""
+    try:
+        working = copy.deepcopy(incoming)
+        working["morningMarkSnapshot"] = copy.deepcopy(original)
+        working["officialCourseCondition"] = official
+        # Do not use any result/finisher data or post-off recomputation.
+        process = subprocess.run(
+            ["node", "scripts/arvexq_capture_course_revised_marks.js"],
+            input=json.dumps(working, ensure_ascii=False), text=True,
+            capture_output=True, timeout=25,
+            env={**os.environ, "TZ": "Asia/Tokyo"},
+        )
+        if process.returncode:
+            return incoming, "official-change mark compute failed: " + process.stderr[-400:]
+        predicted = json.loads(process.stdout)
+        horses = predicted.get("horses")
+        if not isinstance(horses, list) or len(horses) < 3:
+            return incoming, "official-change forecast incomplete"
+        previous_marks = revisions[-1].get("horses") if revisions else original.get("horses")
+        if not isinstance(previous_marks, list):
+            return incoming, "previous snapshot unavailable"
+        old = {int(h["horseNumber"]): str(h.get("mark") or "") for h in previous_marks}
+        new = {int(h["horseNumber"]): str(h.get("mark") or "") for h in horses}
+        affected = sorted(no for no in new if new[no] != old.get(no, ""))
+        if not affected:
+            # Evidence changed, but no meaningful mark changes. Persist source
+            # metadata only; never advertise a phantom revised prediction.
+            incoming["officialCourseCondition"] = official
+            return incoming, ""
+        revision = {"version": "arvexq-official-mark-revision-v1",
+                    "raceId": str(incoming["id"]), "raceDate": str(incoming["date"]),
+                    "revisedAt": now.isoformat(timespec="seconds"),
+                    "reason": reason, "officialCourseCondition": official,
+                    "affectedHorseNumbers": affected, "horses": horses}
+        revisions.append(revision)
+        incoming["morningMarkSnapshot"] = copy.deepcopy(original)
+        incoming["officialMarkRevisions"] = revisions
+        incoming["officialCourseCondition"] = official
+        return incoming, reason
+    except (OSError, ValueError, TypeError, KeyError, subprocess.TimeoutExpired) as exc:
+        return incoming, "official-change mark error: " + type(exc).__name__ + ": " + str(exc)
+
+
 def refresh_one(
     rid: str,
     now_min: int,
@@ -391,6 +463,14 @@ def refresh_one(
 
     analysis_changed = bool(env_analysis_changed or market_analysis_changed)
     merged = merge_live(base, fresh or snapshot(rid), market, analysis_changed)
+    if merged and pre_post:
+        merged, official_status = apply_official_mark_revision(base, merged, datetime.now(JST))
+        if official_status:
+            print("OFFICIAL_COURSE_MARK_EVENT", rid, official_status)
+            if "failed" in official_status or "error" in official_status:
+                errors.append(official_status)
+            else:
+                analysis_changed = True
     if merged and analysis_changed and pre_post:
         pm = dict(merged.get("preparedMeta") or {})
         pm["analysisInputHash"] = analysis_input_hash(merged)
