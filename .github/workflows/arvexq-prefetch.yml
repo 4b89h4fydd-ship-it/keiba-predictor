@@ -33,7 +33,8 @@ name: ARVEXQ Full Prefetch
 
 concurrency:
   group: arvexq-full-prefetch-${{ github.event.inputs.date || 'today' }}
-  cancel-in-progress: true
+  # A mid-run code push must not cancel the dawn manifest publication.
+  cancel-in-progress: false
 
 jobs:
   prefetch:
