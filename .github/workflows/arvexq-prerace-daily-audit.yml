@@ -1,6 +1,12 @@
 name: ARVEXQ Daily Pre-Race Archive Audit
 
 "on":
+  push:
+    branches: [main]
+    paths:
+      - scripts/arvexq_bet_funnel.py
+      - scripts/arvexq_daily_archive_audit.py
+      - .github/workflows/arvexq-prerace-daily-audit.yml
   workflow_dispatch:
     inputs:
       date:
