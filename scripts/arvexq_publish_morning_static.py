@@ -36,7 +36,11 @@ def morning_manifest(payload: dict) -> dict | None:
                 {"id": str(r["id"]),
                  "selected": r["morningSelected"],
                  "selectedScore": r.get("morningSelectedScore") or 0,
-                 "special": r["morningSpecial"],"assessed":r.get("morningAssessed") is not False}
+                 "special": r["morningSpecial"],"assessed":r.get("morningAssessed") is not False,
+                 "primaryType": r.get("morningPrimaryType") or "",
+                 "types": r.get("morningSelectedTypes") or [],
+                 "selectionReason": r.get("morningSelectionReason") or "",
+                 "selectionModelVersion": ((r.get("volatility") or {}).get("morningPicks") or {}).get("selectionModelVersion") or ""}
                 for r in rows
             ]}
 

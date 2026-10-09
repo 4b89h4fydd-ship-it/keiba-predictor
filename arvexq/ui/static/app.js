@@ -3353,7 +3353,11 @@ function computeMorningRaceCandidates(circuit){
   // selection factor. A second full-card quality cut keeps only true elite races.
   all.forEach(function(r){try{
     var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d)||!d.preparedMeta||d.preparedMeta.diagnosisReady!==true)return;
-    var p=predict(d),t=strictSelectedRaceProfile(d,p);if(t.selected)add(r,t)
+    var p=predict(d),strict=strictSelectedRaceProfile(d,p);
+     if(!window.ARVEXQMorningTicketLanes||typeof window.ARVEXQMorningTicketLanes.classify!=='function')
+       throw Error('morning ticket lane classifier unavailable');
+     var t=window.ARVEXQMorningTicketLanes.classify(d,p,strict);
+     if(t.selected)add(r,t)
   }catch(e){}});
   return eliteSelectedRaceCut(Object.keys(map).map(function(k){return map[k]}))
 }
@@ -3366,7 +3370,9 @@ function morningPickOf(r){
   if(r.morningPickVersion==='v1'&&r.morningPickFixedAt)return {
     version:'v1',fixedAt:String(r.morningPickFixedAt),
     selected:r.morningSelected===true,selectedScore:n(r.morningSelectedScore,0),
-    special:r.morningSpecial===true,scope:n(r.morningPickScope,0),assessed:r.morningAssessed!==false
+    special:r.morningSpecial===true,scope:n(r.morningPickScope,0),assessed:r.morningAssessed!==false,
+     primaryType:String(r.morningPrimaryType||''),types:Array.isArray(r.morningSelectedTypes)?r.morningSelectedTypes.slice():[],
+     selectionReason:String(r.morningSelectionReason||'')
   };
   return null
 }
@@ -3383,7 +3389,9 @@ function selectedRaceCandidates(circuit){
     var m=morningPickOf(r);
     return {race:r,tags:['厳選'],selection:{
       selected:true,score:n(m&&m.selectedScore,0),
-      reason:'朝の事前選定固定',fixedAt:String(m&&m.fixedAt||'')
+      reason:String(m&&m.selectionReason||'朝の事前選定固定'),
+       primaryType:String(m&&m.primaryType||''),types:Array.isArray(m&&m.types)?m.types.slice():[],
+       fixedAt:String(m&&m.fixedAt||'')
     }}
   }).sort(raceChronologicalCompare)
 }
@@ -3415,7 +3423,7 @@ function fixedPickEmpty(kind,circuit){
   return '<div class="fixed-pick-empty"><b>該当なし</b><small>'+(incomplete?('基準を満たす確定候補なし｜情報不足 '+incomplete+'レース（朝の未判定を後付けしません）'):(label+'基準を通過したレースなし'))+'</small></div>'
 }
 function fixedSelectedBox(circuit,picks){
-  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>厳選 '+esc(t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
+  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+'｜'+esc(t.score||'—')+'点</em><small>'+esc(t.reason||'朝に選定・固定')+'</small></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
   return '<details class="fixed-pick-box fixed-pick-circuit" data-selected-circuit="selected" data-pick-circuit="'+esc(circuit)+'" '+(open?'open':'')+'><summary class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><span class="fixed-pick-summary-right"><em>'+picks.length+'レース</em><i>⌄</i></span></summary><div class="fixed-pick-box-body">'+body+'</div></details>'
 }
 function selectedRaceBetPreview(r){
@@ -3438,10 +3446,10 @@ function computeMorningSpecialRaceCandidates(){
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceCandidates(){
+  // Selection membership is frozen once; live results and names do not add races.
   return (state.races||[]).filter(function(r){
-    if(!r||!r.id)return false;
-    var title=String(r.title||'');
-    return raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))
+    var m=morningPickOf(r);
+    return !!(r&&r.id&&m&&m.special===true)
   }).slice().sort(raceChronologicalCompare)
 }
 function specialForecastRaceTag(r){
@@ -4843,13 +4851,17 @@ function applyMorningArchive(rows){
     var m={
       version:'v1',fixedAt:archive.fixedAt,scope:archive.scope,
       selected:frozen.selected===true,selectedScore:n(frozen.selectedScore,0),
-      special:frozen.special===true,assessed:frozen.assessed!==false
+      special:frozen.special===true,assessed:frozen.assessed!==false,
+       primaryType:String(frozen.primaryType||''),types:Array.isArray(frozen.types)?frozen.types.slice():[],
+       selectionReason:String(frozen.selectionReason||'')
     };
     r.morningPickVersion='v1';
     r.morningPickFixedAt=archive.fixedAt;
     r.morningPickScope=archive.scope;
     r.morningSelected=m.selected;r.morningSelectedScore=m.selectedScore;
     r.morningSpecial=m.special;r.morningAssessed=m.assessed;
+     r.morningPrimaryType=m.primaryType;r.morningSelectedTypes=m.types.slice();
+     r.morningSelectionReason=m.selectionReason;
     r.volatility=Object.assign({},r.volatility||{},{morningPicks:m});
     r.environmentMeta=Object.assign({},r.environmentMeta||{},{morningPicks:m})
   });

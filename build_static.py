@@ -109,10 +109,13 @@ for filename in BET_ASSETS:
         raise RuntimeError(f"missing independent betting asset: {filename}")
 bet_hash = hashlib.sha256(b"|".join((BET_PATH / filename).read_bytes() for filename in BET_ASSETS)).hexdigest()[:12]
 
-MORNING_MODULE = STATIC / "morning" / "selection_cut.js"
-if not MORNING_MODULE.is_file():
-    raise RuntimeError("morning selection module missing")
-morning_hash = hashlib.sha256(MORNING_MODULE.read_bytes()).hexdigest()[:12]
+MORNING_PATH = STATIC / "morning"
+MORNING_MODULES = ("ticket_lane_classifier.js", "selection_cut.js")
+for filename in MORNING_MODULES:
+    if not (MORNING_PATH / filename).is_file():
+        raise RuntimeError(f"missing morning module: {filename}")
+morning_hash = hashlib.sha256(b"|".join((MORNING_PATH / filename).read_bytes()
+                                     for filename in MORNING_MODULES)).hexdigest()[:12]
 
 STYLE_DIR = STATIC / "styles"
 STYLE_MODULES = ("legacy_v118_v221.css", "race_v222_plus.css")
@@ -217,7 +220,8 @@ for filename in BET_ASSETS:
     shutil.copy2(BET_PATH / filename, DIST / "betting" / filename)
 
 (DIST / "morning").mkdir(exist_ok=True)
-shutil.copy2(MORNING_MODULE, DIST / "morning" / "selection_cut.js")
+for filename in MORNING_MODULES:
+    shutil.copy2(MORNING_PATH / filename, DIST / "morning" / filename)
 
 # Preserve CSS cascade while serving large style groups separately.
 (DIST / "styles").mkdir(exist_ok=True)

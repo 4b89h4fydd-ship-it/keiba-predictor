@@ -32,10 +32,15 @@ if(/^20\d{2}-\d{2}-\d{2}$/.test(day)&&fs.existsSync(existingArchive)){
   function restore(r){
     const m=saved.get(String(r.id));if(!m)return;
     const frozen={version:'v1',fixedAt:archive.fixedAt,scope:archive.scope,
-      selected:m.selected===true,selectedScore:Number(m.selectedScore)||0,special:m.special===true};
+      selected:m.selected===true,selectedScore:Number(m.selectedScore)||0,special:m.special===true,
+      assessed:m.assessed!==false,primaryType:String(m.primaryType||''),
+      types:Array.isArray(m.types)?m.types.slice():[],selectionReason:String(m.selectionReason||''),
+      selectionModelVersion:String(m.selectionModelVersion||'')};
     Object.assign(r,{morningPickVersion:'v1',morningPickFixedAt:archive.fixedAt,
       morningPickScope:archive.scope,morningSelected:frozen.selected,
-      morningSelectedScore:frozen.selectedScore,morningSpecial:frozen.special,morningAssessed:m.assessed!==false});
+      morningSelectedScore:frozen.selectedScore,morningSpecial:frozen.special,morningAssessed:frozen.assessed,
+      morningPrimaryType:frozen.primaryType,morningSelectedTypes:frozen.types.slice(),
+      morningSelectionReason:frozen.selectionReason});
     r.volatility={...(r.volatility||{}),morningPicks:frozen};
     r.environmentMeta={...(r.environmentMeta||{}),morningPicks:frozen};
   }
@@ -53,6 +58,7 @@ if(day===jstToday&&now.getTime()<earliestMorning){save('BEFORE_MORNING_FREEZE_WI
 if(!Number.isFinite(earliest)||now.getTime()>=earliest){save('NOT_RECONSTRUCTED_AFTER_FIRST_OFF');process.exit(0)}
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const selectionModule=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js','utf8');
+const laneModule=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8');
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 if(!root.includes(boot))throw Error('morning picker boot entry missing');
 const source=root.replace(boot,'window.__morningPicks={state,predict,selectedRaceCandidates:computeMorningRaceCandidates,specialForecastRaceCandidates:computeMorningSpecialRaceCandidates,add:function(k,v){instantTrackDetails[k]=v;}};');
@@ -65,6 +71,7 @@ const ctx={window,document,localStorage:store,sessionStorage:store,console,
  navigator:window.navigator,location:window.location,setTimeout:()=>0,
  clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
 vm.createContext(ctx);
+vm.runInContext(laneModule,ctx,{timeout:12000,filename:'ticket_lane_classifier.js'});
 vm.runInContext(selectionModule,ctx,{timeout:12000,filename:'selection_cut.js'});
 vm.runInContext(source,ctx,{timeout:12000,filename:'app.js'});
 const model=window.__morningPicks;
@@ -78,7 +85,7 @@ try{
   console.error('MORNING_SELECTION_ERROR',String(e&&e.stack||e));
   save('MODEL_FAILED_NO_FREEZE');process.exit(0)
 }
-const selectionById=new Map(selected.map(x=>[String(x.race.id),Number(x.selection?.score||0)]));
+const selectionById=new Map(selected.map(x=>[String(x.race.id),x.selection]));
 const specials=new Set(special.map(x=>String(x.id)));
 const fixedAt=now.toISOString();
 const status={morningPickVersion:'v1',morningPickFixedAt:fixedAt,morningPickScope:rows.length};
@@ -86,13 +93,19 @@ for(const r of rows){
   const decision={
     version:'v1',fixedAt,scope:rows.length,
     selected:selectionById.has(String(r.id)),
-    selectedScore:selectionById.get(String(r.id))||0,
+    selectedScore:Number(selectionById.get(String(r.id))?.score)||0,
     special:specials.has(String(r.id)),assessed:assessed.some(z=>String(z.id)===String(r.id)),
+    primaryType:String(selectionById.get(String(r.id))?.primaryType||''),
+    types:Array.isArray(selectionById.get(String(r.id))?.types)?selectionById.get(String(r.id)).types.slice():[],
+    selectionReason:String(selectionById.get(String(r.id))?.reason||''),
+    selectionModelVersion:String(selectionById.get(String(r.id))?.modelVersion||''),
   };
   Object.assign(r,status,{
     morningSelected:decision.selected,
     morningSelectedScore:decision.selectedScore,
     morningSpecial:decision.special,morningAssessed:decision.assessed,
+    morningPrimaryType:decision.primaryType,morningSelectedTypes:decision.types,
+    morningSelectionReason:decision.selectionReason,
   });
   // A public D1 summary upsert currently whitelists unknown top-level keys.
   // Put the manifest inside the existing structured summary metadata as well.
@@ -102,7 +115,7 @@ for(const r of rows){
 for(const d of payload.details||[]){
   const r=rows.find(x=>String(x.id)===String(d.id));
   if(r){
-    for(const key of ['morningPickVersion','morningPickFixedAt','morningPickScope','morningSelected','morningSelectedScore','morningSpecial','morningAssessed'])d[key]=r[key];
+    for(const key of ['morningPickVersion','morningPickFixedAt','morningPickScope','morningSelected','morningSelectedScore','morningSpecial','morningAssessed','morningPrimaryType','morningSelectedTypes','morningSelectionReason'])d[key]=r[key];
     d.volatility={...(d.volatility||{}),morningPicks:r.volatility.morningPicks};
     d.environmentMeta={...(d.environmentMeta||{}),morningPicks:r.volatility.morningPicks};
   }
