@@ -7,6 +7,7 @@ def build_horse_review_bank(recaps: list[dict[str, Any]]) -> dict[str, Any]:
     horses: dict[str, list[dict[str, Any]]] = {}
     unlinked: list[dict[str, Any]] = []
     seen: set[tuple[str, str]] = set()
+    seen_unlinked: set[tuple[str, int]] = set()
     for recap in recaps:
         if not isinstance(recap, dict) or recap.get("verifiedFrom") != "settled-result-payload":
             continue
@@ -19,6 +20,13 @@ def build_horse_review_bank(recaps: list[dict[str, Any]]) -> dict[str, Any]:
             if not race_id:
                 continue
             if not key:
+                try:
+                    race_number = int(runner.get("horseNumber") or 0)
+                except (TypeError, ValueError):
+                    race_number = 0
+                if race_number <= 0 or (race_id, race_number) in seen_unlinked:
+                    continue
+                seen_unlinked.add((race_id, race_number))
                 # Preserve observed facts with race-local identity, but never
                 # pretend a horse number is a global horse identifier.
                 unlinked.append({
