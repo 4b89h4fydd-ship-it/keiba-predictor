@@ -13,6 +13,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from arvexq.ingest.career_transport import pack_detail
+
 
 def load_json(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
@@ -40,7 +42,7 @@ def main() -> int:
 
     payload = load_json(Path(args.input))
     summaries = [x for x in (payload.get("summaries") or []) if isinstance(x, dict)]
-    details = [x for x in (payload.get("details") or []) if isinstance(x, dict) and race_id(x)]
+    details = [pack_detail(x) for x in (payload.get("details") or []) if isinstance(x, dict) and race_id(x)]
     odds = [x for x in (payload.get("odds_current") or []) if isinstance(x, dict)]
     meta = dict(payload.get("meta") or {})
 
