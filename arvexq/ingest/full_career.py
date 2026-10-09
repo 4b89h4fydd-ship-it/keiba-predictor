@@ -18,7 +18,7 @@ def merge_career(existing: Any, incoming: Any, cutoff: str) -> list[dict[str, An
     end = date_key(cutoff)
     if not end:
         return []
-    found: dict[tuple[str, str], dict[str, Any]] = {}
+    found: dict[str, dict[str, Any]] = {}
     for raw in [*(existing if isinstance(existing, list) else []),
                 *(incoming if isinstance(incoming, list) else [])]:
         if not isinstance(raw, dict):
@@ -30,7 +30,9 @@ def merge_career(existing: Any, incoming: Any, cutoff: str) -> list[dict[str, An
         item["date"] = at
         # A horse cannot have multiple starts on the same day. Merge complementary
         # source fields instead of double counting conflicting provider identities.
-        key = (at, str(item.get("track") or item.get("venue") or item.get("course") or ""))
+        # A horse cannot have two starts on the same calendar date.
+        # Date-only identity also deduplicates feeds that omit track or race ID.
+        key = at
         if key not in found:
             found[key] = item
             continue
