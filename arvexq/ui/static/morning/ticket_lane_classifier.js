@@ -67,5 +67,30 @@ function classify(r,p,strict){
      gates:{...basic,strongPlace,clearWinner,longshot},
      note:'券種別モデル評価であり、的中率・期待配当・期待値を表しません。'};
 }
-global.ARVEXQMorningTicketLanes=Object.freeze({VERSION,NAMES,classify});
+// A public selected race must have a genuine, actionable morning recommendation.
+// Prediction quality alone is not a promise that a purchasable ticket exists.
+function ticketKinds(plan){
+ if(!plan||!['通常買い','強く買う'].includes(String(plan.decision||''))||
+    !plan.betInputGate||plan.betInputGate.ready!==true)return [];
+ const kinds=[];
+ for(const item of (Array.isArray(plan.items)?plan.items:[])){
+  if(!item||!['本線','保険','3連単チャレンジ'].includes(String(item.level||''))||
+     !['ワイド','馬連','馬単','3連複','3連単'].includes(String(item.kind||'')))continue;
+  const combos=Array.isArray(item.combos)?item.combos:[];
+  if(!combos.length||!combos.every(c=>Array.isArray(c)&&
+      c.length===(item.kind==='3連単'||item.kind==='3連複'?3:2)&&
+      c.every(v=>Number.isInteger(Number(v))&&Number(v)>0)&&new Set(c.map(Number)).size===c.length))continue;
+  if(item.kind==='3連単'&&(combos.length<6||combos.length>12))continue;
+  if(!kinds.includes(item.kind))kinds.push(item.kind);
+ }
+ return kinds;
+}
+function requireMorningTickets(selection,plan){
+ if(!selection||selection.selected!==true)return selection;
+ const kinds=ticketKinds(plan),has=kinds.length>0;
+ return {...selection,selected:has,ticketKinds:kinds,
+    reason:has?selection.reason+'｜朝の買い目成立：'+kinds.join('・'):
+      '朝の買い目がすべて見送り・未取得のため厳選対象外'};
+}
+global.ARVEXQMorningTicketLanes=Object.freeze({VERSION,NAMES,classify,ticketKinds,requireMorningTickets});
 })(window);

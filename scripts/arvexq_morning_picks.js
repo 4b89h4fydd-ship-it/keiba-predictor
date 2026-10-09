@@ -59,6 +59,8 @@ if(!Number.isFinite(earliest)||now.getTime()>=earliest){save('NOT_RECONSTRUCTED_
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const selectionModule=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js','utf8');
 const laneModule=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8');
+const betModules=['legacy_v213_order_model.js','main_strategy.js','trifecta_strategy.js',
+  'insurance_strategy.js','three_way_engine.js'];
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 if(!root.includes(boot))throw Error('morning picker boot entry missing');
 const source=root.replace(boot,'window.__morningPicks={state,predict,selectedRaceCandidates:computeMorningRaceCandidates,specialForecastRaceCandidates:computeMorningSpecialRaceCandidates,add:function(k,v){instantTrackDetails[k]=v;}};');
@@ -71,6 +73,8 @@ const ctx={window,document,localStorage:store,sessionStorage:store,console,
  navigator:window.navigator,location:window.location,setTimeout:()=>0,
  clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
 vm.createContext(ctx);
+for(const name of betModules)vm.runInContext(fs.readFileSync('arvexq/ui/static/betting/'+name,'utf8'),
+  ctx,{timeout:12000,filename:name});
 vm.runInContext(laneModule,ctx,{timeout:12000,filename:'ticket_lane_classifier.js'});
 vm.runInContext(selectionModule,ctx,{timeout:12000,filename:'selection_cut.js'});
 vm.runInContext(source,ctx,{timeout:12000,filename:'app.js'});

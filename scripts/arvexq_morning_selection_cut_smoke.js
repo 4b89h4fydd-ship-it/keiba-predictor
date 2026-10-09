@@ -35,4 +35,24 @@ const longshot=laneTest({winnerStable:true,winnerConfidence:.70,margin:.027,scor
 assert(longshot.types.includes('高配当狙い型'));
 assert(!('hitRate' in longshot)&&!('expectedValue' in longshot));
 assert(!laneTest({readiness:{prediction:.1}}).selected);
-console.log('MORNING_THREE_LANES_OK');
+// Public selection is allowed only when a real, non-skipped buy exists.
+const winnerSelection={...winner,selected:true};
+const accepted=w.ARVEXQMorningTicketLanes.requireMorningTickets(winnerSelection,{
+ decision:'通常買い',betInputGate:{ready:true},
+ items:[{level:'本線',kind:'馬連',combos:[[1,2],[1,3]]},
+        {level:'3連単チャレンジ',kind:'3連単',combos:[[1,2,3]]}]
+});
+assert.equal(accepted.selected,true);
+assert.deepEqual(accepted.ticketKinds,['馬連'],'a one-point trifecta is not a valid 6–12 ticket challenge');
+assert.match(accepted.reason,/朝の買い目成立/);
+for(const rejected of [
+  null,
+  {decision:'見送り',betInputGate:{ready:true},items:[{level:'本線',kind:'ワイド',combos:[[1,2]]}]},
+  {decision:'通常買い',betInputGate:{ready:false},items:[{level:'本線',kind:'ワイド',combos:[[1,2]]}]},
+  {decision:'通常買い',betInputGate:{ready:true},items:[]},
+  {decision:'通常買い',betInputGate:{ready:true},items:[{level:'本線',kind:'ワイド',combos:[[1,1]]}]},
+  {decision:'通常買い',betInputGate:{ready:true},items:[{level:'3連単チャレンジ',kind:'3連単',combos:[[1,2,3]]}]}
+]){
+ assert.equal(w.ARVEXQMorningTicketLanes.requireMorningTickets(winnerSelection,rejected).selected,false);
+}
+console.log('MORNING_THREE_LANES_AND_ACTIONABLE_TICKET_GATE_OK');

@@ -10,3 +10,16 @@
 - Labels/selection reasons are published exactly once in `morning-picks/YYYY-MM-DD.json`, never reclassified after odds or results. Previously published dates are NOT backfilled; they display "厳選・旧方式".
 - Type and 0–100 internal quality score are not measured accuracy or expected profit. Existing buy/no-buy logic remains authoritative.
 - Morning membership is not updated later; special and selected races both read the immutable manifest.
+
+## Actual ticket confirmation (new morning captures only)
+After the three independent lane tests, the morning runner now runs the same
+`buildAiBetPlan()` as the web app, with the separately loaded betting modules.
+Public `selected` requires a non-skipped, input-ready 本線 / 保険 /
+3連単チャレンジ ticket with valid runner numbers. A 3連単 alone must contain
+6–12 combinations. Qualifying ticket kinds are written into
+`selectionReason`. A high-scoring prediction with every ticket skipped is
+**not** a public free selected race. The dated archive continues to be
+first-write-wins: past dates are never retroactively changed. If the morning
+inputs cannot pass the existing strict purchase-readiness checks, zero public
+selected races is the safe and intentional result, not a license to fabricate
+a ticket or loosen risk safeguards.

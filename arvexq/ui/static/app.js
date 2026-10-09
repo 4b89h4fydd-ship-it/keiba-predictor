@@ -3357,7 +3357,12 @@ function computeMorningRaceCandidates(circuit){
     var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d)||!d.preparedMeta||d.preparedMeta.diagnosisReady!==true)return;
     var p=predict(d),strict=strictSelectedRaceProfile(d,p);
     var t=window.ARVEXQMorningTicketLanes.classify(d,p,strict);
-     if(t.selected)add(r,t)
+    if(!t.selected)return;
+    // This additional condition applies only to the first morning capture;
+    // archived selections are never recalculated from live odds or results.
+    var plan=buildAiBetPlan(d,p);
+    t=window.ARVEXQMorningTicketLanes.requireMorningTickets(t,plan);
+    if(t.selected)add(r,t)
   }catch(e){}});
   return eliteSelectedRaceCut(Object.keys(map).map(function(k){return map[k]}))
 }
@@ -3692,7 +3697,7 @@ function homeCircuitChooser(title,kind){
   return '<section class="arv-pick-circuit-page"><div class="smart-section-title"><div><b>'+esc(title)+'</b><small>中央・地方ごとの該当件数</small></div></div><div class="arv-pick-circuit-grid">'+buttons+'</div></section>'
 }
 function selectedCircuitPage(circuit){
-  var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>厳選 '+esc(t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
+  var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+'｜'+esc((t.types||[]).filter(function(x){return x!==t.primaryType}).join('・')||t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
   return '<section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>'+esc(circuit)+' 厳選レース</b><small>基準通過レースのみ</small></span><em>'+picks.length+'レース</em></div><div class="fixed-pick-box-body">'+body+'</div></section>'
 }
 function specialCircuitPage(circuit){
