@@ -62,6 +62,47 @@ class RaceIntelligenceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             weighted_experiment(card, {"unknown": 1})
 
+    def test_fourteen_factor_shadow_sealed_only_and_never_recomputed(self):
+        from arvexq.prediction.factor_challenger import build_factor_shadow
+        from arvexq.backtest.factor_challenger_evaluation import evaluate, aggregate
+        from arvexq.prediction.prerace_archive import seal_detail, JST
+        from datetime import datetime, timedelta
+        now = datetime(2026, 10, 9, 10, 30, tzinfo=JST)
+        race = copy.deepcopy(self.race)
+        race["startTime"] = "11:00"
+        race["horses"] = []
+        for no in range(1, 6):
+            h = copy.deepcopy(self.horse)
+            h["horseNumber"] = no
+            h["horseId"] = f"unique-{no}"
+            h["recentRaces"][0]["finish"] = no
+            race["horses"].append(h)
+        base = build_factor_shadow(race)
+        self.assertEqual(base["mode"], "frozen-shadow-only-not-for-betting")
+        self.assertIsNone(base["winnerProbability"])
+        lock = {"raceId": race["id"], "raceDate": race["date"],
+                "capturedAtEpoch": int(now.timestamp()),
+                "horses": [{"horseNumber": no, "mark": {"1":"◎","2":"○","3":"▲"}.get(str(no),"△")}
+                           for no in range(1, 6)]}
+        locked = seal_detail(race, lock, now)
+        self.assertIn("researchFactorShadow", locked)
+        original = copy.deepcopy(locked["researchFactorShadow"])
+        locked["horses"][0]["recentRaces"].append({
+            "date": "2026-10-11", "finish": 1, "fieldSize": 8})
+        self.assertEqual(original, locked["researchFactorShadow"])
+        locked["result"] = {"status": "確定", "finishers": [
+            {"horseNumber": 1, "finish": 1}, {"horseNumber": 2, "finish": 2},
+            {"horseNumber": 3, "finish": 3}]}
+        report = evaluate(locked)
+        # Sparse evidence may produce a withheld shadow, which is correct.
+        if not original["sufficient"]:
+            self.assertIsNone(report)
+        if original["sufficient"]:
+            self.assertFalse(report["usedPostoffRecalculation"])
+            self.assertEqual(aggregate([report, report])["raceCount"], 1)
+            locked["researchFactorShadow"]["rows"][0]["researchRankScore"] = .999
+            self.assertIsNone(evaluate(locked), "tampering must fail the original hash")
+
     def test_review_only_after_official_confirmation(self):
         detail = copy.deepcopy(self.race)
         result = {"status": "確定", "finishers": [

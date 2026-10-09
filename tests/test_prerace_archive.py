@@ -58,6 +58,7 @@ class ServerSealTests(unittest.TestCase):
         changed["researchShadow"]={"hash":"malicious-post-hoc-recalculation"}
         restored = restore_seal(d,changed)
         self.assertEqual(restored["researchShadow"]["hash"],old_hash)
+        self.assertEqual(restored["researchFactorShadow"]["hash"], d["researchFactorShadow"]["hash"])
         self.assertEqual(restored["result"]["status"],"確定")
 
     def test_no_post_start_creation(self):

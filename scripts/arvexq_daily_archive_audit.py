@@ -17,6 +17,7 @@ from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock, evaluat
 from scripts.arvexq_fetch_d1_bundle import get_json, detail_from_response
 from arvexq.results.auto_recap import build_race_recap
 from arvexq.databanks.horse_review_bank import build_horse_review_bank
+from arvexq.backtest.factor_challenger_evaluation import evaluate as evaluate_factor_challenger, aggregate as aggregate_factor_challenger
 
 
 def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any]:
@@ -50,12 +51,14 @@ def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any
         except (TypeError, ValueError):
             ticket = "invalid-postlock"
     audit = evaluate_frozen_result(detail) if ticket == "recorded" else None
+    factor_eval = evaluate_factor_challenger(detail)
     return {
         "race_id": rid, "status": "sealed", "ticket": ticket,
         "revision": seal.get("sealRevision") or seal.get("revision") or "",
         "captured_at_epoch": seal.get("capturedAtEpoch"),
         "race_date": detail.get("date"),
         "ticket_result": audit,
+        "factor_challenger_result": factor_eval,
         "recap": recap,
     }
 
@@ -103,6 +106,8 @@ def main() -> int:
         "race_recaps": [r["recap"] for r in ordered if isinstance(r.get("recap"), dict)],
         "horse_review_bank": build_horse_review_bank(
             [r["recap"] for r in ordered if isinstance(r.get("recap"), dict)]),
+        "factor_challenger_metrics": aggregate_factor_challenger(
+            [r["factor_challenger_result"] for r in ordered if isinstance(r.get("factor_challenger_result"), dict)]),
     }
     Path(args.report).write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print("ARVEXQ_NIGHTLY_PRERACE_AUDIT",json.dumps({k:report[k] for k in

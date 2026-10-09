@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
+from copy import deepcopy
 from arvexq.prediction.factor_model import collect_horse_raw_metrics
 
 VERSION = "arvexq-fourteen-factor-evidence-v1"
@@ -27,7 +28,23 @@ FACTORS = (
 
 
 def evidence_card(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any]:
-    raw = collect_horse_raw_metrics(horse, race)
+    # The cards and the frozen challenger cannot access a run on or after the
+    # race's scheduled date, even if a later cache merged new history into it.
+    cutoff = str(race.get("date") or "")
+    safe_horse = deepcopy(horse)
+    if cutoff:
+        for key in ("allPastRuns", "recentRaces"):
+            if isinstance(safe_horse.get(key), list):
+                safe_horse[key] = [
+                    row for row in safe_horse[key]
+                    if isinstance(row, dict)
+                    and str(row.get("date") or row.get("raceDate") or "")
+                    and str(row.get("date") or row.get("raceDate") or "") < cutoff
+                ]
+    else:
+        safe_horse["allPastRuns"] = []
+        safe_horse["recentRaces"] = []
+    raw = collect_horse_raw_metrics(safe_horse, race)
     items = []
     for key, label, fields in FACTORS:
         available = [{"key": f, "value": raw[f]} for f in fields

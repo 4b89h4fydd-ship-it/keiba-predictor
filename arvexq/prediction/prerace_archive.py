@@ -80,6 +80,8 @@ def restore_seal(existing: dict[str, Any] | None, updated: dict[str, Any] | None
     # result, odds and body-weight updates must not rewrite this evidence.
     if isinstance(old.get("researchShadow"), dict):
         out["researchShadow"] = copy.deepcopy(old["researchShadow"])
+    if isinstance(old.get("researchFactorShadow"), dict):
+        out["researchFactorShadow"] = copy.deepcopy(old["researchFactorShadow"])
     pm = dict(out.get("preparedMeta") or {})
     old_pm = old.get("preparedMeta") or {}
     for name in ("preRaceSealEpoch", "preRaceSealRevision", "preRaceSealVersion"):
@@ -135,6 +137,13 @@ def seal_detail(detail: dict[str, Any], lock: dict[str, Any], now: datetime) -> 
         out["researchShadow"] = build_shadow(out)
     except (TypeError, ValueError, ArithmeticError):
         out["researchShadowUnavailable"] = True
+    # Independent 14-factor shadow is sealed at the same pre-off timestamp.
+    # It is read-only and must not change the published marks or ticket selection.
+    try:
+        from arvexq.prediction.factor_challenger import build_factor_shadow
+        out["researchFactorShadow"] = build_factor_shadow(out)
+    except (TypeError, ValueError, ArithmeticError):
+        out["researchFactorShadowUnavailable"] = True
     pm = dict(out.get("preparedMeta") or {})
     pm.update({
         "preRaceSealVersion": SEALED_VERSION,
