@@ -134,6 +134,7 @@ jobs:
         run: |
           python -m py_compile scripts/arvexq_d1_capacity_guard.py
           python -m unittest discover -s tests -p 'test_d1_capacity_guard.py' -v
+          python -m unittest discover -s tests -p 'test_d1_storage_audit.py' -v
 
       - name: Historical sync SQLite contention and D1 batch regressions
         run: |
