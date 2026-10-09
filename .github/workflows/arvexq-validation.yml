@@ -140,6 +140,8 @@ jobs:
           python -m unittest discover -s tests -p 'test_d1_capacity_guard.py' -v
           python -m unittest discover -s tests -p 'test_d1_storage_audit.py' -v
           python -m unittest discover -s tests -p 'test_detail_size_audit.py' -v
+          python -m unittest discover -s tests -p 'test_mass_feature_transport.py' -v
+          python -m unittest discover -s tests -p 'test_live_delta_guard.py' -v
 
       - name: Historical sync SQLite contention and D1 batch regressions
         run: |
