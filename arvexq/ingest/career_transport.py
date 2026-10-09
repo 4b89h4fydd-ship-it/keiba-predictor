@@ -16,6 +16,24 @@ from arvexq.ingest.full_career import merge_career
 SCHEME = "arvexq-career-gzip-json-v1"
 MAX_UNCOMPRESSED = 15_000_000
 
+# Small numeric/identity observations stay queryable on mobile; complete original
+# observations remain losslessly preserved in careerArchive.
+BROWSER_FIELDS = frozenset({
+    "date","raceDate","raceId","raceNumber","raceNo","title","raceName",
+    "track","venue","surface","trackType","distance","distanceM",
+    "condition","going","weather","fieldSize","runners","finish",
+    "finishPosition","rank","margin","marginSeconds","beatenLength",
+    "timeSeconds","time","last3f","last3fRank","last600Rank",
+    "cornerPositions","passing","speedIndex","horseFirst3FSeconds",
+    "jockey","carriedWeight","weight","class","className","opponentLevel",
+    "bodyWeight","frameNumber","horseNumber",
+})
+
+
+def _compact_run(run: dict[str, Any]) -> dict[str, Any]:
+    return {k: copy.deepcopy(v) for k, v in run.items() if k in BROWSER_FIELDS}
+
+
 
 def _serialized(rows: list[dict[str, Any]]) -> bytes:
     return json.dumps(rows, ensure_ascii=False, sort_keys=True,
@@ -29,7 +47,7 @@ def pack_horse(horse: dict[str, Any], race_date: str) -> dict[str, Any]:
         return out
     recent, older = rows[:5], rows[5:]
     out["recentRaces"] = recent
-    out["allPastRuns"] = recent
+    out["allPastRuns"] = recent + [_compact_run(run) for run in older]
     if older:
         raw = _serialized(older)
         if len(raw) > MAX_UNCOMPRESSED:
@@ -46,7 +64,8 @@ def pack_horse(horse: dict[str, Any], race_date: str) -> dict[str, Any]:
         out.pop("careerArchive", None)
     out["careerTransport"] = {
         "version": SCHEME, "observedRuns": len(rows),
-        "visibleRawRuns": len(recent), "packedOlderRuns": len(older),
+        "visibleRawRuns": len(recent), "compactOlderRuns": len(older),
+        "packedOlderRuns": len(older),
         "lossless": True, "complete": (out.get("_careerHistoryAudit") or {}).get("complete") is True,
     }
     return out
