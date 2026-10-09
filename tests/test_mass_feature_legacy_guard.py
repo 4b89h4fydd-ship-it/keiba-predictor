@@ -6,6 +6,7 @@ from arvexq.prediction.mass_feature_snapshot import _stable_hash
 from arvexq.prediction.mass_feature_transport import (
     pack_mass_detail, restore_snapshot, recover_mass_detail)
 from arvexq.prediction.mass_training_store import frozen_training_rows_from_detail
+from arvexq.ingest.career_transport import pack_detail
 from arvexq.prediction.mass_prerace_bridge import prepare_mass_prerace_fields
 from scripts.arvexq_protect_sync import protect_detail
 
@@ -43,6 +44,17 @@ class FrozenLegacyHashTest(unittest.TestCase):
                          old["massFeatureHash"])
         packed["result"]={"status":"確定","finishers":[{"horseNumber":1,"finish":1}]}
         self.assertEqual(frozen_training_rows_from_detail(packed),[])
+
+    def test_live_legacy_source_is_archived_but_new_morning_is_strict(self):
+        old=old_detail()
+        old["massFeatureSnapshot"]["rows"][0]["features"]["speed"]=9.99
+        from copy import deepcopy
+        with self.assertRaisesRegex(ValueError, "origin hash mismatch"):
+            pack_detail(deepcopy(old))
+        retained=pack_detail(deepcopy(old), preserve_unverified_legacy=True)
+        self.assertEqual(retained["massFeatureArchive"]["originHashVerified"],False)
+        self.assertNotIn("massFeatureSnapshot",retained)
+        self.assertEqual(retained["massFeatureHash"],old["massFeatureHash"])
 
     def test_protected_upsert_preserves_original_unverified_hash(self):
         old=old_detail()
