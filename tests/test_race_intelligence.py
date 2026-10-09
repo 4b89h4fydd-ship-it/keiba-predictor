@@ -75,10 +75,15 @@ class RaceIntelligenceTests(unittest.TestCase):
             h = copy.deepcopy(self.horse)
             h["horseNumber"] = no
             h["horseId"] = f"unique-{no}"
+            h["integratedEvaluation"]["components"].update({
+                "drawScore": .5, "bodyWeightScore": .7, "goingFit": .7,
+                "pedigreeScore": .6, "jockeyScore": .6, "trainerScore": .7,
+                "distanceFit": .8, "courseFit": .65})
             h["recentRaces"][0]["finish"] = no
             race["horses"].append(h)
         base = build_factor_shadow(race)
         self.assertEqual(base["mode"], "frozen-shadow-only-not-for-betting")
+        self.assertTrue(base["sufficient"], "well-covered race must produce a frozen research challenger")
         self.assertIsNone(base["winnerProbability"])
         lock = {"raceId": race["id"], "raceDate": race["date"],
                 "capturedAtEpoch": int(now.timestamp()),

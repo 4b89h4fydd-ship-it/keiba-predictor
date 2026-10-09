@@ -37,6 +37,12 @@ def build_race_recap(detail: dict[str, Any]) -> dict[str, Any] | None:
         note = f"{position}着"
         if corners:
             note += "／通過順位 " + "-".join(str(x) for x in corners if x is not None)
+        # Only an explicitly official incident record may describe interference,
+        # obstruction, inquiries etc. Absence of video is NOT evidence of none.
+        steward = row.get("officialStewardsNote")
+        steward_note = str(steward).strip() if isinstance(steward, str) else ""
+        if steward_note:
+            note += "／裁決情報 " + steward_note[:180]
         if not name:
             name = f"{number}番"
         entries.append({

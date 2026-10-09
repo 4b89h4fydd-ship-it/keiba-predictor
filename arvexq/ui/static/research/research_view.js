@@ -19,7 +19,7 @@ function renderHorse(r,h,escapeText){
       +(z.last3FWithinRacePercentile==null?'':'　同レース上がり相対値 '+esc(z.last3FWithinRacePercentile))
       +'</div>'
   }).join('');
-  var condition=official.condition==null?'未取得':esc(official.condition),
+  var condition=official.condition==null?(r&&r.condition==null?'未取得':esc(r.condition)):esc(official.condition),
       source=official.source==='official-announcement'?'公式発表':'出走表由来・公式未確認';
   return '<section class="arv-research-card" aria-label="分析根拠">'
     +'<details><summary>14項目の能力根拠と区間実測（詳細）</summary>'
