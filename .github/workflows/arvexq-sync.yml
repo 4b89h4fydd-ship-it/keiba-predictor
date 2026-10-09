@@ -134,6 +134,11 @@ jobs:
             exit 1
           fi
           jq '{date,targetCount,updatedCount,reanalyzedCount:(.reanalyzed|length),errorCount:(.errors|length),thinSkipped:(.thin_detail_skipped|length),missingD1Base:(.missing_d1_base|length)}' live-audit.json
+          # Report actual user-approved changes (or an explicit zero), without
+          # implying that refreshing data retroactively changed historical marks.
+          if ! grep '^USER_APPROVED_MODEL_' live-sync.log | tail -n 60; then
+            echo "USER_APPROVED_MODEL_EVENTS_NONE"
+          fi
 
       - name: Push live deltas to D1 in safe batches
         run: |
