@@ -98,10 +98,12 @@ class SqliteHistorySyncTests(unittest.TestCase):
             }
             infile = home / "payload.json"
             infile.write_text(json.dumps(payload), encoding="utf-8")
-            subprocess.run([
+            proc = subprocess.run([
                 sys.executable, str(ROOT / "scripts/arvexq_sync_batches.py"),
                 "--input", str(infile), "--out-dir", str(home / "batches"),
-            ], cwd=str(ROOT), check=True, capture_output=True, text=True, timeout=15)
+            ], cwd=str(ROOT), check=False, capture_output=True, text=True, timeout=15)
+            self.assertEqual(proc.returncode, 0,
+                             "Batch CLI failed stdout="+proc.stdout[-2000:]+" stderr="+proc.stderr[-2500:])
             bodies = [json.loads(p.read_text(encoding="utf-8"))
                       for p in sorted((home / "batches").glob("batch-*.json"))]
             self.assertEqual(len(bodies), 3)
