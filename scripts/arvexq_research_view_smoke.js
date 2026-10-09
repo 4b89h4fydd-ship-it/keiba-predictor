@@ -15,7 +15,7 @@ assert.match(view,/実測/);
 assert.match(view,/AI推定は公式発表ではありません/);
 assert.doesNotMatch(view,/undefined|NaN/);
 const incomplete=window.ARVEXQResearchView.renderHorse(detail,{horseNumber:4},esc);
-assert.match(incomplete,/取得待ち/);
+assert.match(incomplete,/未取得/);
 const fallback=window.ARVEXQResearchView.renderHorse({...detail,date:'2026-10-09'},
  {horseNumber:4,frameNumber:2,jockey:'テスト騎手',recentRaces:[{date:'2026-10-01',finish:2,fieldSize:9,distance:1400,cornerPositions:[2,3],first3FSeconds:36.0}]},esc);
 assert.match(fallback,/直近着順/);
