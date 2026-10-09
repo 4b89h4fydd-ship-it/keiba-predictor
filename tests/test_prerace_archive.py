@@ -96,7 +96,7 @@ class ServerSealTests(unittest.TestCase):
         self.assertEqual(result2["detail"]["preRacePrediction"], record)
         complete = deepcopy(result["detail"])
         complete["preRaceBet"] = {"raceId": self.d["id"],
-                                  "fixedAt": self.now.isoformat(), "items": []}
+                                  "fixedAt": self.now.isoformat(), "decision": "見送り", "items": []}
         self.assertEqual(prepare_seal(complete,now=self.now+timedelta(minutes=1))["status"],"already-sealed")
 
     def test_d1_seal_guard_can_insert_new_race_only_with_verified_day(self):
