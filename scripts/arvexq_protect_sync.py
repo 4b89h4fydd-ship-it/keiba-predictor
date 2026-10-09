@@ -89,7 +89,7 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     if old.get("massFeatureArchive") or old.get("massFeatureSnapshot"):
         from arvexq.prediction.mass_feature_transport import pack_mass_detail
         from arvexq.prediction.mass_prerace_bridge import FROZEN_MASS_KEYS
-        frozen = (pack_mass_detail(old) if isinstance(old.get("massFeatureSnapshot"), dict)
+        frozen = (pack_mass_detail(old, preserve_unverified_legacy=True) if isinstance(old.get("massFeatureSnapshot"), dict)
                   and isinstance(old.get("preRacePrediction"), dict) else old)
         for key in FROZEN_MASS_KEYS:
             if key in frozen:
