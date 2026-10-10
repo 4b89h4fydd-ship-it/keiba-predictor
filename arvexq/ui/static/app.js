@@ -1838,7 +1838,8 @@ function latestAuthorizedMarkRevision(r){
   return Date.parse(String(model.revisedAt||''))>Date.parse(String(official.revisedAt||''))?model:official
 }
 function authorizedPreOffMarks(r){
-  return latestAuthorizedMarkRevision(r)||validMorningMarkSnapshot(r)||serverFrozenPrediction(r)
+  return latestAuthorizedMarkRevision(r)||validMorningMarkSnapshot(r)||serverFrozenPrediction(r)||
+    (typeof window!=='undefined'&&window.ARVEXQSavedSnapshot&&window.ARVEXQSavedSnapshot.marks(r))
 }
 function immutableArchivedPrediction(r){
   // Does not invoke ability, pace, winner or bet calculation after the off.
@@ -2242,9 +2243,10 @@ function racecardMarkDisplay(mark){
   return esc(raw);
 }
 function racecardMarkLegend(r){
-  var server=serverFrozenPrediction(r),stored=server?null:loadFrozenMarks(r),clock=raceMarkClock(r),
-      status=server?'サーバー発走前印・固定済み':(stored?'端末の発走前印・固定済み':(clock.started?'発走前印の保存なし':'印は発走10分前から固定'));
-  return '<div class="rc-mark-legend"><b>◎</b> 3着以内の軸　<span class="rc-legend-single">単</span> 単勝向き（1着狙い） <span class="rc-mark-freeze-note">'+esc(status)+'</span></div>'
+  var server=serverFrozenPrediction(r),archive=window.ARVEXQSavedSnapshot&&window.ARVEXQSavedSnapshot.marks(r),stored=server?null:loadFrozenMarks(r),clock=raceMarkClock(r),
+      status=server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':(stored?'端末の発走前印・固定済み':(clock.started?'発走前印の保存なし':'印は発走10分前から固定')));
+  var original=authorizedPreOffMarks(r),axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
+  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 3着以内の軸　<span class="rc-legend-single">単</span> 単勝向き（1着狙い） <span class="rc-mark-freeze-note">'+esc(status)+'</span></div>'
 }
 function racecardEntryRow(r,h,x){
   if(!h||n(h.horseNumber)<=0)return'';
@@ -3545,7 +3547,7 @@ function fixedPickEmpty(kind,circuit){
   return '<div class="fixed-pick-empty"><b>該当なし</b><small>'+(incomplete?('基準を満たす確定候補なし｜情報不足 '+incomplete+'レース（朝の未判定を後付けしません）'):(label+'基準を通過したレースなし'))+'</small></div>'
 }
 function fixedSelectedBox(circuit,picks){
-  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝に選定・固定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+(t.noAxis?'｜◎なし・軸分散':'')+'｜'+esc(t.score||'—')+'点</em></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
+  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝に選定・固定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+(t.noAxis?'｜軸なし・相手上位評価':'')+'｜'+esc(t.score||'—')+'点</em></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
   return '<details class="fixed-pick-box fixed-pick-circuit" data-selected-circuit="selected" data-pick-circuit="'+esc(circuit)+'" '+(open?'open':'')+'><summary class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><span class="fixed-pick-summary-right"><em>'+picks.length+'レース</em><i>⌄</i></span></summary><div class="fixed-pick-box-body">'+body+'</div></details>'
 }
 function selectedRaceBetPreview(r){
@@ -3819,7 +3821,7 @@ function homeCircuitChooser(title,kind){
     (older?'<p class="muted">朝選定記録 '+older+'件は印・馬番入り買い目の発走前保存原本が未確認です。現在の厳選件数から除外し、記録は各会場で表示します。</p>':'')+'</section>'
 }
 function selectedCircuitPage(circuit){
-  var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝の固定判定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+(t.noAxis?'｜◎なし・軸分散':'')+'｜'+esc((t.types||[]).filter(function(x){return x!==t.primaryType}).join('・')||t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
+  var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝の固定判定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+(t.noAxis?'｜軸なし・相手上位評価':'')+'｜'+esc((t.types||[]).filter(function(x){return x!==t.primaryType}).join('・')||t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
   var old=legacyMorningSelectionCandidates(circuit),history=old.length?'<details class="smart-fixed-picks arv-pick-history"><summary class="smart-fixed-picks-head"><span><b>朝選定（買い目原本未確認）</b><small>券種名だけの保存は購入可能な買い目ではありません。朝の記録は維持し、厳選件数には含めません</small></span><em>'+old.length+'件</em></summary><div class="fixed-pick-box-body">'+old.map(function(r){return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>朝選定記録・印／買い目原本未確認</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>未保存</em></button>'}).join('')+'</div></details>':'';
   return '<section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>'+esc(circuit)+' 厳選レース</b><small>朝に買い目まで成立した分類のみ</small></span><em>'+picks.length+'レース</em></div><div class="fixed-pick-box-body">'+body+'</div></section>'+history
 }
@@ -4667,6 +4669,15 @@ function openRace(id,keepStack,skipHistory,preservePanel){
   state.race=applySummaryEnvironment(initial);
   render();
   if(entryDataAvailable(initial))fetchSelectedRaceOdds(id,seq);
+  if(window.ARVEXQSavedSnapshot)window.ARVEXQSavedSnapshot.available(String(initial.date||state.date),id,edgeFetchJson).then(function(saved){
+    if(seq!==state.detailSeq||!saved||!state.race||String(state.race.id)!==String(id))return;
+    state.race=applySummaryEnvironment(mergeRaceReflection(saved,state.race,null,row));
+    state.race._savedSnapshotFallback=true;state.race._savedPreoffOriginal=saved._savedPreoffOriginal;
+    applyMorningArchive([state.race]);
+    instantTrackDetails[String(id)]=state.race;saveDetailCache(id,state.race);
+    updateDetailSections(id,state.race,true);render();
+    if(!entryDataAvailable(initial))fetchSelectedRaceOdds(id,seq)
+  });
   fetchRacecardOnly(id).then(function(card){
     if(seq!==state.detailSeq||!card||!state.race||String(state.race.id)!==String(id))return;
     // A compact roster cannot downgrade a full snapshot already shown.

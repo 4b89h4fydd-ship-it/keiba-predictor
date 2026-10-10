@@ -9,7 +9,17 @@ function manifest(day,id){return {version:'arvexq-saved-snapshots-v1',date:day,r
 (async()=>{
   const result=await root.ARVEXQSavedSnapshot.available(d.date,d.id,async path=>path.endsWith(hash+'.json')?e:manifest(d.date,d.id));
   assert.equal(result._savedSnapshotFallback,true);
-  delete result._savedSnapshotFallback;assert.deepEqual(result,d);
+  const pre={...result,preRacePrediction:{raceId:d.id,raceDate:d.date,capturedAtEpoch:1791580000,frozen:false,
+    horses:[{horseNumber:1,mark:'◎'},{horseNumber:2,mark:'○'}]}};
+  pre.startTime='10:00';
+  pre._savedPreoffOriginal=pre.preRacePrediction;
+  const before=JSON.stringify(pre.preRacePrediction);
+  assert.equal(root.ARVEXQSavedSnapshot.marks(pre).horses[0].mark,'◎');
+  assert.equal(JSON.stringify(pre.preRacePrediction),before,'must not change frozen flag or original');
+  assert.equal(root.ARVEXQSavedSnapshot.marks({...pre,_savedSnapshotFallback:false}),null);
+  assert.equal(root.ARVEXQSavedSnapshot.marks({...pre,_savedPreoffOriginal:{...pre.preRacePrediction,capturedAtEpoch:1791660000}}),null,'post-off original rejected');
+  assert.equal(root.ARVEXQSavedSnapshot.marks({...pre,_savedPreoffOriginal:{...pre.preRacePrediction,horses:[{horseNumber:1,mark:'◎'},{horseNumber:1,mark:'○'}]}}),null);
+  delete result._savedSnapshotFallback;delete result._savedPreoffOriginal;assert.deepEqual(result,d);
   const corrupt=await root.ARVEXQSavedSnapshot.available('2026-10-11','race2',async path=>path.endsWith(hash+'.json')?{...e,gzipBase64:zlib.gzipSync(Buffer.from(' '.repeat(raw.length))).toString('base64')}:manifest('2026-10-11','race2'));
   assert.equal(corrupt,null,'hash mismatch must never display');
   assert.equal(await root.ARVEXQSavedSnapshot.available('2026-10-12','race3',async path=>path.endsWith(hash+'.json')?e:manifest('2026-10-12','race3')),null,'wrong race/date must never display');

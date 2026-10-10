@@ -24,9 +24,26 @@
       var d=JSON.parse(new TextDecoder().decode(raw)),seen=new Set();
       if(d.id!==String(id)||d.date!==date||!Array.isArray(d.horses)||d.horses.length<2)throw Error('snapshot race mismatch');
       d.horses.forEach(function(h){if(!Number.isInteger(h.horseNumber)||h.horseNumber<1||!h.name||seen.has(h.horseNumber))throw Error('snapshot roster invalid');seen.add(h.horseNumber)});
-      return Object.assign({},d,{_savedSnapshotFallback:true});
+      return Object.assign({},d,{_savedSnapshotFallback:true,_savedPreoffOriginal:d.preRacePrediction||null});
     }).catch(function(){delete jobs[key];return null});
     return jobs[key];
   }
-  root.ARVEXQSavedSnapshot=Object.freeze({available:available});
+  function marks(r){
+    // Only a hash-verified archive can expose a provisional pre-off original.
+    // Its frozen=false flag remains unchanged; this is a read-only saved opinion.
+    if(!r||!r._savedSnapshotFallback)return null;
+    var q=r._savedPreoffOriginal,seen=new Set(),known=new Set((r.horses||[]).map(function(h){return h.horseNumber}));
+    var post=Date.parse(r.date+'T'+String(r.scheduledStartTime||r.startTime||'').slice(0,5)+':00+09:00');
+    if(!q||q.raceId!==r.id||q.raceDate!==r.date||!Array.isArray(q.horses)||q.horses.length<2||
+       !(Number(q.capturedAtEpoch)>0)||!Number.isFinite(post)||Number(q.capturedAtEpoch)*1000>=post)return null;
+    for(var i=0;i<q.horses.length;i++){
+      var h=q.horses[i];
+      if(!h||!known.has(h.horseNumber)||seen.has(h.horseNumber)||
+         ['', '◎','○','▲','☆+','☆','△','注'].indexOf(String(h.mark||''))<0)return null;
+      seen.add(h.horseNumber);
+    }
+    if(seen.size!==known.size||q.horses.filter(function(h){return h.mark==='◎'}).length>1)return null;
+    return Object.assign({},q,{version:'arvexq-saved-preoff-marks-v1'});
+  }
+  root.ARVEXQSavedSnapshot=Object.freeze({available:available,marks:marks});
 })(typeof window!=='undefined'?window:globalThis);

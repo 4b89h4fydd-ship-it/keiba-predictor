@@ -35,6 +35,7 @@
   }
   function status(r){
     var at=Number(r&&r.oddsUpdatedAt),raw=r&&r.oddsUpdatedAt;
+    if(/^\d{2}:\d{2}:\d{2}$/.test(String(raw||'')))return 'オッズ取得 '+raw+'（保存値）';
     if(at>0)at=at>1e12?at:at*1000;else at=Date.parse(String(raw||''));
     return Number.isFinite(at)&&at>0?'オッズ取得 '+new Date(at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',hour12:false}):'オッズ取得時刻 未取得';
   }
