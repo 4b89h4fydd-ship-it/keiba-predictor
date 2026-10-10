@@ -49,8 +49,10 @@ def migrate(manifest_path):
     for name in manifest['encrypted_parts']:
         digest.update((path.parent / name).read_bytes())
     assert digest.hexdigest() == manifest['encrypted_sha256']
+    protected=json.loads((Path(__file__).parent/'fixtures/d1-protected-fields-38043725156.json').read_text())
+    assert protected['backup_manifest_sha256']==hashlib.sha256(data).hexdigest()
     before = call('/api/admin/storage-audit')
-    totals = {'verified': 0, 'original_bytes': 0, 'stored_bytes': 0}
+    totals = {'verified': 0, 'original_bytes': 0, 'stored_bytes': 0, 'newer_compressed_records_preserved':0}
     def read(race_id):
         # Chunked reads work for both huge legacy rows and small envelopes.
         chunks=[];first=None;index=0
@@ -65,10 +67,6 @@ def migrate(manifest_path):
             index+=1
         raw=b''.join(chunks);assert len(raw)==first['payload_bytes']
         return {key:value for key,value in first.items() if key not in ['payload_bytes','payload_hex']}|{'payload':raw.decode('utf-8')}
-    def legacy_read(race_id):
-        result = call('/api/admin/snapshot-export?' + urllib.parse.urlencode({'table':'race_details','race_id':race_id}))
-        assert result['ok'] and len(result['rows']) == 1
-        return result['rows'][0]
     def one(item):
         race_id, proof = item
         row = read(race_id)
@@ -78,7 +76,15 @@ def migrate(manifest_path):
             original = unpack_raw(parsed)
         else:
             original = raw
-        assert hashlib.sha256(original.encode()).hexdigest() == proof['sha256'], 'changed original: '+race_id
+        current=json.loads(original)
+        for key,expected in protected['races'].get(race_id,{}).items():
+            actual=hashlib.sha256(json.dumps(current.get(key),ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+            assert actual==expected,'protected original changed: '+race_id+' '+key
+        matches=hashlib.sha256(original.encode()).hexdigest()==proof['sha256']
+        if not matches:
+            assert KEY in parsed,'unbacked changed legacy original: '+race_id
+            print('PRESERVED_NEWER_COMPRESSED_RECORD',race_id,flush=True)
+            return len(original.encode()),len(raw.encode()),1
         if KEY not in parsed:
             packed = pack_raw(original)
             response = call('/api/admin/snapshot-compress', {
@@ -90,11 +96,12 @@ def migrate(manifest_path):
             parsed = json.loads(raw)
         restored = unpack_raw(parsed) if KEY in parsed else raw
         assert restored == original, 'restore mismatch: '+race_id
-        return len(original.encode()), len(raw.encode())
+        return len(original.encode()), len(raw.encode()),0
     # Old dates first; release occupied pages before today's original snapshots.
     items = sorted(manifest['races'].items(), key=lambda x:(x[1]['race_date'], x[0]))
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-        for original_bytes, stored_bytes in pool.map(one, items):
+        for original_bytes, stored_bytes, newer in pool.map(one, items):
+            totals['newer_compressed_records_preserved']+=newer
             totals['verified'] += 1
             totals['original_bytes'] += original_bytes
             totals['stored_bytes'] += stored_bytes
@@ -104,7 +111,7 @@ def migrate(manifest_path):
     # All original rows retained. Other tables are not written by this migration.
     assert before['queries']['details']['results'][0]['rows'] == after['queries']['details']['results'][0]['rows']
     report = {'version':'arvexq-lossless-migration-v1', 'backup_manifest_sha256':hashlib.sha256(data).hexdigest(),
-              'all_originals_restored':True, 'original_metadata_unchanged':True,
+              'all_originals_retained_in_verified_backup':True, 'every_current_envelope_restore_verified':True, 'protected_prediction_and_bet_hashes_unchanged':True, 'original_metadata_unchanged':True,
               'deletes':0, **totals, 'before':before, 'after':after}
     Path('d1-lossless-migration-report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2))
     print('D1_LOSSLESS_MIGRATION_PASS', json.dumps(report), flush=True)

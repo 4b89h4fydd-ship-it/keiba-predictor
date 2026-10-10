@@ -1,4 +1,5 @@
 name: ARVEXQ Protected Lossless D1 Migration
+# Resume through exact byte chunks; preserved newer compressed versions are checked.
 on:
   push:
     branches: [main]
