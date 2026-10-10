@@ -9,6 +9,9 @@ from arvexq.databanks.authorized_feeds import _validated_early_timing
 from arvexq.ingest.orchestrator import FetchResult, fetch_domain
 from arvexq.ingest.full_career import merge_career, audit_career, date_key
 
+# Providers that return only acquisition evidence (career start counts), never runs.
+EVIDENCE_ONLY_SOURCES = frozenset({"netkeiba_career_totals"})
+
 
 def _present(value: Any) -> bool:
     return value not in (None, "", [], {}, "不明")
@@ -169,6 +172,31 @@ def _payload_dict(data: Any, domain: str) -> dict[str, Any]:
     return {}
 
 
+def _apply_career_stats(horse: dict[str, Any], stats: Any, source: str, cutoff: str) -> bool:
+    """Keep race-date-bound start-count evidence; disagreement is not evidence."""
+    end = date_key(cutoff)
+    if not isinstance(stats, dict) or stats.get("asOfRaceDate") != end or not isinstance(stats.get("starts"), int):
+        return False
+    incoming = copy.deepcopy(stats)
+    incoming.setdefault("source", source)
+    prev = horse.get("careerStartEvidence") if isinstance(horse.get("careerStartEvidence"), dict) else None
+    if prev is None or prev.get("asOfRaceDate") != end or prev.get("source") == incoming["source"]:
+        new = incoming
+    elif prev.get("conflict"):
+        return False
+    elif (prev.get("starts"), prev.get("startDates")) == (incoming["starts"], incoming.get("startDates")):
+        return False
+    else:
+        new = {"asOfRaceDate": end, "conflict": True,
+               "sources": sorted({str(prev.get("source")), str(incoming["source"])}),
+               "reportedStarts": sorted({prev.get("starts"), incoming["starts"]})}
+    if new == prev:
+        return False
+    # Separate key: careerStats is a prediction-hash input, this is not.
+    horse["careerStartEvidence"] = new
+    return True
+
+
 def _apply_payload(
     horse: dict[str, Any],
     data: Any,
@@ -209,6 +237,9 @@ def _apply_payload(
         if merged and merged != horse.get("recentRaces"):
             horse["recentRaces"] = merged
             changed = True
+
+    if domain == "horse_history":
+        changed = _apply_career_stats(horse, payload.get("careerStartEvidence"), source, cutoff) or changed
 
     for key in (
         "pedigree", "sire", "dam", "damsire",
@@ -258,6 +289,11 @@ async def enrich_race_missing(
         if src.supplement_complete_history
     }
 
+    evidence_registered = any(
+        src.name in EVIDENCE_ONLY_SOURCES
+        for src in bank_registry.providers("horse_history", circuit=circuit)
+    )
+
     async def one(horse: dict[str, Any]) -> bool:
         changed = False
         async with sem:
@@ -266,6 +302,9 @@ async def enrich_race_missing(
             full_search = history_limit > 5 and (
                 previous_audit.get("requestedAtRaceDate") != date_key(cutoff)
                 or bool(previous_audit.get("failedProviders"))
+                or bool(previous_audit.get("failedEvidenceProviders"))
+                or (evidence_registered and previous_audit.get("reportedStarts") is None
+                    and not previous_audit.get("evidenceAttempted"))
                 or not previous_audit.get("fetchAttempted", bool(previous_audit.get("providersAttempted")))
             )
             if full_search or _needs_history(horse, cutoff=cutoff, limit=min(5, history_limit)):
@@ -281,6 +320,7 @@ async def enrich_race_missing(
 
             history_sources: list[str] = []
             history_failed: list[str] = []
+            evidence_failed: list[str] = []
             for domain, only_sources in domains:
                 results = await fetch_domain(
                     domain,
@@ -296,7 +336,8 @@ async def enrich_race_missing(
                         history_sources.append(result.source)
                     if not result.ok:
                         if domain == "horse_history":
-                            history_failed.append(result.source)
+                            (evidence_failed if result.source in EVIDENCE_ONLY_SOURCES
+                             else history_failed).append(result.source)
                         failures.append({"source": result.source, "domain": domain, "error": result.error or "failed"})
                         continue
                     if result.data in (None, "", [], {}):
@@ -312,7 +353,9 @@ async def enrich_race_missing(
             if history_limit > 5:
                 audit = audit_career(horse, cutoff, history_limit, history_sources)
                 audit["fetchAttempted"] = bool(history_sources)
+                audit["evidenceAttempted"] = any(x in EVIDENCE_ONLY_SOURCES for x in history_sources)
                 audit["failedProviders"] = sorted(set(history_failed))
+                audit["failedEvidenceProviders"] = sorted(set(evidence_failed))
                 if audit != horse.get("_careerHistoryAudit"):
                     horse["_careerHistoryAudit"] = audit
                     changed = True

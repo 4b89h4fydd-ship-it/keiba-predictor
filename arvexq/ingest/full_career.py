@@ -53,20 +53,35 @@ def merge_career(existing: Any, incoming: Any, cutoff: str) -> list[dict[str, An
 
 def audit_career(horse: dict[str, Any], cutoff: str, requested: int,
                  providers: list[str]) -> dict[str, Any]:
+    end = date_key(cutoff)
     runs = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)
-    stats = horse.get("careerStats") if isinstance(horse.get("careerStats"), dict) else {}
+    stats = next((horse[k] for k in ("careerStartEvidence", "careerStats")
+                  if isinstance(horse.get(k), dict) and horse[k].get("asOfRaceDate") == end), {})
+    # A start count is evidence only for the race date it was computed for.
+    # Legacy counts without asOfRaceDate may include later starts.
+    bound = stats.get("asOfRaceDate") == end and not stats.get("conflict")
     declared = next((int(stats[k]) for k in ("starts", "totalStarts", "careerStarts")
-                     if str(stats.get(k) if stats.get(k) is not None else "").isdigit()), None)
+                     if bound and str(stats.get(k) if stats.get(k) is not None else "").isdigit()), None)
+    observed_dates = {r["date"] for r in runs}
+    listed = stats.get("startDates") if bound and isinstance(stats.get("startDates"), list) else None
+    unobserved = sorted(set(listed) - observed_dates) if listed is not None else None
+    unexpected = sorted(observed_dates - set(listed)) if listed is not None else None
     missing = max(0, declared - len(runs)) if declared is not None else None
+    dates_ok = listed is None or (not unobserved and not unexpected)
+    complete = declared is not None and len(runs) == declared and dates_ok
     return {
         "version": "arvexq-career-coverage-v1", "observedRuns": len(runs),
-        "requestedLimit": requested, "requestedAtRaceDate": date_key(cutoff),
+        "requestedLimit": requested, "requestedAtRaceDate": end,
         "providersAttempted": sorted(set(providers)),
         "reportedStarts": declared, "unobservedMinimum": missing,
+        "reportedStartsSource": stats.get("source") if declared is not None else None,
+        "reportedStartsConflict": bool(stats.get("conflict")) and stats.get("asOfRaceDate") == end,
+        "unobservedDates": unobserved, "unexpectedDates": unexpected,
         # Exact equality only: more observed rows than reported starts means the
         # count source or the deduplication cannot be trusted as proof.
-        "complete": declared is not None and len(runs) == declared,
-        "status": ("missing" if not runs and declared != 0 else "incomplete" if missing else
+        "complete": complete,
+        "status": ("missing" if not runs and declared != 0 else
                    "unverified" if declared is None else
-                   "count-mismatch" if len(runs) > declared else "reported-starts-covered"),
+                   "incomplete" if missing or unobserved else
+                   "count-mismatch" if not complete else "reported-starts-covered"),
     }

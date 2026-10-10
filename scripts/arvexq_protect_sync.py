@@ -160,7 +160,7 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         historical = previous_by_no.get(int(current.get("horseNumber") or 0))
         if not isinstance(historical, dict):
             continue
-        for key in ("careerArchive", "careerTransport", "_careerHistoryAudit"):
+        for key in ("careerArchive", "careerTransport", "_careerHistoryAudit", "careerStartEvidence"):
             if key in historical and key not in current:
                 current[key] = copy.deepcopy(historical[key])
         from arvexq.ingest.career_transport import recover_horse, pack_horse

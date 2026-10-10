@@ -108,7 +108,7 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_reported_missing_is_explicit(self):
         horse={"allPastRuns":[run(9,20),run(9,1)],
-               "careerStats":{"starts":12}}
+               "careerStats":{"starts":12,"asOfRaceDate":"2026-10-10"}}
         audit=audit_career(horse,"2026-10-10",1000,["test"])
         self.assertEqual(audit["unobservedMinimum"],10)
         self.assertEqual(audit["status"],"incomplete")

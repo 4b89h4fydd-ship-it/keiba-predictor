@@ -7,6 +7,8 @@ from .nar import build_nar_source
 from .netkeiba import build_netkeiba_source
 from .registry import registry
 from .authorized_feeds import register_authorized_history_feeds
+from .netkeiba_career import SOURCE as NETKEIBA_CAREER_SOURCE, fetch_career_totals
+from .registry import DataSource, SourceCapabilities
 
 
 def _pick(namespace: dict[str, Any], *names: str):
@@ -87,6 +89,24 @@ def _nar_store_adapters(namespace: dict[str, Any]):
     return history, connections
 
 
+def _netkeiba_career_totals_adapter(namespace: dict[str, Any]):
+    """Start-count evidence only (no runs); heavy career lane only."""
+    import os
+    if str(os.getenv("ARVEXQ_NETKEIBA_CAREER_TOTALS", "1")).strip().lower() in {"0", "false", "off", "no"}:
+        return None
+    getter = _pick(namespace, "_netkeiba_get")
+    if getter is None:
+        return None
+    timeout = float(os.getenv("NETKEIBA_CAREER_TOTALS_TIMEOUT_SEC", "6.0"))
+
+    def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
+        if int(limit or 5) <= 5:
+            return {}
+        return fetch_career_totals(lambda url: getter(url, timeout, 86400), horse, race)
+
+    return fetch
+
+
 def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:
     """Bridge proven legacy fetchers into one multi-source registry.
 
@@ -124,6 +144,14 @@ def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:
     )
     if netkeiba.fetchers:
         registry.register(netkeiba)
+
+    career_totals = _netkeiba_career_totals_adapter(namespace)
+    if career_totals is not None:
+        registry.register(DataSource(
+            name=NETKEIBA_CAREER_SOURCE, circuit="both", priority=60,
+            capabilities=SourceCapabilities(horse_history=True),
+            fetchers={"horse_history": career_totals},
+        ))
 
     # Unlimited opt-in licensed providers complement official/NAR stores. Bad
     # configuration must not take the existing official feeds offline.
