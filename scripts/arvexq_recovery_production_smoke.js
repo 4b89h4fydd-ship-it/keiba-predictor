@@ -17,10 +17,10 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
 (async()=>{
   const browser=await type.launch({headless:true,...(process.env.CHROMIUM_PATH&&type===chromium?{executablePath:process.env.CHROMIUM_PATH}:{})});
   const context=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
-  await context.addInitScript(key=>localStorage.setItem(key,'1'),marker);
+  await context.addInitScript(key=>{if(localStorage.getItem(key)!=='1')localStorage.setItem(key,'1')},marker);
   let cursor=0;
   async function check(page,r){
-    const errors=[];const onerror=e=>errors.push(String(e));page.on('pageerror',onerror);
+    const errors=[];const onerror=e=>errors.push(e.stack||String(e));page.on('pageerror',onerror);
     await page.goto(base+'/race?date='+day+'&race_id='+encodeURIComponent(r.id)+'&recovery='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
     await page.waitForFunction(()=>{const note=document.querySelector('.rc-mark-freeze-note');return note&&/保存予想原本|固定済み/.test(note.textContent)},null,{timeout:30000});
     const roster=cards.find(c=>c.id===r.id)||r;
@@ -60,7 +60,7 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     assert.deepEqual(await page.locator('.rc-ai-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark'))),before,'odds refresh must not rewrite saved marks');
     await page.close();
     const fresh=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
-    await fresh.addInitScript(key=>localStorage.setItem(key,'1'),marker);
+    await fresh.addInitScript(key=>{if(localStorage.getItem(key)!=='1')localStorage.setItem(key,'1')},marker);
     await fresh.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
     const home=await fresh.newPage();
     await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
