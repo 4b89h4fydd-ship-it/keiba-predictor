@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {gzipSync} from 'node:zlib';
+import {webcrypto} from 'node:crypto';
+import {restoreBytes,compressStoredSnapshot,readCompressedRace,rewriteDetailSQL} from '../workers/api_full_snapshot.mjs';
+globalThis.crypto ||= webcrypto;
+const raw=JSON.stringify({id:'race',date:'2026-10-10',horses:[{horseNumber:5,name:'原本',pastRuns:Array(25).fill({distance:1800,comment:'保持'.repeat(100)})}],preRacePrediction:{frozen:false},preRaceBet:{fixedAt:'2026-10-10T06:00:00+09:00',items:[{kind:'馬単',combos:[[5,8]]}]},unknownFuture:{all:true}});
+const bytes=new TextEncoder().encode(raw),hash=Buffer.from(await crypto.subtle.digest('SHA-256',bytes)).toString('hex');
+const envelope={preRacePrediction:{frozen:true},arvexqFullPayload:{version:'arvexq-full-payload-v1',bytes:bytes.length,sha256:hash,gzipBase64:gzipSync(bytes).toString('base64')}};
+assert.equal(new TextDecoder().decode(await restoreBytes(envelope)),raw);
+let writes=0,stored=raw,codec=null;
+const env={SYNC_TOKEN:'test',DB:{prepare(sql){let args=[];return{bind(...a){args=a;return this},async first(){if(sql.includes('FROM race_summaries'))return null;return{payload:stored,codec,analysis_ready:1,updated_at:123}},async all(){return{results:[]}},async run(){assert.match(sql,/^UPDATE race_details SET payload=\? WHERE race_id=\? AND payload=\?$/);assert.equal(args[2],stored);writes++;stored=args[0];codec='arvexq-full-payload-v1';return{meta:{changes:1}}}}}}};
+function request(expected=hash,payload=envelope){return new Request('https://test/api/admin/snapshot-compress',{method:'POST',headers:{authorization:'Bearer test','content-type':'application/json'},body:JSON.stringify({race_id:'race',expected_sha256:expected,payload})})}
+assert.equal((await compressStoredSnapshot(new Request('https://test'),env)).status,401);assert.equal(writes,0);
+assert.equal((await compressStoredSnapshot(request('0'.repeat(64)),env)).status,409);assert.equal(writes,0);
+assert.equal((await compressStoredSnapshot(request(hash,{...envelope,arvexqFullPayload:{...envelope.arvexqFullPayload,bytes:1}}),env)).status,400);assert.equal(writes,0);
+assert.equal((await compressStoredSnapshot(request(),env)).status,200);assert.equal(writes,1);
+assert.equal(JSON.parse(stored).preRacePrediction.frozen,false,'submitted projection cannot rewrite frozen state');
+const restored=await (await readCompressedRace(env,'race')).json();assert.deepEqual(restored.detail,JSON.parse(raw));assert.equal(restored.detail_updated_at,123);
+assert.equal((await compressStoredSnapshot(request(),env)).status,200);assert.equal(writes,1,'idempotent migration');
+assert.match(rewriteDetailSQL('INSERT INTO race_details (race_id) VALUES (?) ON CONFLICT(race_id) DO UPDATE SET payload=excluded.payload'),/WHERE race_details.payload IS NOT excluded.payload/);
+assert.match(rewriteDetailSQL('SELECT payload FROM race_details WHERE race_date = ?',true),/CASE WHEN json_valid/);
+console.log('FULL_SNAPSHOT_EXACT_BYTES_ALL_CAREERS_IMMUTABILITY_CAS_AUTH_DUPLICATE_WRITE_PASS');

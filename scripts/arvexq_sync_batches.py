@@ -19,6 +19,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from arvexq.ingest.career_transport import pack_detail
+from arvexq.ingest.full_snapshot_codec import pack_detail as pack_full_snapshot,unpack_detail as unpack_full_snapshot
 from scripts.arvexq_detail_size_audit import print_size_audit
 
 
@@ -53,7 +54,7 @@ def main() -> int:
     # already inconsistent before this run. Preserve bytes, mark them
     # unverified, and disallow subsequent training instead of fabricating.
     live_delta = bool((payload.get("meta") or {}).get("live_delta"))
-    details = [pack_detail(x, preserve_unverified_legacy=live_delta)
+    details = [pack_detail(unpack_full_snapshot(x), preserve_unverified_legacy=live_delta)
                for x in source_details]
     unverified = [
         race_id(d) for d in details
@@ -78,10 +79,11 @@ def main() -> int:
                         for d in details for h in (d.get("horses") or []) if isinstance(h, dict))
     source_bytes = Path(args.input).stat().st_size
     # D1 currently permits at most 2,000,000 bytes per string/BLOB/row.
-    # The Worker storage schema lives outside this repository, so log potential
-    # violations; never drop a race or its career archive to hide the problem.
+    # Audit the actual full-snapshot envelope stored by the managed API.
+    # Never drop a race or its career archive to hide a row-size problem.
     row_risks = []
-    for detail in details:
+    for original_detail in details:
+        detail = pack_full_snapshot(original_detail)
         row_size = print_size_audit(detail, max_detail_bytes=1_500_000)["totalBytes"]
         if row_size > 1_800_000:
             row_risks.append((race_id(detail), row_size))
@@ -119,7 +121,8 @@ def main() -> int:
 
     # Rich details dominate payload size. Send one race at a time so a single
     # oversized day can never trip Cloudflare's request-body limit.
-    for detail in details:
+    for original_detail in details:
+        detail = pack_full_snapshot(original_detail)
         rid = race_id(detail)
         body: dict[str, Any] = {
             "summaries": [summary_by_id[rid]] if rid in summary_by_id else [],

@@ -65,6 +65,11 @@ jobs:
             scripts/arvexq_history_repair.py \
             scripts/arvexq_sqlite_health.py
 
+      - name: Lossless full snapshot compression and immutability
+        run: |
+          python -m unittest tests.test_full_snapshot_codec
+          node scripts/arvexq_full_snapshot_smoke.mjs
+
       - name: Audit mass feature snapshot producers and consumers
         run: |
           git grep -n -F massFeatureSnapshot -- '*.py' '*.js' || true
