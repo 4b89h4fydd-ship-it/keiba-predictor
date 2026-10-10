@@ -146,7 +146,7 @@ js = strings["JS"]
 # iPhone/PWA JS/CSS while preserving the approved top-screen composition.
 core_asset_hash = hashlib.sha256((js + "\0" + css).encode("utf-8")).hexdigest()[:12]
 index_html, fingerprint_replacements = re.subn(
-    r'(/app-' + re.escape(BUILD_VERSION) + r'\\.js\\?fix=)[A-Za-z0-9._-]+',
+    r'(/app-' + re.escape(BUILD_VERSION) + r'\.js\?fix=)[A-Za-z0-9._-]+',
     lambda match: match.group(1) + core_asset_hash,
     index_html,
 )
