@@ -1,0 +1,48 @@
+name: ARVEXQ Complete D1 Protected Backup
+on:
+  workflow_dispatch:
+    inputs:
+      public_certificate:
+        description: Public certificate used to encrypt the verified logical backup
+        required: true
+        type: string
+permissions:
+  contents: write
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      BACKUP_PUBLIC_CERTIFICATE: ${{ inputs.public_certificate }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Export all original application tables and verify reopened SQLite
+        run: python scripts/arvexq_backup_live_d1.py
+      - name: Encrypt verified backup and publish protected backup branch
+        run: |
+          python - <<'PY'
+          import os,json,gzip,shutil,subprocess,hashlib
+          from pathlib import Path
+          certificate=Path('/tmp/arvexq-backup-public.pem');certificate.write_text(os.environ['BACKUP_PUBLIC_CERTIFICATE'])
+          with open('/tmp/arvexq-complete-d1.sqlite3','rb') as source,gzip.open('/tmp/arvexq-complete-d1.sqlite3.gz','wb',compresslevel=9) as target:shutil.copyfileobj(source,target)
+          subprocess.run(['openssl','cms','-encrypt','-binary','-aes256','-in','/tmp/arvexq-complete-d1.sqlite3.gz','-outform','DER','-out','/tmp/arvexq-complete-d1.p7m',str(certificate)],check=True)
+          root=Path('protected-backups')/('d1-'+os.environ['GITHUB_RUN_ID']);root.mkdir(parents=True)
+          summary=json.load(open('/tmp/arvexq-complete-d1-summary.json'));parts=[];digest=hashlib.sha256()
+          with open('/tmp/arvexq-complete-d1.p7m','rb') as source:
+              while chunk:=source.read(20*1024*1024):
+                  name='backup.p7m.part'+str(len(parts)).zfill(3);(root/name).write_bytes(chunk);digest.update(chunk);parts.append(name)
+          summary['encrypted_parts']=parts;summary['encrypted_sha256']=digest.hexdigest();summary['encrypted_bytes']=sum((root/name).stat().st_size for name in parts)
+          (root/'manifest.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2))
+          print('PROTECTED_BACKUP_READY','path='+str(root),'encrypted_bytes='+str(summary['encrypted_bytes']),'restore_verified='+str(summary['restore_verified']))
+          PY
+          BRANCH="backup/d1-$GITHUB_RUN_ID"
+          git checkout -b "$BRANCH"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add protected-backups
+          git commit -m "Protect complete D1 logical backup with verified restoration and encryption"
+          git push origin "$BRANCH"
