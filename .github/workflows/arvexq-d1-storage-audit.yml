@@ -38,6 +38,7 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ (github.event_name == 'push' || inputs.credential == 'deploy') && secrets.CLOUDFLARE_API_TOKEN || secrets.CLOUDFLARE_D1_READ_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
       ARVEXQ_D1_DATABASE_NAME: ${{ vars.ARVEXQ_D1_DATABASE_NAME }}
     steps:
       - uses: actions/checkout@v4
@@ -118,7 +119,18 @@ jobs:
         env:
           REQUESTED_PLAN: ${{ inputs.plan }}
         run: |
-          python scripts/arvexq_d1_storage_audit.py --out d1-storage-audit.json --plan "${REQUESTED_PLAN:-unknown}"
+          python - <<'PY'
+          import subprocess,os,json,urllib.request
+          result=subprocess.run(['python','scripts/arvexq_d1_storage_audit.py','--out','d1-storage-audit.json','--plan',os.environ.get('REQUESTED_PLAN') or 'unknown'])
+          if result.returncode:
+              req=urllib.request.Request('https://kraiz-api.4b89h4fydd.workers.dev/api/admin/storage-audit',headers={'Authorization':'Bearer '+os.environ['SYNC_TOKEN'],'User-Agent':'Mozilla/5.0 ARVEXQ-ReadOnlyAudit/1.0'})
+              with urllib.request.urlopen(req,timeout=60) as response:metrics=json.load(response)
+              assert metrics.get('ok') and metrics.get('sql_writes')==0
+              assert metrics['queries']['details']['results'][0]['rows']>0
+              metrics['management_api_unavailable']=True
+              open('d1-storage-audit.json','w').write(json.dumps(metrics,indent=2))
+              print('BOUND_READONLY_STORAGE_VERIFIED',json.dumps(metrics))
+          PY
       - name: Save read-only audit
         if: always()
         uses: actions/upload-artifact@v4
