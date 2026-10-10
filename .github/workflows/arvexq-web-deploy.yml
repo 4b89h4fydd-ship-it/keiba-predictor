@@ -87,6 +87,37 @@ jobs:
           done
           test "$ok" = "1"
           echo "ARVEXQ production verified at $PROD"
+      - name: Verify current-day racecard fallback is actually deployed
+        shell: bash
+        run: |
+          DAY="$(TZ=Asia/Tokyo date +%F)"
+          SOURCE="dist/racecards/$DAY.json"
+          if [ ! -s "$SOURCE" ]; then
+            echo "::warning::No verified racecard fallback in this build"
+            exit 0
+          fi
+          URL="https://kraizweb1.4b89h4fydd.workers.dev/racecards/$DAY.json?verify=$GITHUB_SHA"
+          curl -fsS --retry 5 --retry-delay 2 --max-time 30 \
+            -H 'cache-control: no-cache' "$URL" -o production-racecards.json
+          python - <<'PY'
+          import json
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          from pathlib import Path
+          date=datetime.now(ZoneInfo("Asia/Tokyo")).date().isoformat()
+          source=json.loads((Path("dist/racecards")/(date+".json")).read_text(encoding="utf-8"))
+          actual=json.loads(Path("production-racecards.json").read_text(encoding="utf-8"))
+          if actual != source:
+              raise SystemExit("PRODUCTION_RACECARD_BACKUP_MISMATCH")
+          if source.get("raceCount") != len(source.get("races") or []):
+              raise SystemExit("PRODUCTION_RACECARD_COUNT_MISMATCH")
+          if not all(len(r.get("horses") or [])>=2 and
+                     all(h.get("horseNumber") and h.get("name") for h in r["horses"])
+                     for r in source["races"]):
+              raise SystemExit("PRODUCTION_RACECARD_RUNNER_MISSING")
+          print("PRODUCTION_RACECARD_BACKUP_OK",date,"races",source["raceCount"],
+                "horses",sum(len(r["horses"]) for r in source["races"]))
+          PY
       - name: Verify immutable morning pick archive from production
         shell: bash
         run: |
