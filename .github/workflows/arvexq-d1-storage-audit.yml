@@ -3,6 +3,12 @@ name: ARVEXQ D1 Read-only Capacity Audit
 "on":
   workflow_dispatch:
     inputs:
+      credential:
+        description: "Existing credential used only for read requests"
+        required: false
+        type: choice
+        options: [readonly, deploy]
+        default: readonly
       plan:
         description: "Cloudflare Workers plan; unknown reports both limits"
         required: false
@@ -18,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_READ_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ inputs.credential == 'deploy' && secrets.CLOUDFLARE_API_TOKEN || secrets.CLOUDFLARE_D1_READ_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       ARVEXQ_D1_DATABASE_NAME: ${{ vars.ARVEXQ_D1_DATABASE_NAME }}
     steps:
@@ -56,6 +62,29 @@ jobs:
           print("D1_AUDIT_ACCOUNT_ID_RESOLVED (value not logged)")
           PY
           rm -f /tmp/arvexq-wrangler-whoami.json
+      - name: Locate separate API Worker using read-only metadata
+        run: |
+          python - <<'PYCODE'
+          import os,json,hashlib,urllib.request,urllib.error
+          base='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/kraiz-api'
+          report={'writes_performed':0,'worker':'kraiz-api'}
+          for kind,suffix in [('source',''),('settings','/settings')]:
+              req=urllib.request.Request(base+suffix,headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']},method='GET')
+              try:
+                  with urllib.request.urlopen(req,timeout=20) as response:
+                      data=response.read(10000000)
+                      info={'http':response.status,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+                      if kind=='settings':
+                          parsed=json.loads(data).get('result') or {}
+                          info['bindings']=[{'name':b.get('name'),'type':b.get('type'),'database_id':b.get('id') if b.get('type')=='d1' else None} for b in parsed.get('bindings',[])]
+                      report[kind]=info
+              except urllib.error.HTTPError as e:
+                  report[kind]={'http':e.code}
+              except Exception as e:
+                  report[kind]={'error_type':type(e).__name__}
+          with open('api-worker-location-audit.json','w') as f:json.dump(report,f,indent=2)
+          print(json.dumps(report))
+          PYCODE
       - name: Inspect D1 storage through Cloudflare read API
         env:
           REQUESTED_PLAN: ${{ inputs.plan }}
@@ -66,6 +95,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: arvexq-readonly-d1-storage
-          path: d1-storage-audit.json
+          path: |
+            d1-storage-audit.json
+            api-worker-location-audit.json
           if-no-files-found: ignore
           retention-days: 7
