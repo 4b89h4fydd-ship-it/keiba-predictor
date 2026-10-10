@@ -144,6 +144,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_mass_feature_legacy_guard.py' -v
           python -m unittest discover -s tests -p 'test_d1_archive_delivery.py' -v
           python -m unittest discover -s tests -p 'test_static_racecard_backup.py' -v
+          python -m unittest discover -s tests -p 'test_morning_ticket_publisher.py' -v
           node scripts/arvexq_frozen_marks_smoke.js
           node scripts/arvexq_static_racecard_smoke.js
           node scripts/arvexq_static_racecard_open_smoke.js
