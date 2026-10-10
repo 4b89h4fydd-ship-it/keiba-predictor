@@ -18,7 +18,7 @@ def run(day, **kw):
 def audited(rows, starts, providers=('test',), failed=(), cutoff='2026-02-01'):
     h = {'allPastRuns': rows, 'recentRaces': rows[:5]}
     if starts is not None:
-        h['careerStats'] = {'starts': starts}
+        h['careerStats'] = {'starts': starts, 'asOfRaceDate': cutoff}
     a = audit_career(h, cutoff, 1000, list(providers))
     a['fetchAttempted'] = True
     a['failedProviders'] = list(failed)

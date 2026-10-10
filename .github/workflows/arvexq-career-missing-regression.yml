@@ -10,6 +10,9 @@ on:
       - 'arvexq/history.py'
       - 'arvexq/prediction/past_performance.py'
       - 'arvexq/ingest/**'
+      - 'arvexq/databanks/**'
+      - 'arvexq/prediction/race_intelligence.py'
+      - 'scripts/arvexq_protect_sync.py'
       - 'tests/test_career*.py'
       - '.github/workflows/arvexq-career-missing-regression.yml'
   workflow_dispatch:
@@ -37,7 +40,7 @@ jobs:
       - name: Existing career regressions
         run: |
           python -m pip install -r requirements.txt pytest
-          python -m pytest tests/test_career_acquisition.py tests/test_career_analysis.py tests/test_career_integration.py tests/test_full_career.py tests/test_career_transport.py -q
+          python -m pytest tests/test_career_acquisition.py tests/test_career_totals_evidence.py tests/test_career_analysis.py tests/test_career_integration.py tests/test_full_career.py tests/test_career_transport.py -q
 
   report:
     needs: test

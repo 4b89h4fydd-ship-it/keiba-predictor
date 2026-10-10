@@ -29,7 +29,8 @@ def _candidates(source):
     return out
 
 
-def _acquisition(source, cutoff, eligible_count, recovery_error):
+def _acquisition(source, cutoff, eligible_dates, recovery_error):
+    eligible_count = len(eligible_dates)
     """Return (status, evidence). status: complete|partial|unverified|race-date-unverified."""
     audit = source.get('_careerHistoryAudit')
     audit = audit if isinstance(audit, dict) else {}
@@ -55,6 +56,10 @@ def _acquisition(source, cutoff, eligible_count, recovery_error):
     if audit.get('version') != AUDIT_VERSION or audit.get('requestedAtRaceDate') != cutoff.isoformat():
         evidence['reason'] = 'audit-not-bound-to-this-race-date'
         return 'unverified', evidence
+    evidence['reportedStartsSource'] = audit.get('reportedStartsSource')
+    if audit.get('reportedStartsConflict'):
+        evidence['reason'] = 'sources-disagree-on-starts'
+        return 'unverified', evidence
     reported = audit.get('reportedStarts')
     failed = bool(audit.get('failedProviders'))
     if audit.get('paginationComplete') is False:
@@ -69,6 +74,12 @@ def _acquisition(source, cutoff, eligible_count, recovery_error):
     if eligible_count > reported:
         evidence['reason'] = 'more-runs-than-reported-starts'
         return 'unverified', evidence
+    stats = next((source[k] for k in ('careerStartEvidence', 'careerStats')
+                  if isinstance(source.get(k), dict) and source[k].get('asOfRaceDate') == cutoff.isoformat()), {})
+    if isinstance(stats.get('startDates'), list):
+        if set(stats['startDates']) != set(eligible_dates):
+            evidence['reason'] = 'start-dates-differ-from-source'
+            return 'partial', evidence
     if audit.get('complete') is not True:
         evidence['reason'] = 'audit-not-marked-complete'
         return 'unverified', evidence
@@ -120,7 +131,7 @@ def build_career_analysis(horse, race):
                    if cutoff is None or not date_key(c.get('date') or c.get('raceDate') or c.get('日付'))
                    or date_key(c.get('date') or c.get('raceDate') or c.get('日付')) >= cutoff.isoformat())
 
-    acquisition, evidence = _acquisition(source, cutoff, len(eligible), recovery_error)
+    acquisition, evidence = _acquisition(source, cutoff, [r['date'] for r in eligible], recovery_error)
     result['missing_fields'] = sorted(set(result['missing_fields']) | missing)
     result['unusable_dated_records'] = invalid
     result['unusable_count_scope'] = 'deduplicated-pre-race-dated-starts'
