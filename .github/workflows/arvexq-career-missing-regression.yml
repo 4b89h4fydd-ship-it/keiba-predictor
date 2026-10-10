@@ -1,0 +1,64 @@
+name: ARVEXQ Career Missing Regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'arvexq/career_*.py'
+      - 'arvexq/horse_detail.py'
+      - 'arvexq/diagnosis.py'
+      - 'arvexq/history.py'
+      - 'arvexq/prediction/past_performance.py'
+      - 'arvexq/ingest/**'
+      - 'tests/test_career*.py'
+      - '.github/workflows/arvexq-career-missing-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: career-missing-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile diagnostic modules
+        run: python -m py_compile arvexq/career_missing.py arvexq/horse_detail.py tests/test_career_missing.py
+      - name: Missing career regression
+        run: python -m unittest discover -s tests -p 'test_career_missing.py' -v
+      - name: Existing career regressions
+        run: |
+          python -m pip install pytest
+          python -m pytest tests/test_career_analysis.py tests/test_career_integration.py -q
+
+  report:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          TEST_RESULT: ${{ needs.test.result }}
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            const title = 'ARVEXQ Career Missing CI';
+            const issues = await github.paginate(github.rest.issues.listForRepo, {owner, repo, state: 'open', per_page: 100});
+            let issue = issues.find(i => !i.pull_request && i.title === title && i.user.login === 'github-actions[bot]');
+            if (!issue) {
+              const created = await github.rest.issues.create({owner, repo, title, body: 'Automated missing-career regression results. No deployment or model accuracy claims. Raw logs and secrets are not copied.'});
+              issue = created.data;
+            }
+            const body = [`Result: ${process.env.TEST_RESULT}`, `Commit: ${context.sha}`, `Run: ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`, 'Scope: missing-history regression only; deployment and production behavior remain unverified.'].join('\n');
+            await github.rest.issues.createComment({owner, repo, issue_number: issue.number, body});
