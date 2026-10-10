@@ -1773,7 +1773,7 @@ function validMorningMarkSnapshot(r){
   // survives. A verified dated receipt is the only alternative evidence.
   if((!snap||!Array.isArray(snap.horses))&&r){
     var evidence=r.morningTicketEvidence,
-        source=window.ARVEXQMorningEvidence;
+        source=(typeof window!=='undefined'&&window.ARVEXQMorningEvidence)||null;
     if(source&&source.verify(r,evidence)){
       snap={version:'arvexq-morning-marks-v1',
         raceId:String(r.id),raceDate:String(r.date),
