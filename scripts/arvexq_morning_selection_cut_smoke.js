@@ -4,6 +4,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 const laneSource=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8');
 const source=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js','utf8');
 const w={};new Function('window',laneSource)(w);new Function('window',source)(w);
+new Function('window',fs.readFileSync('arvexq/ui/static/morning/frozen_ticket_evidence.js','utf8'))(w);
 const n=(v)=>Number(v)||0,chronological=(a,b)=>a.race.startTime.localeCompare(b.race.startTime);
 const rows=[
  {race:{id:'JRA-01',raceNumber:5,startTime:'13:10'},selection:{selected:true,score:70}},
@@ -89,7 +90,25 @@ assert.equal(w.ARVEXQMorningTicketLanes.qualifyPlaceBet(
  .selectionAudit.selected,false,'unqualified place cannot bypass strict selection');
 assert.equal(w.ARVEXQMorningTicketLanes.hasMorningPlace({},{
  selected:true,types:['的中重視型']}),true,'frozen morning place lane remains eligible pre-off');
-assert.equal(w.ARVEXQMorningTicketLanes.selectionDisplayStatus({selected:true,primaryType:'的中重視型',types:['的中重視型'],ticketKinds:['ワイド']}),'actionable');
+const morningRace={id:'original-01',date:'2026-10-11',startTime:'12:00',circuit:'地方'};
+const originalMarks=Array.from({length:8},(_,i)=>({
+  horse:{horseNumber:i+1},predMark:i===0?'◎':i===1?'○':'△',
+  singleWinSuitable:i===0}));
+const originalPlan={decision:'通常買い',betInputGate:{ready:true},
+  items:[{level:'本線',kind:'ワイド',combos:[[1,2],[1,3]]}]};
+const originalSelection={selected:true,primaryType:'的中重視型',types:['的中重視型'],
+  ticketKinds:['ワイド']};
+const originalEvidence=w.ARVEXQMorningEvidence.capture(
+  morningRace,{rows:originalMarks},originalPlan,originalSelection);
+assert(originalEvidence,'valid original ticket+marks must capture');
+originalEvidence.fixedAt='2026-10-11T06:30:00+09:00';
+assert.equal(w.ARVEXQMorningTicketLanes.selectionDisplayStatus({
+  ...originalSelection,ticketEvidence:originalEvidence},morningRace),'actionable');
+assert.equal(w.ARVEXQMorningTicketLanes.selectionDisplayStatus(originalSelection,morningRace),
+  'ticket-original-missing','kinds are not actual stored tickets');
+assert.equal(w.ARVEXQMorningTicketLanes.selectionDisplayStatus({
+  ...originalSelection,ticketEvidence:{...originalEvidence,fixedAt:'2026-10-11T13:00:00+09:00'}},
+  morningRace),'ticket-original-missing','post-off evidence cannot be trusted');
 assert.equal(w.ARVEXQMorningTicketLanes.selectionDisplayStatus({selected:true,primaryType:'',types:[],ticketKinds:[]}), 'legacy-unverified');
 assert.equal(w.ARVEXQMorningTicketLanes.selectionDisplayStatus({selected:true,primaryType:'高配当狙い型',types:['高配当狙い型'],ticketKinds:['馬連']}),'inconsistent');
 console.log('MORNING_THREE_LANES_AND_ACTIONABLE_TICKET_GATE_OK');
