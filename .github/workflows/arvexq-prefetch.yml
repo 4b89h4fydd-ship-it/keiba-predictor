@@ -13,6 +13,7 @@ name: ARVEXQ Full Prefetch
       - app.py
       - scripts/arvexq_prefetch.py
       - scripts/arvexq_morning_picks.js
+      - scripts/arvexq_merge_morning_output.py
       - scripts/arvexq_sync_batches.py
       - scripts/arvexq_fetch_d1_bundle.py
       - scripts/arvexq_protect_sync.py
@@ -240,7 +241,14 @@ jobs:
           # Once the first post has passed we never backfill a new morning pick.
           node --check scripts/arvexq_morning_picks.js
           node scripts/arvexq_morning_picks.js prefetch-payload.json prefetch-morning.json
-          mv prefetch-morning.json prefetch-payload.json
+          # Node rewrites 1.0 as 1 and breaks frozen feature hashes; keep
+          # Python bytes and take only the morning-pick fields from Node.
+          python scripts/arvexq_merge_morning_output.py \
+            --original prefetch-payload.json \
+            --node-output prefetch-morning.json \
+            --out prefetch-merged.json
+          mv prefetch-merged.json prefetch-payload.json
+          rm -f prefetch-morning.json
 
       - name: Publish fixed morning race list as a Cloudflare static asset
         env:
