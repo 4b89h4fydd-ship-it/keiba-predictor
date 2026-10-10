@@ -121,7 +121,7 @@ function qualifyPlaceBet(base,r,frozen){
 }
 // Historical first-write-wins archives remain intact, but unverified
 // older selections are not currently purchasable recommendations.
-function selectionDisplayStatus(m){
+function selectionDisplayStatus(m,r){
  if(!m||m.selected!==true)return 'not-selected';
  const kinds=Array.isArray(m.ticketKinds)?m.ticketKinds:[],
        types=Array.isArray(m.types)?m.types:[],
@@ -131,6 +131,11 @@ function selectionDisplayStatus(m){
  if(!types.length||!kinds.length)return 'legacy-unverified';
  if(!NAMES.includes(String(m.primaryType||''))||!types.includes(m.primaryType)||
     !types.every(t=>NAMES.includes(t)&&supports(t)))return 'inconsistent';
+ const evidence=global.ARVEXQMorningEvidence;
+ if(!r||!m.ticketEvidence||!evidence||!evidence.verify(r,m.ticketEvidence))
+   return 'ticket-original-missing';
+ if(kinds.slice().sort().join('|')!==(m.ticketEvidence.ticketKinds||[]).slice().sort().join('|'))
+   return 'ticket-original-mismatch';
  return 'actionable';
 }
 global.ARVEXQMorningTicketLanes=Object.freeze({VERSION,NAMES,classify,
