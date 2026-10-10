@@ -3490,7 +3490,7 @@ function morningPickReady(){
 function morningPublicStatus(r){
   var m=morningPickOf(r),mod=window.ARVEXQMorningTicketLanes,
       receipt=window.ARVEXQMorningEvidence;
-  var status=mod&&mod.selectionDisplayStatus?mod.selectionDisplayStatus(m):'unavailable';
+  var status=mod&&mod.selectionDisplayStatus?mod.selectionDisplayStatus(m,r):'unavailable';
   if(status!=='actionable')return status;
   // A frozen ticket kind without actual horse-number combinations is
   // an unverified historic selection, not a purchasable recommendation.
