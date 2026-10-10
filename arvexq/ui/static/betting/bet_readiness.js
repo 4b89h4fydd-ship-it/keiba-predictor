@@ -12,6 +12,7 @@ function evaluate(r,p,evidence,rd){
        topMissing=evidence&&evidence.topMissing||[],leadMissing=evidence&&evidence.leaderMissing||[],
        paceCoverage=v(evidence&&evidence.coverage);
  if(field<5)missing.push('出走頭数');
+ if(!r||!r.careerReadiness||r.careerReadiness.ready!==true)missing.push('全出走履歴');
  if(v(rd.card)<.90)missing.push('出馬表・騎手');
  if(v(rd.history)<.55)missing.push('近走データ');
  if(v(rd.analysis)<.45||v(rd.prediction)<(central?.62:.58))missing.push('能力診断');
@@ -37,7 +38,7 @@ function promoteReference(base,r,p,rd){
  if(!base||!base.selectionAudit||base.selectionAudit.selected===true||!r||!p)return base;
  const a=base.selectionAudit,central=String(r.circuit||'')==='中央',
        field=((p.rows)||[]).length;
- if(field<5||r._entryOnly||v(rd.card)<.90||v(rd.history)<.55||
+ if(!r.careerReadiness||r.careerReadiness.ready!==true||field<5||r._entryOnly||v(rd.card)<.90||v(rd.history)<.55||
     v(rd.analysis)<.45||v(rd.prediction)<(central?.62:.58)||
     v(p.coverage)<(central?.44:.38)||v(a.score)<(central?50:48)||
     v(a.evidence)<.30)return base;
