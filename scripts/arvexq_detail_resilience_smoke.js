@@ -39,6 +39,7 @@ const instrumented = source.replace(boot, `
   });
   await page.goto('https://arvexq.test/');
   await page.addStyleTag({content:['styles.css','styles/legacy_v118_v221.css','styles/race_v222_plus.css'].map(p=>fs.readFileSync(path.join(root,'arvexq/ui/static',p),'utf8')).join('\n')});
+  await page.addScriptTag({content:fs.readFileSync(path.join(root,'arvexq/ui/static/research/live_odds.js'),'utf8')});
   await page.addScriptTag({content:instrumented});
   await page.evaluate(row=>{testDetail.state.races=[row];testDetail.state.date=row.date;testDetail.state.track=row.track},base);
   return {page,requests}

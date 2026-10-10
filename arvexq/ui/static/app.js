@@ -2231,8 +2231,8 @@ function racecardOddsHtml(h){
   var valid=h&&h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0,
       value=valid?n(h.winOdds):0,pop=n(h&&h.popularity,0),
       forecast=!!(h&&h.oddsForecast)||/予想|forecast/i.test(String(h&&h.oddsSource||''));
-  return '<span class="odd '+(value>0&&value<10?'single':'')+'">'+esc(valid?(Math.round(value*10)/10).toFixed(1):'取得中')+'</span>'
-    +'<span class="pop">'+(forecast?'予想 ':'')+(pop>0?esc(pop)+'人気':(valid?'参考':'更新中'))+'</span>';
+  return '<span class="odd '+(value>0&&value<10?'single':'')+'">'+esc(valid?(Math.round(value*10)/10).toFixed(1):'未取得')+'</span>'
+    +'<span class="pop">'+(forecast?'予想 ':'')+(pop>0?esc(pop)+'人気':'未取得')+'</span>';
 }
 function racecardMarkDisplay(mark){
   var raw=String(mark||'—').trim(),pair=/^([◎○▲☆△注])([+＋])$/.exec(raw);
@@ -2346,16 +2346,20 @@ function fetchRacecardOnly(id){
   })
 }
 function fetchSelectedRaceOdds(id,seq){
-  var url='https://kraiz-api.4b89h4fydd.workers.dev/api/odds/'+encodeURIComponent(id)+'?t='+Date.now();
-  return edgeFetchJson(url,6500).then(function(body){
-    if(!body||!body.ok||String(body.race_id)!==String(id)||!Array.isArray(body.odds))throw Error('odds unavailable or id mismatch');
-    if(seq!==state.detailSeq||!state.race||String(state.race.id)!==String(id))return;
-    var changed=mergeOddsPayload({horses:body.odds.map(edgeOddsRow)});
+  return window.ARVEXQLiveOdds.fetch(id,edgeFetchJson).then(function(body){
+    if(seq!==state.detailSeq||!state.race||String(state.race.id)!==String(id))return false;
+    var changed=mergeOddsPayload(body);
     updateDetailSections(id,state.race,false);
-    if(changed){saveDetailCache(id,state.race);render()}
+    saveDetailCache(id,state.race);render();
+    return changed
   }).catch(function(error){
-    traceRaceDetail(id,'odds-failed',{url:url,message:String(error&&error.message||error)});
-    if(seq===state.detailSeq&&state.race&&String(state.race.id)===String(id)&&!raceHasOdds(state.race)){detailState(id).odds='error';render()}
+    traceRaceDetail(id,'odds-failed',{message:String(error&&error.message||error)});
+    if(seq===state.detailSeq&&state.race&&String(state.race.id)===String(id)){
+      if(!raceHasOdds(state.race))detailState(id).odds='error';
+      var status=document.getElementById('odds-status');
+      if(status)status.textContent='更新失敗｜'+window.ARVEXQLiveOdds.status(state.race)
+    }
+    return false
   })
 }
 function fetchEdgeRace(id,forceNetwork,retryLimit){
@@ -2478,49 +2482,22 @@ function markRelevantInputSignature(r){
     r.fieldSize,r.markEngineVersion,r.preRacePrediction, horses]);
 }
 function refreshOddsOnly(force){
-  if(state.race&&detailState(state.race.id).busy)return Promise.resolve(false);
   if(!state.race||state.oddsBusy)return Promise.resolve(false);
-  var id=String(state.race.id||'');if(!id)return Promise.resolve(false);
+  var id=String(state.race.id||''),seq=state.detailSeq;if(!id)return Promise.resolve(false);
   state.oddsBusy=true;
   var status=document.getElementById('odds-status');if(status)status.textContent=' 最新データ確認中…';
-  return fetchEdgeRace(id,true).then(function(fresh){
-    if(!fresh||!state.race||String(state.race.id)!==id)return false;
-    var previous=state.race,previousPrediction=previous._prediction,
-        inputBefore=markRelevantInputSignature(previous),before='';try{before=JSON.stringify(previous)}catch(e){}
-    var next=applySummaryEnvironment(mergeRaceReflection(previous,fresh,null,null)),after='';try{after=JSON.stringify(next)}catch(e){}
-    var changed=!before||!after||before!==after;
-    if(changed){
-      // Odds/popularity changes do not alter the AI forecast.
-      var newInput=markRelevantInputSignature(next),sameInputs=inputBefore===newInput;
-      state.race=next;
-      instantTrackDetails[id]=next;
-      if(sameInputs&&previousPrediction){
-        Object.defineProperty(next,'_prediction',{value:previousPrediction,configurable:true,writable:true,enumerable:false});
-      }else{
-        try{delete state.race._prediction}catch(e){}
-        state.pred=null;
-      }
-      saveDetailCache(id,state.race);
-      render()
-    }else{
-      var st=document.getElementById('odds-status');
-      if(st)st.textContent=(raceBodyWeightComplete(state.race)&&raceOddsComplete(state.race))?' 最新データ反映済み':' オッズ・馬体重更新待ち'
-    }
-    return changed
-  }).catch(function(){var st=document.getElementById('odds-status');if(st)st.textContent=' 更新待ち';return false}).finally(function(){state.oddsBusy=false})
+  return fetchSelectedRaceOdds(id,seq).finally(function(){
+    state.oddsBusy=false;
+    if(seq===state.detailSeq&&state.race&&String(state.race.id)===id)ensureAutoOdds(state.race)
+  })
 }
 function ensureAutoOdds(r){
-  if(!r||detailState(r.id).error)return;
   if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}
-  if(r.date!==today())return;
-  var start=mins(r.startTime),remain=start-nowMins(),after=start<9999?nowMins()-start:-9999;
-  var needWeight=!raceBodyWeightComplete(r),needOdds=!raceOddsComplete(r);
-  var needResult=start<9999&&after>=0&&after<=90&&!isFinal(r);
-  if(isFinal(r))return;
-  var delay=needResult?4000:((needWeight||needOdds)?5000:(remain>0?8000:5000));
+  if(!r||r.date!==today()||isFinal(r)||!entryDataAvailable(r))return;
+  var id=String(r.id),seq=state.detailSeq;
   state.oddsTimer=setTimeout(function(){
-    if(state.race&&String(state.race.id)===String(r.id))refreshOddsOnly(false)
-  },delay)
+    if(seq===state.detailSeq&&state.race&&String(state.race.id)===id)refreshOddsOnly(false)
+  },raceOddsComplete(r)?15000:8000)
 }
 function overallScoreText(x){if(x&&x.hasFrozenEvaluation===false)return '—';var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
 function aiBetStoreKey(id){return 'arvexq:prebet:v300:'+String(id||'')}
@@ -4273,7 +4250,7 @@ function positionBucket(x){if(x.expected==="逃げ候補")return"逃げ候補";i
 function stylePositionMap(r,p){var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)}),labels=['逃げ候補','先行','好位','中団','後方','不明'],field=Math.max(1,(r.horses||[]).length),html='<div class="style-position-map"><div class="style-map-axis"><span>内枠</span><b>脚質マップ＋枠順</b><span>外枠</span></div>';for(var j=0;j<labels.length;j++){var lab=labels[j];html+='<div class="style-lane"><div class="style-lane-label">'+lab+'</div><div class="style-lane-track">';for(var i=0;i<rows.length;i++){var x=rows[i],h=x.horse;if(positionBucket(x)!==lab)continue;var left=field<=1?50:6+(n(h.horseNumber)-1)/Math.max(1,field-1)*88,shift=x.pastStyle!==x.expected&&!(x.pastStyle==='先行'&&x.expected==='好位');html+='<span class="style-map-horse'+(shift?' shifted':'')+'" style="left:'+left+'%" title="'+esc(h.name)+'｜過去 '+esc(x.pastStyle)+' → 今回 '+esc(x.expected)+'｜'+esc(x.frontLineRole||'')+'">'+badge(h)+'</span>'}html+='</div></div>'}html+='<div class="style-map-note"><b>水色縁</b>＝過去脚質から今回条件で位置想定が動いた馬。馬番順で内→外を維持。</div>';html+='<div class="style-map-rate-list">'+rows.map(function(x){var h=x.horse,ps=styleDisplayPcts(x),fade=x.styleSamples?Math.round(x.fade*100):null;function cell(l,v,cls){return'<span class="style-map-rate-cell '+(cls||'')+'">'+l+'<strong class="'+(cls==='fade'&&v!=null&&v>=55?'high':'')+'">'+(v==null?'—':v+'%')+'</strong></span>'}return'<div class="style-map-rate-row"><span class="style-map-rate-horse">'+badge(h)+'<b>'+esc(h.name||'')+'</b></span>'+cell('逃',ps[0])+cell('先',ps[1])+cell('差',ps[2])+cell('追',ps[3])+cell('下',fade,'fade')+'</div>'}).join('')+'</div>';var arr=p.arrangement||{};html+='<div class="style-map-summary"><b>先行列：</b>'+esc(arr.pattern||'—')+'　<b>配置：</b>'+esc(arr.concentrationText||'—')+'　<b>初角まで：</b>'+Math.round(firstTurnDistance(r))+'m'+((r.firstTurnDistance||r.startToFirstTurn||r.firstCornerDistance||r.firstCornerMeters)?'':'（コース推定）')+'</div></div>';return html}
 function runnerStyleSection(r,p){
   var diagnosisReady=diagnosisCurrent(r),
-      cadenceText=(raceBodyWeightComplete(r)&&raceOddsComplete(r))?'オッズ・馬体重取得済み':'オッズ・馬体重を自動取得',
+      cadenceText=window.ARVEXQLiveOdds.status(r),
       dayCorr=sameDayCorrectionProfileV313(r,p.rows||[]),
       dayNote=dayCorr.active?('<div class="diagnosis-refresh-note" style="margin:7px 0"><b>当日補正 ON</b>　前'+dayCorr.completed+'R反映 / '+(dayCorr.markRaces?('印内3頭 '+Math.round(dayCorr.coverage*100)+'%'):'印比較待ち')+' / '+esc(dayCorr.flowLabel)+'傾向　<small>当日の傾向は分析参考のみ。朝の固定印は変更しません</small></div>'):'';
   return '<section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
@@ -4809,7 +4786,8 @@ function mergeOddsPayload(body){
       if(String(h.status||'')!==String(z.status)){changed=true;predictionInputChanged=true}
       h.status=z.status
     }
-    if(z.oddsSource)h.oddsSource=z.oddsSource
+    if(z.oddsSource)h.oddsSource=z.oddsSource;
+    if(z.oddsForecast===false)h.oddsForecast=false
   }
   if(body.oddsSource)state.race.oddsSource=body.oddsSource;
   if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;
@@ -4834,6 +4812,7 @@ function render(){
     bind();
     if(entryDataAvailable(state.race)&&state.race._prediction){initPaceBoard();scheduleResultRefresh();ensureAutoOdds(state.race);scheduleRaceBiasRefresh(700)}
     else if(state.track&&!state.picker){scheduleVenueTrendRefresh(350)}
+    if(entryDataAvailable(state.race))ensureAutoOdds(state.race)
     window.scrollTo(0,savedY)
   }catch(e){
     try{console.error('ARVEXQ render recovery',e)}catch(_e){}

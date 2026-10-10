@@ -185,7 +185,7 @@ jobs:
                 if(await markers.count()){
                   assert.equal((await markers.innerText()).trim(),'!');
                   const shade=await markers.evaluate(el=>getComputedStyle(el).color);
-                const channels=(shade.match(/\\d+(?:\\.\\d+)?/g)||[]).map(Number);
+                const channels=(shade.match(/\d+(?:\.\d+)?/g)||[]).map(Number);
                 assert.ok(channels.length>=3 && channels[0]>channels[1]*1.25 && channels[0]>channels[2]*1.15,
                   'alert not red: '+shade);
                 }
