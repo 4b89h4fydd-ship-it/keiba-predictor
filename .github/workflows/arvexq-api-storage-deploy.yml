@@ -1,6 +1,11 @@
 name: ARVEXQ API Private Storage Audit Deploy
 on:
   workflow_dispatch:
+    inputs:
+      verify_only:
+        description: "Verify the deployed API without redeploying"
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -30,6 +35,7 @@ jobs:
           with open(os.environ['GITHUB_ENV'],'a') as f:f.write('CLOUDFLARE_ACCOUNT_ID='+account+'\n')
           PY
       - name: Guard production source and preserve original compatibility settings
+        if: ${{ !inputs.verify_only }}
         run: |
           python - <<'PY'
           import os,json,hashlib,urllib.request,re
@@ -53,16 +59,24 @@ jobs:
           print('API_ORIGINAL_SOURCE_GUARD_PASS',hashlib.sha256(source).hexdigest(),'DB_BINDING_PRESERVED')
           PY
       - name: Deploy preserved API with private fixed-SQL metrics route
+        if: ${{ !inputs.verify_only }}
         run: npx --yes wrangler@4 deploy --config wrangler-api.toml
       - name: Verify original API and read private storage metrics
         run: |
           python - <<'PY'
-          import os,json,urllib.request
+          import os,json,urllib.request,urllib.error,time
           base='https://kraiz-api.4b89h4fydd.workers.dev'
-          with urllib.request.urlopen(base+'/api/health',timeout=30) as response:health=json.load(response)
+          def load(request):
+              for attempt in range(12):
+                  try:
+                      with urllib.request.urlopen(request,timeout=45) as response:return json.load(response)
+                  except urllib.error.HTTPError as e:
+                      if e.code not in (403,404,503) or attempt==11:raise
+                      time.sleep(2)
+          health=load(base+'/api/health')
           assert health.get('ok') and health.get('service')=='KRAIZ API'
           req=urllib.request.Request(base+'/api/admin/storage-audit',headers={'Authorization':'Bearer '+os.environ['SYNC_TOKEN']})
-          with urllib.request.urlopen(req,timeout=60) as response:metrics=json.load(response)
+          metrics=load(req)
           assert metrics.get('ok') and metrics.get('sql_writes')==0
           with open('api-private-storage-audit.json','w') as f:json.dump(metrics,f,indent=2)
           print('API_HEALTH_AND_READONLY_STORAGE_PASS',json.dumps(metrics))
