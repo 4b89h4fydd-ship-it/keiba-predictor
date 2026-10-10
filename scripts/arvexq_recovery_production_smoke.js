@@ -64,8 +64,12 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     await fresh.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
     const home=await fresh.newPage();
     await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
-    for(const track of ['京都','東京','佐賀','帯広ば','高知'])
-      await home.locator('[data-track="'+track+'"]').first().waitFor({state:'visible',timeout:30000});
+    for(const [section,tracks] of [['central',['京都','東京']],['local',['佐賀','帯広ば','高知']]]){
+      await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
+      await home.locator('[data-home-page="'+section+'"]').click();
+      for(const track of tracks)
+        await home.locator('[data-track="'+track+'"]').first().waitFor({state:'visible',timeout:30000});
+    }
     await fresh.close();
     console.log('PRODUCTION_FRESH_HOME_API_OUTAGE_ALL_VENUES_PASS');
     console.log('PRODUCTION_API_OUTAGE_MANUAL_ODDS_SAVED_MARKS_PASS '+process.env.ARVEXQ_BROWSER+' date='+day+' checked='+chosen.length);
