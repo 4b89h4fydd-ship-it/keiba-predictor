@@ -71,7 +71,7 @@ jobs:
           BACKUP_PUBLIC_CERTIFICATE: ${{ inputs.backup_public_certificate }}
         run: |
           python - <<'PYCODE'
-          import os,json,hashlib,urllib.request,urllib.error,subprocess,tempfile,pathlib
+          import os,json,hashlib,urllib.request,urllib.error,subprocess,tempfile,pathlib,base64
           base='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/kraiz-api'
           report={'writes_performed':0,'worker':'kraiz-api'}
           for kind,suffix in [('source',''),('settings','/settings')]:
@@ -87,6 +87,7 @@ jobs:
                               raw.write_bytes(data);raw.chmod(0o600);cert.write_text(certificate)
                               subprocess.run(['openssl','cms','-encrypt','-binary','-aes256','-in',str(raw),'-outform','DER','-out','api-worker-source.p7m',str(cert)],check=True)
                           info['encrypted_backup']='api-worker-source.p7m'
+                          info['encrypted_backup_base64']=base64.b64encode(pathlib.Path('api-worker-source.p7m').read_bytes()).decode('ascii')
                       if kind=='settings':
                           parsed=json.loads(data).get('result') or {}
                           info['bindings']=[{'name':b.get('name'),'type':b.get('type'),'database_id':b.get('id') if b.get('type')=='d1' else None} for b in parsed.get('bindings',[])]
