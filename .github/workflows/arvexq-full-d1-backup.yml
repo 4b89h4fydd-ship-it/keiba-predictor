@@ -1,5 +1,8 @@
 name: ARVEXQ Complete D1 Protected Backup
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/arvexq-full-d1-backup.yml']
   workflow_dispatch:
     inputs:
       public_certificate:
@@ -27,7 +30,7 @@ jobs:
           python - <<'PY'
           import os,json,gzip,shutil,subprocess,hashlib
           from pathlib import Path
-          certificate=Path('/tmp/arvexq-backup-public.pem');certificate.write_text(os.environ['BACKUP_PUBLIC_CERTIFICATE'])
+          certificate=Path('/tmp/arvexq-backup-public.pem');certificate.write_text(os.environ['BACKUP_PUBLIC_CERTIFICATE'] or "-----BEGIN CERTIFICATE-----\nMIIEHzCCAoegAwIBAgIUKey76MllZ+4yVZCSguPGKIYY6GEwDQYJKoZIhvcNAQEL\nBQAwHzEdMBsGA1UEAwwUQVJWRVhRIHNvdXJjZSBiYWNrdXAwHhcNMjYxMDEwMDkz\nMDEwWhcNMjYxMDE3MDkzMDEwWjAfMR0wGwYDVQQDDBRBUlZFWFEgc291cmNlIGJh\nY2t1cDCCAaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBAJ64fgtu/m05VEBE\nRpUA7uZWo1JQq9npdYSLAjzcnKiJhf1jrroLXXiMbmqEjzLnsgbtZQlrWgScNHqB\nAQpahM2mTQgEyRk+RcaS4sbProjHAboKsNATVaWIl2ifpR7jkmbkITlhtyLBrwKf\nj27lpDdTqHGDRXkyLSjDr8qOn/9dBGQiEyllDOJyzAhlsuaFEENriEnVDngR4Nzx\nQBogJTRtFMIAPmolt4UmnRGzUBxKpU7cDMBcGQQMQsgYCgLXToKaLr+RoPvFoGFI\nbWb9hXys9rLnSCxa9iy88saaSZ3rkBR2ZRcCsSvXojgsk4F5K0fVB+bULgKr3ibW\ngVzcP2pnRhHqcSggrYygFWt87b3yYdzbYWm2hDK76FI4K5JSAF9qa6j3Gbz1R5Pm\nDrgZ5VwCP9hGOHi5+LZP+misNa6w0NiU+U5jYhHXxWir01vb1XVMoHDTpNNN42TZ\nId/5aKvjUk1cUov9Gpv5n55Y0mYUjaiDnvd+6VifL1G6yRfYvQIDAQABo1MwUTAd\nBgNVHQ4EFgQUm0BxiUK4xmknvrD4fEgBuUFLpK4wHwYDVR0jBBgwFoAUm0BxiUK4\nxmknvrD4fEgBuUFLpK4wDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOC\nAYEAZL8ZI7mef+eGfls6CNpOE1m3k17MGL8EYkuexSPGCjgHQjwK4SOuM5IpIR6U\nqQjHTyNT1eOnflfGR25BUBq9AOE+0Y2uUBLn/scPREOx40UiT5tZ01mJ7T6EWo8C\ngHxeIqm9xWr2oT0nlMQjd1K1zJPsFC4nTyxJSbuX430kgK1P2irrPKpUbZaA1TbH\n8CH5mqHwWxq9oqj1U5xn6bqXkbcXYWMbk7pi2EJzK1lhWueaLLUefm0efKfR+A7o\nfm/wR96ivr1BZqG95NBw1E49FVzVjTtUW4MRi/AZBhxOMvu0E+D+D9FIHtfmZqgz\nGScDE+O0KtgybzaFhN2YakwNIDdKfVdMFVKmHURKc2EjHfNoyb6FTE5MN3fb/EXd\n3lXRSml5Cdylkw23DIwMYbk9MworuiwZys7cbIC8i2GCkYV/QA4Xi66SaoM3ajdN\nBvg6ztg2MUEkXeSlosz74lWcTvaOGtJ/o29X1DIQ0qrBPDUIKqg1YgG8d5V36eFk\nAd7z\n-----END CERTIFICATE-----\n")
           with open('/tmp/arvexq-complete-d1.sqlite3','rb') as source,gzip.open('/tmp/arvexq-complete-d1.sqlite3.gz','wb',compresslevel=9) as target:shutil.copyfileobj(source,target)
           subprocess.run(['openssl','cms','-encrypt','-binary','-aes256','-in','/tmp/arvexq-complete-d1.sqlite3.gz','-outform','DER','-out','/tmp/arvexq-complete-d1.p7m',str(certificate)],check=True)
           root=Path('protected-backups')/('d1-'+os.environ['GITHUB_RUN_ID']);root.mkdir(parents=True)
