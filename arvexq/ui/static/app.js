@@ -1901,7 +1901,7 @@ function applyFrozenMarks(r,p){
     });
     p.markFreeze={source:server.version==='arvexq-user-model-mark-revision-v1'?'user-model-revision':(server.version==='arvexq-official-mark-revision-v1'?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':'server-prerace')),
       fixedAt:server.revisedAt||server.fixedAt||server.sealedAtJst||server.capturedAtJst||'',
-      reason:String((lock&&lock.reason)||'')};
+      reason:String(server.reason||'')};
   }else if(record){
     var byNo={};record.marks.forEach(function(z){byNo[n(z.no)]=z});
     var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
