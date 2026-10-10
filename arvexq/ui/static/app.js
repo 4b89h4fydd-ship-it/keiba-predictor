@@ -2307,7 +2307,7 @@ function fetchRacecardOnly(id){
   return edgeFetchJson(url,6500).then(function(body){
     var d=body&&body.detail;
     if(!body||!body.ok||!d||String(d.id)!==String(id))throw Error('racecard unavailable or id mismatch');
-    if(!entryDataAvailable(d)&&body.entry_state!=='empty')throw Error('racecard incomplete');
+    if(!entryDataAvailable(d)&&!(body.entry_state==='empty'&&Number(d.fieldSize)===0))throw Error('racecard incomplete');
     d=Object.assign({},d,{_entryOnly:true});return d
   }).catch(function(error){
     traceRaceDetail(id,'racecard-failed',{url:url,message:String(error&&error.message||error)});
