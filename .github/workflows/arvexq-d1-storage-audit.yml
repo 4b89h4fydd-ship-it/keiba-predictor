@@ -3,6 +3,10 @@ name: ARVEXQ D1 Read-only Capacity Audit
 "on":
   workflow_dispatch:
     inputs:
+      backup_public_certificate:
+        description: "Optional public certificate for encrypted API source backup"
+        required: false
+        type: string
       credential:
         description: "Existing credential used only for read requests"
         required: false
@@ -63,9 +67,11 @@ jobs:
           PY
           rm -f /tmp/arvexq-wrangler-whoami.json
       - name: Locate separate API Worker using read-only metadata
+        env:
+          BACKUP_PUBLIC_CERTIFICATE: ${{ inputs.backup_public_certificate }}
         run: |
           python - <<'PYCODE'
-          import os,json,hashlib,urllib.request,urllib.error
+          import os,json,hashlib,urllib.request,urllib.error,subprocess,tempfile,pathlib
           base='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/kraiz-api'
           report={'writes_performed':0,'worker':'kraiz-api'}
           for kind,suffix in [('source',''),('settings','/settings')]:
@@ -74,6 +80,13 @@ jobs:
                   with urllib.request.urlopen(req,timeout=20) as response:
                       data=response.read(10000000)
                       info={'http':response.status,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+                      certificate=os.environ.get('BACKUP_PUBLIC_CERTIFICATE','')
+                      if kind=='source' and certificate:
+                          with tempfile.TemporaryDirectory() as directory:
+                              raw=pathlib.Path(directory)/'source';cert=pathlib.Path(directory)/'public.pem'
+                              raw.write_bytes(data);raw.chmod(0o600);cert.write_text(certificate)
+                              subprocess.run(['openssl','cms','-encrypt','-binary','-aes256','-in',str(raw),'-outform','DER','-out','api-worker-source.p7m',str(cert)],check=True)
+                          info['encrypted_backup']='api-worker-source.p7m'
                       if kind=='settings':
                           parsed=json.loads(data).get('result') or {}
                           info['bindings']=[{'name':b.get('name'),'type':b.get('type'),'database_id':b.get('id') if b.get('type')=='d1' else None} for b in parsed.get('bindings',[])]
@@ -98,5 +111,6 @@ jobs:
           path: |
             d1-storage-audit.json
             api-worker-location-audit.json
+            api-worker-source.p7m
           if-no-files-found: ignore
           retention-days: 7
