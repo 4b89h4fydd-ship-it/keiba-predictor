@@ -7,7 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvexq.history import recent_runs
+from arvexq.career_analysis import analyze_career
+from arvexq.history import all_runs, recent_runs
 from arvexq.race_card import horse_number, sorted_horses
 
 
@@ -19,6 +20,20 @@ def _pick(source: dict[str, Any], *keys: str) -> Any:
     return None
 
 
+def _career_runs(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            "date": run.get("date"),
+            "distance": run.get("distance"),
+            "course_type": run.get("surface"),
+            "track_condition": run.get("condition"),
+            "finish_position": run.get("finish"),
+            "field_size": run.get("fieldSize"),
+        }
+        for run in runs
+    ]
+
+
 def build_horse_detail(horse: dict[str, Any], race: dict[str, Any] | None = None) -> dict[str, Any]:
     race = race if isinstance(race, dict) else {}
     pedigree = _pick(horse, "pedigree", "blood", "bloodline", "血統")
@@ -28,6 +43,7 @@ def build_horse_detail(horse: dict[str, Any], race: dict[str, Any] | None = None
             "dam": _pick(horse, "dam", "mother", "母") or "",
             "damsire": _pick(horse, "damsire", "broodmareSire", "母父") or "",
         }
+    career = analyze_career(_career_runs(all_runs(horse)))
     return {
         "number": horse_number(horse),
         "name": str(_pick(horse, "name", "horseName", "馬名") or "").strip(),
@@ -48,6 +64,7 @@ def build_horse_detail(horse: dict[str, Any], race: dict[str, Any] | None = None
         "representativeRun": _pick(horse, "representativeRun", "bestRun", "代表走") or None,
         "pedigree": pedigree,
         "recentFive": recent_runs(horse, 5),
+        "careerAnalysis": career,
         "raceContext": {
             "track": race.get("track") or race.get("venue") or "",
             "distance": race.get("distance") or race.get("distanceM") or None,

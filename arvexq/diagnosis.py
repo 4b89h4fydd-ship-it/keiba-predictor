@@ -57,6 +57,7 @@ def diagnose_horse(horse: dict[str, Any], race: dict[str, Any] | None = None) ->
         "risks": risks,
         "winningPath": winning_path,
         "horseDetail": detail,
+        "careerAnalysis": detail["careerAnalysis"],
     }
 
 

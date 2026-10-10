@@ -39,7 +39,7 @@ def normalize_run(run: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def recent_runs(horse: dict[str, Any] | None, limit: int = 5) -> list[dict[str, Any]]:
+def _collect_runs(horse: dict[str, Any] | None) -> list[dict[str, Any]]:
     if not isinstance(horse, dict):
         return []
     candidates: list[dict[str, Any]] = []
@@ -63,7 +63,16 @@ def recent_runs(horse: dict[str, Any] | None, limit: int = 5) -> list[dict[str, 
             seen.add(fingerprint)
             candidates.append(run)
     candidates.sort(key=lambda x: str(x.get("date") or ""), reverse=True)
-    return candidates[: max(0, int(limit))]
+    return candidates
+
+
+def recent_runs(horse: dict[str, Any] | None, limit: int = 5) -> list[dict[str, Any]]:
+    return _collect_runs(horse)[: max(0, int(limit))]
+
+
+def all_runs(horse: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Return every normalized past run without the five-run display limit."""
+    return _collect_runs(horse)
 
 
 def has_history(horse: dict[str, Any] | None) -> bool:
@@ -74,4 +83,4 @@ def has_history(horse: dict[str, Any] | None) -> bool:
     return bool(recent_runs(horse, 1))
 
 
-__all__ = ["has_history", "normalize_run", "recent_runs"]
+__all__ = ["all_runs", "has_history", "normalize_run", "recent_runs"]
