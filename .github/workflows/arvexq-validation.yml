@@ -147,6 +147,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_morning_ticket_publisher.py' -v
           node scripts/arvexq_frozen_marks_smoke.js
           python -m unittest discover -s tests -p test_saved_snapshot_recovery.py -v
+          node scripts/arvexq_saved_diagnosis_smoke.js
           node scripts/arvexq_saved_snapshot_smoke.js
           node scripts/arvexq_official_odds_smoke.mjs
           node scripts/arvexq_live_odds_smoke.js

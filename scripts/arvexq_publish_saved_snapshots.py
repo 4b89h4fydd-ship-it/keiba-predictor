@@ -23,7 +23,7 @@ def envelope(raw: str) -> dict:
             'bytes': len(data), 'gzipBase64': base64.b64encode(compressed).decode('ascii')}
 
 
-def publish(root: Path, directory: Path, date: str) -> dict:
+def publish(root: Path, directory: Path, date: str, payload: dict | None = None) -> dict:
     if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', date):
         raise ValueError('invalid date')
     directory.mkdir(parents=True, exist_ok=True)
@@ -34,6 +34,22 @@ def publish(root: Path, directory: Path, date: str) -> dict:
         raise ValueError('snapshot manifest identity mismatch')
     candidates = {}
     databases = []
+    def consider(rid, stamp, raw, table):
+        d = json.loads(raw)
+        if str(d.get('id')) != str(rid) or d.get('date') != date:
+            return False
+        hs = d.get('horses') or []
+        numbers = [h.get('horseNumber') for h in hs if isinstance(h, dict)]
+        if len(hs) < 2 or len(numbers) != len(hs) or len(set(numbers)) != len(hs) or not all(
+                isinstance(n, int) and n > 0 for n in numbers) or not all(h.get('name') for h in hs):
+            return False
+        if int(d.get('fieldSize') or 0) > len(hs):
+            return False
+        quality = (sum(bool(d.get(k)) for k in ('morningMarkSnapshot', 'preRacePrediction', 'preRaceBet', 'morningTicketEvidence')),
+                   int(table == 'payload'), int(table == 'prepared_races'), int(stamp or 0))
+        if rid not in candidates or quality > candidates[rid][0]:
+            candidates[rid] = (quality, raw, d)
+        return True
     for path in sorted(root.rglob('*.sqlite3')):
         conn = sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True)
         try:
@@ -44,25 +60,15 @@ def publish(root: Path, directory: Path, date: str) -> dict:
                 count = 0
                 for rid, stamp, raw in conn.execute(
                         f'SELECT race_id,updated_at,payload FROM {table} WHERE race_date=?', (date,)):
-                    d = json.loads(raw)
-                    if str(d.get('id')) != str(rid) or d.get('date') != date:
-                        continue
-                    hs = d.get('horses') or []
-                    numbers = [h.get('horseNumber') for h in hs]
-                    if len(hs) < 2 or len(set(numbers)) != len(hs) or not all(
-                            isinstance(n, int) and n > 0 for n in numbers) or not all(h.get('name') for h in hs):
-                        continue
-                    if int(d.get('fieldSize') or 0) > len(hs):
-                        continue
-                    count += 1
-                    # Prefer the prepared snapshot with protected prediction fields.
-                    quality = (sum(bool(d.get(k)) for k in ('morningMarkSnapshot', 'preRacePrediction', 'preRaceBet')),
-                               int(table == 'prepared_races'), int(stamp or 0))
-                    if rid not in candidates or quality > candidates[rid][0]:
-                        candidates[rid] = (quality, raw, d)
+                    if consider(rid, stamp, raw, table):
+                        count += 1
                 databases.append({'file': str(path.relative_to(root)), 'table': table, 'races': count})
         finally:
             conn.close()
+    if payload is not None:
+        for d in payload.get('details') or []:
+            if isinstance(d, dict) and d.get('id'):
+                consider(str(d['id']), 0, json.dumps(d, ensure_ascii=False, separators=(',', ':')), 'payload')
     added = 0
     for rid, (_, raw, d) in sorted(candidates.items()):
         if rid in manifest['races']:
@@ -100,5 +106,6 @@ if __name__ == '__main__':
     p.add_argument('--root', type=Path, required=True)
     p.add_argument('--directory', type=Path, default=Path('arvexq/ui/static/saved-snapshots'))
     p.add_argument('--date', required=True)
+    p.add_argument('--input', type=Path)
     a = p.parse_args()
-    publish(a.root, a.directory, a.date)
+    publish(a.root, a.directory, a.date, json.loads(a.input.read_text()) if a.input else None)

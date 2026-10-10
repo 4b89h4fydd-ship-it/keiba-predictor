@@ -288,6 +288,24 @@ jobs:
           gh workflow run arvexq-web-deploy.yml --ref main || echo "::warning::Static archive committed; Web Deploy dispatch not accepted"
           echo "STATIC_MORNING_PICKS_ARCHIVED $FILE"
 
+      - name: Preserve lossless prediction originals before D1 writes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/arvexq_publish_saved_snapshots.py --root .arvexq-data --input prefetch-payload.json --date "$TARGET_DATE"
+          if [ ! -s "arvexq/ui/static/saved-snapshots/$TARGET_DATE.json" ]; then
+            echo "::error::No complete snapshots available for verified independent backup"
+            exit 1
+          fi
+          git add arvexq/ui/static/saved-snapshots
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "ARVEXQ Snapshot Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: preserve verified original snapshots $TARGET_DATE before D1 sync"
+          git pull --rebase origin main
+          git push origin HEAD:main
+          gh workflow run arvexq-web-deploy.yml --ref main
+
       - name: Select only missing or thin D1 details
         run: |
           RACES=$(jq '.meta.race_count // 0' prefetch-payload.json)
