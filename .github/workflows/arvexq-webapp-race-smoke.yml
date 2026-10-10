@@ -11,6 +11,7 @@ on:
       - 'workers/**'
       - 'app.py'
       - 'scripts/arvexq_webapp_race_smoke.js'
+      - 'scripts/arvexq_recovery_production_smoke.js'
       - 'scripts/arvexq_bet_mobile_layout_smoke.js'
       - 'scripts/arvexq_detail_resilience_smoke.js'
       - '.github/workflows/arvexq-webapp-race-smoke.yml'
@@ -273,6 +274,18 @@ jobs:
         run: |
           test -n "$PROD_BASE"
           ARVEXQ_BASE_URL="$PROD_BASE" ARVEXQ_SMOKE_TIMEOUT=30000 ARVEXQ_BROWSER=webkit node scripts/arvexq_webapp_race_smoke.js
+      - name: Production all-race saved-original and independent odds verification
+        if: ${{ always() && env.PROD_BASE != '' }}
+        env:
+          ARVEXQ_BASE_URL: ${{ env.PROD_BASE }}
+          ARVEXQ_BROWSER: chromium
+        run: node scripts/arvexq_recovery_production_smoke.js
+      - name: Production multi-venue iPhone WebKit and API-outage verification
+        if: ${{ always() && env.PROD_BASE != '' }}
+        env:
+          ARVEXQ_BASE_URL: ${{ env.PROD_BASE }}
+          ARVEXQ_BROWSER: webkit
+        run: node scripts/arvexq_recovery_production_smoke.js
       - name: Start local built web app
         if: always()
         shell: bash

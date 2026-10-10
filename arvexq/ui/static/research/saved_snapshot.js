@@ -42,7 +42,10 @@
          ['', '◎','○','▲','☆+','☆','△','注'].indexOf(String(h.mark||''))<0)return null;
       seen.add(h.horseNumber);
     }
-    if(seen.size!==known.size||q.horses.filter(function(h){return h.mark==='◎'}).length>1)return null;
+    // Original predictions legitimately omit withdrawn runners. Every active
+    // horse still needs a recorded row; an incomplete live field cannot pass.
+    var active=(r.horses||[]).filter(function(h){return !h.scratched&&!h.withdrawn&&!/取消|除外|欠場/.test(String(h.status||''))});
+    if(active.some(function(h){return !seen.has(h.horseNumber)})||q.horses.filter(function(h){return h.mark==='◎'}).length>1)return null;
     return Object.assign({},q,{version:'arvexq-saved-preoff-marks-v1'});
   }
   root.ARVEXQSavedSnapshot=Object.freeze({available:available,marks:marks});
