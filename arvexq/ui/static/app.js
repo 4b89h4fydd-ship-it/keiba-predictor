@@ -2204,8 +2204,10 @@ function raceHeadCountText(r){
   return st.entry==='empty'?'0頭':'頭数取得中'
 }
 function raceDetailNotice(r){
-  var st=detailState(r.id);if(!st.error)return '';
-  return '<div class="diagnosis-refresh-note" role="status">'+(entryDataAvailable(r)?'取得済みの出走表を表示しています。':'レース基本情報を表示しています。')+' 詳細の更新に失敗しました。 <button type="button" data-detail-retry="'+esc(r.id)+'">再試行</button></div>'
+  var st=detailState(r.id),staticNotice=r&&r._staticRacecardFallback?
+    '<div class="diagnosis-refresh-note" role="status">保存済みの出走表を表示中です。取消・騎手変更・オッズの最新情報は未確認です。</div>':'';
+  if(!st.error)return staticNotice;
+  return staticNotice+'<div class="diagnosis-refresh-note" role="status">'+(entryDataAvailable(r)?'取得済みの出走表を表示しています。':'レース基本情報を表示しています。')+' 詳細の更新に失敗しました。 <button type="button" data-detail-retry="'+esc(r.id)+'">再試行</button></div>'
 }
 function pendingDetailPanel(r){
   var key=state.openPanel||'entry';if(key==='diagnosis')key='entry';var labels={entry:'出走表',pace:'展開予想',bets:'買い目',result:'結果・払戻'},st=detailState(r.id),status=st[key==='bets'?'diagnosis':key]||'loading';
@@ -2307,7 +2309,17 @@ function fetchRacecardOnly(id){
     if(!body||!body.ok||!d||String(d.id)!==String(id))throw Error('racecard unavailable or id mismatch');
     if(!entryDataAvailable(d)&&body.entry_state!=='empty')throw Error('racecard incomplete');
     d=Object.assign({},d,{_entryOnly:true});return d
-  }).catch(function(error){traceRaceDetail(id,'racecard-failed',{url:url,message:String(error&&error.message||error)});return null})
+  }).catch(function(error){
+    traceRaceDetail(id,'racecard-failed',{url:url,message:String(error&&error.message||error)});
+    var loader=window.ARVEXQStaticRacecard;
+    if(!loader||typeof loader.available!=='function')return null;
+    var summary=(state.races||[]).find(function(r){return String(r&&r.id||'')===String(id)})||state.race||{},
+        date=String(summary.date||state.date||'');
+    return loader.available(date,id,function(path){return edgeFetchJson(path,6500)}).then(function(card){
+      if(card)traceRaceDetail(id,'racecard-static-backup',{date:date,horses:(card.horses||[]).length});
+      return card
+    }).catch(function(){return null})
+  })
 }
 function fetchSelectedRaceOdds(id,seq){
   var url='https://kraiz-api.4b89h4fydd.workers.dev/api/odds/'+encodeURIComponent(id)+'?t='+Date.now();
