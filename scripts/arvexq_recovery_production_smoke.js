@@ -22,7 +22,7 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
   async function check(page,r){
     const errors=[];const onerror=e=>errors.push(e.stack||String(e));page.on('pageerror',onerror);
     await page.goto(base+'/race?date='+day+'&race_id='+encodeURIComponent(r.id)+'&recovery='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
-    await page.waitForFunction(()=>{const note=document.querySelector('.rc-mark-freeze-note');return note&&/保存予想原本|固定済み/.test(note.textContent)},null,{timeout:30000});
+    try{await page.waitForFunction(()=>{const note=document.querySelector('.rc-mark-freeze-note');return note&&/保存予想原本|固定済み/.test(note.textContent)},null,{timeout:30000})}catch(e){console.error('RECOVERY_FAILURE '+r.id+' '+errors.join(';')+' '+(await page.locator('body').innerText()).slice(0,2500));throw e}
     const roster=cards.find(c=>c.id===r.id)||r;
     await page.waitForFunction(count=>document.querySelectorAll('.racecard-row').length===count,roster.horses.length,{timeout:20000});
     assert.equal(await page.locator('.racecard-row').count(),roster.horses.length,'complete official roster '+r.id);

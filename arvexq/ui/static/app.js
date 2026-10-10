@@ -2409,7 +2409,7 @@ function fetchEdgeRace(id,forceNetwork,retryLimit){
       return recovery.available(String((row||cached||{}).date||state.date),key,edgeFetchJson).then(function(saved){
         if(!saved)return entryDataAvailable(cached)?cached:null;
         var recovered=mergeRaceReflection(saved,cached,null,row);
-        recovered._savedSnapshotFallback=true;
+        recovered._savedSnapshotFallback=true;recovered._entryOnly=false;
         applyMorningArchive([recovered]);
         instantTrackDetails[key]=recovered;saveDetailCache(key,recovered);
         updateDetailSections(id,recovered,true);
@@ -4676,7 +4676,7 @@ function openRace(id,keepStack,skipHistory,preservePanel){
   if(window.ARVEXQSavedSnapshot)window.ARVEXQSavedSnapshot.available(String(initial.date||state.date),id,edgeFetchJson).then(function(saved){
     if(seq!==state.detailSeq||!saved||!state.race||String(state.race.id)!==String(id))return;
     state.race=applySummaryEnvironment(mergeRaceReflection(saved,state.race,null,row));
-    state.race._savedSnapshotFallback=true;state.race._savedPreoffOriginal=saved._savedPreoffOriginal;state.race._savedOriginalField=saved._savedOriginalField;
+    state.race._savedSnapshotFallback=true;state.race._entryOnly=false;state.race._savedPreoffOriginal=saved._savedPreoffOriginal;state.race._savedOriginalField=saved._savedOriginalField;
     applyMorningArchive([state.race]);
     instantTrackDetails[String(id)]=state.race;saveDetailCache(id,state.race);
     updateDetailSections(id,state.race,true);render();
