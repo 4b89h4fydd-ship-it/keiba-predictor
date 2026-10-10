@@ -1,0 +1,31 @@
+name: ARVEXQ Recovery Stop Superseded Sync
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/arvexq-recovery-quiesce.yml']
+permissions:
+  actions: write
+  contents: read
+jobs:
+  stop-superseded:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Stop old sync code during immutable-original codec recovery
+        run: |
+          python - <<'PY'
+          import os,json,urllib.request
+          base='https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'}
+          names={'ARVEXQ Full Prefetch','ARVEXQ Realtime Sync','ARVEXQ Result Repair'}
+          for status in ['in_progress','queued']:
+              req=urllib.request.Request(base+'/actions/runs?per_page=100&status='+status,headers=headers)
+              with urllib.request.urlopen(req) as response:runs=json.load(response)['workflow_runs']
+              for run in runs:
+                  if run['name'] not in names or run['head_sha']==os.environ['GITHUB_SHA']:continue
+                  req=urllib.request.Request(base+'/actions/runs/'+str(run['id'])+'/cancel',data=b'',headers=headers,method='POST')
+                  with urllib.request.urlopen(req):pass
+                  print('SUPERSEDED_SYNC_STOPPED',run['id'],run['name'],run['head_sha'])
+          PY
