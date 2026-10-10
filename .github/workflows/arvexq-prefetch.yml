@@ -189,6 +189,51 @@ jobs:
             jq '{missing_card,missing_analysis,analysis_errors,card_errors}' prefetch-report.json
           fi
 
+      - name: Publish lightweight racecards independent of D1 capacity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A D1-full incident must not erase every publicly visible roster.
+          # The artifact includes only observed pre-off runner identities;
+          # no post-off predictions, results, provisional odds or marks.
+          cp prefetch-payload.json /tmp/arvexq-static-racecards-source.json
+          git config user.name "ARVEXQ Racecard Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          published=0
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git checkout -B publish-static-racecards origin/main
+            if ! python scripts/arvexq_publish_racecards_static.py \
+              --input /tmp/arvexq-static-racecards-source.json; then
+              echo "::warning::No verified complete racecards available for static rescue"
+              break
+            fi
+            FILE="arvexq/ui/static/racecards/$TARGET_DATE.json"
+            if [ ! -s "$FILE" ]; then
+              echo "::warning::Static racecard fallback has no validated archive"
+              break
+            fi
+            git add "$FILE"
+            if git diff --cached --quiet; then
+              echo "STATIC_RACECARDS_ALREADY_PUBLISHED"
+              published=1
+              break
+            fi
+            git commit -m "data: immutable fallback racecards $TARGET_DATE"
+            if git push origin HEAD:main; then
+              published=1
+              gh workflow run arvexq-web-deploy.yml --ref main || \
+                echo "::warning::Static racecards committed but deploy dispatch failed"
+              echo "STATIC_RACECARDS_PUBLISHED $FILE"
+              break
+            fi
+            echo "::warning::Racecard publish race, retrying on latest main"
+          done
+          if [ "$published" -ne 1 ]; then
+            echo "::warning::Static racecard publication pending; continue original D1 repair"
+          fi
+          git checkout -B prefetch-continue HEAD
+
       - name: Freeze morning selected and special predictions for all races
         run: |
           # The same UI analysis logic runs headlessly on the full prepared day.
