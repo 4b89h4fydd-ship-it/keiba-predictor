@@ -12,6 +12,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+import urllib.error
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from arvexq.ingest.full_snapshot_codec import KEY, pack_raw, unpack_raw
@@ -28,8 +29,10 @@ def call(path, body=None):
         try:
             with urllib.request.urlopen(request, timeout=60) as response:
                 return json.load(response)
-        except Exception:
+        except Exception as error:
             if attempt == 3:
+                print('MIGRATION_HTTP_FAILURE',path,type(error).__name__,flush=True)
+                if isinstance(error,urllib.error.HTTPError):print(error.read(600).decode('utf-8','replace'),flush=True)
                 raise
             time.sleep(1 + attempt)
 
@@ -49,6 +52,20 @@ def migrate(manifest_path):
     before = call('/api/admin/storage-audit')
     totals = {'verified': 0, 'original_bytes': 0, 'stored_bytes': 0}
     def read(race_id):
+        # Chunked reads work for both huge legacy rows and small envelopes.
+        chunks=[];first=None;index=0
+        while True:
+            result=call('/api/admin/snapshot-export?'+urllib.parse.urlencode({'table':'race_details','race_id':race_id,'chunk':index}))
+            assert result['ok'] and len(result['rows'])==1
+            row=result['rows'][0]
+            if first is None:first=row
+            assert all(row[key]==first[key] for key in ['race_id','race_date','analysis_ready','updated_at','payload_bytes']),'concurrent metadata update'
+            chunks.append(bytes.fromhex(row['payload_hex']))
+            if sum(map(len,chunks))>=first['payload_bytes']:break
+            index+=1
+        raw=b''.join(chunks);assert len(raw)==first['payload_bytes']
+        return {key:value for key,value in first.items() if key not in ['payload_bytes','payload_hex']}|{'payload':raw.decode('utf-8')}
+    def legacy_read(race_id):
         result = call('/api/admin/snapshot-export?' + urllib.parse.urlencode({'table':'race_details','race_id':race_id}))
         assert result['ok'] and len(result['rows']) == 1
         return result['rows'][0]

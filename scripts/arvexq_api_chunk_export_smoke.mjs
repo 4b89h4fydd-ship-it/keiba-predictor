@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {snapshotExport} from '../workers/api_snapshot_export.mjs';
+let reads=0;
+const env={SYNC_TOKEN:'test',DB:{prepare(sql){assert.match(sql,/^SELECT/);assert.match(sql,/hex\(substr\(CAST\(payload AS BLOB\),\?,\?\)\)/);reads++;return{bind(...args){assert.deepEqual(args,[65537,65536,'race']);return this},async first(){return{race_id:'race',payload_bytes:65538,payload_hex:'E697A5'}}}}}};
+const url='https://test/api/admin/snapshot-export?table=race_details&race_id=race&chunk=1';
+assert.equal((await snapshotExport(new Request(url),env)).status,401);assert.equal(reads,0);
+const response=await snapshotExport(new Request(url,{headers:{authorization:'Bearer test'}}),env);
+assert.equal(response.status,200);assert.equal((await response.json()).rows[0].payload_hex,'E697A5');assert.equal(reads,1);
+assert.equal((await snapshotExport(new Request(url.replace('chunk=1','chunk=-1'),{headers:{authorization:'Bearer test'}}),env)).status,400);assert.equal(reads,1);
+console.log('AUTHORIZED_FIXED_SQL_BYTE_CHUNKS_NO_WRITES_NO_UTF8_TRUNCATION_PASS');

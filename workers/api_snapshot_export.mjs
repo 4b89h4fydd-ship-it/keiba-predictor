@@ -15,6 +15,14 @@ export async function snapshotExport(request,env){
   if(!TABLES.includes(table))return respond({ok:false,error:'unsupported table'});
   const id=url.searchParams.get('race_id');
   if(table==='race_details'&&id){
+    if(url.searchParams.has('chunk')){
+      const chunk=Number(url.searchParams.get('chunk')),size=65536;
+      if(!Number.isInteger(chunk)||chunk<0||chunk>2000)return Response.json({ok:false,error:'invalid chunk'},{status:400});
+      // Byte chunks avoid serializing multi-MB legacy JSON in a CPU-limited Worker.
+      // SQLite slices BLOB bytes, so UTF-8 characters spanning chunks stay exact.
+      const row=await env.DB.prepare('SELECT race_id,race_date,analysis_ready,updated_at,length(CAST(payload AS BLOB)) AS payload_bytes,hex(substr(CAST(payload AS BLOB),?,?)) AS payload_hex FROM race_details WHERE race_id=?').bind(chunk*size+1,size,id).first();
+      return respond({ok:true,table,chunk,chunk_bytes:size,rows:row?[row]:[]});
+    }
     const row=await env.DB.prepare('SELECT * FROM race_details WHERE race_id=?').bind(id).first();
     return respond({ok:true,table,rows:row?[row]:[]});
   }

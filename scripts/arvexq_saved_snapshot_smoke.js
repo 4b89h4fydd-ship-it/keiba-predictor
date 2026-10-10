@@ -24,7 +24,8 @@ function manifest(day,id){return {version:'arvexq-saved-snapshots-v1',date:day,r
   withdrawn._savedOriginalField=withdrawn.horses;
   assert.ok(root.ARVEXQSavedSnapshot.marks(withdrawn),'withdrawn runner omitted in original is valid');
   assert.equal(root.ARVEXQSavedSnapshot.marks({...withdrawn,_savedOriginalField:[...pre.horses,{horseNumber:3,name:'未分析馬'}],horses:[...pre.horses,{horseNumber:3,name:'未分析馬'}]}),null,'active runner without original must reject');
-  delete result._savedSnapshotFallback;delete result._savedPreoffOriginal;delete result._savedOriginalField;assert.deepEqual(result,d);
+  assert.equal(result._savedSnapshotSHA,hash,'restored source fingerprint must be exact');
+  delete result._savedSnapshotSHA;delete result._savedSnapshotFallback;delete result._savedPreoffOriginal;delete result._savedOriginalField;assert.deepEqual(result,d);
   const corrupt=await root.ARVEXQSavedSnapshot.available('2026-10-11','race2',async path=>path.endsWith(hash+'.json')?{...e,gzipBase64:zlib.gzipSync(Buffer.from(' '.repeat(raw.length))).toString('base64')}:manifest('2026-10-11','race2'));
   assert.equal(corrupt,null,'hash mismatch must never display');
   assert.equal(await root.ARVEXQSavedSnapshot.available('2026-10-12','race3',async path=>path.endsWith(hash+'.json')?e:manifest('2026-10-12','race3')),null,'wrong race/date must never display');
