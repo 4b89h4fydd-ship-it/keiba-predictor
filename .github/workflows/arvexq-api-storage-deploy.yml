@@ -71,11 +71,14 @@ jobs:
                   try:
                       with urllib.request.urlopen(request,timeout=45) as response:return json.load(response)
                   except urllib.error.HTTPError as e:
-                      if e.code not in (403,404,503) or attempt==11:raise
+                      if e.code not in (403,404,503) or attempt==11:
+                          print('AUDIT_HTTP_FAILURE',e.code,e.read(500).decode('utf-8','replace'))
+                          raise
                       time.sleep(2)
-          health=load(base+'/api/health')
+          headers={'User-Agent':'Mozilla/5.0 ARVEXQ-ReadOnlyAudit/1.0','Accept':'application/json'}
+          health=load(urllib.request.Request(base+'/api/health',headers=headers))
           assert health.get('ok') and health.get('service')=='KRAIZ API'
-          req=urllib.request.Request(base+'/api/admin/storage-audit',headers={'Authorization':'Bearer '+os.environ['SYNC_TOKEN']})
+          req=urllib.request.Request(base+'/api/admin/storage-audit',headers={**headers,'Authorization':'Bearer '+os.environ['SYNC_TOKEN']})
           metrics=load(req)
           assert metrics.get('ok') and metrics.get('sql_writes')==0
           with open('api-private-storage-audit.json','w') as f:json.dump(metrics,f,indent=2)
