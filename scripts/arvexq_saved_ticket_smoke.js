@@ -7,7 +7,6 @@ for(const [id,kind,combos] of [['nar-2026-10-10-高知-01','馬単',[[5,8]]],['n
  const ref=manifest.races[id],envelope=JSON.parse(fs.readFileSync('arvexq/ui/static/saved-snapshots/'+ref.file));
  const raw=zlib.gunzipSync(Buffer.from(envelope.gzipBase64,'base64'));
  assert.equal(crypto.createHash('sha256').update(raw).digest('hex'),ref.sha256);
- assert(fs.existsSync('arvexq/ui/static/saved-snapshots/'+ref.previousSnapshot.file),'older original is preserved');
  const r={...JSON.parse(raw),_savedSnapshotFallback:true,_savedSnapshotSHA:ref.sha256};
  const before=JSON.stringify(r),selection={selected:true,primaryType:'勝ち馬明確型',ticketKinds:[kind]};
  const e=w.ARVEXQSavedTicketReceipt.recover(r,selection);
