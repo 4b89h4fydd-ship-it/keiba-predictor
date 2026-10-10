@@ -259,13 +259,17 @@ jobs:
           import scripts.arvexq_history_repair as history
           import scripts.arvexq_sqlite_health as sqlite_health
 
+          # Full-career completeness has dedicated tests (test_career_evidence,
+          # test_full_career). This step isolates merge/hash invariants from it.
+          prefetch.assess_career_readiness=lambda detail:{'ready':True}
+
           base={
             'id':'nar-2026-10-04-園田-01','date':'2026-10-04','track':'園田','circuit':'地方',
             'surface':'ダート','distance':1400,'weather':'晴','condition':'良','fieldSize':3,
             'horses':[{'horseNumber':1,'name':'テスト馬','jockey':'騎手A','trainer':'厩舎A','carriedWeight':54.0,'bodyWeight':480,'bodyWeightChange':0,'recentRaces':[{'date':'2026-09-01','finish':1}]},
                        {'horseNumber':2,'name':'テスト馬2','jockey':'騎手B','carriedWeight':55.0,'recentRaces':[{'finish':2}]},
                        {'horseNumber':3,'name':'テスト馬3','jockey':'騎手C','carriedWeight':56.0,'recentRaces':[{'finish':3}]}],
-            'preparedMeta':{'diagnosisReady':True},'preRacePrediction':{'mark':'◎','score':88},'predictionAudit':{'locked':True},
+            'preparedMeta':{'diagnosisReady':True,'careerReady':True},'preRacePrediction':{'mark':'◎','score':88},'predictionAudit':{'locked':True},
             'predictionModelVersion':prefetch.FOUR_PILLAR_MODEL_VERSION,
           }
           base['preparedMeta']['analysisInputHash']=analysis_input_hash(base)
@@ -356,7 +360,7 @@ jobs:
               def build(rid,allow_network=False,deep_context=False):
                   calls.append((allow_network,deep_context))
                   d=copy.deepcopy(stale)
-                  d.setdefault('preparedMeta',{})['diagnosisReady']=True
+                  d.setdefault('preparedMeta',{}).update({'diagnosisReady':True,'careerReady':True})
                   d['preRacePrediction']={'mark':'◎','score':91}
                   d['horses'][0]['aiEvaluation']='S'
                   return d
