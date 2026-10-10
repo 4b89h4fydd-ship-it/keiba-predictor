@@ -2310,7 +2310,7 @@ function renderPredictionPending(r){
     var hh=(r.horses||[]).find(function(z){return n(z.horseNumber)===n(state.detailHorseNo)})||{};
     return '<div class="smart-shell">'+raceSubpageTopBar(r,horseDisplayName(r,hh))+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">馬情報を取得中です。</div></section></main>'+cinematicFooter()+'</div>'
   }
-  if(state.subPage==='bets')return '<div class="smart-shell">'+raceSubpageTopBar(r,'買い目')+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">買い目を計算中です。</div></section></main>'+cinematicFooter()+'</div>';
+  if(state.subPage==='bets')return frozenAiBetForRace(r)?betDetailPage(r,{rows:morningSavedMarkRows(r)}):'<div class="smart-shell">'+raceSubpageTopBar(r,'買い目')+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">発走前の買い目原本が未取得です。取得後に表示します（発走後の再計算はしません）。</div></section></main>'+cinematicFooter()+'</div>';
   if(state.subPage==='pace-stage')return paceStagePendingPage(r);
   var content=state.openPanel==='entry'?safeEntryPanel(r,{rows:morningSavedMarkRows(r)}):(state.openPanel==='result'?resultPanel(r):pendingDetailPanel(r));
   return '<div class="smart-shell">'+smartRaceTopBar(r)+'<main class="smart-main smart-race-page">'+smartRaceHead(r)+cinematicTabs(r)+raceDetailNotice(r)+'<div class="smart-race-content">'+content+'</div></main>'+cinematicFooter()+'</div>'
@@ -2321,7 +2321,7 @@ function renderPartialRace(r){
     var h=(r.horses||[]).find(function(z){return n(z.horseNumber)===n(state.detailHorseNo)})||{};
     return '<div class="smart-shell">'+raceSubpageTopBar(r,horseDisplayName(r,h))+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">馬情報を取得中です。</div></section></main>'+cinematicFooter()+'</div>'
   }
-  if(state.subPage==='bets')return '<div class="smart-shell">'+raceSubpageTopBar(r,'買い目')+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">買い目を計算中です。</div></section></main>'+cinematicFooter()+'</div>';
+  if(state.subPage==='bets')return frozenAiBetForRace(r)?betDetailPage(r,{rows:morningSavedMarkRows(r)}):'<div class="smart-shell">'+raceSubpageTopBar(r,'買い目')+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">発走前の買い目原本が未取得です。取得後に表示します（発走後の再計算はしません）。</div></section></main>'+cinematicFooter()+'</div>';
   if(state.subPage==='pace-stage')return paceStagePendingPage(r);
   return '<div class="smart-shell">'+smartRaceTopBar(r)+'<main class="smart-main smart-race-page">'+smartRaceHead(r)+cinematicTabs(r)+raceDetailNotice(r)+'<div class="smart-race-content">'+pendingDetailPanel(r)+'</div></main>'+cinematicFooter()+'</div>'
 }
@@ -3522,7 +3522,8 @@ function selectedRaceCandidates(circuit){
       reason:String(m&&m.selectionReason||'朝の事前選定固定'),
        primaryType:String(m&&m.primaryType||''),types:Array.isArray(m&&m.types)?m.types.slice():[],
        fixedAt:String(m&&m.fixedAt||''),
-       ticketKinds:Array.isArray(m&&m.ticketKinds)?m.ticketKinds.slice():[]
+       ticketKinds:Array.isArray(m&&m.ticketKinds)?m.ticketKinds.slice():[],
+       noAxis:!!(m&&m.ticketEvidence&&m.ticketEvidence.axisStatus==='no-axis')
     }}
   }).sort(raceChronologicalCompare)
 }
@@ -3554,7 +3555,7 @@ function fixedPickEmpty(kind,circuit){
   return '<div class="fixed-pick-empty"><b>該当なし</b><small>'+(incomplete?('基準を満たす確定候補なし｜情報不足 '+incomplete+'レース（朝の未判定を後付けしません）'):(label+'基準を通過したレースなし'))+'</small></div>'
 }
 function fixedSelectedBox(circuit,picks){
-  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝に選定・固定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+'｜'+esc(t.score||'—')+'点</em></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
+  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝に選定・固定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+(t.noAxis?'｜◎なし・軸分散':'')+'｜'+esc(t.score||'—')+'点</em></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
   return '<details class="fixed-pick-box fixed-pick-circuit" data-selected-circuit="selected" data-pick-circuit="'+esc(circuit)+'" '+(open?'open':'')+'><summary class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><span class="fixed-pick-summary-right"><em>'+picks.length+'レース</em><i>⌄</i></span></summary><div class="fixed-pick-box-body">'+body+'</div></details>'
 }
 function selectedRaceBetPreview(r){
@@ -3828,7 +3829,7 @@ function homeCircuitChooser(title,kind){
     (older?'<p class="muted">朝選定記録 '+older+'件は印・馬番入り買い目の発走前保存原本が未確認です。現在の厳選件数から除外し、記録は各会場で表示します。</p>':'')+'</section>'
 }
 function selectedCircuitPage(circuit){
-  var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝の固定判定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+'｜'+esc((t.types||[]).filter(function(x){return x!==t.primaryType}).join('・')||t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
+  var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝の固定判定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+(t.noAxis?'｜◎なし・軸分散':'')+'｜'+esc((t.types||[]).filter(function(x){return x!==t.primaryType}).join('・')||t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
   var old=legacyMorningSelectionCandidates(circuit),history=old.length?'<details class="smart-fixed-picks arv-direct-picks"><summary class="smart-fixed-picks-head"><span><b>朝選定（買い目原本未確認）</b><small>券種名だけの保存は購入可能な買い目ではありません。朝の記録は維持し、厳選件数には含めません</small></span><em>'+old.length+'件</em></summary><div class="fixed-pick-box-body">'+old.map(function(r){return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>朝選定記録・印／買い目原本未確認</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>未保存</em></button>'}).join('')+'</div></details>':'';
   return '<section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>'+esc(circuit)+' 厳選レース</b><small>朝に買い目まで成立した分類のみ</small></span><em>'+picks.length+'レース</em></div><div class="fixed-pick-box-body">'+body+'</div></section>'+history
 }
