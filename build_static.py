@@ -129,7 +129,7 @@ for filename in STYLE_MODULES:
 style_hash = hashlib.sha256(b"|".join((STYLE_DIR / filename).read_bytes() for filename in STYLE_MODULES)).hexdigest()[:12]
 
 RESEARCH_PATH = STATIC / "research"
-RESEARCH_ASSETS = ("local_evidence.js", "research_view.js", "research_view.css")
+RESEARCH_ASSETS = ("local_evidence.js", "research_view.js", "research_view.css", "static_racecard.js")
 for filename in RESEARCH_ASSETS:
     if not (RESEARCH_PATH / filename).is_file():
         raise RuntimeError(f"missing research asset: {filename}")
@@ -278,6 +278,7 @@ headers=[
     "/morning/*","  Cache-Control: no-cache, must-revalidate",
     "/styles/*","  Cache-Control: no-cache, must-revalidate",
     "/research/*","  Cache-Control: no-cache, must-revalidate",
+    "/racecards/*","  Cache-Control: no-cache, must-revalidate",
     "/betting/*","  Cache-Control: no-cache, must-revalidate",
     "/previous_ai_results.js","  Cache-Control: no-cache, must-revalidate",
     "/arvexq-racing-hero.webp","  Cache-Control: public, max-age=604800",
@@ -308,4 +309,12 @@ if morning_dir.is_dir():
     target_dir = DIST / "morning-picks"
     target_dir.mkdir(exist_ok=True)
     for archive in morning_dir.glob("????-??-??.json"):
+        shutil.copy2(archive, target_dir / archive.name)
+
+# Lightweight, immutable factual racecard backup survives an unavailable D1.
+racecard_dir = STATIC / "racecards"
+if racecard_dir.is_dir():
+    target_dir = DIST / "racecards"
+    target_dir.mkdir(exist_ok=True)
+    for archive in racecard_dir.glob("????-??-??.json"):
         shutil.copy2(archive, target_dir / archive.name)
