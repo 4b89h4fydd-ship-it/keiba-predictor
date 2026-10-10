@@ -19,7 +19,8 @@ new Function('window',fs.readFileSync('arvexq/ui/static/betting/bet_readiness.js
 const api=new Function('n','isScratchHorse','dataReadinessProfile','window',
   sourceHistory+src.slice(start,end)+'\nreturn {paceEvidenceProfile,gateBetByPaceEvidence};')(
     n,h=>!!h.scratched,(race,p)=>p.readiness||completeReadiness,win);
-const race={id:'nar-2026-10-08-大井-04',date:'2026-10-08',circuit:'地方',track:'大井'};
+const race={id:'nar-2026-10-08-大井-04',date:'2026-10-08',circuit:'地方',track:'大井',
+  careerReadiness:{ready:true}};
 function row(no,positions=3,options={}){
   const runs=Array.from({length:positions},(_,i)=>({
     date:'2026-09-'+String(30-i).padStart(2,'0'),fieldSize:12,
