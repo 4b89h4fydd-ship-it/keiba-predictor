@@ -328,3 +328,6 @@ if racecard_dir.is_dir():
 # Losslessly archived existing race originals, independent of D1 availability.
 if (STATIC / "saved-snapshots").is_dir():
     shutil.copytree(STATIC / "saved-snapshots", DIST / "saved-snapshots")
+
+from scripts.arvexq_build_odds_sources import build_sources
+build_sources(STATIC, DIST)

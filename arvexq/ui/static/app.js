@@ -2347,8 +2347,8 @@ function fetchRacecardOnly(id){
     }).catch(function(){return null})
   })
 }
-function fetchSelectedRaceOdds(id,seq){
-  return window.ARVEXQLiveOdds.fetch(id,edgeFetchJson).then(function(body){
+function fetchSelectedRaceOdds(id,seq,force){
+  return window.ARVEXQLiveOdds.fetch(id,edgeFetchJson,force).then(function(body){
     if(seq!==state.detailSeq||!state.race||String(state.race.id)!==String(id))return false;
     var changed=mergeOddsPayload(body);
     updateDetailSections(id,state.race,false);
@@ -2501,7 +2501,7 @@ function refreshOddsOnly(force){
   var id=String(state.race.id||''),seq=state.detailSeq;if(!id)return Promise.resolve(false);
   state.oddsBusy=true;
   var status=document.getElementById('odds-status');if(status)status.textContent=' 最新データ確認中…';
-  return fetchSelectedRaceOdds(id,seq).finally(function(){
+  return fetchSelectedRaceOdds(id,seq,force).finally(function(){
     state.oddsBusy=false;
     if(seq===state.detailSeq&&state.race&&String(state.race.id)===id)ensureAutoOdds(state.race)
   })
@@ -4814,6 +4814,8 @@ function mergeOddsPayload(body){
     if(z.oddsForecast===false)h.oddsForecast=false
   }
   if(body.oddsSource)state.race.oddsSource=body.oddsSource;
+  if(body.sourcePublishedAt)state.race.sourcePublishedAt=body.sourcePublishedAt;
+  if(body.popularitySource)state.race.popularitySource=body.popularitySource;
   if(body.oddsUpdatedAt)state.race.oddsUpdatedAt=body.oddsUpdatedAt;
   if(predictionInputChanged){
     try{delete state.race._prediction}catch(e){}

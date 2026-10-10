@@ -7,6 +7,8 @@ on:
       - 'arvexq/ui/static/**'
       - 'build_static.py'
       - 'wrangler.toml'
+      - 'workers/**'
+      - 'scripts/arvexq_build_odds_sources.py'
       - '.github/workflows/arvexq-web-deploy.yml'
       - '.github/workflows/arvexq-webapp-race-smoke.yml'
   workflow_dispatch:

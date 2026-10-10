@@ -1,6 +1,9 @@
 name = "kraizweb1"
+main = "workers/web.mjs"
 compatibility_date = "2026-09-29"
 
 [assets]
+binding = "ASSETS"
+run_worker_first = ["/api/live-odds/*"]
 directory = "./dist"
 not_found_handling = "single-page-application"

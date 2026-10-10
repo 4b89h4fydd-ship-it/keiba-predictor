@@ -24,20 +24,24 @@
         oddsSource:body.oddsSource||z.oddsSource||'official-api',oddsForecast:false};
     });
     return {horses:horses,oddsSource:body.oddsSource||'official-api',
+      sourcePublishedAt:body.sourcePublishedAt||'',popularitySource:body.popularitySource||'',
       oddsUpdatedAt:latest?new Date(latest*1000).toISOString():body.oddsUpdatedAt||''};
   }
-  function fetch(id,fetchJson){
+  function fetch(id,fetchJson,force){
     var key=String(id||'');if(!key)return Promise.reject(Error('race id required'));
     if(!pending[key])pending[key]=Promise.resolve().then(function(){
-      return fetchJson('https://kraiz-api.4b89h4fydd.workers.dev/api/odds/'+encodeURIComponent(key)+'?t='+Date.now(),6500);
-    }).then(function(body){return normalize(body,key)}).finally(function(){delete pending[key]});
+      return fetchJson('/api/live-odds/'+encodeURIComponent(key)+(force?'?force=1':''),6500)
+        .then(function(body){return normalize(body,key)})
+        .catch(function(){return fetchJson('https://kraiz-api.4b89h4fydd.workers.dev/api/odds/'+encodeURIComponent(key)+'?t='+Date.now(),6500).then(function(body){return normalize(body,key)})});
+    }).finally(function(){delete pending[key]});
     return pending[key];
   }
   function status(r){
     var at=Number(r&&r.oddsUpdatedAt),raw=r&&r.oddsUpdatedAt;
     if(/^\d{2}:\d{2}:\d{2}$/.test(String(raw||'')))return 'オッズ取得 '+raw+'（保存値）';
     if(at>0)at=at>1e12?at:at*1000;else at=Date.parse(String(raw||''));
-    return Number.isFinite(at)&&at>0?'オッズ取得 '+new Date(at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',hour12:false}):'オッズ取得時刻 未取得';
+    var label=Number.isFinite(at)&&at>0?'オッズ取得 '+new Date(at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',hour12:false}):'オッズ取得時刻 未取得';
+    return label+(r&&r.popularitySource==='NAR公式単勝オッズ順位'?'｜人気＝公式単勝オッズ順位':'');
   }
   root.ARVEXQLiveOdds=Object.freeze({fetch:fetch,normalize:normalize,status:status});
 })(typeof window!=='undefined'?window:globalThis);

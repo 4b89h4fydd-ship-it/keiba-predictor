@@ -8,6 +8,7 @@ on:
       - 'arvexq/ui/static/**'
       - 'build_static.py'
       - 'wrangler.toml'
+      - 'workers/**'
       - 'app.py'
       - 'scripts/arvexq_webapp_race_smoke.js'
       - 'scripts/arvexq_bet_mobile_layout_smoke.js'
