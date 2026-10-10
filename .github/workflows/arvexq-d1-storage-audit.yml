@@ -3,6 +3,11 @@ name: ARVEXQ D1 Read-only Capacity Audit
 "on":
   workflow_dispatch:
     inputs:
+      bound_worker_probe:
+        description: "Read bound DB metrics through a private temporary Worker; remove Worker after audit"
+        required: false
+        type: boolean
+        default: false
       backup_public_certificate:
         description: "Optional public certificate for encrypted API source backup"
         required: false
@@ -99,6 +104,9 @@ jobs:
           with open('api-worker-location-audit.json','w') as f:json.dump(report,f,indent=2)
           print(json.dumps(report))
           PYCODE
+      - name: Inspect bound D1 without modifying existing Workers or SQL data
+        if: inputs.bound_worker_probe
+        run: python scripts/arvexq_bound_d1_audit.py
       - name: Inspect D1 storage through Cloudflare read API
         env:
           REQUESTED_PLAN: ${{ inputs.plan }}
@@ -113,5 +121,6 @@ jobs:
             d1-storage-audit.json
             api-worker-location-audit.json
             api-worker-source.p7m
+            bound-d1-storage-audit.json
           if-no-files-found: ignore
           retention-days: 7
