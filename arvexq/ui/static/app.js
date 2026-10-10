@@ -2360,7 +2360,7 @@ function fetchEdgeRace(id,forceNetwork,retryLimit){
       merged=mergeRaceReflection(normalizeDetailSummary(row,id),merged,null,null);
       if(!d&&!entryDataAvailable(merged))throw Error('racecard unavailable');
       if(!entryDataAvailable(merged)&&!(d&&Array.isArray(d.horses)&&Number(d.fieldSize)===0&&d.fieldSize!=null))throw Error('racecard incomplete');
-      if(d&&!d._entryOnly)merged._entryOnly=false;
+      if(d&&!d._entryOnly){merged._entryOnly=false;delete merged._staticRacecardFallback}
       if(body.analysis_ready)merged.preparedMeta=Object.assign({},merged.preparedMeta||{},{diagnosisReady:true});
       st.error='';updateDetailSections(id,merged,true);
       traceRaceDetail(id,'loaded',{attempt:index+1,horses:(merged.horses||[]).length,sections:Object.assign({},st)});
