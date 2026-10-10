@@ -1623,21 +1623,13 @@ def _netkeiba_db_horse_history(name:str, cutoff:str, limit:int=5)->dict:
     name=_clean(name)
     if not name:return {"name":"","recentRaces":[]}
     try:
-        q=urllib.parse.urlencode({"pid":"horse_list","word":name})
-        html=_netkeiba_get("https://db.netkeiba.com/?"+q,float(os.getenv("NETKEIBA_DB_SEARCH_TIMEOUT_SEC","4.0")),86400)
+        # netkeiba expects EUC-JP query bytes; UTF-8 silently returns no hits.
+        from arvexq.databanks.netkeiba_career import search_url, parse_search
+        html=_netkeiba_get(search_url(name),float(os.getenv("NETKEIBA_DB_SEARCH_TIMEOUT_SEC","4.0")),86400)
     except Exception as exc:
         print("netkeiba DB horse search failed",name,exc);return {"name":name,"recentRaces":[]}
-    soup=BeautifulSoup(html,"html.parser")
-    candidates=[]
-    for a in soup.find_all("a",href=re.compile(r"^/horse/(?:result/)?\d+/?$")):
-        label=_clean(a.get_text(" ",strip=True));href=str(a.get("href") or "")
-        if label!=name:continue
-        m=re.search(r"/horse/(?:result/)?(\d+)/?",href)
-        if m and m.group(1) not in candidates:candidates.append(m.group(1))
-    # Some search responses jump straight to the horse page.
-    if not candidates:
-        m=re.search(r"/horse/(?:result/)?(\d{8,})/?",html)
-        if m:candidates.append(m.group(1))
+    # Exact-name candidates only (absolute links, or a direct redirect to the horse page).
+    candidates=[c["id"] for c in parse_search(html,name)]
     best={"name":name,"recentRaces":[]};best_score=-1
     for hid in candidates[:4]:
         try:
@@ -1650,7 +1642,8 @@ def _netkeiba_db_horse_history(name:str, cutoff:str, limit:int=5)->dict:
             if not trs:continue
             header_cells=trs[0].find_all(["th","td"])
             headers=[_clean(c.get_text(" ",strip=True)) for c in header_cells]
-            joined="|".join(headers)
+            # Headers are rendered with spaces ("着 順", "頭 数").
+            joined="|".join(re.sub(r"\s+","",h) for h in headers)
             if "日付" not in joined or "着順" not in joined or "距離" not in joined:continue
             def hidx(*keys):
                 for i,h in enumerate(headers):
@@ -1692,7 +1685,9 @@ def _netkeiba_db_horse_history(name:str, cutoff:str, limit:int=5)->dict:
                 if len(runs)>=limit:break
             if runs:break
         runs=sorted(runs,key=lambda z:str(z.get("date") or ""),reverse=True)[:limit]
-        score=len(runs)*100 + (int(runs[0]["date"].replace("-","")) if runs else 0)
+        # Same-name horses: the current runner is the one with the latest pre-race
+        # start, not a retired namesake with a longer record.
+        score=(int(runs[0]["date"].replace("-","")) if runs else 0)*1000 + len(runs)
         if score>best_score:
             best_score=score;best={"name":name,"_netkeibaHorseId":hid,"recentRaces":runs,"source":"netkeiba DB補完"}
     return best
