@@ -5,6 +5,7 @@ from typing import Any
 from arvexq.prediction.factor_model import MODEL_VERSION, PRIMARY_PILLARS, rank_factor_model
 from arvexq.prediction.multi_head import MODEL_VERSION as MULTI_HEAD_MODEL_VERSION, attach_multi_head_signals
 from arvexq.prediction.honmei_gate import evaluate_honmei_gate
+from arvexq.prediction.career_readiness import attach_career_readiness
 
 MARK_ENGINE_VERSION = "arvexq-four-pillar-marks-v7-past-context"
 CORE_MARKS = ("◎", "○", "▲")
@@ -55,7 +56,19 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(detail, dict):
         return detail
 
+    attach_career_readiness(detail)
     horses = [h for h in (detail.get("horses") or []) if isinstance(h, dict)]
+    if not (detail.get("careerReadiness") or {}).get("ready"):
+        for horse in horses:
+            evaluation = horse.get("integratedEvaluation")
+            if isinstance(evaluation, dict):
+                evaluation["mark"] = ""
+                evaluation.pop("rank", None)
+        detail.pop("factorRanking", None)
+        detail.pop("honmeiDecision", None)
+        detail["predictionStatus"] = "waiting-for-full-career"
+        return detail
+    detail["predictionStatus"] = "ready"
     ranked_rows = rank_factor_model(horses, detail)
     if not ranked_rows:
         return detail
