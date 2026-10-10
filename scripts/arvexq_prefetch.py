@@ -26,6 +26,7 @@ if str(ROOT) not in sys.path:
 
 import app
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
+from arvexq.prediction.career_readiness import assess_career_readiness, attach_career_readiness
 from arvexq.prediction.factor_model import MODEL_VERSION as FOUR_PILLAR_MODEL_VERSION
 from arvexq.prediction.race_intelligence import attach_evidence
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
@@ -144,8 +145,9 @@ def _card_usable(detail: dict[str, Any] | None) -> bool:
 
 
 def _analysis_ready(detail: dict[str, Any] | None) -> bool:
-    pm = (detail or {}).get("preparedMeta") or {}
-    return bool(pm.get("diagnosisReady"))
+    if not isinstance(detail, dict): return False
+    pm = detail.get("preparedMeta") or {}
+    return bool(pm.get("diagnosisReady") and pm.get("careerReady") is True and assess_career_readiness(detail).get("ready"))
 
 
 def _analysis_current(detail: dict[str, Any] | None) -> bool:
@@ -258,6 +260,7 @@ def _ensure_analysis(rid: str, current: dict[str, Any] | None) -> tuple[dict[str
 
 def _decorate(detail: dict[str, Any]) -> dict[str, Any]:
     out = copy.deepcopy(detail)
+    attach_career_readiness(out)
     pm = dict(out.get("preparedMeta") or {})
     active = active_horses(out)
     with_history = sum(
