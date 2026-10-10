@@ -8,7 +8,8 @@ from __future__ import annotations
 from typing import Any
 
 from arvexq.career_analysis import analyze_career
-from arvexq.history import all_runs, recent_runs
+from arvexq.history import recent_runs
+from arvexq.prediction.past_performance import observed_runs
 from arvexq.race_card import horse_number, sorted_horses
 
 
@@ -43,7 +44,7 @@ def build_horse_detail(horse: dict[str, Any], race: dict[str, Any] | None = None
             "dam": _pick(horse, "dam", "mother", "母") or "",
             "damsire": _pick(horse, "damsire", "broodmareSire", "母父") or "",
         }
-    career = analyze_career(_career_runs(all_runs(horse)))
+    career = analyze_career(_career_runs(observed_runs(horse, race, limit=None)))
     return {
         "number": horse_number(horse),
         "name": str(_pick(horse, "name", "horseName", "馬名") or "").strip(),

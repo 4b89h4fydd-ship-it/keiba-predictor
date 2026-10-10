@@ -1,5 +1,5 @@
 from arvexq.diagnosis import diagnose_horse
-from arvexq.history import all_runs, recent_runs
+from arvexq.history import recent_runs
 from arvexq.horse_detail import build_horse_detail
 
 
@@ -28,18 +28,17 @@ def _horse():
     return {"horseNumber": 1, "name": "テストホース", "recentRaces": runs}
 
 
-def test_all_runs_exposes_full_career():
+def test_career_analysis_uses_all_observed_runs():
     horse = _horse()
-    assert len(all_runs(horse)) == 8
-    assert len(recent_runs(horse)) == 5
-    detail = build_horse_detail(horse)
+    race = {"track": "大井", "surface": "ダート", "distance": 1200, "date": "2026-02-01", "horses": [horse]}
+    detail = build_horse_detail(horse, race)
     assert len(detail["recentFive"]) == 5
     assert detail["careerAnalysis"]["total_runs"] == 8
 
 
 def test_diagnosis_includes_career_analysis():
     horse = _horse()
-    race = {"track": "大井", "surface": "ダート", "distance": 1200, "horses": [horse]}
+    race = {"track": "大井", "surface": "ダート", "distance": 1200, "date": "2026-02-01", "horses": [horse]}
     view = diagnose_horse(horse, race)
     assert view["careerAnalysis"]["analyzed_runs"] == 8
 
@@ -50,5 +49,6 @@ def test_missing_history_is_flagged():
         "name": "テストホース",
         "recentRaces": [{"date": "2026-01-01", "finish": 1}],
     }
-    detail = build_horse_detail(horse)
+    race = {"track": "大井", "surface": "ダート", "distance": 1200, "date": "2026-02-01", "horses": [horse]}
+    detail = build_horse_detail(horse, race)
     assert detail["careerAnalysis"]["data_limitation"] == "partial"
