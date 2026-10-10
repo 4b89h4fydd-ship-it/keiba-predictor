@@ -24,7 +24,8 @@
       var d=JSON.parse(new TextDecoder().decode(raw)),seen=new Set();
       if(d.id!==String(id)||d.date!==date||!Array.isArray(d.horses)||d.horses.length<2)throw Error('snapshot race mismatch');
       d.horses.forEach(function(h){if(!Number.isInteger(h.horseNumber)||h.horseNumber<1||!h.name||seen.has(h.horseNumber))throw Error('snapshot roster invalid');seen.add(h.horseNumber)});
-      return Object.assign({},d,{_savedSnapshotFallback:true,_savedPreoffOriginal:d.preRacePrediction||null});
+      return Object.assign({},d,{_savedSnapshotFallback:true,_savedPreoffOriginal:d.preRacePrediction||null,
+        _savedOriginalField:d.horses.map(function(h){return {horseNumber:h.horseNumber,scratched:!!h.scratched,withdrawn:!!h.withdrawn,status:h.status||''}})});
     }).catch(function(){delete jobs[key];return null});
     return jobs[key];
   }
@@ -44,7 +45,7 @@
     }
     // Original predictions legitimately omit withdrawn runners. Every active
     // horse still needs a recorded row; an incomplete live field cannot pass.
-    var active=(r.horses||[]).filter(function(h){return !h.scratched&&!h.withdrawn&&!/取消|除外|欠場/.test(String(h.status||''))});
+    var active=(r._savedOriginalField||r.horses||[]).filter(function(h){return !h.scratched&&!h.withdrawn&&!/取消|除外|欠場/.test(String(h.status||''))});
     if(active.some(function(h){return !seen.has(h.horseNumber)})||q.horses.filter(function(h){return h.mark==='◎'}).length>1)return null;
     return Object.assign({},q,{version:'arvexq-saved-preoff-marks-v1'});
   }

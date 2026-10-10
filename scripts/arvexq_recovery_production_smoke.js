@@ -4,6 +4,7 @@ const {chromium,webkit,devices}=require('playwright');
 const directory='arvexq/ui/static/saved-snapshots';
 const day=process.env.ARVEXQ_AUDIT_DATE||fs.readdirSync(directory).filter(f=>/^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort().at(-1).slice(0,10);
 const manifest=JSON.parse(fs.readFileSync(path.join(directory,day+'.json')));
+const cards=JSON.parse(fs.readFileSync('arvexq/ui/static/racecards/'+day+'.json')).races;
 const base=process.env.ARVEXQ_BASE_URL||'https://kraizweb1.4b89h4fydd.workers.dev';
 const type=process.env.ARVEXQ_BROWSER==='webkit'?webkit:chromium;
 const marker=fs.readFileSync('arvexq/ui/static/index.html','utf8').match(/var tag="([^"]+)"/)[1];
@@ -22,13 +23,15 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     const errors=[];const onerror=e=>errors.push(String(e));page.on('pageerror',onerror);
     await page.goto(base+'/race?date='+day+'&race_id='+encodeURIComponent(r.id)+'&recovery='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
     await page.waitForFunction(()=>{const note=document.querySelector('.rc-mark-freeze-note');return note&&/保存予想原本|固定済み/.test(note.textContent)},null,{timeout:30000});
-    assert.equal(await page.locator('.racecard-row').count(),r.horses.length,'complete roster '+r.id);
+    const roster=cards.find(c=>c.id===r.id)||r;
+    await page.waitForFunction(count=>document.querySelectorAll('.racecard-row').length===count,roster.horses.length,{timeout:20000});
+    assert.equal(await page.locator('.racecard-row').count(),roster.horses.length,'complete official roster '+r.id);
     const names=await page.locator('.rc-horse-name').allTextContents();
-    r.horses.forEach(h=>assert.ok(names.includes(h.name),'runner identity missing '+r.id+' '+h.name));
+    roster.horses.forEach(h=>assert.ok(names.includes(h.name),'runner identity missing '+r.id+' '+h.name));
     await page.waitForFunction(()=>document.querySelectorAll('.diagnosis-merged-row').length===document.querySelectorAll('.racecard-row').length,null,{timeout:20000});
     const diagnosis=page.locator('details.card').filter({has:page.locator('.diagnosis-merged-list')});
     await diagnosis.locator('summary').click();
-    assert.equal(await diagnosis.locator('.diagnosis-merged-row').count(),r.horses.length);
+    assert.equal(await diagnosis.locator('.diagnosis-merged-row').count(),roster.horses.length);
     // Only factual acquired odds or an explicit missing status can appear.
     const odds=await page.locator('.rc-odds .odd').allTextContents();
     odds.forEach(x=>assert.ok(/^(?:\d+\.\d|未取得|取消)$/.test(x),'invalid odds text '+x));

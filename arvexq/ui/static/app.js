@@ -4672,7 +4672,7 @@ function openRace(id,keepStack,skipHistory,preservePanel){
   if(window.ARVEXQSavedSnapshot)window.ARVEXQSavedSnapshot.available(String(initial.date||state.date),id,edgeFetchJson).then(function(saved){
     if(seq!==state.detailSeq||!saved||!state.race||String(state.race.id)!==String(id))return;
     state.race=applySummaryEnvironment(mergeRaceReflection(saved,state.race,null,row));
-    state.race._savedSnapshotFallback=true;state.race._savedPreoffOriginal=saved._savedPreoffOriginal;
+    state.race._savedSnapshotFallback=true;state.race._savedPreoffOriginal=saved._savedPreoffOriginal;state.race._savedOriginalField=saved._savedOriginalField;
     applyMorningArchive([state.race]);
     instantTrackDetails[String(id)]=state.race;saveDetailCache(id,state.race);
     updateDetailSections(id,state.race,true);render();

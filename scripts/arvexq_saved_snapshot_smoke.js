@@ -13,6 +13,7 @@ function manifest(day,id){return {version:'arvexq-saved-snapshots-v1',date:day,r
     horses:[{horseNumber:1,mark:'◎'},{horseNumber:2,mark:'○'}]}};
   pre.startTime='10:00';
   pre._savedPreoffOriginal=pre.preRacePrediction;
+  pre._savedOriginalField=pre.horses;
   const before=JSON.stringify(pre.preRacePrediction);
   assert.equal(root.ARVEXQSavedSnapshot.marks(pre).horses[0].mark,'◎');
   assert.equal(JSON.stringify(pre.preRacePrediction),before,'must not change frozen flag or original');
@@ -20,9 +21,10 @@ function manifest(day,id){return {version:'arvexq-saved-snapshots-v1',date:day,r
   assert.equal(root.ARVEXQSavedSnapshot.marks({...pre,_savedPreoffOriginal:{...pre.preRacePrediction,capturedAtEpoch:1791660000}}),null,'post-off original rejected');
   assert.equal(root.ARVEXQSavedSnapshot.marks({...pre,_savedPreoffOriginal:{...pre.preRacePrediction,horses:[{horseNumber:1,mark:'◎'},{horseNumber:1,mark:'○'}]}}),null);
   const withdrawn={...pre,horses:[...pre.horses,{horseNumber:3,name:'取消馬',scratched:true}]};
+  withdrawn._savedOriginalField=withdrawn.horses;
   assert.ok(root.ARVEXQSavedSnapshot.marks(withdrawn),'withdrawn runner omitted in original is valid');
-  assert.equal(root.ARVEXQSavedSnapshot.marks({...withdrawn,horses:[...pre.horses,{horseNumber:3,name:'未分析馬'}]}),null,'active runner without original must reject');
-  delete result._savedSnapshotFallback;delete result._savedPreoffOriginal;assert.deepEqual(result,d);
+  assert.equal(root.ARVEXQSavedSnapshot.marks({...withdrawn,_savedOriginalField:[...pre.horses,{horseNumber:3,name:'未分析馬'}],horses:[...pre.horses,{horseNumber:3,name:'未分析馬'}]}),null,'active runner without original must reject');
+  delete result._savedSnapshotFallback;delete result._savedPreoffOriginal;delete result._savedOriginalField;assert.deepEqual(result,d);
   const corrupt=await root.ARVEXQSavedSnapshot.available('2026-10-11','race2',async path=>path.endsWith(hash+'.json')?{...e,gzipBase64:zlib.gzipSync(Buffer.from(' '.repeat(raw.length))).toString('base64')}:manifest('2026-10-11','race2'));
   assert.equal(corrupt,null,'hash mismatch must never display');
   assert.equal(await root.ARVEXQSavedSnapshot.available('2026-10-12','race3',async path=>path.endsWith(hash+'.json')?e:manifest('2026-10-12','race3')),null,'wrong race/date must never display');
