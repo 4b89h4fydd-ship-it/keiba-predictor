@@ -5004,6 +5004,7 @@ function applyMorningArchive(rows){
        ticketKinds:Array.isArray(frozen.ticketKinds)?frozen.ticketKinds.slice():[],
        ticketEvidence:frozen.ticketEvidence||null
     };
+    if(!m.ticketEvidence&&window.ARVEXQSavedTicketReceipt)m.ticketEvidence=window.ARVEXQSavedTicketReceipt.recover(r,m);
     r.morningPickVersion='v1';
     r.morningPickFixedAt=archive.fixedAt;
     r.morningPickScope=archive.scope;
@@ -5087,7 +5088,8 @@ function load(force){
   function requestMorningArchive(){
     fetch('/morning-picks/'+encodeURIComponent(d)+'.json?day='+encodeURIComponent(d),{cache:'no-store'})
       .then(function(response){return response.ok?response.json():null})
-      .then(function(payload){
+      .then(async function(payload){
+        if(window.ARVEXQSavedTicketReceipt)await window.ARVEXQSavedTicketReceipt.load(d,edgeFetchJson);
         if(seq!==state.requestSeq||state.date!==d)return;
         if(!payload||payload.version!=='v1'||payload.date!==d||!payload.fixedAt||
           !Array.isArray(payload.races)||payload.races.length!==n(payload.scope))return;

@@ -114,7 +114,7 @@ for filename in BET_ASSETS:
 bet_hash = hashlib.sha256(b"|".join((BET_PATH / filename).read_bytes() for filename in BET_ASSETS)).hexdigest()[:12]
 
 MORNING_PATH = STATIC / "morning"
-MORNING_MODULES = ("ticket_lane_classifier.js", "selection_cut.js", "frozen_ticket_evidence.js")
+MORNING_MODULES = ("ticket_lane_classifier.js", "selection_cut.js", "frozen_ticket_evidence.js", "saved_ticket_receipt.js")
 for filename in MORNING_MODULES:
     if not (MORNING_PATH / filename).is_file():
         raise RuntimeError(f"missing morning module: {filename}")

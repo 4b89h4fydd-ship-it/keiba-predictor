@@ -25,7 +25,7 @@
       if(d.id!==String(id)||d.date!==date||!Array.isArray(d.horses)||d.horses.length<2)throw Error('snapshot race mismatch');
       d.horses.forEach(function(h){if(!Number.isInteger(h.horseNumber)||h.horseNumber<1||!h.name||seen.has(h.horseNumber))throw Error('snapshot roster invalid');seen.add(h.horseNumber)});
       if(root.ARVEXQRaceIdentity)root.ARVEXQRaceIdentity.remember(d);
-      return Object.assign({},d,{_savedSnapshotFallback:true,_savedPreoffOriginal:d.preRacePrediction||null,
+      return Object.assign({},d,{_savedSnapshotFallback:true,_savedSnapshotSHA:ref.sha256,_savedPreoffOriginal:d.preRacePrediction||null,
         _savedOriginalField:d.horses.map(function(h){return {horseNumber:h.horseNumber,scratched:!!h.scratched,withdrawn:!!h.withdrawn,status:h.status||''}})});
     }).catch(function(){delete jobs[key];return null});
     return jobs[key];

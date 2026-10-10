@@ -1,1 +1,557 @@
-{"version":"arvexq-saved-snapshots-v1","date":"2026-10-10","races":{"jra-2026-10-10-京都-01":{"file":"24f035182ab7b7f73ef9e93cf912d21fd058b3d89071d438090616396ea80682.json","sha256":"24f035182ab7b7f73ef9e93cf912d21fd058b3d89071d438090616396ea80682","bytes":2744693,"horses":14,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-02":{"file":"0c4e44c30e3e14a81a71ec2dfc52c9b394f71bb21349c622c737a3b85026a1a3.json","sha256":"0c4e44c30e3e14a81a71ec2dfc52c9b394f71bb21349c622c737a3b85026a1a3","bytes":2041770,"horses":9,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-03":{"file":"6106bf1479e51afc9c2e2189266463c3f399a658a1d1042d7773b839c6504736.json","sha256":"6106bf1479e51afc9c2e2189266463c3f399a658a1d1042d7773b839c6504736","bytes":1858162,"horses":8,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-04":{"file":"d3a470808407077c27aa12346601090880d4fae1eada65902f2040b01f7f9f58.json","sha256":"d3a470808407077c27aa12346601090880d4fae1eada65902f2040b01f7f9f58","bytes":3370174,"horses":14,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-05":{"file":"f9e430f4d378d62c6e6d6385dd514ba175ee53db51378cb44d72c59952b5c999.json","sha256":"f9e430f4d378d62c6e6d6385dd514ba175ee53db51378cb44d72c59952b5c999","bytes":444012,"horses":14,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-06":{"file":"7a2b802047c83194c3caf3c290f7ebe8c6d190ebd1b296547397422d7bdd5c81.json","sha256":"7a2b802047c83194c3caf3c290f7ebe8c6d190ebd1b296547397422d7bdd5c81","bytes":352591,"horses":11,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-07":{"file":"830e420636691f2ed28e9d94c29a738516afae9454b6c298d554a111e0ba78d1.json","sha256":"830e420636691f2ed28e9d94c29a738516afae9454b6c298d554a111e0ba78d1","bytes":5447584,"horses":16,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-08":{"file":"bf4a3e171c820a0eaa27f9d2f8e343e521d256c5f5c7ffa6e42535cf33ef28ba.json","sha256":"bf4a3e171c820a0eaa27f9d2f8e343e521d256c5f5c7ffa6e42535cf33ef28ba","bytes":1225421,"horses":6,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-09":{"file":"9a73665536323ba41351153a3734a06ee13067dcb53bbd27d5fbf70e0f303a16.json","sha256":"9a73665536323ba41351153a3734a06ee13067dcb53bbd27d5fbf70e0f303a16","bytes":6145873,"horses":16,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-10":{"file":"1df4f24e74761ad1eb23616789904c607ccedc1fae271171757a1d5dc623daa9.json","sha256":"1df4f24e74761ad1eb23616789904c607ccedc1fae271171757a1d5dc623daa9","bytes":5445688,"horses":15,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-11":{"file":"350fe16e506a4c16e07e4fb47789dc0ed5ae291c446ec74a39b0ab5998027793.json","sha256":"350fe16e506a4c16e07e4fb47789dc0ed5ae291c446ec74a39b0ab5998027793","bytes":4501219,"horses":13,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-京都-12":{"file":"1279cd0392b224d8dfe105b5b1c25dee28d0a74f0b330cd0e1dd2258c8c193fd.json","sha256":"1279cd0392b224d8dfe105b5b1c25dee28d0a74f0b330cd0e1dd2258c8c193fd","bytes":5531192,"horses":16,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-01":{"file":"587a340805329246ccb6a62ffba3103e7a54b0923c39b1ef8e0303e1812cd89d.json","sha256":"587a340805329246ccb6a62ffba3103e7a54b0923c39b1ef8e0303e1812cd89d","bytes":2956722,"horses":16,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-02":{"file":"20b19f6c083db9d111b9509db63918ef96ec0eea62b45856b6f6f4eeb7b48a14.json","sha256":"20b19f6c083db9d111b9509db63918ef96ec0eea62b45856b6f6f4eeb7b48a14","bytes":2665615,"horses":13,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-03":{"file":"90bea59453892a630d4a819aa2dc12c094467b7ad07be39d1726328ded369560.json","sha256":"90bea59453892a630d4a819aa2dc12c094467b7ad07be39d1726328ded369560","bytes":2531997,"horses":16,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-04":{"file":"d0d7144479e8cc34a5dfdd1052de236d04055a1bf04fff0b7ba088f7e3874e86.json","sha256":"d0d7144479e8cc34a5dfdd1052de236d04055a1bf04fff0b7ba088f7e3874e86","bytes":504988,"horses":16,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-05":{"file":"b496e191d796a30e3ca318480a5346bae633d1ed561f9116b0ff729090b63110.json","sha256":"b496e191d796a30e3ca318480a5346bae633d1ed561f9116b0ff729090b63110","bytes":388393,"horses":12,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-06":{"file":"c39e201878ac5f6dce7147cfa40c98ae574cd82ed5767231a9b140ef8e40a6d7.json","sha256":"c39e201878ac5f6dce7147cfa40c98ae574cd82ed5767231a9b140ef8e40a6d7","bytes":444313,"horses":14,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-07":{"file":"eb4ff680e0dce330f5b118549a7167aa960e0ce61856452ea74ea4e329f7f01c.json","sha256":"eb4ff680e0dce330f5b118549a7167aa960e0ce61856452ea74ea4e329f7f01c","bytes":3972332,"horses":13,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-08":{"file":"d42ba2e0d232f05168b210939fccf4a4b82d3682f5dae4b3db6cf9b8e03d1c80.json","sha256":"d42ba2e0d232f05168b210939fccf4a4b82d3682f5dae4b3db6cf9b8e03d1c80","bytes":2852806,"horses":11,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-09":{"file":"aa88578a3dd70e40759a3b9c657b1219def15c3b79d76e1fe81b783a7bdd28f8.json","sha256":"aa88578a3dd70e40759a3b9c657b1219def15c3b79d76e1fe81b783a7bdd28f8","bytes":2623380,"horses":9,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-10":{"file":"9040f63534492a5064cdce38d8dfc6aff0c136738400a992628acd58f2052cda.json","sha256":"9040f63534492a5064cdce38d8dfc6aff0c136738400a992628acd58f2052cda","bytes":4479237,"horses":16,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-11":{"file":"28a9de76689ee90ea52a80832ae8e078842c7cb06fd1bbd7e9e78a608081c971.json","sha256":"28a9de76689ee90ea52a80832ae8e078842c7cb06fd1bbd7e9e78a608081c971","bytes":2802238,"horses":11,"morningMarks":false,"prediction":true,"bet":false},"jra-2026-10-10-東京-12":{"file":"e909f68a816760eb41d3511bbc510a92850690b07673b814eba750ca9a1264a4.json","sha256":"e909f68a816760eb41d3511bbc510a92850690b07673b814eba750ca9a1264a4","bytes":5069834,"horses":16,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-01":{"file":"fc80feb41a9e9c7385663906332b1bc7cfb97aaa9f606dacf25e480a20f9cc1b.json","sha256":"fc80feb41a9e9c7385663906332b1bc7cfb97aaa9f606dacf25e480a20f9cc1b","bytes":1458917,"horses":7,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-02":{"file":"8c0446a7951a21b7d10d3a3a5ec8bee835fe23d5eb1858b96c54c9d6731dfefa.json","sha256":"8c0446a7951a21b7d10d3a3a5ec8bee835fe23d5eb1858b96c54c9d6731dfefa","bytes":2162876,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-03":{"file":"077e8b05db60238acdad83541098eafaee76d1de48b8aad679fb997b45b24a8b.json","sha256":"077e8b05db60238acdad83541098eafaee76d1de48b8aad679fb997b45b24a8b","bytes":2507024,"horses":12,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-04":{"file":"9d3ee999f11548353c6dfbd296773ad9548042453f10c292130a083f720be54d.json","sha256":"9d3ee999f11548353c6dfbd296773ad9548042453f10c292130a083f720be54d","bytes":2070640,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-05":{"file":"2efa1443b9ba43b072f841a7a19cadfd6ee419c2a0080a45f7cdad10d9567244.json","sha256":"2efa1443b9ba43b072f841a7a19cadfd6ee419c2a0080a45f7cdad10d9567244","bytes":2616493,"horses":12,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-06":{"file":"fe4a2a3a30c6c53437a42bd4a052a7db072da0485df12302533613e453410049.json","sha256":"fe4a2a3a30c6c53437a42bd4a052a7db072da0485df12302533613e453410049","bytes":2192010,"horses":12,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-07":{"file":"cb058ce14a3e84d0800b983e5d878fed8575c6105f51ddd9502c9f417ca55b58.json","sha256":"cb058ce14a3e84d0800b983e5d878fed8575c6105f51ddd9502c9f417ca55b58","bytes":2201860,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-08":{"file":"bf358e1bd705da9fddd36455254f15c8d8042cc9f9c0a2e001e5eb91c08e40e3.json","sha256":"bf358e1bd705da9fddd36455254f15c8d8042cc9f9c0a2e001e5eb91c08e40e3","bytes":2366956,"horses":11,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-09":{"file":"0dc88fbed0b39a1fcaefa254ce60b30cf376124ef7ca3d15fe504833a2eb9e59.json","sha256":"0dc88fbed0b39a1fcaefa254ce60b30cf376124ef7ca3d15fe504833a2eb9e59","bytes":2611179,"horses":12,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-10":{"file":"880dd5841ad804d747879daec018008eed260bb5c42bae3174e757302272cbbc.json","sha256":"880dd5841ad804d747879daec018008eed260bb5c42bae3174e757302272cbbc","bytes":1434989,"horses":11,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-11":{"file":"59cf858436f98c39be707e1fc336428e068e1c9a3a43a1140db27e2512075f42.json","sha256":"59cf858436f98c39be707e1fc336428e068e1c9a3a43a1140db27e2512075f42","bytes":2347617,"horses":11,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-佐賀-12":{"file":"cd25d8b27e9acdcd83d29a267a9f3e0a8349db2fcbd8fa0db741fd1da4d22433.json","sha256":"cd25d8b27e9acdcd83d29a267a9f3e0a8349db2fcbd8fa0db741fd1da4d22433","bytes":3041873,"horses":14,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-01":{"file":"d442954eccbe3ebddd5278fff9c962dacd5f9415bbf6a911421af89dc1fa69d7.json","sha256":"d442954eccbe3ebddd5278fff9c962dacd5f9415bbf6a911421af89dc1fa69d7","bytes":2534936,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-02":{"file":"7cddc3a320156e5c2c205e14b2c4a4d96f5af49a1a49f4ee2dc888ab2ebaba92.json","sha256":"7cddc3a320156e5c2c205e14b2c4a4d96f5af49a1a49f4ee2dc888ab2ebaba92","bytes":2547044,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-03":{"file":"53f61f3a9186b1236ff0cc92b201affd82d771d093a36a66f8a291c80be9385b.json","sha256":"53f61f3a9186b1236ff0cc92b201affd82d771d093a36a66f8a291c80be9385b","bytes":2398136,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-04":{"file":"b53a4fc1b9423cba4cd60b39d218245716baf5eedcafb160d6833deeaa5734fa.json","sha256":"b53a4fc1b9423cba4cd60b39d218245716baf5eedcafb160d6833deeaa5734fa","bytes":2387792,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-05":{"file":"e2dd2509c5fc7a28663a51fa7b4549161fce3339fb275f91130100345d6ee138.json","sha256":"e2dd2509c5fc7a28663a51fa7b4549161fce3339fb275f91130100345d6ee138","bytes":2360416,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-06":{"file":"a04f492f5a30ae7539336f206e4af23028feb0e70302f96c9cbc4cadc61978bb.json","sha256":"a04f492f5a30ae7539336f206e4af23028feb0e70302f96c9cbc4cadc61978bb","bytes":2450610,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-07":{"file":"7086eca0fdaea75eb22f59f8f165a3e318107d39bf1de338988b9431d59dbb9a.json","sha256":"7086eca0fdaea75eb22f59f8f165a3e318107d39bf1de338988b9431d59dbb9a","bytes":2346975,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-08":{"file":"84c8416d20dc864560128136aa8fc8ce004a20abce368439b4a16b5951397c2c.json","sha256":"84c8416d20dc864560128136aa8fc8ce004a20abce368439b4a16b5951397c2c","bytes":2360568,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-09":{"file":"baa773f2541e2d6e16b21a5c7a8feda1f7a855d783b90ce30156d368dd17b2e7.json","sha256":"baa773f2541e2d6e16b21a5c7a8feda1f7a855d783b90ce30156d368dd17b2e7","bytes":2348971,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-10":{"file":"247db970034a390ec9131d74f981d691d9be7802c5451e0efbcd56a9fbe1181e.json","sha256":"247db970034a390ec9131d74f981d691d9be7802c5451e0efbcd56a9fbe1181e","bytes":2394097,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-11":{"file":"ec16d1df44b28c35d7383051930043b4825574d056755bd0c3edd27b60bd1133.json","sha256":"ec16d1df44b28c35d7383051930043b4825574d056755bd0c3edd27b60bd1133","bytes":2474889,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-帯広ば-12":{"file":"8818aa6d32610f070120f6466fae8f8113793f4f3ce125357dfceaa13797570a.json","sha256":"8818aa6d32610f070120f6466fae8f8113793f4f3ce125357dfceaa13797570a","bytes":2222982,"horses":9,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-01":{"file":"e65c99a2b2dc63359e1c613e515ba080358f4d03ee654e3faffa819721e57b9e.json","sha256":"e65c99a2b2dc63359e1c613e515ba080358f4d03ee654e3faffa819721e57b9e","bytes":1914577,"horses":9,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-02":{"file":"e6f6b694f566f70cb7d6afe461c9a317d80e16afcd8ae26eae56952c0d3c8bb8.json","sha256":"e6f6b694f566f70cb7d6afe461c9a317d80e16afcd8ae26eae56952c0d3c8bb8","bytes":2349414,"horses":11,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-03":{"file":"e670a1d5929af64cb5ac2fac56d54155a9b9a3f91a71209dd2c3acad65847212.json","sha256":"e670a1d5929af64cb5ac2fac56d54155a9b9a3f91a71209dd2c3acad65847212","bytes":1961322,"horses":9,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-04":{"file":"aef5790741a0ddf1f1baadf7af18efea182a571e9f43e080b5fb7b79c589ac3f.json","sha256":"aef5790741a0ddf1f1baadf7af18efea182a571e9f43e080b5fb7b79c589ac3f","bytes":2689630,"horses":12,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-05":{"file":"abc02d7c6b21597b4d0d46c8c529db39e4520a01ad9b1b8c314687b04840c681.json","sha256":"abc02d7c6b21597b4d0d46c8c529db39e4520a01ad9b1b8c314687b04840c681","bytes":2199535,"horses":10,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-06":{"file":"b7ca9b83ba9bc2433de4c9af107534e29c6013a44617a969b391eff60f138599.json","sha256":"b7ca9b83ba9bc2433de4c9af107534e29c6013a44617a969b391eff60f138599","bytes":1765290,"horses":8,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-07":{"file":"ecef6d5495848fc590b4f117e18235c98fa9d37ec27e02defab9590b46eac190.json","sha256":"ecef6d5495848fc590b4f117e18235c98fa9d37ec27e02defab9590b46eac190","bytes":1849673,"horses":9,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-08":{"file":"514d446a0bd3dfe6b691a1907cd85ccfd045bc65c9600db17b8fe6e8b9905742.json","sha256":"514d446a0bd3dfe6b691a1907cd85ccfd045bc65c9600db17b8fe6e8b9905742","bytes":2691618,"horses":12,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-09":{"file":"3c11d4f4f3be88bf892af35fe6b77d459828dc15ba0b0fa4708d4da19c31dca4.json","sha256":"3c11d4f4f3be88bf892af35fe6b77d459828dc15ba0b0fa4708d4da19c31dca4","bytes":2362045,"horses":11,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-10":{"file":"e4153c7f7163244e3d7c5573165e45d1ce08e405b863379d54e53f877cc682cc.json","sha256":"e4153c7f7163244e3d7c5573165e45d1ce08e405b863379d54e53f877cc682cc","bytes":1964099,"horses":9,"morningMarks":false,"prediction":true,"bet":false},"nar-2026-10-10-高知-11":{"file":"04daf58a68c7bb1b0a2a0d08d1eb9deb2daa44039398c60f1c9a6225810d4d32.json","sha256":"04daf58a68c7bb1b0a2a0d08d1eb9deb2daa44039398c60f1c9a6225810d4d32","bytes":2673250,"horses":12,"morningMarks":false,"prediction":true,"bet":false}}}
+{
+  "version": "arvexq-saved-snapshots-v1",
+  "date": "2026-10-10",
+  "races": {
+    "jra-2026-10-10-京都-01": {
+      "file": "24f035182ab7b7f73ef9e93cf912d21fd058b3d89071d438090616396ea80682.json",
+      "sha256": "24f035182ab7b7f73ef9e93cf912d21fd058b3d89071d438090616396ea80682",
+      "bytes": 2744693,
+      "horses": 14,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-02": {
+      "file": "0c4e44c30e3e14a81a71ec2dfc52c9b394f71bb21349c622c737a3b85026a1a3.json",
+      "sha256": "0c4e44c30e3e14a81a71ec2dfc52c9b394f71bb21349c622c737a3b85026a1a3",
+      "bytes": 2041770,
+      "horses": 9,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-03": {
+      "file": "6106bf1479e51afc9c2e2189266463c3f399a658a1d1042d7773b839c6504736.json",
+      "sha256": "6106bf1479e51afc9c2e2189266463c3f399a658a1d1042d7773b839c6504736",
+      "bytes": 1858162,
+      "horses": 8,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-04": {
+      "file": "d3a470808407077c27aa12346601090880d4fae1eada65902f2040b01f7f9f58.json",
+      "sha256": "d3a470808407077c27aa12346601090880d4fae1eada65902f2040b01f7f9f58",
+      "bytes": 3370174,
+      "horses": 14,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-05": {
+      "file": "f9e430f4d378d62c6e6d6385dd514ba175ee53db51378cb44d72c59952b5c999.json",
+      "sha256": "f9e430f4d378d62c6e6d6385dd514ba175ee53db51378cb44d72c59952b5c999",
+      "bytes": 444012,
+      "horses": 14,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-06": {
+      "file": "7a2b802047c83194c3caf3c290f7ebe8c6d190ebd1b296547397422d7bdd5c81.json",
+      "sha256": "7a2b802047c83194c3caf3c290f7ebe8c6d190ebd1b296547397422d7bdd5c81",
+      "bytes": 352591,
+      "horses": 11,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-07": {
+      "file": "830e420636691f2ed28e9d94c29a738516afae9454b6c298d554a111e0ba78d1.json",
+      "sha256": "830e420636691f2ed28e9d94c29a738516afae9454b6c298d554a111e0ba78d1",
+      "bytes": 5447584,
+      "horses": 16,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-08": {
+      "file": "bf4a3e171c820a0eaa27f9d2f8e343e521d256c5f5c7ffa6e42535cf33ef28ba.json",
+      "sha256": "bf4a3e171c820a0eaa27f9d2f8e343e521d256c5f5c7ffa6e42535cf33ef28ba",
+      "bytes": 1225421,
+      "horses": 6,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-09": {
+      "file": "9a73665536323ba41351153a3734a06ee13067dcb53bbd27d5fbf70e0f303a16.json",
+      "sha256": "9a73665536323ba41351153a3734a06ee13067dcb53bbd27d5fbf70e0f303a16",
+      "bytes": 6145873,
+      "horses": 16,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-10": {
+      "file": "1df4f24e74761ad1eb23616789904c607ccedc1fae271171757a1d5dc623daa9.json",
+      "sha256": "1df4f24e74761ad1eb23616789904c607ccedc1fae271171757a1d5dc623daa9",
+      "bytes": 5445688,
+      "horses": 15,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-11": {
+      "file": "350fe16e506a4c16e07e4fb47789dc0ed5ae291c446ec74a39b0ab5998027793.json",
+      "sha256": "350fe16e506a4c16e07e4fb47789dc0ed5ae291c446ec74a39b0ab5998027793",
+      "bytes": 4501219,
+      "horses": 13,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-京都-12": {
+      "file": "1279cd0392b224d8dfe105b5b1c25dee28d0a74f0b330cd0e1dd2258c8c193fd.json",
+      "sha256": "1279cd0392b224d8dfe105b5b1c25dee28d0a74f0b330cd0e1dd2258c8c193fd",
+      "bytes": 5531192,
+      "horses": 16,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-01": {
+      "file": "587a340805329246ccb6a62ffba3103e7a54b0923c39b1ef8e0303e1812cd89d.json",
+      "sha256": "587a340805329246ccb6a62ffba3103e7a54b0923c39b1ef8e0303e1812cd89d",
+      "bytes": 2956722,
+      "horses": 16,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-02": {
+      "file": "20b19f6c083db9d111b9509db63918ef96ec0eea62b45856b6f6f4eeb7b48a14.json",
+      "sha256": "20b19f6c083db9d111b9509db63918ef96ec0eea62b45856b6f6f4eeb7b48a14",
+      "bytes": 2665615,
+      "horses": 13,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-03": {
+      "file": "90bea59453892a630d4a819aa2dc12c094467b7ad07be39d1726328ded369560.json",
+      "sha256": "90bea59453892a630d4a819aa2dc12c094467b7ad07be39d1726328ded369560",
+      "bytes": 2531997,
+      "horses": 16,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-04": {
+      "file": "d0d7144479e8cc34a5dfdd1052de236d04055a1bf04fff0b7ba088f7e3874e86.json",
+      "sha256": "d0d7144479e8cc34a5dfdd1052de236d04055a1bf04fff0b7ba088f7e3874e86",
+      "bytes": 504988,
+      "horses": 16,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-05": {
+      "file": "b496e191d796a30e3ca318480a5346bae633d1ed561f9116b0ff729090b63110.json",
+      "sha256": "b496e191d796a30e3ca318480a5346bae633d1ed561f9116b0ff729090b63110",
+      "bytes": 388393,
+      "horses": 12,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-06": {
+      "file": "c39e201878ac5f6dce7147cfa40c98ae574cd82ed5767231a9b140ef8e40a6d7.json",
+      "sha256": "c39e201878ac5f6dce7147cfa40c98ae574cd82ed5767231a9b140ef8e40a6d7",
+      "bytes": 444313,
+      "horses": 14,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-07": {
+      "file": "eb4ff680e0dce330f5b118549a7167aa960e0ce61856452ea74ea4e329f7f01c.json",
+      "sha256": "eb4ff680e0dce330f5b118549a7167aa960e0ce61856452ea74ea4e329f7f01c",
+      "bytes": 3972332,
+      "horses": 13,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-08": {
+      "file": "d42ba2e0d232f05168b210939fccf4a4b82d3682f5dae4b3db6cf9b8e03d1c80.json",
+      "sha256": "d42ba2e0d232f05168b210939fccf4a4b82d3682f5dae4b3db6cf9b8e03d1c80",
+      "bytes": 2852806,
+      "horses": 11,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-09": {
+      "file": "aa88578a3dd70e40759a3b9c657b1219def15c3b79d76e1fe81b783a7bdd28f8.json",
+      "sha256": "aa88578a3dd70e40759a3b9c657b1219def15c3b79d76e1fe81b783a7bdd28f8",
+      "bytes": 2623380,
+      "horses": 9,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-10": {
+      "file": "9040f63534492a5064cdce38d8dfc6aff0c136738400a992628acd58f2052cda.json",
+      "sha256": "9040f63534492a5064cdce38d8dfc6aff0c136738400a992628acd58f2052cda",
+      "bytes": 4479237,
+      "horses": 16,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-11": {
+      "file": "28a9de76689ee90ea52a80832ae8e078842c7cb06fd1bbd7e9e78a608081c971.json",
+      "sha256": "28a9de76689ee90ea52a80832ae8e078842c7cb06fd1bbd7e9e78a608081c971",
+      "bytes": 2802238,
+      "horses": 11,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "jra-2026-10-10-東京-12": {
+      "file": "e909f68a816760eb41d3511bbc510a92850690b07673b814eba750ca9a1264a4.json",
+      "sha256": "e909f68a816760eb41d3511bbc510a92850690b07673b814eba750ca9a1264a4",
+      "bytes": 5069834,
+      "horses": 16,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-01": {
+      "file": "fc80feb41a9e9c7385663906332b1bc7cfb97aaa9f606dacf25e480a20f9cc1b.json",
+      "sha256": "fc80feb41a9e9c7385663906332b1bc7cfb97aaa9f606dacf25e480a20f9cc1b",
+      "bytes": 1458917,
+      "horses": 7,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-02": {
+      "file": "8c0446a7951a21b7d10d3a3a5ec8bee835fe23d5eb1858b96c54c9d6731dfefa.json",
+      "sha256": "8c0446a7951a21b7d10d3a3a5ec8bee835fe23d5eb1858b96c54c9d6731dfefa",
+      "bytes": 2162876,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-03": {
+      "file": "077e8b05db60238acdad83541098eafaee76d1de48b8aad679fb997b45b24a8b.json",
+      "sha256": "077e8b05db60238acdad83541098eafaee76d1de48b8aad679fb997b45b24a8b",
+      "bytes": 2507024,
+      "horses": 12,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-04": {
+      "file": "9d3ee999f11548353c6dfbd296773ad9548042453f10c292130a083f720be54d.json",
+      "sha256": "9d3ee999f11548353c6dfbd296773ad9548042453f10c292130a083f720be54d",
+      "bytes": 2070640,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-05": {
+      "file": "2efa1443b9ba43b072f841a7a19cadfd6ee419c2a0080a45f7cdad10d9567244.json",
+      "sha256": "2efa1443b9ba43b072f841a7a19cadfd6ee419c2a0080a45f7cdad10d9567244",
+      "bytes": 2616493,
+      "horses": 12,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-06": {
+      "file": "fe4a2a3a30c6c53437a42bd4a052a7db072da0485df12302533613e453410049.json",
+      "sha256": "fe4a2a3a30c6c53437a42bd4a052a7db072da0485df12302533613e453410049",
+      "bytes": 2192010,
+      "horses": 12,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-07": {
+      "file": "cb058ce14a3e84d0800b983e5d878fed8575c6105f51ddd9502c9f417ca55b58.json",
+      "sha256": "cb058ce14a3e84d0800b983e5d878fed8575c6105f51ddd9502c9f417ca55b58",
+      "bytes": 2201860,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-08": {
+      "file": "bf358e1bd705da9fddd36455254f15c8d8042cc9f9c0a2e001e5eb91c08e40e3.json",
+      "sha256": "bf358e1bd705da9fddd36455254f15c8d8042cc9f9c0a2e001e5eb91c08e40e3",
+      "bytes": 2366956,
+      "horses": 11,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-09": {
+      "file": "0dc88fbed0b39a1fcaefa254ce60b30cf376124ef7ca3d15fe504833a2eb9e59.json",
+      "sha256": "0dc88fbed0b39a1fcaefa254ce60b30cf376124ef7ca3d15fe504833a2eb9e59",
+      "bytes": 2611179,
+      "horses": 12,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-10": {
+      "file": "880dd5841ad804d747879daec018008eed260bb5c42bae3174e757302272cbbc.json",
+      "sha256": "880dd5841ad804d747879daec018008eed260bb5c42bae3174e757302272cbbc",
+      "bytes": 1434989,
+      "horses": 11,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-11": {
+      "file": "59cf858436f98c39be707e1fc336428e068e1c9a3a43a1140db27e2512075f42.json",
+      "sha256": "59cf858436f98c39be707e1fc336428e068e1c9a3a43a1140db27e2512075f42",
+      "bytes": 2347617,
+      "horses": 11,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-佐賀-12": {
+      "file": "cd25d8b27e9acdcd83d29a267a9f3e0a8349db2fcbd8fa0db741fd1da4d22433.json",
+      "sha256": "cd25d8b27e9acdcd83d29a267a9f3e0a8349db2fcbd8fa0db741fd1da4d22433",
+      "bytes": 3041873,
+      "horses": 14,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-01": {
+      "file": "d442954eccbe3ebddd5278fff9c962dacd5f9415bbf6a911421af89dc1fa69d7.json",
+      "sha256": "d442954eccbe3ebddd5278fff9c962dacd5f9415bbf6a911421af89dc1fa69d7",
+      "bytes": 2534936,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-02": {
+      "file": "7cddc3a320156e5c2c205e14b2c4a4d96f5af49a1a49f4ee2dc888ab2ebaba92.json",
+      "sha256": "7cddc3a320156e5c2c205e14b2c4a4d96f5af49a1a49f4ee2dc888ab2ebaba92",
+      "bytes": 2547044,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-03": {
+      "file": "53f61f3a9186b1236ff0cc92b201affd82d771d093a36a66f8a291c80be9385b.json",
+      "sha256": "53f61f3a9186b1236ff0cc92b201affd82d771d093a36a66f8a291c80be9385b",
+      "bytes": 2398136,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-04": {
+      "file": "b53a4fc1b9423cba4cd60b39d218245716baf5eedcafb160d6833deeaa5734fa.json",
+      "sha256": "b53a4fc1b9423cba4cd60b39d218245716baf5eedcafb160d6833deeaa5734fa",
+      "bytes": 2387792,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-05": {
+      "file": "e2dd2509c5fc7a28663a51fa7b4549161fce3339fb275f91130100345d6ee138.json",
+      "sha256": "e2dd2509c5fc7a28663a51fa7b4549161fce3339fb275f91130100345d6ee138",
+      "bytes": 2360416,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-06": {
+      "file": "a04f492f5a30ae7539336f206e4af23028feb0e70302f96c9cbc4cadc61978bb.json",
+      "sha256": "a04f492f5a30ae7539336f206e4af23028feb0e70302f96c9cbc4cadc61978bb",
+      "bytes": 2450610,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-07": {
+      "file": "7086eca0fdaea75eb22f59f8f165a3e318107d39bf1de338988b9431d59dbb9a.json",
+      "sha256": "7086eca0fdaea75eb22f59f8f165a3e318107d39bf1de338988b9431d59dbb9a",
+      "bytes": 2346975,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-08": {
+      "file": "84c8416d20dc864560128136aa8fc8ce004a20abce368439b4a16b5951397c2c.json",
+      "sha256": "84c8416d20dc864560128136aa8fc8ce004a20abce368439b4a16b5951397c2c",
+      "bytes": 2360568,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-09": {
+      "file": "baa773f2541e2d6e16b21a5c7a8feda1f7a855d783b90ce30156d368dd17b2e7.json",
+      "sha256": "baa773f2541e2d6e16b21a5c7a8feda1f7a855d783b90ce30156d368dd17b2e7",
+      "bytes": 2348971,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-10": {
+      "file": "247db970034a390ec9131d74f981d691d9be7802c5451e0efbcd56a9fbe1181e.json",
+      "sha256": "247db970034a390ec9131d74f981d691d9be7802c5451e0efbcd56a9fbe1181e",
+      "bytes": 2394097,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-11": {
+      "file": "ec16d1df44b28c35d7383051930043b4825574d056755bd0c3edd27b60bd1133.json",
+      "sha256": "ec16d1df44b28c35d7383051930043b4825574d056755bd0c3edd27b60bd1133",
+      "bytes": 2474889,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-帯広ば-12": {
+      "file": "8818aa6d32610f070120f6466fae8f8113793f4f3ce125357dfceaa13797570a.json",
+      "sha256": "8818aa6d32610f070120f6466fae8f8113793f4f3ce125357dfceaa13797570a",
+      "bytes": 2222982,
+      "horses": 9,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-高知-01": {
+      "file": "2e81cca1dc68b92075e3758b5b67cd5bcaf6643d9a96fa4a4220fd26d6246639.json",
+      "sha256": "2e81cca1dc68b92075e3758b5b67cd5bcaf6643d9a96fa4a4220fd26d6246639",
+      "bytes": 548526,
+      "horses": 9,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": true,
+      "previousSnapshot": {
+        "file": "e65c99a2b2dc63359e1c613e515ba080358f4d03ee654e3faffa819721e57b9e.json",
+        "sha256": "e65c99a2b2dc63359e1c613e515ba080358f4d03ee654e3faffa819721e57b9e",
+        "bytes": 1914577,
+        "horses": 9,
+        "morningMarks": false,
+        "prediction": true,
+        "bet": false
+      },
+      "source": "verified-d1-backup/d1-38043725156"
+    },
+    "nar-2026-10-10-高知-02": {
+      "file": "e6f6b694f566f70cb7d6afe461c9a317d80e16afcd8ae26eae56952c0d3c8bb8.json",
+      "sha256": "e6f6b694f566f70cb7d6afe461c9a317d80e16afcd8ae26eae56952c0d3c8bb8",
+      "bytes": 2349414,
+      "horses": 11,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-高知-03": {
+      "file": "e670a1d5929af64cb5ac2fac56d54155a9b9a3f91a71209dd2c3acad65847212.json",
+      "sha256": "e670a1d5929af64cb5ac2fac56d54155a9b9a3f91a71209dd2c3acad65847212",
+      "bytes": 1961322,
+      "horses": 9,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-高知-04": {
+      "file": "aef5790741a0ddf1f1baadf7af18efea182a571e9f43e080b5fb7b79c589ac3f.json",
+      "sha256": "aef5790741a0ddf1f1baadf7af18efea182a571e9f43e080b5fb7b79c589ac3f",
+      "bytes": 2689630,
+      "horses": 12,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-高知-05": {
+      "file": "06c44c3c6a20821c70f1c51abd090e8f58a5742932283c2bad0ebb8abe327c8e.json",
+      "sha256": "06c44c3c6a20821c70f1c51abd090e8f58a5742932283c2bad0ebb8abe327c8e",
+      "bytes": 625849,
+      "horses": 10,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": true,
+      "previousSnapshot": {
+        "file": "abc02d7c6b21597b4d0d46c8c529db39e4520a01ad9b1b8c314687b04840c681.json",
+        "sha256": "abc02d7c6b21597b4d0d46c8c529db39e4520a01ad9b1b8c314687b04840c681",
+        "bytes": 2199535,
+        "horses": 10,
+        "morningMarks": false,
+        "prediction": true,
+        "bet": false
+      },
+      "source": "verified-d1-backup/d1-38043725156"
+    },
+    "nar-2026-10-10-高知-06": {
+      "file": "b7ca9b83ba9bc2433de4c9af107534e29c6013a44617a969b391eff60f138599.json",
+      "sha256": "b7ca9b83ba9bc2433de4c9af107534e29c6013a44617a969b391eff60f138599",
+      "bytes": 1765290,
+      "horses": 8,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-高知-07": {
+      "file": "ecef6d5495848fc590b4f117e18235c98fa9d37ec27e02defab9590b46eac190.json",
+      "sha256": "ecef6d5495848fc590b4f117e18235c98fa9d37ec27e02defab9590b46eac190",
+      "bytes": 1849673,
+      "horses": 9,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-高知-08": {
+      "file": "514d446a0bd3dfe6b691a1907cd85ccfd045bc65c9600db17b8fe6e8b9905742.json",
+      "sha256": "514d446a0bd3dfe6b691a1907cd85ccfd045bc65c9600db17b8fe6e8b9905742",
+      "bytes": 2691618,
+      "horses": 12,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-高知-09": {
+      "file": "3c11d4f4f3be88bf892af35fe6b77d459828dc15ba0b0fa4708d4da19c31dca4.json",
+      "sha256": "3c11d4f4f3be88bf892af35fe6b77d459828dc15ba0b0fa4708d4da19c31dca4",
+      "bytes": 2362045,
+      "horses": 11,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-高知-10": {
+      "file": "e4153c7f7163244e3d7c5573165e45d1ce08e405b863379d54e53f877cc682cc.json",
+      "sha256": "e4153c7f7163244e3d7c5573165e45d1ce08e405b863379d54e53f877cc682cc",
+      "bytes": 1964099,
+      "horses": 9,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    },
+    "nar-2026-10-10-高知-11": {
+      "file": "04daf58a68c7bb1b0a2a0d08d1eb9deb2daa44039398c60f1c9a6225810d4d32.json",
+      "sha256": "04daf58a68c7bb1b0a2a0d08d1eb9deb2daa44039398c60f1c9a6225810d4d32",
+      "bytes": 2673250,
+      "horses": 12,
+      "morningMarks": false,
+      "prediction": true,
+      "bet": false
+    }
+  }
+}

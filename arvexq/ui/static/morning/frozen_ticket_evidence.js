@@ -92,7 +92,7 @@ function sealedPlan(r,e){
      points:x.combos.length,reason:x.reason})),
    primaryKind:e.items.find(x=>x.level==='本線').kind,noAxis:e.axisStatus==='no-axis',
    trifectaReviewed:true,trifectaDecision:e.items.some(x=>x.kind==='3連単')?'採用':'見送り',
-   reason:'朝の発走前固定買い目。購入履歴ではなく、事後の組合せ再計算もしていません。',
+   reason:e.origin==='saved-preoff'?'発走前保存の買い目原本。保存時刻の組合せをそのまま復旧しています。':'朝の発走前固定買い目。購入履歴ではなく、事後の組合せ再計算もしていません。',
    dataStatus:'frozen-morning-evidence',referenceBudget:{
      unitYen:100,points:e.items.reduce((a,z)=>a+z.combos.length,0),
      totalYen:e.items.reduce((a,z)=>a+z.combos.length*100,0)}};

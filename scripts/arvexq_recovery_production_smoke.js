@@ -59,6 +59,23 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     await page.waitForTimeout(300);
     assert.deepEqual(await page.locator('.rc-ai-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark'))),before,'odds refresh must not rewrite saved marks');
     await page.close();
+    // Exact recovered pre-off tickets must render even with the mutable API down.
+    for(const [id,kind,patterns] of [
+      ['nar-2026-10-10-高知-01','馬単',[/5\s*→\s*8/]],
+      ['nar-2026-10-10-高知-05','馬連',[/1\s*-\s*5/,/3\s*-\s*5/]]
+    ].filter(([id])=>records.some(r=>r.id===id))){
+      const ticketPage=await context.newPage();
+      await ticketPage.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
+      await check(ticketPage,records.find(r=>r.id===id));
+      await ticketPage.locator('[data-panel="bets"]').click();
+      const box=ticketPage.locator('.ai-bet-box');
+      await box.waitFor({state:'visible',timeout:20000});
+      const text=await box.innerText();assert.ok(text.includes(kind));
+      patterns.forEach(pattern=>assert.match(text,pattern,'actual saved numbered ticket '+id));
+      assert.match(text,/保存/);assert.equal(await ticketPage.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),1);
+      await ticketPage.close();
+      console.log('PRODUCTION_SAVED_NUMBERED_TICKET_API_OUTAGE_PASS '+id+' '+kind);
+    }
     const fresh=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
     await fresh.addInitScript(key=>{if(localStorage.getItem(key)!=='1')localStorage.setItem(key,'1')},marker);
     await fresh.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
@@ -69,6 +86,13 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
       await home.locator('[data-home-page="'+section+'"]').click();
       for(const track of tracks)
         await home.locator('[data-track="'+track+'"]').first().waitFor({state:'visible',timeout:30000});
+    }
+    if(day==='2026-10-10'){
+      const selected=home.locator('.arv-direct-picks').filter({hasText:'地方 厳選レース'});
+      for(const id of ['nar-2026-10-10-高知-01','nar-2026-10-10-高知-05'])
+        await selected.locator('[data-race="'+id+'"]').waitFor({state:'visible',timeout:30000});
+      assert.equal(await selected.locator('[data-race]').count(),2,'only original numbered tickets qualify');
+      console.log('PRODUCTION_SELECTED_EXACT_SAVED_TICKETS_FRESH_HOME_API_OUTAGE_PASS');
     }
     await fresh.close();
     console.log('PRODUCTION_FRESH_HOME_API_OUTAGE_ALL_VENUES_PASS');
