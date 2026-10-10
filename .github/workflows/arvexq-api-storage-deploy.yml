@@ -1,0 +1,75 @@
+name: ARVEXQ API Private Storage Audit Deploy
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify private read-only route and preserved original handlers
+        run: node scripts/arvexq_api_storage_smoke.mjs
+      - name: Discover authorized account without logging credentials
+        run: |
+          if [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then exit 0; fi
+          npx --yes wrangler@4 whoami --json > /tmp/arvexq-whoami.json
+          python - <<'PY'
+          import os,json,re
+          accounts=json.load(open('/tmp/arvexq-whoami.json'))['accounts']
+          assert len(accounts)==1
+          account=accounts[0]['id'];assert re.fullmatch('[a-f0-9]{32}',account)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('CLOUDFLARE_ACCOUNT_ID='+account+'\n')
+          PY
+      - name: Guard production source and preserve original compatibility settings
+        run: |
+          python - <<'PY'
+          import os,json,hashlib,urllib.request,re
+          from pathlib import Path
+          base='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/kraiz-api'
+          def read(suffix):
+              req=urllib.request.Request(base+suffix,headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']})
+              with urllib.request.urlopen(req,timeout=30) as response:return response.read()
+          raw=read('');boundary=raw.split(b'\r\n',1)[0]
+          source=raw.split(b'\r\n\r\n',1)[1].rsplit(b'\r\n'+boundary,1)[0]
+          expected=Path('workers/api_preserved.mjs').read_bytes()
+          assert hashlib.sha256(source).digest()==hashlib.sha256(expected).digest(),'API_SOURCE_CHANGED_REFUSING_OVERWRITE'
+          settings=json.loads(read('/settings'))['result']
+          binding=next(b for b in settings['bindings'] if b['name']=='DB')
+          assert binding['type']=='d1' and binding['id']=='c68ca1ac-357a-4c1f-81ce-0b6337716809'
+          date=settings['compatibility_date'];assert re.fullmatch(r'\d{4}-\d{2}-\d{2}',date)
+          cfg=Path('wrangler-api.toml');text=cfg.read_text();text=text.replace('compatibility_date = "2026-09-29"','compatibility_date = '+json.dumps(date))
+          flags=settings.get('compatibility_flags') or []
+          if flags:text=text.replace('keep_vars = true','compatibility_flags = '+json.dumps(flags)+'\nkeep_vars = true')
+          cfg.write_text(text)
+          print('API_ORIGINAL_SOURCE_GUARD_PASS',hashlib.sha256(source).hexdigest(),'DB_BINDING_PRESERVED')
+          PY
+      - name: Deploy preserved API with private fixed-SQL metrics route
+        run: npx --yes wrangler@4 deploy --config wrangler-api.toml
+      - name: Verify original API and read private storage metrics
+        run: |
+          python - <<'PY'
+          import os,json,urllib.request
+          base='https://kraiz-api.4b89h4fydd.workers.dev'
+          with urllib.request.urlopen(base+'/api/health',timeout=30) as response:health=json.load(response)
+          assert health.get('ok') and health.get('service')=='KRAIZ API'
+          req=urllib.request.Request(base+'/api/admin/storage-audit',headers={'Authorization':'Bearer '+os.environ['SYNC_TOKEN']})
+          with urllib.request.urlopen(req,timeout=60) as response:metrics=json.load(response)
+          assert metrics.get('ok') and metrics.get('sql_writes')==0
+          with open('api-private-storage-audit.json','w') as f:json.dump(metrics,f,indent=2)
+          print('API_HEALTH_AND_READONLY_STORAGE_PASS',json.dumps(metrics))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-api-private-storage-audit
+          path: api-private-storage-audit.json
+          if-no-files-found: ignore

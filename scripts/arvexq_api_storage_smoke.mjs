@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {storageAudit} from '../workers/api_storage_audit.mjs';
+import worker from '../workers/api.mjs';
+let reads=0;
+const env={SYNC_TOKEN:'test-only',DB:{prepare(sql){assert.match(sql,/^\s*(SELECT|PRAGMA)\s/);assert.doesNotMatch(sql,/INSERT|UPDATE|DELETE|DROP|VACUUM/);reads++;return{async all(){return{results:[{rows:1}],meta:{size_after:12345}}}}}}};
+const url='https://example.test/api/admin/storage-audit';
+assert.equal((await storageAudit(new Request(url),env)).status,401);assert.equal(reads,0);
+assert.equal((await worker.fetch(new Request(url,{method:'POST'}),env)).status,405);assert.equal(reads,0);
+const data=await (await worker.fetch(new Request(url,{headers:{authorization:'Bearer test-only'}}),env)).json();
+assert.equal(data.sql_writes,0);assert.equal(reads,6);assert.equal(data.queries.details.meta.size_after,12345);
+assert.equal((await worker.fetch(new Request('https://example.test/api/health'),env)).status,200);
+assert.equal((await worker.fetch(new Request('https://example.test/api/db-check'),env)).status,200);
+console.log('API_ORIGINAL_ROUTES_AUTHORIZED_METRICS_ONLY_ZERO_SQL_WRITES_PASS');
