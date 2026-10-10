@@ -1,0 +1,37 @@
+name: ARVEXQ Protected Lossless D1 Migration
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/arvexq-full-snapshot-migration.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: arvexq-protected-d1-migration
+  cancel-in-progress: false
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      VERIFIED_BACKUP_MANIFEST_SHA256: a9fa25fe85fce7cf804ddbe43966520ad0a572fc5b76fe8d66b4e65e280d78c7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: backup/d1-38043725156
+          path: verified-original-backup
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify codec and exact original preservation before writing
+        run: python -m unittest tests.test_full_snapshot_codec
+      - name: Compress only backup-matching originals and verify every stored restore
+        run: python scripts/arvexq_migrate_full_snapshots.py verified-original-backup/protected-backups/d1-38043725156/manifest.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-protected-lossless-migration
+          path: d1-lossless-migration-report.json
+          if-no-files-found: ignore
