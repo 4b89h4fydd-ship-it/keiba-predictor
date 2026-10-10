@@ -2350,7 +2350,8 @@ function fetchSelectedRaceOdds(id,seq){
     if(seq!==state.detailSeq||!state.race||String(state.race.id)!==String(id))return false;
     var changed=mergeOddsPayload(body);
     updateDetailSections(id,state.race,false);
-    saveDetailCache(id,state.race);render();
+    if(changed){saveDetailCache(id,state.race);render()}
+    else render();
     return changed
   }).catch(function(error){
     traceRaceDetail(id,'odds-failed',{message:String(error&&error.message||error)});
@@ -2395,9 +2396,21 @@ function fetchEdgeRace(id,forceNetwork,retryLimit){
       instantTrackDetails[key]=merged;saveDetailCache(id,merged);return merged
     }).catch(function(error){
       traceRaceDetail(id,'failed',{attempt:index+1,url:url,message:String(error&&error.message||error)});
-      if(index+1<maxAttempts)return new Promise(function(resolve){setTimeout(resolve,(index+1)*1000)}).then(function(){return attempt(index+1)});
-      st.error=String(error&&error.message||error);updateDetailSections(id,cached||row,false);
-      return entryDataAvailable(cached)?cached:null
+      var message=String(error&&error.message||error);
+      if(index+1<maxAttempts&&!/http (?:404|400)/i.test(message))return new Promise(function(resolve){setTimeout(resolve,(index+1)*1000)}).then(function(){return attempt(index+1)});
+      st.error=message;updateDetailSections(id,cached||row,false);
+      var recovery=window.ARVEXQSavedSnapshot;
+      if(!recovery)return entryDataAvailable(cached)?cached:null;
+      return recovery.available(String((row||cached||{}).date||state.date),key,edgeFetchJson).then(function(saved){
+        if(!saved)return entryDataAvailable(cached)?cached:null;
+        var recovered=mergeRaceReflection(saved,cached,null,row);
+        recovered._savedSnapshotFallback=true;
+        applyMorningArchive([recovered]);
+        instantTrackDetails[key]=recovered;saveDetailCache(key,recovered);
+        updateDetailSections(id,recovered,true);
+        traceRaceDetail(id,'saved-snapshot-restored',{horses:recovered.horses.length});
+        return recovered
+      })
     })
   }
   return attempt(0).finally(function(){st.busy=false})
@@ -3807,7 +3820,7 @@ function homeCircuitChooser(title,kind){
 }
 function selectedCircuitPage(circuit){
   var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝の固定判定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+(t.noAxis?'｜◎なし・軸分散':'')+'｜'+esc((t.types||[]).filter(function(x){return x!==t.primaryType}).join('・')||t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
-  var old=legacyMorningSelectionCandidates(circuit),history=old.length?'<details class="smart-fixed-picks arv-direct-picks"><summary class="smart-fixed-picks-head"><span><b>朝選定（買い目原本未確認）</b><small>券種名だけの保存は購入可能な買い目ではありません。朝の記録は維持し、厳選件数には含めません</small></span><em>'+old.length+'件</em></summary><div class="fixed-pick-box-body">'+old.map(function(r){return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>朝選定記録・印／買い目原本未確認</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>未保存</em></button>'}).join('')+'</div></details>':'';
+  var old=legacyMorningSelectionCandidates(circuit),history=old.length?'<details class="smart-fixed-picks arv-pick-history"><summary class="smart-fixed-picks-head"><span><b>朝選定（買い目原本未確認）</b><small>券種名だけの保存は購入可能な買い目ではありません。朝の記録は維持し、厳選件数には含めません</small></span><em>'+old.length+'件</em></summary><div class="fixed-pick-box-body">'+old.map(function(r){return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>朝選定記録・印／買い目原本未確認</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>未保存</em></button>'}).join('')+'</div></details>':'';
   return '<section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>'+esc(circuit)+' 厳選レース</b><small>朝に買い目まで成立した分類のみ</small></span><em>'+picks.length+'レース</em></div><div class="fixed-pick-box-body">'+body+'</div></section>'+history
 }
 function specialCircuitPage(circuit){

@@ -129,7 +129,7 @@ for filename in STYLE_MODULES:
 style_hash = hashlib.sha256(b"|".join((STYLE_DIR / filename).read_bytes() for filename in STYLE_MODULES)).hexdigest()[:12]
 
 RESEARCH_PATH = STATIC / "research"
-RESEARCH_ASSETS = ("local_evidence.js", "research_view.js", "research_view.css", "static_racecard.js", "live_odds.js")
+RESEARCH_ASSETS = ("local_evidence.js", "research_view.js", "research_view.css", "static_racecard.js", "live_odds.js", "saved_snapshot.js")
 for filename in RESEARCH_ASSETS:
     if not (RESEARCH_PATH / filename).is_file():
         raise RuntimeError(f"missing research asset: {filename}")
@@ -324,3 +324,7 @@ if racecard_dir.is_dir():
     target_dir.mkdir(exist_ok=True)
     for archive in racecard_dir.glob("????-??-??.json"):
         shutil.copy2(archive, target_dir / archive.name)
+
+# Losslessly archived existing race originals, independent of D1 availability.
+if (STATIC / "saved-snapshots").is_dir():
+    shutil.copytree(STATIC / "saved-snapshots", DIST / "saved-snapshots")

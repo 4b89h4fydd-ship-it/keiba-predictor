@@ -1,0 +1,47 @@
+name: ARVEXQ Lossless Saved Snapshot Recovery
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: Existing cache date to restore without recalculation
+        required: true
+        default: '2026-10-10'
+permissions:
+  contents: write
+concurrency:
+  group: arvexq-snapshot-recovery
+  cancel-in-progress: false
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache/restore@v4
+        with:
+          path: .arvexq-data
+          key: arvexq-recovery-${{ github.run_id }}
+          restore-keys: |
+            arvexq-prefetch-Linux-${{ inputs.date }}-
+          fail-on-cache-miss: true
+      - name: Export and verify existing originals from read-only SQLite
+        env:
+          RECOVERY_DATE: ${{ inputs.date }}
+        run: |
+          python scripts/arvexq_publish_saved_snapshots.py --root .arvexq-data --date "$RECOVERY_DATE"
+          test -s "arvexq/ui/static/saved-snapshots/$RECOVERY_DATE.json"
+          python build_static.py
+      - name: Commit restored originals only
+        env:
+          RECOVERY_DATE: ${{ inputs.date }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add arvexq/ui/static/saved-snapshots
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix: restore hash-verified saved race originals for $RECOVERY_DATE"
+          git pull --rebase origin main
+          git push origin main
