@@ -145,7 +145,13 @@ js = strings["JS"]
 # Refresh unchanged v329 filenames when actual UI files change. Avoid stale
 # iPhone/PWA JS/CSS while preserving the approved top-screen composition.
 core_asset_hash = hashlib.sha256((js + "\0" + css).encode("utf-8")).hexdigest()[:12]
-index_html = index_html.replace("fix=20261009-user-approved-v357", "fix=" + core_asset_hash)
+index_html, fingerprint_replacements = re.subn(
+    r'(/app-' + re.escape(BUILD_VERSION) + r'\\.js\\?fix=)[A-Za-z0-9._-]+',
+    lambda match: match.group(1) + core_asset_hash,
+    index_html,
+)
+if fingerprint_replacements != 1 or ("?fix=" + core_asset_hash) not in index_html:
+    raise RuntimeError("App JS content fingerprint was not injected; refusing stale iPhone deploy")
 manifest = strings["MANIFEST"]
 sw = strings["SW"]
 
