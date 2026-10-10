@@ -13,6 +13,15 @@ const code=['morningPickOf','morningPickReady','morningPublicStatus','legacyMorn
   .map(take).join('\n')+'\nreturn {morningPickReady,legacyMorningSelectionCandidates,morningPublicStatus,selectedRaceCandidates,specialForecastRaceCandidates};';
 const win={};
 new Function('window',fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8'))(win);
+new Function('window',fs.readFileSync('arvexq/ui/static/morning/frozen_ticket_evidence.js','utf8'))(win);
+const fixedAt='2026-10-10T06:30:00+09:00';
+const receipt={version:win.ARVEXQMorningEvidence.VERSION,raceId:'one',raceDate:'2026-10-10',
+ fixedAt,axisStatus:'honmei',axisHorseNumber:1,
+ marks:[1,2,3,4,5].map(n=>({horseNumber:n,mark:n===1?'◎':'△'})),
+ items:[{level:'本線',kind:'ワイド',combos:[[1,2]],points:1}],
+ ticketKinds:['ワイド'],modelVersion:'test-frozen-preoff'};
+state.races[0].morningTicketEvidence=receipt;
+
 const state={races:[
   {id:'one',date:'2026-10-10',circuit:'中央',track:'東京',raceNumber:1,startTime:'10:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:true,morningSelectedScore:86,morningSpecial:false,
      morningPrimaryType:'的中重視型',morningSelectedTypes:['的中重視型'],morningSelectionReason:'朝の固定分類',morningTicketKinds:['ワイド']},
