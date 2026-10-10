@@ -85,6 +85,10 @@ jobs:
                   with urllib.request.urlopen(req,timeout=20) as response:
                       data=response.read(10000000)
                       info={'http':response.status,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+                      if kind=='source':
+                          boundary=data.split(b'\r\n',1)[0]
+                          code=data.split(b'\r\n\r\n',1)[1].rsplit(b'\r\n'+boundary,1)[0]
+                          info['code_sha256']=hashlib.sha256(code).hexdigest()
                       certificate=os.environ.get('BACKUP_PUBLIC_CERTIFICATE','')
                       if kind=='source' and certificate:
                           with tempfile.TemporaryDirectory() as directory:
