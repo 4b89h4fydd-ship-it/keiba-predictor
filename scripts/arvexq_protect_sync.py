@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from arvexq.prediction.prerace_archive import pre_off, restore_seal, sealed_lock
+from arvexq.ingest.full_snapshot_codec import KEY as FULL_PAYLOAD_KEY, pack_detail as pack_full, unpack_detail as unpack_full
 
 
 def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
@@ -75,6 +76,12 @@ def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
 
 
 def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict[str, Any]:
+    if FULL_PAYLOAD_KEY in incoming:
+        # Archive protection must edit the real original, then recompress it.
+        # Editing only the compact index would leave the full original unprotected.
+        return pack_full(protect_detail(unpack_full(old) if isinstance(old, dict) else old, unpack_full(incoming)))
+    if isinstance(old, dict) and FULL_PAYLOAD_KEY in old:
+        old = unpack_full(old)
     out = copy.deepcopy(incoming)
     if not isinstance(old, dict):
         return out
@@ -217,6 +224,7 @@ def verify_published(body: dict[str, Any], *, base: str, read=fetch_current) -> 
     for detail in body.get("details") or []:
         if not isinstance(detail, dict) or not detail.get("id"):
             continue
+        detail = unpack_full(detail)
         lock = sealed_lock(detail)
         revised = detail.get("modelMarkRevisions") or []
         feature_archive = detail.get("massFeatureArchive")
