@@ -28,6 +28,7 @@
         seen[no]=1;
       }
       if(Number(d.fieldSize||0)>d.horses.length)return null;
+      if(root.ARVEXQRaceIdentity)root.ARVEXQRaceIdentity.remember(d);
       return Object.assign({},d,{_entryOnly:true,_staticRacecardFallback:true});
     });
   }
