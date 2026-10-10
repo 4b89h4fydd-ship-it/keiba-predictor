@@ -1769,6 +1769,18 @@ function serverFrozenPrediction(r){
 }
 function validMorningMarkSnapshot(r){
   var snap=r&&r.morningMarkSnapshot;
+  // D1 can lose its prediction row while the original static morning receipt
+  // survives. A verified dated receipt is the only alternative evidence.
+  if((!snap||!Array.isArray(snap.horses))&&r){
+    var evidence=r.morningTicketEvidence,
+        source=window.ARVEXQMorningEvidence;
+    if(source&&source.verify(r,evidence)){
+      snap={version:'arvexq-morning-marks-v1',
+        raceId:String(r.id),raceDate:String(r.date),
+        fixedAt:evidence.fixedAt,source:'static-original-ticket-evidence',
+        horses:evidence.marks};
+    }
+  }
   if(!r||!snap||snap.version!=='arvexq-morning-marks-v1'||
       String(snap.raceId||'')!==String(r.id)||String(snap.raceDate||'')!==String(r.date)||
       !Array.isArray(snap.horses)||snap.horses.length<3)return null;
@@ -2259,9 +2271,21 @@ function racecardEntryRow(r,h,x){
     +'<div class="rc-v336-odds rc-odds" data-odds-no="'+esc(no)+'">'+racecardOddsHtml(h)+'</div>'
     +'</div>';
 }
+function morningSavedMarkRows(r){
+  var snap=authorizedPreOffMarks(r),byNo={};
+  if(snap&&Array.isArray(snap.horses)){
+    snap.horses.forEach(function(z){byNo[n(z&&z.horseNumber,0)]=z})
+  }
+  return (r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).map(function(h){
+    var z=byNo[n(h.horseNumber)]||{};
+    return {horse:h,predMark:isScratchHorse(h)?'':String(z.mark||''),
+      predRank:999,singleWinSuitable:!!z.singleWinSuitable};
+  })
+}
 function minimalRacecardPanel(r){
+  var receiptRows=morningSavedMarkRows(r);
   return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'
-    +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){return racecardEntryRow(r,h,null)}).join('')
+    +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){var z=receiptRows.find(function(x){return n(x.horse&&x.horse.horseNumber)===n(h.horseNumber)});return racecardEntryRow(r,h,z)}).join('')
     +'</div></section></div>';
 }
 function safeEntryPanel(r,p){
@@ -2288,7 +2312,7 @@ function renderPredictionPending(r){
   }
   if(state.subPage==='bets')return '<div class="smart-shell">'+raceSubpageTopBar(r,'買い目')+'<main class="smart-main smart-race-page"><section class="card"><div class="empty">買い目を計算中です。</div></section></main>'+cinematicFooter()+'</div>';
   if(state.subPage==='pace-stage')return paceStagePendingPage(r);
-  var content=state.openPanel==='entry'?safeEntryPanel(r,{rows:[]}):(state.openPanel==='result'?resultPanel(r):pendingDetailPanel(r));
+  var content=state.openPanel==='entry'?safeEntryPanel(r,{rows:morningSavedMarkRows(r)}):(state.openPanel==='result'?resultPanel(r):pendingDetailPanel(r));
   return '<div class="smart-shell">'+smartRaceTopBar(r)+'<main class="smart-main smart-race-page">'+smartRaceHead(r)+cinematicTabs(r)+raceDetailNotice(r)+'<div class="smart-race-content">'+content+'</div></main>'+cinematicFooter()+'</div>'
 }
 function renderPartialRace(r){
@@ -2687,6 +2711,11 @@ function frozenAiBetForRace(r){
   if(!r||!r.id)return null;
   var server=verifiedSavedAiBet(r,r.preRaceBet);
   if(server)return server;
+  var mod=window.ARVEXQMorningEvidence,original=r.morningTicketEvidence;
+  if(mod&&mod.verify(r,original)){
+    var fixed=verifiedSavedAiBet(r,mod.sealedPlan(r,original));
+    if(fixed)return fixed
+  }
   return verifiedSavedAiBet(r,loadStoredAiBet(r.id,true))
 }
 function alignBetPlanToOutcome(plan,r,p){
@@ -3529,8 +3558,11 @@ function fixedSelectedBox(circuit,picks){
   return '<details class="fixed-pick-box fixed-pick-circuit" data-selected-circuit="selected" data-pick-circuit="'+esc(circuit)+'" '+(open?'open':'')+'><summary class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><span class="fixed-pick-summary-right"><em>'+picks.length+'レース</em><i>⌄</i></span></summary><div class="fixed-pick-box-body">'+body+'</div></details>'
 }
 function selectedRaceBetPreview(r){
-  var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id),st=mins(r.startTime),started=r.date===today()&&st<9999&&nowMins()>=st,plan=loadStoredAiBet(r.id,isFinal(r)||started),p=null;if(plan)plan=immutableStoredAiBetView(d||r,plan);if(d&&!plan&&!isFinal(d)&&!started){try{p=predict(d);plan=buildAiBetPlan(d,p)}catch(e){}}
-  if(!plan)return '<div class="selected-bet-pending">ARVEXQの買い目　準備中</div>';
+  var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id),st=mins(r.startTime),started=r.date===today()&&st<9999&&nowMins()>=st,
+      source=mergeRaceReflection(r,d,null,null),plan=frozenAiBetForRace(source),p=null;
+  if(plan)plan=immutableStoredAiBetView(source,plan);
+  if(d&&!plan&&!isFinal(d)&&!started){try{p=predict(d);plan=buildAiBetPlan(d,p)}catch(e){}}
+  if(!plan)return '<div class="selected-bet-pending">発走前の馬番入り買い目原本が未保存・未取得です。結果から作り直しません。</div>';
   if(plan.decision==='見送り')return '<div class="selected-bet-pending">ARVEXQ買い目　見送り（'+esc(plan.betQuality||0)+'/100）</div>';
   var lines=(plan.items||[]).map(function(z){return '<span class="selected-bet-chip '+(z.level==='3連単チャレンジ'?'tri':'')+'"><b>'+esc(z.level)+'</b> '+esc(z.kind)+' '+esc(z.combo)+'</span>'}).join('');if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')lines+='<span class="selected-bet-chip tri"><b>3連単</b> 検討済み・見送り</span>';
   var result='';if(d&&isFinal(d)){var hit=aiBetPlanHit(d,plan),lv=hit&&hit.levels||{},hits=[];['本線','保険'].forEach(function(k){if(lv[k])hits.push(k+'HIT')});result='<div class="selected-result '+(hit&&hit.hit?'hit':'miss')+'">結果　'+(hits.length?hits.join(' / '):'通常買い目不的中')+(hit&&hit.tri?'　<strong>3連単HIT</strong>':'')+'</div>'}
@@ -4970,6 +5002,10 @@ function applyMorningArchive(rows){
      r.morningPrimaryType=m.primaryType;r.morningSelectedTypes=m.types.slice();
      r.morningSelectionReason=m.selectionReason;r.morningTicketKinds=m.ticketKinds.slice();
      r.morningTicketEvidence=m.ticketEvidence;
+     if(m.ticketEvidence&&window.ARVEXQMorningEvidence&&window.ARVEXQMorningEvidence.verify(r,m.ticketEvidence)){
+       var d=instantTrackDetails[String(r.id)];
+       if(d&&String(d.date||'')===String(r.date))d.morningTicketEvidence=m.ticketEvidence;
+     }
     r.volatility=Object.assign({},r.volatility||{},{morningPicks:m});
     r.environmentMeta=Object.assign({},r.environmentMeta||{},{morningPicks:m})
   });
