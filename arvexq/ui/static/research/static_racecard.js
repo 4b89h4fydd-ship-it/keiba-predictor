@@ -19,7 +19,10 @@
     }
     return jobs[key].then(function(data){
       if(!data)return null;
-      var d=data.races.find(function(x){return x&&String(x.id)===String(id) && x.date===key});
+      return factual(data.races.find(function(x){return x&&String(x.id)===String(id) && x.date===key}));
+    });
+  }
+  function factual(d){
       if(!d||!Array.isArray(d.horses)||d.horses.length<2)return null;
       var seen=Object.create(null);
       for(var i=0;i<d.horses.length;i++){
@@ -30,7 +33,16 @@
       if(Number(d.fieldSize||0)>d.horses.length)return null;
       if(root.ARVEXQRaceIdentity)root.ARVEXQRaceIdentity.remember(d);
       return Object.assign({},d,{_entryOnly:true,_staticRacecardFallback:true});
+  }
+  function list(date,fetchJson){
+    if(!validDay(date))return Promise.resolve(null);
+    return available(date,'__schedule__',fetchJson).then(function(){
+      return jobs[String(date)]?jobs[String(date)].then(function(data){
+        if(!data)return null;
+        var rows=data.races.map(function(r){return r&&r.date===date?factual(r):null});
+        return rows.length&&rows.every(Boolean)?rows:null;
+      }):null;
     });
   }
-  root.ARVEXQStaticRacecard={available:available};
+  root.ARVEXQStaticRacecard={available:available,list:list};
 })(typeof window!=='undefined'?window:globalThis);

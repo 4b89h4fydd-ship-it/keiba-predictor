@@ -36,7 +36,7 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     const odds=await page.locator('.rc-odds .odd').allTextContents();
     odds.forEach(x=>assert.ok(/^(?:\d+\.\d|未取得|取消)$/.test(x),'invalid odds text '+x));
     assert.ok(odds.some(x=>/^\d/.test(x)),'no acquired odds for '+r.id);
-    const red=await page.locator('.rc-odds .odd.single').evaluateAll(xs=>xs.map(x=>({value:Number(x.textContent),color:getComputedStyle(x).color})));
+    const red=await page.evaluate(()=>Array.from(document.querySelectorAll('.rc-odds .odd.single')).map(x=>({value:Number(x.textContent),color:getComputedStyle(x).color})));
     red.forEach(x=>{assert.ok(x.value>0&&x.value<10);const c=x.color.match(/\d+/g).map(Number);assert.ok(c[0]>c[1]*1.25&&c[0]>c[2]*1.15,'single digit odds must be red')});
     assert.ok((await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count())<=1);
     assert.equal(errors.length,0,'runtime errors '+errors.join(';'));
@@ -59,6 +59,15 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     await page.waitForTimeout(300);
     assert.deepEqual(await page.locator('.rc-ai-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark'))),before,'odds refresh must not rewrite saved marks');
     await page.close();
+    const fresh=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
+    await fresh.addInitScript(key=>localStorage.setItem(key,'1'),marker);
+    await fresh.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
+    const home=await fresh.newPage();
+    await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
+    for(const track of ['京都','東京','佐賀','帯広ば','高知'])
+      await home.locator('[data-track="'+track+'"]').first().waitFor({state:'visible',timeout:30000});
+    await fresh.close();
+    console.log('PRODUCTION_FRESH_HOME_API_OUTAGE_ALL_VENUES_PASS');
     console.log('PRODUCTION_API_OUTAGE_MANUAL_ODDS_SAVED_MARKS_PASS '+process.env.ARVEXQ_BROWSER+' date='+day+' checked='+chosen.length);
   }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -15,7 +15,11 @@ const fixture={version:'arvexq-static-entry-v1',date:'2026-10-10',
   assert.equal(d.result,undefined);
   assert.equal(await get('2026-10-10','not-a-race',load),null);
   assert.equal(await get('invalid','jra-2026-10-10-東京-01',load),null);
+  const rows=await ctx.ARVEXQStaticRacecard.list('2026-10-10',load);
+  assert.equal(rows.length,1);assert.equal(rows[0].horses.length,2);
+  assert.equal(rows[0].preRacePrediction,undefined);
   assert.equal(calls,1,'deduplicate dated JSON request');
+  assert.equal(await ctx.ARVEXQStaticRacecard.list('invalid',load),null);
   assert.equal(await get('2026-10-11','jra-2026-10-10-東京-01',
       async()=>({...fixture,date:'2026-10-11'})),null);
   console.log('STATIC_RACECARD_RESCUE_BROWSER_PASS');

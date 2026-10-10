@@ -5135,9 +5135,7 @@ function load(force){
       return rows
     })
     .catch(function(){
-      // Frontend Worker has no /api/v1 backend. Do not fall through to a
-      // same-origin 404/CORS path; keep the current list/cache and retry D1.
-      return null
+      return window.ARVEXQStaticRacecard?window.ARVEXQStaticRacecard.list(d,edgeFetchJson):null
     })
     .then(function(rows){
       if(seq!==state.requestSeq||state.date!==d)return;
