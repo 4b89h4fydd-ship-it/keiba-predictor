@@ -43,7 +43,7 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     page.off('pageerror',onerror);
     console.log('PRODUCTION_RECOVERY_PASS '+r.id+' horses='+r.horses.length+' diagnosis='+r.horses.length);
   }
-  async function worker(){const page=await context.newPage();try{while(cursor<chosen.length)await check(page,chosen[cursor++])}finally{await page.close()}}
+  async function worker(){while(cursor<chosen.length){const r=chosen[cursor++],page=await context.newPage();try{await check(page,r)}finally{await page.close()}}}
   try{
     await Promise.all([worker(),worker(),worker()]);
     const r=chosen.find(r=>r.circuit==='地方')||chosen[0],page=await context.newPage();
