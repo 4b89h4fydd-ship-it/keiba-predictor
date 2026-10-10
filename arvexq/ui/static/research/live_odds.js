@@ -23,7 +23,7 @@
         scratched:z.scratched===true||z.withdrawn===true,
         oddsSource:body.oddsSource||z.oddsSource||'official-api',oddsForecast:false};
     });
-    return {horses:horses,oddsSource:body.oddsSource||'official-api',
+    return {horses:horses,oddsSource:(body.oddsSource||'official-api')+(body.oddsStatus==='saved'?'（保存値・最新取得失敗）':''),
       sourcePublishedAt:body.sourcePublishedAt||'',popularitySource:body.popularitySource||'',
       oddsUpdatedAt:latest?new Date(latest*1000).toISOString():body.oddsUpdatedAt||''};
   }
@@ -41,7 +41,7 @@
     if(/^\d{2}:\d{2}:\d{2}$/.test(String(raw||'')))return 'オッズ取得 '+raw+'（保存値）';
     if(at>0)at=at>1e12?at:at*1000;else at=Date.parse(String(raw||''));
     var label=Number.isFinite(at)&&at>0?'オッズ取得 '+new Date(at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',hour12:false}):'オッズ取得時刻 未取得';
-    return label+(r&&r.popularitySource==='NAR公式単勝オッズ順位'?'｜人気＝公式単勝オッズ順位':'');
+    return label+(r&&/保存値/.test(r.oddsSource||'')?'｜保存値（最新取得失敗）':'')+(r&&r.popularitySource==='NAR公式単勝オッズ順位'?'｜人気＝公式単勝オッズ順位':'');
   }
   root.ARVEXQLiveOdds=Object.freeze({fetch:fetch,normalize:normalize,status:status});
 })(typeof window!=='undefined'?window:globalThis);

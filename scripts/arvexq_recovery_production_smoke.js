@@ -67,12 +67,13 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
       const ticketPage=await context.newPage();
       await ticketPage.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
       await check(ticketPage,records.find(r=>r.id===id));
+      assert.equal(await ticketPage.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),1,'stored axis appears in roster before changing panel');
       await ticketPage.locator('[data-panel="bets"]').click();
       const box=ticketPage.locator('.ai-bet-box');
       await box.waitFor({state:'visible',timeout:20000});
       const text=await box.innerText();assert.ok(text.includes(kind));
       patterns.forEach(pattern=>assert.match(text,pattern,'actual saved numbered ticket '+id));
-      assert.match(text,/保存/);assert.equal(await ticketPage.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),1);
+      assert.match(text,/保存/);
       await ticketPage.close();
       console.log('PRODUCTION_SAVED_NUMBERED_TICKET_API_OUTAGE_PASS '+id+' '+kind);
     }

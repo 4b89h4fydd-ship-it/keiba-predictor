@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {validateSavedOdds} from '../workers/saved_odds.mjs';
+const source={id:'race',sourceSnapshotSha256:'a'.repeat(64),horses:[{horseNumber:1,name:'原本'}]};
+const data={ok:true,race_id:'race',sourceSnapshotSha256:source.sourceSnapshotSha256,oddsUpdatedAt:'2026-10-10T08:40:00+09:00',odds:[{horse_no:1,horse_name:'原本',win_odds:4.3,popularity:2,oddsSource:'netkeiba'}]};
+const saved=validateSavedOdds(data,source);
+assert(saved&&saved.refreshFailed&&saved.oddsStatus==='saved');assert.equal(saved.oddsUpdatedAt,data.oddsUpdatedAt);
+assert.equal(validateSavedOdds({...data,race_id:'other'},source),null);
+assert.equal(validateSavedOdds({...data,odds:[{...data.odds[0],horse_name:'別馬'}]},source),null);
+assert.equal(validateSavedOdds({...data,sourceSnapshotSha256:'b'.repeat(64)},source),null);
+assert.equal(validateSavedOdds({...data,odds:[{...data.odds[0],oddsSource:'model'}]},source),null);
+console.log('ACQUIRED_SAVED_ODDS_OUTAGE_EXACT_TIME_NO_FORECAST_NO_WRONG_RUNNER_PASS');

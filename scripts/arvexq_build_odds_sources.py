@@ -4,6 +4,7 @@ import gzip
 import hashlib
 import json
 from pathlib import Path
+from scripts.arvexq_saved_odds import saved_odds
 
 
 def build_sources(static: Path, dist: Path):
@@ -17,6 +18,7 @@ def build_sources(static: Path, dist: Path):
         if manifest.get('version') != 'arvexq-saved-snapshots-v1':
             raise ValueError('invalid original manifest')
         races = {}
+        backups = {}
         for rid, ref in manifest['races'].items():
             if ref['file'] != ref['sha256']+'.json':
                 raise ValueError('invalid original path')
@@ -28,6 +30,12 @@ def build_sources(static: Path, dist: Path):
             if d.get('id') != rid or d.get('date') != manifest['date']:
                 raise ValueError('original source identity mismatch')
             races[rid] = {k: d[k] for k in ('id','date','circuit','track','raceNumber','netkeibaRaceId') if k in d}
+            races[rid]['sourceSnapshotSha256'] = ref['sha256']
+            acquired = saved_odds(d, ref['sha256'])
+            if acquired:backups[rid] = acquired
             races[rid]['horses'] = [{'horseNumber': h['horseNumber'], 'name': h['name']} for h in d['horses']]
+        backup_target = dist / 'odds-backups'
+        backup_target.mkdir(exist_ok=True)
+        (backup_target / path.name).write_text(json.dumps({'version':'arvexq-saved-actual-odds-v1','date':manifest['date'],'races':backups},ensure_ascii=False,separators=(',', ':')),encoding='utf-8')
         (target / path.name).write_text(json.dumps({'version':'arvexq-odds-sources-v1',
             'date':manifest['date'],'races':races}, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')

@@ -71,6 +71,8 @@ jobs:
           node scripts/arvexq_full_snapshot_smoke.mjs
           node scripts/arvexq_api_chunk_export_smoke.mjs
           node scripts/arvexq_saved_ticket_smoke.js
+          node scripts/arvexq_saved_odds_smoke.mjs
+          python -m unittest tests.test_saved_actual_odds
 
       - name: Audit mass feature snapshot producers and consumers
         run: |
