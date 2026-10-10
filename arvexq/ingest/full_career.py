@@ -56,14 +56,17 @@ def audit_career(horse: dict[str, Any], cutoff: str, requested: int,
     runs = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)
     stats = horse.get("careerStats") if isinstance(horse.get("careerStats"), dict) else {}
     declared = next((int(stats[k]) for k in ("starts", "totalStarts", "careerStarts")
-                     if str(stats.get(k) or "").isdigit()), None)
+                     if str(stats.get(k) if stats.get(k) is not None else "").isdigit()), None)
     missing = max(0, declared - len(runs)) if declared is not None else None
     return {
         "version": "arvexq-career-coverage-v1", "observedRuns": len(runs),
         "requestedLimit": requested, "requestedAtRaceDate": date_key(cutoff),
         "providersAttempted": sorted(set(providers)),
         "reportedStarts": declared, "unobservedMinimum": missing,
-        "complete": declared is not None and len(runs) >= declared,
-        "status": ("missing" if not runs else "incomplete" if missing else
-                   "unverified" if declared is None else "reported-starts-covered"),
+        # Exact equality only: more observed rows than reported starts means the
+        # count source or the deduplication cannot be trusted as proof.
+        "complete": declared is not None and len(runs) == declared,
+        "status": ("missing" if not runs and declared != 0 else "incomplete" if missing else
+                   "unverified" if declared is None else
+                   "count-mismatch" if len(runs) > declared else "reported-starts-covered"),
     }
