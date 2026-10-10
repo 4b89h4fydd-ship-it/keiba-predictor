@@ -89,6 +89,10 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
         await home.locator('[data-track="'+track+'"]').first().waitFor({state:'visible',timeout:30000});
     }
     if(day==='2026-10-10'){
+      // Selected races live under Home -> 厳選レース -> 地方, not the venue list.
+      await home.goto(base+'/?date='+day+'&offline-selected='+Date.now(),{waitUntil:'domcontentloaded'});
+      await home.locator('button[data-home-page="selected"]').click();
+      await home.locator('button[data-pick-circuit="地方"]').click();
       const selected=home.locator('.arv-direct-picks').filter({hasText:'地方 厳選レース'});
       for(const id of ['nar-2026-10-10-高知-01','nar-2026-10-10-高知-05'])
         await selected.locator('[data-race="'+id+'"]').waitFor({state:'visible',timeout:30000});
