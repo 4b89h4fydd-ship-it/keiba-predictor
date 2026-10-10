@@ -3423,7 +3423,16 @@ function computeMorningRaceCandidates(circuit){
     d._arvexqMorningLaneCandidate=t;
     var plan=buildAiBetPlan(d,p);
     t=window.ARVEXQMorningTicketLanes.requireMorningTickets(t,plan);
-    if(t.selected)add(r,t)
+    if(t.selected){
+      var audit=window.ARVEXQMorningEvidence;
+      // Ticket kind names are NOT actionable proof. Freeze the actual
+      // pre-off marks and exact combinations from this same model invocation.
+      if(!audit||typeof audit.capture!=='function')throw Error('morning evidence module unavailable');
+      var receipt=audit.capture(d,p,plan,t);
+      if(!receipt){console.warn('MORNING_SELECTED_NO_CONCRETE_TICKET',d.id);return}
+      t.evidence=receipt;
+      add(r,t)
+    }
   }catch(e){console.error('MORNING_TICKET_DECISION_UNAVAILABLE',r&&r.id,String(e&&e.message||e))}
    finally{if(d)delete d._arvexqMorningLaneCandidate}
   });
@@ -3441,7 +3450,8 @@ function morningPickOf(r){
     special:r.morningSpecial===true,scope:n(r.morningPickScope,0),assessed:r.morningAssessed!==false,
      primaryType:String(r.morningPrimaryType||''),types:Array.isArray(r.morningSelectedTypes)?r.morningSelectedTypes.slice():[],
      selectionReason:String(r.morningSelectionReason||''),
-     ticketKinds:Array.isArray(r.morningTicketKinds)?r.morningTicketKinds.slice():[]
+     ticketKinds:Array.isArray(r.morningTicketKinds)?r.morningTicketKinds.slice():[],
+     ticketEvidence:r.morningTicketEvidence||null
   };
   return null
 }
@@ -3449,8 +3459,18 @@ function morningPickReady(){
   return (state.races||[]).some(function(r){return !!morningPickOf(r)})
 }
 function morningPublicStatus(r){
-  var m=morningPickOf(r),mod=window.ARVEXQMorningTicketLanes;
-  return mod&&mod.selectionDisplayStatus?mod.selectionDisplayStatus(m):'unavailable'
+  var m=morningPickOf(r),mod=window.ARVEXQMorningTicketLanes,
+      receipt=window.ARVEXQMorningEvidence;
+  var status=mod&&mod.selectionDisplayStatus?mod.selectionDisplayStatus(m):'unavailable';
+  if(status!=='actionable')return status;
+  // A frozen ticket kind without actual horse-number combinations is
+  // an unverified historic selection, not a purchasable recommendation.
+  if(!receipt||typeof receipt.verify!=='function'||
+     !receipt.verify(r,m&&m.ticketEvidence)||!m.ticketEvidence||
+     (m.ticketKinds||[]).slice().sort().join('|')!==
+       (m.ticketEvidence.ticketKinds||[]).slice().sort().join('|'))
+    return 'ticket-original-missing';
+  return 'actionable'
 }
 function legacyMorningSelectionCandidates(circuit){
   // No archive mutation: old selections are shown as historical records only.
@@ -3773,11 +3793,11 @@ function homeCircuitChooser(title,kind){
   });
   var older=kind==='selected'?legacyMorningSelectionCandidates().length:0;
   return '<section class="arv-pick-circuit-page"><div class="smart-section-title"><div><b>'+esc(title)+'</b><small>中央・地方ごとの該当件数</small></div></div><div class="arv-pick-circuit-grid">'+buttons+'</div>'+
-    (older?'<p class="muted">旧方式の朝選定 '+older+'件は買い目成立を確認できないため、現在の厳選件数に含めません。記録は各会場の一覧から確認できます。</p>':'')+'</section>'
+    (older?'<p class="muted">朝選定記録 '+older+'件は印・馬番入り買い目の発走前保存原本が未確認です。現在の厳選件数から除外し、記録は各会場で表示します。</p>':'')+'</section>'
 }
 function selectedCircuitPage(circuit){
   var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝の固定判定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選・旧方式')+'｜'+esc((t.types||[]).filter(function(x){return x!==t.primaryType}).join('・')||t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
-  var old=legacyMorningSelectionCandidates(circuit),history=old.length?'<details class="smart-fixed-picks arv-direct-picks"><summary class="smart-fixed-picks-head"><span><b>旧方式の朝選定記録</b><small>保存記録は維持。買い目成立未確認のため現行厳選には含めません</small></span><em>'+old.length+'件</em></summary><div class="fixed-pick-box-body">'+old.map(function(r){return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>旧方式・買い目成立未確認（参考記録）</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>旧方式</em></button>'}).join('')+'</div></details>':'';
+  var old=legacyMorningSelectionCandidates(circuit),history=old.length?'<details class="smart-fixed-picks arv-direct-picks"><summary class="smart-fixed-picks-head"><span><b>朝選定（買い目原本未確認）</b><small>券種名だけの保存は購入可能な買い目ではありません。朝の記録は維持し、厳選件数には含めません</small></span><em>'+old.length+'件</em></summary><div class="fixed-pick-box-body">'+old.map(function(r){return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>朝選定記録・印／買い目原本未確認</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>未保存</em></button>'}).join('')+'</div></details>':'';
   return '<section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>'+esc(circuit)+' 厳選レース</b><small>朝に買い目まで成立した分類のみ</small></span><em>'+picks.length+'レース</em></div><div class="fixed-pick-box-body">'+body+'</div></section>'+history
 }
 function specialCircuitPage(circuit){
@@ -4939,7 +4959,8 @@ function applyMorningArchive(rows){
       special:frozen.special===true,assessed:frozen.assessed!==false,
        primaryType:String(frozen.primaryType||''),types:Array.isArray(frozen.types)?frozen.types.slice():[],
        selectionReason:String(frozen.selectionReason||''),
-       ticketKinds:Array.isArray(frozen.ticketKinds)?frozen.ticketKinds.slice():[]
+       ticketKinds:Array.isArray(frozen.ticketKinds)?frozen.ticketKinds.slice():[],
+       ticketEvidence:frozen.ticketEvidence||null
     };
     r.morningPickVersion='v1';
     r.morningPickFixedAt=archive.fixedAt;
@@ -4948,6 +4969,7 @@ function applyMorningArchive(rows){
     r.morningSpecial=m.special;r.morningAssessed=m.assessed;
      r.morningPrimaryType=m.primaryType;r.morningSelectedTypes=m.types.slice();
      r.morningSelectionReason=m.selectionReason;r.morningTicketKinds=m.ticketKinds.slice();
+     r.morningTicketEvidence=m.ticketEvidence;
     r.volatility=Object.assign({},r.volatility||{},{morningPicks:m});
     r.environmentMeta=Object.assign({},r.environmentMeta||{},{morningPicks:m})
   });
