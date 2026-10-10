@@ -4,9 +4,10 @@ from arvexq.prediction.honmei_gate import evaluate_honmei_gate
 from arvexq.prediction.final_marks import apply_core_marks
 
 def sample(no, rank, finish, strength, pillars, families=(2,3,2,2)):
+    dates=[f"2026-09-{i+10:02d}" for i in range(len(finish))]
     horse = {"horseNumber":no, "name":"Horse"+str(no),
-             "recentRaces":[{"date":f"2026-09-{i+10:02d}","finish":v,"fieldSize":10}
-                            for i,v in enumerate(finish)]}
+             "recentRaces":[{"date":d,"finish":v,"fieldSize":10} for d,v in zip(dates,finish)],
+             "_careerHistoryAudit":{"version":"arvexq-career-coverage-v1","requestedAtRaceDate":"2026-10-09","reportedStarts":len(finish),"observedRuns":len(finish),"paginationComplete":True,"complete":True,"reportedStartsSource":"test","failedProviders":[]}}
     return {"horse":horse, "rank":rank, "sample":len(finish),
             "multiHead":{"strengthRank":rank,"strengthScore":strength,"winRank":rank},
             "pillarRanks":{x:rank for x in ("ability","record","suitability","pace")},
