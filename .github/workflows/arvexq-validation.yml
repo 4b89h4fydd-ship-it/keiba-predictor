@@ -116,6 +116,7 @@ jobs:
           test -s dist/sports/boat-app/app.js
           node --check dist/sports/boat-app/app.js
           node tests/boat_app_smoke.mjs
+          node tests/boat_start_exhibition_smoke.mjs
 
       - name: Betting marks and ticket reconciliation regression
         run: |
