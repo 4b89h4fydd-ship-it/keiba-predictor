@@ -3,11 +3,13 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
+from arvexq.storage.policies.market import retain_analysis
 
 
 class Analysis:
     def save_analysis(self, race_id: str, payload: dict) -> None:
         if not race_id or not isinstance(payload,dict):return
+        payload=retain_analysis(self.path,race_id,payload)
         payload=self._ports._strip_excluded(payload)
         scenarios=payload.get("scenarios") or {}
         horses=payload.get("horses") or []

@@ -1,13 +1,12 @@
 """racedb/schema.py: SQL, payload and preservation rules inherited from 19b76d3."""
 from __future__ import annotations
 import sqlite3
+from arvexq.storage.ports import RaceSnapshotPorts
 from arvexq.storage.config import RACEDB_PATH
-
-
 from pathlib import Path
 
 class RaceSchema:
-    def __init__(self, path: Path = RACEDB_PATH, *, ports):
+    def __init__(self, path: Path = RACEDB_PATH, *, ports: RaceSnapshotPorts):
         self._ports = ports
         self.path = path
         self.path.parent.mkdir(parents=True, exist_ok=True)

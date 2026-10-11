@@ -1,3 +1,6 @@
+from arvexq.storage.cache.detail import _detail_cache_lock, _detail_cache
+from arvexq.storage.cache.race_list import _race_list_cache_lock, _race_list_cache
+from arvexq.storage.cache.volatility import _volatility_pack_lock, _volatility_pack_cache
 import arvexq.infra.collectors.history_state as _stage5_history_state
 from arvexq.infra.collectors.history_state import _history_lock
 import arvexq.infra.collectors.live_state as _stage5_live_state
@@ -1916,11 +1919,7 @@ def _racedb_get_fast(race_id: str) -> dict | None:
         AI_EVALUATION_VERSION=AI_EVALUATION_VERSION, RACEDB=RACEDB, _ensure_race_volatility=_ensure_race_volatility, _precompute_detail_metrics=_precompute_detail_metrics, _racedb_snapshot_usable=_racedb_snapshot_usable, _restore_saved_odds=_restore_saved_odds, _strip_excluded=_strip_excluded
     )
 
-_detail_cache_lock=threading.Lock()
-_detail_cache:dict[str,tuple[float,dict]]={}
 
-_race_list_cache_lock = threading.Lock()
-_race_list_cache: dict[str, tuple[float, list[dict]]] = {}
 
 
 def _local_starter_bundle(rows:list[dict], limit:int=3)->list[dict]:
@@ -1940,8 +1939,6 @@ def _local_starter_bundle(rows:list[dict], limit:int=3)->list[dict]:
     return out
 
 
-_volatility_pack_lock=threading.Lock()
-_volatility_pack_cache:dict[str,tuple[float,list[dict]]]={}
 
 def _local_volatility_map(race_ids:list[str])->dict[str,dict]:
     ids=[str(x) for x in race_ids if x]

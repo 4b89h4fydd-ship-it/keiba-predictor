@@ -3,8 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
-
-
+from arvexq.storage.policies.bundles import accept_bundle
 from pathlib import Path
 
 class DayBundleStore:
@@ -48,6 +47,7 @@ class DayBundleStore:
         if not race_date or not isinstance(payload,dict):return
         conn=sqlite3.connect(self.path,timeout=5)
         try:
+            if not accept_bundle(conn,race_date,payload,complete):return
             conn.execute("""INSERT INTO day_bundles(race_date,payload,complete,race_count,detail_count,updated_at)
                             VALUES(?,?,?,?,?,?)
                             ON CONFLICT(race_date) DO UPDATE SET

@@ -3,10 +3,10 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
+from arvexq.storage.policies.snapshots import retain_snapshot
+from arvexq.storage.sqlite.transactions import begin_write
 from arvexq.storage.config import CENTRAL_DB_PATH
 from arvexq.normalize.central_feed import normalize_central_race
-
-
 from pathlib import Path
 
 class CentralStore:
@@ -32,6 +32,7 @@ class CentralStore:
     def upsert(self, rows: list[dict]) -> int:
         n = 0
         with self.conn:
+            begin_write(self.conn)
             for raw in rows:
                 incoming = normalize_central_race(raw)
                 if not incoming:
@@ -40,6 +41,7 @@ class CentralStore:
                 if old_row:
                     try:old=json.loads(old_row["payload"])
                     except Exception:old={}
+                    incoming=retain_snapshot(old,incoming)
                     merged=dict(old) if isinstance(old,dict) else {}
                     # Lightweight schedule rows must never erase a prepared card/result.
                     for k,v in incoming.items():

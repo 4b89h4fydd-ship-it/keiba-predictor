@@ -2,8 +2,6 @@
 from __future__ import annotations
 import sqlite3
 from arvexq.storage.config import DB_PATH
-
-
 from pathlib import Path
 
 class NarSchema:

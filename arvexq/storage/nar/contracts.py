@@ -43,6 +43,7 @@ HORSE_IDX = {
 
 
 @dataclass
+
 class RaceRow:
     track: str
     date: str
@@ -58,6 +59,7 @@ class RaceRow:
 
 
 @dataclass
+
 class EntryRow:
     track: str
     date: str

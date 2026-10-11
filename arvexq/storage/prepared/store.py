@@ -3,19 +3,19 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+from arvexq.storage.ports import PreparedSnapshotPorts
 import time
+from arvexq.storage.policies.snapshots import retain_snapshot
 from arvexq.storage.config import PREPARED_DB_PATH
 from arvexq.infra.pure_snapshots import _racedb_snapshot_usable
 from arvexq.infra.snapshot_status import _snapshot_final
 from arvexq.prediction.prerace_archive import sealed_lock as _arvexq_sealed_lock
 from arvexq.prediction.mass_prerace_bridge import prepare_mass_prerace_fields, apply_mass_prerace_fields, frozen_mass_fields
 from arvexq.selection.race_selectability_snapshot import prepare_race_selectability_fields, apply_race_selectability_fields, frozen_selectability_fields
-
-
 from pathlib import Path
 
 class PreparedRaceStore:
-    def __init__(self, path: Path = PREPARED_DB_PATH, *, ports):
+    def __init__(self, path: Path = PREPARED_DB_PATH, *, ports: PreparedSnapshotPorts):
         self._ports = ports
         self.path = path
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -86,6 +86,9 @@ class PreparedRaceStore:
             old=conn.execute("SELECT payload FROM prepared_races WHERE race_id=?",(race_id,)).fetchone()
             if old:
                 previous=json.loads(old[0])
+                retained=retain_snapshot(previous,detail)
+                detail.clear();detail.update(retained)
+                payload=json.dumps(detail,ensure_ascii=False,separators=(",",":"))
                 if isinstance(previous.get("preRacePrediction"),dict) and (_arvexq_sealed_lock(previous) or self._ports._prediction_clock_state(detail)[0]=="started" or not isinstance(detail.get("preRacePrediction"),dict)):
                     detail["preRacePrediction"]=previous["preRacePrediction"]
                     previous_mass=frozen_mass_fields(previous)

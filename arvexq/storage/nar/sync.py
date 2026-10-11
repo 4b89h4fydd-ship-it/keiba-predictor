@@ -10,8 +10,6 @@ from datetime import datetime
 from arvexq.storage.config import ARCHIVE_DIR, NAR_DAILY_RACE_URL, NAR_MONTHLY_RACE_URL
 from arvexq.storage.nar.store import NarStore
 from arvexq.storage.nar.parser import NarArchiveParser
-
-
 from pathlib import Path
 
 class NarSync:

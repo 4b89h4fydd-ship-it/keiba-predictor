@@ -2,8 +2,8 @@
 from __future__ import annotations
 import json
 import time
-
-
+from arvexq.storage.policies.archive import retain_archive_rows
+from arvexq.storage.sqlite.transactions import begin_write
 from pathlib import Path
 from typing import Iterable
 from arvexq.storage.nar.contracts import RaceRow
@@ -12,8 +12,10 @@ from arvexq.storage.nar.contracts import EntryRow
 class NarImports:
     def import_rows(self, races: Iterable[RaceRow], entries: Iterable[EntryRow]) -> None:
         races = list(races)
-        race_lookup = {(r.track, r.date, r.race_no): r for r in races}
         with self.conn:
+            begin_write(self.conn)
+            races, entries = retain_archive_rows(self.conn, races, list(entries))
+            race_lookup = {(r.track, r.date, r.race_no): r for r in races}
             for r in races:
                 self.conn.execute(
                     """

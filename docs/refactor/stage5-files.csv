@@ -1,0 +1,72 @@
+移動前,移動後,行数,対象クラス・関数
+new explicit interface / retention policy / package,arvexq/infra/collectors/__init__.py,1,
+app.py,arvexq/infra/collectors/bootstrap.py,18,_site_bootstrap_warm_loop; _start_site_bootstrap_warmer
+app.py,arvexq/infra/collectors/bootstrap_state.py,8,
+app.py,arvexq/infra/collectors/commercial.py,67,_commercial_collect_once; _commercial_collector_loop; _start_commercial_collector
+app.py,arvexq/infra/collectors/commercial_state.py,8,
+app.py,arvexq/infra/collectors/data_core.py,62,_data_core_cycle; _data_core_loop; _start_data_core_collector
+app.py,arvexq/infra/collectors/data_core_state.py,6,
+app.py,arvexq/infra/collectors/environment.py,176,_patch_nar_environment; _patch_central_environment; _refresh_track_environment; _schedule_track_environment; _environment_cycle; _environment_loop; _start_environment_collector
+app.py,arvexq/infra/collectors/environment_state.py,6,
+app.py,arvexq/infra/collectors/fast_card.py,67,_ensure_fast_card_workers; _queue_fast_card; _fast_card_worker; _schedule_fast_card_refresh; _schedule_racedb_snapshot_refresh
+app.py,arvexq/infra/collectors/fast_card_state.py,11,
+app.py,arvexq/infra/collectors/history.py,29,_history_worker; ensure_history_async
+app.py,arvexq/infra/collectors/history_state.py,7,
+app.py,arvexq/infra/collectors/live.py,71,_schedule_live_refresh; _schedule_central_refresh
+app.py,arvexq/infra/collectors/live_state.py,9,
+app.py,arvexq/infra/collectors/odds.py,101,_auto_odds_targets; _auto_odds_cycle; _auto_odds_loop; _start_auto_odds_collector
+app.py,arvexq/infra/collectors/odds_state.py,6,
+app.py,arvexq/infra/collectors/prewarm.py,92,_prewarm_sort_key; _schedule_prewarm; _ensure_detail_background_jobs; _schedule_detail_background_jobs
+app.py,arvexq/infra/collectors/prewarm_state.py,6,
+app.py,arvexq/infra/collectors/racedb.py,63,_racedb_live_cycle; _start_racedb_daemon
+app.py,arvexq/infra/collectors/racedb_state.py,5,
+new explicit interface / retention policy / package,arvexq/storage/__init__.py,1,
+new explicit interface / retention policy / package,arvexq/storage/bundles/__init__.py,1,
+app.py,arvexq/storage/bundles/assembly.py,76,_assemble_day_bundle; _refresh_day_bundle; _schedule_day_bundle_refresh
+app.py,arvexq/storage/bundles/cache.py,44,_site_bootstrap_payload
+app.py,arvexq/storage/bundles/live.py,163,_force_day_live_snapshot
+app.py,arvexq/storage/bundles/local.py,58,_bootstrap_rows_local; _bootstrap_sources_running; _bootstrap_analysis_ready; _bootstrap_detail_local
+app.py,arvexq/storage/bundles/store.py,62,DayBundleStore.__init__; DayBundleStore.get; DayBundleStore.put
+app.py,arvexq/storage/cache/__init__.py,1,
+app.py,arvexq/storage/cache/detail.py,5,
+app.py,arvexq/storage/cache/race_list.py,5,
+app.py,arvexq/storage/cache/volatility.py,5,
+arvexq/storage/cache_keys.py (unchanged),arvexq/storage/cache_keys.py,22,
+new explicit interface / retention policy / package,arvexq/storage/central/__init__.py,1,
+arvexq/infra/legacy_stores.py (SOURCE),arvexq/storage/central/store.py,87,CentralStore.__init__; CentralStore.upsert; CentralStore.races_json; CentralStore.coverage
+app.py,arvexq/storage/config.py,33,
+new explicit interface / retention policy / package,arvexq/storage/data_core/__init__.py,1,
+app.py,arvexq/storage/data_core/health.py,115,_data_core_active_horses; _data_core_result_due; _data_core_health; _data_core_health_hash; _data_core_store_health; _data_core_record_run
+app.py,arvexq/storage/data_core/refresh.py,146,_data_core_snapshot; _data_core_refresh_race; _data_core_day_rows; _data_core_day_status
+new explicit interface / retention policy / package,arvexq/storage/market/__init__.py,1,
+app.py,arvexq/storage/market/odds.py,244,_merge_live_market_rows; odds_refresh
+app.py,arvexq/storage/market/payouts.py,66,payout_refresh
+new explicit interface / retention policy / package,arvexq/storage/nar/__init__.py,1,
+app.py,arvexq/storage/nar/contracts.py,76,
+arvexq/infra/legacy_stores.py (SOURCE),arvexq/storage/nar/history.py,125,NarStore.stats; NarStore.role_profile; NarStore.prize_before; NarStore.recent_races
+arvexq/infra/legacy_stores.py (SOURCE),arvexq/storage/nar/imports.py,77,NarStore.import_rows; NarStore.mark_synced; NarStore.synced_at
+arvexq/infra/legacy_stores.py (SOURCE),arvexq/storage/nar/parser.py,60,NarArchiveParser.parse
+arvexq/infra/legacy_stores.py (SOURCE),arvexq/storage/nar/racecards.py,86,NarStore.races_json; NarStore.coverage
+arvexq/infra/legacy_stores.py (SOURCE),arvexq/storage/nar/schema.py,75,NarStore.__init__; NarStore._migrate
+new explicit interface / retention policy / package,arvexq/storage/nar/store.py,8,
+arvexq/infra/legacy_stores.py (SOURCE),arvexq/storage/nar/sync.py,83,NarSync.__init__; NarSync._download; NarSync.import_zip_bytes; NarSync.sync_daily; NarSync.sync_month; NarSync.import_file
+new explicit interface / retention policy / package,arvexq/storage/policies/__init__.py,1,
+new explicit interface / retention policy / package,arvexq/storage/policies/archive.py,28,
+new explicit interface / retention policy / package,arvexq/storage/policies/bundles.py,12,
+new explicit interface / retention policy / package,arvexq/storage/policies/market.py,32,
+new explicit interface / retention policy / package,arvexq/storage/policies/snapshots.py,73,
+new explicit interface / retention policy / package,arvexq/storage/ports.py,13,
+new explicit interface / retention policy / package,arvexq/storage/prepared/__init__.py,1,
+app.py,arvexq/storage/prepared/cache.py,39,_prepared_ttl; _prepared_get_fresh; _racedb_get_fast
+app.py,arvexq/storage/prepared/refresh.py,111,_restore_saved_odds; _refresh_result_fast; _prepare_race_snapshot; _store_fast_snapshot
+arvexq/infra/race_stores.py (SOURCE),arvexq/storage/prepared/store.py,152,PreparedRaceStore.__init__; PreparedRaceStore.get; PreparedRaceStore.put; PreparedRaceStore.delete; PreparedRaceStore.status
+new explicit interface / retention policy / package,arvexq/storage/racedb/__init__.py,1,
+arvexq/infra/race_stores.py (SOURCE),arvexq/storage/racedb/analysis.py,32,RaceDataBank.save_analysis; RaceDataBank.get_analysis
+arvexq/infra/race_stores.py (SOURCE),arvexq/storage/racedb/career.py,66,RaceDataBank._horse_key; RaceDataBank._run_key; RaceDataBank.upsert_past_runs; RaceDataBank.source_updated; RaceDataBank.mark_source
+arvexq/infra/race_stores.py (SOURCE),arvexq/storage/racedb/odds.py,40,RaceDataBank.save_odds; RaceDataBank.odds_latest
+arvexq/infra/race_stores.py (SOURCE),arvexq/storage/racedb/racecards.py,127,RaceDataBank.upsert_race; RaceDataBank.get_race; RaceDataBank.status
+arvexq/infra/race_stores.py (SOURCE),arvexq/storage/racedb/schema.py,192,RaceDataBank.__init__
+new explicit interface / retention policy / package,arvexq/storage/racedb/store.py,9,
+new explicit interface / retention policy / package,arvexq/storage/sqlite/__init__.py,1,
+app.py,arvexq/storage/sqlite/connection.py,14,_new_conn
+new explicit interface / retention policy / package,arvexq/storage/sqlite/transactions.py,5,

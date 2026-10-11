@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
+from arvexq.storage.policies.snapshots import retain_snapshot
+from arvexq.storage.sqlite.transactions import begin_write
 from arvexq.prediction.prerace_archive import sealed_lock as _arvexq_sealed_lock
 
 
@@ -16,10 +18,12 @@ class RaceCards:
         conn=sqlite3.connect(self.path,timeout=5)
         try:
             conn.execute("PRAGMA journal_mode=WAL")
+            begin_write(conn)
             old=conn.execute("SELECT payload FROM race_snapshots WHERE race_id=?",(race_id,)).fetchone()
             if old:
                 try:previous=json.loads(old[0])
                 except Exception:previous={}
+                detail=retain_snapshot(previous,detail)
                 if isinstance(previous.get("preRacePrediction"),dict) and (_arvexq_sealed_lock(previous) or self._ports._prediction_clock_state(detail)[0]=="started" or not isinstance(detail.get("preRacePrediction"),dict)):
                     detail["preRacePrediction"]=previous["preRacePrediction"]
             snapshot_payload=self._ports._compact_display_snapshot(detail)

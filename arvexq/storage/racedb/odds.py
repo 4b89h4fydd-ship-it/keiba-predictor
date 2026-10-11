@@ -3,11 +3,13 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
+from arvexq.storage.policies.market import retain_odds
 
 
 class Odds:
     def save_odds(self, race_id: str, rows: list[dict], source: str = "", captured_at: int | None = None) -> int:
         if not rows:return 0
+        rows=retain_odds(self.path,race_id,rows)
         # Round to 15 seconds so a polling burst cannot create pointless duplicates.
         ts=int(captured_at or time.time());ts=ts-(ts%15)
         conn=sqlite3.connect(self.path,timeout=3);count=0
