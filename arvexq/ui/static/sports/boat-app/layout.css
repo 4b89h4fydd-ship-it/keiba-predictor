@@ -56,3 +56,15 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible{outline:3px
 
 /* Start exhibition is independent of the final betting and marks modules. */
 .boat-start-grid{display:grid;gap:5px}.boat-start-head,.boat-start-row{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;text-align:center}.boat-start-head{background:#15354a;color:#a8d7e9;font-size:11px}.boat-start-row{background:#233c4a;border:1px solid #446675;font-size:13px}.boat-start-row .boat-no{justify-self:center}.boat-start-row strong{font-size:19px;letter-spacing:.02em}.boat-start-row strong.boat-st-f{color:#ff9696}
+
+/* Compact time-ordered race navigation. */
+.boat-live-panel{border-color:#48819d}
+.boat-live-list{display:grid;gap:6px;margin-top:10px}
+.boat-live-race{display:grid;grid-template-columns:51px minmax(0,1fr) 62px 12px;gap:7px;align-items:center;min-height:56px;padding:9px;border:1px solid #4c7088;border-radius:10px;background:#243c4b;color:#e6f6ff;text-align:left;cursor:pointer;font:inherit}
+.boat-live-clock{font-size:14px;font-weight:900;color:#b6ecff}
+.boat-live-name{min-width:0}.boat-live-name b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.boat-live-name small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#b4cddb;font-size:10px}
+.boat-live-badge{font-size:10px;white-space:nowrap;padding:6px 3px;border:1px solid #56788d;border-radius:7px;text-align:center;color:#afdef2}
+.boat-live-race.soon .boat-live-badge{color:#eed29d;border-color:#a88c56}
+.boat-live-race.finished{opacity:.77}
+@media(max-width:360px){.boat-live-race{grid-template-columns:45px minmax(0,1fr) 57px 10px;gap:5px;padding:7px}.boat-live-badge{font-size:9px}}
