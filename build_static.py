@@ -241,7 +241,7 @@ for route in ("venue", "race"):
 compat_css = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v130")
 compat_app = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v147","v146","v145","v141","v140","v139","v138","v137","v136","v133")
 compat_arvexq = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303")
-for name in ("manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
+for name in ("manifest-arvexq-v181.webmanifest","manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
     (DIST / name).write_text(manifest, encoding="utf-8")
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
 (DIST / f"sw-{BUILD_VERSION}-reset.js").write_text(sw, encoding="utf-8")
@@ -301,6 +301,7 @@ headers=[
     "/race/*","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
     "/version.json","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
     "/manifest-arvexq-v175.webmanifest","  Cache-Control: no-cache, must-revalidate",
+    "/manifest-arvexq-v181.webmanifest","  Cache-Control: no-cache, must-revalidate",
     "/sw.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
     f"/sw-{BUILD_VERSION}-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
     "/sw-v328-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
