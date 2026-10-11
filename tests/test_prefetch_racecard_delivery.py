@@ -164,11 +164,14 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
 
     def test_pipeline_still_publishes_when_analysis_fails(self) -> None:
         workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
-        self.assertIn("proceeding to D1 repair", workflow)
-        self.assertIn("FAILED_BATCHES=$((FAILED_BATCHES + 1))", workflow)
+        self.assertIn("Publish lightweight racecards independent of D1 capacity", workflow)
+        self.assertIn("D1_STORED_EVIDENCE_VERIFIED", workflow)
         self.assertIn("D1_MISSING_CARDS", workflow)
-        guard = workflow.split('if [ "$MISSING_CARD" -gt 0 ] || [ "$MISSING_ANALYSIS" -gt 0 ]; then', 1)[1].split("\n          fi", 1)[0]
-        self.assertNotIn("exit 1", guard)
+        self.assertIn("FAILED_BATCHES=$((FAILED_BATCHES + 1))", workflow)
+        self.assertLess(workflow.index("Publish lightweight racecards independent of D1 capacity"),
+                        workflow.index("Analyze only persisted D1 data"))
+        self.assertLess(workflow.index("Read D1 facts back and require identical horse/history evidence"),
+                        workflow.index("Analyze only persisted D1 data"))
 
 
 if __name__ == "__main__":
