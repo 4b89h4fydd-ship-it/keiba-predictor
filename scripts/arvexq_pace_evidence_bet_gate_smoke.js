@@ -16,9 +16,10 @@ const completeReadiness={prediction:.92,card:1,history:1,actualOdds:1,
 const sourceHistory=src.slice(src.indexOf('function historicalWindow('),src.indexOf('function minetaPastProfile('));
 const win={};
 new Function('window',fs.readFileSync('arvexq/ui/static/betting/bet_readiness.js','utf8'))(win);
-const api=new Function('n','isScratchHorse','dataReadinessProfile','window',
-  sourceHistory+src.slice(start,end)+'\nreturn {paceEvidenceProfile,gateBetByPaceEvidence};')(
-    n,h=>!!h.scratched,(race,p)=>p.readiness||completeReadiness,win);
+const api=new Function('n','isScratchHorse','dataReadinessProfile','window','arvexqRaceType','clamp',
+  sourceHistory+src.slice(start,end)+'\nreturn {paceEvidenceProfile,prepareBetEvidence};')(
+    n,h=>!!h.scratched,(race,p)=>p.readiness||completeReadiness,win,()=>({code:'standard'}),(v,a,b)=>Math.max(a,Math.min(b,v)));
+
 const race={id:'nar-2026-10-08-大井-04',date:'2026-10-08',circuit:'地方',track:'大井',
   careerReadiness:{ready:true}};
 function row(no,positions=3,options={}){
@@ -37,40 +38,43 @@ function plan(){
 }
 const sufficient=prediction([1,2,3,4,5].map(no=>row(no)));
 assert.equal(api.paceEvidenceProfile(race,sufficient).ready,true,'full historical evidence should remain bettable');
-const approved=api.gateBetByPaceEvidence(plan(),race,sufficient);
+const approved=api.prepareBetEvidence(plan(),race,sufficient);
 assert.equal(approved.decision,'強く買う','do not blank strong signal with sufficient source evidence');
 assert.equal(approved.items.length,1);
 const noOdds=prediction([1,2,3,4,5].map(no=>row(no)));
 noOdds.readiness={...completeReadiness,actualOdds:0};
-const blockedOdds=api.gateBetByPaceEvidence(plan(),race,noOdds);
+const blockedOdds=api.prepareBetEvidence(plan(),race,noOdds);
 assert.equal(blockedOdds.decision,'強く買う','odds are optional for model-only tickets');
 assert.ok(blockedOdds.betInputGate.warnings.some(x=>x.includes('実オッズ')));
 assert.equal(blockedOdds.betInputGate.oddsVerified,false);
 const noWeights=prediction([1,2,3,4,5].map(no=>row(no)));
 noWeights.readiness={...completeReadiness,bodyWeight:0};
-assert.equal(api.gateBetByPaceEvidence(plan(),race,noWeights).decision,'強く買う',
+assert.equal(api.prepareBetEvidence(plan(),race,noWeights).decision,'強く買う',
   'body weight is not necessary for an evidence-backed model ticket');
 const tooThin=prediction([row(1,0),row(2,1),row(3,3),row(4,3),row(5,3)]);
-const gated=api.gateBetByPaceEvidence(plan(),race,tooThin);
-assert.equal(gated.decision,'見送り');
-assert.deepEqual(gated.items,[]);
-assert.equal(gated.trifectaDecision,'見送り');
-assert.equal(gated.betQuality,0);
-assert.match(gated.reason,/位置取り/);
+const gated=api.prepareBetEvidence(plan(),race,tooThin);
+assert.equal(gated.decision,'強く買う','evidence preparation cannot decide ticket type');
+assert.equal(gated.betInputGate.ready,false);
+assert.equal(gated.items.length,1,'preparation must not rewrite model draft');
+assert.equal(gated.trifectaDecision,'採用','independent engine makes the actual tri decision');
+assert.equal(gated.betQuality,95,'readiness must not overwrite audit score');
+assert.ok(gated.betInputGate.missing.some(x=>x.includes('位置取り')));
 const future=prediction([row(1,0,{recentRaces:[{
   date:'2026-10-09',fieldSize:12,cornerPositions:[1,1,1]
 }]}),row(2),row(3),row(4),row(5)]);
 assert.equal(api.paceEvidenceProfile(race,future).ready,false,'future data must never satisfy the gate');
-assert.equal(api.gateBetByPaceEvidence(plan(),race,future).decision,'見送り',
+assert.equal(api.prepareBetEvidence(plan(),race,future).betInputGate.ready,false,
  'future corners alone cannot satisfy model purchase evidence');
 const scratch=prediction([row(1),row(2),row(3),row(4),row(5,0,{scratched:true})]);
 assert.equal(api.paceEvidenceProfile(race,scratch).totalHorses,4,'scratched horses excluded');
-const unchanged=api.gateBetByPaceEvidence({decision:'見送り',items:[],reason:'別理由'},race,tooThin);
+const unchanged=api.prepareBetEvidence({decision:'見送り',items:[],reason:'別理由'},race,tooThin);
 assert.equal(unchanged.reason,'別理由','do not overwrite an existing safety rationale');
-assert.ok(src.includes('vp=gateBetByPaceEvidence(vp,r,p)'),'regional bet path needs pace gate');
-assert.ok(src.includes('plan=gateBetByPaceEvidence(plan,r,p)'),'central bet path needs pace gate');
-assert.ok(src.indexOf('vp=gateBetByPaceEvidence(vp,r,p)')<src.indexOf('vp=forceMandatoryTrifecta(vp,r,p)'));
-assert.ok(src.indexOf('plan=gateBetByPaceEvidence(plan,r,p)')<src.indexOf('plan=forceMandatoryTrifecta(plan,r,p)'));
+assert.ok(src.includes('vp=prepareBetEvidence(vp,r,p)'),'regional bet path needs pace gate');
+assert.ok(src.includes('plan=prepareBetEvidence(plan,r,p)'),'central bet path needs pace gate');
+assert.ok(src.indexOf('vp=prepareBetEvidence(vp,r,p)')<src.indexOf('vp=composeThreeWayBetPolicy(vp,r,p)'));
+assert.ok(!src.includes('function forceMandatoryTrifecta('),'obsolete mandatory review cannot be a ticket gate');
+assert.ok(src.indexOf('plan=prepareBetEvidence(plan,r,p)')<src.indexOf('plan=composeThreeWayBetPolicy(plan,r,p)'));
+assert.ok(!src.includes('function rebuildBetStrategyV242('),'old strategy must be physically deleted');
 const reference=win.ARVEXQBetReadiness.promoteReference(
   {selectionAudit:{selected:false,score:64,evidence:.60}},race,
   {coverage:.7,rows:sufficient.rows},completeReadiness);
