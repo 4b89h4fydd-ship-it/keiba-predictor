@@ -1,18 +1,18 @@
 // LARGE: independent BOAT application. No horse app modules are loaded here.
 import {todayJst,esc} from "./core/contract.js";
 import {loadDay} from "./core/feed.js";
-import {venueGrid,raceList,detail} from "./features/races.js";
+import {raceList,detail} from "./features/races.js";
+import {allBoatRaces} from "./features/all-races.js";
 import {selectedSection} from "./features/selected.js";
 import {statsSection} from "./features/ai-stats.js";
-import {realtimeSection} from "./features/realtime.js";
 
 const root=document.getElementById("boat-root");
-const state={date:todayJst(),day:null,error:"",loading:false,view:"home",venue:"",raceId:"",request:0,raceReturnView:"races"};
+const state={date:todayJst(),day:null,error:"",loading:false,view:"home",venue:"",raceId:"",request:0,raceReturnView:"home"};
 function emptyDay(){return {date:state.date,races:[],verifiedAt:""}}
 function routeFromUrl(){
   const params=new URL(location.href).searchParams;
   state.date=/^\d{4}-\d{2}-\d{2}$/.test(params.get("date")||"")?params.get("date"):todayJst();
-  state.view=["home","venues","selected","stats","realtime","races","race"].includes(params.get("view"))?params.get("view"):"home";
+  state.view=["home","selected","stats","races","race"].includes(params.get("view"))?params.get("view"):"home";
   state.venue=String(params.get("venue")||"");state.raceId=String(params.get("race")||"");
 }
 function route(view,venue="",raceId=""){
@@ -38,20 +38,14 @@ function navBar(){
     '<button type="button" data-action="refresh" aria-label="競艇データを更新">↻</button></div></div>';
 }
 function home(){
-  const races=(state.day||emptyDay()).races;
-  const active=new Set(races.map(r=>r.venue));
+  const day=state.day||emptyDay();
   return '<section class="boat-home-hero"><span>ARVEXQ BOAT RACING</span><h1>競艇AI</h1>'+
     '<p>全国24場｜3連単 最大6点｜◎【単】・◎【軸】</p></section>'+
-    '<div class="boat-home-actions">'+
-      '<button type="button" data-view="selected"><strong>本日の厳選レース</strong><small>朝の確定予想のみ</small><b>›</b></button>'+
-      '<button type="button" data-view="stats"><strong>AI成績</strong><small>保存済み買い目を照合</small><b>›</b></button>'+
-      '<button type="button" data-view="realtime"><strong>リアルタイム</strong><small>締切時刻順・レースへ</small><b>›</b></button><button type="button" data-view="venues"><strong>開催場一覧</strong><small>24場・レース詳細へ</small><b>›</b></button></div>'+
-    '<section class="boat-panel"><h2>本日の厳選レース</h2>'+selectedSection(state.day||emptyDay())+
-    '<button class="boat-secondary" type="button" data-view="selected">厳選レース一覧を見る ›</button></section>'+
-    '<section class="boat-panel"><h2>AI成績</h2>'+statsSection((state.day||emptyDay()).races)+
-    '<button class="boat-secondary" type="button" data-view="stats">AI成績の詳細を見る ›</button></section>'+
-    '<section class="boat-panel"><div class="boat-row"><h2>開催場一覧</h2><span class="boat-small">全国24場｜掲載データ '+active.size+'場</span></div>'+
-    venueGrid(state.day||emptyDay(),"")+'</section>'+realtimeSection(state.day||emptyDay());
+    allBoatRaces(day)+
+    '<nav class="arv-all-actions" aria-label="競艇予想メニュー">'+
+      '<button type="button" class="arv-all-action" data-view="selected"><b>本日の厳選</b><small>事前確定のみ</small><span>›</span></button>'+
+      '<button type="button" class="arv-all-action" data-view="stats"><b>AI成績</b><small>事前予想の実績</small><span>›</span></button>'+
+    '</nav>';
 }
 function subheader(title,back="home"){
   return '<div class="boat-subheader"><button type="button" data-back="'+back+'" aria-label="戻る">‹</button>'+
@@ -64,10 +58,7 @@ function body(){
     '<section class="boat-panel"><h2>朝確定・厳選予想</h2>'+selectedSection(day)+'</section>';
   if(state.view==="stats")return subheader("AI成績")+
     '<section class="boat-panel"><h2>3連単 AI成績</h2>'+statsSection(day.races)+'</section>';
-  if(state.view==="realtime")return subheader("リアルタイム")+realtimeSection(day,{full:true});
-  if(state.view==="venues")return subheader("開催場一覧")+
-    '<section class="boat-panel"><h2>競艇場を選択</h2>'+venueGrid(day,"")+'</section>';
-  if(state.view==="races")return subheader(venue+" 全レース","venues")+
+  if(state.view==="races")return subheader(venue+" 全レース","home")+
     '<section class="boat-panel"><h2>'+esc(venue)+' 1R〜12R</h2>'+raceList(day,venue)+'</section>';
   if(state.view==="race"){
     const race=day.races.find(r=>r.id===state.raceId&&r.venue===venue);
@@ -78,7 +69,7 @@ function body(){
 }
 function draw(){
   if(!root)return;
-  root.innerHTML='<div class="boat-shell">'+navBar()+loadingNote()+
+  root.innerHTML='<div class="boat-shell">'+navBar()+(state.view==='home'?'':loadingNote())+
     '<main class="boat-main">'+body()+'</main><footer class="boat-footer">ARVEXQ | BOAT INTELLIGENCE</footer></div>';
 }
 async function refresh(){
@@ -101,11 +92,11 @@ if(root){
     if(b.dataset.venue){route("races",b.dataset.venue);return}
     if(b.dataset.race){
       const race=(state.day||emptyDay()).races.find(r=>r.id===b.dataset.race);
-      if(race){state.raceReturnView=state.view==="realtime"?"realtime":"races";route("race",race.venue,race.id);}
+      if(race){state.raceReturnView=state.view==="home"?"home":"races";route("race",race.venue,race.id);}
       return;
     }
     if(b.dataset.back){
-      if(b.dataset.back==="races")route(state.raceReturnView==="realtime"?"realtime":"races",state.raceReturnView==="realtime"?"":state.venue);
+      if(b.dataset.back==="races")route(state.raceReturnView==="home"?"home":"races",state.raceReturnView==="home"?"":state.venue);
       else route(b.dataset.back);
     }
   });
