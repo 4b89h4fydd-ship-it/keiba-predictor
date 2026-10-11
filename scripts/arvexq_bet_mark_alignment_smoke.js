@@ -3,7 +3,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const src=require('../arvexq/ui/app_source.cjs').readAppSource();
 const begin=src.indexOf('function captureExactaBetEvidence('),end=src.indexOf('function buildAiBetPlan(',begin);
 assert.ok(begin>=0&&end>begin,'model evidence and explanatory functions missing');
 const implementation=new Function('n','isScratchHorse','betComboText','esc',

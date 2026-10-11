@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const fs=require('node:fs');
 const assert=require('node:assert/strict');
-const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const src=require('../arvexq/ui/app_source.cjs').readAppSource();
 const start=src.indexOf('function applyFrozenMarks(r,p){');
 const end=src.indexOf('\n}',start)+2;
 assert.ok(start>=0&&end>start, 'frozen marks entrypoint missing');

@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const source = fs.readFileSync('arvexq/ui/static/app.js', 'utf8');
+const source = require('../arvexq/ui/app_source.cjs').readAppSource();
 
 function extract(start, end) {
   const a = source.indexOf('function ' + start + '(');

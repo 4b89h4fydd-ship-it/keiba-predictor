@@ -9,7 +9,7 @@ const base = {id,date,circuit:'地方',track:'大井',raceNumber:11,startTime:'2
   title:'第２８回 ジャパンダートクラシックJpnＩ３歳選定馬重賞',distance:2000,weather:'曇',condition:'良'};
 const detail = process.env.ARVEXQ_TEST_DETAIL_PATH ? JSON.parse(fs.readFileSync(process.env.ARVEXQ_TEST_DETAIL_PATH)).detail :
   {...base,fieldSize:2,horses:[1,2].map(no=>({horseNumber:no,frameNumber:no,name:'テスト馬'+no,jockey:'騎手',sex:'牡',age:3,carriedWeight:57,bodyWeight:480,winOdds:no*2,popularity:no,recentRaces:Array.from({length:5},(_,i)=>({date:'2026-09-0'+(i+1),track:'大井',distance:1800,fieldSize:12,finish:no,timeSeconds:112,cornerPositions:[no,no,no,no],condition:'良'}))}))};
-const source = fs.readFileSync(path.join(root,'arvexq/ui/static/app.js'),'utf8');
+const source = require('../arvexq/ui/app_source.cjs').readAppSource();
 const boot = 'installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 assert.ok(source.includes(boot));
 const instrumented = source.replace(boot, `

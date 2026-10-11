@@ -95,264 +95,49 @@ SOURCE = (
     "            'scoreMeaning':'比較用のモデル評価点。実測値・的中確率ではない'}\n"
     '\n'
     '\n'
-    'def _v207_norm01(value, default=.5):\n'
-    '    try:\n'
-    '        x=float(value)\n'
-    '        if not math.isfinite(x): return default\n'
-    '    except (TypeError,ValueError):\n'
-    '        return default\n'
-    '    if x > 1.5: x /= 100.0\n'
-    '    return max(0.0,min(1.0,x))\n'
-    '\n'
-    '\n'
-    'def _v207_component(e: dict, *names: str, default=.5):\n'
-    '    c=e.get("components") or {}\n'
-    '    for name in names:\n'
-    '        if c.get(name) is not None:\n'
-    '            return _v207_norm01(c.get(name),default)\n'
-    '    return default\n'
-    '\n'
-    '\n'
-    'def _v207_winner_score(horse: dict, legacy_p1: float) -> float:\n'
-    '    """v206 holdout-promoted winner ranker, used only on validated circuits.\n'
-    '\n'
-    '    The feature whitelist exactly mirrors backtest_v206.py. Result, payout,\n'
-    '    win odds and popularity are deliberately absent.\n'
-    '    """\n'
-    '    e=horse.get("integratedEvaluation") or {}\n'
-    '    pm=horse.get("precomputedMetrics") or {}\n'
-    '    fit=pm.get("fit") or {}\n'
-    '    st=pm.get("style") or {}\n'
-    '    try:samples=max(int(st.get("samples") or 0),int(e.get("samples") or 0))\n'
-    '    except (TypeError,ValueError):samples=0\n'
-    '    fullness=max(0.0,min(1.0,float(e.get("dataCompleteness") or 50)/100.0))\n'
-    '    evidence=max(0.0,min(1.0,.55*min(1.0,samples/5.0)+.45*fullness))\n'
-    '    late_role=max(0.0,min(1.0,\n'
-    '        .42*_v207_norm01(st.get("moved3"),0)+\n'
-    '        .32*_v207_norm01(st.get("mid"),0)+\n'
-    '        .26*_v207_norm01(st.get("close"),0)))\n'
-    '    f={\n'
-    '        "p1_saved":_v207_norm01(legacy_p1,.5),\n'
-    '        "eval_score":_v207_norm01(e.get("score"),.5),\n'
-    '        "race_perf":_v207_component(e,"racePerformance",default=.5),\n'
-    '        "representative":_v207_component(e,"representative",default=.5),\n'
-    '        "distance":_v207_component(e,"distanceFit",default=_v207_norm01(fit.get("distance"),.5)),\n'
-    '        "track":_v207_component(e,"courseFit",default=_v207_norm01(fit.get("track"),.5)),\n'
-    '        "going":_v207_component(e,"goingFit",default=_v207_norm01(fit.get("condition"),.5)),\n'
-    '        "level":_v207_component(e,"opponentLevelScore",default=_v207_norm01(fit.get("level"),.5)),\n'
-    '        "lap":_v207_component(e,"lapScore",default=.5),\n'
-    '        "jockey":_v207_component(e,"jockeyScore","jockeyResults",default=.5),\n'
-    '        "trainer":_v207_component(e,"trainerScore","trainerResults",default=.5),\n'
-    '        "body":_v207_component(e,"bodyWeightScore",default=.5),\n'
-    '        "condition_change":_v207_component(e,"conditionChangeScore",default=.5),\n'
-    '        "early3":_v207_norm01(st.get("early3"),0),\n'
-    '        "ten":_v207_norm01(st.get("ten"),.5),\n'
-    '        "late_role":late_role,\n'
-    '        "evidence":evidence,\n'
-    '    }\n'
-    '    return round(max(0.0,min(1.0,sum(V207_WINNER_WEIGHTS[k]*f[k] for k in V207_WINNER_WEIGHTS)))*100,4)\n'
-    '\n'
-    '\n'
-    'def _v212_role_feature_map(horse: dict) -> dict[str,float]:\n'
-    '    e=horse.get("integratedEvaluation") or {}\n'
-    '    c=e.get("components") or {}\n'
-    '    pm=horse.get("precomputedMetrics") or {}\n'
-    '    fit=pm.get("fit") or {}\n'
-    '    st=pm.get("style") or {}\n'
-    '    try:samples=max(0,int(st.get("samples") or 0))\n'
-    '    except (TypeError,ValueError):samples=0\n'
-    '    def comp(*names,default=.5):\n'
-    '        for name in names:\n'
-    '            if c.get(name) is not None:return _v207_norm01(c.get(name),default)\n'
-    '        return default\n'
-    '    return {\n'
-    '        "base":_v207_norm01(e.get("score"),.5),\n'
-    '        "perf":comp("racePerformance"),\n'
-    '        "rep":comp("representative"),\n'
-    '        "dist":_v207_norm01(fit.get("distance"),.5),\n'
-    '        "track":_v207_norm01(fit.get("track"),.5),\n'
-    '        "going":_v207_norm01(fit.get("condition"),.5),\n'
-    '        "level":_v207_norm01(fit.get("level"),.5),\n'
-    '        "jockey":comp("jockeyScore","jockeyResults"),\n'
-    '        "trainer":comp("trainerScore","trainerResults"),\n'
-    '        "body":comp("bodyWeightScore"),\n'
-    '        "lap":comp("lapScore"),\n'
-    '        "ten":_v207_norm01(st.get("ten"),.5),\n'
-    '        "early3":_v207_norm01(st.get("early3"),.0),\n'
-    '        "moved3":_v207_norm01(st.get("moved3"),.0),\n'
-    '        "front":_v207_norm01(st.get("front"),.0),\n'
-    '        "stalk":_v207_norm01(st.get("stalk"),.0),\n'
-    '        "mid":_v207_norm01(st.get("mid"),.0),\n'
-    '        "close":_v207_norm01(st.get("close"),.0),\n'
-    '        "evidence":max(0.0,min(1.0,samples/5.0)),\n'
-    '        "data":_v207_norm01(e.get("dataCompleteness"),.5),\n'
-    '    }\n'
-    '\n'
-    '\n'
-    'def _v212_p2_score(horse: dict) -> float:\n'
-    '    """Validated local-racing second-place role ranker.\n'
-    '\n'
-    '    Trained chronologically on the same market-blind evidence fields used by ARVEXQ.\n'
-    '    It is deliberately not used for JRA until the JRA holdout is available.\n'
-    '    """\n'
-    '    f=_v212_role_feature_map(horse)\n'
-    '    z=V212_P2_MODEL_INTERCEPT+sum(V212_P2_MODEL_COEFFICIENTS[k]*f[k] for k in V212_P2_MODEL_COEFFICIENTS)\n'
-    '    z=max(-40.0,min(40.0,z))\n'
-    '    prob=1.0/(1.0+math.exp(-z))\n'
-    '    return round(prob*100.0,4)\n'
-    '\n'
-    '\n'
-    'def _saved_role_scores(horse: dict) -> tuple[float,float,float]:\n'
-    '    """Stable pre-race P1/P2/P3 scores stored with the snapshot.\n'
-    '\n'
-    '    These are intentionally market-blind. P1 emphasizes repeatable winning evidence;\n'
-    '    P2 emphasizes stability/front-hold; P3 allows peak/late-role evidence to surface.\n'
-    '    """\n'
-    "    e=horse.get('integratedEvaluation') or {}\n"
-    "    c=e.get('components') or {}\n"
-    "    pm=horse.get('precomputedMetrics') or {}\n"
-    "    fit=pm.get('fit') or {}\n"
-    "    st=pm.get('style') or {}\n"
-    '    def u(v,default=.5):\n'
-    '        try:\n'
-    '            x=float(v)\n'
-    '            return max(0.0,min(1.0,x)) if math.isfinite(x) else default\n'
-    '        except (TypeError,ValueError):\n'
-    '            return default\n'
-    "    base=u(float(e.get('score') or 50)/100)\n"
-    "    perf=u(c.get('racePerformance'))\n"
-    "    rep=u(c.get('representative'))\n"
-    "    track=u(fit.get('track'))\n"
-    "    dist=u(fit.get('distance'))\n"
-    "    going=u(fit.get('condition'))\n"
-    "    level=u(fit.get('level'))\n"
-    "    jockey=u(c.get('jockeyScore',c.get('jockeyResults')))\n"
-    "    body=u(c.get('bodyWeightScore'))\n"
-    "    lap=u(c.get('lapScore'))\n"
-    "    ten=u(st.get('ten'))\n"
-    "    early3=u(st.get('early3'))\n"
-    "    moved3=u(st.get('moved3'))\n"
-    "    front=u(st.get('front'))\n"
-    "    stalk=u(st.get('stalk'))\n"
-    "    mid=u(st.get('mid'))\n"
-    "    close=u(st.get('close'))\n"
-    "    samples=max(0,int(st.get('samples') or 0))\n"
-    '    evidence=min(1.0,samples/5.0)\n'
-    '    p1=(base*.26+perf*.20+rep*.15+dist*.10+track*.09+level*.07+going*.04+\n'
-    '        jockey*.025+body*.015+lap*.02+ten*.02+evidence*.01)\n'
-    '    p2=(base*.18+perf*.19+dist*.08+track*.08+going*.05+early3*.12+stalk*.08+\n'
-    '        front*.05+ten*.06+jockey*.025+evidence*.055)\n'
-    '    p3=(base*.14+perf*.14+rep*.14+dist*.06+track*.05+level*.05+going*.04+\n'
-    '        moved3*.10+mid*.07+close*.08+lap*.06+evidence*.07)\n'
-    '    return tuple(round(max(0.0,min(1.0,z))*100,2) for z in (p1,p2,p3))\n'
-    '\n'
-    '\n'
-    '\n'
-    'def _v213_rank_percentiles(values):\n'
-    '    n=len(values)\n'
-    '    if n<=1:return [0.5]*n\n'
-    '    out=[]\n'
-    '    for v in values:\n'
-    '        less=sum(1 for x in values if x < v)\n'
-    '        equal=sum(1 for x in values if x == v)\n'
-    '        rank=1.0+less+(equal-1)*0.5\n'
-    '        out.append((rank-1.0)/(n-1.0))\n'
-    '    return out\n'
-    '\n'
-    '\n'
-    'def _v213_zscore(values):\n'
-    '    if not values:return []\n'
-    '    mean=sum(values)/len(values)\n'
-    '    var=sum((x-mean)**2 for x in values)/len(values)\n'
-    '    sd=math.sqrt(var)\n'
-    '    if sd<1e-9:return [0.0 for _ in values]\n'
-    '    return [(x-mean)/sd for x in values]\n'
-    '\n'
-    '\n'
-    'def _v213_softmax(values):\n'
-    '    if not values:return []\n'
-    '    mx=max(values);ex=[math.exp(max(-60.0,min(60.0,x-mx))) for x in values];s=sum(ex) or 1.0\n'
-    '    return [x/s for x in ex]\n'
-    '\n'
-    '\n'
-    'def _v213_feature_rows(detail: dict, horses: list[dict]) -> list[dict[str,float]]:\n'
-    '    rows=[];field=max(1,len(horses))\n'
-    '    weights=[];ages=[]\n'
-    '    for h in horses:\n'
-    "        try:w=float(h.get('carriedWeight'));weights.append(w if math.isfinite(w) else None)\n"
-    '        except (TypeError,ValueError):weights.append(None)\n'
-    "        try:a=float(h.get('age'));ages.append(a if math.isfinite(a) else None)\n"
-    '        except (TypeError,ValueError):ages.append(None)\n'
-    '    wv=[x for x in weights if x is not None];av=[x for x in ages if x is not None]\n'
-    '    wmin,wmax=(min(wv),max(wv)) if wv else (0.0,1.0);amin,amax=(min(av),max(av)) if av else (0.0,1.0)\n'
-    '    for idx,h in enumerate(horses):\n'
-    "        e=h.get('integratedEvaluation') or {};c=e.get('components') or {};pm=h.get('precomputedMetrics') or {};fit=pm.get('fit') or {};st=pm.get('style') or {}\n"
-    '        def cp(*names,default=.5):\n'
-    '            for name in names:\n'
-    '                if c.get(name) is not None:return _v207_norm01(c.get(name),default)\n'
-    '            return default\n'
-    "        try:samples=max(int(st.get('samples') or 0),int(e.get('samples') or 0))\n"
-    '        except (TypeError,ValueError):samples=0\n'
-    "        full=max(0.0,min(1.0,float(e.get('dataCompleteness') or 50)/100.0))\n"
-    '        evidence=max(0.0,min(1.0,.55*min(1.0,samples/5.0)+.45*full))\n'
-    "        runs=list(h.get('recentRaces') or [])[:5];finish_scores=[];gains=[];earlys=[];front_hold=[];wins=top3=used=0\n"
-    '        for rr in runs:\n'
-    "            try:fin=int(float(rr.get('finish') or rr.get('finishPosition') or 0))\n"
-    '            except (TypeError,ValueError):fin=0\n'
-    "            try:fs=max(2,int(float(rr.get('fieldSize') or 12)))\n"
-    '            except (TypeError,ValueError):fs=12\n'
-    '            if fin>0:\n'
-    '                score=max(0.0,min(1.0,1.0-(fin-1)/max(1,fs-1)));finish_scores.append(score);used+=1;wins+=int(fin==1);top3+=int(fin<=3)\n'
-    "            corners=rr.get('cornerPositions') or []\n"
-    '            if corners and fin>0:\n'
-    '                try:first=int(float(corners[0] or 0));last=int(float(corners[-1] or 0))\n'
-    '                except (TypeError,ValueError):first=last=0\n'
-    '                if last>0:gains.append(max(-1.0,min(1.0,(last-fin)/max(1,fs-1))))\n'
-    '                if first>0:earlys.append(max(0.0,min(1.0,1.0-(first-1)/max(1,fs-1))))\n'
-    '                if first>0:front_hold.append(1.0 if first<=3 and fin<=3 else 0.0)\n'
-    '        avg=sum(finish_scores)/len(finish_scores) if finish_scores else .5;peak=max(finish_scores) if finish_scores else .5;last=finish_scores[0] if finish_scores else .5\n'
-    "        no=int(h.get('horseNumber') or 0);w=weights[idx];age=ages[idx]\n"
-    '        f={\n'
-    "            'eval_score':_v207_norm01(e.get('score'),.5),'race_perf':cp('racePerformance'),'representative':cp('representative'),\n"
-    "            'distance':cp('distanceFit',default=_v207_norm01(fit.get('distance'),.5)),'track':cp('courseFit',default=_v207_norm01(fit.get('track'),.5)),\n"
-    "            'going':cp('goingFit',default=_v207_norm01(fit.get('condition'),.5)),'level':cp('opponentLevelScore',default=_v207_norm01(fit.get('level'),.5)),\n"
-    "            'lap':cp('lapScore'),'jockey':cp('jockeyScore','jockeyResults'),'trainer':cp('trainerScore','trainerResults'),'body':cp('bodyWeightScore'),\n"
-    "            'condition_change':cp('conditionChangeScore'),'ten':_v207_norm01(st.get('ten'),.5),'early3':_v207_norm01(st.get('early3'),0),\n"
-    "            'moved3':_v207_norm01(st.get('moved3'),0),'front':_v207_norm01(st.get('front'),0),'stalk':_v207_norm01(st.get('stalk'),0),\n"
-    "            'mid':_v207_norm01(st.get('mid'),0),'close':_v207_norm01(st.get('close'),0),'evidence':evidence,'data':full,\n"
-    "            'recent_win':wins/used if used else .1,'recent_top3':top3/used if used else .25,'recent_avg_finish':avg,'recent_peak_finish':peak,\n"
-    "            'recent_last_finish':last,'recent_gain':max(0.0,min(1.0,.5+.5*(sum(gains)/len(gains) if gains else 0.0))),\n"
-    "            'recent_early':sum(earlys)/len(earlys) if earlys else .5,'recent_front_hold':sum(front_hold)/len(front_hold) if front_hold else .25,\n"
-    "            'inside':1.0-(no-1)/max(1,field-1),'weight_rel':1.0-(w-wmin)/max(1e-6,wmax-wmin) if w is not None and wmax>wmin else .5,\n"
-    "            'age_rel':1.0-(age-amin)/max(1e-6,amax-amin) if age is not None and amax>amin else .5,\n"
-    '        }\n'
-    '        rows.append(f)\n'
-    "    rel_sources=['eval_score','race_perf','representative','distance','track','level','ten','early3','moved3','recent_avg_finish','recent_peak_finish','recent_top3']\n"
-    '    for name in rel_sources:\n'
-    '        ranks=_v213_rank_percentiles([f[name] for f in rows])\n'
-    "        for i,f in enumerate(rows):f['rel_'+name]=ranks[i]\n"
-    "    try:dist=float(detail.get('distance') or 1600)\n"
-    '    except (TypeError,ValueError):dist=1600\n'
-    '    short=max(0.0,min(1.0,(1800.0-dist)/600.0));long=max(0.0,min(1.0,(dist-1600.0)/800.0))\n'
-    '    for i,f in enumerate(rows):\n'
-    "        others=[z['early3'] for j,z in enumerate(rows) if j!=i];pressure=sum(others)/len(others) if others else .5;late=.42*f['moved3']+.32*f['mid']+.26*f['close']\n"
-    "        f['short_ten']=short*f['ten'];f['short_early3']=short*f['early3'];f['long_late']=long*late;f['front_conflict']=f['early3']*pressure;f['lone_front']=f['early3']*(1.0-pressure);f['late_role']=late\n"
-    '    return rows\n'
+    'from arvexq.prediction.legacy.common import (\n'
+    '    _v207_norm01,\n'
+    '    _v207_component,\n'
+    '    _v213_rank_percentiles,\n'
+    '    _v213_zscore,\n'
+    '    _v213_softmax,\n'
+    ')\n'
     '\n'
     '\n'
     '\n'
     '\n'
-    'def _v215_speed_ratio(rr: dict) -> float | None:\n'
-    '    try:\n'
-    "        sec=float(rr.get('timeSeconds') or 0); dist=int(float(rr.get('distance') or 0))\n"
-    '    except (TypeError,ValueError):\n'
-    '        return None\n'
-    '    if sec <= 0 or dist <= 0:return None\n'
-    "    track=str(rr.get('track') or '');cond=str(rr.get('condition') or '不明');db=round(dist/200)*200\n"
-    '    base=(V215_SPEED_BASE_EXACT.get(f"{track}|{dist}|{cond}") or\n'
-    '          V215_SPEED_BASE_TRACK_DISTANCE.get(f"{track}|{dist}") or\n'
-    '          V215_SPEED_BASE_DISTANCE_GOING.get(f"{db}|{cond}") or V215_SPEED_GLOBAL)\n'
-    '    return max(.75,min(1.25,(dist/sec)/max(1e-9,float(base))))\n'
+    'from arvexq.prediction.legacy.winner import (\n'
+    '    _v207_winner_score,\n'
+    '    _v212_role_feature_map,\n'
+    '    _v212_p2_score,\n'
+    ')\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    'from arvexq.prediction.legacy.role_features import (\n'
+    '    _saved_role_scores,\n'
+    '    _v213_feature_rows,\n'
+    ')\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    '\n'
+    'from arvexq.prediction.legacy.course import (\n'
+    '    _v215_speed_ratio,\n'
+    '    _v215_draw_score,\n'
+    ')\n'
     '\n'
     '\n'
     'def _pc_live_track_speed(detail: dict) -> dict:\n'
@@ -472,347 +257,39 @@ SOURCE = (
     '            "deficit":round(deficit,6),"frontSignal":round(front_signal,6),"lateSignal":round(late_signal,6),"innerSignal":round(inner_signal,6),\n'
     '            "flowLabel":flow or "中立","sourceRaces":source}\n'
     '\n'
-    'def _v313_horse_flow_adjust(h:dict, profile:dict, field:int)->float:\n'
-    '    if not profile or not profile.get("active"):return 0.0\n'
-    '    runs=list(h.get("recentRaces") or h.get("allPastRuns") or [])[:5];early=late=den=0.0\n'
-    '    for j,rr in enumerate(runs):\n'
-    '        if not isinstance(rr,dict):continue\n'
-    '        cp=[]\n'
-    '        for v in (rr.get("cornerPositions") or []):\n'
-    '            try:q=int(v)\n'
-    '            except Exception:q=0\n'
-    '            if q>0:cp.append(q)\n'
-    '        if not cp:continue\n'
-    '        try:fs=max(4,int(rr.get("fieldSize") or 12))\n'
-    '        except Exception:fs=12\n'
-    '        w=.78**j;pos=cp[0];norm=(pos-1)/max(3,fs-1);den+=w\n'
-    '        if pos<=max(2,math.ceil(fs*.25)):early+=w\n'
-    '        elif norm>=.55:late+=w\n'
-    '        if len(cp)>1 and cp[-1]<=max(3,math.ceil(fs*.30)) and pos>max(3,math.ceil(fs*.30)):late+=w*.35\n'
-    '    if den<=0:early=late=.5\n'
-    '    else:early/=den;late=min(1.0,late/den)\n'
-    '    try:fr=int(h.get("frameNumber") or 0)\n'
-    '    except Exception:fr=0\n'
-    '    max_frame=max(2,min(8,math.ceil(max(2,field)/2)));inside=max(0.0,min(1.0,1-(fr-1)/max(1,max_frame-1))) if fr else .5\n'
-    '    raw=float(profile.get("frontSignal") or 0)*(early-late)+float(profile.get("lateSignal") or 0)*(late-early)+float(profile.get("innerSignal") or 0)*(inside-.5)*1.35\n'
-    '    return max(-.06,min(.06,raw))\n'
-    '\n'
-    'def _v215_draw_score(track: str, dist: int, group: int) -> float:\n'
-    '    db=round(int(dist or 0)/200)*200\n'
-    '    arr=V215_DRAW_STATS.get(f"{track}|{db}")\n'
-    '    if not arr or sum(arr[:3]) < 24:arr=V215_TRACK_DRAW_STATS.get(str(track))\n'
-    '    if not arr or sum(arr[:3]) < 20:return .5\n'
-    '    starts=float(arr[group]);hits=float(arr[3+group]);total_s=float(sum(arr[:3]));total_h=float(sum(arr[3:]))\n'
-    '    base=(total_h+3)/(total_s+9);rate=(hits+1)/(starts+3);lift=rate/max(.05,base)\n'
-    '    return max(0.0,min(1.0,.5+.45*(lift-1)))\n'
+    'from arvexq.prediction.legacy.factors import (\n'
+    '    _v313_horse_flow_adjust,\n'
+    '    _v317_factor_weights,\n'
+    '    _v317_factor_profile,\n'
+    ')\n'
     '\n'
     '\n'
-    'def _v215_prof_feature_rows(detail: dict, horses: list[dict], base_rows: list[dict]) -> list[dict]:\n'
-    '    rows=[];field=max(1,len(horses))\n'
-    "    try:target_date=dt_date.fromisoformat(str(detail.get('date') or ''))\n"
-    '    except Exception:target_date=None\n'
-    '    for idx,h in enumerate(horses):\n'
-    "        f=dict(base_rows[idx]);runs=list(h.get('recentRaces') or [])[:5]\n"
-    '        finish_scores=[];wf_num=wf_den=0.0;speed_vals=[];speed_ws=[];carried=[];prizes=[];days=[]\n'
-    '        for j,rr in enumerate(runs):\n'
-    '            wrec=.72**j\n'
-    "            try:fin=int(float(rr.get('finish') or rr.get('finishPosition') or 0))\n"
-    '            except (TypeError,ValueError):fin=0\n'
-    "            try:fs=max(2,int(float(rr.get('fieldSize') or 12)))\n"
-    '            except (TypeError,ValueError):fs=12\n'
-    '            if fin>0:\n'
-    '                score=max(0.0,min(1.0,1.0-(fin-1)/max(1,fs-1)));finish_scores.append(score);wf_num+=score*wrec;wf_den+=wrec\n'
-    '            sr=_v215_speed_ratio(rr)\n'
-    '            if sr is not None:speed_vals.append(sr);speed_ws.append(wrec)\n'
-    '            try:\n'
-    "                cw=float(rr.get('carriedWeight'))\n"
-    '                if math.isfinite(cw):carried.append(cw)\n'
-    '            except (TypeError,ValueError):pass\n'
-    '            try:\n'
-    "                rp=float(rr.get('racePrize1') or 0)\n"
-    '                if rp>0:prizes.append(rp)\n'
-    '            except (TypeError,ValueError):pass\n'
-    "            if target_date and rr.get('date'):\n"
-    "                try:days.append(max(0,(target_date-dt_date.fromisoformat(str(rr.get('date')))).days))\n"
-    '                except Exception:pass\n'
-    '        trend=(finish_scores[0]-(sum(finish_scores[1:])/len(finish_scores[1:]) if len(finish_scores)>1 else finish_scores[0])) if finish_scores else 0.0\n'
-    '        spavg=sum(v*w for v,w in zip(speed_vals,speed_ws))/sum(speed_ws) if speed_vals else 1.0\n'
-    '        spbest=max(speed_vals) if speed_vals else 1.0;splast=speed_vals[0] if speed_vals else 1.0\n'
-    '        sptrend=(speed_vals[0]-(sum(speed_vals[1:])/len(speed_vals[1:]) if len(speed_vals)>1 else speed_vals[0])) if speed_vals else 0.0\n'
-    "        curpr=float(detail.get('racePrize1') or 0);prevpr=(sum(prizes)/len(prizes) if prizes else 0.0);bestpr=max(prizes) if prizes else 0.0\n"
-    '        class_drop=.5 if curpr<=0 or prevpr<=0 else max(0.0,min(1.0,.5+.22*math.log(max(1e-6,prevpr/curpr))))\n'
-    '        class_fit=.5 if curpr<=0 or bestpr<=0 else max(0.0,min(1.0,.5+.20*math.log(max(1e-6,bestpr/curpr))))\n'
-    "        try:curw=float(h.get('carriedWeight'));curw=curw if math.isfinite(curw) else float('nan')\n"
-    "        except (TypeError,ValueError):curw=float('nan')\n"
-    '        lastw=carried[0] if carried else curw\n'
-    '        wd=0.0 if not (math.isfinite(curw) and math.isfinite(lastw)) else curw-lastw\n'
-    '        weight_delta=max(0.0,min(1.0,.5-.08*wd));wstd=float(np.std(carried)) if False else (math.sqrt(sum((x-sum(carried)/len(carried))**2 for x in carried)/len(carried)) if len(carried)>=2 else 0.0)\n'
-    "        jp=h.get('jockeyProfile') or {};tp=h.get('trainerProfile') or {}\n"
-    '        def pv(p,key,default=.5):return _v207_norm01(p.get(key),default)\n'
-    "        jctx=sum(pv(jp,k) for k in ('overall','track','distance','condition'))/4.0;tctx=sum(pv(tp,k) for k in ('overall','track','distance','condition'))/4.0\n"
-    "        no=int(h.get('horseNumber') or 0);q=(no-1)/max(1,field-1);grp=0 if q<.34 else (2 if q>.66 else 1)\n"
-    '        f.update({\n'
-    "            'speed_adj_avg':max(0.0,min(1.0,.5+(spavg-1)*3.2)),'speed_adj_best':max(0.0,min(1.0,.5+(spbest-1)*2.8)),\n"
-    "            'speed_adj_last':max(0.0,min(1.0,.5+(splast-1)*3.0)),'speed_adj_trend':max(0.0,min(1.0,.5+sptrend*5)),\n"
-    "            'speed_evidence':min(1.0,len(speed_vals)/5.0),'recency_wfinish':wf_num/wf_den if wf_den else .5,\n"
-    "            'finish_trend':max(0.0,min(1.0,.5+trend*.8)),'days_since_last':min(1.0,(days[0] if days else 90)/180.0),\n"
-    "            'freshness':max(0.0,min(1.0,1-abs((days[0] if days else 45)-28)/120.0)),'class_drop':class_drop,'class_fit':class_fit,\n"
-    "            'weight_delta':weight_delta,'weight_stability':max(0.0,min(1.0,1-wstd/4.0)),'jockey_ctx':jctx,'jockey_track':pv(jp,'track'),\n"
-    "            'jockey_distance':pv(jp,'distance'),'jockey_condition':pv(jp,'condition'),'jockey_front':pv(jp,'early3Rate'),\n"
-    "            'trainer_ctx':tctx,'trainer_track':pv(tp,'track'),'trainer_distance':pv(tp,'distance'),'trainer_condition':pv(tp,'condition'),\n"
-    "            'draw_hist':_v215_draw_score(str(detail.get('track') or ''),int(float(detail.get('distance') or 1600)),grp),\n"
-    "            'live_draw':.5,'live_style':.5,'field_norm':max(0.0,min(1.0,(field-4)/12.0)),\n"
-    "            'style_reliability':min(1.0,max(int((h.get('precomputedMetrics') or {}).get('style',{}).get('samples') or 0),int((h.get('integratedEvaluation') or {}).get('samples') or 0))/5.0),\n"
-    '        })\n'
-    '        rows.append(f)\n'
-    '    for i,f in enumerate(rows):\n'
-    "        others=[z.get('early3',0) for j,z in enumerate(rows) if j!=i];pressure=sum(others)/len(others) if others else .5\n"
-    "        late=.42*f.get('moved3',0)+.32*f.get('mid',0)+.26*f.get('close',0);early=max(f.get('front',0),f.get('stalk',0),f.get('early3',0))\n"
-    "        f['pace_fit']=max(0.0,min(1.0,early*(1-pressure)+late*pressure))\n"
-    '    return rows\n'
+    '\n'
+    'from arvexq.prediction.legacy.professional import (\n'
+    '    _v215_prof_feature_rows,\n'
+    '    _v215_professional_p1,\n'
+    ')\n'
     '\n'
     '\n'
-    'def _v215_professional_p1(detail: dict, horses: list[dict], base_rows: list[dict]) -> list[float]:\n'
-    '    feats=_v215_prof_feature_rows(detail,horses,base_rows);raw=[]\n'
-    '    for f in feats:\n'
-    '        total=0.0\n'
-    '        for i,name in enumerate(V215_FEATURES):\n'
-    '            total += V215_P1_COEF[i]*((f.get(name,.5)-V215_MEAN[i])/max(1e-9,V215_SCALE[i]))\n'
-    '        raw.append(total)\n'
-    '    return _v213_zscore(raw)\n'
     '\n'
     '# v218 tactical + conditional-role bridge.\n'
     '# v215/v213 remain the statistical bases. v218 strengthens the race-reading layer\n'
     '# using TRUE RUN, individual neighbour pressure, a probability mixture of pace shapes,\n'
     '# and role-specific compatibility. It does not use post-race information.\n'
-    'V218_TACTICAL_MODEL_VERSION = "arvexq-seven-axis-overlay-v239"\n'
-    'V218_P1_BLEND = 0.24\n'
+    'from arvexq.prediction.legacy.tactical import V218_TACTICAL_MODEL_VERSION, V218_P1_BLEND\n'
     '\n'
     '\n'
-    'def _v218_tactical_roles(detail: dict, horses: list[dict], base_rows: list[dict]):\n'
-    '    feats=_v215_prof_feature_rows(detail,horses,base_rows)\n'
-    '    field=max(1,len(feats))\n'
-    "    order=sorted(range(len(horses)), key=lambda i:int(horses[i].get('horseNumber') or i+1))\n"
-    "    early=[max(float(f.get('front',0)),float(f.get('stalk',0)),float(f.get('early3',0))) for f in feats]\n"
-    '    pressure=max(0.0,min(1.0,(sum(early)/field)*1.45))\n'
-    '    front_count=sum(1 for v in early if v>=.48)\n'
-    "    late_count=sum(1 for f in feats if float(f.get('late_role',0))>=.48)\n"
-    "    track_speed=detail.get('trackSpeed') or {}\n"
-    "    track_speed_score=max(0.0,min(1.0,float(track_speed.get('score') or .5)))\n"
-    "    track_speed_evidence=max(0.0,min(1.0,float(track_speed.get('evidence') or 0)))\n"
-    '\n'
-    '    # Build multiple plausible race shapes instead of forcing one deterministic pace call.\n'
-    '    front_prob=max(.08,min(.58,.16+(1-pressure)*.24+(.10 if front_count==1 else 0.0)))\n'
-    '    collapse_prob=max(.08,min(.58,.10+pressure*.34+max(0,front_count-2)*.035))\n'
-    '    late_prob=max(.08,min(.34,.10+(late_count/field)*.16+pressure*.08))\n'
-    '    neutral_prob=max(.08,1.0-front_prob-collapse_prob-late_prob)\n'
-    '    psum=front_prob+collapse_prob+late_prob+neutral_prob\n'
-    '    front_prob/=psum;collapse_prob/=psum;late_prob/=psum;neutral_prob/=psum\n'
-    '\n'
-    '    # Individual neighbour pressure by horse-number adjacency. This is deliberately\n'
-    '    # separate from overall pace pressure: a front horse can face a hard local squeeze\n'
-    '    # even in a race that is not globally extreme.\n'
-    "    neighbour=[{'left':0.0,'right':0.0,'sandwich':0.0,'local':0.0} for _ in feats]\n"
-    '    for pos,idx in enumerate(order):\n'
-    '        left=early[order[pos-1]] if pos>0 else 0.0\n'
-    '        right=early[order[pos+1]] if pos+1<len(order) else 0.0\n'
-    '        sandwich=1.0 if left>=.52 and right>=.52 else 0.0\n'
-    '        local=max(left,right,.5*(left+right))\n'
-    "        neighbour[idx]={'left':left,'right':right,'sandwich':sandwich,'local':local}\n"
-    '\n'
-    '    p1_raw=[];p2_role=[];p3_role=[];audits=[]\n'
-    '    for i,f in enumerate(feats):\n'
-    '        nb=neighbour[i]\n'
-    '        pure=max(0.0,min(1.0,\n'
-    "            .24*f.get('eval_score',.5)+.18*f.get('race_perf',.5)+.16*f.get('representative',.5)+\n"
-    "            .10*f.get('level',.5)+.08*f.get('distance',.5)+.07*f.get('track',.5)+\n"
-    "            .06*f.get('going',.5)+.06*f.get('lap',.5)+.05*f.get('evidence',.5)\n"
-    '        ))\n'
-    '\n'
-    '        # TRUE RUN approximates the performance hidden by finishing position. Early\n'
-    '        # effort, mid-race gain and adjusted speed can rescue a superficially poor run;\n'
-    '        # easy-front/conflict-free trips get less credit.\n'
-    "        effort_gap=f.get('recent_early',.5)-f.get('recent_last_finish',.5)\n"
-    "        gain=f.get('recent_gain',.5)-.5\n"
-    "        local_cost=max(0.0,min(1.0,.62*nb['local']+.38*nb['sandwich']))\n"
-    "        hidden=max(0.0,min(1.0,.50+.55*effort_gap+.25*gain-.15*f.get('lone_front',0)+.14*local_cost))\n"
-    '        true_run=max(0.0,min(1.0,\n'
-    "            .22*f.get('speed_adj_avg',.5)+.16*f.get('speed_adj_best',.5)+\n"
-    "            .15*f.get('speed_adj_last',.5)+.14*f.get('recency_wfinish',.5)+\n"
-    "            .10*f.get('finish_trend',.5)+.13*hidden+.10*f.get('class_fit',.5)\n"
-    '        ))\n'
-    '\n'
-    '        # v300 robust live track-speed fit. A fast surface rewards horses that can sustain\n'
-    '        # raw speed/early position; a slow surface rewards TRUE RUN, late role and\n'
-    '        # going tolerance. Evidence controls the strength and neutralizes early races.\n'
-    "        fast_track_fit=max(0.0,min(1.0,.42*f.get('speed_adj_best',.5)+.28*f.get('speed_adj_avg',.5)+.18*f.get('ten',.5)+.12*f.get('early3',0)))\n"
-    "        slow_track_fit=max(0.0,min(1.0,.36*true_run+.27*f.get('late_role',0)+.21*f.get('going',.5)+.16*f.get('class_fit',.5)))\n"
-    '        if track_speed_score>=.52:track_speed_fit=fast_track_fit\n'
-    '        elif track_speed_score<=.48:track_speed_fit=slow_track_fit\n'
-    '        else:track_speed_fit=.5*(fast_track_fit+slow_track_fit)\n'
-    '        track_speed_intensity=min(1.0,abs(track_speed_score-.5)*2.0)*track_speed_evidence\n'
-    '        track_speed_fit=.5+(track_speed_fit-.5)*track_speed_intensity\n'
-    '\n'
-    '        front_fit=max(0.0,min(1.0,\n'
-    "            .29*f.get('lone_front',0)+.23*f.get('recent_front_hold',.25)+\n"
-    "            .19*f.get('early3',0)+.13*f.get('ten',.5)+.10*(1-f.get('front_conflict',0))+\n"
-    '            .06*(1-local_cost)\n'
-    '        ))\n'
-    '        collapse_fit=max(0.0,min(1.0,\n'
-    "            .31*f.get('late_role',0)+.21*f.get('moved3',0)+.17*f.get('recent_gain',.5)+\n"
-    "            .13*f.get('close',0)+.11*f.get('speed_adj_best',.5)+.07*local_cost\n"
-    '        ))\n'
-    '        late_fit=max(0.0,min(1.0,\n'
-    "            .28*f.get('late_role',0)+.23*f.get('mid',0)+.19*f.get('close',0)+\n"
-    "            .15*f.get('finish_trend',.5)+.10*f.get('speed_adj_avg',.5)+.05*true_run\n"
-    '        ))\n'
-    "        neutral_fit=max(0.0,min(1.0,.55*pure+.23*f.get('pace_fit',.5)+.22*true_run))\n"
-    '        scenario=max(0.0,min(1.0,\n'
-    '            front_prob*front_fit+collapse_prob*collapse_fit+late_prob*late_fit+neutral_prob*neutral_fit\n'
-    '        ))\n'
-    '        scenario=max(0.0,min(1.0,scenario*(1-.04*track_speed_evidence)+track_speed_fit*(.04*track_speed_evidence)))\n'
-    '\n'
-    '        # v238: "今回条件" is deliberately stronger, with more weight on the\n'
-    '        # race-specific facts (distance/course/going/class/draw) and less on\n'
-    '        # generic connections.  This is still bounded and evidence-regularized\n'
-    '        # downstream so one noisy condition cannot dominate the whole forecast.\n'
-    '        conditions=max(0.0,min(1.0,\n'
-    "            .18*f.get('distance',.5)+.15*f.get('track',.5)+.15*f.get('going',.5)+\n"
-    "            .14*f.get('class_fit',.5)+.10*f.get('draw_hist',.5)+.08*f.get('jockey_ctx',.5)+\n"
-    "            .06*f.get('trainer_ctx',.5)+.05*f.get('freshness',.5)+.04*f.get('weight_delta',.5)+\n"
-    "            .05*f.get('pace_fit',.5)\n"
-    '        ))\n'
-    '        conditions=max(0.0,min(1.0,conditions*(1-.06*track_speed_evidence)+track_speed_fit*(.06*track_speed_evidence)))\n'
-    "        evidence=max(0.0,min(1.0,.62*f.get('evidence',.5)+.38*f.get('style_reliability',.5)))\n"
-    '\n'
-    '        # v239 seven-axis ability model.  The visible detail screen is intentionally\n'
-    '        # simple, but prediction keeps the full internal split: PURE / TRUE RUN /\n'
-    '        # SECTIONAL / pace fit / current conditions / opponent level / reproducibility.\n'
-    '        sectional=max(0.0,min(1.0,\n'
-    "            .55*f.get('lap',.5)+.25*f.get('speed_adj_avg',.5)+.20*f.get('speed_adj_best',.5)\n"
-    '        ))\n'
-    "        opponent=max(0.0,min(1.0,.62*f.get('level',.5)+.38*f.get('class_fit',.5)))\n"
-    '        reproducibility=max(0.0,min(1.0,\n'
-    "            .30*evidence+.18*f.get('recency_wfinish',.5)+.14*f.get('finish_trend',.5)+\n"
-    "            .14*f.get('weight_stability',.5)+.12*f.get('style_reliability',.5)+\n"
-    "            .12*f.get('speed_evidence',.5)\n"
-    '        ))\n'
-    "        # Keep the user's strengthened current-condition stance (22%) while\n"
-    '        # separating the other six concepts instead of hiding them inside one score.\n'
-    '        p1_score=(.21*pure+.17*true_run+.12*sectional+.14*scenario+.22*conditions+\n'
-    '                  .08*opponent+.06*reproducibility)\n'
-    '        p1_score=.5+(p1_score-.5)*(.58+.42*evidence)\n'
-    '        p1_raw.append(p1_score)\n'
-    '\n'
-    '        # Role compatibility is not a replacement for the validated P2/P3 marginal\n'
-    '        # models. It is emitted for the conditional-order engine to use after a winner\n'
-    '        # or winner+runner-up has been fixed.\n'
-    '        second=max(0.0,min(1.0,\n'
-    "            .23*true_run+.22*f.get('pace_fit',.5)+.18*f.get('recent_front_hold',.5)+\n"
-    "            .15*f.get('moved3',.5)+.12*conditions+.10*(1-.55*local_cost)\n"
-    '        ))\n'
-    '        third=max(0.0,min(1.0,\n'
-    "            .22*true_run+.21*f.get('late_role',.5)+.17*f.get('moved3',.5)+\n"
-    "            .14*f.get('close',.5)+.14*conditions+.12*evidence\n"
-    '        ))\n'
-    '        p2_role.append(second);p3_role.append(third)\n'
-    '        audits.append({\n'
-    "            'pure':round(pure,4),'trueRun':round(true_run,4),'hiddenEffort':round(hidden,4),\n"
-    "            'sectional':round(sectional,4),'positionScenario':round(scenario,4),'conditions':round(conditions,4),\n"
-    "            'opponentLevel':round(opponent,4),'stateConsistency':round(reproducibility,4),'sevenAxisScore':round(p1_score,4),\n"
-    "            'trackSpeedFit':round(track_speed_fit,4),'trackSpeed':{'score':round(track_speed_score,4),'evidence':round(track_speed_evidence,4),'ratio':track_speed.get('ratio',1.0),'label':track_speed.get('label','基準'),'completed':track_speed.get('completed',0)},\n"
-    "            'secondRole':round(second,4),'thirdRole':round(third,4),'evidence':round(evidence,4),\n"
-    "            'positionPressure':{\n"
-    "                'left':round(nb['left'],4),'right':round(nb['right'],4),\n"
-    "                'local':round(nb['local'],4),'sandwich':bool(nb['sandwich'])\n"
-    '            },\n'
-    "            'scenarioProbabilities':{\n"
-    "                'front':round(front_prob,4),'neutral':round(neutral_prob,4),\n"
-    "                'collapse':round(collapse_prob,4),'late':round(late_prob,4)\n"
-    '            }\n'
-    '        })\n'
-    '    return _v213_zscore(p1_raw),p2_role,p3_role,audits\n'
+    'from arvexq.prediction.legacy.tactical import (\n'
+    '    _v218_tactical_roles,\n'
+    ')\n'
     '\n'
     '\n'
-    'def _v213_role_utilities(detail: dict, horses: list[dict]):\n'
-    '    feats=_v213_feature_rows(detail,horses)\n'
-    '    def linear(f,coef):\n'
-    '        total=0.0\n'
-    '        for i,name in enumerate(V213_FEATURES):total += coef[i]*((f.get(name,.5)-V213_MEAN[i])/max(1e-9,V213_SCALE[i]))\n'
-    '        return total\n'
-    '    new1=[linear(f,V213_P1_COEF) for f in feats];new2=[linear(f,V213_P2_COEF) for f in feats];new3=[linear(f,V213_P3_COEF) for f in feats]\n'
-    '    cur2=[];cur3=[]\n'
-    '    for f in feats:\n'
-    "        p2f={'base':f['eval_score'],'perf':f['race_perf'],'rep':f['representative'],'dist':f['distance'],'track':f['track'],'going':f['going'],'level':f['level'],'jockey':f['jockey'],'trainer':f['trainer'],'body':f['body'],'lap':f['lap'],'ten':f['ten'],'early3':f['early3'],'moved3':f['moved3'],'front':f['front'],'stalk':f['stalk'],'mid':f['mid'],'close':f['close'],'evidence':f['evidence'],'data':f['data']}\n"
-    '        cur2.append(V212_P2_MODEL_INTERCEPT+sum(V212_P2_MODEL_COEFFICIENTS[k]*p2f[k] for k in V212_P2_MODEL_COEFFICIENTS))\n'
-    "        cur3.append(f['eval_score']*.14+f['race_perf']*.14+f['representative']*.14+f['distance']*.06+f['track']*.05+f['level']*.05+f['going']*.04+f['moved3']*.10+f['mid']*.07+f['close']*.08+f['lap']*.06+f['evidence']*.07)\n"
-    '    z1=_v213_zscore(new1);z2n=_v213_zscore(new2);z2c=_v213_zscore(cur2);z3n=_v213_zscore(new3);z3c=_v213_zscore(cur3)\n'
-    '    pro1=_v215_professional_p1(detail,horses,feats)\n'
-    '    v215_u1=[(1.0-V215_P1_BLEND)*z1[i]+V215_P1_BLEND*pro1[i] for i in range(len(horses))]\n'
-    '    tactical1,p2_role,p3_role,tactical_audit=_v218_tactical_roles(detail,horses,feats)\n'
-    '    u1=[(1.0-V218_P1_BLEND)*v215_u1[i]+V218_P1_BLEND*tactical1[i] for i in range(len(horses))]\n'
-    '    # Keep the validated v213 P2/P3 marginals untouched. v218 uses role compatibility\n'
-    '    # conditionally in the trifecta order engine rather than silently replacing them.\n'
-    '    u2=[(1.0-V213_BLEND[1])*z2c[i]+V213_BLEND[1]*z2n[i] for i in range(len(horses))]\n'
-    '    u3=[(1.0-V213_BLEND[2])*z3c[i]+V213_BLEND[2]*z3n[i] for i in range(len(horses))]\n'
-    '    return u1,u2,u3,_v213_softmax(u1),_v213_softmax(u2),_v213_softmax(u3),z1,pro1,tactical1,p2_role,p3_role,tactical_audit\n'
-    '\n'
-    'def _v317_factor_weights(detail:dict, sparse:bool=False)->dict[str,float]:\n'
-    "    central=str(detail.get('circuit') or '')=='中央'\n"
-    '    if central:\n'
-    "        w={'ability':.12,'classLevel':.06,'form':.07,'pace':.14,'suitability':.23,'connections':.18,'pedigree':.20} if sparse else {'ability':.26,'classLevel':.12,'form':.14,'pace':.18,'suitability':.16,'connections':.08,'pedigree':.06}\n"
-    '    else:\n'
-    "        w={'ability':.10,'classLevel':.06,'form':.07,'pace':.18,'suitability':.25,'connections':.20,'pedigree':.14} if sparse else {'ability':.24,'classLevel':.08,'form':.16,'pace':.20,'suitability':.18,'connections':.09,'pedigree':.05}\n"
-    '    def shift(a,b,x):w[a]+=x;w[b]-=x\n'
-    "    try:dist=float(detail.get('distance') or 0)\n"
-    '    except Exception:dist=0\n'
-    "    surface=str(detail.get('surface') or '')\n"
-    "    if dist and dist<=1400:shift('pace','pedigree',.025);shift('ability','classLevel',.015)\n"
-    "    elif dist>=2300:shift('suitability','pace',.030);shift('classLevel','form',.015)\n"
-    "    if 'ダ' in surface:shift('pace','pedigree',.020);shift('suitability','ability',.015)\n"
-    "    if not central:shift('pace','classLevel',.015);shift('suitability','pedigree',.010)\n"
-    '    total=sum(max(.01,v) for v in w.values()) or 1.0\n'
-    '    return {k:max(.01,v)/total for k,v in w.items()}\n'
+    'from arvexq.prediction.legacy.role_utilities import (\n'
+    '    _v213_role_utilities,\n'
+    ')\n'
     '\n'
     '\n'
-    'def _v317_factor_profile(detail:dict, horse:dict)->dict:\n'
-    "    e=horse.get('integratedEvaluation') or {};c=e.get('components') if isinstance(e.get('components'),dict) else {};a=e.get('v218Audit') or e.get('v217Audit') or {};pm=horse.get('precomputedMetrics') or {};fit=pm.get('fit') or {};st=pm.get('style') or {}\n"
-    '    def u(v,default=.5):\n'
-    '        try:\n'
-    '            x=float(v)\n'
-    '            if not math.isfinite(x):return default\n'
-    '            if x>1.5:x/=100.0\n'
-    '            return max(0.0,min(1.0,x))\n'
-    '        except Exception:return default\n'
-    '    def ax(key,default=.5):return u(a.get(key),default)\n'
-    '    def comp(names,default=.5):\n'
-    '        for k in names:\n'
-    '            if c.get(k) is not None:return u(c.get(k),default)\n'
-    '        return u(default,.5)\n'
-    "    runs=(horse.get('recentRaces') or horse.get('allPastRuns') or [])[:5];tot=good=0\n"
-    '    for rr in runs:\n'
-    '        if not isinstance(rr,dict):continue\n'
-    "        try:f=int(rr.get('finish') or rr.get('finishPosition') or rr.get('rank') or 0)\n"
-    '        except Exception:f=0\n'
-    '        if f>0:tot+=1;good+=1 if f<=3 else 0\n'
-    '    recent=good/tot if tot else .5\n'
-    "    pp=a.get('positionPressure') if isinstance(a.get('positionPressure'),dict) else {}\n"
-    "    frag=u(pp.get('local'),0)\n"
-    "    pure=ax('pure',u(e.get('score'),.5));tr=ax('trueRun',.5);sec=ax('sectional',comp(['lapScore'],.5));scen=ax('positionScenario',.5);cond=ax('conditions',.5);opp=ax('opponentLevel',comp(['opponentLevelScore'],u(fit.get('level'),.5)));state=ax('stateConsistency',.5)\n"
-    "    perf=comp(['racePerformance'],.5);rep=comp(['representative'],.5);course=comp(['courseFit'],u(fit.get('track'),.5));dist=comp(['distanceFit'],u(fit.get('distance'),.5));going=comp(['goingFit'],u(fit.get('condition'),.5));level=comp(['opponentLevelScore'],opp);lap=comp(['lapScore'],sec)\n"
-    "    jockey=comp(['jockeyScore','jockeyResults'],.5);trainer=comp(['trainerScore','trainerResults'],.5);body=comp(['bodyWeightScore'],.5);change=comp(['conditionChangeScore'],.5);ped=comp(['pedigreeScore'],.5);ds=comp(['distanceSuitabilityScore'],dist);ss=comp(['surfaceSuitabilityScore'],.5);draw=comp(['drawScore'],.5)\n"
-    "    ten=u(st.get('ten'),.5);moved=u(st.get('moved3'),.0);close=u(st.get('close'),.0);pace_extra=.55*ten+.25*moved+.20*close\n"
-    '    ability=max(0,min(1,.28*pure+.27*tr+.17*sec+.16*perf+.12*rep))\n'
-    "    class_level=max(0,min(1,.46*opp+.26*level+.16*u(fit.get('level'),.5)+.12*perf))\n"
-    '    form=max(0,min(1,.30*state+.26*recent+.24*perf+.12*rep+.08*(1-frag)))\n'
-    '    pace=max(0,min(1,.36*scen+.18*lap+.18*pace_extra+.15*state+.13*(1-frag)))\n'
-    "    suitability=max(0,min(1,.16*cond+.17*course+.17*dist+.13*going+.12*ds+.09*ss+.08*draw+.08*u(fit.get('track'),.5)))\n"
-    '    connections=max(0,min(1,.33*jockey+.25*trainer+.19*body+.15*change+.08*state))\n'
-    '    pedigree=max(0,min(1,.52*ped+.28*ds+.20*ss))\n'
-    "    sparse=bool(e.get('neutralPrior')) or int(e.get('samples') or 0)<2\n"
-    "    weights=_v317_factor_weights(detail,sparse);factors={'ability':ability,'classLevel':class_level,'form':form,'pace':pace,'suitability':suitability,'connections':connections,'pedigree':pedigree}\n"
-    "    score=sum(weights[k]*factors[k] for k in weights);central=str(detail.get('circuit') or '')=='中央';win=max(0,min(1,score*(1-(.13 if central else .08)*frag)));place=max(0,min(1,.28*score+.20*form+.20*pace+.18*suitability+.08*connections+.06*(1-frag)));show=max(0,min(1,.22*score+.22*form+.20*suitability+.16*pace+.08*connections+.07*pedigree+.05*(1-frag)))\n"
-    "    return {'factors':factors,'weights':weights,'score':score,'win':win,'place':place,'show':show,'fragility':frag,'sparse':sparse,'evidence':ax('evidence',u(e.get('dataCompleteness'),.5))}\n"
+    '\n'
     '\n'
     '\n'
     'def _rank_evaluations(detail):\n'

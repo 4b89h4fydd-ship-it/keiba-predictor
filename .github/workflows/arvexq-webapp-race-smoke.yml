@@ -71,7 +71,7 @@ jobs:
           node - <<'NODE'
           const assert=require('node:assert/strict');
           const fs=require('node:fs');
-          const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+          const src=require('./arvexq/ui/app_source.cjs').readAppSource();
           const styles=['styles.css','styles/legacy_v118_v221.css','styles/race_v222_plus.css'].map(x=>fs.readFileSync('arvexq/ui/static/'+x,'utf8')).join('\n');
           function extract(name){
             const start=src.indexOf('function '+name+'(');
@@ -158,7 +158,7 @@ jobs:
           const assert=require('node:assert/strict');
           const fs=require('node:fs');
           const {chromium,webkit,devices}=require('playwright');
-          const app=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+          const app=require('./arvexq/ui/app_source.cjs').readAppSource();
           const css=['styles.css','styles/legacy_v118_v221.css','styles/race_v222_plus.css'].map(x=>fs.readFileSync('arvexq/ui/static/'+x,'utf8')).join('\n');
           const index=fs.readFileSync('arvexq/ui/static/index.html','utf8');
           const marker=index.match(/var tag="(arvexq-hard-reset-[^"]+)"/);

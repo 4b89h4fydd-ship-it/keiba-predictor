@@ -2,7 +2,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const src=require('../arvexq/ui/app_source.cjs').readAppSource();
 const a=src.indexOf('function historicalWindow('),b=src.indexOf('function minetaRaceContext(',a);
 assert.ok(a>=0&&b>a,'historical model section must be available');
 const n=(v,d=0)=>v===null||v===undefined||v===''||!Number.isFinite(Number(v))?d:Number(v);

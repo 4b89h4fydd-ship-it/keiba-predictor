@@ -2,7 +2,7 @@
 // Exact ARVEXQ browser marks for one licensed, pre-off official condition change.
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm');
-const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const root=require('../arvexq/ui/app_source.cjs').readAppSource();
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 if(!root.includes(boot))throw Error('JS boot anchor changed');
 const source=root.replace(boot,'window.__captureMarks={predict,state};');

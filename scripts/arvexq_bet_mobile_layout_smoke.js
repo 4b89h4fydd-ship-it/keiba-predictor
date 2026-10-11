@@ -4,7 +4,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {chromium,webkit,devices}=require('playwright');
-const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const src=require('../arvexq/ui/app_source.cjs').readAppSource();
 const css=['arvexq/ui/static/styles.css','arvexq/ui/static/styles/legacy_v118_v221.css',
  'arvexq/ui/static/styles/race_v222_plus.css','arvexq/ui/static/betting/bet_ui.css']
  .map(p=>fs.readFileSync(p,'utf8')).join('\n');

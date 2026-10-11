@@ -60,7 +60,7 @@ const jstToday=new Date(now.getTime()+9*3600000).toISOString().slice(0,10);
 const earliestMorning=Date.parse(day+'T06:15:00+09:00');
 if(day===jstToday&&now.getTime()<earliestMorning){save('BEFORE_MORNING_FREEZE_WINDOW');process.exit(0)}
 if(!Number.isFinite(earliest)||now.getTime()>=earliest){save('NOT_RECONSTRUCTED_AFTER_FIRST_OFF');process.exit(0)}
-const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const root=require('../arvexq/ui/app_source.cjs').readAppSource();
 const selectionModule=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js','utf8');
 const selectedPipeline=fs.readFileSync('arvexq/ui/static/morning/selected_race_pipeline.js','utf8');
 const specialModule=fs.readFileSync('arvexq/ui/static/morning/special_selection.js','utf8');
