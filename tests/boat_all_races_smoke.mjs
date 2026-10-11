@@ -12,6 +12,7 @@ assert.ok(!html.includes('arv-all-venue-thumb'));
 assert.ok(!html.includes('aria-hidden="true">≋'));
 
 assert.ok(html.includes("各会場の全レース"));
+assert.ok(!html.includes("arv-all-venue-thumb"),"no unused boat thumbnail column");
 assert.ok(!html.includes("開催場一覧"));
 assert.ok(!html.includes("リアルタイム"));
 assert.ok(html.includes('data-venue="桐生"'));
