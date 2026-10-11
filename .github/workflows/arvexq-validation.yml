@@ -120,6 +120,7 @@ jobs:
           node tests/boat_all_races_smoke.mjs
           node scripts/arvexq_horse_portal_smoke.js
           node --check dist/sports/horse-portal.js
+          node --check dist/sports/unified-home.js
           test -s dist/sports/all-races.css
           test -s dist/sports/boat-app/features/all-races.js
 
