@@ -251,65 +251,85 @@ def _all_original_career_evidence_retained(expected: dict[str, Any],
                for r in previous)
 
 
-def verify_published(body: dict[str, Any], *, base: str, read=fetch_current) -> list[str]:
-    """Detect a concurrent D1 sync that removed or rewrote a pre-race seal.
+def _verify_one_published_detail(detail: dict[str, Any], actual: dict[str, Any] | None) -> None:
+    rid = str(detail["id"])
+    lock = sealed_lock(detail)
+    revised = detail.get("modelMarkRevisions") or []
+    feature_archive = detail.get("massFeatureArchive")
+    horse_archives = {
+        int(h.get("horseNumber") or 0): h["careerArchive"]
+        for h in detail.get("horses") or []
+        if isinstance(h, dict) and isinstance(h.get("careerArchive"), dict)
+    }
+    if lock:
+        current = sealed_lock(actual or {})
+        if not current or current != lock:
+            raise RuntimeError("D1_SEAL_POST_VERIFY_MISMATCH " + rid)
+        bet = detail.get("preRaceBet")
+        if isinstance(bet, dict) and (actual or {}).get("preRaceBet") != bet:
+            raise RuntimeError("D1_PRE_RACE_BET_POST_VERIFY_MISMATCH " + rid)
+    if revised and (actual or {}).get("modelMarkRevisions") != revised:
+        raise RuntimeError("D1_MODEL_MARK_REVISION_POST_VERIFY_MISMATCH " + rid)
+    if isinstance(feature_archive, dict):
+        stored = (actual or {}).get("massFeatureArchive") or {}
+        if (stored.get("sha256") != feature_archive.get("sha256")
+                or stored.get("featureHash") != feature_archive.get("featureHash")
+                or stored.get("encoding") != feature_archive.get("encoding")):
+            raise RuntimeError("D1_MASS_ARCHIVE_POST_VERIFY_MISMATCH " + rid)
+    if horse_archives:
+        stored_horses = {int(h.get("horseNumber") or 0): h
+                         for h in (actual or {}).get("horses") or [] if isinstance(h, dict)}
+        for no, archive in horse_archives.items():
+            stored = (stored_horses.get(no) or {}).get("careerArchive") or {}
+            if stored.get("sha256") == archive.get("sha256") and stored.get("encoding") == archive.get("encoding"):
+                continue
+            expected_horse = next(
+                (h for h in detail.get("horses") or []
+                 if isinstance(h, dict) and int(h.get("horseNumber") or 0) == no), {})
+            actual_horse = stored_horses.get(no) or {}
+            if not _all_original_career_evidence_retained(
+                    expected_horse, actual_horse, str(detail.get("date") or "")):
+                raise RuntimeError("D1_CAREER_ARCHIVE_POST_VERIFY_MISMATCH "+rid+":"+str(no))
+            print("D1_CAREER_ARCHIVE_RICHER_PRESERVED", rid, no,
+                  "requested="+str(archive.get("storedRunCount")),
+                  "actual="+str(stored.get("storedRunCount")))
 
-    This is not a substitute for an atomic Worker-side compare-and-swap,
-    but it makes lost archives observable rather than silently claiming success.
+
+def verify_published(body: dict[str, Any], *, base: str, read=fetch_current,
+                     retry_delays: tuple[float, ...] = (0.5, 1.5),
+                     sleeper=time.sleep) -> list[str]:
+    """Verify server-authoritative archives with bounded D1 read-back retries.
+
+    A successful D1 write may be briefly invisible to a different read replica.
+    Only an actual hash/content match or a proven richer, lossless archive is
+    accepted. A persistently stale/missing/replaced observation still fails.
     """
     verified: list[str] = []
-    for detail in body.get("details") or []:
-        if not isinstance(detail, dict) or not detail.get("id"):
+    for item in body.get("details") or []:
+        if not isinstance(item, dict) or not item.get("id"):
             continue
-        detail = unpack_full(detail)
+        detail = unpack_full(item)
         lock = sealed_lock(detail)
         revised = detail.get("modelMarkRevisions") or []
         feature_archive = detail.get("massFeatureArchive")
-        horse_archives = {
-            int(h.get("horseNumber") or 0): h["careerArchive"]
-            for h in detail.get("horses") or []
+        horse_archives = [
+            h for h in detail.get("horses") or []
             if isinstance(h, dict) and isinstance(h.get("careerArchive"), dict)
-        }
+        ]
         if not lock and not revised and not feature_archive and not horse_archives:
             continue
         rid = str(detail["id"])
-        actual = read(base, rid)
-        if lock:
-            current = sealed_lock(actual or {})
-            if not current or current != lock:
-                raise RuntimeError("D1_SEAL_POST_VERIFY_MISMATCH " + rid)
-            bet = detail.get("preRaceBet")
-            if isinstance(bet, dict) and (actual or {}).get("preRaceBet") != bet:
-                raise RuntimeError("D1_PRE_RACE_BET_POST_VERIFY_MISMATCH " + rid)
-        if revised and (actual or {}).get("modelMarkRevisions") != revised:
-            raise RuntimeError("D1_MODEL_MARK_REVISION_POST_VERIFY_MISMATCH " + rid)
-        if isinstance(feature_archive, dict):
-            stored = (actual or {}).get("massFeatureArchive") or {}
-            if (stored.get("sha256") != feature_archive.get("sha256")
-                    or stored.get("featureHash") != feature_archive.get("featureHash")
-                    or stored.get("encoding") != feature_archive.get("encoding")):
-                raise RuntimeError("D1_MASS_ARCHIVE_POST_VERIFY_MISMATCH " + rid)
-        if horse_archives:
-            stored_horses = {int(h.get("horseNumber") or 0):h
-                             for h in (actual or {}).get("horses") or [] if isinstance(h,dict)}
-            for no, archive in horse_archives.items():
-                stored = (stored_horses.get(no) or {}).get("careerArchive") or {}
-                if (stored.get("sha256") != archive.get("sha256") or
-                        stored.get("encoding") != archive.get("encoding")):
-                    # Do not silently accept a mismatched digest. Prove that
-                    # the newly published, digest-verified full career is a
-                    # superset of *every* historical observation we sent.
-                    expected_horse = next(
-                        (h for h in detail.get("horses") or []
-                         if isinstance(h, dict) and int(h.get("horseNumber") or 0) == no),
-                        {})
-                    actual_horse = stored_horses.get(no) or {}
-                    if not _all_original_career_evidence_retained(
-                            expected_horse, actual_horse, str(detail.get("date") or "")):
-                        raise RuntimeError("D1_CAREER_ARCHIVE_POST_VERIFY_MISMATCH "+rid+":"+str(no))
-                    print("D1_CAREER_ARCHIVE_RICHER_PRESERVED", rid, no,
-                          "requested="+str(archive.get("storedRunCount")),
-                          "actual="+str(stored.get("storedRunCount")))
+        for attempt in range(len(retry_delays) + 1):
+            actual = read(base, rid)
+            try:
+                _verify_one_published_detail(detail, actual)
+                break
+            except RuntimeError as exc:
+                if attempt == len(retry_delays):
+                    raise
+                print("D1_POST_VERIFY_RETRY", rid, type(exc).__name__,
+                      "attempt="+str(attempt + 1))
+                sleeper(retry_delays[attempt])
         verified.append(rid)
     return verified
 

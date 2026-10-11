@@ -29,7 +29,7 @@ class D1ArchiveDeliveryTest(unittest.TestCase):
         bad=copy.deepcopy(original)
         bad.pop("massFeatureArchive",None)
         with self.assertRaisesRegex(RuntimeError,"D1_MASS_ARCHIVE_POST_VERIFY_MISMATCH"):
-            verify_published({"details":[original]},base="https://unit.invalid",
+            verify_published({"details":[original]},base="https://unit.invalid",retry_delays=(),
                              read=lambda base,rid:bad)
 
     def test_d1_discarding_horse_career_archive_fails(self):
@@ -37,8 +37,35 @@ class D1ArchiveDeliveryTest(unittest.TestCase):
         bad=copy.deepcopy(original)
         bad["horses"][0].pop("careerArchive",None)
         with self.assertRaisesRegex(RuntimeError,"D1_CAREER_ARCHIVE_POST_VERIFY_MISMATCH"):
-            verify_published({"details":[original]},base="https://unit.invalid",
+            verify_published({"details":[original]},base="https://unit.invalid",retry_delays=(),
                              read=lambda base,rid:bad)
+
+    def test_stale_d1_read_is_retried_without_disabling_integrity(self):
+        original=row()
+        missing=copy.deepcopy(original)
+        missing["horses"][0].pop("careerArchive")
+        attempts=[]
+        delays=[]
+        def read(base,rid):
+            attempts.append(rid)
+            return copy.deepcopy(missing if len(attempts)==1 else original)
+        self.assertEqual(
+            verify_published({"details":[original]},base="https://unit.invalid",
+                             read=read,retry_delays=(.01,),sleeper=delays.append),
+            ["race-100"])
+        self.assertEqual(len(attempts),2)
+        self.assertEqual(delays,[.01])
+
+    def test_persistent_d1_data_loss_fails_after_bounded_retry(self):
+        original=row()
+        bad=copy.deepcopy(original)
+        bad["horses"][0].pop("careerArchive")
+        reads=[]
+        with self.assertRaisesRegex(RuntimeError,"D1_CAREER_ARCHIVE_POST_VERIFY_MISMATCH"):
+            verify_published({"details":[original]},base="https://unit.invalid",
+                             read=lambda base,rid: (reads.append(rid),bad)[1],
+                             retry_delays=(.01,.02),sleeper=lambda _:None)
+        self.assertEqual(len(reads),3)
 
     def test_richer_concurrent_career_archive_is_verified(self):
         from arvexq.ingest.career_transport import pack_horse
@@ -76,7 +103,7 @@ class D1ArchiveDeliveryTest(unittest.TestCase):
                 {"horseNumber":1,"name":"horse","allPastRuns":actual_runs},day)]}
             with self.assertRaisesRegex(RuntimeError,
                                         "D1_CAREER_ARCHIVE_POST_VERIFY_MISMATCH"):
-                verify_published({"details":[expected]},base="https://unit.invalid",
+                verify_published({"details":[expected]},base="https://unit.invalid",retry_delays=(),
                                  read=lambda _base,_rid:copy.deepcopy(actual))
 
     def test_corrupted_richer_archive_never_passes_preservation_check(self):
@@ -91,7 +118,7 @@ class D1ArchiveDeliveryTest(unittest.TestCase):
         current["careerArchive"]["sha256"]="0"*64
         actual={"id":"race-100","date":day,"horses":[current]}
         with self.assertRaisesRegex(RuntimeError,"D1_CAREER_ARCHIVE_POST_VERIFY_MISMATCH"):
-            verify_published({"details":[expected]},base="https://unit.invalid",
+            verify_published({"details":[expected]},base="https://unit.invalid",retry_delays=(),
                              read=lambda _base,_rid:actual)
 
     def test_old_preoff_frozen_prediction_remains_requisite(self):
@@ -100,7 +127,7 @@ class D1ArchiveDeliveryTest(unittest.TestCase):
         changed=copy.deepcopy(original)
         changed["modelMarkRevisions"]=[]
         with self.assertRaisesRegex(RuntimeError,"D1_MODEL_MARK_REVISION_POST_VERIFY_MISMATCH"):
-            verify_published({"details":[original]},base="https://unit.invalid",
+            verify_published({"details":[original]},base="https://unit.invalid",retry_delays=(),
                              read=lambda base,rid:changed)
 
 
