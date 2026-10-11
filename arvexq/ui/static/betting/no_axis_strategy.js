@@ -4,9 +4,9 @@
 function apply(ctx){
  const {ready,lists,add,result,fieldSize}=ctx;
  const field=Math.max(5,Number(fieldSize)||8),
-       wideFloor=Math.max(.095,9.9/(field*(field-1))),
-       quinFloor=Math.max(.075,6.6/(field*(field-1))),
-       trioFloor=Math.max(.055,27/(field*(field-1)*Math.max(1,field-2)));
+       wideFloor=Math.max(.085,6.0/(field*(field-1))),
+       quinFloor=Math.max(.065,4.0/(field*(field-1))),
+       trioFloor=Math.max(.042,16/(field*(field-1)*Math.max(1,field-2)));
  result.noAxis=true;result.primaryKind='';
  if(!ready){ctx.reason='◎なし・購入に必要なデータが不足';return false;}
  const families=[{kind:'ワイド',min:wideFloor,cut:.69,max:3},
