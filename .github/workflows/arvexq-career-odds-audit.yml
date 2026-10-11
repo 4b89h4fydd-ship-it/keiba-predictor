@@ -12,7 +12,19 @@ permissions:
   contents: read
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Syntax check
+        run: python -m py_compile scripts/arvexq_career_odds_audit.py tests/test_arvexq_career_odds_audit.py
+      - name: Offline unit tests (no network)
+        run: python -m unittest tests/test_arvexq_career_odds_audit.py -v
   audit:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +33,7 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Run read-only audit (GET only)
+      - name: Run read-only audit (GET only; non-zero exit on audit program failure)
         env:
           ARVEXQ_DATE: ${{ inputs.date }}
           PYTHONPATH: .
