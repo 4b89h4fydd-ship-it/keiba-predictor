@@ -84,6 +84,41 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
             self.assertIn("source_roster_missing_known_horses",
                           [r["reason"] for r in report["repairs"]])
 
+    def test_incomplete_field_is_never_misclassified_as_ready(self) -> None:
+        detail = {"id": self.id, "date": "2026-10-08", "fieldSize": 12,
+                  "horses": [{"horseNumber": i, "name": f"馬{i}",
+                              "jockey": "騎手", "carriedWeight": 56}
+                             for i in range(1, 4)]}
+        self.assertFalse(prefetch._card_usable(detail),
+                         "three visible horses are not a complete twelve-runner roster")
+        detail["horses"].extend(
+            {"horseNumber": i, "name": f"馬{i}", "jockey": "騎手",
+             "carriedWeight": 56} for i in range(4, 13))
+        self.assertTrue(prefetch._card_usable(detail))
+        detail["horses"].pop()
+        self.assertFalse(prefetch._card_usable(detail))
+
+    def test_reuse_verified_prior_roster_inside_same_prefetch(self) -> None:
+        source = {"date": "2026-10-08", "races": [{
+            "id": self.id, "date": "2026-10-08", "fieldSize": 4,
+            "horses": [{"horseNumber": n, "name": f"horse{n}",
+                         "jockey": "騎手", "carriedWeight": 56}
+                        for n in range(1, 5)]}]}
+        with patch.object(prefetch, "_read", return_value=source):
+            recovered = prefetch._recover_existing_racecards("2026-10-08")
+        self.assertEqual(len(recovered[self.id]["horses"]), 4)
+        incoming = {"id": self.id, "fieldSize": 4,
+                    "horses": [{"horseNumber": 1, "name": "horse1",
+                                "jockey": "騎手", "carriedWeight": 56,
+                                "recentRaces": [{"date":"2026-09-01","finish":2}]}],
+                    "preRaceBet": {"fixedAt": "2026-10-08T10:05:00+09:00",
+                                    "items": ["保存原本"]}}
+        merged = prefetch._merge_detail(recovered[self.id], incoming)
+        self.assertTrue(prefetch._card_usable(merged))
+        self.assertEqual(len(merged["horses"]), 4)
+        self.assertEqual(len(merged["horses"][0]["recentRaces"]), 1)
+        self.assertEqual(merged["preRaceBet"], incoming["preRaceBet"])
+
     def test_network_enrichment_is_bounded_and_preserves_failed_card(self) -> None:
         from threading import Lock
         from time import sleep
