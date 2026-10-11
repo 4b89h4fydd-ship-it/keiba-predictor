@@ -27,19 +27,17 @@
 .boat-page .arv-unified-body{padding-top:11px}
 .boat-page .arv-unified-body .arv-all-panel{margin-top:0}
 .boat-page #boat-root{padding-top:var(--arvexq-nav-h)!important}
-.arv-all-venue{display:grid;grid-template-columns:62px minmax(0,1fr);column-gap:8px;align-items:start}
-.arv-all-venue-thumb{grid-row:1 / 3;width:62px;min-height:105px;align-self:stretch;border-radius:9px;background:linear-gradient(145deg,#0c5b86,#102138);border:1px solid #387ca8;display:grid;place-items:center;font-size:23px;color:#a0e6ff;box-shadow:inset 0 0 24px rgba(36,135,208,.26)}
-.arv-all-venue-thumb>span{font-size:10px;font-weight:750;letter-spacing:.05em;margin-top:4px}
-.arv-all-venue-head{grid-column:2;min-width:0}
-.arv-all-races-grid{grid-column:2}
+.arv-all-venue{display:grid;grid-template-columns:minmax(0,1fr);gap:0;align-items:start}
+.arv-all-venue-head{grid-column:1;min-width:0}
+.arv-all-races-grid{grid-column:1}
 .arv-all-venue-head>div{display:flex;align-items:center;gap:6px;min-width:0}
 .arv-all-go{padding:3px 6px;font-size:10px;min-width:36px}
 .arv-all-venue-head b{font-size:15px}
 .arv-all-venue-head span{display:none}
 .arv-all-title h2{font-size:19px}
-.arv-all-race{min-height:38px}
-.arv-all-race strong{font-size:12px}
-.arv-all-race small{font-size:9px}
+.arv-all-race{min-height:43px}
+.arv-all-race strong{font-size:14px}
+.arv-all-race small{font-size:10px}
 .arv-all-panel .arv-all-title p{display:none}
 .arv-all-race:not(:disabled){border-color:#55b5ff;background:linear-gradient(180deg,#0a68b8,#063b75);box-shadow:0 0 6px rgba(14,128,245,.37)}
 .arv-all-race:disabled{background:#1b3445;border-color:#557184;box-shadow:none}
@@ -51,12 +49,46 @@
   .arv-unified-action{min-height:72px}
   .arv-unified-action-icon{font-size:20px}
   .arv-unified-action-label{font-size:12px}
-  .arv-all-venue{grid-template-columns:45px minmax(0,1fr);gap:5px}
-  .arv-all-venue-thumb{width:45px;min-height:90px;font-size:18px}
   .arv-all-venue-head b{font-size:13px}
   .arv-all-races-grid{gap:3px}
-  .arv-all-race{min-height:36px}
-  .arv-all-race strong{font-size:11px}
-  .arv-all-race small{font-size:8px}
+  .arv-all-race{min-height:41px}
+  .arv-all-race strong{font-size:13px}
+  .arv-all-race small{font-size:9px}
 }
 @media(max-width:325px){.arv-all-races-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* v359: retire the obsolete fixed-hero spacer; current hero is in normal flow.
+   Higher specificity than old v118/v221 standalone/home rules, not another path. */
+html body .smart-shell.smart-home{padding-top:0!important}
+html body .smart-shell.smart-home>.smart-main.smart-home-main,
+html.pwa-standalone body .smart-shell.smart-home>.smart-main.smart-home-main,
+html body .smart-shell.smart-home .smart-home-main{
+  padding-top:0!important;
+  margin-top:0!important;
+  min-height:0!important;
+}
+html body .smart-shell.smart-home>.arv-unified-hero{position:relative!important;top:auto!important;left:auto!important;transform:none!important}
+html body .smart-shell.smart-home>.arv-unified-hero+.smart-main{padding-top:0!important}
+html body .smart-shell.smart-home .arv-unified-body{margin-top:0!important}
+
+/* Dated subpages are shared in behavior across horse and boat. */
+html body .smart-shell .smart-topbar.arv-dated-subbar{
+  display:grid!important;
+  grid-template-columns:39px minmax(0,1fr) minmax(105px,132px) 39px!important;
+  gap:6px!important;
+  align-items:center!important;
+  padding:8px!important;
+  min-height:56px!important;
+  width:100%!important;
+  max-width:920px!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+}
+html body .arv-dated-subbar .smart-head-copy{min-width:0!important;text-align:center!important}
+html body .arv-dated-subbar .smart-head-copy strong{display:block;font-size:16px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body .arv-dated-subbar .arv-sub-back,
+html body .arv-dated-subbar .arv-sub-close{display:grid;place-items:center;min-width:37px;width:37px;height:41px;min-height:41px;padding:0;border-radius:9px;border:1px solid #527892;background:#1a3348;color:#ecf7ff;font-size:27px;cursor:pointer}
+html body .arv-dated-subbar .arv-sub-date{position:relative;display:grid;place-items:center;min-width:0;height:40px;padding:2px;border:1px solid #4b7897;border-radius:9px;background:#172f43;color:#eefbff;font-weight:800;font-size:12px}
+html body .arv-dated-subbar .arv-sub-date>input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2}
+@media(max-width:360px){html body .smart-shell .smart-topbar.arv-dated-subbar{grid-template-columns:34px minmax(0,1fr) minmax(90px,112px) 34px!important;gap:3px!important;padding:6px 4px!important}html body .arv-dated-subbar .arv-sub-back,html body .arv-dated-subbar .arv-sub-close{min-width:32px;width:32px}html body .arv-dated-subbar .arv-sub-date{font-size:11px}html body .arv-dated-subbar .smart-head-copy strong{font-size:14px!important}}

@@ -8,7 +8,11 @@ const day={date,verifiedAt:"2026-10-12T09:00:00+09:00",races:[
  {id:"boat-"+date+"-大村-04",venue:"大村",raceNo:4,closeTime:"11:05",result:{status:"中止"}}
 ]};
 const html=allBoatRaces(day,{now});
+assert.ok(!html.includes('arv-all-venue-thumb'));
+assert.ok(!html.includes('aria-hidden="true">≋'));
+
 assert.ok(html.includes("各会場の全レース"));
+assert.ok(!html.includes("arv-all-venue-thumb"),"no unused boat thumbnail column");
 assert.ok(!html.includes("開催場一覧"));
 assert.ok(!html.includes("リアルタイム"));
 assert.ok(html.includes('data-venue="桐生"'));
