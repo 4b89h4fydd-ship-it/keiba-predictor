@@ -239,7 +239,7 @@ def _supplement_missing(detail: dict[str, Any] | None) -> dict[str, Any] | None:
         return detail
 
 
-def _ensure_analysis(rid: str, current: dict[str, Any] | None, *, allow_deep: bool = True) -> tuple[dict[str, Any] | None, str]:
+def _ensure_analysis(rid: str, current: dict[str, Any] | None) -> tuple[dict[str, Any] | None, str]:
     """Run app.py diagnosis and keep its returned JSON even if SQLite persistence fails."""
     raw_before = _raw_snapshot(rid)
     latest = _merge_detail(current, raw_before)
@@ -270,30 +270,9 @@ def _ensure_analysis(rid: str, current: dict[str, Any] | None, *, allow_deep: bo
     if _analysis_ready(latest):
         return latest, ";".join(errors)
 
-    # Deep/provider refresh is only permitted during the legacy compatibility
-    # call; the production persisted-input phase MUST remain network-free.
-    if not allow_deep:
-        if not _analysis_ready(latest) and not errors:
-            errors.append("stored evidence insufficient for diagnosis")
-        return latest or current, ";".join(errors)
-    deep: dict[str, Any] | None = None
-    try:
-        built = app._build_fast_diagnosis_snapshot(
-            rid,
-            allow_network=True,
-            deep_context=True,
-        )
-        if isinstance(built, dict) and built.get("id"):
-            deep = built
-            _seed_snapshot(built)
-    except Exception as exc:
-        errors.append(f"deep:{type(exc).__name__}:{exc}")
-
-    raw_after_deep = _raw_snapshot(rid)
-    latest = _merge_detail(latest, raw_after_deep)
-    latest = _merge_detail(latest, deep)
-    if not _analysis_ready(latest) and not errors:
-        errors.append("diagnosis builder completed but diagnosisReady is false")
+    # The AI stage must never acquire missing histories after fact persistence.
+    if not errors:
+        errors.append("stored evidence insufficient for diagnosis")
     return latest or current, ";".join(errors)
 
 
@@ -353,11 +332,11 @@ def prepare(
     report_path: str,
     workers: int,
     analysis_workers: int,
-    phase: str = "all",
+    phase: str = "collect",
 ) -> int:
     if phase == "analyze":
         return analyze_persisted(bundle_path, payload_path, report_path)
-    if phase not in {"collect", "all"}:
+    if phase != "collect":
         raise ValueError("unknown prefetch stage")
     bundle = _read(bundle_path)
     rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
@@ -426,43 +405,12 @@ def prepare(
     enrichment_workers = int(os.getenv("ARVEXQ_PREFETCH_ENRICH_WORKERS", "3") or 3)
     print(f"FULL_PREFETCH enrichment cards={len(inputs)} workers={min(4, max(1, enrichment_workers))}", flush=True)
     enriched = _enrich_cards_concurrently(inputs, enrichment_workers)
-    analysis_targets = []
+    # Collection ends here. Never call diagnosis, evaluation or ticket builders
+    # before verified D1 persistence. Preserve acquired cards in memory on DB lag.
     for rid in ids:
         detail = enriched.get(rid, inputs.get(rid))
         if detail:
             by_id[rid] = detail
-        if _card_usable(detail):
-            if _analysis_current(detail):
-                skipped_unchanged.append(rid)
-            else:
-                analysis_targets.append(rid)
-
-    print(
-        f"FULL_PREFETCH analysis targets={len(analysis_targets)} "
-        f"unchanged={len(skipped_unchanged)}"
-    )
-    if analysis_targets and phase == "all":
-        # app.py persists into one SQLite RaceDB. Production deliberately uses
-        # one diagnosis worker; the merge above keeps returned JSON authoritative
-        # even if local persistence is unavailable.
-        with ThreadPoolExecutor(
-            max_workers=max(1, min(analysis_workers, len(analysis_targets)))
-        ) as pool:
-            futures = {
-                pool.submit(_ensure_analysis, rid, by_id.get(rid)): rid
-                for rid in analysis_targets
-            }
-            for fut in as_completed(futures):
-                rid = futures[fut]
-                try:
-                    detail, error = fut.result()
-                except Exception as exc:
-                    detail, error = None, f"{type(exc).__name__}: {exc}"
-                if detail:
-                    by_id[rid] = detail
-                if error:
-                    analysis_errors[rid] = error
-                    print("FULL_PREFETCH_ANALYSIS_WARN", rid, error)
 
     decorated: dict[str, dict[str, Any]] = {}
     for rid in ids:
@@ -470,7 +418,7 @@ def prepare(
         # stale copy erase the in-memory card/diagnosis we just built.
         detail = _merge_detail(_raw_snapshot(rid), by_id.get(rid))
         if detail.get("id"):
-            decorated[rid] = _decorate(detail, include_evidence=(phase == "all"))
+            decorated[rid] = _decorate(detail, include_evidence=False)
 
     missing_card = [rid for rid in ids if not _card_usable(decorated.get(rid))]
     missing_analysis = [
@@ -484,7 +432,7 @@ def prepare(
         "summaries": rows,
         "details": [decorated[rid] for rid in ids if rid in decorated],
         "meta": {
-            "source": "github-actions-facts-first-v1" if phase == "collect" else "github-actions-full-prefetch-v4-memory-authoritative",
+            "source": "github-actions-facts-first-v1",
             "sync_date": bundle.get("date") or "",
             "race_count": len(ids),
             "detail_count": len(decorated),
@@ -495,8 +443,8 @@ def prepare(
             "missing_card_count": len(missing_card),
             "missing_analysis_count": len(missing_analysis),
             "display_complete": bool(ids) and not missing_card,
-            "analysis_complete": phase == "all" and bool(ids) and not missing_card and not missing_analysis,
-            "pipeline_stage": "facts_stored_pending_d1" if phase == "collect" else "legacy_full",
+            "analysis_complete": False,
+            "pipeline_stage": "facts_stored_pending_d1",
             "prefetched_at": int(datetime.now(JST).timestamp()),
         },
     }
@@ -587,7 +535,7 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
             continue
         try:
             # Explicitly disables the previous deep network fallback.
-            predicted, err = _ensure_analysis(rid, fact, allow_deep=False)
+            predicted, err = _ensure_analysis(rid, fact)
             final = _decorate(_merge_detail(fact, predicted)) if isinstance(predicted, dict) else fact
             if _analysis_ready(final):
                 # Observed D1 runner identities and all prior history are immutable.
@@ -644,7 +592,7 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", default="bundle.json")
-    parser.add_argument("--phase", choices=("collect", "analyze", "all"), default="collect")
+    parser.add_argument("--phase", choices=("collect", "analyze"), default="collect")
     parser.add_argument("--payload", default="prefetch-payload.json")
     parser.add_argument("--report", default="prefetch-report.json")
     parser.add_argument("--workers", type=int, default=int(os.getenv("ARVEXQ_PREFETCH_WORKERS", "6")))
