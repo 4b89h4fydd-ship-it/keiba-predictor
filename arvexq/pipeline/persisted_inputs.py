@@ -28,8 +28,25 @@ def _career_rows(horse: dict[str, Any], cutoff: str) -> list[dict[str, Any]]:
     if horse.get("careerArchive"):
         from arvexq.ingest.career_transport import recover_horse
         horse = recover_horse(horse, cutoff)
-    return [r for r in [*(horse.get("allPastRuns") or []),
-                        *(horse.get("recentRaces") or [])] if isinstance(r, dict)]
+    # Full career and the display's latest five deliberately overlap.
+    # Deduplicate the observations before comparing stored evidence counts.
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str, str]] = set()
+    for race in [*(horse.get("allPastRuns") or []), *(horse.get("recentRaces") or [])]:
+        if not isinstance(race, dict):
+            continue
+        identity = (
+            str(race.get("date") or ""),
+            str(race.get("raceId") or race.get("track") or ""),
+            str(race.get("raceNumber") or ""),
+            str(race.get("finish") or ""),
+        )
+        if identity == ("", "", "", ""):
+            identity = (str(race), "", "", "")
+        if identity not in seen:
+            seen.add(identity)
+            out.append(race)
+    return out
 
 
 def _history_observations_retained(original: list[dict[str, Any]],
