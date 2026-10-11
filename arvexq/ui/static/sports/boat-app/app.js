@@ -5,6 +5,7 @@ import {raceList,detail} from "./features/races.js";
 import {allBoatRaces} from "./features/all-races.js";
 import {selectedSection} from "./features/selected.js";
 import {statsSection} from "./features/ai-stats.js";
+import {specialSection} from "./features/special.js";
 
 const root=document.getElementById("boat-root");
 const state={date:todayJst(),day:null,error:"",loading:false,view:"home",venue:"",raceId:"",request:0,raceReturnView:"home"};
@@ -12,7 +13,7 @@ function emptyDay(){return {date:state.date,races:[],verifiedAt:""}}
 function routeFromUrl(){
   const params=new URL(location.href).searchParams;
   state.date=/^\d{4}-\d{2}-\d{2}$/.test(params.get("date")||"")?params.get("date"):todayJst();
-  state.view=["home","selected","stats","races","race"].includes(params.get("view"))?params.get("view"):"home";
+  state.view=["home","selected","special","stats","races","race"].includes(params.get("view"))?params.get("view"):"home";
   state.venue=String(params.get("venue")||"");state.raceId=String(params.get("race")||"");
 }
 function route(view,venue="",raceId=""){
@@ -38,14 +39,11 @@ function navBar(){
     '<button type="button" data-action="refresh" aria-label="競艇データを更新">↻</button></div></div>';
 }
 function home(){
-  const day=state.day||emptyDay();
-  return '<section class="boat-home-hero"><span>ARVEXQ BOAT RACING</span><h1>競艇AI</h1>'+
-    '<p>全国24場｜3連単 最大6点｜◎【単】・◎【軸】</p></section>'+
-    allBoatRaces(day)+
-    '<nav class="arv-all-actions" aria-label="競艇予想メニュー">'+
-      '<button type="button" class="arv-all-action" data-view="selected"><b>本日の厳選</b><small>事前確定のみ</small><span>›</span></button>'+
-      '<button type="button" class="arv-all-action" data-view="stats"><b>AI成績</b><small>事前予想の実績</small><span>›</span></button>'+
-    '</nav>';
+  const day=state.day||emptyDay(),shared=window.ARVEXQUnifiedHome;
+  const hero=shared?shared.hero():'<div class="arv-unified-hero"></div>';
+  const date=shared?shared.dateBar(state.date):'';
+  const actions=shared?shared.buttons('boat'):'';
+  return hero+'<div class="arv-unified-body">'+date+actions+allBoatRaces(day)+'</div>';
 }
 function subheader(title,back="home"){
   return '<div class="boat-subheader"><button type="button" data-back="'+back+'" aria-label="戻る">‹</button>'+
@@ -56,6 +54,7 @@ function body(){
   if(state.view==="home")return home();
   if(state.view==="selected")return subheader("本日の厳選レース")+
     '<section class="boat-panel"><h2>朝確定・厳選予想</h2>'+selectedSection(day)+'</section>';
+  if(state.view==="special")return subheader("特別予想")+'<section class="boat-panel"><h2>特別予想</h2>'+specialSection(day)+'</section>';
   if(state.view==="stats")return subheader("AI成績")+
     '<section class="boat-panel"><h2>3連単 AI成績</h2>'+statsSection(day.races)+'</section>';
   if(state.view==="races")return subheader(venue+" 全レース","home")+
@@ -69,7 +68,7 @@ function body(){
 }
 function draw(){
   if(!root)return;
-  root.innerHTML='<div class="boat-shell">'+navBar()+(state.view==='home'?'':loadingNote())+
+  root.innerHTML='<div class="boat-shell">'+(state.view==='home'?'':navBar()+loadingNote())+
     '<main class="boat-main">'+body()+'</main><footer class="boat-footer">ARVEXQ | BOAT INTELLIGENCE</footer></div>';
 }
 async function refresh(){
