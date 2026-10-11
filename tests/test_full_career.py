@@ -106,6 +106,52 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(second["horses"][0]["allPastRuns"]),8)
         self.assertEqual(second["horses"][0]["_careerHistoryAudit"]["failedProviders"],[])
 
+    async def test_unverified_success_retries_to_obtain_start_count(self):
+        # The first fetch succeeds with recent rows but cannot prove the full
+        # career; it must not permanently suppress subsequent history searches.
+        reg=DataBankRegistry()
+        attempts=[]
+        starts=[run(9,x) for x in (1,7,12,18,24)]
+        def later_verified(h,r,limit):
+            attempts.append(limit)
+            if len(attempts)==1:
+                return {"allPastRuns":starts}
+            return {"allPastRuns":starts,
+                    "careerStartEvidence":{"starts":5,"asOfRaceDate":"2026-10-10"}}
+        reg.register(DataSource(name="late_verified",circuit="NAR",priority=1,
+            capabilities=SourceCapabilities(horse_history=True),
+            fetchers={"horse_history":later_verified}))
+        horse={"horseNumber":1,"name":"sample","recentRaces":starts}
+        detail={"date":"2026-10-10","circuit":"地方","horses":[horse]}
+        first=await enrich_race_missing(detail,bank_registry=reg,history_limit=1000)
+        self.assertEqual(first["horses"][0]["_careerHistoryAudit"]["status"],"unverified")
+        second=await enrich_race_missing(first,bank_registry=reg,history_limit=1000)
+        self.assertEqual(attempts,[1000,1000])
+        self.assertTrue(second["horses"][0]["_careerHistoryAudit"]["complete"])
+        await enrich_race_missing(second,bank_registry=reg,history_limit=1000)
+        self.assertEqual(attempts,[1000,1000],"verified full career stays cached")
+
+    async def test_known_partial_career_is_retried(self):
+        reg=DataBankRegistry()
+        attempts=[]
+        starts=[run(9,x) for x in (1,7,12,18,24)]
+        def broaden(h,r,limit):
+            attempts.append(limit)
+            visible=starts[:3] if len(attempts)==1 else starts
+            return {"allPastRuns":visible,
+                    "careerStartEvidence":{"starts":5,"asOfRaceDate":"2026-10-10"}}
+        reg.register(DataSource(name="broaden",circuit="NAR",priority=1,
+            capabilities=SourceCapabilities(horse_history=True),
+            fetchers={"horse_history":broaden}))
+        detail={"date":"2026-10-10","circuit":"地方",
+                "horses":[{"horseNumber":1,"name":"sample",
+                            "recentRaces":starts[:3]}]}
+        first=await enrich_race_missing(detail,bank_registry=reg,history_limit=1000)
+        self.assertFalse(first["horses"][0]["_careerHistoryAudit"]["complete"])
+        second=await enrich_race_missing(first,bank_registry=reg,history_limit=1000)
+        self.assertTrue(second["horses"][0]["_careerHistoryAudit"]["complete"])
+        self.assertEqual(attempts,[1000,1000])
+
     async def test_reported_missing_is_explicit(self):
         horse={"allPastRuns":[run(9,20),run(9,1)],
                "careerStats":{"starts":12,"asOfRaceDate":"2026-10-10"}}

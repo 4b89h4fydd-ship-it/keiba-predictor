@@ -14,7 +14,12 @@ const earliest=Math.min(...rows.map(r=>Date.parse(String(r.date||day)+'T'+String
 const structurallyReady=rows.length>0&&details.size>=rows.length&&rows.every(r=>{
  const d=details.get(String(r.id));return !!(d&&Array.isArray(d.horses)&&d.horses.filter(h=>h&&h.name&&Number(h.horseNumber)>0).length>=3);
 });
-const assessed=rows.filter(r=>{const d=details.get(String(r.id));return d&&d.preparedMeta&&d.preparedMeta.diagnosisReady===true;});
+// diagnosisReady can be stale even after a newly introduced full-career gate.
+ // Only count a race as assessed when every active starter's lifetime is verified.
+const assessed=rows.filter(r=>{const d=details.get(String(r.id)),pm=d&&d.preparedMeta;
+ return !!(pm&&pm.diagnosisReady===true&&pm.careerReady===true
+   &&d.careerReadiness&&d.careerReadiness.ready===true);
+});
 // One thin AI card no longer stalls all complete morning selections. Explicit
 // 'assessed:false' is archived for those races, never silently called rejected.
 const complete=structurallyReady&&assessed.length>=Math.max(1,Math.ceil(rows.length*.80));

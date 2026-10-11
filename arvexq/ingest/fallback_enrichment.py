@@ -301,6 +301,10 @@ async def enrich_race_missing(
             previous_audit = horse.get("_careerHistoryAudit") or {}
             full_search = history_limit > 5 and (
                 previous_audit.get("requestedAtRaceDate") != date_key(cutoff)
+                # A successful HTTP fetch is not equivalent to a verified career.
+                # If a source returned runs but no date-bound start count, or
+                # only a partial lifetime, the next heavy prefetch must retry.
+                or previous_audit.get("complete") is not True
                 or bool(previous_audit.get("failedProviders"))
                 or bool(previous_audit.get("failedEvidenceProviders"))
                 or (evidence_registered and previous_audit.get("reportedStarts") is None

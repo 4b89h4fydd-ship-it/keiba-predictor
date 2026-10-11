@@ -8,7 +8,7 @@ function fixture(date,start){
     {id:'nar-'+date+'-大井-01',date,circuit:'地方',track:'大井',raceNumber:1,startTime:start,title:'朝の能力判定'},
     {id:'nar-'+date+'-大井-02',date,circuit:'地方',track:'大井',raceNumber:2,startTime:start,title:'大井記念 重賞'},
   ];
-  const details=races.map(r=>({...r,preparedMeta:{diagnosisReady:true},
+  const details=races.map(r=>({...r,careerReadiness:{ready:true},preparedMeta:{diagnosisReady:true,careerReady:true},
     horses:[1,2,3,4,5].map(n=>({horseNumber:n,name:'テスト馬'+n,frameNumber:n,sex:'牡',age:4,
       recentRaces:[{date:'2026-08-01',cornerPositions:[n,n],finish:n,fieldSize:8,distance:1200,track:'大井'}]}))}));
   return {summaries:races,details,meta:{sync_date:date,race_count:races.length}};
@@ -43,7 +43,8 @@ try{
     mixed.summaries.push(r);
     mixed.details.push({...mixed.details[0],...r});
   }
-  mixed.details[4].preparedMeta={diagnosisReady:false};
+  mixed.details[4].preparedMeta={diagnosisReady:false,careerReady:false};
+  mixed.details[4].careerReadiness={ready:false};
   const partialDiagnosis=run(mixed);
   assert.equal(partialDiagnosis.summaries.length,5);
   assert(partialDiagnosis.summaries.every(r=>r.morningPickVersion==='v1'));
@@ -51,6 +52,11 @@ try{
   assert.deepEqual(partialDiagnosis.summaries[4].morningSelectedTypes,[]);
   assert.equal(partialDiagnosis.summaries[4].morningSelected,false,'never promote unassessed cards');
   assert(partialDiagnosis.summaries.slice(0,4).every(r=>r.morningAssessed===true));
+  const waiting=fixture(tomorrow,'21:00');
+  waiting.details.forEach(d=>{d.preparedMeta.careerReady=false;d.careerReadiness={ready:false}});
+  const notFrozen=run(waiting);
+  assert(notFrozen.summaries.every(r=>!r.morningPickFixedAt),
+    'missing verified lifetime histories must not freeze an empty morning selection');
   const past=fixture('2025-10-01','09:00');
   assert(run(past).summaries.every(r=>!r.morningPickFixedAt),'do not fabricate after first post');
   const partial=fixture(tomorrow,'21:00');partial.details.pop();
