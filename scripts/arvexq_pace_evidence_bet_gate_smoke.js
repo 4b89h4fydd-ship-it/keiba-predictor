@@ -75,8 +75,9 @@ const reference=win.ARVEXQBetReadiness.promoteReference(
   {selectionAudit:{selected:false,score:64,evidence:.60}},race,
   {coverage:.7,rows:sufficient.rows},completeReadiness);
 assert.equal(reference.referenceOnly,true,'routine race may have a separate reference ticket');
-assert.equal(reference.selectionAudit.selected,true,'ticket gate may independently assess a routine race');
-assert.equal(reference.selectionAudit.referenceOnly,true,'but it is NEVER an elite morning selection');
+assert.equal(reference.selectionAudit.selected,false,'ticket gate must not forge an elite morning selection');
+assert.equal(reference.selectionAudit.referenceOnly,undefined,
+ 'the immutable morning selection audit is unchanged');
 assert.equal(win.ARVEXQBetReadiness.promoteReference(
   {selectionAudit:{selected:false,score:12,evidence:.15}},race,
   {coverage:.7,rows:sufficient.rows},completeReadiness).selectionAudit.selected,false,
