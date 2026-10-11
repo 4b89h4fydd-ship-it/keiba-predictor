@@ -11,18 +11,14 @@ const details=new Map((payload.details||[]).filter(d=>d&&d.id).map(d=>[String(d.
 const day=String((payload.meta||{}).sync_date||rows[0]?.date||'');
 const now=new Date();
 const earliest=Math.min(...rows.map(r=>Date.parse(String(r.date||day)+'T'+String(r.startTime||'').slice(0,5)+':00+09:00')));
-const structurallyReady=rows.length>0&&details.size>=rows.length&&rows.every(r=>{
- const d=details.get(String(r.id));return !!(d&&Array.isArray(d.horses)&&d.horses.filter(h=>h&&h.name&&Number(h.horseNumber)>0).length>=3);
-});
-// diagnosisReady can be stale even after a newly introduced full-career gate.
- // Only count a race as assessed when every active starter's lifetime is verified.
-const assessed=rows.filter(r=>{const d=details.get(String(r.id)),pm=d&&d.preparedMeta;
- return !!(pm&&pm.diagnosisReady===true&&pm.careerReady===true
-   &&d.careerReadiness&&d.careerReadiness.ready===true);
-});
-// One thin AI card no longer stalls all complete morning selections. Explicit
-// 'assessed:false' is archived for those races, never silently called rejected.
-const complete=structurallyReady&&assessed.length>=Math.max(1,Math.ceil(rows.length*.80));
+// A published race schedule, individual horse coverage and career ingestion
+// are separate facts. An incomplete full-career scrape is not a reason to
+// freeze zero selections for an otherwise assessable day.
+const morningInputs=require('../arvexq/pipeline/morning_input_policy.js').status(rows,details,day);
+const assessed=rows.filter(r=>morningInputs.assessedIds.has(String(r.id)));
+// Never publish a first-write-wins selected slate before a majority of cards
+// can actually be evaluated; incomplete races retain assessed:false.
+const complete=morningInputs.scheduleReady&&assessed.length>=Math.max(1,Math.ceil(rows.length*.80));
 function save(reason){
   fs.writeFileSync(output,JSON.stringify(payload));
   console.log('MORNING_PICKS_'+reason,'day='+day,'races='+rows.length,'complete='+complete);
