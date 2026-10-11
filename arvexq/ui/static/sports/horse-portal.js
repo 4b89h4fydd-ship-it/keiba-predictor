@@ -50,14 +50,6 @@
       '<header class="arv-all-title"><h2>各会場の全レース</h2><p>1R〜12Rを選択するとレース詳細へ</p></header>'+
       group("中央")+group("地方")+'</section>';
   }
-  function home(rows,opts={}){
-    const selected=opts.selected||{},special=opts.special||{};
-    const action=(page,title,meta)=>'<button type="button" data-home-page="'+page+'" class="arv-all-action"><b>'+title+'</b><small>'+esc(meta)+'</small><span>›</span></button>';
-    return '<div class="arv-all-home">'+allRaces(rows,opts)+
-      '<nav class="arv-all-actions" aria-label="競馬予想メニュー">'+
-      action("selected","本日の厳選",(n(selected.central)+n(selected.local))+'レース')+
-      action("special","特別予想",(n(special.central)+n(special.local))+'レース')+
-      action("ai-stats","AI成績","事前予想の実績")+'</nav></div>';
-  }
+  function home(rows,opts={}){return allRaces(rows,opts)}
   root.ARVEXQHorsePortal=Object.freeze({home,allRaces,raceState});
 })(typeof window!=="undefined"?window:globalThis);
