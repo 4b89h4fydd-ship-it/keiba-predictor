@@ -1,0 +1,85 @@
+name: ARVEXQ Domain Refactor
+
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - app.py
+      - build_static.py
+      - arvexq/**
+      - scripts/**
+      - tests/**
+      - .github/workflows/arvexq-domain-refactor.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-domain-refactor-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      NAR_BACKGROUND_WARM: "0"
+      ARVEXQ_COMMERCIAL_COLLECTOR: "0"
+      ARVEXQ_ENVIRONMENT_COLLECTOR: "0"
+      ARVEXQ_AUTO_ODDS: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install test dependencies
+        run: |
+          python -m pip install -q -r requirements.txt pytest httpx pyyaml
+          npm install --no-save --package-lock=false playwright
+          npx playwright install --with-deps chromium webkit
+      - name: Syntax and all Python unit and integration tests
+        run: |
+          python -m compileall -q app.py arvexq scripts tests
+          python -m pytest tests -q
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          for path in Path('.github/workflows').glob('*.yml'):
+              yaml.safe_load(path.read_text(encoding='utf-8'))
+          PY
+      - name: Identical module formulas, prediction outputs and asset source order
+        run: |
+          python -c 'from arvexq.ui.assets import read_asset; print(read_asset("app.js"), end="")' > /tmp/arvexq-python-app.js
+          node --check arvexq/ui/static/app.js
+          node --check arvexq/ui/static/prediction/pace_simulation.js
+          node --check arvexq/ui/static/prediction/relative_grades.js
+          ARVEXQ_PYTHON_SOURCE=/tmp/arvexq-python-app.js node tests/domain_extraction_smoke.js
+          python scripts/arvexq_structure_inventory.py --output /tmp/arvexq-inventory.json
+      - name: Static deployment build
+        run: python build_static.py
+      - name: Independent selection, frozen marks, evidence and ticket regressions
+        run: |
+          node scripts/arvexq_morning_picks_smoke.js
+          node scripts/arvexq_mark_lock_smoke.js
+          node scripts/arvexq_frozen_marks_smoke.js
+          node scripts/arvexq_model_mark_revision_smoke.js
+          node scripts/arvexq_six_pace_metrics_smoke.js
+          node scripts/arvexq_pace_transition_smoke.js
+          node scripts/arvexq_pace_evidence_bet_gate_smoke.js
+          node scripts/arvexq_three_way_bet_smoke.js
+          node scripts/arvexq_bet_mark_alignment_smoke.js
+          node scripts/arvexq_saved_ticket_smoke.js
+          node scripts/arvexq_static_racecard_open_smoke.js
+          node scripts/arvexq_race_identity_smoke.js
+          node scripts/arvexq_scratch_live_smoke.js
+      - name: Offline Chromium and iPhone WebKit UI and failure isolation
+        run: |
+          node scripts/arvexq_detail_resilience_smoke.js
+          node scripts/arvexq_bet_mobile_layout_smoke.js
