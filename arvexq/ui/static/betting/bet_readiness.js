@@ -12,13 +12,16 @@ function evaluate(r,p,evidence,rd){
        topMissing=evidence&&evidence.topMissing||[],leadMissing=evidence&&evidence.leaderMissing||[],
        paceCoverage=v(evidence&&evidence.coverage);
  if(field<5)missing.push('出走頭数');
- if(!r||!r.careerReadiness||r.careerReadiness.ready!==true)missing.push('全出走履歴');
- if(v(rd.card)<.90)missing.push('出馬表・騎手');
- if(v(rd.history)<.55)missing.push('近走データ');
- if(v(rd.analysis)<.45||v(rd.prediction)<(central?.62:.58))missing.push('能力診断');
+ // Full-career ingestion continues independently. Partial career coverage is
+ // disclosed, but cannot veto an otherwise evidenced pre-race pair ticket.
+ if(!r||!r.careerReadiness||r.careerReadiness.ready!==true)
+   warnings.push('全キャリア未確認（取得済み過去走に基づく暫定評価）');
+ if(v(rd.card)<.85)missing.push('出馬表・騎手');
+ if(v(rd.history)<.40)missing.push('近走データ');
+ if(v(rd.analysis)<.40||v(rd.prediction)<(central?.55:.51))missing.push('能力診断');
  // Evidence for the candidate most likely to win is not optional; limited
  // omissions in secondary runners should not block all unordered tickets.
- if(paceCoverage<.45||topMissing.length>1||leadMissing.length>1||
+ if(paceCoverage<.35||topMissing.length>2||leadMissing.length>2||
     (topNo>0&&topMissing.map(Number).includes(topNo)))missing.push('位置取りの観測根拠');
  if(!r||!r.date)missing.push('開催日');
  if(v(rd.actualOdds)<.65)warnings.push('実オッズ未充足（期待値未検証）');
@@ -28,7 +31,7 @@ function evaluate(r,p,evidence,rd){
  const ready=missing.length===0,
        trifectaReady=ready&&evidence&&evidence.ready===true&&
          v(rd.history)>=.70&&v(rd.environment)>=.5&&
-         v(rd.prediction)>=(central?.68:.62);
+         v(rd.prediction)>=(central?.65:.60);
  return Object.freeze({version:VERSION,ready,modelReady:ready,
    trifectaReady:!!trifectaReady,missing,warnings,
    oddsVerified:v(rd.actualOdds)>=.65,pace:evidence,readiness:rd,
@@ -38,10 +41,13 @@ function promoteReference(base,r,p,rd){
  if(!base||!base.selectionAudit||base.selectionAudit.selected===true||!r||!p)return base;
  const a=base.selectionAudit,central=String(r.circuit||'')==='中央',
        field=((p.rows)||[]).length;
- if(!r.careerReadiness||r.careerReadiness.ready!==true||field<5||r._entryOnly||v(rd.card)<.90||v(rd.history)<.55||
-    v(rd.analysis)<.45||v(rd.prediction)<(central?.62:.58)||
-    v(p.coverage)<(central?.44:.38)||v(a.score)<(central?50:48)||
-    v(a.evidence)<.30)return base;
+ // Normal and special forecasts must not inherit the much stricter
+ // morning "selected" gate. This is reference-only and still requires
+ // real card/history/model inputs and the independent ticket engine.
+ if(field<5||r._entryOnly||v(rd.card)<.85||v(rd.history)<.40||
+    v(rd.analysis)<.40||v(rd.prediction)<(central?.55:.51)||
+    v(p.coverage)<(central?.38:.33)||v(a.score)<(central?30:27)||
+    v(a.evidence)<.23)return base;
  return {...base,referenceOnly:true,
    selectionAudit:{...a,selected:true,referenceOnly:true,strictWinnerSelected:false,
      reason:'通常レースのモデル参考買い目。朝の厳選判定とは別'}};
