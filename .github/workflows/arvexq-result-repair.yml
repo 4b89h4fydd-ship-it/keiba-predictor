@@ -7,6 +7,8 @@ name: ARVEXQ Result Repair
     paths:
       - app.py
       - scripts/arvexq_result_repair.py
+      - scripts/arvexq_restore_result_day.py
+      - arvexq/results/day_index.py
       - scripts/arvexq_sync_batches.py
       - scripts/arvexq_fetch_d1_bundle.py
       - arvexq/results/**
@@ -77,13 +79,17 @@ jobs:
             --out bundle.json \
             --report d1-bundle-report.json \
             --workers 8 \
-            --allow-missing-details
+            --allow-missing-details --allow-empty-day
+          # D1 is not the source of truth for the official race schedule.
+          # Restore race IDs from the canonical prefetch archive if D1 is empty.
+          python scripts/arvexq_restore_result_day.py \
+            --bundle bundle.json --date "$SYNC_DATE" --report result-day-index.json
           RACES=$(jq '.races // [] | length' bundle.json)
           DETAILS=$(jq '.details // [] | length' bundle.json)
           MISSING=$(jq '.missing_detail_count // 0' d1-bundle-report.json)
           echo "D1 day races=$RACES details=$DETAILS missing_details=$MISSING"
           if [ "$RACES" -le 0 ]; then
-            echo "::error::D1 returned no races for $SYNC_DATE"
+            echo "::error::No verified official race IDs exist for $SYNC_DATE"
             exit 1
           fi
 
