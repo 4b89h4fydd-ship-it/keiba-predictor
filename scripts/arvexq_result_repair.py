@@ -86,6 +86,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     pending.sort(key=lambda rid: (row_date(summary_by_id[rid]), start_minutes(summary_by_id[rid]), rid))
     errors: dict[str, str] = {}
     repaired: set[str] = set()
+    published: set[str] = set()  # publish observed result/payout improvements even when still incomplete
 
     for rid in pending:
         _seed_base(rid, by_id.get(rid))
@@ -121,9 +122,19 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
                     errors[rid] = error
                     print("RESULT_REPAIR_ERROR", rid, error)
                     continue
+                before_result = (by_id.get(rid) or {}).get("result") or {}
                 merged = merge_detail(by_id.get(rid), fresh)
                 by_id[rid] = merged
                 _seed_base(rid, merged)
+                next_result = merged.get("result") or {}
+                # Persist a genuine official advancement immediately: 速報,
+                # confirmed placings, or payout updates must not wait for ALL
+                # payout types to become available. No fresh-result guesses.
+                if next_result != before_result and (
+                    next_result.get("finishers") or next_result.get("payouts")
+                    or next_result.get("status") in TERMINAL_NO_PAYOUT
+                ):
+                    published.add(rid)
                 result_ok, payout_ok, _ = result_state(merged)
                 if result_ok and payout_ok:
                     repaired.add(rid)
@@ -172,7 +183,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             payout_missing.append(item)
 
     detail_payload = [
-        by_id[rid] for rid in sorted(repaired)
+        by_id[rid] for rid in sorted(published | repaired)
         if isinstance(by_id.get(rid), dict) and by_id[rid].get("id")
     ]
     payload = {
@@ -184,6 +195,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             "started_race_count": len(started_ids),
             "result_pending_before": len(pending),
             "result_repaired_count": len(repaired),
+            "result_published_count": len(published | repaired),
             "result_missing_count": len(unresolved),
             "payout_missing_count": len(payout_missing),
             "result_detail_write_count": len(detail_payload),
@@ -196,6 +208,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "started": len(started_ids),
         "pending_before": len(pending),
         "repaired": sorted(repaired),
+        "published": sorted(published | repaired),
         "result_missing": unresolved,
         "payout_missing": payout_missing,
         "detail_write_count": len(detail_payload),
@@ -208,6 +221,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         f"started={len(started_ids)}",
         f"pending_before={len(pending)}",
         f"repaired={len(repaired)}",
+        f"published={len(published | repaired)}",
         f"detail_write_count={len(detail_payload)}",
         f"result_missing={len(unresolved)}",
         f"payout_missing={len(payout_missing)}",
