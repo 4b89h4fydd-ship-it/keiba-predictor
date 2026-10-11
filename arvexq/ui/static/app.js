@@ -2804,7 +2804,7 @@ function paceEvidenceProfile(r,p){
 }
 // Input evidence and reference eligibility only; ticket decisions are
 // exclusively owned by the independent three-way strategy.
-function gateBetByPaceEvidence(plan,r,p){
+function prepareBetEvidence(plan,r,p){
   if(!plan)return plan;
   var pace=paceEvidenceProfile(r,p),readiness=dataReadinessProfile(r,p),
       mod=window.ARVEXQBetReadiness,
@@ -2843,7 +2843,7 @@ function buildAiBetPlan(r,p){
   var featured=isFeaturedBetRace(r,p),v213Ready=String(r&&r.circuit||'')==='地方'&&rows.every(function(x){var e=x&&x.horse&&x.horse.integratedEvaluation||{};return isFinite(Number(e.v218P1Utility!=null?e.v218P1Utility:(e.v217P1Utility!=null?e.v217P1Utility:e.v213P1Utility)))&&isFinite(Number(e.v213P2Utility))&&isFinite(Number(e.v213P3Utility))});
   if(v213Ready){
     var vp=buildV213BetModelAudit(r,p,rows,featured);
-    vp=gateBetByPaceEvidence(vp,r,p);
+    vp=prepareBetEvidence(vp,r,p);
     vp=composeThreeWayBetPolicy(vp,r,p);
     vp=markMandatoryTrifectaReview(vp,r);
     vp=attachBetOutcomeAudit(vp,r,p);
@@ -2936,7 +2936,7 @@ function buildAiBetPlan(r,p){
           triTop:triTop,triRatio:triRatio,triTop6:triTop6,orderConfidence:orderConfidence,
           ticketDistribution:'sequential-joint-v300-winner-consensus'},
         reason:'着順モデルの監査値。券種・組み合わせは独立戦略のみで判定。'};
-  plan=gateBetByPaceEvidence(plan,r,p);
+  plan=prepareBetEvidence(plan,r,p);
   plan=composeThreeWayBetPolicy(plan,r,p);
   plan=markMandatoryTrifectaReview(plan,r);
   plan=attachBetOutcomeAudit(plan,r,p);
