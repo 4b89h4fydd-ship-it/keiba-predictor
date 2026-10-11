@@ -5,6 +5,11 @@ does not invent starts or imply that a finite monthly lookback is a full career.
 """
 from __future__ import annotations
 from typing import Any
+from threading import BoundedSemaphore
+
+# Avoid 80 race background workers each spawning up to six official ZIP fetches.
+# Limit network-heavy monthly waves while retaining independent, safe DB I/O.
+nar_history_wave_slots = BoundedSemaphore(2)
 from arvexq.ingest.full_career import date_key
 
 
@@ -49,4 +54,4 @@ def official_history_complete(coverage: dict[str,Any], required: dict[str,int]) 
     if any(name not in required or type(required[name]) is not int
            or required[name]<0 for name in counts):
         return False
-    return all(int(count or 0)>=required[name] for name,count in counts.items())
+    return all(int(count or 0)==required[name] for name,count in counts.items())

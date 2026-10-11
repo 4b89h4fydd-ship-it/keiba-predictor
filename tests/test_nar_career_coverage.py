@@ -11,6 +11,9 @@ class NarCareerCoverageTests(unittest.TestCase):
         self.assertFalse(official_history_complete(coverage,{}))
         self.assertTrue(official_history_complete({"counts":{"A":81,"B":7}},
                                                   {"A":81,"B":7}))
+        self.assertFalse(official_history_complete({"counts":{"A":82,"B":7}},
+                                                   {"A":81,"B":7}),
+                         "extra starts indicate an identity/count conflict, not proof")
     def test_date_bound_reported_starts_only(self):
         detail={"horses":[
             {"name":"A","careerStartEvidence":{"starts":81,"asOfRaceDate":"2026-10-11"}},

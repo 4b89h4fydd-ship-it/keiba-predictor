@@ -25,7 +25,7 @@ from arvexq.infra.pure_snapshots import (
     _merge_official_result,
 )
 from arvexq.databanks.legacy_bridge import register_legacy_sources
-from arvexq.ingest.nar_career_coverage import pre_race_reported_starts, official_history_complete
+from arvexq.ingest.nar_career_coverage import pre_race_reported_starts, official_history_complete, nar_history_wave_slots
 from arvexq.ui.assets import read_asset, read_binary_asset
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -1520,7 +1520,10 @@ def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[st
         try:
             for pos in range(0, len(months), wave):
                 batch = months[pos:pos+wave]
-                _, errs = _sync_nar_month_wave(batch)
+                # Bound cross-race NAR ZIP downloads; the SQL import itself
+                # also retains the existing single-writer lock.
+                with nar_history_wave_slots:
+                    _, errs = _sync_nar_month_wave(batch)
                 errors.extend(errs)
                 months_done += len(batch)
                 cov_now = _history_counts(horse_names, iso_date)
