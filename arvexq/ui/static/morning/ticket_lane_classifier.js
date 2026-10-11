@@ -2,7 +2,7 @@
    Relative model concentration is NOT a calibrated hit rate or expected return. */
 (function(global){
 'use strict';
-const VERSION='arvexq-morning-ticket-lanes-v2';
+const VERSION='arvexq-morning-ticket-lanes-v3';
 const NAMES=['的中重視型','勝ち馬明確型','高配当狙い型'];
 function num(x,d=0){return x===null||x===undefined||x===''||!Number.isFinite(Number(x))?d:Number(x)}
 function clamp(x){return Math.max(0,Math.min(1,num(x)))}
@@ -19,8 +19,8 @@ function classify(r,p,strict){
        scenario=clamp(a.scenarioProb),top3=clamp(a.top3mass),
        margin=clamp(a.margin),winnerConf=clamp(a.winnerConfidence),
        axis=rows.find(z=>z.predMark==='◎');
- const basic={field:field>=5,readiness:ready>=(isCentral?.64:.57),
-       coverage:coverage>=(isCentral?.45:.38),evidence:evidence>=(isCentral?.37:.31)};
+ const basic={field:field>=5,readiness:ready>=(isCentral?.58:.53),
+       coverage:coverage>=(isCentral?.40:.35),evidence:evidence>=(isCentral?.31:.27)};
  const basicOK=Object.keys(basic).every(k=>basic[k]);
  const ranking=rows.map(z=>({no:num(z.horse.horseNumber),p2:rankedRole(z,2),p3:rankedRole(z,3)}));
  const roleCoverage=field?ranking.filter(z=>z.p2!==null&&z.p3!==null).length/field:0;
@@ -30,11 +30,11 @@ function classify(r,p,strict){
  const placeTop2=placeSum?place.slice(0,2).reduce((s,z)=>s+z.value,0)/placeSum:0;
  const placeTop3=placeSum?place.slice(0,3).reduce((s,z)=>s+z.value,0)/placeSum:0;
  const axisTop3=!!axis&&place.slice(0,3).some(z=>z.no===num(axis.horse.horseNumber));
- const noAxisPlace=!axis&&roleCoverage>=.85&&placeTop3>=.54&&placeTop2>=.36;
- const strongPlace=basicOK&&roleCoverage>=.68&&(axisTop3||noAxisPlace)&&
-       placeTop3>=Math.max(.47,Math.min(.82,3/Math.max(field,1)*1.08))&&
-       placeTop2>=Math.max(.30,Math.min(.62,2/Math.max(field,1)*1.07))&&
-       scenario>=(isCentral?.22:.17)&&num(a.score)>=(isCentral?57:52);
+ const noAxisPlace=!axis&&roleCoverage>=.75&&placeTop3>=.47&&placeTop2>=.31;
+ const strongPlace=basicOK&&roleCoverage>=.60&&(axisTop3||noAxisPlace)&&
+       placeTop3>=Math.max(.43,Math.min(.80,3/Math.max(field,1)*1.04))&&
+       placeTop2>=Math.max(.28,Math.min(.59,2/Math.max(field,1)*1.02))&&
+       scenario>=(isCentral?.19:.15)&&num(a.score)>=(isCentral?52:48);
  const clearWinner=basicOK&&!!axis&&(a.selected===true||(
        a.winnerStable===true&&winnerConf>=(isCentral?.65:.60)&&
        margin>=(isCentral?.035:.028)&&top3>=(isCentral?.61:.59)&&
