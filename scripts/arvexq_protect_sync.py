@@ -214,6 +214,43 @@ def guard(body: dict[str, Any], read=fetch_current, *, base: str) -> dict[str, A
     return out
 
 
+def _all_original_career_evidence_retained(expected: dict[str, Any],
+                                           actual: dict[str, Any], race_date: str) -> bool:
+    """Accept a concurrent *richer* archive only after full recovery and proof.
+
+    Different SHA alone does not indicate lost data: another authorised writer
+    can add older starts or previously absent fields after a successful sync.
+    A compact five-run display, bad digest, changed original observation or
+    removed historical start must still fail closed.
+    """
+    from arvexq.ingest.career_transport import recover_horse
+    from arvexq.ingest.full_career import merge_career
+    if not (isinstance(expected.get("careerArchive"), dict) and
+            isinstance(actual.get("careerArchive"), dict) and race_date):
+        return False
+    try:
+        lhs = recover_horse(expected, race_date)
+        rhs = recover_horse(actual, race_date)
+        previous = merge_career(lhs.get("allPastRuns"), lhs.get("recentRaces"), race_date)
+        retained = merge_career(rhs.get("allPastRuns"), rhs.get("recentRaces"), race_date)
+    except (ValueError, KeyError, TypeError, OSError, RuntimeError):
+        return False
+    if not previous or len(retained) < len(previous):
+        return False
+    current_by_date = {r["date"]: r for r in retained}
+    def contains(richer: Any, original: Any) -> bool:
+        if isinstance(original, dict):
+            return isinstance(richer, dict) and all(
+                key in richer and contains(richer[key], value)
+                for key, value in original.items())
+        if isinstance(original, list):
+            return isinstance(richer, list) and len(richer) >= len(original) and all(
+                contains(richer[i], value) for i, value in enumerate(original))
+        return richer == original
+    return all(r["date"] in current_by_date and contains(current_by_date[r["date"]], r)
+               for r in previous)
+
+
 def verify_published(body: dict[str, Any], *, base: str, read=fetch_current) -> list[str]:
     """Detect a concurrent D1 sync that removed or rewrote a pre-race seal.
 
@@ -259,7 +296,20 @@ def verify_published(body: dict[str, Any], *, base: str, read=fetch_current) -> 
                 stored = (stored_horses.get(no) or {}).get("careerArchive") or {}
                 if (stored.get("sha256") != archive.get("sha256") or
                         stored.get("encoding") != archive.get("encoding")):
-                    raise RuntimeError("D1_CAREER_ARCHIVE_POST_VERIFY_MISMATCH "+rid+":"+str(no))
+                    # Do not silently accept a mismatched digest. Prove that
+                    # the newly published, digest-verified full career is a
+                    # superset of *every* historical observation we sent.
+                    expected_horse = next(
+                        (h for h in detail.get("horses") or []
+                         if isinstance(h, dict) and int(h.get("horseNumber") or 0) == no),
+                        {})
+                    actual_horse = stored_horses.get(no) or {}
+                    if not _all_original_career_evidence_retained(
+                            expected_horse, actual_horse, str(detail.get("date") or "")):
+                        raise RuntimeError("D1_CAREER_ARCHIVE_POST_VERIFY_MISMATCH "+rid+":"+str(no))
+                    print("D1_CAREER_ARCHIVE_RICHER_PRESERVED", rid, no,
+                          "requested="+str(archive.get("storedRunCount")),
+                          "actual="+str(stored.get("storedRunCount")))
         verified.append(rid)
     return verified
 
