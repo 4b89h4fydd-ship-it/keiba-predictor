@@ -37,12 +37,18 @@
         verified.push(name(row.name)?row:Object.assign({},row,{name:card.horses.find(function(h){return Number(h.horseNumber)===number}).name}))
       });
       if(rejected){
-        var fresh=Object.assign({},out.result,{finishers:verified});
-        // Never label a partially quarantined result final or show unverified
-        // payouts. Preserve all correctly matched finishers for display.
-        fresh.status='速報';
-        delete fresh.payouts;
-        out.result=fresh;
+        // No matching row means this may be a different race entirely.
+        // Retain the existing fail-closed behavior for that case.
+        if(!verified.length){
+          delete out.result;
+        }else{
+          var fresh=Object.assign({},out.result,{finishers:verified});
+          // Never label a partially quarantined result final or show
+          // unverifiable payouts. Retain only the matched finishers.
+          fresh.status='速報';
+          delete fresh.payouts;
+          out.result=fresh;
+        }
         out._resultIdentityError=true;
         out._resultIdentityRejectedCount=rejected;
       }else if(verified.length){
