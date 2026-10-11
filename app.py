@@ -1,3 +1,70 @@
+from arvexq.ingest.supplemental.state import _enrich_jobs_lock
+from arvexq.ingest.supplemental.state import _enrich_jobs
+from arvexq.ingest.supplemental.state import _enrich_data_lock
+from arvexq.ingest.supplemental.state import _enrich_data
+from arvexq.ingest.history.jobs import _full_history_lock
+from arvexq.ingest.history.jobs import _full_history_running
+import arvexq.ingest.snapshots.local as _acq_snapshots_local
+import arvexq.ingest.snapshots.hydration as _acq_snapshots_hydration
+import arvexq.ingest.history.harvest as _acq_history_harvest
+import arvexq.ingest.supplemental.enrichment as _acq_supplemental_enrichment
+import arvexq.ingest.snapshots.results as _acq_snapshots_results
+from arvexq.ingest.central.jra.state import JRA_BAD_TITLE_RE
+from arvexq.ingest.central.jra.state import JRA_CNAME_RE
+from arvexq.ingest.central.jra.state import JRA_HORSE_CNAME_RE
+from arvexq.ingest.central.jra.state import JRA_MEETING_DAY_RE
+from arvexq.ingest.central.jra.state import JRA_PROGRAM_TRACK_RE
+from arvexq.ingest.central.jra.state import JRA_RESULT_CNAME_RE
+from arvexq.ingest.central.jra.state import JRA_TRACK_CODES
+from arvexq.ingest.central.jra.state import JRA_TRACK_CODE_BY_NAME
+from arvexq.ingest.central.jra.state import _jra_cache_lock
+from arvexq.ingest.central.jra.state import _jra_cname_lookup
+from arvexq.ingest.central.jra.state import _jra_cname_lookup_lock
+from arvexq.ingest.central.jra.state import _jra_program_cache
+from arvexq.ingest.central.jra.state import _jra_program_cache_lock
+from arvexq.ingest.central.jra.state import _jra_text_cache
+from arvexq.ingest.environment.state import _environment_http_cache
+from arvexq.ingest.environment.state import _environment_http_lock
+from arvexq.ingest.local.state import NAR_BABA_CODES
+from arvexq.ingest.local.state import NAR_NETKEIBA_CODES
+from arvexq.ingest.local.state import _nar_odds_cache
+from arvexq.ingest.local.state import _nar_odds_cache_lock
+from arvexq.ingest.local.state import _nar_sync_io_lock
+from arvexq.ingest.history.jobs import _race_history_jobs
+from arvexq.ingest.history.jobs import _race_history_lock
+from arvexq.ingest.netkeiba.state import NETKEIBA_TRACK_CODES
+from arvexq.ingest.netkeiba.state import _netkeiba_cache
+from arvexq.ingest.netkeiba.state import _netkeiba_cache_lock
+from arvexq.ingest.supplemental.state import _smart_cache
+from arvexq.ingest.supplemental.state import _smart_cache_lock
+import arvexq.ingest.central.jra.transport as _acq_central_jra_transport
+import arvexq.ingest.central.jra.identifiers as _acq_central_jra_identifiers
+import arvexq.ingest.central.jra.program as _acq_central_jra_program
+import arvexq.ingest.central.jra.history as _acq_central_jra_history
+import arvexq.ingest.central.jra.racecards as _acq_central_jra_racecards
+import arvexq.ingest.central.jra.calendar as _acq_central_jra_calendar
+import arvexq.ingest.central.jra.results as _acq_central_jra_results
+import arvexq.ingest.central.feeds as _acq_central_feeds
+import arvexq.ingest.central.history as _acq_central_history
+import arvexq.ingest.central.racecards as _acq_central_racecards
+import arvexq.ingest.local.archive as _acq_local_archive
+import arvexq.ingest.local.history as _acq_local_history
+import arvexq.ingest.local.racecards as _acq_local_racecards
+import arvexq.ingest.local.odds as _acq_local_odds
+import arvexq.ingest.local.results as _acq_local_results
+import arvexq.ingest.netkeiba.transport as _acq_netkeiba_transport
+import arvexq.ingest.netkeiba.history as _acq_netkeiba_history
+import arvexq.ingest.netkeiba.program as _acq_netkeiba_program
+import arvexq.ingest.netkeiba.rows as _acq_netkeiba_rows
+import arvexq.ingest.netkeiba.racecards as _acq_netkeiba_racecards
+import arvexq.ingest.netkeiba.odds as _acq_netkeiba_odds
+import arvexq.ingest.netkeiba.results as _acq_netkeiba_results
+import arvexq.ingest.supplemental.feeds as _acq_supplemental_feeds
+import arvexq.ingest.environment.parsers as _acq_environment_parsers
+import arvexq.ingest.environment.transport as _acq_environment_transport
+import arvexq.ingest.environment.providers as _acq_environment_providers
+import arvexq.ingest.merge.current as _acq_merge_current
+
 from arvexq.services import prepare_race_detail
 from arvexq.ingest.pure_parsers import (
     decode_csv_bytes,
@@ -275,236 +342,92 @@ from arvexq.normalize.central_feed import (
 )
 
 
-JRA_TRACK_CODES = {"01":"札幌","02":"函館","03":"福島","04":"新潟","05":"東京","06":"中山","07":"中京","08":"京都","09":"阪神","10":"小倉"}
-JRA_TRACK_CODE_BY_NAME = {v:k for k,v in JRA_TRACK_CODES.items()}
-JRA_MEETING_DAY_RE = re.compile(r"(\d+)回(札幌|函館|福島|新潟|東京|中山|中京|京都|阪神|小倉)(\d+)日")
-JRA_CNAME_RE = re.compile(r"pw01dde(?:01|10)\d{20}(?:/|%2F)[0-9A-Fa-f]{2}",re.I)
-JRA_HORSE_CNAME_RE = re.compile(r"pw01dud\d{12,}(?:/|%2F)[0-9A-Fa-f]{2}",re.I)
-JRA_RESULT_CNAME_RE = re.compile(r"pw01sde(?:01|10)\d{20}(?:/|%2F)[0-9A-Fa-f]{2}",re.I)
-_jra_cache_lock = threading.Lock()
-_jra_text_cache: dict[str, tuple[float,str]] = {}
 
 def _jra_request(url: str, cname: str | None = None, cache_sec: int = 1800) -> str:
-    key=url+"|"+(cname or "")
-    now=time.time()
-    with _jra_cache_lock:
-        hit=_jra_text_cache.get(key)
-        if hit and now-hit[0] < cache_sec:
-            return hit[1]
-    headers={"User-Agent":"Mozilla/5.0 (compatible; KeibaPredictor/6.2; +https://www.jra.go.jp/)","Accept-Language":"ja,en;q=0.8"}
-    data=None
-    if cname:
-        data=urllib.parse.urlencode({"cname":cname}).encode("ascii")
-        headers["Content-Type"]="application/x-www-form-urlencoded"
-    req=urllib.request.Request(url,data=data,headers=headers)
-    with urllib.request.urlopen(req,timeout=float(os.getenv("JRA_OFFICIAL_TIMEOUT_SEC","4.5"))) as res:
-        text=_jra_decode(res.read())
-    with _jra_cache_lock:
-        _jra_text_cache[key]=(now,text)
-    return text
+    return _acq_central_jra_transport._jra_request(
+        url, cname, cache_sec,
+    )
 
 def _jra_norm_cname(value:str)->str:
-    return re.sub(r"%2F","/",str(value or ""),flags=re.I)
+    return _acq_central_jra_identifiers._jra_norm_cname(
+        value,
+    )
 
 def _jra_attr_cname(tag, pattern) -> str:
-    if not tag: return ""
-    blob=" ".join(str(v) for v in tag.attrs.values())+" "+str(tag)
-    m=pattern.search(blob)
-    return _jra_norm_cname(m.group(0)) if m else ""
+    return _acq_central_jra_identifiers._jra_attr_cname(
+        tag, pattern,
+        _jra_norm_cname=_jra_norm_cname,
+    )
 
-JRA_BAD_TITLE_RE = re.compile(r"検索ウィンドウ|緊急情報|重要なお知らせ|お知らせ|関連メニュー|今週の開催|JRAからのお知らせ|インフォメーション|ピックアップ|発売レース|各種サービス|スペシャルコンテンツ|競馬メニュー|開催日程")
-JRA_PROGRAM_TRACK_RE = re.compile(r"\d+回(札幌|函館|福島|新潟|東京|中山|中京|京都|阪神|小倉)\d+日")
-_jra_program_cache_lock=threading.Lock(); _jra_program_cache={}
-_jra_cname_lookup_lock=threading.Lock(); _jra_cname_lookup={}
 
 def _jra_program_title(info:str)->str:
-    s=re.sub(r"\s+"," ",str(info or "")).strip(); dm=re.search(r"[\d,]{4,5}\s*[（(]",s); prefix=(s[:dm.start()] if dm else s).strip()
-    cm=re.search(r"\s+(?:障害)?(?:2歳|3歳|4歳)(?:以上)?",prefix)
-    if cm and cm.start()>0:
-        named=prefix[:cm.start()].strip()
-        if named:return named
-    return prefix
+    return _acq_central_jra_identifiers._jra_program_title(
+        info,
+    )
 
 def _jra_program_summaries(iso_date:str)->list[dict]:
-    now=time.time()
-    with _jra_program_cache_lock:
-        hit=_jra_program_cache.get(iso_date)
-        if hit and now-hit[0]<(60 if iso_date==_today_iso() else 86400):return [dict(x) for x in hit[1]]
-    try:d=datetime.strptime(iso_date,"%Y-%m-%d")
-    except Exception:return []
-    url=f"https://www.jra.go.jp/keiba/calendar{d.year}/{d.year}/{d.month}/{d.strftime('%m%d')}.html"
-    try:html=_jra_request(url,None,60 if iso_date==_today_iso() else 86400)
-    except Exception:return []
-    soup=BeautifulSoup(html,"html.parser"); out=[]
-    for table in soup.find_all("table"):
-        head=_jra_text(table.find("thead") or table.find("tr") or table)
-        if "レース番号" not in head or "発走時刻" not in head:continue
-        track="";meeting_no=0;day_no=0
-        prev=table.find_previous(string=JRA_MEETING_DAY_RE)
-        if prev:
-            mt=JRA_MEETING_DAY_RE.search(str(prev))
-            if mt:meeting_no=int(mt.group(1));track=mt.group(2);day_no=int(mt.group(3))
-        if not track:
-            node=table.find_previous(["h2","h3","h4","h5","strong","p","div"]);guard=0
-            while node is not None and guard<30:
-                mt=JRA_MEETING_DAY_RE.search(_jra_text(node))
-                if mt:meeting_no=int(mt.group(1));track=mt.group(2);day_no=int(mt.group(3));break
-                node=node.find_previous(["h2","h3","h4","h5","strong","p","div"]);guard+=1
-        if not track:continue
-        track_code=JRA_TRACK_CODE_BY_NAME.get(track,"")
-        for tr in table.find_all("tr"):
-            cells=tr.find_all(["th","td"])
-            if len(cells)<3:continue
-            c0,c1,c2=(_jra_text(cells[0]),_jra_text(cells[1]),_jra_text(cells[2]))
-            rm=re.search(r"(\d{1,2})\s*レース",c0)
-            if not rm:continue
-            race_no=int(rm.group(1))
-            dm=re.search(r"([\d,]{4,5})\s*[（(]([^）)]+)[）)]",c1)
-            distance=int(dm.group(1).replace(",","")) if dm else 0;desc=dm.group(2) if dm else ""
-            surface="障害" if "障害" in c1 else ("芝" if "芝" in desc else ("ダート" if "ダ" in desc else ""))
-            sm=re.search(r"(\d{1,2})時\s*(\d{2})分",c2)
-            start=f"{int(sm.group(1)):02d}:{sm.group(2)}" if sm else ""
-            title=_jra_program_title(c1) or f"{race_no}R"
-            nkid=(f"{d.year:04d}{track_code}{meeting_no:02d}{day_no:02d}{race_no:02d}" if track_code and meeting_no and day_no else "")
-            z=normalize_central_race({"id":f"jra-{iso_date}-{track}-{race_no:02d}","date":iso_date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":"不明","weather":"不明","fieldSize":0,"racePrize1":0,"startTime":start,"scheduledStartTime":start,"horses":[],"source":"JRA競馬番組","_summaryOnly":True,"meetingNumber":meeting_no,"meetingDay":day_no,"netkeibaRaceId":nkid})
-            if z:out.append(z)
-    out.sort(key=lambda x:(str(x.get("track") or ""),int(x.get("raceNumber") or 0)))
-    with _jra_program_cache_lock:_jra_program_cache[iso_date]=(now,[dict(x) for x in out])
-    return out
+    return _acq_central_jra_program._jra_program_summaries(
+        iso_date,
+        _jra_program_title=_jra_program_title, _jra_request=_jra_request, _jra_text=_jra_text,
+        _today_iso=_today_iso,
+    )
 
 def _jra_program_lookup(iso_date:str,track:str,race_no:int):
-    for r in _jra_program_summaries(iso_date):
-        if str(r.get("track"))==str(track) and int(r.get("raceNumber") or 0)==int(race_no):return dict(r)
-    return None
+    return _acq_central_jra_program._jra_program_lookup(
+        iso_date, track, race_no,
+        _jra_program_summaries=_jra_program_summaries,
+    )
 
 def _jra_find_cname(iso_date:str,track:str,race_no:int)->str:
-    key=(iso_date,track,int(race_no))
-    with _jra_cname_lookup_lock:
-        if key in _jra_cname_lookup:return _jra_cname_lookup[key]
-    token=iso_date.replace("-","")
-    try:home=_jra_request("https://www.jra.go.jp/",None,60)
-    except Exception:return ""
-    seeds=[]
-    for c in JRA_CNAME_RE.findall(home):
-        c=_jra_norm_cname(c)
-        if token in c and c not in seeds:seeds.append(c)
-    candidates=list(seeds)
-    def live_first(items):
-        # JRA exposes a basic card (pw01dde01...) and the live/full card
-        # (pw01dde10...). The live/full variant carries current odds + body weight.
-        return sorted(items,key=lambda c:(0 if "pw01dde10" in c else 1,0 if token in c else 1,c))
-    for seed in seeds[:8]:
-        try:page=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",seed,30)
-        except Exception:continue
-        for c in JRA_CNAME_RE.findall(page):
-            c=_jra_norm_cname(c)
-            if token in c and c not in candidates:candidates.append(c)
-        for c in live_first(candidates):
-            if _jra_track_from_cname(c)==track and _jra_race_no_from_cname(c)==int(race_no):
-                with _jra_cname_lookup_lock:_jra_cname_lookup[key]=c
-                return c
-    for c in live_first(candidates):
-        if _jra_track_from_cname(c)==track and _jra_race_no_from_cname(c)==int(race_no):
-            with _jra_cname_lookup_lock:_jra_cname_lookup[key]=c
-            return c
-    return ""
+    return _acq_central_jra_program._jra_find_cname(
+        iso_date, track, race_no,
+        _jra_norm_cname=_jra_norm_cname, _jra_race_no_from_cname=_jra_race_no_from_cname, _jra_request=_jra_request,
+        _jra_track_from_cname=_jra_track_from_cname,
+    )
 
 def _jra_text(tag) -> str:
-    return re.sub(r"\s+"," ",tag.get_text(" ",strip=True) if tag else "").strip()
+    return _acq_central_jra_identifiers._jra_text(
+        tag,
+    )
 
 def _jra_iso_date(y:int,m:int,d:int)->str:
-    return f"{y:04d}-{m:02d}-{d:02d}"
+    return _acq_central_jra_identifiers._jra_iso_date(
+        y, m, d,
+    )
 
 def _jra_date_from_cname(cname:str)->str:
-    m=re.search(r"(20\d{6})/[0-9A-Fa-f]{2}$",cname or "")
-    if not m:return ""
-    x=m.group(1);return f"{x[:4]}-{x[4:6]}-{x[6:8]}"
+    return _acq_central_jra_identifiers._jra_date_from_cname(
+        cname,
+    )
 
 def _jra_race_no_from_cname(cname:str)->int:
-    m=re.search(r"pw01dde(?:01|10)\d{2}\d{4}\d{4}(\d{2})20\d{6}/",cname or "")
-    return int(m.group(1)) if m else 0
+    return _acq_central_jra_identifiers._jra_race_no_from_cname(
+        cname,
+    )
 
 def _jra_track_from_cname(cname:str)->str:
-    m=re.search(r"pw01dde(?:01|10)(\d{2})",cname or "")
-    return JRA_TRACK_CODES.get(m.group(1),"") if m else ""
+    return _acq_central_jra_identifiers._jra_track_from_cname(
+        cname,
+    )
 
 def _jra_parse_time_seconds(txt:str)->float:
-    m=re.search(r"(?<!\d)(\d{1,2}):(\d{2}\.\d)(?!\d)",txt or "")
-    if not m:return 0.0
-    return int(m.group(1))*60+float(m.group(2))
+    return _acq_central_jra_identifiers._jra_parse_time_seconds(
+        txt,
+    )
 
 def _jra_parse_past_cell(cell, cutoff:str) -> dict | None:
-    txt=_jra_text(cell)
-    dm=re.search(r"(20\d{2})年(\d{1,2})月(\d{1,2})日",txt)
-    if not dm:return None
-    iso=_jra_iso_date(int(dm.group(1)),int(dm.group(2)),int(dm.group(3)))
-    if cutoff and iso>=cutoff:return None
-    track=""
-    for t in list(JRA_TRACK_CODES.values())+["門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"]:
-        if re.search(r"(?:日|\s)"+re.escape(t)+r"(?:\s|$)",txt): track=t;break
-    finish=0
-    fm=re.search(r"(?<!\d)(\d{1,2})\s*着(?!\d)",txt)
-    if fm: finish=int(fm.group(1))
-    field=0
-    fsm=re.search(r"(\d{1,2})\s*頭",txt)
-    if fsm: field=int(fsm.group(1))
-    dist=0; surface=""
-    dsm=re.search(r"(\d{3,4})(芝|ダ|障)",txt)
-    if dsm: dist=int(dsm.group(1)); surface=dsm.group(2)
-    cond="不明"
-    for c in ["不良","稍重","重","良"]:
-        if c in txt: cond=c;break
-    weight=0.0
-    wm=re.search(r"(\d{2}(?:\.\d)?)\s*kg",txt)
-    if wm: weight=float(wm.group(1))
-    corners=[]
-    for li in cell.find_all("li"):
-        z=_jra_text(li)
-        if re.fullmatch(r"\d{1,2}",z): corners.append(int(z))
-    result_cname=_jra_attr_cname(cell,JRA_RESULT_CNAME_RE)
-    rid=("jraresult-"+base64.urlsafe_b64encode(result_cname.encode()).decode().rstrip("=")) if result_cname else ""
-    # title is best-effort: text between track and class/finish data
-    title=""
-    if track:
-        after=txt.split(track,1)[1].strip()
-        after=re.split(r"\s+(?:\d{1,2}着|\d{1,2}頭|\d+番)",after,1)[0]
-        title=after[:60].strip()
-    tm=_jra_parse_time_seconds(txt)
-    return {"date":iso,"track":track,"title":title,"distance":dist,"surface":surface,"condition":cond,"weather":"不明","fieldSize":field,"finish":finish,"timeSeconds":tm,"cornerPositions":corners,"carriedWeight":weight,"raceId":rid,"source":"JRA公式"}
+    return _acq_central_jra_history._jra_parse_past_cell(
+        cell, cutoff,
+        _jra_attr_cname=_jra_attr_cname, _jra_iso_date=_jra_iso_date, _jra_parse_time_seconds=_jra_parse_time_seconds,
+        _jra_text=_jra_text,
+    )
 
 def _jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
-    if not cname:return []
-    try: html=_jra_request("https://www.jra.go.jp/JRADB/accessU.html",cname,86400)
-    except Exception:return []
-    soup=BeautifulSoup(html,"html.parser")
-    out=[]
-    for table in soup.find_all("table"):
-        head=_jra_text(table.find("thead") or table.find("tr"))
-        if "年月日" not in head or "レース名" not in head: continue
-        for tr in table.find_all("tr"):
-            cells=tr.find_all(["th","td"])
-            if len(cells)<8: continue
-            vals=[_jra_text(c) for c in cells]
-            dm=re.search(r"(20\d{2})年(\d{1,2})月(\d{1,2})日",vals[0])
-            if not dm:continue
-            iso=_jra_iso_date(int(dm.group(1)),int(dm.group(2)),int(dm.group(3)))
-            if cutoff and iso>=cutoff:continue
-            track=vals[1]
-            title=vals[2]
-            disttxt=vals[3]
-            dsm=re.search(r"(芝|ダ|障)(\d{3,4})",disttxt)
-            surface=dsm.group(1) if dsm else ""; dist=int(dsm.group(2)) if dsm else 0
-            cond=vals[4] if len(vals)>4 else "不明"
-            field=_int(vals[5]) if len(vals)>5 else 0
-            finish=_int(vals[7]) if len(vals)>7 else 0
-            jockey=vals[8] if len(vals)>8 else ""
-            cw=float(re.sub(r"[^0-9.]","",vals[9]) or 0) if len(vals)>9 else 0
-            tm=_jra_parse_time_seconds(vals[11] if len(vals)>11 else "")
-            rc=_jra_attr_cname(tr,JRA_RESULT_CNAME_RE)
-            rid=("jraresult-"+base64.urlsafe_b64encode(rc.encode()).decode().rstrip("=")) if rc else ""
-            out.append({"date":iso,"track":track,"title":title,"distance":dist,"surface":surface,"condition":cond or "不明","weather":"不明","fieldSize":field,"finish":finish,"timeSeconds":tm,"cornerPositions":[],"carriedWeight":cw,"jockey":jockey,"raceId":rid,"source":"JRA公式競走馬情報"})
-            if len(out)>=limit:return out
-    return out
+    return _acq_central_jra_history._jra_profile_runs(
+        cname, cutoff, limit,
+        _jra_attr_cname=_jra_attr_cname, _jra_iso_date=_jra_iso_date, _jra_parse_time_seconds=_jra_parse_time_seconds,
+        _jra_request=_jra_request, _jra_text=_jra_text,
+    )
 
 from arvexq.ingest.history.run_merge import (
     _jra_merge_run_fields,
@@ -516,281 +439,35 @@ from arvexq.ingest.history.run_merge import (
 
 
 def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
-    date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
-    cache_sec=int(os.getenv("JRA_LIVE_ODDS_CACHE_SEC","45")) if date==_today_iso() else 600
-    try: html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,cache_sec)
-    except Exception:return None
-    # The basic dde01 card can omit live fields even while the official dde10
-    # card for the same race already contains them. Prefer the official live card.
-    if date==_today_iso() and "pw01dde10" not in cname:
-        live=[]
-        for cc in JRA_CNAME_RE.findall(html):
-            cc=_jra_norm_cname(cc)
-            if ("pw01dde10" in cc and _jra_date_from_cname(cc)==date and
-                _jra_track_from_cname(cc)==track and _jra_race_no_from_cname(cc)==race_no):
-                live.append(cc)
-        if live:
-            cname=live[0]
-            try: html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,0)
-            except Exception:pass
-    soup=BeautifulSoup(html,"html.parser")
-    full=_jra_text(soup)
-    if not date or not track or not race_no:return None
-    sm=re.search(r"発走時刻[：:]\s*(\d{1,2})時(\d{2})分",full)
-    start=f"{int(sm.group(1)):02d}:{sm.group(2)}" if sm else ""
-    dm=re.search(r"コース\s*[：:]?\s*([\d,]+)\s*メートル\s*[（(]([^）)]+)[）)]",full)
-    distance=int(dm.group(1).replace(",","")) if dm else 0
-    course_desc=dm.group(2) if dm else ""
-    surface="芝" if "芝" in course_desc else ("ダート" if "ダート" in course_desc else ("障害" if "障" in course_desc else ""))
-    weather="不明"; condition="不明"
-    wm=re.search(r"天候\s*([^\s]+)",full)
-    if wm:weather=wm.group(1)[:4]
-    cm=re.search(r"(?:芝|ダート)\s*(良|稍重|重|不良)",full)
-    if cm:condition=cm.group(1)
-    title=""
-    title_block=JRA_BAD_TITLE_RE
-    for node in soup.find_all(["h2","h3"]):
-        tx=_jra_text(node)
-        if not tx or len(tx)>=80 or title_block.search(tx) or "出馬表" in tx:
-            continue
-        if re.match(r"^\d+レース$",tx):
-            continue
-        title=tx;break
-    if not title:title=f"{race_no}R"
-    prize1=0
-    pm=re.search(r"1着\s*([\d,.]+)",full)
-    if pm:
-        try:prize1=int(float(pm.group(1).replace(",",""))*10000)
-        except:pass
-    horses=[]
-    target_table=None
-    for table in soup.find_all("table"):
-        tx=_jra_text(table.find("thead") or table)
-        if "馬番" in tx and "前走" in tx:
-            target_table=table;break
-    if not target_table:return None
-    for tr in target_table.find_all("tr"):
-        cells=tr.find_all(["th","td"])
-        if len(cells)<4:continue
-        # horse number among first 3 cells
-        no=0; noidx=-1
-        for ci,c in enumerate(cells[:3]):
-            mt=re.fullmatch(r"\s*(\d{1,2})\s*",_jra_text(c))
-            if mt and 1<=int(mt.group(1))<=18:
-                no=int(mt.group(1));noidx=ci;break
-        if not no:continue
-        frame_no=0
-        fm=re.search(r"枠\s*(\d)",_jra_text(cells[0])+" "+str(cells[0]))
-        if fm:frame_no=int(fm.group(1))
-        # identify horse info and profile cells
-        info=None; profile=None; horse_cname=""
-        for c in cells:
-            hc=_jra_attr_cname(c,JRA_HORSE_CNAME_RE)
-            if hc:
-                info=c;horse_cname=hc;break
-        if info is None:
-            info=cells[min(len(cells)-1,noidx+1)]
-        info_i=cells.index(info)
-        profile=cells[info_i+1] if info_i+1<len(cells) else None
-        # horse name from horse profile link or first plausible link/text
-        name=""
-        for a in info.find_all("a"):
-            if _jra_attr_cname(a,JRA_HORSE_CNAME_RE):
-                name=_jra_text(a);break
-        if not name:
-            name=re.split(r"\d+(?:\.\d+)?\(?",_jra_text(info),1)[0].strip()[:40]
-        if not name:continue
-        infot=_jra_text(info); prot=_jra_text(profile)
-        sex="";age=0
-        sx=re.search(r"(牡|牝|せん)(\d+)",prot)
-        if sx:sex=sx.group(1);age=int(sx.group(2))
-        cw=0.0
-        cwm=re.search(r"(\d{2}(?:\.\d)?)\s*kg",prot)
-        if cwm:cw=float(cwm.group(1))
-        jockey=""
-        links=[_jra_text(a) for a in profile.find_all("a")] if profile else []
-        if links:jockey=links[-1]
-        if not jockey and cwm:
-            jockey=prot[cwm.end():].strip().split(" ")[0:3]
-            jockey=" ".join(jockey).strip()
-        trainer=""
-        tm=re.search(r"([^\s]+(?:\s[^\s]+)?)\((?:美浦|栗東|本会外)\)",infot)
-        if tm:trainer=tm.group(1).strip()
-        prize=0
-        prm=re.search(r"([\d,.]+)万円",infot)
-        if prm:
-            try:prize=int(float(prm.group(1).replace(",",""))*10000)
-            except:pass
-        past=[]
-        past_cells=cells[info_i+2:info_i+6]
-        for c in past_cells:
-            rr=_jra_parse_past_cell(c,date)
-            if rr:past.append(rr)
-        # JRA card exposes 前走〜4走前. If all four slots were inspected and fewer
-        # than four real runs exist, that is the horse's full career to date.
-        career_complete=(len(past_cells)>=4 and len(past)<4)
-        win_odds=0.0; popularity=0; body_weight=0; body_change=None
-        tail=infot.split(name,1)[1] if name in infot else infot
-        om=re.search(r"([0-9]+(?:\.[0-9]+)?)\s*\((\d+)番人気\)",tail)
-        if om:
-            try: win_odds=float(om.group(1)); popularity=int(om.group(2))
-            except: pass
-        bwm=re.search(r"(\d{3})\s*kg\s*[（(]\s*([+\-]?\d+)\s*[）)]",infot)
-        if bwm:
-            try: body_weight=int(bwm.group(1)); body_change=int(bwm.group(2))
-            except: pass
-        elif re.search(r"(\d{3})\s*kg",infot):
-            try: body_weight=int(re.search(r"(\d{3})\s*kg",infot).group(1))
-            except: pass
-        scratch_status=_scratch_status(_jra_text(tr))
-        horses.append({"horseNumber":no,"frameNumber":frame_no,"name":name,"age":age,"sex":sex,"carriedWeight":cw,"jockey":jockey,"trainer":trainer,"prizeMoneyAtRace":prize,"recentRaces":past,"winOdds":win_odds or None,"popularity":popularity or None,"bodyWeight":body_weight or None,"bodyWeightChange":body_change,"oddsSource":"JRA公式" if win_odds else "","status":scratch_status,"scratched":bool(scratch_status),"_jraHorseCname":horse_cname,"_jraCareerComplete":career_complete,"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{}})
-    if not horses:return None
-    program=_jra_program_lookup(date,track,race_no)
-    if program:title=program.get("title") or title;distance=int(program.get("distance") or distance);surface=program.get("surface") or surface;start=program.get("startTime") or start
-    # Listing must stay fast. Full five-run profile supplementation is done only when needed.
-    if supplement_profiles:
-        def supplement(h):
-            existing=h.get("recentRaces") or []
-            if _jra_history_complete(existing,bool(h.get("_jraCareerComplete"))):return h
-            extra=_jra_profile_runs(h.get("_jraHorseCname") or "",date,5)
-            h["recentRaces"]=_jra_merge_runs(existing,extra,5)
-            return h
-        workers=max(2,min(8,int(os.getenv("JRA_PROFILE_WORKERS","6"))))
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            horses=list(pool.map(supplement,horses))
-    rid=f"jra-{date}-{track}-{race_no:02d}"
-    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":len(horses),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"horses":horses,"source":"JRA公式","jraCname":cname})
+    return _acq_central_jra_racecards._jra_parse_race(
+        cname, supplement_profiles,
+        _jra_attr_cname=_jra_attr_cname, _jra_date_from_cname=_jra_date_from_cname, _jra_norm_cname=_jra_norm_cname,
+        _jra_parse_past_cell=_jra_parse_past_cell, _jra_profile_runs=_jra_profile_runs, _jra_program_lookup=_jra_program_lookup,
+        _jra_race_no_from_cname=_jra_race_no_from_cname, _jra_request=_jra_request, _jra_text=_jra_text,
+        _jra_track_from_cname=_jra_track_from_cname, _today_iso=_today_iso,
+    )
 
 def _jra_parse_race_summary(cname:str)->dict|None:
-    """Fast list-page parser: no horse/profile parsing. Full card loads only when opened."""
-    date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
-    if not date or not track or not race_no:return None
-    cache_sec=45 if date==_today_iso() else 900
-    try:html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,cache_sec)
-    except Exception:return None
-    soup=BeautifulSoup(html,"html.parser"); full=_jra_text(soup)
-    sm=re.search(r"発走時刻\s*[：:]?\s*(\d{1,2})時\s*(\d{2})分",full)
-    start=f"{int(sm.group(1)):02d}:{sm.group(2)}" if sm else ""
-    dm=re.search(r"コース\s*[：:]?\s*([\d,]+)\s*メートル\s*[（(]([^）)]+)[）)]",full)
-    distance=int(dm.group(1).replace(",","")) if dm else 0; desc=dm.group(2) if dm else ""
-    surface="芝" if "芝" in desc else ("ダート" if "ダート" in desc else ("障害" if "障" in desc else ""))
-    weather="不明"; condition="不明"
-    wm=re.search(r"天候\s*([^\s]+)",full)
-    if wm:weather=wm.group(1)[:4]
-    cm=re.search(r"(?:芝|ダート)\s*(良|稍重|重|不良)",full)
-    if cm:condition=cm.group(1)
-    blocked=JRA_BAD_TITLE_RE
-    title=""
-    for node in soup.find_all(["h2","h3"]):
-        tx=_jra_text(node)
-        if not tx or len(tx)>=80 or blocked.search(tx) or "出馬表" in tx or re.match(r"^\d+レース$",tx):continue
-        title=tx;break
-    if not title:title=f"{race_no}R"
-    program=_jra_program_lookup(date,track,race_no)
-    if program:title=program.get("title") or title;distance=int(program.get("distance") or distance);surface=program.get("surface") or surface;start=program.get("startTime") or start
-    rid=f"jra-{date}-{track}-{race_no:02d}"
-    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":0,"racePrize1":0,"startTime":start,"scheduledStartTime":start,"horses":[],"source":"JRA公式・高速一覧","jraCname":cname,"_summaryOnly":True})
+    return _acq_central_jra_racecards._jra_parse_race_summary(
+        cname,
+        _jra_date_from_cname=_jra_date_from_cname, _jra_program_lookup=_jra_program_lookup, _jra_race_no_from_cname=_jra_race_no_from_cname,
+        _jra_request=_jra_request, _jra_text=_jra_text, _jra_track_from_cname=_jra_track_from_cname,
+        _today_iso=_today_iso,
+    )
 
 def fetch_jra_official(iso_date:str, lightweight: bool = False)->list[dict]:
-    if lightweight:return _jra_program_summaries(iso_date)
-    token=iso_date.replace("-","")
-    try:
-        home=_jra_request("https://www.jra.go.jp/",None,120)
-    except Exception:
-        return []
-    seeds=[]
-    for c in JRA_CNAME_RE.findall(home):
-        if token in c and c not in seeds:
-            seeds.append(c)
-    if not seeds:
-        return []
-
-    # v48: a race page contains links to the other active venue(s) too.
-    # v47 filtered those links to the first venue, which could leave only Nakayama.
-    # Discover one seed per track first, then expand each venue to all race-number links.
-    track_seed={}
-    for c in seeds:
-        tr=_jra_track_from_cname(c)
-        if tr and tr not in track_seed:
-            track_seed[tr]=c
-
-    discovered=[]
-    processed_tracks=set()
-    queue=list(track_seed.items())
-    guard=0
-    while queue and guard<12:
-        guard+=1
-        track,seed=queue.pop(0)
-        if track in processed_tracks:
-            continue
-        processed_tracks.add(track)
-        try:
-            html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",seed,180)
-        except Exception:
-            continue
-        links=[]
-        for c in JRA_CNAME_RE.findall(html):
-            if token not in c:
-                continue
-            if c not in links:
-                links.append(c)
-            if c not in discovered:
-                discovered.append(c)
-        # Important: do NOT restrict to the current track. Any newly linked venue
-        # becomes a seed and is expanded on its own page.
-        for c in links:
-            tr=_jra_track_from_cname(c)
-            if tr and tr not in processed_tracks and all(q[0]!=tr for q in queue):
-                queue.append((tr,c))
-
-    for c in seeds:
-        if c not in discovered:
-            discovered.append(c)
-
-    # prefer detailed 01 variant and deduplicate by venue/race number
-    chosen={}
-    for c in discovered:
-        key=(_jra_track_from_cname(c),_jra_race_no_from_cname(c))
-        if not key[0] or not key[1]:
-            continue
-        if key not in chosen or c.startswith("pw01dde01"):
-            chosen[key]=c
-
-    def one(c):
-        try:
-            return _jra_parse_race_summary(c) if lightweight else _jra_parse_race(c, supplement_profiles=True)
-        except Exception as exc:
-            print("JRA official race parse failed",c,exc)
-            return None
-    workers=max(4,min(16,int(os.getenv("JRA_SUMMARY_WORKERS","12") if lightweight else os.getenv("JRA_RACE_WORKERS","6"))))
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        races=[x for x in pool.map(one,chosen.values()) if x]
-    races.sort(key=lambda r:(r.get("track") or "",int(r.get("raceNumber") or 0)))
-    return races
+    return _acq_central_jra_calendar.fetch_jra_official(
+        iso_date, lightweight,
+        _jra_parse_race=_jra_parse_race, _jra_parse_race_summary=_jra_parse_race_summary, _jra_program_summaries=_jra_program_summaries,
+        _jra_race_no_from_cname=_jra_race_no_from_cname, _jra_request=_jra_request, _jra_track_from_cname=_jra_track_from_cname,
+    )
 
 def fetch_central_feed(iso_date: str, history: bool = False) -> list[dict]:
     # Prefer a licensed feed when configured. Otherwise use the official JRA website.
-    base = _clean(os.getenv("CENTRAL_HISTORY_FEED_URL", "")) if history else ""
-    if not base:
-        base = _clean(os.getenv("CENTRAL_FEED_URL", ""))
-    if not base:
-        # JRA official fallback is intended for current/near-current racecards.
-        return fetch_jra_official(iso_date)
-    if "{date}" in base:
-        url = base.replace("{date}", iso_date)
-    else:
-        url = base + ("&" if "?" in base else "?") + "date=" + iso_date
-    headers = {"User-Agent": "KeibaPredictor/6.2", "Accept": "application/json"}
-    token = _clean(os.getenv("CENTRAL_HISTORY_FEED_TOKEN", "")) if history else ""
-    if not token:
-        token = _clean(os.getenv("CENTRAL_FEED_TOKEN", ""))
-    if token:
-        headers["Authorization"] = "Bearer " + token
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req, timeout=float(os.getenv("CENTRAL_FEED_TIMEOUT_SEC", "12"))) as response:
-        body = json.loads(response.read().decode("utf-8"))
-    rows = body if isinstance(body, list) else body.get("races", [])
-    return [r for r in (normalize_central_race(x) for x in rows) if r]
+    return _acq_central_feeds.fetch_central_feed(
+        iso_date, history,
+        fetch_jra_official=fetch_jra_official,
+    )
 
 from arvexq.ingest.scheduling import (
     iter_months_back,
@@ -802,15 +479,12 @@ from arvexq.ingest.scheduling import (
 
 
 def sync_recent_history(months: int = 12) -> list[dict]:
-    sync = NarSync()
-    out = []
-    today = datetime.now().date()
-    for year, month in reversed(list(iter_months_back(today, months))):
-        out.append(sync.sync_month(year, month))
-    return out
+    return _acq_local_archive.sync_recent_history(
+        months,
+        NarSync=NarSync,
+    )
 
 
-_nar_sync_io_lock = threading.Lock()
 _history_lock = threading.Lock()
 _history_started = False
 _history_ready = False
@@ -1107,183 +781,48 @@ def _central_refresh_status(iso_date: str) -> dict:
         return {"running": iso_date in _central_refresh_running, "last": _central_refresh_last.get(iso_date,0)}
 
 def _nar_month_needs_fetch(year: int, month: int) -> bool:
-    cache_key = f"month-{year:04d}-{month:02d}"
-    store = NarStore()
-    try:
-        synced = store.synced_at(cache_key)
-    finally:
-        try: store.conn.close()
-        except Exception: pass
-    if not synced:
-        return True
-    today = datetime.now().date()
-    if year == today.year and month == today.month:
-        return int(time.time()) - synced >= int(os.getenv("NAR_CURRENT_MONTH_TTL_SECONDS", "300"))
-    return False
+    return _acq_local_archive._nar_month_needs_fetch(
+        year, month,
+        NarStore=NarStore,
+    )
 
 
 def _download_nar_month_only(year: int, month: int) -> tuple[int, int, bytes, Path]:
-    dest = ARCHIVE_DIR / f"{year:04d}{month:02d}_race.zip"
-    url = NAR_MONTHLY_RACE_URL.format(year=year, month=month)
-    request = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
-            "Accept": "application/zip,application/octet-stream,*/*",
-            "Referer": "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/TodayRaceInfoTop",
-            "Accept-Language": "ja-JP,ja;q=0.9",
-        },
+    return _acq_local_archive._download_nar_month_only(
+        year, month,
+        ARCHIVE_DIR=ARCHIVE_DIR, NAR_MONTHLY_RACE_URL=NAR_MONTHLY_RACE_URL,
     )
-    with urllib.request.urlopen(request, timeout=float(os.getenv("NAR_FAST_TIMEOUT_SEC", "22"))) as response:
-        data = response.read()
-    if not zipfile.is_zipfile(io.BytesIO(data)):
-        raise RuntimeError(f"NAR {year:04d}-{month:02d} was not ZIP")
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_bytes(data)
-    return year, month, data, dest
 
 
 def _sync_nar_month_wave(months: list[tuple[int, int]]) -> tuple[list[dict], list[str]]:
     # Download network-bound monthly ZIPs concurrently, then import sequentially into SQLite.
     # This keeps DB writes safe while removing the largest source of wait time.
-    unique = list(dict.fromkeys(months))
-    need = [(y, m) for y, m in unique if _nar_month_needs_fetch(y, m)]
-    results: dict[tuple[int, int], tuple[int, int, bytes, Path]] = {}
-    errors: list[str] = []
-    workers = max(2, min(6, int(os.getenv("NAR_HISTORY_WORKERS", "6"))))
-    if need:
-        with ThreadPoolExecutor(max_workers=min(workers, len(need))) as pool:
-            future_map = {pool.submit(_download_nar_month_only, y, m):(y, m) for y, m in need}
-            for fut in as_completed(future_map):
-                y, m = future_map[fut]
-                try:
-                    results[(y, m)] = fut.result()
-                except Exception as exc:
-                    errors.append(f"{y:04d}-{m:02d}:{exc}")
-    sync = NarSync()
-    out = []
-    try:
-        for y, m in unique:
-            if (y, m) not in results:
-                out.append({"status":"cached","cacheKey":f"month-{y:04d}-{m:02d}"})
-                continue
-            _, _, data, dest = results[(y, m)]
-            try:
-                with _nar_sync_io_lock:
-                    info = sync.import_zip_bytes(data, f"month-{y:04d}-{m:02d}", dest)
-                out.append({"status":"synced", **info})
-            except Exception as exc:
-                errors.append(f"{y:04d}-{m:02d}:import:{exc}")
-    finally:
-        try: sync.store.conn.close()
-        except Exception: pass
-    return out, errors
+    return _acq_local_archive._sync_nar_month_wave(
+        months,
+        NarSync=NarSync, _download_nar_month_only=_download_nar_month_only, _nar_month_needs_fetch=_nar_month_needs_fetch,
+    )
 
 
-_race_history_lock = threading.Lock()
-_race_history_jobs: dict[str, dict] = {}
 
 
 def _history_counts(horse_names: list[str], cutoff: str) -> dict:
-    names = [x for x in dict.fromkeys(horse_names) if x]
-    if not names:
-        return {"totalHorses":0,"horsesWithHistory":0,"horsesWith4Plus":0,"horsesWith5Plus":0,"horsesWith6Plus":0,"totalRuns":0,"counts":{},"underFive":[]}
-    store = NarStore()
-    try:
-        placeholders = ",".join("?" for _ in names)
-        rows = store.conn.execute(
-            f"SELECT name,COUNT(*) cnt FROM entries WHERE name IN ({placeholders}) AND date<? AND finish>0 GROUP BY name",
-            (*names, cutoff),
-        ).fetchall()
-        cmap = {r["name"]: int(r["cnt"] or 0) for r in rows}
-    finally:
-        try: store.conn.close()
-        except Exception: pass
-    counts = {name: int(cmap.get(name, 0)) for name in names}
-    vals = list(counts.values())
-    return {
-        "totalHorses": len(names),
-        "horsesWithHistory": sum(1 for v in vals if v > 0),
-        "horsesWith4Plus": sum(1 for v in vals if v >= 4),
-        "horsesWith5Plus": sum(1 for v in vals if v >= 5),
-        "horsesWith6Plus": sum(1 for v in vals if v >= 6),
-        "totalRuns": sum(vals),
-        "counts": counts,
-        "underFive": [name for name, v in counts.items() if v < 5],
-    }
+    return _acq_local_history._history_counts(
+        horse_names, cutoff,
+        NarStore=NarStore,
+    )
 
 def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[str], force: bool = False) -> dict:
-    max_months = max(6, min(36, int(os.getenv("NAR_ON_DEMAND_HISTORY_MONTHS", "36"))))
-    # Race-date-bound start counts may already be recorded in the prepared
-    # snapshot. They are the lower bound the official local DB must cover.
-    # An unknown count is NOT evidence that five runs exhaust the lifetime.
-    try:
-        original = RACEDB.get_race(race_id)[0]
-    except Exception:
-        original = None
-    required = pre_race_reported_starts(original, iso_date, horse_names)
-    with _race_history_lock:
-        existing = _race_history_jobs.get(race_id)
-        if existing and not force:
-            return dict(existing)
-        cov = _history_counts(horse_names, iso_date)
-        job = {"status":"running","monthsDone":0,"maxMonths":max_months,"coverage":cov,"error":"","source":"NAR公式月次レースデータ",
-               "knownCareerStarts":len(required),"fullCareerVerified":official_history_complete(cov,required)}
-        _race_history_jobs[race_id] = job
-
-    def worker():
-        errors = []
-        months_done = 0
-        months = list(_months_from_race_date(iso_date, max_months))
-        wave = max(2, min(4, int(os.getenv("NAR_ON_DEMAND_WAVE_MONTHS", "3"))))
-        try:
-            for pos in range(0, len(months), wave):
-                batch = months[pos:pos+wave]
-                # Bound cross-race NAR ZIP downloads; the SQL import itself
-                # also retains the existing single-writer lock.
-                with nar_history_wave_slots:
-                    _, errs = _sync_nar_month_wave(batch)
-                errors.extend(errs)
-                months_done += len(batch)
-                cov_now = _history_counts(horse_names, iso_date)
-                with _race_history_lock:
-                    _race_history_jobs[race_id] = {"status":"running","monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-3:]),"source":"NAR公式 高速並列履歴"}
-                # Five runs are display data, not the complete career.
-                # Stop only when every horse's official lifetime count for
-                # this race date has been reached. Otherwise use the bounded
-                # configured lookback, leaving coverage explicitly unverified.
-                if official_history_complete(cov_now, required):
-                    break
-            cov_now = _history_counts(horse_names, iso_date)
-            # v155: if official NAR history is still under five starts, search a second
-            # career source. This is especially important for JRA/NAR transfers.
-            supplemented=0
-            under=list(cov_now.get("underFive") or [])
-            if under:
-                try:supplemented=_supplement_sparse_nar_history(race_id,under,iso_date)
-                except Exception as exc:errors.append("netkeiba DB補完:"+str(exc))
-            verified = official_history_complete(cov_now, required)
-            status = "done" if verified else ("error" if errors and not (cov_now.get("horsesWithHistory",0)>0 or supplemented>0) else "partial")
-            source="NAR公式 高速並列履歴"+(" + netkeiba DB補完" if supplemented else "")
-            with _race_history_lock:
-                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":source,"supplementedHorses":supplemented,
-                                               "knownCareerStarts":len(required),"fullCareerVerified":verified}
-            with _detail_cache_lock:
-                _detail_cache.pop(race_id, None)
-            try:_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=True)
-            except Exception as exc:print("NAR history diagnosis rebuild failed",race_id,exc)
-        except Exception as exc:
-            errors.append(str(exc))
-            cov_now = _history_counts(horse_names, iso_date)
-            with _race_history_lock:
-                _race_history_jobs[race_id] = {"status":"error","monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":"NAR公式 高速並列履歴"}
-    threading.Thread(target=worker, daemon=True).start()
-    return dict(job)
+    return _acq_local_history._start_race_history_search(
+        race_id, iso_date, horse_names, force,
+        RACEDB=RACEDB, _build_fast_diagnosis_snapshot=_build_fast_diagnosis_snapshot, _detail_cache=_detail_cache,
+        _detail_cache_lock=_detail_cache_lock, _history_counts=_history_counts, _supplement_sparse_nar_history=_supplement_sparse_nar_history,
+        _sync_nar_month_wave=_sync_nar_month_wave,
+    )
 
 def _race_history_status(race_id: str) -> dict | None:
-    with _race_history_lock:
-        x = _race_history_jobs.get(race_id)
-        return dict(x) if x else None
+    return _acq_local_history._race_history_status(
+        race_id,
+    )
 
 def _new_conn(path: Path):
     conn = sqlite3.connect(path, timeout=1.5)
@@ -1297,226 +836,49 @@ def _new_conn(path: Path):
 
 
 def nar_race_summaries(iso_date: str) -> list[dict]:
-    if not DB_PATH.exists():
-        return []
-    conn = _new_conn(DB_PATH)
-    try:
-        rows = conn.execute(
-            """
-            SELECT r.*,
-                   COUNT(e.horse_no) AS entry_count,
-                   SUM(CASE WHEN e.finish=1 THEN 1 ELSE 0 END) AS f1,
-                   SUM(CASE WHEN e.finish=2 THEN 1 ELSE 0 END) AS f2,
-                   SUM(CASE WHEN e.finish=3 THEN 1 ELSE 0 END) AS f3
-            FROM races r
-            LEFT JOIN entries e ON e.track=r.track AND e.date=r.date AND e.race_no=r.race_no
-            WHERE r.date=?
-            GROUP BY r.track,r.date,r.race_no
-            ORDER BY r.track,r.race_no
-            """,
-            (iso_date,),
-        ).fetchall()
-        out=[]
-        for r in rows:
-            count=int(r["entry_count"] or r["field_size"] or 0)
-            finalized=count>0 and int(r["f1"] or 0)>0 and int(r["f2"] or 0)>0 and (count<3 or int(r["f3"] or 0)>0)
-            out.append({
-                "id":f"nar-{iso_date}-{r['track']}-{int(r['race_no']):02d}",
-                "circuit":"地方","date":iso_date,"track":r["track"],"raceNumber":int(r["race_no"]),
-                "title":r["title"] or f"{int(r['race_no'])}R","distance":int(r["distance"] or 0),
-                "condition":r["condition"] or "不明","weather":r["weather"] or "不明",
-                "fieldSize":count,"racePrize1":int(r["prize1"] or 0),"surface":"",
-                "startTime":r["start_time"] or "","scheduledStartTime":r["scheduled_start_time"] or r["start_time"] or "",
-                "startTimeChanged":bool((r["scheduled_start_time"] or "") and (r["start_time"] or "") and r["scheduled_start_time"]!=r["start_time"]),
-                "horses":[],"result":{"status":"確定","finishers":[{"finish":1}]} if finalized else None,"source":"NAR公式"
-            })
-        return out
-    finally:
-        conn.close()
+    return _acq_local_racecards.nar_race_summaries(
+        iso_date,
+        DB_PATH=DB_PATH, _new_conn=_new_conn,
+    )
 
 
-NETKEIBA_TRACK_CODES={"01":"札幌","02":"函館","03":"福島","04":"新潟","05":"東京","06":"中山","07":"中京","08":"京都","09":"阪神","10":"小倉"}
-_netkeiba_cache_lock=threading.Lock(); _netkeiba_cache={}
 
 def _netkeiba_get(url:str,timeout:float=4.0,cache_sec:int=45)->str:
-    now=time.time()
-    with _netkeiba_cache_lock:
-        hit=_netkeiba_cache.get(url)
-        if hit and now-hit[0]<cache_sec:return hit[1]
-    req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1","Referer":"https://race.netkeiba.com/","Accept-Language":"ja-JP,ja;q=0.9"})
-    with urllib.request.urlopen(req,timeout=timeout) as res: txt=_decode_site(res.read())
-    with _netkeiba_cache_lock:
-        _netkeiba_cache[url]=(now,txt)
-        if len(_netkeiba_cache)>80:
-            k=min(_netkeiba_cache.items(),key=lambda kv:kv[1][0])[0];_netkeiba_cache.pop(k,None)
-    return txt
+    return _acq_netkeiba_transport._netkeiba_get(
+        url, timeout, cache_sec,
+    )
 
 def _netkeiba_db_horse_history(name:str, cutoff:str, limit:int=5)->dict:
-    """Fallback career lookup by horse name for sparse NAR histories.
-
-    Uses netkeiba DB only as a supplement after NAR official history has been searched.
-    The result page contains both central and local starts, which is useful for transfers.
-    """
-    name=_clean(name)
-    if not name:return {"name":"","recentRaces":[]}
-    try:
-        # netkeiba expects EUC-JP query bytes; UTF-8 silently returns no hits.
-        from arvexq.databanks.netkeiba_career import search_url, parse_search
-        html=_netkeiba_get(search_url(name),float(os.getenv("NETKEIBA_DB_SEARCH_TIMEOUT_SEC","4.0")),86400)
-    except Exception as exc:
-        print("netkeiba DB horse search failed",name,exc);return {"name":name,"recentRaces":[]}
-    # Exact-name candidates only (absolute links, or a direct redirect to the horse page).
-    candidates=[c["id"] for c in parse_search(html,name)]
-    best={"name":name,"recentRaces":[]};best_score=-1
-    for hid in candidates[:4]:
-        try:
-            page=_netkeiba_get(f"https://db.netkeiba.com/horse/result/{hid}/",float(os.getenv("NETKEIBA_DB_RESULT_TIMEOUT_SEC","4.0")),86400)
-        except Exception as exc:
-            print("netkeiba DB horse result failed",name,hid,exc);continue
-        ps=BeautifulSoup(page,"html.parser");runs=[]
-        for table in ps.find_all("table"):
-            trs=table.find_all("tr")
-            if not trs:continue
-            header_cells=trs[0].find_all(["th","td"])
-            headers=[_clean(c.get_text(" ",strip=True)) for c in header_cells]
-            # Headers are rendered with spaces ("着 順", "頭 数").
-            joined="|".join(re.sub(r"\s+","",h) for h in headers)
-            if "日付" not in joined or "着順" not in joined or "距離" not in joined:continue
-            def hidx(*keys):
-                for i,h in enumerate(headers):
-                    hh=re.sub(r"\s+","",h)
-                    if any(k in hh for k in keys):return i
-                return -1
-            i_date=hidx("日付");i_track=hidx("開催");i_title=hidx("レース名");i_field=hidx("頭数")
-            i_fin=hidx("着順");i_jockey=hidx("騎手");i_cw=hidx("斤量");i_dist=hidx("距離")
-            i_cond=hidx("馬場");i_time=hidx("タイム");i_corner=hidx("通過");i_bw=hidx("馬体重")
-            for tr in trs[1:]:
-                cells=tr.find_all(["th","td"])
-                vals=[_clean(c.get_text(" ",strip=True)) for c in cells]
-                def val(i):return vals[i] if i>=0 and i<len(vals) else ""
-                dm=re.search(r"(20\d{2})[./](\d{1,2})[./](\d{1,2})",val(i_date))
-                if not dm:continue
-                date=f"{int(dm.group(1)):04d}-{int(dm.group(2)):02d}-{int(dm.group(3)):02d}"
-                if cutoff and date>=cutoff:continue
-                fm=re.match(r"\s*(\d+)",val(i_fin))
-                if not fm:continue
-                dist_txt=val(i_dist);dst=re.search(r"(芝|ダ|障)[^0-9]*(\d{3,4})",dist_txt)
-                if not dst:continue
-                track=re.sub(r"^\d+|\d+$","",val(i_track)).strip()
-                field=_safe_int(val(i_field));corn=[]
-                cm=re.search(r"\d{1,2}(?:-\d{1,2})+",val(i_corner))
-                if cm:corn=[int(x) for x in cm.group(0).split("-")]
-                tm=0.0;mt=re.search(r"(?:(\d+):)?(\d{1,2})\.(\d)",val(i_time))
-                if mt:tm=int(mt.group(1) or 0)*60+int(mt.group(2))+int(mt.group(3))/10
-                bwm=re.search(r"(\d{3,4})(?:\s*\(\s*([+\-]?\d+)\s*\))?",val(i_bw))
-                runs.append({
-                    "date":date,"track":track,"title":val(i_title),"distance":int(dst.group(2)),
-                    "surface":"障害" if dst.group(1)=="障" else ("芝" if dst.group(1)=="芝" else "ダート"),
-                    "condition":val(i_cond) or "不明","weather":"不明","fieldSize":field,
-                    "finish":int(fm.group(1)),"timeSeconds":tm,"cornerPositions":corn,
-                    "carriedWeight":float(re.search(r"\d+(?:\.\d+)?",val(i_cw)).group()) if re.search(r"\d+(?:\.\d+)?",val(i_cw)) else 0.0,
-                    "bodyWeight":int(bwm.group(1)) if bwm else None,
-                    "bodyWeightChange":int(bwm.group(2)) if bwm and bwm.group(2) is not None else None,
-                    "jockey":val(i_jockey),"source":"netkeiba DB補完",
-                })
-                if len(runs)>=limit:break
-            if runs:break
-        runs=sorted(runs,key=lambda z:str(z.get("date") or ""),reverse=True)[:limit]
-        # Same-name horses: the current runner is the one with the latest pre-race
-        # start, not a retired namesake with a longer record.
-        score=(int(runs[0]["date"].replace("-","")) if runs else 0)*1000 + len(runs)
-        if score>best_score:
-            best_score=score;best={"name":name,"_netkeibaHorseId":hid,"recentRaces":runs,"source":"netkeiba DB補完"}
-    return best
+    return _acq_netkeiba_history._netkeiba_db_horse_history(
+        name, cutoff, limit,
+        _netkeiba_get=_netkeiba_get,
+    )
 
 
 def _supplement_sparse_nar_history(race_id:str, names:list[str], cutoff:str)->int:
-    if not names:return 0
-    unique=list(dict.fromkeys([_clean(x) for x in names if _clean(x)]))
-    workers=max(2,min(4,int(os.getenv("NETKEIBA_DB_HISTORY_WORKERS","4"))))
-    rows=[]
-    with ThreadPoolExecutor(max_workers=min(workers,len(unique))) as pool:
-        futs={pool.submit(_netkeiba_db_horse_history,name,cutoff,5):name for name in unique}
-        for fut in as_completed(futs):
-            try:
-                z=fut.result() or {}
-                if z.get("recentRaces"):rows.append(z)
-            except Exception as exc:print("sparse NAR history supplement failed",futs[fut],exc)
-    if not rows:return 0
-    try:
-        with _enrich_data_lock:
-            olddata=_enrich_data.get(race_id) or {}
-            merged={}
-            for rr in (olddata.get("netkeibaRows") or [])+rows:
-                key=int(rr.get("horseNumber") or 0) or str(rr.get("name") or "")
-                if key:merged[key]=rr
-            _enrich_data[race_id]={
-                "netkeibaRows":list(merged.values()),
-                "smartRows":olddata.get("smartRows") or [],
-                "extra":olddata.get("extra") or [],
-            }
-        with _enrich_jobs_lock:
-            prev=_enrich_jobs.get(race_id) or {}
-            src=list(prev.get("sources") or [])
-            if "netkeiba DB補完" not in src:src.append("netkeiba DB補完")
-            _enrich_jobs[race_id]={**prev,"status":"done","sources":src,"finishedAt":time.time()}
-    except Exception as exc:
-        print("sparse NAR enrichment cache failed",race_id,exc);return 0
-    return len(rows)
+    return _acq_netkeiba_history._supplement_sparse_nar_history(
+        race_id, names, cutoff,
+        _netkeiba_db_horse_history=_netkeiba_db_horse_history,
+    )
 
 
 def _netkeiba_race_summaries(iso_date:str)->list[dict]:
-    token=iso_date.replace("-","");url=f"https://race.netkeiba.com/top/race_list_sub.html?kaisai_date={token}"
-    try:html=_netkeiba_get(url,float(os.getenv("NETKEIBA_LIST_TIMEOUT_SEC","3.5")),30 if iso_date==_today_iso() else 86400)
-    except Exception as exc:
-        print("netkeiba list failed",iso_date,exc);return []
-    soup=BeautifulSoup(html,"html.parser");out={}
-    for a in soup.find_all("a",href=re.compile(r"race_id=(\d{12})")):
-        href=str(a.get("href") or "");m=re.search(r"race_id=(\d{12})",href)
-        if not m:continue
-        rid=m.group(1);code=rid[4:6];track=NETKEIBA_TRACK_CODES.get(code)
-        if not track:continue
-        race_no=int(rid[-2:]);node=a
-        for _ in range(4):
-            if node.parent is None:break
-            node=node.parent
-            tx=_clean(node.get_text(" ",strip=True))
-            if re.search(rf"(?:^|\s){race_no}R(?:\s|$)",tx):break
-        tx=_clean(node.get_text(" ",strip=True) if node else a.get_text(" ",strip=True))
-        mm=re.search(rf"(?:^|\s){race_no}R\s*(.*?)\s+(\d{{1,2}}:\d{{2}})\s+((?:芝|ダ|障)[^\s]*?)(\d{{3,4}})m(?:\s+(\d+)頭)?",tx)
-        title="";start="";surf="";dist=0;field=0
-        if mm:
-            title=_clean(mm.group(1));start=mm.group(2);kind=mm.group(3);dist=int(mm.group(4));field=int(mm.group(5) or 0);surf="障害" if kind.startswith("障") else ("芝" if kind.startswith("芝") else "ダート")
-        else:
-            t=re.sub(rf"^.*?{race_no}R\s*","",tx);tm=re.search(r"\b\d{1,2}:\d{2}\b",t)
-            if tm:title=_clean(t[:tm.start()]);start=tm.group(0)
-            dm=re.search(r"(?:芝|ダ|障)[^0-9]*(\d{3,4})m",t)
-            if dm:dist=int(dm.group(1));surf="芝" if "芝" in dm.group(0) else ("障害" if "障" in dm.group(0) else "ダート")
-            fm=re.search(r"(\d+)頭",t);field=int(fm.group(1)) if fm else 0
-        if not title:title=f"{race_no}R"
-        z=normalize_central_race({"id":f"jra-{iso_date}-{track}-{race_no:02d}","date":iso_date,"track":track,"raceNumber":race_no,"title":title,"distance":dist,"surface":surf,"condition":"不明","weather":"不明","fieldSize":field,"startTime":start,"scheduledStartTime":start,"horses":[],"source":"netkeiba一覧","netkeibaRaceId":rid,"_summaryOnly":True})
-        if z:out[(track,race_no)]=z
-    rows=list(out.values());rows.sort(key=lambda x:(str(x.get("track") or ""),int(x.get("raceNumber") or 0)))
-    return rows
+    return _acq_netkeiba_program._netkeiba_race_summaries(
+        iso_date,
+        _netkeiba_get=_netkeiba_get, _today_iso=_today_iso,
+    )
 
 def _netkeiba_program_race_id(iso_date:str,track:str,race_no:int)->str:
-    try:
-        p=_jra_program_lookup(iso_date,track,race_no) or {}
-        rid=str(p.get("netkeibaRaceId") or "")
-        if re.fullmatch(r"\d{12}",rid):return rid
-        code=JRA_TRACK_CODE_BY_NAME.get(str(track or ""),"")
-        meet=int(p.get("meetingNumber") or 0);day=int(p.get("meetingDay") or 0)
-        year=int(str(iso_date)[:4]) if re.match(r"^20\d{2}",str(iso_date)) else 0
-        if year and code and meet and day and int(race_no)>0:return f"{year:04d}{code}{meet:02d}{day:02d}{int(race_no):02d}"
-    except Exception:pass
-    return ""
+    return _acq_netkeiba_program._netkeiba_program_race_id(
+        iso_date, track, race_no,
+        _jra_program_lookup=_jra_program_lookup,
+    )
 
 def _netkeiba_race_id(iso_date:str,track:str,race_no:int)->str:
-    rid=_netkeiba_program_race_id(iso_date,track,race_no)
-    if rid:return rid
-    for r in _netkeiba_race_summaries(iso_date):
-        if str(r.get("track"))==str(track) and int(r.get("raceNumber") or 0)==int(race_no):return str(r.get("netkeibaRaceId") or "")
-    return ""
+    return _acq_netkeiba_program._netkeiba_race_id(
+        iso_date, track, race_no,
+        _netkeiba_program_race_id=_netkeiba_program_race_id, _netkeiba_race_summaries=_netkeiba_race_summaries,
+    )
 
 from arvexq.ingest.parsers.supplemental import (
     _parse_recent_cell,
@@ -1531,564 +893,82 @@ _NK_SEXAGE_RE = re.compile(r"^(牡|牝|セ|騸)\s*(\d{1,2})")
 
 
 def _nk_row_horse_no(tr, index: int | None = None) -> int:
-    """netkeiba HorseList 行の馬番。
-
-    現行DOMは馬番セルが無く、オッズ span の id (odds-1_01) と行順が馬番を持つ。
-    旧DOMは td.Umaban に馬番があったため両対応にする。
-    """
-    o = tr.find("span", id=_NK_ODDS_ID_RE)
-    if o is not None:
-        m = _NK_ODDS_ID_RE.match(str(o.get("id") or ""))
-        if m and int(m.group(1)) > 0:
-            return int(m.group(1))
-    um = tr.find("td", class_=re.compile(r"^Umaban"))
-    if um is not None:
-        m = re.search(r"\d{1,2}", _clean(um.get_text(" ", strip=True)))
-        if m and int(m.group()) > 0:
-            return int(m.group())
-    if index is not None:
-        return int(index) + 1
-    return 0
+    return _acq_netkeiba_rows._nk_row_horse_no(
+        tr, index,
+        _NK_ODDS_ID_RE=_NK_ODDS_ID_RE,
+    )
 
 
 def _nk_row_frame(tr) -> int:
-    for td in tr.find_all("td"):
-        for cls in (td.get("class") or []):
-            m = _NK_WAKU_RE.match(str(cls))
-            if m:
-                return int(m.group(1))
-    return 0
+    return _acq_netkeiba_rows._nk_row_frame(
+        tr,
+        _NK_WAKU_RE=_NK_WAKU_RE,
+    )
 
 
 def _nk_row_horse(tr, index: int | None = None) -> dict | None:
-    """netkeiba HorseList 1行 -> 出走馬 dict。旧DOM/新DOM両対応。"""
-    info = tr.select_one("td.Horse_Info") or tr.select_one("td.HorseInfo")
-    if info is None:
-        return None
-    name_a = (info.select_one("dt.Horse a") or info.select_one("div.Horse02 a")
-              or info.select_one("dt a") or info.select_one(".HorseName a"))
-    name = _clean(name_a.get_text(" ", strip=True)) if name_a else ""
-    if not name or "のデータベース" in name or len(name) > 24:
-        return None
-    no = _nk_row_horse_no(tr, index)
-    if no <= 0:
-        return None
-
-    sex = ""; age = 0
-    barei = _clean(tr.select_one("span.Barei").get_text(" ", strip=True)) if tr.select_one("span.Barei") else ""
-    if not barei:
-        bt = tr.select_one("td.Barei")
-        barei = _clean(bt.get_text(" ", strip=True)) if bt else ""
-    if not barei:
-        dd_age = info.select_one("dd.Age")
-        if dd_age is not None:
-            barei = _clean(dd_age.get_text(" ", strip=True))
-    m = _NK_SEXAGE_RE.match(barei)
-    if m:
-        sex = m.group(1); age = int(m.group(2))
-
-    jockey = ""; carried = 0.0
-    dd_j = info.select_one("dd.Jockey")
-    if dd_j is not None:
-        em = dd_j.find("em")
-        jockey = _clean(em.get_text(" ", strip=True)) if em else ""
-        jtxt = _clean(dd_j.get_text(" ", strip=True))
-        if not jockey:
-            jockey = _clean(re.sub(r"[\d.]+", " ", jtxt))
-        m = re.search(r"(\d{2}(?:\.\d)?)\s*$", jtxt)
-        if m:
-            try: carried = float(m.group(1))
-            except Exception: carried = 0.0
-    if not jockey or not carried:
-        jt = tr.select_one("td.Jockey")
-        if jt is not None:
-            ja = jt.find("a")
-            if ja is not None and not jockey:
-                jockey = _clean(ja.get_text(" ", strip=True))
-            jtxt = _clean(jt.get_text(" ", strip=True))
-            m = re.search(r"(\d{2}(?:\.\d)?)\s*$", jtxt)
-            if m and not carried:
-                try: carried = float(m.group(1))
-                except Exception: carried = 0.0
-
-    trainer = ""
-    tr_el = tr.select_one("td.Trainer")
-    if tr_el is not None:
-        trainer = _clean(tr_el.get_text(" ", strip=True))
-    if not trainer:
-        for sel in ("div.Horse05 a", "div.Horse05"):
-            el = info.select_one(sel)
-            if el is None:
-                continue
-            t = re.sub(r"^(栗東|美浦|地方|外国)\s*[・･]\s*", "", _clean(el.get_text(" ", strip=True)))
-            if t:
-                trainer = t
-                break
-
-    wtxt = ""
-    wt = tr.select_one("td.Weight")
-    if wt is not None:
-        wtxt = _clean(wt.get_text(" ", strip=True))
-    if not wtxt:
-        wt = info.select_one("div.Weight")
-        if wt is not None:
-            wtxt = _clean(wt.get_text(" ", strip=True))
-    bw = None; chg = None
-    m = re.search(r"(\d{3})\s*(?:[（(]\s*([+\-]?\d+)\s*[）)])?", wtxt)
-    if m:
-        try:
-            bw = int(m.group(1))
-            chg = int(m.group(2)) if m.group(2) is not None else None
-        except Exception:
-            bw = None; chg = None
-
-    odds = None; pop = None
-    o = tr.find("span", id=re.compile(r"^odds-1_"))
-    if o is not None:
-        m = re.search(r"\d+(?:\.\d+)?", _clean(o.get_text(" ", strip=True)))
-        if m:
-            try: odds = float(m.group())
-            except Exception: odds = None
-    p = tr.find("span", id=re.compile(r"^ninki-1_"))
-    if p is not None:
-        m = re.search(r"\d+", _clean(p.get_text(" ", strip=True)))
-        if m: pop = int(m.group())
-
-    txt = _clean(tr.get_text(" ", strip=True))
-    status = _scratch_status(txt)
-    return {
-        "horseNumber": no,
-        "frameNumber": _nk_row_frame(tr) or int((no + 1) // 2),
-        "name": name, "sex": sex, "age": age,
-        "carriedWeight": carried, "jockey": jockey, "trainer": trainer,
-        "bodyWeight": bw, "bodyWeightChange": chg,
-        "winOdds": odds, "popularity": pop,
-        "status": status, "scratched": bool(status),
-        "recentRaces": [],
-        "jockeyStats": {}, "trainerStats": {}, "jockeyProfile": {}, "trainerProfile": {},
-        "source": "netkeiba",
-    }
+    return _acq_netkeiba_rows._nk_row_horse(
+        tr, index,
+        _NK_SEXAGE_RE=_NK_SEXAGE_RE, _nk_row_frame=_nk_row_frame, _nk_row_horse_no=_nk_row_horse_no,
+    )
 
 
 def _netkeiba_detail_rows(detail:dict)->list[dict]:
-    rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
-    if not rid:return []
-    url=f"https://race.netkeiba.com/race/shutuba.html?race_id={rid}";past=f"https://race.netkeiba.com/race/shutuba_past.html?race_id={rid}&rf=shutuba_submenu"
-    html="";past_html=""
-    timeout=float(os.getenv("NETKEIBA_DETAIL_TIMEOUT_SEC","3.5"))
-    def _get_now():
-        try:return _netkeiba_get(url,timeout,20)
-        except Exception as exc:print("netkeiba detail failed",rid,exc);return ""
-    def _get_past():
-        try:return _netkeiba_get(past,timeout,180)
-        except Exception as exc:print("netkeiba past failed",rid,exc);return ""
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        f1=pool.submit(_get_now);f2=pool.submit(_get_past);html=f1.result() or "";past_html=f2.result() or ""
-    rows={}
-    if html:
-        soup=BeautifulSoup(html,"html.parser")
-        for tr in soup.select("tr.HorseList"):
-            horse=_nk_row_horse(tr)
-            if not horse:continue
-            rows[horse["horseNumber"]]=horse
-    if past_html:
-        soup=BeautifulSoup(past_html,"html.parser")
-        for tr in soup.select("tr.HorseList"):
-            horse=_nk_row_horse(tr)
-            if not horse:continue
-            key=horse["horseNumber"]
-            if key not in rows:rows[key]=horse
-            rr=[]
-            for td in tr.find_all("td"):
-                z=_parse_recent_cell(td.get_text(" ",strip=True))
-                if z:rr.append(z)
-                if len(rr)>=5:break
-            if rr:rows[key]["recentRaces"]=rr[:5]
-    return list(rows.values())
+    return _acq_netkeiba_racecards._netkeiba_detail_rows(
+        detail,
+        _netkeiba_get=_netkeiba_get, _netkeiba_race_id=_netkeiba_race_id, _nk_row_horse=_nk_row_horse,
+    )
 
 def central_race_summaries(iso_date: str, allow_network: bool = False, force: bool = False) -> list[dict]:
-    db=[]
-    if CENTRAL_DB_PATH.exists():
-        conn=_new_conn(CENTRAL_DB_PATH)
-        try:
-            rows=conn.execute("SELECT payload FROM central_races WHERE date=? ORDER BY track,race_no",(iso_date,)).fetchall()
-            for x in rows:
-                try:r=json.loads(x["payload"])
-                except Exception:continue
-                hs=r.get("horses") if isinstance(r.get("horses"),list) else [];q=dict(r);q["fieldSize"]=int(q.get("fieldSize") or len(hs));q["horses"]=[]
-                if JRA_BAD_TITLE_RE.search(str(q.get("title") or "")):q["title"]=f"{int(q.get('raceNumber') or 0)}R"
-                res=q.get("result") if isinstance(q.get("result"),dict) else None
-                if res and (res.get("finishers") or res.get("status")=="確定"):q["result"]={"status":res.get("status") or "確定","finishers":res.get("finishers") or [{"finish":1}]}
-                else:q["result"]=None
-                db.append(q)
-        finally:conn.close()
-    valid=[x for x in db if not JRA_BAD_TITLE_RE.search(str(x.get("title") or "")) and int(x.get("distance") or 0)>0]
-    merged={(str(r.get("track") or ""),int(r.get("raceNumber") or 0)):dict(r) for r in valid}
-    tracks={k[0] for k in merged if k[0]}
-    # A normal JRA day has multiple venues. If the cache is clearly complete, return instantly.
-    complete=len(merged)>=20 and len(tracks)>=2
-    if allow_network and (force or not complete):
-        program=[]; nk=[]
-        try:program=_jra_program_summaries(iso_date)
-        except Exception as exc:print("JRA program list failed",iso_date,exc)
-        # Program page is the fast authoritative schedule. Netkeiba fills gaps and provides race ids.
-        if len(program)<20 or len({str(r.get('track') or '') for r in program})<2:
-            try:nk=_netkeiba_race_summaries(iso_date)
-            except Exception as exc:print("netkeiba summary fallback failed",iso_date,exc)
-        else:
-            # Reuse netkeiba only from its short in-memory cache when available; avoid a second wait.
-            try:
-                token=iso_date.replace('-','');url=f"https://race.netkeiba.com/top/race_list_sub.html?kaisai_date={token}"
-                with _netkeiba_cache_lock:
-                    hit=_netkeiba_cache.get(url)
-                if hit:nk=_netkeiba_race_summaries(iso_date)
-            except Exception:pass
-        fresh=list(program or [])+list(nk or [])
-        for r in fresh:
-            key=(str(r.get("track") or ""),int(r.get("raceNumber") or 0))
-            if not key[0] or not key[1]:continue
-            old=merged.get(key,{})
-            z=dict(old)
-            # Keep rich cached horses/result, but replace stale schedule fields with fresh schedule data.
-            for k,v in r.items():
-                if k in {"horses","result"}:continue
-                if v not in (None,"",0,[]):z[k]=v
-            if old.get("result"):z["result"]=old.get("result")
-            if old.get("horses"):z["horses"]=[]
-            merged[key]=normalize_central_race(z) or z
-        if fresh:
-            try:
-                st=CentralStore();st.upsert(list(merged.values()));st.conn.close()
-            except Exception as exc:print("central summary cache save failed",exc)
-    out=list(merged.values());out.sort(key=lambda x:(str(x.get("track") or ""),int(x.get("raceNumber") or 0)))
-    return out
+    return _acq_central_racecards.central_race_summaries(
+        iso_date, allow_network, force,
+        CENTRAL_DB_PATH=CENTRAL_DB_PATH, CentralStore=CentralStore, _jra_program_summaries=_jra_program_summaries,
+        _netkeiba_race_summaries=_netkeiba_race_summaries, _new_conn=_new_conn,
+    )
 
-NAR_BABA_CODES={"帯広ば":"03","帯広":"03","盛岡":"10","水沢":"11","浦和":"18","船橋":"19","大井":"20","川崎":"21","金沢":"22","笠松":"23","名古屋":"24","園田":"27","姫路":"28","高知":"31","佐賀":"32","門別":"36"}
-NAR_NETKEIBA_CODES={"門別":"30","盛岡":"35","水沢":"36","浦和":"42","船橋":"43","大井":"44","川崎":"45","金沢":"46","笠松":"47","名古屋":"48","園田":"50","姫路":"51","高知":"54","佐賀":"55"}
 
 def _nar_netkeiba_race_id(iso_date:str,track:str,race_no:int)->str:
-    code=NAR_NETKEIBA_CODES.get(str(track or '').strip())
-    m=re.match(r'^(20\d{2})-(\d{2})-(\d{2})$',str(iso_date or ''))
-    if not code or not m or int(race_no)<=0:return ''
-    return f"{m.group(1)}{code}{m.group(2)}{m.group(3)}{int(race_no):02d}"
+    return _acq_netkeiba_program._nar_netkeiba_race_id(
+        iso_date, track, race_no,
+    )
 
 def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
-    """Fallback before NAR live odds/weights appear: use netkeiba's current NAR card.
-    Predicted odds are explicitly tagged and are replaced by official live odds later.
-    """
-    rid=_nar_netkeiba_race_id(str(detail.get('date') or ''),str(detail.get('track') or ''),int(detail.get('raceNumber') or 0))
-    if not rid:return {}
-    url=f"https://nar.netkeiba.com/race/shutuba.html?race_id={rid}"
-    if force:url+=f"&t={int(time.time()*1000)}"
-    try:html=_netkeiba_get(url,float(os.getenv('NETKEIBA_NAR_TIMEOUT_SEC','3.5')),0 if force else 30)
-    except Exception as exc:
-        print('NAR netkeiba preview failed',rid,exc);return {}
-    soup=BeautifulSoup(html,'html.parser');full=_clean(soup.get_text(' ',strip=True));forecast_page='予想オッズ' in full
-    out={};field_count=0
-    for tr in soup.select('tr.HorseList'):
-        field_count+=1
-        txt=_clean(tr.get_text(' ',strip=True));no=0
-        um=tr.find('td',class_=re.compile(r'Umaban',re.I))
-        if um:
-            mm=re.search(r'\d{1,2}',_clean(um.get_text(' ',strip=True)));no=int(mm.group()) if mm else 0
-        if not no:
-            mm=re.match(r'\D*(\d{1,2})\D+',txt);no=int(mm.group(1)) if mm else 0
-        if not no:continue
-        odd=None;pop=None
-        odds_span=tr.find('span',id=re.compile(r'^odds-1_'))
-        ns=tr.find('span',id=re.compile(r'^ninki-1_'))
-        if odds_span:
-            mo=re.search(r'\d+(?:\.\d+)?',_clean(odds_span.get_text(' ',strip=True)));odd=float(mo.group()) if mo else None
-        if ns:
-            mp=re.search(r'\d+',_clean(ns.get_text(' ',strip=True)));pop=int(mp.group()) if mp else None
-        if odd is None:
-            mo=re.search(r'(?<!\d)(\d{1,3}(?:\.\d+)?)\s*[（(]\s*(\d{1,2})人気\s*[）)]',txt)
-            if mo:odd=float(mo.group(1));pop=int(mo.group(2))
-        bw=None;chg=None
-        wt=tr.select_one('td.Weight')
-        wtxt=_clean(wt.get_text(' ',strip=True)) if wt else txt
-        bm=re.search(r'(?<!\d)(\d{3})\s*kg?\s*[（(]\s*([+\-]?\d+)\s*[）)]',wtxt)
-        if not bm:bm=re.search(r'(?<!\d)(\d{3})\s*[（(]\s*([+\-]?\d+)\s*[）)]',wtxt)
-        if bm:bw=int(bm.group(1));chg=int(bm.group(2))
-        if odd is None and bw is None:continue
-        z={}
-        if odd and odd>1:
-            z.update({'winOdds':odd,'popularity':pop,'oddsSource':'netkeiba予想オッズ' if forecast_page else 'netkeiba実オッズ','oddsForecast':bool(forecast_page)})
-        if bw:
-            z['bodyWeight']=bw;z['bodyWeightChange']=chg
-        out[no]=z
-    # v247: shutuba can omit the odds cells even while netkeiba's dedicated
-    # NAR odds page already has them. Pull that page directly and merge the live
-    # single-win odds so the full-day expected-value scan is not stuck at 0/N.
-    field_count=max(field_count if 'field_count' in locals() else 0,len(out))
-    have_odds=sum(1 for z in out.values() if (z or {}).get('winOdds'))
-    if force or have_odds<max(3,int(max(1,field_count)*.65)):
-        odds_url=f"https://nar.netkeiba.com/odds/index.html?race_id={rid}&type=b1"
-        if force:odds_url+=f"&t={int(time.time()*1000)}"
-        try:
-            oh=_netkeiba_get(odds_url,float(os.getenv('NETKEIBA_NAR_ODDS_TIMEOUT_SEC','3.2')),0 if force else 12)
-            osoup=BeautifulSoup(oh,'html.parser')
-            for table in osoup.find_all('table'):
-                headers=[_clean(x.get_text(' ',strip=True)).replace(' ','') for x in table.find_all('th')]
-                if not headers:continue
-                def hi(*parts):
-                    for j,hv in enumerate(headers):
-                        if any(p in hv for p in parts):return j
-                    return -1
-                ino=hi('馬番');iodd=hi('単勝オッズ','オッズ');ipop=hi('人気')
-                if ino<0 or iodd<0:continue
-                # Some tables include grouped/multi-row headers; use rows with enough td cells only.
-                for tr in table.find_all('tr'):
-                    cells=tr.find_all('td')
-                    if not cells:continue
-                    vals=[_clean(td.get_text(' ',strip=True)) for td in cells]
-                    if max(ino,iodd)>=len(vals):continue
-                    try:no=int(re.sub(r'\D','',vals[ino]) or 0)
-                    except Exception:no=0
-                    if no<=0 or no>30:continue
-                    mo=re.search(r'\d+(?:\.\d+)?',vals[iodd].replace(',',''))
-                    if not mo:continue
-                    try:odd=float(mo.group())
-                    except Exception:continue
-                    if odd<=1:continue
-                    pop=None
-                    if 0<=ipop<len(vals):
-                        mp=re.search(r'\d+',vals[ipop])
-                        if mp:
-                            try:pop=int(mp.group())
-                            except Exception:pop=None
-                    z=out.setdefault(no,{})
-                    z['winOdds']=odd;z['oddsSource']='netkeiba実オッズ';z['oddsForecast']=False
-                    if pop:z['popularity']=pop
-        except Exception as exc:
-            print('NAR netkeiba odds-page fallback failed',rid,exc)
-    return out
+    return _acq_netkeiba_racecards._nar_netkeiba_preview_rows(
+        detail, force,
+        _nar_netkeiba_race_id=_nar_netkeiba_race_id, _netkeiba_get=_netkeiba_get,
+    )
 
-_nar_odds_cache_lock=threading.Lock()
-_nar_odds_cache:dict[str,tuple[float,dict]]={}
 
 def _parse_nar_live_odds_html(html:str)->dict:
-    """Parse NAR official 単・複 page across header and positional layouts."""
-    if not html:return {}
-    soup=BeautifulSoup(html,"html.parser")
-    out={}
-
-    # Header-driven layout.
-    for table in soup.find_all("table"):
-        rows=table.find_all("tr")
-        if not rows:continue
-        header=[];header_idx=-1
-        for ri,tr in enumerate(rows[:4]):
-            vals=[_clean(c.get_text(" ",strip=True)) for c in tr.find_all(["th","td"])]
-            if any("馬番" in x for x in vals) and any("単勝" in x for x in vals):
-                header=vals;header_idx=ri;break
-        if not header:continue
-
-        def idxpart(part):
-            for i,x in enumerate(header):
-                if part in x:return i
-            return -1
-
-        ino=idxpart("馬番");iodd=idxpart("単勝");ipop=idxpart("人気");ibw=idxpart("馬体重")
-        for tr in rows[header_idx+1:]:
-            vals=[_clean(c.get_text(" ",strip=True)) for c in tr.find_all(["th","td"])]
-            if ino<0 or ino>=len(vals) or iodd<0 or iodd>=len(vals):continue
-            mn=re.fullmatch(r"\D*(\d{1,2})\D*",vals[ino])
-            if not mn:continue
-            no=int(mn.group(1))
-            om=re.search(r"(?<!\d)(\d+(?:\.\d+)?)(?!\d)",vals[iodd])
-            odds=float(om.group(1)) if om else 0.0
-            scratch_status=_scratch_status(vals[iodd])
-            pop=0
-            if ipop>=0 and ipop<len(vals):
-                pm=re.search(r"\d+",vals[ipop]);pop=int(pm.group()) if pm else 0
-            bw=0;chg=None
-            if ibw>=0 and ibw<len(vals):
-                bm=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",vals[ibw])
-                if bm:
-                    bw=int(bm.group(1));chg=int(bm.group(2)) if bm.group(2) is not None else None
-            if odds<=0 and not bw and not scratch_status:
-                continue
-            out[no]={"winOdds":odds or None,"popularity":pop or None,"bodyWeight":bw or None,
-                     "bodyWeightChange":chg,"oddsSource":"NAR公式" if odds else "NAR公式出馬表",
-                     "status":scratch_status,"scratched":bool(scratch_status)}
-
-    # Current official layout second pass:
-    # 枠 | 馬番 | 馬名 | 単勝 | 複勝下限 | 複勝上限 | 性齢 | 馬体重 ...
-    # Always run this pass, even when the header-driven pass already found odds.
-    # NAR uses multi-row/rowspan headers and the header index can be shifted for
-    # 馬体重 on only one runner. Previously `if not out` skipped this reliable
-    # flat-row pass as soon as odds existed, leaving cases such as the last horse
-    # with odds but bodyWeight=None. Merge the flat row into missing live fields.
-    for table in soup.find_all("table"):
-        for tr in table.find_all("tr"):
-            vals=[_clean(c.get_text(" ",strip=True)) for c in tr.find_all(["th","td"])]
-            if len(vals)<4:continue
-            m0=re.fullmatch(r"\d{1,2}",vals[0])
-            m1=re.fullmatch(r"\d{1,2}",vals[1]) if len(vals)>1 else None
-            oddm=re.fullmatch(r"\d+(?:\.\d+)?",vals[3]) if len(vals)>3 else None
-            scratch_status=_scratch_status(vals[3] if len(vals)>3 else "")
-            if not (m0 and m1 and (oddm or scratch_status)):continue
-            no=int(m1.group());odds=float(oddm.group()) if oddm else 0.0
-            if no<=0 or (odds<=0 and not scratch_status):continue
-            bw=0;chg=None
-            for cell in vals[6:10]:
-                bm=re.search(r"(\d{3})\s*(?:[（(]\s*([+\-]?\d+)\s*[）)])?",cell)
-                if bm:
-                    bw=int(bm.group(1));chg=int(bm.group(2)) if bm.group(2) is not None else None
-                    break
-            z=out.setdefault(no,{})
-            if odds>0:z["winOdds"]=odds
-            if bw:
-                z["bodyWeight"]=bw
-                z["bodyWeightChange"]=chg
-            z["oddsSource"]="NAR公式" if odds else z.get("oddsSource","")
-            if scratch_status:
-                z["status"]=scratch_status;z["scratched"]=True
-            else:
-                z.setdefault("status","");z.setdefault("scratched",False)
-
-    ranked=sorted((float(v["winOdds"]),no) for no,v in out.items() if v.get("winOdds"))
-    rank=0;last=None
-    for ix,(odd,no) in enumerate(ranked,1):
-        if last is None or odd!=last:rank=ix
-        if not out[no].get("popularity"):out[no]["popularity"]=rank
-        last=odd
-    return out
+    return _acq_local_odds._parse_nar_live_odds_html(
+        html,
+    )
 
 
 def _nar_live_odds(track:str,iso_date:str,race_no:int,force:bool=False)->dict:
-    code=NAR_BABA_CODES.get(str(track or "").strip())
-    if not code:return {}
-    key=f"{code}|{iso_date}|{race_no}";now=time.time();ttl=int(os.getenv("NAR_LIVE_ODDS_CACHE_SEC","20"))
-    with _nar_odds_cache_lock:
-        hit=_nar_odds_cache.get(key)
-        if hit and not force and now-hit[0]<ttl:return hit[1]
-
-    q=urllib.parse.urlencode({"k_babaCode":code,"k_raceDate":iso_date.replace("-","/"),"k_raceNo":int(race_no),"t":int(time.time()*1000) if force else ""})
-    urls=[
-        "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/OddsTanFuku?"+q,
-        "https://www.keiba.go.jp/KeibaWeb_IPAT/TodayRaceInfo/OddsTanFuku_ipat?"+q,
-    ]
-    out={}
-    for url in urls:
-        req=urllib.request.Request(url,headers={
-            "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
-            "Accept-Language":"ja-JP,ja;q=0.9",
-            "Referer":"https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/TodayRaceInfoTop",
-        })
-        try:
-            with urllib.request.urlopen(req,timeout=float(os.getenv("NAR_ODDS_TIMEOUT_SEC","2.5"))) as res:
-                html=_jra_decode(res.read())
-            out=_parse_nar_live_odds_html(html)
-            if out:break
-        except Exception as exc:
-            print("NAR odds fetch failed",track,iso_date,race_no,url,exc)
-
-    with _nar_odds_cache_lock:
-        _nar_odds_cache[key]=(now,out)
-        if len(_nar_odds_cache)>64:
-            oldest=min(_nar_odds_cache.items(),key=lambda kv:kv[1][0])[0];_nar_odds_cache.pop(oldest,None)
-    return out
+    return _acq_local_odds._nar_live_odds(
+        track, iso_date, race_no, force,
+        _parse_nar_live_odds_html=_parse_nar_live_odds_html,
+    )
 
 def _attach_nar_live_odds(detail:dict)->dict:
-    if not detail:return detail
-    odds=_nar_live_odds(str(detail.get("track") or ""),str(detail.get("date") or ""),int(detail.get("raceNumber") or 0))
-    if not odds:return detail
-    for h in detail.get("horses",[]) or []:
-        z=odds.get(int(h.get("horseNumber") or 0))
-        if z:h.update({k:v for k,v in z.items() if v is not None and v!=""})
-    detail["oddsSource"]="NAR公式"; detail["oddsType"]="単勝実オッズ"; detail["oddsUpdatedAt"]=datetime.now().strftime("%H:%M:%S")
-    return detail
+    return _acq_local_odds._attach_nar_live_odds(
+        detail,
+        _nar_live_odds=_nar_live_odds,
+    )
 
 def nar_race_detail(race_id: str) -> dict | None:
-    m=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-(.+)-(\d{2})$",race_id)
-    if not m:return None
-    iso_date,track,race_no=m.group(1),m.group(2),int(m.group(3))
-    store=NarStore()
-    try:
-        race=store.conn.execute("SELECT * FROM races WHERE track=? AND date=? AND race_no=?",(track,iso_date,race_no)).fetchone()
-        if not race:return None
-        entries=store.conn.execute("SELECT * FROM entries WHERE track=? AND date=? AND race_no=? ORDER BY horse_no",(track,iso_date,race_no)).fetchall()
-        horses=[]
-        for e in entries:
-            horses.append({
-                "id":_stable_id(iso_date,track,race_no,e["horse_no"],e["name"]),"horseNumber":int(e["horse_no"]),
-                "frameNumber":int(e["frame_no"] or 0),"name":e["name"],"age":int(e["age"] or 0),"sex":e["sex"] or "牡",
-                "carriedWeight":float(e["carried_weight"] or 0),"jockey":e["jockey"] or "","trainer":e["trainer"] or "",
-                "status":str(e["status"] or "") if "status" in e.keys() else "",
-                "scratched":bool(_scratch_status(str(e["status"] or ""))) if "status" in e.keys() else False,
-                "jockeyStats":store.stats("jockey",e["jockey"],iso_date),"trainerStats":store.stats("trainer",e["trainer"],iso_date),
-                "jockeyProfile":store.role_profile("jockey",e["jockey"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
-                "trainerProfile":store.role_profile("trainer",e["trainer"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
-                "prizeMoneyAtRace":store.prize_before(e["name"],iso_date),"recentRaces":store.recent_races(e["name"],iso_date,5),
-            })
-        finishers=[]
-        for e in entries:
-            fin=int(e["finish"] or 0)
-            if entries:
-                try:cp=json.loads(e["corner_positions_json"] or "[]")
-                except Exception:cp=[]
-                finishers.append({"finish":fin,"horseNumber":int(e["horse_no"]),"frameNumber":int(e["frame_no"] or 0),"name":e["name"],"timeSeconds":float(e["time_seconds"] or 0),"cornerPositions":cp})
-        finishers.sort(key=lambda x:(x["finish"] or 999,x["horseNumber"]))
-        need=min(3,len(entries)); ranks={x["finish"] for x in finishers}; finalized=need>0 and all(i in ranks for i in range(1,need+1))
-        detail={"id":race_id,"circuit":"地方","date":iso_date,"track":track,"raceNumber":race_no,
-                "title":race["title"] or f"{race_no}R","distance":int(race["distance"] or 0),"condition":race["condition"] or "不明",
-                "weather":race["weather"] or "不明","fieldSize":int(race["field_size"] or len(entries)),"racePrize1":int(race["prize1"] or 0),
-                "surface":"","startTime":race["start_time"] or "","scheduledStartTime":race["scheduled_start_time"] or race["start_time"] or "",
-                "startTimeChanged":bool((race["scheduled_start_time"] or "") and (race["start_time"] or "") and race["scheduled_start_time"]!=race["start_time"]),
-                "horses":horses,"result":{"status":"確定","finishers":finishers} if finalized else None,"source":"NAR公式"}
-        return detail
-    finally:
-        try:store.conn.close()
-        except Exception:pass
+    return _acq_local_racecards.nar_race_detail(
+        race_id,
+        NarStore=NarStore,
+    )
 
 
 def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
-    """Attach recent NAR runs for all horses with one SQL query, avoiding N+1."""
-    if not isinstance(detail,dict) or str(detail.get("circuit") or "")!="地方":
-        return detail
-    horses=detail.get("horses") or []
-    names=[str(h.get("name") or "") for h in horses if h.get("name")]
-    cutoff=str(detail.get("date") or "9999-12-31")
-    if not names or not DB_PATH.exists():return detail
-    conn=_new_conn(DB_PATH)
-    try:
-        ph=",".join("?" for _ in names)
-        sql=f"""
-        SELECT e.name,e.date,e.track,e.race_no,e.finish,e.time_seconds,e.corner_positions_json,
-               e.carried_weight,e.jockey,e.trainer,
-               r.title,r.distance,r.weather,r.condition,r.field_size,r.prize1
-        FROM entries e
-        JOIN races r ON r.track=e.track AND r.date=e.date AND r.race_no=e.race_no
-        WHERE e.name IN ({ph}) AND e.date<? AND e.finish>0
-        ORDER BY e.name,e.date DESC,e.race_no DESC
-        """
-        rows=conn.execute(sql,[*names,cutoff]).fetchall()
-    finally:
-        conn.close()
-    grouped={n:[] for n in names}
-    for row in rows:
-        arr=grouped.get(str(row["name"]) or "")
-        if arr is None or len(arr)>=limit:continue
-        try:cp=json.loads(row["corner_positions_json"] or "[]")
-        except Exception:cp=[]
-        arr.append({
-            "date":row["date"],"track":row["track"],"raceNumber":int(row["race_no"] or 0),
-            "raceId":f"nar-{row['date']}-{row['track']}-{int(row['race_no'] or 0):02d}",
-            "title":row["title"] or f"{int(row['race_no'] or 0)}R",
-            "distance":int(row["distance"] or 0),"condition":row["condition"] or "不明",
-            "weather":row["weather"] or "不明","finish":int(row["finish"] or 0),
-            "timeSeconds":float(row["time_seconds"] or 0),"cornerPositions":cp,
-            "fieldSize":int(row["field_size"] or 0),"racePrize1":int(row["prize1"] or 0),
-            "carriedWeight":float(row["carried_weight"] or 0),
-            "jockey":row["jockey"] or "","trainer":row["trainer"] or "",
-            "source":"NAR公式ローカル履歴",
-        })
-    for h in horses:
-        h["recentRaces"]=grouped.get(str(h.get("name") or ""),[])[:limit]
-        h["allPastRuns"]=list(h["recentRaces"])
-    return detail
+    return _acq_local_history._nar_attach_recent_batch(
+        detail, limit,
+        DB_PATH=DB_PATH, _new_conn=_new_conn,
+    )
 
 
 from arvexq.ingest.history.central_rows import (
@@ -2099,199 +979,46 @@ from arvexq.ingest.history.central_rows import (
 
 
 def _central_resolve_race_id(run: dict) -> str:
-    if run.get("raceId"):
-        return str(run.get("raceId"))
-    d = _clean(str(run.get("date") or ""))
-    tr = _clean(str(run.get("track") or ""))
-    rn = int(run.get("raceNumber") or 0)
-    if not d or not tr or rn <= 0 or not CENTRAL_DB_PATH.exists():
-        return ""
-    conn = _new_conn(CENTRAL_DB_PATH)
-    try:
-        row = conn.execute(
-            "SELECT id FROM central_races WHERE date=? AND track=? AND race_no=? LIMIT 1",
-            (d, tr, rn),
-        ).fetchone()
-        return str(row["id"]) if row else ""
-    finally:
-        conn.close()
+    return _acq_central_history._central_resolve_race_id(
+        run,
+        CENTRAL_DB_PATH=CENTRAL_DB_PATH, _new_conn=_new_conn,
+    )
 
 
 def _central_recent_from_store(horse_name: str, cutoff: str, limit: int = 5) -> list[dict]:
-    if not CENTRAL_DB_PATH.exists() or not horse_name:
-        return []
-    conn = _new_conn(CENTRAL_DB_PATH)
-    try:
-        # Pull newest races first. We stop as soon as this horse has five actual starts.
-        rows = conn.execute(
-            "SELECT payload FROM central_races WHERE date<? ORDER BY date DESC,track DESC,race_no DESC LIMIT 4000",
-            (cutoff,),
-        ).fetchall()
-        out = []
-        seen = set()
-        for row in rows:
-            try:
-                race = json.loads(row["payload"])
-            except Exception:
-                continue
-            run = _central_run_from_race(race, horse_name)
-            if not run:
-                continue
-            key = (run.get("date"), run.get("track"), int(run.get("raceNumber") or 0))
-            if key in seen:
-                continue
-            seen.add(key)
-            # A finish can be missing in a future-entry payload. Keep the race only when
-            # the historical payload contains an actual result or explicit run result data.
-            if int(run.get("finish") or 0) <= 0 and not run.get("cornerPositions") and not float(run.get("timeSeconds") or 0):
-                continue
-            out.append(run)
-            if len(out) >= limit:
-                break
-        return out
-    finally:
-        conn.close()
+    return _acq_central_history._central_recent_from_store(
+        horse_name, cutoff, limit,
+        CENTRAL_DB_PATH=CENTRAL_DB_PATH, _new_conn=_new_conn,
+    )
 
 
 def _merge_central_recent(existing: list[dict], stored: list[dict], cutoff: str, limit: int = 5) -> list[dict]:
-    all_runs = []
-    seen = set()
-    for src in (existing or []) + (stored or []):
-        if not isinstance(src, dict):
-            continue
-        run = dict(src)
-        if cutoff and run.get("date") and str(run.get("date")) >= cutoff:
-            continue
-        rid = _central_resolve_race_id(run)
-        if rid:
-            run["raceId"] = rid
-        key = run.get("raceId") or (str(run.get("date") or "") + "|" + str(run.get("track") or "") + "|" + str(int(run.get("raceNumber") or 0)))
-        if key in seen:
-            continue
-        seen.add(key)
-        all_runs.append(run)
-    all_runs.sort(key=lambda x: (str(x.get("date") or ""), int(x.get("raceNumber") or 0)), reverse=True)
-    return all_runs[:limit]
+    return _acq_central_history._merge_central_recent(
+        existing, stored, cutoff, limit,
+        _central_resolve_race_id=_central_resolve_race_id,
+    )
 
 
 def _central_month_dates(year: int, month: int, cutoff: str) -> list[str]:
-    last = calendar.monthrange(year, month)[1]
-    cutoff_date = datetime.strptime(cutoff, "%Y-%m-%d").date()
-    dates = []
-    # JRA standard meetings are Sat/Sun and holiday Mondays. Searching these days first
-    # avoids hundreds of empty requests while still covering ordinary and holiday meetings.
-    for day in range(last, 0, -1):
-        d = dt_date(year, month, day)
-        if d >= cutoff_date:
-            continue
-        if d.weekday() in (0, 5, 6):
-            dates.append(d.isoformat())
-    return dates
+    return _acq_central_history._central_month_dates(
+        year, month, cutoff,
+    )
 
 
 def _fetch_central_days_parallel(days: list[str]) -> tuple[list[dict], list[str]]:
-    if not days:
-        return [], []
-    workers = max(2, min(10, int(os.getenv("CENTRAL_HISTORY_WORKERS", "6"))))
-    rows: list[dict] = []
-    errors: list[str] = []
-    with ThreadPoolExecutor(max_workers=min(workers, len(days))) as pool:
-        future_map = {pool.submit(fetch_central_feed, day, True):day for day in days}
-        for fut in as_completed(future_map):
-            day = future_map[fut]
-            try:
-                rows.extend(fut.result() or [])
-            except Exception as exc:
-                errors.append(f"{day}:{exc}")
-    return rows, errors
+    return _acq_central_history._fetch_central_days_parallel(
+        days,
+        fetch_central_feed=fetch_central_feed,
+    )
 
 
 def _start_central_history_search(race_id: str, iso_date: str, force: bool = False) -> dict:
-    max_months = max(12, min(60, int(os.getenv("CENTRAL_ON_DEMAND_HISTORY_MONTHS", "36"))))
-    detail = central_race_detail(race_id)
-    cov = _central_detail_coverage(detail or {})
-    with _race_history_lock:
-        existing = _race_history_jobs.get(race_id)
-        if existing and not force:
-            return dict(existing)
-        has_feed=bool(_clean(os.getenv("CENTRAL_HISTORY_FEED_URL", "")) or _clean(os.getenv("CENTRAL_FEED_URL", "")))
-        job = {"status":"running","monthsDone":0,"maxMonths":max_months,"coverage":cov,"error":"",
-               "source":"中央フィード高速並列検索" if has_feed else "JRA公式 競走馬情報5走補完"}
-        _race_history_jobs[race_id] = job
-
-    def worker():
-        errors = []
-        months_done = 0
-        store = CentralStore()
-        try:
-            # With no external central feed, use each horse's official JRA profile directly.
-            if not has_feed:
-                current=central_race_detail(race_id) or {}
-                horses=current.get("horses") or []
-                cutoff=current.get("date") or iso_date
-                # The official profile page may contain far more than five
-                # performances. Preserve its entire available pre-race career
-                # in allPastRuns, keeping only recentRaces at five for the UI.
-                history_limit=max(6,min(1000,int(os.getenv("ARVEXQ_CAREER_FETCH_LIMIT","1000"))))
-                def fill(h):
-                    h=dict(h)
-                    try:
-                        cname=h.get("_jraHorseCname") or h.get("jraHorseCname") or ""
-                        extra=_jra_profile_runs(cname,cutoff,history_limit)
-                        h=merge_full_profile_history(h,extra,cutoff)
-                    except Exception as exc:
-                        errors.append(str(exc))
-                    return h
-                workers=max(2,min(8,int(os.getenv("JRA_PROFILE_WORKERS","6"))))
-                with ThreadPoolExecutor(max_workers=min(workers,max(1,len(horses)))) as pool:
-                    current["horses"]=list(pool.map(fill,horses)) if horses else []
-                current["source"]="JRA公式"
-                store.upsert([current])
-                fresh_detail=central_race_detail(race_id) or current
-                cov_now=_central_detail_coverage(fresh_detail)
-                total_now=int(cov_now.get("totalHorses") or 0)
-                resolved_now=int(cov_now.get("horsesResolved") or cov_now.get("horsesWith5Plus") or 0)
-                # A debut/young horse can legitimately have 0 prior runs. If JRA says the
-                # inspected career is complete, treat it as resolved instead of a fetch error.
-                central_done=bool(assess_career_readiness(fresh_detail).get("ready"))
-                with _race_history_lock:
-                    _race_history_jobs[race_id]={"status":"done" if central_done else ("error" if errors and not cov_now.get("horsesWithHistory",0) else "partial"),
-                        "monthsDone":0,"maxMonths":0,"coverage":cov_now,"error":" | ".join(errors[-5:]),
-                        "source":"JRA公式 競走馬情報全過去走補完","fullCareerVerified":central_done}
-                with _detail_cache_lock:
-                    _detail_cache.pop(race_id,None)
-                return
-            for y, m in _months_from_race_date(iso_date, max_months):
-                days = _central_month_dates(y, m, iso_date)
-                fresh_rows, errs = _fetch_central_days_parallel(days)
-                errors.extend(errs)
-                if fresh_rows:
-                    store.upsert(fresh_rows)
-                months_done += 1
-                fresh_detail = central_race_detail(race_id) or {}
-                cov_now = _central_detail_coverage(fresh_detail)
-                with _race_history_lock:
-                    _race_history_jobs[race_id] = {"status":"running","monthsDone":months_done,"maxMonths":max_months,
-                                                   "coverage":cov_now,"error":" | ".join(errors[-3:]),"source":"中央フィード高速並列検索"}
-                if assess_career_readiness(fresh_detail).get("ready"):
-                    break
-            fresh_detail = central_race_detail(race_id) or {}
-            cov_now = _central_detail_coverage(fresh_detail)
-            verified=bool(assess_career_readiness(fresh_detail).get("ready"))
-            status = "done" if verified else ("error" if errors and not cov_now.get("horsesWithHistory",0) else "partial")
-            with _race_history_lock:
-                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,
-                                               "coverage":cov_now,"error":" | ".join(errors[-5:]),"source":"中央フィード高速並列検索",
-                                               "fullCareerVerified":verified}
-            with _detail_cache_lock:
-                _detail_cache.pop(race_id, None)
-        finally:
-            try:
-                store.conn.close()
-            except Exception:
-                pass
-    threading.Thread(target=worker, daemon=True).start()
-    return dict(job)
+    return _acq_central_history._start_central_history_search(
+        race_id, iso_date, force,
+        CentralStore=CentralStore, _central_month_dates=_central_month_dates, _detail_cache=_detail_cache,
+        _detail_cache_lock=_detail_cache_lock, _fetch_central_days_parallel=_fetch_central_days_parallel, _jra_profile_runs=_jra_profile_runs,
+        central_race_detail=central_race_detail,
+    )
 
 
 from arvexq.ingest.parsers.market import (
@@ -2301,286 +1028,71 @@ from arvexq.ingest.parsers.market import (
 
 
 def _netkeiba_live_win_odds(detail:dict,force:bool=False)->dict:
-    rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
-        str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0)
+    return _acq_netkeiba_odds._netkeiba_live_win_odds(
+        detail, force,
+        _netkeiba_get=_netkeiba_get, _netkeiba_race_id=_netkeiba_race_id,
     )
-    if not rid:return {}
-    base="https://race.netkeiba.com/api/api_get_jra_odds.html"
-    nonce=f"&t={int(time.time()*1000)}" if force else ""
-    common=f"pid=api_get_jra_odds&race_id={urllib.parse.quote(rid)}&type=1&sort=odds&compress=0&output=json"
-    urls=[f"{base}?{common}&action=update{nonce}",f"{base}?{common}&action=init{nonce}"]
-    for url in urls:
-        try:
-            raw=_netkeiba_get(url,float(os.getenv("NETKEIBA_ODDS_TIMEOUT_SEC","3.0")),
-                              0 if force else int(os.getenv("NETKEIBA_ODDS_CACHE_SEC","8")))
-            out=_parse_netkeiba_win_odds_payload(raw)
-            if out:return out
-        except Exception as exc:
-            print("netkeiba odds api failed",rid,exc)
-    return {}
 
 def _merge_central_odds(detail:dict, odds:dict)->dict:
-    if not odds:return detail
-    by={int(h.get("horseNumber") or 0):h for h in detail.get("horses",[]) or []}
-    for no,z in odds.items():
-        h=by.get(int(no))
-        if h:
-            for k,v in z.items():
-                if v not in (None,""):h[k]=v
-    detail["oddsSource"]="netkeiba実オッズ";detail["oddsType"]="単勝実オッズ";detail["oddsUpdatedAt"]=_now_jst().strftime("%H:%M:%S")
-    return detail
+    return _acq_merge_current._merge_central_odds(
+        detail, odds,
+        _now_jst=_now_jst,
+    )
 
 def _merge_result_fields(detail:dict,result:dict)->dict:
-    fins=(result or {}).get("finishers") or []
-    if not fins:return detail
-    hs=detail.get("horses") if isinstance(detail.get("horses"),list) else []
-    by={int(h.get("horseNumber") or 0):h for h in hs if int(h.get("horseNumber") or 0)>0}
-    if not hs:
-        hs=[];detail["horses"]=hs
-    for f in fins:
-        no=int(f.get("horseNumber") or 0)
-        if not no:continue
-        h=by.get(no)
-        if h is None:
-            h={"horseNumber":no,"frameNumber":int(f.get("frameNumber") or no),"name":str(f.get("name") or ""),"recentRaces":[],"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{}}
-            hs.append(h);by[no]=h
-        for k in ("winOdds","popularity","bodyWeight","bodyWeightChange"):
-            if f.get(k) not in (None,""):h[k]=f.get(k)
-        if f.get("winOdds"):h["oddsSource"]="netkeiba最終"
-    if any(f.get("winOdds") for f in fins):
-        detail["oddsSource"]="netkeiba最終";detail["oddsType"]="単勝最終オッズ";detail["oddsUpdatedAt"]=_now_jst().strftime("%H:%M:%S")
-    detail["fieldSize"]=int(detail.get("fieldSize") or len(hs))
-    return detail
+    return _acq_merge_current._merge_result_fields(
+        detail, result,
+        _now_jst=_now_jst,
+    )
 
 
 def _fetch_nar_payouts_only(detail: dict) -> tuple[list[dict],str]:
-    code=NAR_BABA_CODES.get(detail.get("track"))
-    if not code:return [],"競馬場コード未取得"
-    query=urllib.parse.urlencode({
-        "k_babaCode":code,
-        "k_raceDate":str(detail.get("date") or "").replace("-","/"),
-        "k_raceNo":int(detail.get("raceNumber") or 0),
-    })
-    urls=[
-        "https://www.keiba.go.jp/KeibaWebSP/TodayRaceInfo/S_RefundMoneyList?"+query,
-        "https://sp.keiba.go.jp/KeibaWebSP/TodayRaceInfo/S_RefundMoneyList?"+query,
-    ]
-    last=""
-    for url in urls:
-        try:
-            req=urllib.request.Request(url,headers={
-                "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
-                "Accept-Language":"ja,en-US;q=0.8",
-            })
-            with urllib.request.urlopen(req,timeout=float(os.getenv("NAR_PAYOUT_TIMEOUT_SEC","2.0"))) as response:
-                html=_jra_decode(response.read())
-            payouts=_parse_payouts(BeautifulSoup(html,"html.parser"))
-            if payouts:return payouts,url
-            last="払戻表は取得したが解析結果0件"
-        except Exception as exc:
-            last=str(exc)
-    return [],last or "払い戻し未取得"
+    return _acq_local_results._fetch_nar_payouts_only(
+        detail,
+    )
 
 
 def _attach_nar_payouts(detail: dict) -> dict:
-    result=detail.get("result")
-    if not isinstance(result,dict):
-        result={}
-        detail["result"]=result
-    if result.get("payouts"):return detail
-    payouts,source=_fetch_nar_payouts_only(detail)
-    if payouts:
-        result["payouts"]=payouts
-        result["status"]="確定"
-        result["payoutSource"]="NAR公式"
-        result["payoutUrl"]=source
-        result.pop("payoutError",None)
-    else:
-        result["payoutError"]="払い戻し未取得"
-        result["payoutDebug"]=source[:240]
-    return detail
+    return _acq_local_results._attach_nar_payouts(
+        detail,
+        _fetch_nar_payouts_only=_fetch_nar_payouts_only,
+    )
 
 
 def _netkeiba_current_result(detail:dict)->dict|None:
-    rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
-    if not rid:return None
-    try:html=_netkeiba_get(f"https://race.netkeiba.com/race/result.html?race_id={rid}",float(os.getenv("NETKEIBA_RESULT_TIMEOUT_SEC","3.0")),20)
-    except Exception as exc:
-        print("netkeiba result failed",rid,exc);return None
-    soup=BeautifulSoup(html,"html.parser"); table=None; headers=[]
-    for tb in soup.find_all("table"):
-        for tr in tb.find_all("tr")[:4]:
-            vals=[re.sub(r"\s+","",_clean(c.get_text(" ",strip=True))) for c in tr.find_all(["th","td"])]
-            if any("着順" in v for v in vals) and any("馬番" in v for v in vals) and any("馬名" in v for v in vals):
-                table=tb;headers=vals;break
-        if table:break
-    if table is None:return None
-    def hidx(*keys):
-        for i,v in enumerate(headers):
-            for k in keys:
-                if k in v:return i
-        return -1
-    i_fin=hidx("着順");i_frame=hidx("枠");i_no=hidx("馬番");i_name=hidx("馬名");i_time=hidx("タイム");i_corner=hidx("コーナー通過順");i_pop=hidx("人気");i_odds=hidx("単勝オッズ","単勝");i_bw=hidx("馬体重")
-    finishers=[]
-    for tr in table.find_all("tr"):
-        tds=tr.find_all("td")
-        if not tds:continue
-        vals=[_clean(td.get_text(" ",strip=True)) for td in tds]
-        def val(i):return vals[i] if 0<=i<len(vals) else ""
-        fm=re.search(r"\d+",val(i_fin)) if i_fin>=0 else None
-        fin=int(fm.group()) if fm else 0; no=0; frame=0
-        mn=re.search(r"\d+",val(i_no)) if i_no>=0 else None
-        mf=re.search(r"\d+",val(i_frame)) if i_frame>=0 else None
-        if mn:no=int(mn.group())
-        if mf:frame=int(mf.group())
-        if not no:
-            um=tr.find("td",class_=re.compile(r"Umaban",re.I))
-            mm=re.search(r"\d+",_clean(um.get_text(" ",strip=True))) if um else None
-            if mm:no=int(mm.group())
-        name=val(i_name)
-        if not name:
-            na=tr.select_one(".Horse_Name a,.HorseInfo a,.Horse_Name")
-            name=_clean(na.get_text(" ",strip=True)) if na else ""
-        tm=_jra_parse_time_seconds(val(i_time)) if i_time>=0 else 0.0
-        corners=[]
-        cs=val(i_corner)
-        cm=re.search(r"\d{1,2}(?:-\d{1,2})+",cs)
-        if cm:corners=[int(x) for x in cm.group().split("-")]
-        pop=None;odd=None;bw=None;chg=None
-        mp=re.search(r"\d+",val(i_pop)) if i_pop>=0 else None
-        if mp:
-            try:pop=int(mp.group())
-            except Exception:pass
-        mo=re.search(r"\d+(?:\.\d+)?",val(i_odds)) if i_odds>=0 else None
-        if mo:
-            try:odd=float(mo.group())
-            except Exception:pass
-        mb=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",val(i_bw)) if i_bw>=0 else None
-        if mb:
-            try:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
-            except Exception:pass
-        if no and name:finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val(i_fin),"horseNumber":no,"frameNumber":frame,"name":name,"timeSeconds":tm,"cornerPositions":corners,"winOdds":odd,"popularity":pop,"bodyWeight":bw,"bodyWeightChange":chg})
-    finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
-    if len(finishers)<3:return None
-    payouts=_parse_payouts(soup)
-    status="確定" if payouts or re.search(r"確定",_clean(soup.get_text(" ",strip=True))) else "速報"
-    return {"status":status,"finishers":finishers,"source":"netkeiba結果","payouts":payouts}
+    return _acq_netkeiba_results._netkeiba_current_result(
+        detail,
+        _jra_parse_time_seconds=_jra_parse_time_seconds, _netkeiba_get=_netkeiba_get, _netkeiba_race_id=_netkeiba_race_id,
+    )
 
 
 def _jra_result_cname_from_card(cname:str)->str:
-    if not cname:return ""
-    try:html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,20)
-    except Exception as exc:
-        print("JRA result link fetch failed",exc);return ""
-    vals=[_jra_norm_cname(x) for x in JRA_RESULT_CNAME_RE.findall(html)]
-    return vals[0] if vals else ""
+    return _acq_central_jra_identifiers._jra_result_cname_from_card(
+        cname,
+        _jra_norm_cname=_jra_norm_cname, _jra_request=_jra_request,
+    )
 
 def _jra_any_track(cname:str)->str:
-    m=re.search(r"pw01(?:d|s)de(?:01|10)(\d{2})",cname or "",re.I)
-    return JRA_TRACK_CODES.get(m.group(1),"") if m else ""
+    return _acq_central_jra_identifiers._jra_any_track(
+        cname,
+    )
 
 def _jra_any_race_no(cname:str)->int:
-    m=re.search(r"pw01(?:d|s)de(?:01|10)\d{2}\d{4}\d{4}(\d{2})20\d{6}/",cname or "",re.I)
-    return int(m.group(1)) if m else 0
+    return _acq_central_jra_identifiers._jra_any_race_no(
+        cname,
+    )
 
 def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
-    if not result_cname:return None
-    try:html=_jra_request("https://www.jra.go.jp/JRADB/accessS.html",result_cname,20)
-    except Exception as exc:
-        print("JRA official result fetch failed",result_cname,exc);return None
-    soup=BeautifulSoup(html,"html.parser");full=_jra_text(soup)
-    date=_jra_date_from_cname(result_cname) or str((base or {}).get("date") or "")
-    track=_jra_any_track(result_cname) or str((base or {}).get("track") or "")
-    race_no=_jra_any_race_no(result_cname) or int((base or {}).get("raceNumber") or 0)
-    sm=re.search(r"発走時刻\s*[：:]?\s*(\d{1,2})時\s*(\d{2})分",full)
-    start=f"{int(sm.group(1)):02d}:{sm.group(2)}" if sm else str((base or {}).get("startTime") or "")
-    dm=re.search(r"コース\s*[：:]?\s*([\d,]+)\s*メートル\s*[（(]([^）)]+)[）)]",full)
-    distance=int(dm.group(1).replace(",","")) if dm else int((base or {}).get("distance") or 0)
-    desc=dm.group(2) if dm else str((base or {}).get("surface") or "")
-    surface="障害" if "障" in desc else ("芝" if "芝" in desc else ("ダート" if "ダ" in desc else str((base or {}).get("surface") or "")))
-    weather="不明";wm=re.search(r"天候\s*[：:]?\s*(晴|曇|雨|小雨|雪|小雪)",full)
-    if wm:weather=wm.group(1)
-    conds=[]
-    for typ in ("芝","ダート"):
-        cm=re.search(typ+r"\s*[：:]?\s*(良|稍重|重|不良)",full)
-        if cm:conds.append((typ,cm.group(1)))
-    condition="不明"
-    if surface=="芝":condition=next((c for t,c in conds if t=="芝"),condition)
-    elif surface=="ダート":condition=next((c for t,c in conds if t=="ダート"),condition)
-    elif conds:condition=conds[-1][1]
-    title=""
-    for node in soup.find_all(["h2","h3"]):
-        tx=_jra_text(node)
-        if tx and len(tx)<100 and not JRA_BAD_TITLE_RE.search(tx) and "レース結果" not in tx and not re.match(r"^\d+レース$",tx):title=tx;break
-    if not title:title=str((base or {}).get("title") or f"{race_no}R")
-    table=None;headers=[]
-    for tb in soup.find_all("table"):
-        for tr in tb.find_all("tr")[:5]:
-            vals=[re.sub(r"\s+","",_jra_text(c)) for c in tr.find_all(["th","td"])]
-            if any("着順" in v for v in vals) and any("馬番" in v for v in vals) and any("馬名" in v for v in vals):table=tb;headers=vals;break
-        if table:break
-    if table is None:return None
-    def hidx(*keys):
-        for i,v in enumerate(headers):
-            for k in keys:
-                if k in v:return i
-        return -1
-    ix={"fin":hidx("着順"),"frame":hidx("枠"),"no":hidx("馬番"),"name":hidx("馬名"),"sexage":hidx("性齢"),"cw":hidx("負担重量","斤量"),"jockey":hidx("騎手名","騎手"),"time":hidx("タイム"),"last3f":hidx("推定上り","上り"),"corner":hidx("コーナー通過順位","コーナー通過順"),"bw":hidx("馬体重"),"trainer":hidx("調教師名","調教師"),"pop":hidx("単勝人気","人気")}
-    finishers=[]
-    for tr in table.find_all("tr"):
-        tds=tr.find_all("td")
-        if not tds:continue
-        vals=[_jra_text(td) for td in tds]
-        def val(k):
-            i=ix[k];return vals[i] if 0<=i<len(vals) else ""
-        fm=re.search(r"\d+",val("fin"));nm=re.search(r"\d+",val("no"))
-        if not nm:continue
-        fin=int(fm.group()) if fm else 0;no=int(nm.group());mf=re.search(r"\d+",val("frame"));frame=int(mf.group()) if mf else 0
-        name=_clean(val("name"));sxage=val("sexage");sx="";age=0;smx=re.search(r"(牡|牝|せん)(\d+)",sxage)
-        if smx:sx=smx.group(1);age=int(smx.group(2))
-        mcw=re.search(r"\d+(?:\.\d+)?",val("cw"));cw=float(mcw.group()) if mcw else 0.0
-        tm=_jra_parse_time_seconds(val("time"));m3=re.search(r"\d+(?:\.\d+)?",val("last3f"));last3f=float(m3.group()) if m3 else None;corners=[];cm=re.search(r"\d{1,2}(?:-\d{1,2})+",val("corner"))
-        if cm:corners=[int(x) for x in cm.group().split("-")]
-        elif val("corner"):corners=[int(x) for x in re.findall(r"\d{1,2}",val("corner"))]
-        bw=None;chg=None;mb=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",val("bw"))
-        if mb:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
-        mp=re.search(r"\d+",val("pop"));pop=int(mp.group()) if mp else None
-        finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val("fin"),"horseNumber":no,"frameNumber":frame,"name":name,"sex":sx,"age":age,"carriedWeight":cw,"jockey":_clean(val("jockey")),"trainer":_clean(val("trainer")),"timeSeconds":tm,"last3FSeconds":last3f,"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,"popularity":pop})
-    sectionals=sorted({float(x.get("last3FSeconds")) for x in finishers if x.get("last3FSeconds") not in (None,"") and float(x.get("last3FSeconds"))>0})
-    for x in finishers:
-        try:s=float(x.get("last3FSeconds")) if x.get("last3FSeconds") not in (None,"") else 0.0
-        except (TypeError,ValueError):s=0.0
-        if s>0 and sectionals:
-            rk=sectionals.index(s)+1
-            x["last3FRank"]=rk
-            x["last3FPercentile"]=0.5 if len(sectionals)==1 else 1.0-(rk-1)/(len(sectionals)-1)
-    finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
-    if not finishers:return None
-    payouts=_parse_payouts(soup)
-    status="確定" if payouts or re.search(r"確定",full) else "速報"
-    prize1=0
-    pm=re.search(r"1着\s*([\d,.]+)",full)
-    if pm:
-        try:prize1=int(float(pm.group(1).replace(",",""))*10000)
-        except (TypeError,ValueError):prize1=0
-    return {"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":len(finishers),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"result":{"status":status,"finishers":finishers,"source":"JRA公式","payouts":payouts},"resultCname":result_cname,"source":"JRA公式結果"}
+    return _acq_central_jra_results._jra_parse_result(
+        result_cname, base,
+        _jra_any_race_no=_jra_any_race_no, _jra_any_track=_jra_any_track, _jra_date_from_cname=_jra_date_from_cname,
+        _jra_parse_time_seconds=_jra_parse_time_seconds, _jra_request=_jra_request, _jra_text=_jra_text,
+    )
 def _netkeiba_race_meta(detail:dict)->dict:
-    rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
-    if not rid:return {}
-    try:html=_netkeiba_get(f"https://race.netkeiba.com/race/shutuba.html?race_id={rid}",float(os.getenv("NETKEIBA_DETAIL_TIMEOUT_SEC","3.5")),20)
-    except Exception:return {}
-    soup=BeautifulSoup(html,"html.parser");full=_clean(soup.get_text(" ",strip=True));out={}
-    h1=soup.find("h1")
-    if h1:out["title"]=_clean(h1.get_text(" ",strip=True))
-    sm=re.search(r"(\d{1,2}:\d{2})発走",full)
-    if sm:out["startTime"]=sm.group(1)
-    dm=re.search(r"(?:芝|ダ|障)(\d{3,4})m",full)
-    if dm:out["distance"]=int(dm.group(1))
-    wm=re.search(r"天候[:：]?\s*(晴|曇|雨|小雨|雪|小雪)",full)
-    if wm:out["weather"]=wm.group(1)
-    cm=re.search(r"馬場[:：]?\s*(良|稍重|重|不良)",full)
-    if cm:out["condition"]=cm.group(1)
-    return out
+    return _acq_netkeiba_racecards._netkeiba_race_meta(
+        detail,
+        _netkeiba_get=_netkeiba_get, _netkeiba_race_id=_netkeiba_race_id,
+    )
 
 def _race_should_have_result(detail:dict)->bool:
     d=str(detail.get("date") or ""); st=str(detail.get("startTime") or "")
@@ -2594,427 +1106,117 @@ def _race_should_have_result(detail:dict)->bool:
     return now>=start+3
 
 def central_race_detail(race_id: str) -> dict | None:
-    detail=None
-    if CENTRAL_DB_PATH.exists():
-        conn=_new_conn(CENTRAL_DB_PATH)
-        try:
-            row=conn.execute("SELECT payload FROM central_races WHERE id=?",(race_id,)).fetchone()
-            if row:
-                try:detail=json.loads(row["payload"])
-                except Exception as exc:print("central payload decode failed",race_id,exc)
-        finally:conn.close()
-    if detail is None:
-        mm=re.match(r"^jra-(20\d{2}-\d{2}-\d{2})-([^\-]+)-(\d{2})$",str(race_id or ""))
-        if mm:
-            detail=_jra_program_lookup(mm.group(1),mm.group(2),int(mm.group(3)))
-            if detail:
-                detail["id"]=race_id
-                try:st=CentralStore();st.upsert([detail]);st.conn.close()
-                except Exception as exc:print("central fallback cache save failed",exc)
-    if detail is None:return None
-    date=str(detail.get("date") or "");track=str(detail.get("track") or "");race_no=int(detail.get("raceNumber") or 0)
-    program=_jra_program_lookup(date,track,race_no)
-    if program:
-        for k in ("title","distance","surface","startTime","scheduledStartTime","meetingNumber","meetingDay","netkeibaRaceId"):
-            v=program.get(k)
-            if v not in (None,"",0):detail[k]=v
-    if not detail.get("netkeibaRaceId"):detail["netkeibaRaceId"]=_netkeiba_program_race_id(date,track,race_no)
-    cname=str(detail.get("jraCname") or "")
-    should_result=_race_should_have_result(detail)
-    if not cname and (should_result or not (detail.get("horses") or []) or int(detail.get("distance") or 0)<=0):
-        cname=_jra_find_cname(date,track,race_no)
-        if cname:detail["jraCname"]=cname
-    # Finished race: fetch JRA official result first. This also supplies exact weather/going.
-    if should_result and cname:
-        try:
-            rc=str(detail.get("resultCname") or "") or _jra_result_cname_from_card(cname)
-            if rc:
-                official=_jra_parse_result(rc,detail)
-                if official:detail=_merge_official_result(detail,official)
-        except Exception as exc:print("JRA official result hydrate failed",race_id,exc)
-    # Official JRA card is primary for the pre-race card and live body data.
-    malformed=(not (detail.get("horses") or []) or bool(JRA_BAD_TITLE_RE.search(str(detail.get("title") or ""))) or int(detail.get("distance") or 0)<=0)
-    if cname:
-        try:
-            live=_jra_parse_race(cname,supplement_profiles=False)
-            if live:
-                if malformed:
-                    # Keep any official result already obtained, but replace the card with the official entry data.
-                    saved_result=detail.get("result");saved_rc=detail.get("resultCname")
-                    detail=live
-                    if saved_result:detail["result"]=saved_result
-                    if saved_rc:detail["resultCname"]=saved_rc
-                else:
-                    for k in ("title","distance","surface","condition","weather","fieldSize","startTime","scheduledStartTime"):
-                        v=live.get(k)
-                        if v not in (None,"",0,"不明"):detail[k]=v
-                    by_no={int(h.get("horseNumber") or 0):h for h in live.get("horses",[]) or []}
-                    for h in detail.get("horses",[]) or []:
-                        z=by_no.get(int(h.get("horseNumber") or 0))
-                        if z:
-                            for k in ("bodyWeight","bodyWeightChange","sex","age","carriedWeight","jockey","trainer"):
-                                if z.get(k) not in (None,"",0,[]):h[k]=z.get(k)
-                            if z.get("recentRaces"):
-                                h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],z.get("recentRaces") or [],5)
-        except Exception as exc:print("JRA official card hydrate failed",race_id,exc)
-    # If the official card is unavailable (e.g. publication ended), fill missing card rows from netkeiba.
-    if not (detail.get("horses") or []):
-        try:
-            nr=_netkeiba_detail_rows(detail)
-            if nr:
-                for h in nr:
-                    h.pop("winOdds",None);h.pop("popularity",None);h.pop("oddsSource",None)
-                detail["horses"]=nr;detail["fieldSize"]=len(nr);detail.setdefault("dataSources",[])
-                if "netkeiba" not in detail["dataSources"]:detail["dataSources"].append("netkeiba")
-        except Exception as exc:print("central card fallback failed",race_id,exc)
-    # Before official results exist, fill only missing weather/going from a secondary public race page.
-    if detail.get("condition") in (None,"","不明") or detail.get("weather") in (None,"","不明"):
-        try:
-            meta=_netkeiba_race_meta(detail)
-            for k in ("title","distance","condition","weather","startTime"):
-                if detail.get(k) in (None,"",0,"不明") and meta.get(k) not in (None,"",0,"不明"):detail[k]=meta[k]
-        except Exception as exc:print("central race meta fallback failed",race_id,exc)
-    # Result fallback only if JRA official result link was not available yet.
-    if should_result and not (detail.get("result") and (detail.get("result") or {}).get("finishers")):
-        try:
-            rr=_netkeiba_current_result(detail)
-            if rr:
-                for f in rr.get("finishers",[]) or []:f.pop("winOdds",None)
-                detail["result"]=rr
-                # Populate result/body fields without odds.
-                hs=detail.get("horses") or [];by_no={int(h.get("horseNumber") or 0):h for h in hs}
-                for f in rr.get("finishers",[]) or []:
-                    h=by_no.get(int(f.get("horseNumber") or 0))
-                    if h:
-                        for k in ("bodyWeight","bodyWeightChange"):
-                            if f.get(k) not in (None,""):h[k]=f.get(k)
-        except Exception as exc:print("central result fallback failed",race_id,exc)
-    detail.pop("oddsSource",None);detail.pop("oddsType",None);detail.pop("oddsUpdatedAt",None)
-    for h in detail.get("horses",[]) or []:
-        h.pop("winOdds",None);h.pop("popularity",None);h.pop("oddsSource",None)
-    if detail.get("horses") or detail.get("result"):
-        try:st=CentralStore();st.upsert([detail]);st.conn.close()
-        except Exception as exc:print("central hydrated cache save failed",exc)
-    cutoff=str(detail.get("date") or "9999-12-31")
-    for h in detail.get("horses",[]) or []:
-        try:
-            stored=_central_recent_from_store(str(h.get("name") or ""),cutoff,5)
-            h["recentRaces"]=_merge_central_recent(h.get("recentRaces") or [],stored,cutoff,5)
-        except Exception as exc:
-            print("central horse history merge failed",race_id,h.get("name"),exc)
-            h["recentRaces"]=[x for x in (h.get("recentRaces") or []) if isinstance(x,dict)][:5]
-    return detail
+    return _acq_central_racecards.central_race_detail(
+        race_id,
+        CENTRAL_DB_PATH=CENTRAL_DB_PATH, CentralStore=CentralStore, _central_recent_from_store=_central_recent_from_store,
+        _jra_find_cname=_jra_find_cname, _jra_parse_race=_jra_parse_race, _jra_parse_result=_jra_parse_result,
+        _jra_program_lookup=_jra_program_lookup, _jra_result_cname_from_card=_jra_result_cname_from_card, _merge_central_recent=_merge_central_recent,
+        _netkeiba_current_result=_netkeiba_current_result, _netkeiba_detail_rows=_netkeiba_detail_rows, _netkeiba_program_race_id=_netkeiba_program_race_id,
+        _netkeiba_race_meta=_netkeiba_race_meta, _new_conn=_new_conn, _race_should_have_result=_race_should_have_result,
+    )
 
 # --- v68 compact rows + fast JRA summaries; official data stays authoritative ---
-_smart_cache_lock=threading.Lock(); _smart_cache:dict[str,tuple[float,dict]]={}
-_enrich_jobs_lock=threading.Lock(); _enrich_jobs:dict[str,dict]={}
-_enrich_data_lock=threading.Lock(); _enrich_data:dict[str,dict]={}
 
 
 def _format_feed_url(base:str,detail:dict)->str:
-    vals={"date":str(detail.get("date") or ""),"yyyymmdd":str(detail.get("date") or "").replace("-",""),"track":str(detail.get("track") or ""),"race":str(detail.get("raceNumber") or ""),"circuit":str(detail.get("circuit") or ""),"race_id":str(detail.get("id") or "")}
-    out=base; used=False
-    for k,v in vals.items():
-        token="{"+k+"}"
-        if token in out:out=out.replace(token,urllib.parse.quote(v));used=True
-    if not used:out+=("&" if "?" in out else "?")+urllib.parse.urlencode({"date":vals["date"],"track":vals["track"],"race":vals["race"],"circuit":vals["circuit"]})
-    return out
+    return _acq_supplemental_feeds._format_feed_url(
+        base, detail,
+    )
 
 def _fetch_json_url(url:str,timeout:float=4.0,token:str=""):
-    headers={"User-Agent":"Mozilla/5.0 (compatible; KeibaPredictor/7.7)","Accept":"application/json,text/plain,*/*","Accept-Language":"ja-JP,ja;q=0.9"}
-    if token:headers["Authorization"]="Bearer "+token
-    req=urllib.request.Request(url,headers=headers)
-    with urllib.request.urlopen(req,timeout=timeout) as res:return json.loads(res.read().decode("utf-8","ignore"))
+    return _acq_supplemental_feeds._fetch_json_url(
+        url, timeout, token,
+    )
 
 def _extract_smartrc_embedded(html:str)->list[dict]:
-    soup=BeautifulSoup(html,"html.parser")
-    for sc in soup.find_all("script"):
-        raw=(sc.string or sc.get_text() or "").strip()
-        if not raw or ("hname" not in raw and "horseNumber" not in raw and '"uno"' not in raw):continue
-        candidates=[]
-        if sc.get("type") in ("application/json","application/ld+json"):
-            try:candidates.append(json.loads(raw))
-            except Exception:pass
-        for m in re.finditer(r"(?:=|:)\s*(\[[\s\S]{10,120000}?\]|\{[\s\S]{10,120000}?\})\s*;",raw):
-            try:candidates.append(json.loads(html_lib.unescape(m.group(1))))
-            except Exception:pass
-        for c in candidates:
-            rows=_json_horse_rows(c)
-            if rows:return rows
-    return []
+    return _acq_supplemental_feeds._extract_smartrc_embedded(
+        html,
+    )
 
 def _fetch_smartrc(detail:dict)->dict:
-    key=str(detail.get("id") or f"{detail.get('date')}|{detail.get('track')}|{detail.get('raceNumber')}");now=time.time()
-    with _smart_cache_lock:
-        hit=_smart_cache.get(key)
-        if hit and now-hit[0]<600:return hit[1]
-    feed=str(os.getenv("SMARTRC_FEED_URL","")).strip();token=str(os.getenv("SMARTRC_FEED_TOKEN","")).strip();out={"rows":[],"status":"browser","error":"","url":"https://www.smartrc.jp/v3/"}
-    if feed:
-        try:
-            raw=_json_horse_rows(_fetch_json_url(_format_feed_url(feed,detail),float(os.getenv("SMARTRC_TIMEOUT_SEC","5")),token));rows=[z for z in (_smart_normalize_row(x) for x in raw) if z];out={"rows":rows,"status":"done" if rows else "unavailable","error":"","url":"https://www.smartrc.jp/v3/"}
-        except Exception as exc:out={"rows":[],"status":"error","error":str(exc)[:220],"url":"https://www.smartrc.jp/v3/"}
-    with _smart_cache_lock:_smart_cache[key]=(now,out)
-    return out
+    return _acq_supplemental_feeds._fetch_smartrc(
+        detail,
+        _fetch_json_url=_fetch_json_url, _format_feed_url=_format_feed_url,
+    )
 
 def _fetch_extra_sources(detail:dict)->list[dict]:
-    spec=str(os.getenv("EXTRA_RACE_FEEDS","")).strip(); out=[]
-    if not spec:return out
-    for part in spec.split(";"):
-        part=part.strip()
-        if not part:continue
-        name,url=(part.split("=",1) if "=" in part else ("補助",part))
-        try:
-            body=_fetch_json_url(_format_feed_url(url.strip(),detail),float(os.getenv("EXTRA_FEED_TIMEOUT_SEC","4")),str(os.getenv("EXTRA_FEED_TOKEN","")).strip()); rows=[]
-            for x in _json_horse_rows(body):
-                no=_safe_int(_pick(x,"horseNumber","horse_no","uno","number","馬番"));hn=str(_pick(x,"name","hname","horseName","馬名") or "").strip()
-                if no or hn:rows.append({"horseNumber":no,"name":hn,"extra":x})
-            if rows:out.append({"source":name.strip() or "補助","rows":rows})
-        except Exception as exc:print("extra source failed",name,exc)
-    return out
+    return _acq_supplemental_feeds._fetch_extra_sources(
+        detail,
+        _fetch_json_url=_fetch_json_url, _format_feed_url=_format_feed_url,
+    )
 
 def _merge_enrichment(detail:dict,data:dict)->dict:
-    hs=detail.get("horses") or [];by_no={int(h.get("horseNumber") or 0):h for h in hs if h.get("horseNumber")};by_name={str(h.get("name") or "").strip():h for h in hs if h.get("name")};sources=[]
-    for row in data.get("smartRows") or []:
-        h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
-        if not h:continue
-        if "SmartRc" not in sources:sources.append("SmartRc")
-        if row.get("smartRc"):h["smartRc"]={**(h.get("smartRc") or {}),**row.get("smartRc")}
-        if row.get("pedigree"):h["pedigree"]={**(h.get("pedigree") or {}),**row.get("pedigree")}
-        for k in ("owner","producer","birthday"):
-            if h.get(k) in (None,"") and row.get(k) not in (None,""):h[k]=row.get(k)
-        if row.get("recentRaces"):h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],row.get("recentRaces") or [],5)
-    for row in data.get("netkeibaRows") or []:
-        h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
-        if not h:continue
-        sources.append("netkeiba") if "netkeiba" not in sources else None
-        for k in ("sex","age","carriedWeight","jockey","trainer","bodyWeight","bodyWeightChange","owner","producer"):
-            if (h.get(k) in (None,"",0)) and row.get(k) not in (None,""):h[k]=row.get(k)
-        if row.get("pedigree"):h["pedigree"]={**(h.get("pedigree") or {}),**row.get("pedigree")}
-        if row.get("_netkeibaHorseId"):h["_netkeibaHorseId"]=row.get("_netkeibaHorseId")
-        if row.get("recentRaces"):
-            h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],row.get("recentRaces") or [],5)
-    for b in data.get("extra") or []:
-        src=str(b.get("source") or "補助")
-        for row in b.get("rows") or []:
-            h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
-            if h:
-                extra=_strip_excluded(row.get("extra") or {})
-                h.setdefault("extraSources",{})[src]=extra
-                for key in ("pedigree","jockeyStats","trainerStats","jumpJockeyStats","jumpTrainerStats","jumpStats","isTransfer","transferFrom","ten1f","agari3f","pedigreeScore","distanceSuitabilityScore","surfaceSuitabilityScore","drawScore","bodyWeightScore","opponentLevelScore","lapScore","conditionChangeScore","jockeyScore","trainerScore","jumpJockeyScore","jumpTrainerScore"):
-                    if extra.get(key) is not None:h[key]=extra[key]
-                if isinstance(extra.get("allPastRuns"),list):h["allPastRuns"]=extra["allPastRuns"]
-        if src not in sources:sources.append(src)
-    base=list(detail.get("dataSources") or []);official="JRA公式" if detail.get("circuit")=="中央" else "NAR公式"
-    for s in [official]+sources:
-        if s not in base:base.append(s)
-    detail["dataSources"]=base;return detail
+    return _acq_merge_current._merge_enrichment(
+        detail, data,
+        _strip_excluded=_strip_excluded,
+    )
 
 def _enrichment_status(race_id:str)->dict:
-    with _enrich_jobs_lock:
-        st=_enrich_jobs.get(race_id);return dict(st) if st else {"status":"idle","sources":[],"error":""}
+    return _acq_supplemental_enrichment._enrichment_status(
+        race_id,
+    )
 
 def _start_enrichment(race_id:str,detail:dict,force:bool=False,horse_no:int|None=None)->dict:
-    now=time.time()
-    with _enrich_jobs_lock:
-        old=_enrich_jobs.get(race_id)
-        if old and old.get("status")=="running" and not force:return dict(old)
-        if old and old.get("status") in {"done","unavailable"} and not force and now-float(old.get("finishedAt") or 0)<300:return dict(old)
-        _enrich_jobs[race_id]={"status":"running","sources":[],"error":"","startedAt":now,"horseNumber":horse_no}
-    snap=json.loads(json.dumps(detail,ensure_ascii=False,default=str))
-    def worker():
-        errs=[];sources=[];netkeibaRows=[];smartRows=[];extra=[]
-        def get_netkeiba():
-            if snap.get("circuit")!="中央":return []
-            try:return _netkeiba_detail_rows(snap)
-            except Exception as exc:errs.append("netkeiba: "+str(exc));return []
-        def get_smart():
-            # v146: SmartRc tempo/final-section metrics are intentionally suspended.
-            return []
-        def get_extra():
-            try:return _fetch_extra_sources(snap)
-            except Exception as exc:errs.append("補助: "+str(exc));return []
-        try:
-            with ThreadPoolExecutor(max_workers=3) as pool:
-                f_net=pool.submit(get_netkeiba);f_smart=pool.submit(get_smart);f_extra=pool.submit(get_extra)
-                netkeibaRows=f_net.result() or [];smartRows=f_smart.result() or [];extra=f_extra.result() or []
-            if netkeibaRows:sources.append("netkeiba")
-            if smartRows:sources.append("SmartRc")
-            for b in extra:
-                if b.get("source") not in sources:sources.append(b.get("source"))
-        except Exception as exc:errs.append("情報取得: "+str(exc))
-        if horse_no:
-            netkeibaRows=[x for x in netkeibaRows if int(x.get("horseNumber") or 0)==int(horse_no)]
-            smartRows=[x for x in smartRows if int(x.get("horseNumber") or 0)==int(horse_no)]
-        with _enrich_data_lock:
-            olddata=_enrich_data.get(race_id) or {}
-            nk={}
-            for rr in (olddata.get("netkeibaRows") or [])+netkeibaRows:
-                key=int(rr.get("horseNumber") or 0) or str(rr.get("name") or "")
-                nk[key]=rr
-            sk={}
-            for rr in (olddata.get("smartRows") or [])+smartRows:
-                key=int(rr.get("horseNumber") or 0) or str(rr.get("name") or "")
-                sk[key]=rr
-            _enrich_data[race_id]={"netkeibaRows":list(nk.values()),"smartRows":list(sk.values()),"extra":extra or olddata.get("extra") or []}
-        with _enrich_jobs_lock:_enrich_jobs[race_id]={"status":"done" if sources else "unavailable","sources":sources,"error":" | ".join(errs[-3:]),"finishedAt":time.time(),"horseNumber":horse_no}
-        try:
-            enriched=json.loads(json.dumps(snap,ensure_ascii=False,default=str))
-            with _enrich_data_lock:
-                saved_data=_enrich_data.get(race_id) or {}
-            enriched=_merge_enrichment(enriched,saved_data)
-            enriched["enrichmentSearch"]=_enrichment_status(race_id)
-            latest,_=PREPARED_STORE.get(race_id)
-            if latest:
-                enriched=_merge_enrichment(latest,saved_data)
-                enriched["enrichmentSearch"]=_enrichment_status(race_id)
-            enriched=_precompute_detail_metrics(_attach_evaluation_context(_attach_stored_career(enriched)))
-            PREPARED_STORE.put(enriched)
-            RACEDB.upsert_race(enriched)
-        except Exception as exc:print("RaceDB enrichment save failed",race_id,exc)
-        with _detail_cache_lock:_detail_cache.pop(race_id,None)
-    threading.Thread(target=worker,daemon=True).start();return _enrichment_status(race_id)
+    return _acq_supplemental_enrichment._start_enrichment(
+        race_id, detail, force, horse_no,
+        PREPARED_STORE=PREPARED_STORE, RACEDB=RACEDB, _attach_evaluation_context=_attach_evaluation_context,
+        _attach_stored_career=_attach_stored_career, _detail_cache=_detail_cache, _detail_cache_lock=_detail_cache_lock,
+        _enrichment_status=_enrichment_status, _fetch_extra_sources=_fetch_extra_sources, _merge_enrichment=_merge_enrichment,
+        _netkeiba_detail_rows=_netkeiba_detail_rows, _precompute_detail_metrics=_precompute_detail_metrics,
+    )
 
 def _apply_enrichment(race_id:str,detail:dict)->dict:
-    with _enrich_data_lock:data=_enrich_data.get(race_id)
-    if data:_merge_enrichment(detail,data)
-    detail["enrichmentSearch"]=_enrichment_status(race_id)
-    title=str(detail.get("title") or "");surface=str(detail.get("surface") or "")
-    mode="障害" if (surface=="障害" or "障害" in title or re.search(r"(?:J[･・.]?G[ⅠⅡⅢ123]|\\bJS\\b|ジャンプ)",title,re.I)) else ("新馬" if re.search(r"(?:新馬|メイクデビュー)",title) else "平地")
-    detail["analysisMode"]=mode
-    if mode=="新馬":
-        for h in detail.get("horses",[]) or []:
-            if not (h.get("recentRaces") or []):h["debutNoHistory"]=True
-    return detail
+    return _acq_supplemental_enrichment._apply_enrichment(
+        race_id, detail,
+        _enrichment_status=_enrichment_status, _merge_enrichment=_merge_enrichment,
+    )
 
 
 # --- v123 live weather / going -----------------------------------------
 _environment_lock=threading.Lock()
 _environment_running:set[str]=set()
 _environment_state:dict[str,dict]={}
-_environment_http_lock=threading.Lock()
-_environment_http_cache:dict[str,tuple[float,dict]]={}
 
 def _env_clean_weather(v:str)->str:
-    s=_clean(v)
-    for x in ("小雨","小雪","晴","曇","雨","雪"):
-        if x in s:return x
-    return "不明"
+    return _acq_environment_parsers._env_clean_weather(
+        v,
+    )
 
 def _env_clean_condition(v:str)->str:
-    s=_clean(v)
-    for x in ("不良","稍重","重","良"):
-        if x in s:return x
-    return "不明"
+    return _acq_environment_parsers._env_clean_condition(
+        v,
+    )
 
 def _parse_nar_environment_html(html:str)->dict:
-    if not html:return {}
-    soup=BeautifulSoup(html,"html.parser")
-    full=re.sub(r"\s+"," ",soup.get_text(" ",strip=True))
-    wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
-    cm=re.search(r"馬場(?:状態)?\s*[：:]?\s*(不良|稍重|重|良)",full)
-    out={"scratchMap":{}}
-    if wm:out["weather"]=_env_clean_weather(wm.group(1))
-    if cm:out["condition"]=_env_clean_condition(cm.group(1))
-    for tr in soup.find_all("tr"):
-        tx=_clean(tr.get_text(" ",strip=True))
-        st=_scratch_status(tx)
-        if not st:continue
-        nums=[]
-        for c in tr.find_all(["th","td"])[:4]:
-            m=re.fullmatch(r"\D*(\d{1,2})\D*",_clean(c.get_text(" ",strip=True)))
-            if m:
-                v=int(m.group(1))
-                if 1<=v<=18:nums.append(v)
-        if nums:
-            no=nums[1] if len(nums)>=2 else nums[0]
-            out["scratchMap"][no]=st
-    return out
+    return _acq_environment_parsers._parse_nar_environment_html(
+        html,
+        _env_clean_condition=_env_clean_condition, _env_clean_weather=_env_clean_weather,
+    )
 
 def _parse_jra_environment_html(html:str, surface:str="")->dict:
-    if not html:return {}
-    soup=BeautifulSoup(html,"html.parser")
-    full=_jra_text(soup)
-    out={"surfaceConditions":{}}
-    wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
-    if wm:out["weather"]=_env_clean_weather(wm.group(1))
-    for surf,label in (("芝","芝"),("ダート","ダート")):
-        cm=re.search(re.escape(label)+r"\s*[：:]?\s*(不良|稍重|重|良)",full)
-        if cm:out["surfaceConditions"][surf]=_env_clean_condition(cm.group(1))
-    if surface=="障害":
-        c=out["surfaceConditions"].get("芝") or out["surfaceConditions"].get("ダート")
-    else:
-        c=out["surfaceConditions"].get(surface)
-    if c:out["condition"]=c
-    return out
+    return _acq_environment_parsers._parse_jra_environment_html(
+        html, surface,
+        _env_clean_condition=_env_clean_condition, _env_clean_weather=_env_clean_weather, _jra_text=_jra_text,
+    )
 
 def _environment_http_get(url:str, ttl:int=30)->str:
-    now=time.time()
-    with _environment_http_lock:
-        hit=_environment_http_cache.get(url)
-        if hit and now-hit[0]<ttl:return str(hit[1].get("html") or "")
-    req=urllib.request.Request(url,headers={
-        "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
-        "Accept-Language":"ja-JP,ja;q=0.9",
-    })
-    with urllib.request.urlopen(req,timeout=float(os.getenv("RACE_ENV_TIMEOUT_SEC","2.8"))) as res:
-        html=_jra_decode(res.read())
-    with _environment_http_lock:
-        _environment_http_cache[url]=(now,{"html":html})
-        if len(_environment_http_cache)>80:
-            oldest=min(_environment_http_cache.items(),key=lambda kv:kv[1][0])[0]
-            _environment_http_cache.pop(oldest,None)
-    return html
+    return _acq_environment_transport._environment_http_get(
+        url, ttl,
+    )
 
 def _nar_fetch_environment(track:str, iso_date:str, race_no:int)->dict:
-    code=NAR_BABA_CODES.get(str(track or "").strip())
-    if not code or not race_no:return {}
-    q=urllib.parse.urlencode({"k_babaCode":code,"k_raceDate":iso_date.replace("-","/"),"k_raceNo":int(race_no)})
-    urls=[
-        "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/DebaTableSmall?"+q,
-        "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/RaceMarkTable?"+q,
-    ]
-    out={}
-    for url in urls:
-        try:parsed=_parse_nar_environment_html(_environment_http_get(url,25 if iso_date==_today_iso() else 86400))
-        except Exception as exc:
-            print("NAR environment fetch failed",track,iso_date,race_no,exc);continue
-        for k in ("weather","condition"):
-            if parsed.get(k) not in (None,"","不明"):out[k]=parsed[k]
-        if parsed.get("scratchMap"):out["scratchMap"]=parsed["scratchMap"]
-        if out.get("weather") and out.get("condition") and "scratchMap" in out:break
-    if out:
-        out.update({"source":"NAR公式","updatedAtEpoch":int(time.time()),"raceNo":int(race_no)})
-    return out
+    return _acq_environment_providers._nar_fetch_environment(
+        track, iso_date, race_no,
+        _environment_http_get=_environment_http_get, _parse_nar_environment_html=_parse_nar_environment_html, _today_iso=_today_iso,
+    )
 
 def _jra_fetch_environment(row:dict)->dict:
-    date=str(row.get("date") or "")
-    track=str(row.get("track") or "")
-    race_no=int(row.get("raceNumber") or 0)
-    surface=str(row.get("surface") or "")
-    cname=str(row.get("jraCname") or "")
-    if not cname:
-        try:cname=_jra_find_cname(date,track,race_no)
-        except Exception:cname=""
-    out={}
-    if cname:
-        try:
-            html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,20 if date==_today_iso() else 86400)
-            out=_parse_jra_environment_html(html,surface)
-        except Exception as exc:
-            print("JRA environment official failed",date,track,race_no,exc)
-    # Secondary source only fills a field the official page did not provide.
-    if out.get("weather") in (None,"","不明") or out.get("condition") in (None,"","不明"):
-        try:
-            meta=_netkeiba_race_meta(row)
-            if out.get("weather") in (None,"","不明") and meta.get("weather") not in (None,"","不明"):
-                out["weather"]=_env_clean_weather(meta.get("weather"))
-            if out.get("condition") in (None,"","不明") and meta.get("condition") not in (None,"","不明"):
-                out["condition"]=_env_clean_condition(meta.get("condition"))
-        except Exception as exc:
-            print("JRA environment secondary failed",date,track,race_no,exc)
-    if out.get("weather") not in (None,"","不明") or out.get("condition") not in (None,"","不明"):
-        out.update({"source":"JRA公式優先","updatedAtEpoch":int(time.time())})
-    return out
+    return _acq_environment_providers._jra_fetch_environment(
+        row,
+        _env_clean_condition=_env_clean_condition, _env_clean_weather=_env_clean_weather, _jra_find_cname=_jra_find_cname,
+        _jra_request=_jra_request, _netkeiba_race_meta=_netkeiba_race_meta, _parse_jra_environment_html=_parse_jra_environment_html,
+        _today_iso=_today_iso,
+    )
 
 
 def _upcoming_rows(rows:list[dict])->list[dict]:
@@ -3813,61 +2015,14 @@ def data_core_refresh_day(date:str=Query(""),circuit:str=Query("")):
     threading.Thread(target=worker,daemon=True,name="data-core-day-"+ds).start()
     return {"status":"queued","date":ds,"circuit":circuit,"raceCount":len(rows),"version":ARVEXQ_DATA_CORE_VERSION}
 
-_full_history_lock=threading.Lock()
-_full_history_running:set[str]=set()
 
 def _schedule_full_history_harvest(detail: dict) -> None:
-    """Persist every career run exposed by the currently available official source without blocking the race screen."""
-    if not bool(int(os.getenv("RACEDB_FULL_HISTORY","1"))) or not isinstance(detail,dict):return
-    # Historical/final cards also need pre-race career data for backtests.
-    # Source functions receive the race-date cutoff, so later races are excluded.
-    if not detail.get("date"):return
-    race_id=str(detail.get("id") or "");horses=[h for h in (detail.get("horses") or []) if isinstance(h,dict) and h.get("name")]
-    if not race_id or not horses:return
-    with _full_history_lock:
-        if race_id in _full_history_running:return
-        _full_history_running.add(race_id)
-    def worker():
-        ttl=max(1800,int(os.getenv("RACEDB_FULL_HISTORY_TTL_SEC","21600")));cutoff=str(detail.get("date") or _today_iso());circuit=str(detail.get("circuit") or "")
-        try:
-            if circuit=="地方":
-                store=NarStore()
-                try:
-                    for h in horses:
-                        key="fullhist:nar:"+RACEDB._horse_key(h);last=RACEDB.source_updated(key)
-                        if last and int(time.time())-last<ttl:continue
-                        try:
-                            runs=store.recent_races(str(h.get("name") or ""),cutoff,100000)
-                            n=RACEDB.upsert_past_runs(h,runs);RACEDB.mark_source(key,"done",f"{n} runs")
-                        except Exception as exc:RACEDB.mark_source(key,"error",str(exc))
-                finally:
-                    try:store.conn.close()
-                    except Exception:pass
-            else:
-                def one(h):
-                    key="fullhist:jra:"+RACEDB._horse_key(h);last=RACEDB.source_updated(key)
-                    if last and int(time.time())-last<ttl:return
-                    cname=str(h.get("_jraHorseCname") or "")
-                    if not cname:
-                        RACEDB.mark_source(key,"unavailable","JRA horse id unavailable");return
-                    try:
-                        runs=_jra_profile_runs(cname,cutoff,10000)
-                        n=RACEDB.upsert_past_runs(h,runs);RACEDB.mark_source(key,"done",f"{n} runs")
-                    except Exception as exc:RACEDB.mark_source(key,"error",str(exc))
-                workers=max(1,min(4,int(os.getenv("RACEDB_FULL_HISTORY_WORKERS","3"))))
-                with ThreadPoolExecutor(max_workers=min(workers,max(1,len(horses)))) as pool:list(pool.map(one,horses))
-            latest,_=PREPARED_STORE.get(race_id)
-            if latest:
-                latest=_precompute_detail_metrics(_attach_evaluation_context(_attach_stored_career(latest)))
-                latest.setdefault("historySearch",{})["status"]="complete-local-history"
-                pm=latest.setdefault("preparedMeta",{})
-                pm.pop("diagnosisVersion",None)
-                pm["diagnosisReady"]=False
-                PREPARED_STORE.put(latest,force=True)
-                RACEDB.upsert_race(latest)
-        finally:
-            with _full_history_lock:_full_history_running.discard(race_id)
-    threading.Thread(target=worker,daemon=True).start()
+    return _acq_history_harvest._schedule_full_history_harvest(
+        detail,
+        NarStore=NarStore, PREPARED_STORE=PREPARED_STORE, RACEDB=RACEDB,
+        _attach_evaluation_context=_attach_evaluation_context, _attach_stored_career=_attach_stored_career, _jra_profile_runs=_jra_profile_runs,
+        _precompute_detail_metrics=_precompute_detail_metrics, _today_iso=_today_iso,
+    )
 
 PREPARED_STORE = PreparedRaceStore()
 _prewarm_lock = threading.Lock()
@@ -4012,52 +2167,14 @@ def _prepared_get_fresh(race_id: str) -> dict | None:
 
 
 def _refresh_result_fast(race_id: str) -> dict | None:
-    """Refresh only authoritative result data; never rebuild history/diagnosis."""
-    detail=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
-    if not detail:
-        detail=nar_race_detail(race_id) if race_id.startswith("nar-") else central_race_detail(race_id)
-    if not detail:return None
-
-    official=None
-    if race_id.startswith("nar-"):
-        try:official=_nar_official_result_fast(detail)
-        except Exception as exc:print("NAR fast result refresh failed",race_id,exc)
-        if official:
-            detail["result"]=official
-            if official.get("weather") not in (None,"","不明"):detail["weather"]=official["weather"]
-            if official.get("condition") not in (None,"","不明"):detail["condition"]=official["condition"]
-            detail=_merge_result_fields(detail,official)
-        elif _race_should_have_result(detail):
-            try:
-                nk=_netkeiba_current_result(detail)
-                if nk:
-                    detail["result"]=nk
-                    detail=_merge_result_fields(detail,nk)
-            except Exception as exc:print("NAR result fallback failed",race_id,exc)
-        if _result_has_podium(detail):
-            try:detail=_attach_nar_payouts(detail)
-            except Exception as exc:print("NAR payout attach after result failed",race_id,exc)
-    else:
-        try:
-            result_cname=str(detail.get("resultCname") or "")
-            if not result_cname:
-                cname=_jra_find_cname(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
-                if cname:result_cname=_jra_result_cname_from_card(cname)
-            parsed=_jra_parse_result(result_cname,detail) if result_cname else None
-            if parsed:detail=_merge_official_result(detail,parsed)
-        except Exception as exc:print("JRA fast result refresh failed",race_id,exc)
-        if not _result_has_podium(detail) and _race_should_have_result(detail):
-            try:
-                nk=_netkeiba_current_result(detail)
-                if nk:
-                    detail["result"]=nk
-                    detail=_merge_result_fields(detail,nk)
-            except Exception as exc:print("JRA result fallback failed",race_id,exc)
-
-    if _result_has_podium(detail):
-        try:_store_fast_snapshot(detail)
-        except Exception as exc:print("result snapshot save failed",race_id,exc)
-    return _compact_display_snapshot(detail)
+    return _acq_snapshots_results._refresh_result_fast(
+        race_id,
+        _attach_nar_payouts=_attach_nar_payouts, _compact_display_snapshot=_compact_display_snapshot, _fast_local_race_detail=_fast_local_race_detail,
+        _jra_find_cname=_jra_find_cname, _jra_parse_result=_jra_parse_result, _jra_result_cname_from_card=_jra_result_cname_from_card,
+        _merge_result_fields=_merge_result_fields, _nar_official_result_fast=_nar_official_result_fast, _netkeiba_current_result=_netkeiba_current_result,
+        _prepared_get_fresh=_prepared_get_fresh, _race_should_have_result=_race_should_have_result, _racedb_get_fast=_racedb_get_fast,
+        _store_fast_snapshot=_store_fast_snapshot, central_race_detail=central_race_detail, nar_race_detail=nar_race_detail,
+    )
 
 
 def _prepare_race_snapshot(race_id: str, force: bool = False, manual: bool = False) -> dict | None:
@@ -4175,82 +2292,11 @@ _racedb_refresh_lock=threading.Lock()
 _racedb_refresh_running:set[str]=set()
 
 def _fast_local_race_detail(race_id:str)->dict|None:
-    """First paint from local DB only. Never wait on web/history/profile lookups."""
-    now=int(time.time())
-    if race_id.startswith("nar-"):
-        m=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-(.+)-(\d{2})$",race_id)
-        if not m or not DB_PATH.exists():return None
-        iso_date,track,race_no=m.group(1),m.group(2),int(m.group(3))
-        conn=_new_conn(DB_PATH)
-        try:
-            race=conn.execute("SELECT * FROM races WHERE track=? AND date=? AND race_no=?",(track,iso_date,race_no)).fetchone()
-            if not race:return None
-            entries=conn.execute("SELECT * FROM entries WHERE track=? AND date=? AND race_no=? ORDER BY horse_no",(track,iso_date,race_no)).fetchall()
-        finally:conn.close()
-        if not entries:return None
-        horses=[];finishers=[]
-        for e in entries:
-            horses.append({"id":_stable_id(iso_date,track,race_no,e["horse_no"],e["name"]),
-                "horseNumber":int(e["horse_no"]),"frameNumber":int(e["frame_no"] or 0),"name":e["name"],
-                "age":int(e["age"] or 0),"sex":e["sex"] or "牡","carriedWeight":float(e["carried_weight"] or 0),
-                "jockey":e["jockey"] or "","trainer":e["trainer"] or "",
-                "status":str(e["status"] or "") if "status" in e.keys() else "",
-                "scratched":bool(_scratch_status(str(e["status"] or ""))) if "status" in e.keys() else False,
-                "recentRaces":[],
-                "jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{},
-                "collectionState":{"status":"basic","history":"loading","pastRunCount":0}})
-            fin=int(e["finish"] or 0)
-            if fin>0:
-                try:cp=json.loads(e["corner_positions_json"] or "[]")
-                except Exception:cp=[]
-                finishers.append({"finish":fin,"horseNumber":int(e["horse_no"]),"frameNumber":int(e["frame_no"] or 0),
-                                  "name":e["name"],"timeSeconds":float(e["time_seconds"] or 0),"cornerPositions":cp})
-        finishers.sort(key=lambda x:(x["finish"],x["horseNumber"]))
-        need=min(3,len(entries));ranks={x["finish"] for x in finishers}
-        finalized=need>0 and all(i in ranks for i in range(1,need+1))
-        detail={"id":race_id,"circuit":"地方","date":iso_date,"track":track,"raceNumber":race_no,
-                "title":race["title"] or f"{race_no}R","distance":int(race["distance"] or 0),
-                "condition":race["condition"] or "不明","weather":race["weather"] or "不明",
-                "fieldSize":int(race["field_size"] or len(entries)),"racePrize1":int(race["prize1"] or 0),
-                "surface":"","startTime":race["start_time"] or "",
-                "scheduledStartTime":race["scheduled_start_time"] or race["start_time"] or "",
-                "horses":horses,"result":{"status":"確定","finishers":finishers} if finalized else None,
-                "source":"NAR公式・高速Snapshot"}
-    else:
-        if not CENTRAL_DB_PATH.exists():return None
-        conn=_new_conn(CENTRAL_DB_PATH)
-        try:row=conn.execute("SELECT payload FROM central_races WHERE id=?",(race_id,)).fetchone()
-        finally:conn.close()
-        if not row:return None
-        try:detail=json.loads(row["payload"])
-        except Exception:return None
-        if not isinstance(detail,dict) or not (detail.get("horses") or []):return None
-        detail=dict(detail);detail["id"]=race_id
-        for h in detail.get("horses",[]) or []:
-            if not isinstance(h,dict):continue
-            runs=list(h.get("recentRaces") or h.get("allPastRuns") or [])[:5]
-            h["recentRaces"]=runs;h.pop("allPastRuns",None)
-            h.setdefault("jockeyStats",{});h.setdefault("trainerStats",{})
-            h.setdefault("jockeyProfile",{});h.setdefault("trainerProfile",{})
-            h["collectionState"]={"status":"complete" if runs else "basic",
-                                  "history":"available" if runs else "loading","pastRunCount":len(runs)}
-        detail["source"]=str(detail.get("source") or "JRA")+"・高速Snapshot"
-    try:
-        latest=RACEDB.odds_latest(race_id);by={int(x.get("horseNumber") or 0):x for x in latest}
-        for h in detail.get("horses",[]) or []:
-            z=by.get(int(h.get("horseNumber") or 0))
-            if z:
-                if z.get("winOdds") is not None:h["winOdds"]=z["winOdds"]
-                if z.get("popularity") is not None:h["popularity"]=z["popularity"]
-    except Exception:pass
-    title=str(detail.get("title") or "");surface=str(detail.get("surface") or "")
-    detail["analysisMode"]="障害" if (surface=="障害" or "障害" in title or "ジャンプ" in title) else ("新馬" if re.search(r"(?:新馬|メイクデビュー)",title) else "平地")
-    try:
-        saved_analysis=RACEDB.get_analysis(race_id)
-        if saved_analysis:detail["analysis"]=saved_analysis
-    except Exception:pass
-    detail["preparedMeta"]={"prepared":True,"fastPartial":True,"preparedAtEpoch":now,"build":"v93-fast"}
-    return detail
+    return _acq_snapshots_local._fast_local_race_detail(
+        race_id,
+        CENTRAL_DB_PATH=CENTRAL_DB_PATH, DB_PATH=DB_PATH, RACEDB=RACEDB,
+        _new_conn=_new_conn,
+    )
 
 
 def _build_fast_diagnosis_snapshot(race_id:str, allow_network:bool=False, deep_context:bool=False)->dict|None:
@@ -4362,448 +2408,66 @@ def _fast_card_worker():
             with _fast_card_cv:_fast_card_running.discard(race_id)
 
 def _parse_nar_official_card_html(detail:dict, html:str)->list[dict]:
-    """Parse the NAR official card including layouts where 馬体重 and 増減 are separate cells."""
-    if not html:return []
-    soup=BeautifulSoup(html,"html.parser")
-    known={_clean(h.get("name")):int(h.get("horseNumber") or 0)
-           for h in detail.get("horses",[]) or []
-           if h.get("name") and int(h.get("horseNumber") or 0)>0}
-    out_by_no={}
-
-    def horse_no_from_row(tr, vals, rowtxt):
-        for name,hno in known.items():
-            if name and name in rowtxt:return hno
-        # Prefer the explicit 馬番 area near the start of the row.
-        nums=[]
-        for c in vals[:8]:
-            m=re.fullmatch(r"\D*(\d{1,2})\D*",c)
-            if m:
-                v=int(m.group(1))
-                if 1<=v<=18:nums.append(v)
-        return nums[-1] if nums else 0
-
-    def parse_weight_cell(txt):
-        m=re.search(r"(?<!\d)(\d{3})(?:\s*(?:kg)?)?(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?(?!\d)",txt,re.I)
-        if not m:return None,None
-        w=int(m.group(1))
-        if not (250<=w<=800):return None,None
-        c=int(m.group(2)) if m.group(2) is not None else None
-        return w,c
-
-    for table in soup.find_all("table"):
-        rows=table.find_all("tr")
-        if not rows:continue
-
-        # Try the header-driven layout first. NAR often publishes 馬体重 and 変更
-        # in separate columns, so the old "(+/-)"-only parser missed every horse.
-        header_vals=[];header_idx=-1
-        for ri,tr in enumerate(rows[:8]):
-            vals=[_clean(c.get_text(" ",strip=True)) for c in tr.find_all(["th","td"],recursive=False)]
-            compact=[re.sub(r"\s+","",x) for x in vals]
-            if any("馬体重" in x for x in compact):
-                header_vals=compact;header_idx=ri;break
-
-        ibw=-1;ichg=-1;icw=-1
-        if header_vals:
-            for i,x in enumerate(header_vals):
-                if ibw<0 and "馬体重" in x:ibw=i
-                if ichg<0 and ("変更" in x or "増減" in x):ichg=i
-                if icw<0 and ("負担重量" in x or "斤量" in x or x=="重量"):icw=i
-
-        for tr in rows[(header_idx+1 if header_idx>=0 else 0):]:
-            cells=tr.find_all(["th","td"],recursive=False)
-            vals=[_clean(c.get_text(" ",strip=True)) for c in cells]
-            rowtxt=_clean(tr.get_text(" ",strip=True))
-            if not vals or not rowtxt:continue
-            no=horse_no_from_row(tr,vals,rowtxt)
-            if not no:continue
-
-            weight=None;change=None;carried=None
-
-            # Current carried weight is independent from body weight. Some NAR layouts
-            # publish it as 負担重量 / 斤量, so fill a missing DB value from the card.
-            if icw>=0 and icw<len(vals):
-                cm=re.search(r"(?<!\d)(\d{2}(?:\.\d)?)(?!\d)",vals[icw])
-                if cm:
-                    try:
-                        cv=float(cm.group(1))
-                        if 35<=cv<=80:carried=round(cv,1)
-                    except Exception:pass
-
-            # 1) Exact body-weight column when the table aligns normally.
-            if ibw>=0 and ibw<len(vals):
-                weight,change=parse_weight_cell(vals[ibw])
-                if weight and change is None and ichg>=0 and ichg<len(vals):
-                    cm=re.search(r"([+\-]?\d{1,3})",vals[ichg])
-                    if cm:
-                        cv=int(cm.group(1))
-                        if -99<=cv<=99:change=cv
-
-            # 2) Layouts that render 482(+4) in one text block.
-            if not weight:
-                wm=re.search(r"(?<!\d)(\d{3})\s*(?:kg)?\s*[（(]\s*([+\-]?\d+)\s*[）)]",rowtxt,re.I)
-                if wm:
-                    w=int(wm.group(1))
-                    if 250<=w<=800:
-                        weight=w;change=int(wm.group(2))
-
-            # 3) DebaTableSmall-style rows: current weight is a standalone 3-digit
-            # cell and the change is the next small integer cell.
-            if not weight:
-                for i,cell in enumerate(vals[:24]):
-                    if not re.fullmatch(r"\d{3}",cell):continue
-                    w=int(cell)
-                    if not (250<=w<=800):continue
-                    weight=w
-                    if i+1<len(vals):
-                        cm=re.fullmatch(r"\s*([+\-]?\d{1,2})\s*",vals[i+1])
-                        if cm:change=int(cm.group(1))
-                    break
-
-            if not weight and carried is None:continue
-            out_by_no[no]={
-                "horseNumber":no,
-                "bodyWeight":weight,
-                "bodyWeightChange":change,
-                "carriedWeight":carried,
-                "source":"NAR公式出馬表",
-            }
-
-    return [out_by_no[k] for k in sorted(out_by_no)]
+    return _acq_local_racecards._parse_nar_official_card_html(
+        detail, html,
+    )
 
 
 def _nar_official_card_rows_fast(detail:dict)->list[dict]:
-    """Fetch NAR official current body weight/change from multiple official card layouts."""
-    code=NAR_BABA_CODES.get(str(detail.get("track") or ""))
-    if not code:return []
-    date=str(detail.get("date") or "")
-    race_no=int(detail.get("raceNumber") or 0)
-    if not date or not race_no:return []
-    q=urllib.parse.urlencode({
-        "k_babaCode":code,
-        "k_raceDate":date.replace("-","/"),
-        "k_raceNo":race_no,
-    })
-    # DebaTableSmall exposes 馬体重 / 変更 as simple columns and is the most
-    # reliable source for the current value. Keep the other official layouts as fallbacks.
-    urls=[
-        "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/DebaTableSmall?"+q,
-        "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/DebaTable?"+q,
-        "https://www.keiba.go.jp/KeibaWeb_IPAT/TodayRaceInfo/DebaTable_ipat?"+q,
-        "https://www.keiba.go.jp/KeibaWebSP/TodayRaceInfo/S_DebaTable?"+q,
-        "https://sp.keiba.go.jp/KeibaWebSP/TodayRaceInfo/S_DebaTable?"+q,
-    ]
-    out_by_no={}
-    # Every active runner matters. Do not stop at N-1 coverage: that caused the
-    # last horse on some NAR cards to remain "未発表" even after the official
-    # card had published its body weight.
-    target=max(1,len([h for h in detail.get("horses",[]) or [] if not h.get("scratched")]))
-    for url in urls:
-        try:
-            req=urllib.request.Request(url,headers={
-                "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
-                "Accept-Language":"ja-JP,ja;q=0.9",
-                "Referer":"https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/TodayRaceInfoTop",
-            })
-            with urllib.request.urlopen(req,timeout=float(os.getenv("NAR_CARD_TIMEOUT_SEC","4.0"))) as res:
-                html=_jra_decode(res.read())
-        except Exception as exc:
-            print("NAR official card failed",detail.get("id"),url,exc);continue
-        for row in _parse_nar_official_card_html(detail,html):
-            no=int(row.get("horseNumber") or 0)
-            if no:out_by_no[no]=row
-        if out_by_no and (not target or len(out_by_no)>=target):break
-    return [out_by_no[k] for k in sorted(out_by_no)]
+    return _acq_local_racecards._nar_official_card_rows_fast(
+        detail,
+        _parse_nar_official_card_html=_parse_nar_official_card_html,
+    )
 
 
 def _merge_current_card_fields(detail:dict, rows:list[dict])->dict:
-    if not rows:return detail
-    by={int(x.get("horseNumber") or 0):x for x in rows if int(x.get("horseNumber") or 0)>0}
-    changed=False
-    for h in detail.get("horses",[]) or []:
-        z=by.get(int(h.get("horseNumber") or 0))
-        if not z:continue
-        for k in ("bodyWeight","bodyWeightChange","carriedWeight","status","scratched"):
-            if z.get(k) not in (None,"") and h.get(k)!=z.get(k):
-                h[k]=z.get(k);changed=True
-    if changed:
-        detail["bodyWeightSource"]="NAR公式出馬表"
-        detail["bodyWeightUpdatedAt"]=_now_jst().strftime("%H:%M:%S")
-    return detail
+    return _acq_merge_current._merge_current_card_fields(
+        detail, rows,
+        _now_jst=_now_jst,
+    )
 
 
 def _nar_result_should_be_available(detail:dict, grace_min:int=1)->bool:
-    date=str(detail.get("date") or "")
-    if not date:return False
-    if date<_today_iso():return True
-    if date>_today_iso():return False
-    st=str(detail.get("startTime") or detail.get("scheduledStartTime") or "")
-    m=re.match(r"^(\d{1,2}):(\d{2})",st)
-    if not m:return False
-    nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
-    return nowm>=int(m.group(1))*60+int(m.group(2))+int(grace_min)
+    return _acq_local_results._nar_result_should_be_available(
+        detail, grace_min,
+        _now_jst=_now_jst, _today_iso=_today_iso,
+    )
 
 
 def _nar_official_result_fast(detail:dict)->dict|None:
-    """Fetch NAR official RaceMarkTable directly; includes result, body weight and corner order."""
-    code=NAR_BABA_CODES.get(str(detail.get("track") or "").strip())
-    date=str(detail.get("date") or "")
-    race_no=int(detail.get("raceNumber") or 0)
-    if not code or not date or not race_no:return None
-    q=urllib.parse.urlencode({"k_babaCode":code,"k_raceDate":date.replace("-","/"),"k_raceNo":race_no})
-    urls=[
-        "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/RaceMarkTable?"+q,
-        "https://www.keiba.go.jp/KeibaWeb_IPAT/TodayRaceInfo/RaceMarkTable_ipat?"+q,
-    ]
-    known={_clean(h.get("name")):int(h.get("horseNumber") or 0) for h in detail.get("horses",[]) or [] if h.get("name")}
-    last_err=""
-    for url in urls:
-        try:
-            req=urllib.request.Request(url,headers={
-                "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
-                "Accept-Language":"ja-JP,ja;q=0.9",
-                "Referer":"https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/TodayRaceInfoTop",
-            })
-            with urllib.request.urlopen(req,timeout=float(os.getenv("NAR_RESULT_TIMEOUT_SEC","4.0"))) as res:
-                html=_jra_decode(res.read())
-        except Exception as exc:
-            last_err=str(exc);continue
-        if not html:continue
-        soup=BeautifulSoup(html,"html.parser")
-        full=_clean(soup.get_text(" ",strip=True))
-        if "競走成績" not in full and "着順" not in full:continue
-        wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
-        cm=re.search(r"馬場(?:状態)?\s*[：:]?\s*(不良|稍重|重|良)",full)
-        finishers=[]
-        for table in soup.find_all("table"):
-            rows=table.find_all("tr")
-            if not rows:continue
-            headers=[];header_i=-1
-            for ri,tr in enumerate(rows[:4]):
-                vals=[_clean(c.get_text(" ",strip=True)) for c in tr.find_all(["th","td"],recursive=False)]
-                joined="|".join(vals)
-                if "着順" in joined and "馬体重" in joined and "馬番" in joined:
-                    headers=vals;header_i=ri;break
-            if not headers:continue
-            def hi(part):
-                for i,x in enumerate(headers):
-                    if part in x:return i
-                return -1
-            idx={k:hi(v) for k,v in {
-                "fin":"着順","frame":"枠","no":"馬番","name":"馬名","sexage":"性齢",
-                "cw":"負担","jockey":"騎手","trainer":"調教師","bw":"馬体重",
-                "time":"タイム","corner":"コーナー","pop":"人気","odds":"単勝"
-            }.items()}
-            for tr in rows[header_i+1:]:
-                cells=tr.find_all(["th","td"],recursive=False)
-                vals=[_clean(c.get_text(" ",strip=True)) for c in cells]
-                if not vals:continue
-                def val(key):
-                    j=idx.get(key,-1)
-                    return vals[j] if j>=0 and j<len(vals) else ""
-                fin_txt=val("fin") or vals[0]
-                mf=re.match(r"^\s*(\d+)\s*$",fin_txt)
-                if not mf:continue
-                fin=int(mf.group(1))
-                name=val("name")
-                no=0
-                mno=re.search(r"\d+",val("no")) if val("no") else None
-                if mno:no=int(mno.group())
-                if not no and name:no=known.get(_clean(name),0)
-                if not no:
-                    for nm,hno in known.items():
-                        if nm and nm in _clean(tr.get_text(" ",strip=True)):
-                            no=hno;name=name or nm;break
-                if not no:continue
-                fr=0;mfr=re.search(r"\d+",val("frame")) if val("frame") else None
-                if mfr:fr=int(mfr.group())
-                bw=None;chg=None
-                bwtxt=val("bw") or _clean(tr.get_text(" ",strip=True))
-                mbw=re.search(r"(?<!\d)(\d{3,4})\s*(?:kg)?\s*[（(]\s*([+\-]?\d+)\s*[）)]",bwtxt)
-                if mbw:bw=int(mbw.group(1));chg=int(mbw.group(2))
-                tm=0.0;mt=re.search(r"(\d+):(\d{2}(?:\.\d+)?)",val("time"))
-                if mt:tm=int(mt.group(1))*60+float(mt.group(2))
-                corners=[]
-                ctext=val("corner")
-                mcorn=re.search(r"(?<!\d)(\d{1,2}(?:-\d{1,2}){1,4})(?!\d)",ctext)
-                if mcorn:
-                    try:corners=[int(x) for x in mcorn.group(1).split("-")]
-                    except Exception:corners=[]
-                pop=None;mp=re.search(r"\d+",val("pop")) if val("pop") else None
-                if mp:pop=int(mp.group())
-                odd=None;mo=re.search(r"\d+(?:\.\d+)?",val("odds")) if val("odds") else None
-                if mo:
-                    try:odd=float(mo.group())
-                    except Exception:odd=None
-                finishers.append({
-                    "finish":fin,"finishLabel":f"{fin}着","horseNumber":no,
-                    "frameNumber":fr or int((no+1)//2),"name":name or next((nm for nm,hno in known.items() if hno==no),""),
-                    "timeSeconds":tm,"last3FSeconds":last3f,"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,
-                    "popularity":pop,"winOdds":odd,
-                })
-            if finishers:break
-        finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
-        # Do not call a partial page final until at least the podium is visible.
-        classified=[int(x.get("finish") or 0) for x in finishers if int(x.get("finish") or 0)>0]
-        if 1 not in classified or sum(1 for finish in classified if finish<=3)<3:continue
-        payouts=_parse_payouts(soup)
-        explicit_final=bool(re.search(r"確定",full)) and not bool(re.search(r"速報|暫定",full))
-        out={"status":"確定" if explicit_final else "速報","finishers":finishers,"source":"NAR公式競走成績","payouts":payouts}
-        if wm:out["weather"]=_env_clean_weather(wm.group(1))
-        if cm:out["condition"]=_env_clean_condition(cm.group(1))
-        out["sourceUrl"]=url
-        return out
-    if last_err:print("NAR official result unavailable",detail.get("id"),last_err)
-    return None
+    return _acq_local_results._nar_official_result_fast(
+        detail,
+        _env_clean_condition=_env_clean_condition, _env_clean_weather=_env_clean_weather,
+    )
 
 
 def _netkeiba_card_rows_fast(detail:dict)->list[dict]:
-    rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
-        str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0)
+    return _acq_netkeiba_racecards._netkeiba_card_rows_fast(
+        detail,
+        _netkeiba_get=_netkeiba_get, _netkeiba_race_id=_netkeiba_race_id, _nk_row_horse=_nk_row_horse,
     )
-    if not rid:return []
-    try:
-        html=_netkeiba_get(
-            f"https://race.netkeiba.com/race/shutuba.html?race_id={rid}",
-            float(os.getenv("FAST_CARD_TIMEOUT_SEC","1.2")),20
-        )
-    except Exception:return []
-    soup=BeautifulSoup(html,"html.parser");rows=[]
-    for tr in soup.select("tr.HorseList"):
-        horse=_nk_row_horse(tr)
-        if not horse:continue
-        horse["source"]="netkeiba高速出走表"
-        rows.append(horse)
-    return rows
 
 
 def _netkeiba_past_rows_fast(detail:dict)->list[dict]:
-    """One cached page gets recent runs for every JRA starter."""
-    rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
-        str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0)
+    return _acq_netkeiba_history._netkeiba_past_rows_fast(
+        detail,
+        _netkeiba_get=_netkeiba_get, _netkeiba_race_id=_netkeiba_race_id, _nk_row_horse=_nk_row_horse,
     )
-    if not rid:return []
-    url=f"https://race.netkeiba.com/race/shutuba_past.html?race_id={rid}&rf=shutuba_submenu"
-    try:
-        html=_netkeiba_get(
-            url,
-            float(os.getenv("FAST_HISTORY_TIMEOUT_SEC","1.8")),
-            int(os.getenv("FAST_HISTORY_CACHE_SEC","300")),
-        )
-    except Exception as exc:
-        print("fast JRA past page failed",rid,exc);return []
-    soup=BeautifulSoup(html,"html.parser");out=[]
-    for tr in soup.select("tr.HorseList"):
-        horse=_nk_row_horse(tr)
-        if not horse:continue
-        runs=[]
-        for td in tr.find_all("td"):
-            z=_parse_recent_cell(td.get_text(" ",strip=True))
-            if z:runs.append(z)
-            if len(runs)>=5:break
-        horse["recentRaces"]=runs[:5]
-        out.append(horse)
-    return out
 
 
 def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
     # NAR: hydrate the date once. v117 called a non-existent sync_day(), so selected
     # local races could stay empty until another background job happened to fill the DB.
-    if race_id.startswith("nar-"):
-        m=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-(.+)-(\d{2})$",race_id)
-        if not m:return
-        iso_date,track,race_no=m.group(1),m.group(2),int(m.group(3))
-        sync=None
-        try:
-            target=datetime.strptime(iso_date,"%Y-%m-%d").date()
-            sync=NarSync()
-            with _nar_sync_io_lock:
-                if iso_date==_today_iso():sync.sync_daily(force=False)
-                else:sync.sync_month(target.year,target.month,force=False)
-        except Exception as exc:
-            print("fast NAR date hydrate failed",race_id,exc)
-        finally:
-            try:
-                if sync:sync.store.conn.close()
-            except Exception:pass
-        q=_fast_local_race_detail(race_id)
-        if q:
-            # Finished/started races: RaceMarkTable is the fastest authoritative source and also
-            # carries body weight. Before the race, use the official card from multiple layouts.
-            official_result=None
-            if _nar_result_should_be_available(q):
-                try:official_result=_nar_official_result_fast(q)
-                except Exception as exc:print("fast NAR official result failed",race_id,exc)
-            if official_result:
-                q["result"]=official_result
-                if official_result.get("weather") not in (None,"","不明"):q["weather"]=official_result["weather"]
-                if official_result.get("condition") not in (None,"","不明"):q["condition"]=official_result["condition"]
-                q=_merge_result_fields(q,official_result)
-                q["bodyWeightSource"]="NAR公式競走成績"
-                q["bodyWeightUpdatedAt"]=_now_jst().strftime("%H:%M:%S")
-            else:
-                try:q=_merge_current_card_fields(q,_nar_official_card_rows_fast(q))
-                except Exception as exc:print("fast NAR official body weight failed",race_id,exc)
-            _store_fast_snapshot(q)
-            if deep_history:
-                names=[str(h.get("name") or "") for h in q.get("horses",[]) if h.get("name")]
-                cov=_history_counts(names,iso_date)
-                if names and not _history_is_enough(cov,0):
-                    _start_race_history_search(race_id,iso_date,names,force=False)
-        return
-
-    m=re.match(r"^jra-(20\d{2}-\d{2}-\d{2})-([^\-]+)-(\d{2})$",race_id)
-    if not m:return
-    date,track,rno=m.group(1),m.group(2),int(m.group(3))
-    base=None
-    if CENTRAL_DB_PATH.exists():
-        conn=_new_conn(CENTRAL_DB_PATH)
-        try:
-            row=conn.execute("SELECT payload FROM central_races WHERE id=?",(race_id,)).fetchone()
-            if row:
-                try:base=json.loads(row["payload"])
-                except Exception:base=None
-        finally:conn.close()
-    if not base:
-        base={"id":race_id,"circuit":"中央","date":date,"track":track,"raceNumber":rno,
-              "title":f"{rno}R","distance":0,"surface":"","condition":"不明","weather":"不明",
-              "horses":[],"source":"高速出走表"}
-
-    rows=_netkeiba_card_rows_fast(base)
-    if rows:
-        base=_merge_card_rows_preserve(base,rows)
-        base["id"]=race_id;base["circuit"]="中央"
-        # Weather/going is a separate lightweight feed; do not let the fast
-        # horse-card path leave the race at "不明".
-        if date==_today_iso() and (base.get("weather") in (None,"","不明") or base.get("condition") in (None,"","不明")):
-            try:
-                env=_jra_fetch_environment(base)
-                if env.get("weather") not in (None,"","不明"):base["weather"]=env["weather"]
-                if env.get("condition") not in (None,"","不明"):base["condition"]=env["condition"]
-                if env:base["environmentMeta"]={"source":env.get("source","JRA公式優先"),"updatedAtEpoch":env.get("updatedAtEpoch",int(time.time()))}
-            except Exception as exc:print("fast JRA environment failed",race_id,exc)
-        # One past page hydrates all starters; collector does this before the customer taps.
-        if not _diagnosis_history_quality(base).get("ready"):
-            base=_merge_fast_history(base,_netkeiba_past_rows_fast(base))
-        try:
-            st=CentralStore();st.upsert([base]);st.conn.close()
-        except Exception as exc:print("fast card central save failed",exc)
-        try:RACEDB.upsert_race(base)
-        except Exception as exc:print("fast card racedb save failed",exc)
-        q=_fast_local_race_detail(race_id)
-        if q:_store_fast_snapshot(q)
-        return
-
-    # Official fallback only after the faster single-page route fails.
-    try:
-        cname=_jra_find_cname(date,track,rno)
-        live=_jra_parse_race(cname,supplement_profiles=False) if cname else None
-        if live:
-            live["id"]=race_id
-            st=CentralStore();st.upsert([live]);st.conn.close()
-            q=_fast_local_race_detail(race_id)
-            if q:_store_fast_snapshot(q)
-    except Exception as exc:print("fast JRA card hydrate failed",race_id,exc)
+    return _acq_snapshots_hydration._hydrate_fast_card_now(
+        race_id, deep_history,
+        CENTRAL_DB_PATH=CENTRAL_DB_PATH, CentralStore=CentralStore, NarSync=NarSync,
+        RACEDB=RACEDB, _fast_local_race_detail=_fast_local_race_detail, _history_counts=_history_counts,
+        _jra_fetch_environment=_jra_fetch_environment, _jra_find_cname=_jra_find_cname, _jra_parse_race=_jra_parse_race,
+        _merge_current_card_fields=_merge_current_card_fields, _merge_result_fields=_merge_result_fields, _nar_official_card_rows_fast=_nar_official_card_rows_fast,
+        _nar_official_result_fast=_nar_official_result_fast, _nar_result_should_be_available=_nar_result_should_be_available, _netkeiba_card_rows_fast=_netkeiba_card_rows_fast,
+        _netkeiba_past_rows_fast=_netkeiba_past_rows_fast, _new_conn=_new_conn, _now_jst=_now_jst,
+        _start_race_history_search=_start_race_history_search, _store_fast_snapshot=_store_fast_snapshot, _today_iso=_today_iso,
+    )
 
 def _schedule_fast_card_refresh(race_id:str,priority:int=50)->None:
     _queue_fast_card(race_id,priority)
