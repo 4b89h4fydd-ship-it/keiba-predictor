@@ -140,7 +140,7 @@ SPORT_FILES = (
     "switch.css", "all-races.css", "unified-home.css", "unified-home.js", "horse-portal.js", "boat.html", "boat-app/layout.css", "boat-app/app.js",
     "boat-app/core/contract.js", "boat-app/core/feed.js", "boat-app/core/stats.js", "boat-app/core/prediction-model.js", "boat-app/core/ticket-engine.js", "boat-app/core/daily-selection.js", "boat-app/core/start-exhibition.js",
     "boat-app/features/races.js", "boat-app/features/start-exhibition.js", "boat-app/features/selected.js",
-    "boat-app/features/ai-stats.js", "boat-app/features/special.js", "boat-app/features/all-races.js", "boat-app/features/tickets.js",
+    "boat-app/features/ai-stats.js", "boat-app/features/special.js", "boat-app/features/all-races.js", "boat-app/features/tickets.js", "boat-app/features/entrant-analysis.js",
 )
 for filename in SPORT_FILES:
     if not (SPORT_DIR / filename).is_file():
