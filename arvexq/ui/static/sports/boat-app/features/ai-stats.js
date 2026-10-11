@@ -2,7 +2,8 @@
 import {summarize} from "../core/stats.js";
 import {esc} from "../core/contract.js";
 export function statsSection(day){
-  const m=summarize(day.races);
+  const races=Array.isArray(day)?day:Array.isArray(day?.races)?day.races:[];
+  const m=summarize(races);
   const fmtPct=x=>x===null?"集計対象なし":(100*x).toFixed(1)+"%";
   const roi=m.roi===null?"算出不可":m.roi.toFixed(1)+"%";
   let rows='<div class="boat-stat-grid"><div><small>事前予想保存</small><strong>'+m.published+'R</strong></div>'+
