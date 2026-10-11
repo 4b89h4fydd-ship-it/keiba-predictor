@@ -5,15 +5,15 @@ const path=require('node:path');
 const js=fs.readFileSync(path.join(__dirname,'../arvexq/ui/static/research/race_identity.js'),'utf8');
 const context={window:{},console};
 vm.runInNewContext(js,context);
-const module=context.window.ARVEXQRaceIdentity;
+const identity=context.window.ARVEXQRaceIdentity;
 const rid='nar-2026-10-11-大井-08';
 const race={id:rid,date:'2026-10-11',horses:[
   {horseNumber:1,name:'テストイチ'},
   {horseNumber:2,name:'テストニ'},
   {horseNumber:3,name:'テストサン'}
 ]};
-module.remember(race);
-function clean(r){return JSON.parse(JSON.stringify(module.sanitize(r)))}
+identity.remember(race);
+function clean(r){return JSON.parse(JSON.stringify(identity.sanitize(r)))}
 const omittedNames=clean({...race,result:{
   status:'確定',finishers:[{horseNumber:1,finish:1},{horseNumber:2,finish:2,name:''},{horseNumber:3,finish:3,name:'テストサン'}],
   payouts:[{type:'馬連',combination:'1-2',amount:550}]
