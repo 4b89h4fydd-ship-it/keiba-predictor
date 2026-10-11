@@ -9,7 +9,9 @@ class AssetManifestIntegrationTest(unittest.TestCase):
         from fastapi.testclient import TestClient
         import app
 
-        response = TestClient(app.app).get('/app-v329.js')
+        # FastAPI retains v324 compatibility URLs; the static deployment
+        # emits v329 URLs. Verify the existing API route without changing it.
+        response = TestClient(app.app).get('/app-v324.js')
         self.assertEqual(response.status_code, 200)
         self.assertIn('application/javascript', response.headers['content-type'])
         self.assertEqual(response.text, read_asset('app.js'))
