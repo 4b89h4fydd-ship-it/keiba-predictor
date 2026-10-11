@@ -1,6 +1,6 @@
-"""Career start-count evidence from the netkeiba horse database.
+"""Verified career runs and date-bound start-count evidence from netkeiba.
 
-This provider returns *only* acquisition evidence (``careerStartEvidence``), never runs,
+This provider returns acquisition evidence and same-page historical runs,
 so prediction inputs are unchanged.  Evidence is emitted only when:
 
 * the horse identity is unambiguous (exact name, and known pre-race start
@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 
 from arvexq.ingest.full_career import date_key, merge_career
 
-SOURCE = "netkeiba_career_totals"
+SOURCE = "netkeiba_verified_career"
 BASE = "https://db.netkeiba.com"
 _ID = re.compile(r"db\.netkeiba\.com/+horse/(\d{10})/")
 _NOT_STARTED = ("取", "除")          # 出走取消・競走除外: not a start
