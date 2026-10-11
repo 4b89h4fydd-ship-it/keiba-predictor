@@ -2021,7 +2021,9 @@ function careerCoverageLine(h){var c=h&&h.careerCoverage,label=careerCoverageLab
 function runnerDetailBody(r,p,x){
   var h=x.horse,displayName=horseDisplayName(r,h),recent=(h.recentRaces||h.allPastRuns||[]).slice(0,5),reasons=(x.overallReasons||[]).slice(0,4),bodyTxt=horseBodyWeightText(h),styleTxt=x.expected||x.pastStyle||'不明',
       rf=x.researchFactors||{},sp=styleDisplayPcts(x),out=(p&&p.outcome)||(raceMarkClock(r).started?null:paceOutcomeModel(r,p)),no=n(h.horseNumber),role=raceMarkClock(r).started?'発走前保存情報':'相手候補';
-  function pct(v){v=clamp(n(v,.5),0,1);return Math.round(v*100)}
+  // No model evidence must never be displayed as zero ability.
+  var hasScoredEvidence=Number.isFinite(Number(x.coverage))&&Number(x.coverage)>0;
+  function pct(v){if(!hasScoredEvidence||v==null||v===''||!Number.isFinite(Number(v)))return '未評価';return Math.round(clamp(Number(v),0,1)*100)}
   function scoreCell(label,v){return '<div class="horse-info-cell"><small>'+esc(label)+'</small><b>'+pct(v)+'</b></div>'}
   if(out){
     var f=(out.first||[]).some(function(z){return n(z.horse&&z.horse.horseNumber)===no}),
@@ -2029,8 +2031,11 @@ function runnerDetailBody(r,p,x){
         t=(out.third||[]).some(function(z){return n(z.horse&&z.horse.horseNumber)===no});
     role=f?('1着候補・'+out.verdict):(s?'2着候補':(t?'3着候補':'相手候補'))
   }
-  var ability=n(rf.ability,x.ability),form=n(rf.form,x.resultsScore),klass=n(rf.classLevel,x.levelFit),
-      suit=n(rf.suitability,mean([n(x.distFit,.5),n(x.trackFit,.5),n(x.condFit,.5)])),pace=n(rf.pace,n(x.paceScore,50)/100);
+  function scored(primary,fallback){var v=primary!=null&&primary!==''?primary:fallback;return v==null||v===''||!Number.isFinite(Number(v))?null:Number(v)}
+  var ability=scored(rf.ability,x.ability),form=scored(rf.form,x.resultsScore),klass=scored(rf.classLevel,x.levelFit),
+      fitValues=[x.distFit,x.trackFit,x.condFit].filter(function(v){return v!=null&&v!==''&&Number.isFinite(Number(v))});
+  var suit=scored(rf.suitability,fitValues.length?fitValues.reduce(function(a,b){return a+Number(b)},0)/fitValues.length:null),
+      pace=scored(rf.pace,x.paceScore!=null?Number(x.paceScore)/100:null);
   return '<div class="horse-detail">'
     +'<div class="runner-overall-box"><div class="runner-overall-head"><span class="label">AI総合評価</span><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><span class="runner-overall-mark" data-ai-mark="'+esc(x.predMark||'')+'">'+esc(x.predMark||'—')+'</span><span class="runner-overall-score">総合 '+esc(overallScoreText(x))+'</span></div>'+
     '<div class="overall-reasons"><i class="good">'+esc(role)+'</i>'+(reasons.length?reasons.map(function(z){var warn=String(z).indexOf('注意')>=0||String(z).indexOf('不足')>=0;return '<i class="'+(warn?'warn':'good')+'">'+esc(z)+'</i>'}).join(''):'')+'</div></div>'+
