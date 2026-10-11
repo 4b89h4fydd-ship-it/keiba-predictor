@@ -41,9 +41,9 @@
   function realtime(rows,opts){
     opts=opts||{};
     const date=String(opts.date||""),today=String(opts.today||date),now=Number(opts.nowMinutes||0),full=opts.full===true;
-    const source=timeline(rows,date,today,now,full?0:8);
+    const source=timeline(rows,date,today,now,0);
     const circuits=["中央","地方"].map(name=>{
-      const races=source.filter(r=>r.circuit===name);
+      const all=source.filter(r=>r.circuit===name),races=full?all:all.slice(0,4);
       if(!races.length)return "";
       return '<div class="arv-tb-live-group"><div class="arv-tb-group-head"><b>'+name+'</b><small>'+races.length+'レース</small></div>'+
         '<div class="arv-tb-races">'+races.map(r=>card(r,date,today,now)).join("")+'</div></div>';
