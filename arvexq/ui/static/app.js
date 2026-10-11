@@ -2339,7 +2339,7 @@ function hydrateStaticRacecardFirst(id,seq,summary){
   var loader=window.ARVEXQStaticRacecard;
   if(!loader||typeof loader.available!=='function')return Promise.resolve(false);
   var date=String((summary||{}).date||state.date||'');
-  if(!/^20\\d{2}-\\d{2}-\\d{2}$/.test(date))return Promise.resolve(false);
+  if(!/^20\d{2}-\d{2}-\d{2}$/.test(date))return Promise.resolve(false);
   return loader.available(date,id,function(path){return edgeFetchJson(path,6500)}).then(function(card){
     if(seq!==state.detailSeq||!card||String(card.id)!==String(id)||
        !state.race||String(state.race.id)!==String(id))return false;
