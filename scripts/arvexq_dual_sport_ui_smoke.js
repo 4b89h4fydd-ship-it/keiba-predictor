@@ -24,10 +24,14 @@ async function check(type,name){
     await page.locator(".arv-all-panel").waitFor({state:"visible",timeout:15000});
     assert.equal(await page.locator(".boat-venue-grid,.boat-live-panel").count(),0);
     assert.equal(await page.locator(".boat-home-actions").count(),0);
-    await page.locator('.arv-all-actions button[data-view="stats"]').click();
+    assert.equal(await page.locator(".arv-unified-hero img").count(),1);
+    assert.equal(await page.locator(".arv-unified-date input[type=date]").count(),1);
+    assert.equal(await page.locator(".arv-unified-actions button").count(),3);
+    assert.equal(await page.locator(".boat-page-head").count(),0);
+    await page.locator('.arv-unified-actions button[data-view="stats"]').click();
     await page.locator(".boat-stat-grid").waitFor({state:"visible",timeout:12000});
     await page.locator('.boat-subheader button[data-view="home"]').click();
-    await page.locator('.arv-all-actions button[data-view="selected"]').click();
+    await page.locator('.arv-unified-actions button[data-view="selected"]').click();
     await page.locator(".boat-panel").first().waitFor({state:"visible",timeout:12000});
     await page.locator('.boat-subheader button[data-view="home"]').click();
     const horseLink=page.locator('.arvexq-sport-nav a[href="/keiba/"]');
