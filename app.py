@@ -25,6 +25,7 @@ from arvexq.infra.pure_snapshots import (
     _merge_official_result,
 )
 from arvexq.databanks.legacy_bridge import register_legacy_sources
+from arvexq.ingest.nar_career_coverage import pre_race_reported_starts, official_history_complete
 from arvexq.ui.assets import read_asset, read_binary_asset
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -1494,12 +1495,21 @@ def _history_counts(horse_names: list[str], cutoff: str) -> dict:
 
 def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[str], force: bool = False) -> dict:
     max_months = max(6, min(36, int(os.getenv("NAR_ON_DEMAND_HISTORY_MONTHS", "36"))))
+    # Race-date-bound start counts may already be recorded in the prepared
+    # snapshot. They are the lower bound the official local DB must cover.
+    # An unknown count is NOT evidence that five runs exhaust the lifetime.
+    try:
+        original = RACEDB.get_race(race_id)[0]
+    except Exception:
+        original = None
+    required = pre_race_reported_starts(original, iso_date, horse_names)
     with _race_history_lock:
         existing = _race_history_jobs.get(race_id)
         if existing and not force:
             return dict(existing)
         cov = _history_counts(horse_names, iso_date)
-        job = {"status":"running","monthsDone":0,"maxMonths":max_months,"coverage":cov,"error":"","source":"NAR公式月次レースデータ"}
+        job = {"status":"running","monthsDone":0,"maxMonths":max_months,"coverage":cov,"error":"","source":"NAR公式月次レースデータ",
+               "knownCareerStarts":len(required),"fullCareerVerified":official_history_complete(cov,required)}
         _race_history_jobs[race_id] = job
 
     def worker():
@@ -1516,7 +1526,11 @@ def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[st
                 cov_now = _history_counts(horse_names, iso_date)
                 with _race_history_lock:
                     _race_history_jobs[race_id] = {"status":"running","monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-3:]),"source":"NAR公式 高速並列履歴"}
-                if _history_is_enough(cov_now, months_done):
+                # Five runs are display data, not the complete career.
+                # Stop only when every horse's official lifetime count for
+                # this race date has been reached. Otherwise use the bounded
+                # configured lookback, leaving coverage explicitly unverified.
+                if official_history_complete(cov_now, required):
                     break
             cov_now = _history_counts(horse_names, iso_date)
             # v155: if official NAR history is still under five starts, search a second
@@ -1526,10 +1540,12 @@ def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[st
             if under:
                 try:supplemented=_supplement_sparse_nar_history(race_id,under,iso_date)
                 except Exception as exc:errors.append("netkeiba DB補完:"+str(exc))
-            status = "done" if (cov_now.get("horsesWithHistory",0) > 0 or supplemented>0) else ("error" if errors else "done")
+            verified = official_history_complete(cov_now, required)
+            status = "done" if verified else ("error" if errors and not (cov_now.get("horsesWithHistory",0)>0 or supplemented>0) else "partial")
             source="NAR公式 高速並列履歴"+(" + netkeiba DB補完" if supplemented else "")
             with _race_history_lock:
-                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":source,"supplementedHorses":supplemented}
+                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":source,"supplementedHorses":supplemented,
+                                               "knownCareerStarts":len(required),"fullCareerVerified":verified}
             with _detail_cache_lock:
                 _detail_cache.pop(race_id, None)
             try:_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=True)
