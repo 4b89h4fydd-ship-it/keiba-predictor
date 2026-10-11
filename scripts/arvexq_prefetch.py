@@ -258,6 +258,34 @@ def _ensure_analysis(rid: str, current: dict[str, Any] | None) -> tuple[dict[str
     return latest or current, ";".join(errors)
 
 
+
+def _enrich_cards_concurrently(cards: dict[str, dict[str, Any]], workers: int = 3) -> dict[str, dict[str, Any]]:
+    """Isolate network-only lifetime enrichment from SQLite-backed AI diagnosis.
+
+    Each input is a separate race snapshot. No worker persists a RaceDB row,
+    so provider I/O can overlap without concurrent prediction/SQLite writers.
+    Failures never discard the original racecard or turn missing history into
+    a verified zero-start history.
+    """
+    if not cards:
+        return {}
+    limit = max(1, min(4, int(workers), len(cards)))
+    results: dict[str, dict[str, Any]] = {}
+    with ThreadPoolExecutor(max_workers=limit) as pool:
+        futures = {pool.submit(_supplement_missing, copy.deepcopy(card)): rid
+                   for rid, card in cards.items()}
+        for future in as_completed(futures):
+            rid = futures[future]
+            try:
+                enriched = future.result()
+                results[rid] = _merge_detail(cards[rid], enriched) if isinstance(enriched, dict) else cards[rid]
+            except Exception as exc:
+                print("FULL_PREFETCH_ENRICH_WARN", rid, type(exc).__name__, exc, flush=True)
+                results[rid] = cards[rid]
+            print("FULL_PREFETCH_ENRICH_DONE", rid, flush=True)
+    return results
+
+
 def _decorate(detail: dict[str, Any]) -> dict[str, Any]:
     out = copy.deepcopy(detail)
     attach_career_readiness(out)
@@ -298,7 +326,6 @@ def prepare(
         raw = _raw_snapshot(rid)
         current = _merge_detail(by_id.get(rid), raw)
         if _card_usable(current):
-            current = _supplement_missing(current)
             return rid, current, ""
         try:
             prepared = app._prepare_race_snapshot(rid, force=True)
@@ -309,7 +336,6 @@ def prepare(
         # If RaceDB save failed, keep the returned prepared card authoritative.
         latest = _merge_detail(current, _raw_snapshot(rid))
         latest = _merge_detail(latest, detail)
-        latest = _supplement_missing(latest)
         if latest and latest.get("id"):
             return rid, latest, ""
         return rid, None, "no usable snapshot after card preparation"
@@ -333,11 +359,19 @@ def prepare(
                     errors[rid] = error
                     print("FULL_PREFETCH_CARD_WARN", rid, error)
 
-    # Diagnose only cards whose prediction fingerprint is not already current.
-    analysis_targets = []
+    # Build each raw card once, enrich lifetime records with bounded network
+    # concurrency, then keep AI/SQLite diagnosis serialized as before.
+    inputs = {}
     for rid in ids:
         detail = _merge_detail(by_id.get(rid), _raw_snapshot(rid))
-        detail = _supplement_missing(detail)
+        if isinstance(detail, dict) and detail.get("id"):
+            inputs[rid] = detail
+    enrichment_workers = int(os.getenv("ARVEXQ_PREFETCH_ENRICH_WORKERS", "3") or 3)
+    print(f"FULL_PREFETCH enrichment cards={len(inputs)} workers={min(4, max(1, enrichment_workers))}", flush=True)
+    enriched = _enrich_cards_concurrently(inputs, enrichment_workers)
+    analysis_targets = []
+    for rid in ids:
+        detail = enriched.get(rid, inputs.get(rid))
         if detail:
             by_id[rid] = detail
         if _card_usable(detail):

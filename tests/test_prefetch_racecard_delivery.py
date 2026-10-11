@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts import arvexq_select_prefetch_repairs as repair
+from scripts import arvexq_prefetch as prefetch
 
 
 def race(rid: str, numbers: tuple[int, ...], ai: bool = True) -> dict:
@@ -82,6 +83,35 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
             self.assertEqual(report["repair_count"], 2)
             self.assertIn("source_roster_missing_known_horses",
                           [r["reason"] for r in report["repairs"]])
+
+    def test_network_enrichment_is_bounded_and_preserves_failed_card(self) -> None:
+        from threading import Lock
+        from time import sleep
+        active = 0
+        max_active = 0
+        lock = Lock()
+        ids = [f"race-{i}" for i in range(7)]
+        cards = {rid: {"id": rid, "horses": [{"horseNumber": 1, "name": rid}]}
+                 for rid in ids}
+        def fetch(card):
+            nonlocal active, max_active
+            with lock:
+                active += 1
+                max_active = max(max_active, active)
+            sleep(.012)
+            with lock:
+                active -= 1
+            if card["id"] == "race-3":
+                raise RuntimeError("provider timed out")
+            card["evidenceReady"] = True
+            return card
+        with patch.object(prefetch, "_supplement_missing", side_effect=fetch):
+            output = prefetch._enrich_cards_concurrently(cards, workers=3)
+        self.assertEqual(set(output), set(cards))
+        self.assertTrue(1 < max_active <= 3)
+        self.assertFalse(output["race-3"].get("evidenceReady"))
+        self.assertTrue(output["race-4"]["evidenceReady"])
+        self.assertFalse(any(card.get("evidenceReady") for card in cards.values()))
 
     def test_pipeline_still_publishes_when_analysis_fails(self) -> None:
         workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
