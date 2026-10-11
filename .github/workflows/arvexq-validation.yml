@@ -105,6 +105,14 @@ jobs:
           if missing:raise SystemExit('missing current assets: '+','.join(missing))
           PY
 
+      - name: Dual-sport navigation and page isolation
+        run: |
+          python -m unittest discover -s tests -p 'test_sport_navigation.py' -v
+          test -s dist/keiba/index.html
+          test -s dist/kyotei/index.html
+          test -s dist/sports/boat.js
+          node --check dist/sports/boat.js
+
       - name: Betting marks and ticket reconciliation regression
         run: |
           node --check arvexq/ui/static/app.js
