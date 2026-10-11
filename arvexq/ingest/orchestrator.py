@@ -45,11 +45,25 @@ async def fetch_domain(
 
     async def run(source):
         fetcher = source.fetchers[domain]
-        try:
-            data = await _call(fetcher, *args, **kwargs)
-            return FetchResult(source=source.name, domain=domain, ok=True, data=data)
-        except Exception as exc:
-            return FetchResult(source=source.name, domain=domain, ok=False, error=f"{type(exc).__name__}: {exc}")
+        # Retry only transient failures through the SAME registered provider.
+        # A site returning empty/ambiguous history is a data-quality outcome,
+        # not a reason to hammer it or invent a different acquisition route.
+        for attempt in range(2):
+            try:
+                data = await _call(fetcher, *args, **kwargs)
+                return FetchResult(source=source.name, domain=domain, ok=True, data=data)
+            except Exception as exc:
+                message = f"{type(exc).__name__}: {exc}"
+                transient = any(code in message.lower() for code in (
+                    "timeout", "timed out", "temporar", "connectionreset",
+                    "connection aborted", "429", "502", "503", "504",
+                    "remote end closed", "service unavailable",
+                ))
+                if attempt == 0 and transient:
+                    await asyncio.sleep(0.3)
+                    continue
+                return FetchResult(source=source.name, domain=domain, ok=False, error=message)
+        raise AssertionError("unreachable provider retry")
 
     return list(await asyncio.gather(*(run(source) for source in providers)))
 
