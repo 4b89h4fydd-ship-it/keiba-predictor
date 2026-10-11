@@ -38,6 +38,23 @@ class SportNavigationTest(unittest.TestCase):
         self.assertIn('validTicket', script)
         self.assertNotIn('Math.random', script)
 
+    def test_venue_page_does_not_overlay_the_fixed_sport_navigation(self):
+        legacy = (STATIC / "styles" / "legacy_v118_v221.css").read_text(encoding="utf-8")
+        start = legacy.index("/* Venue-only layout:")
+        end = legacy.index("/* v195", start)
+        venue = legacy[start:end]
+        self.assertIn(".smart-venue-page>.smart-venue-topbar", venue)
+        self.assertIn("top:var(--arvexq-nav-h", venue)
+        self.assertIn("position:sticky!important", venue)
+        self.assertNotIn("position:fixed!important", venue)
+        self.assertNotIn("padding-top:calc(174px", venue)
+        self.assertNotIn("padding-top:calc(163px", venue)
+        switch = (STATIC / "sports" / "switch.css").read_text(encoding="utf-8")
+        self.assertIn(".arvexq-sport-nav", switch)
+        self.assertIn("position:fixed!important", switch)
+        app = (STATIC / "app.js").read_text(encoding="utf-8")
+        self.assertIn("smart-shell smart-venue-page", app)
+
     def test_compiled_outputs(self):
         dist = ROOT / "dist"
         if not (dist / "index.html").exists():
