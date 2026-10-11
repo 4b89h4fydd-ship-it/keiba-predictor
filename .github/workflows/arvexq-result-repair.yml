@@ -9,6 +9,8 @@ name: ARVEXQ Result Repair
       - scripts/arvexq_result_repair.py
       - scripts/arvexq_sync_batches.py
       - scripts/arvexq_fetch_d1_bundle.py
+      - arvexq/results/**
+      - tests/test_result_stalled_regressions.py
       - .github/workflows/arvexq-result-repair.yml
   schedule:
     # Offset from realtime sync so both jobs do not hit result sources together.
@@ -51,6 +53,9 @@ jobs:
       - name: Install runtime dependencies
         run: python -m pip install -q -r requirements.txt
 
+      - name: Result parser and non-destructive merge regression
+        run: python -m unittest discover -s tests -p 'test_result_stalled_regressions.py' -v
+
       - name: Set sync date
         run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
 
@@ -84,17 +89,9 @@ jobs:
 
       - name: Repair all started incomplete results
         run: |
-          if ! python - <<'PY' > result-repair.log 2>&1
-          import app, runpy, sys
-          app.last3f = None
-          sys.argv = [
-              'scripts/arvexq_result_repair.py',
-              '--bundle', 'bundle.json',
-              '--payload', 'result-repair-payload.json',
-              '--report', 'result-repair-report.json',
-          ]
-          runpy.run_path('scripts/arvexq_result_repair.py', run_name='__main__')
-          PY
+          if ! PYTHONPATH=. python scripts/arvexq_result_repair.py \
+              --bundle bundle.json --payload result-repair-payload.json \
+              --report result-repair-report.json > result-repair.log 2>&1
           then
             echo "::error::Result repair failed"
             tail -n 80 result-repair.log || true

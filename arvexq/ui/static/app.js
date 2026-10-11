@@ -2133,6 +2133,39 @@ function mergeHorseReflection(oldH,newH,liveH){
   if(liveH.horseNumber)out.horseNumber=liveH.horseNumber;
   return out
 }
+// Result updates can be sparse: newer racecard/poll payloads must not erase
+// already verified finishers, payout rows, or a final status.
+function mergePublishedResult(oldResult,newResult){
+  var prev=oldResult&&typeof oldResult==='object'?oldResult:{},
+      next=newResult&&typeof newResult==='object'?newResult:{};
+  if(!reflectUseful(next))return prev;
+  var out=Object.assign({},prev),
+      priorFinal=String(prev.status||'')==='確定',newFinal=String(next.status||'')==='確定';
+  Object.keys(next).forEach(function(k){
+    if(k==='status'||k==='finishers'||k==='payouts')return;
+    if(reflectUseful(next[k]))out[k]=next[k]
+  });
+  var oldFs=Array.isArray(prev.finishers)?prev.finishers:[],
+      freshFs=Array.isArray(next.finishers)?next.finishers:[],
+      oldRanked=oldFs.filter(function(x){return x&&n(x.finish)>0}).length,
+      newRanked=freshFs.filter(function(x){return x&&n(x.finish)>0}).length;
+  if(freshFs.length&&(newRanked>=oldRanked)&&(!priorFinal||newFinal)){
+    var oldBy={};
+    oldFs.forEach(function(x){if(x&&n(x.horseNumber)>0)oldBy[n(x.horseNumber)]=x});
+    out.finishers=freshFs.map(function(x){
+      var merged=Object.assign({},oldBy[n(x&&x.horseNumber)]||{});
+      Object.keys(x||{}).forEach(function(k){if(reflectUseful(x[k]))merged[k]=x[k]});
+      return merged
+    });
+  }
+  if(Array.isArray(next.payouts)&&next.payouts.length){
+    var oldPay=Array.isArray(prev.payouts)?prev.payouts:[];
+    if(next.payouts.length>=oldPay.length)out.payouts=next.payouts
+  }
+  if(newFinal)out.status='確定';
+  else if(!priorFinal&&reflectUseful(next.status))out.status=next.status;
+  return out
+}
 function mergeRaceReflection(base,incoming,oddsRows,summary){
   base=base||{};incoming=incoming||{};summary=summary||{};
   var out=Object.assign({},base);
@@ -2146,10 +2179,8 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
     if(key==='horses'||key==='result')return;
     if(reflectUseful(v))out[key]=v
   });
-  var oldResult=base.result||{},newResult=incoming.result||{};
-  var oldFinish=(oldResult.finishers||[]).length,newFinish=(newResult.finishers||[]).length;
-  if(newFinish>=oldFinish&&reflectUseful(newResult))out.result=newResult;
-  else if(reflectUseful(oldResult))out.result=oldResult;
+  var combinedResult=mergePublishedResult(base.result,incoming.result);
+  if(reflectUseful(combinedResult))out.result=combinedResult;
   var oldBy={},newBy={},liveBy={},order=[];
   (base.horses||[]).forEach(function(h){var no=n(h&&h.horseNumber,0);if(no){oldBy[no]=h;order.push(no)}});
   (incoming.horses||[]).forEach(function(h){var no=n(h&&h.horseNumber,0);if(no){newBy[no]=h;if(order.indexOf(no)<0)order.push(no)}});
@@ -2230,7 +2261,7 @@ function raceDetailNotice(r){
 }
 function pendingDetailPanel(r){
   var key=state.openPanel||'entry';if(key==='diagnosis')key='entry';var labels={entry:'出走表',pace:'展開予想',bets:'買い目',result:'結果・払戻'},st=detailState(r.id),status=st[key==='bets'?'diagnosis':key]||'loading';
-  if(key==='result'&&hasAnyResultData(r))return resultPanel(r);
+  if(key==='result')return resultPanel(r);
   return '<section class="card" data-section-state="'+esc(status)+'"><h2>'+esc(labels[key]||'出走表')+'</h2><p role="status">'+(status==='empty'?'出走馬0頭を確認しました。':(status==='error'?'この項目を取得できませんでした。取得済みの情報は表示を継続します。':'この項目を取得中です。'))+'</p>'+(status==='error'?'<button type="button" data-detail-retry="'+esc(r.id)+'">再試行</button>':'')+'</section>'
 }
 function racecardOddsHtml(h){
@@ -3140,7 +3171,7 @@ function resultPanel(r){
   var final=isFinal(r),flash=isFlash(r),any=hasAnyResultData(r);
   return '<section id="section-result" class="card result-panel-compact"><h2>レース結果</h2>'+
     (any?renderResult(r)+(final?renderPayouts(r):'<section class="card result-wait-card"><div class="section-title">払い戻し <span class="muted">確定待ち</span></div><div class="muted">確定後に自動反映します。</div></section>')+renderActualFlow(r):
-      (flash?'<div class="muted result-status-compact">速報取得中</div>':(final?'<div class="muted result-status-compact">確定済み・結果詳細を取得中</div>':'<div class="muted result-status-compact">未確定</div>'))) +
+      '<div class="muted result-status-compact">'+(final?'結果は確定扱いですが着順詳細は未取得です。':(String(r.date||'')<today()||String(r.date||'')===today()&&mins(r.startTime)<=nowMins()?'公式結果の反映待ちです。自動再確認しています。':'発走前・結果未確定'))+'</div><button type="button" data-detail-retry="'+esc(r.id)+'">結果を再確認</button>') +
   researchRecapPanel(r)+'</section>'
 }
 function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+(window.ARVEXQDiagnosisView?window.ARVEXQDiagnosisView.render(r,p,{original:authorizedPreOffMarks,esc:esc,started:function(x){return raceMarkClock(x).started},scratch:isScratchHorse}):'')+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・展開予想から見たい項目を押してください。</div>'}
@@ -4598,22 +4629,42 @@ function refreshRaceBiasData(){
     return false
   }).finally(function(){raceBiasBusy=false;if(state.race&&String(state.race.id)===id)scheduleRaceBiasRefresh(12000)})
 }
+// Results are fetched independently of prediction/diagnosis readiness.
+// A re-render (for example from odds updates) must not postpone the polling timer.
+var resultPollBusy=false,resultPollActiveId='';
 function scheduleResultRefresh(){
+  var r=state.race;
+  if(!r||!r.id||String(r.date||'')!==today()||!r.startTime||
+      (isFinal(r)&&hasResultData(r)&&((r.result||{}).payouts||[]).length>0)){
+    if(state.resultTimer){clearTimeout(state.resultTimer);state.resultTimer=null}
+    return;
+  }
+  var id=String(r.id);
+  if(state.resultTimer&&resultPollActiveId===id)return;
   if(state.resultTimer){clearTimeout(state.resultTimer);state.resultTimer=null}
-  var r=state.race;if(!r||!r.id||String(r.date||'')!==today()||(isFinal(r)&&hasResultData(r))||!r.startTime)return;
-  var id=String(r.id),delta=mins(r.startTime)-nowMins(),wait;
-  if(delta>3)wait=Math.min(300000,Math.max(30000,(delta-2)*60000));
-  else wait=20000;
+  if(resultPollBusy)return;
+  resultPollActiveId=id;
+  var delta=mins(r.startTime)-nowMins();
+  var wait=delta>3?Math.min(300000,Math.max(30000,(delta-2)*60000)):20000;
   state.resultTimer=setTimeout(function(){
+    state.resultTimer=null;
+    var seq=state.detailSeq;
     if(!state.race||String(state.race.id)!==id)return;
-    fetchEdgeRace(id,true).then(function(body){
-      if(!body||!state.race||String(state.race.id)!==id)return;
-      var hadResult=hasResultData(state.race),becameFinal=!isFinal(state.race)&&isFinal(body);
-      state.race=applySummaryEnvironment(body);
+    resultPollBusy=true;
+    fetchEdgeRace(id,true,1).then(function(body){
+      if(!body||seq!==state.detailSeq||!state.race||String(state.race.id)!==id)return;
+      state.race=applySummaryEnvironment(mergeRaceReflection(state.race,body,null,null));
       instantTrackDetails[id]=state.race;saveDetailCache(id,state.race);
-      // v237: live/result refresh must never close or replace the panel the user opened.
+      updateDetailSections(id,state.race,true);
+      // Keep the opened tab, historical predictions and tickets unchanged.
       render()
-    }).catch(function(){scheduleResultRefresh()})
+    }).catch(function(error){
+      traceRaceDetail(id,'result-poll-failed',{message:String(error&&error.message||error)});
+      if(state.race&&String(state.race.id)===id)detailState(id).result='error';
+    }).finally(function(){
+      resultPollBusy=false;
+      scheduleResultRefresh()
+    })
   },wait)
 }
 
@@ -4846,8 +4897,10 @@ function render(){
     arvexqBootPainted=true;
     syncLiveCenterOverlay();
     bind();
-    if(entryDataAvailable(state.race)&&state.race._prediction){initPaceBoard();scheduleResultRefresh();ensureAutoOdds(state.race);scheduleRaceBiasRefresh(700)}
+    if(entryDataAvailable(state.race)&&state.race._prediction){initPaceBoard();ensureAutoOdds(state.race);scheduleRaceBiasRefresh(700)}
     else if(state.track&&!state.picker){scheduleVenueTrendRefresh(350)}
+    // The result and payout lane must work even when AI diagnosis is unavailable.
+    if(state.race) scheduleResultRefresh();
     if(entryDataAvailable(state.race))ensureAutoOdds(state.race)
     window.scrollTo(0,savedY)
   }catch(e){
