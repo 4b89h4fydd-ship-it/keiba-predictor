@@ -44,7 +44,7 @@ function render(r,p,deps){
   var total=plan.referenceBudget||{},status=plan.fixedAt?'発走前固定':'暫定・未保存',
       savedV346=!!plan.fixedAt&&String(plan.engineVersion||plan.betStrategy||'').includes('three-way-v346'),
       hon=plan.honmei||{},notation=hon.grade==='A'?
-        ('◎【'+(hon.role==='win'?'単':'軸')+'】A'):'◎'+(hon.grade||'C'),
+        ('◎【'+(hon.role==='win'?'単':'軸')+'】'):'◎'+(hon.grade||'C'),
       axisLabel=savedV346?'旧方式：新しい◎の役割・信頼度は当時未記録（後付けしません）':hon.horseNumber?
         (notation+'　'+hon.horseNumber+'番｜'+(hon.role==='win'?'1着向き':'3着内の軸向き')+
           (hon.fixedAxis?'（本線・3連単は券種別に審査）':'（信頼度C・軸固定しない）')):'◎なし・軸固定なし',
@@ -69,8 +69,8 @@ function render(r,p,deps){
     +explanation
     +'<div class="bet-mark-guide"><b>'+esc(savedV346?'保存時点の印の見方':'印の見方（券種ごとに役割を再判定）')+'</b><div class="bet-mark-grid">'
     +(savedV346?'<span><i>◎</i>旧方式：3着内の軸候補。新役割は後付けしません</span>':
-      '<span><i>◎【単】A</i>信頼度A・1着向き。勝ち切る根拠があり、券種別審査で1着固定を検討</span>'+
-      '<span><i>◎【軸】A</i>信頼度A・3着内の軸向き。3連複・ワイドを優先</span>'+
+      '<span><i>◎【単】</i>信頼度A・1着向き。勝ち切る根拠があり、券種別審査で1着固定を検討</span>'+
+      '<span><i>◎【軸】</i>信頼度A・3着内の軸向き。3連複・ワイドを優先</span>'+
       '<span><i>◎B</i>信頼度B・相対本命。1着向き／軸向きは個別表示し、固定は慎重に審査</span>'+
       '<span><i>◎C</i>信頼度C・相対本命。軸固定せず、買い目は独立審査</span>')+
       '<span><i>【単】</i>1着向き評価（単勝の購入確定ではありません）</span>'
