@@ -26,6 +26,8 @@ from arvexq.infra.pure_snapshots import (
 )
 from arvexq.databanks.legacy_bridge import register_legacy_sources
 from arvexq.ingest.nar_career_coverage import pre_race_reported_starts, official_history_complete, nar_history_wave_slots
+from arvexq.ingest.jra_career_merge import merge_full_profile_history
+from arvexq.prediction.career_readiness import assess_career_readiness
 from arvexq.ui.assets import read_asset, read_binary_asset
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -2596,11 +2598,16 @@ def _start_central_history_search(race_id: str, iso_date: str, force: bool = Fal
                 current=central_race_detail(race_id) or {}
                 horses=current.get("horses") or []
                 cutoff=current.get("date") or iso_date
+                # The official profile page may contain far more than five
+                # performances. Preserve its entire available pre-race career
+                # in allPastRuns, keeping only recentRaces at five for the UI.
+                history_limit=max(6,min(1000,int(os.getenv("ARVEXQ_CAREER_FETCH_LIMIT","1000"))))
                 def fill(h):
                     h=dict(h)
                     try:
-                        extra=_jra_profile_runs(h.get("_jraHorseCname") or "",cutoff,5)
-                        h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],extra,5)
+                        cname=h.get("_jraHorseCname") or h.get("jraHorseCname") or ""
+                        extra=_jra_profile_runs(cname,cutoff,history_limit)
+                        h=merge_full_profile_history(h,extra,cutoff)
                     except Exception as exc:
                         errors.append(str(exc))
                     return h
@@ -2615,11 +2622,11 @@ def _start_central_history_search(race_id: str, iso_date: str, force: bool = Fal
                 resolved_now=int(cov_now.get("horsesResolved") or cov_now.get("horsesWith5Plus") or 0)
                 # A debut/young horse can legitimately have 0 prior runs. If JRA says the
                 # inspected career is complete, treat it as resolved instead of a fetch error.
-                central_done=(total_now == 0) or (resolved_now >= total_now) or bool(cov_now.get("horsesWithHistory",0))
+                central_done=bool(assess_career_readiness(fresh_detail).get("ready"))
                 with _race_history_lock:
-                    _race_history_jobs[race_id]={"status":"done" if central_done else ("error" if errors else "done"),
+                    _race_history_jobs[race_id]={"status":"done" if central_done else ("error" if errors and not cov_now.get("horsesWithHistory",0) else "partial"),
                         "monthsDone":0,"maxMonths":0,"coverage":cov_now,"error":" | ".join(errors[-5:]),
-                        "source":"JRA公式 競走馬情報5走補完"}
+                        "source":"JRA公式 競走馬情報全過去走補完","fullCareerVerified":central_done}
                 with _detail_cache_lock:
                     _detail_cache.pop(race_id,None)
                 return
@@ -2635,14 +2642,16 @@ def _start_central_history_search(race_id: str, iso_date: str, force: bool = Fal
                 with _race_history_lock:
                     _race_history_jobs[race_id] = {"status":"running","monthsDone":months_done,"maxMonths":max_months,
                                                    "coverage":cov_now,"error":" | ".join(errors[-3:]),"source":"中央フィード高速並列検索"}
-                if _history_is_enough(cov_now, months_done):
+                if assess_career_readiness(fresh_detail).get("ready"):
                     break
             fresh_detail = central_race_detail(race_id) or {}
             cov_now = _central_detail_coverage(fresh_detail)
-            status = "done" if cov_now.get("horsesWithHistory", 0) > 0 else ("error" if errors else "done")
+            verified=bool(assess_career_readiness(fresh_detail).get("ready"))
+            status = "done" if verified else ("error" if errors and not cov_now.get("horsesWithHistory",0) else "partial")
             with _race_history_lock:
                 _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,
-                                               "coverage":cov_now,"error":" | ".join(errors[-5:]),"source":"中央フィード高速並列検索"}
+                                               "coverage":cov_now,"error":" | ".join(errors[-5:]),"source":"中央フィード高速並列検索",
+                                               "fullCareerVerified":verified}
             with _detail_cache_lock:
                 _detail_cache.pop(race_id, None)
         finally:
@@ -4861,7 +4870,7 @@ def _ensure_detail_background_jobs(race_id: str, detail: dict) -> None:
             if _race_history_status(race_id) is None and not _history_is_enough(cov,0):_start_race_history_search(race_id,detail.get("date") or _today_iso(),names)
         else:
             cov=_central_detail_coverage(detail);total=int(cov.get("totalHorses") or 0);resolved=int(cov.get("horsesResolved") or cov.get("horsesWith5Plus") or 0)
-            if detail.get("analysisMode")!="新馬" and _race_history_status(race_id) is None and resolved<total:_start_central_history_search(race_id,detail.get("date") or _today_iso())
+            if detail.get("analysisMode")!="新馬" and _race_history_status(race_id) is None and not assess_career_readiness(detail).get("ready"):_start_central_history_search(race_id,detail.get("date") or _today_iso())
     except Exception as exc:
         print("prepared history schedule failed",race_id,exc)
 
@@ -6495,7 +6504,7 @@ def collect_race_info(
             cov = _central_detail_coverage(detail)
             total = int(cov.get("totalHorses") or 0)
             resolved = int(cov.get("horsesResolved") or cov.get("horsesWith5Plus") or 0)
-            if total == 0 or resolved >= total:
+            if total == 0 or assess_career_readiness(detail).get("ready"):
                 history = {"status":"done","monthsDone":int((history or {}).get("monthsDone") or 0),
                            "maxMonths":int((history or {}).get("maxMonths") or 0),"coverage":cov,"error":"",
                            "source":(history or {}).get("source") or "JRA公式 競走馬情報5走補完"}
