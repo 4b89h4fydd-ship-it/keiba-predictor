@@ -7,7 +7,10 @@ export const orderedTrifectas=Object.freeze(Array.from({length:6},(_,a)=>
     a!==b&&b!==c&&a!==c?String(a+1)+"-"+(b+1)+"-"+(c+1):null).filter(Boolean)).flat()).flat());
 const finite=(x,a,b)=>typeof x==="number"&&Number.isFinite(x)?Math.min(b,Math.max(a,x)):null;
 const normalized=(x,a,b,defaultValue=.5)=>x===null?defaultValue:Math.min(1,Math.max(0,(x-a)/(b-a)));
-const rate=x=>typeof x==="number"&&Number.isFinite(x)?Math.min(1,Math.max(0,x>1?x/100:x)):null;
+// Official 勝率 is scored on the 0-10 scale; 連対率 percentages are 0-100.
+// Keep these distinct to prevent 6.5 (score points) being treated as 6.5%.
+const points=x=>typeof x==="number"&&Number.isFinite(x)&&x>=0&&x<=10?x/10:null;
+const rate=x=>typeof x==="number"&&Number.isFinite(x)&&x>=0&&x<=100?x/100:null;
 const avg=(xs,fb=.5)=>{const f=xs.filter(x=>Number.isFinite(x));return f.length?f.reduce((s,x)=>s+x,0)/f.length:fb};
 export function featureScores(entrants,context={}){
   if(!Array.isArray(entrants)||entrants.length!==6||
@@ -15,7 +18,7 @@ export function featureScores(entrants,context={}){
      entrants.some(x=>!Number.isInteger(x?.boatNo)||x.boatNo<1||x.boatNo>6))throw Error("6艇の検証済み出走選手が必要です");
   return [...entrants].sort((a,b)=>a.boatNo-b.boatNo).map((e,i)=>{
     const p=e.player||{},m=e.motor||{},ex=e.exhibition||{};
-    const skill=avg([rate(p.winRate),rate(p.top3Rate),rate(p.localWinRate),rate(p.courseWinRate),rate(p.courseTop3Rate)]);
+    const skill=avg([points(p.winRate),rate(p.top3Rate),points(p.localWinRate),rate(p.courseWinRate),rate(p.courseTop3Rate)]);
     const start=avg([normalized(finite(p.avgST,0,.4),.35,.08),normalized(finite(p.courseAvgST,0,.4),.35,.08)]);
     const motor=avg([rate(m.top2Rate),rate(m.top3Rate)]);
     const exhibition=avg([normalized(finite(ex.time,6,9),8,6),normalized(finite(ex.turnTime,3,9),8,4),normalized(finite(ex.straightTime,3,9),8,4)]);
