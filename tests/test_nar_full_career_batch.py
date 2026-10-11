@@ -104,6 +104,9 @@ class NarFullCareerBatchTests(unittest.TestCase):
         d=self.fixture()
         d["horses"][0]["allPastRuns"]=[run("2026-03-10", "existing"),
                                          run("2025-12-01", "existing")]
+        # Restrict this fixture to the two explicitly supplied rows: the
+        # first test already exercises pre-existing five-row and ZIP archives.
+        d["horses"][0]["recentRaces"] = []
         d["horses"][0].pop("careerArchive", None)
         with patch.object(app, "DB_PATH", self.path):
             app._nar_attach_recent_batch(d, 5)
