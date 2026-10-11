@@ -15,7 +15,8 @@ assert.ok(Math.abs(m.reduce((s,x)=>s+x.win,0)-1)<1e-10);
 assert.ok(Math.abs(m.reduce((s,x)=>s+x.top3,0)-3)<1e-10);
 assert.deepEqual(expandFormation("1-23-234"),["1-2-3","1-2-4","1-3-2","1-3-4"]);
 assert.equal(summarizeFormation(expandFormation("1-23-234")),"1-23-234");
-assert.equal(summarizeFormation(["1-2-3","2-1-3"]),null);
+assert.equal(summarizeFormation(["1-2-3","2-1-3"]),"12-12-3");
+assert.equal(summarizeFormation(["1-2-3","1-3-4"]),null);
 assert.throws(()=>expandFormation("1-1-1"));
 const date="2026-10-12";
 const race={
