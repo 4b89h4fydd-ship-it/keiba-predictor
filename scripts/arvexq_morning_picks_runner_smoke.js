@@ -41,8 +41,11 @@ try{
     const r={id:'nar-'+tomorrow+'-大井-'+String(k).padStart(2,'0'),date:tomorrow,
       circuit:'地方',track:'大井',raceNumber:k,startTime:'21:00',title:'未判定も記録する朝の出走表'};
     mixed.summaries.push(r);
-    mixed.details.push({...mixed.details[0],...r});
+    // Each race owns its observations: mutating one missing card must not
+    // clear the evidence of the other assessed cards.
+    mixed.details.push({...JSON.parse(JSON.stringify(mixed.details[0])),...r});
   }
+  assert.notStrictEqual(mixed.details[0].horses,mixed.details[4].horses);
   mixed.details[4].preparedMeta={diagnosisReady:false,careerReady:false};
   mixed.details[4].careerReadiness={ready:false};
   mixed.details[4].horses.forEach(h=>{h.recentRaces=[];});

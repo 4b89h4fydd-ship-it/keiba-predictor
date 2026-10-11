@@ -20,7 +20,9 @@ for (const hasSummary of [false, true]) {
     const html = vm.runInContext(renderer + ';renderRaceLoading()', context);
     assert.ok(html.startsWith('<div class="smart-shell"><header>'));
     assert.ok(html.includes('<main class="smart-main smart-race-page">'));
-    assert.ok(html.includes(error || 'レース詳細を読み込み中'));
+    assert.ok(html.includes(error ? '取得済み情報を維持して再取得中' : 'レース情報を読み込み中'));
+    assert.equal(html.includes('<section>概要</section>'), hasSummary);
+    assert.ok(html.includes('smart-loading'));
     assert.equal(html.includes('data-race="test"'), Boolean(error && hasSummary));
     assert.ok(html.endsWith('</main><footer></footer></div>'));
   }
