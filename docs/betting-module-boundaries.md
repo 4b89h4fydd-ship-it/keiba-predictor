@@ -2,7 +2,7 @@
 
 | Module | Responsibility |
 |---|---|
-| `arvexq/ui/static/betting/legacy_v213_order_model.js` | Conditional 1-2-3 distribution used by existing P1/P2/P3 model; no DOM or persistence |
+| `arvexq/ui/static/betting/legacy_v213_order_model.js` | Historical conditional 1-2-3 role distribution and audit only; never chooses kinds, combinations or purchase decisions |
 | `arvexq/ui/static/betting/main_strategy.js` | Standalone main-ticket kind and combinations; no reliance on displayed mark priority |
 | `arvexq/ui/static/betting/trifecta_strategy.js` | Independent first/second/third challenge gate and 6–12 point allocation |
 | `arvexq/ui/static/betting/insurance_strategy.js` | Non-overlapping backup if first place reverses, optional one-point hedge |
@@ -13,9 +13,11 @@
 | `arvexq/prediction/prerace_archive.py` | Existing immutable before-off seal and outcome comparison, delegates payout details |
 | `scripts/arvexq_capture_prerace_bet.js` | Load the same exact betting engine in server pre-off capture, hash model source |
 | `build_static.py` | Fingerprint and copy separate web assets, fail if a dependency is missing |
-| `arvexq/ui/static/app.js` | Original forecast + navigation coordinator, new decision/render functions now only thin bridges |
+| `arvexq/ui/static/app.js` | Forecast + navigation coordinator; produces bet evidence and ordering audits, passes them to the single independent decision engine |
 
 Do not copy the new three-way policy, rendering markup or payout calculations into app.js in future changes. Runtime order: main_strategy, trifecta_strategy, insurance_strategy, three_way_engine, bet_view, app-v*.js. Existing legacy prediction/pace logic still resides in app.js and is not claimed to have been fully separated.
 
 ## v355 model reference purchases vs elite morning selections
 The independently loaded `bet_readiness.js` evaluates prediction readiness before ticket production, distinguishing hard evidence gaps from optional real odds, published body weight or partial official conditions. A routine race may receive **reference-only** ワイド/馬連/3連複 tickets if it passes modest independent evidence thresholds. It does **not** become a morning `厳選` and does not obtain 3連単 by promotion. All tickets need purchase-evidence readiness; 3連単 additionally requires robust pace and order evidence, and stays disabled without ◎. Missing real odds are disclosed, no implied positive expected return. Frozen pre-race bets are immutable; all adjustments apply only to newly computed pre-off tickets.
+
+The only ticket selection and combination writer is `three_way_engine.js`, delegating to `main_strategy.js`, `no_axis_strategy.js`, `trifecta_strategy.js` and `insurance_strategy.js`. The main app and historical order model must never filter, choose, reorder or manufacture tickets. `prepareBetEvidence()` may attach readiness/reference status, and explanatory functions may attach audits. The immutable pre-off saved plan is returned unchanged before any new computation; post-off synthesis is forbidden.
