@@ -25,7 +25,7 @@ from arvexq.infra.pure_snapshots import (
     _merge_official_result,
 )
 from arvexq.databanks.legacy_bridge import register_legacy_sources
-from arvexq.ingest.nar_career_coverage import pre_race_reported_starts, official_history_complete, nar_history_wave_slots
+from arvexq.ingest.nar_career_coverage import pre_race_reported_starts, official_history_complete, career_gap_candidates, nar_history_wave_slots
 from arvexq.ingest.jra_career_merge import merge_full_profile_history
 from arvexq.prediction.career_readiness import assess_career_readiness
 from arvexq.ui.assets import read_asset, read_binary_asset
@@ -1538,19 +1538,23 @@ def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[st
                 if official_history_complete(cov_now, required):
                     break
             cov_now = _history_counts(horse_names, iso_date)
-            # v155: if official NAR history is still under five starts, search a second
-            # career source. This is especially important for JRA/NAR transfers.
+            # Missing history is measured against verified pre-race starts,
+            # NOT against the five runs shown on the racecard. Transfers may
+            # also have unseen JRA records despite >=5 local NAR appearances.
+            pending=career_gap_candidates(cov_now,required,horse_names)
+            fetch_cap=max(1,min(16,int(os.getenv("NAR_HISTORY_FALLBACK_MAX_HORSES","8"))))
+            queue=pending[:fetch_cap]
             supplemented=0
-            under=list(cov_now.get("underFive") or [])
-            if under:
-                try:supplemented=_supplement_sparse_nar_history(race_id,under,iso_date)
+            if queue:
+                try:supplemented=_supplement_sparse_nar_history(race_id,queue,iso_date)
                 except Exception as exc:errors.append("netkeiba DB補完:"+str(exc))
             verified = official_history_complete(cov_now, required)
             status = "done" if verified else ("error" if errors and not (cov_now.get("horsesWithHistory",0)>0 or supplemented>0) else "partial")
             source="NAR公式 高速並列履歴"+(" + netkeiba DB補完" if supplemented else "")
             with _race_history_lock:
                 _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":source,"supplementedHorses":supplemented,
-                                               "knownCareerStarts":len(required),"fullCareerVerified":verified}
+                                               "knownCareerStarts":len(required),"fullCareerVerified":verified,
+                                               "fallbackRequestedHorses":len(queue),"fallbackPendingHorses":len(pending)-len(queue)}
             with _detail_cache_lock:
                 _detail_cache.pop(race_id, None)
             try:_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=True)
@@ -1710,21 +1714,23 @@ def _netkeiba_db_horse_history(name:str, cutoff:str, limit:int=5)->dict:
         # start, not a retired namesake with a longer record.
         score=(int(runs[0]["date"].replace("-","")) if runs else 0)*1000 + len(runs)
         if score>best_score:
-            best_score=score;best={"name":name,"_netkeibaHorseId":hid,"recentRaces":runs,"source":"netkeiba DB補完"}
+            best_score=score;best={"name":name,"_netkeibaHorseId":hid,
+                                   "recentRaces":runs[:5],"allPastRuns":runs,"source":"netkeiba DB補完"}
     return best
 
 
 def _supplement_sparse_nar_history(race_id:str, names:list[str], cutoff:str)->int:
     if not names:return 0
     unique=list(dict.fromkeys([_clean(x) for x in names if _clean(x)]))
-    workers=max(2,min(4,int(os.getenv("NETKEIBA_DB_HISTORY_WORKERS","4"))))
+    workers=max(1,min(3,int(os.getenv("NETKEIBA_DB_HISTORY_WORKERS","2"))))
+    max_runs=max(6,min(300,int(os.getenv("NETKEIBA_DB_CAREER_FETCH_LIMIT","200"))))
     rows=[]
     with ThreadPoolExecutor(max_workers=min(workers,len(unique))) as pool:
-        futs={pool.submit(_netkeiba_db_horse_history,name,cutoff,5):name for name in unique}
+        futs={pool.submit(_netkeiba_db_horse_history,name,cutoff,max_runs):name for name in unique}
         for fut in as_completed(futs):
             try:
                 z=fut.result() or {}
-                if z.get("recentRaces"):rows.append(z)
+                if z.get("allPastRuns"):rows.append(z)
             except Exception as exc:print("sparse NAR history supplement failed",futs[fut],exc)
     if not rows:return 0
     try:
@@ -3316,8 +3322,19 @@ def _merge_enrichment(detail:dict,data:dict)->dict:
             if (h.get(k) in (None,"",0)) and row.get(k) not in (None,""):h[k]=row.get(k)
         if row.get("pedigree"):h["pedigree"]={**(h.get("pedigree") or {}),**row.get("pedigree")}
         if row.get("_netkeibaHorseId"):h["_netkeibaHorseId"]=row.get("_netkeibaHorseId")
-        if row.get("recentRaces"):
-            h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],row.get("recentRaces") or [],5)
+        if row.get("recentRaces") or row.get("allPastRuns"):
+            # The fallback can carry an entire dated JRA/NAR history. Do not
+            # collapse it to a five-run UI projection when enriching a local
+            # race and never replace an already longer official history.
+            from arvexq.ingest.full_career import merge_career
+            cutoff=str(detail.get("date") or "")
+            existing=[*(h.get("allPastRuns") or []),*(h.get("recentRaces") or [])]
+            incoming=row.get("allPastRuns") or row.get("recentRaces") or []
+            if cutoff:
+                merged=merge_career(existing,incoming,cutoff)
+                if merged:
+                    h["allPastRuns"]=merged
+                    h["recentRaces"]=merged[:5]
     for b in data.get("extra") or []:
         src=str(b.get("source") or "補助")
         for row in b.get("rows") or []:
