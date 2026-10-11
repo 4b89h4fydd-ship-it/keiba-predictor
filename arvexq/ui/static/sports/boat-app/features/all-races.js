@@ -29,7 +29,7 @@ export function allBoatRaces(day,{now=new Date()}={}){
         ' aria-label="'+esc(venue+' '+no+'レース '+(time||"締切未取得"))+'">'+
         '<strong>'+no+'R</strong><small>'+esc(time||"未取得")+'</small></button>';
     }).join("");
-    return '<div class="arv-all-venue"><div class="arv-all-venue-head"><div><b>'+esc(venue)+'</b><span>1R〜12R</span></div>'+
+    return '<div class="arv-all-venue"><div class="arv-all-venue-thumb" aria-hidden="true">≋</div><div class="arv-all-venue-head"><div><b>'+esc(venue)+'</b><span>1R〜12R</span></div>'+
       '<button type="button" data-venue="'+esc(venue)+'" class="arv-all-go">会場ページへ ›</button></div>'+
       '<div class="arv-all-races-grid">'+cells+'</div></div>';
   }).join("");

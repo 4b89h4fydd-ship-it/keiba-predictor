@@ -108,6 +108,9 @@ jobs:
       - name: Horse modular asset caching
         run: python -m unittest discover -s tests -p 'test_static_asset_cache.py' -v
 
+      - name: Dual-sport brand hero and app icon assets
+        run: python -m unittest discover -s tests -p 'test_dual_sport_brand_assets.py' -v
+
       - name: Dual-sport navigation and page isolation
         run: |
           python -m unittest discover -s tests -p 'test_sport_navigation.py' -v
@@ -120,6 +123,7 @@ jobs:
           node tests/boat_all_races_smoke.mjs
           node scripts/arvexq_horse_portal_smoke.js
           node --check dist/sports/horse-portal.js
+          node --check dist/sports/unified-home.js
           test -s dist/sports/all-races.css
           test -s dist/sports/boat-app/features/all-races.js
 
