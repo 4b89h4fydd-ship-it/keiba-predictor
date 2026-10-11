@@ -3434,41 +3434,14 @@ function eliteSelectedRaceCut(rows){
  return window.ARVEXQMorningSelection.allStrictQualifiers(rows,{n:n,chronological:raceChronologicalCompare});
 }
 function computeMorningRaceCandidates(circuit){
-  var all=(state.races||[]).filter(function(r){return r&&r.id&&(!circuit||String(r.circuit||'')===String(circuit))}),map={};
-  function add(r,t){if(!r)return;var k=String(r.id);map[k]={race:r,tags:['厳選'],selection:t}}
-  // v304: every race on the card is evaluated first. Clock time is NEVER a
-  // selection factor. A second full-card quality cut keeps only true elite races.
-  if(!window.ARVEXQMorningTicketLanes||typeof window.ARVEXQMorningTicketLanes.classify!=='function')
-    throw Error('morning classifier missing — do not publish an empty selection');
-  all.forEach(function(r){var d=null;try{
-    // A missing server diagnosisReady flag may mean full-career ingest is still
-    // running, not that this race is unanalyzable. Use the live model/quality
-    // gates below instead; never synthesize an absent racecard.
-    d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);
-    if(!d||isFinal(d)||!Array.isArray(d.horses)||
-       d.horses.filter(function(h){return h&&!isScratchHorse(h)&&n(h.horseNumber)>0&&String(h.name||'').trim()}).length<5)return;
-    var p=predict(d),strict=strictSelectedRaceProfile(d,p);
-    var t=window.ARVEXQMorningTicketLanes.classify(d,p,strict);
-    if(!t.selected)return;
-    // This additional condition applies only to the first morning capture;
-    // archived selections are never recalculated from live odds or results.
-    d._arvexqMorningLaneCandidate=t;
-    var plan=buildAiBetPlan(d,p);
-    t=window.ARVEXQMorningTicketLanes.requireMorningTickets(t,plan);
-    if(t.selected){
-      var audit=window.ARVEXQMorningEvidence;
-      // Ticket kind names are NOT actionable proof. Freeze the actual
-      // pre-off marks and exact combinations from this same model invocation.
-      if(!audit||typeof audit.capture!=='function')throw Error('morning evidence module unavailable');
-      var receipt=audit.capture(d,p,plan,t);
-      if(!receipt){console.warn('MORNING_SELECTED_NO_CONCRETE_TICKET',d.id);return}
-      t.evidence=receipt;
-      add(r,t)
-    }
-  }catch(e){console.error('MORNING_TICKET_DECISION_UNAVAILABLE',r&&r.id,String(e&&e.message||e))}
-   finally{if(d)delete d._arvexqMorningLaneCandidate}
-  });
-  return eliteSelectedRaceCut(Object.keys(map).map(function(k){return map[k]}))
+ if(!window.ARVEXQSelectedRacePipeline)throw Error('morning selector module missing');
+ return window.ARVEXQSelectedRacePipeline.select(
+  (state.races||[]).filter(function(r){return r&&r.id&&(!circuit||String(r.circuit||'')===String(circuit))}),
+  {getDetail:function(r){return instantTrackDetails[String(r.id)]||loadDetailCache(r.id)},
+   isFinal:isFinal,isScratch:isScratchHorse,predict:predict,
+   evaluateQuality:strictSelectedRaceProfile,makeTicket:buildAiBetPlan,
+   lanes:window.ARVEXQMorningTicketLanes,evidence:window.ARVEXQMorningEvidence,
+   cut:eliteSelectedRaceCut,warn:function(){console.warn.apply(console,arguments)}})
 }
 function morningPickOf(r){
   if(!r)return null;
@@ -3577,11 +3550,8 @@ function smartSelectedRaces(forceOpen){
   return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>朝一に全対象を判定・固定｜基準通過の全件を表示</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
 }
 function computeMorningSpecialRaceCandidates(){
-  return (state.races||[]).filter(function(r){
-    if(!r||!r.id)return false;
-    var title=String(r.title||'');
-    return isMainForecastRace(r)||raceIsGraded(r)||(String(r.track||'')==='高知'&&(/ファイナル/i.test(title)||n(r.raceNumber)===12))
-  }).slice().sort(raceChronologicalCompare)
+ if(!window.ARVEXQSpecialSelection)throw Error('special selection module missing');
+ return window.ARVEXQSpecialSelection.select(state.races||[]);
 }
 function specialForecastRaceCandidates(){
   // Selection membership is frozen once; live results and names do not add races.
