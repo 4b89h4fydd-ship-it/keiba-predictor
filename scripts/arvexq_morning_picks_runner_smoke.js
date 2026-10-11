@@ -45,6 +45,7 @@ try{
   }
   mixed.details[4].preparedMeta={diagnosisReady:false,careerReady:false};
   mixed.details[4].careerReadiness={ready:false};
+  mixed.details[4].horses.forEach(h=>{h.recentRaces=[];});
   const partialDiagnosis=run(mixed);
   assert.equal(partialDiagnosis.summaries.length,5);
   assert(partialDiagnosis.summaries.every(r=>r.morningPickVersion==='v1'));
@@ -54,9 +55,13 @@ try{
   assert(partialDiagnosis.summaries.slice(0,4).every(r=>r.morningAssessed===true));
   const waiting=fixture(tomorrow,'21:00');
   waiting.details.forEach(d=>{d.preparedMeta.careerReady=false;d.careerReadiness={ready:false}});
-  const notFrozen=run(waiting);
-  assert(notFrozen.summaries.every(r=>!r.morningPickFixedAt),
-    'missing verified lifetime histories must not freeze an empty morning selection');
+  const individuallyAssessed=run(waiting);
+  assert(individuallyAssessed.summaries.every(r=>!!r.morningPickFixedAt&&r.morningAssessed===true),
+    'the complete-lifetime flag must not veto otherwise evidenced morning cards');
+  const trulyMissing=fixture(tomorrow,'21:00');
+  trulyMissing.details.forEach(d=>d.horses.forEach(h=>h.recentRaces=[]));
+  assert(run(trulyMissing).summaries.every(r=>!r.morningPickFixedAt),
+    'entirely missing horse history must not freeze a false empty morning slate');
   const past=fixture('2025-10-01','09:00');
   assert(run(past).summaries.every(r=>!r.morningPickFixedAt),'do not fabricate after first post');
   const partial=fixture(tomorrow,'21:00');partial.details.pop();
