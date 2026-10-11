@@ -18,7 +18,7 @@ export function detail(r){
     const markRow=verified?(r.forecast.marks||{})[e.boatNo]:null;
     const mark=markRow?displayMark(markRow):"—";
     const grade=markRow&&["A","B","C"].includes(markRow.grade)?markRow.grade:"";
-    return '<div class="boat-entry"><b class="boat-no no-'+Number(e.boatNo)+'">'+digits[Number(e.boatNo)]||esc(e.boatNo)+'</b><span><b>'+esc(e.name)+'</b><small>'+esc(e.class||"")+' '+esc(e.motorNo?"M"+e.motorNo:"")+'</small></span><span class="boat-mark-cell"><strong class="boat-mark">'+esc(mark)+'</strong>'+(grade?'<small>'+grade+'</small>':'')+'</span></div>';
+    return '<div class="boat-entry"><b class="boat-no no-'+Number(e.boatNo)+'">'+(digits[Number(e.boatNo)]||esc(e.boatNo))+'</b><span><b>'+esc(e.name)+'</b><small>'+esc(e.class||"")+' '+esc(e.motorNo?"M"+e.motorNo:"")+'</small></span><span class="boat-mark-cell"><strong class="boat-mark">'+esc(mark)+'</strong>'+(grade?'<small>'+grade+'</small>':'')+'</span></div>';
   }).join("")+'</div>':'<p class="boat-muted">出走選手のデータが揃っていません。</p>';
   return '<section class="boat-panel"><button type="button" data-back="races" class="boat-back">‹ レース一覧</button>'+
     '<h2>'+esc(r.venue)+' '+r.raceNo+'R <small>'+esc(r.title||"")+'</small></h2>'+entries+'</section>'+startExhibitionPanel(r)+
