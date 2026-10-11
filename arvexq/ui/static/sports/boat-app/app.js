@@ -100,7 +100,7 @@ if(root){
     }
   });
   root.addEventListener("change",event=>{
-    if(event.target.id==="boat-date"&&/^\d{4}-\d{2}-\d{2}$/.test(event.target.value)){
+    if((event.target.id==="boat-date"||event.target.id==="date")&&/^\d{4}-\d{2}-\d{2}$/.test(event.target.value)){
       state.date=event.target.value;route("home");refresh();
     }
   });
