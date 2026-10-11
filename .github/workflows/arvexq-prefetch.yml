@@ -124,12 +124,23 @@ jobs:
 
       - name: Discover all officially available races
         run: |
-          curl -fsS --retry 3 --retry-all-errors --retry-delay 2 --max-time 120 \
+          # Forced refresh is the preferred source. Never overwrite a valid
+          # official discovery with a second, possibly stale request.
+          rm -f bundle.json
+          if curl -fsS --retry 1 --retry-all-errors --retry-delay 2 \
+            --connect-timeout 10 --max-time 90 \
             "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$TARGET_DATE&force=1" \
-            -o bundle.json || true
-          curl -fsS --retry 3 --retry-all-errors --retry-delay 2 --max-time 45 \
-            "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$TARGET_DATE" \
-            -o bundle.json || true
+            -o bundle.json && \
+            jq -e '(.races | type) == "array" and ((.races | length) > 0)' bundle.json > /dev/null; then
+            echo "FULL_PREFETCH forced discovery complete"
+          else
+            echo "::warning::Forced discovery unavailable or empty; trying existing official cache"
+            rm -f bundle.json
+            curl -fsS --retry 1 --retry-all-errors --retry-delay 2 \
+              --connect-timeout 10 --max-time 45 \
+              "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$TARGET_DATE" \
+              -o bundle.json || true
+          fi
           RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
           echo "FULL_PREFETCH races=$RACES date=$TARGET_DATE"
           if [ "$RACES" -le 0 ]; then
