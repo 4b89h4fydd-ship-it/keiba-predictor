@@ -6164,7 +6164,10 @@ def _force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
         try:wait(fs,timeout=max(.5,min(4.0,deadline-time.time()-2.0)))
         finally:ex.shutdown(wait=False,cancel_futures=True)
 
-    # PHASE 2 — results and body-weight-sensitive diagnosis only for the useful time window.
+    # In the canonical facts-first Actions job this endpoint is discovery only.
+    # Official results have their own writer and diagnosis runs after D1 readback.
+    collect_only=os.getenv("ARVEXQ_COLLECT_ONLY","0")=="1"
+    # PHASE 2 — legacy interactive live updates, never the collector stage.
     nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
     focus=[]
     for r in rows:
@@ -6173,7 +6176,7 @@ def _force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
         if (-45<=remain<=240) or not _bootstrap_analysis_ready(snapshot(str(r.get("id") or ""))):
             focus.append(r)
     focus.sort(key=lambda r:abs((_race_minutes_server(r) if _race_minutes_server(r)<9999 else nowm+9999)-nowm))
-    focus=focus[:max(12,min(28,len(focus)))]
+    focus=[] if collect_only else focus[:max(12,min(28,len(focus)))]
 
     def finish_one(row):
         rid=str(row.get("id") or "")
