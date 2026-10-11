@@ -55,7 +55,7 @@
     "arvexq/storage/racedb/__init__.py": 1,
     "arvexq/storage/sqlite/__init__.py": 1,
     "arvexq/storage/sqlite/transactions.py": 5,
-    "arvexq/storage/policies/market.py": 32,
+    "arvexq/storage/policies/market.py": 33,
     "arvexq/storage/policies/__init__.py": 1,
     "arvexq/storage/policies/snapshots.py": 73,
     "arvexq/storage/policies/archive.py": 28,
@@ -135,5 +135,31 @@
   "limitations": [
     "No production DB was modified; output replay uses isolated SQLite/ZIP/HTTP fixtures.",
     "Live production-source response comparison was not executed. Existing prediction/UI/source acquisition modules remain byte-identical."
-  ]
+  ],
+  "app_prediction_functions_unchanged": {
+    "_prediction_clock_state": "fe6f9e6b3dbac754ab3d4c27dbd58827b356e37edbf6ded210a86c2558ce007a",
+    "_learning_races": "a503efdf8b455ea4a5d4498bc4149445d4aca0b2e764b69f8cbdb5a2b0b1003f",
+    "_v312_method": "a7d7dfdf7d9ed731903cb9a6259f0951c2329af7fa40dbf5cc73885b8e32f9ed",
+    "_v312_base_winner_weights": "b83ad78e4a733f79335a9acb9c7adf5409db70dc555a1650f77a083220581f11",
+    "_winner_learning_profile": "9f609dc6ee004e04b8794076cd10e690ff5a2ffbedc2d37d5427ac7a7d1169ad",
+    "_build_prerace_prediction": "5787250262488dfb76bd2714aff5b0d44da9ebe4c28f63f84a5e411bfea4d22c",
+    "_prediction_audit_from_lock": "d06ddd8eaddb6c458a0a5082f8fc46f4fcea95b8e9afb709873fdf5835dc4665",
+    "_attach_prerace_audit": "c45ff842353c727beb6a0ca94f5053d9093b5c132b2a3ddaf754c327851b5877",
+    "_compact_display_snapshot": "72726335609f8eb4c8ec3e8806072b5d7f434213d32b380f457252cba8a0775f",
+    "_precompute_detail_metrics": "eef01ee0237191b757d68e335f86922091de5cfd6f5afb2cabafb66d81fa4a1b",
+    "_evaluation_number": "0fb0ddd26db0566757c9dfb763107a29f277072b19554774ddb18f45a9abb023",
+    "_ensure_race_volatility": "0047c63e40676a81b52af07ac9907c32e44d3149526f920b4f0c673665c2dc22",
+    "_build_fast_diagnosis_snapshot": "90345708f2f989043fbcf2fc33d818ee8a6e514894d8babb873d1a6f7754ec33"
+  },
+  "retention_checkpoint_actions": {
+    "head": "f1a055dbf53459f36ff3345105f33877777d339b",
+    "validation": {
+      "id": 38116739498,
+      "conclusion": "success"
+    },
+    "domain_refactor": {
+      "id": 38116739484,
+      "conclusion": "success"
+    }
+  }
 }

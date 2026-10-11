@@ -53,7 +53,7 @@ arvexq/infra/legacy_stores.py (SOURCE),arvexq/storage/nar/sync.py,83,NarSync.__i
 new explicit interface / retention policy / package,arvexq/storage/policies/__init__.py,1,
 new explicit interface / retention policy / package,arvexq/storage/policies/archive.py,28,
 new explicit interface / retention policy / package,arvexq/storage/policies/bundles.py,12,
-new explicit interface / retention policy / package,arvexq/storage/policies/market.py,32,
+new explicit interface / retention policy / package,arvexq/storage/policies/market.py,33,
 new explicit interface / retention policy / package,arvexq/storage/policies/snapshots.py,73,
 new explicit interface / retention policy / package,arvexq/storage/ports.py,13,
 new explicit interface / retention policy / package,arvexq/storage/prepared/__init__.py,1,

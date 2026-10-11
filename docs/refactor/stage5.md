@@ -45,9 +45,9 @@ PRのbaseは `refactor/arvexq-acquisition-stage4`。mainへの統合・本番公
 
 既に適用済みの一度限りの移行スクリプト2本は終了メッセージを返すstubに変更し、削除したSOURCEファイルへの参照とimport時の書換えを止めた。
 
-## 検証（作業中）
+## 段階検証
 
-クラス分離後、既存403 Pythonテスト・114 subtests成功。coordinator分離後も既存403成功。最終検証・Actionsの結果は完了時に追記する。
+クラス分離後、既存403 Pythonテスト・114 subtests成功。coordinator分離後も既存403成功。最終検証・Actionsの結果は後述。
 
 ## 完了構成・削減状況
 
@@ -89,11 +89,12 @@ PRのbaseは `refactor/arvexq-acquisition-stage4`。mainへの統合・本番公
 | Python単体・API/SQLite結合・全回帰 | 549成功、114 subtests成功、失敗0 |
 | 第5段階の追加検証 | 146件成功。ソースAST/依存ポート、SQL・出力比較、全キャリア、固定予想/買い目、欠損保持、並行更新/再起動、import副作用、collector独立性を含む |
 | 既存JavaScript回帰 | 16本成功。朝の固定、印・買い目、取消、静的fallback等 |
-| 予想式/出力比較 | 31式・中央/地方/新馬/障害、成功 |
+| 予想式/出力比較 | app.pyの予想/学習/監査等13関数AST一致、31式・中央/地方/新馬/障害、成功 |
 | 静的ビルド | 成功。基準の214成果物とSHA-256一致、差分0 |
 | 保護領域のソース | UI・予想・厳選・買い目・取得・workers等317ファイルがbyte単位で不変 |
 | 既存ファイル全体 | 619ファイル不変。既存変更はapp.py、workflow 2本、適用済み移行script 2本のみ。旧SOURCE 2本は削除して実体化 |
 | 分離段階GitHub Actions | [Validation成功](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/38115993667)、[Domain Refactor成功](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/38115995317) |
+| 保存保護段階GitHub Actions | [Validation成功](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/38116739498)、[Domain Refactor成功](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/38116739484)。Chromium/iPhone WebKitも成功 |
 | 最終HEAD GitHub Actions | 新Draft PRのChecksと[ブランチ別実行一覧](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions?query=branch%3Arefactor%2Farvexq-storage-stage5)を参照 |
 
 既存のFastAPI startup/Starletteに関するdeprecation警告13件は残る。ローカルsandbox内で子プロセス実行が制限されたJSテストは許可された実行環境で再実行して成功。Chromium/iPhone WebKitの失敗隔離・買い目レイアウトはGitHub Actionsで実行する。
