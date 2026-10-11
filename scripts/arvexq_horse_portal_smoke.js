@@ -14,6 +14,7 @@ assert.ok(!rendered.includes('arv-all-venue-thumb'));
 assert.ok(!rendered.includes('♞'));
 
 assert.equal(rendered.includes("各会場の全レース"),true);
+assert.ok(!rendered.includes("arv-all-venue-thumb"),"no unused horse thumbnail column");
 assert.equal(rendered.includes("開催場一覧"),false);
 assert.equal(rendered.includes("リアルタイム"),false);
 assert.equal(rendered.includes("data-home-page=\"central\""),false);
