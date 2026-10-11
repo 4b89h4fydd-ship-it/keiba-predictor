@@ -34,7 +34,7 @@ export function realtimeSection(day,{full=false,now=new Date()}={}){
         '<span class="boat-live-name"><b>'+esc(r.venue)+' '+r.raceNo+'R</b><small>'+esc(r.title||"レース情報")+'</small></span>'+
         '<span class="boat-live-badge">'+status+'</span><span>›</span></button>';
     }).join("")+'</div>';
-  }else body='<p class="boat-muted">出走・締切時刻の確認済みデータがまだありません。データ接続後に実際のレースを表示します。</p>';
+  }else body='<p class="boat-muted">出走・締切時刻の確認済みデータは未取得です。データ接続後に実際のレースを表示します。</p>';
   return '<section class="boat-panel boat-live-panel"><div class="boat-row"><h2>リアルタイム</h2><span class="boat-status">締切時刻順</span></div>'+
     '<p class="boat-muted">レースを押すと予想・スタート展示・結果へ</p>'+body+
     (full?"":'<button type="button" class="boat-secondary" data-view="realtime">全レースの締切順を見る ›</button>')+
