@@ -2260,6 +2260,16 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
   color:#e6d8b8!important;border:1px solid #826f4d!important;
   background:#25313c!important;padding:2px 4px!important;
 }
+/* A-tier role tags use the same bottom slot as B/C, never a second A badge. */
+.rc-racecard-v339 .rc-honmei-grade.rc-honmei-grade-role{
+  box-sizing:border-box!important;
+  min-width:0!important;width:100%!important;max-width:100%!important;
+  padding:2px 0!important;font-size:9px!important;letter-spacing:-1px!important;
+  white-space:nowrap!important;overflow:hidden!important;
+}
 @media(max-width:390px){
   .rc-racecard-v339 .rc-honmei-grade{font-size:9px!important;padding:1px 3px!important;}
+  .rc-racecard-v339 .rc-honmei-grade.rc-honmei-grade-role{
+    font-size:8px!important;letter-spacing:-1px!important;padding:1px 0!important;
+  }
 }
