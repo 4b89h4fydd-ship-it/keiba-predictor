@@ -186,6 +186,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_prerace_bet_recovery.py' -v
           python -m unittest discover -s tests -p 'test_career_evidence.py' -v
           python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
+          python -m unittest discover -s tests -p 'test_prerace_partial_career.py' -v
           python -m unittest discover -s tests -p 'test_daily_archive_audit.py' -v
 
       - name: Prefetch racecard delivery regression
