@@ -2376,7 +2376,9 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
     grouped={n:[] for n in names}
     for row in rows:
         arr=grouped.get(str(row["name"]) or "")
-        if arr is None or len(arr)>=limit:continue
+        # SQL has already fetched every earlier result. Do not silently turn
+        # lifetime NAR history into a five-start history here.
+        if arr is None:continue
         try:cp=json.loads(row["corner_positions_json"] or "[]")
         except Exception:cp=[]
         arr.append({
@@ -2391,9 +2393,25 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
             "jockey":row["jockey"] or "","trainer":row["trainer"] or "",
             "source":"NAR公式ローカル履歴",
         })
+    from arvexq.ingest.full_career import merge_career
+    from arvexq.ingest.career_transport import recover_horse
     for h in horses:
-        h["recentRaces"]=grouped.get(str(h.get("name") or ""),[])[:limit]
-        h["allPastRuns"]=list(h["recentRaces"])
+        # Preserve all previously stored starts (including packed full-career
+        # archives), even when this local monthly SQLite database is sparse.
+        # The five-run limit applies to the mobile display only.
+        try:
+            previous=recover_horse(h,cutoff) if isinstance(h.get("careerArchive"),dict) else h
+        except (ValueError,KeyError,TypeError) as exc:
+            # A corrupt archive must remain visible as a verification error,
+            # never be silently discarded or reported as a complete career.
+            previous=h
+            h.setdefault("careerHistoryWarnings",[]).append("archive-recovery:"+type(exc).__name__)
+        old_runs=[*(previous.get("allPastRuns") or []),*(previous.get("recentRaces") or [])]
+        full=merge_career(old_runs,grouped.get(str(h.get("name") or ""),[]),cutoff)
+        h["allPastRuns"]=full
+        h["recentRaces"]=full[:max(1,int(limit))]
+        # Do not change _careerHistoryAudit.complete: an observed list alone
+        # cannot prove there were no earlier JRA/NAR starts.
     return detail
 
 
