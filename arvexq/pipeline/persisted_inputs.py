@@ -22,6 +22,28 @@ def _runners(detail: dict[str, Any]) -> dict[int, dict[str, Any]]:
     return out
 
 
+
+def _career_rows(horse: dict[str, Any], cutoff: str) -> list[dict[str, Any]]:
+    """Recover the existing packed career archive without any provider request."""
+    if horse.get("careerArchive"):
+        from arvexq.ingest.career_transport import recover_horse
+        horse = recover_horse(horse, cutoff)
+    return [r for r in [*(horse.get("allPastRuns") or []),
+                        *(horse.get("recentRaces") or [])] if isinstance(r, dict)]
+
+
+def _history_observations_retained(original: list[dict[str, Any]],
+                                   saved: list[dict[str, Any]]) -> bool:
+    """Older results can gain fields; their known date/venue/race must survive."""
+    keys = ("date", "track", "raceNumber", "raceId", "finish")
+    for prior in original:
+        known = [(k, str(prior[k])) for k in keys if prior.get(k) not in (None, "")]
+        if known and not any(all(str(next_run.get(k, "")) == value for k, value in known)
+                             for next_run in saved):
+            return False
+    return True
+
+
 def verify_persisted_facts(source: dict[str, Any], saved: dict[str, Any]) -> list[str]:
     """Return precise missing/mismatched records; never replace failed writes with RAM.
 
@@ -56,13 +78,20 @@ def verify_persisted_facts(source: dict[str, Any], saved: dict[str, Any]) -> lis
         if set(a) != set(b) or any(str(a[n].get("name")) != str(b[n].get("name")) for n in a.keys() & b.keys()):
             errors.append(f"{rid}:horse-identities-changed")
         for number in a.keys() & b.keys():
-            # A saved snapshot may have additional history, but must not lose
-            # any already collected official career evidence.
-            for key in ("allPastRuns", "recentRaces"):
-                collected = a[number].get(key)
-                stored = b[number].get(key)
-                if isinstance(collected, list) and len(collected) > len(stored or []):
-                    errors.append(f"{rid}:horse-{number}:{key}-truncated")
+            # Recover the same canonical full-career transport used by the
+            # existing prefetch. Five visible runs are not a complete career.
+            try:
+                original = _career_rows(a[number], str(old.get("date") or ""))
+                retained = _career_rows(b[number], str(new.get("date") or ""))
+            except (ValueError, KeyError, TypeError, RuntimeError) as exc:
+                errors.append(f"{rid}:horse-{number}:career-archive-invalid:{type(exc).__name__}")
+                continue
+            # Original older starts must remain, even after compression.
+            if not _history_observations_retained(original, retained):
+                errors.append(f"{rid}:horse-{number}:allPastRuns-truncated")
+            elif len(original) > len(retained):
+                # Handle historical rows lacking any usable race identity.
+                errors.append(f"{rid}:horse-{number}:history-count-truncated")
     return errors
 
 def may_create_prerace_prediction(detail: dict[str, Any], now=None) -> bool:
