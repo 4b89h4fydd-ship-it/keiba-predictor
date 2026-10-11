@@ -69,7 +69,24 @@ assert.equal(insufficient.decision,'データ不足','missing pre-off data canno
 assert.equal(insufficient.dataStatus,'insufficient-preoff-evidence');
 assert.deepEqual(insufficient.dataMissing,['近走データ']);
 const nonselected=policy({...base(),selectionAudit:{selected:false}},race,prediction);
-assert.equal(nonselected.decision,'厳選対象外','non-selected is not the same as skipped or missing');
+assert.equal(nonselected.decision,'見送り','without an elite selection or independent quality pass, skip');
+assert.deepEqual(nonselected.items,[],'not selected and not independently qualified');
+const independent=policy({...base(),selectionAudit:{selected:false},referenceOnly:true},race,prediction);
+assert.equal(independent.selectionAudit.selected,false,'reference tickets must not claim morning selection');
+assert.equal(independent.referenceOnly,true,'reference disclosure retained');
+assert.equal(independent.decision,'通常買い','independent evidence-backed ticket should not be vetoed by elite');
+assert.ok(independent.items.some(z=>z.level==='本線'),'independent main ticket emitted');
+assert.ok(independent.items.some(z=>z.level==='3連単チャレンジ'),
+  'qualified non-elite race is reviewed for trifecta on its own evidence');
+const independentLowHistory=policy({...base(),selectionAudit:{selected:false},referenceOnly:true,
+ betInputGate:{ready:true,trifectaReady:false}},race,prediction);
+assert.ok(independentLowHistory.items.some(z=>z.level==='本線'),
+ 'partial career evidence still allows supported unordered main');
+assert.equal(independentLowHistory.trifectaDecision,'見送り',
+ 'trifecta stays disabled until additional ordering evidence is ready');
+const unsafeReference=policy({...base(),selectionAudit:{selected:false},referenceOnly:true,
+ betInputGate:{ready:false,missing:['位置取りの観測根拠']}},race,prediction);
+assert.deepEqual(unsafeReference.items,[],'reference qualification cannot bypass missing data');
 const viewGlobal={};
 new Function('window',fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8'))(viewGlobal);
 const missingHtml=viewGlobal.ARVEXQBetView.render(race,prediction,{
