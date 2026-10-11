@@ -138,8 +138,8 @@ research_hash = hashlib.sha256(b"|".join((RESEARCH_PATH / filename).read_bytes()
 SPORT_DIR = STATIC / "sports"
 SPORT_FILES = (
     "switch.css", "boat.html", "boat-app/layout.css", "boat-app/app.js",
-    "boat-app/core/contract.js", "boat-app/core/feed.js", "boat-app/core/stats.js",
-    "boat-app/features/races.js", "boat-app/features/selected.js",
+    "boat-app/core/contract.js", "boat-app/core/feed.js", "boat-app/core/stats.js", "boat-app/core/start-exhibition.js",
+    "boat-app/features/races.js", "boat-app/features/start-exhibition.js", "boat-app/features/selected.js",
     "boat-app/features/ai-stats.js",
 )
 for filename in SPORT_FILES:
