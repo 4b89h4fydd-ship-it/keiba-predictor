@@ -1,0 +1,9 @@
+/* Navigation for the parent ARVEXQ sport selector; no horse rules modified. */
+.arvexq-sport-nav{box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:7px 12px;background:#0b151c;border-bottom:1px solid #3b5264;color:#eef6fc;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
+.arvexq-sport-nav *{box-sizing:border-box}
+.arvexq-sport-caption{font-size:12px;letter-spacing:.12em;font-weight:900;color:#9ab6c7;margin-right:auto;white-space:nowrap}
+.arvexq-sport-nav a{display:inline-flex;align-items:center;justify-content:center;min-width:92px;min-height:39px;padding:7px 15px;border:1px solid #345268;border-radius:11px;background:#182a36;color:#c9d9e4;font-size:15px;font-weight:850;text-decoration:none;line-height:1.2}
+.arvexq-sport-nav a.active,.arvexq-sport-nav a[aria-current="page"]{background:linear-gradient(135deg,#1f6cc6,#124a85);border-color:#70c9f7;color:#fff;box-shadow:inset 0 -2px 0 #63d6f7}
+.arvexq-sport-nav a:focus-visible{outline:3px solid #eabf55;outline-offset:2px}
+.boat-page .arvexq-sport-nav{position:sticky;top:0;z-index:30;padding-top:max(7px,env(safe-area-inset-top))}
+@media(max-width:360px){.arvexq-sport-nav{gap:6px;padding-inline:8px}.arvexq-sport-caption{font-size:10px}.arvexq-sport-nav a{min-width:73px;font-size:14px;padding-inline:8px}}
