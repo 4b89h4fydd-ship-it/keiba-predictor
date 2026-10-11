@@ -64,8 +64,21 @@ def sealed_lock(detail: dict[str, Any]) -> dict[str, Any] | None:
     return None
 
 
-def restore_seal(existing: dict[str, Any] | None, updated: dict[str, Any] | None) -> dict[str, Any]:
-    """Keep the first sealed pre-race forecast even across later updates."""
+def restore_seal(
+    existing: dict[str, Any] | None,
+    updated: dict[str, Any] | None,
+    *,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    """Protect the first genuine original, but never freeze a failed capture.
+
+    A sealed prediction is immutable. A betting error receipt is not a real
+    original: it may be replaced only with a validated pre-off ticket, while
+    the scheduled race is still in the future. Once post time has passed,
+    neither a retry nor a later sync may invent a missing original.
+    """
+    from scripts.arvexq_prerace_bet_integrity import has_valid_original
+
     out = copy.deepcopy(updated) if isinstance(updated, dict) else {}
     old = existing if isinstance(existing, dict) else {}
     old_lock = sealed_lock(old)
@@ -74,10 +87,37 @@ def restore_seal(existing: dict[str, Any] | None, updated: dict[str, Any] | None
     if str(old.get("id") or "") != str(out.get("id") or ""):
         return out
     out["preRacePrediction"] = copy.deepcopy(old_lock)
-    if isinstance(old.get("preRaceBet"), dict):
-        out["preRaceBet"] = copy.deepcopy(old["preRaceBet"])
-    # Shadow is generated from the same original pre-off payload. Subsequent
-    # result, odds and body-weight updates must not rewrite this evidence.
+    start = post_at(old)
+    clock = now.astimezone(JST) if now is not None else datetime.now(JST)
+    race_id = str(old.get("id") or "")
+    prior = old.get("preRaceBet")
+    proposed = out.get("preRaceBet")
+    if has_valid_original(prior, race_id=race_id, start_at=start):
+        # First successful, provenance-checked original always wins.
+        out["preRaceBet"] = copy.deepcopy(prior)
+    elif start is not None and clock < start and has_valid_original(
+        proposed, race_id=race_id, start_at=start
+    ):
+        # Recovery is allowed only before off. Do not turn errors into skips.
+        out["preRaceBet"] = copy.deepcopy(proposed)
+    elif isinstance(prior, dict):
+        # Retain the historical error (or unverified legacy receipt) if no
+        # genuine pre-off recovery can be verified.
+        out["preRaceBet"] = copy.deepcopy(prior)
+    else:
+        out.pop("preRaceBet", None)
+
+    # Failed-attempt evidence is append-only, separately from the winning
+    # original. Normal syncs lacking this field cannot erase past failures.
+    failures = []
+    for source in (old, out):
+        for item in source.get("preRaceBetCaptureFailures") or []:
+            if isinstance(item, dict) and item not in failures:
+                failures.append(copy.deepcopy(item))
+    if failures:
+        out["preRaceBetCaptureFailures"] = failures[-24:]
+
+    # The research shadow belongs to the exact same original pre-off input.
     if isinstance(old.get("researchShadow"), dict):
         out["researchShadow"] = copy.deepcopy(old["researchShadow"])
     if isinstance(old.get("researchFactorShadow"), dict):
@@ -89,7 +129,6 @@ def restore_seal(existing: dict[str, Any] | None, updated: dict[str, Any] | None
             pm[name] = old_pm[name]
     out["preparedMeta"] = pm
     return out
-
 
 def seal_detail(detail: dict[str, Any], lock: dict[str, Any], now: datetime) -> dict[str, Any]:
     """Materialize a validated, immutable server snapshot without mutating input."""
