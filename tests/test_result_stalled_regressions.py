@@ -42,6 +42,52 @@ class StoredResultMergeTests(unittest.TestCase):
         self.assertEqual(len(result["payouts"]), 2)
 
 
+class SingleResultAcquisitionPathTests(unittest.TestCase):
+    def test_realtime_sync_never_polls_result_source_independently(self):
+        from pathlib import Path
+        import scripts.arvexq_live_sync as live
+
+        realtime = Path("scripts/arvexq_live_sync.py").read_text(encoding="utf-8")
+        repair = Path("scripts/arvexq_result_repair.py").read_text(encoding="utf-8")
+        self.assertNotIn("app._refresh_result_fast(", realtime)
+        self.assertNotIn("def terminal(", realtime)
+        self.assertEqual(repair.count("app._refresh_result_fast("), 1,
+                         "result repair is the sole external result refresher")
+
+        rid = "nar-2026-10-11-大井-11"
+        original = {
+            "id": rid, "date": "2026-10-11", "startTime": "11:00",
+            "track": "大井", "raceNumber": 11, "circuit": "地方",
+            "preparedMeta": {"diagnosisReady": True},
+            "horses": [{"horseNumber": 1, "name": "one", "winOdds": 2.5}],
+            "preRacePrediction": {"frozen": True, "raceId": rid},
+            "preRaceBet": {"fixedAt": "2026-10-11T10:35:00+09:00",
+                           "items": [{"kind": "馬連", "combos": [[1, 2]]}]},
+            "result": {"status": "確定",
+                       "finishers": [{"finish": 1, "horseNumber": 1},
+                                     {"finish": 2, "horseNumber": 2},
+                                     {"finish": 3, "horseNumber": 3}],
+                       "payouts": [{"type": "馬連", "amount": 600}]},
+        }
+        partial = {"id": rid, "date": original["date"], "track": "大井",
+                   "horses": [], "result": {"status": "速報",
+                     "finishers": [{"finish": 1, "horseNumber": 1}]}}
+        with patch.object(live, "snapshot", return_value=partial), \
+             patch.object(live.app, "odds_refresh", return_value={
+                 "horses": [{"horseNumber": 1, "winOdds": 3.2}]}), \
+             patch.object(live.app, "_refresh_result_fast",
+                          side_effect=AssertionError("duplicate result fetch")):
+            _, updated, error, _, _ = live.refresh_one(
+                rid, 12 * 60, {rid: original}, original)
+        self.assertFalse(error, error)
+        self.assertEqual(updated["result"], original["result"],
+                         "live odds cannot downgrade official results/payouts")
+        self.assertEqual(updated["preRacePrediction"], original["preRacePrediction"])
+        self.assertEqual(updated["preRaceBet"], original["preRaceBet"])
+        self.assertEqual(updated["horses"][0]["winOdds"], 3.2)
+
+
+
 class OfficialNarResultParserTests(unittest.TestCase):
     @staticmethod
     def _html(split_col=False):
