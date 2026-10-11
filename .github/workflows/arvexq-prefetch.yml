@@ -148,6 +148,47 @@ jobs:
             exit 0
           fi
 
+      - name: Publish official day summaries before heavy prediction work
+        run: |
+          # Reorder the existing D1 cold-start sync; no new data acquisition lane.
+          RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
+          if [ "$RACES" -le 0 ]; then
+            echo "D1_EARLY_SUMMARIES_NO_OFFICIAL_RACES date=$TARGET_DATE"
+            exit 0
+          fi
+          if [ -z "$SYNC_TOKEN" ]; then
+            echo "::error::D1_EARLY_SUMMARIES_MISSING_SYNC_TOKEN"
+            exit 1
+          fi
+          curl -fsS --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 35 \
+            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=0" -o initial-d1-day.json
+          jq -e '.ok == true and (.races | type == "array")' initial-d1-day.json >/dev/null
+          EXISTING=$(jq '.races | length' initial-d1-day.json)
+          if [ "$EXISTING" -eq 0 ]; then
+            jq -n --slurpfile source bundle.json \
+              '{summaries: $source[0].races, details: [], meta: {source: "arvexq-cold-start-race-summaries-v1", sync_batch: true, sync_batch_kind: "summaries"}}' \
+              > initial-day-summaries.json
+            echo "D1_EARLY_SUMMARIES_WRITE date=$TARGET_DATE races=$RACES"
+            python scripts/arvexq_d1_capacity_guard.py \
+              --file initial-day-summaries.json --api-base "$CLOUDFLARE_API_BASE" --max-bytes 4000000
+          else
+            echo "D1_EARLY_SUMMARIES_ALREADY_EXISTS date=$TARGET_DATE count=$EXISTING"
+          fi
+          curl -fsS --retry 4 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 35 \
+            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=0&t=$(date +%s)" -o verified-early-day.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source=json.loads(Path("bundle.json").read_text(encoding="utf-8"))
+          remote=json.loads(Path("verified-early-day.json").read_text(encoding="utf-8"))
+          expected={str(r["id"]) for r in source["races"] if isinstance(r,dict) and r.get("id")}
+          actual={str(r["id"]) for r in remote.get("races",[]) if isinstance(r,dict) and r.get("id")}
+          missing=sorted(expected-actual)
+          print("D1_EARLY_SUMMARIES_VERIFY", "expected=",len(expected),"actual=",len(actual),"missing=",len(missing))
+          if not remote.get("ok") or missing:
+              raise SystemExit("D1_EARLY_SUMMARIES_INCOMPLETE: "+",".join(missing[:12]))
+          PY
+
       - name: Stop bootstrap server to release SQLite writers
         run: |
           # Bootstrap HTTP discovery has finished; diagnosis uses app.py directly.
@@ -341,27 +382,7 @@ jobs:
             --retries 6 \
             --allow-missing-details \
             --allow-empty-day
-          # On a newly opened racing date, publish lightweight summaries first.
-          # The race list must not depend on slower roster/AI-detail materialization.
-          EXISTING=$(jq '.races // [] | length' current-d1.json)
-          if [ "$EXISTING" -eq 0 ]; then
-            PREPARED=$(jq '.summaries // [] | length' prefetch-payload.json)
-            if [ "$PREPARED" -le 0 ]; then
-              echo "::error::No officially prepared summaries for first D1 publication"
-              exit 1
-            fi
-            jq -n --slurpfile data prefetch-payload.json \
-              '{summaries: $data[0].summaries,details: [],meta: {source:"arvexq-cold-start-race-summaries-v1",sync_batch:true,sync_batch_kind:"summaries"}}' \
-              > initial-day-summaries.json
-            echo "D1 initial race list publishing summaries=$PREPARED"
-            curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
-              --connect-timeout 10 --max-time 40 -X POST \
-              "$CLOUDFLARE_API_BASE/api/sync" \
-              -H "content-type: application/json" \
-              -H "x-sync-token: $SYNC_TOKEN" \
-              --data-binary @initial-day-summaries.json > /dev/null
-            echo "D1_COLD_START_SUMMARIES_PUBLISHED $PREPARED"
-          fi
+          # Day summaries are committed and verified immediately after official discovery.
           python scripts/arvexq_select_prefetch_repairs.py \
             --prepared prefetch-payload.json \
             --current current-d1.json \
