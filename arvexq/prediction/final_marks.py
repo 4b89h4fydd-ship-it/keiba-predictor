@@ -69,8 +69,29 @@ def sufficiently_observed_partial_career(
     blocked = readiness.get("blockedHorses") or []
     if total < 5 or total != int(readiness.get("activeHorses") or 0):
         return False
+    # An observed, date-bounded history is usable evidence even when the
+    # provider's lifetime start-count verification endpoint is unavailable.
+    # This is NOT evidence of full career completeness. Require every active
+    # horse to have five distinct, usable pre-race dated starts, and reject
+    # contradictory counts or identity/cutoff errors.
     if complete < max(4, (4 * total + 4) // 5) or not 0 < len(blocked) <= 2:
-        return False
+        if len(blocked) != total:
+            return False
+        by_no = {int(h["horseNumber"]): h for h in horses}
+        acceptable = {"provider-fetch-failed", "reported-starts-unknown"}
+        for entry in blocked:
+            horse = by_no.get(int(entry.get("horseNumber") or 0))
+            if (not horse or not str(horse.get("name") or "").strip()
+                    or entry.get("reason") not in acceptable
+                    or entry.get("reportedStarts") is not None):
+                return False
+            try:
+                runs = observed_runs(horse, detail, limit=None)
+            except (ValueError, TypeError, KeyError):
+                return False
+            if len({str(run.get("date") or "") for run in runs}) < 5:
+                return False
+        return True
     by_no = {int(h["horseNumber"]): h for h in horses}
     for entry in blocked:
         horse = by_no.get(int(entry.get("horseNumber") or 0))
@@ -116,7 +137,11 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     if limited:
         # Never set careerReadiness.ready=True or mark incomplete history complete.
         readiness["predictionEligible"] = True
-        readiness["predictionEvidencePolicy"] = "80pct-verified-max2-unverified-min3-observed-v1"
+        readiness["predictionEvidencePolicy"] = (
+            "all-active-five-dated-observed-total-unverified-v2"
+            if int(readiness.get("completeHorses") or 0) == 0
+            else "80pct-verified-max2-unverified-min3-observed-v1"
+        )
     ranked_rows = rank_factor_model(horses, detail)
     if not ranked_rows:
         return detail

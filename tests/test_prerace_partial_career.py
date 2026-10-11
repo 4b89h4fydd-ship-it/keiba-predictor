@@ -80,6 +80,46 @@ class PartialCareerSealTests(unittest.TestCase):
                               build=lambda _: self.fail("unverified field cannot be sealed"))
         self.assertEqual(result["status"], "waiting-for-full-career")
 
+    def test_all_horses_with_real_dated_runs_can_forecast_if_totals_endpoint_fails(self):
+        # Production regression: nine runners with 20+ observed starts each can
+        # be blocked simply because external career-total verification failed.
+        detail = race(count=9, verified=0)
+        for horse in detail["horses"]:
+            original = horse["recentRaces"][0]
+            dates = [1, 3, 7, 11, 15, 18, 20, 24, 27, 29]
+            runs = [{**original, "date": f"2026-09-{day:02d}"}
+                    for day in dates]
+            horse["recentRaces"] = runs[:5]
+            horse["allPastRuns"] = runs
+            audit = horse["_careerHistoryAudit"]
+            audit["reportedStarts"] = None
+            audit["reportedStartsSource"] = None
+            audit["complete"] = False
+            audit["failedProviders"] = ["official-total-provider"]
+        readiness = assess_career_readiness(detail)
+        self.assertEqual(readiness["completeHorses"], 0)
+        self.assertTrue(sufficiently_observed_partial_career(detail, readiness))
+        forecast = apply_core_marks(copy.deepcopy(detail))
+        self.assertEqual(forecast["predictionStatus"], "partial-career-evidence")
+        self.assertFalse(forecast["careerReadiness"]["ready"])
+        self.assertEqual(forecast["careerReadiness"]["predictionEvidencePolicy"],
+                         "all-active-five-dated-observed-total-unverified-v2")
+        result = prepare_seal(detail, now=NOW, assign=apply_core_marks, build=model)
+        self.assertEqual(result["status"], "sealed", result)
+        self.assertFalse(result["detail"]["preRacePrediction"]["careerEvidence"]["fullCareerVerified"])
+        self.assertEqual(len(result["detail"]["preRacePrediction"]["careerEvidence"]["blockedHorses"]), 9)
+
+        # One runner without five real starts cannot quietly pass this rule.
+        unsafe = copy.deepcopy(detail)
+        unsafe["horses"][0]["recentRaces"] = unsafe["horses"][0]["recentRaces"][:2]
+        unsafe["horses"][0]["allPastRuns"] = unsafe["horses"][0]["allPastRuns"][:2]
+        self.assertFalse(sufficiently_observed_partial_career(
+            unsafe, assess_career_readiness(unsafe)))
+        # No retrospective forecast is created even with abundant evidence.
+        post = prepare_seal(detail, now=NOW + timedelta(minutes=31),
+                            assign=apply_core_marks, build=model)
+        self.assertEqual(post["status"], "started-no-new-lock")
+
     def test_three_race_minimum_and_no_future_bypass(self):
         detail = race()
         for h in detail["horses"][-2:]:
