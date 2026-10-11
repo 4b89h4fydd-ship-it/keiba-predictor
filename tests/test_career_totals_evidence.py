@@ -86,7 +86,7 @@ def fake_site(candidates, pages):
 class FetchTests(unittest.TestCase):
     def test_unique_identity_returns_stats_only(self):
         get = fake_site(horse_page("2022100001"), {"2022100001": (listing_html(ROWS), top_html(4))})
-        out = nk.fetch_career_totals(get, {"name": "テスト", "recentRaces": [run(9, 1)]}, RACE)
+        out = nk.fetch_verified_career(get, {"name": "テスト", "recentRaces": [run(9, 1)]}, RACE)
         self.assertEqual(set(out), {"careerStartEvidence"})  # no runs: prediction inputs unchanged
         self.assertEqual(out["careerStartEvidence"]["starts"], 3)
 
@@ -94,18 +94,18 @@ class FetchTests(unittest.TestCase):
         get = fake_site(search_list(("2022100001", "テスト"), ("2019100009", "テスト")),
                         {"2022100001": (listing_html(ROWS), top_html(4)),
                          "2019100009": (listing_html(ROWS), top_html(4))})
-        self.assertEqual(nk.fetch_career_totals(get, {"name": "テスト"}, RACE), {})
+        self.assertEqual(nk.fetch_verified_career(get, {"name": "テスト"}, RACE), {})
 
     def test_birth_year_disambiguates(self):
         get = fake_site(search_list(("2022100001", "テスト"), ("2019100009", "テスト")),
                         {"2022100001": (listing_html(ROWS), top_html(4)),
                          "2019100009": (listing_html(ROWS), top_html(4))})
-        out = nk.fetch_career_totals(get, {"name": "テスト", "age": "4"}, RACE)
+        out = nk.fetch_verified_career(get, {"name": "テスト", "age": "4"}, RACE)
         self.assertEqual(out["careerStartEvidence"]["sourceHorseId"], "2022100001")
 
     def test_known_run_absent_from_source_is_not_evidence(self):
         get = fake_site(horse_page("2022100001"), {"2022100001": (listing_html(ROWS), top_html(4))})
-        self.assertEqual(nk.fetch_career_totals(get, {"name": "テスト", "recentRaces": [run(5, 5)]}, RACE), {})
+        self.assertEqual(nk.fetch_verified_career(get, {"name": "テスト", "recentRaces": [run(5, 5)]}, RACE), {})
 
 
 def registry_with(runs, stats=None, *, evidence_error=False, second_stats=None):
@@ -118,7 +118,7 @@ def registry_with(runs, stats=None, *, evidence_error=False, second_stats=None):
         if evidence_error:
             raise RuntimeError("evidence outage")
         return {"careerStartEvidence": stats} if stats else {}
-    reg.register(DataSource(name="netkeiba_career_totals", circuit="both", priority=60,
+    reg.register(DataSource(name="netkeiba_verified_career", circuit="both", priority=60,
                             capabilities=SourceCapabilities(horse_history=True),
                             fetchers={"horse_history": evidence}))
     if second_stats:
@@ -128,7 +128,7 @@ def registry_with(runs, stats=None, *, evidence_error=False, second_stats=None):
     return reg
 
 
-def stats_for(dates, source="netkeiba_career_totals"):
+def stats_for(dates, source="netkeiba_verified_career"):
     return {"starts": len(dates), "asOfRaceDate": "2026-10-10", "startDates": dates, "source": source}
 
 
@@ -143,7 +143,7 @@ class EndToEndTests(unittest.IsolatedAsyncioTestCase):
         runs = [run(6, 1), run(7, 1), run(9, 1)]
         h = await self.enrich(registry_with(runs, stats_for(["2026-06-01", "2026-07-01", "2026-09-01"])))
         self.assertTrue(h["_careerHistoryAudit"]["complete"])
-        self.assertEqual(h["_careerHistoryAudit"]["reportedStartsSource"], "netkeiba_career_totals")
+        self.assertEqual(h["_careerHistoryAudit"]["reportedStartsSource"], "netkeiba_verified_career")
         a = build_career_analysis(h, RACE)
         self.assertEqual(a["career_state"], "complete")
         self.assertEqual(a["data_limitation"], "complete")
@@ -172,7 +172,7 @@ class EndToEndTests(unittest.IsolatedAsyncioTestCase):
         h = await self.enrich(registry_with([run(9, 1)], evidence_error=True))
         audit = h["_careerHistoryAudit"]
         self.assertEqual(audit["failedProviders"], [])
-        self.assertEqual(audit["failedEvidenceProviders"], ["netkeiba_career_totals"])
+        self.assertEqual(audit["failedEvidenceProviders"], ["netkeiba_verified_career"])
         self.assertEqual(build_career_analysis(h, RACE)["acquisition_status"], "unverified")
 
     async def test_stats_for_other_race_date_ignored(self):
@@ -197,23 +197,23 @@ class EndToEndTests(unittest.IsolatedAsyncioTestCase):
 
 class WiringTests(unittest.TestCase):
     def test_adapter_only_runs_in_career_lane(self):
-        from arvexq.databanks.legacy_bridge import _netkeiba_career_totals_adapter
+        from arvexq.databanks.legacy_bridge import _netkeiba_verified_career_adapter
         calls = []
         def getter(url, timeout, cache):
             calls.append(url)
             return horse_page("2022100001") if "pid=horse_list" in url else (
                 listing_html(ROWS) if "/result/" in url else top_html(4))
-        fetch = _netkeiba_career_totals_adapter({"_netkeiba_get": getter})
+        fetch = _netkeiba_verified_career_adapter({"_netkeiba_get": getter})
         self.assertEqual(fetch({"name": "テスト"}, RACE, 5), {})
         self.assertEqual(calls, [])
         self.assertEqual(fetch({"name": "テスト"}, RACE, 1000)["careerStartEvidence"]["starts"], 3)
 
     def test_adapter_can_be_disabled(self):
         import os
-        from arvexq.databanks.legacy_bridge import _netkeiba_career_totals_adapter
+        from arvexq.databanks.legacy_bridge import _netkeiba_verified_career_adapter
         os.environ["ARVEXQ_NETKEIBA_CAREER_TOTALS"] = "0"
         try:
-            self.assertIsNone(_netkeiba_career_totals_adapter({"_netkeiba_get": lambda *a: ""}))
+            self.assertIsNone(_netkeiba_verified_career_adapter({"_netkeiba_get": lambda *a: ""}))
         finally:
             del os.environ["ARVEXQ_NETKEIBA_CAREER_TOTALS"]
 
