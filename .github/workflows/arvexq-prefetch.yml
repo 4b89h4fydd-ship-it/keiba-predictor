@@ -219,45 +219,33 @@ jobs:
             done
           fi
 
-      - name: Precompute all race cards and analysis
+      - name: Collect racecards and full careers without running predictions
         run: |
           RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
           if [ "$RACES" -le 0 ]; then
-            echo '{"summaries":[],"details":[],"meta":{"race_count":0}}' > prefetch-payload.json
-            echo '{"races":0,"missing_card":[],"missing_analysis":[]}' > prefetch-report.json
+            echo '{"summaries":[],"details":[],"meta":{"race_count":0,"pipeline_stage":"facts_stored_pending_d1"}}' > prefetch-facts.json
+            echo '{"races":0,"missing_card":[],"missing_analysis":[],"analysis_errors":{},"card_errors":{}}' > prefetch-facts-report.json
             exit 0
           fi
           python -m py_compile scripts/arvexq_prefetch.py
-          if ! python - <<'PY' > prefetch-run.log 2>&1
+          if ! python - <<'PY' > prefetch-collect.log 2>&1
           import app, runpy, sys
           app.last3f = None
           sys.argv = [
-              'scripts/arvexq_prefetch.py',
+              'scripts/arvexq_prefetch.py', '--phase', 'collect',
               '--bundle', 'bundle.json',
-              '--payload', 'prefetch-payload.json',
-              '--report', 'prefetch-report.json',
-              '--workers', '1',
-              '--analysis-workers', '1',
+              '--payload', 'prefetch-facts.json',
+              '--report', 'prefetch-facts-report.json',
+              '--workers', '1', '--analysis-workers', '1',
           ]
           runpy.run_path('scripts/arvexq_prefetch.py', run_name='__main__')
           PY
           then
-            echo "::error::FULL PREFETCH script failed"
-            tail -n 80 prefetch-run.log || true
+            echo "::error::FACT_COLLECTION_FAILED"
+            tail -n 70 prefetch-collect.log || true
             exit 1
           fi
-
-          jq '{races,missingCard:(.missing_card|length),missingAnalysis:(.missing_analysis|length),analysisErrors:(.analysis_errors|length),cardErrors:(.card_errors|length)}' prefetch-report.json
-          MISSING_CARD=$(jq '.meta.missing_card_count // 0' prefetch-payload.json)
-          MISSING_ANALYSIS=$(jq '.meta.missing_analysis_count // 0' prefetch-payload.json)
-          RACES=$(jq '.meta.race_count // 0' prefetch-payload.json)
-          analysisCount=$((RACES - MISSING_ANALYSIS))
-          echo "analysisCount=$analysisCount races=$RACES"
-          # A missing AI diagnosis must not prevent every racecard from reaching D1.
-          if [ "$MISSING_CARD" -gt 0 ] || [ "$MISSING_ANALYSIS" -gt 0 ]; then
-            echo "::warning::FULL PREFETCH incomplete: missing_card=$MISSING_CARD missing_analysis=$MISSING_ANALYSIS; proceeding to D1 repair"
-            jq '{missing_card,missing_analysis,analysis_errors,card_errors}' prefetch-report.json
-          fi
+          jq '{races,details,cards_ready,missing_card,card_errors}' prefetch-facts-report.json
 
       - name: Publish lightweight racecards independent of D1 capacity
         env:
@@ -266,7 +254,7 @@ jobs:
           # A D1-full incident must not erase every publicly visible roster.
           # The artifact includes only observed pre-off runner identities;
           # no post-off predictions, results, provisional odds or marks.
-          cp prefetch-payload.json /tmp/arvexq-static-racecards-source.json
+          cp prefetch-facts.json /tmp/arvexq-static-racecards-source.json
           git config user.name "ARVEXQ Racecard Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           published=0
@@ -303,6 +291,75 @@ jobs:
             echo "::warning::Static racecard publication pending; continue original D1 repair"
           fi
           git checkout -B prefetch-continue HEAD
+
+      - name: Persist collected facts using the existing D1 sync pipeline
+        run: |
+          RACES=$(jq '.meta.race_count // 0' prefetch-facts.json)
+          if [ "$RACES" -le 0 ]; then
+            echo "D1_FACTS_NO_RACES"
+            exit 0
+          fi
+          python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base "$CLOUDFLARE_API_BASE" --date "$TARGET_DATE" \
+            --out facts-current-d1.json --report facts-current-d1-report.json \
+            --workers 4 --retries 6 --allow-missing-details --allow-empty-day
+          python scripts/arvexq_select_prefetch_repairs.py \
+            --prepared prefetch-facts.json --current facts-current-d1.json \
+            --out facts-sync-payload.json --report facts-sync-selection.json
+          python scripts/arvexq_sync_batches.py \
+            --input facts-sync-payload.json --out-dir facts-sync-batches
+          COUNT=$(find facts-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
+          test "$COUNT" -gt 0
+          for file in facts-sync-batches/batch-*.json; do
+            PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$CLOUDFLARE_API_BASE"
+            python scripts/arvexq_d1_capacity_guard.py \
+              --file "$file" --api-base "$CLOUDFLARE_API_BASE" --max-bytes 4000000
+            PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"
+          done
+          echo "D1_FACTS_SYNC_DONE batches=$COUNT"
+
+      - name: Read D1 facts back and require identical horse/history evidence
+        run: |
+          RACES=$(jq '.meta.race_count // 0' prefetch-facts.json)
+          if [ "$RACES" -le 0 ]; then
+            echo '{"races":[],"details":[]}' > persisted-facts.json
+            exit 0
+          fi
+          python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base "$CLOUDFLARE_API_BASE" --date "$TARGET_DATE" \
+            --out persisted-facts.json --report persisted-facts-report.json \
+            --workers 4 --retries 6 --allow-missing-details
+          python scripts/arvexq_verify_persisted_inputs.py \
+            --source prefetch-facts.json --saved persisted-facts.json \
+            --report persisted-evidence-check.json
+          echo "D1_STORED_EVIDENCE_VERIFIED"
+
+      - name: Analyze only persisted D1 data and prepare original marks and bets
+        run: |
+          RACES=$(jq '.races // [] | length' persisted-facts.json)
+          if [ "$RACES" -le 0 ]; then
+            echo '{"summaries":[],"details":[],"meta":{"race_count":0,"missing_card_count":0,"missing_analysis_count":0}}' > prefetch-payload.json
+            echo '{"races":0,"missing_card":[],"missing_analysis":[],"analysis_errors":{},"card_errors":{}}' > prefetch-report.json
+            exit 0
+          fi
+          if ! python - <<'PY' > prefetch-analysis.log 2>&1
+          import app, runpy, sys
+          app.last3f = None
+          sys.argv = [
+              'scripts/arvexq_prefetch.py', '--phase', 'analyze',
+              '--bundle', 'persisted-facts.json',
+              '--payload', 'prefetch-payload.json',
+              '--report', 'prefetch-report.json',
+              '--workers', '1', '--analysis-workers', '1',
+          ]
+          runpy.run_path('scripts/arvexq_prefetch.py', run_name='__main__')
+          PY
+          then
+            echo "::error::D1_ONLY_ANALYSIS_FAILED"
+            tail -n 70 prefetch-analysis.log || true
+            exit 1
+          fi
+          jq '{races,analysis_ready,analysis_errors}' prefetch-report.json
 
       - name: Freeze morning selected and special predictions for all races
         run: |
