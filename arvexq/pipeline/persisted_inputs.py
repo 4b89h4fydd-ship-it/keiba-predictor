@@ -64,3 +64,21 @@ def verify_persisted_facts(source: dict[str, Any], saved: dict[str, Any]) -> lis
                 if isinstance(collected, list) and len(collected) > len(stored or []):
                     errors.append(f"{rid}:horse-{number}:{key}-truncated")
     return errors
+
+def may_create_prerace_prediction(detail: dict[str, Any], now=None) -> bool:
+    """No newly generated pre-race marks once the official scheduled off time passes."""
+    from datetime import datetime, timedelta, timezone
+
+    if not isinstance(detail, dict):
+        return False
+    day = str(detail.get("date") or "")
+    clock = str(detail.get("scheduledStartTime") or detail.get("startTime") or "")
+    try:
+        off = datetime.strptime(day + " " + clock[:5], "%Y-%m-%d %H:%M").replace(
+            tzinfo=timezone(timedelta(hours=9))
+        )
+    except (TypeError, ValueError):
+        return False
+    if now is None:
+        now = datetime.now(off.tzinfo)
+    return now < off
