@@ -141,7 +141,42 @@ def _card_usable(detail: dict[str, Any] | None) -> bool:
             weight = 0.0
         if jockey and (banei or weight > 0):
             core += 1
-    return len(active) < 4 or core >= max(3, (len(active) * 7 + 9) // 10)
+    expected = detail.get("fieldSize") or detail.get("runnerCount") or 0
+    try:
+        expected = int(expected)
+    except (ValueError, TypeError):
+        expected = 0
+    # A cached two-runner fragment is NOT a finished field of twelve.
+    # Include declared scratches in roster cardinality; they are still
+    # listed runners but remain unselectable in the client.
+    roster = {int(h.get("horseNumber") or 0) for h in (detail.get("horses") or [])
+              if isinstance(h, dict) and str(h.get("horseNumber") or "").isdigit()}
+    if expected >= 2 and len(roster - {0}) < expected:
+        return False
+    return core >= max(1, (len(active) * 7 + 9) // 10)
+
+
+def _recover_existing_racecards(date: str) -> dict[str, dict[str, Any]]:
+    """Reuse this same pipeline's previously verified published roster cache.
+
+    No second fetcher: the immutable static racecard is a materialized output
+    of an earlier successful official prefetch. It can fill gaps in current
+    network responses without ever fabricating horses or replacing richer
+    provider observations.
+    """
+    if not date or len(date) != 10 or date[4] != "-" or date[7] != "-":
+        return {}
+    path = Path("arvexq/ui/static/racecards") / (date + ".json")
+    record = _read(str(path))
+    if str(record.get("date") or "") != date:
+        return {}
+    recovered: dict[str, dict[str, Any]] = {}
+    for row in record.get("races") or []:
+        if not isinstance(row, dict) or str(row.get("date") or "") != date:
+            continue
+        if _card_usable(row):
+            recovered[str(row["id"])] = row
+    return recovered
 
 
 def _analysis_ready(detail: dict[str, Any] | None) -> bool:
@@ -318,6 +353,18 @@ def prepare(
     rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
     initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id")]
     by_id: dict[str, dict[str, Any]] = {str(d["id"]): d for d in initial}
+    # Replay only validated existing outputs of this SAME canonical prefetch,
+    # so a failed upstream HTTP fetch cannot erase a known published roster.
+    static = _recover_existing_racecards(str(bundle.get("date") or ""))
+    recovered_rosters = []
+    for summary in rows:
+        rid = str(summary["id"])
+        prior = by_id.get(rid)
+        prepared = _merge_detail(prior, summary)
+        if not _card_usable(prepared) and rid in static:
+            prepared = _merge_detail(static[rid], prepared)
+            recovered_rosters.append(rid)
+        by_id[rid] = prepared
     errors: dict[str, str] = {}
     analysis_errors: dict[str, str] = {}
     skipped_unchanged: list[str] = []
@@ -432,6 +479,7 @@ def prepare(
             "race_count": len(ids),
             "detail_count": len(decorated),
             "card_complete_count": card_count,
+            "reused_verified_rosters": len(recovered_rosters),
             "analysis_count": analysis_count,
             "analysis_skipped_unchanged_count": len(set(skipped_unchanged)),
             "missing_card_count": len(missing_card),
@@ -446,6 +494,7 @@ def prepare(
         "races": len(ids),
         "details": len(decorated),
         "cards_ready": card_count,
+        "reused_verified_rosters": sorted(recovered_rosters),
         "analysis_ready": analysis_count,
         "analysis_skipped_unchanged": sorted(set(skipped_unchanged)),
         "missing_card": missing_card,

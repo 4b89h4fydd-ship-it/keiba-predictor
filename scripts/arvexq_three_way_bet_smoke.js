@@ -9,6 +9,12 @@ const n=(x,f=0)=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Num
 const betGlobal={};
 new Function('window',strategySrc)(betGlobal);
 new Function('window',moduleSrc)(betGlobal);
+const betViewSource=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8');
+const raceCss=fs.readFileSync('arvexq/ui/static/styles/race_v222_plus.css','utf8');
+assert.ok(src.includes('rc-honmei-grade'),'reliability must render below ◎ in horsecard');
+assert.ok(raceCss.includes('.rc-honmei-grade'),'compact confidence badge CSS must be present');
+for(const label of ['◎【単】A','◎【軸】A','◎B','◎C'])
+  assert.ok(betViewSource.includes(label),'betting legend missing '+label);
 const policy=(base,r,p)=>betGlobal.ARVEXQThreeWayBet.compose(base,r,p,{
  n,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),isScratchHorse:h=>!!h.scratched,
  betComboText:(kind,cs)=>cs.map(c=>c.join(kind==='馬単'||kind==='3連単'?' → ':' - ')).join(' / ')

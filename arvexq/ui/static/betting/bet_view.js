@@ -43,9 +43,11 @@ function render(r,p,deps){
   }
   var total=plan.referenceBudget||{},status=plan.fixedAt?'発走前固定':'暫定・未保存',
       savedV346=!!plan.fixedAt&&String(plan.engineVersion||plan.betStrategy||'').includes('three-way-v346'),
-      hon=plan.honmei||{},axisLabel=savedV346?'旧方式：新しい◎の役割・信頼度は当時未記録（後付けしません）':hon.horseNumber?
-        ('◎'+hon.horseNumber+' '+(hon.role==='win'?'1着向き':'3着内の軸向き')+'｜信頼度'+(hon.grade||'C')+
-          (hon.fixedAxis?'（券種別の固定条件は別途審査）':'（軸固定せず組み合わせを検討）')):'◎なし・軸固定なし',
+      hon=plan.honmei||{},notation=hon.grade==='A'?
+        ('◎【'+(hon.role==='win'?'単':'軸')+'】A'):'◎'+(hon.grade||'C'),
+      axisLabel=savedV346?'旧方式：新しい◎の役割・信頼度は当時未記録（後付けしません）':hon.horseNumber?
+        (notation+'　'+hon.horseNumber+'番｜'+(hon.role==='win'?'1着向き':'3着内の軸向き')+
+          (hon.fixedAxis?'（本線・3連単は券種別に審査）':'（信頼度C・軸固定しない）')):'◎なし・軸固定なし',
       explanation=aiBetExplanationHtml(plan);
   return '<div class="ai-bet-box arv-three-bet">'
     +'<div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div>'
@@ -66,7 +68,12 @@ function render(r,p,deps){
     +(plan.postLockNotice?'<p class="ai-bet-lock-notice">'+esc(plan.postLockNotice)+'</p>':'')
     +explanation
     +'<div class="bet-mark-guide"><b>'+esc(savedV346?'保存時点の印の見方':'印の見方（券種ごとに役割を再判定）')+'</b><div class="bet-mark-grid">'
-    +(savedV346?'<span><i>◎</i>旧方式：3着内の軸候補。新役割は後付けしません</span>':'<span><i>◎</i>1着向き／3着内の軸向きを判定。信頼度Cは固定しない</span>')+'<span><i>【単】</i>独立した1着・単勝向き評価</span>'
+    +(savedV346?'<span><i>◎</i>旧方式：3着内の軸候補。新役割は後付けしません</span>':
+      '<span><i>◎【単】A</i>信頼度A・1着向き。勝ち切る根拠があり、券種別審査で1着固定を検討</span>'+
+      '<span><i>◎【軸】A</i>信頼度A・3着内の軸向き。3連複・ワイドを優先</span>'+
+      '<span><i>◎B</i>信頼度B・相対本命。1着向き／軸向きは個別表示し、固定は慎重に審査</span>'+
+      '<span><i>◎C</i>信頼度C・相対本命。軸固定せず、買い目は独立審査</span>')+
+      '<span><i>【単】</i>1着向き評価（単勝の購入確定ではありません）</span>'
     +'<span><i>○</i>連対の本線候補</span><span><i>▲</i>上位有力候補</span>'
     +'<span><i>☆+</i>1着逆転も狙う強穴</span><span><i>☆</i>能力面の穴・相手候補</span>'
     +'<span><i>△</i>3着・押さえ</span><span><i>注</i>条件が合うときのみ採用</span>'
