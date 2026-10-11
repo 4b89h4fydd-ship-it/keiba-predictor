@@ -55,39 +55,3 @@ def official_history_complete(coverage: dict[str,Any], required: dict[str,int]) 
            or required[name]<0 for name in counts):
         return False
     return all(int(count or 0)==required[name] for name,count in counts.items())
-
-
-def career_gap_candidates(
-    coverage: dict[str, Any], reported_starts: dict[str, int],
-    horse_names: list[str],
-) -> list[str]:
-    """Prioritize missing lifetime records, not just horses with <5 starts.
-
-    Known race-date-bound totals lead the queue (74 reported/18 acquired is
-    incomplete). Without a verified total, a runner is *still* unverified,
-    regardless of having five or more observed starts. Duplicate names are
-    excluded because name-based secondary lookups cannot identify their owner.
-    """
-    counts = coverage.get("counts") or {}
-    if not isinstance(counts, dict):
-        counts = {}
-    unique = list(dict.fromkeys(name for name in horse_names if name))
-    duplicate_names = {name for name in unique if horse_names.count(name) > 1}
-    known, unknown_sparse, unknown_other = [], [], []
-    for name in unique:
-        if name in duplicate_names:
-            continue
-        observed = max(0, int(counts.get(name) or 0))
-        reported = reported_starts.get(name)
-        if type(reported) is int and reported >= 0:
-            if observed < reported:
-                known.append((reported - observed, name))
-        elif observed < 5:
-            unknown_sparse.append((observed, name))
-        else:
-            unknown_other.append((observed, name))
-    # Deterministic priority improves reproducibility and prevents callers
-    # accidentally treating a five-start projection as lifetime coverage.
-    return ([name for _, name in sorted(known, key=lambda v: (-v[0], v[1]))]
-            + [name for _, name in sorted(unknown_sparse)]
-            + [name for _, name in sorted(unknown_other)])

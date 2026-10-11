@@ -25,7 +25,7 @@ from arvexq.infra.pure_snapshots import (
     _merge_official_result,
 )
 from arvexq.databanks.legacy_bridge import register_legacy_sources
-from arvexq.ingest.nar_career_coverage import pre_race_reported_starts, official_history_complete, career_gap_candidates, nar_history_wave_slots
+from arvexq.ingest.nar_career_coverage import pre_race_reported_starts, official_history_complete, nar_history_wave_slots
 from arvexq.ingest.jra_career_merge import merge_full_profile_history
 from arvexq.prediction.career_readiness import assess_career_readiness
 from arvexq.ui.assets import read_asset, read_binary_asset
@@ -1538,23 +1538,16 @@ def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[st
                 if official_history_complete(cov_now, required):
                     break
             cov_now = _history_counts(horse_names, iso_date)
-            # Missing history is measured against verified pre-race starts,
-            # NOT against the five runs shown on the racecard. Transfers may
-            # also have unseen JRA records despite >=5 local NAR appearances.
-            pending=career_gap_candidates(cov_now,required,horse_names)
-            fetch_cap=max(1,min(16,int(os.getenv("NAR_HISTORY_FALLBACK_MAX_HORSES","8"))))
-            queue=pending[:fetch_cap]
-            supplemented=0
-            if queue:
-                try:supplemented=_supplement_sparse_nar_history(race_id,queue,iso_date)
-                except Exception as exc:errors.append("netkeiba DB補完:"+str(exc))
+            # This worker owns *only* the NAR official month ZIP/SQLite lane.
+            # Full-career transfers and independent provider identity checks
+            # belong to the canonical Full Prefetch enrichment pipeline.
             verified = official_history_complete(cov_now, required)
-            status = "done" if verified else ("error" if errors and not (cov_now.get("horsesWithHistory",0)>0 or supplemented>0) else "partial")
-            source="NAR公式 高速並列履歴"+(" + netkeiba DB補完" if supplemented else "")
+            status = "done" if verified else ("error" if errors and not cov_now.get("horsesWithHistory",0) else "partial")
             with _race_history_lock:
-                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,"coverage":cov_now,"error":" | ".join(errors[-5:]),"source":source,"supplementedHorses":supplemented,
-                                               "knownCareerStarts":len(required),"fullCareerVerified":verified,
-                                               "fallbackRequestedHorses":len(queue),"fallbackPendingHorses":len(pending)-len(queue)}
+                _race_history_jobs[race_id] = {"status":status,"monthsDone":months_done,"maxMonths":max_months,
+                                               "coverage":cov_now,"error":" | ".join(errors[-5:]),
+                                               "source":"NAR公式 高速並列履歴",
+                                               "knownCareerStarts":len(required),"fullCareerVerified":verified}
             with _detail_cache_lock:
                 _detail_cache.pop(race_id, None)
             try:_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=True)
@@ -1638,122 +1631,6 @@ def _netkeiba_get(url:str,timeout:float=4.0,cache_sec:int=45)->str:
         if len(_netkeiba_cache)>80:
             k=min(_netkeiba_cache.items(),key=lambda kv:kv[1][0])[0];_netkeiba_cache.pop(k,None)
     return txt
-
-def _netkeiba_db_horse_history(name:str, cutoff:str, limit:int=5)->dict:
-    """Fallback career lookup by horse name for sparse NAR histories.
-
-    Uses netkeiba DB only as a supplement after NAR official history has been searched.
-    The result page contains both central and local starts, which is useful for transfers.
-    """
-    name=_clean(name)
-    if not name:return {"name":"","recentRaces":[]}
-    try:
-        # netkeiba expects EUC-JP query bytes; UTF-8 silently returns no hits.
-        from arvexq.databanks.netkeiba_career import search_url, parse_search
-        html=_netkeiba_get(search_url(name),float(os.getenv("NETKEIBA_DB_SEARCH_TIMEOUT_SEC","4.0")),86400)
-    except Exception as exc:
-        print("netkeiba DB horse search failed",name,exc);return {"name":name,"recentRaces":[]}
-    # Exact-name candidates only (absolute links, or a direct redirect to the horse page).
-    candidates=[c["id"] for c in parse_search(html,name)]
-    best={"name":name,"recentRaces":[]};best_score=-1
-    for hid in candidates[:4]:
-        try:
-            page=_netkeiba_get(f"https://db.netkeiba.com/horse/result/{hid}/",float(os.getenv("NETKEIBA_DB_RESULT_TIMEOUT_SEC","4.0")),86400)
-        except Exception as exc:
-            print("netkeiba DB horse result failed",name,hid,exc);continue
-        ps=BeautifulSoup(page,"html.parser");runs=[]
-        for table in ps.find_all("table"):
-            trs=table.find_all("tr")
-            if not trs:continue
-            header_cells=trs[0].find_all(["th","td"])
-            headers=[_clean(c.get_text(" ",strip=True)) for c in header_cells]
-            # Headers are rendered with spaces ("着 順", "頭 数").
-            joined="|".join(re.sub(r"\s+","",h) for h in headers)
-            if "日付" not in joined or "着順" not in joined or "距離" not in joined:continue
-            def hidx(*keys):
-                for i,h in enumerate(headers):
-                    hh=re.sub(r"\s+","",h)
-                    if any(k in hh for k in keys):return i
-                return -1
-            i_date=hidx("日付");i_track=hidx("開催");i_title=hidx("レース名");i_field=hidx("頭数")
-            i_fin=hidx("着順");i_jockey=hidx("騎手");i_cw=hidx("斤量");i_dist=hidx("距離")
-            i_cond=hidx("馬場");i_time=hidx("タイム");i_corner=hidx("通過");i_bw=hidx("馬体重")
-            for tr in trs[1:]:
-                cells=tr.find_all(["th","td"])
-                vals=[_clean(c.get_text(" ",strip=True)) for c in cells]
-                def val(i):return vals[i] if i>=0 and i<len(vals) else ""
-                dm=re.search(r"(20\d{2})[./](\d{1,2})[./](\d{1,2})",val(i_date))
-                if not dm:continue
-                date=f"{int(dm.group(1)):04d}-{int(dm.group(2)):02d}-{int(dm.group(3)):02d}"
-                if cutoff and date>=cutoff:continue
-                fm=re.match(r"\s*(\d+)",val(i_fin))
-                if not fm:continue
-                dist_txt=val(i_dist);dst=re.search(r"(芝|ダ|障)[^0-9]*(\d{3,4})",dist_txt)
-                if not dst:continue
-                track=re.sub(r"^\d+|\d+$","",val(i_track)).strip()
-                field=_safe_int(val(i_field));corn=[]
-                cm=re.search(r"\d{1,2}(?:-\d{1,2})+",val(i_corner))
-                if cm:corn=[int(x) for x in cm.group(0).split("-")]
-                tm=0.0;mt=re.search(r"(?:(\d+):)?(\d{1,2})\.(\d)",val(i_time))
-                if mt:tm=int(mt.group(1) or 0)*60+int(mt.group(2))+int(mt.group(3))/10
-                bwm=re.search(r"(\d{3,4})(?:\s*\(\s*([+\-]?\d+)\s*\))?",val(i_bw))
-                runs.append({
-                    "date":date,"track":track,"title":val(i_title),"distance":int(dst.group(2)),
-                    "surface":"障害" if dst.group(1)=="障" else ("芝" if dst.group(1)=="芝" else "ダート"),
-                    "condition":val(i_cond) or "不明","weather":"不明","fieldSize":field,
-                    "finish":int(fm.group(1)),"timeSeconds":tm,"cornerPositions":corn,
-                    "carriedWeight":float(re.search(r"\d+(?:\.\d+)?",val(i_cw)).group()) if re.search(r"\d+(?:\.\d+)?",val(i_cw)) else 0.0,
-                    "bodyWeight":int(bwm.group(1)) if bwm else None,
-                    "bodyWeightChange":int(bwm.group(2)) if bwm and bwm.group(2) is not None else None,
-                    "jockey":val(i_jockey),"source":"netkeiba DB補完",
-                })
-                if len(runs)>=limit:break
-            if runs:break
-        runs=sorted(runs,key=lambda z:str(z.get("date") or ""),reverse=True)[:limit]
-        # Same-name horses: the current runner is the one with the latest pre-race
-        # start, not a retired namesake with a longer record.
-        score=(int(runs[0]["date"].replace("-","")) if runs else 0)*1000 + len(runs)
-        if score>best_score:
-            best_score=score;best={"name":name,"_netkeibaHorseId":hid,
-                                   "recentRaces":runs[:5],"allPastRuns":runs,"source":"netkeiba DB補完"}
-    return best
-
-
-def _supplement_sparse_nar_history(race_id:str, names:list[str], cutoff:str)->int:
-    if not names:return 0
-    unique=list(dict.fromkeys([_clean(x) for x in names if _clean(x)]))
-    workers=max(1,min(3,int(os.getenv("NETKEIBA_DB_HISTORY_WORKERS","2"))))
-    max_runs=max(6,min(300,int(os.getenv("NETKEIBA_DB_CAREER_FETCH_LIMIT","200"))))
-    rows=[]
-    with ThreadPoolExecutor(max_workers=min(workers,len(unique))) as pool:
-        futs={pool.submit(_netkeiba_db_horse_history,name,cutoff,max_runs):name for name in unique}
-        for fut in as_completed(futs):
-            try:
-                z=fut.result() or {}
-                if z.get("allPastRuns"):rows.append(z)
-            except Exception as exc:print("sparse NAR history supplement failed",futs[fut],exc)
-    if not rows:return 0
-    try:
-        with _enrich_data_lock:
-            olddata=_enrich_data.get(race_id) or {}
-            merged={}
-            for rr in (olddata.get("netkeibaRows") or [])+rows:
-                key=int(rr.get("horseNumber") or 0) or str(rr.get("name") or "")
-                if key:merged[key]=rr
-            _enrich_data[race_id]={
-                "netkeibaRows":list(merged.values()),
-                "smartRows":olddata.get("smartRows") or [],
-                "extra":olddata.get("extra") or [],
-            }
-        with _enrich_jobs_lock:
-            prev=_enrich_jobs.get(race_id) or {}
-            src=list(prev.get("sources") or [])
-            if "netkeiba DB補完" not in src:src.append("netkeiba DB補完")
-            _enrich_jobs[race_id]={**prev,"status":"done","sources":src,"finishedAt":time.time()}
-    except Exception as exc:
-        print("sparse NAR enrichment cache failed",race_id,exc);return 0
-    return len(rows)
-
 
 def _netkeiba_race_summaries(iso_date:str)->list[dict]:
     token=iso_date.replace("-","");url=f"https://race.netkeiba.com/top/race_list_sub.html?kaisai_date={token}"

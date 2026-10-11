@@ -1,6 +1,6 @@
-"""Career start-count evidence from the netkeiba horse database.
+"""Verified career runs and date-bound start-count evidence from netkeiba.
 
-This provider returns *only* acquisition evidence (``careerStartEvidence``), never runs,
+This provider returns acquisition evidence and same-page historical runs,
 so prediction inputs are unchanged.  Evidence is emitted only when:
 
 * the horse identity is unambiguous (exact name, and known pre-race start
@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 
 from arvexq.ingest.full_career import date_key, merge_career
 
-SOURCE = "netkeiba_career_totals"
+SOURCE = "netkeiba_verified_career"
 BASE = "https://db.netkeiba.com"
 _ID = re.compile(r"db\.netkeiba\.com/+horse/(\d{10})/")
 _NOT_STARTED = ("取", "除")          # 出走取消・競走除外: not a start
@@ -120,16 +120,87 @@ def build_stats(listing: list[dict[str, Any]] | None, total: int | None,
     }
 
 
-def _birth_year(horse: dict[str, Any], cutoff: str) -> int | None:
-    try:
-        age = int(re.sub(r"\D", "", str(horse.get("age") or "")) or 0)
-    except ValueError:
-        return None
-    return int(cutoff[:4]) - age if age and cutoff else None
+def parse_verified_runs(html: str, cutoff: str, start_dates: list[str],
+                        limit: int = 1000) -> list[dict[str, Any]]:
+    """Performance rows from the *same* date-verified complete results listing.
+
+    Source totals prove starts, but a row without track or distance is not
+    usable as a speed/pace observation. Never invent measurements.
+    """
+    end = date_key(cutoff)
+    allowed = set(start_dates)
+    if not end or not allowed:
+        return []
+    for table in _soup(html).find_all("table"):
+        trs = table.find_all("tr")
+        if not trs:
+            continue
+        headers = [re.sub(r"\s+", "", c.get_text(" ", strip=True))
+                   for c in trs[0].find_all(["th", "td"])]
+        if "日付" not in headers or "着順" not in headers:
+            continue
+        def col(*names: str) -> int:
+            return next((i for i, h in enumerate(headers)
+                         if any(n == h or n in h for n in names)), -1)
+        i_date, i_fin = col("日付"), col("着順")
+        i_track, i_dist = col("開催"), col("距離")
+        if min(i_date, i_fin, i_track, i_dist) < 0:
+            return []
+        i_field, i_title = col("頭数"), col("レース名")
+        i_time, i_corner = col("タイム"), col("通過")
+        i_weight, i_jockey = col("斤量"), col("騎手")
+        i_body, i_cond = col("馬体重"), col("馬場")
+        rows = []
+        for tr in trs[1:]:
+            vals = [c.get_text(" ", strip=True) for c in tr.find_all(["th", "td"])]
+            def value(i: int) -> str:
+                return vals[i].strip() if 0 <= i < len(vals) else ""
+            at = date_key(value(i_date))
+            if not at or at >= end or at not in allowed:
+                continue
+            fin = value(i_fin)
+            if not (re.match(r"^\d+", fin) or fin.startswith(_NON_FINISH)):
+                continue
+            dm = re.search(r"(芝|ダ|障)[^0-9]*(\d{3,4})", value(i_dist))
+            track = re.sub(r"^\d+|\d+$", "", value(i_track)).strip()
+            if not dm or not track:
+                continue
+            run = {
+                "date": at, "track": track, "distance": int(dm.group(2)),
+                "surface": ("障害" if dm.group(1) == "障" else
+                            "芝" if dm.group(1) == "芝" else "ダート"),
+                "source": "netkeiba verified career listing",
+                "title": value(i_title),
+            }
+            fm = re.match(r"^(\d+)", fin)
+            if fm:
+                run["finish"] = int(fm.group(1))
+            else:
+                run["finish"] = 0
+                run["resultStatus"] = fin
+            field = re.search(r"\d+", value(i_field))
+            if field: run["fieldSize"] = int(field.group())
+            tm = re.search(r"(?:(\d+):)?(\d{1,2})\.(\d+)", value(i_time))
+            if tm:
+                run["timeSeconds"] = (int(tm.group(1) or 0) * 60 +
+                                      int(tm.group(2)) + int(tm.group(3)) / (10 ** len(tm.group(3))))
+            positions = re.search(r"\d{1,2}(?:-\d{1,2})+", value(i_corner))
+            if positions:
+                run["cornerPositions"] = [int(x) for x in positions.group().split("-")]
+            weight = re.search(r"\d+(?:\.\d+)?", value(i_weight))
+            if weight: run["carriedWeight"] = float(weight.group())
+            if value(i_jockey): run["jockey"] = value(i_jockey)
+            body = re.search(r"^\d{3,4}", value(i_body))
+            if body: run["bodyWeight"] = int(body.group())
+            if value(i_cond): run["condition"] = value(i_cond)
+            rows.append(run)
+        return sorted(rows, key=lambda r: r["date"], reverse=True)[:max(1, int(limit))]
+    return []
 
 
-def fetch_career_totals(get: Callable[[str], str], horse: dict[str, Any],
-                        race: dict[str, Any]) -> dict[str, Any]:
+def fetch_verified_career(get: Callable[[str], str], horse: dict[str, Any],
+                          race: dict[str, Any], limit: int = 1000) -> dict[str, Any]:
+    """The single prefetch source of both full observed runs and career counts."""
     name = str(horse.get("name") or horse.get("horseName") or "").strip()
     cutoff = date_key(race.get("date") or race.get("raceDate"))
     if not name or not cutoff:
@@ -138,12 +209,33 @@ def fetch_career_totals(get: Callable[[str], str], horse: dict[str, Any],
     born = _birth_year(horse, cutoff)
     if born:
         candidates = [c for c in candidates if c["birthYear"] == born]
-    known = {r["date"] for r in merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)}
+    known = {r["date"] for r in merge_career(
+        horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)}
     matches = []
     for cand in candidates[:4]:
-        stats = build_stats(parse_listing(get(f"{BASE}/horse/result/{cand['id']}/")),
-                            parse_total(get(f"{BASE}/horse/{cand['id']}/")), cutoff, cand["id"])
-        if stats is not None and known <= set(stats["startDates"]):
-            matches.append(stats)
-    # Ambiguous identity is not evidence.
-    return {"careerStartEvidence": matches[0]} if len(matches) == 1 else {}
+        listing_html = get(f"{BASE}/horse/result/{cand['id']}/")
+        stats = build_stats(parse_listing(listing_html),
+                            parse_total(get(f"{BASE}/horse/{cand['id']}/")),
+                            cutoff, cand["id"])
+        if stats is None or not known <= set(stats["startDates"]):
+            continue
+        runs = parse_verified_runs(listing_html, cutoff, stats["startDates"], limit)
+        matches.append((stats, runs))
+    if len(matches) != 1:
+        return {}
+    stats, runs = matches[0]
+    output = {"careerStartEvidence": stats}
+    if runs:
+        output["allPastRuns"] = runs
+        output["recentRaces"] = runs[:5]
+    return output
+
+
+def _birth_year(horse: dict[str, Any], cutoff: str) -> int | None:
+    try:
+        age = int(re.sub(r"\D", "", str(horse.get("age") or "")) or 0)
+    except ValueError:
+        return None
+    return int(cutoff[:4]) - age if age and cutoff else None
+
+
