@@ -2245,3 +2245,21 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
 
 /* Race-detail only; home layout remains unchanged. */
 .arv-mark-fix-status{display:block;max-width:100%;font-size:11px;line-height:1.5;margin-top:4px;overflow-wrap:anywhere;opacity:.87}
+
+
+/* Honmei v348: one large mark; reliability is BELOW it on all iPhone widths. */
+.rc-racecard-v339 .rc-v336-mark .rc-mark-box:has(.rc-honmei-grade){
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+  justify-content:center!important;gap:3px!important;padding:2px 0!important;
+  white-space:normal!important;
+}
+.rc-racecard-v339 .rc-honmei-grade{
+  display:block!important;min-width:23px!important;line-height:1.05!important;
+  text-align:center!important;font-size:10px!important;font-weight:900!important;
+  letter-spacing:.5px!important;border-radius:3px!important;
+  color:#e6d8b8!important;border:1px solid #826f4d!important;
+  background:#25313c!important;padding:2px 4px!important;
+}
+@media(max-width:390px){
+  .rc-racecard-v339 .rc-honmei-grade{font-size:9px!important;padding:1px 3px!important;}
+}
