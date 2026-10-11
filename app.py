@@ -5344,6 +5344,15 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                 if mo:
                     try:odd=float(mo.group())
                     except Exception:odd=None
+                # Official NAR result tables do not always publish a 3F split.
+                # Missing values are unknown, never inherited from another finisher.
+                last3f=None
+                last3f_idx=hi("上り") if hi("上り")>=0 else hi("上がり")
+                if last3f_idx>=0 and last3f_idx<len(vals):
+                    token=re.search(r"\d{2}(?:\.\d)?",vals[last3f_idx])
+                    if token:
+                        try:last3f=float(token.group())
+                        except (TypeError,ValueError):last3f=None
                 finishers.append({
                     "finish":fin,"finishLabel":f"{fin}着","horseNumber":no,
                     "frameNumber":fr or int((no+1)//2),"name":name or next((nm for nm,hno in known.items() if hno==no),""),
