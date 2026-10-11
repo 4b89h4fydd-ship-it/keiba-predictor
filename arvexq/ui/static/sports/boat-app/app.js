@@ -47,7 +47,7 @@ function home(){
       '<button type="button" data-view="venues"><strong>開催場一覧</strong><small>24場・レース詳細へ</small><b>›</b></button></div>'+
     '<section class="boat-panel"><h2>本日の厳選レース</h2>'+selectedSection(state.day||emptyDay())+
     '<button class="boat-secondary" type="button" data-view="selected">厳選レース一覧を見る ›</button></section>'+
-    '<section class="boat-panel"><h2>AI成績</h2>'+statsSection(state.day||emptyDay())+
+    '<section class="boat-panel"><h2>AI成績</h2>'+statsSection((state.day||emptyDay()).races)+
     '<button class="boat-secondary" type="button" data-view="stats">AI成績の詳細を見る ›</button></section>'+
     '<section class="boat-panel"><div class="boat-row"><h2>開催場一覧</h2><span class="boat-small">全国24場｜掲載データ '+active.size+'場</span></div>'+
     venueGrid(state.day||emptyDay(),"")+'</section>';
