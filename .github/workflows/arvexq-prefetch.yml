@@ -156,27 +156,41 @@ jobs:
             echo "D1_EARLY_SUMMARIES_NO_OFFICIAL_RACES date=$TARGET_DATE"
             exit 0
           fi
+          # Early D1 failures must not block the independent static rescue step.
+          # The later D1 verification still fails the job if publishing is incomplete.
           if [ -z "$SYNC_TOKEN" ]; then
-            echo "::error::D1_EARLY_SUMMARIES_MISSING_SYNC_TOKEN"
-            exit 1
+            echo "::warning::D1_EARLY_SUMMARIES_MISSING_SYNC_TOKEN; static rescue continues"
+            exit 0
           fi
-          curl -fsS --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 35 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=0" -o initial-d1-day.json
-          jq -e '.ok == true and (.races | type == "array")' initial-d1-day.json >/dev/null
+          if ! curl -fsS --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 35 \
+            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=0" -o initial-d1-day.json; then
+            echo "::warning::D1_EARLY_SUMMARIES_READ_FAILED; static rescue continues"
+            exit 0
+          fi
+          if ! jq -e '.ok == true and (.races | type == "array")' initial-d1-day.json >/dev/null; then
+            echo "::warning::D1_EARLY_SUMMARIES_INVALID_DAY; static rescue continues"
+            exit 0
+          fi
           EXISTING=$(jq '.races | length' initial-d1-day.json)
           if [ "$EXISTING" -eq 0 ]; then
             jq -n --slurpfile source bundle.json \
               '{summaries: $source[0].races, details: [], meta: {source: "arvexq-cold-start-race-summaries-v1", sync_batch: true, sync_batch_kind: "summaries"}}' \
               > initial-day-summaries.json
             echo "D1_EARLY_SUMMARIES_WRITE date=$TARGET_DATE races=$RACES"
-            python scripts/arvexq_d1_capacity_guard.py \
-              --file initial-day-summaries.json --api-base "$CLOUDFLARE_API_BASE" --max-bytes 4000000
+            if ! python scripts/arvexq_d1_capacity_guard.py \
+              --file initial-day-summaries.json --api-base "$CLOUDFLARE_API_BASE" --max-bytes 4000000; then
+              echo "::warning::D1_EARLY_SUMMARIES_WRITE_BLOCKED; static rescue continues"
+              exit 0
+            fi
           else
             echo "D1_EARLY_SUMMARIES_ALREADY_EXISTS date=$TARGET_DATE count=$EXISTING"
           fi
-          curl -fsS --retry 4 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 35 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=0&t=$(date +%s)" -o verified-early-day.json
-          python - <<'PY'
+          if ! curl -fsS --retry 4 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 35 \
+            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=0&t=$(date +%s)" -o verified-early-day.json; then
+            echo "::warning::D1_EARLY_SUMMARIES_VERIFY_READ_FAILED; static rescue continues"
+            exit 0
+          fi
+          if ! python - <<'PY'
           import json
           from pathlib import Path
           source=json.loads(Path("bundle.json").read_text(encoding="utf-8"))
@@ -188,6 +202,9 @@ jobs:
           if not remote.get("ok") or missing:
               raise SystemExit("D1_EARLY_SUMMARIES_INCOMPLETE: "+",".join(missing[:12]))
           PY
+          then
+            echo "::warning::D1_EARLY_SUMMARIES_INCOMPLETE; static rescue continues"
+          fi
 
       - name: Stop bootstrap server to release SQLite writers
         run: |
