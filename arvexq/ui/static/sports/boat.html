@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#091620">
+<title>ARVEXQ | 競艇AI</title>
+<link rel="stylesheet" href="/sports/switch.css?v=__ARVEXQ_SPORT_HASH__">
+<link rel="stylesheet" href="/sports/boat.css?v=__ARVEXQ_SPORT_HASH__">
+<script defer src="/sports/boat.js?v=__ARVEXQ_SPORT_HASH__"></script>
+</head>
+<body class="boat-page">
+<nav class="arvexq-sport-nav" aria-label="競技切替"><span class="arvexq-sport-caption">ARVEXQ</span><a href="/keiba/">競馬</a><a class="active" aria-current="page" href="/kyotei/">競艇</a></nav>
+<header class="boat-hero"><div class="boat-kicker">ARVEXQ / BOAT RACING INTELLIGENCE</div><h1>競艇AI</h1><p>競馬とは独立した予想エンジンで全国24場を分析する専用画面。</p></header>
+<main class="boat-wrap">
+<section class="boat-panel" aria-label="予想条件"><div class="boat-rule"><div><b>3連単</b><span>券種は固定</span></div><div><b>最大6点</b><span>無理に6点埋めない</span></div><div><b>印連動</b><span>単・軸／A・B・C</span></div></div></section>
+<div class="boat-notice" role="status">現在は競艇画面の基盤を準備した段階です。公式の出走表・過去成績・直前展示・オッズとの接続および時系列検証は未完了です。予想データが完成するまで、架空の印や買い目は表示しません。</div>
+<section class="boat-panel"><div class="boat-meta"><h2>全国24場</h2><p>競艇会場を選択</p></div><div id="boat-venue-grid" class="boat-venue-grid" aria-label="競艇場一覧"></div></section>
+<section class="boat-panel boat-workspace" id="boat-workspace" aria-live="polite"><h2>競艇予想</h2><p>会場を選択してください。</p></section>
+<section class="boat-panel"><h2>AI予想の基準</h2><ol class="boat-help">
+<li>選手のコース別成績・近況、スタート、モーター、進入、展示、気象、水面と1マーク展開を分析。</li>
+<li>1着向きは◎【単】、3着以内の軸向きは◎【軸】。両方満たせば併記。A／B／Cは信頼度を示す。</li>
+<li>3連単120通りの順位確率を評価し、最大6点の買い目を印と連動させる。</li>
+<li>展示後に再分析し、発走前の買い目を保存して的中率・回収率を検証する。</li>
+</ol></section><footer class="boat-footer">ARVEXQ / BOAT</footer>
+</main></body></html>
