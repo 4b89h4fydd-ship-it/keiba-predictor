@@ -296,6 +296,10 @@ jobs:
           for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
           curl -fsS "http://127.0.0.1:8788/sw-$BUILD-reset.js" >/tmp/current-sw.js
           test -s /tmp/current-sw.js
+      - name: Local iPhone sport-switch and boat navigation smoke
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8788
+        run: node scripts/arvexq_dual_sport_ui_smoke.js
       - name: Local Chromium diagnostic
         if: always()
         continue-on-error: true

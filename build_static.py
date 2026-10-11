@@ -136,7 +136,12 @@ for filename in RESEARCH_ASSETS:
 research_hash = hashlib.sha256(b"|".join((RESEARCH_PATH / filename).read_bytes() for filename in RESEARCH_ASSETS)).hexdigest()[:12]
 
 SPORT_DIR = STATIC / "sports"
-SPORT_FILES = ("switch.css", "boat.css", "boat.js", "boat.html")
+SPORT_FILES = (
+    "switch.css", "boat.html", "boat-app/layout.css", "boat-app/app.js",
+    "boat-app/core/contract.js", "boat-app/core/feed.js", "boat-app/core/stats.js",
+    "boat-app/features/races.js", "boat-app/features/selected.js",
+    "boat-app/features/ai-stats.js",
+)
 for filename in SPORT_FILES:
     if not (SPORT_DIR / filename).is_file():
         raise RuntimeError(f"missing independent sport asset: {filename}")
@@ -259,8 +264,8 @@ for filename in RESEARCH_ASSETS:
 
 # Ship dedicated sport resources without merging boat logic into the horse app.
 (DIST / "sports").mkdir(exist_ok=True)
-for filename in ("switch.css", "boat.css", "boat.js"):
-    shutil.copy2(SPORT_DIR / filename, DIST / "sports" / filename)
+shutil.copy2(SPORT_DIR / "switch.css", DIST / "sports" / "switch.css")
+shutil.copytree(SPORT_DIR / "boat-app", DIST / "sports" / "boat-app")
 
 # Independent UI feature modules kept outside the main app bundle.
 for extra_asset in ("previous_ai_results.js",):
