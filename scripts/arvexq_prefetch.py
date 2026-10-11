@@ -325,7 +325,7 @@ def _enrich_cards_concurrently(cards: dict[str, dict[str, Any]], workers: int = 
     return results
 
 
-def _decorate(detail: dict[str, Any]) -> dict[str, Any]:
+def _decorate(detail: dict[str, Any], *, include_evidence: bool = True) -> dict[str, Any]:
     out = copy.deepcopy(detail)
     attach_career_readiness(out)
     pm = dict(out.get("preparedMeta") or {})
@@ -342,8 +342,9 @@ def _decorate(detail: dict[str, Any]) -> dict[str, Any]:
     pm["cardComplete"] = _card_usable(out)
     pm["historyCoverage"] = round(with_history / max(1, len(active)), 4) if active else 0.0
     out["preparedMeta"] = pm
-    # Read-only evidence decoration: no re-ranking, mark update, or post-race analysis.
-    return attach_evidence(out)
+    # Collection stays source-only; attach computed evidence only after a
+    # verified D1 readback. No new marks, rankings, or scores before storage.
+    return attach_evidence(out) if include_evidence else out
 
 
 def prepare(
@@ -469,7 +470,7 @@ def prepare(
         # stale copy erase the in-memory card/diagnosis we just built.
         detail = _merge_detail(_raw_snapshot(rid), by_id.get(rid))
         if detail.get("id"):
-            decorated[rid] = _decorate(detail)
+            decorated[rid] = _decorate(detail, include_evidence=(phase == "all"))
 
     missing_card = [rid for rid in ids if not _card_usable(decorated.get(rid))]
     missing_analysis = [
