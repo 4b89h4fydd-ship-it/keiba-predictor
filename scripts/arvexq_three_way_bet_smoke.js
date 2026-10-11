@@ -116,6 +116,15 @@ const missingHtml=viewGlobal.ARVEXQBetView.render(race,prediction,{
 });
 assert.match(missingHtml,/データ不足・未取得/);
 assert.doesNotMatch(missingHtml,/見送り：/,'missing data must never be presented as discretionary abstention');
+const legacyPlan={...plan,engineVersion:'arvexq-three-way-v346',
+  fixedAt:'2026-10-11T09:20:00+09:00'};
+delete legacyPlan.honmei;
+const legacyHtml=viewGlobal.ARVEXQBetView.render(race,prediction,{
+ buildAiBetPlan:()=>legacyPlan,esc:String,n,isFinal:()=>true,
+ raceMarkClock:()=>({started:true}),aiBetExplanationHtml:()=>'',betComboText:()=>''
+});
+assert.match(legacyHtml,/新しい◎の役割・信頼度は当時未記録/);
+assert.doesNotMatch(legacyHtml,/◎なし・軸固定なし/,'do not retroactively relabel saved v346 forecast');
 const confused=policy({...base(),audit:{orderConfidence:.03}},race,prediction);
 assert.equal(confused.trifectaDecision,'見送り','low ordering confidence blocks trifecta');
 assert.ok(confused.items.every(x=>x.level!=='3連単チャレンジ'));
