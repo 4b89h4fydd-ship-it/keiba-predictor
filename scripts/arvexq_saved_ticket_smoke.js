@@ -20,4 +20,19 @@ for(const [id,kind,combos] of [['nar-2026-10-10-高知-01','馬単',[[5,8]]],['n
  assert.equal(w.ARVEXQSavedTicketReceipt.recover({...r,preRaceBet:{...r.preRaceBet,axisNo:8}},selection),null);
  assert.equal(w.ARVEXQSavedTicketReceipt.recover(r,{...selection,ticketKinds:['3連単']}),null);
 }
+// A timestamp on a FAILED capture is not an immutable bet. The very same
+// verifier runs in both the browser and the server-side JS capture bridge.
+const app=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const from=app.indexOf('function verifiedSavedAiBet('),to=app.indexOf('function frozenAiBetForRace(',from);
+assert.ok(from>=0&&to>from);
+const verify=new Function(app.slice(from,to)+';return verifiedSavedAiBet;')();
+const race={id:'nar-2026-10-12-高知-04',date:'2026-10-12',startTime:'18:00'};
+const valid={raceId:race.id,raceDate:race.date,fixedAt:'2026-10-12T17:35:00+09:00',
+ decision:'通常買い',items:[{kind:'馬連',combos:[[1,2]]}]};
+assert.deepEqual(verify(race,valid),valid,'genuine original must survive');
+assert.equal(verify(race,{...valid,captureStatus:'failed',decision:'未取得',items:[]}),null);
+assert.equal(verify(race,{...valid,captureStatus:'engine-missing',decision:'見送り',items:[]}),null);
+assert.equal(verify(race,{...valid,decision:'データ不足',items:[]}),null);
+assert.equal(verify(race,{...valid,betInputGate:{ready:false},items:[]}),null);
+assert.equal(verify(race,{...valid,fixedAt:'2026-10-12T18:01:00+09:00'}),null);
 console.log('SAVED_PREOFF_TICKETS_EXACT_COMBINATIONS_TIMESTAMPS_MARKS_OLDER_ORIGINALS_PASS');
