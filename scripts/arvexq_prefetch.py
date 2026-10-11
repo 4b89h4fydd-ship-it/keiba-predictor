@@ -649,6 +649,17 @@ def main() -> int:
         default=int(os.getenv("ARVEXQ_PREFETCH_ANALYSIS_WORKERS", "1")),
     )
     args = parser.parse_args()
+    # Each Actions stage is a separate process. Only the collector may talk
+    # to existing acquisition providers; the analyzer uses persisted facts.
+    if args.phase == "collect":
+        os.environ["ARVEXQ_COLLECT_ONLY"] = "1"
+    elif args.phase == "analyze":
+        os.environ["ARVEXQ_COLLECT_ONLY"] = "0"
+        os.environ["ARVEXQ_SUPPLEMENT_MISSING"] = "0"
+        os.environ["RACEDB_FULL_HISTORY"] = "0"
+        # Analysis does not register data providers or discover racecards.
+        return prepare(args.bundle, args.payload, args.report,
+                       args.workers, args.analysis_workers, phase="analyze")
     # The heavy prefetch lane always registers configured licensed feeds, even
     # when a legacy app startup path skipped optional source registration.
     try:
