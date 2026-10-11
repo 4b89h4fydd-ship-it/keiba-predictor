@@ -4014,7 +4014,7 @@ function renderVenue(){
 }
 function smartInlineResult(r){
   var final=isFinal(r),flash=isFlash(r),any=hasAnyResultData(r),ready=hasResultData(r),f=((r.result||{}).finishers||[]).slice().sort(function(a,b){return n(a.finish)-n(b.finish)}).slice(0,3),nums=ready&&f.length?f.map(function(x){return n(x.horseNumber)}).join(' - '):'';
-  return '<button type="button" class="smart-inline-result '+(final?'final':(flash?'flash':''))+'" data-panel="result"><span>レース結果</span><strong>'+(final?(ready?'確定':'取得中'):(flash?(any?'速報':'速報待ち'):'未確定'))+'</strong></button>'
+  return '<button type="button" class="smart-inline-result '+(final?'final':(flash?'flash':''))+'" data-panel="result"><span>レース結果</span><strong>'+(final?(ready?'確定':'着順未取得'):(flash?(any?'速報':'速報待ち'):(String(r.date||'')<today()?'結果未取得':'未確定')))+'</strong></button>'
 }
 function officialRaceLinks(r){
   var central=String((r&&r.circuit)||state.circuit||'')==='中央';
@@ -4490,7 +4490,9 @@ function refreshRaceBiasData(){
 var resultPollBusy=false,resultPollActiveId='';
 function scheduleResultRefresh(){
   var r=state.race;
-  if(!r||!r.id||String(r.date||'')!==today()||!r.startTime||
+  if(!r||!r.id||!r.startTime||!/^\d{4}-\d{2}-\d{2}$/.test(String(r.date||''))||
+      String(r.date||'')>today()||
+      (Date.parse(today()+'T00:00:00+09:00')-Date.parse(String(r.date||'')+'T00:00:00+09:00'))>7*86400000||
       (isFinal(r)&&hasResultData(r)&&((r.result||{}).payouts||[]).length>0)){
     if(state.resultTimer){clearTimeout(state.resultTimer);state.resultTimer=null}
     return;
@@ -4531,12 +4533,11 @@ function refreshPayoutsOnly(attempt){
   fetchEdgeRace(r.id,true)
     .then(function(body){
       if(!body||!state.race||String(state.race.id)!==String(r.id))return;
-      state.race=applySummaryEnvironment(body);
-      saveDetailCache(r.id,state.race);
-      render()
+      state.race=applySummaryEnvironment(mergeRaceReflection(state.race,body,null,null));
+      saveDetailCache(r.id,state.race)
     })
-    .catch(function(){})
-    .finally(function(){state.payoutBusy=false})
+    .catch(function(error){traceRaceDetail(r.id,'payout-refresh-failed',{message:String(error&&error.message||error)})})
+    .finally(function(){state.payoutBusy=false;if(state.race&&String(state.race.id)===String(r.id))render()})
 }
 
 
