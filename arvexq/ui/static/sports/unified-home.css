@@ -27,19 +27,17 @@
 .boat-page .arv-unified-body{padding-top:11px}
 .boat-page .arv-unified-body .arv-all-panel{margin-top:0}
 .boat-page #boat-root{padding-top:var(--arvexq-nav-h)!important}
-.arv-all-venue{display:grid;grid-template-columns:62px minmax(0,1fr);column-gap:8px;align-items:start}
-.arv-all-venue-thumb{grid-row:1 / 3;width:62px;min-height:105px;align-self:stretch;border-radius:9px;background:linear-gradient(145deg,#0c5b86,#102138);border:1px solid #387ca8;display:grid;place-items:center;font-size:23px;color:#a0e6ff;box-shadow:inset 0 0 24px rgba(36,135,208,.26)}
-.arv-all-venue-thumb>span{font-size:10px;font-weight:750;letter-spacing:.05em;margin-top:4px}
-.arv-all-venue-head{grid-column:2;min-width:0}
-.arv-all-races-grid{grid-column:2}
+.arv-all-venue{display:grid;grid-template-columns:minmax(0,1fr);gap:0;align-items:start}
+.arv-all-venue-head{grid-column:1;min-width:0}
+.arv-all-races-grid{grid-column:1}
 .arv-all-venue-head>div{display:flex;align-items:center;gap:6px;min-width:0}
 .arv-all-go{padding:3px 6px;font-size:10px;min-width:36px}
 .arv-all-venue-head b{font-size:15px}
 .arv-all-venue-head span{display:none}
 .arv-all-title h2{font-size:19px}
-.arv-all-race{min-height:38px}
-.arv-all-race strong{font-size:12px}
-.arv-all-race small{font-size:9px}
+.arv-all-race{min-height:43px}
+.arv-all-race strong{font-size:14px}
+.arv-all-race small{font-size:10px}
 .arv-all-panel .arv-all-title p{display:none}
 .arv-all-race:not(:disabled){border-color:#55b5ff;background:linear-gradient(180deg,#0a68b8,#063b75);box-shadow:0 0 6px rgba(14,128,245,.37)}
 .arv-all-race:disabled{background:#1b3445;border-color:#557184;box-shadow:none}
@@ -51,12 +49,10 @@
   .arv-unified-action{min-height:72px}
   .arv-unified-action-icon{font-size:20px}
   .arv-unified-action-label{font-size:12px}
-  .arv-all-venue{grid-template-columns:45px minmax(0,1fr);gap:5px}
-  .arv-all-venue-thumb{width:45px;min-height:90px;font-size:18px}
   .arv-all-venue-head b{font-size:13px}
   .arv-all-races-grid{gap:3px}
-  .arv-all-race{min-height:36px}
-  .arv-all-race strong{font-size:11px}
-  .arv-all-race small{font-size:8px}
+  .arv-all-race{min-height:41px}
+  .arv-all-race strong{font-size:13px}
+  .arv-all-race small{font-size:9px}
 }
 @media(max-width:325px){.arv-all-races-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
