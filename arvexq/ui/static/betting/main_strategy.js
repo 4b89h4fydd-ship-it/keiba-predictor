@@ -1,35 +1,53 @@
-/* ARVEXQ: independent main strategy (internal model weights, not calibrated probabilities). */
+/* ARVEXQ independent main ticket owner: ◎ role changes the purchase lane. */
 (function(global){
 'use strict';
 function apply(ctx){
- const {ready,winClear,order,lists,top,add,result,hasHonmei,fieldSize}=ctx;
+ const {ready,winClear,order,lists,top,add,result,fixedAxis,axisNo,axisRole,axisGrade,fieldSize}=ctx;
  const field=Math.max(5,Number(fieldSize)||8),
-       wideFloor=Math.max(.085,6.0/(field*(field-1))),
-       quinFloor=Math.max(.065,4.0/(field*(field-1))),
+       wideFloor=Math.max(.085,6/(field*(field-1))),
+       quinFloor=Math.max(.065,4/(field*(field-1))),
        trioFloor=Math.max(.042,16/(field*(field-1)*Math.max(1,field-2)));
- if(!hasHonmei){
+ if(!fixedAxis){
+   // Grade C is a relative favourite, not a bankable fixed axis.
    if(global.ARVEXQNoAxisBet&&typeof global.ARVEXQNoAxisBet.apply==='function')
      global.ARVEXQNoAxisBet.apply(ctx);
-   else {result.primaryKind='';ctx.reason='軸なし買い目モジュール未取得'}
+   else {result.primaryKind='';ctx.reason='軸固定できない買い目モジュール未取得'}
    return;
  }
-  // One main ticket family: place reliability and ordered certainty decide
-  // the type. No multiple identical opinions through several ticket kinds.
-  if(ready){
-    var kind='';
-    if(winClear&&order>=.45&&lists['馬単'][0]&&lists['馬単'][0].weight>=.075)kind='馬単';
-    else if(lists['馬連'][0]&&lists['馬連'][0].weight>=quinFloor)kind='馬連';
-    else if(lists['3連複'][0]&&lists['3連複'][0].weight>=trioFloor&&top.weight<.30)kind='3連複';
-    else if(lists['ワイド'][0]&&lists['ワイド'][0].weight>=wideFloor)kind='ワイド';
-    if(kind){
-      var pool=lists[kind],max=kind==='3連複'?3:2,cut=pool[0].weight*.70,combos=[];
-      pool.some(function(z){if(combos.length>=max||combos.length>=1&&z.weight<cut)return true;combos.push(z.combo);return false});
-      add('本線',kind,combos,'着順別モデルの相対集中度・点数を比較して'+kind+'を優先。配当オッズ未検証のため数値的な期待値は未算出。');
-      result.primaryKind=kind;
-    }else{result.primaryKind='';ctx.reason='本線に適した券種の集中度が不足'}
-  }else result.primaryKind='';
+ result.noAxis=false;result.primaryKind='';
+ if(!ready)return;
+ function candidates(kind){
+   return (lists[kind]||[]).filter(z=>Array.isArray(z.combo)&&z.combo.includes(axisNo)&&
+     (kind!=='馬単'||axisRole==='win'&&z.combo[0]===axisNo));
+ }
+ // 1着向き: 1着固定を検討できるのは勝ちモデルとも一致した場合だけ。
+ // 軸向き: 同じ◎を勝手に1着固定せず、3連複/ワイド/馬連を優先。
+ const families=axisRole==='win'?[
+   {kind:'馬単',min:.075,allowed:winClear&&top.no===axisNo&&order>=.45,max:2},
+   {kind:'馬連',min:quinFloor,allowed:true,max:2},
+   {kind:'ワイド',min:wideFloor,allowed:true,max:3},
+   {kind:'3連複',min:trioFloor,allowed:true,max:3}
+ ]:[
+   {kind:'3連複',min:trioFloor,allowed:axisGrade==='A',max:3},
+   {kind:'ワイド',min:wideFloor,allowed:true,max:3},
+   {kind:'馬連',min:quinFloor,allowed:true,max:2},
+   {kind:'3連複',min:trioFloor,allowed:true,max:3}
+ ];
+ for(const family of families){
+   if(!family.allowed)continue;
+   const pool=candidates(family.kind);
+   if(!pool.length||pool[0].weight<family.min)continue;
+   const floor=pool[0].weight*.70;
+   const combos=pool.filter(z=>z.weight>=floor).slice(0,family.max).map(z=>z.combo.slice());
+   if(!combos.length)continue;
+   add('本線',family.kind,combos,
+     '◎'+axisNo+'は'+(axisRole==='win'?'1着向き':'3着内の軸向き')+
+     '・信頼度'+axisGrade+'。'+family.kind+'の独立着順モデルで組み合わせを選出。');
+   result.primaryKind=family.kind;
+   return;
+ }
+ ctx.reason='◎'+axisNo+'の役割とモデル集中度を満たす本線の組み合わせが不足';
 }
-
 const old=global.ARVEXQBetStrategies||{};
 global.ARVEXQBetStrategies=Object.freeze(Object.assign({},old,{main:apply}));
 })(window);

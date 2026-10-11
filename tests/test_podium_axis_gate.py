@@ -44,6 +44,28 @@ class PodiumAxisTests(unittest.TestCase):
         self.assertEqual(marks[2],"◎")
         self.assertEqual(marks[1],"○")
         self.assertEqual(list(marks.values()).count("◎"),1)
+        self.assertEqual(detail["honmeiDecision"]["confidenceGrade"],"A")
+        self.assertTrue(detail["honmeiDecision"]["fixedAxisAllowed"])
+        self.assertEqual(detail["horses"][1]["integratedEvaluation"]["honmeiRole"],"axis")
+
+    def test_relative_honmei_is_shown_but_cannot_be_fixed_without_podium_evidence(self):
+        rows = [
+            sample(1, 1, [7, 8, 9, 8, 9], .76, (.82, .82, .80, .85)),
+            sample(2, 2, [8, 9, 9, 9, 9], .75, (.80, .79, .78, .77)),
+            sample(3, 3, [9, 9, 9, 9, 9], .40, (.45, .42, .48, .39)),
+        ]
+        with patch("arvexq.prediction.final_marks.rank_factor_model", return_value=rows), \
+             patch("arvexq.prediction.final_marks.attach_multi_head_signals",
+                   return_value={"winnerHorseNumber":1,"winnerGap":.12}):
+            detail = apply_core_marks({"horses":[r["horse"] for r in rows],
+                                       "circuit":"地方","date":"2026-10-09"})
+        marks=[h["integratedEvaluation"]["mark"] for h in detail["horses"]]
+        self.assertEqual(marks.count("◎"),1)
+        self.assertFalse(detail["honmeiDecision"]["eligible"])
+        self.assertEqual(detail["honmeiDecision"]["confidenceGrade"],"C")
+        self.assertFalse(detail["honmeiDecision"]["fixedAxisAllowed"])
+        self.assertEqual(detail["horses"][0]["integratedEvaluation"]["honmeiGrade"],"C")
+
 
 if __name__=="__main__":
     unittest.main()

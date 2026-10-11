@@ -20,7 +20,8 @@ const weights=[
 const rows=weights.map((v,i)=>({
  horse:{horseNumber:i+1,integratedEvaluation:{}},
  ticketP1Probability:v[0],ticketP2Probability:v[1],ticketP3Probability:v[2],
- predMark:['☆','◎','○','▲','☆+','☆','△','注'][i]
+ predMark:['◎','○','▲','☆','☆+','☆','△','注'][i],
+ honmeiRole:i===0?'win':'',honmeiGrade:i===0?'A':''
 }));
 const base=()=>({
  engineVersion:'prior-model',
@@ -32,7 +33,8 @@ const base=()=>({
 const race={id:'synthetic',date:'2026-10-12',startTime:'11:00',circuit:'地方'};
 const prediction={rows,outcome:{first:[rows[0]],second:[rows[1],rows[2]],third:[rows[2],rows[3],rows[4]]}};
 const plan=policy(base(),race,prediction);
-assert.equal(plan.engineVersion,'arvexq-three-way-v346');
+assert.equal(plan.engineVersion,'arvexq-three-way-v347');
+assert.deepEqual(plan.honmei,{horseNumber:1,role:'win',grade:'A',fixedAxis:true,roleLabel:'1着向き'});
 assert.equal(plan.expectedValue,null,'no invented EV');
 assert.equal(plan.trifectaReviewed,true,'every race is reviewed');
 assert.equal(plan.trifectaDecision,'採用',JSON.stringify(plan.threeWayAudit));
@@ -51,6 +53,25 @@ const differentMarks={...prediction,rows:rows.map((x,i)=>({...x,predMark:i===0?'
 const again=policy(base(),race,differentMarks);
 assert.deepEqual(again.items.map(x=>x.combos),plan.items.map(x=>x.combos),'marks are annotations, not ticket order');
 const noAxisPrediction={...prediction,rows:rows.map(z=>({...z,predMark:z.predMark==='◎'?'○':z.predMark}))};
+const gradeC={...prediction,rows:rows.map((z,i)=>({...z,honmeiGrade:i===0?'C':''}))};
+const weakAxis=policy(base(),race,gradeC);
+assert.equal(weakAxis.honmei.grade,'C');
+assert.equal(weakAxis.noAxis,true,'relative ◎C cannot become a fixed betting axis');
+assert.equal(weakAxis.trifectaDecision,'見送り');
+assert.ok(weakAxis.items.every(z=>!['馬単','3連単'].includes(z.kind)));
+const axisPrediction={...prediction,rows:rows.map((z,i)=>({...z,
+ predMark:i===1?'◎':i===0?'○':z.predMark,
+ honmeiRole:i===1?'axis':'',honmeiGrade:i===1?'A':''}))};
+const axisPlan=policy(base(),race,axisPrediction);
+assert.equal(axisPlan.honmei.role,'axis');
+assert.ok(axisPlan.items.filter(z=>z.level==='本線').every(z=>z.combos.every(c=>c.includes(2))),
+ 'axis-role main tickets must include the ◎ horse');
+assert.ok(axisPlan.items.filter(z=>z.level==='本線').every(z=>z.kind!=='馬単'),
+ '3着内の軸向き must never issue 1st-place-fixed exacta');
+const axisTri=axisPlan.items.filter(z=>z.kind==='3連単');
+assert.ok(axisTri.every(z=>z.combos.every(c=>c[0]!==2&&(c[1]===2||c[2]===2))),
+ '3着内の軸向き cannot be silently converted to first-place-fixed trifecta');
+
 const noAxisPlan=policy(base(),race,noAxisPrediction);
 assert.equal(noAxisPlan.noAxis,true);
 assert.equal(noAxisPlan.trifectaDecision,'見送り');
