@@ -105,6 +105,9 @@ jobs:
           if missing:raise SystemExit('missing current assets: '+','.join(missing))
           PY
 
+      - name: Horse modular asset caching
+        run: python -m unittest discover -s tests -p 'test_static_asset_cache.py' -v
+
       - name: Dual-sport navigation and page isolation
         run: |
           python -m unittest discover -s tests -p 'test_sport_navigation.py' -v

@@ -283,6 +283,9 @@ for v in compat_arvexq:redirects.append(f"/arvexq-app-{v}.js /arvexq-app-{BUILD_
 for v in compat_css:redirects.append(f"/styles-arvexq-{v}.css /styles-arvexq-{BUILD_VERSION}.css 302")
 (DIST / "_redirects").write_text("\n".join(redirects)+"\n",encoding="utf-8")
 
+# All immutable assets above are referenced from index.html with a content hash
+# in their query string. Keep main JS/CSS and boat ES imports revalidating until
+# every legacy or imported URL has a guaranteed content-addressed name.
 headers=[
     "/index.html","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
     "/404.html","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
@@ -306,14 +309,16 @@ headers=[
     f"/app-{BUILD_VERSION}.js","  Cache-Control: no-cache, must-revalidate",
     f"/arvexq-app-{BUILD_VERSION}.js","  Cache-Control: no-cache, must-revalidate",
     f"/styles-arvexq-{BUILD_VERSION}.css","  Cache-Control: no-cache, must-revalidate",
-    "/morning/*","  Cache-Control: no-cache, must-revalidate",
-    "/styles/*","  Cache-Control: no-cache, must-revalidate",
-    "/research/*","  Cache-Control: no-cache, must-revalidate",
+    "/morning/*","  Cache-Control: public, max-age=31536000, immutable",
+    "/styles/*","  Cache-Control: public, max-age=31536000, immutable",
+    "/research/*","  Cache-Control: public, max-age=31536000, immutable",
     "/sports/*","  Cache-Control: no-cache, must-revalidate",
+    "/sports/switch.css","  Cache-Control: public, max-age=31536000, immutable",
+    "/sports/boat-app/layout.css","  Cache-Control: public, max-age=31536000, immutable",
     "/keiba/*","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
     "/kyotei/*","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
     "/racecards/*","  Cache-Control: no-cache, must-revalidate",
-    "/betting/*","  Cache-Control: no-cache, must-revalidate",
+    "/betting/*","  Cache-Control: public, max-age=31536000, immutable",
     "/previous_ai_results.js","  Cache-Control: no-cache, must-revalidate",
     "/arvexq-racing-hero.webp","  Cache-Control: public, max-age=604800",
     "/arvexq-racing-detail.webp","  Cache-Control: public, max-age=604800",
