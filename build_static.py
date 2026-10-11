@@ -138,9 +138,9 @@ research_hash = hashlib.sha256(b"|".join((RESEARCH_PATH / filename).read_bytes()
 SPORT_DIR = STATIC / "sports"
 SPORT_FILES = (
     "switch.css", "all-races.css", "unified-home.css", "unified-home.js", "horse-portal.js", "boat.html", "boat-app/layout.css", "boat-app/app.js",
-    "boat-app/core/contract.js", "boat-app/core/feed.js", "boat-app/core/stats.js", "boat-app/core/start-exhibition.js",
+    "boat-app/core/contract.js", "boat-app/core/feed.js", "boat-app/core/stats.js", "boat-app/core/prediction-model.js", "boat-app/core/ticket-engine.js", "boat-app/core/daily-selection.js", "boat-app/core/start-exhibition.js",
     "boat-app/features/races.js", "boat-app/features/start-exhibition.js", "boat-app/features/selected.js",
-    "boat-app/features/ai-stats.js", "boat-app/features/special.js", "boat-app/features/all-races.js",
+    "boat-app/features/ai-stats.js", "boat-app/features/special.js", "boat-app/features/all-races.js", "boat-app/features/tickets.js", "boat-app/features/entrant-analysis.js",
 )
 for filename in SPORT_FILES:
     if not (SPORT_DIR / filename).is_file():
@@ -274,6 +274,10 @@ shutil.copy2(STATIC / "arvexq-unified-hero.webp", DIST / "sports" / "arvexq-unif
 for filename in ("all-races.css","unified-home.css","unified-home.js","horse-portal.js"):
     shutil.copy2(SPORT_DIR / filename, DIST / "sports" / filename)
 shutil.copytree(SPORT_DIR / "boat-app", DIST / "sports" / "boat-app")
+# One audited boat race/odds/result snapshot per date. The independent data
+# publisher enforces permissions and quality; the frontend uses this exact path.
+if (SPORT_DIR / "boat-data").is_dir():
+    shutil.copytree(SPORT_DIR / "boat-data", DIST / "sports" / "boat-data")
 
 # Independent UI feature modules kept outside the main app bundle.
 for extra_asset in ("previous_ai_results.js",):
