@@ -70,3 +70,25 @@ html body .smart-shell.smart-home .smart-home-main{
 html body .smart-shell.smart-home>.arv-unified-hero{position:relative!important;top:auto!important;left:auto!important;transform:none!important}
 html body .smart-shell.smart-home>.arv-unified-hero+.smart-main{padding-top:0!important}
 html body .smart-shell.smart-home .arv-unified-body{margin-top:0!important}
+
+/* Dated subpages are shared in behavior across horse and boat. */
+html body .smart-shell .smart-topbar.arv-dated-subbar{
+  display:grid!important;
+  grid-template-columns:39px minmax(0,1fr) minmax(105px,132px) 39px!important;
+  gap:6px!important;
+  align-items:center!important;
+  padding:8px!important;
+  min-height:56px!important;
+  width:100%!important;
+  max-width:920px!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+}
+html body .arv-dated-subbar .smart-head-copy{min-width:0!important;text-align:center!important}
+html body .arv-dated-subbar .smart-head-copy strong{display:block;font-size:16px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body .arv-dated-subbar .arv-sub-back,
+html body .arv-dated-subbar .arv-sub-close{display:grid;place-items:center;min-width:37px;width:37px;height:41px;min-height:41px;padding:0;border-radius:9px;border:1px solid #527892;background:#1a3348;color:#ecf7ff;font-size:27px;cursor:pointer}
+html body .arv-dated-subbar .arv-sub-date{position:relative;display:grid;place-items:center;min-width:0;height:40px;padding:2px;border:1px solid #4b7897;border-radius:9px;background:#172f43;color:#eefbff;font-weight:800;font-size:12px}
+html body .arv-dated-subbar .arv-sub-date>input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2}
+@media(max-width:360px){html body .smart-shell .smart-topbar.arv-dated-subbar{grid-template-columns:34px minmax(0,1fr) minmax(90px,112px) 34px!important;gap:3px!important;padding:6px 4px!important}html body .arv-dated-subbar .arv-sub-back,html body .arv-dated-subbar .arv-sub-close{min-width:32px;width:32px}html body .arv-dated-subbar .arv-sub-date{font-size:11px}html body .arv-dated-subbar .smart-head-copy strong{font-size:14px!important}}
