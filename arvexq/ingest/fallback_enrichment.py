@@ -9,8 +9,9 @@ from arvexq.databanks.authorized_feeds import _validated_early_timing
 from arvexq.ingest.orchestrator import FetchResult, fetch_domain
 from arvexq.ingest.full_career import merge_career, audit_career, date_key
 
-# Providers that return only acquisition evidence (career start counts), never runs.
-EVIDENCE_ONLY_SOURCES = frozenset({"netkeiba_career_totals"})
+# Identity-verified career sources provide both observed runs and race-date
+# start-count evidence. Track count-source outages separately for audit parity.
+START_COUNT_SOURCES = frozenset({"netkeiba_verified_career"})
 
 
 def _present(value: Any) -> bool:
@@ -290,7 +291,7 @@ async def enrich_race_missing(
     }
 
     evidence_registered = any(
-        src.name in EVIDENCE_ONLY_SOURCES
+        src.name in START_COUNT_SOURCES
         for src in bank_registry.providers("horse_history", circuit=circuit)
     )
 
@@ -340,7 +341,7 @@ async def enrich_race_missing(
                         history_sources.append(result.source)
                     if not result.ok:
                         if domain == "horse_history":
-                            (evidence_failed if result.source in EVIDENCE_ONLY_SOURCES
+                            (evidence_failed if result.source in START_COUNT_SOURCES
                              else history_failed).append(result.source)
                         failures.append({"source": result.source, "domain": domain, "error": result.error or "failed"})
                         continue
@@ -357,7 +358,7 @@ async def enrich_race_missing(
             if history_limit > 5:
                 audit = audit_career(horse, cutoff, history_limit, history_sources)
                 audit["fetchAttempted"] = bool(history_sources)
-                audit["evidenceAttempted"] = any(x in EVIDENCE_ONLY_SOURCES for x in history_sources)
+                audit["evidenceAttempted"] = any(x in START_COUNT_SOURCES for x in history_sources)
                 audit["failedProviders"] = sorted(set(history_failed))
                 audit["failedEvidenceProviders"] = sorted(set(evidence_failed))
                 if audit != horse.get("_careerHistoryAudit"):
