@@ -20,7 +20,7 @@ class GapAwareSelectionTests(unittest.TestCase):
         required = {"old": 74, "complete": 74, "short": 8, "debut": 0}
         self.assertEqual(career_gap_candidates(
             coverage, required, ["old", "complete", "unknown", "short", "debut"]),
-            ["old", "short", "debut", "unknown"])
+            ["old", "short", "unknown"])
         # The zero-start target is explicitly verified and must not be fetched.
         # The unknown-career 22-start horse is still unverified.
 
