@@ -166,6 +166,10 @@ index_html, fingerprint_replacements = re.subn(
 if fingerprint_replacements != 1 or ("?fix=" + core_asset_hash) not in index_html:
     raise RuntimeError("App JS content fingerprint was not injected; refusing stale iPhone deploy")
 manifest = strings["MANIFEST"]
+# PWA icons must change their URLs when replaced, otherwise iOS retains the old
+# icon after users install or update the combined horse/boat app.
+manifest = manifest.replace("arvexq-icon-v175-192.png","arvexq-icon-v181-192.png")
+manifest = manifest.replace("arvexq-icon-v175-512.png","arvexq-icon-v181-512.png")
 sw = strings["SW"]
 
 # Prediction/mark logic is owned by arvexq/ui/static/app.js and the server-side
@@ -265,6 +269,8 @@ for filename in RESEARCH_ASSETS:
 # Ship dedicated sport resources without merging boat logic into the horse app.
 (DIST / "sports").mkdir(exist_ok=True)
 shutil.copy2(SPORT_DIR / "switch.css", DIST / "sports" / "switch.css")
+# Binary hero file is sourced from the user-approved dual-sport artwork.
+shutil.copy2(STATIC / "arvexq-unified-hero.webp", DIST / "sports" / "arvexq-unified-hero.webp")
 for filename in ("all-races.css","unified-home.css","unified-home.js","horse-portal.js"):
     shutil.copy2(SPORT_DIR / filename, DIST / "sports" / filename)
 shutil.copytree(SPORT_DIR / "boat-app", DIST / "sports" / "boat-app")
@@ -323,6 +329,7 @@ headers=[
     "/betting/*","  Cache-Control: public, max-age=31536000, immutable",
     "/previous_ai_results.js","  Cache-Control: no-cache, must-revalidate",
     "/arvexq-racing-hero.webp","  Cache-Control: public, max-age=604800",
+    "/sports/arvexq-unified-hero.webp","  Cache-Control: public, max-age=604800",
     "/arvexq-racing-detail.webp","  Cache-Control: public, max-age=604800",
     "/hero-horse.webp","  Cache-Control: public, max-age=604800",
     "/pace-preview.webp","  Cache-Control: public, max-age=604800",
@@ -335,6 +342,12 @@ headers=[
 (DIST / "arvexq-icon-v175-512.png").write_bytes(base64.b64decode(icons["512"]))
 (DIST / "arvexq-icon-192.png").write_bytes(base64.b64decode(icons["192"]))
 (DIST / "arvexq-icon-512.png").write_bytes(base64.b64decode(icons["512"]))
+# Keep old icon URLs for cache compatibility, but expose new correct-size
+# PWA images with content-versioned names to refresh iOS home-screen artwork.
+from scripts.arvexq_pwa_icon_resize import resize_indexed_png
+icon_source = STATIC / "arvexq-unified-icon-128.png"
+for label, pixels in (("touch-v181",180), ("icon-v181-192",192), ("icon-v181-512",512)):
+    (DIST / ("arvexq-" + label + ".png")).write_bytes(resize_indexed_png(icon_source,pixels))
 assets={"CINEMATIC_HERO_WEBP":"arvexq-racing-hero.webp","CINEMATIC_DETAIL_WEBP":"arvexq-racing-detail.webp","HERO_HORSE_WEBP":"hero-horse.webp","PACE_PREVIEW_WEBP":"pace-preview.webp","ARVEXQ_LOGO_WEBP":"arvexq-logo.webp"}
 for var,filename in assets.items():
     if var in binary_b64:(DIST / filename).write_bytes(base64.b64decode(binary_b64[var]))
