@@ -98,6 +98,24 @@ assert.doesNotMatch(missingHtml,/見送り：/,'missing data must never be prese
 const confused=policy({...base(),audit:{orderConfidence:.03}},race,prediction);
 assert.equal(confused.trifectaDecision,'見送り','low ordering confidence blocks trifecta');
 assert.ok(confused.items.every(x=>x.level!=='3連単チャレンジ'));
+const legacySrc=fs.readFileSync('arvexq/ui/static/betting/legacy_v213_order_model.js','utf8');
+const legacy={};new Function('window',legacySrc)(legacy);
+assert.equal(typeof legacy.ARVEXQLegacyOrderModel.audit,'function','v213 audit preserved');
+assert.equal(legacy.ARVEXQLegacyOrderModel.build,undefined,'old v213 ticket generator removed');
+const roleRows=rows.map((z,i)=>({...z,p1Probability:weights[i][0],p2Probability:weights[i][1],
+ p3Probability:weights[i][2],winnerDecisionProbability:weights[i][0],
+ frontStay:.5,posCons:.5,latePower:.5,paceOutcomeFirst:.5,paceOutcomeSecond:.5,paceOutcomeThird:.5}));
+const historical=legacy.ARVEXQLegacyOrderModel.audit(race,prediction,roleRows,false,{
+ n,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),strictSelectedRaceProfile:()=>({selected:false}),
+ captureExactaBetEvidence:()=>({version:'audit-evidence'})
+});
+assert.equal(historical.items,undefined,'old model cannot issue tickets');
+assert.equal(historical.decision,undefined,'old model cannot decide purchases');
+assert.equal(historical.exactaEvidence.version,'audit-evidence','exacta model evidence remains');
+assert.ok(historical.audit.orderConfidence>=0,'ordering audit preserved');
+for(const name of ['rebuildBetStrategyV242','buildV213AiBetPlan','forceMandatoryTrifecta','alignBetPlanToOutcome'])
+ assert.ok(!src.includes('function '+name+'('),'competing selector deleted: '+name);
+assert.ok(!src.includes('.qualifyPlaceBet('),'old morning selected mutation removed');
 assert.ok(!src.includes('function composeThreeWayBetPolicy(r,p)'),'policy must consume audited model');
 assert.ok(src.includes('window.ARVEXQThreeWayBet.compose(base,r,p'),'bridge must invoke standalone engine');
 assert.ok(src.includes('vp=composeThreeWayBetPolicy(vp,r,p)'),'local branch');
