@@ -89,6 +89,28 @@ jobs:
           done
           test "$ok" = "1"
           echo "ARVEXQ production verified at $PROD"
+      - name: Verify production sport routes and isolated boat assets
+        shell: bash
+        run: |
+          PROD='https://kraizweb1.4b89h4fydd.workers.dev'
+          curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 "$PROD/keiba/?verify=$GITHUB_SHA" -o prod-keiba.html
+          curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 "$PROD/kyotei/?verify=$GITHUB_SHA" -o prod-kyotei.html
+          curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 "$PROD/sports/boat.js?verify=$GITHUB_SHA" -o prod-boat.js
+          python - <<'PY'
+          from pathlib import Path
+          horse=Path('prod-keiba.html').read_text(encoding='utf-8')
+          boat=Path('prod-kyotei.html').read_text(encoding='utf-8')
+          js=Path('prod-boat.js').read_text(encoding='utf-8')
+          if 'aria-current="page" href="/keiba/"' not in horse:
+              raise SystemExit('PRODUCTION_KEIBA_ROUTE_WRONG_HTML')
+          if 'aria-current="page" href="/kyotei/"' not in boat:
+              raise SystemExit('PRODUCTION_KYOTEI_ROUTE_WRONG_HTML')
+          if '/app-v329.js' not in horse or '/app-v329.js' in boat:
+              raise SystemExit('PRODUCTION_SPORT_BUNDLE_NOT_ISOLATED')
+          if 'データ未接続' not in js or 'boat-venue-grid' not in boat:
+              raise SystemExit('PRODUCTION_BOAT_ASSET_MISSING')
+          print('PRODUCTION_DUAL_SPORT_ROUTES_OK')
+          PY
       - name: Verify current-day racecard fallback is actually deployed
         shell: bash
         run: |
