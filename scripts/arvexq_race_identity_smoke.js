@@ -13,5 +13,22 @@ assert.equal(safe.result,undefined);assert.equal(safe._resultIdentityError,true)
 assert.deepEqual(safe.preRacePrediction,{keep:true});assert.equal(JSON.stringify(contaminated),bytes,'do not change stored raw original');
 const genuine={...card,result:{finishers:[{horseNumber:1,name:'甲',finish:1}]}};
 assert.deepEqual(root.ARVEXQRaceIdentity.sanitize(genuine).result,genuine.result);
+const nameless={...card,result:{status:'確定',finishers:[
+  {horseNumber:1,finish:1},
+  {horseNumber:2,name:'乙',finish:2}
+],payouts:[{type:'単勝',amount:250}]}};
+const recovered=root.ARVEXQRaceIdentity.sanitize(nameless);
+assert.equal(recovered.result.finishers.length,2);
+assert.equal(recovered.result.finishers[0].name,'甲','missing result name must be filled from verified horse number');
+assert.equal(recovered.result.payouts.length,1);
+const partial={...card,result:{status:'速報',finishers:[
+  {horseNumber:1,name:'甲',finish:1},
+  {horseNumber:2,name:'他レース',finish:2}
+]}};
+const partialSafe=root.ARVEXQRaceIdentity.sanitize(partial);
+assert.equal(partialSafe.result.finishers.length,1,'one foreign finisher cannot erase good ones');
+assert.equal(partialSafe.result.finishers[0].horseNumber,1);
+assert.equal(partialSafe._resultIdentityError,true);
+
 assert.deepEqual(root.ARVEXQRaceIdentity.sanitize({...contaminated,date:'2026-10-11'}).horses,contaminated.horses,'different date must not use this roster');
 console.log('RACE_IDENTITY_NO_GHOST_RUNNER_NO_WRONG_RESULT_NO_RAW_MUTATION_PASS');
