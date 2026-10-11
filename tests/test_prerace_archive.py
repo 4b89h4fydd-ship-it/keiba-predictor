@@ -195,17 +195,17 @@ class ServerSealTests(unittest.TestCase):
         self.assertIn("vm.runInContext(lane", source)
         self.assertIn("vm.runInContext(engine", source)
 
-    def test_same_js_betting_core_is_archiveable(self):
+    def test_unavailable_js_ticket_is_retryable_not_an_immutable_skip(self):
         from scripts.arvexq_freeze_predictions import capture_original_bet
         import shutil
         if shutil.which("node") is None:
             self.skipTest("Node unavailable")
+        # This fixture has only three runners. The live betting core returns
+        # null with fewer than four; it must NOT mint a stored "見送り".
         d = seal_detail(self.d, forecast(self.d, self.now), self.now)
-        bet = capture_original_bet(d, self.now)
-        self.assertEqual(bet["raceId"], self.d["id"])
-        self.assertTrue(bet["fixedBeforePost"])
-        self.assertIsInstance(bet["items"], list)
-        self.assertIn("jsHash", bet)
+        with self.assertRaisesRegex(RuntimeError, "bet capture failed"):
+            capture_original_bet(d, self.now)
+        self.assertNotIn("preRaceBet", d)
         with self.assertRaises(ValueError):
             capture_original_bet(d, self.now + timedelta(minutes=21))
 

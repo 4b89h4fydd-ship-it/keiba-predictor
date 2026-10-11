@@ -14,9 +14,12 @@ def has_valid_original(bet: Any, *, race_id: str, start_at: datetime | None = No
         return False
     if str(bet.get("raceId") or "") != str(race_id or ""):
         return False
-    if not bet.get("fixedAt") or bet.get("captureStatus") == "failed":
+    if not bet.get("fixedAt") or str(bet.get("captureStatus") or "") in ("failed", "engine-missing"):
         return False
-    if str(bet.get("decision") or "") in ("", "未取得", "エラー"):
+    if str(bet.get("decision") or "") in ("", "未取得", "エラー", "データ不足"):
+        return False
+    gate = bet.get("betInputGate")
+    if isinstance(gate, dict) and gate.get("ready") is False:
         return False
     try:
         at = datetime.fromisoformat(str(bet["fixedAt"]).replace("Z", "+00:00"))
