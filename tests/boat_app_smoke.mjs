@@ -19,7 +19,7 @@ const one=summarize([race]);assert.equal(one.settled,1);assert.equal(one.hits,1)
 assert.equal(one.hitRate,1);
 assert.equal(usableForecast({...race,forecast:{...race.forecast,tickets:[...race.forecast.tickets,...race.forecast.tickets,...race.forecast.tickets,...race.forecast.tickets]}}),false);
 assert.equal(usableForecast({...race,forecast:{...race.forecast,snapshotAt:"2026-10-11T12:02:00+09:00"}}),false);
-assert.equal(selectedRace({...race,selection:{...race.selection,snapshotAt:"2026-10-11T11:30:00+09:00"}}),false);
+assert.equal(selectedRace({...race,selection:{...race.selection,lockedAt:"2026-10-11T12:05:00+09:00"}}),false);
 const parsed=parseDay({version:"arvexq-boat-day-v1",date:day,verified:true,races:[race]},day);
 assert.equal(parsed.races.length,1);
 assert.throws(()=>parseDay({version:"arvexq-boat-day-v1",date:day,verified:false,races:[race]},day));
