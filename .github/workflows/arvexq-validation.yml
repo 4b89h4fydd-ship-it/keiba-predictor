@@ -219,6 +219,9 @@ jobs:
 
       - name: Prefetch racecard delivery regression
         run: |
+          python -m py_compile arvexq/pipeline/persisted_inputs.py arvexq/results/day_index.py \
+            scripts/arvexq_verify_persisted_inputs.py scripts/arvexq_restore_result_day.py
+          python -m unittest discover -s tests -p 'test_persisted_pipeline_stages.py' -v
           python -m unittest discover -s tests -p 'test_prefetch_racecard_delivery.py' -v
           python -m unittest discover -s tests -p 'test_early_pace_enrichment.py' -v
           python -m unittest discover -s tests -p 'test_authorized_history_feeds.py' -v
