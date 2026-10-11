@@ -3441,7 +3441,12 @@ function computeMorningRaceCandidates(circuit){
   if(!window.ARVEXQMorningTicketLanes||typeof window.ARVEXQMorningTicketLanes.classify!=='function')
     throw Error('morning classifier missing — do not publish an empty selection');
   all.forEach(function(r){var d=null;try{
-    d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(!d||isFinal(d)||!d.preparedMeta||d.preparedMeta.diagnosisReady!==true)return;
+    // A missing server diagnosisReady flag may mean full-career ingest is still
+    // running, not that this race is unanalyzable. Use the live model/quality
+    // gates below instead; never synthesize an absent racecard.
+    d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);
+    if(!d||isFinal(d)||!Array.isArray(d.horses)||
+       d.horses.filter(function(h){return h&&!isScratchHorse(h)&&n(h.horseNumber)>0&&String(h.name||'').trim()}).length<5)return;
     var p=predict(d),strict=strictSelectedRaceProfile(d,p);
     var t=window.ARVEXQMorningTicketLanes.classify(d,p,strict);
     if(!t.selected)return;
