@@ -45,11 +45,11 @@ const status={version:'arvexq-server-exact-js-bet-v1',
 try{
  const prediction=exported.predict(race);
  const result=exported.buildAiBetPlan(race,prediction);
- if(!result){console.log(JSON.stringify({...status,decision:'見送り',
-   reason:'現行買い目エンジンの購入条件未達。発走後に再計算しません。',
-   items:[],singleWinHorseNumber:(prediction.rows||[]).find(x=>x&&x.singleWinSuitable)?.horse?.horseNumber||0,
-   betQuality:0,trifectaReviewed:true,trifectaDecision:'見送り',trifectaReason:'入力または条件不足'}));
- }else{
+ if(!result)throw Error('betting model returned no pre-off plan; capture is retryable');
+ if(result.captureStatus==='engine-missing'||result.dataStatus==='engine-unavailable'||
+    result.decision==='データ不足'||result.betInputGate&&result.betInputGate.ready===false)
+   throw Error('betting model inputs or modules unavailable; cannot seal a fabricated skip');
+ {
    const out=JSON.parse(JSON.stringify(result));
    out.version=status.version;out.jsHash=status.jsHash;
    out.singleWinHorseNumber=(prediction.rows||[]).find(x=>x&&x.singleWinSuitable)?.horse?.horseNumber||0;
