@@ -1,10 +1,13 @@
 """Retain healthy fields on partial updates and immutable pre-off artifacts."""
 import copy
-import json
+from arvexq.ingest.pure_parsers import _jra_run_key
 from arvexq.prediction.prerace_archive import sealed_lock
 
 # Transient readiness/audit metadata belongs to the current refresh attempt.
 _TRANSIENT = {'preparedMeta', 'dataCoreHealth', 'predictionAudit'}
+# Forecasts and tickets are whole artifacts; never synthesize a field-wise hybrid.
+_ATOMIC = {'preRacePrediction','preRaceBet','researchShadow','researchFactorShadow',
+           'morningPicks','morningMarkSnapshot','morningSelectionSnapshot'}
 _POSITIVE = {'distance', 'fieldSize', 'raceNumber', 'horseNumber', 'frameNumber',
              'age', 'bodyWeight', 'carriedWeight', 'winOdds', 'popularity'}
 
@@ -17,9 +20,7 @@ def _missing(key, value):
 
 def _runs(previous, incoming):
     """Union full career only; display recentRaces remains the incoming list."""
-    def key(run):
-        return json.dumps([run.get(k) for k in ('raceId','date','track','raceNumber','title','distance','finish','timeSeconds')],
-                          ensure_ascii=False, default=str)
+    key=_jra_run_key
     by_key={key(run):run for run in previous if isinstance(run,dict)}
     out=[];seen=set()
     for run in incoming:
@@ -34,7 +35,7 @@ def _runs(previous, incoming):
 def _merge(previous, incoming):
     out=copy.deepcopy(incoming)
     for key, old in previous.items():
-        if key in _TRANSIENT:
+        if key in _TRANSIENT or key in _ATOMIC:
             continue
         new=out.get(key)
         if key not in out or _missing(key,new):
@@ -57,7 +58,7 @@ def retain_snapshot(previous, incoming):
         return incoming
     out=_merge(previous,incoming)
     if sealed_lock(previous):
-        for key in ('preRacePrediction','preRaceBet','researchShadow','researchFactorShadow',
+        for key in ('preRacePrediction','researchShadow','researchFactorShadow',
                     'morningPicks','morningMarkSnapshot','morningSelectionSnapshot'):
             if key in previous:
                 out[key]=copy.deepcopy(previous[key])
@@ -68,6 +69,9 @@ def retain_snapshot(previous, incoming):
         if meta:out['preparedMeta']=meta
     # A recorded pre-off ticket and morning history cannot be replaced by a refresh.
     for key in ('preRaceBet','morningPicks','morningMarkSnapshot','morningSelectionSnapshot'):
-        if isinstance(previous.get(key),(dict,list)) and previous[key]:
-            out[key]=copy.deepcopy(previous[key])
+        recorded=previous.get(key)
+        if key=='preRaceBet' and (not isinstance(recorded,dict) or not recorded.get('fixedAt')):
+            continue
+        if isinstance(recorded,(dict,list)) and recorded:
+            out[key]=copy.deepcopy(recorded)
     return out

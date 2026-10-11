@@ -54,7 +54,7 @@ new explicit interface / retention policy / package,arvexq/storage/policies/__in
 new explicit interface / retention policy / package,arvexq/storage/policies/archive.py,28,
 new explicit interface / retention policy / package,arvexq/storage/policies/bundles.py,12,
 new explicit interface / retention policy / package,arvexq/storage/policies/market.py,33,
-new explicit interface / retention policy / package,arvexq/storage/policies/snapshots.py,73,
+new explicit interface / retention policy / package,arvexq/storage/policies/snapshots.py,77,
 new explicit interface / retention policy / package,arvexq/storage/ports.py,13,
 new explicit interface / retention policy / package,arvexq/storage/prepared/__init__.py,1,
 app.py,arvexq/storage/prepared/cache.py,39,_prepared_ttl; _prepared_get_fresh; _racedb_get_fast

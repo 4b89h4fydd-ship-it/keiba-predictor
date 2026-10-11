@@ -57,7 +57,7 @@
     "arvexq/storage/sqlite/transactions.py": 5,
     "arvexq/storage/policies/market.py": 33,
     "arvexq/storage/policies/__init__.py": 1,
-    "arvexq/storage/policies/snapshots.py": 73,
+    "arvexq/storage/policies/snapshots.py": 77,
     "arvexq/storage/policies/archive.py": 28,
     "arvexq/storage/policies/bundles.py": 12,
     "arvexq/storage/market/__init__.py": 1,
@@ -112,12 +112,12 @@
     "DayBundleStore.put: lower-quality failed bundle retention"
   ],
   "python": {
-    "passed": 549,
+    "passed": 550,
     "subtests_passed": 114,
     "warnings": 13,
     "failed": 0
   },
-  "new_storage_tests": 146,
+  "new_storage_tests": 147,
   "javascript_regression_scripts": 16,
   "formula_comparisons": 31,
   "first_checkpoint_actions": {
@@ -159,6 +159,17 @@
     },
     "domain_refactor": {
       "id": 38116739484,
+      "conclusion": "success"
+    }
+  },
+  "connection_checkpoint_actions": {
+    "head": "ef62f444dc52ce8a443955ca3183040a9ceaec71",
+    "validation": {
+      "id": 38116978967,
+      "conclusion": "success"
+    },
+    "domain_refactor": {
+      "id": 38116978961,
       "conclusion": "success"
     }
   }

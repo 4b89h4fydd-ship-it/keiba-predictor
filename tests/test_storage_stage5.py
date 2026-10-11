@@ -290,6 +290,11 @@ def test_full_career_union_never_changes_recent_five_or_meaningful_zero():
     assert len(merged['horses'][0]['recentRaces'])==5
     assert merged['horses'][0]['bodyWeightChange']==0
     assert len(new['horses'][0]['allPastRuns'])==5
+    new['horses'][0]['allPastRuns'][0]['title']='公式表記更新'
+    new['horses'][0]['allPastRuns'][0]['finish']=1
+    updated=retain_snapshot(old,new)
+    assert len(updated['horses'][0]['allPastRuns'])==12
+    assert updated['horses'][0]['allPastRuns'][0]['finish']==1
 
 
 def test_nonempty_card_does_not_reintroduce_withdrawn_horse():
@@ -381,3 +386,22 @@ def test_day_bundle_failed_refresh_cannot_delete_complete_known_data(tmp_path):
     store.put('2026-10-10',payload,True);first=store.get('2026-10-10')
     store.put('2026-10-10',{'raceCount':0,'detailCount':0,'details':[],'error':'timeout'},False)
     assert store.get('2026-10-10')==first
+
+
+def test_unrecorded_ticket_placeholder_can_be_filled_before_off():
+    from datetime import datetime
+    from arvexq.prediction.prerace_archive import JST,seal_detail
+    from arvexq.storage.policies.snapshots import retain_snapshot
+    from test_prerace_archive import race,forecast
+    now=datetime(2026,10,8,19,50,tzinfo=JST)
+    old=seal_detail(race(now),forecast(race(now),now),now)
+    old['preRaceBet']={'items':[]}
+    update=copy.deepcopy(old);update['preRaceBet']={'fixedAt':now.isoformat(),'items':[{'nums':[1,2]}]}
+    saved=retain_snapshot(old,update)
+    assert saved['preRaceBet']==update['preRaceBet']
+    replacement=copy.deepcopy(saved);replacement['preRaceBet']['items']=[{'nums':[9]}]
+    assert retain_snapshot(saved,replacement)['preRaceBet']==saved['preRaceBet']
+
+    old['preRaceBet']={'items':[{'nums':[9]}]}
+    update['preRaceBet']={'fixedAt':now.isoformat(),'decision':'見送り','items':[]}
+    assert retain_snapshot(old,update)['preRaceBet']==update['preRaceBet']
