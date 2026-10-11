@@ -1,12 +1,7 @@
 // MEDIUM: venue and race cards. All labels originate from the verified daily feed.
-import {VENUES,esc,usableForecast,displayMark} from "../core/contract.js";
+import {esc,usableForecast,displayMark} from "../core/contract.js";
 import {startExhibitionPanel} from "./start-exhibition.js";
 const digits=["","①","②","③","④","⑤","⑥"];
-export function venueGrid(day,selected){
-  const active=new Set(day.races.map(r=>r.venue));
-  return '<div class="boat-venue-grid">'+VENUES.map(v=>
-    '<button type="button" class="'+(v===selected?'selected':'')+'" data-venue="'+esc(v)+'" aria-pressed="'+(v===selected)+'">'+esc(v)+(active.has(v)?'<small>開催情報あり</small>':'<small>未取得</small>')+'</button>').join("")+'</div>';
-}
 export function raceList(day,venue){
   const list=day.races.filter(r=>r.venue===venue).sort((a,b)=>a.raceNo-b.raceNo);
   if(!list.length)return '<p class="boat-muted">この会場の検証済みレースは未取得です。開催の有無は未確認です。</p>';

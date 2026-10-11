@@ -1,27 +1,30 @@
-const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const assert=require("node:assert/strict"),fs=require("node:fs"),vm=require("node:vm");
 const root={};
-vm.runInNewContext(fs.readFileSync('arvexq/ui/static/sports/horse-portal.js','utf8'),{window:root});
-const ui=root.ARVEXQHorsePortal;
-const date='2026-10-11';
+vm.runInNewContext(fs.readFileSync("arvexq/ui/static/sports/horse-portal.js","utf8"),{window:root});
+const ui=root.ARVEXQHorsePortal,date="2026-10-12";
 const rows=[
-{id:'jra-'+date+'-東京-01',circuit:'中央',track:'東京',raceNumber:1,startTime:'09:50',title:'第1レース',date},
-{id:'nar-'+date+'-大井-03',circuit:'地方',track:'大井',raceNumber:3,startTime:'10:10',title:'第3レース',date},
-{id:'jra-'+date+'-京都-02',circuit:'中央',track:'京都',raceNumber:2,startTime:'10:05',title:'第2レース',date},
-{id:'jra-'+date+'-中山-12',circuit:'中央',track:'中山',raceNumber:12,startTime:'16:30',title:'第12レース',date}
+ {id:"jra-"+date+"-東京-01",circuit:"中央",track:"東京",raceNumber:1,startTime:"09:50",title:"東京1R",date},
+ {id:"jra-"+date+"-東京-02",circuit:"中央",track:"東京",raceNumber:2,startTime:"10:20",date},
+ {id:"nar-"+date+"-大井-03",circuit:"地方",track:"大井",raceNumber:3,startTime:"10:10",date},
+ {id:"nar-"+date+"-大井-04",circuit:"地方",track:"大井",raceNumber:4,startTime:"10:40",date,result:{status:"中止"}}
 ];
-const h=ui.home(rows,{date,today:date,nowMinutes:600,selected:{central:2,local:1},special:{central:1,local:0}});
-for(const page of ['central','local','realtime','selected','special','ai-stats'])assert.ok(h.includes('data-home-page="'+page+'"'),page);
-assert.ok(h.includes('data-race="nar-'+date+'-大井-03"'));
-assert.ok(h.includes('data-circuit="中央"'));
-assert.ok(h.includes('data-circuit="地方"'));
-assert.ok(h.includes('data-track="京都"'));
-const timeline=ui.timeline(rows,date,date,600);
-assert.equal(timeline[0].startTime,'10:05');
-assert.equal(timeline[1].startTime,'10:10');
-assert.equal(ui.status(rows[0],date,date,600).label,'結果待ち');
-assert.equal(ui.status(rows[1],date,date,600).label,'まもなく');
-assert.ok(ui.realtime([], {date,today:date,nowMinutes:600}).includes('架空のレースは表示しません'));
-assert.ok(ui.venues([], '地方').includes('開催場情報がまだありません'));
-const dangerous='<img src=x onerror=alert(1)>';
-assert.equal(ui.home([{...rows[0],title:dangerous}],{date,today:date,nowMinutes:600}).includes(dangerous),false);
-console.log('HORSE_TELEBOAT_PORTAL_OK');
+const opts={date,today:date,nowMinutes:600,selected:{central:2,local:1},special:{central:1,local:0}};
+const rendered=ui.home(rows,opts);
+assert.equal(rendered.includes("各会場の全レース"),true);
+assert.equal(rendered.includes("開催場一覧"),false);
+assert.equal(rendered.includes("リアルタイム"),false);
+assert.equal(rendered.includes("data-home-page=\"central\""),false);
+assert.equal(rendered.includes("data-home-page=\"realtime\""),false);
+assert.equal(rendered.includes("data-track=\"東京\""),true);
+assert.equal(rendered.includes("data-track=\"大井\""),true);
+assert.equal(rendered.includes("data-race=\"jra-"+date+"-東京-02\""),true);
+assert.equal(rendered.includes("data-race=\"nar-"+date+"-大井-03\""),true);
+assert.equal(rendered.includes("data-race=\"nar-"+date+"-大井-04\""),false);
+assert.equal((rendered.match(/class="arv-all-race /g)||[]).length,24);
+assert.equal((rendered.match(/aria-disabled="true"/g)||[]).length,21);
+for(const tag of ["selected","special","ai-stats"])assert.ok(rendered.includes('data-home-page="'+tag+'"'));
+assert.ok(ui.home([],opts).includes("未取得"));
+assert.ok(!ui.home([],opts).includes("data-race="));
+const injected=ui.home([{...rows[0],track:'<img src=x onerror=alert(1)>'}],opts);
+assert.ok(!injected.includes('<img src=x onerror=alert(1)>'));
+console.log("HORSE_ALL_RACES_OK");
