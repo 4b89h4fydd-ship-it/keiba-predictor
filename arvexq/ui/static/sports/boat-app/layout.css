@@ -87,3 +87,16 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible{outline:3px
 .boat-mark-cell small{font-size:10px;color:#a1dfff}
 .boat-mark-cell .boat-mark{white-space:normal;font-size:12px;line-height:1.3}
 @media(max-width:360px){.boat-bet-header{font-size:9px}.boat-bet-row{grid-template-columns:13px minmax(48px,1fr) minmax(42px,.7fr) minmax(43px,.75fr) minmax(50px,.85fr);gap:2px;padding:8px 4px}.boat-bet-combination{font-size:14px}.boat-bet-odds{font-size:13px}.boat-bet-stake,.boat-bet-return{font-size:10px}.boat-formation strong{font-size:23px}}
+
+/* Verified racer/motor/exhibition evidence. */
+.boat-racer-analysis{margin:6px 0;background:#203848;border:1px solid #476c82;border-radius:10px;overflow:hidden}
+.boat-racer-analysis summary{list-style:none;display:grid;grid-template-columns:36px minmax(0,1fr) 58px auto;gap:8px;align-items:center;padding:8px;cursor:pointer;min-height:51px}
+.boat-racer-analysis summary::-webkit-details-marker{display:none}
+.boat-racer-analysis summary strong{font-size:14px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.boat-racer-analysis summary small{color:#a7c1d1;font-size:10px}
+.boat-racer-analysis summary>span:last-child{color:#86d6f6;font-size:10px;white-space:nowrap}
+.boat-racer-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:8px;border-top:1px solid #476c82}
+.boat-racer-metrics>div{display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:8px;padding:7px 4px;background:#122c3f}
+.boat-racer-metrics small{font-size:10px;color:#a9cddd}
+.boat-racer-metrics b{font-size:12px;color:#f0f9fd}
+@media(max-width:360px){.boat-racer-analysis summary{grid-template-columns:35px minmax(0,1fr) 37px;gap:5px}.boat-racer-analysis summary>span:last-child{display:none}}
