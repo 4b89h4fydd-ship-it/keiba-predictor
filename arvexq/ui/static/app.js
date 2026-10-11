@@ -3623,12 +3623,9 @@ function returnToToday(){
   window.scrollTo(0,0);load()
 }
 function smartHomeHero(){
-  return '<section class="smart-home-hero">'+
-    '<img class="smart-home-hero-image" src="/arvexq-racing-hero.webp" alt="ARVEXQ hero">'+
-    '<div class="smart-home-hero-overlay"></div>'+
-    '<div class="smart-home-hero-date smart-home-hero-date-left">'+esc((state.date||'').replace(/-/g,'.'))+'</div>'+
-    '<label class="smart-hero-calendar-left" title="開催日を選択"><span class="calendar-mark" aria-hidden="true">▦</span><span>日付選択</span><input id="date" type="date" value="'+esc(state.date)+'" aria-label="開催日を選択"></label>'+
-  '</section>'
+  var shared=window.ARVEXQUnifiedHome;
+  if(shared)return shared.hero();
+  return '<div class="arv-unified-hero"><img src="/arvexq-racing-hero.webp" alt="ARVEXQ"></div>';
 }
 function allTodayRacesFinished(){
   var rows=(state.races||[]).filter(function(r){return r&&r.id});
@@ -3731,7 +3728,7 @@ function renderHomeSectionPage(){
   state.homePage=null;state.pickCircuit=null;return renderHome()
 }
 function renderHome(){
-  return '<div class="smart-shell smart-home">'+smartHomeHero()+'<main class="smart-main smart-home-main">'+(window.ARVEXQHorsePortal?window.ARVEXQHorsePortal.home(state.races||[],{date:state.date,today:today(),nowMinutes:nowMins(),selected:homePickCounts('selected'),special:homePickCounts('special')}):smartHomeHub())+(state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+'</main>'+cinematicFooter()+'</div>'
+  return '<div class="smart-shell smart-home">'+smartHomeHero()+'<main class="smart-main smart-home-main">'+(window.ARVEXQUnifiedHome?'<div class="arv-unified-body">'+window.ARVEXQUnifiedHome.dateBar(state.date)+window.ARVEXQUnifiedHome.buttons('horse'): '')+(window.ARVEXQHorsePortal?window.ARVEXQHorsePortal.home(state.races||[],{date:state.date,today:today(),nowMinutes:nowMins(),selected:homePickCounts('selected'),special:homePickCounts('special')}):smartHomeHub())+(state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+(window.ARVEXQUnifiedHome?'</div>':'')+'</main>'+cinematicFooter()+'</div>'
 }
 function volatilityBadge(r){
   var v=r&&r.volatility||{},ready=v.ready===true&&n(v.score)>0,label=ready?String(v.label||'標'):'…',
