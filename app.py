@@ -3221,7 +3221,16 @@ def _merge_enrichment(detail:dict,data:dict)->dict:
                 h.setdefault("extraSources",{})[src]=extra
                 for key in ("pedigree","jockeyStats","trainerStats","jumpJockeyStats","jumpTrainerStats","jumpStats","isTransfer","transferFrom","ten1f","agari3f","pedigreeScore","distanceSuitabilityScore","surfaceSuitabilityScore","drawScore","bodyWeightScore","opponentLevelScore","lapScore","conditionChangeScore","jockeyScore","trainerScore","jumpJockeyScore","jumpTrainerScore"):
                     if extra.get(key) is not None:h[key]=extra[key]
-                if isinstance(extra.get("allPastRuns"),list):h["allPastRuns"]=extra["allPastRuns"]
+                if isinstance(extra.get("allPastRuns"),list) and detail.get("date"):
+                    # An older supplemental lane used to overwrite the whole
+                    # lifetime archive with any partial third-party response.
+                    # Reuse the one date-safe deduplicating merge operation.
+                    from arvexq.ingest.full_career import merge_career
+                    observed=[*(h.get("allPastRuns") or []),*(h.get("recentRaces") or [])]
+                    merged=merge_career(observed,extra["allPastRuns"],detail["date"])
+                    if merged:
+                        h["allPastRuns"]=merged
+                        h["recentRaces"]=merged[:5]
         if src not in sources:sources.append(src)
     base=list(detail.get("dataSources") or []);official="JRA公式" if detail.get("circuit")=="中央" else "NAR公式"
     for s in [official]+sources:
