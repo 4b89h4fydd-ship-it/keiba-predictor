@@ -1,5 +1,6 @@
 // MEDIUM: venue and race cards. All labels originate from the verified daily feed.
 import {VENUES,esc,usableForecast,displayMark} from "../core/contract.js";
+import {startExhibitionPanel} from "./start-exhibition.js";
 const digits=["","①","②","③","④","⑤","⑥"];
 export function venueGrid(day,selected){
   const active=new Set(day.races.map(r=>r.venue));
@@ -27,7 +28,7 @@ export function detail(r){
     return '<div class="boat-ticket">'+esc(combination)+'</div>';
   }).join("")+'</div><p class="boat-muted">保存時刻 '+esc(r.forecast.snapshotAt)+' / '+r.forecast.tickets.length+'点</p>';
   return '<section class="boat-panel"><button type="button" data-back="races" class="boat-back">‹ レース一覧</button>'+
-    '<h2>'+esc(r.venue)+' '+r.raceNo+'R <small>'+esc(r.title||"")+'</small></h2>'+entries+'</section>'+
+    '<h2>'+esc(r.venue)+' '+r.raceNo+'R <small>'+esc(r.title||"")+'</small></h2>'+entries+'</section>'+startExhibitionPanel(r)+
     '<section class="boat-panel"><h2>AI 3連単買い目 <span class="boat-label">最大6点</span></h2>'+tickets+'</section>'+
     '<section class="boat-panel"><h2>レース結果</h2>'+
     (r.result&&r.result.status==="confirmed"?'<p>確定 '+esc(r.result.trifecta||"—")+' / 3連単払戻 '+(Number.isFinite(r.result.trifectaPayoutYen)?r.result.trifectaPayoutYen.toLocaleString("ja-JP")+"円":"未取得")+'</p>':'<p class="boat-muted">結果未確定・未取得</p>')+'</section>';
