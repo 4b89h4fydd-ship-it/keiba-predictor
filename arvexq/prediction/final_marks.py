@@ -7,7 +7,7 @@ from arvexq.prediction.multi_head import MODEL_VERSION as MULTI_HEAD_MODEL_VERSI
 from arvexq.prediction.honmei_gate import evaluate_honmei_gate
 from arvexq.prediction.career_readiness import attach_career_readiness
 
-MARK_ENGINE_VERSION = "arvexq-four-pillar-marks-v7-past-context"
+MARK_ENGINE_VERSION = "arvexq-four-pillar-marks-v8-honmei-role"
 CORE_MARKS = ("◎", "○", "▲")
 LOWER_MARKS = ("☆+", "☆", "△", "注")
 
@@ -124,8 +124,27 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     honmei_decision = evaluate_honmei_gate(ranked_rows, multi_head_summary, detail)
     detail["honmeiDecision"] = honmei_decision
     ranked = [row["horse"] for row in ranked_rows]
-    axis_no = int(honmei_decision.get("horseNumber") or 0) if honmei_decision.get("eligible") else 0
+    # Publish exactly one relative ◎ when a forecast is genuinely available.
+    # A failed strict podium gate downgrades reliability rather than hiding the
+    # model leader; a C-grade honmei can never be treated as a fixed ticket axis.
+    axis_no = int(honmei_decision.get("horseNumber") or 0)
     axis_horse = next((h for h in ranked if int(h.get("horseNumber") or 0) == axis_no), None)
+    axis_rows = honmei_decision.get("axisCandidates") or []
+    axis_data = next((q for q in axis_rows if q.get("horseNumber") == axis_no), {})
+    grade = ("A" if honmei_decision.get("eligible") else
+             "B" if float(axis_data.get("score") or 0) >= .55
+             and int(axis_data.get("validRuns") or 0) >= 2 else "C")
+    mh = (axis_horse or {}).get("integratedEvaluation") or {}
+    axis_head = next((row.get("multiHead") or {} for row in ranked_rows
+                      if row.get("horse") is axis_horse), {})
+    win_head = int(axis_head.get("winRank") or 999) == 1
+    gap = float((multi_head_summary or {}).get("winnerGap") or 0)
+    model_winner = int((multi_head_summary or {}).get("winnerHorseNumber") or 0)
+    honmei_role = "win" if win_head and model_winner == axis_no and gap >= .015 else "axis"
+    honmei_decision["displayHonmei"] = axis_horse is not None
+    honmei_decision["confidenceGrade"] = grade if axis_horse is not None else ""
+    honmei_decision["role"] = honmei_role if axis_horse is not None else "none"
+    honmei_decision["fixedAxisAllowed"] = grade in ("A", "B") and axis_horse is not None
 
     for horse in horses:
         e = horse.setdefault("integratedEvaluation", {})
@@ -169,7 +188,10 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         e["upsideHeadRank"] = multi_head.get("upsideRank")
         e["dangerPopular"] = bool(multi_head.get("dangerPopular"))
         e["upsideCandidate"] = bool(multi_head.get("upsideCandidate"))
-        e["honmeiEligible"] = bool(honmei_decision.get("eligible") and int(horse.get("horseNumber") or 0) == int(honmei_decision.get("horseNumber") or 0))
+        is_honmei = axis_horse is horse
+        e["honmeiEligible"] = bool(honmei_decision.get("eligible") and is_honmei)
+        e["honmeiRole"] = honmei_role if is_honmei else ""
+        e["honmeiGrade"] = grade if is_honmei else ""
         e["honmeiGateVersion"] = honmei_decision.get("version")
         e["podiumAxisScore"] = next((q["score"] for q in honmei_decision.get("axisCandidates", []) if q["horseNumber"] == int(horse.get("horseNumber") or 0)), None)
         horse["abilityEvidence"] = evidence
@@ -181,7 +203,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             }
         )
 
-    # ◎ is top-three axis, so it may differ from the winner-model leader.
+    # The ◎ candidate may be a 1st-place winner or a reliable podium axis.
     remaining_rows = [row for row in ranked_rows if row["horse"] is not axis_horse]
     core_assignments = ()
     if axis_horse is not None:
@@ -219,7 +241,8 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     detail["multiHeadModelVersion"] = MULTI_HEAD_MODEL_VERSION
     detail["multiHeadSummary"] = multi_head_summary
     detail["markMethod"] = (
-        "core=four-pillar consensus + all observed pre-off career + recent-five form + independent top-three axis; "
+        "core=four-pillar consensus + all observed pre-off career + recent-five form + relative honmei; "
+        "honmei=one candidate with win/axis role and A/B/C reliability (C is not a fixed ticket axis); "
         "heads=strength(ability+record), win(ability+record+suitability+pace), "
         "upside(suitability+pace+support), market-risk(popularity-vs-model); "
         "support=pedigree+weather/going+bias+draw+body/weight+condition-change+freshness+age/sex+jockey+trainer"
