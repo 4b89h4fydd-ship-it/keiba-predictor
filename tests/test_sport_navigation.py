@@ -19,6 +19,8 @@ class SportNavigationTest(unittest.TestCase):
         self.assertIn('href="/keiba/"', html)
         self.assertIn('href="/kyotei/"', html)
         self.assertIn('/sports/boat-app/app.js', html)
+        self.assertIn('/sports/unified-home.js', html)
+        self.assertIn('/sports/unified-home.css', html)
         self.assertNotIn('/app-v329.js', html)
         self.assertNotIn('arvexq/ui/static/app.js', html)
         self.assertIn('3連単最大6点', html)
@@ -53,6 +55,8 @@ class SportNavigationTest(unittest.TestCase):
         self.assertTrue((dist / "sports" / "boat-app" / "features" / "all-races.js").is_file())
         self.assertIn('/sports/horse-portal.js',horse)
         self.assertTrue((dist / "sports" / "all-races.css").is_file())
+        self.assertTrue((dist / "sports" / "unified-home.js").is_file())
+        self.assertTrue((dist / "sports" / "unified-home.css").is_file())
         self.assertIn("/sports/all-races.css",horse)
         self.assertIn("/sports/all-races.css",boat)
 
