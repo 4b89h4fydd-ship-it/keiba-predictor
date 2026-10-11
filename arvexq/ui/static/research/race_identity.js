@@ -22,11 +22,33 @@
     if((r.horses||[]).length!==horses.length)changed=true;
     var out=Object.assign({},r,{horses:horses,fieldSize:horses.length});
     if(changed)out._rosterIdentityError=true;
-    var known=new Map(card.horses.map(function(h){return [h.horseNumber,name(h.name)]}));
-    if(out.result&&Array.isArray(out.result.finishers)&&out.result.finishers.some(function(h){
-      return !known.has(Number(h.horseNumber))||!h.name||known.get(Number(h.horseNumber))!==name(h.name);
-    })){
-      delete out.result;out._resultIdentityError=true;
+    var known=new Map(card.horses.map(function(h){return [Number(h.horseNumber),{name:name(h.name),rawName:h.name}]}));
+    if(out.result&&Array.isArray(out.result.finishers)){
+      var original=out.result.finishers,verified=[],invalid=0;
+      original.forEach(function(h){
+        if(!h||!Number.isInteger(Number(h.horseNumber))){invalid++;return}
+        var expected=known.get(Number(h.horseNumber));
+        if(!expected){invalid++;return}
+        // Official result sources sometimes leave the finisher name empty.
+        // A matching horse number can inherit the verified card identity;
+        // a nonempty conflicting name must NEVER overwrite that identity.
+        var observed=name(h.name);
+        if(observed&&observed!==expected.name){invalid++;return}
+        verified.push(observed?h:Object.assign({},h,{name:expected.rawName}))
+      });
+      if(invalid){
+        out._resultIdentityError=true;
+        if(!verified.length&&original.length){
+          // Refuse an entirely foreign result, preserving the old guard.
+          delete out.result;
+        }else{
+          // A single missing/mismatched finisher must not erase the
+          // other authoritative placings or payout records.
+          out.result=Object.assign({},out.result,{finishers:verified})
+        }
+      }else if(verified.some(function(h,i){return h!==original[i]})){
+        out.result=Object.assign({},out.result,{finishers:verified})
+      }
     }
     return out;
   }
