@@ -1596,6 +1596,24 @@ def nar_race_summaries(iso_date: str) -> list[dict]:
             """,
             (iso_date,),
         ).fetchall()
+        # Same official SQLite entry store as the existing race detail.
+        # Never publish synthetic [{"finish":1}] placeholders as results.
+        entry_rows=conn.execute(
+            """SELECT track,race_no,horse_no,frame_no,name,finish,time_seconds,corner_positions_json
+               FROM entries WHERE date=? AND finish>0 ORDER BY track,race_no,finish,horse_no""",
+            (iso_date,),
+        ).fetchall()
+        real_finishers={}
+        for e in entry_rows:
+            key=(str(e["track"]),int(e["race_no"]))
+            try: corners=json.loads(e["corner_positions_json"] or "[]")
+            except (ValueError,TypeError): corners=[]
+            real_finishers.setdefault(key,[]).append({
+                "finish":int(e["finish"]),"horseNumber":int(e["horse_no"]),
+                "frameNumber":int(e["frame_no"] or 0),"name":e["name"] or "",
+                "timeSeconds":float(e["time_seconds"] or 0),
+                "cornerPositions":corners if isinstance(corners,list) else [],
+            })
         out=[]
         for r in rows:
             count=int(r["entry_count"] or r["field_size"] or 0)
@@ -1608,7 +1626,7 @@ def nar_race_summaries(iso_date: str) -> list[dict]:
                 "fieldSize":count,"racePrize1":int(r["prize1"] or 0),"surface":"",
                 "startTime":r["start_time"] or "","scheduledStartTime":r["scheduled_start_time"] or r["start_time"] or "",
                 "startTimeChanged":bool((r["scheduled_start_time"] or "") and (r["start_time"] or "") and r["scheduled_start_time"]!=r["start_time"]),
-                "horses":[],"result":{"status":"確定","finishers":[{"finish":1}]} if finalized else None,"source":"NAR公式"
+                "horses":[],"result":{"status":"確定","finishers":real_finishers.get((str(r["track"]),int(r["race_no"])),[])} if finalized else None,"source":"NAR公式"
             })
         return out
     finally:
@@ -1905,7 +1923,7 @@ def central_race_summaries(iso_date: str, allow_network: bool = False, force: bo
                 hs=r.get("horses") if isinstance(r.get("horses"),list) else [];q=dict(r);q["fieldSize"]=int(q.get("fieldSize") or len(hs));q["horses"]=[]
                 if JRA_BAD_TITLE_RE.search(str(q.get("title") or "")):q["title"]=f"{int(q.get('raceNumber') or 0)}R"
                 res=q.get("result") if isinstance(q.get("result"),dict) else None
-                if res and (res.get("finishers") or res.get("status")=="確定"):q["result"]={"status":res.get("status") or "確定","finishers":res.get("finishers") or [{"finish":1}]}
+                if res and (res.get("finishers") or res.get("status")=="確定"):q["result"]={"status":res.get("status") or "確定","finishers":res.get("finishers") or []}
                 else:q["result"]=None
                 db.append(q)
         finally:conn.close()
