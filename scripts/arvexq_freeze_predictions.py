@@ -123,7 +123,20 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
                     "predictionModelVersion", "winConfidenceEvidence"):
             if key in ranked:
                 working[key] = copy.deepcopy(ranked[key])
+        if ranked.get("predictionStatus") == "partial-career-evidence":
+            working["predictionStatus"] = "partial-career-evidence"
+            working["careerReadiness"] = copy.deepcopy(ranked.get("careerReadiness") or {})
         lock = build(working)
+        if isinstance(lock, dict) and working.get("predictionStatus") == "partial-career-evidence":
+            current = working.get("careerReadiness") or {}
+            lock["careerEvidence"] = {
+                "fullCareerVerified": False,
+                "status": "partially-observed-preoff",
+                "predictionEvidencePolicy": current.get("predictionEvidencePolicy"),
+                "completeHorses": current.get("completeHorses"),
+                "activeHorses": current.get("activeHorses"),
+                "blockedHorses": copy.deepcopy(current.get("blockedHorses") or []),
+            }
         if isinstance(lock, dict):
             # Preserve the morning's original marks. Only an authenticated
             # official-condition change may supply a later pre-off revision.

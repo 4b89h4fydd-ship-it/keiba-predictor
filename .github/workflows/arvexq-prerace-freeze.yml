@@ -14,6 +14,7 @@ name: ARVEXQ Server Pre-Race Seal
       - arvexq/ui/static/morning/ticket_lane_classifier.js
       - arvexq/prediction/career_readiness.py
       - arvexq/prediction/final_marks.py
+      - tests/test_prerace_partial_career.py
       - arvexq/ingest/fallback_enrichment.py
       - arvexq/prediction/prerace_archive.py
       - .github/workflows/arvexq-prerace-freeze.yml
@@ -53,6 +54,7 @@ jobs:
         run: |
           node --check scripts/arvexq_capture_prerace_bet.js
           python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
+          python -m unittest discover -s tests -p 'test_prerace_partial_career.py' -v
           python -m unittest discover -s tests -p 'test_prerace_bet_recovery.py' -v
       - name: Seal upcoming races into Cloudflare D1
         run: PYTHONPATH=. python scripts/arvexq_freeze_predictions.py --audit prerace-freeze-report.json --ahead-minutes 35

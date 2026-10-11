@@ -44,6 +44,47 @@ def _plus_candidate(remaining_rows: list[dict[str, Any]]) -> dict[str, Any] | No
     return None
 
 
+
+def sufficiently_observed_partial_career(
+    detail: dict[str, Any], readiness: dict[str, Any]
+) -> bool:
+    """A high-coverage field may be forecast without calling ingestion complete.
+
+    This is not a whole-career verification: it only permits an explicitly
+    labelled pre-off provisional prediction if missing acquisition audits affect
+    at most two runners, with several dated, usable runs for each.
+    """
+    from arvexq.prediction.past_performance import observed_runs
+
+    if not isinstance(detail, dict) or detail.get("_entryOnly"):
+        return False
+    horses = [
+        h for h in (detail.get("horses") or [])
+        if isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0
+        and not h.get("scratched") and not h.get("withdrawn")
+        and not any(x in str(h.get("status") or "") for x in ("取消", "除外", "欠場"))
+    ]
+    total = len(horses)
+    complete = int(readiness.get("completeHorses") or 0)
+    blocked = readiness.get("blockedHorses") or []
+    if total < 5 or total != int(readiness.get("activeHorses") or 0):
+        return False
+    if complete < max(4, (4 * total + 4) // 5) or not 0 < len(blocked) <= 2:
+        return False
+    by_no = {int(h["horseNumber"]): h for h in horses}
+    for entry in blocked:
+        horse = by_no.get(int(entry.get("horseNumber") or 0))
+        if not horse or not str(horse.get("name") or "").strip():
+            return False
+        try:
+            runs = observed_runs(horse, detail, limit=None)
+        except (ValueError, TypeError, KeyError):
+            return False
+        if len(runs) < 3:
+            return False
+    return True
+
+
 def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     """Apply final marks and persist separate ARVEXQ decision heads.
 
@@ -58,7 +99,10 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
 
     attach_career_readiness(detail)
     horses = [h for h in (detail.get("horses") or []) if isinstance(h, dict)]
-    if not (detail.get("careerReadiness") or {}).get("ready"):
+    readiness = detail.get("careerReadiness") or {}
+    fully_verified = readiness.get("ready") is True
+    limited = not fully_verified and sufficiently_observed_partial_career(detail, readiness)
+    if not fully_verified and not limited:
         for horse in horses:
             evaluation = horse.get("integratedEvaluation")
             if isinstance(evaluation, dict):
@@ -68,7 +112,11 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         detail.pop("honmeiDecision", None)
         detail["predictionStatus"] = "waiting-for-full-career"
         return detail
-    detail["predictionStatus"] = "ready"
+    detail["predictionStatus"] = "partial-career-evidence" if limited else "ready"
+    if limited:
+        # Never set careerReadiness.ready=True or mark incomplete history complete.
+        readiness["predictionEligible"] = True
+        readiness["predictionEvidencePolicy"] = "80pct-verified-max2-unverified-min3-observed-v1"
     ranked_rows = rank_factor_model(horses, detail)
     if not ranked_rows:
         return detail
