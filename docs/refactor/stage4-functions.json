@@ -655,14 +655,16 @@
     "before": "app.py",
     "after": "arvexq/ingest/netkeiba/history.py",
     "dependencies": [
-      "_enrich_data",
-      "_enrich_data_lock",
-      "_enrich_jobs",
-      "_enrich_jobs_lock",
       "_netkeiba_db_horse_history"
     ],
     "ast_sha256": "2dda37332835275fbaa0baa5ad209f57fa38511ce551ac39399c3f16fe9ba4c3",
-    "original_lines": 33
+    "original_lines": 33,
+    "owned_state": [
+      "_enrich_data",
+      "_enrich_data_lock",
+      "_enrich_jobs",
+      "_enrich_jobs_lock"
+    ]
   },
   {
     "name": "_netkeiba_past_rows_fast",
@@ -997,5 +999,151 @@
     ],
     "ast_sha256": "dcd8d4eea865f38811b71e38ecc943a9290d0e1b04461db0e83274204a4e4ba4",
     "original_lines": 14
+  },
+  {
+    "name": "_fast_local_race_detail",
+    "before": "app.py",
+    "after": "arvexq/ingest/snapshots/local.py",
+    "dependencies": [
+      "CENTRAL_DB_PATH",
+      "DB_PATH",
+      "RACEDB",
+      "_new_conn"
+    ],
+    "owned_state": [],
+    "ast_sha256": "d1d3eff890ca589452c49dcd6e497cdc2ba8a3158a8e47215622024dd39363ed",
+    "original_lines": 77
+  },
+  {
+    "name": "_hydrate_fast_card_now",
+    "before": "app.py",
+    "after": "arvexq/ingest/snapshots/hydration.py",
+    "dependencies": [
+      "CENTRAL_DB_PATH",
+      "CentralStore",
+      "NarSync",
+      "RACEDB",
+      "_fast_local_race_detail",
+      "_history_counts",
+      "_jra_fetch_environment",
+      "_jra_find_cname",
+      "_jra_parse_race",
+      "_merge_current_card_fields",
+      "_merge_result_fields",
+      "_nar_official_card_rows_fast",
+      "_nar_official_result_fast",
+      "_nar_result_should_be_available",
+      "_netkeiba_card_rows_fast",
+      "_netkeiba_past_rows_fast",
+      "_new_conn",
+      "_now_jst",
+      "_start_race_history_search",
+      "_store_fast_snapshot",
+      "_today_iso"
+    ],
+    "owned_state": [
+      "_nar_sync_io_lock"
+    ],
+    "ast_sha256": "c1daf38ef2cf242c0f98f74d1798e7dbaea8d39b04f6234ea30b6c5323703d6e",
+    "original_lines": 98
+  },
+  {
+    "name": "_schedule_full_history_harvest",
+    "before": "app.py",
+    "after": "arvexq/ingest/history/harvest.py",
+    "dependencies": [
+      "NarStore",
+      "PREPARED_STORE",
+      "RACEDB",
+      "_attach_evaluation_context",
+      "_attach_stored_career",
+      "_jra_profile_runs",
+      "_precompute_detail_metrics",
+      "_today_iso"
+    ],
+    "owned_state": [
+      "_full_history_lock",
+      "_full_history_running"
+    ],
+    "ast_sha256": "f65f2bcff89c32f6d3cbb6d76d43dce8cd358ffe8e0cb8cbc975c1c0a5cbbf37",
+    "original_lines": 52
+  },
+  {
+    "name": "_enrichment_status",
+    "before": "app.py",
+    "after": "arvexq/ingest/supplemental/enrichment.py",
+    "dependencies": [],
+    "owned_state": [
+      "_enrich_jobs",
+      "_enrich_jobs_lock"
+    ],
+    "ast_sha256": "a5c521d39b274360989fbc435437d3f4a579e2b1651de3db830e630b085ff171",
+    "original_lines": 3
+  },
+  {
+    "name": "_start_enrichment",
+    "before": "app.py",
+    "after": "arvexq/ingest/supplemental/enrichment.py",
+    "dependencies": [
+      "PREPARED_STORE",
+      "RACEDB",
+      "_attach_evaluation_context",
+      "_attach_stored_career",
+      "_detail_cache",
+      "_detail_cache_lock",
+      "_enrichment_status",
+      "_fetch_extra_sources",
+      "_merge_enrichment",
+      "_netkeiba_detail_rows",
+      "_precompute_detail_metrics"
+    ],
+    "owned_state": [
+      "_enrich_data",
+      "_enrich_data_lock",
+      "_enrich_jobs",
+      "_enrich_jobs_lock"
+    ],
+    "ast_sha256": "c7c705015b6a5b035c4fa39f4e6835f90318df7d223f82014570ac53842f6dd8",
+    "original_lines": 60
+  },
+  {
+    "name": "_apply_enrichment",
+    "before": "app.py",
+    "after": "arvexq/ingest/supplemental/enrichment.py",
+    "dependencies": [
+      "_enrichment_status",
+      "_merge_enrichment"
+    ],
+    "owned_state": [
+      "_enrich_data",
+      "_enrich_data_lock"
+    ],
+    "ast_sha256": "9b27b87a055f9ff3ce538519f86e5c4e04c7cbfbcfceff0d3d07c71c4d085943",
+    "original_lines": 11
+  },
+  {
+    "name": "_refresh_result_fast",
+    "before": "app.py",
+    "after": "arvexq/ingest/snapshots/results.py",
+    "dependencies": [
+      "_attach_nar_payouts",
+      "_compact_display_snapshot",
+      "_fast_local_race_detail",
+      "_jra_find_cname",
+      "_jra_parse_result",
+      "_jra_result_cname_from_card",
+      "_merge_result_fields",
+      "_nar_official_result_fast",
+      "_netkeiba_current_result",
+      "_prepared_get_fresh",
+      "_race_should_have_result",
+      "_racedb_get_fast",
+      "_store_fast_snapshot",
+      "central_race_detail",
+      "nar_race_detail"
+    ],
+    "owned_state": [],
+    "ast_sha256": "5673ff60852f485f18ba403ea9322a54e8c5dff9ddafd72b8a6e0568aa0a8270",
+    "original_lines": 47
   }
 ]

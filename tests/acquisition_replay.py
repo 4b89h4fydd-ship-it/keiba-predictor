@@ -27,13 +27,15 @@ def caches(app):
     return [getattr(app, name) for name in sorted(names) if isinstance(getattr(app, name), dict)]
 
 
-def compare(app, name, args=(), *, responses=(), overrides=None, env=None, expected_error=None):
+def compare(app, name, args=(), *, responses=(), overrides=None, env=None, expected_error=None, setup=None, capture=None):
     """Compare return data, input mutations, cache state and exact HTTP requests."""
     outcomes = []
     cache_objects = caches(app)
     saved = [copy.deepcopy(c) for c in cache_objects]
     try:
         for original in (True, False):
+            if setup:
+                setup()
             for cache in cache_objects:
                 cache.clear()
             namespace = original_namespace(app) if original else vars(app)
@@ -56,7 +58,8 @@ def compare(app, name, args=(), *, responses=(), overrides=None, env=None, expec
                 except Exception as exc:
                     result = None
                     error = (type(exc).__name__, str(exc))
-            outcomes.append((result, values, calls, [copy.deepcopy(c) for c in cache_objects], error))
+            outcomes.append((result, values, calls, [copy.deepcopy(c) for c in cache_objects],
+                             copy.deepcopy(capture()) if capture else None, error))
         assert outcomes[0] == outcomes[1], f'{name}: acquisition output/request/cache mismatch'
         if expected_error:
             assert outcomes[1][-1][0] == expected_error

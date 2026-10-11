@@ -35,6 +35,7 @@
 |`arvexq/ingest/environment/parsers.py`|`_env_clean_weather`, `_env_clean_condition`, `_parse_nar_environment_html`, `_parse_jra_environment_html`|
 |`arvexq/ingest/environment/providers.py`|`_nar_fetch_environment`, `_jra_fetch_environment`|
 |`arvexq/ingest/environment/transport.py`|`_environment_http_get`|
+|`arvexq/ingest/history/harvest.py`|`_schedule_full_history_harvest`|
 |`arvexq/ingest/local/archive.py`|`sync_recent_history`, `_nar_month_needs_fetch`, `_download_nar_month_only`, `_sync_nar_month_wave`|
 |`arvexq/ingest/local/history.py`|`_history_counts`, `_start_race_history_search`, `_race_history_status`, `_nar_attach_recent_batch`|
 |`arvexq/ingest/local/odds.py`|`_parse_nar_live_odds_html`, `_nar_live_odds`, `_attach_nar_live_odds`|
@@ -48,6 +49,10 @@
 |`arvexq/ingest/netkeiba/results.py`|`_netkeiba_current_result`|
 |`arvexq/ingest/netkeiba/rows.py`|`_nk_row_horse_no`, `_nk_row_frame`, `_nk_row_horse`|
 |`arvexq/ingest/netkeiba/transport.py`|`_netkeiba_get`|
+|`arvexq/ingest/snapshots/hydration.py`|`_hydrate_fast_card_now`|
+|`arvexq/ingest/snapshots/local.py`|`_fast_local_race_detail`|
+|`arvexq/ingest/snapshots/results.py`|`_refresh_result_fast`|
+|`arvexq/ingest/supplemental/enrichment.py`|`_enrichment_status`, `_start_enrichment`, `_apply_enrichment`|
 |`arvexq/ingest/supplemental/feeds.py`|`_format_feed_url`, `_fetch_json_url`, `_extract_smartrc_embedded`, `_fetch_smartrc`, `_fetch_extra_sources`|
 
 関数単位の移動対応・依存は [stage4-functions.json](stage4-functions.json)。
@@ -68,6 +73,10 @@
 |環境通信|既定2.8秒、呼出元TTL、最大80件。JRA/NARのURLをキーとする現行共通環境キャッシュ。ネットワーク待ち中にキャッシュロックを保持しない。|
 |追加フィード|既存URL/token/timeoutと取得元単位の例外捕捉を維持。smartrcは600秒キャッシュ。|
 
+状態を分離したファイルは `central/jra/state.py`、`netkeiba/state.py`、
+`local/state.py`、`supplemental/state.py`、`environment/state.py`、`history/jobs.py`
+（すべて `arvexq/ingest/` 配下）。8つの追加パッケージディレクトリは
+実際の上記機能を持ち、各 `__init__.py` は副作用のないパッケージ説明だけを置く。
 状態は JRA、netkeiba、NAR、補完、環境の `state.py` が所有する。
 レース単位の履歴進捗は `ingest/history/jobs.py` で共有する。
 同一取得元のURLキャッシュ共有と、中央・地方をまとめたレース履歴ステータスは
@@ -84,10 +93,39 @@ timeout、キャッシュ内容を比較する。原本 app の起動やネッ�
 まだ旧ストアと保存基盤に依存する。互換入口が必要なportだけを渡す。
 バックグラウンド起動、API、予想固定、保存と取得の全体調整は段階的な改善対象として残る。
 
+- `_history_worker` と collector の起動・状態管理は app に残る。
+- `_data_core_refresh_race` / `_force_day_live_snapshot` は取得・保存・予想準備を調整する。直接HTTP取得は今回の分離先を呼ぶ。
+- 履歴取得は `prediction/career_readiness` と診断用の readiness helper に依存する。これは既存の取得終了判定を保つため。
+- `_start_enrichment` / `_schedule_full_history_harvest` は解析と保存の callback に依存する。保存基盤の実体化・トランザクション境界の整理は次の改善対象。
+- 既存の `legacy_stores.py`（525行）、`race_stores.py`（546行）、`legacy_evaluation.py`（719行）は変更していない。app 以外のUI・Workers・運用スクリプトの大型ファイルは今回の対象外。
+
 比較中、基準の `_nar_official_result_fast` が結果行の `last3f` を未定義のまま参照する
 既存不具合を検出した。移動後も同一の NameError を再現することを検証し、
 本PRでは結果計算の修正を混在させない。この直接取得経路の不具合修正は別変更の対象。
 
 ## 検証記録
 
-最終の行数、単体/API結合・ビルド・Actions の結果は作業完了時に追記する。
+|項目|結果|
+|---|---|
+|基準 app.py|6,441行|
+|分離後 app.py|4,105行（2,336行、36.3%削減）|
+|分離関数|90関数、移動元の本体2,843行|
+|取得機能モジュール|32ファイル、最大254行。追加したすべてのPythonモジュールは500行未満。|
+|app の既存定義|移動対象外の144関数・クラスはAST一致|
+|構文検証|`compileall app.py arvexq scripts tests` 成功|
+|全Python単体・結合|403成功、失敗0、既存非推奨警告13、114 subtests成功|
+|追加検証|90のAST/署名/port検証、31の通信・取得元別ケース、15のSQLite/API/全キャリア/障害分離ケース|
+|取得出力比較|固定応答による基準比較の不一致0（既存NAR結果エラーの一致を含む）|
+|予想計算・出力|31のJS計算式と中央・地方・新馬・障害の既存 golden 出力が一致|
+|静的ビルド|成功。基準と分離後の生成物214ファイルすべてSHA-256一致（ビルドログの70は直下の項目数）。|
+|既存ソース・保存履歴|app.pyとCI対象ブランチ設定2ファイルを除く基準の570ファイルがSHA-256一致。UI・発走前・朝の保存データを含む。|
+|段階1 GitHub Actions|[Validation成功](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/38114337097) / [Domain Refactor成功](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/38114338580)|
+
+[stage4-validation.json](stage4-validation.json) に行数・各機能モジュールの行数と比較件数を保存する。
+第2段階と最終HEADのCI結果はDraft PRのチェックと完了報告に記録する。
+
+GitHub Actionsの変更は、PR baseが`refactor/arvexq-domain-separation`でも
+既存の2つの検証workflowが動くようにする対象ブランチの追加だけ。
+main push条件と公開用workflowは変更しない。検証は外部サイト・本番キャッシュを使わず、
+Python/API、静的ビルド、予想・朝の選定・固定印・保存買い目、Chromium/WebKit画面回帰を実行する。
+外部取得元の当日の可用性はこのオフライン構造変更テストの判定対象ではない。

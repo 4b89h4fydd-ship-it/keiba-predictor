@@ -23,7 +23,7 @@ PAYOUT = '<table><tr><th>単勝</th><td>1</td><td>350円</td></tr></table>'
 
 
 @pytest.mark.parametrize('record', RECORDS, ids=lambda r: r['name'])
-def test_all_83_function_bodies_signatures_and_dependency_ports(record):
+def test_all_function_bodies_signatures_and_dependency_ports(record):
     original = next(n for n in BASELINE_TREE.body if n.name == record['name'])
     digest = hashlib.sha256(ast.dump(original, include_attributes=False).encode()).hexdigest()
     assert digest == record['ast_sha256']

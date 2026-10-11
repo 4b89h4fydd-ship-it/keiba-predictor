@@ -14,6 +14,12 @@ import re
 import time
 
 
+
+from arvexq.ingest.supplemental.state import _enrich_data
+from arvexq.ingest.supplemental.state import _enrich_data_lock
+from arvexq.ingest.supplemental.state import _enrich_jobs
+from arvexq.ingest.supplemental.state import _enrich_jobs_lock
+
 def _netkeiba_db_horse_history(name: str, cutoff: str, limit: int=5, *, _netkeiba_get) -> dict:
     """Fallback career lookup by horse name for sparse NAR histories.
 
@@ -93,7 +99,9 @@ def _netkeiba_db_horse_history(name: str, cutoff: str, limit: int=5, *, _netkeib
     return best
 
 
-def _supplement_sparse_nar_history(race_id: str, names: list[str], cutoff: str, *, _enrich_data, _enrich_data_lock, _enrich_jobs, _enrich_jobs_lock, _netkeiba_db_horse_history) -> int:
+
+
+def _supplement_sparse_nar_history(race_id: str, names: list[str], cutoff: str, *, _netkeiba_db_horse_history) -> int:
     if not names:return 0
     unique=list(dict.fromkeys([_clean(x) for x in names if _clean(x)]))
     workers=max(2,min(4,int(os.getenv("NETKEIBA_DB_HISTORY_WORKERS","4"))))

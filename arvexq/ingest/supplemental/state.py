@@ -8,3 +8,11 @@ import threading
 
 _smart_cache_lock=threading.Lock()
 _smart_cache:dict[str,tuple[float,dict]]={}
+
+_enrich_jobs_lock=threading.Lock()
+
+_enrich_jobs:dict[str,dict]={}
+
+_enrich_data_lock=threading.Lock()
+
+_enrich_data:dict[str,dict]={}
