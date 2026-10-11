@@ -100,3 +100,21 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible{outline:3px
 .boat-racer-metrics small{font-size:10px;color:#a9cddd}
 .boat-racer-metrics b{font-size:12px;color:#f0f9fd}
 @media(max-width:360px){.boat-racer-analysis summary{grid-template-columns:35px minmax(0,1fr) 37px;gap:5px}.boat-racer-analysis summary>span:last-child{display:none}}
+
+/* v359: compact subpage navigation, with date selectable in situ */
+.boat-page .boat-subheader.boat-subheader-dated{
+  position:relative;
+  display:grid;
+  grid-template-columns:39px minmax(0,1fr) minmax(105px,130px) 39px;
+  align-items:center;
+  gap:5px;
+  padding:8px 8px!important;
+  margin:0!important;
+  min-height:57px;
+}
+.boat-page .boat-subheader-dated h1{min-width:0;margin:0;font-size:clamp(14px,4vw,19px);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boat-page .boat-subheader-dated>button{min-width:37px;width:37px;height:40px;min-height:40px;padding:0}
+.boat-page .boat-subdate{display:flex;position:relative;align-items:center;justify-content:center;height:40px;min-width:0;padding:4px;border:1px solid #477894;border-radius:9px;color:#eef6ff;font-variant-numeric:tabular-nums;background:#152f44;font-size:12px;font-weight:700;white-space:nowrap}
+.boat-page .boat-subdate>input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2}
+.boat-page .boat-subheader-dated+section{margin-top:6px!important}
+@media(max-width:360px){.boat-page .boat-subheader.boat-subheader-dated{grid-template-columns:33px minmax(0,1fr) minmax(92px,112px) 33px;gap:3px;padding-inline:4px!important}.boat-page .boat-subheader-dated>button{width:32px;min-width:32px}.boat-page .boat-subdate{font-size:11px}}
