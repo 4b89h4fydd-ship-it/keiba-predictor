@@ -5005,8 +5005,9 @@ def _fast_card_worker():
         try:
             deep=priority<=10
             _hydrate_fast_card_now(race_id,deep_history=deep)
-            try:_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=deep)
-            except Exception as exc:print("fast diagnosis after card failed",race_id,exc)
+            if os.getenv("ARVEXQ_COLLECT_ONLY","0")!="1":
+                try:_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=deep)
+                except Exception as exc:print("fast diagnosis after card failed",race_id,exc)
         except Exception as exc:
             print("fast card worker failed",race_id,exc)
         finally:
@@ -5534,9 +5535,10 @@ def _racedb_get_fast(race_id:str)->dict|None:
     except Exception:return None
     if not detail or not _racedb_snapshot_usable(detail):return None
     if (detail.get("preparedMeta") or {}).get("fastPartial"):return detail
-    if (detail.get("aiEvaluation") or {}).get("version")!=AI_EVALUATION_VERSION:
-        detail=_precompute_detail_metrics(_strip_excluded(detail))
-    detail=_ensure_race_volatility(detail)
+    if os.getenv("ARVEXQ_COLLECT_ONLY","0")!="1":
+        if (detail.get("aiEvaluation") or {}).get("version")!=AI_EVALUATION_VERSION:
+            detail=_precompute_detail_metrics(_strip_excluded(detail))
+        detail=_ensure_race_volatility(detail)
     detail=_restore_saved_odds(detail)
     return detail
 
@@ -5957,8 +5959,9 @@ def _bootstrap_detail_local(race_id:str,force_hydrate:bool=False)->dict|None:
         if force_hydrate:_schedule_fast_card_refresh(race_id,5)
         return None
     d=_restore_saved_odds(d)
-    d=_ensure_race_volatility(d)
-    if force_hydrate and not _bootstrap_analysis_ready(d):_schedule_fast_card_refresh(race_id,8)
+    if os.getenv("ARVEXQ_COLLECT_ONLY","0")!="1":
+        d=_ensure_race_volatility(d)
+    if force_hydrate and os.getenv("ARVEXQ_COLLECT_ONLY","0")!="1" and not _bootstrap_analysis_ready(d):_schedule_fast_card_refresh(race_id,8)
     return _compact_display_snapshot(d)
 
 def _assemble_day_bundle(date:str,allow_network_fill:bool=False)->dict:
@@ -6011,8 +6014,9 @@ def _refresh_day_bundle(date:str,force_sources:bool=False,wait_for_complete:bool
         payload=_assemble_day_bundle(date,allow_network_fill=False)
         missing=list(payload.get("missing") or [])
         for rid in missing:_schedule_fast_card_refresh(rid,5)
-        for d in payload.get("details") or []:
-            if d and d.get("id") and not _bootstrap_analysis_ready(d):_schedule_fast_card_refresh(str(d.get("id")),12)
+        if os.getenv("ARVEXQ_COLLECT_ONLY","0")!="1":
+            for d in payload.get("details") or []:
+                if d and d.get("id") and not _bootstrap_analysis_ready(d):_schedule_fast_card_refresh(str(d.get("id")),12)
         try:DAY_BUNDLES.put(date,payload,bool(payload.get("displayComplete")))
         except Exception:pass
         with _site_bootstrap_lock:
