@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {allBoatRaces} from "../arvexq/ui/static/sports/boat-app/features/all-races.js";
+import {raceList} from "../arvexq/ui/static/sports/boat-app/features/races.js";
 const date="2026-10-12",now=new Date("2026-10-12T09:45:00+09:00");
 const day={date,verifiedAt:"2026-10-12T09:00:00+09:00",races:[
  {id:"boat-"+date+"-桐生-01",venue:"桐生",raceNo:1,closeAt:"2026-10-12T09:50:00+09:00",closeTime:"09:50"},
@@ -25,4 +26,12 @@ const empty=allBoatRaces({date,races:[]},{now});
 assert.ok(empty.includes("未取得"));
 assert.ok(!empty.includes('data-race="'));
 assert.ok(!empty.includes('data-venue="'));
+// The venue page must have three direct grid children, never a fourth
+// forecast label which creates a phantom second row on mobile.
+const venueRaceHtml=raceList({races:[{
+  id:"boat-"+date+"-桐生-01",venue:"桐生",raceNo:1,
+  title:"予選",closeTime:"10:30"
+}]}, "桐生");
+assert.ok(venueRaceHtml.includes('<span><b>予選</b><em class="pending">分析待ち</em></span><small>10:30</small>'));
+assert.ok(!venueRaceHtml.includes('</small><em'));
 console.log("BOAT_ALL_RACES_OK");
