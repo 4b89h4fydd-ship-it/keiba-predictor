@@ -583,9 +583,9 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
         try:
             # Explicitly disables the previous deep network fallback.
             predicted, err = _ensure_analysis(rid, fact, allow_deep=False)
-            if predicted and _analysis_ready(predicted):
+            final = _decorate(_merge_detail(fact, predicted)) if isinstance(predicted, dict) else fact
+            if _analysis_ready(final):
                 # Observed D1 runner identities and all prior history are immutable.
-                final = _merge_detail(fact, predicted)
                 after = verify_persisted_facts(
                     {"summaries": [row], "details": [fact]},
                     {"races": [row], "details": [final]},
@@ -594,7 +594,7 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
                     errors[rid] = "diagnosis modified saved facts: " + ";".join(after[:3])
                     analyzed[rid] = fact
                 else:
-                    analyzed[rid] = _decorate(final)
+                    analyzed[rid] = final
                     if err:
                         print("PERSISTED_DIAGNOSIS_WARN", rid, err)
             else:
@@ -613,7 +613,11 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
             "race_count": len(rows),
             "detail_count": len(analyzed),
             "analysis_count": sum(1 for x in analyzed.values() if _analysis_ready(x)),
+            "missing_card_count": sum(1 for rid in errors if errors[rid].startswith("saved D1")),
+            "missing_analysis_count": len(errors),
             "analysis_missing_count": len(errors),
+            "display_complete": len(analyzed) == len(rows) and all(_card_usable(x) for x in analyzed.values()),
+            "analysis_complete": bool(rows) and not errors,
         },
     }
     _write(payload_path, payload)
@@ -623,6 +627,8 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
         "analysis_ready": payload["meta"]["analysis_count"],
         "unchanged": skipped,
         "analysis_errors": errors,
+        "card_errors": {},
+        "missing_analysis": sorted(errors),
         "missing_card": [rid for rid in errors if errors[rid].startswith("saved D1")],
     })
     print("PERSISTED_D1_ANALYSIS", "races=",len(rows),
