@@ -33,11 +33,7 @@ function loadingNote(){return state.error?
   state.loading?'<div class="boat-notice" role="status">競艇データを確認しています…</div>':
   !(state.day&&state.day.verifiedAt)?'<div class="boat-notice" role="status">競艇データは現在未接続です。未確認の出走表・予想印・買い目は表示しません。</div>':"";
 }
-function navBar(){
-  return '<div class="boat-page-head"><span class="boat-kicker">ARVEXQ / BOAT RACING</span><div class="boat-page-actions">'+
-    '<label class="boat-date">開催日 <input type="date" id="boat-date" value="'+esc(state.date)+'"></label>'+
-    '<button type="button" data-action="refresh" aria-label="競艇データを更新">↻</button></div></div>';
-}
+// Subpages have one shared title/date/close row; the old kicker/refresh bar is removed.
 function home(){
   const day=state.day||emptyDay(),shared=window.ARVEXQUnifiedHome;
   const hero=shared?shared.hero():'<div class="arv-unified-hero"></div>';
@@ -46,8 +42,11 @@ function home(){
   return hero+'<div class="arv-unified-body">'+date+actions+allBoatRaces(day)+'</div>';
 }
 function subheader(title,back="home"){
-  return '<div class="boat-subheader"><button type="button" data-back="'+back+'" aria-label="戻る">‹</button>'+
-    '<h1>'+esc(title)+'</h1><button type="button" data-view="home" aria-label="トップへ戻る">×</button></div>';
+  const label=title.replace(/^本日の/,"").replace(/^当日の/,"");
+  return '<div class="boat-subheader boat-subheader-dated"><button type="button" data-back="'+back+'" aria-label="戻る">‹</button>'+
+    '<h1>'+esc(label)+'</h1><label class="boat-subdate" aria-label="表示日を選択"><span>'+esc(state.date.replace(/-/g,"/"))+
+    '</span><input type="date" id="boat-date" value="'+esc(state.date)+'" aria-label="表示日を選択"></label>'+
+    '<button type="button" data-view="home" aria-label="トップへ戻る">×</button></div>';
 }
 function body(){
   const day=state.day||emptyDay(),venue=state.venue;
@@ -68,8 +67,9 @@ function body(){
 }
 function draw(){
   if(!root)return;
-  root.innerHTML='<div class="boat-shell">'+(state.view==='home'?'':navBar()+loadingNote())+
-    '<main class="boat-main">'+body()+'</main><footer class="boat-footer">ARVEXQ | BOAT INTELLIGENCE</footer></div>';
+  root.innerHTML='<div class="boat-shell"><main class="boat-main">'+body()+
+    (state.view==='home'?'':loadingNote())+
+    '</main><footer class="boat-footer">ARVEXQ | BOAT INTELLIGENCE</footer></div>';
 }
 async function refresh(){
   const request=++state.request;state.loading=true;state.error="";draw();
@@ -101,7 +101,8 @@ if(root){
   });
   root.addEventListener("change",event=>{
     if((event.target.id==="boat-date"||event.target.id==="date")&&/^\d{4}-\d{2}-\d{2}$/.test(event.target.value)){
-      state.date=event.target.value;route("home");refresh();
+      const keep=["selected","special","stats"].includes(state.view)?state.view:"home";
+      state.date=event.target.value;route(keep);refresh();
     }
   });
   window.addEventListener("popstate",()=>{routeFromUrl();refresh()});
