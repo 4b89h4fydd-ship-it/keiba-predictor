@@ -9,8 +9,13 @@ function composeThreeWayBetPolicy(base,r,p,deps){
       selected=!!(base.selectionAudit&&base.selectionAudit.selected),
       // A qualifying reference race need not be an elite morning selection.
       purchaseQualified=selected||base.referenceOnly===true,
-      ready=g.ready===true&&purchaseQualified,hasHonmei=rows.some(z=>z.predMark==='◎'),
-      stamp='arvexq-three-way-v346',
+      ready=g.ready===true&&purchaseQualified,
+      honmei=rows.find(z=>z.predMark==='◎')||null,
+      honmeiNo=honmei?n(honmei.horse.horseNumber):0,
+      honmeiGrade=honmei&&['A','B','C'].includes(honmei.honmeiGrade)?honmei.honmeiGrade:'C',
+      honmeiRole=honmei&&honmei.honmeiRole==='win'?'win':'axis',
+      hasHonmei=!!honmei,fixedAxis=hasHonmei&&honmeiGrade!=='C',
+      stamp='arvexq-three-way-v347',
       reason=ready?'':(!g.ready?'発走前データの購入条件未達':'券種別の独立したモデル品質条件未達');
   result.engineVersion=stamp;
   result.referenceOnly=!!base.referenceOnly;
@@ -24,7 +29,11 @@ function composeThreeWayBetPolicy(base,r,p,deps){
   result.expectedValueReason='券種別の実配当オッズと検証済み着順確率が揃わないため、期待値・回収率は算出しません。';
   result.roleMeaning={first:'独立1着予測と展開AI',second:'1着馬を除く条件付き2着予測',third:'1・2着馬を除く条件付き3着予測'};
   result.items=[];
-  result.noAxis=!hasHonmei;
+  result.noAxis=!fixedAxis;
+  result.honmei={horseNumber:honmeiNo,role:hasHonmei?honmeiRole:'none',
+    grade:hasHonmei?honmeiGrade:'',fixedAxis:fixedAxis,
+    roleLabel:!hasHonmei?'◎未確定':honmeiRole==='win'?'1着向き':'3着内の軸向き'};
+
   result.dataMissing=Array.isArray(g.missing)?g.missing.slice():[];
   result.dataStatus=g.ready===true?'ready':'insufficient-preoff-evidence';
   if(rows.length<4){
@@ -108,7 +117,9 @@ function composeThreeWayBetPolicy(base,r,p,deps){
   }
   var ctx={ready:ready,trifectaReady:!!g.trifectaReady,
      winClear:winClear,order:order,lists:lists,top:top,fieldSize:rows.length,
-     runner:runner,top12:top12,top24:top24,ordered:ordered,p1:p1,add:add,hasHonmei:hasHonmei,
+     runner:runner,top12:top12,top24:top24,ordered:ordered,p1:p1,add:add,
+     hasHonmei:hasHonmei,fixedAxis:fixedAxis,axisNo:honmeiNo,
+     axisRole:honmeiRole,axisGrade:honmeiGrade,
      result:result,reason:reason};
   global.ARVEXQBetStrategies.main(ctx);
   ctx.triAllowed=global.ARVEXQBetStrategies.trifecta(ctx);
@@ -128,5 +139,5 @@ function composeThreeWayBetPolicy(base,r,p,deps){
   result.betStrategy=stamp;
   return result
 }
-global.ARVEXQThreeWayBet=Object.freeze({compose:composeThreeWayBetPolicy,version:'arvexq-three-way-v346'});
+global.ARVEXQThreeWayBet=Object.freeze({compose:composeThreeWayBetPolicy,version:'arvexq-three-way-v347'});
 })(window);
