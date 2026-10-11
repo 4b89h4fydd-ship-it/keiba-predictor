@@ -151,12 +151,16 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
     def test_official_d1_day_exists_before_heavy_prefetch(self) -> None:
         workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
         early = workflow.index("Publish official day summaries before heavy prediction work")
-        heavy = workflow.index("Precompute all race cards and analysis")
+        collect = workflow.index("Collect racecards and full careers without running predictions")
+        heavy = workflow.index("Analyze only persisted D1 data")
         cold = workflow.index("D1_EARLY_SUMMARIES_WRITE")
         verify = workflow.index("D1_EARLY_SUMMARIES_VERIFY")
+        persist = workflow.index("D1_STORED_EVIDENCE_VERIFIED")
         self.assertLess(early, cold)
         self.assertLess(cold, verify)
-        self.assertLess(verify, heavy)
+        self.assertLess(verify, collect)
+        self.assertLess(collect, persist)
+        self.assertLess(persist, heavy)
         self.assertIn("--file initial-day-summaries.json", workflow)
         self.assertIn("D1_EARLY_SUMMARIES_INCOMPLETE", workflow)
         self.assertEqual(workflow.count("arvexq-cold-start-race-summaries-v1"), 1,
