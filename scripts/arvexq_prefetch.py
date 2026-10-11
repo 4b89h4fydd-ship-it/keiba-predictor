@@ -538,7 +538,7 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
     No racecard/history source is called by this stage. Missing facts stay
     missing and are never turned into fake zero-valued ability marks.
     """
-    from arvexq.pipeline.persisted_inputs import verify_persisted_facts
+    from arvexq.pipeline.persisted_inputs import verify_persisted_facts, may_create_prerace_prediction
     day = _read(bundle_path)
     rows = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id")]
     details = {str(d["id"]): d for d in (day.get("details") or [])
@@ -563,6 +563,10 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
         if _analysis_current(fact):
             analyzed[rid] = fact
             skipped.append(rid)
+            continue
+        if not may_create_prerace_prediction(fact):
+            analyzed[rid] = fact
+            errors[rid] = "scheduled off passed: no new retrospective pre-race prediction"
             continue
         # Seed just the independently verified D1 detail. Do not call
         # _prepare_race_snapshot or any provider to fill an empty D1 race.
