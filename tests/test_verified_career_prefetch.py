@@ -95,6 +95,42 @@ class VerifiedCareerTests(unittest.TestCase):
         self.assertEqual(len(actual["allPastRuns"]),5)
         self.assertFalse(audit_career({"name":NAME,**actual},RACE["date"],5,[nk.SOURCE])["complete"])
 
+    def test_existing_provider_retry_once_for_transient_http_failure(self):
+        from arvexq.ingest.orchestrator import fetch_domain
+        import asyncio
+        attempts = []
+        def temporarily_unavailable(horse, race, limit):
+            attempts.append(limit)
+            if len(attempts) == 1:
+                raise TimeoutError("provider 503 timeout")
+            return {"recentRaces": [{"date": "2026-09-01", "finish": 2}]}
+        reg=DataBankRegistry()
+        reg.register(DataSource(name="existing",circuit="NAR",priority=10,
+            capabilities=SourceCapabilities(horse_history=True),
+            fetchers={"horse_history":temporarily_unavailable}))
+        results=asyncio.run(fetch_domain("horse_history",
+            {"horseNumber":1},RACE,100,circuit="NAR",bank_registry=reg))
+        self.assertTrue(results[0].ok)
+        self.assertEqual(len(attempts),2)
+        self.assertEqual(results[0].data["recentRaces"][0]["finish"],2)
+
+    def test_existing_provider_does_not_retry_invalid_or_empty_history(self):
+        from arvexq.ingest.orchestrator import fetch_domain
+        import asyncio
+        calls=[]
+        def empty_history(horse, race, limit):
+            calls.append(1)
+            return {}
+        reg=DataBankRegistry()
+        reg.register(DataSource(name="existing",circuit="NAR",priority=10,
+            capabilities=SourceCapabilities(horse_history=True),
+            fetchers={"horse_history":empty_history}))
+        results=asyncio.run(fetch_domain("horse_history",
+            {"horseNumber":1},RACE,100,circuit="NAR",bank_registry=reg))
+        self.assertTrue(results[0].ok)
+        self.assertEqual(len(calls),1)
+        self.assertEqual(results[0].data,{})
+
     def test_prefetch_pipeline_preserves_fixed_prediction_and_bets(self):
         rows=[{"date":f"2026-08-{i:02d}","track":"大井","distance":1200,
                "finish":2,"fieldSize":12} for i in range(1,7)]
