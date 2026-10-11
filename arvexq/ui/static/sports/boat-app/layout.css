@@ -53,3 +53,6 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible{outline:3px
 .boat-footer{text-align:center;font-size:10px;color:#8ba6b8;margin:5px 0 20px}
 @media(max-width:440px){.boat-home-actions button strong{font-size:12px}.boat-home-actions button small{font-size:9px}.boat-main{padding:9px 8px 22px}.boat-panel{padding:11px}.boat-date input{width:106px}.boat-kicker{font-size:9px}}
 @media(max-width:360px){.boat-home-actions{gap:4px}.boat-home-actions button{min-height:85px}.boat-home-actions button strong{font-size:11px}.boat-venue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.boat-page-head{padding-inline:8px}.boat-date input{width:93px}.boat-stat-grid strong{font-size:14px}}
+
+/* Start exhibition is independent of the final betting and marks modules. */
+.boat-start-grid{display:grid;gap:5px}.boat-start-head,.boat-start-row{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;text-align:center}.boat-start-head{background:#15354a;color:#a8d7e9;font-size:11px}.boat-start-row{background:#233c4a;border:1px solid #446675;font-size:13px}.boat-start-row .boat-no{justify-self:center}.boat-start-row strong{font-size:19px;letter-spacing:.02em}.boat-start-row strong.boat-st-f{color:#ff9696}
