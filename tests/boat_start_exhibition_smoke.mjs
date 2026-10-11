@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import {validStartExhibition} from "../arvexq/ui/static/sports/boat-app/core/start-exhibition.js";
+import {startExhibitionPanel} from "../arvexq/ui/static/sports/boat-app/features/start-exhibition.js";
+const rows=[1,2,3,4,5,6].map(n=>({boatNo:n,course:n,st:n===2?"F.03":n===4?".00":".12"}));
+const x={startExhibition:{verified:true,source:"BOATRACE公式",observedAt:"2026-10-11T14:08:00+09:00",rows}};
+assert.equal(validStartExhibition(x).rows[1].st,"F.03");
+assert.ok(startExhibitionPanel(x).includes("F.03"));
+assert.ok(startExhibitionPanel(x).includes("進入"));
+assert.equal(validStartExhibition({startExhibition:{...x.startExhibition,rows:[...rows.slice(0,5),{...rows[5],course:1}]}}),null);
+assert.equal(validStartExhibition({startExhibition:{...x.startExhibition,verified:false}}),null);
+assert.equal(validStartExhibition({startExhibition:{...x.startExhibition,rows:rows.map(z=>({...z,st:"bad"}))}}),null);
+assert.ok(startExhibitionPanel({}).includes("未取得"));
+console.log("BOAT_START_EXHIBITION_OK");
