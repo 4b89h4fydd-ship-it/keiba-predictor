@@ -23,10 +23,31 @@
     var out=Object.assign({},r,{horses:horses,fieldSize:horses.length});
     if(changed)out._rosterIdentityError=true;
     var known=new Map(card.horses.map(function(h){return [h.horseNumber,name(h.name)]}));
-    if(out.result&&Array.isArray(out.result.finishers)&&out.result.finishers.some(function(h){
-      return !known.has(Number(h.horseNumber))||!h.name||known.get(Number(h.horseNumber))!==name(h.name);
-    })){
-      delete out.result;out._resultIdentityError=true;
+    if(out.result&&Array.isArray(out.result.finishers)){
+      // Official race results may contain horseNumber and finish but omit
+      // the horse's name. A verified racecard makes that row identifiable.
+      // Never discard the whole result because ONE name is absent.
+      var verified=[],rejected=0;
+      out.result.finishers.forEach(function(row){
+        if(!row||typeof row!=='object'){rejected++;return}
+        var number=Number(row.horseNumber),trusted=known.get(number);
+        if(!trusted||(name(row.name)&&trusted!==name(row.name))){
+          rejected++;return
+        }
+        verified.push(name(row.name)?row:Object.assign({},row,{name:card.horses.find(function(h){return Number(h.horseNumber)===number}).name}))
+      });
+      if(rejected){
+        var fresh=Object.assign({},out.result,{finishers:verified});
+        // Never label a partially quarantined result final or show unverified
+        // payouts. Preserve all correctly matched finishers for display.
+        fresh.status='速報';
+        delete fresh.payouts;
+        out.result=fresh;
+        out._resultIdentityError=true;
+        out._resultIdentityRejectedCount=rejected;
+      }else if(verified.length){
+        out.result=Object.assign({},out.result,{finishers:verified})
+      }
     }
     return out;
   }
