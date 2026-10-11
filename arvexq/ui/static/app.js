@@ -2133,6 +2133,39 @@ function mergeHorseReflection(oldH,newH,liveH){
   if(liveH.horseNumber)out.horseNumber=liveH.horseNumber;
   return out
 }
+// Result updates can be sparse: newer racecard/poll payloads must not erase
+// already verified finishers, payout rows, or a final status.
+function mergePublishedResult(oldResult,newResult){
+  var prev=oldResult&&typeof oldResult==='object'?oldResult:{},
+      next=newResult&&typeof newResult==='object'?newResult:{};
+  if(!reflectUseful(next))return prev;
+  var out=Object.assign({},prev),
+      priorFinal=String(prev.status||'')==='確定',newFinal=String(next.status||'')==='確定';
+  Object.keys(next).forEach(function(k){
+    if(k==='status'||k==='finishers'||k==='payouts')return;
+    if(reflectUseful(next[k]))out[k]=next[k]
+  });
+  var oldFs=Array.isArray(prev.finishers)?prev.finishers:[],
+      freshFs=Array.isArray(next.finishers)?next.finishers:[],
+      oldRanked=oldFs.filter(function(x){return x&&n(x.finish)>0}).length,
+      newRanked=freshFs.filter(function(x){return x&&n(x.finish)>0}).length;
+  if(freshFs.length&&(newRanked>=oldRanked)&&(!priorFinal||newFinal)){
+    var oldBy={};
+    oldFs.forEach(function(x){if(x&&n(x.horseNumber)>0)oldBy[n(x.horseNumber)]=x});
+    out.finishers=freshFs.map(function(x){
+      var merged=Object.assign({},oldBy[n(x&&x.horseNumber)]||{});
+      Object.keys(x||{}).forEach(function(k){if(reflectUseful(x[k]))merged[k]=x[k]});
+      return merged
+    });
+  }
+  if(Array.isArray(next.payouts)&&next.payouts.length){
+    var oldPay=Array.isArray(prev.payouts)?prev.payouts:[];
+    if(next.payouts.length>=oldPay.length)out.payouts=next.payouts
+  }
+  if(newFinal)out.status='確定';
+  else if(!priorFinal&&reflectUseful(next.status))out.status=next.status;
+  return out
+}
 function mergeRaceReflection(base,incoming,oddsRows,summary){
   base=base||{};incoming=incoming||{};summary=summary||{};
   var out=Object.assign({},base);
@@ -2146,10 +2179,8 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
     if(key==='horses'||key==='result')return;
     if(reflectUseful(v))out[key]=v
   });
-  var oldResult=base.result||{},newResult=incoming.result||{};
-  var oldFinish=(oldResult.finishers||[]).length,newFinish=(newResult.finishers||[]).length;
-  if(newFinish>=oldFinish&&reflectUseful(newResult))out.result=newResult;
-  else if(reflectUseful(oldResult))out.result=oldResult;
+  var combinedResult=mergePublishedResult(base.result,incoming.result);
+  if(reflectUseful(combinedResult))out.result=combinedResult;
   var oldBy={},newBy={},liveBy={},order=[];
   (base.horses||[]).forEach(function(h){var no=n(h&&h.horseNumber,0);if(no){oldBy[no]=h;order.push(no)}});
   (incoming.horses||[]).forEach(function(h){var no=n(h&&h.horseNumber,0);if(no){newBy[no]=h;if(order.indexOf(no)<0)order.push(no)}});
