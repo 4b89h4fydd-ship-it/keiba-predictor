@@ -56,7 +56,7 @@ export function predictionMarks(outcomes,{calibrated=false}={}){
   const m=marginalProbabilities(outcomes);
   const rank=[...m].sort((a,b)=>(.55*b.win+.45*b.top3/3)-(.55*a.win+.45*a.top3/3));
   const winner=[...m].sort((a,b)=>b.win-a.win)[0],axis=[...m].sort((a,b)=>b.top3-a.top3)[0];
-  const symbols=["◎","○","▲","☆","△","注"],marks={};
+  const symbols=["◎","○","▲","☆","△","—"],marks={}; // 注は特別な警戒根拠を確認した場合のみ
   for(const row of rank){
     const priority=rank.indexOf(row),role=row.boatNo===winner.boatNo&&row.boatNo===axis.boatNo?"both":
       row.boatNo===winner.boatNo?"win":row.boatNo===axis.boatNo?"axis":"none";
