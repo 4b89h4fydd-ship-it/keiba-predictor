@@ -38,7 +38,6 @@ from arvexq.prediction.prerace_archive import post_at
 
 JST = timezone(timedelta(hours=9))
 D1_BASE = os.getenv("CLOUDFLARE_API_BASE", "https://kraiz-api.4b89h4fydd.workers.dev").rstrip("/")
-TERMINAL = {"中止", "取止", "取消", "不成立"}
 LIVE_HORSE_FIELDS = (
     "winOdds", "popularity", "bodyWeight", "bodyWeightChange",
     "status", "scratched", "oddsSource", "oddsForecast",
@@ -63,19 +62,6 @@ def start_min(row: dict[str, Any]) -> int:
         return int(h) * 60 + int(m[:2])
     except Exception:
         return 9999
-
-
-def terminal(detail: dict[str, Any] | None) -> bool:
-    result = (detail or {}).get("result") or {}
-    status = str(result.get("status") or "")
-    if status in TERMINAL:
-        return True
-    ranks = {
-        int(x.get("finish") or 0)
-        for x in (result.get("finishers") or [])
-        if isinstance(x, dict)
-    }
-    return status == "確定" and all(x in ranks for x in (1, 2, 3))
 
 
 def snapshot(rid: str) -> dict[str, Any] | None:
@@ -472,15 +458,10 @@ def refresh_one(
         except Exception as exc:
             errors.append("analysis:" + str(exc))
 
-    reference = merge_live(base, fresh, market, env_analysis_changed or market_analysis_changed) or base or fresh
-    if sm < 9999 and now_min >= sm + 2 and not terminal(reference):
-        try:
-            result_detail = app._refresh_result_fast(rid)
-            if isinstance(result_detail, dict):
-                fresh = result_detail
-        except Exception as exc:
-            errors.append("result:" + str(exc))
-
+    # All official result/payout source polling belongs to
+    # scripts/arvexq_result_repair.py. Realtime Sync only merges market,
+    # official scratches and pre-post environment/diagnosis deltas. Existing
+    # result fields in its D1 base are preserved by merge_live(), not refetched.
     analysis_changed = bool(env_analysis_changed or market_analysis_changed)
     merged = merge_live(base, fresh or snapshot(rid), market, analysis_changed)
     if merged and pre_post and official_condition:
