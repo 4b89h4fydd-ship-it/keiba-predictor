@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from threading import local
 
 from .jra import build_jra_source
 from .nar import build_nar_source
@@ -45,12 +46,18 @@ def _nar_store_adapters(namespace: dict[str, Any]):
     store_cls = namespace.get("NarStore")
     if not callable(store_cls):
         return None, None
-    holder: dict[str, Any] = {}
+    # Synchronous providers are called through asyncio.to_thread from several
+    # race and horse workers. A shared sqlite3.Connection is bound to its
+    # creator thread and fails on any later worker (ProgrammingError).
+    # Keep each worker's NarStore private; never disable SQLite thread checks.
+    holder = local()
 
     def store():
-        if "value" not in holder:
-            holder["value"] = store_cls()
-        return holder["value"]
+        value = getattr(holder, "value", None)
+        if value is None:
+            value = store_cls()
+            holder.value = value
+        return value
 
     def history(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
         name = str(horse.get("name") or "").strip()
