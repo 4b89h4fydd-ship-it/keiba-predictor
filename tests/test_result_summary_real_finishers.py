@@ -32,8 +32,13 @@ class RealResultSummaries(unittest.TestCase):
         self.assertEqual(summary[0]["result"]["finishers"][0]["name"],"馬3")
 
     def test_no_synthetic_podium_in_jra_summary(self):
-        text=Path("app.py").read_text(encoding="utf-8")
-        self.assertNotIn('[{"finish":1}]',text)
+        # Audit only the JRA summary function; an explanatory comment in the
+        # unrelated NAR function may legitimately quote a bad placeholder.
+        import inspect
+        import app
+        source=inspect.getsource(app.central_race_summaries)
+        self.assertNotIn('[{"finish":1}]',source)
+        self.assertIn('res.get("finishers") or []',source)
 
 
 if __name__=="__main__":
