@@ -33,7 +33,7 @@ export function usableForecast(race){
 export function selectedRace(race){
   const s=race&&race.selection;
   return !!(usableForecast(race)&&s&&s.approved===true&&
-    beforeOff(s.lockedAt,race.closeAt)&&s.snapshotAt===race.forecast.snapshotAt);
+    beforeOff(s.lockedAt,race.closeAt)&&Date.parse(s.lockedAt)<=Date.parse(race.forecast.snapshotAt));
 }
 export function parseDay(raw,day){
   if(!raw||raw.version!=="arvexq-boat-day-v1"||raw.date!==day||raw.verified!==true||
