@@ -12,6 +12,7 @@ on:
       - 'app.py'
       - 'scripts/arvexq_webapp_race_smoke.js'
       - 'scripts/arvexq_recovery_production_smoke.js'
+      - 'scripts/arvexq_web_odds_fallback_smoke.mjs'
       - 'scripts/arvexq_bet_mobile_layout_smoke.js'
       - 'scripts/arvexq_detail_resilience_smoke.js'
       - '.github/workflows/arvexq-webapp-race-smoke.yml'
@@ -36,6 +37,7 @@ jobs:
         shell: bash
         run: |
           node --check arvexq/ui/static/app.js
+          node scripts/arvexq_web_odds_fallback_smoke.mjs
           python -m py_compile build_static.py
           python build_static.py
           BUILD="$(tr -d '\r\n' < dist/build-version.txt)"

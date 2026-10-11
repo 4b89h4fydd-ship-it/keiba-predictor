@@ -30,7 +30,10 @@ export default {
           if(body)return Response.json(body,{headers:{'Cache-Control':'no-store'}});
         }catch{}
       }
-      return Response.json({ok:false,error:'official odds unavailable',odds:[]},{status:503,headers:{'Cache-Control':'no-store'}});
+      // For a verified race, source unavailability is data missingness, not an invalid page.
+       // Keep 'ok:false' and empty odds: never invent a price or suppress the failure.
+       return Response.json(source?{ok:false,race_id:source.id,odds:[],oddsStatus:'unavailable',refreshFailed:true,error:'official odds unavailable'}:{ok:false,error:'official odds source manifest unavailable',odds:[]},
+         {status:source?200:503,headers:{'Cache-Control':'no-store'}});
     }
   }
 };
