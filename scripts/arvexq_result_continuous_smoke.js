@@ -12,6 +12,12 @@ const useful=v=>v!==null&&v!==undefined&&v!==''&&
  (!Array.isArray(v)||v.length>0)&&
  (typeof v!=='object'||Array.isArray(v)||Object.keys(v).length>0);
 const n=(v,d=0)=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))?Number(v):d;
+const readyAt=app.indexOf('function hasResultData('),readyEnd=app.indexOf('\nfunction mins(',readyAt);
+assert.ok(readyAt>0&&readyEnd>readyAt,'podium readiness must be extracted');
+const readiness=new Function('n',app.slice(readyAt,readyEnd)+';return hasResultData;')(n);
+assert.equal(readiness({result:{finishers:[{finish:1},{finish:1},{finish:3}]}}),true,'dead heat for 1st still includes three podium runners');
+assert.equal(readiness({result:{finishers:[{finish:1},{finish:2},{finish:2}]}}),true,'dead heat for 2nd still includes three podium runners');
+assert.equal(readiness({result:{finishers:[{finish:1},{finish:2}]}}),false,'two names is not a full podium');
 const a=app.indexOf('function mergePublishedResult('),b=app.indexOf('function mergeRaceReflection(',a);
 assert.ok(a>0&&b>a,'result merge is an independent function');
 const merge=new Function('reflectUseful','n',app.slice(a,b)+';return mergePublishedResult;')(useful,n);
