@@ -275,7 +275,10 @@ jobs:
               raise SystemExit('workflow failure output is too verbose')
 
           if '[:24]' in repair:raise SystemExit('result repair must not cap pending results at 24')
-          prefetch_required=['_build_fast_diagnosis_snapshot(','allow_network=True','deep_context=True','_merge_detail(','memory-authoritative']
+          prefetch_required=['_build_fast_diagnosis_snapshot(','allow_network=False','deep_context=False',
+                             '_merge_detail(','def analyze_persisted(', 'choices=("collect", "analyze")']
+          if 'allow_network=True' in prefetch or 'deep_context=True' in prefetch or 'phase == "all"' in prefetch:
+              raise SystemExit('legacy combined or network-based AI path must not exist')
           missing=[x for x in prefetch_required if x not in prefetch]
           if missing:raise SystemExit('prefetch must explicitly materialize and retain diagnosis: '+repr(missing))
           workflow_required=['--phase\', \'collect','--phase\', \'analyze','persisted-facts.json','D1_STORED_EVIDENCE_VERIFIED','D1_MISSING_CARDS','ARVEXQ_PREFETCH_WORKERS: "1"','ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "1"','Validate restored SQLite cache','Stop bootstrap server to release SQLite writers','arvexq_sqlite_health.py']
