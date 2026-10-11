@@ -95,10 +95,15 @@ def restore_seal(
     if has_valid_original(prior, race_id=race_id, start_at=start):
         # First successful, provenance-checked original always wins.
         out["preRaceBet"] = copy.deepcopy(prior)
-    elif start is not None and clock < start and has_valid_original(
-        proposed, race_id=race_id, start_at=start
+    elif (
+        (not isinstance(prior, dict)
+         or prior.get("captureStatus") in ("failed", "engine-missing")
+         or str(prior.get("decision") or "") in ("未取得", "エラー"))
+        and start is not None and clock < start
+        and has_valid_original(proposed, race_id=race_id, start_at=start)
     ):
-        # Recovery is allowed only before off. Do not turn errors into skips.
+        # Recover a missing/failed original only. An older legacy fixed ticket
+        # with incomplete metadata is protected, not silently superseded.
         out["preRaceBet"] = copy.deepcopy(proposed)
     elif isinstance(prior, dict):
         # Retain the historical error (or unverified legacy receipt) if no
