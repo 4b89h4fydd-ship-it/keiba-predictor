@@ -4,9 +4,9 @@
 function apply(ctx){
  const {ready,winClear,order,lists,top,add,result,hasHonmei,fieldSize}=ctx;
  const field=Math.max(5,Number(fieldSize)||8),
-       wideFloor=Math.max(.095,9.9/(field*(field-1))),
-       quinFloor=Math.max(.075,6.6/(field*(field-1))),
-       trioFloor=Math.max(.055,27/(field*(field-1)*Math.max(1,field-2)));
+       wideFloor=Math.max(.085,6.0/(field*(field-1))),
+       quinFloor=Math.max(.065,4.0/(field*(field-1))),
+       trioFloor=Math.max(.042,16/(field*(field-1)*Math.max(1,field-2)));
  if(!hasHonmei){
    if(global.ARVEXQNoAxisBet&&typeof global.ARVEXQNoAxisBet.apply==='function')
      global.ARVEXQNoAxisBet.apply(ctx);
