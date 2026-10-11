@@ -4730,7 +4730,10 @@ def _prepare_race_snapshot(race_id: str, force: bool = False, manual: bool = Fal
     if hit and hit.get("analysis"):detail["analysis"]=hit["analysis"]
     detail=_strip_excluded(_apply_enrichment(race_id,detail))
     detail=_attach_stored_career(detail)
-    detail=_precompute_detail_metrics(_attach_evaluation_context(detail))
+    # This canonical provider path is also used in the standalone fact stage.
+    # AI evaluation is deferred until facts have been written and read from D1.
+    if os.getenv("ARVEXQ_COLLECT_ONLY","0") != "1":
+        detail=_precompute_detail_metrics(_attach_evaluation_context(detail))
     detail=_restore_saved_odds(detail)
     detail.setdefault("preparedMeta",{}).pop("fastPartial",None)
     # Snapshot creation never blocks on network history. Existing DB/feed history is included.
