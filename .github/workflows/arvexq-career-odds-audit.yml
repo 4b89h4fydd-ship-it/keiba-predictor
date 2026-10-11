@@ -1,0 +1,33 @@
+name: ARVEXQ Career and Odds Audit (read-only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'YYYY-MM-DD (empty = today JST)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run read-only audit (GET only)
+        env:
+          ARVEXQ_DATE: ${{ inputs.date }}
+          PYTHONPATH: .
+        run: python scripts/arvexq_career_odds_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-career-odds-audit
+          path: audit_out/
