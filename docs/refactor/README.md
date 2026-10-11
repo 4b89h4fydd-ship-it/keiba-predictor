@@ -1,6 +1,6 @@
 # ARVEXQ ドメイン分離：調査・段階移行報告
 
-基準main: `c025fea65f95aa0641b1c674ef703e4644b9b3a3`。専用ブランチ: `refactor/arvexq-domain-separation`。
+基準main: `c025fea65f95aa0641b1c674ef703e4644b9b3a3`。専用ブランチ: `refactor/arvexq-domain-separation`。Draft PR: [#13](https://github.com/4b89h4fydd-ship-it/keiba-predictor/pull/13)。
 
 このPRは安全な初期3段階の実装。全体の構造改革は未完了。依存のない計算・解析を実際のPython/JavaScriptモジュールへ移し、状態を持つ取得・保存・画面の残作業を明示する。mainの直接更新・本番デプロイ・既存の発走前アーカイブの再生成は行っていない。
 
@@ -81,6 +81,8 @@
 - Frozen artifacts: 既存の`preRacePrediction`, `predictionAudit`, 買い目と朝のアーカイブの時刻・ハッシュを保持。今回のfixture生成は合成入力のみ。
 - JS純粋計算API: `ARVEXQPaceSimulation.create({n,clamp,mean,courseProfile,courseTraits,firstTurnDistance})`、`ARVEXQRelativeGrades.create({n,clamp,mean,raceMode,recentFinishScore})`。
 - 資産: `app_sources.json`の順序で純粋モジュールを先に、画面アダプタを最後に結合。ブラウザ、FastAPI、静的ビルド、朝の発行、買い目captureとテストで同じソースを使う。外部ビルド依存は追加していない。
+
+FastAPIの既存互換URLはv324、静的デプロイのURLはv329である。この既存のバージョン差は今回変更せず、両方の生成ソースを一致させて検証した。URL・version.json・PWA設定の統合は今後の改善対象。
 
 完全な型付きDTO、保存層のインターフェース、画面stateの分離は未完了。形式的な型の追加だけで統一済みとはしない。
 
