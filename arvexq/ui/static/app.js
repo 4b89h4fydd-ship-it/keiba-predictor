@@ -1409,7 +1409,7 @@ function strictSelectedRaceProfile(r,p){
 }
 function assignPredictionMarks(rows,r){
   var field=Math.max(1,rows.length),uniform=1/field,selected=[],attention=[];
-  rows.forEach(function(z){z.predMark='';z.predRank=999;z.attentionReason='';z.axisProbability=0;z.axisRank=999;z.axisConfidence=0;z.axisFragility=0;z.winEvidenceProbability=0;z.winEvidenceRank=999;z.winnerConsensusProbability=0;z.winnerConsensusRank=999;z.winnerDecisionProbability=0;z.winnerDecisionRank=999;z.winDecisionReason='';z.winDecisionOverride=false;z.winnerDecisionStable=false});
+  rows.forEach(function(z){z.predMark='';z.predRank=999;z.attentionReason='';z.axisProbability=0;z.axisRank=999;z.axisConfidence=0;z.axisFragility=0;z.winEvidenceProbability=0;z.winEvidenceRank=999;z.winnerConsensusProbability=0;z.winnerConsensusRank=999;z.winnerDecisionProbability=0;z.winnerDecisionRank=999;z.winDecisionReason='';z.winDecisionOverride=false;z.winnerDecisionStable=false;z.honmeiRole='';z.honmeiGrade='';z.podiumAxisEligible=false;z.honmeiWithheld=false});
   function p1(z){return clamp(n(z.pureWinProbability,z.p1Probability),0,1)}
   function audit(z){var e=z&&z.horse&&z.horse.integratedEvaluation||{};return e.v218Audit||e.v217Audit||z.v218Audit||z.v217Audit||{}}
   function seven(z){var a=audit(z);return clamp(n(a.sevenAxisScore,n(z.v239Composite,n(z.overallRaw,.5))),0,1)}
@@ -1561,38 +1561,41 @@ function assignPredictionMarks(rows,r){
     z.podiumAxisScore=score;z.podiumAxisHistory=h;return z;
   }).sort(function(a,b){return n(b.podiumAxisScore)-n(a.podiumAxisScore)||
     n(b.axisProbability)-n(a.axisProbability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
-  var axisLeader=podiumAxis[0]||null,axisNext=podiumAxis[1]||null,
+  var eligibleAxis=podiumAxis.filter(function(z){return !isScratchHorse(z.horse)});
+  var axisLeader=eligibleAxis[0]||null,axisNext=eligibleAxis[1]||null,
       axisGap=n(axisLeader&&axisLeader.podiumAxisScore)-n(axisNext&&axisNext.podiumAxisScore),
       axisH=axisLeader&&axisLeader.podiumAxisHistory||{starts:0,top3:0,rate:0};
-  // Risk-first independent module: after the original ranking, demand
-  // observed podium repeatability AND top-three/winner-head agreement.
-  // An omitted module must never silently restore the old looser ◎ rule.
+  // The strict gate remains an independent reliability audit. It must not
+  // suppress the relative ◎ when the current pre-off forecast is available.
   var axisReview=window.ARVEXQPodiumAxisGuard&&window.ARVEXQPodiumAxisGuard.inspect?
     window.ARVEXQPodiumAxisGuard.inspect(axisLeader,axisNext):
     {version:'axis-guard-missing',eligible:false,failures:['axis-guard-unavailable']};
-  honmeiEligible=axisReview.eligible===true&&!!axisLeader&&!!axisNext&&
-    !isScratchHorse(axisLeader.horse);
+  honmeiEligible=axisReview.eligible===true&&!!axisLeader;
+  var axisGrade=honmeiEligible?'A':
+    (axisLeader&&n(axisLeader.podiumAxisScore)>=.55&&
+     n(axisLeader.edgeEvidence,n(axisLeader.coverage))>=.30&&
+     n(axisH.recentStarts,n(axisH.starts))>=2?'B':'C');
+  var axisWinReady=!!(axisLeader&&axisLeader===winLeader&&stable&&
+      n(axisLeader.winnerDecisionRank)===1&&
+      n(axisLeader.winnerDecisionProbability)>=uniform*1.25);
+  var axisRole=axisWinReady?'win':'axis';
   rows.forEach(function(z){z.podiumAxisEligible=honmeiEligible&&z===axisLeader});
-  r.honmeiDecisionFrontend={version:'arvexq-podium-axis-frontend-v5-context',
-    eligible:honmeiEligible,horseNumber:n(axisLeader&&axisLeader.horse&&axisLeader.horse.horseNumber),
+  r.honmeiDecisionFrontend={version:'arvexq-honmei-role-v1',
+    eligible:honmeiEligible,displayHonmei:!!axisLeader,
+    horseNumber:n(axisLeader&&axisLeader.horse&&axisLeader.horse.horseNumber),
+    role:axisLeader?axisRole:'none',confidenceGrade:axisLeader?axisGrade:'',
     axisScore:n(axisLeader&&axisLeader.podiumAxisScore),axisGap:axisGap,
     historyRuns:axisH.starts,historyTop3:axisH.top3,
-     recentRuns:axisH.recentStarts,recentTop3:axisH.recentTop3,
+    recentRuns:axisH.recentStarts,recentTop3:axisH.recentTop3,
     checks:axisReview.checks||{},failed:axisReview.failures||[],
     gateVersion:axisReview.version,pastContext:axisReview.pastContext||{},
-    reason:honmeiEligible?'podium-axis-passed':'podium-axis-withheld'};
-  if(honmeiEligible)take(axisLeader,'◎');
-  else if(axisLeader){
-    axisLeader.honmeiWithheld=true;
-    var fails=axisReview.failures||[];
-    axisLeader.attentionReason='◎保留｜'+
-      (fails.includes('historyVerified')?'日付確認済みの過去走不足':
-       fails.includes('matchingConditionEvidence')?'同距離・芝ダで馬券圏内の裏付け不足':
-       fails.includes('noRepeatedFrontFade')?'先行失速の反復':
-       fails.includes('recentFormNotDeteriorating')?'直近の内容悪化':
-       fails.includes('historicalPodium')?'近5走・全キャリアの3着内再現不足':
-       fails.includes('winningChance')?'1着評価上位との不一致':
-       fails.includes('clearSeparation')?'軸候補の評価差不足':'独立軸ゲートの証拠不足');
+    reason:honmeiEligible?'reliable-honmei':'relative-honmei-not-fixed'};
+  if(axisLeader){
+    take(axisLeader,'◎');
+    axisLeader.honmeiRole=axisRole;
+    axisLeader.honmeiGrade=axisGrade;
+    axisLeader.attentionReason='◎ '+(axisRole==='win'?'1着向き':'3着内の軸向き')+
+      '｜信頼度'+axisGrade+(honmeiEligible?'｜厳格な軸条件通過':'｜相対本命・軸固定は別審査');
   }
   var secondPick=p2Recall.find(function(z){return selected.indexOf(z)<0})||sorted.find(function(z){return selected.indexOf(z)<0});
   take(secondPick,'○');
@@ -2955,7 +2958,7 @@ function aiBetRecommendation(r,p){
 
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は3着以内への安定性を重視した馬券の軸。単勝向きとは別判定。発走後の正式印は保存済み予想だけを表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は原則1頭。1着向き／3着内の軸向きと信頼度A・B・Cを買い目にも反映。信頼度Cは軸固定を保証しません。発走後は保存済み予想だけを表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b><small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
