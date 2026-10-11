@@ -33,9 +33,12 @@ assert.equal(mod.evaluate(race,{rows:horses.slice(0,3)},observed,rd).ready,false
 const reference=mod.promoteReference(
  {selectionAudit:{selected:false,score:43,evidence:.34,reason:'strict winner gate did not pass'}},
  race,prediction,rd);
-assert.equal(reference.selectionAudit.selected,true,
- 'usable ordinary/special race may receive a clearly labeled reference ticket');
+assert.equal(reference.selectionAudit.selected,false,
+ 'a regular/special ticket must not forge an immutable elite selection');
 assert.equal(reference.referenceOnly,true);
+assert.equal(reference.selectionAudit.reason,'strict winner gate did not pass');
+assert.equal(reference.selectionAudit.referenceOnly,undefined,
+ 'the selected audit must remain unmodified');
 const unready=mod.promoteReference(
  {selectionAudit:{selected:false,score:43,evidence:.34}},race,prediction,{...rd,history:0});
 assert.equal(unready.selectionAudit.selected,false,'reference tickets still require recent model evidence');
