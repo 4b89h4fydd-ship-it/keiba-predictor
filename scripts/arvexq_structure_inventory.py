@@ -103,7 +103,10 @@ def main():
     ROOT = args.root.resolve()
     report = inventory()
     if args.output:
-        args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        metadata = {key: value for key, value in report.items() if key != 'files'}
+        prefix = json.dumps(metadata, ensure_ascii=False, indent=2)[:-2]
+        rows = ',\n'.join('    ' + json.dumps(row, ensure_ascii=False, separators=(',', ':')) for row in report['files'])
+        args.output.write_text(prefix + ',\n  \"files\": [\n' + rows + '\n  ]\n}\n', encoding='utf-8')
     for item in sorted(report['files'], key=lambda r: r.get('lines', 0), reverse=True):
         if 'review_priority' in item:
             print(f"{item['lines']:5} {item['review_priority']} {item['path']}")
