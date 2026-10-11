@@ -1896,6 +1896,15 @@ function applyFrozenMarks(r,p){
       catch(e){record=null}
     }
   }
+  // Current pre-off marks are always calculated from the freshest race input.
+  // Retain the first pre-off server/local receipt for later accuracy audits
+  // and any already-fixed bet, but never let the receipt overwrite live marks.
+  if(!clock.started){
+    p.rows.forEach(function(z){z.markFrozen=false;z.computedLiveMark=String(z.predMark||'')});
+    p.markFreeze={source:'live-before-post',originalPreserved:!!(server||record),
+      reason:'発走前の最新データによるAI評価。保存済み予想・買い目は変更しません。'};
+    return p
+  }
   if(server){
     var remote={};server.horses.forEach(function(q){remote[n(q.horseNumber)]=q});
     var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
@@ -1940,43 +1949,6 @@ function applyFrozenMarks(r,p){
   }else p.markFreeze={source:'provisional'};
   return p;
 }
-function applyServerAuthoritativeMarks(rows,r){
-  rows=rows||[];r=r||{};
-  var rd=String(r.date||''),st=mins(r.startTime),started=isFinal(r)||(rd&&rd<today())||(rd===today()&&st<9999&&nowMins()>=st);
-  var frontendGate=r.honmeiDecisionFrontend||{},engine=String(r.markEngineVersion||''),i,x,no,mark;
-  for(i=0;i<(r.horses||[]).length;i++){
-    var he=((r.horses[i]||{}).integratedEvaluation||{});
-    if(he.markEngineVersion)engine+=' '+String(he.markEngineVersion)
-  }
-  // A v4 lock may contain the old forced ◎. When the new frontend consensus gate
-  // withholds ◎, do not let that legacy snapshot overwrite the live v5 decision.
-  // The immutable preRacePrediction object itself is never changed and remains the
-  // source for historical accuracy audits.
-  var podiumEngine=engine.indexOf('arvexq-four-pillar-marks-v6')>=0;
-  // Only v6 is allowed to replace a live pre-race frontend decision.
-  // After the race, frozen pre-race marks continue to take precedence.
-  if(!started&&!podiumEngine)return false;
-  var byNo={},lock=r.preRacePrediction||{},locked=Array.isArray(lock.horses)?lock.horses:[],i,x,no,mark;
-  if(started)for(i=0;i<locked.length;i++){x=locked[i]||{};no=n(x.horseNumber,0);mark=String(x.mark||'');if(no&&mark)byNo[no]=mark}
-  // Never relabel a completed race from post-race integratedEvaluation.
-  if(started&&!Object.keys(byNo).length)return false;
-  if(!Object.keys(byNo).length){
-    for(i=0;i<(r.horses||[]).length;i++){
-      x=r.horses[i]||{};var e=x.integratedEvaluation||{};no=n(x.horseNumber,0);mark=String(e.mark||'');
-      if(no&&mark&&String(e.markEngineVersion||r.markEngineVersion||'').indexOf('arvexq-four-pillar-marks-')===0)byNo[no]=mark
-    }
-  }
-  if(!Object.keys(byNo).length)return false;
-  var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
-  for(i=0;i<rows.length;i++){
-    x=rows[i]||{};no=n(x.horse&&x.horse.horseNumber,0);mark=byNo[no]||'';
-    x.frontendComputedMark=String(x.predMark||'');
-    x.predMark=mark;
-    x.predRank=order[mark]||999;
-    x.authoritativeMark=!!mark;
-  }
-  return true
-}
 function predict(r){
   if(r._prediction)return applyFrozenMarks(r,r._prediction);
   if(raceMarkClock(r).started){
@@ -2002,7 +1974,6 @@ function predict(r){
   // assignPredictionMarks consumes these scores, so marks are no longer decided before the pace conclusion.
   paceOutcomeModel(r,draft);
   assignPredictionMarks(rows,modelRace);
-  applyServerAuthoritativeMarks(rows,modelRace);
   // Second pass: refresh the displayed outcome with the now-final P1/P2/P3 decision roles.
   var outcome=paceOutcomeModel(r,draft),cov=mean(rows.map(function(x){return x.coverage}));
   assignSingleWinCandidate(rows,modelRace);
@@ -2281,8 +2252,10 @@ function racecardMarkDisplay(mark){
 }
 function racecardMarkLegend(r){
   var server=serverFrozenPrediction(r),archive=window.ARVEXQSavedSnapshot&&window.ARVEXQSavedSnapshot.marks(r),stored=server?null:loadFrozenMarks(r),clock=raceMarkClock(r),
-      status=server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':(stored?'端末の発走前印・固定済み':(clock.started?'発走前印の保存なし':'印は発走10分前から固定')));
-  var original=authorizedPreOffMarks(r),axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
+      status=!clock.started?('発走前の最新AI印（更新あり）'+(server||stored?'／保存済み原本・買い目は維持':'')):
+        (server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':(stored?'端末の発走前印・固定済み':'発走前印の保存なし')));
+  var original=clock.started?authorizedPreOffMarks(r):null,
+      axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
   return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 3着以内の軸　<span class="rc-legend-single">単</span> 単勝向き（1着狙い） <span class="rc-mark-freeze-note">'+esc(status)+'</span></div>'
 }
 function racecardEntryRow(r,h,x){
@@ -4056,8 +4029,8 @@ function officialRaceActions(r){
   return ''
 }
 function smartRaceHead(r){
-  var count=raceHeadCountText(r),revision=latestOfficialMarkRevision(r),baseline=validMorningMarkSnapshot(r),
-      markState=revision?'公式馬場変更で印修正：'+String(revision.reason||''):baseline?'朝の印を固定中':'';
+  var count=raceHeadCountText(r),clock=raceMarkClock(r),revision=latestOfficialMarkRevision(r),baseline=validMorningMarkSnapshot(r),
+      markState=!clock.started?'印：最新の取得データで再評価（発走前）':(revision?'発走前の公式馬場変更で印修正：'+String(revision.reason||''):baseline?'発走前に保存された印':'');
   
   return '<section class="smart-race-head smart-race-head-compact smart-race-head-v222">'+
     '<div class="smart-race-title-stack smart-race-full-title"><h1>'+esc(r.title||'レース詳細')+'</h1>'+(markState?'<small class="arv-mark-fix-status">'+esc(markState)+'</small>':'')+'</div>'+
