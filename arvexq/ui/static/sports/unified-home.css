@@ -56,3 +56,17 @@
   .arv-all-race small{font-size:9px}
 }
 @media(max-width:325px){.arv-all-races-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* v359: retire the obsolete fixed-hero spacer; current hero is in normal flow.
+   Higher specificity than old v118/v221 standalone/home rules, not another path. */
+html body .smart-shell.smart-home{padding-top:0!important}
+html body .smart-shell.smart-home>.smart-main.smart-home-main,
+html.pwa-standalone body .smart-shell.smart-home>.smart-main.smart-home-main,
+html body .smart-shell.smart-home .smart-home-main{
+  padding-top:0!important;
+  margin-top:0!important;
+  min-height:0!important;
+}
+html body .smart-shell.smart-home>.arv-unified-hero{position:relative!important;top:auto!important;left:auto!important;transform:none!important}
+html body .smart-shell.smart-home>.arv-unified-hero+.smart-main{padding-top:0!important}
+html body .smart-shell.smart-home .arv-unified-body{margin-top:0!important}
