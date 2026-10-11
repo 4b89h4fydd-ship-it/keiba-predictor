@@ -13,8 +13,16 @@ const betViewSource=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8
 const raceCss=fs.readFileSync('arvexq/ui/static/styles/race_v222_plus.css','utf8');
 assert.ok(src.includes('rc-honmei-grade'),'reliability must render below ◎ in horsecard');
 assert.ok(raceCss.includes('.rc-honmei-grade'),'compact confidence badge CSS must be present');
-for(const label of ['◎【単】A','◎【軸】A','◎B','◎C'])
+assert.ok(src.includes("x.honmeiGrade==='A'?'【'+(x.honmeiRole==='win'?'単':'軸')+'】'"),
+ 'A-grade role must replace displayed A on racecard');
+assert.ok(src.includes("?'◎【'+(x.honmeiRole==='win'?'単':'軸')+'】'"),
+ 'AI marks panel A-role must omit displayed A');
+assert.ok(raceCss.includes('.rc-honmei-grade.rc-honmei-grade-role'),
+ 'A-role must fit beneath ◎ on small displays');
+for(const label of ['◎【単】','◎【軸】','◎B','◎C'])
   assert.ok(betViewSource.includes(label),'betting legend missing '+label);
+assert.ok(!betViewSource.includes('<i>◎【単】A</i>'),'obsolete A suffix in betting guide');
+assert.ok(!betViewSource.includes('<i>◎【軸】A</i>'),'obsolete A suffix in betting guide');
 const policy=(base,r,p)=>betGlobal.ARVEXQThreeWayBet.compose(base,r,p,{
  n,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),isScratchHorse:h=>!!h.scratched,
  betComboText:(kind,cs)=>cs.map(c=>c.join(kind==='馬単'||kind==='3連単'?' → ':' - ')).join(' / ')
