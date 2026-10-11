@@ -12,13 +12,15 @@ const frozen={version:'arvexq-official-mark-revision-v1',
   horses:[{horseNumber:1,mark:'◎',singleWinSuitable:true,lockedEvaluation:{score:90,grade:'S'}},
           {horseNumber:2,mark:'○'}]};
 const n=(v,otherwise=0)=>Number(v)||otherwise;
-const fn=new Function('raceMarkClock','authorizedPreOffMarks','loadFrozenMarks',
+const build=new Function('raceMarkClock','authorizedPreOffMarks','loadFrozenMarks',
   'isScratchHorse','n','validMorningMarkSnapshot','markFreezeKey','localStorage',
-  original+';return applyFrozenMarks')(
-    ()=>({valid:true,started:false,remaining:12}),
+  original+';return applyFrozenMarks');
+function runner(started){return build(
+    ()=>({valid:true,started:started,remaining:started?-1:12}),
     ()=>frozen,()=>null,(horse)=>!!horse.scratched,n,()=>false,()=>'',{
       setItem(){assert.fail('server marks must not be replaced by local edits')}
-    });
+    });}
+const fn=runner(true);
 const race={id:'jra-2026-10-10-京都-05',date:'2026-10-10',
   horses:[{horseNumber:1},{horseNumber:2}]};
 const pred={rows:[{horse:race.horses[0],predMark:'△',overallScore:66},
@@ -31,4 +33,12 @@ assert.deepEqual(result.rows.map(x=>x.predMark),['◎','○']);
 assert.equal(result.rows[0].overallScore,90);
 assert.equal(result.rows[0].singleWinSuitable,true);
 assert.equal(result.rows[0].markFrozen,true);
-console.log('FROZEN_MARKS_VALID_PRODUCTION_CODE_PASS');
+const live=runner(false)(race,{rows:[{horse:race.horses[0],predMark:'△',overallScore:66},
+ {horse:race.horses[1],predMark:'▲',overallScore:65}]});
+assert.deepEqual(live.rows.map(x=>x.predMark),['△','▲'],
+ 'pre-off must not be overwritten by earlier server receipt');
+assert.equal(live.rows[0].overallScore,66,'pre-off retains latest model score');
+assert.equal(live.markFreeze.source,'live-before-post');
+assert.equal(live.markFreeze.originalPreserved,true);
+assert.ok(!src.includes('function applyServerAuthoritativeMarks('));
+console.log('FROZEN_MARKS_VALID_PRODUCTION_CODE_PASS postoff=original preoff=latest');
