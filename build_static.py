@@ -137,10 +137,10 @@ research_hash = hashlib.sha256(b"|".join((RESEARCH_PATH / filename).read_bytes()
 
 SPORT_DIR = STATIC / "sports"
 SPORT_FILES = (
-    "switch.css", "boat.html", "boat-app/layout.css", "boat-app/app.js",
+    "switch.css", "horse-portal.css", "horse-portal.js", "boat.html", "boat-app/layout.css", "boat-app/app.js",
     "boat-app/core/contract.js", "boat-app/core/feed.js", "boat-app/core/stats.js", "boat-app/core/start-exhibition.js",
     "boat-app/features/races.js", "boat-app/features/start-exhibition.js", "boat-app/features/selected.js",
-    "boat-app/features/ai-stats.js",
+    "boat-app/features/ai-stats.js", "boat-app/features/realtime.js",
 )
 for filename in SPORT_FILES:
     if not (SPORT_DIR / filename).is_file():
@@ -265,6 +265,8 @@ for filename in RESEARCH_ASSETS:
 # Ship dedicated sport resources without merging boat logic into the horse app.
 (DIST / "sports").mkdir(exist_ok=True)
 shutil.copy2(SPORT_DIR / "switch.css", DIST / "sports" / "switch.css")
+for filename in ("horse-portal.css","horse-portal.js"):
+    shutil.copy2(SPORT_DIR / filename, DIST / "sports" / filename)
 shutil.copytree(SPORT_DIR / "boat-app", DIST / "sports" / "boat-app")
 
 # Independent UI feature modules kept outside the main app bundle.

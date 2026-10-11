@@ -50,6 +50,9 @@ class SportNavigationTest(unittest.TestCase):
         self.assertNotIn('__ARVEXQ_SPORT_HASH__', boat)
         self.assertTrue((dist / "sports" / "boat-app" / "app.js").is_file())
         self.assertTrue((dist / "sports" / "boat-app" / "core" / "stats.js").is_file())
+        self.assertTrue((dist / "sports" / "boat-app" / "features" / "realtime.js").is_file())
+        self.assertIn('/sports/horse-portal.js',horse)
+        self.assertTrue((dist / "sports" / "horse-portal.css").is_file())
 
 
 if __name__ == "__main__":

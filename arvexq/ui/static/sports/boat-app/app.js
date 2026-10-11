@@ -4,14 +4,15 @@ import {loadDay} from "./core/feed.js";
 import {venueGrid,raceList,detail} from "./features/races.js";
 import {selectedSection} from "./features/selected.js";
 import {statsSection} from "./features/ai-stats.js";
+import {realtimeSection} from "./features/realtime.js";
 
 const root=document.getElementById("boat-root");
-const state={date:todayJst(),day:null,error:"",loading:false,view:"home",venue:"",raceId:"",request:0};
+const state={date:todayJst(),day:null,error:"",loading:false,view:"home",venue:"",raceId:"",request:0,raceReturnView:"races"};
 function emptyDay(){return {date:state.date,races:[],verifiedAt:""}}
 function routeFromUrl(){
   const params=new URL(location.href).searchParams;
   state.date=/^\d{4}-\d{2}-\d{2}$/.test(params.get("date")||"")?params.get("date"):todayJst();
-  state.view=["home","venues","selected","stats","races","race"].includes(params.get("view"))?params.get("view"):"home";
+  state.view=["home","venues","selected","stats","realtime","races","race"].includes(params.get("view"))?params.get("view"):"home";
   state.venue=String(params.get("venue")||"");state.raceId=String(params.get("race")||"");
 }
 function route(view,venue="",raceId=""){
@@ -44,13 +45,13 @@ function home(){
     '<div class="boat-home-actions">'+
       '<button type="button" data-view="selected"><strong>本日の厳選レース</strong><small>朝の確定予想のみ</small><b>›</b></button>'+
       '<button type="button" data-view="stats"><strong>AI成績</strong><small>保存済み買い目を照合</small><b>›</b></button>'+
-      '<button type="button" data-view="venues"><strong>開催場一覧</strong><small>24場・レース詳細へ</small><b>›</b></button></div>'+
+      '<button type="button" data-view="realtime"><strong>リアルタイム</strong><small>締切時刻順・レースへ</small><b>›</b></button><button type="button" data-view="venues"><strong>開催場一覧</strong><small>24場・レース詳細へ</small><b>›</b></button></div>'+
     '<section class="boat-panel"><h2>本日の厳選レース</h2>'+selectedSection(state.day||emptyDay())+
     '<button class="boat-secondary" type="button" data-view="selected">厳選レース一覧を見る ›</button></section>'+
     '<section class="boat-panel"><h2>AI成績</h2>'+statsSection((state.day||emptyDay()).races)+
     '<button class="boat-secondary" type="button" data-view="stats">AI成績の詳細を見る ›</button></section>'+
     '<section class="boat-panel"><div class="boat-row"><h2>開催場一覧</h2><span class="boat-small">全国24場｜掲載データ '+active.size+'場</span></div>'+
-    venueGrid(state.day||emptyDay(),"")+'</section>';
+    venueGrid(state.day||emptyDay(),"")+'</section>'+realtimeSection(state.day||emptyDay());
 }
 function subheader(title,back="home"){
   return '<div class="boat-subheader"><button type="button" data-back="'+back+'" aria-label="戻る">‹</button>'+
@@ -63,13 +64,14 @@ function body(){
     '<section class="boat-panel"><h2>朝確定・厳選予想</h2>'+selectedSection(day)+'</section>';
   if(state.view==="stats")return subheader("AI成績")+
     '<section class="boat-panel"><h2>3連単 AI成績</h2>'+statsSection(day.races)+'</section>';
+  if(state.view==="realtime")return subheader("リアルタイム")+realtimeSection(day,{full:true});
   if(state.view==="venues")return subheader("開催場一覧")+
     '<section class="boat-panel"><h2>競艇場を選択</h2>'+venueGrid(day,"")+'</section>';
   if(state.view==="races")return subheader(venue+" 全レース","venues")+
     '<section class="boat-panel"><h2>'+esc(venue)+' 1R〜12R</h2>'+raceList(day,venue)+'</section>';
   if(state.view==="race"){
     const race=day.races.find(r=>r.id===state.raceId&&r.venue===venue);
-    return subheader((venue||"")+(race?" "+race.raceNo+"R":""),"races")+
+    return subheader((venue||"")+(race?" "+race.raceNo+"R":""),state.raceReturnView)+
       (race?detail(race):'<section class="boat-panel"><p class="boat-muted">このレースの情報は確認できません。</p></section>');
   }
   return home();
@@ -99,11 +101,11 @@ if(root){
     if(b.dataset.venue){route("races",b.dataset.venue);return}
     if(b.dataset.race){
       const race=(state.day||emptyDay()).races.find(r=>r.id===b.dataset.race);
-      if(race)route("race",race.venue,race.id);
+      if(race){state.raceReturnView=state.view==="realtime"?"realtime":"races";route("race",race.venue,race.id);}
       return;
     }
     if(b.dataset.back){
-      if(b.dataset.back==="races")route("races",state.venue);
+      if(b.dataset.back==="races")route(state.raceReturnView==="realtime"?"realtime":"races",state.raceReturnView==="realtime"?"":state.venue);
       else route(b.dataset.back);
     }
   });
@@ -114,4 +116,7 @@ if(root){
   });
   window.addEventListener("popstate",()=>{routeFromUrl();refresh()});
   routeFromUrl();draw();refresh();
+  setInterval(function(){
+    if(state.date===todayJst()&&!state.loading&&document.visibilityState!=="hidden")refresh();
+  },60000);
 }
