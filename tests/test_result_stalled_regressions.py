@@ -72,9 +72,9 @@ class SingleResultAcquisitionPathTests(unittest.TestCase):
         partial = {"id": rid, "date": original["date"], "track": "大井",
                    "horses": [], "result": {"status": "速報",
                      "finishers": [{"finish": 1, "horseNumber": 1}]}}
-        with patch.object(live, "snapshot", return_value=partial), \\
+        with patch.object(live, "snapshot", return_value=partial), \
              patch.object(live.app, "odds_refresh", return_value={
-                 "horses": [{"horseNumber": 1, "winOdds": 3.2}]}), \\
+                 "horses": [{"horseNumber": 1, "winOdds": 3.2}]}), \
              patch.object(live.app, "_refresh_result_fast",
                           side_effect=AssertionError("duplicate result fetch")):
             _, updated, error, _, _ = live.refresh_one(
