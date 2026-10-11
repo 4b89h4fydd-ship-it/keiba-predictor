@@ -66,6 +66,8 @@ if(day===jstToday&&now.getTime()<earliestMorning){save('BEFORE_MORNING_FREEZE_WI
 if(!Number.isFinite(earliest)||now.getTime()>=earliest){save('NOT_RECONSTRUCTED_AFTER_FIRST_OFF');process.exit(0)}
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const selectionModule=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js','utf8');
+const selectedPipeline=fs.readFileSync('arvexq/ui/static/morning/selected_race_pipeline.js','utf8');
+const specialModule=fs.readFileSync('arvexq/ui/static/morning/special_selection.js','utf8');
 const laneModule=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8');
 const evidenceModule=fs.readFileSync('arvexq/ui/static/morning/frozen_ticket_evidence.js','utf8');
 const betModules=['legacy_v213_order_model.js','podium_axis_guard.js','bet_readiness.js','no_axis_strategy.js','main_strategy.js','trifecta_strategy.js',
@@ -87,6 +89,8 @@ for(const name of betModules)vm.runInContext(fs.readFileSync('arvexq/ui/static/b
 vm.runInContext(laneModule,ctx,{timeout:12000,filename:'ticket_lane_classifier.js'});
 vm.runInContext(evidenceModule,ctx,{timeout:12000,filename:'frozen_ticket_evidence.js'});
 vm.runInContext(selectionModule,ctx,{timeout:12000,filename:'selection_cut.js'});
+vm.runInContext(selectedPipeline,ctx,{timeout:12000,filename:'selected_race_pipeline.js'});
+vm.runInContext(specialModule,ctx,{timeout:12000,filename:'special_selection.js'});
 vm.runInContext(source,ctx,{timeout:12000,filename:'app.js'});
 const model=window.__morningPicks;
 model.state.date=day;model.state.races=rows;model.state.circuit='地方';
