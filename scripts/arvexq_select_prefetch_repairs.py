@@ -72,6 +72,18 @@ def repair_reason(prepared: Any, existing: Any) -> str:
         return "roster_incomplete"
     if not rich(existing):
         return "thin"
+    # Facts are saved first. A later valid analysis must be published even
+    # when the earlier fact snapshot already had a complete runner list.
+    new_pm = prepared.get("preparedMeta") if isinstance(prepared.get("preparedMeta"), dict) else {}
+    old_pm = existing.get("preparedMeta") if isinstance(existing.get("preparedMeta"), dict) else {}
+    if new_pm.get("diagnosisReady") and (
+        not old_pm.get("diagnosisReady")
+        or (new_pm.get("analysisInputHash") and
+            new_pm.get("analysisInputHash") != old_pm.get("analysisInputHash"))
+        or (prepared.get("predictionModelVersion") and
+            prepared.get("predictionModelVersion") != existing.get("predictionModelVersion"))
+    ):
+        return "persisted_prediction_changed"
     old_horses = {int(h.get("horseNumber") or 0): h for h in existing.get("horses") or [] if isinstance(h, dict)}
     for horse in prepared.get("horses") or []:
         if not isinstance(horse, dict):
