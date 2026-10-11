@@ -1,0 +1,176 @@
+{
+  "baseline": "19b76d3c3bed8f1f36adf9590de39e80d4116f96",
+  "branch": "refactor/arvexq-storage-stage5",
+  "pr_base": "refactor/arvexq-acquisition-stage4",
+  "app_lines_before": 4105,
+  "app_lines_after": 2872,
+  "moved_methods": 43,
+  "moved_coordinators": 64,
+  "storage_collector_modules": {
+    "arvexq/storage/nar/parser.py": 60,
+    "arvexq/storage/nar/schema.py": 75,
+    "arvexq/storage/nar/imports.py": 77,
+    "arvexq/storage/nar/history.py": 125,
+    "arvexq/storage/nar/racecards.py": 86,
+    "arvexq/storage/central/store.py": 87,
+    "arvexq/storage/nar/sync.py": 83,
+    "arvexq/storage/prepared/store.py": 152,
+    "arvexq/storage/racedb/schema.py": 192,
+    "arvexq/storage/racedb/racecards.py": 127,
+    "arvexq/storage/racedb/career.py": 66,
+    "arvexq/storage/racedb/odds.py": 40,
+    "arvexq/storage/racedb/analysis.py": 32,
+    "arvexq/storage/bundles/store.py": 62,
+    "arvexq/infra/collectors/history.py": 29,
+    "arvexq/infra/collectors/live.py": 71,
+    "arvexq/infra/collectors/commercial.py": 67,
+    "arvexq/infra/collectors/environment.py": 176,
+    "arvexq/infra/collectors/data_core.py": 62,
+    "arvexq/infra/collectors/prewarm.py": 92,
+    "arvexq/infra/collectors/fast_card.py": 67,
+    "arvexq/infra/collectors/odds.py": 101,
+    "arvexq/infra/collectors/racedb.py": 63,
+    "arvexq/infra/collectors/bootstrap.py": 18,
+    "arvexq/storage/sqlite/connection.py": 14,
+    "arvexq/storage/data_core/health.py": 115,
+    "arvexq/storage/data_core/refresh.py": 146,
+    "arvexq/storage/prepared/cache.py": 39,
+    "arvexq/storage/prepared/refresh.py": 111,
+    "arvexq/storage/bundles/local.py": 58,
+    "arvexq/storage/bundles/assembly.py": 76,
+    "arvexq/storage/bundles/cache.py": 44,
+    "arvexq/storage/bundles/live.py": 163,
+    "arvexq/storage/market/payouts.py": 66,
+    "arvexq/storage/market/odds.py": 244,
+    "arvexq/storage/cache_keys.py": 22,
+    "arvexq/storage/config.py": 33,
+    "arvexq/storage/__init__.py": 1,
+    "arvexq/storage/ports.py": 13,
+    "arvexq/storage/central/__init__.py": 1,
+    "arvexq/storage/data_core/__init__.py": 1,
+    "arvexq/storage/nar/store.py": 8,
+    "arvexq/storage/nar/__init__.py": 1,
+    "arvexq/storage/nar/contracts.py": 76,
+    "arvexq/storage/racedb/store.py": 9,
+    "arvexq/storage/racedb/__init__.py": 1,
+    "arvexq/storage/sqlite/__init__.py": 1,
+    "arvexq/storage/sqlite/transactions.py": 5,
+    "arvexq/storage/policies/market.py": 33,
+    "arvexq/storage/policies/__init__.py": 1,
+    "arvexq/storage/policies/snapshots.py": 77,
+    "arvexq/storage/policies/archive.py": 28,
+    "arvexq/storage/policies/bundles.py": 12,
+    "arvexq/storage/market/__init__.py": 1,
+    "arvexq/storage/prepared/__init__.py": 1,
+    "arvexq/storage/cache/__init__.py": 1,
+    "arvexq/storage/cache/detail.py": 5,
+    "arvexq/storage/cache/volatility.py": 5,
+    "arvexq/storage/cache/race_list.py": 5,
+    "arvexq/storage/bundles/__init__.py": 1,
+    "arvexq/infra/collectors/odds_state.py": 6,
+    "arvexq/infra/collectors/environment_state.py": 6,
+    "arvexq/infra/collectors/commercial_state.py": 8,
+    "arvexq/infra/collectors/__init__.py": 1,
+    "arvexq/infra/collectors/live_state.py": 9,
+    "arvexq/infra/collectors/prewarm_state.py": 6,
+    "arvexq/infra/collectors/data_core_state.py": 6,
+    "arvexq/infra/collectors/fast_card_state.py": 11,
+    "arvexq/infra/collectors/bootstrap_state.py": 8,
+    "arvexq/infra/collectors/racedb_state.py": 5,
+    "arvexq/infra/collectors/history_state.py": 7
+  },
+  "max_module_lines": 244,
+  "unchanged_original_files": 619,
+  "changed_original_files": [
+    ".github/workflows/arvexq-domain-refactor.yml",
+    ".github/workflows/arvexq-validation.yml",
+    "app.py",
+    "scripts/arvexq_extract_backend.py",
+    "scripts/arvexq_patch_mass_prerace_store.py"
+  ],
+  "deleted_original_files": [
+    "arvexq/infra/legacy_stores.py",
+    "arvexq/infra/race_stores.py"
+  ],
+  "protected_files": 317,
+  "static_artifact_count": 214,
+  "static_mismatches": [],
+  "normal_sqlite_schema_payload_replay": [
+    "NarStore",
+    "CentralStore",
+    "PreparedRaceStore",
+    "RaceDataBank",
+    "DayBundleStore"
+  ],
+  "intentional_retention_changes": [
+    "NarStore.import_rows: missing CSV fields retain known data",
+    "CentralStore.upsert: partial horse/full-career and fixed ticket retention",
+    "PreparedRaceStore.put: partial fields / first fixed ticket / sealed artifacts",
+    "RaceDataBank.upsert_race: partial fields / first fixed ticket / sealed artifacts",
+    "RaceDataBank.save_odds: missing odds/popularity retention",
+    "RaceDataBank.save_analysis: partial analysis retention",
+    "DayBundleStore.put: lower-quality failed bundle retention"
+  ],
+  "python": {
+    "passed": 550,
+    "subtests_passed": 114,
+    "warnings": 13,
+    "failed": 0
+  },
+  "new_storage_tests": 147,
+  "javascript_regression_scripts": 16,
+  "formula_comparisons": 31,
+  "first_checkpoint_actions": {
+    "head": "5a62e584890db5dee94b93edca014f5b512f7562",
+    "validation": {
+      "id": 38115993667,
+      "conclusion": "success"
+    },
+    "domain_refactor": {
+      "id": 38115995317,
+      "conclusion": "success"
+    }
+  },
+  "final_actions": "See Draft PR checks for final HEAD",
+  "limitations": [
+    "No production DB was modified; output replay uses isolated SQLite/ZIP/HTTP fixtures.",
+    "Live production-source response comparison was not executed. Existing prediction/UI/source acquisition modules remain byte-identical."
+  ],
+  "app_prediction_functions_unchanged": {
+    "_prediction_clock_state": "fe6f9e6b3dbac754ab3d4c27dbd58827b356e37edbf6ded210a86c2558ce007a",
+    "_learning_races": "a503efdf8b455ea4a5d4498bc4149445d4aca0b2e764b69f8cbdb5a2b0b1003f",
+    "_v312_method": "a7d7dfdf7d9ed731903cb9a6259f0951c2329af7fa40dbf5cc73885b8e32f9ed",
+    "_v312_base_winner_weights": "b83ad78e4a733f79335a9acb9c7adf5409db70dc555a1650f77a083220581f11",
+    "_winner_learning_profile": "9f609dc6ee004e04b8794076cd10e690ff5a2ffbedc2d37d5427ac7a7d1169ad",
+    "_build_prerace_prediction": "5787250262488dfb76bd2714aff5b0d44da9ebe4c28f63f84a5e411bfea4d22c",
+    "_prediction_audit_from_lock": "d06ddd8eaddb6c458a0a5082f8fc46f4fcea95b8e9afb709873fdf5835dc4665",
+    "_attach_prerace_audit": "c45ff842353c727beb6a0ca94f5053d9093b5c132b2a3ddaf754c327851b5877",
+    "_compact_display_snapshot": "72726335609f8eb4c8ec3e8806072b5d7f434213d32b380f457252cba8a0775f",
+    "_precompute_detail_metrics": "eef01ee0237191b757d68e335f86922091de5cfd6f5afb2cabafb66d81fa4a1b",
+    "_evaluation_number": "0fb0ddd26db0566757c9dfb763107a29f277072b19554774ddb18f45a9abb023",
+    "_ensure_race_volatility": "0047c63e40676a81b52af07ac9907c32e44d3149526f920b4f0c673665c2dc22",
+    "_build_fast_diagnosis_snapshot": "90345708f2f989043fbcf2fc33d818ee8a6e514894d8babb873d1a6f7754ec33"
+  },
+  "retention_checkpoint_actions": {
+    "head": "f1a055dbf53459f36ff3345105f33877777d339b",
+    "validation": {
+      "id": 38116739498,
+      "conclusion": "success"
+    },
+    "domain_refactor": {
+      "id": 38116739484,
+      "conclusion": "success"
+    }
+  },
+  "connection_checkpoint_actions": {
+    "head": "ef62f444dc52ce8a443955ca3183040a9ceaec71",
+    "validation": {
+      "id": 38116978967,
+      "conclusion": "success"
+    },
+    "domain_refactor": {
+      "id": 38116978961,
+      "conclusion": "success"
+    }
+  }
+}
