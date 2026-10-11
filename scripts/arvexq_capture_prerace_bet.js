@@ -2,7 +2,7 @@
 // Run the SAME versioned browser betting core without displaying a race.
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto');
-const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const root=require('../arvexq/ui/app_source.cjs').readAppSource();
 const strategies=['podium_axis_guard.js','bet_readiness.js','no_axis_strategy.js','main_strategy.js','trifecta_strategy.js',
  'insurance_strategy.js'].map(name=>({name,code:fs.readFileSync('arvexq/ui/static/betting/'+name,'utf8')}));
 const lane=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8');

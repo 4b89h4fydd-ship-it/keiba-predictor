@@ -3,7 +3,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const src=require('../arvexq/ui/app_source.cjs').readAppSource();
 const start=src.indexOf('function paceEvidenceProfile(');
 const end=src.indexOf('function buildAiBetPlan(',start);
 assert.ok(start>=0&&end>start,'pace evidence gate must precede ticket generation');

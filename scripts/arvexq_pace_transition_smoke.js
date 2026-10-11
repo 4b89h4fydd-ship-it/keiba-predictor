@@ -2,7 +2,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const src=require('../arvexq/ui/app_source.cjs').readAppSource();
 function extract(from,to){
   const a=src.indexOf(from),b=src.indexOf(to,a+from.length);
   assert.ok(a>=0&&b>a,'missing pace function '+from);
@@ -46,7 +46,7 @@ assert.ok(src.includes("if(!p.firstPos){x.expected='不明'"),
 const pack=(rows,order,laneMap,stage)=>
   order.map((x,i)=>({no:x.horse.horseNumber,lane:0,gap:i*.02,score:1-i/Math.max(1,order.length-1)}));
 const plan=new Function('n','clamp','courseTraits','firstTurnDistance','eventOrderPack',
-  extract('function scenarioPlan(','function gradeClass(')+'\nreturn scenarioPlan;')(
+  require('node:fs').readFileSync('arvexq/ui/static/prediction/pace_simulation.js','utf8').split('function scenarioPlan(')[1].split('\nreturn Object.freeze')[0].replace(/^/, 'function scenarioPlan(')+'\nreturn scenarioPlan;')(
     n,clamp,()=>({straight:.75,moveRoom:.65}),()=>350,pack);
 function horse(no,fields){
   return Object.assign({horse:{horseNumber:no},goProb:.2,needLead:.2,breakSkill:.4,

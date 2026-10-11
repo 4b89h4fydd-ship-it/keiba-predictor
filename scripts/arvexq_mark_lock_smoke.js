@@ -3,7 +3,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const src=require('../arvexq/ui/app_source.cjs').readAppSource();
 function extract(a,b){
  const start=src.indexOf('function '+a+'('),stop=src.indexOf('function '+b+'(',start+1);
  assert.ok(start>=0&&stop>start,'missing '+a);return src.slice(start,stop);

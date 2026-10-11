@@ -69,7 +69,8 @@ for node in tree.body:
                 if not asset_path.is_file():
                     raise RuntimeError(f"extracted asset not found: {asset_path}")
                 if fn.id == "read_asset":
-                    strings[name] = asset_path.read_text(encoding="utf-8")
+                    from arvexq.ui.assets import read_asset
+                    strings[name] = read_asset(value.args[0].value)
                 else:
                     binary_b64[name] = base64.b64encode(asset_path.read_bytes()).decode("ascii")
                 continue

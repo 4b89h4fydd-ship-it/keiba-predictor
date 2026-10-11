@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict');
-const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const root=require('../arvexq/ui/app_source.cjs').readAppSource();
 const i=root.indexOf('function latestOfficialMarkRevision(r){'),
       j=root.indexOf('function immutableArchivedPrediction(r){',i);
 assert(i>=0&&j>i,'model mark reader has a distinct explicit approval branch');

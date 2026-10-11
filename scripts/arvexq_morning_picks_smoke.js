@@ -3,7 +3,7 @@
 // reshuffle the morning's selected/special race list.
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs');
-const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const src=require('../arvexq/ui/app_source.cjs').readAppSource();
 function take(name){
   const a=src.lastIndexOf('function '+name+'('),b=src.indexOf('\n}',a);
   assert(a>=0&&b>a,'missing '+name);

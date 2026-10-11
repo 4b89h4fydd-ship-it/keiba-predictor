@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
-const source = fs.readFileSync(path.join(__dirname, '../arvexq/ui/static/app.js'), 'utf8');
+const source = require('../arvexq/ui/app_source.cjs').readAppSource();
 const renderer = source.slice(source.indexOf('function renderRaceLoading(){'),
   source.indexOf('function mergeResultHorseFields'));
 for (const hasSummary of [false, true]) {

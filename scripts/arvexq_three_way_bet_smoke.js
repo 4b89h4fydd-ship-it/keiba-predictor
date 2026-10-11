@@ -2,7 +2,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const src=require('../arvexq/ui/app_source.cjs').readAppSource();
 const strategySrc=['no_axis_strategy.js','main_strategy.js','trifecta_strategy.js','insurance_strategy.js'].map(x=>fs.readFileSync('arvexq/ui/static/betting/'+x,'utf8')).join('\n');
 const moduleSrc=fs.readFileSync('arvexq/ui/static/betting/three_way_engine.js','utf8');
 const n=(x,f=0)=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x):f;

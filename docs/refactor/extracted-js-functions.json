@@ -1,0 +1,250 @@
+[
+  {
+    "name": "pressureInfo",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "95e9ce94b608c435dd32b93d3cb012db40301c05f04873b79f03a53b792f61b2",
+    "characters": 2416
+  },
+  {
+    "name": "frontArrangement",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "d50a3ca32b360844f0744eaa7f6c290db32e74a514f4df58bfb13e53a23382af",
+    "characters": 3559
+  },
+  {
+    "name": "tacticalContext",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "66e034079724342cce6cb55b7aa103d62308ad2b162a8291664116a9b61edea8",
+    "characters": 695
+  },
+  {
+    "name": "scenarioModel",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "8294ec5adae500776223f940e1f6f3080f4d1bcd21d85a8932495a012206ebd0",
+    "characters": 2224
+  },
+  {
+    "name": "startOrder",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "cff6c143ecf53079355660837882bf8fbcc542d1dc12c6f59ba7ebc738e8856e",
+    "characters": 270
+  },
+  {
+    "name": "scenarioSuit",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "f4149c0d8c3f8abb1817a533582b6248b8312d3266105352d318614fe780d4cd",
+    "characters": 797
+  },
+  {
+    "name": "suitability",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "25554f9e45c58a8589644e08256dbacef242fa5fe2afba2830b0c24c6a7f9231",
+    "characters": 1178
+  },
+  {
+    "name": "cornerScores",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "a429d1a6559650381f71937971655b30916542434f2d74acef4a351943fdbb6a",
+    "characters": 628
+  },
+  {
+    "name": "seedHash",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "a084973fff8448275c5d85007f3593b04bed539d2085ad0f7b91855e6bffb54c",
+    "characters": 140
+  },
+  {
+    "name": "prng",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "bb0ee7e212104ca6f95b11f5bba4f0a45c448692184351484033a3759ef156b1",
+    "characters": 170
+  },
+  {
+    "name": "jitter",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "6eb01903b4a09174e19fdf10475a2345f109eded8aed467f159cd320a2c07e26",
+    "characters": 69
+  },
+  {
+    "name": "chooseScenario",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "8ef2aec9aa7cd5b8407400331d820a0deaca3c68ed8e26c62fc1ff4a61433e08",
+    "characters": 157
+  },
+  {
+    "name": "packStage",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "ab7489b02da380a8cce4ebef1df59a41748c7f3b4fc22a7b49f1d52f0d18476f",
+    "characters": 727
+  },
+  {
+    "name": "stageMap",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "1e562c70a3a4cb1a54aed41dc7477379ab71cb4c7511d7fc9e951792cbd66bfd",
+    "characters": 92
+  },
+  {
+    "name": "stageByNo",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "cee668177aa1dc242fab66fe4e24966b495978c079f4334f5b7de4a4d98e57cb",
+    "characters": 110
+  },
+  {
+    "name": "simulateOne",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 12,
+    "source_sha256": "846ec05674c793d5d6ce1a971523a8bb921758616595e19499d2dc751ac0c379",
+    "characters": 4289
+  },
+  {
+    "name": "generateSimulations",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "ecc88aabe93c62c49fe8115414c4c0ac551aa17dd3584c8f7aa5b362075813f2",
+    "characters": 2337
+  },
+  {
+    "name": "avgOrder",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "2b2f3e0246346492b45adcbcd5dab252663e46b0d9b962d9c63f08a1b0e76d85",
+    "characters": 295
+  },
+  {
+    "name": "packScenarioStage",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "fe4e4f6f18e0f30379379b96263e6450e35f9dd0bc424eef96874cc2baf3d6a7",
+    "characters": 720
+  },
+  {
+    "name": "rowsFromPack",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 1,
+    "source_sha256": "68f7a1604f4e112614d7059c48c1ea0800bb3b0b27099e4e7c80fcdd2601280a",
+    "characters": 182
+  },
+  {
+    "name": "eventOrderPack",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 9,
+    "source_sha256": "7ad44af5959c1fb7de92698cac095bf32526d6a5aa1383b180a9f7e5d26556c8",
+    "characters": 421
+  },
+  {
+    "name": "scenarioPlan",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/pace_simulation.js",
+    "lines": 211,
+    "source_sha256": "fc40085e5c1bab6d23514cdb8ef19395711036d7b5827cf39cbf4c24cb24972c",
+    "characters": 11931
+  },
+  {
+    "name": "gradeClass",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/relative_grades.js",
+    "lines": 1,
+    "source_sha256": "9164937a67fb7ab8f74e93bce96559fee5f6f73adbb5c5c0ba82138eda8bc760",
+    "characters": 98
+  },
+  {
+    "name": "predictionProfile",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/relative_grades.js",
+    "lines": 7,
+    "source_sha256": "2706258128a2b02c034ae52f57a4ea5242ca64d76527991ee99375270b812e22",
+    "characters": 359
+  },
+  {
+    "name": "gradeRowsRelative",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/relative_grades.js",
+    "lines": 23,
+    "source_sha256": "5e051e8c0050ef267563a10b58248a6dca0bdccea074b965d0787881516e44b5",
+    "characters": 1193
+  },
+  {
+    "name": "baseGradeReasons",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/relative_grades.js",
+    "lines": 15,
+    "source_sha256": "95be789fad4e4720f7919766455081ee0d66cd8012c7ab4581c1d084e299ed7a",
+    "characters": 810
+  },
+  {
+    "name": "assignOverallGradesCentral",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/relative_grades.js",
+    "lines": 27,
+    "source_sha256": "766e0f99d84296dd5dbdb5d9b0f610ee54c233806d1780da070d56c618961a0a",
+    "characters": 1245
+  },
+  {
+    "name": "assignOverallGradesNar",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/relative_grades.js",
+    "lines": 37,
+    "source_sha256": "3e601ce8e09f979d71755a60ccd9d75e1a3bbda9b507db0c12b1fb23b489c2cd",
+    "characters": 1929
+  },
+  {
+    "name": "assignOverallGradesJump",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/relative_grades.js",
+    "lines": 24,
+    "source_sha256": "9ca84446107f67972d14bb56187827f5c2599ea69034a17fc93ed90ea9523674",
+    "characters": 740
+  },
+  {
+    "name": "assignOverallGradesDebut",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/relative_grades.js",
+    "lines": 24,
+    "source_sha256": "84e01cb6dd4cfbee07fd5f74f816eeff370d027ce5135a465b5f159ef0d63c54",
+    "characters": 793
+  },
+  {
+    "name": "assignOverallGrades",
+    "before": "arvexq/ui/static/app.js",
+    "after": "arvexq/ui/static/prediction/relative_grades.js",
+    "lines": 7,
+    "source_sha256": "95b184730bb5059c25397d39f405e79b87984de696c95f5b7274d151399f1ee0",
+    "characters": 369
+  }
+]

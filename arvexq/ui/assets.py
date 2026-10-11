@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from functools import lru_cache
 from pathlib import Path
 
@@ -17,6 +18,9 @@ def _safe_path(name: str) -> Path:
 
 @lru_cache(maxsize=32)
 def read_asset(name: str) -> str:
+    if name == "app.js":
+        names = json.loads(_safe_path("app_sources.json").read_text(encoding="utf-8"))
+        return "\n".join(_safe_path(part).read_text(encoding="utf-8") for part in names)
     return _safe_path(name).read_text(encoding="utf-8")
 
 

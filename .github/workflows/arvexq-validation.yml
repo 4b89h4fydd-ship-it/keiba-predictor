@@ -88,6 +88,16 @@ jobs:
             arvexq/infra/pure_snapshots.py
           python -m unittest discover -s tests -p 'test_app_pure_modules.py' -v
 
+      - name: Domain extraction formulas, outputs and failure isolation
+        run: |
+          python -m compileall -q app.py arvexq scripts tests
+          python -m unittest discover -s tests -p 'test_domain_extraction.py' -v
+          python scripts/arvexq_structure_inventory.py --output /tmp/arvexq-inventory.json
+          python -c 'from arvexq.ui.assets import read_asset; print(read_asset("app.js"), end="")' > /tmp/arvexq-python-app.js
+          node --check arvexq/ui/static/prediction/pace_simulation.js
+          node --check arvexq/ui/static/prediction/relative_grades.js
+          ARVEXQ_PYTHON_SOURCE=/tmp/arvexq-python-app.js node tests/domain_extraction_smoke.js
+
       - name: Static PWA build and version guard
         run: |
           python build_static.py > build-static.log 2>&1

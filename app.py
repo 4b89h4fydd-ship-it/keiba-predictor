@@ -102,7 +102,6 @@ from arvexq.prediction.legacy_model_tables import (
 )
 
 
-
 @app.middleware("http")
 async def _arvexq_timing(request: Request, call_next):
     started=time.perf_counter()
@@ -114,58 +113,6 @@ async def _arvexq_timing(request: Request, call_next):
 INDEX = read_asset("index.html")
 
 CSS = read_asset("styles.css")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 JS = read_asset("app.js")
@@ -261,177 +208,28 @@ HORSE_IDX = {
 }
 
 
-def _clean(value: str | None) -> str:
-    return (value or "").strip().replace("\u3000", " ")
+from arvexq.normalize.scalars import (
+    _clean,
+    _int,
+    _float,
+    _carried_weight,
+    _iso_date,
+    _start_time,
+    _time_seconds,
+    _normalize_sex,
+    _scratch_status,
+    _normalize_weather,
+    _normalize_condition,
+    _stable_id,
+)
 
 
-def _int(value: str | None, default: int = 0) -> int:
-    s = _clean(value).replace(",", "")
-    if not s:
-        return default
-    try:
-        return int(float(s))
-    except ValueError:
-        return default
-
-
-def _float(value: str | None, default: float = 0.0) -> float:
-    s = _clean(value).replace(",", "")
-    if not s:
-        return default
-    try:
-        return float(s)
-    except ValueError:
-        return default
-
-
-def _carried_weight(value: str | None, default: float = 0.0) -> float:
-    """斤量セルを数値にする。NAR公式は減量騎手を「▲ 51.0」「☆55.0」のように
-    印つきで出すため、float() に直接渡すと失敗して 0kg 扱いになっていた。"""
-    s = _clean(value).replace(",", "")
-    if not s:
-        return default
-    m = re.search(r"\d+(?:\.\d+)?", s)
-    if not m:
-        return default
-    try:
-        return float(m.group(0))
-    except ValueError:
-        return default
-
-
-def _iso_date(yyyymmdd: str) -> str:
-    s = re.sub(r"\D", "", yyyymmdd)
-    if len(s) != 8:
-        return yyyymmdd
-    return f"{s[:4]}-{s[4:6]}-{s[6:]}"
-
-
-def _start_time(hhmm: str) -> str:
-    s = re.sub(r"\D", "", hhmm)
-    if len(s) == 3:
-        s = "0" + s
-    if len(s) != 4:
-        return _clean(hhmm)
-    return f"{s[:2]}:{s[2:]}"
-
-
-def _time_seconds(raw: str) -> float:
-    """NAR result time e.g. '2043' => 2:04.3, '594' => 59.4."""
-    s = re.sub(r"[^0-9]", "", _clean(raw))
-    if not s:
-        return 0.0
-    if len(s) <= 3:
-        return int(s) / 10.0
-    minutes = int(s[:-3])
-    sec_tenths = int(s[-3:])
-    return minutes * 60 + sec_tenths / 10.0
-
-
-def _normalize_sex(value: str) -> str:
-    s = _clean(value)
-    if s in {"セン", "セ", "騸"}:
-        return "セ"
-    if s.startswith("牝"):
-        return "牝"
-    return "牡"
-
-
-
-def _scratch_status(value: str) -> str:
-    s=_clean(value)
-    if not s:return ""
-    if "競走除外" in s or "除外" in s:return "除外"
-    if "出走取消" in s or "取消" in s:return "出走取消"
-    if "欠場" in s:return "欠場"
-    return ""
-
-
-def _normalize_weather(value: str) -> str:
-    s = _clean(value)
-    for v in ("晴", "曇", "小雨", "雨", "小雪", "雪"):
-        if v in s:
-            return v
-    return "不明"
-
-
-def _normalize_condition(value: str) -> str:
-    s = _clean(value)
-    # Banei uses a moisture percentage rather than 良/稍重/重/不良.
-    for v in ("不良", "稍重", "重", "良"):
-        if v in s:
-            return v
-    return "不明"
-
-
-def _stable_id(*parts: object) -> int:
-    digest = hashlib.blake2s("|".join(map(str, parts)).encode("utf-8"), digest_size=4).digest()
-    return int.from_bytes(digest, "big") & 0x7FFFFFFF
-
-
-def read_csv_from_zip(zip_bytes: bytes, suffix: str) -> list[list[str]]:
-    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
-        matches = [n for n in zf.namelist() if n.lower().endswith(suffix.lower())]
-        if not matches:
-            return []
-        text = decode_csv_bytes(zf.read(matches[0]))
-    return [row for row in csv.reader(io.StringIO(text)) if row]
-
-
-def strip_header(rows: list[list[str]]) -> list[list[str]]:
-    if rows and rows[0] and _clean(rows[0][0]) == "競馬場":
-        return rows[1:]
-    return rows
-
-
-def _top_level_tokens(text: str) -> list[str]:
-    """Split a NAR corner-order string while keeping '(2,7)' as one group."""
-    text = _clean(text)
-    if not text:
-        return []
-    tokens: list[str] = []
-    buf: list[str] = []
-    depth = 0
-    for ch in text:
-        if ch == "(":
-            depth += 1
-            buf.append(ch)
-        elif ch == ")":
-            depth = max(0, depth - 1)
-            buf.append(ch)
-        elif ch == "," and depth == 0:
-            if buf:
-                tokens.append("".join(buf).strip())
-                buf = []
-        else:
-            buf.append(ch)
-    if buf:
-        tokens.append("".join(buf).strip())
-    return tokens
-
-
-def parse_corner_order(text: str) -> dict[int, int]:
-    """
-    Convert NAR's race-level passage order to {horse_number: position}.
-    Parenthesized groups are treated as tied; hyphens are distance separators,
-    not missing horses, so numbers remain sequential positions.
-    """
-    positions: dict[int, int] = {}
-    rank = 1
-    for token in _top_level_tokens(text):
-        tied = token.startswith("(") and token.endswith(")")
-        nums = [int(x) for x in re.findall(r"\d+", token)]
-        if not nums:
-            continue
-        if tied and len(nums) > 1:
-            for horse_no in nums:
-                positions[horse_no] = rank
-            rank += len(nums)
-        else:
-            for horse_no in nums:
-                positions[horse_no] = rank
-                rank += 1
-    return positions
+from arvexq.ingest.parsers.nar_archive import (
+    read_csv_from_zip,
+    strip_header,
+    _top_level_tokens,
+    parse_corner_order,
+)
 
 
 @dataclass
@@ -472,30 +270,9 @@ _arvexq_installer(globals())
 del _arvexq_installer
 
 
-def normalize_central_race(raw: dict) -> dict | None:
-    if not isinstance(raw, dict):
-        return None
-    date = _clean(str(raw.get("date") or ""))
-    track = _clean(str(raw.get("track") or ""))
-    race_no = _int(str(raw.get("raceNumber") or raw.get("race_no") or "0"))
-    if not date or not track or race_no <= 0:
-        return None
-    horses = raw.get("horses") if isinstance(raw.get("horses"), list) else []
-    rid = _clean(str(raw.get("id") or f"jra-{date}-{track}-{race_no:02d}"))
-    out = dict(raw)
-    out.update({
-        "id": rid, "circuit": "中央", "date": date, "track": track, "raceNumber": race_no,
-        "title": raw.get("title") or f"{race_no}R", "distance": int(raw.get("distance") or 0),
-        "condition": raw.get("condition") or "不明", "weather": raw.get("weather") or "不明",
-        "surface": raw.get("surface") or raw.get("trackType") or "",
-        "fieldSize": int(raw.get("fieldSize") or len(horses)),
-        "racePrize1": int(raw.get("racePrize1") or raw.get("prize1") or 0),
-        "startTime": raw.get("startTime") or raw.get("actualStartTime") or "",
-        "scheduledStartTime": raw.get("scheduledStartTime") or raw.get("originalStartTime") or raw.get("startTime") or raw.get("actualStartTime") or "",
-        "horses": horses, "source": raw.get("source") or "中央本番フィード",
-    })
-    out["startTimeChanged"] = bool(out.get("scheduledStartTime") and out.get("startTime") and out.get("scheduledStartTime") != out.get("startTime"))
-    return out
+from arvexq.normalize.central_feed import (
+    normalize_central_race,
+)
 
 
 JRA_TRACK_CODES = {"01":"札幌","02":"函館","03":"福島","04":"新潟","05":"東京","06":"中山","07":"中京","08":"京都","09":"阪神","10":"小倉"}
@@ -729,43 +506,14 @@ def _jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
             if len(out)>=limit:return out
     return out
 
-def _jra_merge_run_fields(base:dict,incoming:dict)->dict:
-    """Merge duplicate starts field-by-field instead of discarding richer data."""
-    out=dict(base or {})
-    for key,value in (incoming or {}).items():
-        if not _jra_run_value_present(key,out.get(key)) and _jra_run_value_present(key,value):out[key]=value
-        elif key=="cornerPositions" and value and len(value)>len(out.get(key) or []):out[key]=value
-    sources=[]
-    for src in (str((base or {}).get("source") or ""),str((incoming or {}).get("source") or "")):
-        if src and src not in sources:sources.append(src)
-    if sources:out["source"]=" + ".join(sources)
-    return out
+from arvexq.ingest.history.run_merge import (
+    _jra_merge_run_fields,
+    _jra_run_core_complete,
+    _jra_history_complete,
+    _jra_merge_runs,
+    _merge_fast_history,
+)
 
-
-def _jra_run_core_complete(r:dict)->bool:
-    try:finish=int(r.get("finish") or 0);field=int(r.get("fieldSize") or 0);distance=int(r.get("distance") or 0)
-    except (TypeError,ValueError):return False
-    return bool(str(r.get("date") or "") and str(r.get("track") or "") and finish>0 and field>1 and distance>0)
-
-
-def _jra_history_complete(runs:list[dict],career_complete:bool=False)->bool:
-    rows=[r for r in (runs or []) if isinstance(r,dict)]
-    target=min(5,len(rows)) if career_complete else 5
-    if target==0:return bool(career_complete)
-    return len(rows)>=target and sum(1 for r in rows[:target] if _jra_run_core_complete(r))>=target
-
-
-def _jra_merge_runs(a:list[dict],b:list[dict],limit:int=5)->list[dict]:
-    merged={};order=[]
-    for r in list(a or [])+list(b or []):
-        if not isinstance(r,dict):continue
-        key=_jra_run_key(r)
-        if key not in merged:
-            merged[key]=dict(r);order.append(key)
-        else:merged[key]=_jra_merge_run_fields(merged[key],r)
-    allr=[merged[k] for k in order]
-    allr.sort(key=lambda r:str(r.get("date") or ""),reverse=True)
-    return allr[:limit]
 
 def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
@@ -1044,14 +792,13 @@ def fetch_central_feed(iso_date: str, history: bool = False) -> list[dict]:
     rows = body if isinstance(body, list) else body.get("races", [])
     return [r for r in (normalize_central_race(x) for x in rows) if r]
 
-def iter_months_back(target: dt_date, count: int) -> Iterator[tuple[int, int]]:
-    year, month = target.year, target.month
-    for _ in range(count):
-        month -= 1
-        if month == 0:
-            year -= 1
-            month = 12
-        yield year, month
+from arvexq.ingest.scheduling import (
+    iter_months_back,
+    _race_minutes,
+    _commercial_target_rows,
+    _months_from_race_date,
+    _race_minutes_server,
+)
 
 
 def sync_recent_history(months: int = 12) -> list[dict]:
@@ -1282,27 +1029,6 @@ _commercial_collector_state={
     "hydrated":0,"diagnosed":0,"cycleSec":0,
 }
 
-def _race_minutes(row:dict)->int:
-    s=str(row.get("startTime") or "")
-    m=re.match(r"^(\d{1,2}):(\d{2})$",s)
-    return int(m.group(1))*60+int(m.group(2)) if m else 9999
-
-def _commercial_target_rows(rows:list[dict], now_min:int)->list[dict]:
-    """Commercial mode prepares the whole day; upcoming races are simply first."""
-    valid=[r for r in rows if r.get("id") and r.get("track")]
-    valid.sort(key=lambda r:(
-        0 if _race_minutes(r)>=now_min-25 else 1,
-        abs(_race_minutes(r)-now_min),
-        str(r.get("track") or ""),
-        int(r.get("raceNumber") or 0),
-    ))
-    seen=set();out=[]
-    for r in valid:
-        rid=str(r.get("id") or "")
-        if rid and rid not in seen:
-            seen.add(rid);out.append(r)
-    return out
-
 
 def _commercial_collect_once():
     started=time.time()
@@ -1457,15 +1183,6 @@ def _sync_nar_month_wave(months: list[tuple[int, int]]) -> tuple[list[dict], lis
 _race_history_lock = threading.Lock()
 _race_history_jobs: dict[str, dict] = {}
 
-def _months_from_race_date(iso_date: str, count: int):
-    d = datetime.strptime(iso_date, "%Y-%m-%d").date()
-    y, m = d.year, d.month
-    for _ in range(max(1, count)):
-        yield y, m
-        m -= 1
-        if m == 0:
-            y -= 1
-            m = 12
 
 def _history_counts(horse_names: list[str], cutoff: str) -> dict:
     names = [x for x in dict.fromkeys(horse_names) if x]
@@ -1616,7 +1333,6 @@ def nar_race_summaries(iso_date: str) -> list[dict]:
         return out
     finally:
         conn.close()
-
 
 
 NETKEIBA_TRACK_CODES={"01":"札幌","02":"函館","03":"福島","04":"新潟","05":"東京","06":"中山","07":"中京","08":"京都","09":"阪神","10":"小倉"}
@@ -1802,30 +1518,12 @@ def _netkeiba_race_id(iso_date:str,track:str,race_no:int)->str:
         if str(r.get("track"))==str(track) and int(r.get("raceNumber") or 0)==int(race_no):return str(r.get("netkeibaRaceId") or "")
     return ""
 
-def _parse_recent_cell(txt:str)->dict|None:
-    s=_clean(txt)
-    md=re.search(r"(20\d{2})[./](\d{1,2})[./](\d{1,2})\s*([^\s]+)\s+(\d+)\s+(.+?)\s+((?:芝|ダ|障)[^0-9 ]*)(\d{3,4})",s)
-    if not md:return None
-    date=f"{int(md.group(1)):04d}-{int(md.group(2)):02d}-{int(md.group(3)):02d}";track=md.group(4);finish=int(md.group(5));title=_clean(md.group(6));distance=int(md.group(8));surface=md.group(7)
-    tm=0.0;mt=re.search(r"\b(\d+):(\d{2}\.\d)\b",s)
-    if mt:tm=int(mt.group(1))*60+float(mt.group(2))
-    cond="不明";mc=re.search(r"(?:^|\s)(良|稍|重|不)(?:\s|$)",s)
-    if mc:cond=mc.group(1)
-    field=0;mf=re.search(r"(\d+)頭",s);field=int(mf.group(1)) if mf else 0
-    corners=[]
-    for cm in re.findall(r"(?<!\d)(\d{1,2}(?:-\d{1,2}){1,3})(?!\d)",s):
-        vals=[int(x) for x in cm.split("-")]
-        if vals and max(vals)<=(field if field else 30):
-            corners=vals;break
-    # 斤量は「通過順」の直前にある。単純に最初の2桁を拾うと着順(10〜18)や
-    # 頭数を誤って斤量にしてしまうため、通過順の直前を優先して探す。
-    cw=0.0;mw=re.search(r"(?<!\d)(\d{2}(?:\.\d)?)\s+(?=\d{1,2}(?:-\d{1,2}){1,3}(?!\d))",s)
-    if not mw:mw=re.search(r"(?<!\d)(5[0-9](?:\.\d)?)(?!\d)",s)
-    if not mw:mw=re.search(r"\s(\d{2}(?:\.\d)?)\s",s)
-    if mw:
-        try:cw=float(mw.group(1))
-        except Exception:pass
-    return {"date":date,"track":track,"title":title,"distance":distance,"surface":"障害" if surface.startswith("障") else ("芝" if surface.startswith("芝") else "ダート"),"condition":cond,"weather":"不明","fieldSize":field,"finish":finish,"timeSeconds":tm,"cornerPositions":corners,"carriedWeight":cw,"source":"netkeiba"}
+from arvexq.ingest.parsers.supplemental import (
+    _parse_recent_cell,
+    _safe_float,
+    _safe_int,
+    _smart_normalize_row,
+)
 
 _NK_WAKU_RE = re.compile(r"^Waku(\d)$")
 _NK_ODDS_ID_RE = re.compile(r"^odds-1_(\d{1,2})$")
@@ -1970,8 +1668,6 @@ def _nk_row_horse(tr, index: int | None = None) -> dict | None:
         "jockeyStats": {}, "trainerStats": {}, "jockeyProfile": {}, "trainerProfile": {},
         "source": "netkeiba",
     }
-
-
 
 
 def _netkeiba_detail_rows(detail:dict)->list[dict]:
@@ -2348,8 +2044,6 @@ def nar_race_detail(race_id: str) -> dict | None:
         except Exception:pass
 
 
-
-
 def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
     """Attach recent NAR runs for all horses with one SQL query, avoiding N+1."""
     if not isinstance(detail,dict) or str(detail.get("circuit") or "")!="地方":
@@ -2397,74 +2091,11 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
     return detail
 
 
-def _horse_key(value: str) -> str:
-    return re.sub(r"[\s\u3000]+", "", _clean(str(value or "")))
-
-
-def _central_find_horse(race: dict, horse_name: str) -> tuple[dict | None, dict | None]:
-    key = _horse_key(horse_name)
-    horse = None
-    for h in race.get("horses", []) or []:
-        if _horse_key(h.get("name")) == key:
-            horse = h
-            break
-    finisher = None
-    result = race.get("result") if isinstance(race.get("result"), dict) else {}
-    finishers = result.get("finishers") if isinstance(result.get("finishers"), list) else []
-    for f in finishers:
-        same_no = horse is not None and int(f.get("horseNumber") or 0) == int(horse.get("horseNumber") or 0)
-        same_name = _horse_key(f.get("name")) == key
-        if same_no or same_name:
-            finisher = f
-            break
-    return horse, finisher
-
-
-def _central_run_from_race(race: dict, horse_name: str) -> dict | None:
-    horse, fin = _central_find_horse(race, horse_name)
-    if horse is None and fin is None:
-        return None
-    horse = horse or {}
-    fin = fin or {}
-    finish = int(fin.get("finish") or horse.get("finish") or 0)
-    corners = fin.get("cornerPositions") or horse.get("cornerPositions") or []
-    if not isinstance(corners, list):
-        corners = []
-    last3f = fin.get("last3FSeconds") or fin.get("last3F") or horse.get("last3FSeconds") or horse.get("last3F")
-    try:last3f=float(last3f) if last3f not in (None,"") else None
-    except (TypeError,ValueError):last3f=None
-    last3f = fin.get("last3FSeconds") or fin.get("last3F") or horse.get("last3FSeconds") or horse.get("last3F")
-    try:last3f=float(last3f) if last3f not in (None,"") else None
-    except (TypeError,ValueError):last3f=None
-    last3f_rank=fin.get("last3FRank") or horse.get("last3FRank")
-    try:last3f_rank=int(last3f_rank) if last3f_rank not in (None,"") else None
-    except (TypeError,ValueError):last3f_rank=None
-    last3f_pct=fin.get("last3FPercentile") if fin.get("last3FPercentile") is not None else horse.get("last3FPercentile")
-    try:last3f_pct=float(last3f_pct) if last3f_pct is not None else None
-    except (TypeError,ValueError):last3f_pct=None
-    return {
-        "raceId": race.get("id") or "",
-        "date": race.get("date") or "",
-        "track": race.get("track") or "",
-        "raceNumber": int(race.get("raceNumber") or 0),
-        "title": race.get("title") or "",
-        "distance": int(race.get("distance") or 0),
-        "condition": race.get("condition") or "不明",
-        "weather": race.get("weather") or "不明",
-        "surface": race.get("surface") or "",
-        "fieldSize": int(race.get("fieldSize") or len(race.get("horses") or [])),
-        "finish": finish,
-        "timeSeconds": float(fin.get("timeSeconds") or horse.get("timeSeconds") or 0),
-        "last3FSeconds": last3f,
-        "last3FRank": last3f_rank,
-        "last3FPercentile": last3f_pct,
-        "cornerPositions": [int(x) for x in corners if str(x).strip().isdigit()],
-        "carriedWeight": float(horse.get("carriedWeight") or fin.get("carriedWeight") or 0),
-        "racePrize1": int(race.get("racePrize1") or 0),
-        "jockey": horse.get("jockey") or fin.get("jockey") or "",
-        "trainer": horse.get("trainer") or fin.get("trainer") or "",
-        "source": race.get("source") or "中央フィード",
-    }
+from arvexq.ingest.history.central_rows import (
+    _horse_key,
+    _central_find_horse,
+    _central_run_from_race,
+)
 
 
 def _central_resolve_race_id(run: dict) -> str:
@@ -2663,46 +2294,10 @@ def _start_central_history_search(race_id: str, iso_date: str, force: bool = Fal
     return dict(job)
 
 
-
-def _parse_netkeiba_win_odds_payload(raw:str)->dict:
-    if not raw:return {}
-    s=str(raw).strip()
-    if not s.startswith("{"):
-        m=re.search(r"\((\{.*\})\)\s*;?\s*$",s,re.S)
-        if m:s=m.group(1)
-    try:body=json.loads(s)
-    except Exception:return {}
-    data=body.get("data") if isinstance(body,dict) else None
-    odds=(data.get("odds") if isinstance(data,dict) else None) or {}
-    win=odds.get("1") if isinstance(odds,dict) else None
-    if win is None and isinstance(odds,dict):win=odds.get(1)
-    if not isinstance(win,dict):return {}
-    out={}
-    for k,v in win.items():
-        try:no=int(str(k))
-        except Exception:continue
-        odd=None;pop=None
-        if isinstance(v,(list,tuple)):
-            if len(v)>0:
-                candidate=str(v[0]).replace(",","").strip()
-                if re.fullmatch(r"\d+(?:\.\d+)?",candidate):
-                    try:odd=float(candidate)
-                    except Exception:odd=None
-            if len(v)>2:
-                try:pop=int(float(v[2]))
-                except Exception:pop=None
-        elif isinstance(v,dict):
-            for kk in ("odds","win","tan"):
-                if v.get(kk) not in (None,""):
-                    try:odd=float(v.get(kk));break
-                    except Exception:pass
-            for kk in ("popularity","popular","rank","ninki"):
-                if v.get(kk) not in (None,""):
-                    try:pop=int(float(v.get(kk)));break
-                    except Exception:pass
-        if odd is not None and odd>0:
-            out[no]={"winOdds":odd,"popularity":pop,"oddsSource":"netkeiba実オッズ"}
-    return out
+from arvexq.ingest.parsers.market import (
+    _parse_netkeiba_win_odds_payload,
+    _parse_payouts,
+)
 
 
 def _netkeiba_live_win_odds(detail:dict,force:bool=False)->dict:
@@ -2756,86 +2351,6 @@ def _merge_result_fields(detail:dict,result:dict)->dict:
         detail["oddsSource"]="netkeiba最終";detail["oddsType"]="単勝最終オッズ";detail["oddsUpdatedAt"]=_now_jst().strftime("%H:%M:%S")
     detail["fieldSize"]=int(detail.get("fieldSize") or len(hs))
     return detail
-
-def _parse_payouts(soup) -> list[dict]:
-    """Parse official payout tables robustly, including NAR line-break cells."""
-    import unicodedata
-    aliases={
-        "単勝":"単勝","複勝":"複勝",
-        "枠連":"枠連","枠複":"枠連","枠連複":"枠連",
-        "馬連":"馬連","馬複":"馬連","馬連複":"馬連",
-        "ワイド":"ワイド",
-        "馬単":"馬単","馬連単":"馬単",
-        "3連複":"3連複","三連複":"3連複","３連複":"3連複",
-        "3連単":"3連単","三連単":"3連単","３連単":"3連単",
-    }
-    label_keys=sorted(aliases,key=len,reverse=True)
-    out=[];seen=set()
-
-    def norm(v):
-        return re.sub(r"\s+","",unicodedata.normalize("NFKC",str(v or "")))
-
-    def lines(cell):
-        copy=BeautifulSoup(str(cell),"html.parser")
-        for br in copy.find_all("br"):br.replace_with("\n")
-        vals=[]
-        for x in copy.get_text("\n").splitlines():
-            x=norm(x)
-            if x:vals.append(x)
-        return vals
-
-    def add(kind,combo,amount):
-        kind=aliases.get(kind,kind);combo=norm(combo);amount=norm(amount)
-        cm=re.fullmatch(r"\d+(?:[-→・]\d+){0,2}",combo)
-        am=re.fullmatch(r"([\d,]+)円?",amount)
-        if not cm or not am:return
-        value=int(am.group(1).replace(",",""))
-        key=(kind,combo,value)
-        if key in seen:return
-        seen.add(key)
-        out.append({"type":kind,"combination":combo,"amount":value})
-
-    for table in soup.find_all("table"):
-        current=""
-        for tr in table.find_all("tr"):
-            cells=tr.find_all(["th","td"],recursive=False)
-            if not cells:continue
-            cell_lines=[lines(c) for c in cells]
-            flat=[x for group in cell_lines for x in group]
-            label_i=None;label_raw=""
-            for i,group in enumerate(cell_lines):
-                for v in group:
-                    hit=next((k for k in label_keys if norm(v)==norm(k)),None)
-                    if hit:
-                        label_i=i;label_raw=hit;break
-                if label_i is not None:break
-            if label_i is not None:
-                current=aliases[label_raw]
-                payload=[x for group in cell_lines[label_i+1:] for x in group]
-            elif current:
-                payload=flat
-            else:
-                continue
-
-            combos=[x for x in payload if re.fullmatch(r"\d+(?:[-→・]\d+){0,2}",norm(x))]
-            amounts=[x for x in payload if re.fullmatch(r"[\d,]+円",norm(x))]
-            if combos and amounts:
-                for combo,amount in zip(combos,amounts):
-                    add(current,combo,amount)
-
-    if not out:
-        raw=unicodedata.normalize("NFKC",soup.get_text("\n"))
-        raw=re.sub(r"[ \t]+","",raw)
-        labels="|".join(re.escape(k) for k in label_keys)
-        chunks=list(re.finditer(rf"(?m)^({labels})\s*$",raw))
-        for idx,m in enumerate(chunks):
-            kind=aliases.get(norm(m.group(1)),norm(m.group(1)))
-            seg=raw[m.end():chunks[idx+1].start() if idx+1<len(chunks) else m.end()+500]
-            combos=re.findall(r"(?m)^(?:\s*)(\d+(?:[-→・]\d+){0,2})(?:\s*)$",seg)
-            amounts=re.findall(r"([\d,]+)\s*円",seg)
-            for combo,amount in zip(combos,amounts):
-                add(kind,combo,amount+"円")
-    return out
 
 
 def _fetch_nar_payouts_only(detail: dict) -> tuple[list[dict],str]:
@@ -3195,28 +2710,6 @@ _smart_cache_lock=threading.Lock(); _smart_cache:dict[str,tuple[float,dict]]={}
 _enrich_jobs_lock=threading.Lock(); _enrich_jobs:dict[str,dict]={}
 _enrich_data_lock=threading.Lock(); _enrich_data:dict[str,dict]={}
 
-def _safe_float(v):
-    try:
-        if v is None or v=="": return None
-        if isinstance(v,str):
-            m=re.search(r"-?\d+(?:\.\d+)?",v.replace(",","").strip())
-            if not m:return None
-            v=m.group(0)
-        return float(v)
-    except Exception:return None
-
-def _safe_int(v):
-    x=_safe_float(v); return int(x) if x is not None else None
-
-def _smart_normalize_row(x:dict)->dict|None:
-    if not isinstance(x,dict):return None
-    no=_safe_int(_pick(x,"horseNumber","horse_no","uno","number","馬番")); name=str(_pick(x,"name","hname","horseName","馬名") or "").strip()
-    if not no and not name:return None
-    smart={"ten1f":_pick(x,"ten1f","ten1f_best","h1_ten1f","テン1F"),"ten":_pick(x,"ten","ten_pat","ten_has","テン"),"agari":_pick(x,"agari","agari3f","furlong3","agari_pat","agari_has","上がり"),"estimatedPopularity":_pick(x,"estimatedPopularity","est_pop","推人","推定人気")}
-    out={"horseNumber":no,"name":name,"smartRc":smart}
-    rr=_pick(x,"recentRaces","recent_races")
-    if isinstance(rr,list):out["recentRaces"]=[z for z in rr if isinstance(z,dict)][:5]
-    return out
 
 def _format_feed_url(base:str,detail:dict)->str:
     vals={"date":str(detail.get("date") or ""),"yyyymmdd":str(detail.get("date") or "").replace("-",""),"track":str(detail.get("track") or ""),"race":str(detail.get("raceNumber") or ""),"circuit":str(detail.get("circuit") or ""),"race_id":str(detail.get("id") or "")}
@@ -3394,7 +2887,6 @@ def _apply_enrichment(race_id:str,detail:dict)->dict:
     return detail
 
 
-
 # --- v123 live weather / going -----------------------------------------
 _environment_lock=threading.Lock()
 _environment_running:set[str]=set()
@@ -3524,9 +3016,6 @@ def _jra_fetch_environment(row:dict)->dict:
         out.update({"source":"JRA公式優先","updatedAtEpoch":int(time.time())})
     return out
 
-def _race_minutes_server(row:dict)->int:
-    m=re.match(r"^(\d{1,2}):(\d{2})",str(row.get("startTime") or row.get("scheduledStartTime") or ""))
-    return int(m.group(1))*60+int(m.group(2)) if m else 9999
 
 def _upcoming_rows(rows:list[dict])->list[dict]:
     if not rows:return []
@@ -3684,44 +3173,11 @@ def _start_environment_collector():
 # We prepare complete display JSON in the background and serve that snapshot first.
 
 
-def _safe_body_weight_value(value):
-    if value in (None,""):return None
-    try:
-        m=re.search(r"(?<!\d)(\d{3})(?!\d)",str(value))
-        x=int(m.group(1)) if m else int(round(float(value)))
-    except Exception:return None
-    return x if 250<=x<=800 else None
-
-
-def _safe_carried_weight_value(value, body_weight=None):
-    if value in (None,""):return None
-    try:x=float(re.sub(r"[^0-9.+-]","",str(value)))
-    except Exception:return None
-    # Strict mode: 斤量 is already a kg value. Do not auto-divide 3-digit values,
-    # because a horse body weight such as 500 can otherwise become a false 50kg.
-    if 35<=x<=80:return round(x,1)
-    return None
-
-
-def _sanitize_horse_measurements(h:dict)->dict:
-    if not isinstance(h,dict):return h
-    z=dict(h)
-    bw=_safe_body_weight_value(z.get("bodyWeight") or z.get("horseWeight") or z.get("currentBodyWeight"))
-    z["bodyWeight"]=bw
-    ch=z.get("bodyWeightChange")
-    try:ch=int(float(ch)) if ch not in (None,"") else None
-    except Exception:ch=None
-    z["bodyWeightChange"]=ch if ch is not None and abs(ch)<=99 else None
-    z["carriedWeight"]=_safe_carried_weight_value(z.get("carriedWeight"),bw)
-    runs=[]
-    for rr in list(z.get("allPastRuns") or z.get("recentRaces") or []):
-        if not isinstance(rr,dict):continue
-        q=dict(rr);rbw=_safe_body_weight_value(q.get("bodyWeight"));q["bodyWeight"]=rbw
-        q["carriedWeight"]=_safe_carried_weight_value(q.get("carriedWeight"),rbw)
-        runs.append(q)
-    if z.get("allPastRuns") is not None:z["allPastRuns"]=runs
-    z["recentRaces"]=runs[:5]
-    return z
+from arvexq.normalize.measurements import (
+    _safe_body_weight_value,
+    _safe_carried_weight_value,
+    _sanitize_horse_measurements,
+)
 
 
 PRERACE_AUDIT_VERSION = "arvexq-prerace-audit-v317-consensus-rebuild"
@@ -3748,50 +3204,11 @@ def _prediction_clock_state(detail: dict) -> tuple[str, int | None]:
     return ("pre" if nowm<post else "started"),post-nowm
 
 
-def _learning_probability(rows:list[dict], weights:dict, power:float=1.0, shrink:float=0.0)->list[float]:
-    """Market-independent winner distribution from immutable pre-race lock fields."""
-    if not rows:return []
-    p1=_prob_vector([float(x.get("p1Probability") or 0) for x in rows])
-    win=_prob_vector([float(x.get("winEvidenceProbability") or 0) for x in rows])
-    pair=_prob_vector([float(x.get("pairwiseWinRate") or .5) for x in rows])
-    w1=float(weights.get("p1",.58));w2=float(weights.get("winEvidence",.24));w3=float(weights.get("pairwise",.18))
-    raw=[max(1e-12,w1*p1[i]+w2*win[i]+w3*pair[i]) for i in range(len(rows))]
-    pw=max(.55,min(1.65,float(power or 1.0)))
-    raw=[x**pw for x in raw];sm=sum(raw) or 1.0;probs=[x/sm for x in raw]
-    sh=max(0.0,min(.25,float(shrink or 0.0)));u=1.0/len(rows)
-    if sh:probs=[(1-sh)*x+sh*u for x in probs]
-    sm=sum(probs) or 1.0
-    return [x/sm for x in probs]
-
-
-def _learning_metric(races:list[dict], weights:dict, power:float=1.0, shrink:float=0.0)->dict:
-    """Winner metrics from immutable pre-race probabilities only.
-
-    Top-1 is the primary objective. Log loss, Brier and ECE are calibration guards;
-    they prevent a superficially good ranker from becoming over-confident.
-    """
-    if not races:return {"races":0,"top1":0.0,"logLoss":None,"brier":None,"ece":None,"hits":0,"horseSamples":0}
-    hits=0;ll=0.0;br=0.0;used=0;cal=[]
-    for z in races:
-        rows=z.get("horses") or [];winner=int(z.get("winnerNo") or 0)
-        probs=_learning_probability(rows,weights,power,shrink)
-        if not probs or winner<=0:continue
-        try:wi=next(i for i,x in enumerate(rows) if int(x.get("horseNumber") or 0)==winner)
-        except StopIteration:continue
-        pred=max(range(len(probs)),key=lambda i:(probs[i],-int(rows[i].get("horseNumber") or 999)))
-        hits+=1 if pred==wi else 0;ll-=math.log(max(1e-12,probs[wi]));br+=sum((p-(1.0 if i==wi else 0.0))**2 for i,p in enumerate(probs));used+=1
-        cal.extend((float(p),1 if i==wi else 0) for i,p in enumerate(probs))
-    ece=0.0
-    if cal:
-        for bi in range(10):
-            lo=bi/10;hi=(bi+1)/10
-            vals=[x for x in cal if x[0]>=lo and (x[0]<hi or (bi==9 and x[0]<=hi))]
-            if vals:
-                pm=sum(x[0] for x in vals)/len(vals);ar=sum(x[1] for x in vals)/len(vals)
-                ece+=abs(pm-ar)*len(vals)/len(cal)
-    return {"races":used,"hits":hits,"top1":round(hits/used,6) if used else 0.0,
-            "logLoss":round(ll/used,6) if used else None,"brier":round(br/used,6) if used else None,
-            "ece":round(ece,6) if cal else None,"horseSamples":len(cal)}
+from arvexq.backtest.probability_metrics import (
+    _learning_probability,
+    _learning_metric,
+    _learning_paired_top1,
+)
 
 
 def _learning_races(as_of_date:str,circuit:str)->list[dict]:
@@ -3822,22 +3239,6 @@ def _learning_races(as_of_date:str,circuit:str)->list[dict]:
         out.append({"date":str(row["race_date"] or ""),"winnerNo":winner,"horses":horses,"dataQuality":quality,
                     "profileId":str((lock.get("learningProfile") or {}).get("profileId") or "baseline")})
     return out
-
-
-def _learning_paired_top1(races:list[dict], base_w:dict, cand_w:dict, power:float, shrink:float)->dict:
-    base_only=cand_only=both=neither=0
-    for z in races:
-        rows=z.get("horses") or [];winner=int(z.get("winnerNo") or 0)
-        bp=_learning_probability(rows,base_w,1.0,0.0);cp=_learning_probability(rows,cand_w,power,shrink)
-        if not bp or not cp:continue
-        b=rows[max(range(len(bp)),key=lambda i:(bp[i],-int(rows[i].get("horseNumber") or 999)))]
-        c=rows[max(range(len(cp)),key=lambda i:(cp[i],-int(rows[i].get("horseNumber") or 999)))]
-        bh=int(b.get("horseNumber") or 0)==winner;ch=int(c.get("horseNumber") or 0)==winner
-        if bh and ch:both+=1
-        elif bh:base_only+=1
-        elif ch:cand_only+=1
-        else:neither+=1
-    return {"candidateOnly":cand_only,"baselineOnly":base_only,"both":both,"neither":neither,"netWins":cand_only-base_only}
 
 
 V312_CIRCUIT_METHODS = {
@@ -4474,121 +3875,15 @@ _prewarm_running: set[str] = set()
 _prewarm_state: dict[str, dict] = {}
 
 
-def _pc_clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, float(v)))
-
-
-def _pc_race_field(rr: dict) -> int:
-    return max(4, int(rr.get("fieldSize") or 12))
-
-
-def _pc_finish_quality(rr: dict) -> float:
-    fin=int(rr.get("finish") or 0); fs=_pc_race_field(rr)
-    if fin <= 0:return .45
-    return _pc_clamp(1-(fin-1)/max(3,fs-1))
-
-
-def _pc_list_quality(rows: list[dict], target_dist: int) -> float:
-    if not rows:return .5
-    num=den=0.0
-    for i,rr in enumerate(rows):
-        w=.82**i
-        q=_pc_finish_quality(rr)
-        ti=_pc_time_index(rr,target_dist)
-        q=q*.72+(_pc_clamp(ti/18) if ti else .5)*.28
-        num+=q*w;den+=w
-    return num/den if den else .5
-
-
-def _pc_style_metrics(horse: dict, race: dict) -> dict:
-    rs=list(horse.get("recentRaces") or [])
-    c=[0.0,0.0,0.0,0.0];den=early_den=early3=moved3=tempo_num=tempo_den=0.0;samples=0
-    target=int(race.get("distance") or 0)
-    for i,rr in enumerate(rs):
-        pos_list=list(rr.get("cornerPositions") or [])
-        try:pos=int(pos_list[0]) if pos_list else 0
-        except Exception:pos=0
-        if pos <= 0:continue
-        fs=_pc_race_field(rr); norm=(pos-1)/max(1,fs-1)
-        delta=abs(int(rr.get("distance") or 0)-target)
-        rel=1.22 if delta<=100 else (1.08 if delta<=300 else (.74 if delta>=700 else 1.0))
-        if str(rr.get("track") or "")==str(race.get("track") or ""):rel*=1.10
-        if str(rr.get("condition") or "") not in ("","不明") and str(rr.get("condition") or "")==str(race.get("condition") or ""):rel*=1.05
-        w=(.82**i)*rel;den+=w;early_den+=w;samples+=1
-        if pos==1:c[0]+=w
-        elif pos<=3 or norm<=.22:c[1]+=w
-        elif norm<=.62:c[2]+=w
-        else:c[3]+=w
-        if pos<=3:early3+=w
-        later=[]
-        for z in pos_list[1:]:
-            try:
-                z=int(z)
-                if z>0:later.append(z)
-            except Exception:pass
-        if pos>3 and later and min(later)<=3:moved3+=w
-        ten=_pc_clamp(1-(pos-1)/max(3,fs-1));tempo_num+=ten*w;tempo_den+=w
-    if not den:
-        return {"front":0,"stalk":0,"mid":0,"close":0,"early3":0,"moved3":0,"ten":.5,"samples":0,"stylePoint":None,"pastStyle":"履歴なし"}
-    front,stalk,mid,close=[z/den for z in c]
-    point=front+2*stalk+3*mid+4*close
-    name="逃げ" if point<1.65 else ("先行" if point<2.35 else ("差し" if point<3.15 else "追込"))
-    return {"front":front,"stalk":stalk,"mid":mid,"close":close,"early3":early3/early_den if early_den else 0,"moved3":moved3/early_den if early_den else 0,"ten":tempo_num/tempo_den if tempo_den else .5,"samples":samples,"stylePoint":round(point,4),"pastStyle":name}
-
-
-def _pc_sectional_score(horse: dict, race: dict) -> tuple[float | None, int]:
-    """Closing-section evidence from historical 3F times, normalized by each run's own average speed.
-
-    This deliberately uses only past-race data. It does not infer missing sectionals and
-    never reads the current race result/market. The ratio makes the signal portable across
-    distances/tracks better than comparing raw 3F seconds directly.
-    """
-    rows=list(horse.get("allPastRuns") or horse.get("recentRaces") or [])
-    target=int(race.get("distance") or 0); num=den=0.0; used=0
-    for i,rr in enumerate(rows[:8]):
-        try:
-            ag=float(rr.get("agari3f") or rr.get("agari") or 0)
-            sec=float(rr.get("timeSeconds") or 0)
-            dist=int(rr.get("distance") or 0)
-        except Exception:
-            continue
-        if not (27.0 <= ag <= 50.0) or sec <= 0 or dist < 600:
-            continue
-        avg_speed=dist/sec
-        close_speed=600.0/ag
-        if avg_speed <= 0:continue
-        ratio=close_speed/avg_speed
-        # Around 1.00 is an even finish; 1.15-1.30 is a strong closing section.
-        q=_pc_clamp((ratio-.96)/.36)
-        try:rank=int(rr.get("agariRank") or rr.get("agari_rank") or 0)
-        except Exception:rank=0
-        if rank>0:
-            fs=_pc_race_field(rr)
-            rq=_pc_clamp(1-(rank-1)/max(3,fs-1))
-            q=q*.82+rq*.18
-        delta=abs(dist-target) if target else 0
-        rel=1.16 if delta<=100 else (1.06 if delta<=300 else (.78 if delta>=700 else .94))
-        if str(rr.get("track") or "")==str(race.get("track") or ""):rel*=1.06
-        w=(.84**i)*rel
-        num+=q*w;den+=w;used+=1
-    return ((num/den) if den else None),used
-
-
-def _pc_fit_metrics(horse: dict, race: dict) -> dict:
-    rs=list(horse.get("recentRaces") or []); target=int(race.get("distance") or 0); target_season=_pc_season(str(race.get("date") or ""))
-    groups={"track":[],"distance":[],"condition":[],"weather":[],"season":[],"level":[]}
-    for rr in rs:
-        dist=int(rr.get("distance") or 0);delta=abs(dist-target)
-        if str(rr.get("track") or "")==str(race.get("track") or ""):groups["track"].append(rr)
-        if delta<=100 or (target>=1800 and delta<=200):groups["distance"].append(rr)
-        if str(rr.get("condition") or "") not in ("","不明") and str(rr.get("condition") or "")==str(race.get("condition") or ""):groups["condition"].append(rr)
-        if str(rr.get("weather") or "") not in ("","不明") and str(rr.get("weather") or "")==str(race.get("weather") or ""):groups["weather"].append(rr)
-        if _pc_season(str(rr.get("date") or ""))==target_season:groups["season"].append(rr)
-        rp=int(rr.get("racePrize1") or 0);tp=int(race.get("racePrize1") or 0)
-        if tp>0 and rp>=tp*.8:groups["level"].append(rr)
-    out={k:_pc_list_quality(v,target) for k,v in groups.items()}
-    out["counts"]={k:len(v) for k,v in groups.items()}
-    return out
+from arvexq.prediction.metrics.past_runs import (
+    _pc_clamp,
+    _pc_race_field,
+    _pc_finish_quality,
+    _pc_list_quality,
+    _pc_style_metrics,
+    _pc_sectional_score,
+    _pc_fit_metrics,
+)
 
 
 def _is_jump_run(run: dict) -> bool:
@@ -4615,7 +3910,6 @@ def _ensure_race_volatility(detail: dict) -> dict:
     if v.get("version")!=VOLATILITY_ENGINE_VERSION:
         detail["volatility"]=_race_volatility(detail)
     return detail
-
 
 
 def _restore_saved_odds(detail:dict)->dict:
@@ -4694,9 +3988,13 @@ def _prepared_ttl(detail: dict) -> int:
     return int(os.getenv("PREPARED_TODAY_TTL_SEC","45")) if str(detail.get("date") or "")==_today_iso() else int(os.getenv("PREPARED_ARCHIVE_TTL_SEC","21600"))
 
 
-def _snapshot_final(detail: dict) -> bool:
-    result=detail.get("result") or {}
-    return result.get("status")=="確定" and bool(result.get("finishers"))
+from arvexq.infra.snapshot_status import (
+    _snapshot_final,
+    _result_has_podium,
+    _bootstrap_display_ready,
+    _bootstrap_detail_ready,
+    _merge_card_rows_preserve,
+)
 
 
 def _prepared_get_fresh(race_id: str) -> dict | None:
@@ -4711,12 +4009,6 @@ def _prepared_get_fresh(race_id: str) -> dict | None:
         detail["dataCoreHealth"]=_data_core_health(detail);detail["dataCoreVersion"]=ARVEXQ_DATA_CORE_VERSION
     except Exception:pass
     return detail
-
-
-def _result_has_podium(detail: dict | None) -> bool:
-    result=(detail or {}).get("result") or {}
-    ranks={int(x.get("finish") or 0) for x in (result.get("finishers") or []) if isinstance(x,dict)}
-    return all(i in ranks for i in (1,2,3))
 
 
 def _refresh_result_fast(race_id: str) -> dict | None:
@@ -5024,7 +4316,6 @@ def _store_fast_snapshot(detail:dict)->None:
     except Exception as exc:print("fast prepared save failed",detail.get("id"),exc)
     try:RACEDB.upsert_race(detail)
     except Exception as exc:print("fast RaceDB save failed",detail.get("id"),exc)
-
 
 
 _fast_card_lock=threading.Lock()
@@ -5386,38 +4677,6 @@ def _netkeiba_card_rows_fast(detail:dict)->list[dict]:
     return rows
 
 
-def _merge_card_rows_preserve(base:dict, fresh_rows:list[dict])->dict:
-    """Refresh today's card fields without deleting history/metrics already collected."""
-    old_horses=base.get("horses") or []
-    by_no={int(h.get("horseNumber") or 0):h for h in old_horses if int(h.get("horseNumber") or 0)>0}
-    by_name={str(h.get("name") or ""):h for h in old_horses if h.get("name")}
-    merged=[]
-    for fresh in fresh_rows or []:
-        no=int(fresh.get("horseNumber") or 0)
-        old=by_no.get(no) or by_name.get(str(fresh.get("name") or "")) or {}
-        z=json.loads(json.dumps(old,ensure_ascii=False,default=str)) if old else {}
-        for k,v in fresh.items():
-            if k in {"recentRaces","allPastRuns","precomputedMetrics","integratedEvaluation",
-                     "jockeyStats","trainerStats","jockeyProfile","trainerProfile","prizeMoneyAtRace"}:
-                continue
-            if v not in (None,"",[],{}):z[k]=v
-        # preserve rich local data
-        for k in ("recentRaces","allPastRuns","precomputedMetrics","integratedEvaluation",
-                  "jockeyStats","trainerStats","jockeyProfile","trainerProfile","prizeMoneyAtRace",
-                  "pedigree","representativeRun"):
-            if old.get(k) not in (None,"",[],{}):z[k]=old.get(k)
-        z.setdefault("recentRaces",[])
-        z.setdefault("jockeyStats",{})
-        z.setdefault("trainerStats",{})
-        z.setdefault("jockeyProfile",{})
-        z.setdefault("trainerProfile",{})
-        merged.append(z)
-    if merged:
-        base["horses"]=merged
-        base["fieldSize"]=len(merged)
-    return base
-
-
 def _netkeiba_past_rows_fast(detail:dict)->list[dict]:
     """One cached page gets recent runs for every JRA starter."""
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
@@ -5445,21 +4704,6 @@ def _netkeiba_past_rows_fast(detail:dict)->list[dict]:
         horse["recentRaces"]=runs[:5]
         out.append(horse)
     return out
-
-
-def _merge_fast_history(detail:dict, history_rows:list[dict])->dict:
-    by_no={int(h.get("horseNumber") or 0):h for h in detail.get("horses",[]) or []}
-    by_name={str(h.get("name") or ""):h for h in detail.get("horses",[]) or [] if h.get("name")}
-    for row in history_rows or []:
-        h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or ""))
-        if not h:continue
-        runs=list(row.get("recentRaces") or [])
-        if runs:
-            old=list(h.get("allPastRuns") or h.get("recentRaces") or [])
-            merged=_jra_merge_runs(old,runs,max(5,len(old)+len(runs)))
-            h["recentRaces"]=merged[:5]
-            h["allPastRuns"]=merged
-    return detail
 
 
 def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
@@ -5798,7 +5042,6 @@ def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0
     return {"races":rows,"prepared":_local_starter_bundle(rows)} if bundle else rows
 
 
-
 @app.get("/api/v1/environment-pack")
 def environment_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...)):
     rows=nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False)
@@ -5897,8 +5140,6 @@ def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Q
     return {"track":track,"date":date,"circuit":circuit,"races":out,"count":len(out),"source":"local-only","filled":bool(fill)}
 
 
-
-
 _site_bootstrap_lock=threading.Lock()
 _site_bootstrap_build_lock=threading.Lock()
 _site_bootstrap_cache:dict[str,tuple[float,dict]]={}
@@ -5980,10 +5221,6 @@ def _bootstrap_sources_running(date:str)->bool:
     except Exception:pass
     return bool(running)
 
-def _bootstrap_display_ready(d:dict|None)->bool:
-    """Enough data to open/render the race immediately."""
-    if not isinstance(d,dict):return False
-    return bool((d.get("horses") or []) or d.get("result"))
 
 def _bootstrap_analysis_ready(d:dict|None)->bool:
     """Diagnosis readiness is tracked separately and must never block site display."""
@@ -5993,8 +5230,6 @@ def _bootstrap_analysis_ready(d:dict|None)->bool:
     return bool(pm.get("diagnosisReady") and pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION)
 
 # Compatibility for older internal callers: "ready" now means display-ready.
-def _bootstrap_detail_ready(d:dict|None)->bool:
-    return _bootstrap_display_ready(d)
 
 def _bootstrap_detail_local(race_id:str,force_hydrate:bool=False)->dict|None:
     """Fast local snapshot for day bundles. Heavy diagnosis work is background-only."""
@@ -6332,7 +5567,6 @@ def past_pack(race_id:str):
     return {"raceId":race_id,"races":out,"count":len(out),"source":"local-only"}
 
 
-
 @app.post("/api/v1/prepare-race/{race_id}")
 def prepare_race(race_id:str):
     """Queue the selected race first; customer HTTP request returns immediately."""
@@ -6399,7 +5633,6 @@ def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), 
         return _compact_display_snapshot(quick)
     _schedule_fast_card_refresh(race_id,0)
     return JSONResponse(status_code=202,content={"status":"preparing","raceId":race_id})
-
 
 
 @app.post("/api/v1/race/{race_id}/diagnosis-refresh")
@@ -6532,7 +5765,6 @@ def collect_race_info(
         "historySearch":history or {"status":"done","coverage":{}},
         "enrichmentSearch":enrich,
     }
-
 
 
 @app.get("/api/v1/payouts/{race_id}")
@@ -7062,12 +6294,8 @@ def home():
     })
 
 
-
-
-
 from arvexq.ui.icon_assets import load_icons as _load_arvexq_icons
 ARVEXQ_ICONS = _load_arvexq_icons()
-
 
 
 @app.get("/arvexq-icon-v175-{size}.png")
@@ -7205,78 +6433,9 @@ register_legacy_sources(globals())
 _start_racedb_daemon()
 
 
-
-
 # v158 upset targeting / race selection
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # v239: simplified horse detail and persistent live iframe
-
-
-
-
-
-
-
-
-
-
 
 

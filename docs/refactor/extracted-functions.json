@@ -1,0 +1,688 @@
+[
+  {
+    "name": "_clean",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 2,
+    "ast_sha256": "e786174ed57af515fd989691d230ec8b0fee0b6ce103e2246183e043654261a1"
+  },
+  {
+    "name": "_int",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 8,
+    "ast_sha256": "48f7004b3b24ce1f449d525e229394fa45385dbcba97ca65c1b1a53b4886ffdb"
+  },
+  {
+    "name": "_float",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 8,
+    "ast_sha256": "8b5cee46a5457aa81993cfbde291657d43791be46e8aeeb06dbfb5bf695bce48"
+  },
+  {
+    "name": "_carried_weight",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 13,
+    "ast_sha256": "7839930a097de25e57c44824829bbdfbb3b277a21110339459bebe58776c77a3"
+  },
+  {
+    "name": "_iso_date",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 5,
+    "ast_sha256": "bca961075ec9591f19d67a9268435073d2a42d53257ce6bb7183035ec6285a3c"
+  },
+  {
+    "name": "_start_time",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 7,
+    "ast_sha256": "0171d9c1f5626f56b1fb7f37046e119e8d698d2f6aaef58dcd2ea40b64d59c70"
+  },
+  {
+    "name": "_time_seconds",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 10,
+    "ast_sha256": "bc6c22a2ff095301048e57ca2635ccaf4c0c493e2373a160042b245cdc873a66"
+  },
+  {
+    "name": "_normalize_sex",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 7,
+    "ast_sha256": "c08c3c97dc47b69f6728952a1713c46c751e2173d3fee00f79e3ccf6667ef389"
+  },
+  {
+    "name": "_scratch_status",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 7,
+    "ast_sha256": "05a209ed02ec22b2ed0cfeb0a55a65631c9d37050c1c630d910f4f9906b68e23"
+  },
+  {
+    "name": "_normalize_weather",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 6,
+    "ast_sha256": "834834f017b28ca381b208780bb49e831955ebe58b59b08769ca0cddb46ac081"
+  },
+  {
+    "name": "_normalize_condition",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 7,
+    "ast_sha256": "52696de4638b94630aecc216a90646002a12fd54e4a7ee5c4bf4f2748efebd00"
+  },
+  {
+    "name": "_stable_id",
+    "before": "app.py",
+    "after": "arvexq/normalize/scalars.py",
+    "lines": 3,
+    "ast_sha256": "b79c17c7a2510c3829ed73b01e9d52949c186c172b83237cf74d943873bbe49c"
+  },
+  {
+    "name": "_safe_body_weight_value",
+    "before": "app.py",
+    "after": "arvexq/normalize/measurements.py",
+    "lines": 7,
+    "ast_sha256": "fd24fe40989c3984cedeedcc43b0d8e990bba7c7439238619cf705ee6ee925d8"
+  },
+  {
+    "name": "_safe_carried_weight_value",
+    "before": "app.py",
+    "after": "arvexq/normalize/measurements.py",
+    "lines": 8,
+    "ast_sha256": "2e586f32dcfbcdb29cd5e838ccc712df042f6c01bed8058535dee955acc1722e"
+  },
+  {
+    "name": "_sanitize_horse_measurements",
+    "before": "app.py",
+    "after": "arvexq/normalize/measurements.py",
+    "lines": 19,
+    "ast_sha256": "fa392edd82a64196530602b13c1205e339d15606737dbc99831b24d6f57885df"
+  },
+  {
+    "name": "normalize_central_race",
+    "before": "app.py",
+    "after": "arvexq/normalize/central_feed.py",
+    "lines": 24,
+    "ast_sha256": "fde0c33ce9c92b3acf8be32fdaa1bd39dd5f4438fb77053d2017abce3643712b"
+  },
+  {
+    "name": "read_csv_from_zip",
+    "before": "app.py",
+    "after": "arvexq/ingest/parsers/nar_archive.py",
+    "lines": 7,
+    "ast_sha256": "6866a793c1d92f2896b5a23c54b3b41d1334a715fb7e41dad50d56ec288088ec"
+  },
+  {
+    "name": "strip_header",
+    "before": "app.py",
+    "after": "arvexq/ingest/parsers/nar_archive.py",
+    "lines": 4,
+    "ast_sha256": "7f0883c3efeb13de68d238fe887b87a1fba7bb46db97f7ceb3098c25ac948984"
+  },
+  {
+    "name": "_top_level_tokens",
+    "before": "app.py",
+    "after": "arvexq/ingest/parsers/nar_archive.py",
+    "lines": 24,
+    "ast_sha256": "0db644f3c0cd86a2d4849a9ced755d82d2a7e937dde0074d01c795f4d07bf5b0"
+  },
+  {
+    "name": "parse_corner_order",
+    "before": "app.py",
+    "after": "arvexq/ingest/parsers/nar_archive.py",
+    "lines": 22,
+    "ast_sha256": "7ff3afa7afdd8b04e34b754e368bab7b03447b5febbe9639305cf1e4aa2febc8"
+  },
+  {
+    "name": "_parse_netkeiba_win_odds_payload",
+    "before": "app.py",
+    "after": "arvexq/ingest/parsers/market.py",
+    "lines": 39,
+    "ast_sha256": "e5f3ca227fdd36e2ddd4383302cd7234295ef9e9f7f7afc4312b24eb477ee005"
+  },
+  {
+    "name": "_parse_payouts",
+    "before": "app.py",
+    "after": "arvexq/ingest/parsers/market.py",
+    "lines": 79,
+    "ast_sha256": "ab088b0e19abdb61b9aadd4d412646eca7b502bc82239a78e74465eadd9f6fc5"
+  },
+  {
+    "name": "_parse_recent_cell",
+    "before": "app.py",
+    "after": "arvexq/ingest/parsers/supplemental.py",
+    "lines": 24,
+    "ast_sha256": "c86d388aae24eb8cfff2b98f440d3dbab997465011f2cfbfbbde1ab9f307a664"
+  },
+  {
+    "name": "_safe_float",
+    "before": "app.py",
+    "after": "arvexq/ingest/parsers/supplemental.py",
+    "lines": 9,
+    "ast_sha256": "8b1997aee0491f06716c51b2879617481b31aa3d50f6fb19ddbb4ab1bce6f1e2"
+  },
+  {
+    "name": "_safe_int",
+    "before": "app.py",
+    "after": "arvexq/ingest/parsers/supplemental.py",
+    "lines": 2,
+    "ast_sha256": "7f6bd76490775f2c8ea8095dcd45e5845b64a38e197394fd2643bc62d1dc900c"
+  },
+  {
+    "name": "_smart_normalize_row",
+    "before": "app.py",
+    "after": "arvexq/ingest/parsers/supplemental.py",
+    "lines": 9,
+    "ast_sha256": "70f5fc8a4345a514d76e36111da6c513ac87383aef485871b8717d8249e4d830"
+  },
+  {
+    "name": "_jra_merge_run_fields",
+    "before": "app.py",
+    "after": "arvexq/ingest/history/run_merge.py",
+    "lines": 11,
+    "ast_sha256": "236433e34c944c274d6a877220f2f7483b444149812a2210f420b4e3368e7cca"
+  },
+  {
+    "name": "_jra_run_core_complete",
+    "before": "app.py",
+    "after": "arvexq/ingest/history/run_merge.py",
+    "lines": 4,
+    "ast_sha256": "cbc46cc3226264f28d4dd5a2f1a7c7feb3da7c1ee9915d737d52b60887783afe"
+  },
+  {
+    "name": "_jra_history_complete",
+    "before": "app.py",
+    "after": "arvexq/ingest/history/run_merge.py",
+    "lines": 5,
+    "ast_sha256": "63c9572f273b7cbe71bd28b4af01f494a896078a3bc3e04d47231f6921c1cc2b"
+  },
+  {
+    "name": "_jra_merge_runs",
+    "before": "app.py",
+    "after": "arvexq/ingest/history/run_merge.py",
+    "lines": 11,
+    "ast_sha256": "5cffef571e122edf005cedf967de6a98d6eedca54bc582824e1ab818ff531aa9"
+  },
+  {
+    "name": "_merge_fast_history",
+    "before": "app.py",
+    "after": "arvexq/ingest/history/run_merge.py",
+    "lines": 13,
+    "ast_sha256": "3dbb93e8e77297a1dbcafd38b8c6b46d84de81722d9f170af4c47cfb6e253d07"
+  },
+  {
+    "name": "_horse_key",
+    "before": "app.py",
+    "after": "arvexq/ingest/history/central_rows.py",
+    "lines": 2,
+    "ast_sha256": "96217e87502ba9a95c5a2fd7882a22a74b68d6518795832e6f231e4aa22a66c3"
+  },
+  {
+    "name": "_central_find_horse",
+    "before": "app.py",
+    "after": "arvexq/ingest/history/central_rows.py",
+    "lines": 17,
+    "ast_sha256": "cac84d7f804620e166643e7ff327dc3a2d3083f59cf19efb06fd7a99c2b24a74"
+  },
+  {
+    "name": "_central_run_from_race",
+    "before": "app.py",
+    "after": "arvexq/ingest/history/central_rows.py",
+    "lines": 45,
+    "ast_sha256": "91e53b9e284222f1dd4ef122a060ddf16bdbe1ea9bafa7c85c689035292b0ade"
+  },
+  {
+    "name": "_pc_clamp",
+    "before": "app.py",
+    "after": "arvexq/prediction/metrics/past_runs.py",
+    "lines": 2,
+    "ast_sha256": "b769e57e545b828d2bba16bd6afcb8a3410a34e7138d0d052e4c766ee0294db2"
+  },
+  {
+    "name": "_pc_race_field",
+    "before": "app.py",
+    "after": "arvexq/prediction/metrics/past_runs.py",
+    "lines": 2,
+    "ast_sha256": "82f86cc8505e58cba30dc392490c714238f2286a91aefc6cba474ae1296123db"
+  },
+  {
+    "name": "_pc_finish_quality",
+    "before": "app.py",
+    "after": "arvexq/prediction/metrics/past_runs.py",
+    "lines": 4,
+    "ast_sha256": "1950c2585c59c8029b7a2774d83fdef3f3801336f264112a8e3b5d0394da223d"
+  },
+  {
+    "name": "_pc_list_quality",
+    "before": "app.py",
+    "after": "arvexq/prediction/metrics/past_runs.py",
+    "lines": 10,
+    "ast_sha256": "8efc16e17ba4f500bd191d29ba4dfde4c86db8c69f5c06e4a5609e74b0444a9f"
+  },
+  {
+    "name": "_pc_style_metrics",
+    "before": "app.py",
+    "after": "arvexq/prediction/metrics/past_runs.py",
+    "lines": 34,
+    "ast_sha256": "19a047fcb5849d4570beccdab46b6c6bc58d327528c7c231098a269d6b6e054a"
+  },
+  {
+    "name": "_pc_sectional_score",
+    "before": "app.py",
+    "after": "arvexq/prediction/metrics/past_runs.py",
+    "lines": 36,
+    "ast_sha256": "100bbe63544e23002b58b84d1379f007a42ccb69f1c9d70e996927ebce3071b3"
+  },
+  {
+    "name": "_pc_fit_metrics",
+    "before": "app.py",
+    "after": "arvexq/prediction/metrics/past_runs.py",
+    "lines": 15,
+    "ast_sha256": "4c3a5bb5015271c0f525fbc65fd47265b1382846ab66c6aa4858568db4b6ce42"
+  },
+  {
+    "name": "_learning_probability",
+    "before": "app.py",
+    "after": "arvexq/backtest/probability_metrics.py",
+    "lines": 14,
+    "ast_sha256": "682310b66e265a2b79af7015eb90f3d3d181ea0f34706a95e5101ca141e0f0c9"
+  },
+  {
+    "name": "_learning_metric",
+    "before": "app.py",
+    "after": "arvexq/backtest/probability_metrics.py",
+    "lines": 28,
+    "ast_sha256": "c88f857a911ec256d3863377c64e3daa0b2e61537eae1c5e0fa97539ff4df102"
+  },
+  {
+    "name": "_learning_paired_top1",
+    "before": "app.py",
+    "after": "arvexq/backtest/probability_metrics.py",
+    "lines": 14,
+    "ast_sha256": "3dc6d326a8ec55962daa5045fe8ae86609e4505520ad02e721bee116ad30a488"
+  },
+  {
+    "name": "_snapshot_final",
+    "before": "app.py",
+    "after": "arvexq/infra/snapshot_status.py",
+    "lines": 3,
+    "ast_sha256": "3fb5e203d30b4289c9b526729d7f5b8f4583923ab3c932d5f460dcea68895331"
+  },
+  {
+    "name": "_result_has_podium",
+    "before": "app.py",
+    "after": "arvexq/infra/snapshot_status.py",
+    "lines": 4,
+    "ast_sha256": "3e5fd9696fba48e3dd6e03b97402c81015f07c6e6ee68194163fad170a94f176"
+  },
+  {
+    "name": "_bootstrap_display_ready",
+    "before": "app.py",
+    "after": "arvexq/infra/snapshot_status.py",
+    "lines": 4,
+    "ast_sha256": "4bf42dcea9ead9febf04b03331acc5d6c442526be8f06677fb4ceee2f57defe8"
+  },
+  {
+    "name": "_bootstrap_detail_ready",
+    "before": "app.py",
+    "after": "arvexq/infra/snapshot_status.py",
+    "lines": 2,
+    "ast_sha256": "a2ba56ef6494bbb91997f6cc352e760aa470cdbc97ea6400ffd66441351449f8"
+  },
+  {
+    "name": "_merge_card_rows_preserve",
+    "before": "app.py",
+    "after": "arvexq/infra/snapshot_status.py",
+    "lines": 30,
+    "ast_sha256": "ffe79fa7b0761c96a4bb49a75071fd9918f438f0c4923e9541358f47a32c76f8"
+  },
+  {
+    "name": "iter_months_back",
+    "before": "app.py",
+    "after": "arvexq/ingest/scheduling.py",
+    "lines": 8,
+    "ast_sha256": "3a750f4cd107a999b11984bb8ab0b91f153266655662f1e7c33721bc3df99046"
+  },
+  {
+    "name": "_race_minutes",
+    "before": "app.py",
+    "after": "arvexq/ingest/scheduling.py",
+    "lines": 4,
+    "ast_sha256": "254a30ca709095f32af31791e0acb0c62ced8e416fa68ca78914d2412b9f0247"
+  },
+  {
+    "name": "_commercial_target_rows",
+    "before": "app.py",
+    "after": "arvexq/ingest/scheduling.py",
+    "lines": 15,
+    "ast_sha256": "bb4be0025c717182454fac724e9bbf67c32a556369ea6fa24bff864df61fefa6"
+  },
+  {
+    "name": "_months_from_race_date",
+    "before": "app.py",
+    "after": "arvexq/ingest/scheduling.py",
+    "lines": 9,
+    "ast_sha256": "84ee7b25afe85e054b3e9cca2858aa9a097b4942d5300ab38f3e29c196ef1f51"
+  },
+  {
+    "name": "_race_minutes_server",
+    "before": "app.py",
+    "after": "arvexq/ingest/scheduling.py",
+    "lines": 3,
+    "ast_sha256": "48ee84c7d7ad234f1724a02be336e809b6c015eebf8bcc8f35eaa47750cd621f"
+  },
+  {
+    "name": "_f",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 6,
+    "ast_sha256": "d0c88257faef6df280b4e4224133e810428a7610f94184f9ee81a163f341e78e"
+  },
+  {
+    "name": "_s",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 2,
+    "ast_sha256": "67896fc1cfdf6ebd618dbd5a3e8b22d66c0a32d694ee8ed0ee4f2fe8500b7bfd"
+  },
+  {
+    "name": "_clamp",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 2,
+    "ast_sha256": "fceb177eb0936c0573d72fb770c0d15500ed9723e61a40c346f118a7abd3c711"
+  },
+  {
+    "name": "_mean",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 3,
+    "ast_sha256": "b3e69d727f9faca63c85ce048e27c746cad25c4deae83eef967e94bdc53af7d3"
+  },
+  {
+    "name": "_std",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 6,
+    "ast_sha256": "6474fc245323711697f5f2d2bbe50d8d51d9aca25ff385ef3b7fc66619317b01"
+  },
+  {
+    "name": "_quantile",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 11,
+    "ast_sha256": "47babb9e018a58d9af323d1078a8780f5860f394b3de1dc1b4a12e7892583526"
+  },
+  {
+    "name": "_trend",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 14,
+    "ast_sha256": "add2e06357ddf30a2fdc2d5333235d6b64b51c9b9b01f41272695b25485f8277"
+  },
+  {
+    "name": "_finish",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 2,
+    "ast_sha256": "4d09af3152e94e444f5a757e53ba6f26937e24ddf770b35a1a37bc7e0cf25297"
+  },
+  {
+    "name": "_field_size",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 2,
+    "ast_sha256": "83fc34c3db4376204596d29e3966d27dcdedc2a342eb8211a411aac9ea8a3f37"
+  },
+  {
+    "name": "_finish_quality",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 10,
+    "ast_sha256": "71477b5b511214aee1cb807603805c0e1e3051ccf661cc4bb367ed9985293ac5"
+  },
+  {
+    "name": "_speed",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 3,
+    "ast_sha256": "66e1d810ef8b9f6f45544667a4317054ac73a9391a792409895b969103b29093"
+  },
+  {
+    "name": "_clock_speed",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 6,
+    "ast_sha256": "548ed1473070aa3193f9e7f16a20d8a68e067ba771bac020469aae463aedb808"
+  },
+  {
+    "name": "_late_speed",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 16,
+    "ast_sha256": "5f94135a8eb61422a3929adebd56c0a5bd89e494d431d2ccd6aaeb1a0061b8d7"
+  },
+  {
+    "name": "_early_speed",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 2,
+    "ast_sha256": "496886e5c378c9eb56367abb5b33a9047d8bd3e53092da624a9faf2f58d23ecb"
+  },
+  {
+    "name": "_position",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 6,
+    "ast_sha256": "0f5634f481ab83e38f8fd873b157514182d4d40131f041647e743011a7b49e34"
+  },
+  {
+    "name": "_position_quality",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 8,
+    "ast_sha256": "6d66d905b9a4a95fc4485743496ea8245082002e155737c77139e57da6d657ae"
+  },
+  {
+    "name": "_opponent_level",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 9,
+    "ast_sha256": "97fb08e2bb074bab5011f6fb6d6369f345cadbb93e0cabd204df22a26ecfc584"
+  },
+  {
+    "name": "_prize",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 2,
+    "ast_sha256": "17625d1a1cc6d78a8365cc271444b8764558ca2c7bfe2522960ef67ea9978deb"
+  },
+  {
+    "name": "_margin",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 2,
+    "ast_sha256": "245f0be15d6ed1406f8384a5e03702eadfb039ee2dccf3a48a9752d2b34a58e5"
+  },
+  {
+    "name": "_carried_weight",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 2,
+    "ast_sha256": "47fd4b160f0009654e07e342a899ef54b0b91103e60191922732980b91d06736"
+  },
+  {
+    "name": "_body_weight",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 2,
+    "ast_sha256": "42781fe4c54a61b652f3f235ea214f42a68baf686fc8baceadd9332aea7e40e9"
+  },
+  {
+    "name": "_distance",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 2,
+    "ast_sha256": "6fc2a61dbf46b971e94ae9c648a6daea4215aede5d4fb8effce40894144c8973"
+  },
+  {
+    "name": "_win_flag",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 3,
+    "ast_sha256": "d31d61a0fe2197ca0f072728a71d6b014e31708594f63ff624d4cd3bba1e52ba"
+  },
+  {
+    "name": "_top2_flag",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 3,
+    "ast_sha256": "72be365c3ce8aba43cafff20f53bde4b7eb04c825dac38b9e57c011c52b91cf3"
+  },
+  {
+    "name": "_top3_flag",
+    "before": "arvexq/prediction/mass_feature_factory.py",
+    "after": "arvexq/features/mass/run_metrics.py",
+    "lines": 3,
+    "ast_sha256": "6594debde88b41c34012fcaa8a89bbe10b9c62823bc9d083aa6f14518ce47b7a"
+  },
+  {
+    "name": "_v207_norm01",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/common.py",
+    "lines": 8,
+    "ast_sha256": "a2e0d2b3dacd97aa19f3bd49740bc6fc59e7b6264bb86f167ecc5155be3b7856"
+  },
+  {
+    "name": "_v207_component",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/common.py",
+    "lines": 6,
+    "ast_sha256": "18728d3ab5e9dc1bd8fcdc892e2fa4fac43fffb26d8a775939fd6a88f9c68f0b"
+  },
+  {
+    "name": "_v213_rank_percentiles",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/common.py",
+    "lines": 10,
+    "ast_sha256": "6de04a2a5e0c1cd557a6853b0f972cd433af143fee646b502f19caf1bcda18bd"
+  },
+  {
+    "name": "_v213_zscore",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/common.py",
+    "lines": 7,
+    "ast_sha256": "e652ccd5addc141c872f2f67c416b347a079d850a2fb1b23026612bee24221cb"
+  },
+  {
+    "name": "_v213_softmax",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/common.py",
+    "lines": 4,
+    "ast_sha256": "af4c3dfae9c2dbfd699d540aca98126bc9f3de48eeb1ef1ee4f83ea318f63588"
+  },
+  {
+    "name": "_v207_winner_score",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/winner.py",
+    "lines": 38,
+    "ast_sha256": "e646602d346d2e3ddf62a5d5b9156d4a76d45a9061988b302197e48241cf428c"
+  },
+  {
+    "name": "_v212_role_feature_map",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/winner.py",
+    "lines": 34,
+    "ast_sha256": "d34481f2fbd5ffeb4345a5674fe5c5749c6c7bd61969168f0a63594b2d0d6234"
+  },
+  {
+    "name": "_v212_p2_score",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/winner.py",
+    "lines": 11,
+    "ast_sha256": "fffcc39c49f1b2aeb836b23407f36c031703ddabe9eb68ca5e91f27b8cfa090e"
+  },
+  {
+    "name": "_saved_role_scores",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/role_features.py",
+    "lines": 43,
+    "ast_sha256": "f6aa35f1fe29f9aa8eb143ebee762ba04bc7b1b8645f1d25e3b578de56f19641"
+  },
+  {
+    "name": "_v213_feature_rows",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/role_features.py",
+    "lines": 63,
+    "ast_sha256": "3e1d4f252bea6e79ecf56d0d45907db0da05215d53ee072845e6c06a7f6b6b22"
+  },
+  {
+    "name": "_v215_speed_ratio",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/course.py",
+    "lines": 11,
+    "ast_sha256": "cb9761e18134c04e6b776a7a0979d110352581036113d52269a705a9e84c8555"
+  },
+  {
+    "name": "_v215_draw_score",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/course.py",
+    "lines": 8,
+    "ast_sha256": "14700ba84dc1983d472cf4832caf3e045887145cff17f6fe0ab484adab6549df"
+  },
+  {
+    "name": "_v215_prof_feature_rows",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/professional.py",
+    "lines": 63,
+    "ast_sha256": "27c473b93af29a8ee8e093b822ee2c92092b591e91d86da6600ee99ed0b8b215"
+  },
+  {
+    "name": "_v215_professional_p1",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/professional.py",
+    "lines": 8,
+    "ast_sha256": "90c425fd730740bc9b278e913ef595abb03aeb23fb39a320245a9a9925a88068"
+  },
+  {
+    "name": "_v218_tactical_roles",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/tactical.py",
+    "lines": 143,
+    "ast_sha256": "69ed66b74396d8cddc3eed0694a19c06c8090298c7948dc98901f0ae8817fded"
+  },
+  {
+    "name": "_v213_role_utilities",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/role_utilities.py",
+    "lines": 22,
+    "ast_sha256": "48ba9ccf56d782af2c3560f584b8e682706f931f5e0183ec2992bc25b5767177"
+  },
+  {
+    "name": "_v313_horse_flow_adjust",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/factors.py",
+    "lines": 24,
+    "ast_sha256": "55e2aa5b08c0dca2c6298d60cd00313d2372f7b2ed2533bc0e0f4c4d147f2c40"
+  },
+  {
+    "name": "_v317_factor_weights",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/factors.py",
+    "lines": 16,
+    "ast_sha256": "d488e3e2668ac81aee9f4d152741d54cfb74801c4c8e3e93809f794e29735aab"
+  },
+  {
+    "name": "_v317_factor_profile",
+    "before": "arvexq/domain/legacy_evaluation.py:SOURCE",
+    "after": "arvexq/prediction/legacy/factors.py",
+    "lines": 38,
+    "ast_sha256": "f5feb554ef7360baae59dba585835babbadc3e12dcb06b031d0710a8f861903e"
+  }
+]
