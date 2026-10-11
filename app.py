@@ -1,3 +1,71 @@
+import arvexq.infra.collectors.history_state as _stage5_history_state
+from arvexq.infra.collectors.history_state import _history_lock
+import arvexq.infra.collectors.live_state as _stage5_live_state
+from arvexq.infra.collectors.live_state import _live_refresh_lock
+from arvexq.infra.collectors.live_state import _live_refresh_last
+from arvexq.infra.collectors.live_state import _live_refresh_running
+from arvexq.infra.collectors.live_state import _central_refresh_lock
+from arvexq.infra.collectors.live_state import _central_refresh_running
+from arvexq.infra.collectors.live_state import _central_refresh_last
+import arvexq.infra.collectors.commercial_state as _stage5_commercial_state
+from arvexq.infra.collectors.commercial_state import _commercial_collector_lock
+from arvexq.infra.collectors.commercial_state import _commercial_collector_state
+import arvexq.infra.collectors.environment_state as _stage5_environment_state
+from arvexq.infra.collectors.environment_state import _environment_lock
+from arvexq.infra.collectors.environment_state import _environment_running
+from arvexq.infra.collectors.environment_state import _environment_state
+import arvexq.infra.collectors.data_core_state as _stage5_data_core_state
+from arvexq.infra.collectors.data_core_state import _data_core_lock
+from arvexq.infra.collectors.data_core_state import _data_core_running
+from arvexq.infra.collectors.data_core_state import _data_core_state
+import arvexq.infra.collectors.prewarm_state as _stage5_prewarm_state
+from arvexq.infra.collectors.prewarm_state import _prewarm_lock
+from arvexq.infra.collectors.prewarm_state import _prewarm_running
+from arvexq.infra.collectors.prewarm_state import _prewarm_state
+import arvexq.infra.collectors.fast_card_state as _stage5_fast_card_state
+from arvexq.infra.collectors.fast_card_state import _racedb_refresh_lock
+from arvexq.infra.collectors.fast_card_state import _racedb_refresh_running
+from arvexq.infra.collectors.fast_card_state import _fast_card_lock
+from arvexq.infra.collectors.fast_card_state import _fast_card_running
+from arvexq.infra.collectors.fast_card_state import _fast_card_pending
+from arvexq.infra.collectors.fast_card_state import _fast_card_queue
+from arvexq.infra.collectors.fast_card_state import _fast_card_cv
+import arvexq.infra.collectors.odds_state as _stage5_odds_state
+from arvexq.infra.collectors.odds_state import _auto_odds_lock
+from arvexq.infra.collectors.odds_state import _auto_odds_last
+from arvexq.infra.collectors.odds_state import _auto_odds_state
+import arvexq.infra.collectors.bootstrap_state as _stage5_bootstrap_state
+from arvexq.infra.collectors.bootstrap_state import _site_bootstrap_lock
+from arvexq.infra.collectors.bootstrap_state import _site_bootstrap_build_lock
+from arvexq.infra.collectors.bootstrap_state import _site_bootstrap_cache
+from arvexq.infra.collectors.bootstrap_state import _site_force_cache
+from arvexq.infra.collectors.bootstrap_state import _site_bootstrap_state
+import arvexq.infra.collectors.racedb_state as _stage5_racedb_state
+from arvexq.infra.collectors.racedb_state import _racedb_daemon_lock
+import arvexq.infra.collectors.history as _stage5_infra_collectors_history
+import arvexq.infra.collectors.live as _stage5_infra_collectors_live
+import arvexq.infra.collectors.commercial as _stage5_infra_collectors_commercial
+import arvexq.infra.collectors.environment as _stage5_infra_collectors_environment
+import arvexq.infra.collectors.data_core as _stage5_infra_collectors_data_core
+import arvexq.infra.collectors.prewarm as _stage5_infra_collectors_prewarm
+import arvexq.infra.collectors.fast_card as _stage5_infra_collectors_fast_card
+import arvexq.infra.collectors.odds as _stage5_infra_collectors_odds
+import arvexq.infra.collectors.racedb as _stage5_infra_collectors_racedb
+import arvexq.infra.collectors.bootstrap as _stage5_infra_collectors_bootstrap
+import arvexq.storage.sqlite.connection as _stage5_storage_sqlite_connection
+import arvexq.storage.data_core.health as _stage5_storage_data_core_health
+import arvexq.storage.data_core.refresh as _stage5_storage_data_core_refresh
+import arvexq.storage.prepared.cache as _stage5_storage_prepared_cache
+import arvexq.storage.prepared.refresh as _stage5_storage_prepared_refresh
+import arvexq.storage.bundles.local as _stage5_storage_bundles_local
+import arvexq.storage.bundles.assembly as _stage5_storage_bundles_assembly
+import arvexq.storage.bundles.cache as _stage5_storage_bundles_cache
+import arvexq.storage.bundles.live as _stage5_storage_bundles_live
+import arvexq.storage.market.payouts as _stage5_storage_market_payouts
+import arvexq.storage.market.odds as _stage5_storage_market_odds
+from arvexq.storage.config import ARCHIVE_DIR, DATA_ROOT, DAY_BUNDLE_DB_PATH, DB_PATH, NAR_DAILY_RACE_URL, NAR_MONTHLY_RACE_URL, PREPARED_DB_PATH, RACEDB_PATH, _default_data_root
+from arvexq.storage.nar.contracts import RaceRow, EntryRow, RACE_IDX, HORSE_IDX
+from arvexq.storage.bundles.store import DayBundleStore
 from arvexq.ingest.supplemental.state import _enrich_jobs_lock
 from arvexq.ingest.supplemental.state import _enrich_jobs
 from arvexq.ingest.supplemental.state import _enrich_data_lock
@@ -212,67 +280,10 @@ ARVEXQ_LOGO_WEBP = read_binary_asset("arvexq-logo-webp.webp")
 PACE_PREVIEW_WEBP = read_binary_asset("pace-preview-webp.webp")
 
 # --- NAR official live data connector ---------------------------------
-NAR_DAILY_RACE_URL = "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=daily"
-NAR_MONTHLY_RACE_URL = (
-    "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload"
-    "?type=monthly&k_year={year}&k_month={month}"
-)
 
-def _default_data_root() -> Path:
-    env=os.getenv("KEIBA_DATA_DIR","").strip()
-    if env:return Path(env)
-    for cand in (Path("/var/data/keiba_data"),Path("/data/keiba_data")):
-        try:
-            if cand.parent.exists() and os.access(cand.parent,os.W_OK):
-                return cand
-        except Exception:pass
-    return Path("/tmp/keiba_data")
 
-DATA_ROOT = _default_data_root()
-ARCHIVE_DIR = DATA_ROOT / "nar" / "archives"
-DB_PATH = DATA_ROOT / "nar" / "nar.sqlite3"
-PREPARED_DB_PATH = DATA_ROOT / "prepared" / "prepared.sqlite3"
-RACEDB_PATH = Path(os.getenv("RACEDB_PATH", str(DATA_ROOT / "racedb" / "racedb.sqlite3")))
-DAY_BUNDLE_DB_PATH = Path(os.getenv("DAY_BUNDLE_DB_PATH", str(DATA_ROOT / "bundle" / "day_bundle.sqlite3")))
 
 # Official CSV fixed-column indexes, based on NAR's published data specification.
-RACE_IDX = {
-    "track": 0,
-    "date": 1,
-    "race_no": 2,
-    "start_time": 3,
-    "race_type": 4,
-    "title": 5,
-    "surface": 21,
-    "direction": 22,
-    "distance": 23,
-    "weather": 24,
-    "condition": 25,
-    "field_size": 26,
-    "class_condition": 27,
-    "prize1": 28,
-    "prize2": 29,
-    "prize3": 30,
-    "prize4": 31,
-    "prize5": 32,
-    "corner_name_start": 50,
-    "corner_order_start": 58,
-}
-HORSE_IDX = {
-    "track": 0,
-    "date": 1,
-    "race_no": 2,
-    "frame_no": 3,
-    "horse_no": 5,
-    "name": 6,
-    "sex": 7,
-    "age": 8,
-    "jockey": 14,
-    "carried_weight": 16,
-    "trainer": 18,
-    "finish": 31,
-    "time": 32,
-}
 
 
 from arvexq.normalize.scalars import (
@@ -299,42 +310,19 @@ from arvexq.ingest.parsers.nar_archive import (
 )
 
 
-@dataclass
-class RaceRow:
-    track: str
-    date: str
-    race_no: int
-    start_time: str
-    title: str
-    distance: int
-    weather: str
-    condition: str
-    field_size: int
-    prize: tuple[int, int, int, int, int]
-    corners: list[dict[int, int]]
 
 
-@dataclass
-class EntryRow:
-    track: str
-    date: str
-    race_no: int
-    frame_no: int
-    horse_no: int
-    name: str
-    sex: str
-    age: int
-    carried_weight: float
-    jockey: str
-    trainer: str
-    finish: int
-    time_seconds: float
 
 
-# ARVEXQ_EXTRACTED:install_legacy_stores
-from arvexq.infra.legacy_stores import install_legacy_stores as _arvexq_installer
-_arvexq_installer(globals())
-del _arvexq_installer
+from arvexq.storage.config import CENTRAL_DB_PATH
+from arvexq.storage.nar.parser import NarArchiveParser
+from arvexq.storage.nar.store import NarStore
+from arvexq.storage.central.store import CentralStore
+from arvexq.storage.nar.sync import NarSync as _NarSync
+class NarSync(_NarSync):
+    def __init__(self, store=None, parser=None):
+        super().__init__(store or NarStore(), parser or NarArchiveParser())
+
 
 
 from arvexq.normalize.central_feed import (
@@ -485,38 +473,18 @@ def sync_recent_history(months: int = 12) -> list[dict]:
     )
 
 
-_history_lock = threading.Lock()
-_history_started = False
-_history_ready = False
-_history_error = ""
 
-def _history_worker(months_back: int | None = None):
-    global _history_ready, _history_error
-    # v43: do not block on-demand history behind an 18-month serial startup crawl.
-    # Warm only the latest few months, in parallel. Deeper history is fetched only when needed.
-    time.sleep(float(os.getenv("HISTORY_START_DELAY_SEC", "0.15")))
-    today = datetime.now().date()
-    if months_back is None:
-        months_back = max(2, min(8, int(os.getenv("NAR_HISTORY_WARM_MONTHS", "4"))))
-    seen = set()
-    jobs = []
-    for y, m in [(today.year, today.month)] + list(iter_months_back(today, months_back - 1)):
-        if (y, m) not in seen:
-            jobs.append((y, m)); seen.add((y, m))
-    try:
-        _, errors = _sync_nar_month_wave(jobs)
-        _history_error = " | ".join(errors)
-    except Exception as exc:
-        _history_error = str(exc)
-    _history_ready = True
+def _history_worker(months_back: int | None=None):
+    return _stage5_infra_collectors_history._history_worker(
+        months_back,
+        _sync_nar_month_wave=_sync_nar_month_wave, datetime=datetime, iter_months_back=iter_months_back, os=os, time=time, _state=_stage5_history_state
+    )
 
 def ensure_history_async():
-    global _history_started
-    with _history_lock:
-        if _history_started:
-            return
-        _history_started = True
-        threading.Thread(target=_history_worker, daemon=True).start()
+    return _stage5_infra_collectors_history.ensure_history_async(
+
+        _history_lock=_history_lock, _history_worker=_history_worker, threading=threading, _state=_stage5_history_state
+    )
 
 def _now_jst():
     return datetime.now(ZoneInfo("Asia/Tokyo"))
@@ -555,8 +523,8 @@ def health():
     except Exception:
         central_coverage = {"minDate": None, "maxDate": None, "count": 0}
     return {
-        "status":"ok", "mode":"production-v325-home-race-boxes", "historyStarted":_history_started,
-        "historyReady":_history_ready, "historyError":_history_error, "narCoverage":nar_coverage,
+        "status":"ok", "mode":"production-v325-home-race-boxes", "historyStarted":_stage5_history_state._history_started,
+        "historyReady":_stage5_history_state._history_ready, "historyError":_stage5_history_state._history_error, "narCoverage":nar_coverage,
         "centralCoverage":central_coverage, "centralFeedConfigured":bool(os.getenv("CENTRAL_FEED_URL")), "jraOfficialFallback":True,
         "centralHistoryFeedConfigured":bool(os.getenv("CENTRAL_HISTORY_FEED_URL") or os.getenv("CENTRAL_FEED_URL")),
         "narHistoryMonths": max(2, min(8, int(os.getenv("NAR_HISTORY_WARM_MONTHS", "4")))),
@@ -577,7 +545,7 @@ def history_backfill_one(months_ago: int = Query(1, ge=1, le=24)):
 
 @app.get("/api/v1/history-status")
 def history_status():
-    return {"started":_history_started,"ready":_history_ready,"error":_history_error}
+    return {"started":_stage5_history_state._history_started,"ready":_stage5_history_state._history_ready,"error":_stage5_history_state._history_error}
 
 @app.get("/api/v1/central-status")
 def central_status():
@@ -621,143 +589,42 @@ def central_schema():
       "optionalResult":{"status":"確定","finishers":[{"finish":1,"horseNumber":1,"name":"馬名","timeSeconds":92.3,"cornerPositions":[2,2,1]}]},
     }
 
-_live_refresh_lock = threading.Lock()
-_live_refresh_last: dict[str, int] = {}
-_live_refresh_running: set[str] = set()
 
-def _schedule_live_refresh(iso_date: str, force: bool = False):
-    key = f"live:{iso_date}"
-    now = int(time.time())
-    with _live_refresh_lock:
-        if key in _live_refresh_running or (not force and now - _live_refresh_last.get(key, 0) < 90):
-            return
-        _live_refresh_running.add(key)
-    def worker():
-        changed=False
-        try:
-            try:
-                target = datetime.strptime(iso_date, "%Y-%m-%d").date()
-                sync = NarSync()
-                with _nar_sync_io_lock:
-                    if iso_date == _today_iso():
-                        sync.sync_daily(force=force)
-                    else:
-                        # Target only the selected month instead of a bulk history crawl.
-                        sync.sync_month(target.year,target.month,force=force)
-                changed=True
-            except Exception as exc:
-                print(f"NAR background sync failed: {exc}")
-            if changed:
-                # v48: an empty list may have been cached before the async NAR fetch finished.
-                with _race_list_cache_lock:
-                    [_race_list_cache.pop(k,None) for k in list(_race_list_cache) if k.startswith(iso_date+"|")]
-        finally:
-            with _live_refresh_lock:
-                _live_refresh_running.discard(key)
-                _live_refresh_last[key] = int(time.time())
-    threading.Thread(target=worker, daemon=True).start()
+def _schedule_live_refresh(iso_date: str, force: bool=False):
+    return _stage5_infra_collectors_live._schedule_live_refresh(
+        iso_date, force,
+        NarSync=NarSync, _live_refresh_last=_live_refresh_last, _live_refresh_lock=_live_refresh_lock, _live_refresh_running=_live_refresh_running, _nar_sync_io_lock=_nar_sync_io_lock, _race_list_cache=_race_list_cache, _race_list_cache_lock=_race_list_cache_lock, _today_iso=_today_iso, datetime=datetime, threading=threading, time=time
+    )
 
 
-_central_refresh_lock = threading.Lock()
-_central_refresh_running: set[str] = set()
-_central_refresh_last: dict[str, int] = {}
 
-def _schedule_central_refresh(iso_date: str, force: bool = False):
-    now=int(time.time())
-    with _central_refresh_lock:
-        if iso_date in _central_refresh_running:
-            return
-        # current day can refresh frequently; older dates are effectively immutable
-        ttl=90 if iso_date==_today_iso() else 3600
-        if not force and now-_central_refresh_last.get(iso_date,0)<ttl:
-            return
-        _central_refresh_running.add(iso_date)
-    def worker():
-        success=False
-        try:
-            if _clean(os.getenv("CENTRAL_FEED_URL", "")):
-                rows=fetch_central_feed(iso_date)
-            else:
-                rows=fetch_jra_official(iso_date, lightweight=True)
-                if not rows: rows=_netkeiba_race_summaries(iso_date)
-            if rows:
-                st=CentralStore()
-                try: st.upsert(rows)
-                finally: st.conn.close()
-                success=True
-                with _race_list_cache_lock:
-                    [_race_list_cache.pop(k,None) for k in list(_race_list_cache) if k.startswith(iso_date+"|")]
-        except Exception as exc:
-            print(f"Central async refresh failed: {exc}")
-        finally:
-            with _central_refresh_lock:
-                _central_refresh_running.discard(iso_date)
-                # Successful fetches use the normal TTL. Empty/failed fetches retry quickly.
-                _central_refresh_last[iso_date]=int(time.time()) if success else max(0,int(time.time())-85)
-    threading.Thread(target=worker,daemon=True).start()
+def _schedule_central_refresh(iso_date: str, force: bool=False):
+    return _stage5_infra_collectors_live._schedule_central_refresh(
+        iso_date, force,
+        CentralStore=CentralStore, _central_refresh_last=_central_refresh_last, _central_refresh_lock=_central_refresh_lock, _central_refresh_running=_central_refresh_running, _clean=_clean, _netkeiba_race_summaries=_netkeiba_race_summaries, _race_list_cache=_race_list_cache, _race_list_cache_lock=_race_list_cache_lock, _today_iso=_today_iso, fetch_central_feed=fetch_central_feed, fetch_jra_official=fetch_jra_official, os=os, threading=threading, time=time
+    )
 
 
-_commercial_collector_lock=threading.Lock()
-_commercial_collector_state={
-    "running":False,"lastStart":0,"lastFinish":0,"lastError":"",
-    "hydrated":0,"diagnosed":0,"cycleSec":0,
-}
 
 
 def _commercial_collect_once():
-    started=time.time()
-    with _commercial_collector_lock:
-        if _commercial_collector_state["running"]:return
-        _commercial_collector_state.update({"running":True,"lastStart":started,"lastError":"","hydrated":0,"diagnosed":0})
-    queued=ready=0;errs=[]
-    try:
-        today=_today_iso()
-        _schedule_live_refresh(today,False)
-        _schedule_central_refresh(today,False)
-        # Short settle only; the next cycle catches anything still downloading.
-        time.sleep(float(os.getenv("COMMERCIAL_LIST_SETTLE_SEC","1.2")))
-        rows=[]
-        try:rows.extend(nar_race_summaries(today))
-        except Exception as exc:errs.append("NAR list: "+str(exc))
-        try:rows.extend(central_race_summaries(today,allow_network=False))
-        except Exception as exc:errs.append("JRA list: "+str(exc))
-        nowj=_now_jst();now_min=nowj.hour*60+nowj.minute
-        targets=_commercial_target_rows(rows,now_min)
-        for idx,r in enumerate(targets):
-            rid=str(r.get("id") or "")
-            if not rid:continue
-            d=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
-            pm=(d or {}).get("preparedMeta") or {}
-            if d and pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION and pm.get("diagnosisReady"):
-                ready+=1;continue
-            # Upcoming races first, but all jobs share the same two-worker queue.
-            priority=20+idx
-            _schedule_fast_card_refresh(rid,priority);queued+=1
-        with _race_list_cache_lock:_race_list_cache.clear()
-        _schedule_day_bundle_refresh(today,False)
-    except Exception as exc:errs.append(str(exc))
-    finally:
-        finished=time.time()
-        with _commercial_collector_lock:
-            _commercial_collector_state.update({
-                "running":False,"lastFinish":finished,"lastError":" | ".join(errs[-6:]),
-                "hydrated":ready,"diagnosed":ready,"queued":queued,"cycleSec":round(finished-started,2),
-            })
+    return _stage5_infra_collectors_commercial._commercial_collect_once(
+
+        PREDICTION_ENGINE_VERSION=PREDICTION_ENGINE_VERSION, _commercial_collector_lock=_commercial_collector_lock, _commercial_collector_state=_commercial_collector_state, _commercial_target_rows=_commercial_target_rows, _fast_local_race_detail=_fast_local_race_detail, _now_jst=_now_jst, _prepared_get_fresh=_prepared_get_fresh, _race_list_cache=_race_list_cache, _race_list_cache_lock=_race_list_cache_lock, _racedb_get_fast=_racedb_get_fast, _schedule_central_refresh=_schedule_central_refresh, _schedule_day_bundle_refresh=_schedule_day_bundle_refresh, _schedule_fast_card_refresh=_schedule_fast_card_refresh, _schedule_live_refresh=_schedule_live_refresh, _today_iso=_today_iso, central_race_summaries=central_race_summaries, nar_race_summaries=nar_race_summaries, os=os, time=time
+    )
 
 def _commercial_collector_loop():
-    first_delay=float(os.getenv("COMMERCIAL_COLLECTOR_START_DELAY_SEC","1.0"))
-    interval=max(120,int(os.getenv("COMMERCIAL_COLLECTOR_INTERVAL_SEC","180")))
-    time.sleep(first_delay)
-    while True:
-        try:_commercial_collect_once()
-        except Exception as exc:print("commercial collector cycle failed",exc)
-        time.sleep(interval)
+    return _stage5_infra_collectors_commercial._commercial_collector_loop(
+
+        _commercial_collect_once=_commercial_collect_once, os=os, time=time
+    )
 
 @app.on_event("startup")
 def _start_commercial_collector():
-    enabled=str(os.getenv("ARVEXQ_COMMERCIAL_COLLECTOR","1")).lower() in {"1","true","yes","on"}
-    if enabled:
-        threading.Thread(target=_commercial_collector_loop,daemon=True,name="arvexq-commercial-collector").start()
+    return _stage5_infra_collectors_commercial._start_commercial_collector(
+
+        _commercial_collector_loop=_commercial_collector_loop, os=os, threading=threading
+    )
 
 @app.get("/api/v1/runtime-status")
 def runtime_status():
@@ -825,14 +692,10 @@ def _race_history_status(race_id: str) -> dict | None:
     )
 
 def _new_conn(path: Path):
-    conn = sqlite3.connect(path, timeout=1.5)
-    conn.row_factory = sqlite3.Row
-    try:
-        conn.execute("PRAGMA query_only=ON")
-        conn.execute("PRAGMA busy_timeout=1200")
-    except Exception:
-        pass
-    return conn
+    return _stage5_storage_sqlite_connection._new_conn(
+        path,
+        sqlite3=sqlite3
+    )
 
 
 def nar_race_summaries(iso_date: str) -> list[dict]:
@@ -1173,9 +1036,6 @@ def _apply_enrichment(race_id:str,detail:dict)->dict:
 
 
 # --- v123 live weather / going -----------------------------------------
-_environment_lock=threading.Lock()
-_environment_running:set[str]=set()
-_environment_state:dict[str,dict]={}
 
 def _env_clean_weather(v:str)->str:
     return _acq_environment_parsers._env_clean_weather(
@@ -1226,148 +1086,48 @@ def _upcoming_rows(rows:list[dict])->list[dict]:
     future=[r for r in rows if _race_minutes_server(r)>=nowm-12 and not _snapshot_final(r)]
     return future or [r for r in rows if not _snapshot_final(r)] or rows[-1:]
 
-def _patch_nar_environment(date:str, track:str, rows:list[dict], env:dict)->list[str]:
-    if not env:return []
-    affected=[]
-    upcoming=_upcoming_rows(rows)
-    if not upcoming:return affected
-    conn=_new_conn(DB_PATH)
-    try:
-        with conn:
-            for r in upcoming:
-                no=int(r.get("raceNumber") or 0)
-                if not no:continue
-                sets=[];args=[]
-                if env.get("weather") not in (None,"","不明"):
-                    sets.append("weather=?");args.append(env["weather"])
-                if env.get("condition") not in (None,"","不明"):
-                    sets.append("condition=?");args.append(env["condition"])
-                if sets:
-                    args.extend([track,date,no])
-                    conn.execute("UPDATE races SET "+",".join(sets)+" WHERE track=? AND date=? AND race_no=?",args)
-                    affected.append(str(r.get("id") or f"nar-{date}-{track}-{no:02d}"))
-                scratch_map=env.get("scratchMap") or {}
-                if scratch_map and int(env.get("raceNo") or 0)==no:
-                    for horse_no,status in scratch_map.items():
-                        conn.execute("UPDATE entries SET status=? WHERE track=? AND date=? AND race_no=? AND horse_no=?",
-                                     (str(status),track,date,no,int(horse_no)))
-                    rid=str(r.get("id") or f"nar-{date}-{track}-{no:02d}")
-                    if rid not in affected:affected.append(rid)
-    finally:conn.close()
-    return affected
+def _patch_nar_environment(date: str, track: str, rows: list[dict], env: dict) -> list[str]:
+    return _stage5_infra_collectors_environment._patch_nar_environment(
+        date, track, rows, env,
+        DB_PATH=DB_PATH, _new_conn=_new_conn, _upcoming_rows=_upcoming_rows
+    )
 
-def _patch_central_environment(rows:list[dict], env_by_surface:dict, weather:str)->list[str]:
-    if not rows:return []
-    upcoming=_upcoming_rows(rows)
-    st=CentralStore();affected=[]
-    try:
-        for r in upcoming:
-            z=dict(r)
-            changed=False
-            if weather not in (None,"","不明") and z.get("weather")!=weather:
-                z["weather"]=weather;changed=True
-            surf=str(z.get("surface") or "")
-            cond=env_by_surface.get(surf) or (env_by_surface.get("芝") if surf=="障害" else None)
-            if cond not in (None,"","不明") and z.get("condition")!=cond:
-                z["condition"]=cond;changed=True
-            if changed:
-                z["environmentMeta"]={"source":"JRA公式優先","updatedAtEpoch":int(time.time())}
-                st.upsert([z]);affected.append(str(z.get("id") or ""))
-    finally:
-        st.conn.close()
-    return [x for x in affected if x]
+def _patch_central_environment(rows: list[dict], env_by_surface: dict, weather: str) -> list[str]:
+    return _stage5_infra_collectors_environment._patch_central_environment(
+        rows, env_by_surface, weather,
+        CentralStore=CentralStore, _upcoming_rows=_upcoming_rows, time=time
+    )
 
-def _refresh_track_environment(date:str,circuit:str,track:str,force:bool=False)->dict:
-    key=f"{date}|{circuit}|{track}"
-    with _environment_lock:
-        state=_environment_state.get(key) or {}
-        if state.get("running"):return dict(state)
-        if not force and int(time.time())-int(state.get("updatedAtEpoch") or 0)<25:
-            return dict(state)
-        _environment_state[key]={"running":True,"updatedAtEpoch":int(state.get("updatedAtEpoch") or 0),"changed":0,"error":""}
-    affected=[];error=""
-    try:
-        rows=nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False)
-        rows=[r for r in rows if str(r.get("track") or "")==str(track)]
-        if not rows:return {"running":False,"changed":0}
-        if circuit=="地方":
-            reps=_upcoming_rows(rows)
-            rep=reps[0] if reps else rows[0]
-            env=_nar_fetch_environment(track,date,int(rep.get("raceNumber") or 0))
-            if env:
-                affected=_patch_nar_environment(date,track,rows,env)
-        else:
-            reps=_upcoming_rows(rows)
-            by_surface={}
-            weather="不明"
-            for surf in ("芝","ダート","障害"):
-                cand=next((r for r in reps if str(r.get("surface") or "")==surf),None)
-                if not cand:continue
-                env=_jra_fetch_environment(cand)
-                if env.get("weather") not in (None,"","不明"):weather=env["weather"]
-                if env.get("condition") not in (None,"","不明"):
-                    by_surface[surf]=env["condition"]
-                for k,v in (env.get("surfaceConditions") or {}).items():
-                    if v not in (None,"","不明"):by_surface[k]=v
-            affected=_patch_central_environment(rows,by_surface,weather)
+def _refresh_track_environment(date: str, circuit: str, track: str, force: bool=False) -> dict:
+    return _stage5_infra_collectors_environment._refresh_track_environment(
+        date, circuit, track, force,
+        _build_fast_diagnosis_snapshot=_build_fast_diagnosis_snapshot, _environment_lock=_environment_lock, _environment_state=_environment_state, _jra_fetch_environment=_jra_fetch_environment, _nar_fetch_environment=_nar_fetch_environment, _patch_central_environment=_patch_central_environment, _patch_nar_environment=_patch_nar_environment, _race_list_cache=_race_list_cache, _race_list_cache_lock=_race_list_cache_lock, _upcoming_rows=_upcoming_rows, central_race_summaries=central_race_summaries, nar_race_summaries=nar_race_summaries, time=time
+    )
 
-        if affected:
-            with _race_list_cache_lock:
-                [_race_list_cache.pop(k,None) for k in list(_race_list_cache) if k.startswith(date+"|")]
-            # Only recalc races whose live environment actually changed.
-            for rid in affected:
-                try:_build_fast_diagnosis_snapshot(rid,allow_network=False,deep_context=False)
-                except Exception as exc:print("environment diagnosis rebuild failed",rid,exc)
-    except Exception as exc:
-        error=str(exc);print("track environment refresh failed",date,circuit,track,exc)
-    finally:
-        with _environment_lock:
-            _environment_state[key]={
-                "running":False,"updatedAtEpoch":int(time.time()),"changed":len(affected),"error":error
-            }
-    return dict(_environment_state.get(key) or {})
-
-def _schedule_track_environment(date:str,circuit:str,track:str,force:bool=False)->None:
-    key=f"{date}|{circuit}|{track}"
-    with _environment_lock:
-        if key in _environment_running:return
-        state=_environment_state.get(key) or {}
-        if not force and int(time.time())-int(state.get("updatedAtEpoch") or 0)<25:return
-        _environment_running.add(key)
-    def worker():
-        try:_refresh_track_environment(date,circuit,track,force)
-        finally:
-            with _environment_lock:_environment_running.discard(key)
-    threading.Thread(target=worker,daemon=True,name="env-"+track).start()
+def _schedule_track_environment(date: str, circuit: str, track: str, force: bool=False) -> None:
+    return _stage5_infra_collectors_environment._schedule_track_environment(
+        date, circuit, track, force,
+        _environment_lock=_environment_lock, _environment_running=_environment_running, _environment_state=_environment_state, _refresh_track_environment=_refresh_track_environment, threading=threading, time=time
+    )
 
 def _environment_cycle():
-    date=_today_iso()
-    rows=[]
-    try:rows.extend(nar_race_summaries(date))
-    except Exception:pass
-    try:rows.extend(central_race_summaries(date,allow_network=False))
-    except Exception:pass
-    groups=[]
-    seen=set()
-    for r in rows:
-        key=(str(r.get("circuit") or ""),str(r.get("track") or ""))
-        if not key[0] or not key[1] or key[1]=="帯広" or key in seen:continue
-        seen.add(key);groups.append(key)
-    for circuit,track in groups:
-        _schedule_track_environment(date,circuit,track,False)
+    return _stage5_infra_collectors_environment._environment_cycle(
+
+        _schedule_track_environment=_schedule_track_environment, _today_iso=_today_iso, central_race_summaries=central_race_summaries, nar_race_summaries=nar_race_summaries
+    )
 
 def _environment_loop():
-    time.sleep(float(os.getenv("ENVIRONMENT_START_DELAY_SEC","0.8")))
-    while True:
-        try:_environment_cycle()
-        except Exception as exc:print("environment cycle failed",exc)
-        time.sleep(max(30,int(os.getenv("ENVIRONMENT_REFRESH_SEC","45"))))
+    return _stage5_infra_collectors_environment._environment_loop(
+
+        _environment_cycle=_environment_cycle, os=os, time=time
+    )
 
 @app.on_event("startup")
 def _start_environment_collector():
-    enabled=str(os.getenv("ARVEXQ_ENVIRONMENT_COLLECTOR","1")).lower() in {"1","true","yes","on"}
-    if enabled:
-        threading.Thread(target=_environment_loop,daemon=True,name="arvexq-environment").start()
+    return _stage5_infra_collectors_environment._start_environment_collector(
+
+        _environment_loop=_environment_loop, os=os, threading=threading
+    )
 
 
 # --- v82 prepared-race cache -------------------------------------------
@@ -1693,10 +1453,29 @@ def _compact_display_snapshot(detail: dict) -> dict:
     return out
 
 
-# ARVEXQ_EXTRACTED:install_race_stores
-from arvexq.infra.race_stores import install_race_stores as _arvexq_installer
-_arvexq_installer(globals())
-del _arvexq_installer
+from types import SimpleNamespace as _StoragePorts
+from arvexq.prediction.prerace_archive import sealed_lock as _arvexq_sealed_lock
+from arvexq.prediction.mass_prerace_bridge import prepare_mass_prerace_fields, apply_mass_prerace_fields, frozen_mass_fields
+from arvexq.selection.race_selectability_snapshot import prepare_race_selectability_fields, apply_race_selectability_fields, frozen_selectability_fields
+from arvexq.storage.prepared.store import PreparedRaceStore as _PreparedRaceStore
+class PreparedRaceStore(_PreparedRaceStore):
+    def __init__(self, path: Path = PREPARED_DB_PATH):
+        super().__init__(path, ports=_StoragePorts(
+            _compact_display_snapshot=lambda *a, **k: _compact_display_snapshot(*a, **k),
+            _prediction_audit_from_lock=lambda *a, **k: _prediction_audit_from_lock(*a, **k),
+            _prediction_clock_state=lambda *a, **k: _prediction_clock_state(*a, **k),
+            _strip_excluded=lambda *a, **k: _strip_excluded(*a, **k),
+            _today_iso=lambda *a, **k: _today_iso(*a, **k),
+        ))
+from arvexq.storage.racedb.store import RaceDataBank as _RaceDataBank
+class RaceDataBank(_RaceDataBank):
+    def __init__(self, path: Path = RACEDB_PATH):
+        super().__init__(path, ports=_StoragePorts(
+            _compact_display_snapshot=lambda *a, **k: _compact_display_snapshot(*a, **k),
+            _prediction_clock_state=lambda *a, **k: _prediction_clock_state(*a, **k),
+            _strip_excluded=lambda *a, **k: _strip_excluded(*a, **k),
+        ))
+
 
 RACEDB = RaceDataBank()
 
@@ -1706,290 +1485,85 @@ RACEDB = RaceDataBank()
 # persists every usable snapshot in RaceDB, and keeps retrying only missing/stale
 # fields instead of rebuilding the whole race blindly.
 DATA_CORE_FIELDS = ("card","history","odds","body_weight","environment","result","payouts","analysis")
-_data_core_lock=threading.Lock()
-_data_core_running:set[str]=set()
-_data_core_state={"running":False,"lastStart":0,"lastFinish":0,"checked":0,"refreshed":0,"error":""}
 
-def _data_core_active_horses(detail:dict)->list[dict]:
-    return [h for h in (detail.get("horses") or []) if isinstance(h,dict) and not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
+def _data_core_active_horses(detail: dict) -> list[dict]:
+    return _stage5_storage_data_core_health._data_core_active_horses(
+        detail
 
-def _data_core_result_due(detail:dict)->bool:
-    try:
-        if str(detail.get("date") or "")!=_today_iso():return True
-        st=_race_minutes_server(detail)
-        if st>=9999:return False
-        now=_now_jst();return now.hour*60+now.minute>=st+2
-    except Exception:return False
+    )
 
-def _data_core_health(detail:dict|None)->dict:
-    d=detail if isinstance(detail,dict) else {}
-    horses=_data_core_active_horses(d); total=len(horses)
-    field_size=max(total,int(d.get("fieldSize") or 0))
-    named=sum(1 for h in horses if str(h.get("name") or "").strip() and str(h.get("jockey") or "").strip())
-    card_pct=int(round(100*named/max(1,field_size))) if field_size else 0
-    card_ready=bool(field_size>=2 and named>=max(2,field_size-1))
+def _data_core_result_due(detail: dict) -> bool:
+    return _stage5_storage_data_core_health._data_core_result_due(
+        detail,
+        _now_jst=_now_jst, _race_minutes_server=_race_minutes_server, _today_iso=_today_iso
+    )
 
-    hist_counts=[]
-    for h in horses:
-        if h.get("debutNoHistory"):
-            hist_counts.append(5)
-        else:
-            runs=[x for x in (h.get("recentRaces") or h.get("allPastRuns") or []) if isinstance(x,dict)]
-            hist_counts.append(min(5,len(runs)))
-    hist_total=max(1,total*5)
-    hist_points=sum(hist_counts)
-    hist_pct=int(round(100*hist_points/hist_total)) if total else 0
-    history_ready=bool(total and all(x>=5 for x in hist_counts))
+def _data_core_health(detail: dict | None) -> dict:
+    return _stage5_storage_data_core_health._data_core_health(
+        detail,
+        PREDICTION_ENGINE_VERSION=PREDICTION_ENGINE_VERSION, _data_core_active_horses=_data_core_active_horses, _data_core_result_due=_data_core_result_due, _prediction_clock_state=_prediction_clock_state, _snapshot_final=_snapshot_final, _today_iso=_today_iso, re=re
+    )
 
-    real_odds=[]
-    weights=[]
-    for h in horses:
-        try:odd=float(h.get("winOdds") or 0)
-        except Exception:odd=0.0
-        real_odds.append(bool(odd>1 and not h.get("oddsForecast") and not re.search(r"予想|forecast",str(h.get("oddsSource") or ""),re.I)))
-        try:bw=int(h.get("bodyWeight") or 0)
-        except Exception:bw=0
-        weights.append(bool(250<=bw<=800))
-    odds_pct=int(round(100*sum(real_odds)/max(1,total))) if total else 0
-    body_pct=int(round(100*sum(weights)/max(1,total))) if total else 0
-    clock_state,minutes_to_post=_prediction_clock_state(d)
-    is_today=str(d.get("date") or "")==_today_iso()
-    odds_due=bool((not is_today) or clock_state=="started" or minutes_to_post is None or minutes_to_post<=360 or any(real_odds))
-    body_due=bool((not is_today) or clock_state=="started" or minutes_to_post is None or minutes_to_post<=120 or any(weights))
+def _data_core_health_hash(field_key: str, item: dict) -> str:
+    return _stage5_storage_data_core_health._data_core_health_hash(
+        field_key, item,
+        hashlib=hashlib, json=json
+    )
 
-    weather=str(d.get("weather") or "").strip();condition=str(d.get("condition") or "").strip()
-    env_ready=weather not in ("","不明","—") and condition not in ("","不明","—")
-    env_pct=(50 if weather not in ("","不明","—") else 0)+(50 if condition not in ("","不明","—") else 0)
+def _data_core_store_health(detail: dict | None, attempted: set[str] | None=None, source_hint: str='') -> dict:
+    return _stage5_storage_data_core_health._data_core_store_health(
+        detail, attempted, source_hint,
+        RACEDB=RACEDB, _data_core_health=_data_core_health, _data_core_health_hash=_data_core_health_hash, sqlite3=sqlite3, time=time
+    )
 
-    result=d.get("result") if isinstance(d.get("result"),dict) else {}
-    finishers=[x for x in (result.get("finishers") or []) if isinstance(x,dict)]
-    ranks={int(x.get("finish") or 0) for x in finishers}
-    result_ready=all(x in ranks for x in (1,2,3))
-    final=bool(str(result.get("status") or "")=="確定" or _snapshot_final(d))
-    payouts=result.get("payouts") if isinstance(result.get("payouts"),list) else []
-    payouts_ready=bool(payouts)
-    due=_data_core_result_due(d)
+def _data_core_record_run(run_id: str, race_id: str, started: int, status: str, attempted: set[str], before: dict, after: dict, note: str=''):
+    return _stage5_storage_data_core_health._data_core_record_run(
+        run_id, race_id, started, status, attempted, before, after, note,
+        RACEDB=RACEDB, json=json, sqlite3=sqlite3, time=time
+    )
 
-    pm=d.get("preparedMeta") if isinstance(d.get("preparedMeta"),dict) else {}
-    analysis_ready=bool(pm.get("diagnosisReady") and pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION)
+def _data_core_snapshot(race_id: str) -> dict | None:
+    return _stage5_storage_data_core_refresh._data_core_snapshot(
+        race_id,
+        _fast_local_race_detail=_fast_local_race_detail, _prepared_get_fresh=_prepared_get_fresh, _racedb_get_fast=_racedb_get_fast
+    )
 
-    srcs=[str(x) for x in (d.get("dataSources") or []) if x]
-    default_source=" / ".join(srcs[:4]) or str(d.get("source") or "")
-    def rec(status,pct,source="",note=""):
-        return {"status":status,"completeness":max(0,min(100,int(pct))),"source":source or default_source,"note":note}
-    return {
-        "card":rec("ready" if card_ready else "missing",card_pct,note=f"{named}/{field_size or total}頭 基本項目"),
-        "history":rec("ready" if history_ready else ("partial" if hist_points else "missing"),hist_pct,note=f"{hist_points}/{total*5 if total else 0}走"),
-        "odds":rec("ready" if total and all(real_odds) else (("partial" if any(real_odds) else "missing") if odds_due else "not_due"),odds_pct,str(d.get("oddsSource") or default_source),f"{sum(real_odds)}/{total}頭 実単勝"+(" / 取得時間前" if not odds_due else "")),
-        "body_weight":rec("ready" if total and all(weights) else (("partial" if any(weights) else "missing") if body_due else "not_due"),body_pct,note=f"{sum(weights)}/{total}頭 現在馬体重"+(" / 発表時間前" if not body_due else "")),
-        "environment":rec("ready" if env_ready else ("partial" if env_pct else "missing"),env_pct,note=f"天候 {weather or '—'} / 馬場 {condition or '—'}"),
-        "result":rec("ready" if result_ready else ("pending" if due else "not_due"),100 if result_ready else 0,str(result.get("source") or default_source),"上位3頭" if result_ready else "確定待ち"),
-        "payouts":rec("ready" if payouts_ready else ("pending" if final else "not_due"),100 if payouts_ready else 0,str(result.get("payoutSource") or default_source),f"{len(payouts)}件" if payouts_ready else "確定待ち"),
-        "analysis":rec("ready" if analysis_ready else "missing",100 if analysis_ready else 0,note=str(pm.get("diagnosisVersion") or "")),
-    }
+def _data_core_refresh_race(race_id: str, force: bool=False) -> dict:
+    return _stage5_storage_data_core_refresh._data_core_refresh_race(
+        race_id, force,
+        ARVEXQ_DATA_CORE_VERSION=ARVEXQ_DATA_CORE_VERSION, PREPARED_STORE=PREPARED_STORE, RACEDB=RACEDB, _build_fast_diagnosis_snapshot=_build_fast_diagnosis_snapshot, _data_core_health=_data_core_health, _data_core_lock=_data_core_lock, _data_core_record_run=_data_core_record_run, _data_core_result_due=_data_core_result_due, _data_core_running=_data_core_running, _data_core_snapshot=_data_core_snapshot, _data_core_store_health=_data_core_store_health, _hydrate_fast_card_now=_hydrate_fast_card_now, _refresh_result_fast=_refresh_result_fast, _schedule_track_environment=_schedule_track_environment, _start_central_history_search=_start_central_history_search, _start_race_history_search=_start_race_history_search, _today_iso=_today_iso, central_race_detail=central_race_detail, hashlib=hashlib, odds_refresh=odds_refresh, payout_refresh=payout_refresh, time=time
+    )
 
-def _data_core_health_hash(field_key:str, item:dict)->str:
-    raw=json.dumps([field_key,item.get("status"),item.get("completeness"),item.get("source"),item.get("note")],ensure_ascii=False,separators=(",",":"))
-    return hashlib.sha1(raw.encode("utf-8","ignore")).hexdigest()
+def _data_core_day_rows(date: str) -> list[dict]:
+    return _stage5_storage_data_core_refresh._data_core_day_rows(
+        date,
+        _bootstrap_rows_local=_bootstrap_rows_local
+    )
 
-def _data_core_store_health(detail:dict|None, attempted:set[str]|None=None, source_hint:str="")->dict:
-    if not isinstance(detail,dict) or not detail.get("id"):return {}
-    rid=str(detail.get("id")); health=_data_core_health(detail); now=int(time.time()); attempted=attempted or set()
-    conn=sqlite3.connect(RACEDB.path,timeout=3)
-    try:
-        for key,item in health.items():
-            src=str(item.get("source") or source_hint or "")[:180]
-            status=str(item.get("status") or "missing")
-            pct=int(item.get("completeness") or 0)
-            note=str(item.get("note") or "")[:400]
-            vh=_data_core_health_hash(key,item)
-            row=conn.execute("SELECT attempts FROM field_state WHERE race_id=? AND field_key=?",(rid,key)).fetchone()
-            attempts=int(row[0] or 0) if row else 0
-            if key in attempted and status!="ready":attempts+=1
-            conn.execute("""INSERT INTO field_state(race_id,field_key,status,completeness,source,updated_at,last_attempt_at,attempts,note,value_hash)
-                            VALUES(?,?,?,?,?,?,?,?,?,?)
-                            ON CONFLICT(race_id,field_key) DO UPDATE SET status=excluded.status,completeness=excluded.completeness,
-                            source=CASE WHEN excluded.source<>'' THEN excluded.source ELSE field_state.source END,
-                            updated_at=excluded.updated_at,last_attempt_at=excluded.last_attempt_at,attempts=excluded.attempts,note=excluded.note,value_hash=excluded.value_hash""",
-                         (rid,key,status,pct,src,now,now if key in attempted else 0,attempts,note,vh))
-        conn.commit()
-    finally:conn.close()
-    return health
-
-def _data_core_record_run(run_id:str,race_id:str,started:int,status:str,attempted:set[str],before:dict,after:dict,note:str=""):
-    conn=sqlite3.connect(RACEDB.path,timeout=3)
-    try:
-        conn.execute("""INSERT OR REPLACE INTO collector_runs(run_id,race_id,started_at,finished_at,status,attempted_fields,before_json,after_json,note)
-                        VALUES(?,?,?,?,?,?,?,?,?)""",
-                     (run_id,race_id,started,int(time.time()),status,json.dumps(sorted(attempted),ensure_ascii=False),
-                      json.dumps(before,ensure_ascii=False,separators=(",",":")),json.dumps(after,ensure_ascii=False,separators=(",",":")),str(note or "")[:600]))
-        conn.commit()
-    finally:conn.close()
-
-def _data_core_snapshot(race_id:str)->dict|None:
-    return _prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
-
-def _data_core_refresh_race(race_id:str,force:bool=False)->dict:
-    rid=str(race_id or "")
-    if not rid:return {"raceId":rid,"ok":False,"error":"empty race id"}
-    with _data_core_lock:
-        if rid in _data_core_running:
-            d=_data_core_snapshot(rid);return {"raceId":rid,"ok":True,"running":True,"health":_data_core_health(d)}
-        _data_core_running.add(rid)
-    started=int(time.time());run_id=f"dc-{started}-{hashlib.sha1(rid.encode()).hexdigest()[:8]}";attempted=set();errors=[]
-    try:
-        d=_data_core_snapshot(rid)
-        before=_data_core_health(d)
-        # Card: hydrate only when basic starter rows are incomplete.
-        if force or before.get("card",{}).get("status")!="ready":
-            attempted.add("card")
-            try:_hydrate_fast_card_now(rid,deep_history=False)
-            except Exception as exc:errors.append("card:"+str(exc))
-            d=_data_core_snapshot(rid)
-
-        h=_data_core_health(d)
-        # Live odds + current body weight are one official/live fetch but tracked separately.
-        if str((d or {}).get("date") or "")==_today_iso() and (force or h.get("odds",{}).get("status")!="ready" or h.get("body_weight",{}).get("status")!="ready"):
-            attempted.update({"odds","body_weight"})
-            try:odds_refresh(rid,1)
-            except Exception as exc:errors.append("live:"+str(exc))
-            d=_data_core_snapshot(rid)
-
-        h=_data_core_health(d)
-        if force or h.get("environment",{}).get("status")!="ready":
-            attempted.add("environment")
-            try:
-                if rid.startswith("jra-"):
-                    fresh=central_race_detail(rid)
-                    if fresh:
-                        base=d or fresh
-                        for k in ("weather","condition","title","distance","surface","startTime","scheduledStartTime"):
-                            if fresh.get(k) not in (None,"",0,"不明"):base[k]=fresh.get(k)
-                        RACEDB.upsert_race(base);PREPARED_STORE.put(base,force=True);d=base
-                else:
-                    _schedule_track_environment(str((d or {}).get("date") or _today_iso()),str((d or {}).get("circuit") or "地方"),str((d or {}).get("track") or ""),True)
-            except Exception as exc:errors.append("env:"+str(exc))
-
-        h=_data_core_health(d)
-        if force or h.get("history",{}).get("status")!="ready":
-            attempted.add("history")
-            try:
-                if rid.startswith("jra-"):
-                    _start_central_history_search(rid,str((d or {}).get("date") or _today_iso()),force=bool(force))
-                else:
-                    names=[str(x.get("name") or "") for x in ((d or {}).get("horses") or []) if x.get("name")]
-                    if names:_start_race_history_search(rid,str((d or {}).get("date") or _today_iso()),names,force=bool(force))
-            except Exception as exc:errors.append("history:"+str(exc))
-
-        h=_data_core_health(d)
-        if _data_core_result_due(d or {}) and (force or h.get("result",{}).get("status")!="ready"):
-            attempted.add("result")
-            try:_refresh_result_fast(rid)
-            except Exception as exc:errors.append("result:"+str(exc))
-            d=_data_core_snapshot(rid)
-
-        h=_data_core_health(d)
-        if h.get("result",{}).get("status")=="ready" and (force or h.get("payouts",{}).get("status")!="ready"):
-            attempted.add("payouts")
-            try:payout_refresh(rid)
-            except Exception as exc:errors.append("payouts:"+str(exc))
-            d=_data_core_snapshot(rid)
-
-        h=_data_core_health(d)
-        if force or h.get("analysis",{}).get("status")!="ready":
-            attempted.add("analysis")
-            try:_build_fast_diagnosis_snapshot(rid,allow_network=False,deep_context=False)
-            except Exception as exc:errors.append("analysis:"+str(exc))
-            d=_data_core_snapshot(rid)
-
-        after=_data_core_store_health(d,attempted,"ARVEXQ Data Core")
-        if isinstance(d,dict) and d.get("id"):
-            d["dataCoreHealth"]=after;d["dataCoreVersion"]=ARVEXQ_DATA_CORE_VERSION;d["dataCoreUpdatedAt"]=int(time.time())
-            try:RACEDB.upsert_race(d);PREPARED_STORE.put(d,force=True)
-            except Exception as exc:errors.append("persist-health:"+str(exc))
-        _data_core_record_run(run_id,rid,started,"partial" if errors else "ok",attempted,before,after," | ".join(errors[-5:]))
-        return {"raceId":rid,"ok":not errors,"attempted":sorted(attempted),"health":after,"errors":errors[-5:],"version":ARVEXQ_DATA_CORE_VERSION}
-    finally:
-        with _data_core_lock:_data_core_running.discard(rid)
-
-def _data_core_day_rows(date:str)->list[dict]:
-    try:return _bootstrap_rows_local(date)
-    except Exception:return []
-
-def _data_core_day_status(date:str,circuit:str="")->dict:
-    rows=[r for r in _data_core_day_rows(date) if not circuit or str(r.get("circuit") or "")==str(circuit)]
-    ids=[str(r.get("id") or "") for r in rows if r.get("id")]
-    by={rid:{} for rid in ids}
-    if ids:
-        conn=sqlite3.connect(RACEDB.path,timeout=3);conn.row_factory=sqlite3.Row
-        try:
-            marks=",".join("?" for _ in ids)
-            for r in conn.execute(f"SELECT * FROM field_state WHERE race_id IN ({marks})",ids).fetchall():
-                by.setdefault(str(r["race_id"]),{})[str(r["field_key"])]=dict(r)
-        finally:conn.close()
-    fields={k:{"ready":0,"partial":0,"missing":0,"pending":0,"not_due":0} for k in DATA_CORE_FIELDS}
-    ready_races=0
-    race_rows=[]
-    for r in rows:
-        rid=str(r.get("id") or "");st=by.get(rid) or {}
-        # If not yet persisted, calculate from the latest local snapshot without network.
-        if not st:
-            h=_data_core_health(_data_core_snapshot(rid))
-            st={k:{"status":v.get("status"),"completeness":v.get("completeness"),"source":v.get("source"),"note":v.get("note")} for k,v in h.items()}
-        for k in DATA_CORE_FIELDS:
-            status=str((st.get(k) or {}).get("status") or "missing")
-            fields[k][status if status in fields[k] else "missing"]+=1
-        essential=("card","history","odds","body_weight","environment","analysis")
-        ready=all(str((st.get(k) or {}).get("status") or "") in ({"ready","not_due"} if k in {"odds","body_weight"} else {"ready"}) for k in essential)
-        if ready:ready_races+=1
-        race_rows.append({"id":rid,"track":r.get("track"),"raceNumber":r.get("raceNumber"),"startTime":r.get("startTime"),"ready":ready,"fields":st})
-    return {"version":ARVEXQ_DATA_CORE_VERSION,"date":date,"circuit":circuit,"raceCount":len(rows),"readyRaceCount":ready_races,"fields":fields,"races":race_rows}
+def _data_core_day_status(date: str, circuit: str='') -> dict:
+    return _stage5_storage_data_core_refresh._data_core_day_status(
+        date, circuit,
+        ARVEXQ_DATA_CORE_VERSION=ARVEXQ_DATA_CORE_VERSION, DATA_CORE_FIELDS=DATA_CORE_FIELDS, RACEDB=RACEDB, _data_core_day_rows=_data_core_day_rows, _data_core_health=_data_core_health, _data_core_snapshot=_data_core_snapshot, sqlite3=sqlite3
+    )
 
 def _data_core_cycle():
-    global _data_core_state
-    with _data_core_lock:
-        if _data_core_state.get("running"):return
-        _data_core_state.update({"running":True,"lastStart":int(time.time()),"checked":0,"refreshed":0,"error":""})
-    checked=refreshed=0;errors=[]
-    try:
-        rows=_data_core_day_rows(_today_iso())
-        nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
-        candidates=[]
-        for r in rows:
-            rid=str(r.get("id") or "")
-            if not rid:continue
-            d=_data_core_snapshot(rid);h=_data_core_health(d);checked+=1
-            _data_core_store_health(d,set(),"local") if d else None
-            needed=[k for k in ("card","history","odds","body_weight","environment","analysis") if h.get(k,{}).get("status") not in {"ready","not_due"}]
-            if _data_core_result_due(d or r) and h.get("result",{}).get("status")!="ready":needed.append("result")
-            if h.get("result",{}).get("status")=="ready" and h.get("payouts",{}).get("status")!="ready":needed.append("payouts")
-            if needed:
-                st=_race_minutes_server(r);dist=abs(st-nowm) if st<9999 else 9999
-                candidates.append((dist,st,rid,needed))
-        candidates.sort(key=lambda x:(x[0],x[1]))
-        targets=candidates[:max(1,int(os.getenv("ARVEXQ_DATA_CORE_BATCH","16")))]
-        workers=max(1,min(8,len(targets))) if targets else 0
-        if workers:
-            with ThreadPoolExecutor(max_workers=workers) as pool:
-                for z in pool.map(lambda x:_data_core_refresh_race(x[2],False),targets):
-                    refreshed+=1
-                    if not z.get("ok") and z.get("errors"):errors.extend(z.get("errors") or [])
-    except Exception as exc:errors.append(str(exc))
-    finally:
-        with _data_core_lock:
-            _data_core_state.update({"running":False,"lastFinish":int(time.time()),"checked":checked,"refreshed":refreshed,"error":" | ".join(errors[-5:])})
+    return _stage5_infra_collectors_data_core._data_core_cycle(
+
+        ThreadPoolExecutor=ThreadPoolExecutor, _data_core_day_rows=_data_core_day_rows, _data_core_health=_data_core_health, _data_core_lock=_data_core_lock, _data_core_refresh_race=_data_core_refresh_race, _data_core_result_due=_data_core_result_due, _data_core_snapshot=_data_core_snapshot, _data_core_state=_data_core_state, _data_core_store_health=_data_core_store_health, _now_jst=_now_jst, _race_minutes_server=_race_minutes_server, _today_iso=_today_iso, os=os, time=time
+    )
 
 def _data_core_loop():
-    time.sleep(float(os.getenv("ARVEXQ_DATA_CORE_START_DELAY_SEC","1.2")))
-    while True:
-        try:_data_core_cycle()
-        except Exception as exc:print("ARVEXQ Data Core cycle failed",exc)
-        time.sleep(max(10,int(os.getenv("ARVEXQ_DATA_CORE_LOOP_SEC","12"))))
+    return _stage5_infra_collectors_data_core._data_core_loop(
+
+        _data_core_cycle=_data_core_cycle, os=os, time=time
+    )
 
 @app.on_event("startup")
 def _start_data_core_collector():
-    enabled=str(os.getenv("ARVEXQ_DATA_CORE","1")).lower() in {"1","true","yes","on"}
-    if enabled:threading.Thread(target=_data_core_loop,daemon=True,name="arvexq-data-core").start()
+    return _stage5_infra_collectors_data_core._start_data_core_collector(
+
+        _data_core_loop=_data_core_loop, os=os, threading=threading
+    )
 
 @app.get("/api/v1/data-core/status")
 def data_core_status(date:str=Query(""),circuit:str=Query("")):
@@ -2025,9 +1599,6 @@ def _schedule_full_history_harvest(detail: dict) -> None:
     )
 
 PREPARED_STORE = PreparedRaceStore()
-_prewarm_lock = threading.Lock()
-_prewarm_running: set[str] = set()
-_prewarm_state: dict[str, dict] = {}
 
 
 from arvexq.prediction.metrics.past_runs import (
@@ -2067,41 +1638,11 @@ def _ensure_race_volatility(detail: dict) -> dict:
     return detail
 
 
-def _restore_saved_odds(detail:dict)->dict:
-    """Display-only odds must survive diagnosis/history/environment snapshot rebuilds."""
-    if not isinstance(detail,dict):return detail
-    race_id=str(detail.get("id") or "")
-    if not race_id:return detail
-    rows=[]
-    try:rows=RACEDB.odds_latest(race_id) or []
-    except Exception:rows=[]
-    if not rows:
-        try:
-            previous,_=PREPARED_STORE.get(race_id)
-            if previous:
-                rows=[{
-                    "horseNumber":h.get("horseNumber"),"winOdds":h.get("winOdds"),
-                    "popularity":h.get("popularity"),"oddsSource":h.get("oddsSource") or previous.get("oddsSource")
-                } for h in (previous.get("horses") or []) if h.get("winOdds") not in (None,"")]
-                if rows:
-                    detail["oddsUpdatedAt"]=previous.get("oddsUpdatedAt") or detail.get("oddsUpdatedAt")
-                    detail["oddsSource"]=previous.get("oddsSource") or detail.get("oddsSource")
-        except Exception:pass
-    if not rows:return detail
-    by={int(h.get("horseNumber") or 0):h for h in (detail.get("horses") or [])}
-    latest=0;source=""
-    for z in rows:
-        no=int(z.get("horseNumber") or 0);h=by.get(no)
-        if not h:continue
-        for k in ("winOdds","popularity"):
-            if z.get(k) not in (None,""):h[k]=z.get(k)
-        if z.get("oddsSource"):
-            h["oddsSource"]=z.get("oddsSource");source=z.get("oddsSource")
-        latest=max(latest,int(z.get("capturedAt") or 0))
-    if source:detail["oddsSource"]=source
-    if latest:
-        detail["oddsUpdatedAt"]=datetime.fromtimestamp(latest,ZoneInfo("Asia/Tokyo")).strftime("%H:%M:%S")
-    return detail
+def _restore_saved_odds(detail: dict) -> dict:
+    return _stage5_storage_prepared_refresh._restore_saved_odds(
+        detail,
+        PREPARED_STORE=PREPARED_STORE, RACEDB=RACEDB, ZoneInfo=ZoneInfo, datetime=datetime
+    )
 
 
 def _precompute_detail_metrics(detail: dict) -> dict:
@@ -2139,8 +1680,10 @@ def _precompute_detail_metrics(detail: dict) -> dict:
 
 
 def _prepared_ttl(detail: dict) -> int:
-    # Today's cards can change (odds/body weight/result). Old races are effectively static.
-    return int(os.getenv("PREPARED_TODAY_TTL_SEC","45")) if str(detail.get("date") or "")==_today_iso() else int(os.getenv("PREPARED_ARCHIVE_TTL_SEC","21600"))
+    return _stage5_storage_prepared_cache._prepared_ttl(
+        detail,
+        _today_iso=_today_iso, os=os
+    )
 
 
 from arvexq.infra.snapshot_status import (
@@ -2153,143 +1696,54 @@ from arvexq.infra.snapshot_status import (
 
 
 def _prepared_get_fresh(race_id: str) -> dict | None:
-    detail,updated=PREPARED_STORE.get(race_id)
-    if not detail or not updated or not _racedb_snapshot_usable(detail):return None
-    if (detail.get("preparedMeta") or {}).get("fastPartial"):return detail
-    if (detail.get("aiEvaluation") or {}).get("version")!=AI_EVALUATION_VERSION:
-        detail=_precompute_detail_metrics(_strip_excluded(detail))
-    detail=_ensure_race_volatility(detail)
-    detail=_restore_saved_odds(detail)
-    try:
-        detail["dataCoreHealth"]=_data_core_health(detail);detail["dataCoreVersion"]=ARVEXQ_DATA_CORE_VERSION
-    except Exception:pass
-    return detail
-
-
-def _refresh_result_fast(race_id: str) -> dict | None:
-    return _acq_snapshots_results._refresh_result_fast(
+    return _stage5_storage_prepared_cache._prepared_get_fresh(
         race_id,
-        _attach_nar_payouts=_attach_nar_payouts, _compact_display_snapshot=_compact_display_snapshot, _fast_local_race_detail=_fast_local_race_detail,
-        _jra_find_cname=_jra_find_cname, _jra_parse_result=_jra_parse_result, _jra_result_cname_from_card=_jra_result_cname_from_card,
-        _merge_result_fields=_merge_result_fields, _nar_official_result_fast=_nar_official_result_fast, _netkeiba_current_result=_netkeiba_current_result,
-        _prepared_get_fresh=_prepared_get_fresh, _race_should_have_result=_race_should_have_result, _racedb_get_fast=_racedb_get_fast,
-        _store_fast_snapshot=_store_fast_snapshot, central_race_detail=central_race_detail, nar_race_detail=nar_race_detail,
+        AI_EVALUATION_VERSION=AI_EVALUATION_VERSION, ARVEXQ_DATA_CORE_VERSION=ARVEXQ_DATA_CORE_VERSION, PREPARED_STORE=PREPARED_STORE, _data_core_health=_data_core_health, _ensure_race_volatility=_ensure_race_volatility, _precompute_detail_metrics=_precompute_detail_metrics, _racedb_snapshot_usable=_racedb_snapshot_usable, _restore_saved_odds=_restore_saved_odds, _strip_excluded=_strip_excluded
     )
 
 
-def _prepare_race_snapshot(race_id: str, force: bool = False, manual: bool = False) -> dict | None:
-    hit=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
-    if hit and (str(hit.get("date") or "")<_today_iso() or _snapshot_final(hit)) and not force:return hit
-    if hit and not force:return hit
-    if manual and race_id.startswith("nar-"):
-        match=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-",race_id)
-        if match:
-            target=datetime.strptime(match.group(1),"%Y-%m-%d")
-            sync=NarSync()
-            try:
-                with _nar_sync_io_lock:
-                    if match.group(1)==_today_iso():sync.sync_daily(force=True)
-                    else:sync.sync_month(target.year,target.month,force=True)
-            finally:sync.store.conn.close()
-    detail=nar_race_detail(race_id) if race_id.startswith("nar-") else central_race_detail(race_id)
-    if not detail:return None
-    horses=detail.get("horses") if isinstance(detail.get("horses"),list) else []
-    if not race_id.startswith("nar-") and int(detail.get("fieldSize") or 0)>0 and not horses and not detail.get("result"):
-        return None
-    if race_id.startswith("nar-"):detail=_attach_nar_payouts(detail)
-    if hit and hit.get("analysis"):detail["analysis"]=hit["analysis"]
-    detail=_strip_excluded(_apply_enrichment(race_id,detail))
-    detail=_attach_stored_career(detail)
-    detail=_precompute_detail_metrics(_attach_evaluation_context(detail))
-    detail=_restore_saved_odds(detail)
-    detail.setdefault("preparedMeta",{}).pop("fastPartial",None)
-    # Snapshot creation never blocks on network history. Existing DB/feed history is included.
-    detail.setdefault("historySearch",{"status":"prepared","monthsDone":0,"maxMonths":0,"coverage":{"totalHorses":len(detail.get("horses",[])),"totalRuns":sum(len(h.get("recentRaces") or []) for h in detail.get("horses",[]))},"error":"","source":detail.get("source") or "prepared"})
-    try:
-        RACEDB.upsert_race(detail)
-        _schedule_full_history_harvest(detail)
-    except Exception as exc:print("RaceDB snapshot write failed",race_id,exc)
-    PREPARED_STORE.put(detail,force=bool(manual or force))
-    display=_compact_display_snapshot(detail)
-    if detail.get("date")==_today_iso() and not _snapshot_final(detail):_schedule_detail_background_jobs(race_id,detail)
-    return display
+def _refresh_result_fast(race_id: str) -> dict | None:
+    return _stage5_storage_prepared_refresh._refresh_result_fast(
+        race_id,
+        _acq_snapshots_results=_acq_snapshots_results, _attach_nar_payouts=_attach_nar_payouts, _compact_display_snapshot=_compact_display_snapshot, _fast_local_race_detail=_fast_local_race_detail, _jra_find_cname=_jra_find_cname, _jra_parse_result=_jra_parse_result, _jra_result_cname_from_card=_jra_result_cname_from_card, _merge_result_fields=_merge_result_fields, _nar_official_result_fast=_nar_official_result_fast, _netkeiba_current_result=_netkeiba_current_result, _prepared_get_fresh=_prepared_get_fresh, _race_should_have_result=_race_should_have_result, _racedb_get_fast=_racedb_get_fast, _store_fast_snapshot=_store_fast_snapshot, central_race_detail=central_race_detail, nar_race_detail=nar_race_detail
+    )
+
+
+def _prepare_race_snapshot(race_id: str, force: bool=False, manual: bool=False) -> dict | None:
+    return _stage5_storage_prepared_refresh._prepare_race_snapshot(
+        race_id, force, manual,
+        NarSync=NarSync, PREPARED_STORE=PREPARED_STORE, RACEDB=RACEDB, _apply_enrichment=_apply_enrichment, _attach_evaluation_context=_attach_evaluation_context, _attach_nar_payouts=_attach_nar_payouts, _attach_stored_career=_attach_stored_career, _compact_display_snapshot=_compact_display_snapshot, _nar_sync_io_lock=_nar_sync_io_lock, _precompute_detail_metrics=_precompute_detail_metrics, _prepared_get_fresh=_prepared_get_fresh, _racedb_get_fast=_racedb_get_fast, _restore_saved_odds=_restore_saved_odds, _schedule_detail_background_jobs=_schedule_detail_background_jobs, _schedule_full_history_harvest=_schedule_full_history_harvest, _snapshot_final=_snapshot_final, _strip_excluded=_strip_excluded, _today_iso=_today_iso, central_race_detail=central_race_detail, datetime=datetime, nar_race_detail=nar_race_detail, re=re
+    )
 
 
 def _prewarm_sort_key(row: dict, date: str) -> tuple:
-    t=str(row.get("startTime") or "")
-    try:
-        hh,mm=t.split(":",1);m=int(hh)*60+int(mm[:2])
-    except Exception:
-        m=9999
-    if date==_today_iso():
-        now=_now_jst().hour*60+_now_jst().minute
-        return (0 if m>=now else 1, m if m>=now else m+1440, str(row.get("track") or ""), int(row.get("raceNumber") or 0))
-    return (0,m,str(row.get("track") or ""),int(row.get("raceNumber") or 0))
+    return _stage5_infra_collectors_prewarm._prewarm_sort_key(
+        row, date,
+        _now_jst=_now_jst, _today_iso=_today_iso
+    )
 
 
-def _schedule_prewarm(rows: list[dict], date: str, circuit: str = "") -> None:
-    ordered=[r for r in sorted(rows,key=lambda x:_prewarm_sort_key(x,date)) if r.get("id") and (not circuit or r.get("circuit")==circuit)]
-    max_races=max(1,int(os.getenv("PREWARM_MAX_RACES","36")))
-    ordered=ordered[:max_races]
-    if not ordered:return
-    key=f"{date}|{circuit or 'all'}"
-    with _prewarm_lock:
-        if key in _prewarm_running:return
-        _prewarm_running.add(key);_prewarm_state[key]={"running":True,"done":0,"total":len(ordered),"last":int(time.time()),"errors":0}
-    def worker():
-        done=errs=0
-        workers=max(1,min(int(os.getenv("PREWARM_WORKERS","2")),len(ordered)))
-        deep=max(0,int(os.getenv("PREWARM_DEEP_RACES","3")))
-        def one(ix_row):
-            ix,row=ix_row;rid=str(row.get("id") or "")
-            detail=_prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid)
-            if detail:
-                if not (_prepared_get_fresh(rid) or _racedb_get_fast(rid)):_store_fast_snapshot(detail)
-            else:
-                _schedule_fast_card_refresh(rid)
-            return rid,detail
-        try:
-            with ThreadPoolExecutor(max_workers=workers) as pool:
-                futures=[pool.submit(one,x) for x in enumerate(ordered)]
-                for fut in as_completed(futures):
-                    try:
-                        _,detail=fut.result()
-                        if detail:done+=1
-                        else:errs+=1
-                    except Exception as exc:
-                        errs+=1;print("prewarm failed",exc)
-                    with _prewarm_lock:_prewarm_state[key]={"running":True,"done":done,"total":len(ordered),"last":int(time.time()),"errors":errs}
-        finally:
-            with _prewarm_lock:
-                _prewarm_running.discard(key);_prewarm_state[key]={"running":False,"done":done,"total":len(ordered),"last":int(time.time()),"errors":errs}
-    threading.Thread(target=worker,daemon=True).start()
+def _schedule_prewarm(rows: list[dict], date: str, circuit: str='') -> None:
+    return _stage5_infra_collectors_prewarm._schedule_prewarm(
+        rows, date, circuit,
+        ThreadPoolExecutor=ThreadPoolExecutor, _fast_local_race_detail=_fast_local_race_detail, _prepared_get_fresh=_prepared_get_fresh, _prewarm_lock=_prewarm_lock, _prewarm_running=_prewarm_running, _prewarm_sort_key=_prewarm_sort_key, _prewarm_state=_prewarm_state, _racedb_get_fast=_racedb_get_fast, _schedule_fast_card_refresh=_schedule_fast_card_refresh, _store_fast_snapshot=_store_fast_snapshot, as_completed=as_completed, os=os, threading=threading, time=time
+    )
 
 
 def _ensure_detail_background_jobs(race_id: str, detail: dict) -> None:
-    if detail.get("date")!=_today_iso() or _snapshot_final(detail):return
-    try:
-        es=_enrichment_status(race_id)
-        if es.get("status") in {"idle","unavailable"}:_start_enrichment(race_id,detail)
-    except Exception as exc:
-        print("prepared enrichment schedule failed",race_id,exc)
-    try:
-        if race_id.startswith("nar-"):
-            names=[str(h.get("name") or "") for h in detail.get("horses",[]) if h.get("name")]
-            cov=_history_counts(names,detail.get("date") or "9999-12-31")
-            if _race_history_status(race_id) is None and not _history_is_enough(cov,0):_start_race_history_search(race_id,detail.get("date") or _today_iso(),names)
-        else:
-            cov=_central_detail_coverage(detail);total=int(cov.get("totalHorses") or 0);resolved=int(cov.get("horsesResolved") or cov.get("horsesWith5Plus") or 0)
-            if detail.get("analysisMode")!="新馬" and _race_history_status(race_id) is None and not assess_career_readiness(detail).get("ready"):_start_central_history_search(race_id,detail.get("date") or _today_iso())
-    except Exception as exc:
-        print("prepared history schedule failed",race_id,exc)
+    return _stage5_infra_collectors_prewarm._ensure_detail_background_jobs(
+        race_id, detail,
+        _central_detail_coverage=_central_detail_coverage, _enrichment_status=_enrichment_status, _history_counts=_history_counts, _history_is_enough=_history_is_enough, _race_history_status=_race_history_status, _snapshot_final=_snapshot_final, _start_central_history_search=_start_central_history_search, _start_enrichment=_start_enrichment, _start_race_history_search=_start_race_history_search, _today_iso=_today_iso, assess_career_readiness=assess_career_readiness
+    )
 
 
 def _schedule_detail_background_jobs(race_id: str, detail: dict) -> None:
-    threading.Thread(target=_ensure_detail_background_jobs,args=(race_id,detail),daemon=True).start()
+    return _stage5_infra_collectors_prewarm._schedule_detail_background_jobs(
+        race_id, detail,
+        _ensure_detail_background_jobs=_ensure_detail_background_jobs, threading=threading
+    )
 
 
-_racedb_refresh_lock=threading.Lock()
-_racedb_refresh_running:set[str]=set()
 
 def _fast_local_race_detail(race_id:str)->dict|None:
     return _acq_snapshots_local._fast_local_race_detail(
@@ -2355,57 +1809,31 @@ def _build_fast_diagnosis_snapshot(race_id:str, allow_network:bool=False, deep_c
     return _compact_display_snapshot(detail)
 
 
-def _store_fast_snapshot(detail:dict)->None:
-    if not detail or not _racedb_snapshot_usable(detail):return
-    detail=_restore_saved_odds(detail)
-    try:PREPARED_STORE.put(detail,force=True)
-    except Exception as exc:print("fast prepared save failed",detail.get("id"),exc)
-    try:RACEDB.upsert_race(detail)
-    except Exception as exc:print("fast RaceDB save failed",detail.get("id"),exc)
+def _store_fast_snapshot(detail: dict) -> None:
+    return _stage5_storage_prepared_refresh._store_fast_snapshot(
+        detail,
+        PREPARED_STORE=PREPARED_STORE, RACEDB=RACEDB, _racedb_snapshot_usable=_racedb_snapshot_usable, _restore_saved_odds=_restore_saved_odds
+    )
 
 
-_fast_card_lock=threading.Lock()
-_fast_card_running:set[str]=set()
-_fast_card_pending:set[str]=set()
-_fast_card_queue=[]
-_fast_card_cv=threading.Condition()
-_fast_card_workers_started=False
 
 def _ensure_fast_card_workers():
-    global _fast_card_workers_started
-    with _fast_card_cv:
-        if _fast_card_workers_started:return
-        _fast_card_workers_started=True
-        workers=max(1,min(6,int(os.getenv("FAST_CARD_WORKERS","4"))))
-        for idx in range(workers):
-            threading.Thread(target=_fast_card_worker,daemon=True,name=f"fast-card-worker-{idx+1}").start()
+    return _stage5_infra_collectors_fast_card._ensure_fast_card_workers(
 
-def _queue_fast_card(race_id:str,priority:int=50):
-    if not race_id:return
-    _ensure_fast_card_workers()
-    with _fast_card_cv:
-        if race_id in _fast_card_pending or race_id in _fast_card_running:return
-        _fast_card_pending.add(race_id)
-        _fast_card_queue.append((int(priority),time.time(),race_id))
-        _fast_card_queue.sort(key=lambda x:(x[0],x[1]))
-        _fast_card_cv.notify()
+        _fast_card_cv=_fast_card_cv, _fast_card_worker=_fast_card_worker, os=os, threading=threading, _state=_stage5_fast_card_state
+    )
+
+def _queue_fast_card(race_id: str, priority: int=50):
+    return _stage5_infra_collectors_fast_card._queue_fast_card(
+        race_id, priority,
+        _ensure_fast_card_workers=_ensure_fast_card_workers, _fast_card_cv=_fast_card_cv, _fast_card_pending=_fast_card_pending, _fast_card_queue=_fast_card_queue, _fast_card_running=_fast_card_running, time=time
+    )
 
 def _fast_card_worker():
-    while True:
-        with _fast_card_cv:
-            while not _fast_card_queue:_fast_card_cv.wait()
-            priority,_,race_id=_fast_card_queue.pop(0)
-            _fast_card_pending.discard(race_id)
-            _fast_card_running.add(race_id)
-        try:
-            deep=priority<=10
-            _hydrate_fast_card_now(race_id,deep_history=deep)
-            try:_build_fast_diagnosis_snapshot(race_id,allow_network=False,deep_context=deep)
-            except Exception as exc:print("fast diagnosis after card failed",race_id,exc)
-        except Exception as exc:
-            print("fast card worker failed",race_id,exc)
-        finally:
-            with _fast_card_cv:_fast_card_running.discard(race_id)
+    return _stage5_infra_collectors_fast_card._fast_card_worker(
+
+        _build_fast_diagnosis_snapshot=_build_fast_diagnosis_snapshot, _fast_card_cv=_fast_card_cv, _fast_card_pending=_fast_card_pending, _fast_card_queue=_fast_card_queue, _fast_card_running=_fast_card_running, _hydrate_fast_card_now=_hydrate_fast_card_now
+    )
 
 def _parse_nar_official_card_html(detail:dict, html:str)->list[dict]:
     return _acq_local_racecards._parse_nar_official_card_html(
@@ -2469,33 +1897,24 @@ def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
         _start_race_history_search=_start_race_history_search, _store_fast_snapshot=_store_fast_snapshot, _today_iso=_today_iso,
     )
 
-def _schedule_fast_card_refresh(race_id:str,priority:int=50)->None:
-    _queue_fast_card(race_id,priority)
+def _schedule_fast_card_refresh(race_id: str, priority: int=50) -> None:
+    return _stage5_infra_collectors_fast_card._schedule_fast_card_refresh(
+        race_id, priority,
+        _queue_fast_card=_queue_fast_card
+    )
 
 
-def _schedule_racedb_snapshot_refresh(race_id:str)->None:
-    with _racedb_refresh_lock:
-        if race_id in _racedb_refresh_running:return
-        _racedb_refresh_running.add(race_id)
-    def worker():
-        try:
-            fresh=_prepare_race_snapshot(race_id,True)
-            if fresh:_ensure_detail_background_jobs(race_id,fresh)
-        except Exception as exc:print("RaceDB refresh failed",race_id,exc)
-        finally:
-            with _racedb_refresh_lock:_racedb_refresh_running.discard(race_id)
-    threading.Thread(target=worker,daemon=True).start()
+def _schedule_racedb_snapshot_refresh(race_id: str) -> None:
+    return _stage5_infra_collectors_fast_card._schedule_racedb_snapshot_refresh(
+        race_id,
+        _ensure_detail_background_jobs=_ensure_detail_background_jobs, _prepare_race_snapshot=_prepare_race_snapshot, _racedb_refresh_lock=_racedb_refresh_lock, _racedb_refresh_running=_racedb_refresh_running, threading=threading
+    )
 
-def _racedb_get_fast(race_id:str)->dict|None:
-    try:detail,updated=RACEDB.get_race(race_id)
-    except Exception:return None
-    if not detail or not _racedb_snapshot_usable(detail):return None
-    if (detail.get("preparedMeta") or {}).get("fastPartial"):return detail
-    if (detail.get("aiEvaluation") or {}).get("version")!=AI_EVALUATION_VERSION:
-        detail=_precompute_detail_metrics(_strip_excluded(detail))
-    detail=_ensure_race_volatility(detail)
-    detail=_restore_saved_odds(detail)
-    return detail
+def _racedb_get_fast(race_id: str) -> dict | None:
+    return _stage5_storage_prepared_cache._racedb_get_fast(
+        race_id,
+        AI_EVALUATION_VERSION=AI_EVALUATION_VERSION, RACEDB=RACEDB, _ensure_race_volatility=_ensure_race_volatility, _precompute_detail_metrics=_precompute_detail_metrics, _racedb_snapshot_usable=_racedb_snapshot_usable, _restore_saved_odds=_restore_saved_odds, _strip_excluded=_strip_excluded
+    )
 
 _detail_cache_lock=threading.Lock()
 _detail_cache:dict[str,tuple[float,dict]]={}
@@ -2804,378 +2223,66 @@ def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Q
     return {"track":track,"date":date,"circuit":circuit,"races":out,"count":len(out),"source":"local-only","filled":bool(fill)}
 
 
-_site_bootstrap_lock=threading.Lock()
-_site_bootstrap_build_lock=threading.Lock()
-_site_bootstrap_cache:dict[str,tuple[float,dict]]={}
-_site_force_cache:dict[str,tuple[float,dict]]={}
-_site_bootstrap_state:dict[str,dict]={}
 
-class DayBundleStore:
-    def __init__(self,path:Path):
-        self.path=path
-        self.path.parent.mkdir(parents=True,exist_ok=True)
-        conn=sqlite3.connect(self.path,timeout=5)
-        try:
-            conn.execute("""CREATE TABLE IF NOT EXISTS day_bundles(
-                race_date TEXT PRIMARY KEY,
-                payload TEXT NOT NULL,
-                complete INTEGER NOT NULL DEFAULT 0,
-                race_count INTEGER NOT NULL DEFAULT 0,
-                detail_count INTEGER NOT NULL DEFAULT 0,
-                updated_at INTEGER NOT NULL
-            )""")
-            conn.commit()
-        finally:conn.close()
-
-    def get(self,race_date:str,complete_only:bool=False)->dict|None:
-        conn=sqlite3.connect(self.path,timeout=3);conn.row_factory=sqlite3.Row
-        try:
-            sql="SELECT * FROM day_bundles WHERE race_date=?"
-            args=[race_date]
-            if complete_only:sql+=" AND complete=1"
-            row=conn.execute(sql,args).fetchone()
-            if not row:return None
-            try:p=json.loads(row["payload"])
-            except Exception:return None
-            p["persisted"]=True
-            p["updatedAtEpoch"]=int(row["updated_at"] or 0)
-            p["complete"]=bool(row["complete"])
-            p["raceCount"]=int(row["race_count"] or 0)
-            p["detailCount"]=int(row["detail_count"] or 0)
-            return p
-        finally:conn.close()
-
-    def put(self,race_date:str,payload:dict,complete:bool)->None:
-        if not race_date or not isinstance(payload,dict):return
-        conn=sqlite3.connect(self.path,timeout=5)
-        try:
-            conn.execute("""INSERT INTO day_bundles(race_date,payload,complete,race_count,detail_count,updated_at)
-                            VALUES(?,?,?,?,?,?)
-                            ON CONFLICT(race_date) DO UPDATE SET
-                              payload=excluded.payload,complete=excluded.complete,
-                              race_count=excluded.race_count,detail_count=excluded.detail_count,
-                              updated_at=excluded.updated_at""",
-                         (race_date,json.dumps(payload,ensure_ascii=False,separators=(",",":"),default=str),
-                          1 if complete else 0,int(payload.get("raceCount") or 0),
-                          int(payload.get("detailCount") or 0),int(time.time())))
-            conn.commit()
-        finally:conn.close()
 
 DAY_BUNDLES=DayBundleStore(DAY_BUNDLE_DB_PATH)
 
-def _bootstrap_rows_local(date:str)->list[dict]:
-    raw=races(date,"",0,0)
-    rows=raw.get("races",[]) if isinstance(raw,dict) else list(raw or [])
-    out=[];seen=set()
-    for r in rows:
-        rid=str(r.get("id") or "")
-        if not rid or rid in seen:continue
-        seen.add(rid);out.append(r)
-    out.sort(key=lambda r:(str(r.get("circuit") or ""),str(r.get("track") or ""),int(r.get("raceNumber") or 0)))
-    return out
+def _bootstrap_rows_local(date: str) -> list[dict]:
+    return _stage5_storage_bundles_local._bootstrap_rows_local(
+        date,
+        races=races
+    )
 
-def _bootstrap_sources_running(date:str)->bool:
-    running=False
-    try:
-        with _live_refresh_lock:
-            running=running or (f"live:{date}" in _live_refresh_running)
-    except Exception:pass
-    try:
-        running=running or bool(_central_refresh_status(date).get("running"))
-    except Exception:pass
-    return bool(running)
+def _bootstrap_sources_running(date: str) -> bool:
+    return _stage5_storage_bundles_local._bootstrap_sources_running(
+        date,
+        _central_refresh_status=_central_refresh_status, _live_refresh_lock=_live_refresh_lock, _live_refresh_running=_live_refresh_running
+    )
 
 
-def _bootstrap_analysis_ready(d:dict|None)->bool:
-    """Diagnosis readiness is tracked separately and must never block site display."""
-    if not _bootstrap_display_ready(d):return False
-    if _snapshot_final(d):return True
-    pm=d.get("preparedMeta") or {}
-    return bool(pm.get("diagnosisReady") and pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION)
+def _bootstrap_analysis_ready(d: dict | None) -> bool:
+    return _stage5_storage_bundles_local._bootstrap_analysis_ready(
+        d,
+        PREDICTION_ENGINE_VERSION=PREDICTION_ENGINE_VERSION, _bootstrap_display_ready=_bootstrap_display_ready, _snapshot_final=_snapshot_final
+    )
 
 # Compatibility for older internal callers: "ready" now means display-ready.
 
-def _bootstrap_detail_local(race_id:str,force_hydrate:bool=False)->dict|None:
-    """Fast local snapshot for day bundles. Heavy diagnosis work is background-only."""
-    d=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
-    if not d:
-        try:d=_fast_local_race_detail(race_id)
-        except Exception:d=None
-    if not d:
-        if force_hydrate:_schedule_fast_card_refresh(race_id,5)
-        return None
-    d=_restore_saved_odds(d)
-    d=_ensure_race_volatility(d)
-    if force_hydrate and not _bootstrap_analysis_ready(d):_schedule_fast_card_refresh(race_id,8)
-    return _compact_display_snapshot(d)
+def _bootstrap_detail_local(race_id: str, force_hydrate: bool=False) -> dict | None:
+    return _stage5_storage_bundles_local._bootstrap_detail_local(
+        race_id, force_hydrate,
+        _bootstrap_analysis_ready=_bootstrap_analysis_ready, _compact_display_snapshot=_compact_display_snapshot, _ensure_race_volatility=_ensure_race_volatility, _fast_local_race_detail=_fast_local_race_detail, _prepared_get_fresh=_prepared_get_fresh, _racedb_get_fast=_racedb_get_fast, _restore_saved_odds=_restore_saved_odds, _schedule_fast_card_refresh=_schedule_fast_card_refresh
+    )
 
-def _assemble_day_bundle(date:str,allow_network_fill:bool=False)->dict:
-    rows=_bootstrap_rows_local(date)
-    details=[]
-    if rows:
-        workers=max(1,min(8,int(os.getenv("DAY_BUNDLE_WORKERS","6")),len(rows)))
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            futures={
-                pool.submit(_bootstrap_detail_local,str(r.get("id")),allow_network_fill):str(r.get("id"))
-                for r in rows
-            }
-            for fut in as_completed(futures):
-                try:d=fut.result()
-                except Exception as exc:
-                    print("day bundle race failed",futures[fut],exc);d=None
-                if d and d.get("id"):details.append(d)
+def _assemble_day_bundle(date: str, allow_network_fill: bool=False) -> dict:
+    return _stage5_storage_bundles_assembly._assemble_day_bundle(
+        date, allow_network_fill,
+        ThreadPoolExecutor=ThreadPoolExecutor, _bootstrap_analysis_ready=_bootstrap_analysis_ready, _bootstrap_detail_local=_bootstrap_detail_local, _bootstrap_display_ready=_bootstrap_display_ready, _bootstrap_rows_local=_bootstrap_rows_local, _bootstrap_sources_running=_bootstrap_sources_running, as_completed=as_completed, os=os, time=time
+    )
 
-    details.sort(key=lambda d:(str(d.get("circuit") or ""),str(d.get("track") or ""),int(d.get("raceNumber") or 0)))
-    display_ids={str(d.get("id") or "") for d in details if _bootstrap_display_ready(d)}
-    analysis_ids={str(d.get("id") or "") for d in details if _bootstrap_analysis_ready(d)}
-    missing=[str(r.get("id") or "") for r in rows if str(r.get("id") or "") not in display_ids]
-    source_running=_bootstrap_sources_running(date)
-    display_complete=bool(rows) and not missing and not source_running
+def _refresh_day_bundle(date: str, force_sources: bool=False, wait_for_complete: bool=False, timeout_sec: float=25.0) -> dict:
+    return _stage5_storage_bundles_assembly._refresh_day_bundle(
+        date, force_sources, wait_for_complete, timeout_sec,
+        DAY_BUNDLES=DAY_BUNDLES, _assemble_day_bundle=_assemble_day_bundle, _bootstrap_analysis_ready=_bootstrap_analysis_ready, _schedule_central_refresh=_schedule_central_refresh, _schedule_fast_card_refresh=_schedule_fast_card_refresh, _schedule_live_refresh=_schedule_live_refresh, _site_bootstrap_build_lock=_site_bootstrap_build_lock, _site_bootstrap_cache=_site_bootstrap_cache, _site_bootstrap_lock=_site_bootstrap_lock, _site_bootstrap_state=_site_bootstrap_state, _today_iso=_today_iso, time=time
+    )
 
-    return {
-        "date":date,"races":rows,"details":details,
-        "raceCount":len(rows),"detailCount":len(display_ids),
-        "analysisCount":len(analysis_ids),
-        "missing":missing,
-        "complete":display_complete,
-        "displayComplete":display_complete,
-        "analysisComplete":bool(rows) and len(analysis_ids)>=len(rows),
-        "sourceRunning":source_running,
-        "generatedAtEpoch":int(time.time()),
-        "source":"nonblocking-day-bundle"
-    }
+def _schedule_day_bundle_refresh(date: str, force_sources: bool=False) -> None:
+    return _stage5_storage_bundles_assembly._schedule_day_bundle_refresh(
+        date, force_sources,
+        _refresh_day_bundle=_refresh_day_bundle, _site_bootstrap_lock=_site_bootstrap_lock, _site_bootstrap_state=_site_bootstrap_state, os=os, threading=threading, time=time
+    )
 
-def _refresh_day_bundle(date:str,force_sources:bool=False,wait_for_complete:bool=False,timeout_sec:float=25.0)->dict:
-    """Single-pass bundle refresh. Missing/outdated races are queued and never block the caller."""
-    started=time.time()
-    with _site_bootstrap_build_lock:
-        with _site_bootstrap_lock:
-            _site_bootstrap_state[date]={"running":True,"startedAt":int(started),"raceCount":0,"ready":0,"missing":[]}
-        if force_sources or date==_today_iso():
-            try:_schedule_live_refresh(date,force=bool(force_sources))
-            except Exception:pass
-            try:_schedule_central_refresh(date,force=bool(force_sources))
-            except Exception:pass
-        payload=_assemble_day_bundle(date,allow_network_fill=False)
-        missing=list(payload.get("missing") or [])
-        for rid in missing:_schedule_fast_card_refresh(rid,5)
-        for d in payload.get("details") or []:
-            if d and d.get("id") and not _bootstrap_analysis_ready(d):_schedule_fast_card_refresh(str(d.get("id")),12)
-        try:DAY_BUNDLES.put(date,payload,bool(payload.get("displayComplete")))
-        except Exception:pass
-        with _site_bootstrap_lock:
-            _site_bootstrap_cache[date]=(time.time(),payload)
-            _site_bootstrap_state[date]={
-                "running":False,"startedAt":int(started),"finishedAt":int(time.time()),
-                "raceCount":int(payload.get("raceCount") or 0),"ready":int(payload.get("detailCount") or 0),
-                "analysisReady":int(payload.get("analysisCount") or 0),"missing":missing,
-                "sourceRunning":bool(payload.get("sourceRunning")),"elapsedMs":int((time.time()-started)*1000),
-            }
-        return payload
+def _site_bootstrap_payload(date: str, force: bool=False, wait: bool=False) -> dict:
+    return _stage5_storage_bundles_cache._site_bootstrap_payload(
+        date, force, wait,
+        DAY_BUNDLES=DAY_BUNDLES, _assemble_day_bundle=_assemble_day_bundle, _bundle_quality=_bundle_quality, _schedule_day_bundle_refresh=_schedule_day_bundle_refresh, _site_bootstrap_lock=_site_bootstrap_lock, _site_force_cache=_site_force_cache, _today_iso=_today_iso, time=time
+    )
 
-def _schedule_day_bundle_refresh(date:str,force_sources:bool=False)->None:
-    with _site_bootstrap_lock:
-        st=_site_bootstrap_state.get(date) or {}
-        if st.get("running"):return
-        _site_bootstrap_state[date]={"running":True,"startedAt":int(time.time()),"raceCount":0,"ready":0,"missing":[]}
-    def worker():
-        try:_refresh_day_bundle(date,force_sources,True,float(os.getenv("DAY_BUNDLE_BUILD_TIMEOUT_SEC","45")))
-        except Exception as exc:
-            print("day bundle refresh failed",date,exc)
-            with _site_bootstrap_lock:
-                st=dict(_site_bootstrap_state.get(date) or {})
-                st.update({"running":False,"error":str(exc),"finishedAt":int(time.time())})
-                _site_bootstrap_state[date]=st
-    threading.Thread(target=worker,daemon=True,name="day-bundle-"+date).start()
-
-def _site_bootstrap_payload(date:str,force:bool=False,wait:bool=False)->dict:
-    """
-    Customer path is strictly non-blocking.
-    Return the best local bundle immediately, then continue full preparation in background.
-    v240: a fresh force=1 collector result must not be immediately replaced by an
-    older persisted bundle on the next non-force poll.
-    """
-    stored=DAY_BUNDLES.get(date,complete_only=True)
-    recent_force=None
-    with _site_bootstrap_lock:
-        fc=_site_force_cache.get(date)
-        if fc and time.time()-float(fc[0])<=60:
-            recent_force=dict(fc[1])
-    if not force and recent_force and (not stored or _bundle_quality(recent_force)>=_bundle_quality(stored)):
-        out=dict(recent_force)
-        out["cached"]=False
-        out["servedFrom"]="recent-force-live"
-        return out
-    if stored and not force:
-        if date==_today_iso() and int(time.time())-int(stored.get("updatedAtEpoch") or 0)>20:
-            _schedule_day_bundle_refresh(date,False)
-        out=dict(stored)
-        out["cached"]=True
-        out["servedFrom"]="persistent-display-complete"
-        return out
-
-    # Local-only assembly: no external fetch and no waiting for the builder lock.
-    try:
-        current=_assemble_day_bundle(date,allow_network_fill=False)
-    except Exception as exc:
-        print("nonblocking bootstrap assemble failed",date,exc)
-        current={"date":date,"races":[],"details":[],"raceCount":0,"detailCount":0,
-                 "analysisCount":0,"missing":[],"complete":False,
-                 "displayComplete":False,"analysisComplete":False,
-                 "sourceRunning":False,"generatedAtEpoch":int(time.time()),
-                 "source":"nonblocking-day-bundle"}
-
-    # Persist a complete display bundle; analysis may still improve later.
-    if current.get("displayComplete"):
-        try:DAY_BUNDLES.put(date,current,True)
-        except Exception:pass
-
-    # Always kick the expensive work into background.
-    _schedule_day_bundle_refresh(date,bool(force))
-
-    current["cached"]=False
-    current["servedFrom"]="local-immediate"
-    return current
-
-def _force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
-    """GitHub collector path: all-card live fields first, diagnosis second.
-
-    v304 refreshed each race as one long job (card -> odds -> result -> diagnosis).
-    Slow diagnosis jobs could occupy all workers and starve later races before their
-    odds call ever started.  v305 splits the phases: every race gets an odds attempt
-    first; only then do we spend the remaining budget on results/diagnosis.
-    """
-    started=time.time()
-    try:_schedule_live_refresh(date,force=True)
-    except Exception:pass
-    try:_schedule_central_refresh(date,force=True)
-    except Exception:pass
-    deadline=started+max(8.0,float(timeout_sec))
-    # Let program/card discovery start, but reserve most of the request for market data.
-    while time.time()<deadline and _bootstrap_sources_running(date):
-        if time.time()-started>2.2:break
-        time.sleep(.15)
-    rows=_bootstrap_rows_local(date)
-    if not rows:
-        return _site_bootstrap_payload(date,True,False)
-
-    def snapshot(rid:str)->dict:
-        return _prepared_get_fresh(rid) or _racedb_get_fast(rid) or _fast_local_race_detail(rid) or {}
-
-    def live_coverage(d:dict)->tuple[int,int,int]:
-        hs=[h for h in (d.get("horses") or []) if not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
-        got=sum(1 for h in hs if float(h.get("winOdds") or 0)>0)
-        weights=sum(1 for h in hs if int(h.get("bodyWeight") or 0)>250)
-        return len(hs),got,weights
-
-    # PHASE 1 — FULL CARD ODDS. No diagnosis is allowed to block these workers.
-    def market_one(row):
-        rid=str(row.get("id") or "")
-        if not rid:return rid,False
-        try:
-            d=snapshot(rid)
-            if not _bootstrap_display_ready(d):
-                try:_hydrate_fast_card_now(rid,deep_history=False)
-                except Exception as exc:print("full-day card hydrate failed",rid,exc)
-            body=odds_refresh(rid,1)
-            field=int((body or {}).get("fieldCount") or 0);got=int((body or {}).get("oddsCount") or 0)
-            return rid,bool(field and got==field)
-        except Exception as exc:
-            print("full-day market refresh failed",rid,exc)
-            return rid,False
-
-    market_workers=max(6,min(int(os.getenv("FULL_DAY_ODDS_WORKERS","20")),24,len(rows)))
-    market_results={}
-    ex=ThreadPoolExecutor(max_workers=market_workers)
-    futures={ex.submit(market_one,r):str(r.get("id") or "") for r in rows}
-    # Reserve a few seconds for a second sparse-row pass and bundle assembly.
-    market_deadline=min(deadline-5.0,time.time()+max(6.0,min(14.0,deadline-time.time()-5.0)))
-    try:
-        done,_=wait(list(futures),timeout=max(.5,market_deadline-time.time()))
-        for fut in done:
-            rid=futures[fut]
-            try:market_results[rid]=bool(fut.result()[1])
-            except Exception:market_results[rid]=False
-    finally:
-        ex.shutdown(wait=False,cancel_futures=True)
-
-    # PHASE 1B — retry only races still missing at least one active runner's odds.
-    missing=[]
-    for r in rows:
-        rid=str(r.get("id") or "")
-        field,got,_=live_coverage(snapshot(rid))
-        if rid and field and got<field:missing.append(r)
-    if missing and time.time()<deadline-2.5:
-        retry_workers=max(4,min(int(os.getenv("FULL_DAY_ODDS_RETRY_WORKERS","16")),20,len(missing)))
-        ex=ThreadPoolExecutor(max_workers=retry_workers)
-        fs=[ex.submit(market_one,r) for r in missing]
-        try:wait(fs,timeout=max(.5,min(4.0,deadline-time.time()-2.0)))
-        finally:ex.shutdown(wait=False,cancel_futures=True)
-
-    # PHASE 2 — results and body-weight-sensitive diagnosis only for the useful time window.
-    nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
-    focus=[]
-    for r in rows:
-        st=_race_minutes_server(r)
-        remain=(st-nowm) if st<9999 else 9999
-        if (-45<=remain<=240) or not _bootstrap_analysis_ready(snapshot(str(r.get("id") or ""))):
-            focus.append(r)
-    focus.sort(key=lambda r:abs((_race_minutes_server(r) if _race_minutes_server(r)<9999 else nowm+9999)-nowm))
-    focus=focus[:max(12,min(28,len(focus)))]
-
-    def finish_one(row):
-        rid=str(row.get("id") or "")
-        if not rid:return None
-        try:
-            st=_race_minutes_server(row)
-            if st<9999 and nowm>=st+2 and not _snapshot_final(snapshot(rid)):
-                try:_refresh_result_fast(rid)
-                except Exception:pass
-            # Rebuild only after live fields have been persisted, so newly published
-            # body weight can affect the current diagnosis without starving market fetches.
-            try:_build_fast_diagnosis_snapshot(rid,allow_network=False,deep_context=False)
-            except Exception as exc:print("focused diagnosis rebuild failed",rid,exc)
-            d=snapshot(rid)
-            return _compact_display_snapshot(d) if d else None
-        except Exception as exc:
-            print("focused live rebuild failed",rid,exc)
-            return None
-
-    if focus and time.time()<deadline-1.2:
-        workers=max(4,min(10,len(focus)))
-        ex=ThreadPoolExecutor(max_workers=workers)
-        fs=[ex.submit(finish_one,r) for r in focus]
-        try:wait(fs,timeout=max(.4,deadline-time.time()-1.0))
-        finally:ex.shutdown(wait=False,cancel_futures=True)
-
-    out=_assemble_day_bundle(date,allow_network_fill=False)
-    if out.get("displayComplete"):
-        try:DAY_BUNDLES.put(date,out,True)
-        except Exception:pass
-    dc_ready=0
-    for d in out.get("details",[]) or []:
-        try:
-            hh=_data_core_store_health(d,set(),"force-day")
-            if all((hh.get(k) or {}).get("status")=="ready" for k in ("card","history","odds","body_weight","environment","analysis")):
-                dc_ready+=1
-        except Exception as exc:print("data core force health failed",(d or {}).get("id"),exc)
-    out["dataCore"]={"version":ARVEXQ_DATA_CORE_VERSION,"readyRaceCount":dc_ready,"raceCount":len(out.get("races") or [])}
-    odds_ready=0;odds_partial=0;odds_missing=[]
-    for d in out.get("details",[]) or []:
-        hs=[h for h in (d.get("horses") or []) if not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
-        got=sum(1 for h in hs if float(h.get("winOdds") or 0)>0)
-        if hs and got==len(hs):odds_ready+=1
-        elif hs and got:odds_partial+=1;odds_missing.append(str(d.get("id") or ""))
-        elif hs:odds_missing.append(str(d.get("id") or ""))
-    out["oddsReadyCount"]=odds_ready
-    out["oddsPartialCount"]=odds_partial
-    out["oddsMissingRaceIds"]=odds_missing
-    out["forceLiveRefresh"]=True
-    out["forceElapsedMs"]=int((time.time()-started)*1000)
-    with _site_bootstrap_lock:
-        _site_force_cache[date]=(time.time(),dict(out))
-        _site_bootstrap_cache[date]=(time.time(),dict(out))
-    return out
+def _force_day_live_snapshot(date: str, timeout_sec: float=23.0) -> dict:
+    return _stage5_storage_bundles_live._force_day_live_snapshot(
+        date, timeout_sec,
+        ARVEXQ_DATA_CORE_VERSION=ARVEXQ_DATA_CORE_VERSION, DAY_BUNDLES=DAY_BUNDLES, ThreadPoolExecutor=ThreadPoolExecutor, _assemble_day_bundle=_assemble_day_bundle, _bootstrap_analysis_ready=_bootstrap_analysis_ready, _bootstrap_display_ready=_bootstrap_display_ready, _bootstrap_rows_local=_bootstrap_rows_local, _bootstrap_sources_running=_bootstrap_sources_running, _build_fast_diagnosis_snapshot=_build_fast_diagnosis_snapshot, _compact_display_snapshot=_compact_display_snapshot, _data_core_store_health=_data_core_store_health, _fast_local_race_detail=_fast_local_race_detail, _hydrate_fast_card_now=_hydrate_fast_card_now, _now_jst=_now_jst, _prepared_get_fresh=_prepared_get_fresh, _race_minutes_server=_race_minutes_server, _racedb_get_fast=_racedb_get_fast, _refresh_result_fast=_refresh_result_fast, _schedule_central_refresh=_schedule_central_refresh, _schedule_live_refresh=_schedule_live_refresh, _site_bootstrap_cache=_site_bootstrap_cache, _site_bootstrap_lock=_site_bootstrap_lock, _site_bootstrap_payload=_site_bootstrap_payload, _site_force_cache=_site_force_cache, _snapshot_final=_snapshot_final, odds_refresh=odds_refresh, os=os, time=time, wait=wait
+    )
 
 @app.get("/api/v1/site-bootstrap")
 def site_bootstrap(date: str = Query(...), force: int = Query(0), wait: int = Query(0)):
@@ -3187,17 +2294,17 @@ def site_bootstrap(date: str = Query(...), force: int = Query(0), wait: int = Qu
     return _site_bootstrap_payload(date,False,False)
 
 def _site_bootstrap_warm_loop():
-    time.sleep(float(os.getenv("BOOTSTRAP_START_DELAY_SEC","2.5")))
-    while True:
-        try:_schedule_day_bundle_refresh(_today_iso(),False)
-        except Exception as exc:print("bundle warmer failed",exc)
-        time.sleep(max(20,int(os.getenv("BOOTSTRAP_REFRESH_SEC","30"))))
+    return _stage5_infra_collectors_bootstrap._site_bootstrap_warm_loop(
+
+        _schedule_day_bundle_refresh=_schedule_day_bundle_refresh, _today_iso=_today_iso, os=os, time=time
+    )
 
 @app.on_event("startup")
 def _start_site_bootstrap_warmer():
-    enabled=str(os.getenv("ARVEXQ_BOOTSTRAP_WARM","1")).lower() in {"1","true","yes","on"}
-    if enabled:
-        threading.Thread(target=_site_bootstrap_warm_loop,daemon=True,name="arvexq-bootstrap").start()
+    return _stage5_infra_collectors_bootstrap._start_site_bootstrap_warmer(
+
+        _site_bootstrap_warm_loop=_site_bootstrap_warm_loop, os=os, threading=threading
+    )
 
 
 @app.get("/api/v1/site-bootstrap-status")
@@ -3432,357 +2539,51 @@ def collect_race_info(
 
 
 @app.get("/api/v1/payouts/{race_id}")
-def payout_refresh(race_id:str):
-    """Fetch only payouts; do not rebuild history/AI."""
-    saved=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
-    if not saved:raise HTTPException(status_code=404,detail="race not found")
-    existing=((saved.get("result") or {}).get("payouts") or [])
-    if existing:
-        return {"raceId":race_id,"payouts":existing,"source":(saved.get("result") or {}).get("payoutSource") or "保存済み","cached":True}
+def payout_refresh(race_id: str):
+    return _stage5_storage_market_payouts.payout_refresh(
+        race_id,
+        HTTPException=HTTPException, PREPARED_STORE=PREPARED_STORE, RACEDB=RACEDB, _fast_local_race_detail=_fast_local_race_detail, _fetch_nar_payouts_only=_fetch_nar_payouts_only, _jra_find_cname=_jra_find_cname, _jra_parse_result=_jra_parse_result, _jra_result_cname_from_card=_jra_result_cname_from_card, _netkeiba_current_result=_netkeiba_current_result, _prepared_get_fresh=_prepared_get_fresh, _racedb_get_fast=_racedb_get_fast
+    )
 
-    payouts=[];source="";error=""
-    if race_id.startswith("nar-"):
-        payouts,src=_fetch_nar_payouts_only(saved)
-        source="NAR公式" if payouts else ""
-        error="" if payouts else src
-        if not payouts:
-            try:
-                nk=_netkeiba_current_result(saved) or {}
-                payouts=nk.get("payouts") or []
-                if payouts:source="netkeiba結果"
-            except Exception as exc:
-                error=(error+" | "+str(exc)).strip(" |")
-    else:
-        try:
-            result_cname=str(saved.get("resultCname") or "")
-            if not result_cname:
-                cname=_jra_find_cname(str(saved.get("date") or ""),str(saved.get("track") or ""),int(saved.get("raceNumber") or 0))
-                if cname:result_cname=_jra_result_cname_from_card(cname)
-            official=_jra_parse_result(result_cname,saved) if result_cname else None
-            payouts=((official or {}).get("result") or {}).get("payouts") or []
-            if payouts:source="JRA公式"
-        except Exception as exc:
-            error=str(exc)
-        if not payouts:
-            try:
-                nk=_netkeiba_current_result(saved) or {}
-                payouts=nk.get("payouts") or []
-                if payouts:source="netkeiba結果"
-            except Exception as exc:
-                error=(error+" | "+str(exc)).strip(" |")
-
-    if payouts:
-        for store_get,store_put in (
-            (lambda:PREPARED_STORE.get(race_id)[0],lambda d:PREPARED_STORE.put(d,force=True)),
-            (lambda:RACEDB.get_race(race_id)[0],lambda d:RACEDB.upsert_race(d)),
-        ):
-            try:
-                d=store_get()
-                if not d:continue
-                res=d.get("result")
-                if not isinstance(res,dict):res={};d["result"]=res
-                res["payouts"]=payouts;res["payoutSource"]=source;res.pop("payoutError",None)
-                store_put(d)
-            except Exception as exc:
-                print("payout snapshot patch failed",race_id,exc)
-    return {"raceId":race_id,"payouts":payouts,"source":source,"cached":False,"error":error[:240]}
-
-def _merge_live_market_rows(race_id:str, fresh_rows:list[dict], saved:dict|None=None)->list[dict]:
-    """Preserve the best known live fields per horse when a source returns a partial table.
-
-    A live odds page can briefly omit one or more runners while updating.  Never let
-    that sparse response erase previously captured odds/body weight for other horses.
-    Fresh non-empty fields win; the latest RaceDB point and saved race snapshot fill gaps.
-    """
-    by_no:dict[int,dict]={}
-    saved=saved or {}
-    for h in (saved.get("horses") or []):
-        try:no=int(h.get("horseNumber") or 0)
-        except Exception:no=0
-        if not no:continue
-        z={"horseNumber":no}
-        for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","oddsForecast",
-                  "referenceBodyWeight","referenceBodyWeightDate","status","scratched","oddsSource"):
-            if h.get(k) not in (None,""):z[k]=h.get(k)
-        by_no[no]=z
-    try:
-        for h in RACEDB.odds_latest(race_id) or []:
-            no=int(h.get("horseNumber") or 0)
-            if not no:continue
-            z=by_no.setdefault(no,{"horseNumber":no})
-            for k in ("winOdds","popularity","oddsSource"):
-                if z.get(k) in (None,"") and h.get(k) not in (None,""):z[k]=h.get(k)
-    except Exception as exc:
-        print("odds preserve read failed",race_id,exc)
-    for h in fresh_rows or []:
-        try:no=int(h.get("horseNumber") or 0)
-        except Exception:no=0
-        if not no:continue
-        z=by_no.setdefault(no,{"horseNumber":no})
-        for k,v in h.items():
-            if k=="horseNumber":continue
-            if v not in (None,""):z[k]=v
-    return [by_no[k] for k in sorted(by_no)]
+def _merge_live_market_rows(race_id: str, fresh_rows: list[dict], saved: dict | None=None) -> list[dict]:
+    return _stage5_storage_market_odds._merge_live_market_rows(
+        race_id, fresh_rows, saved,
+        RACEDB=RACEDB
+    )
 
 @app.get("/api/v1/odds-refresh/{race_id}")
-def odds_refresh(race_id:str, force: int = Query(0)):
-    saved=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
-    saved_has_odds=bool(saved and any((h.get("winOdds") not in (None,"") and float(h.get("winOdds") or 0)>0) for h in (saved.get("horses") or [])))
-    saved_horses=(saved.get("horses") or []) if saved else []
-    saved_has_weights=bool(saved_horses and all(h.get("bodyWeight") not in (None,"") for h in saved_horses if not h.get("scratched")))
-    if saved and saved.get("date")!=_today_iso() and saved_has_odds:
-        return {"raceId":race_id,"horses":saved_horses,"oddsSource":saved.get("oddsSource") or "保存済み","storedInRaceDB":True,"oddsUpdatedAt":saved.get("oddsUpdatedAt") or ""}
-    if saved and _snapshot_final(saved) and saved_has_odds and saved_has_weights:
-        return {"raceId":race_id,"horses":saved_horses,"oddsSource":saved.get("oddsSource") or "保存済み","storedInRaceDB":True,"oddsUpdatedAt":saved.get("oddsUpdatedAt") or ""}
-    horses=[]; source=""
-    if race_id.startswith("nar-"):
-        m=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-(.+)-(\d{2})$",race_id)
-        if m:
-            odds=_nar_live_odds(m.group(2),m.group(1),int(m.group(3)),bool(force))
-            merged={int(no):dict(z or {}) for no,z in odds.items()}
-            # NAR current body weight is published on the official DebaTable.
-            # Pull it directly instead of trying to resolve a JRA-style netkeiba race id.
-            if not merged or any(not (z or {}).get("bodyWeight") for z in merged.values()):
-                try:
-                    detail=dict(saved or {})
-                    detail.update({"id":race_id,"date":m.group(1),"track":m.group(2),"raceNumber":int(m.group(3))})
-                    if not detail.get("horses"):
-                        try:
-                            qd=_fast_local_race_detail(race_id)
-                            if qd:detail=qd
-                        except Exception:pass
-                    for h in _nar_official_card_rows_fast(detail):
-                        no=int(h.get("horseNumber") or 0)
-                        if not no:continue
-                        z=merged.setdefault(no,{})
-                        for k in ("bodyWeight","bodyWeightChange","status","scratched"):
-                            if z.get(k) in (None,"") and h.get(k) not in (None,""):z[k]=h.get(k)
-                    if merged and not odds:source="NAR公式出馬表"
-                except Exception as exc:print("NAR official body weight fallback failed",race_id,exc)
-            # v232: before official live odds/weights are posted, fill the screen with
-            # netkeiba NAR predicted odds and any current weight already exposed there.
-            try:
-                detail=dict(saved or {})
-                detail.update({"id":race_id,"date":m.group(1),"track":m.group(2),"raceNumber":int(m.group(3))})
-                nk=_nar_netkeiba_preview_rows(detail,bool(force)) or {}
-                for no,z0 in nk.items():
-                    z=merged.setdefault(int(no),{})
-                    official_live=bool(z.get("winOdds") and not z.get("oddsForecast"))
-                    if not official_live and z0.get("winOdds"):
-                        z["winOdds"]=z0.get("winOdds");z["popularity"]=z0.get("popularity");z["oddsSource"]=z0.get("oddsSource");z["oddsForecast"]=bool(z0.get("oddsForecast"))
-                    for k in ("bodyWeight","bodyWeightChange"):
-                        if z.get(k) in (None,"") and z0.get(k) not in (None,""):z[k]=z0.get(k)
-                if nk and not odds:source="netkeiba予想オッズ"
-            except Exception as exc:print("NAR netkeiba preview fallback failed",race_id,exc)
-            # Always attach a truthful previous-race weight reference while current weigh-in is pending.
-            if saved:
-                saved_by={int(h.get("horseNumber") or 0):h for h in (saved.get("horses") or [])}
-                for no,h0 in saved_by.items():
-                    z=merged.setdefault(no,{})
-                    if not z.get("bodyWeight"):
-                        rw,rd=_reference_weight_from_horse(h0)
-                        if rw:z["referenceBodyWeight"]=rw;z["referenceBodyWeightDate"]=rd
-            if saved and _snapshot_final(saved):
-                for f in ((saved.get("result") or {}).get("finishers") or []):
-                    no=int(f.get("horseNumber") or 0)
-                    if not no:continue
-                    z=merged.setdefault(no,{})
-                    for k in ("bodyWeight","bodyWeightChange","popularity","winOdds"):
-                        if z.get(k) in (None,"") and f.get(k) not in (None,""):z[k]=f.get(k)
-            for no,z in sorted(merged.items()):
-                horses.append({"horseNumber":int(no),**{k:v for k,v in z.items() if v is not None}})
-            if not source:source="NAR公式" if odds else (next((str(z.get("oddsSource") or "") for z in merged.values() if z.get("oddsSource")),"") or ("NAR公式出馬表" if horses else ""))
-    else:
-        mm=re.match(r"^jra-(20\d{2}-\d{2}-\d{2})-([^\-]+)-(\d{2})$",race_id)
-        detail={}
-        if mm:
-            detail=_jra_program_lookup(mm.group(1),mm.group(2),int(mm.group(3))) or {"date":mm.group(1),"track":mm.group(2),"raceNumber":int(mm.group(3))}
-            detail["netkeibaRaceId"]=detail.get("netkeibaRaceId") or _netkeiba_program_race_id(mm.group(1),mm.group(2),int(mm.group(3)))
-            merged={}
-            # v228: official JRA first. The live/full dde10 card carries odds and body weight.
-            try:
-                cname=_jra_find_cname(mm.group(1),mm.group(2),int(mm.group(3)))
-                if cname:
-                    jr=_jra_parse_race(cname,supplement_profiles=False) or {}
-                    for h in jr.get("horses",[]) or []:
-                        no=int(h.get("horseNumber") or 0)
-                        if not no:continue
-                        z=merged.setdefault(no,{})
-                        for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched"):
-                            if h.get(k) not in (None,""):z[k]=h.get(k)
-                    if any(float((h.get("winOdds") or 0))>0 or h.get("bodyWeight") for h in (jr.get("horses") or [])):
-                        source="JRA公式"
-            except Exception as exc: print("fast odds JRA failed",race_id,exc)
-
-            # Secondary public-page fallback only fills fields still missing after JRA official.
-            try:
-                nk=_netkeiba_live_win_odds(detail,bool(force)) or {}
-                for no,z0 in nk.items():
-                    z=merged.setdefault(int(no),{})
-                    for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched"):
-                        if z.get(k) in (None,"") and (z0 or {}).get(k) not in (None,""):
-                            z[k]=(z0 or {}).get(k)
-            except Exception as exc: print("fast odds secondary fallback failed",race_id,exc)
-
-            # Fast shutuba scrape fallback (same page used for the card).
-            if not any(float((z or {}).get("winOdds") or 0)>0 for z in merged.values()):
-                try:
-                    card_detail=dict(detail);card_detail["id"]=race_id
-                    for h in _netkeiba_card_rows_fast(card_detail):
-                        no=int(h.get("horseNumber") or 0)
-                        if not no:continue
-                        z=merged.setdefault(no,{})
-                        for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched"):
-                            if h.get(k) not in (None,""):z[k]=h.get(k)
-                    if any(float((z or {}).get("winOdds") or 0)>0 for z in merged.values()):source="netkeiba出馬表"
-                except Exception as exc:print("fast odds card scrape failed",race_id,exc)
-
-            # Yesterday/final races: result page carries final odds.
-            if not any(float((z or {}).get("winOdds") or 0)>0 for z in merged.values()):
-                try:
-                    result_detail=(saved or detail or {})
-                    nkres=_netkeiba_current_result(result_detail) or {}
-                    for f in nkres.get("finishers",[]) or []:
-                        no=int(f.get("horseNumber") or 0)
-                        if not no:continue
-                        z=merged.setdefault(no,{})
-                        for k in ("winOdds","popularity","bodyWeight","bodyWeightChange"):
-                            if f.get(k) not in (None,""):z[k]=f.get(k)
-                    if any(float((z or {}).get("winOdds") or 0)>0 for z in merged.values()):source="netkeiba最終"
-                except Exception as exc:print("final odds result fallback failed",race_id,exc)
-
-            for no,z in sorted(merged.items()):horses.append({"horseNumber":no,**z})
-            if not source and horses:source="netkeiba"
-    # v305: a source can momentarily return a sparse odds table. Merge it with the
-    # best already-saved per-horse live fields so one missing row never falls back
-    # to the endless "取得中" state after another horse was successfully refreshed.
-    horses=_merge_live_market_rows(race_id,horses,saved)
-    if not source:
-        source=next((str(h.get("oddsSource") or "") for h in horses if h.get("oddsSource")),"")
-    if horses:
-        try:RACEDB.save_odds(race_id,horses,source)
-        except Exception as exc:print("RaceDB odds save failed",race_id,exc)
-        try:
-            snapshot,_=PREPARED_STORE.get(race_id)
-            if snapshot:
-                by_no={int(h.get("horseNumber") or 0):h for h in horses}
-                for h in snapshot.get("horses",[]):
-                    update=by_no.get(int(h.get("horseNumber") or 0),{})
-                    for key in ("winOdds","popularity","bodyWeight","bodyWeightChange","oddsForecast","referenceBodyWeight","referenceBodyWeightDate","status","scratched"):
-                        if update.get(key) is not None:h[key]=update[key]
-                    if update.get("oddsSource"):h["oddsSource"]=update.get("oddsSource")
-                snapshot["oddsSource"]=source
-                snapshot["oddsUpdatedAt"]=_now_jst().strftime("%H:%M:%S")
-                PREPARED_STORE.put(snapshot,force=True)
-                try:RACEDB.upsert_race(snapshot)
-                except Exception:pass
-        except Exception as exc:print("odds snapshot update failed",exc)
-        try:
-            with _site_bootstrap_lock:_site_bootstrap_cache.pop(_today_iso(),None)
-        except Exception:pass
-    if not horses:
-        try:
-            stored=RACEDB.odds_latest(race_id) or []
-            if stored:
-                horses=stored
-                source=next((str(x.get("oddsSource") or "") for x in stored if x.get("oddsSource")),"保存済み")
-        except Exception:pass
-    live=[h for h in horses if not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
-    odds_count=sum(1 for h in live if float(h.get("winOdds") or 0)>0)
-    return {"raceId":race_id,"horses":horses,"oddsSource":source,
-            "oddsUpdatedAt":_now_jst().strftime("%H:%M:%S"),"storedInRaceDB":bool(horses),
-            "fieldCount":len(live),"oddsCount":odds_count,
-            "oddsComplete":bool(live) and odds_count==len(live)}
+def odds_refresh(race_id: str, force: int=Query(0)):
+    return _stage5_storage_market_odds.odds_refresh(
+        race_id, force,
+        PREPARED_STORE=PREPARED_STORE, RACEDB=RACEDB, _fast_local_race_detail=_fast_local_race_detail, _jra_find_cname=_jra_find_cname, _jra_parse_race=_jra_parse_race, _jra_program_lookup=_jra_program_lookup, _merge_live_market_rows=_merge_live_market_rows, _nar_live_odds=_nar_live_odds, _nar_netkeiba_preview_rows=_nar_netkeiba_preview_rows, _nar_official_card_rows_fast=_nar_official_card_rows_fast, _netkeiba_card_rows_fast=_netkeiba_card_rows_fast, _netkeiba_current_result=_netkeiba_current_result, _netkeiba_live_win_odds=_netkeiba_live_win_odds, _netkeiba_program_race_id=_netkeiba_program_race_id, _now_jst=_now_jst, _prepared_get_fresh=_prepared_get_fresh, _racedb_get_fast=_racedb_get_fast, _reference_weight_from_horse=_reference_weight_from_horse, _site_bootstrap_cache=_site_bootstrap_cache, _site_bootstrap_lock=_site_bootstrap_lock, _snapshot_final=_snapshot_final, _today_iso=_today_iso, re=re
+    )
 
 
-_auto_odds_lock=threading.Lock()
-_auto_odds_last:dict[str,float]={}
-_auto_odds_state={"running":False,"lastStart":0,"lastFinish":0,"checked":0,"updated":0,"error":""}
 
-def _auto_odds_targets()->list[dict]:
-    date=_today_iso();rows=[]
-    try:rows.extend(nar_race_summaries(date))
-    except Exception:pass
-    try:rows.extend(central_race_summaries(date,allow_network=False))
-    except Exception:pass
-    nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
-    out=[]
-    for r in rows:
-        if not r.get("id") or _snapshot_final(r):continue
-        start=_race_minutes_server(r)
-        if start>=9999:
-            out.append(r);continue
-        remain=start-nowm
-        if remain < -8:continue
-        out.append(r)
-    out.sort(key=lambda r:_race_minutes_server(r))
-    return out
+def _auto_odds_targets() -> list[dict]:
+    return _stage5_infra_collectors_odds._auto_odds_targets(
+
+        _now_jst=_now_jst, _race_minutes_server=_race_minutes_server, _snapshot_final=_snapshot_final, _today_iso=_today_iso, central_race_summaries=central_race_summaries, nar_race_summaries=nar_race_summaries
+    )
 
 def _auto_odds_cycle():
-    global _auto_odds_state
-    with _auto_odds_lock:
-        if _auto_odds_state.get("running"):return
-        _auto_odds_state.update({"running":True,"lastStart":int(time.time()),"checked":0,"updated":0,"error":""})
-    checked=updated=0;errors=[]
-    try:
-        now=time.time();targets=[]
-        nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
-        for r in _auto_odds_targets():
-            rid=str(r.get("id") or "");start=_race_minutes_server(r)
-            remain=(start-nowm) if start<9999 else 9999
-            cadence=30 if remain<=30 else 60 if remain<=180 else 180
-            last=float(_auto_odds_last.get(rid,0))
-            if now-last<cadence:continue
-            _auto_odds_last[rid]=now;targets.append(r)
-        def one(r):
-            rid=str(r.get("id") or "")
-            try:
-                last_body=None
-                for attempt in range(2):
-                    last_body=odds_refresh(rid,1)
-                    hs=(last_body or {}).get("horses") or []
-                    live=[h for h in hs if not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
-                    got=sum(1 for h in live if float(h.get("winOdds") or 0)>0)
-                    weights=sum(1 for h in live if int(h.get("bodyWeight") or 0)>250)
-                    if live and got==len(live):
-                        return rid,{"complete":True,"odds":got,"field":len(live),"weights":weights}
-                    if attempt==0:time.sleep(.15)
-                return rid,{"complete":False,"odds":got if 'got' in locals() else 0,
-                            "field":len(live) if 'live' in locals() else 0,
-                            "weights":weights if 'weights' in locals() else 0}
-            except Exception as exc:
-                return rid,exc
-        workers=max(1,min(20,int(os.getenv("AUTO_ODDS_WORKERS","18")),len(targets))) if targets else 0
-        if workers:
-            with ThreadPoolExecutor(max_workers=workers) as pool:
-                for rid,res in pool.map(one,targets):
-                    checked+=1
-                    if isinstance(res,dict) and res.get("complete"):
-                        updated+=1
-                    elif isinstance(res,dict):
-                        # Partial tables are not success. Retry on the next short cycle instead
-                        # of waiting the normal far-race cadence for a missing runner.
-                        _auto_odds_last[rid]=min(float(_auto_odds_last.get(rid,0)),time.time()-20)
-                    elif isinstance(res,Exception):errors.append(rid+": "+str(res))
-    finally:
-        with _auto_odds_lock:
-            _auto_odds_state.update({
-                "running":False,"lastFinish":int(time.time()),"checked":checked,
-                "updated":updated,"error":" | ".join(errors[-5:])
-            })
+    return _stage5_infra_collectors_odds._auto_odds_cycle(
+
+        ThreadPoolExecutor=ThreadPoolExecutor, _auto_odds_last=_auto_odds_last, _auto_odds_lock=_auto_odds_lock, _auto_odds_state=_auto_odds_state, _auto_odds_targets=_auto_odds_targets, _now_jst=_now_jst, _race_minutes_server=_race_minutes_server, odds_refresh=odds_refresh, os=os, time=time
+    )
 
 def _auto_odds_loop():
-    time.sleep(float(os.getenv("AUTO_ODDS_START_DELAY_SEC","0.7")))
-    while True:
-        try:_auto_odds_cycle()
-        except Exception as exc:print("auto odds cycle failed",exc)
-        time.sleep(max(8,int(os.getenv("AUTO_ODDS_LOOP_SEC","10"))))
+    return _stage5_infra_collectors_odds._auto_odds_loop(
+
+        _auto_odds_cycle=_auto_odds_cycle, os=os, time=time
+    )
 
 @app.on_event("startup")
 def _start_auto_odds_collector():
-    enabled=str(os.getenv("ARVEXQ_AUTO_ODDS","1")).lower() in {"1","true","yes","on"}
-    if enabled:
-        threading.Thread(target=_auto_odds_loop,daemon=True,name="arvexq-auto-odds").start()
+    return _stage5_infra_collectors_odds._start_auto_odds_collector(
+
+        _auto_odds_loop=_auto_odds_loop, os=os, threading=threading
+    )
 
 @app.get("/api/v1/odds-auto-status")
 def odds_auto_status():
@@ -3875,49 +2676,18 @@ def racedb_race(race_id:str):
     if not detail:raise HTTPException(status_code=404,detail="RaceDB snapshot not found")
     return {"updatedAt":updated,"detail":detail,"oddsLatest":RACEDB.odds_latest(race_id)}
 
-_racedb_daemon_started=False
-_racedb_daemon_lock=threading.Lock()
 
-def _racedb_live_cycle()->None:
-    today=_today_iso();rows=[]
-    _schedule_live_refresh(today,False)
-    _schedule_central_refresh(today,False)
-    try:rows.extend(nar_race_summaries(today))
-    except Exception as exc:print("RaceDB NAR list failed",exc)
-    try:rows.extend(central_race_summaries(today,allow_network=True,force=False))
-    except Exception as exc:print("RaceDB JRA list failed",exc)
-    if rows:_schedule_prewarm(rows,today,"")
-    # Odds are much more volatile than past runs.  Only poll a few upcoming races.
-    if not bool(int(os.getenv("RACEDB_AUTO_ODDS","1"))):return
-    nowm=_now_jst().hour*60+_now_jst().minute;window=int(os.getenv("RACEDB_ODDS_WINDOW_MIN","90"));limit=max(1,int(os.getenv("RACEDB_ODDS_MAX_RACES","4")))
-    upcoming=[]
-    for r in rows:
-        if r.get("result"):continue
-        t=str(r.get("startTime") or "")
-        m=re.match(r"^(\d{1,2}):(\d{2})",t)
-        if not m:continue
-        rm=int(m.group(1))*60+int(m.group(2));delta=rm-nowm
-        if -5<=delta<=window:upcoming.append((delta,r))
-    upcoming.sort(key=lambda x:x[0])
-    for _,r in upcoming[:limit]:
-        try:odds_refresh(str(r.get("id") or ""))
-        except Exception as exc:print("RaceDB automatic odds failed",r.get("id"),exc)
+def _racedb_live_cycle() -> None:
+    return _stage5_infra_collectors_racedb._racedb_live_cycle(
 
-def _start_racedb_daemon()->None:
-    global _racedb_daemon_started
-    if str(os.getenv("ARVEXQ_COMMERCIAL_COLLECTOR","1")).lower() in {"1","true","yes","on"}:return
-    if not bool(int(os.getenv("RACEDB_AUTO_UPDATE","1"))):return
-    with _racedb_daemon_lock:
-        if _racedb_daemon_started:return
-        _racedb_daemon_started=True
-    def worker():
-        # Short initial delay lets app import/route registration finish.
-        time.sleep(float(os.getenv("RACEDB_START_DELAY_SEC","2")))
-        while True:
-            try:_racedb_live_cycle()
-            except Exception as exc:print("RaceDB live cycle failed",exc)
-            time.sleep(max(30,int(os.getenv("RACEDB_UPDATE_SEC","120"))))
-    threading.Thread(target=worker,daemon=True,name="RaceDB-live-updater").start()
+        _now_jst=_now_jst, _schedule_central_refresh=_schedule_central_refresh, _schedule_live_refresh=_schedule_live_refresh, _schedule_prewarm=_schedule_prewarm, _today_iso=_today_iso, central_race_summaries=central_race_summaries, nar_race_summaries=nar_race_summaries, odds_refresh=odds_refresh, os=os, re=re
+    )
+
+def _start_racedb_daemon() -> None:
+    return _stage5_infra_collectors_racedb._start_racedb_daemon(
+
+        _racedb_daemon_lock=_racedb_daemon_lock, _racedb_live_cycle=_racedb_live_cycle, os=os, threading=threading, time=time, _state=_stage5_racedb_state
+    )
 
 @app.get("/api/v1/enrichment-status/{race_id}")
 def enrichment_status(race_id:str):

@@ -1,0 +1,471 @@
+[
+  {
+    "class": "NarArchiveParser",
+    "method": "parse",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/parser.py",
+    "owner": "NarArchiveParser",
+    "ports": [],
+    "ast_sha256": "aa807614c14ddea8d2df9c7bc2f00b3318369502125c90d346a3d89b33d2160b"
+  },
+  {
+    "class": "NarStore",
+    "method": "__init__",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/schema.py",
+    "owner": "NarSchema",
+    "ports": [],
+    "ast_sha256": "f7af1b0cce12b7a9a88751e6cbeb7c7d1fb2ec00ce7ad79cb032ecd4ae7a042d"
+  },
+  {
+    "class": "NarStore",
+    "method": "_migrate",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/schema.py",
+    "owner": "NarSchema",
+    "ports": [],
+    "ast_sha256": "a58df3b32dd3997a7c7bf045ce205a0261fecf1769b42e4d0ab7c1a93e494db8"
+  },
+  {
+    "class": "NarStore",
+    "method": "import_rows",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/imports.py",
+    "owner": "NarImports",
+    "ports": [],
+    "ast_sha256": "9af0e6b5c3d08081be21fcc0567e1fe255ba16483c6c2ad5967f46b1e939ad38"
+  },
+  {
+    "class": "NarStore",
+    "method": "mark_synced",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/imports.py",
+    "owner": "NarImports",
+    "ports": [],
+    "ast_sha256": "745643f2ca88ed1e199dbc5f0d55e2da1d8d8a870996110836133c6e92d91b18"
+  },
+  {
+    "class": "NarStore",
+    "method": "synced_at",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/imports.py",
+    "owner": "NarImports",
+    "ports": [],
+    "ast_sha256": "46ec0a9ffb1a9289f125af5b03ca5750b5915364223f0502aca9d7d0ac5270f4"
+  },
+  {
+    "class": "NarStore",
+    "method": "stats",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/history.py",
+    "owner": "NarHistory",
+    "ports": [],
+    "ast_sha256": "4c5b3f7f17ed694d111a31ee8e4515affea95be18b40100e7fd669039177cead"
+  },
+  {
+    "class": "NarStore",
+    "method": "role_profile",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/history.py",
+    "owner": "NarHistory",
+    "ports": [],
+    "ast_sha256": "65492302c1945f6807ac84b5d1613809f522e5a9a239600ea0173dc7d7794b9d"
+  },
+  {
+    "class": "NarStore",
+    "method": "prize_before",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/history.py",
+    "owner": "NarHistory",
+    "ports": [],
+    "ast_sha256": "16e5e69a4fe152bcb6ded3dee2fca220f6f8cc76ba148ed11847977c4f913d17"
+  },
+  {
+    "class": "NarStore",
+    "method": "recent_races",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/history.py",
+    "owner": "NarHistory",
+    "ports": [],
+    "ast_sha256": "e2eaf6771e1078559c69891ea97606fa2f63abfe401ac31e2d269a07d9ea4bf6"
+  },
+  {
+    "class": "NarStore",
+    "method": "races_json",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/racecards.py",
+    "owner": "NarRacecards",
+    "ports": [],
+    "ast_sha256": "b0776ca0c377f0a2b0b5fe30d4dcbdc86056736da5ac48b649a6aa1d39314088"
+  },
+  {
+    "class": "NarStore",
+    "method": "coverage",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/racecards.py",
+    "owner": "NarRacecards",
+    "ports": [],
+    "ast_sha256": "f8de119c9ac16b90c1870a54645029d329d0d56058c0a67ceab39c2e535dc485"
+  },
+  {
+    "class": "CentralStore",
+    "method": "__init__",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/central/store.py",
+    "owner": "CentralStore",
+    "ports": [],
+    "ast_sha256": "cdb21636b5bbdc4f0466c462bc7c8e40d8e9ea0414fe69261c0cfa3ae36c510d"
+  },
+  {
+    "class": "CentralStore",
+    "method": "upsert",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/central/store.py",
+    "owner": "CentralStore",
+    "ports": [],
+    "ast_sha256": "346a5b76f038128d9b57f349f2d5cd1622328b2ef3ae3d2e9011144ecb0507a3"
+  },
+  {
+    "class": "CentralStore",
+    "method": "races_json",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/central/store.py",
+    "owner": "CentralStore",
+    "ports": [],
+    "ast_sha256": "b75018576a28f49e9e8d592c3bb00918e4c5f91fc86f3e692ed132358b37f85f"
+  },
+  {
+    "class": "CentralStore",
+    "method": "coverage",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/central/store.py",
+    "owner": "CentralStore",
+    "ports": [],
+    "ast_sha256": "b167aac8cc84931daba6f3665409139c596e42f49bb5e38bfe5dfee986f3f4e5"
+  },
+  {
+    "class": "NarSync",
+    "method": "__init__",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/sync.py",
+    "owner": "NarSync",
+    "ports": [],
+    "ast_sha256": "4b2b571cbbafc8f2ff89a992ae09b0cc865b6353043256422e0f766e3a66589a"
+  },
+  {
+    "class": "NarSync",
+    "method": "_download",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/sync.py",
+    "owner": "NarSync",
+    "ports": [],
+    "ast_sha256": "822d757c3987168b26b9087c09de58ca7f29112da31dd8875ec8204b042a1f37"
+  },
+  {
+    "class": "NarSync",
+    "method": "import_zip_bytes",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/sync.py",
+    "owner": "NarSync",
+    "ports": [],
+    "ast_sha256": "85ff589fc5edce21e22d765ba59d4784ff08e110ea86de136dcd238d8748fb36"
+  },
+  {
+    "class": "NarSync",
+    "method": "sync_daily",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/sync.py",
+    "owner": "NarSync",
+    "ports": [],
+    "ast_sha256": "205a31a1b986ce66aee910a6d6720bfe6c194d79d22bc970d36c5bcdc463c2a9"
+  },
+  {
+    "class": "NarSync",
+    "method": "sync_month",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/sync.py",
+    "owner": "NarSync",
+    "ports": [],
+    "ast_sha256": "a365c362723fbd51ac87faecf763c6ebbf9c625347f9d509e9ad8dfc9403b84e"
+  },
+  {
+    "class": "NarSync",
+    "method": "import_file",
+    "origin": "legacy_stores",
+    "after": "arvexq/storage/nar/sync.py",
+    "owner": "NarSync",
+    "ports": [],
+    "ast_sha256": "f1aba1a5e4172fd512c2d7b1f254fdca4846c25d76dba0af80b8133a66de6c85"
+  },
+  {
+    "class": "PreparedRaceStore",
+    "method": "__init__",
+    "origin": "race_stores",
+    "after": "arvexq/storage/prepared/store.py",
+    "owner": "PreparedRaceStore",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_audit_from_lock",
+      "_prediction_clock_state",
+      "_strip_excluded",
+      "_today_iso"
+    ],
+    "ast_sha256": "435cffc96f6203d1ee763576c5aa50edc02edb868549674c29b81f7c9de26e24"
+  },
+  {
+    "class": "PreparedRaceStore",
+    "method": "get",
+    "origin": "race_stores",
+    "after": "arvexq/storage/prepared/store.py",
+    "owner": "PreparedRaceStore",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_audit_from_lock",
+      "_prediction_clock_state",
+      "_strip_excluded",
+      "_today_iso"
+    ],
+    "ast_sha256": "3abdbcb2a5d14934529289553b0bf862e9810f3954a2c5acc809d7ed7406333b"
+  },
+  {
+    "class": "PreparedRaceStore",
+    "method": "put",
+    "origin": "race_stores",
+    "after": "arvexq/storage/prepared/store.py",
+    "owner": "PreparedRaceStore",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_audit_from_lock",
+      "_prediction_clock_state",
+      "_strip_excluded",
+      "_today_iso"
+    ],
+    "ast_sha256": "de099c917f1da93b6b9eb3a7554388cfa3dd16ebc3e74877841b700eb275ef6f"
+  },
+  {
+    "class": "PreparedRaceStore",
+    "method": "delete",
+    "origin": "race_stores",
+    "after": "arvexq/storage/prepared/store.py",
+    "owner": "PreparedRaceStore",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_audit_from_lock",
+      "_prediction_clock_state",
+      "_strip_excluded",
+      "_today_iso"
+    ],
+    "ast_sha256": "10890a6c600075d64a0b424215c83536fc9291a25670cc6628ff75feb7943d74"
+  },
+  {
+    "class": "PreparedRaceStore",
+    "method": "status",
+    "origin": "race_stores",
+    "after": "arvexq/storage/prepared/store.py",
+    "owner": "PreparedRaceStore",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_audit_from_lock",
+      "_prediction_clock_state",
+      "_strip_excluded",
+      "_today_iso"
+    ],
+    "ast_sha256": "e0e1a20537d340a813d4bbcd62f72de9cc056c61c261d62d32f4e000be859e86"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "__init__",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/schema.py",
+    "owner": "RaceSchema",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "298d53193615b10190b1c155207b99d8adb8ec6ba9259db7707111329f5b6bac"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "upsert_race",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/racecards.py",
+    "owner": "RaceCards",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "f5858cfbdb2f01858def60d09e1ce7ad1d037403d43073804f2eeeb0d741d716"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "get_race",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/racecards.py",
+    "owner": "RaceCards",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "7757d60515009aef9a5735ba01da35fd462ebfc39ec399bcc841646ec794e104"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "status",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/racecards.py",
+    "owner": "RaceCards",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "3a325f157ad64d4a5989546d8710c0180309fe9631622ee10577272fb30ca8a3"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "_horse_key",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/career.py",
+    "owner": "Career",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "5b2d99abc6df1b7e3e1479b75ac820424e454051d2636718087a9d319bc6d038"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "_run_key",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/career.py",
+    "owner": "Career",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "2649d0a436dd0c61c3d14a3b1e6fa3fa3c9bc3aa9d5f3c235675ce987397d230"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "upsert_past_runs",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/career.py",
+    "owner": "Career",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "512e066a68356f67958998735297ea094f4d9e65b4c2f52d5acd268820cd232e"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "source_updated",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/career.py",
+    "owner": "Career",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "b334b9bd803f8a9460f7dddcb1387e225e5758c5c501db5739cc5e53f6b49b9f"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "mark_source",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/career.py",
+    "owner": "Career",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "d12c0259f3a2465186b8c2505cd3ed982abb82c5a388b6f4403d7362b169fbfb"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "save_odds",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/odds.py",
+    "owner": "Odds",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "a8ebb9bd3afe1830db002034c06f420909fd9423838da89fe304dc2de55401a5"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "odds_latest",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/odds.py",
+    "owner": "Odds",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "4116feb1d3fe1cbfcea6103aba39c65784c124d29498838cd3af25768fcedc60"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "save_analysis",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/analysis.py",
+    "owner": "Analysis",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "c032ef76d99ad266ac8ee4099b8d9289b25867ac720edf012abf67a99e289f37"
+  },
+  {
+    "class": "RaceDataBank",
+    "method": "get_analysis",
+    "origin": "race_stores",
+    "after": "arvexq/storage/racedb/analysis.py",
+    "owner": "Analysis",
+    "ports": [
+      "_compact_display_snapshot",
+      "_prediction_clock_state",
+      "_strip_excluded"
+    ],
+    "ast_sha256": "4cca98907a83d6d4c02261ead52d757ac50ecf0bd52342d40c62ea6f57eaede5"
+  },
+  {
+    "class": "DayBundleStore",
+    "method": "__init__",
+    "origin": "app",
+    "after": "arvexq/storage/bundles/store.py",
+    "owner": "DayBundleStore",
+    "ports": [],
+    "ast_sha256": "0c94d30a27e66b4e4a066c2f5ee0c043c7d6d2e3da08b53897bc295b5299cf14"
+  },
+  {
+    "class": "DayBundleStore",
+    "method": "get",
+    "origin": "app",
+    "after": "arvexq/storage/bundles/store.py",
+    "owner": "DayBundleStore",
+    "ports": [],
+    "ast_sha256": "c0207ad86ff7cf070c971ff1f3cc40e13d4f0c3241abff8f3a32cab76245c74d"
+  },
+  {
+    "class": "DayBundleStore",
+    "method": "put",
+    "origin": "app",
+    "after": "arvexq/storage/bundles/store.py",
+    "owner": "DayBundleStore",
+    "ports": [],
+    "ast_sha256": "1ad4a1f7cf49a9328c38fcc76465717625c4f65adf5ad2c4baa7d4ece48c92f4"
+  }
+]

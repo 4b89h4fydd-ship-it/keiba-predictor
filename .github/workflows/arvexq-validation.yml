@@ -3,7 +3,7 @@ name: ARVEXQ Validation
 "on":
   workflow_dispatch:
   pull_request:
-    branches: [main, refactor/arvexq-domain-separation]
+    branches: [main, refactor/arvexq-domain-separation, refactor/arvexq-acquisition-stage4]
     paths:
       - app.py
       - build_static.py
