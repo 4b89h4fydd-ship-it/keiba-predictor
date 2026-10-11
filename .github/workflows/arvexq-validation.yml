@@ -117,6 +117,10 @@ jobs:
           node --check dist/sports/boat-app/app.js
           node tests/boat_app_smoke.mjs
           node tests/boat_start_exhibition_smoke.mjs
+          node tests/boat_realtime_smoke.mjs
+          node scripts/arvexq_horse_portal_smoke.js
+          node --check dist/sports/horse-portal.js
+          test -s dist/sports/horse-portal.css
 
       - name: Betting marks and ticket reconciliation regression
         run: |
