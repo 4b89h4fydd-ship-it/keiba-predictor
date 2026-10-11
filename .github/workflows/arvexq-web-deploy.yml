@@ -108,6 +108,8 @@ jobs:
           if '/app-v329.js' not in horse or '/app-v329.js' in boat:
               raise SystemExit('PRODUCTION_SPORT_BUNDLE_NOT_ISOLATED')
           if '本日の厳選レース' not in js or '/sports/boat-app/app.js' not in boat:
+              print('BOAT_ASSET_FETCH_DIAGNOSTIC: JS_LEN',len(js),'BOAT_LEN',len(boat),
+                    'JS_HEAD',repr(js[:200]),'BOAT_REFERENCES',('/sports/boat-app/app.js' in boat))
               raise SystemExit('PRODUCTION_BOAT_ASSET_MISSING')
           print('PRODUCTION_DUAL_SPORT_ROUTES_OK')
           PY
