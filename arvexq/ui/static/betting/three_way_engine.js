@@ -7,10 +7,14 @@ function composeThreeWayBetPolicy(base,r,p,deps){
   var rows=((p&&p.rows)||[]).filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)&&n(x.horse.horseNumber)>0});
   var result=Object.assign({},base),audit=base.audit||{},g=base.betInputGate||{},
       selected=!!(base.selectionAudit&&base.selectionAudit.selected),
-      ready=g.ready===true&&selected,hasHonmei=rows.some(z=>z.predMark==='◎'),
+      // A qualifying reference race need not be an elite morning selection.
+      purchaseQualified=selected||base.referenceOnly===true,
+      ready=g.ready===true&&purchaseQualified,hasHonmei=rows.some(z=>z.predMark==='◎'),
       stamp='arvexq-three-way-v346',
-      reason=ready?'':'厳選品質または発走前データの購入条件未達';
+      reason=ready?'':(!g.ready?'発走前データの購入条件未達':'券種別の独立したモデル品質条件未達');
   result.engineVersion=stamp;
+  result.referenceOnly=!!base.referenceOnly;
+
   result.trifectaReviewed=true;
   result.trifectaDecision='見送り';
   result.trifectaReason='';
@@ -102,7 +106,7 @@ function composeThreeWayBetPolicy(base,r,p,deps){
     result.insuranceDecision='見送り';result.insuranceReason='券種別判定モジュールの読み込み不足';
     result.captureStatus='engine-missing';result.dataStatus='engine-unavailable';return result;
   }
-  var ctx={ready:ready,trifectaReady:!!g.trifectaReady&&!base.referenceOnly,
+  var ctx={ready:ready,trifectaReady:!!g.trifectaReady,
      winClear:winClear,order:order,lists:lists,top:top,fieldSize:rows.length,
      runner:runner,top12:top12,top24:top24,ordered:ordered,p1:p1,add:add,hasHonmei:hasHonmei,
      result:result,reason:reason};
@@ -110,7 +114,7 @@ function composeThreeWayBetPolicy(base,r,p,deps){
   ctx.triAllowed=global.ARVEXQBetStrategies.trifecta(ctx);
   global.ARVEXQBetStrategies.insurance(ctx);
   reason=ctx.reason;
-  result.decision=result.items.length?'通常買い':(!g.ready?'データ不足':!selected?'厳選対象外':'見送り');
+  result.decision=result.items.length?'通常買い':(!g.ready?'データ不足':'見送り');
   if(result.items.length&&!result.primaryKind){
     result.items=[];result.decision='見送り';
     result.trifectaDecision='見送り';result.trifectaReason='本線の品質条件未達につき3連単も購入対象外';
@@ -120,7 +124,7 @@ function composeThreeWayBetPolicy(base,r,p,deps){
   result.referenceBudget={unitYen:100,points:total,totalYen:100*total,
     note:'100円/点の参考額。購入額・配当・期待回収率を保証しません。'};
   result.reason=!g.ready?('発走前データ不足：'+(result.dataMissing.join('・')||'取得未完了')):
-    result.items.length?'本線・3連単チャレンジ・保険を独立判定。'+String(base.reason||''):reason||base.reason||'購入条件未達';
+    result.items.length?'本線・3連単チャレンジ・保険を券種別に独立判定。'+(result.referenceOnly?'朝の厳選とは別の参考買い目。':''):reason||base.reason||'購入条件未達';
   result.betStrategy=stamp;
   return result
 }

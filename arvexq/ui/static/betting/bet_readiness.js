@@ -48,9 +48,9 @@ function promoteReference(base,r,p,rd){
     v(rd.analysis)<.40||v(rd.prediction)<(central?.55:.51)||
     v(p.coverage)<(central?.38:.33)||v(a.score)<(central?30:27)||
     v(a.evidence)<.23)return base;
- return {...base,referenceOnly:true,
-   selectionAudit:{...a,selected:true,referenceOnly:true,strictWinnerSelected:false,
-     reason:'通常レースのモデル参考買い目。朝の厳選判定とは別'}};
+ // Do not forge the immutable morning/elite decision to make a ticket.
+ // Keep the true audit and attach the separately qualified reference status.
+ return {...base,referenceOnly:true};
 }
 global.ARVEXQBetReadiness=Object.freeze({VERSION,evaluate,promoteReference});
 })(window);

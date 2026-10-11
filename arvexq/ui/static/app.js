@@ -2613,9 +2613,11 @@ function rebuildBetStrategyV242(base,r,p){
       axisNo=axisRow&&axisRow.horse?n(axisRow.horse.horseNumber):0,axisConfidence=clamp(n(axisRow&&axisRow.axisConfidence),0,1),
       coreP1No=p1.length?n(p1[0].no):0,axisAgreement=!!(axisNo&&coreP1No&&axisNo===coreP1No),axisStable=!!(axisRow&&axisRow.winnerDecisionStable),centralRace=String((r&&r.circuit)||'')==='中央',axisLocked=axisStable&&axisAgreement&&axisConfidence>=(centralRace?.68:.62),
       raceType=arvexqRaceType(base,p),readiness=dataReadinessProfile(r,p),
-      // Special races must be forecast, not automatically recommended for purchase.
-      qualityGate=selected;
-  if(readiness.prediction<(centralRace?.62:.58)||!qualityGate){base.items=[];base.decision='見送り';base.betQuality=0;base.betStrategy=centralRace?'v313-central':'v313-local';base.dataReadiness=readiness;base.reason=!qualityGate?'厳選品質ゲート未通過。メイン・重賞でも買い目の購入は推奨しません。':'予想データの充足度が不足しているため買い目を固定しません。';base.trifectaDecision='見送り';base.trifectaReason='データ充足待ち。';return base}
+      // The morning elite label never authorizes purchases by itself.
+      // Independently qualified regular and special races may be evaluated,
+      // but must still pass the per-race evidence gate and ticket strategies.
+      qualityGate=selected||base.referenceOnly===true;
+  if(readiness.prediction<(centralRace?.55:.51)||!qualityGate){base.items=[];base.decision='見送り';base.betQuality=0;base.betStrategy=centralRace?'v313-central':'v313-local';base.dataReadiness=readiness;base.reason=!qualityGate?'券種別の独立したモデル品質条件を満たさないため見送り。':'予想データの充足度が不足しているため買い目を固定しません。';base.trifectaDecision='見送り';base.trifectaReason='データ充足待ち。';return base}
   function ratioScore(v,lo,hi){return clamp((n(v)-lo)/Math.max(.0001,hi-lo),0,1)}
   function concentration(v,scale){return clamp(n(v)/Math.max(.0001,scale),0,1)}
   var winClarity=clamp(.58*ratioScore(p1Margin,Math.max(.006,1/field*.05),Math.max(.040,1/field*.34))+.42*ratioScore(p1Top,1/field*1.05,Math.min(.48,1/field*2.75)),0,1),
