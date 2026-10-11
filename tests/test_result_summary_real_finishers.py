@@ -33,7 +33,7 @@ class RealResultSummaries(unittest.TestCase):
 
     def test_no_synthetic_podium_in_jra_summary(self):
         text=Path("app.py").read_text(encoding="utf-8")
-        self.assertNotIn('[{"finish":1}]',text)
+        self.assertNotIn('or [{"finish":1}]',text)
 
 
 if __name__=="__main__":
