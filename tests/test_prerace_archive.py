@@ -82,6 +82,23 @@ class ServerSealTests(unittest.TestCase):
                               build=lambda x:forecast(x,self.now))
         self.assertEqual(result["status"], "missing-historical-evidence")
 
+    def test_unverified_full_career_is_reported_not_sealed(self):
+        d = deepcopy(self.d)
+        def missing_career(card):
+            card["predictionStatus"] = "waiting-for-full-career"
+            card["careerReadiness"] = {
+                "activeHorses": 3, "completeHorses": 2,
+                "blockedHorses": [{"horseNumber": 1,
+                                   "reason": "reported-starts-unknown"}]}
+            return card
+        result = prepare_seal(d, now=self.now, assign=missing_career,
+                              build=lambda _: self.fail("no lock from unverified careers"))
+        self.assertEqual(result["status"], "waiting-for-full-career")
+        self.assertEqual(result["activeHorses"], 3)
+        self.assertEqual(result["completeHorses"], 2)
+        self.assertEqual(result["blockedHorses"][0]["reason"], "reported-starts-unknown")
+        self.assertNotIn("preRacePrediction", d)
+
     def test_evaluation_and_marks_are_as_captured(self):
         result = prepare_seal(self.d, now=self.now, assign=lambda x:x,
                               build=lambda x:forecast(x,self.now))

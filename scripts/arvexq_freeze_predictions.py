@@ -95,6 +95,14 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
         ranked = assign(core_input)
         if not isinstance(ranked, dict):
             return {"status": "incomplete-prediction"}
+        if ranked.get("predictionStatus") == "waiting-for-full-career":
+            career = ranked.get("careerReadiness") or {}
+            return {
+                "status": "waiting-for-full-career",
+                "completeHorses": int(career.get("completeHorses") or 0),
+                "activeHorses": int(career.get("activeHorses") or len(active)),
+                "blockedHorses": list(career.get("blockedHorses") or [])[:8],
+            }
         ranked_horses = {
             int(h.get("horseNumber") or 0): h
             for h in (ranked.get("horses") or [])
