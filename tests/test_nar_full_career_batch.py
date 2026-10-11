@@ -116,5 +116,35 @@ class NarFullCareerBatchTests(unittest.TestCase):
         self.assertEqual(len(d["horses"][0]["recentRaces"]), 5)
 
 
+    def test_extra_feed_does_not_erase_full_career_or_frozen_bets(self):
+        import app
+        before=[run(f"2025-{m:02d}-01") for m in range(1,10)]
+        detail={"id":"nar-2026-10-11-大井-11","date":"2026-10-11",
+                "circuit":"地方","horses":[{
+                    "horseNumber":1,"name":"全履歴馬",
+                    "allPastRuns":copy.deepcopy(before),
+                    "recentRaces":copy.deepcopy(before[:5]),
+                    "_careerHistoryAudit":{"reportedStarts":15,"complete":False}}],
+                "preRacePrediction":{"fixedAt":"2026-10-11T09:30:00+09:00"},
+                "preRaceBet":{"fixedAt":"2026-10-11T09:30:00+09:00",
+                              "items":[{"kind":"馬連","combos":[[1,2]]}]}}
+        original=copy.deepcopy(detail)
+        extra=[run("2025-07-01","secondary"),run("2026-09-01","secondary"),
+               run("2026-10-11","future"),run("2026-10-12","future")]
+        updated=app._merge_enrichment(detail,{"extra":[
+            {"source":"supplement","rows":[{
+                "horseNumber":1,"name":"全履歴馬",
+                "extra":{"allPastRuns":extra}}]}]})
+        h=updated["horses"][0]
+        self.assertEqual(len(h["allPastRuns"]),10,"one genuinely new past race")
+        self.assertEqual(len(h["recentRaces"]),5)
+        self.assertEqual(len([x for x in h["allPastRuns"]
+                              if x["date"]=="2025-07-01"]),1)
+        self.assertEqual(h["_careerHistoryAudit"],original["horses"][0]["_careerHistoryAudit"])
+        self.assertTrue(all(x["date"]<"2026-10-11" for x in h["allPastRuns"]))
+        self.assertEqual(updated["preRacePrediction"],original["preRacePrediction"])
+        self.assertEqual(updated["preRaceBet"],original["preRaceBet"])
+
+
 if __name__ == "__main__":
     unittest.main()
