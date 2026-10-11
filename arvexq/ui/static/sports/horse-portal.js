@@ -41,7 +41,7 @@
           return '<button type="button" class="arv-all-race '+raceState(r,opts)+'" data-race="'+esc(r.id)+'" aria-label="'+esc(track)+' '+number+'レース '+esc(clock(r)||"時刻未取得")+'">'+
             '<strong>'+number+'R</strong><small>'+esc(clock(r)||"未取得")+'</small></button>';
         }).join("");
-        return '<div class="arv-all-venue">'+header+'<div class="arv-all-races-grid">'+chips+'</div></div>';
+        return '<div class="arv-all-venue"><div class="arv-all-venue-thumb" aria-hidden="true">♞</div>'+header+'<div class="arv-all-races-grid">'+chips+'</div></div>';
       }).join("");
       return '<div class="arv-all-circuit"><div class="arv-all-circuit-label"><b>'+esc(circuit)+'競馬</b><small>'+tracks.length+'会場</small></div>'+
         (cards||'<p class="arv-all-empty">この日の開催データは未取得です。未取得を「開催なし」とは判定しません。</p>')+'</div>';
