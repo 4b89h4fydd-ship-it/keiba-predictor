@@ -22,7 +22,7 @@ assert.equal(rendered.includes("data-race=\"nar-"+date+"-大井-03\""),true);
 assert.equal(rendered.includes("data-race=\"nar-"+date+"-大井-04\""),false);
 assert.equal((rendered.match(/class="arv-all-race /g)||[]).length,24);
 assert.equal((rendered.match(/aria-disabled="true"/g)||[]).length,21);
-for(const tag of ["selected","special","ai-stats"])assert.ok(rendered.includes('data-home-page="'+tag+'"'));
+for(const tag of ["selected","special","ai-stats"])assert.ok(!rendered.includes('data-home-page="'+tag+'"'));
 assert.ok(ui.home([],opts).includes("未取得"));
 assert.ok(!ui.home([],opts).includes("data-race="));
 const injected=ui.home([{...rows[0],track:'<img src=x onerror=alert(1)>'}],opts);
