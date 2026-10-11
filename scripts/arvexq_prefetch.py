@@ -239,7 +239,7 @@ def _supplement_missing(detail: dict[str, Any] | None) -> dict[str, Any] | None:
         return detail
 
 
-def _ensure_analysis(rid: str, current: dict[str, Any] | None) -> tuple[dict[str, Any] | None, str]:
+def _ensure_analysis(rid: str, current: dict[str, Any] | None, *, allow_deep: bool = True) -> tuple[dict[str, Any] | None, str]:
     """Run app.py diagnosis and keep its returned JSON even if SQLite persistence fails."""
     raw_before = _raw_snapshot(rid)
     latest = _merge_detail(current, raw_before)
@@ -270,8 +270,12 @@ def _ensure_analysis(rid: str, current: dict[str, Any] | None) -> tuple[dict[str
     if _analysis_ready(latest):
         return latest, ";".join(errors)
 
-    # FULL PREFETCH is the heavy lane, so one deep fallback is allowed when the
-    # prepared card is not sufficient to produce all-head diagnosis.
+    # Deep/provider refresh is only permitted during the legacy compatibility
+    # call; the production persisted-input phase MUST remain network-free.
+    if not allow_deep:
+        if not _analysis_ready(latest) and not errors:
+            errors.append("stored evidence insufficient for diagnosis")
+        return latest or current, ";".join(errors)
     deep: dict[str, Any] | None = None
     try:
         built = app._build_fast_diagnosis_snapshot(
@@ -348,7 +352,12 @@ def prepare(
     report_path: str,
     workers: int,
     analysis_workers: int,
+    phase: str = "all",
 ) -> int:
+    if phase == "analyze":
+        return analyze_persisted(bundle_path, payload_path, report_path)
+    if phase not in {"collect", "all"}:
+        raise ValueError("unknown prefetch stage")
     bundle = _read(bundle_path)
     rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
     initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id")]
@@ -431,7 +440,7 @@ def prepare(
         f"FULL_PREFETCH analysis targets={len(analysis_targets)} "
         f"unchanged={len(skipped_unchanged)}"
     )
-    if analysis_targets:
+    if analysis_targets and phase == "all":
         # app.py persists into one SQLite RaceDB. Production deliberately uses
         # one diagnosis worker; the merge above keeps returned JSON authoritative
         # even if local persistence is unavailable.
@@ -474,7 +483,7 @@ def prepare(
         "summaries": rows,
         "details": [decorated[rid] for rid in ids if rid in decorated],
         "meta": {
-            "source": "github-actions-full-prefetch-v4-memory-authoritative",
+            "source": "github-actions-facts-first-v1" if phase == "collect" else "github-actions-full-prefetch-v4-memory-authoritative",
             "sync_date": bundle.get("date") or "",
             "race_count": len(ids),
             "detail_count": len(decorated),
@@ -485,7 +494,8 @@ def prepare(
             "missing_card_count": len(missing_card),
             "missing_analysis_count": len(missing_analysis),
             "display_complete": bool(ids) and not missing_card,
-            "analysis_complete": bool(ids) and not missing_card and not missing_analysis,
+            "analysis_complete": phase == "all" and bool(ids) and not missing_card and not missing_analysis,
+            "pipeline_stage": "facts_stored_pending_d1" if phase == "collect" else "legacy_full",
             "prefetched_at": int(datetime.now(JST).timestamp()),
         },
     }
@@ -522,9 +532,108 @@ def prepare(
     return 0
 
 
+def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> int:
+    """Analyze D1 readback only, via the SAME diagnosis engine as before.
+
+    No racecard/history source is called by this stage. Missing facts stay
+    missing and are never turned into fake zero-valued ability marks.
+    """
+    from arvexq.pipeline.persisted_inputs import verify_persisted_facts
+    day = _read(bundle_path)
+    rows = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id")]
+    details = {str(d["id"]): d for d in (day.get("details") or [])
+               if isinstance(d, dict) and d.get("id")}
+    saved = {"races": rows, "details": list(details.values())}
+    integrity = verify_persisted_facts(
+        {"summaries": rows, "details": list(details.values())}, saved
+    )
+    if integrity:
+        raise ValueError("D1 race identity invalid: " + str(integrity[:8]))
+    errors: dict[str, str] = {}
+    analyzed: dict[str, dict[str, Any]] = {}
+    skipped = []
+    for row in rows:
+        rid = str(row["id"])
+        fact = details.get(rid)
+        if not _card_usable(fact):
+            errors[rid] = "saved D1 racecard incomplete"
+            if fact:
+                analyzed[rid] = fact
+            continue
+        if _analysis_current(fact):
+            analyzed[rid] = fact
+            skipped.append(rid)
+            continue
+        # Seed just the independently verified D1 detail. Do not call
+        # _prepare_race_snapshot or any provider to fill an empty D1 race.
+        _seed_snapshot(fact)
+        locally_stored = _raw_snapshot(rid)
+        if not isinstance(locally_stored, dict):
+            errors[rid] = "D1 facts could not be staged in local RaceDB"
+            analyzed[rid] = fact
+            continue
+        stored_check = verify_persisted_facts(
+            {"summaries": [row], "details": [fact]},
+            {"races": [row], "details": [locally_stored]},
+        )
+        if stored_check:
+            errors[rid] = "RaceDB staging mismatch: " + ";".join(stored_check[:3])
+            analyzed[rid] = fact
+            continue
+        try:
+            # Explicitly disables the previous deep network fallback.
+            predicted, err = _ensure_analysis(rid, fact, allow_deep=False)
+            if predicted and _analysis_ready(predicted):
+                # Observed D1 runner identities and all prior history are immutable.
+                final = _merge_detail(fact, predicted)
+                after = verify_persisted_facts(
+                    {"summaries": [row], "details": [fact]},
+                    {"races": [row], "details": [final]},
+                )
+                if after:
+                    errors[rid] = "diagnosis modified saved facts: " + ";".join(after[:3])
+                    analyzed[rid] = fact
+                else:
+                    analyzed[rid] = _decorate(final)
+                    if err:
+                        print("PERSISTED_DIAGNOSIS_WARN", rid, err)
+            else:
+                analyzed[rid] = fact
+                errors[rid] = err or "stored evidence not adequate for diagnosis"
+        except Exception as exc:
+            analyzed[rid] = fact
+            errors[rid] = f"{type(exc).__name__}: {exc}"
+    payload = {
+        "summaries": rows,
+        "details": [analyzed[str(r["id"])] for r in rows if str(r["id"]) in analyzed],
+        "meta": {
+            "source": "github-actions-persisted-d1-analysis-v1",
+            "pipeline_stage": "predictions_pending_d1",
+            "sync_date": day.get("date") or "",
+            "race_count": len(rows),
+            "detail_count": len(analyzed),
+            "analysis_count": sum(1 for x in analyzed.values() if _analysis_ready(x)),
+            "analysis_missing_count": len(errors),
+        },
+    }
+    _write(payload_path, payload)
+    _write(report_path, {
+        "date": day.get("date") or "",
+        "races": len(rows),
+        "analysis_ready": payload["meta"]["analysis_count"],
+        "unchanged": skipped,
+        "analysis_errors": errors,
+        "missing_card": [rid for rid in errors if errors[rid].startswith("saved D1")],
+    })
+    print("PERSISTED_D1_ANALYSIS", "races=",len(rows),
+          "ready=",payload["meta"]["analysis_count"], "missing=",len(errors))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", default="bundle.json")
+    parser.add_argument("--phase", choices=("collect", "analyze", "all"), default="collect")
     parser.add_argument("--payload", default="prefetch-payload.json")
     parser.add_argument("--report", default="prefetch-report.json")
     parser.add_argument("--workers", type=int, default=int(os.getenv("ARVEXQ_PREFETCH_WORKERS", "6")))
@@ -556,6 +665,7 @@ def main() -> int:
         args.report,
         args.workers,
         args.analysis_workers,
+        phase=args.phase,
     )
 
 
