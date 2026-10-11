@@ -15,7 +15,7 @@ assert.ok(html.includes('data-venue="桐生"'));
 assert.ok(html.includes('data-venue="大村"'));
 assert.ok(html.includes('data-race="boat-'+date+'-桐生-01"'));
 assert.ok(!html.includes('data-race="boat-'+date+'-大村-04"'));
-assert.equal((html.match(/class="arv-all-race/g)||[]).length,24);
+assert.equal((html.match(/class="arv-all-race /g)||[]).length,24);
 assert.equal((html.match(/aria-disabled="true"/g)||[]).length,21);
 const empty=allBoatRaces({date,races:[]},{now});
 assert.ok(empty.includes("未取得"));
