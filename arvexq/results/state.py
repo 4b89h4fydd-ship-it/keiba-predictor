@@ -74,6 +74,11 @@ def merge_result(old: Any, new: Any) -> dict[str, Any]:
             continue
         if old_final and not new_final and key in {"status", "finishers"}:
             continue
+        # A partial refresh cannot shrink an already known official result.
+        if key in {"payouts", "finishers"} and isinstance(value, list):
+            previous = old_r.get(key)
+            if isinstance(previous, list) and len(previous) > len(value):
+                continue
         out[key] = copy.deepcopy(value)
     return out
 
