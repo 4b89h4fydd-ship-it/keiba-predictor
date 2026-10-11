@@ -148,6 +148,20 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         self.assertTrue(output["race-4"]["evidenceReady"])
         self.assertFalse(any(card.get("evidenceReady") for card in cards.values()))
 
+    def test_official_d1_day_exists_before_heavy_prefetch(self) -> None:
+        workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
+        early = workflow.index("Publish official day summaries before heavy prediction work")
+        heavy = workflow.index("Precompute all race cards and analysis")
+        cold = workflow.index("D1_EARLY_SUMMARIES_WRITE")
+        verify = workflow.index("D1_EARLY_SUMMARIES_VERIFY")
+        self.assertLess(early, cold)
+        self.assertLess(cold, verify)
+        self.assertLess(verify, heavy)
+        self.assertIn("--file initial-day-summaries.json", workflow)
+        self.assertIn("D1_EARLY_SUMMARIES_INCOMPLETE", workflow)
+        self.assertEqual(workflow.count("arvexq-cold-start-race-summaries-v1"), 1,
+                         "retire the old post-analysis cold-start publisher")
+
     def test_pipeline_still_publishes_when_analysis_fails(self) -> None:
         workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
         self.assertIn("proceeding to D1 repair", workflow)
