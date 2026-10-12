@@ -25,27 +25,40 @@ const boat=[
  {id:'boat-'+today+'-戸田-01',venue:'戸田',raceNo:1,closeTime:'11:00',closeAt:at('11:00').toISOString(),
   result:{status:'cancelled'}}
 ];
-const ids=(mode,rows,t)=>Array.from(liveModel(mode,rows,today,at(t)),r=>r.id).sort().join(',');
-assert.match(ids('horse',horse,'09:59'),/東京-01/);
-assert.match(ids('horse',horse,'10:01'),/東京-02/);
-assert.match(ids('horse',horse,'10:11'),/浦和-02/);
-assert.match(ids('boat',boat,'10:01'),/桐生-02/);
-assert.match(ids('boat',boat,'10:11'),/津-02/);
-assert.doesNotMatch(ids('boat',boat,'09:59'),/戸田-01/);
-assert.equal(liveModel('boat',boat,'2026-10-11',at('09:59')).length,0);
-assert.equal(liveModel('horse',horse,today,at('23:58')).length,0);
+const status=(mode,rows,t,id)=>Array.from(liveModel(mode,rows,today,at(t)))
+  .find(r=>r.id.endsWith(id));
+assert.equal(liveModel('horse',horse,today,at('09:59')).length,4);
+assert.equal(liveModel('boat',boat,today,at('09:59')).length,5);
+assert.equal(status('horse',horse,'09:59','東京-01').status,'soon');
+assert.equal(status('horse',horse,'09:59','東京-01').next,true);
+assert.equal(status('horse',horse,'10:01','東京-01').status,'elapsed');
+assert.equal(status('horse',horse,'10:01','東京-02').next,true);
+assert.equal(status('boat',boat,'10:01','桐生-01').status,'elapsed');
+assert.equal(status('boat',boat,'10:01','桐生-02').next,true);
+assert.equal(status('boat',boat,'10:11','津-01').status,'elapsed');
+assert.equal(status('boat',boat,'10:11','津-02').next,true);
+assert.equal(status('boat',boat,'09:59','戸田-01').status,'cancelled');
+assert.equal(liveModel('boat',boat,'2026-10-11',at('09:59')).length,5);
+assert.equal(liveModel('horse',horse,today,at('23:58')).length,4);
+assert.ok(liveModel('horse',horse,today,at('23:58'))
+  .every(r=>r.status==='elapsed'));
 assert.notEqual(liveSignature('boat',boat,today,at('09:59')),
                 liveSignature('boat',boat,today,at('10:01')));
-assert.match(liveRaces('boat',boat,today,at('10:01')),/リアルタイム/);
-assert.match(liveRaces('horse',horse,today,at('10:01')),/東京/);
+assert.match(liveRaces('boat',boat,today,at('10:01')),/全会場・全レース自動更新/);
+assert.match(liveRaces('horse',horse,today,at('10:01')),/全4R/);
+assert.match(liveRaces('boat',boat,today,at('10:01')),/全5R/);
+assert.match(liveRaces('boat',boat,today,at('10:01')),/暗色＝時刻経過・確定/);
 assert.doesNotMatch(liveRaces('boat',[],today,at('10:01')),/データ確認 0場/);
 for(const path of ['arvexq/ui/static/app.js','arvexq/ui/static/sports/boat-app/app.js']){
   const js=fs.readFileSync(path,'utf8');
   const mode=path.endsWith('boat-app/app.js')?'boat':'horse';
   assert.match(js,new RegExp("liveRaces\\('"+mode+"'"));
-  assert.match(js,new RegExp("liveSignature\\('"+mode+"'"));
+  assert.match(js,new RegExp("syncLiveUI\\('"+mode+"'"));
   assert.match(js,/10000/);
 }
+const dark=fs.readFileSync('arvexq/ui/static/sports/all-races.css','utf8');
+assert.match(dark,/\.arv-all-race\.elapsed,\.arv-all-race\.finished/);
+assert.match(dark,/opacity:\.63/);
 const raceSource=fs.readFileSync('arvexq/ui/static/sports/boat-app/features/races.js','utf8');
 const section=raceSource.slice(raceSource.indexOf('export function raceList('),raceSource.indexOf('export function detail('))
   .replace('export function raceList','function raceList');

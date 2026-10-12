@@ -36,10 +36,24 @@ async function check(kind,name){
       const x=window.ARVEXQUnifiedHome;
       const start=new Date(day+'T10:20:00+09:00');
       const after=new Date(day+'T10:40:00+09:00');
-      return {first:x.liveModel('boat',records,day,start).find(z=>z.venue==='桐生')?.number,
-        next:x.liveModel('boat',records,day,after).find(z=>z.venue==='桐生')?.number};
+      const a=x.liveModel('boat',records,day,start);
+      const b=x.liveModel('boat',records,day,after);
+      const before=a.find(z=>z.venue==='桐生'&&z.next);
+      const afterNext=b.find(z=>z.venue==='桐生'&&z.next);
+      const firstState=b.find(z=>z.venue==='桐生'&&z.number===1)?.status;
+      x.syncLiveUI('boat',records,day,document,after);
+      const firstButton=document.querySelector('button[data-race="'+records[0].id+'"]');
+      return {first:before?.number,next:afterNext?.number,
+        firstState,buttonElapsed:firstButton?.classList.contains('elapsed'),
+        buttonLabel:firstButton?.querySelector('.arv-race-state')?.textContent,
+        allRaceButtons:document.querySelectorAll('.boat-page .arv-all-panel button.arv-all-race').length};
+
     },[records,day]);
     assert.equal(timeline.first,1);assert.equal(timeline.next,2);
+    assert.equal(timeline.firstState,'elapsed');
+    assert.equal(timeline.buttonElapsed,true);
+    assert.equal(timeline.buttonLabel,'締切経過');
+    assert.equal(timeline.allRaceButtons,24);
     await portal.locator('button[data-race="'+records[0].id+'"]').click({timeout:20000});
     await page.locator('.boat-entry-list .boat-entry').first().waitFor({state:'visible',timeout:20000});
     assert.equal(await page.locator('.boat-entry-list .boat-entry').count(),6);
