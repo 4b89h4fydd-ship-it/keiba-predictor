@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 import tempfile
 import urllib.parse
 import urllib.request
@@ -17,9 +18,10 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from scripts.arvexq_boat_publish import validate_day
-
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from scripts.arvexq_boat_publish import validate_day
 OUTPUT = ROOT / "arvexq/ui/static/sports/boat-data"
 MAX_BYTES = 15_000_000
 
