@@ -8,16 +8,26 @@
   const clock=r=>/^\d{1,2}:\d{2}/.test(String(r.startTime||""))?String(r.startTime).slice(0,5):"";
   const terminal=r=>/確定|中止|取止|取消|不成立/.test(String(r?.result?.status||r?.raceStatus||""));
   const cancelled=r=>/中止|取止|取消|不成立/.test(String(r?.result?.status||r?.raceStatus||""));
-  function raceState(r,opts){
+  function clockNow(opts={}){
+    if(opts.now instanceof Date)return opts.now;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(String(opts.today||""))&&Number.isFinite(Number(opts.nowMinutes))){
+      const minute=Math.max(0,Math.min(1439,Number(opts.nowMinutes)));
+      return new Date(opts.today+"T"+String(Math.floor(minute/60)).padStart(2,"0")+":"+
+        String(minute%60).padStart(2,"0")+":00+09:00");
+    }
+    return new Date();
+  }
+  function raceState(r,opts={}){
+    const shared=root.ARVEXQUnifiedHome;
+    if(shared?.raceStatus)return shared.raceStatus("horse",r,opts.date,clockNow(opts));
     if(cancelled(r))return "cancelled";
     if(terminal(r))return "finished";
-    const time=clock(r);
-    if(!time)return "unknown";
-    if(opts.date>opts.today)return "future";
-    if(opts.date<opts.today)return "pending";
-    const match=/^(\d{1,2}):(\d{2})/.exec(time);
-    const diff=Number(match[1])*60+Number(match[2])-Number(opts.nowMinutes||0);
-    return diff<0?"pending":diff<=10?"soon":"upcoming";
+    if(!clock(r))return "unknown";
+    return opts.date<opts.today?"elapsed":"upcoming";
+  }
+  function liveLabel(code){
+    return ({finished:"確定",elapsed:"発走時刻経過",soon:"まもなく",
+      upcoming:"発走前",cancelled:"中止",unknown:"未取得"})[code]||"";
   }
   function allRaces(rows,opts={}){
     const source=(rows||[]).filter(r=>r&&r.id&&r.track&&(r.circuit==="中央"||r.circuit==="地方")&&
@@ -31,6 +41,9 @@
         const times=races.map(clock).filter(Boolean).sort();
         const header='<div class="arv-all-venue-head"><div><b>'+esc(track)+'</b><span>1R〜12R</span></div>'+
           '<button type="button" data-track="'+esc(track)+'" data-circuit="'+esc(circuit)+'" class="arv-all-go">会場ページへ ›</button></div>';
+        const shared=root.ARVEXQUnifiedHome;
+        const liveRows=shared?.liveModel?shared.liveModel("horse",races,opts.date,clockNow(opts)):[];
+        const liveById=new Map(liveRows.map(r=>[r.id,r]));
         const chips=Array.from({length:12},(_,i)=>{
           const number=i+1,r=map.get(number);
           if(!r||cancelled(r)){
@@ -38,8 +51,11 @@
             return '<button type="button" disabled aria-disabled="true" class="arv-all-race unavailable">'+
               '<strong>'+number+'R</strong><small>'+esc(r&&clock(r)||label)+'</small></button>';
           }
-          return '<button type="button" class="arv-all-race '+raceState(r,opts)+'" data-race="'+esc(r.id)+'" aria-label="'+esc(track)+' '+number+'レース '+esc(clock(r)||"時刻未取得")+'">'+
-            '<strong>'+number+'R</strong><small>'+esc(clock(r)||"未取得")+'</small></button>';
+          const state=raceState(r,opts),next=liveById.get(r.id)?.next;
+          return '<button type="button" class="arv-all-race '+esc(state)+(next?' next':'')+
+            '" data-race="'+esc(r.id)+'" data-race-state="'+esc(state)+'" aria-label="'+esc(track+' '+number+'R '+clock(r)+' '+liveLabel(state))+'">'+
+            '<strong>'+number+'R</strong><small>'+esc(clock(r)||"未取得")+'</small>'+
+            '<em class="arv-race-state">'+esc(liveLabel(state))+'</em></button>';
         }).join("");
         return '<div class="arv-all-venue">'+header+'<div class="arv-all-races-grid">'+chips+'</div></div>';
       }).join("");
