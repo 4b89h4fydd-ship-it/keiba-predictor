@@ -75,39 +75,30 @@ const swReloadMarker = 'v329-racecard-stable-20261007';
     let initialText = await page.locator('body').innerText();
     if (hasFatalUiError(initialText)) throw new Error('startup display error: ' + initialText.slice(0, 1000));
 
-    if ((await page.locator('[data-race]').count()) === 0) {
-      // v330+: home -> central/local -> venue -> race. Older smoke skipped the circuit page.
-      const circuit = page.locator('button[data-home-page="central"],button[data-home-page="local"]').first();
-      // A new racing date may not yet be published in D1 just after midnight JST.
-      // Exercise an archived, actually available race rather than demanding
-      // phantom current-day races or silently marking a skipped smoke as passed.
-      if (!(await circuit.count())) {
-        await page.waitForTimeout(3000);
-        if (!(await circuit.count())) {
-          const jstDay = new Date(Date.now() + 9*60*60*1000).toISOString().slice(0,10);
-          for (let daysBack=1;daysBack<=3;daysBack++) {
-            const day = new Date(jstDay+'T00:00:00Z');
-            day.setUTCDate(day.getUTCDate()-daysBack);
-            const archiveDate=day.toISOString().slice(0,10);
-            await page.goto(base+'/?date='+archiveDate+'&smoke=archived-'+browserName,
-                            {waitUntil:'domcontentloaded',timeout});
-            await page.waitForFunction(() => !document.querySelector('.boot'),null,{timeout});
-            await page.waitForTimeout(2500);
-            if (await circuit.count()) {
-              console.log('SMOKE_ARCHIVE_FALLBACK verified_date='+archiveDate+' because current date has no races');
-              break;
-            }
-          }
-        }
-      }
-      await circuit.waitFor({ state: 'visible', timeout });
-      await circuit.click();
-      const venue = page.locator('button[data-track]').first();
-      await venue.waitFor({ state: 'visible', timeout });
-      await venue.click();
-      const venueText = await page.locator('body').innerText();
-      if (hasFatalUiError(venueText)) throw new Error('venue display error: ' + venueText.slice(0, 1000));
+    // Both circuits' venue race buttons are shown directly on the shared home.
+    let racesAvailable=await page.locator('.arv-all-panel button[data-race]').count();
+    if(!racesAvailable){
+      await page.waitForTimeout(2000);
+      racesAvailable=await page.locator('.arv-all-panel button[data-race]').count();
     }
+    if(!racesAvailable){
+      const jstDay=new Date(Date.now()+9*60*60*1000).toISOString().slice(0,10);
+      for(let daysBack=1;daysBack<=3;daysBack++){
+        const day=new Date(jstDay+'T00:00:00Z');
+        day.setUTCDate(day.getUTCDate()-daysBack);
+        const archiveDate=day.toISOString().slice(0,10);
+        await page.goto(base+'/?date='+archiveDate+'&smoke=archived-'+browserName,
+                        {waitUntil:'domcontentloaded',timeout});
+        await page.waitForFunction(() => !document.querySelector('.boot'),null,{timeout});
+        try{
+          await page.locator('.arv-all-panel button[data-race]').first().waitFor({state:'visible',timeout:7000});
+          racesAvailable=await page.locator('.arv-all-panel button[data-race]').count();
+          console.log('SMOKE_ARCHIVE_FALLBACK',archiveDate,'races=',racesAvailable);
+          break;
+        }catch(_){}
+      }
+    }
+    if(!racesAvailable)throw new Error('No visible verified race across today and three archived dates');
 
     const race = page.locator('button[data-race]').first();
     await race.waitFor({ state: 'visible', timeout });

@@ -100,11 +100,12 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     await fresh.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
     const home=await fresh.newPage();
     await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
-    for(const [section,tracks] of [['central',['京都','東京']],['local',['佐賀','帯広ば','高知']]]){
+    for(const [circuit,tracks] of [['中央',['京都','東京']],['地方',['佐賀','帯広ば','高知']]]){
       await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
-      await home.locator('[data-home-page="'+section+'"]').click();
+      // Current shared home lists both circuits without a central/local chooser.
       for(const track of tracks)
-        await home.locator('[data-track="'+track+'"]').first().waitFor({state:'visible',timeout:30000});
+        await home.locator('.arv-all-panel [data-track="'+track+'"][data-circuit="'+circuit+'"]').first()
+          .waitFor({state:'visible',timeout:30000});
     }
     if(day==='2026-10-10'){
       // Selected races live under Home -> 厳選レース -> 地方, not the venue list.
