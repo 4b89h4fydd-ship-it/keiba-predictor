@@ -13,10 +13,23 @@ const betViewSource=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8
 const raceCss=fs.readFileSync('arvexq/ui/static/styles/race_v222_plus.css','utf8');
 assert.ok(src.includes('rc-honmei-grade'),'reliability must render below ◎ in horsecard');
 assert.ok(raceCss.includes('.rc-honmei-grade'),'compact confidence badge CSS must be present');
-assert.ok(src.includes("x.honmeiGrade==='A'?'【'+(x.honmeiRole==='win'?'単':'軸')+'】'"),
- 'A-grade role must replace displayed A on racecard');
-assert.ok(src.includes("?'◎【'+(x.honmeiRole==='win'?'単':'軸')+'】'"),
- 'AI marks panel A-role must omit displayed A');
+// The new label helper deliberately refuses to invent metadata absent from
+// an immutable pre-off receipt. Legacy receipts must not show unexplained ◎.
+const helperStart=src.indexOf('function validatedHonmeiMetadata(');
+const helperEnd=src.indexOf('function racecardMarkLegend(',helperStart);
+assert.ok(helperStart>=0&&helperEnd>helperStart,'honmei role rendering helper missing');
+const labels=new Function(src.slice(helperStart,helperEnd)+
+  'return {honmeiBadgeText,honmeiA11yText};')();
+assert.equal(labels.honmeiBadgeText({predMark:'◎',honmeiRole:'win',honmeiGrade:'A'}),'【単】');
+assert.equal(labels.honmeiBadgeText({predMark:'◎',honmeiRole:'axis',honmeiGrade:'A'}),'【軸】');
+assert.equal(labels.honmeiBadgeText({predMark:'◎',honmeiRole:'win',honmeiGrade:'A',podiumAxisEligible:true}),'【単】【軸】');
+assert.equal(labels.honmeiBadgeText({predMark:'◎',honmeiRole:'axis',honmeiGrade:'B'}),'B');
+assert.equal(labels.honmeiBadgeText({predMark:'◎',honmeiRole:'axis',honmeiGrade:'C'}),'C');
+assert.equal(labels.honmeiBadgeText({predMark:'◎'}),'未保存');
+assert.match(labels.honmeiA11yText({predMark:'◎'}),/保存されていません/);
+assert.match(labels.honmeiA11yText({predMark:'◎',honmeiRole:'axis',honmeiGrade:'C'}),/軸固定不可/);
+assert.match(src,/podiumAxisEligible:z\.predMark==='◎'&&z\.podiumAxisEligible===true/,'pre-off A eligibility must be sealed too');
+assert.match(src,/honmeiRole:mark==='◎'\?honmei\.honmeiRole/,'archived marks must restore their original role');
 assert.ok(raceCss.includes('.rc-honmei-grade.rc-honmei-grade-role'),
  'A-role must fit beneath ◎ on small displays');
 for(const label of ['◎【単】','◎【軸】','◎B','◎C'])
