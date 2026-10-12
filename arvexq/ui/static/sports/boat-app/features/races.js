@@ -10,6 +10,10 @@ export function raceList(day,venue){
   // Same compact 1R–12R grid as the horse venue page. Missing cards are
   // disabled rather than falsely labelled cancelled.
   const byNo=new Map(list.map(r=>[r.raceNo,r]));
+  const shared=globalThis.ARVEXQUnifiedHome;
+  const when=new Date();
+  const model=shared?.liveModel?shared.liveModel('boat',list,day.date,when):[];
+  const byLive=new Map(model.map(r=>[r.id,r]));
   return '<div class="arv-all-races-grid boat-venue-race-grid">'+
     Array.from({length:12},(_,i)=>{
       const n=i+1,r=byNo.get(n);
@@ -19,10 +23,19 @@ export function raceList(day,venue){
         String(r.result?.status||r.status||''));
       if(cancelled)return '<button class="arv-all-race unavailable" type="button" disabled>'+
         '<strong>'+n+'R</strong><small>中止</small></button>';
-      const done=r.result?.status==="confirmed"?" finished":"";
-      return '<button type="button" class="arv-all-race'+done+'" data-race="'+esc(r.id)+
-        '" aria-label="'+esc(venue+' '+n+'R '+(r.closeTime||"時刻未取得"))+'">'+
-        '<strong>'+n+'R</strong><small>'+esc(r.closeTime||"未取得")+'</small></button>';
+      const live=byLive.get(r.id);
+      const time=Date.parse(String(r.closeAt||''));
+      const status=live?.status||(r.result?.status==="confirmed"?"finished":
+        Number.isFinite(time)&&time<=when.getTime()?"elapsed":
+        Number.isFinite(time)&&time-when.getTime()<=600000?"soon":
+        Number.isFinite(time)?"upcoming":"unknown");
+      const label={finished:"確定",elapsed:"締切経過",soon:"まもなく",
+        upcoming:"締切前",unknown:"時刻未取得"}[status]||"";
+      return '<button type="button" class="arv-all-race '+status+(live?.next?' next':'')+
+        '" data-race="'+esc(r.id)+'" data-race-state="'+status+
+        '" aria-label="'+esc(venue+' '+n+'R '+(r.closeTime||"時刻未取得")+' '+label)+'">'+
+        '<strong>'+n+'R</strong><small>'+esc(r.closeTime||"未取得")+'</small>'+
+        '<em class="arv-race-state">'+label+'</em></button>';
     }).join("")+'</div>';
 }
 export function detail(r){
