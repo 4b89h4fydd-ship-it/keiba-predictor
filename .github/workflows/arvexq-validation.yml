@@ -128,6 +128,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_boat_official_import.py' -v
           node tests/boat_start_exhibition_smoke.mjs
           node tests/boat_all_races_smoke.mjs
+          node tests/boat_horse_realtime_sync.mjs
           node scripts/arvexq_horse_portal_smoke.js
           node --check dist/sports/horse-portal.js
           node --check dist/sports/unified-home.js
