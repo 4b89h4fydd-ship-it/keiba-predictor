@@ -153,6 +153,10 @@ jobs:
           python -m http.server 8790 --directory dist >/tmp/arvexq-boat-local.log 2>&1 &
           sleep 2
           ARVEXQ_BASE_URL=http://127.0.0.1:8790 node scripts/arvexq_dual_sport_ui_smoke.js
+      - name: Local iPhone Chromium and WebKit pull-to-refresh twice per sport
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8790
+        run: node scripts/arvexq_pull_to_refresh_smoke.js
       - name: Offline iPhone AI-bet header and horizontal-clipping regression
         run: |
           node --check scripts/arvexq_bet_mobile_layout_smoke.js
@@ -270,6 +274,11 @@ jobs:
           grep -A3 'function courseProfile(r)' /tmp/prod-app.js | grep -q 'r=r||{}'
           curl -fsS --max-time 15 -H 'Cache-Control: no-cache' "$PROD/sw-v329-reset.js?ci=$GITHUB_SHA" >/tmp/prod-sw.js
           test -s /tmp/prod-sw.js
+      - name: Production iPhone Chromium and WebKit pull-to-refresh
+        if: ${{ always() && env.PROD_BASE != '' }}
+        env:
+          ARVEXQ_BASE_URL: ${{ env.PROD_BASE }}
+        run: node scripts/arvexq_pull_to_refresh_smoke.js
       - name: Production Chromium click smoke
         if: ${{ always() && env.PROD_BASE != '' }}
         id: prod_chromium
