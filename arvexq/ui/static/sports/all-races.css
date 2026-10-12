@@ -75,3 +75,9 @@ body:has(.smart-home){background:#0b171f!important}
 .boat-page .arv-unified-body>.arv-all-panel{margin-top:8px}
 .smart-home .arv-unified-body>.arv-unified-actions,
 .boat-page .arv-unified-body>.arv-unified-actions{margin-top:12px}
+
+/* The three AI menu shortcuts belong directly below the date bar, above all venue 1R-12R grids. */
+.smart-home .arv-unified-body>.arv-unified-actions,
+.boat-page .arv-unified-body>.arv-unified-actions{margin-top:8px;margin-bottom:10px}
+.smart-home .arv-unified-body>.arv-all-panel,
+.boat-page .arv-unified-body>.arv-all-panel{margin-top:0}

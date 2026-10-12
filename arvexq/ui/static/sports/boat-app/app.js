@@ -39,7 +39,7 @@ function home(){
   const hero=shared?shared.hero():'<div class="arv-unified-hero"></div>';
   const date=shared?shared.dateBar(state.date):'';
   const actions=shared?shared.buttons('boat'):'';
-  return hero+'<div class="arv-unified-body">'+date+allBoatRaces(day)+actions+'</div>';
+  return hero+'<div class="arv-unified-body">'+date+actions+allBoatRaces(day)+'</div>';
 }
 function subheader(title,back="home"){
   const label=title.replace(/^本日の/,"").replace(/^当日の/,"");
