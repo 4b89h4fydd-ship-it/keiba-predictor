@@ -159,6 +159,42 @@ def official_day_record(day: date, schedule: Any, close_times: list[Any],
     }
 
 
+
+def split_b_program_venues(files: dict[str,str]) -> dict[str,str]:
+    """Split official multi-venue B archives into single-venue parser inputs.
+
+    The reviewed parser's parse() only handles one venue per text file and
+    otherwise overwrites 1R..12R for every subsequent site.
+    """
+    separated: dict[str,str] = {}
+    for filename,raw in files.items():
+        prefix: list[str] = []
+        current: str | None = None
+        block: list[str] = []
+        idx=0
+        def emit():
+            nonlocal idx
+            if current is None or not block:
+                return
+            idx+=1
+            separated[f"{filename}-venue-{idx:03d}-{current}"]="\n".join(prefix+block)+"\n"
+        for line in raw.splitlines():
+            norm=line.replace(" ","").replace("\u3000","")
+            match=next((name for name in VENUE_NAMES if "ボートレース"+name in norm),None)
+            if match:
+                emit()
+                current=match
+                block=[line]
+            elif current is None:
+                prefix.append(line)
+            else:
+                block.append(line)
+        emit()
+    if not separated:
+        raise ValueError("B official archive has no recognized venue headings")
+    return separated
+
+
 def acquire(day:date,cache_dir:Path)->dict[str,Any]:
     """One B download; optional one K download. No HTML scraping/extra providers."""
     try:
@@ -171,8 +207,16 @@ def acquire(day:date,cache_dir:Path)->dict[str,Any]:
     if not b:
         raise RuntimeError("Official B program missing or unavailable; no blank publish")
     sched=ScheduleParser()
-    result=sched.parse(b)
+    parts=split_b_program_venues(b)
+    result=sched.parse(parts)
     times=sched.parse_schedule_with_close_times(b,day)
+    by_close={(str(t.venue_code).zfill(2),t.race_number) for t in times}
+    by_program={(str(x.venue_code).zfill(2),x.race_number) for x in result.races}
+    missing=sorted(by_close-by_program)
+    if missing:
+        raise RuntimeError(f"Official B venue segmentation incomplete: {len(missing)}/{len(by_close)} missing; first {missing[:12]}")
+    if len(result.races)!=len(by_close):
+        raise RuntimeError("Official B race count mismatch; refusing partial publication")
     print("OFFICIAL_B_SOURCE_AUDIT", "archives=",len(b),
           "rawRaces=",len(result.races),"entries=",len(result.entries),
           "closingTimes=",len(times),
