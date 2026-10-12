@@ -125,6 +125,7 @@ jobs:
           python -m py_compile scripts/arvexq_boat_ingest.py
           python -m unittest discover -s tests -p 'test_boat_feed_publisher.py' -v
           python -m unittest discover -s tests -p 'test_boat_licensed_ingest.py' -v
+          python -m unittest discover -s tests -p 'test_boat_official_import.py' -v
           node tests/boat_start_exhibition_smoke.mjs
           node tests/boat_all_races_smoke.mjs
           node scripts/arvexq_horse_portal_smoke.js
