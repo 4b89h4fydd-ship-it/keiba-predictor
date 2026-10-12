@@ -5,7 +5,10 @@ const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const start=src.indexOf('function applyFrozenMarks(r,p){');
 const end=src.indexOf('\n}',start)+2;
 assert.ok(start>=0&&end>start, 'frozen marks entrypoint missing');
-const original=src.slice(start,end);
+const helpersStart=src.indexOf('function validatedHonmeiMetadata(');
+const helpersEnd=src.indexOf('function racecardMarkLegend(',helpersStart);
+assert.ok(helpersStart>=0&&helpersEnd>helpersStart,'frozen grade helper missing');
+const original=src.slice(helpersStart,helpersEnd)+'\n'+src.slice(start,end);
 assert.doesNotMatch(original, /\block&&lock\.reason\b/, 'unbound lock regression');
 const frozen={version:'arvexq-official-mark-revision-v1',
   reason:'公式馬場変更', fixedAt:'2026-10-10T10:00:00+09:00',
@@ -33,6 +36,8 @@ assert.deepEqual(result.rows.map(x=>x.predMark),['◎','○']);
 assert.equal(result.rows[0].overallScore,90);
 assert.equal(result.rows[0].singleWinSuitable,true);
 assert.equal(result.rows[0].markFrozen,true);
+assert.equal(result.rows[0].honmeiRole,'','legacy server marks without role must remain unknown');
+assert.equal(result.rows[0].honmeiGrade,'','do not invent grade from post-result evaluation');
 const live=runner(false)(race,{rows:[{horse:race.horses[0],predMark:'△',overallScore:66},
  {horse:race.horses[1],predMark:'▲',overallScore:65}]});
 assert.deepEqual(live.rows.map(x=>x.predMark),['△','▲'],
