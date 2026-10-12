@@ -34,3 +34,37 @@ body:has(.smart-home){background:#0b171f!important}
 .boat-page .arv-all-panel{margin-top:0}
 @media(max-width:440px){.arv-all-panel{padding:9px}.arv-all-races-grid{gap:4px}.arv-all-race{min-height:50px;padding:5px 1px}.arv-all-race strong{font-size:13px}.arv-all-race small{font-size:9px}}
 @media(max-width:350px){.arv-all-races-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.arv-all-action b{font-size:12px}.arv-all-action small{font-size:9px}}
+
+/* All venues, all 1R–12R: once scheduled time passes, darken the race tile.
+ * "Elapsed" means the clock has passed, NOT that the official result is confirmed.
+ * The dark tile stays clickable so the result can be checked later.
+ */
+.arv-all-race.elapsed,.arv-all-race.finished{
+  background:linear-gradient(180deg,#0d1b25,#091118)!important;
+  border-color:#273e4c!important;
+  color:#8394a1!important;
+  opacity:.63;
+  filter:saturate(.28);
+}
+.arv-all-race.elapsed strong,.arv-all-race.finished strong{color:#96a6b0}
+.arv-all-race.elapsed small,.arv-all-race.finished small{color:#718693}
+.arv-all-race.next:not(.elapsed):not(.finished){
+  border-color:#65b7e3;
+  box-shadow:inset 0 0 0 1px #398ec4;
+}
+.arv-all-race.soon:not(.elapsed):not(.finished){
+  border-color:#e6c56c;
+  background:linear-gradient(180deg,#4b3c1e,#192d38);
+}
+.arv-all-race .arv-race-state{
+  font-size:9px;font-style:normal;line-height:1.05;
+  color:#bfdbea;white-space:nowrap;
+}
+.arv-all-race.elapsed .arv-race-state,.arv-all-race.finished .arv-race-state{color:#9eabb3}
+.arv-realtime-summary{margin:8px 0 4px;font-size:12px;color:#dbedfa;line-height:1.45}
+.arv-realtime-legend{display:flex;gap:8px;flex-wrap:wrap;margin:0;
+  font-size:10px;color:#a7c9df;line-height:1.5}
+@media(max-width:440px){
+  .arv-all-race{min-height:60px}
+  .arv-all-race .arv-race-state{font-size:8px}
+}

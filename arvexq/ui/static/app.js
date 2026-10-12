@@ -5157,10 +5157,9 @@ function specialForecastRaceCandidates(){
 setInterval(function(){
   if(document.visibilityState==='hidden'||state.date!==today()||state.race||state.raceLoading||
      state.track||state.picker||state.homePage)return;
-  var shared=window.ARVEXQUnifiedHome,el=document.querySelector('.smart-shell.smart-home .arv-realtime-section');
-  if(!shared||!el)return;
-  var fresh=shared.liveSignature('horse',state.races||[],state.date);
-  if(fresh!==el.getAttribute('data-live-signature'))render();
+  var shared=window.ARVEXQUnifiedHome;
+  if(!shared||!document.querySelector('.smart-shell.smart-home .arv-all-panel'))return;
+  shared.syncLiveUI('horse',state.races||[],state.date,document);
 },10000);
 installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
 })();

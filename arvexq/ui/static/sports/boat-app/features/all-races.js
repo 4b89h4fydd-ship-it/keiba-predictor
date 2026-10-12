@@ -20,11 +20,6 @@ export function allBoatRaces(day,{now=new Date()}={}){
   const cards=active.map(venue=>{
     const byNo=new Map(races.filter(r=>r?.venue===venue&&Number.isInteger(r.raceNo))
       .map(r=>[r.raceNo,r]));
-    const ended=races.filter(row=>row?.venue===venue&&(
-      row.result?.status==='confirmed'||(
-        Number.isFinite(Date.parse(String(row.closeAt||'')))&&
-        Date.parse(String(row.closeAt||''))<=now.getTime())
-    )).length;
     const cells=Array.from({length:12},(_,idx)=>{
       const no=idx+1,r=byNo.get(no);
       if(!r||isCancelled(r))return '<button type="button" disabled aria-disabled="true" class="arv-all-race unavailable">'+
@@ -44,7 +39,7 @@ export function allBoatRaces(day,{now=new Date()}={}){
         '<strong>'+no+'R</strong><small>'+esc(time||"未取得")+'</small>'+
         '<em class="arv-race-state">'+label+'</em></button>';
     }).join("");
-    return '<div class="arv-all-venue"><div class="arv-all-venue-head"><div><b>'+esc(venue)+'</b><span>1R〜12R・経過 '+ended+'R</span></div>'+
+    return '<div class="arv-all-venue"><div class="arv-all-venue-head"><div><b>'+esc(venue)+'</b><span>1R〜12R</span></div>'+
       '<button type="button" data-venue="'+esc(venue)+'" class="arv-all-go">会場ページへ ›</button></div>'+
       '<div class="arv-all-races-grid">'+cells+'</div></div>';
   }).join("");

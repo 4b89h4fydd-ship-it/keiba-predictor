@@ -117,11 +117,8 @@ if(root){
   setInterval(function(){
     if(state.view!=="home"||state.date!==todayJst()||document.visibilityState==="hidden")return;
     const shared=window.ARVEXQUnifiedHome;
-    const panel=root.querySelector('.arv-realtime-section');
-    if(!panel||!shared)return;
+    if(!shared||!root.querySelector('.arv-all-panel'))return;
     const rows=(state.day||emptyDay()).races||[];
-    const signature=shared.liveSignature('boat',rows,state.date);
-    if(panel.getAttribute('data-live-signature')!==signature)
-      panel.outerHTML=shared.liveRaces('boat',rows,state.date);
+    shared.syncLiveUI('boat',rows,state.date,root);
   },10000);
 }
