@@ -76,11 +76,11 @@ def merge_public(current: dict | None, incoming: dict) -> dict:
                 if r.get(key) and r[key] != old[key]:
                     raise ValueError("Immutable pre-off " + key + " changed for " + r["id"])
                 newer[key] = old[key]
-        if old.get("result", {}).get("status") == "confirmed":
-            if r.get("result", {}).get("status") == "confirmed" and r["result"] != old["result"]:
+        if (old.get("result") or {}).get("status") == "confirmed":
+            if (r.get("result") or {}).get("status") == "confirmed" and r["result"] != old["result"]:
                 raise ValueError("Confirmed official result changed for " + r["id"])
             newer["result"] = old["result"]
-        if old.get("odds3t", {}).get("updatedAt") and not r.get("odds3t"):
+        if (old.get("odds3t") or {}).get("updatedAt") and not r.get("odds3t"):
             newer["odds3t"] = old["odds3t"]
         if old.get("entries") and not r.get("entries"):
             newer["entries"] = old["entries"]
