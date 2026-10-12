@@ -100,12 +100,18 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     await fresh.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
     const home=await fresh.newPage();
     await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
-    for(const [circuit,tracks] of [['中央',['京都','東京']],['地方',['佐賀','帯広ば','高知']]]){
+    // Only demand venues that genuinely have races on this exact audited day.
+    // An inactive venue (e.g. 高知 on 2026-10-12) must never be fabricated
+    // to satisfy a stale UI test.
+    for(const circuit of ['中央','地方']){
+      const tracks=[...new Set(records.filter(r=>r.circuit===circuit).map(r=>r.track))];
+      assert.ok(tracks.length>0,'no verified '+circuit+' race venues in audit');
       await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
-      // Current shared home lists both circuits without a central/local chooser.
-      for(const track of tracks)
+      for(const track of tracks){
         await home.locator('.arv-all-panel [data-track="'+track+'"][data-circuit="'+circuit+'"]').first()
           .waitFor({state:'visible',timeout:30000});
+      }
+      console.log('PRODUCTION_VERIFIED_VENUE_HOME',circuit,JSON.stringify(tracks));
     }
     if(day==='2026-10-10'){
       // Selected races live under Home -> 厳選レース -> 地方, not the venue list.
