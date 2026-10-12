@@ -36,7 +36,7 @@ jobs:
           node tests/boat_all_races_smoke.mjs
       - name: Install iPhone Chromium and WebKit browsers
         run: |
-          npm install --no-save playwright
+          npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium webkit
       - name: Verify actual production 1R–12R layout and darkening on iPhone
         env:
