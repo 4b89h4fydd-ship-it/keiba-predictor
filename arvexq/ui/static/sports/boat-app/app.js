@@ -39,7 +39,8 @@ function home(){
   const hero=shared?shared.hero():'<div class="arv-unified-hero"></div>';
   const date=shared?shared.dateBar(state.date):'';
   const actions=shared?shared.buttons('boat'):'';
-  return hero+'<div class="arv-unified-body">'+date+actions+allBoatRaces(day)+'</div>';
+  return hero+'<div class="arv-unified-body">'+date+actions+
+    (shared?shared.liveRaces('boat',day.races||[],state.date):'')+allBoatRaces(day)+'</div>';
 }
 function subheader(title,back="home"){
   const label=title.replace(/^本日の/,"").replace(/^当日の/,"");
@@ -92,7 +93,7 @@ if(root){
     if(b.dataset.venue){route("races",b.dataset.venue);return}
     if(b.dataset.race){
       const race=(state.day||emptyDay()).races.find(r=>r.id===b.dataset.race);
-      if(race){state.raceReturnView=state.view==="home"?"home":"races";route("race",race.venue,race.id);}
+      if(race){state.raceReturnView="races";route("race",race.venue,race.id);}
       return;
     }
     if(b.dataset.back){
@@ -112,4 +113,15 @@ if(root){
   setInterval(function(){
     if(state.date===todayJst()&&!state.loading&&document.visibilityState!=="hidden")refresh();
   },60000);
+  // Keep the next race moving even when no updated data file is published.
+  setInterval(function(){
+    if(state.view!=="home"||state.date!==todayJst()||document.visibilityState==="hidden")return;
+    const shared=window.ARVEXQUnifiedHome;
+    const panel=root.querySelector('.arv-realtime-section');
+    if(!panel||!shared)return;
+    const rows=(state.day||emptyDay()).races||[];
+    const signature=shared.liveSignature('boat',rows,state.date);
+    if(panel.getAttribute('data-live-signature')!==signature)
+      panel.outerHTML=shared.liveRaces('boat',rows,state.date);
+  },10000);
 }

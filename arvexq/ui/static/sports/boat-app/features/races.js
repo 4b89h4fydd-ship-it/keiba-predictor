@@ -7,12 +7,23 @@ const digits=["","①","②","③","④","⑤","⑥"];
 export function raceList(day,venue){
   const list=day.races.filter(r=>r.venue===venue).sort((a,b)=>a.raceNo-b.raceNo);
   if(!list.length)return '<p class="boat-muted">この会場の検証済みレースは未取得です。開催の有無は未確認です。</p>';
-  // Three grid columns only: placing the forecast as a fourth direct child
-  // previously created an unintended second row on narrow venue pages.
-  return '<div class="boat-race-grid">'+list.map(r=>'<button type="button" data-race="'+esc(r.id)+'">'+
-    '<strong>'+r.raceNo+'R</strong><span><b>'+esc(r.title||"")+'</b>'+
-    (usableForecast(r)?'<em>AI予想あり</em>':'<em class="pending">分析待ち</em>')+
-    '</span><small>'+esc(r.closeTime||"時刻未取得")+'</small></button>').join("")+'</div>';
+  // Same compact 1R–12R grid as the horse venue page. Missing cards are
+  // disabled rather than falsely labelled cancelled.
+  const byNo=new Map(list.map(r=>[r.raceNo,r]));
+  return '<div class="arv-all-races-grid boat-venue-race-grid">'+
+    Array.from({length:12},(_,i)=>{
+      const n=i+1,r=byNo.get(n);
+      if(!r)return '<button class="arv-all-race unavailable" type="button" disabled>'+
+        '<strong>'+n+'R</strong><small>未取得</small></button>';
+      const cancelled=/cancelled|canceled|abandoned|中止|取止|取消|不成立/i.test(
+        String(r.result?.status||r.status||''));
+      if(cancelled)return '<button class="arv-all-race unavailable" type="button" disabled>'+
+        '<strong>'+n+'R</strong><small>中止</small></button>';
+      const done=r.result?.status==="confirmed"?" finished":"";
+      return '<button type="button" class="arv-all-race'+done+'" data-race="'+esc(r.id)+
+        '" aria-label="'+esc(venue+' '+n+'R '+(r.closeTime||"時刻未取得"))+'">'+
+        '<strong>'+n+'R</strong><small>'+esc(r.closeTime||"未取得")+'</small></button>';
+    }).join("")+'</div>';
 }
 export function detail(r){
   if(!r)return "";

@@ -92,3 +92,20 @@ html body .arv-dated-subbar .arv-sub-close{display:grid;place-items:center;min-w
 html body .arv-dated-subbar .arv-sub-date{position:relative;display:grid;place-items:center;min-width:0;height:40px;padding:2px;border:1px solid #4b7897;border-radius:9px;background:#172f43;color:#eefbff;font-weight:800;font-size:12px}
 html body .arv-dated-subbar .arv-sub-date>input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2}
 @media(max-width:360px){html body .smart-shell .smart-topbar.arv-dated-subbar{grid-template-columns:34px minmax(0,1fr) minmax(90px,112px) 34px!important;gap:3px!important;padding:6px 4px!important}html body .arv-dated-subbar .arv-sub-back,html body .arv-dated-subbar .arv-sub-close{min-width:32px;width:32px}html body .arv-dated-subbar .arv-sub-date{font-size:11px}html body .arv-dated-subbar .smart-head-copy strong{font-size:14px!important}}
+
+
+/* One scheduled-next-race panel shared by horse and BOAT. Cards auto-advance. */
+.arv-realtime-section{border:1px solid #517f9b;border-radius:13px;background:linear-gradient(155deg,#112b40,#0a1b2a);padding:10px;min-width:0}
+.arv-realtime-section>header{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:0 0 7px;border-bottom:1px solid #345970}
+.arv-realtime-section>header>b{font-size:16px;color:#f5faff}
+.arv-realtime-section>header>small{font-size:10px;color:#a7d4ee;text-align:right}
+.arv-realtime-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}
+.arv-realtime-race{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3px 5px;padding:8px 9px;min-height:64px;border-radius:10px;border:1px solid #4984ad;background:linear-gradient(140deg,#183f5e,#102a40);color:#f0f8ff;text-align:left;font:inherit;cursor:pointer;min-width:0}
+.arv-realtime-race.soon{border-color:#ddbb65;background:linear-gradient(140deg,#3d351a,#163248)}
+.arv-realtime-race .arv-realtime-venue{font-size:11px;color:#bad5e9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;grid-column:1/3}
+.arv-realtime-race>b{font-size:19px;line-height:1.1}
+.arv-realtime-race .arv-realtime-clock{font-size:14px;font-weight:800;text-align:right;color:#d8efff}
+.arv-realtime-race>small{font-size:10px;color:#ffdf9b;grid-column:1/3}
+.arv-realtime-empty{font-size:12px;color:#bdd3e1;padding:8px 0 0;margin:0}
+.boat-page .boat-venue-race-grid{margin-top:9px}
+@media(max-width:360px){.arv-realtime-grid{gap:5px}.arv-realtime-race{padding:7px;min-height:59px}.arv-realtime-race>b{font-size:17px}.arv-realtime-race .arv-realtime-clock{font-size:12px}}

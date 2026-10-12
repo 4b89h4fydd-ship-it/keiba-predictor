@@ -3742,7 +3742,7 @@ function renderHomeSectionPage(){
   state.homePage=null;state.pickCircuit=null;return renderHome()
 }
 function renderHome(){
-  return '<div class="smart-shell smart-home">'+smartHomeHero()+'<main class="smart-main smart-home-main">'+(window.ARVEXQUnifiedHome?'<div class="arv-unified-body">'+window.ARVEXQUnifiedHome.dateBar(state.date)+window.ARVEXQUnifiedHome.buttons('horse'): '')+(window.ARVEXQHorsePortal?window.ARVEXQHorsePortal.home(state.races||[],{date:state.date,today:today(),nowMinutes:nowMins(),selected:homePickCounts('selected'),special:homePickCounts('special')}):smartHomeHub())+(state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+(window.ARVEXQUnifiedHome?'</div>':'')+'</main>'+cinematicFooter()+'</div>'
+  return '<div class="smart-shell smart-home">'+smartHomeHero()+'<main class="smart-main smart-home-main">'+(window.ARVEXQUnifiedHome?'<div class="arv-unified-body">'+window.ARVEXQUnifiedHome.dateBar(state.date)+window.ARVEXQUnifiedHome.buttons('horse')+window.ARVEXQUnifiedHome.liveRaces('horse',state.races||[],state.date): '')+(window.ARVEXQHorsePortal?window.ARVEXQHorsePortal.home(state.races||[],{date:state.date,today:today(),nowMinutes:nowMins(),selected:homePickCounts('selected'),special:homePickCounts('special')}):smartHomeHub())+(state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+(window.ARVEXQUnifiedHome?'</div>':'')+'</main>'+cinematicFooter()+'</div>'
 }
 function volatilityBadge(r){
   var v=r&&r.volatility||{},ready=v.ready===true&&n(v.score)>0,label=ready?String(v.label||'標'):'…',
@@ -5154,5 +5154,13 @@ function specialForecastRaceCandidates(){
     return !!(r&&r.id&&m&&m.special===true)
   }).slice().sort(raceChronologicalCompare)
 }
+setInterval(function(){
+  if(document.visibilityState==='hidden'||state.date!==today()||state.race||state.raceLoading||
+     state.track||state.picker||state.homePage)return;
+  var shared=window.ARVEXQUnifiedHome,el=document.querySelector('.smart-shell.smart-home .arv-realtime-section');
+  if(!shared||!el)return;
+  var fresh=shared.liveSignature('horse',state.races||[],state.date);
+  if(fresh!==el.getAttribute('data-live-signature'))render();
+},10000);
 installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
 })();
