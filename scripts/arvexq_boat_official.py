@@ -214,6 +214,14 @@ def acquire(day:date,cache_dir:Path)->dict[str,Any]:
     by_program={(str(x.venue_code).zfill(2),x.race_number) for x in result.races}
     missing=sorted(by_close-by_program)
     if missing:
+        for name,source in parts.items():
+            section=sched.parse({name:source})
+            code=next(iter({str(r.venue_code).zfill(2) for r in section.races}),"?")
+            print("OFFICIAL_B_SECTION_AUDIT",name,"venueCode=",code,
+                  "raceCount=",len(section.races),"entrants=",len(section.entries),
+                  "opening=",repr(source.splitlines()[:2])[:170])
+        print("OFFICIAL_B_MISSING_VENUES",sorted({v for v,_ in missing}),
+              "existingVenues=",sorted({v for v,_ in by_program}))
         raise RuntimeError(f"Official B venue segmentation incomplete: {len(missing)}/{len(by_close)} missing; first {missing[:12]}")
     if len(result.races)!=len(by_close):
         raise RuntimeError("Official B race count mismatch; refusing partial publication")
