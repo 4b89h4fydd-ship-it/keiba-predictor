@@ -63,7 +63,7 @@
         (cards||'<p class="arv-all-empty">この日の開催データは未取得です。未取得を「開催なし」とは判定しません。</p>')+'</div>';
     };
     return '<section class="arv-all-panel" aria-label="各会場の全レース">'+
-      '<header class="arv-all-title"><h2>各会場の全レース</h2><p>1R〜12Rを選択するとレース詳細へ</p></header>'+
+      '<header class="arv-all-title"><h2>各会場の全レース</h2><p>1R〜12Rを表示・自動更新　終了時刻を過ぎたレースは暗く表示</p></header>'+
       group("中央")+group("地方")+'</section>';
   }
   function home(rows,opts={}){return allRaces(rows,opts)}

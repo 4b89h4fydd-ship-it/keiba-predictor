@@ -39,8 +39,7 @@ function home(){
   const hero=shared?shared.hero():'<div class="arv-unified-hero"></div>';
   const date=shared?shared.dateBar(state.date):'';
   const actions=shared?shared.buttons('boat'):'';
-  return hero+'<div class="arv-unified-body">'+date+actions+
-    (shared?shared.liveRaces('boat',day.races||[],state.date):'')+allBoatRaces(day)+'</div>';
+  return hero+'<div class="arv-unified-body">'+date+allBoatRaces(day)+actions+'</div>';
 }
 function subheader(title,back="home"){
   const label=title.replace(/^本日の/,"").replace(/^当日の/,"");
@@ -115,9 +114,9 @@ if(root){
   },60000);
   // Keep the next race moving even when no updated data file is published.
   setInterval(function(){
-    if(state.view!=="home"||state.date!==todayJst()||document.visibilityState==="hidden")return;
+    if(!["home","races"].includes(state.view)||document.visibilityState==="hidden")return;
     const shared=window.ARVEXQUnifiedHome;
-    if(!shared||!root.querySelector('.arv-all-panel'))return;
+    if(!shared||!root.querySelector('.arv-all-panel,.boat-venue-race-grid'))return;
     const rows=(state.day||emptyDay()).races||[];
     shared.syncLiveUI('boat',rows,state.date,root);
   },10000);

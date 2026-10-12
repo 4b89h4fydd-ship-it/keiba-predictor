@@ -52,7 +52,9 @@ assert.doesNotMatch(liveRaces('boat',[],today,at('10:01')),/データ確認 0場
 for(const path of ['arvexq/ui/static/app.js','arvexq/ui/static/sports/boat-app/app.js']){
   const js=fs.readFileSync(path,'utf8');
   const mode=path.endsWith('boat-app/app.js')?'boat':'horse';
-  assert.match(js,new RegExp("liveRaces\\('"+mode+"'"));
+  if(mode==='horse')assert.match(js,/ARVEXQHorsePortal\.home/);
+  else assert.match(js,/allBoatRaces\(day\)/);
+  assert.doesNotMatch(js,new RegExp("liveRaces\\('"+mode+"'"));
   assert.match(js,new RegExp("syncLiveUI\\('"+mode+"'"));
   assert.match(js,/10000/);
 }

@@ -68,3 +68,10 @@ body:has(.smart-home){background:#0b171f!important}
   .arv-all-race{min-height:60px}
   .arv-all-race .arv-race-state{font-size:8px}
 }
+
+/* Home v20261012: the all-venue 1R–12R list is the sole race-navigation
+   section between the date selector and optional AI shortcuts. */
+.smart-home .arv-unified-body>.arv-all-panel,
+.boat-page .arv-unified-body>.arv-all-panel{margin-top:8px}
+.smart-home .arv-unified-body>.arv-unified-actions,
+.boat-page .arv-unified-body>.arv-unified-actions{margin-top:12px}

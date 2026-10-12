@@ -46,7 +46,7 @@ export function allBoatRaces(day,{now=new Date()}={}){
   // Do not print 24 inactive venues as a giant list. Without confirmed schedule
   // feed they are unknown, not proof that a race meeting was cancelled.
   return '<section class="arv-all-panel" aria-label="各会場の全レース">'+
-    '<header class="arv-all-title"><h2>各会場の全レース</h2><p>締切時刻とレース番号から直接詳細へ</p></header>'+
+    '<header class="arv-all-title"><h2>各会場の全レース</h2><p>1R〜12Rを表示・自動更新　締切を過ぎたレースは暗く表示</p></header>'+
     '<div class="arv-all-circuit"><div class="arv-all-circuit-label"><b>競艇</b><small>データ確認 '+active.length+'場</small></div>'+
     (cards||'<p class="arv-all-empty">開催・出走データは未取得です。未取得を「開催なし」とは判定しません。</p>')+
     '</div></section>';

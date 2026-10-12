@@ -31,7 +31,9 @@ async function check(kind,name){
     await page.waitForFunction(()=>document.querySelectorAll('.boat-page .arv-all-panel button[data-race]').length===3,{timeout:20000});
     assert.equal(await cells.count(),24,name+' expected two 12R venue grids');
     assert.equal(await portal.locator('button.arv-all-race[data-race]').count(),3);
-    assert.equal(await page.locator('.arv-realtime-section').count(),1);
+    assert.equal(await page.locator('.arv-realtime-section').count(),0);
+    assert.equal(await page.locator('.arv-all-panel').count(),1);
+    assert.equal(await page.getByText('開催場一覧',{exact:true}).count(),0);
     const timeline=await page.evaluate(([records,day])=>{
       const x=window.ARVEXQUnifiedHome;
       const start=new Date(day+'T10:20:00+09:00');
@@ -63,7 +65,8 @@ async function check(kind,name){
     await page.locator('.boat-venue-race-grid').waitFor({state:'visible',timeout:20000});
     assert.equal(await page.locator('.boat-venue-race-grid button').count(),12);
     await page.locator('.boat-subheader button[data-view="home"]').click();
-    await page.locator('.arv-realtime-section').waitFor({state:'visible'});
+    await page.locator('.arv-all-panel').waitFor({state:'visible'});
+    assert.equal(await page.locator('.arv-realtime-section').count(),0);
     assert.equal(errors.filter(x=>/ReferenceError|SyntaxError|TypeError/.test(x)).length,0,errors.join(';'));
     console.log('REALTIME_RACE_ROUTE_IOS_PARITY_OK',name);
   }finally{await browser.close()}
