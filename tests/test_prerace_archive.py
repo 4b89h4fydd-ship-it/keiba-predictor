@@ -45,6 +45,36 @@ class ServerSealTests(unittest.TestCase):
         self.assertEqual(preserved["preRacePrediction"], d["preRacePrediction"])
         self.assertEqual(preserved["result"]["status"], "確定")
 
+    def test_server_seals_original_honmei_role_without_posthoc_relabel(self):
+        d = deepcopy(self.d)
+        honmei = d["horses"][1]["integratedEvaluation"]
+        honmei.update({"mark": "◎", "honmeiRole": "axis",
+                       "honmeiGrade": "A", "honmeiEligible": True})
+        saved = seal_detail(d, forecast(d, self.now), self.now)
+        record = saved["preRacePrediction"]
+        q = record["horses"][1]
+        self.assertEqual(q["honmeiRole"], "axis")
+        self.assertEqual(q["honmeiGrade"], "A")
+        self.assertTrue(q["podiumAxisEligible"])
+        changed = deepcopy(saved)
+        changed["horses"][1]["integratedEvaluation"].update({
+            "mark": "◎", "honmeiRole": "win", "honmeiGrade": "C",
+            "honmeiEligible": False,
+        })
+        changed["result"] = {"status": "確定", "finishers": [{"finish": 1, "horseNumber": 3}]}
+        self.assertEqual(restore_seal(saved, changed)["preRacePrediction"], record)
+
+    def test_seal_does_not_derive_grade_from_generic_ability_grade(self):
+        d = deepcopy(self.d)
+        d["horses"][1]["integratedEvaluation"] = {
+            "mark": "◎", "grade": "S", "score": 92,
+        }
+        saved = seal_detail(d, forecast(d, self.now), self.now)
+        q = saved["preRacePrediction"]["horses"][1]
+        self.assertEqual(q["lockedEvaluation"]["grade"], "S")
+        self.assertNotIn("honmeiGrade", q)
+        self.assertNotIn("honmeiRole", q)
+
     def test_shadow_stays_as_captured_through_later_result_updates(self):
         d = seal_detail(self.d, forecast(self.d,self.now),self.now)
         self.assertIn("researchShadow",d)
