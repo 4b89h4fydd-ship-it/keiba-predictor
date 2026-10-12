@@ -122,7 +122,9 @@ jobs:
           node tests/boat_prediction_and_tickets_smoke.mjs
           node tests/boat_race_detail_smoke.mjs
           node tests/boat_daily_high_payout_smoke.mjs
+          python -m py_compile scripts/arvexq_boat_ingest.py
           python -m unittest discover -s tests -p 'test_boat_feed_publisher.py' -v
+          python -m unittest discover -s tests -p 'test_boat_licensed_ingest.py' -v
           node tests/boat_start_exhibition_smoke.mjs
           node tests/boat_all_races_smoke.mjs
           node scripts/arvexq_horse_portal_smoke.js

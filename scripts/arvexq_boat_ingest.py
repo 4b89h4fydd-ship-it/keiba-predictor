@@ -82,7 +82,9 @@ def merge_public(current: dict | None, incoming: dict) -> dict:
             if (r.get("result") or {}).get("status") == "confirmed" and r["result"] != old["result"]:
                 raise ValueError("Confirmed official result changed for " + r["id"])
             newer["result"] = old["result"]
-        if (old.get("odds3t") or {}).get("updatedAt") and not r.get("odds3t"):
+        prior_odds = (old.get("odds3t") or {}).get("updatedAt")
+        new_odds = (r.get("odds3t") or {}).get("updatedAt")
+        if prior_odds and (not new_odds or str(prior_odds) > str(new_odds)):
             newer["odds3t"] = old["odds3t"]
         if old.get("entries") and not r.get("entries"):
             newer["entries"] = old["entries"]
