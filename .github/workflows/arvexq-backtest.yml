@@ -67,6 +67,14 @@ jobs:
             tail -n 80 backtest-v206/run.log || true
             exit 1
           fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path("backtest-v206/report.json").read_text(encoding="utf-8"))
+          if report.get("raceCount",0)<8 or report.get("error"):
+              raise SystemExit("BACKTEST_UNUSABLE_INSUFFICIENT_FINAL_RACES")
+          print("BACKTEST_VALIDATED_FINAL_RACES",report["raceCount"])
+          PY
           echo "v206 backtest complete"
 
       - name: Show report in Actions summary
