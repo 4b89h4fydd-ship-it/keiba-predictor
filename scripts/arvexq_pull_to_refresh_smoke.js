@@ -8,12 +8,19 @@ async function swipe(page){
   return page.evaluate(()=>{
     scrollTo(0,0);
     const target=document.querySelector('.arv-unified-hero img')||document.body;
-    const touch=(y)=>new Touch({identifier:31,target,clientX:120,clientY:y,pageX:120,pageY:y,screenX:120,screenY:y});
+    // Playwright WebKit exposes TouchEvent but Touch has an illegal public
+    // constructor on Linux. Dispatch DOM touch-shaped events instead; the
+    // application listens for these standard payload fields.
+    const touch=(y)=>({identifier:31,target,clientX:120,clientY:y,pageX:120,pageY:y,screenX:120,screenY:y});
     function fire(type,now){
-      target.dispatchEvent(new TouchEvent(type,{bubbles:true,cancelable:true,
-        touches:type==='touchend'?[]:[touch(now)],
-        targetTouches:type==='touchend'?[]:[touch(now)],
-        changedTouches:[touch(now)]}));
+      const ev=new Event(type,{bubbles:true,cancelable:true});
+      const active=type==='touchend'?[]:[touch(now)];
+      Object.defineProperties(ev,{
+        touches:{value:active},
+        targetTouches:{value:active},
+        changedTouches:{value:[touch(now)]}
+      });
+      target.dispatchEvent(ev);
     }
     const before=Number(document.documentElement.dataset.arvexqPullRefreshCount||0);
     fire('touchstart',160);
