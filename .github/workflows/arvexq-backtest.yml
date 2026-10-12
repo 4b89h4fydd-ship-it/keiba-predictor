@@ -15,6 +15,10 @@ name: ARVEXQ Backtest v206
         default: "2500"
         type: choice
         options: ["800", "1500", "2500", "5000"]
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/arvexq-backtest.yml
   schedule:
     - cron: "45 14 * * *"
 
@@ -44,8 +48,8 @@ jobs:
       - name: Resolve backtest window
         shell: bash
         run: |
-          DAYS="${{ github.event.inputs.days }}"; [ -n "$DAYS" ] || DAYS=28
-          ITER="${{ github.event.inputs.iterations }}"; [ -n "$ITER" ] || ITER=2500
+          DAYS="${{ github.event.inputs.days }}"; [ -n "$DAYS" ] || DAYS=7
+          ITER="${{ github.event.inputs.iterations }}"; [ -n "$ITER" ] || ITER=800
           echo "BACKTEST_DAYS=$DAYS" >> "$GITHUB_ENV"
           echo "BACKTEST_ITERATIONS=$ITER" >> "$GITHUB_ENV"
           echo "ARVEXQ v206 days=$DAYS iterations=$ITER"
