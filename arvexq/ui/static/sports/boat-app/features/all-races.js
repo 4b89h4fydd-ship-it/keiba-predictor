@@ -13,23 +13,38 @@ function timeText(r){
 export function allBoatRaces(day,{now=new Date()}={}){
   const races=Array.isArray(day?.races)?day.races:[];
   const active=VENUES.filter(venue=>races.some(r=>r.venue===venue));
-  const jstDay=new Date(now.getTime()+9*3600000).toISOString().slice(0,10);
+  const shared=globalThis.ARVEXQUnifiedHome;
+  const today=new Date(now.getTime()+9*3600000).toISOString().slice(0,10);
+  const model=shared?.liveModel?shared.liveModel('boat',races,day.date,now):[];
+  const byLive=new Map(model.map(row=>[row.id,row]));
   const cards=active.map(venue=>{
     const byNo=new Map(races.filter(r=>r?.venue===venue&&Number.isInteger(r.raceNo))
       .map(r=>[r.raceNo,r]));
+    const ended=races.filter(row=>row?.venue===venue&&(
+      row.result?.status==='confirmed'||(
+        Number.isFinite(Date.parse(String(row.closeAt||'')))&&
+        Date.parse(String(row.closeAt||''))<=now.getTime())
+    )).length;
     const cells=Array.from({length:12},(_,idx)=>{
       const no=idx+1,r=byNo.get(no);
       if(!r||isCancelled(r))return '<button type="button" disabled aria-disabled="true" class="arv-all-race unavailable">'+
         '<strong>'+no+'R</strong><small>'+esc(r&&timeText(r)||"未取得")+'</small></button>';
-      const time=timeText(r),t=Date.parse(String(r.closeAt||""));
+      const time=timeText(r),t=Date.parse(String(r.closeAt||''));
       const diff=Number.isFinite(t)?Math.ceil((t-now.getTime())/60000):null;
-      const result=r.result?.status==="confirmed"?"finished":diff!==null&&diff<0?"pending":
-        diff!==null&&diff<=10&&day.date===jstDay?"soon":"upcoming";
-      return '<button type="button" data-race="'+esc(r.id)+'" class="arv-all-race '+result+'"'+
-        ' aria-label="'+esc(venue+' '+no+'レース '+(time||"締切未取得"))+'">'+
-        '<strong>'+no+'R</strong><small>'+esc(time||"未取得")+'</small></button>';
+      const status=byLive.get(r.id)?.status||(
+        r.result?.status==='confirmed'?'finished':
+        diff!==null&&diff<=0?'elapsed':
+        diff!==null&&diff<=10&&day.date===today?'soon':
+        diff!==null?'upcoming':'unknown');
+      const next=byLive.get(r.id)?.next||false;
+      const label={finished:'確定',elapsed:'締切経過',soon:'まもなく',
+        upcoming:'締切前',unknown:'時刻未取得'}[status]||'';
+      return '<button type="button" data-race="'+esc(r.id)+'" class="arv-all-race '+status+(next?' next':'')+'"'+
+        ' data-race-state="'+status+'" aria-label="'+esc(venue+' '+no+'レース '+(time||'締切未取得')+' '+label)+'">'+
+        '<strong>'+no+'R</strong><small>'+esc(time||"未取得")+'</small>'+
+        '<em class="arv-race-state">'+label+'</em></button>';
     }).join("");
-    return '<div class="arv-all-venue"><div class="arv-all-venue-head"><div><b>'+esc(venue)+'</b><span>1R〜12R</span></div>'+
+    return '<div class="arv-all-venue"><div class="arv-all-venue-head"><div><b>'+esc(venue)+'</b><span>1R〜12R・経過 '+ended+'R</span></div>'+
       '<button type="button" data-venue="'+esc(venue)+'" class="arv-all-go">会場ページへ ›</button></div>'+
       '<div class="arv-all-races-grid">'+cells+'</div></div>';
   }).join("");
