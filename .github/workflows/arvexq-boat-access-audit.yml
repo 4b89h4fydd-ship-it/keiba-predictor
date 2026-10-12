@@ -1,0 +1,65 @@
+name: ARVEXQ BOAT Cloudflare Access Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/arvexq-boat-access-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  access-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      BOAT_HOST: kraizweb1.4b89h4fydd.workers.dev
+    steps:
+      - name: Check existing Access application and API capability without printing secrets
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request,urllib.error
+          acc=os.getenv('CLOUDFLARE_ACCOUNT_ID','')
+          token=os.getenv('CLOUDFLARE_API_TOKEN','')
+          host=os.environ['BOAT_HOST']
+          if not acc or not token:
+              raise SystemExit('ACCESS_AUDIT_BLOCKED: account ID or API token not configured')
+          url=f'https://api.cloudflare.com/client/v4/accounts/{acc}/access/apps?per_page=100'
+          req=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/json'})
+          try:
+              with urllib.request.urlopen(req,timeout=20) as response:
+                  data=json.load(response)
+          except urllib.error.HTTPError as exc:
+              print('ACCESS_AUDIT_API_UNAVAILABLE', 'HTTP',exc.code,
+                    'requires Access Apps and Policies Read/Write token permission')
+              raise SystemExit(2)
+          except Exception as exc:
+              print('ACCESS_AUDIT_REQUEST_FAILED',type(exc).__name__)
+              raise SystemExit(2)
+          if not data.get('success'):
+              print('ACCESS_AUDIT_QUERY_REJECTED')
+              raise SystemExit(2)
+          relevant=[]
+          for app in data.get('result') or []:
+              addresses=[str(app.get('domain') or '')]
+              addresses.extend(str(x) for x in (app.get('self_hosted_domains') or []))
+              for dest in app.get('destinations') or []:
+                  addresses.append(str(dest.get('uri') or dest.get('domain') or ''))
+              if any(host in addr for addr in addresses):
+                  relevant.append({
+                      'name':app.get('name',''), 'type':app.get('type',''),
+                      'paths':[addr.replace(host,'HOST') for addr in addresses if host in addr],
+                      'policyCount':len(app.get('policies') or []),
+                  })
+          print('ACCESS_AUDIT_API_OK', 'existingAppCount=',len(relevant))
+          print('ACCESS_AUDIT_EXISTING_APPS',json.dumps(relevant,ensure_ascii=False))
+          if not relevant:
+              print('ACCESS_SETUP_NEEDED: no Access application for BOAT host')
+          else:
+              print('ACCESS_CONFIGURATION_FOUND_VERIFY_POLICIES_AND_PATHS')
+          PY
