@@ -136,12 +136,7 @@ for filename in RESEARCH_ASSETS:
 research_hash = hashlib.sha256(b"|".join((RESEARCH_PATH / filename).read_bytes() for filename in RESEARCH_ASSETS)).hexdigest()[:12]
 
 SPORT_DIR = STATIC / "sports"
-SPORT_FILES = (
-    "switch.css", "all-races.css", "unified-home.css", "unified-home.js", "pull-refresh.js", "pull-refresh.css", "horse-portal.js", "boat.html", "boat-app/layout.css", "boat-app/app.js",
-    "boat-app/core/contract.js", "boat-app/core/feed.js", "boat-app/core/stats.js", "boat-app/core/prediction-model.js", "boat-app/core/ticket-engine.js", "boat-app/core/daily-selection.js", "boat-app/core/start-exhibition.js",
-    "boat-app/features/races.js", "boat-app/features/start-exhibition.js", "boat-app/features/selected.js",
-    "boat-app/features/ai-stats.js", "boat-app/features/special.js", "boat-app/features/all-races.js", "boat-app/features/tickets.js", "boat-app/features/entrant-analysis.js",
-)
+SPORT_FILES = ("all-races.css", "unified-home.css", "unified-home.js", "pull-refresh.js", "pull-refresh.css", "horse-portal.js")
 for filename in SPORT_FILES:
     if not (SPORT_DIR / filename).is_file():
         raise RuntimeError(f"missing independent sport asset: {filename}")
@@ -167,9 +162,9 @@ if fingerprint_replacements != 1 or ("?fix=" + core_asset_hash) not in index_htm
     raise RuntimeError("App JS content fingerprint was not injected; refusing stale iPhone deploy")
 manifest = strings["MANIFEST"]
 # PWA icons must change their URLs when replaced, otherwise iOS retains the old
-# icon after users install or update the combined horse/boat app.
-manifest = manifest.replace("arvexq-icon-v175-192.png","arvexq-icon-v181-192.png")
-manifest = manifest.replace("arvexq-icon-v175-512.png","arvexq-icon-v181-512.png")
+# icon after users install or update the horse-only app.
+manifest = manifest.replace("arvexq-icon-v175-192.png","arvexq-icon-v360-192.png")
+manifest = manifest.replace("arvexq-icon-v175-512.png","arvexq-icon-v360-512.png")
 sw = strings["SW"]
 
 # Prediction/mark logic is owned by arvexq/ui/static/app.js and the server-side
@@ -223,13 +218,9 @@ if "</body>" in index_html:
 
 (DIST / "index.html").write_text(index_html, encoding="utf-8")
 (DIST / "404.html").write_text(index_html, encoding="utf-8")
-# The horse app remains the default. Boat has its own HTML, CSS and JS.
+# Preserve /keiba/ as a horse-only alias.
 (DIST / "keiba").mkdir(exist_ok=True)
 (DIST / "keiba" / "index.html").write_text(index_html, encoding="utf-8")
-boat_html = (SPORT_DIR / "boat.html").read_text(encoding="utf-8")
-boat_html = boat_html.replace("__ARVEXQ_SPORT_HASH__", sport_hash)
-(DIST / "kyotei").mkdir(exist_ok=True)
-(DIST / "kyotei" / "index.html").write_text(boat_html, encoding="utf-8")
 for route in ("venue", "race"):
     (DIST / route).mkdir()
     (DIST / route / "index.html").write_text(index_html, encoding="utf-8")
@@ -241,7 +232,7 @@ for route in ("venue", "race"):
 compat_css = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v130")
 compat_app = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v147","v146","v145","v141","v140","v139","v138","v137","v136","v133")
 compat_arvexq = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303")
-for name in ("manifest-arvexq-v181.webmanifest","manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
+for name in ("manifest-arvexq-v360.webmanifest","manifest-arvexq-v181.webmanifest","manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
     (DIST / name).write_text(manifest, encoding="utf-8")
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
 (DIST / f"sw-{BUILD_VERSION}-reset.js").write_text(sw, encoding="utf-8")
@@ -266,18 +257,10 @@ for filename in STYLE_MODULES:
 for filename in RESEARCH_ASSETS:
     shutil.copy2(RESEARCH_PATH / filename, DIST / "research" / filename)
 
-# Ship dedicated sport resources without merging boat logic into the horse app.
+# Ship only horse racing UI resources.
 (DIST / "sports").mkdir(exist_ok=True)
-shutil.copy2(SPORT_DIR / "switch.css", DIST / "sports" / "switch.css")
-# Binary hero file is sourced from the user-approved dual-sport artwork.
-shutil.copy2(STATIC / "arvexq-unified-hero.webp", DIST / "sports" / "arvexq-unified-hero.webp")
-for filename in ("all-races.css","unified-home.css","unified-home.js","horse-portal.js","pull-refresh.js","pull-refresh.css"):
+for filename in SPORT_FILES:
     shutil.copy2(SPORT_DIR / filename, DIST / "sports" / filename)
-shutil.copytree(SPORT_DIR / "boat-app", DIST / "sports" / "boat-app")
-# One audited boat race/odds/result snapshot per date. The independent data
-# publisher enforces permissions and quality; the frontend uses this exact path.
-if (SPORT_DIR / "boat-data").is_dir():
-    shutil.copytree(SPORT_DIR / "boat-data", DIST / "sports" / "boat-data")
 
 # Independent UI feature modules kept outside the main app bundle.
 for extra_asset in ("previous_ai_results.js",):
@@ -289,14 +272,14 @@ for extra_asset in ("previous_ai_results.js",):
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
 model_version = strings.get("AI_EVALUATION_VERSION", "").removeprefix("evidence-")
 (DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"four-pillar-authoritative","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
-redirects=["/venue /index.html 200","/race /index.html 200","/keiba /keiba/index.html 200","/kyotei /kyotei/index.html 200"]
+redirects=["/venue /index.html 200","/race /index.html 200","/keiba /keiba/index.html 200"]
 for v in compat_app:redirects.append(f"/app-{v}.js /app-{BUILD_VERSION}.js 302")
 for v in compat_arvexq:redirects.append(f"/arvexq-app-{v}.js /arvexq-app-{BUILD_VERSION}.js 302")
 for v in compat_css:redirects.append(f"/styles-arvexq-{v}.css /styles-arvexq-{BUILD_VERSION}.css 302")
 (DIST / "_redirects").write_text("\n".join(redirects)+"\n",encoding="utf-8")
 
 # All immutable assets above are referenced from index.html with a content hash
-# in their query string. Keep main JS/CSS and boat ES imports revalidating until
+# in their query string. Keep main JS/CSS revalidating until
 # every legacy or imported URL has a guaranteed content-addressed name.
 headers=[
     "/index.html","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
@@ -306,6 +289,7 @@ headers=[
     "/version.json","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
     "/manifest-arvexq-v175.webmanifest","  Cache-Control: no-cache, must-revalidate",
     "/manifest-arvexq-v181.webmanifest","  Cache-Control: no-cache, must-revalidate",
+    "/manifest-arvexq-v360.webmanifest","  Cache-Control: no-cache, must-revalidate",
     "/sw.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
     f"/sw-{BUILD_VERSION}-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
     "/sw-v328-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
@@ -326,15 +310,11 @@ headers=[
     "/styles/*","  Cache-Control: public, max-age=31536000, immutable",
     "/research/*","  Cache-Control: public, max-age=31536000, immutable",
     "/sports/*","  Cache-Control: no-cache, must-revalidate",
-    "/sports/switch.css","  Cache-Control: public, max-age=31536000, immutable",
-    "/sports/boat-app/layout.css","  Cache-Control: public, max-age=31536000, immutable",
     "/keiba/*","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
-    "/kyotei/*","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0",
     "/racecards/*","  Cache-Control: no-cache, must-revalidate",
     "/betting/*","  Cache-Control: public, max-age=31536000, immutable",
     "/previous_ai_results.js","  Cache-Control: no-cache, must-revalidate",
     "/arvexq-racing-hero.webp","  Cache-Control: public, max-age=604800",
-    "/sports/arvexq-unified-hero.webp","  Cache-Control: public, max-age=604800",
     "/arvexq-racing-detail.webp","  Cache-Control: public, max-age=604800",
     "/hero-horse.webp","  Cache-Control: public, max-age=604800",
     "/pace-preview.webp","  Cache-Control: public, max-age=604800",
@@ -347,12 +327,16 @@ headers=[
 (DIST / "arvexq-icon-v175-512.png").write_bytes(base64.b64decode(icons["512"]))
 (DIST / "arvexq-icon-192.png").write_bytes(base64.b64decode(icons["192"]))
 (DIST / "arvexq-icon-512.png").write_bytes(base64.b64decode(icons["512"]))
-# Keep old icon URLs for cache compatibility, but expose new correct-size
-# PWA images with content-versioned names to refresh iOS home-screen artwork.
-from scripts.arvexq_pwa_icon_resize import resize_indexed_png
-icon_source = STATIC / "arvexq-unified-icon-128.png"
-for label, pixels in (("touch-v181",180), ("icon-v181-192",192), ("icon-v181-512",512)):
-    (DIST / ("arvexq-" + label + ".png")).write_bytes(resize_indexed_png(icon_source,pixels))
+# Restore original horse-only icons and change icon URLs to refresh iOS.
+for label, data in (
+    ("arvexq-touch-v181.png", base64.b64decode(binary_b64["ARVEXQ_TOUCH_ICON_180"])),
+    ("arvexq-icon-v181-192.png", base64.b64decode(icons["192"])),
+    ("arvexq-icon-v181-512.png", base64.b64decode(icons["512"])),
+    ("arvexq-touch-v360.png", base64.b64decode(binary_b64["ARVEXQ_TOUCH_ICON_180"])),
+    ("arvexq-icon-v360-192.png", base64.b64decode(icons["192"])),
+    ("arvexq-icon-v360-512.png", base64.b64decode(icons["512"])),
+):
+    (DIST / label).write_bytes(data)
 assets={"CINEMATIC_HERO_WEBP":"arvexq-racing-hero.webp","CINEMATIC_DETAIL_WEBP":"arvexq-racing-detail.webp","HERO_HORSE_WEBP":"hero-horse.webp","PACE_PREVIEW_WEBP":"pace-preview.webp","ARVEXQ_LOGO_WEBP":"arvexq-logo.webp"}
 for var,filename in assets.items():
     if var in binary_b64:(DIST / filename).write_bytes(base64.b64decode(binary_b64[var]))

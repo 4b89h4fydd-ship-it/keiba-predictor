@@ -1,4 +1,4 @@
-/* SMALL: one iPhone/Android pull-to-refresh gesture for both ARVEXQ sports. */
+/* iPhone/Android pull-to-refresh gesture for horse racing. */
 (function(root){
   'use strict';
   let installed=false, refreshHandler=null, gesture=null, busy=false, timer=null;
@@ -51,7 +51,7 @@
     if(!t)return;
     const dy=t.clientY-gesture.y, dx=Math.abs(t.clientX-gesture.x);
     if(dx>Math.max(18,dy*.7)||dy<0){gesture=null;paint();return}
-    // iOS standalone homes have a fixed sport bar; body scroll can be zero
+    // iOS standalone homes have fixed headers; body scroll can be zero
     // even while nested content scrolls. Only refresh at document's top.
     if(readY()>2){gesture=null;paint();return}
     if(dy<6)return;
