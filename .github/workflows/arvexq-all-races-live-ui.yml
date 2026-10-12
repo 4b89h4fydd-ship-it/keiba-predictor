@@ -1,4 +1,4 @@
-name: ARVEXQ All-Races Live UI
+name: ARVEXQ Horse All-Races Live UI
 
 on:
   push:
@@ -8,10 +8,10 @@ on:
       - 'arvexq/ui/static/sports/unified-home.js'
       - 'arvexq/ui/static/sports/horse-portal.js'
       - 'arvexq/ui/static/sports/all-races.css'
-      - 'arvexq/ui/static/sports/boat-app/**'
-      - 'tests/boat_horse_realtime_sync.mjs'
+      - 'arvexq/ui/static/sports/horse-portal.js'
+      - 'tests/horse_realtime_sync.mjs'
       - 'scripts/arvexq_realtime_navigation_smoke.js'
-      - 'scripts/arvexq_dual_sport_ui_smoke.js'
+      - 'scripts/arvexq_horse_portal_smoke.js'
       - '.github/workflows/arvexq-all-races-live-ui.yml'
   workflow_dispatch:
 
@@ -32,18 +32,19 @@ jobs:
           set -euo pipefail
           node --check arvexq/ui/static/sports/unified-home.js
           node --check arvexq/ui/static/sports/horse-portal.js
-          node --check arvexq/ui/static/sports/boat-app/app.js
-          node tests/boat_horse_realtime_sync.mjs
-          node tests/boat_all_races_smoke.mjs
+          node tests/horse_realtime_sync.mjs
+          node scripts/arvexq_horse_portal_smoke.js
       - name: Install iPhone Chromium and WebKit browsers
         run: |
           npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium webkit
-      - name: Verify actual production 1R–12R layout and darkening on iPhone
+      - name: Verify local horse-only 1R-12R layout and darkening on iPhone
         env:
-          ARVEXQ_BASE_URL: https://kraizweb1.4b89h4fydd.workers.dev
+          ARVEXQ_BASE_URL: http://127.0.0.1:8790
         run: |
           set -euo pipefail
+          python build_static.py
+          python -m http.server 8790 --directory dist >/tmp/arvexq-horse-ui.log 2>&1 &
+          sleep 2
           node scripts/arvexq_realtime_navigation_smoke.js
-          node scripts/arvexq_dual_sport_ui_smoke.js
-          echo "ALL_VENUES_ALL_RACES_REALTIME_PRODUCTION_VERIFIED"
+          echo "HORSE_ALL_VENUES_12R_LOCAL_VERIFIED"

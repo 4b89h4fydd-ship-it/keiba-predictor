@@ -4,6 +4,6 @@ compatibility_date = "2026-09-29"
 
 [assets]
 binding = "ASSETS"
-run_worker_first = ["/api/live-odds/*"]
+run_worker_first = ["/api/live-odds/*", "/kyotei", "/kyotei/*", "/sports/boat*"]
 directory = "./dist"
 not_found_handling = "single-page-application"

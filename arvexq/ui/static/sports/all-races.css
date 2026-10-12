@@ -1,4 +1,4 @@
-/* Single shared racing portal: venue -> all 12 races, horse & boat. */
+/* Horse racing portal: venue -> all 12 races. */
 .arv-all-home{display:grid;gap:12px;margin:8px 0 18px;min-width:0}
 .arv-all-panel{min-width:0;max-width:100%;border:1px solid #4e7a96;border-radius:15px;padding:11px;background:linear-gradient(150deg,#172d3e,#0c1e2b);color:#f3f7fb;box-shadow:0 7px 20px rgba(0,0,0,.19)}
 .arv-all-title{margin-bottom:10px}
@@ -31,7 +31,6 @@
 body:has(.smart-home){background:#0b171f!important}
 .smart-shell.smart-home{background:linear-gradient(180deg,#0b1b28,#101d27 55%,#091720)!important;color:#edf8ff!important}
 .smart-home .smart-home-main{color:#edf8ff!important}
-.boat-page .arv-all-panel{margin-top:0}
 @media(max-width:440px){.arv-all-panel{padding:9px}.arv-all-races-grid{gap:4px}.arv-all-race{min-height:50px;padding:5px 1px}.arv-all-race strong{font-size:13px}.arv-all-race small{font-size:9px}}
 @media(max-width:350px){.arv-all-races-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.arv-all-action b{font-size:12px}.arv-all-action small{font-size:9px}}
 
@@ -71,13 +70,9 @@ body:has(.smart-home){background:#0b171f!important}
 
 /* Home v20261012: the all-venue 1R–12R list is the sole race-navigation
    section between the date selector and optional AI shortcuts. */
-.smart-home .arv-unified-body>.arv-all-panel,
-.boat-page .arv-unified-body>.arv-all-panel{margin-top:8px}
-.smart-home .arv-unified-body>.arv-unified-actions,
-.boat-page .arv-unified-body>.arv-unified-actions{margin-top:12px}
+.smart-home .arv-unified-body>.arv-all-panel{margin-top:8px}
+.smart-home .arv-unified-body>.arv-unified-actions{margin-top:12px}
 
 /* The three AI menu shortcuts belong directly below the date bar, above all venue 1R-12R grids. */
-.smart-home .arv-unified-body>.arv-unified-actions,
-.boat-page .arv-unified-body>.arv-unified-actions{margin-top:8px;margin-bottom:10px}
-.smart-home .arv-unified-body>.arv-all-panel,
-.boat-page .arv-unified-body>.arv-all-panel{margin-top:0}
+.smart-home .arv-unified-body>.arv-unified-actions{margin-top:8px;margin-bottom:10px}
+.smart-home .arv-unified-body>.arv-all-panel{margin-top:0}

@@ -3,6 +3,9 @@ import {savedOdds} from './saved_odds.mjs';
 export default {
   async fetch(request,env,ctx){
     const url=new URL(request.url);
+    // Retired boat-racing paths must not be served by the SPA fallback.
+    if(/^\/(?:kyotei(?:\/|$)|sports\/boat(?:-app|-data|\.html)(?:\/|$))/.test(url.pathname))
+      return new Response('Not Found',{status:404,headers:{'Cache-Control':'no-store'}});
     if(!url.pathname.startsWith('/api/live-odds/'))return env.ASSETS.fetch(request);
     if(request.method!=='GET')return new Response('Method not allowed',{status:405});
     let source,date,retainedKey;

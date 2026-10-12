@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
 <meta name="arvexq-ui-structure" content="diagnosis-horse-detail-v1">
-<link rel="manifest" href="/manifest-arvexq-v181.webmanifest">
+<link rel="manifest" href="/manifest-arvexq-v360.webmanifest">
 <link rel="stylesheet" href="/styles-arvexq-v329.css?fix=20261009-user-approved-v357">
 <link rel="stylesheet" href="/styles/legacy_v118_v221.css?v=__ARVEXQ_STYLE_MODULE_HASH__">
 <link rel="stylesheet" href="/styles/race_v222_plus.css?v=__ARVEXQ_STYLE_MODULE_HASH__">
@@ -17,30 +17,28 @@
 <link rel="stylesheet" href="/research/research_view.css?v=__ARVEXQ_RESEARCH_HASH__">
 <style>.smart-special-picks .fixed-pick-box-body{display:block!important}</style>
 <title>ARVEXQ | RACE INTELLIGENCE</title>
-<link rel="icon" type="image/png" href="/arvexq-icon-v181-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v181.png?v=181">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/arvexq-touch-v181.png?v=181">
+<link rel="icon" type="image/png" href="/arvexq-icon-v360-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v360.png?v=360">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/arvexq-touch-v360.png?v=360">
 <script>
 (function(){
-  var tag="arvexq-hard-reset-v357-user-approved-20261009";
+  var tag="arvexq-horse-only-reset-v360-20261012";
   try{
     if(localStorage.getItem(tag)==="1")return;
     localStorage.setItem(tag,"1");
     Promise.resolve().then(async function(){
       try{if("caches" in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}))}}catch(_e){}
       try{if("serviceWorker" in navigator){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(r){return r.unregister()}))}}catch(_e){}
-      var u=new URL(location.href);u.searchParams.set("arvexq_build","v330");u.searchParams.set("_",Date.now());location.replace(u.toString());
+      var u=new URL(location.href);u.searchParams.set("arvexq_build","horse-v360");u.searchParams.set("_",Date.now());location.replace(u.toString());
     });
   }catch(_e){}
 })();
 </script>
-<link rel="stylesheet" href="/sports/switch.css?v=__ARVEXQ_SPORT_HASH__">
 <link rel="stylesheet" href="/sports/all-races.css?v=__ARVEXQ_SPORT_HASH__">
 <link rel="stylesheet" href="/sports/unified-home.css?v=__ARVEXQ_SPORT_HASH__">
 <link rel="stylesheet" href="/sports/pull-refresh.css?v=__ARVEXQ_SPORT_HASH__">
 </head>
 <body>
-<nav class="arvexq-sport-nav" aria-label="競技切替"><a class="active" aria-current="page" href="/keiba/">競馬</a><a href="/kyotei/">競艇</a></nav>
 <div id="app"><div class="boot">ARVEXQを起動中…</div></div>
 <script defer src="/betting/legacy_v213_order_model.js?v=__ARVEXQ_BET_ASSET_FINGERPRINT__"></script>
 <script defer src="/betting/podium_axis_guard.js?v=__ARVEXQ_BET_ASSET_FINGERPRINT__"></script>
