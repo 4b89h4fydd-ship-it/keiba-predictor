@@ -37,5 +37,7 @@ assert.ok(venueRaceHtml.includes('data-race="boat-'+date+'-桐生-01"'));
 assert.equal((venueRaceHtml.match(/<button/g)||[]).length,12);
 assert.equal((venueRaceHtml.match(/disabled/g)||[]).length,11);
 assert.ok(venueRaceHtml.includes('<strong>1R</strong><small>10:30</small>'));
-assert.ok(!venueRaceHtml.includes('</small><em'));
+assert.ok(venueRaceHtml.includes('class="arv-race-state"'));
+assert.ok(venueRaceHtml.includes('時刻未取得')||venueRaceHtml.includes('締切前'));
+assert.ok(!venueRaceHtml.includes('<em class="pending">分析待ち</em>'));
 console.log("BOAT_ALL_RACES_OK");
