@@ -26,12 +26,16 @@ const empty=allBoatRaces({date,races:[]},{now});
 assert.ok(empty.includes("未取得"));
 assert.ok(!empty.includes('data-race="'));
 assert.ok(!empty.includes('data-venue="'));
-// The venue page must have three direct grid children, never a fourth
-// forecast label which creates a phantom second row on mobile.
+// The BOAT venue page now uses the exact 1R-12R horse-style grid,
+// not the retired three-column row layout.
 const venueRaceHtml=raceList({races:[{
   id:"boat-"+date+"-桐生-01",venue:"桐生",raceNo:1,
   title:"予選",closeTime:"10:30"
 }]}, "桐生");
-assert.ok(venueRaceHtml.includes('<span><b>予選</b><em class="pending">分析待ち</em></span><small>10:30</small>'));
+assert.ok(venueRaceHtml.includes('class="arv-all-races-grid boat-venue-race-grid"'));
+assert.ok(venueRaceHtml.includes('data-race="boat-'+date+'-桐生-01"'));
+assert.equal((venueRaceHtml.match(/<button/g)||[]).length,12);
+assert.equal((venueRaceHtml.match(/disabled/g)||[]).length,11);
+assert.ok(venueRaceHtml.includes('<strong>1R</strong><small>10:30</small>'));
 assert.ok(!venueRaceHtml.includes('</small><em'));
 console.log("BOAT_ALL_RACES_OK");
