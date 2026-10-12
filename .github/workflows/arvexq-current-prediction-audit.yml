@@ -38,14 +38,18 @@ jobs:
           ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
           ARVEXQ_DAYS: ${{ inputs.days || '7' }}
           ARVEXQ_END_DATE: ${{ inputs.end_date || '2026-10-12' }}
-        run: python scripts/arvexq_current_prediction_audit.py | tee unified-audit.log
+        run: |
+          set -o pipefail
+          python scripts/arvexq_current_prediction_audit.py | tee unified-audit.log
       - name: Run central/local data quality audit
         env:
           PYTHONPATH: '.'
           ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
           ARVEXQ_DAYS: ${{ inputs.days || '7' }}
           ARVEXQ_END_DATE: ${{ inputs.end_date || '2026-10-12' }}
-        run: python scripts/arvexq_central_data_quality_audit.py | tee data-quality-audit.log
+        run: |
+          set -o pipefail
+          python scripts/arvexq_central_data_quality_audit.py | tee data-quality-audit.log
       - name: Publish concise summary
         if: always()
         run: |
