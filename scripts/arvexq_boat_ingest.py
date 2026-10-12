@@ -123,6 +123,81 @@ def ingest(obj: dict, day: str, output: Path = OUTPUT) -> tuple[Path, bool]:
     return dest, True
 
 
+
+def ingest_personal_official(obj: dict, day: str, output: Path = OUTPUT) -> tuple[Path, bool]:
+    """Use the SAME day-merger as the original BOAT ingestion.
+
+    This branch is for personal access-controlled deployments only.
+    Public workers.dev is not authenticated, so publication stays locked
+    until its unauthenticated-access probe proves the boat route is private.
+    """
+    if os.environ.get("ARVEXQ_BOAT_PRIVATE_ACCESS_VERIFIED") != "1":
+        raise PermissionError("Private BOAT app access not verified")
+    from scripts.arvexq_boat_official import SOURCE
+    if (not isinstance(obj, dict)
+        or obj.get("version") != "arvexq-boat-day-v1"
+        or obj.get("date") != day
+        or obj.get("verified") is not True
+        or obj.get("personalOnly") is not True
+        or obj.get("provenanceId") != "BOATRACE-OFFICIAL-BK-PERSONAL"
+        or not isinstance(obj.get("races"),list)
+        or not obj["races"]
+        or (obj.get("dataAudit") or {}).get("source") != SOURCE):
+        raise ValueError("Not a verified official personal-only day")
+    # Prevent any external payload from declaring its own verified forecast
+    # or odds without an approved pre-off evidence trail.
+    for race in obj["races"]:
+        if not isinstance(race,dict) or race.get("forecast") or race.get("odds3t") or race.get("selection"):
+            raise ValueError("Official B/K must not contain fabricated picks or live odds")
+    from scripts.arvexq_boat_publish import VENUES, timepoint
+    timepoint(obj.get("verifiedAt",""))
+    original={"version":obj["version"],"date":day,"verified":True,
+              "verifiedAt":obj["verifiedAt"],"dataStatus":"verified",
+              "provenanceId":obj["provenanceId"],"personalOnly":True,
+              "dataAudit":obj["dataAudit"],"races":obj["races"]}
+    seen=set()
+    for r in original["races"]:
+        expected="boat-"+day+"-"+str(r["venue"])+"-"+str(r["raceNo"]).zfill(2)
+        entries=r.get("entries")
+        if (r.get("venue") not in VENUES or type(r.get("raceNo")) is not int
+            or not 1<=r["raceNo"]<=12 or r.get("id")!=expected or expected in seen
+            or not isinstance(entries,list) or len(entries)!=6
+            or {e.get("boatNo") for e in entries}!={1,2,3,4,5,6}
+            or any(not str(e.get("name") or "").strip() for e in entries)
+            or not r.get("closeTime") or not r.get("closeAt")):
+            raise ValueError("Official personal day has invalid race or entries")
+        timepoint(r["closeAt"])
+        seen.add(expected)
+        result=r.get("result")
+        if result and result.get("status")=="confirmed":
+            if (not isinstance(result.get("trifecta"),str)
+                or len(result["trifecta"].split("-"))!=3
+                or len(set(result["trifecta"].split("-")))!=3
+                or any(x not in "123456" for x in result["trifecta"].split("-"))
+                or type(result.get("trifectaPayoutYen")) is not int
+                or result["trifectaPayoutYen"]<=0):
+                raise ValueError("Official trifecta payout invalid")
+    # Stored record is merged on the same safe single-writer path.
+    output.mkdir(parents=True, exist_ok=True)
+    path=output/(day+".json")
+    previous=json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+    if previous and previous.get("personalOnly") is not True:
+        raise ValueError("Cannot mix licensed and personal snapshots")
+    merged=merge_public(previous,original)
+    if previous==merged:
+        return path,False
+    fd,temp=tempfile.mkstemp(dir=output,prefix=".boat-official-",suffix=".tmp")
+    try:
+        with os.fdopen(fd,"w",encoding="utf-8") as fp:
+            json.dump(merged,fp,ensure_ascii=False,separators=(",",":"),allow_nan=False)
+            fp.write("\n")
+        os.replace(temp,path)
+    finally:
+        if os.path.exists(temp):
+            os.unlink(temp)
+    return path,True
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--date", default=datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d"))
