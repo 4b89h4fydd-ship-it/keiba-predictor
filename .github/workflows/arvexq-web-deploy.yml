@@ -32,22 +32,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Restore authenticated personal BOAT data before normal web deploy
-        if: ${{ vars.ARVEXQ_BOAT_PRIVATE_ACCESS_VERIFIED == 'true' }}
-        shell: bash
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCESS_CLIENT_ID: ${{ secrets.ARVEXQ_BOAT_ACCESS_CLIENT_ID }}
-          CLOUDFLARE_ACCESS_CLIENT_SECRET: ${{ secrets.ARVEXQ_BOAT_ACCESS_CLIENT_SECRET }}
-        run: |
-          set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq p7zip-full
-          python -m pip install 'boatrace-lzh==0.1.0'
-          DAY="$(TZ=Asia/Tokyo date +%F)"
-          echo "BOAT_DAY=$DAY" >> "$GITHUB_ENV"
-          bash scripts/arvexq_boat_private_access.sh "$DAY"
-          test -s "arvexq/ui/static/sports/boat-data/$DAY.json"
       - name: Build static app
         shell: bash
         run: |
@@ -105,50 +89,24 @@ jobs:
           done
           test "$ok" = "1"
           echo "ARVEXQ production verified at $PROD"
-      - name: Verify production sport routes and isolated boat assets
+      - name: Verify horse-only routes and removed boat endpoints
         shell: bash
-        env:
-          PRIVATE_BOAT: ${{ vars.ARVEXQ_BOAT_PRIVATE_ACCESS_VERIFIED }}
-          CLOUDFLARE_ACCESS_CLIENT_ID: ${{ secrets.ARVEXQ_BOAT_ACCESS_CLIENT_ID }}
-          CLOUDFLARE_ACCESS_CLIENT_SECRET: ${{ secrets.ARVEXQ_BOAT_ACCESS_CLIENT_SECRET }}
         run: |
+          set -euo pipefail
           PROD='https://kraizweb1.4b89h4fydd.workers.dev'
-          curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 "$PROD/keiba/?verify=$GITHUB_SHA" -o prod-keiba.html
-          if [ "${PRIVATE_BOAT:-}" = 'true' ]; then
-            curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 \
-              -H "CF-Access-Client-Id: $CLOUDFLARE_ACCESS_CLIENT_ID" \
-              -H "CF-Access-Client-Secret: $CLOUDFLARE_ACCESS_CLIENT_SECRET" \
-              "$PROD/kyotei/?verify=$GITHUB_SHA" -o prod-kyotei.html
-          else
-            curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 "$PROD/kyotei/?verify=$GITHUB_SHA" -o prod-kyotei.html
+          curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 "$PROD/?horse_only=$GITHUB_SHA" -o prod-horse.html
+          curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 "$PROD/keiba/?horse_only=$GITHUB_SHA" -o prod-keiba.html
+          grep -q '/sports/horse-portal.js' prod-horse.html
+          grep -q '/sports/horse-portal.js' prod-keiba.html
+          if grep -Eqi 'kyotei|boat-app|競艇|arvexq-sport-nav' prod-horse.html prod-keiba.html; then
+            echo "::error::Horse page still contains a boat or switch reference"
+            exit 1
           fi
-          curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 "$PROD/sports/boat-app/app.js?verify=$GITHUB_SHA" -o prod-boat.js
-          python - <<'PY'
-          from pathlib import Path
-          horse=Path('prod-keiba.html').read_text(encoding='utf-8')
-          boat=Path('prod-kyotei.html').read_text(encoding='utf-8')
-          js=Path('prod-boat.js').read_text(encoding='utf-8')
-          if 'aria-current="page" href="/keiba/"' not in horse:
-              raise SystemExit('PRODUCTION_KEIBA_ROUTE_WRONG_HTML')
-          if 'aria-current="page" href="/kyotei/"' not in boat:
-              raise SystemExit('PRODUCTION_KYOTEI_ROUTE_WRONG_HTML')
-          if '/app-v329.js' not in horse or '/app-v329.js' in boat:
-              raise SystemExit('PRODUCTION_SPORT_BUNDLE_NOT_ISOLATED')
-          if '本日の厳選レース' not in js or '/sports/boat-app/app.js' not in boat:
-              print('BOAT_ASSET_FETCH_DIAGNOSTIC: JS_LEN',len(js),'BOAT_LEN',len(boat),
-                    'JS_HEAD',repr(js[:200]),'BOAT_REFERENCES',('/sports/boat-app/app.js' in boat))
-              raise SystemExit('PRODUCTION_BOAT_ASSET_MISSING')
-          print('PRODUCTION_DUAL_SPORT_ROUTES_OK')
-          PY
-      - name: Verify official BOAT day through authenticated Access after deploy
-        if: ${{ vars.ARVEXQ_BOAT_PRIVATE_ACCESS_VERIFIED == 'true' }}
-        shell: bash
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCESS_CLIENT_ID: ${{ secrets.ARVEXQ_BOAT_ACCESS_CLIENT_ID }}
-          CLOUDFLARE_ACCESS_CLIENT_SECRET: ${{ secrets.ARVEXQ_BOAT_ACCESS_CLIENT_SECRET }}
-        run: bash scripts/arvexq_boat_private_access.sh "$BOAT_DAY" --verify-only
-
+          for path in '/kyotei/' '/sports/boat-app/app.js' '/sports/boat-data/2026-10-12.json'; do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$PROD$path?horse_only=$GITHUB_SHA")"
+            test "$code" = '404' || { echo "::error::Boat URL $path returned $code instead of 404"; exit 1; }
+          done
+          echo 'PRODUCTION_HORSE_ONLY_ROUTES_OK'
       - name: Verify current-day racecard fallback is actually deployed
         shell: bash
         run: |

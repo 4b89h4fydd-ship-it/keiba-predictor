@@ -108,32 +108,17 @@ jobs:
       - name: Horse modular asset caching
         run: python -m unittest discover -s tests -p 'test_static_asset_cache.py' -v
 
-      - name: Dual-sport brand hero and app icon assets
-        run: python -m unittest discover -s tests -p 'test_dual_sport_brand_assets.py' -v
-
-      - name: Dual-sport navigation and page isolation
+      - name: Horse-only brand, routes and 1R-12R statuses
         run: |
-          python -m unittest discover -s tests -p 'test_sport_navigation.py' -v
-          test -s dist/keiba/index.html
-          test -s dist/kyotei/index.html
-          test -s dist/sports/boat-app/app.js
-          node --check dist/sports/boat-app/app.js
-          node tests/boat_app_smoke.mjs
-          node tests/boat_prediction_and_tickets_smoke.mjs
-          node tests/boat_race_detail_smoke.mjs
-          node tests/boat_daily_high_payout_smoke.mjs
-          python -m py_compile scripts/arvexq_boat_ingest.py
-          python -m unittest discover -s tests -p 'test_boat_feed_publisher.py' -v
-          python -m unittest discover -s tests -p 'test_boat_licensed_ingest.py' -v
-          python -m unittest discover -s tests -p 'test_boat_official_import.py' -v
-          node tests/boat_start_exhibition_smoke.mjs
-          node tests/boat_all_races_smoke.mjs
-          node tests/boat_horse_realtime_sync.mjs
+          python -m unittest discover -s tests -p 'test_horse_brand_assets.py' -v
+          node tests/horse_realtime_sync.mjs
           node scripts/arvexq_horse_portal_smoke.js
           node --check dist/sports/horse-portal.js
           node --check dist/sports/unified-home.js
+          test -s dist/keiba/index.html
           test -s dist/sports/all-races.css
-          test -s dist/sports/boat-app/features/all-races.js
+          test ! -e dist/kyotei/index.html
+          test ! -e dist/sports/boat-app/app.js
 
       - name: Betting marks and ticket reconciliation regression
         run: |
