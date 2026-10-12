@@ -1,0 +1,64 @@
+name: ARVEXQ Official BOAT B-K Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/arvexq_boat_official.py
+      - scripts/arvexq_boat_ingest.py
+      - tests/test_boat_official_import.py
+      - .github/workflows/arvexq-boat-official.yml
+  workflow_dispatch:
+    inputs:
+      race_date:
+        description: Official day YYYY-MM-DD (blank means today in JST)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-boat-official-one-day
+  cancel-in-progress: true
+
+jobs:
+  official-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run fact-integrity and private-export tests
+        run: |
+          python -m py_compile scripts/arvexq_boat_official.py scripts/arvexq_boat_ingest.py
+          python -m unittest discover -s tests -p 'test_boat_official_import.py' -v
+      - name: Install the reviewed BOATRACE B-K unpacker
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          python -m pip install 'boatrace-lzh==0.1.0'
+      - name: Test official one-day B and K acquisition in runner memory
+        env:
+          REQUEST_DATE: ${{ inputs.race_date }}
+        run: |
+          set -euo pipefail
+          DAY="${REQUEST_DATE:-$(TZ=Asia/Tokyo date +%F)}"
+          # Download only the single requested day's official B and K archives.
+          # Never commit or upload BOATRACE records to this GitHub repository.
+          python scripts/arvexq_boat_official.py --date "$DAY" \
+            --cache-dir "$RUNNER_TEMP/official-boat-cache" \
+            --output "$RUNNER_TEMP/official-boat-day"
+          test -s "$RUNNER_TEMP/official-boat-day/$DAY.json"
+          python - "$RUNNER_TEMP/official-boat-day/$DAY.json" <<'PY'
+          import json,sys
+          obj=json.load(open(sys.argv[1],encoding='utf-8'))
+          races=obj["races"]
+          if not races or any(len(r["entries"])!=6 for r in races):
+              raise SystemExit("OFFICIAL_BK_SIX_BOAT_GATE_FAILED")
+          print("OFFICIAL_BK_PROBE_OK date=",obj["date"],
+                "raceCount=",len(races),
+                "withKConfirmed=",sum(r.get("result",{}).get("status")=="confirmed" for r in races))
+          PY
