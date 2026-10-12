@@ -27,8 +27,27 @@ jobs:
           acc=os.getenv('CLOUDFLARE_ACCOUNT_ID','')
           token=os.getenv('CLOUDFLARE_API_TOKEN','')
           host=os.environ['BOAT_HOST']
-          if not acc or not token:
-              raise SystemExit('ACCESS_AUDIT_BLOCKED: account ID or API token not configured')
+          if not token:
+              raise SystemExit('ACCESS_AUDIT_BLOCKED: Cloudflare API token not configured')
+          if not acc:
+              # Worker deployment already has a usable token. Discover the
+              # account ID without asking the user to copy or reveal it.
+              listing=urllib.request.Request(
+                  'https://api.cloudflare.com/client/v4/accounts?per_page=100',
+                  headers={'Authorization':'Bearer '+token,'Accept':'application/json'})
+              try:
+                  with urllib.request.urlopen(listing,timeout=20) as response:
+                      accounts=json.load(response)
+                  matches=accounts.get('result') or []
+                  if not accounts.get('success') or len(matches)!=1:
+                      raise ValueError('unambiguous account not discoverable')
+                  acc=str(matches[0].get('id') or '')
+                  if not acc:
+                      raise ValueError('account ID not returned')
+                  print('ACCESS_AUDIT_ACCOUNT_RESOLVED_FROM_EXISTING_TOKEN')
+              except Exception as err:
+                  print('ACCESS_AUDIT_ACCOUNT_DISCOVERY_UNAVAILABLE',type(err).__name__)
+                  raise SystemExit(2)
           url=f'https://api.cloudflare.com/client/v4/accounts/{acc}/access/apps?per_page=100'
           req=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/json'})
           try:
