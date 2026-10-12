@@ -94,16 +94,24 @@ jobs:
         run: |
           set -euo pipefail
           PROD='https://kraizweb1.4b89h4fydd.workers.dev'
-          curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 "$PROD/?horse_only=$GITHUB_SHA" -o prod-horse.html
-          curl -fSLsS --retry 5 --retry-delay 2 --max-time 30 "$PROD/keiba/?horse_only=$GITHUB_SHA" -o prod-keiba.html
-          grep -q '/sports/horse-portal.js' prod-horse.html
-          grep -q '/sports/horse-portal.js' prod-keiba.html
-          if grep -Eqi 'kyotei|boat-app|競艇|arvexq-sport-nav' prod-horse.html prod-keiba.html; then
-            echo "::error::Horse page still contains a boat or switch reference"
-            exit 1
-          fi
+          ok=0
+          for i in $(seq 1 18); do
+            curl -fSLsS --retry 3 --retry-delay 2 --max-time 30 -H 'Cache-Control: no-cache' "$PROD/?horse_only=$GITHUB_SHA-$i" -o prod-horse.html
+            curl -fSLsS --retry 3 --retry-delay 2 --max-time 30 -H 'Cache-Control: no-cache' "$PROD/keiba/?horse_only=$GITHUB_SHA-$i" -o prod-keiba.html
+            if grep -q '/sports/horse-portal.js' prod-horse.html &&
+               grep -q '/sports/horse-portal.js' prod-keiba.html &&
+               ! grep -Eqi 'kyotei|boat-app|競艇|arvexq-sport-nav' prod-horse.html prod-keiba.html; then
+              ok=1
+              break
+            fi
+            echo "Horse-only HTML not fully propagated (attempt $i)"
+            grep -inE 'kyotei|boat-app|競艇|arvexq-sport-nav' prod-horse.html prod-keiba.html | cut -c1-200 || true
+            sha256sum dist/index.html prod-horse.html prod-keiba.html
+            sleep 4
+          done
+          test "$ok" = 1 || { echo "::error::Production horse-only HTML verification failed"; exit 1; }
           for path in '/kyotei/' '/sports/boat-app/app.js' '/sports/boat-data/2026-10-12.json'; do
-            code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$PROD$path?horse_only=$GITHUB_SHA")"
+            code="$(curl -sS -H 'Cache-Control: no-cache' -o /dev/null -w '%{http_code}' --max-time 20 "$PROD$path?horse_only=$GITHUB_SHA")"
             test "$code" = '404' || { echo "::error::Boat URL $path returned $code instead of 404"; exit 1; }
           done
           echo 'PRODUCTION_HORSE_ONLY_ROUTES_OK'
