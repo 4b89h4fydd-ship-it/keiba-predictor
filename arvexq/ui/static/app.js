@@ -50,7 +50,6 @@ var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoadi
 var dailyAiStats={date:"",loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,fullPodiumHits:0,centralPodiumHits:0,centralPodiumTotal:0,localPodiumHits:0,localPodiumTotal:0,markedPodiumSum:0,holePlaceHits:0,top2Hits:0,top3Hits:0,candidateOrderMisses:0,candidateMisses:0,highConfHits:0,highConfTotal:0,brierSum:0,logLossSum:0,reasons:{},rows:[],error:""},dailyAiStatsJob=0;
 var previousAiStats={date:"",loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,fullPodiumHits:0,markedPodiumSum:0,rows:[],error:""},previousAiStatsJob=0;
 var liveCenterOpen=false,liveCenterTrack="",liveCenterCircuit="";
-var pullRefresh={tracking:false,startY:0,startX:0,startAt:0,distance:0,ready:false,refreshing:false,hideTimer:null};
 
 function cacheKey(d,c){return "arvexq:"+String(window.ARVEXQ_BUILD||"dev")+":races:"+d+":"+(c||state.circuit||"")}
 function loadRaceCache(d,c){try{var raw=localStorage.getItem(cacheKey(d,c));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(d>=today()&&Date.now()-n(x.ts)>2*60000)return null;return x.rows}catch(e){return null}}
@@ -4629,59 +4628,9 @@ function openRace(id,keepStack,skipHistory,preservePanel){
 }
 
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
-function pullRefreshMarkup(){
-  return '<div id="arvexq-pull-refresh" class="arv-pull-refresh'+(pullRefresh.refreshing?' refreshing':'')+'" aria-live="polite"><span class="arv-pull-spinner"></span><b>'+(pullRefresh.refreshing?'更新中…':'下に引いて更新')+'</b></div>'
-}
-function updatePullRefreshIndicator(){
-  var el=document.getElementById('arvexq-pull-refresh');if(!el)return;
-  if(pullRefresh.refreshing){el.className='arv-pull-refresh refreshing visible';el.style.setProperty('--pull-y','54px');el.querySelector('b').textContent='更新中…';return}
-  if(!pullRefresh.tracking){el.className='arv-pull-refresh';el.style.removeProperty('--pull-y');return}
-  var y=Math.min(78,Math.max(0,pullRefresh.distance*.58)),elapsed=Date.now()-pullRefresh.startAt;
-  el.className='arv-pull-refresh visible'+(pullRefresh.ready?' ready':'');
-  el.style.setProperty('--pull-y',y+'px');
-  var label=el.querySelector('b');
-  if(label)label.textContent=pullRefresh.ready?'離して更新':'下に引いて更新'
-}
-function finishPullRefresh(){
-  if(!pullRefresh.refreshing)return;
-  pullRefresh.refreshing=false;pullRefresh.tracking=false;pullRefresh.ready=false;pullRefresh.distance=0;pullRefresh.hideTimer=null;
-  updatePullRefreshIndicator()
-}
-function startPullRefresh(){
-  if(pullRefresh.refreshing)return;
-  pullRefresh.refreshing=true;pullRefresh.tracking=false;pullRefresh.ready=false;pullRefresh.distance=0;
-  updatePullRefreshIndicator();
-  try{reloadCurrent()}catch(e){}
-  if(pullRefresh.hideTimer)clearTimeout(pullRefresh.hideTimer);
-  pullRefresh.hideTimer=setTimeout(finishPullRefresh,1200)
-}
 function installPullRefresh(){
-  var active=null;
-  document.addEventListener('touchstart',function(e){
-    if(pullRefresh.refreshing||e.touches.length!==1)return;
-    var scroller=document.scrollingElement||document.documentElement;
-    if((scroller&&scroller.scrollTop>1)||window.scrollY>1)return;
-    var t=e.touches[0];active={id:t.identifier,x:t.clientX,y:t.clientY,time:Date.now()};
-    pullRefresh.tracking=true;pullRefresh.startY=t.clientY;pullRefresh.startX=t.clientX;pullRefresh.startAt=active.time;pullRefresh.distance=0;pullRefresh.ready=false;updatePullRefreshIndicator()
-  },{passive:true});
-  document.addEventListener('touchmove',function(e){
-    if(!active||pullRefresh.refreshing||!pullRefresh.tracking)return;
-    var t=null;for(var i=0;i<e.touches.length;i++)if(e.touches[i].identifier===active.id){t=e.touches[i];break}
-    if(!t)return;
-    var dy=t.clientY-active.y,dx=Math.abs(t.clientX-active.x);
-    if(dy<=0||dx>Math.max(24,dy*.75)){pullRefresh.tracking=false;active=null;updatePullRefreshIndicator();return}
-    pullRefresh.distance=dy;
-    pullRefresh.ready=dy>=72;
-    if(dy>8&&e.cancelable)e.preventDefault();
-    updatePullRefreshIndicator()
-  },{passive:false});
-  document.addEventListener('touchend',function(e){
-    if(!active)return;
-    var wasReady=pullRefresh.ready;active=null;
-    pullRefresh.tracking=false;
-    if(wasReady)startPullRefresh();else{pullRefresh.ready=false;pullRefresh.distance=0;updatePullRefreshIndicator()}
-  },{passive:true});
-  document.addEventListener('touchcancel',function(){active=null;pullRefresh.tracking=false;pullRefresh.ready=false;pullRefresh.distance=0;updatePullRefreshIndicator()},{passive:true})
+  // The shared sport module owns the touch listeners and indicator.
+  window.ARVEXQPullRefresh.mount({refresh:reloadCurrent});
 }
 function reloadCurrent(){
   if(state.race&&state.race.id){
@@ -4759,7 +4708,7 @@ function render(){
   syncLocation();stopTimer();
   try{
     var view=state.raceLoading?renderRaceLoading():(state.race?renderRace():(state.picker?renderPicker():(state.track?renderVenue():(state.homePage?renderHomeSectionPage():renderHome()))));
-    app.innerHTML=view+pullRefreshMarkup()+smartTodayReturn();
+    app.innerHTML=view+smartTodayReturn();
     arvexqBootPainted=true;
     syncLiveCenterOverlay();
     bind();

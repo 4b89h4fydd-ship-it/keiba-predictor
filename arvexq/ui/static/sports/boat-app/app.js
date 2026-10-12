@@ -67,8 +67,7 @@ function body(){
 }
 function draw(){
   if(!root)return;
-  root.innerHTML='<div class="boat-shell"><main class="boat-main">'+body()+
-    (state.view==='home'?'':loadingNote())+
+  root.innerHTML='<div class="boat-shell"><main class="boat-main">'+loadingNote()+body()+
     '</main><footer class="boat-footer">ARVEXQ | BOAT INTELLIGENCE</footer></div>';
 }
 async function refresh(){
@@ -79,7 +78,9 @@ async function refresh(){
     state.day=day;state.error="";
   }catch(_error){
     if(request!==state.request)return;
-    state.day=emptyDay();state.error="確認済みの競艇データがまだ公開されていません。データ接続完了までレース予想は表示できません。";
+    // Preserve the last verified snapshot on transient errors for this date.
+    if(!state.day||state.day.date!==state.date)state.day=emptyDay();
+    state.error="この日の商用利用許諾済み競艇データは未配信です。実データが公開されるまで印・買い目は表示しません。";
   }finally{if(request===state.request){state.loading=false;draw()}}
 }
 if(root){
@@ -107,6 +108,7 @@ if(root){
   });
   window.addEventListener("popstate",()=>{routeFromUrl();refresh()});
   routeFromUrl();draw();refresh();
+  window.ARVEXQPullRefresh.mount({refresh});
   setInterval(function(){
     if(state.date===todayJst()&&!state.loading&&document.visibilityState!=="hidden")refresh();
   },60000);

@@ -271,7 +271,7 @@ for filename in RESEARCH_ASSETS:
 shutil.copy2(SPORT_DIR / "switch.css", DIST / "sports" / "switch.css")
 # Binary hero file is sourced from the user-approved dual-sport artwork.
 shutil.copy2(STATIC / "arvexq-unified-hero.webp", DIST / "sports" / "arvexq-unified-hero.webp")
-for filename in ("all-races.css","unified-home.css","unified-home.js","horse-portal.js"):
+for filename in ("all-races.css","unified-home.css","unified-home.js","horse-portal.js","pull-refresh.js","pull-refresh.css"):
     shutil.copy2(SPORT_DIR / filename, DIST / "sports" / filename)
 shutil.copytree(SPORT_DIR / "boat-app", DIST / "sports" / "boat-app")
 # One audited boat race/odds/result snapshot per date. The independent data

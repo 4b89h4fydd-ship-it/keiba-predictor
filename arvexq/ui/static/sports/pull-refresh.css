@@ -1,0 +1,7 @@
+/* Shared pull-to-refresh status, below the fixed sport selector. */
+.arv-pull-refresh{position:fixed;left:50%;top:calc(var(--arvexq-nav-h,49px) + 7px);transform:translate(-50%,calc(-110% + var(--pull-y,0px)));z-index:2147482900;pointer-events:none;opacity:0;transition:opacity .12s,transform .12s;background:#123a51;border:1px solid #64b6e3;border-radius:24px;box-shadow:0 5px 20px #0008;color:#f1faff;padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:12px;white-space:nowrap}
+.arv-pull-refresh.visible{opacity:1}
+.arv-pull-refresh.ready{border-color:#f1c979}
+.arv-pull-spinner{display:inline-block;width:15px;height:15px;border:2px solid #7c9bb0;border-top-color:#fff;border-radius:50%}
+.arv-pull-refresh.refreshing .arv-pull-spinner{animation:arv-pull-spin .7s linear infinite}
+@keyframes arv-pull-spin{to{transform:rotate(360deg)}}
