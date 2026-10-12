@@ -41,10 +41,10 @@ async function check(browserType,browserName){
       await page.waitForFunction(()=>window.ARVEXQPullRefresh&&document.querySelector('#arvexq-pull-refresh'),{timeout:15000});
       const first=await swipe(page);
       assert.equal(first.after,first.before+1,browserName+' '+pagePath+' first swipe not dispatched');
-      assert.equal(first.label,'更新中…',browserName+' '+sport+' indicator not active');
+      assert.equal(first.label,'更新中…',browserName+' '+pagePath+' indicator not active');
       await page.waitForFunction(()=>!document.querySelector('#arvexq-pull-refresh')?.classList.contains('refreshing'),{timeout:25000});
       const second=await swipe(page);
-      assert.equal(second.after,first.after+1,browserName+' '+sport+' second swipe not dispatched');
+      assert.equal(second.after,first.after+1,browserName+' '+pagePath+' second swipe not dispatched');
       await page.waitForFunction(()=>!document.querySelector('#arvexq-pull-refresh')?.classList.contains('refreshing'),{timeout:25000});
       assert.equal(await page.locator('#arvexq-pull-refresh').count(),1,'duplicate refresh indicator');
       assert.equal(errors.filter(e=>/ReferenceError|SyntaxError|not a function/.test(e)).length,0,errors.join('; '));
