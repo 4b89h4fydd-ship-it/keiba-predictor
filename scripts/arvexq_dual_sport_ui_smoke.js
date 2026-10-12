@@ -21,6 +21,10 @@ async function check(type,name){
     assert.equal(await page.locator(".arv-unified-hero img").count(),1);
     assert.equal(await page.locator(".arv-unified-date input[type=date]").count(),1);
     assert.equal(await page.locator(".arv-unified-actions button").count(),3);
+    const horseOrder=await page.locator('.smart-home .arv-unified-body').evaluate(el=>
+      [...el.children].map(x=>x.className).slice(0,3));
+    assert.deepEqual(horseOrder,['arv-unified-date','arv-unified-actions','arv-all-panel'],
+      name+' horse AI shortcuts must be DIRECTLY after date');
     await link.click({timeout:15000});
     await page.waitForURL(/\/kyotei\//,{timeout:30000});
     await page.locator(".arv-unified-hero").waitFor({state:"visible",timeout:30000});
@@ -30,6 +34,10 @@ async function check(type,name){
     assert.equal(await page.locator(".arv-unified-hero img").count(),1);
     assert.equal(await page.locator(".arv-unified-date input[type=date]").count(),1);
     assert.equal(await page.locator(".arv-unified-actions button").count(),3);
+    const boatOrder=await page.locator('.boat-page .arv-unified-body').evaluate(el=>
+      [...el.children].map(x=>x.className).slice(0,3));
+    assert.deepEqual(boatOrder,['arv-unified-date','arv-unified-actions','arv-all-panel'],
+      name+' BOAT AI shortcuts must be DIRECTLY after date');
     assert.equal(await page.locator(".boat-page-head").count(),0);
     await page.locator('.arv-unified-actions button[data-view="stats"]').click();
     await page.locator(".boat-stat-grid").waitFor({state:"visible",timeout:12000});
