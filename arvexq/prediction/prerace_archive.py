@@ -167,6 +167,18 @@ def seal_detail(detail: dict[str, Any], lock: dict[str, Any], now: datetime) -> 
                         "podiumAxisScore", "winHeadRank", "strengthHeadRank")
             if key in e
         }
+        # Seal ONLY the role/grade produced for THIS ◎ before the off. A
+        # general ability grade is not the honmei confidence grade. Never
+        # derive it from post-race data or guess it from the raw mark.
+        if str(item.get("mark") or "") == "◎" and str(e.get("mark") or "") == "◎":
+            role = str(e.get("honmeiRole") or "")
+            grade = str(e.get("honmeiGrade") or "")
+            if role in ("win", "axis") and grade in ("A", "B", "C"):
+                item["honmeiRole"] = role
+                item["honmeiGrade"] = grade
+                item["podiumAxisEligible"] = bool(
+                    grade == "A" and e.get("honmeiEligible") is True
+                )
     raw = json.dumps({
         "raceId": record["raceId"], "date": record["raceDate"],
         "captured": record["capturedAtEpoch"], "sealed": record["sealedAtEpoch"],
