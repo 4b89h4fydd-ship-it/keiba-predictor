@@ -11,6 +11,7 @@ on:
       - 'arvexq/ui/static/sports/boat-app/**'
       - 'tests/boat_horse_realtime_sync.mjs'
       - 'scripts/arvexq_realtime_navigation_smoke.js'
+      - 'scripts/arvexq_dual_sport_ui_smoke.js'
       - '.github/workflows/arvexq-all-races-live-ui.yml'
   workflow_dispatch:
 
@@ -44,4 +45,5 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/arvexq_realtime_navigation_smoke.js
+          node scripts/arvexq_dual_sport_ui_smoke.js
           echo "ALL_VENUES_ALL_RACES_REALTIME_PRODUCTION_VERIFIED"
