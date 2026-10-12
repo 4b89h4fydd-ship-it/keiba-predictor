@@ -153,7 +153,16 @@ for(const detail of payload.details||[]){
     const p=model.predict(detail);
     const active=(detail.horses||[]).filter(h=>h&&Number(h.horseNumber)>0&&!h.scratched&&!h.withdrawn&&!/取消|除外|欠場/.test(String(h.status||'')));
     const marks=(p.rows||[]).filter(z=>z&&z.horse&&Number(z.horse.horseNumber)>0)
-      .map(z=>({horseNumber:Number(z.horse.horseNumber),mark:String(z.predMark||''),singleWinSuitable:!!z.singleWinSuitable}));
+      .map(z=>{
+        const role=z.predMark==='◎'&&['win','axis'].includes(String(z.honmeiRole||''))?
+          String(z.honmeiRole):'';
+        const grade=role&&['A','B','C'].includes(String(z.honmeiGrade||''))?
+          String(z.honmeiGrade):'';
+        return {horseNumber:Number(z.horse.horseNumber),mark:String(z.predMark||''),
+          singleWinSuitable:!!z.singleWinSuitable,
+          honmeiRole:grade?role:'',honmeiGrade:grade,
+          podiumAxisEligible:grade==='A'&&z.podiumAxisEligible===true};
+      });
     if(active.length<3||marks.length<active.length||marks.filter(x=>!!x.mark).length<3)continue;
     detail.morningMarkSnapshot={version:'arvexq-morning-marks-v1',raceId:String(detail.id),
       raceDate:String(detail.date||day),fixedAt,source:'morning-full-prefetch-original',
