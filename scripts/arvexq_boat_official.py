@@ -195,6 +195,41 @@ def split_b_program_venues(files: dict[str,str]) -> dict[str,str]:
     return separated
 
 
+
+def parse_official_multi_venue_schedule(parser: Any, parts: dict[str,str], day: date) -> Any:
+    """Rebind parser rows to their *own* official venue header.
+
+    In boatrace-lzh 0.1.0 ScheduleParser._extract_header() may choose a
+    different stadium named in the global B-day heading, even after splitting.
+    The segment's explicit BOATRACE venue heading and the dated closing-time
+    index are authoritative. No entrant or racer identity is invented.
+    """
+    from types import SimpleNamespace
+    by_name={name:f"{i:02d}" for i,name in enumerate(VENUE_NAMES,1)}
+    races=[];entries=[];racers=[]
+    seen=set()
+    for file,content in parts.items():
+        venue=file.rsplit("-venue-",1)[-1].split("-",1)[-1]
+        code=by_name.get(venue)
+        if code is None:
+            raise ValueError("Unexpected official B venue segment "+file)
+        parsed=parser.parse({file:content})
+        for row in parsed.races:
+            key=(code,row.race_number)
+            if key in seen:
+                raise ValueError(f"Duplicate official B race in segmented feed: {key}")
+            seen.add(key)
+            row.venue_code=code
+            row.race_date=day
+            races.append(row)
+        for entry in parsed.entries:
+            entry.venue_code=code
+            entry.race_date=day
+            entries.append(entry)
+        racers.extend(parsed.racers)
+    return SimpleNamespace(races=races,entries=entries,racers=racers)
+
+
 def acquire(day:date,cache_dir:Path)->dict[str,Any]:
     """One B download; optional one K download. No HTML scraping/extra providers."""
     try:
@@ -208,7 +243,7 @@ def acquire(day:date,cache_dir:Path)->dict[str,Any]:
         raise RuntimeError("Official B program missing or unavailable; no blank publish")
     sched=ScheduleParser()
     parts=split_b_program_venues(b)
-    result=sched.parse(parts)
+    result=parse_official_multi_venue_schedule(sched,parts,day)
     times=sched.parse_schedule_with_close_times(b,day)
     by_close={(str(t.venue_code).zfill(2),t.race_number) for t in times}
     by_program={(str(x.venue_code).zfill(2),x.race_number) for x in result.races}
