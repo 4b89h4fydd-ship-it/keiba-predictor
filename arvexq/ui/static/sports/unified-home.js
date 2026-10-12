@@ -25,9 +25,11 @@
       button('stats','▣','AI成績',stats)+'</nav>';
   }
 
-  // Shared real-time race selector. Uses scheduled start/close, never invents
-  // confirmation that a race is running or has finished.
+  // All scheduled races are retained. Live status updates every 10 seconds
+  // in the existing venue's 1R-12R grid, not just one upcoming race.
   const jstDate=now=>new Date(now.getTime()+9*3600000).toISOString().slice(0,10);
+  const cancelledStatus=status=>/cancelled|canceled|abandoned|中止|取止|取消|不成立|除外/i.test(String(status||''));
+  const confirmedStatus=status=>/confirmed|final|settled|finished|completed|確定|終了/i.test(String(status||''));
   function normalizedRace(mode,r,day){
     if(!r||!r.id)return null;
     const isBoat=mode==='boat',venue=String(isBoat?r.venue:r.track||'');
@@ -36,56 +38,89 @@
     const circuit=isBoat?'競艇':r.circuit==='中央'?'中央':r.circuit==='地方'?'地方':'';
     if(!circuit)return null;
     const status=String(r.result?.status||r.raceStatus||r.status||'');
-    if(/cancelled|canceled|abandoned|中止|取止|取消|不成立/i.test(status))return null;
     const time=String(isBoat?r.closeTime:r.startTime||r.scheduledStartTime||'');
     const clock=/^([01]?\d|2[0-3]):([0-5]\d)/.exec(time);
     const stamp=isBoat?Date.parse(String(r.closeAt||'')):NaN;
     const schedule=Number.isFinite(stamp)?stamp:
       clock?Date.parse(day+'T'+clock[1].padStart(2,'0')+':'+clock[2]+':00+09:00'):NaN;
-    if(!Number.isFinite(schedule))return null;
-    return {id:String(r.id),circuit,venue,number,
-      title:String(r.title||''),time:clock?clock[1].padStart(2,'0')+':'+clock[2]:
-        new Date(schedule+9*3600000).toISOString().slice(11,16),
-      timestamp:schedule};
+    const renderedTime=clock?clock[1].padStart(2,'0')+':'+clock[2]:
+      Number.isFinite(schedule)?new Date(schedule+9*3600000).toISOString().slice(11,16):'';
+    return {id:String(r.id),circuit,venue,number,title:String(r.title||''),
+      time:renderedTime,timestamp:schedule,confirmed:confirmedStatus(status),
+      cancelled:cancelledStatus(status)};
   }
+  function raceStatus(mode,r,day,now=new Date()){
+    const row=normalizedRace(mode,r,day);
+    if(!row)return 'unknown';
+    if(row.cancelled)return 'cancelled';
+    if(row.confirmed)return 'finished';
+    if(!Number.isFinite(row.timestamp))return 'unknown';
+    const delta=row.timestamp-now.getTime();
+    if(delta<=0)return 'elapsed'; // Clock passed; do not invent a confirmed result.
+    return delta<=600000?'soon':'upcoming';
+  }
+  const labelFor=(status,mode)=>({
+    finished:'確定',elapsed:mode==='boat'?'締切経過':'発走時刻経過',
+    soon:'まもなく',upcoming:'発走前',unknown:'時刻未取得',
+    cancelled:'中止'
+  }[status]||'');
   function liveModel(mode,rows,day,now=new Date()){
-    if(!/^(horse|boat)$/.test(mode)||day!==jstDate(now))return [];
-    const current=now.getTime(),groups=new Map();
-    for(const raw of Array.isArray(rows)?rows:[]){
+    if(!/^(horse|boat)$/.test(mode))return [];
+    const data=(Array.isArray(rows)?rows:[]).map(raw=>{
       const r=normalizedRace(mode,raw,day);
-      if(!r||r.timestamp<current)continue; // Advance to the NEXT race immediately.
-      const key=r.circuit+'|'+r.venue;
-      const old=groups.get(key);
-      if(!old||r.timestamp<old.timestamp||
-           r.timestamp===old.timestamp&&r.number<old.number)groups.set(key,r);
+      return r?{...r,status:raceStatus(mode,raw,day,now),next:false}:null;
+    }).filter(Boolean);
+    const nextByVenue=new Map();
+    for(const race of data){
+      if(race.status!=='upcoming'&&race.status!=='soon')continue;
+      const key=race.circuit+'|'+race.venue,old=nextByVenue.get(key);
+      if(!old||race.timestamp<old.timestamp||
+         race.timestamp===old.timestamp&&race.number<old.number)nextByVenue.set(key,race);
     }
-    return [...groups.values()].sort((a,b)=>
-      a.circuit.localeCompare(b.circuit,'ja')||a.timestamp-b.timestamp||
-      a.venue.localeCompare(b.venue,'ja'));
+    const ids=new Set([...nextByVenue.values()].map(x=>x.id));
+    for(const r of data)r.next=ids.has(r.id);
+    return data.sort((a,b)=>a.circuit.localeCompare(b.circuit,'ja')||
+      a.venue.localeCompare(b.venue,'ja')||a.number-b.number);
   }
   function liveSignature(mode,rows,day,now=new Date()){
     return liveModel(mode,rows,day,now).map(r=>
-      r.id+':'+Math.max(0,Math.ceil((r.timestamp-now.getTime())/60000))).join('|');
+      r.id+':'+r.status+(r.next?':next':'')).join('|');
   }
   function liveRaces(mode,rows,day,now=new Date()){
-    const selected=liveModel(mode,rows,day,now);
-    const current=day===jstDate(now),title='リアルタイム';
-    const html=selected.map(r=>{
-      const left=Math.max(0,Math.ceil((r.timestamp-now.getTime())/60000));
-      const status=left<=10?'まもなく':'あと'+left+'分';
-      return '<button type="button" class="arv-realtime-race'+(left<=10?' soon':'')+
-        '" data-race="'+esc(r.id)+'" aria-label="'+esc(r.venue+' '+r.number+'R '+r.time)+'">'+
-        '<span class="arv-realtime-venue">'+esc(r.circuit==='競艇'?'':r.circuit+' ') +esc(r.venue)+'</span>'+
-        '<b>'+r.number+'R</b><span class="arv-realtime-clock">'+esc(r.time)+'</span>'+
-        '<small>'+esc(status)+'</small></button>';
-    }).join('');
-    const caption=selected.length?'各会場の次レースへ自動切替':'';
-    const empty=!current?'当日分のみ表示します':
-      Array.isArray(rows)&&rows.length?'本日の次レースはありません':'開催データはまだ未取得です';
+    const all=liveModel(mode,rows,day,now);
+    const ended=all.filter(r=>r.status==='elapsed'||r.status==='finished').length;
+    const active=all.filter(r=>r.status==='soon').length;
+    const pending=all.filter(r=>r.next).length;
+    const desc=all.length?
+      '全'+all.length+'R / 時刻経過 '+ended+'R / まもなく '+active+'R / 次レース '+pending+'場':
+      '開催・出走情報は未取得です';
     return '<section class="arv-realtime-section" data-live-signature="'+esc(liveSignature(mode,rows,day,now))+
-      '" aria-label="'+title+'"><header><b>'+title+'</b><small>'+caption+'</small></header>'+
-      (selected.length?'<div class="arv-realtime-grid">'+html+'</div>':
-        '<p class="arv-realtime-empty">'+empty+'</p>')+'</section>';
+      '" aria-label="リアルタイム"><header><b>リアルタイム</b><small>全会場・全レース自動更新</small></header>'+
+      '<p class="arv-realtime-summary">'+esc(desc)+'</p>'+
+      '<p class="arv-realtime-legend"><span>青＝次レース</span><span>金＝まもなく</span><span>暗色＝時刻経過・確定</span></p></section>';
   }
-  root.ARVEXQUnifiedHome=Object.freeze({hero,dateBar,buttons,liveModel,liveSignature,liveRaces});
+  function syncLiveUI(mode,rows,day,scope,now=new Date()){
+    const rootNode=scope||root.document;
+    if(!rootNode||!rootNode.querySelectorAll)return;
+    const all=liveModel(mode,rows,day,now);
+    const lookup=new Map(all.map(r=>[r.id,r]));
+    for(const el of rootNode.querySelectorAll('button.arv-all-race[data-race]')){
+      const r=lookup.get(el.getAttribute('data-race'));
+      if(!r)continue;
+      const code=r.status;
+      for(const cls of ['elapsed','finished','soon','upcoming','future','pending','next'])
+        el.classList.toggle(cls,cls===code||cls==='next'&&r.next);
+      el.setAttribute('data-race-state',code);
+      const stateLabel=el.querySelector('.arv-race-state');
+      if(stateLabel)stateLabel.textContent=labelFor(code,mode);
+    }
+    const section=rootNode.querySelector('.arv-realtime-section');
+    if(section){
+      const signature=liveSignature(mode,rows,day,now);
+      if(section.getAttribute('data-live-signature')!==signature){
+        section.outerHTML=liveRaces(mode,rows,day,now);
+      }
+    }
+  }
+  root.ARVEXQUnifiedHome=Object.freeze({hero,dateBar,buttons,liveModel,liveSignature,liveRaces,raceStatus,labelFor,syncLiveUI});
 })(typeof window!=='undefined'?window:globalThis);
