@@ -100,8 +100,11 @@ def official_day_record(day: date, schedule: Any, close_times: list[Any],
                 v=getattr(racer,src,None)
                 if v is not None:person[dest]=v
             ent={"boatNo":e.boat_number,"name":str(racer.name).strip(),"player":person}
+            if getattr(racer,"racer_class",None):
+                ent["class"]=str(racer.racer_class)
             if getattr(e,"motor_number",None) is not None:
                 ent["motor"]={"number":e.motor_number}
+                ent["motorNo"]=e.motor_number
             if getattr(e,"boat_part",None) is not None:
                 ent["boat"]={"number":e.boat_part}
             entrants.append(ent)
