@@ -1860,7 +1860,11 @@ function immutableArchivedPrediction(r){
       if(last>=4&&finish>0){finishEvidence.closingSamples++;
         if(finish<=3)finishEvidence.closingWins++}
     });
+    var honmei=validatedHonmeiMetadata(snap);
     return{horse:h,predMark:mark,predRank:order[mark]||999,markFrozen:!!saved.length,
+      honmeiRole:mark==='◎'?honmei.honmeiRole:'',
+      honmeiGrade:mark==='◎'?honmei.honmeiGrade:'',
+      podiumAxisEligible:mark==='◎'&&honmei.honmeiGrade==='A'&&snap.podiumAxisEligible===true,
       hasFrozenEvaluation:ev.score!=null,
       overallRaw:ev.score!=null?n(ev.score):null,overallGrade:String(ev.grade||'—'),
       overallScore:ev.score!=null?n(ev.score):null,overallScoreExact:ev.score!=null?n(ev.score):null,
@@ -1892,8 +1896,10 @@ function applyFrozenMarks(r,p){
       marked>=3&&n(p.coverage,0)>=.35){
       record={version:'v345',raceId:String(r.id),date:String(r.date),fixedAt:new Date().toISOString(),
         fixedMinutesBeforePost:clock.remaining,
-        marks:rows.map(function(z){return {no:n(z.horse.horseNumber),mark:String(z.predMark||''),
-          single:!!z.singleWinSuitable}})};
+        marks:rows.map(function(z){var h=validatedHonmeiMetadata(z);return {no:n(z.horse.horseNumber),mark:String(z.predMark||''),
+          single:!!z.singleWinSuitable,honmeiRole:z.predMark==='◎'?h.honmeiRole:'',
+          honmeiGrade:z.predMark==='◎'?h.honmeiGrade:'',
+          podiumAxisEligible:z.predMark==='◎'&&z.podiumAxisEligible===true}})};
       try{localStorage.setItem(markFreezeKey(r),JSON.stringify(record))}
       catch(e){record=null}
     }
@@ -1914,6 +1920,10 @@ function applyFrozenMarks(r,p){
       var q=remote[n(z.horse&&z.horse.horseNumber)]||{},scratched=isScratchHorse(z.horse);
       z.computedLiveMark=String(z.predMark||'');z.predMark=scratched?'':String(q.mark||'');
       z.predRank=order[z.predMark]||999;z.markFrozen=true;
+      var lockedHonmei=validatedHonmeiMetadata(q);
+      z.honmeiRole=z.predMark==='◎'?lockedHonmei.honmeiRole:'';
+      z.honmeiGrade=z.predMark==='◎'?lockedHonmei.honmeiGrade:'';
+      z.podiumAxisEligible=z.predMark==='◎'&&lockedHonmei.honmeiGrade==='A'&&q.podiumAxisEligible===true;
       z.singleWinSuitable=!scratched&&(!!q.singleWinSuitable||
         (n((r.preRaceBet||{}).singleWinHorseNumber,0)>0&&
          n((r.preRaceBet||{}).singleWinHorseNumber)===n(z.horse&&z.horse.horseNumber)));
@@ -1934,6 +1944,10 @@ function applyFrozenMarks(r,p){
       z.computedLiveMark=String(z.predMark||'');
       z.predMark=!scratched&&snap?String(snap.mark||''):'';
       z.predRank=order[z.predMark]||999;
+      var lockedHonmei=validatedHonmeiMetadata(snap);
+      z.honmeiRole=z.predMark==='◎'?lockedHonmei.honmeiRole:'';
+      z.honmeiGrade=z.predMark==='◎'?lockedHonmei.honmeiGrade:'';
+      z.podiumAxisEligible=z.predMark==='◎'&&lockedHonmei.honmeiGrade==='A'&&snap&&snap.podiumAxisEligible===true;
       z.singleWinSuitable=!scratched&&!!(snap&&snap.single);
       z.markFrozen=true;
     });
@@ -2257,6 +2271,30 @@ function racecardMarkDisplay(mark){
   }
   return esc(raw);
 }
+
+function validatedHonmeiMetadata(source){
+  var q=source||{},role=String(q.honmeiRole||q.role||''),
+      grade=String(q.honmeiGrade||q.confidenceGrade||'');
+  return{honmeiRole:role==='win'||role==='axis'?role:'',
+    honmeiGrade:['A','B','C'].indexOf(grade)>=0?grade:''}
+}
+function honmeiBadgeText(x){
+  if(!x||x.predMark!=='◎')return '';
+  var q=validatedHonmeiMetadata(x);
+  if(!q.honmeiRole||!q.honmeiGrade)return '未保存';
+  if(q.honmeiGrade!=='A')return q.honmeiGrade;
+  if(q.honmeiRole==='win'&&x.podiumAxisEligible===true)
+    return '【単】【軸】';
+  return q.honmeiRole==='win'?'【単】':'【軸】';
+}
+function honmeiA11yText(x){
+  if(!x||x.predMark!=='◎')return '';
+  var q=validatedHonmeiMetadata(x);
+  if(!q.honmeiRole||!q.honmeiGrade)return '◎・発走前の役割と信頼度は保存されていません';
+  return '◎・'+(q.honmeiRole==='win'?'1着向き':'3着内の軸向き')+
+    '・信頼度'+q.honmeiGrade+(q.honmeiGrade==='C'?'・相対本命（軸固定不可）':'');
+}
+
 function racecardMarkLegend(r){
   var server=serverFrozenPrediction(r),archive=window.ARVEXQSavedSnapshot&&window.ARVEXQSavedSnapshot.marks(r),stored=server?null:loadFrozenMarks(r),clock=raceMarkClock(r),
       status=!clock.started?('発走前の最新AI印（更新あり）'+(server||stored?'／保存済み原本・買い目は維持':'')):
@@ -2277,7 +2315,7 @@ function racecardEntryRow(r,h,x){
       openAttr=scratch?'':(' data-horse-open="'+esc(no)+'"'),
       detailLabel=' aria-label="'+esc(name)+'の詳細を開く"';
   return '<div class="racecard-row rc-racecard-v336 rc-racecard-v339'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'" aria-label="'+esc(String(x&&x.predMark||'—').replace(/\+/g,'＋')+(x&&x.predMark==='◎'&&x.honmeiRole?'、'+(x.honmeiRole==='win'?'1着向き':'3着内の軸向き')+'（信頼度'+(x.honmeiGrade||'C')+'）':'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':''))+'"><span class="rc-mark-main">'+racecardMarkDisplay(x&&x.predMark)+'</span>'+(x&&x.predMark==='◎'&&x.honmeiRole?'<span class="rc-honmei-grade'+(x.honmeiGrade==='A'?' rc-honmei-grade-role':'')+'" title="'+esc(x.honmeiRole==='win'?'1着向き':'3着内の軸向き') +'（信頼度'+esc(x.honmeiGrade||'C')+'）" aria-hidden="true">'+esc(x.honmeiGrade==='A'?'【'+(x.honmeiRole==='win'?'単':'軸')+'】':x.honmeiGrade||'C')+'</span>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
+    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'" aria-label="'+esc(String(x&&x.predMark||'—').replace(/\+/g,'＋')+(x&&x.predMark==='◎'?'、'+honmeiA11yText(x):'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':''))+'"><span class="rc-mark-main">'+racecardMarkDisplay(x&&x.predMark)+'</span>'+(x&&x.predMark==='◎'?'<span class="rc-honmei-grade'+(x.honmeiGrade==='A'?' rc-honmei-grade-role':'')+'" title="'+esc(honmeiA11yText(x))+'" aria-hidden="true">'+esc(honmeiBadgeText(x))+'</span>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
     +'<button type="button" class="rc-v336-number"'+openAttr+detailLabel+disabled+'><span class="rc-number frame'+fr+'">'+esc(no)+'</span></button>'
     +'<div class="rc-v336-info"><button type="button" class="rc-horse-main"'+openAttr+detailLabel+disabled+'>'
       +'<span class="rc-horse-name">'+esc(name)+'</span>'
@@ -2962,7 +3000,7 @@ function aiBetRecommendation(r,p){
 
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は原則1頭。1着向き／3着内の軸向きと信頼度A・B・Cを買い目にも反映。信頼度Cは軸固定を保証しません。発走後は保存済み予想だけを表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(x.predMark==='◎'&&x.honmeiRole?'<small>'+esc((x.honmeiGrade||'C')==='A'?'◎【'+(x.honmeiRole==='win'?'単':'軸')+'】':'◎'+(x.honmeiGrade||'C'))+'｜'+esc(x.honmeiRole==='win'?'1着向き':'3着内の軸向き')+'｜信頼度'+esc(x.honmeiGrade||'C')+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は原則1頭。1着向き／3着内の軸向きと信頼度A・B・Cを買い目にも反映。信頼度Cは軸固定を保証しません。発走後は保存済み予想だけを表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(x.predMark==='◎'?'<small>'+esc(honmeiBadgeText(x)==='未保存'?'◎：当時の役割・信頼度未保存':'◎'+honmeiBadgeText(x)+'｜'+(x.honmeiRole==='win'?'1着向き':'3着内の軸向き')+'｜信頼度'+x.honmeiGrade)+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
