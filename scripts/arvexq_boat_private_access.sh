@@ -23,9 +23,8 @@ check_private(){
     exit 1
   fi
 }
-# Access must protect the host, not just /kyotei/. Anonymous access to
-# /sports/boat-data remains redistribution regardless of the user interface.
-check_private "/"
+# Protect BOTH the boat screen and its actual dated data. The horse app
+# may remain public; /sports/boat-data must never be served anonymously.
 check_private "/kyotei/"
 check_private "/sports/boat-data/$DAY.json"
 if [[ "${2:-}" == "--verify-only" ]]; then
