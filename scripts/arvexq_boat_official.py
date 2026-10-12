@@ -173,9 +173,19 @@ def acquire(day:date,cache_dir:Path)->dict[str,Any]:
     sched=ScheduleParser()
     result=sched.parse(b)
     times=sched.parse_schedule_with_close_times(b,day)
+    print("OFFICIAL_B_SOURCE_AUDIT", "archives=",len(b),
+          "rawRaces=",len(result.races),"entries=",len(result.entries),
+          "closingTimes=",len(times),
+          "closeVenues=",sorted({str(t.venue_code) for t in times}),
+          "parsedVenues=",sorted({str(r.venue_code) for r in result.races}))
     # K is posted after racing; one attempt, never infer missing results.
     k=d.download(day,"performance") if day<=datetime.now(JST).date() else {}
     perf=PerformanceParser().parse(k) if k else None
+    print("OFFICIAL_K_SOURCE_AUDIT","archives=",len(k),
+          "rawRaces=",len(perf.races) if perf else 0,
+          "entries=",len(perf.entries) if perf else 0,
+          "payouts=",len(perf.payouts) if perf else 0,
+          "venues=",sorted({str(r.venue_code) for r in perf.races}) if perf else [])
     return official_day_record(day,result,times,perf)
 
 
