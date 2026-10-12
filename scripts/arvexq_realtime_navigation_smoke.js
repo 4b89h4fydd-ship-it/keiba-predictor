@@ -46,6 +46,7 @@ async function check(kind,name){
       return {first:before?.number,next:afterNext?.number,
         firstState,buttonElapsed:firstButton?.classList.contains('elapsed'),
         buttonLabel:firstButton?.querySelector('.arv-race-state')?.textContent,
+        opacity:firstButton?Number(getComputedStyle(firstButton).opacity):1,
         allRaceButtons:document.querySelectorAll('.boat-page .arv-all-panel button.arv-all-race').length};
 
     },[records,day]);
@@ -53,6 +54,7 @@ async function check(kind,name){
     assert.equal(timeline.firstState,'elapsed');
     assert.equal(timeline.buttonElapsed,true);
     assert.equal(timeline.buttonLabel,'締切経過');
+    assert.ok(timeline.opacity<0.8,name+' elapsed race was not visually darkened');
     assert.equal(timeline.allRaceButtons,24);
     await portal.locator('button[data-race="'+records[0].id+'"]').click({timeout:20000});
     await page.locator('.boat-entry-list .boat-entry').first().waitFor({state:'visible',timeout:20000});
