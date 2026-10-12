@@ -4,7 +4,7 @@
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function hero(){
     return '<div class="arv-unified-hero">'+
-      '<img src="/sports/arvexq-unified-hero.webp" alt="ARVEXQ｜競馬・競艇 AI" width="960" height="540" decoding="async" fetchpriority="high" '+
+      '<img src="/sports/arvexq-unified-hero.webp?v=20261012-hq1536" alt="ARVEXQ｜競馬・競艇 AI" width="1536" height="864" decoding="async" fetchpriority="high" '+
       'onerror="this.onerror=null;this.src=\'/arvexq-racing-hero.webp\'"></div>';
   }
   function dateBar(iso){

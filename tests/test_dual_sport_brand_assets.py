@@ -12,6 +12,14 @@ class SharedBrandAssetsTest(unittest.TestCase):
         hero=(STATIC/"arvexq-unified-hero.webp").read_bytes()
         icon=(STATIC/"arvexq-unified-icon-128.png").read_bytes()
         self.assertTrue(hero.startswith(b"RIFF") and hero[8:12]==b"WEBP")
+        # The accepted full-resolution art replaces the old ~2.8 KB thumbnail.
+        self.assertGreater(len(hero), 300_000)
+        self.assertEqual(hero[12:16], b"VP8 ")
+        w=struct.unpack("<H",hero[26:28])[0] & 0x3fff
+        h=struct.unpack("<H",hero[28:30])[0] & 0x3fff
+        self.assertEqual((w,h),(1536,864))
+        shared=(STATIC/"sports"/"unified-home.js").read_text(encoding="utf-8")
+        self.assertIn("/sports/arvexq-unified-hero.webp?v=20261012-hq1536", shared)
         self.assertTrue(icon.startswith(b"\x89PNG\r\n\x1a\n"))
         self.assertEqual(struct.unpack(">II",icon[16:24]),(128,128))
 
