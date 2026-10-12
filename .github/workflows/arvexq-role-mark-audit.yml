@@ -15,7 +15,7 @@ on:
       end_date:
         description: 'Last completed date (YYYY-MM-DD)'
         required: false
-        default: '2026-10-05'
+        default: ''
 
 permissions:
   contents: read
@@ -31,11 +31,12 @@ jobs:
       - name: Syntax check
         run: python -m py_compile scripts/arvexq_role_mark_audit.py
       - name: Run exact locked role audit
+        # Only completed racing days; tomorrow/future data cannot be backtested.
         env:
           PYTHONPATH: '.'
           ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
           ARVEXQ_DAYS: ${{ inputs.days || '7' }}
-          ARVEXQ_END_DATE: ${{ inputs.end_date || '2026-10-05' }}
+          ARVEXQ_END_DATE: ${{ inputs.end_date || '' }}
         run: python scripts/arvexq_role_mark_audit.py | tee role-audit.log
       - name: Publish role summary
         if: always()
