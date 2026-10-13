@@ -2049,12 +2049,19 @@ function ensureAutoOdds(r){
 }
 function overallScoreText(x){if(x&&x.hasFrozenEvaluation===false)return '—';var v=x&&x.overallScoreExact!=null?Number(x.overallScoreExact):Number(x&&x.overallScore);return isFinite(v)?(Math.round(v*10)/10).toFixed(1):'—'}
 function aiBetStoreKey(id){return 'arvexq:prebet:v300:'+String(id||'')}
-function loadStoredAiBet(id,allowLegacy){try{var keys=[aiBetStoreKey(id)],i,x;if(allowLegacy){['v218','v217','v215','v213','v212','v211','v210','v207','v205','v181','v180'].forEach(function(v){keys.push('arvexq:prebet:'+v+':'+String(id||''))})}for(i=0;i<keys.length;i++){x=JSON.parse(localStorage.getItem(keys[i])||'null');if(x&&((x.items&&x.items.length)||x.decision==='見送り'))return x}return null}catch(e){return null}}
+function loadStoredAiBet(id){
+  // Only the current device receipt key is eligible for live presentation.
+  // Legacy v180-v218 receipts remain untouched in storage for external audit.
+  try{
+    var x=JSON.parse(localStorage.getItem(aiBetStoreKey(id))||'null');
+    return x&&((x.items&&x.items.length)||x.decision==='見送り')?x:null;
+  }catch(e){return null}
+}
 function saveStoredAiBet(r,plan){
   try{
     if(!r||!r.id||!plan||isFinal(r))return;
     var st=mins(r.startTime),raceDate=String(r.date||''),todayKey=today(),started=(raceDate===todayKey&&st<9999&&nowMins()>=st);
-    if(raceMarkClock(r).started||started||st>=9999||raceDate!==todayKey||loadStoredAiBet(r.id,false))return;
+    if(raceMarkClock(r).started||started||st>=9999||raceDate!==todayKey||loadStoredAiBet(r.id))return;
     var rd=plan.dataReadiness||{},central=String(r.circuit||'')==='中央',
         minReady=central?.62:.58,ready=Number(rd.prediction),remain=st-nowMins(),lockWindow=30,
         gate=plan.betInputGate||{};
@@ -2123,7 +2130,7 @@ function frozenAiBetForRace(r){
     var fixed=currentBetEnginePlan(verifiedSavedAiBet(r,mod.sealedPlan(r,original)));
     if(fixed)return fixed
   }
-  return currentBetEnginePlan(verifiedSavedAiBet(r,loadStoredAiBet(r.id,true)))
+  return currentBetEnginePlan(verifiedSavedAiBet(r,loadStoredAiBet(r.id)))
 }
 // Outcome context is explanatory: it must not reorder or exclude ticket combos.
 function attachBetOutcomeAudit(plan,r,p){
