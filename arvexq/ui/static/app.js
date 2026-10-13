@@ -1167,7 +1167,7 @@ function assignPredictionMarks(rows,r){
     z.honmeiGrade=idx===0?grade:'';
     z.podiumAxisEligible=z===axisRow&&grade==='A';
     z.singleWinSuitable=idx===0&&grade==='A';z.singleWinStrength=n(z.threeFactorScore);
-    z.singleWinReason=idx===0?'同一3要素で1着・3着内の軸を判定':'';
+    z.singleWinReason=idx===0?'近走・条件の実績から1着と3着内を別判定':'';
     z.attentionReason=idx===0?'近走5走＋同距離・馬場の実績｜信頼度'+grade:
       (idx<labels.length?'総合 '+Math.round(z.threeFactorScore*100)+'/100':
        (z===starCandidate?'同距離・馬場の観測実績により選出':''));
@@ -2317,7 +2317,7 @@ function buildAiBetPlan(r,p){
   // Plackett-Luce ranking as ◎○▲, never an independent ticket predictor.
   if(active){
     items.push(item('本線','馬連',[[no(ordered[0]),no(ordered[1])]],
-      '◎と○の組合せ（3要素による1・2着候補）'));
+      '◎と○の組合せ（近走・条件の1・2着候補）'));
     items.push(item('保険','ワイド',[[no(ordered[0]),no(ordered[2])]],
       '◎と▲の3着内組合せ'));
     if(gap>=.055){
@@ -2332,7 +2332,7 @@ function buildAiBetPlan(r,p){
       tri.sort(function(a,b){return b.score-a.score});
       var maxPoints=6,combos=tri.slice(0,maxPoints).map(function(z){return z.combo});
       if(combos.length)items.push(item('3連単チャレンジ','3連単',combos,
-        '◎1着固定。3要素の順序確率上位を最大6点'));
+        '◎1着固定。近走・条件の順序推定上位を最大6点'));
     }
   }
   var trifecta=items.some(function(z){return z.kind==='3連単'}),
@@ -2349,7 +2349,7 @@ function buildAiBetPlan(r,p){
           selected.reason+'／データ充足の審査が必要',
         expectedValueReason:'各券種の的中率・期待値は検証で校正されていません。',
         referenceBudget:{points:items.reduce(function(v,x){return v+x.points},0)},
-        dataReadiness:ready,betInputGate:{ready:isReady,missing:isReady?[]:['3要素または出走前データ不足']},
+        dataReadiness:ready,betInputGate:{ready:isReady,missing:isReady?[]:['近走・条件の根拠または出走前データ不足']},
         betWarnings:!isReady?['直近5走・区間の実測根拠不足']:[],
         p1Model:'arvexq-form-condition-no-sectional-proposal-v1',
         p2Model:'plackett-luce-same-score',p3Model:'plackett-luce-same-score',
