@@ -2301,43 +2301,6 @@ function diagnosisPanel(r,p){
 }
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=(h.allPastRuns||h.recentRaces||[]).slice(0,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中'),career=careerCoverageLabel(h);if(career)status+='・全キャリア'+career;return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){return '<section id="section-pace" class="card pace-panel-direct">'+paceBoard(r,p)+'</section>'}
-function detailPanel(r,p){
-  var rows=sortedHorseRows(p.rows),field=rows.length;
-  if(!field)return '<section class="card"><h2>詳細</h2><div class="muted">詳細データを取得中です。</div></section>';
-  var no=n(state.detailHorseNo,0),idx=rows.findIndex(function(z){return n(z.horse.horseNumber)===no});
-  if(idx<0){idx=0;state.detailHorseNo=n(rows[0].horse.horseNumber)}
-  var x=rows[idx],h=x.horse,e=h.integratedEvaluation||{},a=e.v218Audit||e.v217Audit||x.v218Audit||x.v217Audit||{},
-      recent=(h.recentRaces||h.allPastRuns||[]).slice(0,5),bodyTxt=horseBodyWeightText(h)||((referenceBodyWeight(h)>0)?('前走 '+referenceBodyWeight(h)+'kg'):'計量待ち'),
-      styleTxt=x.expected||x.pastStyle||'不明',score=Math.round(clamp(n(a.sevenAxisScore,x.v239Composite!=null?x.v239Composite:n(x.overallRaw,.5)),0,1)*100),
-      grade=score>=84?'S':score>=74?'A':score>=62?'B':'C';
-  var recentHtml=recent.length?recent.map(function(rr){
-    var rid=rr.raceId||((r.circuit==='地方'&&rr.date&&rr.track&&n(rr.raceNumber))?('nar-'+rr.date+'-'+rr.track+'-'+String(n(rr.raceNumber)).padStart(2,'0')):'');
-    return '<div class="recent detail-recent-v239"><div class="recent-head"><b>'+esc(rr.date||'—')+' '+esc(rr.track||'—')+' '+(n(rr.raceNumber)?esc(rr.raceNumber)+'R ':'')+esc(rr.distance||'—')+'m</b><strong>'+esc(rr.finish||rr.finishPosition||'—')+'着</strong></div>'+
-      '<div>'+fmtTime(rr.timeSeconds)+'　'+esc(rr.condition||'不明')+' / '+esc(rr.weather||'不明')+'</div>'+
-      '<div class="muted">'+(rr.title?esc(rr.title)+'　':'')+'通過 '+esc((rr.cornerPositions||[]).join('-')||'—')+(saneCarriedWeightValue(rr.carriedWeight,rr.bodyWeight)?'　斤量 '+esc(String(saneCarriedWeightValue(rr.carriedWeight,rr.bodyWeight)).replace(/\.0$/,''))+'kg':'')+'</div>'+
-      (rid?'<button type="button" class="recent-open" data-past-race="'+esc(rid)+'">この過去レースを見る</button>':'')+'</div>'
-  }).join(''):'<div class="empty compact">近走データを確認できませんでした</div>';
-  return '<section id="section-detail" class="card detail-panel-v223 detail-panel-v239">'
-    +'<div class="detail-nav-v223">'
-      +'<button type="button" data-detail-prev="1" aria-label="前の馬">‹</button>'
-      +'<span class="detail-check-v223 rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span>'
-      +badge(h)+'<strong class="detail-name-v223">'+esc(h.name)+'</strong>'
-      +'<button type="button" data-detail-next="1" aria-label="次の馬">›</button>'
-      +'<span class="detail-count-v223">'+(idx+1)+'/'+field+'頭</span>'
-    +'</div>'
-    +'<div class="detail-ai-card-v223 detail-ai-v239"><div class="detail-ai-label-v223">AI総合評価</div><div class="detail-ai-main-v223"><strong class="overall-grade '+gradeClass(grade)+'">'+grade+'</strong><b>'+score+'</b><i data-ai-mark="'+esc(x.predMark||'')+'">'+esc(x.predMark||'—')+'</i></div><div class="detail-ai-sub-v223"><span>1着 '+(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.p1Probability)))*100).toFixed(1)+'%</span><span>2着 '+(n(x.p2Probability)*100).toFixed(1)+'%</span><span>3着 '+(n(x.p3Probability)*100).toFixed(1)+'%</span></div></div>'
-    +'<div class="detail-simple-section-v239"><h3>基本情報</h3><div class="horse-info-grid">'
-      +'<div class="horse-info-cell"><small>性齢</small><b>'+esc(h.sex||'—')+esc(h.age||'—')+'</b></div>'
-      +'<div class="horse-info-cell"><small>脚質</small><b>'+esc(styleTxt)+'</b></div>'
-      +'<div class="horse-info-cell"><small>騎手</small><b>'+esc(h.jockey||'—')+'</b></div>'
-      +'<div class="horse-info-cell"><small>斤量</small><b>'+esc(carriedWeightText(h))+'</b></div>'
-      +'<div class="horse-info-cell"><small>調教師</small><b>'+esc(h.trainer||'—')+'</b></div>'
-      +'<div class="horse-info-cell"><small>馬体重</small><b>'+esc(bodyTxt)+'</b></div>'
-    +'</div></div>'
-    +'<div class="detail-simple-section-v239"><h3>近走データ</h3>'+recentHtml+'</div>'
-    +researchHorsePanel(r,h)
-  +'</section>'
-}
 function openHorseDetailPage(no){
   no=n(no,0);if(!no||!state.race)return;
   state.detailHorseNo=no;
