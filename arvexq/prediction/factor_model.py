@@ -74,7 +74,7 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
         score = (recent if comparable is None else
                  (1 - strength) * recent + strength * comparable) if recent is not None else 0.5
         factors = {
-            "recentForm": raw.get("trueRun"),
+            "recentForm": raw.get("recentForm"),
             "conditionForm": raw.get("conditionForm"),
         }
         available = sum(value is not None for value in factors.values())
