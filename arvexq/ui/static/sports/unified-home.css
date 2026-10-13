@@ -1081,3 +1081,77 @@ html body .smart-venue-page,
 html body .smart-venue-page .smart-main{
  background:#fff!important;
 }
+
+/* Unified minimal white visual language across the entire horse racing app.
+   Preserve semantic states, horse marks and odds highlights. */
+html body,html body .smart-shell,html body .smart-main,
+html body .smart-home-subpage,html body .smart-race-page,
+html body .smart-venue-page,html body .smart-venue-page .smart-main{
+ background:#fff!important;color:#20262b!important;
+}
+html body .smart-topbar,html body .arv-dated-subbar,
+html body .smart-race-topbar{
+ background:#fff!important;color:#20262b!important;border-color:#e0e3e5!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+html body .smart-topbar strong,html body .smart-topbar small,
+html body .arv-dated-subbar *,html body .smart-race-topbar strong{
+ color:#20262b!important;
+}
+html body .smart-race-page .smart-race-head,
+html body .smart-race-page .smart-race-header,
+html body .smart-race-page .smart-race-info,
+html body .smart-race-page .smart-race-summary,
+html body .smart-race-page .card,
+html body .smart-race-page .smart-race-content,
+html body .smart-home-subpage .smart-fixed-picks,
+html body .smart-home-subpage .smart-ai-daily,
+html body .smart-home-subpage .arv-pick-circuit-page,
+html body .smart-home-subpage .arv-ai-venues,
+html body .smart-venue-page .smart-race-section{
+ background:#fff!important;color:#20262b!important;box-shadow:none!important;
+ border-color:#e3e6e8!important;
+}
+html body .smart-race-page .smart-race-head *,
+html body .smart-race-page .smart-race-header *,
+html body .smart-race-page .smart-race-info *,
+html body .smart-race-page .smart-race-summary *,
+html body .smart-race-page .card h2,
+html body .smart-race-page .smart-race-meta,
+html body .smart-race-page .smart-race-head h1,
+html body .smart-race-page .smart-race-result-side time{
+ color:#20262b!important;text-shadow:none!important;
+}
+html body .smart-race-page .card,
+html body .smart-race-page .smart-race-head,
+html body .smart-home-subpage .smart-fixed-picks,
+html body .smart-home-subpage .smart-ai-daily,
+html body .smart-home-subpage .arv-pick-circuit-page,
+html body .smart-home-subpage .arv-ai-venues{
+ padding:7px!important;margin:4px 0 7px!important;border-radius:5px!important;
+}
+html body .smart-race-page .smart-race-tabs{margin:4px 0!important;gap:3px!important}
+html body .smart-race-page .smart-race-tabs button{
+ box-shadow:none!important;border-radius:4px!important;
+}
+html body .smart-home-subpage .fixed-pick-box-body,
+html body .smart-home-subpage .fixed-pick-empty,
+html body .smart-home-subpage .smart-empty{
+ background:#fff!important;color:#20262b!important;opacity:1!important;
+}
+html body .smart-home-subpage .arv-pick-circuit-btn,
+html body .smart-home-subpage .arv-ai-venue-card,
+html body .smart-home-subpage .smart-ai-daily-grid>div,
+html body .smart-home-subpage .arv-ai-metrics>div{
+ background:#fff!important;color:#20262b!important;box-shadow:none!important;
+ border:1px solid #e1e5e7!important;
+}
+html body .smart-venue-page .smart-race-list{gap:4px!important}
+html body .smart-venue-page .smart-race-row:not(.final):not([data-race-state="elapsed"]):not([data-race-state="finished"]){
+ background:#fff!important;color:#20262b!important;border-color:#e1e5e7!important;
+}
+html body .smart-venue-page .smart-race-row:not(.final):not([data-race-state="elapsed"]):not([data-race-state="finished"]) *{
+ color:#20262b!important;
+}
+html body .smart-race-page .smart-race-content,
+html body .smart-race-page .smart-race-head-layout{gap:5px!important}
