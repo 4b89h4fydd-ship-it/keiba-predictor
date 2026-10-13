@@ -7,6 +7,7 @@ from typing import Any, Iterable
 
 from arvexq.prediction.mass_training_dataset import rows_from_frozen_snapshot
 from arvexq.prediction.mass_feature_transport import recover_mass_detail
+from arvexq.prediction.prerace_archive import post_at, sealed_lock
 
 STORE_VERSION = "arvexq-mass-training-store-v1"
 
@@ -29,6 +30,20 @@ def frozen_training_rows_from_detail(detail: dict[str, Any]) -> list[dict[str, A
     result = _confirmed_result(detail)
     if result is None:
         return []
+    lock = sealed_lock(detail)
+    if lock is None:
+        return []
+    try:
+        captured = int(detail.get("massFeatureCapturedAtEpoch") or 0)
+        locked_capture = int(lock.get("massFeatureCapturedAtEpoch") or 0)
+        post = post_at(detail)
+        source_hash = str(detail.get("massFeatureHash") or "")
+        lock_hash = str(lock.get("massFeatureHash") or "")
+        if (not post or not 0 < captured < int(post.timestamp()) or
+                captured != locked_capture or not source_hash or source_hash != lock_hash):
+            return []
+    except (ValueError, TypeError):
+        return []
     # Read the frozen pre-race evidence from its authenticated lossless
     # archive. Never infer feature rows from the already-known finishers.
     if not isinstance(detail.get("massFeatureSnapshot"), dict) and detail.get("massFeatureArchive"):
@@ -41,7 +56,7 @@ def frozen_training_rows_from_detail(detail: dict[str, Any]) -> list[dict[str, A
     snapshot = detail.get("massFeatureSnapshot")
     if not isinstance(snapshot, dict):
         return []
-    if not snapshot.get("featureHash") or not snapshot.get("rows"):
+    if (snapshot.get("featureHash") != source_hash or not snapshot.get("rows")):
         return []
     return rows_from_frozen_snapshot(snapshot, result)
 
