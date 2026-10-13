@@ -60,8 +60,10 @@ class UnifiedThreeFactorTests(unittest.TestCase):
                    side_effect=ready):
             detail = apply_core_marks(copy.deepcopy(self.race))
         ordered = sorted(detail["horses"], key=lambda h: h["integratedEvaluation"]["rank"])
+        # Fifth rank does not automatically earn ☆; this fixture has weak
+        # independent factors for Horse5.
         self.assertEqual([h["integratedEvaluation"]["mark"] for h in ordered],
-                         ["◎", "○", "▲", "△", "☆"])
+                         ["◎", "○", "▲", "△", ""])
         self.assertEqual(detail["honmeiDecision"]["horseNumber"], ordered[0]["horseNumber"])
         self.assertEqual(sum(h["integratedEvaluation"]["mark"] == "◎" for h in ordered), 1)
         self.assertNotIn("multiHeadSummary", detail)
