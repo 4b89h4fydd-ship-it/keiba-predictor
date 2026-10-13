@@ -38,8 +38,9 @@ class PastFiveContextTests(unittest.TestCase):
         self.assertEqual(features["historySamples"], 5)
         self.assertEqual(features["pastPerformance"]["top3"], 4)
         raw = collect_horse_raw_metrics(d, RACE)
-        self.assertIsNotNone(raw["trueRun"])
-        self.assertIsNotNone(raw["pure"])
+        self.assertIsNotNone(raw["recentForm"])
+        self.assertIsNotNone(raw["conditionForm"])
+        self.assertNotIn("pure",raw)
 
     def test_not_comparable_is_not_claimed_to_be_bad_or_good(self):
         runs = [run("2026-09-20", 1, distance=1800),
@@ -70,8 +71,9 @@ class PastFiveContextTests(unittest.TestCase):
         self.assertIsNone(context["top3Rate"])
         self.assertEqual(context["status"], "missing-dated-past-runs")
         raw = collect_horse_raw_metrics(horse, RACE)
-        self.assertIsNone(raw["trueRun"])
-        self.assertIsNone(raw["sectional"])
+        self.assertIsNone(raw["recentForm"])
+        self.assertIsNone(raw["conditionForm"])
+        self.assertNotIn("sectional",raw)
 
     def test_date_at_or_after_off_never_used(self):
         h = {"recentRaces": [run("2026-10-09", 1), run("2026-10-10", 1)]}
