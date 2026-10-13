@@ -1800,7 +1800,7 @@ function racecardEntryRow(r,h,x){
     +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'" aria-label="'+esc(String(x&&x.predMark||'—').replace(/\+/g,'＋')+(x&&x.predMark==='◎'?'、'+honmeiA11yText(x):'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':''))+'"><span class="rc-mark-main">'+racecardMarkDisplay(x&&x.predMark)+'</span>'+(markRoleLabel(x)?'<small style="display:block;font-size:9px">'+esc(markRoleLabel(x))+'</small>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
     +'<button type="button" class="rc-v336-number"'+openAttr+detailLabel+disabled+'><span class="rc-number frame'+fr+'">'+esc(no)+'</span></button>'
     +'<div class="rc-v336-info"><button type="button" class="rc-horse-main"'+openAttr+detailLabel+disabled+'>'
-      +'<span class="rc-horse-name">'+'<span class="rc-horse-title">'+esc(name)+'</span>'+(markRoleLabel(x)&&!scratch?' <small class="rc-honmei-role">'+esc(markRoleLabel(x))+'</small>':'')+'</span>'
+      +'<span class="rc-horse-name">'+'<span class="rc-horse-title">'+esc(name)+'</span>'+(markRoleLabel(x)&&!scratch?' <small class="rc-honmei-role">'+markRoleLabel(x).replace('◎【単】','<span class="arv-role-win">◎【単】</span>').replace('◎【軸】','<span class="arv-role-axis">◎【軸】</span>')+'</small>':'')+'</span>'
       +'<span class="rc-v336-meta"><span class="rc-sexage">'+esc(h.sex||'—')+esc(h.age||'—')+'</span>'
       +'<span class="carry">'+esc(carriedWeightText(h))+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span></span>'
     +'</button></div>'
