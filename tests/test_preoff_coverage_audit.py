@@ -11,8 +11,10 @@ class CoverageAuditTests(unittest.TestCase):
         out=audit_races(races)
         self.assertEqual(out["overall"]["horses"],2)
         self.assertEqual(out["overall"]["withoutFiveRunEvidence"],1)
-        self.assertEqual(out["overall"]["sectionalMissing"],2)
-        self.assertEqual(out["overall"]["neutralImputedSectional"],1)
+        self.assertEqual(out["overall"]["recentFormMissing"],1)
+        self.assertEqual(out["overall"]["conditionFormMissing"],2)
+        self.assertNotIn("sectionalMissing",out["overall"])
+        self.assertNotIn("neutralImputedSectional",out["overall"])
         self.assertEqual(out["byCircuit"]["中央"]["races"],1)
 
 if __name__=="__main__":
