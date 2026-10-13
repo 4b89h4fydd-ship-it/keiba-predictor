@@ -11,12 +11,16 @@ class ObservedMetricsTests(unittest.TestCase):
         self.assertEqual(row["margin"],0.2)
         horse={"horseNumber":1,"recentRaces":[run]}
         race={"date":"2026-10-14"}
-        self.assertAlmostEqual(collect_horse_raw_metrics(horse,race)["sectional"],8/9)
+        raw = collect_horse_raw_metrics(horse,race)
+        self.assertAlmostEqual(raw["recentForm"],7/9)
+        self.assertNotIn("sectional",raw)
         self.assertEqual(analyze_past_performance(horse,race)["marginObservedRuns"],1)
 
     def test_no_sectional_fabricated_when_missing(self):
         horse={"horseNumber":1,"recentRaces":[{"date":"2026-10-10","finish":3,"fieldSize":10,"last3f":36.1}]}
-        self.assertIsNone(collect_horse_raw_metrics(horse,{"date":"2026-10-14"})["sectional"])
+        raw = collect_horse_raw_metrics(horse,{"date":"2026-10-14"})
+        self.assertAlmostEqual(raw["recentForm"],7/9)
+        self.assertNotIn("sectional",raw)
 
 if __name__=="__main__":
     unittest.main()
