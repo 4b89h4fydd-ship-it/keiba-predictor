@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from arvexq.prediction.factor_model import (
-    MODEL_VERSION, PRIMARY_PILLARS, SCORE_WEIGHTS,
+    MODEL_VERSION, PRIMARY_PILLARS, CONDITION_WEIGHT_PER_RUN, MAX_CONDITION_WEIGHT,
     collect_horse_raw_metrics, rank_factor_model,
 )
 from arvexq.prediction.final_marks import apply_core_marks
@@ -39,7 +39,8 @@ class UnifiedThreeFactorTests(unittest.TestCase):
     def test_weights_use_observed_runs_and_ignore_old_composites(self):
         ranking = rank_factor_model(self.race["horses"], self.race)
         self.assertEqual(PRIMARY_PILLARS, ("recentForm", "conditionForm"))
-        self.assertEqual(SCORE_WEIGHTS, {"recentForm": 1.0, "conditionForm": 0.0})
+        self.assertEqual(CONDITION_WEIGHT_PER_RUN, 0.08)
+        self.assertEqual(MAX_CONDITION_WEIGHT, 0.25)
         self.assertIn("no-sectional", MODEL_VERSION)
         self.assertEqual(ranking[0]["horse"]["horseNumber"], 1)
         self.assertEqual(ranking[0]["primaryPillarCoverage"], 2)
