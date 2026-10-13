@@ -1074,6 +1074,15 @@ function strictSelectedRaceProfile(r,p){
     reason:selected?'新方式80点以上・根拠充足':'見送り: '+failed.join('・'),
     model:'arvexq-true-run-pure-sectional-v2'};
 }
+// Optional ☆ eligibility changes neither the ranking nor the 45/35/20 score.
+function eligibleOptionalStar(z,fourthScore){
+  var f=z&&z.threeFactorValues||{},vals=[f.trueRun,f.pure,f.sectional];
+  if(!z||n(z.threeFactorCoverage,0)!==3||
+    vals.some(function(v){return v==null||!isFinite(Number(v))}))return false;
+  var score=n(z.threeFactorScore,0),strong=vals.filter(function(v){return Number(v)>=.68}).length;
+  return score>=.68&&n(fourthScore,0)-score<=.075&&strong>=2&&
+    (n(f.trueRun,0)>=.70||n(f.sectional,0)>=.70);
+}
 function assignPredictionMarks(rows,r){
   if(!rows.length)return;
   var field=rows.length,ordered,topScore,total=0,weights=[],i,j,k;
@@ -1143,22 +1152,23 @@ function assignPredictionMarks(rows,r){
     z.winnerConsensusRank=idx+1;z.winEvidenceRank=idx+1;z.pairwiseRank=idx+1;});
   secondOrder.forEach(function(z,idx){z.p2Rank=idx+1;z.p2RecallRank=idx+1});
   thirdOrder.forEach(function(z,idx){z.p3Rank=idx+1;z.p3RecallRank=idx+1});
-  var labels=['◎','○','▲','△','☆'];
+  var labels=['◎','○','▲','△'],fourthScore=n(ordered[Math.min(3,ordered.length-1)].threeFactorScore,0);
+  var starCandidate=ordered.slice(4).find(function(z){return eligibleOptionalStar(z,fourthScore)})||null;
   ordered.forEach(function(z,idx){z.predRank=idx+1;
-    z.predMark=idx<labels.length?labels[idx]:'';
+    z.predMark=idx<labels.length?labels[idx]:(z===starCandidate?'☆':'');
     z.honmeiRole=idx===0?'win':'';
     z.honmeiGrade=idx===0?grade:'';
     z.podiumAxisEligible=idx===0&&grade==='A';
     z.singleWinSuitable=idx===0&&grade==='A';z.singleWinStrength=n(z.threeFactorScore);
     z.singleWinReason=idx===0?'同一3要素で1着・3着内の軸を判定':'';
     z.attentionReason=idx===0?'TRUE RUN 45%＋PURE 35%＋SECTIONAL 20%｜信頼度'+grade:
-      (idx<labels.length?'総合 '+Math.round(z.threeFactorScore*100)+'/100':'');
+      (idx<labels.length?'総合 '+Math.round(z.threeFactorScore*100)+'/100':
+       (z===starCandidate?'TRUE RUN・PURE・SECTIONALの複数独立根拠により選出':''));
     var e=z.horse&&z.horse.integratedEvaluation;
     if(e){e.mark=z.predMark;e.honmeiRole=z.honmeiRole;e.honmeiGrade=z.honmeiGrade;
       e.honmeiEligible=z.podiumAxisEligible;}
   });
-  // 注 is not automatically awarded to sixth place; only exceptional evidence
-  // should qualify, so the new model leaves it blank rather than fabricate risk.
+  // 注 and ☆+ are retired for new predictions. ☆ is optional, not rank five.
   r.honmeiDecisionFrontend={version:'arvexq-true-run-pure-sectional-v2',eligible:grade==='A',
     horseNumber:n(top.horse.horseNumber),role:'win',confidenceGrade:grade,
     axisScore:n(top.threeFactorScore),axisGap:gap,
@@ -1772,7 +1782,7 @@ function racecardMarkLegend(r){
         (server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':(stored?'端末の発走前印・固定済み':'発走前印の保存なし')));
   var original=clock.started?authorizedPreOffMarks(r):null,
       axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
-  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 展開次第で3着内　<b>注</b> 特に注意　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
+  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 好走根拠が複数揃う場合だけ　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
   var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
       fr=clamp(n(h.frameNumber,no),1,8),curBw=currentBodyWeight(h),
       deltaValue=currentBodyWeightChange(h),pastBw=!curBw?referenceBodyWeight(h):0,
@@ -2365,14 +2375,14 @@ function aiBetRecommendation(r,p){
 
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は近走内容45%・基礎能力35%・区間性能20%の総合最高評価。○は1・2着、▲は2・3着、△は3着、☆は展開次第、注は特別な注意馬。発走後は保存済み予想のみ表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(x.predMark==='◎'?'<small>'+esc(honmeiBadgeText(x)==='未保存'?'◎：当時の役割・信頼度未保存':'◎'+honmeiBadgeText(x)+'｜'+(x.honmeiRole==='win'?'1着向き':'3着内の軸向き')+'｜信頼度'+x.honmeiGrade)+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は近走内容45%・基礎能力35%・区間性能20%の総合最高評価。○は1・2着、▲は2・3着、△は3着向き。☆は独立した好走根拠が複数揃った場合だけ選びます。発走後は保存済み予想のみ表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(x.predMark==='◎'?'<small>'+esc(honmeiBadgeText(x)==='未保存'?'◎：当時の役割・信頼度未保存':'◎'+honmeiBadgeText(x)+'｜'+(x.honmeiRole==='win'?'1着向き':'3着内の軸向き')+'｜信頼度'+x.honmeiGrade)+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse&&a.horse.horseNumber,999)-n(b.horse&&b.horse.horseNumber,999)});
   var details='<div class="diagnosis-merged-list">'+rows.map(function(x,i){
     var h=x.horse,e=x.evaluation||{},confidence=esc(e.confidence||'低'),rank=n(x.overallRank,i+1),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,bwLabel=bw?bw:(refbw?('前走 '+refbw+'kg'):(isFinal(r)?'結果確認中':'計量待ち'));
-    var reason=(x.overallReasons||[]).join(' / ')+(n(x.bombScore)>=65?' / BOMB '+n(x.bombScore)+' EDGE '+n(x.edgeScore)+' '+(x.upsetReasons||[]).slice(0,2).join('・'):'')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:'');
+    var reason=(x.overallReasons||[]).join(' / ')+(n(x.bombScore)>=65?' / BOMB '+n(x.bombScore)+' EDGE '+n(x.edgeScore)+' '+(x.upsetReasons||[]).slice(0,2).join('・'):'')+(x.predMark==='☆'&&x.attentionReason?' / ☆の根拠 '+x.attentionReason:'');
     return '<article class="horse-card diagnosis-merged-row">'
       +'<div class="diagnosis-merged-head">'
         +'<span class="diag-check-cell"><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span></span>'
