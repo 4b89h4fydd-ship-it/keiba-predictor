@@ -46,15 +46,19 @@ assert.match(html,/保険｜本線補完/);
 assert.match(html,/class="arv-three-combos"/,'tickets should be visually separated');
 assert.match(html,/class="arv-bet-quality"/,'bet confidence displayed clearly');
 assert.match(html,/【単】/);
-assert.match(html,/☆\+/);
+assert.match(html,/◎【軸】/);
+assert.match(html,/<i>【単】<\/i>/);
+assert.match(html,/<i>【軸】<\/i>/);
+assert.match(html,/<i>☆<\/i>/);
+assert.doesNotMatch(html,/☆\+/,'retired + mark must not appear in current bets');
 
 const legacyPlan={...plan,engineVersion:'arvexq-bets-old-v317',
   fixedAt:'2026-10-08T10:20:00+09:00',
   items:[{level:'通常',kind:'馬連',points:1,combos:[[2,6]],combo:'2 - 6'}]};
 const historical=renderer({},esc,n,()=>legacyPlan,()=>({vote:''}),
   ()=>'',()=>'')({track:'大井',raceNumber:7},{});
-assert.match(historical,/発走前保存済み買い目（旧方式）/);
-assert.match(historical,/2 - 6/,'old picks must not vanish when new sections replace legacy');
+assert.match(historical,/現行方式の発走前買い目は未保存です/);
+assert.doesNotMatch(historical,/2 - 6/,'retired picks must not reappear as live selections');
 assert.doesNotMatch(historical,/本線｜的中重視/,'old ticket is not relabelled');
 
 function extractFunction(name){
@@ -109,7 +113,7 @@ async function test(type,label){
           pills:pills.map(x=>({x:x.x,right:x.right})),
           tickets:[...document.querySelectorAll('.arv-three-ticket>strong')].map(e=>({x:e.getBoundingClientRect().x,right:e.getBoundingClientRect().right})),
           combos:[...document.querySelectorAll('.arv-three-combo')].map(e=>({x:e.getBoundingClientRect().x,right:e.getBoundingClientRect().right,width:e.getBoundingClientRect().width})),
-          markBadges:[...document.querySelectorAll('.bet-mark-grid i')].filter(e=>['【単】','☆+'].includes(e.textContent)).map(e=>{
+          markBadges:[...document.querySelectorAll('.bet-mark-grid i')].filter(e=>['【単】','【軸】'].includes(e.textContent)).map(e=>{
             const b=e.getBoundingClientRect();return {text:e.textContent,width:b.width,height:b.height,whiteSpace:getComputedStyle(e).whiteSpace};
           }),
           titleText:document.querySelector('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent};
