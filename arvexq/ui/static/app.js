@@ -2135,8 +2135,8 @@ function verifiedSavedAiBet(r,plan){
 function currentBetEnginePlan(plan){
   // Historical sealed tickets remain in audit storage, not in the live UI.
   // Never re-derive or relabel a legacy ticket after the off.
-  return plan&&/^arvexq-true-run-pure-sectional-v[12]$/.test(
-    String(plan.engineVersion||plan.betStrategy||''))?plan:null
+  return plan&&String(plan.engineVersion||plan.betStrategy||'')===
+    'arvexq-form-condition-no-sectional-proposal-v1'?plan:null
 }
 function frozenAiBetForRace(r){
   if(!r||!r.id)return null;
