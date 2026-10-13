@@ -975,18 +975,54 @@ function dataReadinessProfile(r,p){
   return{prediction:prediction,market:market,card:card,history:hist,actualOdds:actual,bodyWeight:body,environment:env,analysis:analysis,missing:missing}
 }
 function arvexqFactorValues(z,r){
-  // Mirrors Python: actual pre-race five-run evidence only; no old composite.
-  var h=z&&z.horse||{},cutoff=String(r&&r.date||''),
-      pool=[].concat(h.recentRaces||[],h.allPastRuns||[]),seen={},runs=[];
-  pool.sort(function(a,b){return String(b&&b.date||b&&b.raceDate||'').localeCompare(String(a&&a.date||a&&a.raceDate||''))});
-  pool.forEach(function(q){
-    if(!q||!cutoff)return;
-    var date=String(q.date||q.raceDate||'').slice(0,10),field=Number(q.fieldSize),
-        finish=Number(q.finish||q.finishPosition||q.rank),
-        key=String(q.raceId||'')+'|'+date+'|'+String(q.track||'')+'|'+String(q.raceNumber||'');
-    if(!date||date>=cutoff||seen[key]||!(field>=2&&finish>=1&&finish<=field))return;
-    seen[key]=1;
-    if(runs.length<5)runs.push({source:q,quality:(field-finish)/(field-1),field:field});
+  // Python parity: merge date-bounded starts from every supported history lane
+  // before selecting the most recent five valid runs. Provider-specific date
+  // formats and complementary duplicate rows must not change the model score.
+  function canonicalDay(value){
+    var s=String(value==null?'':value).trim().replace(/[/.]/g,'-');
+    if(/^\d{8}$/.test(s))s=s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6);
+    var day=s.slice(0,10);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return '';
+    var ts=Date.parse(day+'T00:00:00Z');
+    return isFinite(ts)&&new Date(ts).toISOString().slice(0,10)===day?day:'';
+  }
+  function absent(value){
+    return value==null||value===''||
+      (Array.isArray(value)&&value.length===0)||
+      (value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===0);
+  }
+  var h=z&&z.horse||{},cutoff=canonicalDay(r&&(r.date||r.raceDate)),
+      byDay=Object.create(null),runs=[];
+  if(!cutoff)return {trueRun:null,pure:null,sectional:null,coverage:0,score:.5};
+  ['recentRaces','allPastRuns','pastRaces','history','runs'].forEach(function(key){
+    (Array.isArray(h[key])?h[key]:[]).forEach(function(q){
+      if(!q||typeof q!=='object'||Array.isArray(q))return;
+      var day=canonicalDay(q.date||q.raceDate||q['日付']);
+      if(!day||day>=cutoff)return;
+      var saved=byDay[day];
+      if(!saved){byDay[day]=Object.assign({date:day},q);byDay[day].date=day;return}
+      Object.keys(q).forEach(function(k){
+        var val=q[k];
+        if((k==='cornerPositions'||k==='passing')&&Array.isArray(val)){
+          if(!Array.isArray(saved[k]))saved[k]=val.slice();
+          else {
+            var base=saved[k],length=Math.max(base.length,val.length);
+            saved[k]=Array.from({length:length},function(_,i){
+              var v=i<base.length?base[i]:null;
+              return v==null||v===''||v===0?(i<val.length?val[i]:v):v;
+            });
+          }
+        }else if(absent(saved[k])&&!absent(val))saved[k]=val;
+      });
+    });
+  });
+  Object.keys(byDay).sort().reverse().forEach(function(day){
+    if(runs.length>=5)return;
+    var q=byDay[day],
+        field=Number(q.fieldSize||q.runners||q['頭数']),
+        finish=Number(q.finish||q.finishPosition||q['着順']);
+    if(!(field>=2&&isFinite(field)&&finish>=1&&finish<=field&&isFinite(finish)))return;
+    runs.push({source:q,quality:(field-finish)/(field-1),field:field});
   });
   var quality=runs.map(function(x){return x.quality}),tr=null,pure=null,sec=null;
   if(quality.length){
