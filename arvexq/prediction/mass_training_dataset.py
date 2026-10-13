@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Any, Iterable
+from datetime import date
+from math import isfinite
 
 DATASET_VERSION = "arvexq-mass-training-dataset-v1"
 
@@ -85,16 +87,38 @@ def time_ordered_race_ids(rows: Iterable[dict[str, Any]]) -> list[str]:
 
 
 def split_walk_forward(rows: list[dict[str, Any]], train_ratio: float = 0.7, valid_ratio: float = 0.15) -> dict[str, list[dict[str, Any]]]:
-    """Chronological race-group split; never random horse-row splitting."""
-    race_ids = time_ordered_race_ids(rows)
-    n = len(race_ids)
+    """Chronological date blocks; same-day races never straddle periods.
+
+    Fewer than three observed days cannot support independent training,
+    tuning and evaluation. Return empty holdouts so train_head fails closed.
+    This is a single temporal holdout, not a repeated walk-forward experiment.
+    """
+    if (not isfinite(train_ratio) or not isfinite(valid_ratio)
+            or train_ratio <= 0 or valid_ratio <= 0 or train_ratio + valid_ratio >= 1):
+        raise ValueError("split ratios must be positive and leave a test period")
+    race_dates: dict[str, str] = {}
+    for row in rows:
+        rid = str(row.get("raceId") or "")
+        day = str(row.get("date") or "")
+        try:
+            if not rid or date.fromisoformat(day).isoformat() != day:
+                raise ValueError("invalid race identity or date")
+        except (TypeError, ValueError) as exc:
+            raise ValueError("every training row needs raceId and ISO date") from exc
+        if rid in race_dates and race_dates[rid] != day:
+            raise ValueError("one race cannot have conflicting dates")
+        race_dates[rid] = day
+    days = sorted(set(race_dates.values()))
+    n = len(days)
     if n == 0:
         return {"train": [], "valid": [], "test": []}
-    train_end = max(1, int(n * train_ratio))
-    valid_end = max(train_end, int(n * (train_ratio + valid_ratio)))
-    train_ids = set(race_ids[:train_end])
-    valid_ids = set(race_ids[train_end:valid_end])
-    test_ids = set(race_ids[valid_end:])
+    if n < 3:
+        return {"train": list(rows), "valid": [], "test": []}
+    train_end = min(n - 2, max(1, int(n * train_ratio)))
+    valid_end = min(n - 1, max(train_end + 1, int(n * (train_ratio + valid_ratio))))
+    train_ids = {rid for rid, day in race_dates.items() if day in days[:train_end]}
+    valid_ids = {rid for rid, day in race_dates.items() if day in days[train_end:valid_end]}
+    test_ids = {rid for rid, day in race_dates.items() if day in days[valid_end:]}
     return {
         "train": [row for row in rows if str(row.get("raceId") or "") in train_ids],
         "valid": [row for row in rows if str(row.get("raceId") or "") in valid_ids],

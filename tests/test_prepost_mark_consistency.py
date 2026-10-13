@@ -1,16 +1,17 @@
 from pathlib import Path
+import subprocess
 import unittest
 S=Path(__file__).resolve().parents[1]/'arvexq/ui/static/app.js'
 class PrePostMarkConsistency(unittest.TestCase):
- def test_same_verified_source_is_used_before_and_after(self):
-  s=S.read_text(encoding='utf-8')
-  a=s[s.index('function applyFrozenMarks('):s.index('function threeFactorMarkInputSignature(')]
-  self.assertIn('if(!clock.started&&!server)',a)
-  self.assertIn('if(server){',a)
-  self.assertIn('z.predMark=scratched?',a)
-  archive=s[s.index('function immutableArchivedPrediction('):s.index('function applyFrozenMarks(')]
-  self.assertIn('var lock=authorizedPreOffMarks(r)',archive)
-  self.assertIn('var clock=raceMarkClock(r),server=authorizedPreOffMarks(r)',a)
+ def test_live_preoff_marks_and_immutable_postoff_original(self):
+  # Execute the existing behavior regression against the real display function.
+  # Morning originals stay immutable; they must not overwrite newer pre-off
+  # inputs, and are the authority once the race has started. The former text
+  # assertion required the retired morning-before-post override instead.
+  root=S.parents[3]
+  result=subprocess.run(['node','scripts/arvexq_frozen_marks_smoke.js'],
+                        cwd=root,capture_output=True,text=True,timeout=30)
+  self.assertEqual(result.returncode,0,result.stdout+result.stderr)
  def test_three_factor_weights_are_intact(self):
   s=S.read_text(encoding='utf-8')
   self.assertIn('score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)',s)

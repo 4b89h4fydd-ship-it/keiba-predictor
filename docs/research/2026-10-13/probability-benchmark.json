@@ -1,0 +1,33 @@
+{
+  "environment": "Python 3.12 managed cloud; single execution; synthetic strengths; not production latency",
+  "measurements": [
+    {
+      "field": 8,
+      "elapsedSeconds": 0.0011805540000295878,
+      "rankColumnMaxError": 1.1102230246251565e-16,
+      "horseRowMaxError": 1.1102230246251565e-16,
+      "podiumMass": 1.0
+    },
+    {
+      "field": 12,
+      "elapsedSeconds": 0.017515752999997858,
+      "rankColumnMaxError": 2.220446049250313e-16,
+      "horseRowMaxError": 0.0,
+      "podiumMass": 1.0
+    },
+    {
+      "field": 16,
+      "elapsedSeconds": 0.3305090880000989,
+      "rankColumnMaxError": 4.440892098500626e-16,
+      "horseRowMaxError": 4.440892098500626e-16,
+      "podiumMass": 1.0
+    },
+    {
+      "field": 18,
+      "elapsedSeconds": 1.573553428000082,
+      "rankColumnMaxError": 5.551115123125783e-16,
+      "horseRowMaxError": 8.881784197001252e-16,
+      "podiumMass": 1.0
+    }
+  ]
+}

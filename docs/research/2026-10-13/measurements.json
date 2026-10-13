@@ -1,0 +1,4464 @@
+{
+  "version": "arvexq-integrated-research-v1",
+  "staticSnapshots": {
+    "counts": {
+      "envelopes": 268,
+      "sha256Verified": 268,
+      "preRacePrediction": 268,
+      "preRaceBet": 2,
+      "result": 3,
+      "massFeatureSnapshot": 266,
+      "sealed": 7,
+      "featureSnapshotWithCaptureTime": 0
+    },
+    "byDate": {
+      "2026-10-13": 58,
+      "2026-10-12": 71,
+      "2026-10-11": 80,
+      "2026-10-10": 59
+    },
+    "archivedModelVersions": {
+      "evidence-v317-consensus-rebuild": 268
+    },
+    "currentRawFactorCoverage": {
+      "horses": 3044,
+      "trueRunMissing": 221,
+      "pureMissing": 221,
+      "sectionalMissing": 3044
+    },
+    "manifest": [
+      {
+        "file": "01e10ccde4619eb54afcc91118e84a047c56481c2659f70dd43bd887c7e51738.json",
+        "sha256": "01e10ccde4619eb54afcc91118e84a047c56481c2659f70dd43bd887c7e51738",
+        "raceId": "nar-2026-10-13-川崎-01",
+        "date": "2026-10-13",
+        "bytes": 2579130
+      },
+      {
+        "file": "037f9f6c3ff098ccb9676b1727febfce8fe9fc2a0c70a0636debc9d96b5a9a75.json",
+        "sha256": "037f9f6c3ff098ccb9676b1727febfce8fe9fc2a0c70a0636debc9d96b5a9a75",
+        "raceId": "nar-2026-10-12-佐賀-10",
+        "date": "2026-10-12",
+        "bytes": 2654595
+      },
+      {
+        "file": "03e099771256a4eec9b1f65523ff7912e0e56ada78c8fcb5fa004c797a11826b.json",
+        "sha256": "03e099771256a4eec9b1f65523ff7912e0e56ada78c8fcb5fa004c797a11826b",
+        "raceId": "jra-2026-10-11-京都-04",
+        "date": "2026-10-11",
+        "bytes": 2226285
+      },
+      {
+        "file": "044cb5f63902504fe814d12bc19691b00b595326a9d0bbed72ad46a7587a674d.json",
+        "sha256": "044cb5f63902504fe814d12bc19691b00b595326a9d0bbed72ad46a7587a674d",
+        "raceId": "nar-2026-10-13-金沢-08",
+        "date": "2026-10-13",
+        "bytes": 1974092
+      },
+      {
+        "file": "04daf58a68c7bb1b0a2a0d08d1eb9deb2daa44039398c60f1c9a6225810d4d32.json",
+        "sha256": "04daf58a68c7bb1b0a2a0d08d1eb9deb2daa44039398c60f1c9a6225810d4d32",
+        "raceId": "nar-2026-10-10-高知-11",
+        "date": "2026-10-10",
+        "bytes": 2673250
+      },
+      {
+        "file": "05a37a085ae56cb8c312ce322d06fceba98c5547c38d5c89803f603c79fcd58b.json",
+        "sha256": "05a37a085ae56cb8c312ce322d06fceba98c5547c38d5c89803f603c79fcd58b",
+        "raceId": "nar-2026-10-11-高知-05",
+        "date": "2026-10-11",
+        "bytes": 2283956
+      },
+      {
+        "file": "05fa4dbc4ed2282c7e8abc317f91e8297ca3c9d43dd22fdcc0256476a6ea4e3f.json",
+        "sha256": "05fa4dbc4ed2282c7e8abc317f91e8297ca3c9d43dd22fdcc0256476a6ea4e3f",
+        "raceId": "nar-2026-10-11-盛岡-05",
+        "date": "2026-10-11",
+        "bytes": 1711707
+      },
+      {
+        "file": "06c44c3c6a20821c70f1c51abd090e8f58a5742932283c2bad0ebb8abe327c8e.json",
+        "sha256": "06c44c3c6a20821c70f1c51abd090e8f58a5742932283c2bad0ebb8abe327c8e",
+        "raceId": "nar-2026-10-10-高知-05",
+        "date": "2026-10-10",
+        "bytes": 625849
+      },
+      {
+        "file": "077e8b05db60238acdad83541098eafaee76d1de48b8aad679fb997b45b24a8b.json",
+        "sha256": "077e8b05db60238acdad83541098eafaee76d1de48b8aad679fb997b45b24a8b",
+        "raceId": "nar-2026-10-10-佐賀-03",
+        "date": "2026-10-10",
+        "bytes": 2507024
+      },
+      {
+        "file": "0a59fbd4396fb36d26cb81f04c3c26ae42be33eeb7787c54e8f05a72c984dbe2.json",
+        "sha256": "0a59fbd4396fb36d26cb81f04c3c26ae42be33eeb7787c54e8f05a72c984dbe2",
+        "raceId": "jra-2026-10-12-京都-12",
+        "date": "2026-10-12",
+        "bytes": 5952447
+      },
+      {
+        "file": "0a803e34e27bf9b0c746ad85e798f71336db2bb3de7c29772649c5e19ffeffa9.json",
+        "sha256": "0a803e34e27bf9b0c746ad85e798f71336db2bb3de7c29772649c5e19ffeffa9",
+        "raceId": "nar-2026-10-11-盛岡-10",
+        "date": "2026-10-11",
+        "bytes": 2525758
+      },
+      {
+        "file": "0c4e44c30e3e14a81a71ec2dfc52c9b394f71bb21349c622c737a3b85026a1a3.json",
+        "sha256": "0c4e44c30e3e14a81a71ec2dfc52c9b394f71bb21349c622c737a3b85026a1a3",
+        "raceId": "jra-2026-10-10-京都-02",
+        "date": "2026-10-10",
+        "bytes": 2041770
+      },
+      {
+        "file": "0cd2ac9c671893207aadae4228f17832631d10dc40161c4bdeab85d60a5c6fc1.json",
+        "sha256": "0cd2ac9c671893207aadae4228f17832631d10dc40161c4bdeab85d60a5c6fc1",
+        "raceId": "nar-2026-10-11-盛岡-07",
+        "date": "2026-10-11",
+        "bytes": 2290625
+      },
+      {
+        "file": "0dc88fbed0b39a1fcaefa254ce60b30cf376124ef7ca3d15fe504833a2eb9e59.json",
+        "sha256": "0dc88fbed0b39a1fcaefa254ce60b30cf376124ef7ca3d15fe504833a2eb9e59",
+        "raceId": "nar-2026-10-10-佐賀-09",
+        "date": "2026-10-10",
+        "bytes": 2611179
+      },
+      {
+        "file": "0dccc940770b145e7e9f14bf6e6c7725a30db07badfdebbca73fbb830d2f9e07.json",
+        "sha256": "0dccc940770b145e7e9f14bf6e6c7725a30db07badfdebbca73fbb830d2f9e07",
+        "raceId": "nar-2026-10-12-帯広ば-02",
+        "date": "2026-10-12",
+        "bytes": 2329488
+      },
+      {
+        "file": "112f1cca618c6bccb14e5bcfb9ab59327e98dffd99c97464d4d1c86446704df9.json",
+        "sha256": "112f1cca618c6bccb14e5bcfb9ab59327e98dffd99c97464d4d1c86446704df9",
+        "raceId": "jra-2026-10-11-東京-10",
+        "date": "2026-10-11",
+        "bytes": 5453072
+      },
+      {
+        "file": "126dec8065565550cae7f5317c01bdc4486a5b954353d493de37b7c921289cc0.json",
+        "sha256": "126dec8065565550cae7f5317c01bdc4486a5b954353d493de37b7c921289cc0",
+        "raceId": "nar-2026-10-13-門別-04",
+        "date": "2026-10-13",
+        "bytes": 1999615
+      },
+      {
+        "file": "1279cd0392b224d8dfe105b5b1c25dee28d0a74f0b330cd0e1dd2258c8c193fd.json",
+        "sha256": "1279cd0392b224d8dfe105b5b1c25dee28d0a74f0b330cd0e1dd2258c8c193fd",
+        "raceId": "jra-2026-10-10-京都-12",
+        "date": "2026-10-10",
+        "bytes": 5531192
+      },
+      {
+        "file": "12d00f3a2bf59600cc997bd4212707376efd4bf035acdaf720fdeb5c0a988fb8.json",
+        "sha256": "12d00f3a2bf59600cc997bd4212707376efd4bf035acdaf720fdeb5c0a988fb8",
+        "raceId": "nar-2026-10-12-盛岡-05",
+        "date": "2026-10-12",
+        "bytes": 2220457
+      },
+      {
+        "file": "152b754b472cb10bd09a52a0a36363d2431a767040d7db0fe2681619cfef651a.json",
+        "sha256": "152b754b472cb10bd09a52a0a36363d2431a767040d7db0fe2681619cfef651a",
+        "raceId": "nar-2026-10-13-盛岡-01",
+        "date": "2026-10-13",
+        "bytes": 2471450
+      },
+      {
+        "file": "152f9c96d03654ae05180a8674598dd8f45f781d7aa3eea4ff0df362746a7826.json",
+        "sha256": "152f9c96d03654ae05180a8674598dd8f45f781d7aa3eea4ff0df362746a7826",
+        "raceId": "nar-2026-10-13-金沢-04",
+        "date": "2026-10-13",
+        "bytes": 2327502
+      },
+      {
+        "file": "15b7721f2ff32b26b9a34df3b64a76287353236ffbdb040a18df458c1ec995ca.json",
+        "sha256": "15b7721f2ff32b26b9a34df3b64a76287353236ffbdb040a18df458c1ec995ca",
+        "raceId": "nar-2026-10-13-門別-12",
+        "date": "2026-10-13",
+        "bytes": 2180838
+      },
+      {
+        "file": "169fb82d0346d8e85725173eb0219b5a742fdc8beede7b1cbbe048266a53cf0d.json",
+        "sha256": "169fb82d0346d8e85725173eb0219b5a742fdc8beede7b1cbbe048266a53cf0d",
+        "raceId": "jra-2026-10-11-京都-03",
+        "date": "2026-10-11",
+        "bytes": 586394
+      },
+      {
+        "file": "171517de7e3dc49025ea00439d125b21bafac3b1fc937d759eae784da0627a2a.json",
+        "sha256": "171517de7e3dc49025ea00439d125b21bafac3b1fc937d759eae784da0627a2a",
+        "raceId": "nar-2026-10-13-名古屋-02",
+        "date": "2026-10-13",
+        "bytes": 2764612
+      },
+      {
+        "file": "19fbc735aa97665f304f6165f3c62815da97a374287cf87ba712784aeb44d315.json",
+        "sha256": "19fbc735aa97665f304f6165f3c62815da97a374287cf87ba712784aeb44d315",
+        "raceId": "jra-2026-10-12-東京-06",
+        "date": "2026-10-12",
+        "bytes": 603912
+      },
+      {
+        "file": "1a2b67c61fd7ebc40949d635e995a8cbe19957235cdd15ec1256c4fbef7f2b5f.json",
+        "sha256": "1a2b67c61fd7ebc40949d635e995a8cbe19957235cdd15ec1256c4fbef7f2b5f",
+        "raceId": "nar-2026-10-13-盛岡-03",
+        "date": "2026-10-13",
+        "bytes": 2738346
+      },
+      {
+        "file": "1a3ed0e86ccf219e840bb6327db523a00ace9dbaa8dbc43ce76eeb5615cefef8.json",
+        "sha256": "1a3ed0e86ccf219e840bb6327db523a00ace9dbaa8dbc43ce76eeb5615cefef8",
+        "raceId": "nar-2026-10-13-川崎-09",
+        "date": "2026-10-13",
+        "bytes": 2656476
+      },
+      {
+        "file": "1b1e4bf9ae6af0dd58e5e7d79bcbefc1024380c588ec74fa5b60d6ede12757a3.json",
+        "sha256": "1b1e4bf9ae6af0dd58e5e7d79bcbefc1024380c588ec74fa5b60d6ede12757a3",
+        "raceId": "nar-2026-10-11-佐賀-10",
+        "date": "2026-10-11",
+        "bytes": 2316433
+      },
+      {
+        "file": "1b5136d958eabebf08bce4401a8b63316de57238262bf3dab4dc6342ba36b02b.json",
+        "sha256": "1b5136d958eabebf08bce4401a8b63316de57238262bf3dab4dc6342ba36b02b",
+        "raceId": "nar-2026-10-13-盛岡-06",
+        "date": "2026-10-13",
+        "bytes": 3016464
+      },
+      {
+        "file": "1ba51357e93be55a5ef036e19282863958aa9b5cbc7837204122b2a1dfcde961.json",
+        "sha256": "1ba51357e93be55a5ef036e19282863958aa9b5cbc7837204122b2a1dfcde961",
+        "raceId": "nar-2026-10-13-盛岡-04",
+        "date": "2026-10-13",
+        "bytes": 2781238
+      },
+      {
+        "file": "1d421eaf881f9dcca43e1282d7e8649b848de79b3919077f6ce7d03a04c36378.json",
+        "sha256": "1d421eaf881f9dcca43e1282d7e8649b848de79b3919077f6ce7d03a04c36378",
+        "raceId": "nar-2026-10-11-盛岡-01",
+        "date": "2026-10-11",
+        "bytes": 2331799
+      },
+      {
+        "file": "1df4f24e74761ad1eb23616789904c607ccedc1fae271171757a1d5dc623daa9.json",
+        "sha256": "1df4f24e74761ad1eb23616789904c607ccedc1fae271171757a1d5dc623daa9",
+        "raceId": "jra-2026-10-10-京都-10",
+        "date": "2026-10-10",
+        "bytes": 5445688
+      },
+      {
+        "file": "1e2d27356b4ee778c6d6dffb024083593e701c895325f982f46dce14a5c916fb.json",
+        "sha256": "1e2d27356b4ee778c6d6dffb024083593e701c895325f982f46dce14a5c916fb",
+        "raceId": "jra-2026-10-11-東京-11",
+        "date": "2026-10-11",
+        "bytes": 6360727
+      },
+      {
+        "file": "1e3f3386671632ad544c4b2def7e3a54aa88630016aabe8225f4285d62528c2f.json",
+        "sha256": "1e3f3386671632ad544c4b2def7e3a54aa88630016aabe8225f4285d62528c2f",
+        "raceId": "nar-2026-10-13-金沢-06",
+        "date": "2026-10-13",
+        "bytes": 1931335
+      },
+      {
+        "file": "1efdccc1b569ab4aff051a3fd76c8de341119d14423189a78d9d353035481b29.json",
+        "sha256": "1efdccc1b569ab4aff051a3fd76c8de341119d14423189a78d9d353035481b29",
+        "raceId": "nar-2026-10-12-川崎-05",
+        "date": "2026-10-12",
+        "bytes": 2633964
+      },
+      {
+        "file": "20b19f6c083db9d111b9509db63918ef96ec0eea62b45856b6f6f4eeb7b48a14.json",
+        "sha256": "20b19f6c083db9d111b9509db63918ef96ec0eea62b45856b6f6f4eeb7b48a14",
+        "raceId": "jra-2026-10-10-東京-02",
+        "date": "2026-10-10",
+        "bytes": 2665615
+      },
+      {
+        "file": "21040c0610c8a913b0467da5d8fa0e55373cb1d5fb18bf53604587a209a413a0.json",
+        "sha256": "21040c0610c8a913b0467da5d8fa0e55373cb1d5fb18bf53604587a209a413a0",
+        "raceId": "nar-2026-10-13-名古屋-06",
+        "date": "2026-10-13",
+        "bytes": 2723053
+      },
+      {
+        "file": "21383dea7944ae389166b460449ec5471a088850d63b82821d171f72b47f56ac.json",
+        "sha256": "21383dea7944ae389166b460449ec5471a088850d63b82821d171f72b47f56ac",
+        "raceId": "nar-2026-10-12-佐賀-01",
+        "date": "2026-10-12",
+        "bytes": 2268424
+      },
+      {
+        "file": "243880223313405d1d121e432fc876901be66a68a2faac453d9d2d1a77492319.json",
+        "sha256": "243880223313405d1d121e432fc876901be66a68a2faac453d9d2d1a77492319",
+        "raceId": "nar-2026-10-13-川崎-12",
+        "date": "2026-10-13",
+        "bytes": 2904737
+      },
+      {
+        "file": "247db970034a390ec9131d74f981d691d9be7802c5451e0efbcd56a9fbe1181e.json",
+        "sha256": "247db970034a390ec9131d74f981d691d9be7802c5451e0efbcd56a9fbe1181e",
+        "raceId": "nar-2026-10-10-帯広ば-10",
+        "date": "2026-10-10",
+        "bytes": 2394097
+      },
+      {
+        "file": "24f035182ab7b7f73ef9e93cf912d21fd058b3d89071d438090616396ea80682.json",
+        "sha256": "24f035182ab7b7f73ef9e93cf912d21fd058b3d89071d438090616396ea80682",
+        "raceId": "jra-2026-10-10-京都-01",
+        "date": "2026-10-10",
+        "bytes": 2744693
+      },
+      {
+        "file": "28a9de76689ee90ea52a80832ae8e078842c7cb06fd1bbd7e9e78a608081c971.json",
+        "sha256": "28a9de76689ee90ea52a80832ae8e078842c7cb06fd1bbd7e9e78a608081c971",
+        "raceId": "jra-2026-10-10-東京-11",
+        "date": "2026-10-10",
+        "bytes": 2802238
+      },
+      {
+        "file": "28ec0d22556463802f0c7722025e09b9f76c448f2531260bdb0defb200b4b19f.json",
+        "sha256": "28ec0d22556463802f0c7722025e09b9f76c448f2531260bdb0defb200b4b19f",
+        "raceId": "jra-2026-10-12-東京-11",
+        "date": "2026-10-12",
+        "bytes": 9131231
+      },
+      {
+        "file": "2a75c32c5267fd8a07c4cdc31fdb3b48fd72c30e1bea36014d7eb7bd866458f7.json",
+        "sha256": "2a75c32c5267fd8a07c4cdc31fdb3b48fd72c30e1bea36014d7eb7bd866458f7",
+        "raceId": "nar-2026-10-13-名古屋-07",
+        "date": "2026-10-13",
+        "bytes": 2742401
+      },
+      {
+        "file": "2ab8b6aa831862a5aeb0a203492bd426e088da92dfb731936998b568e8914ee7.json",
+        "sha256": "2ab8b6aa831862a5aeb0a203492bd426e088da92dfb731936998b568e8914ee7",
+        "raceId": "jra-2026-10-12-京都-06",
+        "date": "2026-10-12",
+        "bytes": 453150
+      },
+      {
+        "file": "2b7bfe00e21ad3d8e5a228cbd1a7866b92fe7ae158ec8b3c2029ba2c3d6a513b.json",
+        "sha256": "2b7bfe00e21ad3d8e5a228cbd1a7866b92fe7ae158ec8b3c2029ba2c3d6a513b",
+        "raceId": "jra-2026-10-12-京都-07",
+        "date": "2026-10-12",
+        "bytes": 6110693
+      },
+      {
+        "file": "2b7e25c0fbee0fbc85322ab79d809ca350490b07ef37d0bc441c17af9588bdcc.json",
+        "sha256": "2b7e25c0fbee0fbc85322ab79d809ca350490b07ef37d0bc441c17af9588bdcc",
+        "raceId": "nar-2026-10-11-高知-11",
+        "date": "2026-10-11",
+        "bytes": 2751528
+      },
+      {
+        "file": "2bc523ae266cf684c22c448756cd8335dcb9a6cc1179954a77c9f9ce3e2f5301.json",
+        "sha256": "2bc523ae266cf684c22c448756cd8335dcb9a6cc1179954a77c9f9ce3e2f5301",
+        "raceId": "jra-2026-10-12-京都-10",
+        "date": "2026-10-12",
+        "bytes": 3051794
+      },
+      {
+        "file": "2c4a18d3f251c54c0eadf63ae1e30703b707e66a37b6b40cd7f5c661cdb85689.json",
+        "sha256": "2c4a18d3f251c54c0eadf63ae1e30703b707e66a37b6b40cd7f5c661cdb85689",
+        "raceId": "nar-2026-10-13-盛岡-12",
+        "date": "2026-10-13",
+        "bytes": 3300077
+      },
+      {
+        "file": "2cf623a76adf505507dcc388999f3d9ef31cd0c8a595501e3277a0ab4242919d.json",
+        "sha256": "2cf623a76adf505507dcc388999f3d9ef31cd0c8a595501e3277a0ab4242919d",
+        "raceId": "nar-2026-10-12-川崎-08",
+        "date": "2026-10-12",
+        "bytes": 2466552
+      },
+      {
+        "file": "2d8ce87cdebdb41f77f9060ca2255329906159b0240b4531228c5387ec2454c8.json",
+        "sha256": "2d8ce87cdebdb41f77f9060ca2255329906159b0240b4531228c5387ec2454c8",
+        "raceId": "nar-2026-10-12-佐賀-08",
+        "date": "2026-10-12",
+        "bytes": 2915091
+      },
+      {
+        "file": "2e81cca1dc68b92075e3758b5b67cd5bcaf6643d9a96fa4a4220fd26d6246639.json",
+        "sha256": "2e81cca1dc68b92075e3758b5b67cd5bcaf6643d9a96fa4a4220fd26d6246639",
+        "raceId": "nar-2026-10-10-高知-01",
+        "date": "2026-10-10",
+        "bytes": 548526
+      },
+      {
+        "file": "2efa1443b9ba43b072f841a7a19cadfd6ee419c2a0080a45f7cdad10d9567244.json",
+        "sha256": "2efa1443b9ba43b072f841a7a19cadfd6ee419c2a0080a45f7cdad10d9567244",
+        "raceId": "nar-2026-10-10-佐賀-05",
+        "date": "2026-10-10",
+        "bytes": 2616493
+      },
+      {
+        "file": "2f90dea7e480c8885c847db9ec697e6aa63688105eecbfbddf9290f2c88f8203.json",
+        "sha256": "2f90dea7e480c8885c847db9ec697e6aa63688105eecbfbddf9290f2c88f8203",
+        "raceId": "nar-2026-10-11-高知-06",
+        "date": "2026-10-11",
+        "bytes": 2461453
+      },
+      {
+        "file": "305e0aa94058ac1cc869c51756ede082a842f52c111d14dc918143bf48e83fcb.json",
+        "sha256": "305e0aa94058ac1cc869c51756ede082a842f52c111d14dc918143bf48e83fcb",
+        "raceId": "nar-2026-10-12-帯広ば-08",
+        "date": "2026-10-12",
+        "bytes": 2101073
+      },
+      {
+        "file": "32cf9e14200f01a3bf976c24768152334fa0e210d5719d38687fd49db8adf665.json",
+        "sha256": "32cf9e14200f01a3bf976c24768152334fa0e210d5719d38687fd49db8adf665",
+        "raceId": "nar-2026-10-13-名古屋-03",
+        "date": "2026-10-13",
+        "bytes": 2260349
+      },
+      {
+        "file": "3427f1548c57f51895c1d14cef73bc09b3dd93cc88cd11197b4b20680f703ddd.json",
+        "sha256": "3427f1548c57f51895c1d14cef73bc09b3dd93cc88cd11197b4b20680f703ddd",
+        "raceId": "nar-2026-10-13-川崎-07",
+        "date": "2026-10-13",
+        "bytes": 3185388
+      },
+      {
+        "file": "350fe16e506a4c16e07e4fb47789dc0ed5ae291c446ec74a39b0ab5998027793.json",
+        "sha256": "350fe16e506a4c16e07e4fb47789dc0ed5ae291c446ec74a39b0ab5998027793",
+        "raceId": "jra-2026-10-10-京都-11",
+        "date": "2026-10-10",
+        "bytes": 4501219
+      },
+      {
+        "file": "39351cb2c983cf0cb23d90f9c1e7281caf8cb754c5e3481cce07c08580d4e2c0.json",
+        "sha256": "39351cb2c983cf0cb23d90f9c1e7281caf8cb754c5e3481cce07c08580d4e2c0",
+        "raceId": "nar-2026-10-13-名古屋-01",
+        "date": "2026-10-13",
+        "bytes": 2248442
+      },
+      {
+        "file": "3a92047ce2020612a66d547ea564e1e299000618b3a3617ae01cec745be4b343.json",
+        "sha256": "3a92047ce2020612a66d547ea564e1e299000618b3a3617ae01cec745be4b343",
+        "raceId": "nar-2026-10-12-川崎-02",
+        "date": "2026-10-12",
+        "bytes": 2330354
+      },
+      {
+        "file": "3c11d4f4f3be88bf892af35fe6b77d459828dc15ba0b0fa4708d4da19c31dca4.json",
+        "sha256": "3c11d4f4f3be88bf892af35fe6b77d459828dc15ba0b0fa4708d4da19c31dca4",
+        "raceId": "nar-2026-10-10-高知-09",
+        "date": "2026-10-10",
+        "bytes": 2362045
+      },
+      {
+        "file": "3f5c121c29b279116d39037fa4c6cfbb3fc4af371ecaf5df17b0a8084c0cfdc3.json",
+        "sha256": "3f5c121c29b279116d39037fa4c6cfbb3fc4af371ecaf5df17b0a8084c0cfdc3",
+        "raceId": "nar-2026-10-11-高知-09",
+        "date": "2026-10-11",
+        "bytes": 2374137
+      },
+      {
+        "file": "3fa9ba88e470c673d7e2f23ea79a5a1adde1c2a39f6084b9f3fd105c91df99ee.json",
+        "sha256": "3fa9ba88e470c673d7e2f23ea79a5a1adde1c2a39f6084b9f3fd105c91df99ee",
+        "raceId": "nar-2026-10-11-帯広ば-02",
+        "date": "2026-10-11",
+        "bytes": 2428846
+      },
+      {
+        "file": "3fe19a8ed3f5eb5157b9ae88bb86cfca702646641686b974cf28f01053b3cc25.json",
+        "sha256": "3fe19a8ed3f5eb5157b9ae88bb86cfca702646641686b974cf28f01053b3cc25",
+        "raceId": "nar-2026-10-11-佐賀-09",
+        "date": "2026-10-11",
+        "bytes": 2540938
+      },
+      {
+        "file": "3ff6c0ee277ec88118d27df536db831a1ae787762b61e0a6370b60f0cfd7e83f.json",
+        "sha256": "3ff6c0ee277ec88118d27df536db831a1ae787762b61e0a6370b60f0cfd7e83f",
+        "raceId": "nar-2026-10-12-川崎-01",
+        "date": "2026-10-12",
+        "bytes": 2489914
+      },
+      {
+        "file": "40b06231a7d7cc89ca5909ca26611e17849e49931649fb87870a7fe28ec471d5.json",
+        "sha256": "40b06231a7d7cc89ca5909ca26611e17849e49931649fb87870a7fe28ec471d5",
+        "raceId": "nar-2026-10-13-名古屋-08",
+        "date": "2026-10-13",
+        "bytes": 2552845
+      },
+      {
+        "file": "40d1e54434905098382febcd6b7f3a6727d1cb6ff4a1eee76a322618ccee6c4a.json",
+        "sha256": "40d1e54434905098382febcd6b7f3a6727d1cb6ff4a1eee76a322618ccee6c4a",
+        "raceId": "nar-2026-10-12-佐賀-03",
+        "date": "2026-10-12",
+        "bytes": 2961195
+      },
+      {
+        "file": "4105325f9131cba4f4b5259988c3dd7bb000ae785cbc7d224898385c7d906bd8.json",
+        "sha256": "4105325f9131cba4f4b5259988c3dd7bb000ae785cbc7d224898385c7d906bd8",
+        "raceId": "nar-2026-10-11-佐賀-11",
+        "date": "2026-10-11",
+        "bytes": 3146753
+      },
+      {
+        "file": "41485632c157589d70d44772c451a59be8b895251925f952cc0570af7acbf2d0.json",
+        "sha256": "41485632c157589d70d44772c451a59be8b895251925f952cc0570af7acbf2d0",
+        "raceId": "nar-2026-10-12-盛岡-09",
+        "date": "2026-10-12",
+        "bytes": 2750112
+      },
+      {
+        "file": "4153c337ac22d56c2a5460b755a168753546ddeaae5f70f9e9f63d330158a87e.json",
+        "sha256": "4153c337ac22d56c2a5460b755a168753546ddeaae5f70f9e9f63d330158a87e",
+        "raceId": "nar-2026-10-11-高知-08",
+        "date": "2026-10-11",
+        "bytes": 2364944
+      },
+      {
+        "file": "419173f1aa504137a938e52ca32b1ed76f0663d9dbf0016c22b32ec814d768a3.json",
+        "sha256": "419173f1aa504137a938e52ca32b1ed76f0663d9dbf0016c22b32ec814d768a3",
+        "raceId": "nar-2026-10-13-盛岡-10",
+        "date": "2026-10-13",
+        "bytes": 2723762
+      },
+      {
+        "file": "41e1d6216a12dacfc22d77ece7abba5852d80a96e5792a45dff61fe9e1e382b8.json",
+        "sha256": "41e1d6216a12dacfc22d77ece7abba5852d80a96e5792a45dff61fe9e1e382b8",
+        "raceId": "jra-2026-10-11-京都-11",
+        "date": "2026-10-11",
+        "bytes": 5502444
+      },
+      {
+        "file": "424c23b1bcdd9b35bf4782d07ef6999f51e649a79e686a224c65fe9da8aa60f1.json",
+        "sha256": "424c23b1bcdd9b35bf4782d07ef6999f51e649a79e686a224c65fe9da8aa60f1",
+        "raceId": "nar-2026-10-11-帯広ば-07",
+        "date": "2026-10-11",
+        "bytes": 2452085
+      },
+      {
+        "file": "427c8d789852fa9697d5faf8f585b7da9f88cf9819968e4198ea5b0a6552498b.json",
+        "sha256": "427c8d789852fa9697d5faf8f585b7da9f88cf9819968e4198ea5b0a6552498b",
+        "raceId": "nar-2026-10-13-金沢-07",
+        "date": "2026-10-13",
+        "bytes": 2643816
+      },
+      {
+        "file": "43c1003639df4b72aab4bdaae38c7c401fa288d701b5657530d8142c33cd3d90.json",
+        "sha256": "43c1003639df4b72aab4bdaae38c7c401fa288d701b5657530d8142c33cd3d90",
+        "raceId": "nar-2026-10-12-帯広ば-07",
+        "date": "2026-10-12",
+        "bytes": 2552225
+      },
+      {
+        "file": "43f500e5615367571e0f7f39977ed84569dcf376eec51546216c22f8a2bc648b.json",
+        "sha256": "43f500e5615367571e0f7f39977ed84569dcf376eec51546216c22f8a2bc648b",
+        "raceId": "nar-2026-10-13-金沢-10",
+        "date": "2026-10-13",
+        "bytes": 2282565
+      },
+      {
+        "file": "46a75854d8b783e13e662a7b6bc95881c41d0452ebb23d378f5366f36e751b33.json",
+        "sha256": "46a75854d8b783e13e662a7b6bc95881c41d0452ebb23d378f5366f36e751b33",
+        "raceId": "nar-2026-10-13-金沢-05",
+        "date": "2026-10-13",
+        "bytes": 2243783
+      },
+      {
+        "file": "46aede404c6ac158562aa235f6aebfe67720f221b5017d9dc2198dca68b6f777.json",
+        "sha256": "46aede404c6ac158562aa235f6aebfe67720f221b5017d9dc2198dca68b6f777",
+        "raceId": "nar-2026-10-11-金沢-01",
+        "date": "2026-10-11",
+        "bytes": 1802674
+      },
+      {
+        "file": "47d0be53cc9a637824bfa367f23f3f6d88f2c5fce1a65d1f886526be82b196cf.json",
+        "sha256": "47d0be53cc9a637824bfa367f23f3f6d88f2c5fce1a65d1f886526be82b196cf",
+        "raceId": "nar-2026-10-11-帯広ば-08",
+        "date": "2026-10-11",
+        "bytes": 2463318
+      },
+      {
+        "file": "491ff84ef9f4ce99f32af7ca47f9e2deabc64f2c6bce90989ad5af031b9e5908.json",
+        "sha256": "491ff84ef9f4ce99f32af7ca47f9e2deabc64f2c6bce90989ad5af031b9e5908",
+        "raceId": "nar-2026-10-12-佐賀-09",
+        "date": "2026-10-12",
+        "bytes": 1629764
+      },
+      {
+        "file": "4dc7b86fb65bc71928f994a0c928f959fe09e586466188797a36fd787e9cf93f.json",
+        "sha256": "4dc7b86fb65bc71928f994a0c928f959fe09e586466188797a36fd787e9cf93f",
+        "raceId": "nar-2026-10-12-川崎-10",
+        "date": "2026-10-12",
+        "bytes": 2267227
+      },
+      {
+        "file": "4ea490920b1bcff3bc0ee9d322043da13c3cd2f446f780b0dabde72d70b7ca65.json",
+        "sha256": "4ea490920b1bcff3bc0ee9d322043da13c3cd2f446f780b0dabde72d70b7ca65",
+        "raceId": "nar-2026-10-13-金沢-09",
+        "date": "2026-10-13",
+        "bytes": 2473238
+      },
+      {
+        "file": "4f2de9981e80bbca554f2f9b97fc265431abd01357dc685d058586eb71598d5d.json",
+        "sha256": "4f2de9981e80bbca554f2f9b97fc265431abd01357dc685d058586eb71598d5d",
+        "raceId": "jra-2026-10-11-京都-10",
+        "date": "2026-10-11",
+        "bytes": 6512296
+      },
+      {
+        "file": "4fd0271571b6c4acdace83de8b29b9fe00e8bbe19db581c2c4656231ee178057.json",
+        "sha256": "4fd0271571b6c4acdace83de8b29b9fe00e8bbe19db581c2c4656231ee178057",
+        "raceId": "jra-2026-10-11-東京-09",
+        "date": "2026-10-11",
+        "bytes": 4100087
+      },
+      {
+        "file": "506c8a8170c8a1292c0cc562974434b49c66b8a53ddcb97ae1ddca60317adb0f.json",
+        "sha256": "506c8a8170c8a1292c0cc562974434b49c66b8a53ddcb97ae1ddca60317adb0f",
+        "raceId": "jra-2026-10-11-東京-03",
+        "date": "2026-10-11",
+        "bytes": 2902917
+      },
+      {
+        "file": "514d446a0bd3dfe6b691a1907cd85ccfd045bc65c9600db17b8fe6e8b9905742.json",
+        "sha256": "514d446a0bd3dfe6b691a1907cd85ccfd045bc65c9600db17b8fe6e8b9905742",
+        "raceId": "nar-2026-10-10-高知-08",
+        "date": "2026-10-10",
+        "bytes": 2691618
+      },
+      {
+        "file": "52582360867da6d9b70ee1c6839f07cae0904db528405d7f78d7e6bef1e1a099.json",
+        "sha256": "52582360867da6d9b70ee1c6839f07cae0904db528405d7f78d7e6bef1e1a099",
+        "raceId": "nar-2026-10-12-盛岡-11",
+        "date": "2026-10-12",
+        "bytes": 1693399
+      },
+      {
+        "file": "5279d89a4f60d65da1a290382ef7d3ab8b13e74d695c6ca04b5bfb34e066b8e1.json",
+        "sha256": "5279d89a4f60d65da1a290382ef7d3ab8b13e74d695c6ca04b5bfb34e066b8e1",
+        "raceId": "jra-2026-10-12-東京-10",
+        "date": "2026-10-12",
+        "bytes": 3480731
+      },
+      {
+        "file": "53f61f3a9186b1236ff0cc92b201affd82d771d093a36a66f8a291c80be9385b.json",
+        "sha256": "53f61f3a9186b1236ff0cc92b201affd82d771d093a36a66f8a291c80be9385b",
+        "raceId": "nar-2026-10-10-帯広ば-03",
+        "date": "2026-10-10",
+        "bytes": 2398136
+      },
+      {
+        "file": "5525811336d2f5a748145e8a8e796497ca099560b899fc09ac44ce4ae3dbe8f4.json",
+        "sha256": "5525811336d2f5a748145e8a8e796497ca099560b899fc09ac44ce4ae3dbe8f4",
+        "raceId": "jra-2026-10-12-京都-09",
+        "date": "2026-10-12",
+        "bytes": 3558007
+      },
+      {
+        "file": "554976834f112a7044b2b7340b5353c9554205f9903ceddb0beef56abf89de8e.json",
+        "sha256": "554976834f112a7044b2b7340b5353c9554205f9903ceddb0beef56abf89de8e",
+        "raceId": "nar-2026-10-12-盛岡-01",
+        "date": "2026-10-12",
+        "bytes": 2639855
+      },
+      {
+        "file": "561503f6b020f5fa8781def232ffef08ba9a2442c9b0d6c60724759437b9064b.json",
+        "sha256": "561503f6b020f5fa8781def232ffef08ba9a2442c9b0d6c60724759437b9064b",
+        "raceId": "nar-2026-10-12-盛岡-06",
+        "date": "2026-10-12",
+        "bytes": 2557926
+      },
+      {
+        "file": "56e03ff9e32e1eed7824ee709dc93de491dca41a23fad62bf12d279f996974d6.json",
+        "sha256": "56e03ff9e32e1eed7824ee709dc93de491dca41a23fad62bf12d279f996974d6",
+        "raceId": "jra-2026-10-12-京都-02",
+        "date": "2026-10-12",
+        "bytes": 2155299
+      },
+      {
+        "file": "56f5f2c38d28e5a98122503c396723d25ed89ffd8a647ccee83484680f7fd604.json",
+        "sha256": "56f5f2c38d28e5a98122503c396723d25ed89ffd8a647ccee83484680f7fd604",
+        "raceId": "nar-2026-10-12-盛岡-02",
+        "date": "2026-10-12",
+        "bytes": 2421545
+      },
+      {
+        "file": "577c432d6bb24b6a5a96e9987a2368f5d77428218305cc576bf6bcf3d1256509.json",
+        "sha256": "577c432d6bb24b6a5a96e9987a2368f5d77428218305cc576bf6bcf3d1256509",
+        "raceId": "nar-2026-10-11-帯広ば-12",
+        "date": "2026-10-11",
+        "bytes": 2241573
+      },
+      {
+        "file": "57c5bc8fd6d7319cc7518ca53209ebfd844a8cee5acd90be5740966aa6daf0a1.json",
+        "sha256": "57c5bc8fd6d7319cc7518ca53209ebfd844a8cee5acd90be5740966aa6daf0a1",
+        "raceId": "nar-2026-10-12-佐賀-07",
+        "date": "2026-10-12",
+        "bytes": 2671223
+      },
+      {
+        "file": "587a340805329246ccb6a62ffba3103e7a54b0923c39b1ef8e0303e1812cd89d.json",
+        "sha256": "587a340805329246ccb6a62ffba3103e7a54b0923c39b1ef8e0303e1812cd89d",
+        "raceId": "jra-2026-10-10-東京-01",
+        "date": "2026-10-10",
+        "bytes": 2956722
+      },
+      {
+        "file": "590fbc1f7571750ed696a7499a4a9c7003ba79c16b7644db65ff58cf6612e33a.json",
+        "sha256": "590fbc1f7571750ed696a7499a4a9c7003ba79c16b7644db65ff58cf6612e33a",
+        "raceId": "jra-2026-10-11-京都-06",
+        "date": "2026-10-11",
+        "bytes": 6416476
+      },
+      {
+        "file": "59cf858436f98c39be707e1fc336428e068e1c9a3a43a1140db27e2512075f42.json",
+        "sha256": "59cf858436f98c39be707e1fc336428e068e1c9a3a43a1140db27e2512075f42",
+        "raceId": "nar-2026-10-10-佐賀-11",
+        "date": "2026-10-10",
+        "bytes": 2347617
+      },
+      {
+        "file": "5a3f02d02e5a4db307e41cad850ada37c3dcd741b2034d4bddce8cb0022822f3.json",
+        "sha256": "5a3f02d02e5a4db307e41cad850ada37c3dcd741b2034d4bddce8cb0022822f3",
+        "raceId": "nar-2026-10-13-盛岡-08",
+        "date": "2026-10-13",
+        "bytes": 2383548
+      },
+      {
+        "file": "5aa5c7dec19eb600c07a32fc6b8e0acae20b8215b0d92e495ada0c86cc141ac0.json",
+        "sha256": "5aa5c7dec19eb600c07a32fc6b8e0acae20b8215b0d92e495ada0c86cc141ac0",
+        "raceId": "jra-2026-10-11-京都-09",
+        "date": "2026-10-11",
+        "bytes": 5629290
+      },
+      {
+        "file": "5b6663dabcfb110774fb0d5ed31d488f183b9da38a29a05f550a83f2427c7ba6.json",
+        "sha256": "5b6663dabcfb110774fb0d5ed31d488f183b9da38a29a05f550a83f2427c7ba6",
+        "raceId": "nar-2026-10-12-佐賀-04",
+        "date": "2026-10-12",
+        "bytes": 2732207
+      },
+      {
+        "file": "5ca0cb245635c5c8727faaeb9fca0e3dae12208ca050e8a4f280c79badeeb734.json",
+        "sha256": "5ca0cb245635c5c8727faaeb9fca0e3dae12208ca050e8a4f280c79badeeb734",
+        "raceId": "nar-2026-10-13-川崎-11",
+        "date": "2026-10-13",
+        "bytes": 3074317
+      },
+      {
+        "file": "5d4ebf1a0680bc182d1b1fdfcfd5370e91ae86faef6542601b74afcfac07885c.json",
+        "sha256": "5d4ebf1a0680bc182d1b1fdfcfd5370e91ae86faef6542601b74afcfac07885c",
+        "raceId": "nar-2026-10-11-金沢-02",
+        "date": "2026-10-11",
+        "bytes": 2035942
+      },
+      {
+        "file": "5d548f88ea6f92de76ef7cd3862bff8b6a87ac669857e45835defbaa2753f1ce.json",
+        "sha256": "5d548f88ea6f92de76ef7cd3862bff8b6a87ac669857e45835defbaa2753f1ce",
+        "raceId": "nar-2026-10-11-帯広ば-06",
+        "date": "2026-10-11",
+        "bytes": 2130178
+      },
+      {
+        "file": "60c4315e5d700c74f90a8f851e08b7d790ed13338e53c81bc9d0e79ed8d9ddff.json",
+        "sha256": "60c4315e5d700c74f90a8f851e08b7d790ed13338e53c81bc9d0e79ed8d9ddff",
+        "raceId": "nar-2026-10-12-川崎-06",
+        "date": "2026-10-12",
+        "bytes": 1280823
+      },
+      {
+        "file": "6106bf1479e51afc9c2e2189266463c3f399a658a1d1042d7773b839c6504736.json",
+        "sha256": "6106bf1479e51afc9c2e2189266463c3f399a658a1d1042d7773b839c6504736",
+        "raceId": "jra-2026-10-10-京都-03",
+        "date": "2026-10-10",
+        "bytes": 1858162
+      },
+      {
+        "file": "62622fe8d1b11efb2127dff4f136fd2903857c2054c43cc94faf791cbaeb1535.json",
+        "sha256": "62622fe8d1b11efb2127dff4f136fd2903857c2054c43cc94faf791cbaeb1535",
+        "raceId": "nar-2026-10-11-高知-02",
+        "date": "2026-10-11",
+        "bytes": 2154392
+      },
+      {
+        "file": "6327174f6eff3c582c85b6b395811dc1efcf8de560d9a191c566d28dd5828b8d.json",
+        "sha256": "6327174f6eff3c582c85b6b395811dc1efcf8de560d9a191c566d28dd5828b8d",
+        "raceId": "jra-2026-10-11-東京-07",
+        "date": "2026-10-11",
+        "bytes": 5325312
+      },
+      {
+        "file": "6607a95a1b0b09b39535f8c9d8c628e2ae77c23070e750cac2d88084e1c30c6e.json",
+        "sha256": "6607a95a1b0b09b39535f8c9d8c628e2ae77c23070e750cac2d88084e1c30c6e",
+        "raceId": "nar-2026-10-12-盛岡-04",
+        "date": "2026-10-12",
+        "bytes": 2673568
+      },
+      {
+        "file": "680408efb0ccee6aca2f3ac08d930450a7224e17bf70ca58f34f59db7c2c7b8a.json",
+        "sha256": "680408efb0ccee6aca2f3ac08d930450a7224e17bf70ca58f34f59db7c2c7b8a",
+        "raceId": "nar-2026-10-13-川崎-02",
+        "date": "2026-10-13",
+        "bytes": 2375934
+      },
+      {
+        "file": "6b1826ef0b2e5eb6b6dbf175d17b2e6b6f951d0127d3f9712dc81ae2a3e5c37a.json",
+        "sha256": "6b1826ef0b2e5eb6b6dbf175d17b2e6b6f951d0127d3f9712dc81ae2a3e5c37a",
+        "raceId": "nar-2026-10-11-盛岡-06",
+        "date": "2026-10-11",
+        "bytes": 1752992
+      },
+      {
+        "file": "6b7d889bacce8cbaddaabcb6d6d689d32b0f0c682e2f04df38a1a4bb3e488865.json",
+        "sha256": "6b7d889bacce8cbaddaabcb6d6d689d32b0f0c682e2f04df38a1a4bb3e488865",
+        "raceId": "nar-2026-10-12-川崎-07",
+        "date": "2026-10-12",
+        "bytes": 2322094
+      },
+      {
+        "file": "6c0eb3cbf892d7c3107abb6c3a4c7e2e9cf2b0fb65aaa8e3314fdf5333ab6183.json",
+        "sha256": "6c0eb3cbf892d7c3107abb6c3a4c7e2e9cf2b0fb65aaa8e3314fdf5333ab6183",
+        "raceId": "nar-2026-10-13-川崎-05",
+        "date": "2026-10-13",
+        "bytes": 2842359
+      },
+      {
+        "file": "6c7e2718881395828ddeec71fab9c28aad5d87eb8af18959077040e027a16f53.json",
+        "sha256": "6c7e2718881395828ddeec71fab9c28aad5d87eb8af18959077040e027a16f53",
+        "raceId": "jra-2026-10-12-京都-01",
+        "date": "2026-10-12",
+        "bytes": 3031572
+      },
+      {
+        "file": "6d9be5ec882670b8960551561a44d5b1864b1e6b3abea4c8b72567a4cb4e2c53.json",
+        "sha256": "6d9be5ec882670b8960551561a44d5b1864b1e6b3abea4c8b72567a4cb4e2c53",
+        "raceId": "nar-2026-10-12-盛岡-08",
+        "date": "2026-10-12",
+        "bytes": 2564984
+      },
+      {
+        "file": "6ea386ec89175f536409936aba58a1b528610facce8351c5916df069f9820786.json",
+        "sha256": "6ea386ec89175f536409936aba58a1b528610facce8351c5916df069f9820786",
+        "raceId": "nar-2026-10-13-門別-03",
+        "date": "2026-10-13",
+        "bytes": 2486662
+      },
+      {
+        "file": "7070b155b0ec8d51d3bc5688018542818a397b4a910b447c3700037d3c59270c.json",
+        "sha256": "7070b155b0ec8d51d3bc5688018542818a397b4a910b447c3700037d3c59270c",
+        "raceId": "nar-2026-10-11-金沢-06",
+        "date": "2026-10-11",
+        "bytes": 2043381
+      },
+      {
+        "file": "7086eca0fdaea75eb22f59f8f165a3e318107d39bf1de338988b9431d59dbb9a.json",
+        "sha256": "7086eca0fdaea75eb22f59f8f165a3e318107d39bf1de338988b9431d59dbb9a",
+        "raceId": "nar-2026-10-10-帯広ば-07",
+        "date": "2026-10-10",
+        "bytes": 2346975
+      },
+      {
+        "file": "7137482c2a078db991b950cb2de9b08a7c3d663fcf50c2fbb2f5e9eca77f0bd5.json",
+        "sha256": "7137482c2a078db991b950cb2de9b08a7c3d663fcf50c2fbb2f5e9eca77f0bd5",
+        "raceId": "nar-2026-10-11-金沢-03",
+        "date": "2026-10-11",
+        "bytes": 1925617
+      },
+      {
+        "file": "74dcd15e5dd5b59adb1d36e72ee2b223a83f77ed2501cc3b51a2c16641a62811.json",
+        "sha256": "74dcd15e5dd5b59adb1d36e72ee2b223a83f77ed2501cc3b51a2c16641a62811",
+        "raceId": "jra-2026-10-12-京都-03",
+        "date": "2026-10-12",
+        "bytes": 2527793
+      },
+      {
+        "file": "752dbd450320ead675be235ca6a0db8c7765804fb74508aafeab38a45e26030a.json",
+        "sha256": "752dbd450320ead675be235ca6a0db8c7765804fb74508aafeab38a45e26030a",
+        "raceId": "jra-2026-10-12-京都-11",
+        "date": "2026-10-12",
+        "bytes": 8499602
+      },
+      {
+        "file": "75480edf060d71521a34053f14c7ea6c4b1614f7a6b4fdd080bab116b5462893.json",
+        "sha256": "75480edf060d71521a34053f14c7ea6c4b1614f7a6b4fdd080bab116b5462893",
+        "raceId": "nar-2026-10-12-帯広ば-01",
+        "date": "2026-10-12",
+        "bytes": 2788956
+      },
+      {
+        "file": "7716697c09009c9a6f2df3c46a9aa734ae013d7f6cd372515e0935f23feed02b.json",
+        "sha256": "7716697c09009c9a6f2df3c46a9aa734ae013d7f6cd372515e0935f23feed02b",
+        "raceId": "nar-2026-10-13-盛岡-05",
+        "date": "2026-10-13",
+        "bytes": 2333569
+      },
+      {
+        "file": "7813604a4cd1c847792f9a6584f5394d01f32a061c613c500eeba5b40c2dd084.json",
+        "sha256": "7813604a4cd1c847792f9a6584f5394d01f32a061c613c500eeba5b40c2dd084",
+        "raceId": "nar-2026-10-11-盛岡-08",
+        "date": "2026-10-11",
+        "bytes": 2238901
+      },
+      {
+        "file": "7a2b802047c83194c3caf3c290f7ebe8c6d190ebd1b296547397422d7bdd5c81.json",
+        "sha256": "7a2b802047c83194c3caf3c290f7ebe8c6d190ebd1b296547397422d7bdd5c81",
+        "raceId": "jra-2026-10-10-京都-06",
+        "date": "2026-10-10",
+        "bytes": 352591
+      },
+      {
+        "file": "7bc356cf62bdf3948adbd5a01f681b7b9d7fc3c4acba13e0a6f7c0ea45679676.json",
+        "sha256": "7bc356cf62bdf3948adbd5a01f681b7b9d7fc3c4acba13e0a6f7c0ea45679676",
+        "raceId": "nar-2026-10-12-帯広ば-05",
+        "date": "2026-10-12",
+        "bytes": 2617414
+      },
+      {
+        "file": "7c99d212eaadcca909652f4b5f3e1aa2bc46a56d752fb0b3c799d4b2d72e09e3.json",
+        "sha256": "7c99d212eaadcca909652f4b5f3e1aa2bc46a56d752fb0b3c799d4b2d72e09e3",
+        "raceId": "jra-2026-10-12-東京-03",
+        "date": "2026-10-12",
+        "bytes": 2677409
+      },
+      {
+        "file": "7cddc3a320156e5c2c205e14b2c4a4d96f5af49a1a49f4ee2dc888ab2ebaba92.json",
+        "sha256": "7cddc3a320156e5c2c205e14b2c4a4d96f5af49a1a49f4ee2dc888ab2ebaba92",
+        "raceId": "nar-2026-10-10-帯広ば-02",
+        "date": "2026-10-10",
+        "bytes": 2547044
+      },
+      {
+        "file": "7d31721eabbea895c2383b1a242bc75205e09cf42960acc2edda2152840f19c4.json",
+        "sha256": "7d31721eabbea895c2383b1a242bc75205e09cf42960acc2edda2152840f19c4",
+        "raceId": "nar-2026-10-13-門別-10",
+        "date": "2026-10-13",
+        "bytes": 3204975
+      },
+      {
+        "file": "7e74521da50834a35c60596b83a8fffd8594936080656e5d8f32b312b6854058.json",
+        "sha256": "7e74521da50834a35c60596b83a8fffd8594936080656e5d8f32b312b6854058",
+        "raceId": "nar-2026-10-11-佐賀-04",
+        "date": "2026-10-11",
+        "bytes": 2094143
+      },
+      {
+        "file": "7eebee77a212a0f74a19ee6a3b5dadc6954f680a9d3adb778ce408b8b13b2b33.json",
+        "sha256": "7eebee77a212a0f74a19ee6a3b5dadc6954f680a9d3adb778ce408b8b13b2b33",
+        "raceId": "nar-2026-10-12-帯広ば-09",
+        "date": "2026-10-12",
+        "bytes": 2653545
+      },
+      {
+        "file": "7f447b539e94ace440cdf3e98830094419be584192494a39375ca5ed577a7086.json",
+        "sha256": "7f447b539e94ace440cdf3e98830094419be584192494a39375ca5ed577a7086",
+        "raceId": "nar-2026-10-11-盛岡-04",
+        "date": "2026-10-11",
+        "bytes": 2112644
+      },
+      {
+        "file": "7f5d1ae9981c52b6862e4897b7f778c14c901272da7b126b7b70f5307b097e0c.json",
+        "sha256": "7f5d1ae9981c52b6862e4897b7f778c14c901272da7b126b7b70f5307b097e0c",
+        "raceId": "nar-2026-10-11-帯広ば-03",
+        "date": "2026-10-11",
+        "bytes": 2471302
+      },
+      {
+        "file": "808f6509e618a222fe1057944bc27c2b569d023ad0e4c02fcb991716915b2a07.json",
+        "sha256": "808f6509e618a222fe1057944bc27c2b569d023ad0e4c02fcb991716915b2a07",
+        "raceId": "nar-2026-10-11-金沢-05",
+        "date": "2026-10-11",
+        "bytes": 1982065
+      },
+      {
+        "file": "80d137ec0e5d902ab425a11d9e88da4ef6cbdd50e5b2504762df84836cfbd1a3.json",
+        "sha256": "80d137ec0e5d902ab425a11d9e88da4ef6cbdd50e5b2504762df84836cfbd1a3",
+        "raceId": "nar-2026-10-12-佐賀-02",
+        "date": "2026-10-12",
+        "bytes": 1964551
+      },
+      {
+        "file": "82605a92a646ed0cb27ed94205cf989ed39532a79e99008d8b69a56b7ed99706.json",
+        "sha256": "82605a92a646ed0cb27ed94205cf989ed39532a79e99008d8b69a56b7ed99706",
+        "raceId": "jra-2026-10-12-東京-07",
+        "date": "2026-10-12",
+        "bytes": 5312913
+      },
+      {
+        "file": "830e420636691f2ed28e9d94c29a738516afae9454b6c298d554a111e0ba78d1.json",
+        "sha256": "830e420636691f2ed28e9d94c29a738516afae9454b6c298d554a111e0ba78d1",
+        "raceId": "jra-2026-10-10-京都-07",
+        "date": "2026-10-10",
+        "bytes": 5447584
+      },
+      {
+        "file": "831786b1f81d055ba47bd9878468a92ffb7a096a85f134ca766c0289efd5d8c4.json",
+        "sha256": "831786b1f81d055ba47bd9878468a92ffb7a096a85f134ca766c0289efd5d8c4",
+        "raceId": "nar-2026-10-12-川崎-11",
+        "date": "2026-10-12",
+        "bytes": 1809767
+      },
+      {
+        "file": "84b6ab252ef8b3287f4513a4e0ecc8db66bec4bb9c9ac6014175f7f5f8d75cf9.json",
+        "sha256": "84b6ab252ef8b3287f4513a4e0ecc8db66bec4bb9c9ac6014175f7f5f8d75cf9",
+        "raceId": "nar-2026-10-12-帯広ば-12",
+        "date": "2026-10-12",
+        "bytes": 2665912
+      },
+      {
+        "file": "84c8416d20dc864560128136aa8fc8ce004a20abce368439b4a16b5951397c2c.json",
+        "sha256": "84c8416d20dc864560128136aa8fc8ce004a20abce368439b4a16b5951397c2c",
+        "raceId": "nar-2026-10-10-帯広ば-08",
+        "date": "2026-10-10",
+        "bytes": 2360568
+      },
+      {
+        "file": "86341dfc6ebb89eae5d7652433375a3a10a41d6a17d44a56552e495fedb5967a.json",
+        "sha256": "86341dfc6ebb89eae5d7652433375a3a10a41d6a17d44a56552e495fedb5967a",
+        "raceId": "nar-2026-10-13-金沢-01",
+        "date": "2026-10-13",
+        "bytes": 2373342
+      },
+      {
+        "file": "878ff435433567f2e6b0ddd1c27de42a2c1e87941eb51aee84536a3e628e2561.json",
+        "sha256": "878ff435433567f2e6b0ddd1c27de42a2c1e87941eb51aee84536a3e628e2561",
+        "raceId": "jra-2026-10-12-東京-12",
+        "date": "2026-10-12",
+        "bytes": 7705521
+      },
+      {
+        "file": "87ebb2daddcab24f8d6bea6246f92cfc7f856b23a265af2952d000fd2aed2138.json",
+        "sha256": "87ebb2daddcab24f8d6bea6246f92cfc7f856b23a265af2952d000fd2aed2138",
+        "raceId": "nar-2026-10-11-盛岡-03",
+        "date": "2026-10-11",
+        "bytes": 1936063
+      },
+      {
+        "file": "880dd5841ad804d747879daec018008eed260bb5c42bae3174e757302272cbbc.json",
+        "sha256": "880dd5841ad804d747879daec018008eed260bb5c42bae3174e757302272cbbc",
+        "raceId": "nar-2026-10-10-佐賀-10",
+        "date": "2026-10-10",
+        "bytes": 1434989
+      },
+      {
+        "file": "8818aa6d32610f070120f6466fae8f8113793f4f3ce125357dfceaa13797570a.json",
+        "sha256": "8818aa6d32610f070120f6466fae8f8113793f4f3ce125357dfceaa13797570a",
+        "raceId": "nar-2026-10-10-帯広ば-12",
+        "date": "2026-10-10",
+        "bytes": 2222982
+      },
+      {
+        "file": "89577ad5887bab2d8f73fe8185ea284e7c2c499eb1435aaf7aaa88f28b4fd515.json",
+        "sha256": "89577ad5887bab2d8f73fe8185ea284e7c2c499eb1435aaf7aaa88f28b4fd515",
+        "raceId": "nar-2026-10-12-帯広ば-03",
+        "date": "2026-10-12",
+        "bytes": 2134123
+      },
+      {
+        "file": "89beca18bbb05c53caedb728da7fe2135b00d5964e533b1b40e9da4332161442.json",
+        "sha256": "89beca18bbb05c53caedb728da7fe2135b00d5964e533b1b40e9da4332161442",
+        "raceId": "nar-2026-10-11-金沢-07",
+        "date": "2026-10-11",
+        "bytes": 1639318
+      },
+      {
+        "file": "8a4714568116adec24fa047f87748e1d98febe453d781c59dc13d9a4cbd9c5dd.json",
+        "sha256": "8a4714568116adec24fa047f87748e1d98febe453d781c59dc13d9a4cbd9c5dd",
+        "raceId": "nar-2026-10-11-帯広ば-04",
+        "date": "2026-10-11",
+        "bytes": 2468857
+      },
+      {
+        "file": "8a791adf2f47c63dbf8e54a81d7d667e4470ca4d809f3fcd5ba05500c8b9d60b.json",
+        "sha256": "8a791adf2f47c63dbf8e54a81d7d667e4470ca4d809f3fcd5ba05500c8b9d60b",
+        "raceId": "nar-2026-10-13-盛岡-09",
+        "date": "2026-10-13",
+        "bytes": 2224028
+      },
+      {
+        "file": "8adda3757c6c4f5262fab08a5614f9222eeb243cd196ff5259471cf37b43f33e.json",
+        "sha256": "8adda3757c6c4f5262fab08a5614f9222eeb243cd196ff5259471cf37b43f33e",
+        "raceId": "nar-2026-10-12-川崎-09",
+        "date": "2026-10-12",
+        "bytes": 2022906
+      },
+      {
+        "file": "8b739a1068a80c2413fafabebbe4496e4174598f4bf2eac0997c8e02df929e2d.json",
+        "sha256": "8b739a1068a80c2413fafabebbe4496e4174598f4bf2eac0997c8e02df929e2d",
+        "raceId": "nar-2026-10-12-帯広ば-11",
+        "date": "2026-10-12",
+        "bytes": 2928908
+      },
+      {
+        "file": "8bbdc5dd45829cd2b11e9d97b4aa680cb6f6cc77d45cfef73fc06e936329b332.json",
+        "sha256": "8bbdc5dd45829cd2b11e9d97b4aa680cb6f6cc77d45cfef73fc06e936329b332",
+        "raceId": "nar-2026-10-13-川崎-10",
+        "date": "2026-10-13",
+        "bytes": 2892848
+      },
+      {
+        "file": "8c0446a7951a21b7d10d3a3a5ec8bee835fe23d5eb1858b96c54c9d6731dfefa.json",
+        "sha256": "8c0446a7951a21b7d10d3a3a5ec8bee835fe23d5eb1858b96c54c9d6731dfefa",
+        "raceId": "nar-2026-10-10-佐賀-02",
+        "date": "2026-10-10",
+        "bytes": 2162876
+      },
+      {
+        "file": "8cf67c0a69c3a5208ae3fa5b37a4dfd2929c0bdb0390506687e16cdf1f532790.json",
+        "sha256": "8cf67c0a69c3a5208ae3fa5b37a4dfd2929c0bdb0390506687e16cdf1f532790",
+        "raceId": "nar-2026-10-12-帯広ば-04",
+        "date": "2026-10-12",
+        "bytes": 2261504
+      },
+      {
+        "file": "8d67c70957b583201c96d6e20b0862dcf13f64fb75751579321c8cf15f6e1c23.json",
+        "sha256": "8d67c70957b583201c96d6e20b0862dcf13f64fb75751579321c8cf15f6e1c23",
+        "raceId": "jra-2026-10-11-京都-08",
+        "date": "2026-10-11",
+        "bytes": 5319359
+      },
+      {
+        "file": "8dbeba2735dd4e2e948cae037dadbb263a3aad3a4b527fd96420da3564c45a55.json",
+        "sha256": "8dbeba2735dd4e2e948cae037dadbb263a3aad3a4b527fd96420da3564c45a55",
+        "raceId": "nar-2026-10-11-盛岡-09",
+        "date": "2026-10-11",
+        "bytes": 2616761
+      },
+      {
+        "file": "8e6170f73a259c2f21b69179249ddb804f0f6dded0ec23a915883623aa06a480.json",
+        "sha256": "8e6170f73a259c2f21b69179249ddb804f0f6dded0ec23a915883623aa06a480",
+        "raceId": "jra-2026-10-11-京都-02",
+        "date": "2026-10-11",
+        "bytes": 2228526
+      },
+      {
+        "file": "8e83fe85791d4d5ff2d63ee470f906785a2e4de8f61219a6726515870c2c915a.json",
+        "sha256": "8e83fe85791d4d5ff2d63ee470f906785a2e4de8f61219a6726515870c2c915a",
+        "raceId": "nar-2026-10-11-高知-03",
+        "date": "2026-10-11",
+        "bytes": 1894384
+      },
+      {
+        "file": "8f284fb76cb9c938997b3a5ff1efca372615bb0729298d46893bbbf352714abe.json",
+        "sha256": "8f284fb76cb9c938997b3a5ff1efca372615bb0729298d46893bbbf352714abe",
+        "raceId": "nar-2026-10-11-帯広ば-05",
+        "date": "2026-10-11",
+        "bytes": 2450727
+      },
+      {
+        "file": "8fc9cdbe374d5e51ac661606615fd9bee0c1fe5c18a0e0061212da2b94b05d71.json",
+        "sha256": "8fc9cdbe374d5e51ac661606615fd9bee0c1fe5c18a0e0061212da2b94b05d71",
+        "raceId": "nar-2026-10-11-盛岡-11",
+        "date": "2026-10-11",
+        "bytes": 2718595
+      },
+      {
+        "file": "9040f63534492a5064cdce38d8dfc6aff0c136738400a992628acd58f2052cda.json",
+        "sha256": "9040f63534492a5064cdce38d8dfc6aff0c136738400a992628acd58f2052cda",
+        "raceId": "jra-2026-10-10-東京-10",
+        "date": "2026-10-10",
+        "bytes": 4479237
+      },
+      {
+        "file": "90bea59453892a630d4a819aa2dc12c094467b7ad07be39d1726328ded369560.json",
+        "sha256": "90bea59453892a630d4a819aa2dc12c094467b7ad07be39d1726328ded369560",
+        "raceId": "jra-2026-10-10-東京-03",
+        "date": "2026-10-10",
+        "bytes": 2531997
+      },
+      {
+        "file": "91977b22ad98bdd8715282eed21ba2e43f8d008cb6a500321a2cdb7b567b1f85.json",
+        "sha256": "91977b22ad98bdd8715282eed21ba2e43f8d008cb6a500321a2cdb7b567b1f85",
+        "raceId": "jra-2026-10-11-東京-05",
+        "date": "2026-10-11",
+        "bytes": 413207
+      },
+      {
+        "file": "91cbd467d23c216a330e3615a3c687d97ff3711c16192bcacf72f545a0224fab.json",
+        "sha256": "91cbd467d23c216a330e3615a3c687d97ff3711c16192bcacf72f545a0224fab",
+        "raceId": "nar-2026-10-13-門別-07",
+        "date": "2026-10-13",
+        "bytes": 2186837
+      },
+      {
+        "file": "92255b0735339766c6744c0ed7c49fe54de951a18161f6769a4eba97d675f851.json",
+        "sha256": "92255b0735339766c6744c0ed7c49fe54de951a18161f6769a4eba97d675f851",
+        "raceId": "nar-2026-10-13-名古屋-05",
+        "date": "2026-10-13",
+        "bytes": 2693637
+      },
+      {
+        "file": "95dc5938e073acfc43c073a0b206739cafdccfda327761cb3796ae8a85814f77.json",
+        "sha256": "95dc5938e073acfc43c073a0b206739cafdccfda327761cb3796ae8a85814f77",
+        "raceId": "nar-2026-10-12-帯広ば-10",
+        "date": "2026-10-12",
+        "bytes": 2763976
+      },
+      {
+        "file": "9a73665536323ba41351153a3734a06ee13067dcb53bbd27d5fbf70e0f303a16.json",
+        "sha256": "9a73665536323ba41351153a3734a06ee13067dcb53bbd27d5fbf70e0f303a16",
+        "raceId": "jra-2026-10-10-京都-09",
+        "date": "2026-10-10",
+        "bytes": 6145873
+      },
+      {
+        "file": "9a8cf19b0e8143c2578e8a94e7bea266227e40c0770222e42ad5e36b27f0776d.json",
+        "sha256": "9a8cf19b0e8143c2578e8a94e7bea266227e40c0770222e42ad5e36b27f0776d",
+        "raceId": "nar-2026-10-11-金沢-04",
+        "date": "2026-10-11",
+        "bytes": 1596554
+      },
+      {
+        "file": "9b52788eeaed36ee4622026cf75969fcf2ec34964882bf4c0b31749404fcd0f8.json",
+        "sha256": "9b52788eeaed36ee4622026cf75969fcf2ec34964882bf4c0b31749404fcd0f8",
+        "raceId": "jra-2026-10-12-東京-01",
+        "date": "2026-10-12",
+        "bytes": 2973963
+      },
+      {
+        "file": "9d3ee999f11548353c6dfbd296773ad9548042453f10c292130a083f720be54d.json",
+        "sha256": "9d3ee999f11548353c6dfbd296773ad9548042453f10c292130a083f720be54d",
+        "raceId": "nar-2026-10-10-佐賀-04",
+        "date": "2026-10-10",
+        "bytes": 2070640
+      },
+      {
+        "file": "9d8e54ff48091e81a04c0caa3330a263622e893dc48d6913cec3d2e6be7b665f.json",
+        "sha256": "9d8e54ff48091e81a04c0caa3330a263622e893dc48d6913cec3d2e6be7b665f",
+        "raceId": "jra-2026-10-12-東京-05",
+        "date": "2026-10-12",
+        "bytes": 452785
+      },
+      {
+        "file": "9dabba07eaaa1c08107272ce765a16ca4a3154e746b2449b3ab9b78ee64dba19.json",
+        "sha256": "9dabba07eaaa1c08107272ce765a16ca4a3154e746b2449b3ab9b78ee64dba19",
+        "raceId": "nar-2026-10-11-佐賀-03",
+        "date": "2026-10-11",
+        "bytes": 2735423
+      },
+      {
+        "file": "a04f492f5a30ae7539336f206e4af23028feb0e70302f96c9cbc4cadc61978bb.json",
+        "sha256": "a04f492f5a30ae7539336f206e4af23028feb0e70302f96c9cbc4cadc61978bb",
+        "raceId": "nar-2026-10-10-帯広ば-06",
+        "date": "2026-10-10",
+        "bytes": 2450610
+      },
+      {
+        "file": "a2ac4142ed231e5d41a3b679b06c6c7f9f1fc70c2efdb70250ff5c1dc7d5a11f.json",
+        "sha256": "a2ac4142ed231e5d41a3b679b06c6c7f9f1fc70c2efdb70250ff5c1dc7d5a11f",
+        "raceId": "nar-2026-10-13-門別-01",
+        "date": "2026-10-13",
+        "bytes": 2009812
+      },
+      {
+        "file": "a35701e9d17bb68755c5fc58fad71f5342de6c86aefdea4b0dd9bc9aea0859c2.json",
+        "sha256": "a35701e9d17bb68755c5fc58fad71f5342de6c86aefdea4b0dd9bc9aea0859c2",
+        "raceId": "nar-2026-10-13-門別-09",
+        "date": "2026-10-13",
+        "bytes": 2502386
+      },
+      {
+        "file": "a7d20cf25e34e7630876ff2ed8d74e104fe55c42e94ed8d8a9be0c917b44e530.json",
+        "sha256": "a7d20cf25e34e7630876ff2ed8d74e104fe55c42e94ed8d8a9be0c917b44e530",
+        "raceId": "nar-2026-10-11-盛岡-02",
+        "date": "2026-10-11",
+        "bytes": 1883864
+      },
+      {
+        "file": "a8a37b458799badf48a32bb7a30b50ab863cd35813eb2e1c2ea16f551807fe9e.json",
+        "sha256": "a8a37b458799badf48a32bb7a30b50ab863cd35813eb2e1c2ea16f551807fe9e",
+        "raceId": "nar-2026-10-13-名古屋-12",
+        "date": "2026-10-13",
+        "bytes": 2978787
+      },
+      {
+        "file": "aa88578a3dd70e40759a3b9c657b1219def15c3b79d76e1fe81b783a7bdd28f8.json",
+        "sha256": "aa88578a3dd70e40759a3b9c657b1219def15c3b79d76e1fe81b783a7bdd28f8",
+        "raceId": "jra-2026-10-10-東京-09",
+        "date": "2026-10-10",
+        "bytes": 2623380
+      },
+      {
+        "file": "aa9b6f1287823d0ffc054aa5713cdcd3d2ec0a123ea6de3c916a6795ba9707fd.json",
+        "sha256": "aa9b6f1287823d0ffc054aa5713cdcd3d2ec0a123ea6de3c916a6795ba9707fd",
+        "raceId": "nar-2026-10-12-盛岡-07",
+        "date": "2026-10-12",
+        "bytes": 2940113
+      },
+      {
+        "file": "ace906b052382d106437f2dc4a8a8b46c8106f5405909025c0be5e3157aef769.json",
+        "sha256": "ace906b052382d106437f2dc4a8a8b46c8106f5405909025c0be5e3157aef769",
+        "raceId": "nar-2026-10-11-帯広ば-10",
+        "date": "2026-10-11",
+        "bytes": 2454258
+      },
+      {
+        "file": "ae17e9ec80527a62b8d2e9ad3b533741a8d01693dbf0d44c70b6f7e8fc3e1688.json",
+        "sha256": "ae17e9ec80527a62b8d2e9ad3b533741a8d01693dbf0d44c70b6f7e8fc3e1688",
+        "raceId": "nar-2026-10-12-佐賀-06",
+        "date": "2026-10-12",
+        "bytes": 2552609
+      },
+      {
+        "file": "aef5790741a0ddf1f1baadf7af18efea182a571e9f43e080b5fb7b79c589ac3f.json",
+        "sha256": "aef5790741a0ddf1f1baadf7af18efea182a571e9f43e080b5fb7b79c589ac3f",
+        "raceId": "nar-2026-10-10-高知-04",
+        "date": "2026-10-10",
+        "bytes": 2689630
+      },
+      {
+        "file": "afb7b2e9ca86d6300229255aabafe8a45eee4c34f2c77764f54482c1405cb965.json",
+        "sha256": "afb7b2e9ca86d6300229255aabafe8a45eee4c34f2c77764f54482c1405cb965",
+        "raceId": "nar-2026-10-13-盛岡-11",
+        "date": "2026-10-13",
+        "bytes": 2945007
+      },
+      {
+        "file": "b02eb576a46e556e3528fb97e8a12d1cdf458b944056fc84c76c94654f50a7e7.json",
+        "sha256": "b02eb576a46e556e3528fb97e8a12d1cdf458b944056fc84c76c94654f50a7e7",
+        "raceId": "nar-2026-10-13-門別-06",
+        "date": "2026-10-13",
+        "bytes": 1920709
+      },
+      {
+        "file": "b259e3952378ef921167d3f974c0b0c91241dd3b35d65fa35f615186ef5f4b3a.json",
+        "sha256": "b259e3952378ef921167d3f974c0b0c91241dd3b35d65fa35f615186ef5f4b3a",
+        "raceId": "nar-2026-10-12-盛岡-03",
+        "date": "2026-10-12",
+        "bytes": 2166625
+      },
+      {
+        "file": "b25c1438d18fa1b8e9c641da6239e706f50bd6a1d30fdaddab56c4fdbc46806e.json",
+        "sha256": "b25c1438d18fa1b8e9c641da6239e706f50bd6a1d30fdaddab56c4fdbc46806e",
+        "raceId": "nar-2026-10-13-名古屋-04",
+        "date": "2026-10-13",
+        "bytes": 2658654
+      },
+      {
+        "file": "b496e191d796a30e3ca318480a5346bae633d1ed561f9116b0ff729090b63110.json",
+        "sha256": "b496e191d796a30e3ca318480a5346bae633d1ed561f9116b0ff729090b63110",
+        "raceId": "jra-2026-10-10-東京-05",
+        "date": "2026-10-10",
+        "bytes": 388393
+      },
+      {
+        "file": "b53a4fc1b9423cba4cd60b39d218245716baf5eedcafb160d6833deeaa5734fa.json",
+        "sha256": "b53a4fc1b9423cba4cd60b39d218245716baf5eedcafb160d6833deeaa5734fa",
+        "raceId": "nar-2026-10-10-帯広ば-04",
+        "date": "2026-10-10",
+        "bytes": 2387792
+      },
+      {
+        "file": "b64fb2c9c792c29ad18756c6541eed1e77225d28d454b1901046b988878ff7d9.json",
+        "sha256": "b64fb2c9c792c29ad18756c6541eed1e77225d28d454b1901046b988878ff7d9",
+        "raceId": "jra-2026-10-11-京都-07",
+        "date": "2026-10-11",
+        "bytes": 3870712
+      },
+      {
+        "file": "b7ca9b83ba9bc2433de4c9af107534e29c6013a44617a969b391eff60f138599.json",
+        "sha256": "b7ca9b83ba9bc2433de4c9af107534e29c6013a44617a969b391eff60f138599",
+        "raceId": "nar-2026-10-10-高知-06",
+        "date": "2026-10-10",
+        "bytes": 1765290
+      },
+      {
+        "file": "ba4712abb613a90e6f98c5472ee6f2c99c38b6ea1deb2a6962cdbdda8b12c2b6.json",
+        "sha256": "ba4712abb613a90e6f98c5472ee6f2c99c38b6ea1deb2a6962cdbdda8b12c2b6",
+        "raceId": "jra-2026-10-11-東京-01",
+        "date": "2026-10-11",
+        "bytes": 2376033
+      },
+      {
+        "file": "ba5afbffaf26120edb0fc766d3f55283c28dbdb1f2757c6d9f062fb07b05e8f4.json",
+        "sha256": "ba5afbffaf26120edb0fc766d3f55283c28dbdb1f2757c6d9f062fb07b05e8f4",
+        "raceId": "jra-2026-10-11-東京-02",
+        "date": "2026-10-11",
+        "bytes": 2770008
+      },
+      {
+        "file": "baa773f2541e2d6e16b21a5c7a8feda1f7a855d783b90ce30156d368dd17b2e7.json",
+        "sha256": "baa773f2541e2d6e16b21a5c7a8feda1f7a855d783b90ce30156d368dd17b2e7",
+        "raceId": "nar-2026-10-10-帯広ば-09",
+        "date": "2026-10-10",
+        "bytes": 2348971
+      },
+      {
+        "file": "baf61ec6b005ce71e819f1ad19225bbea519bbc7a4ebf994bb331826dfed0819.json",
+        "sha256": "baf61ec6b005ce71e819f1ad19225bbea519bbc7a4ebf994bb331826dfed0819",
+        "raceId": "nar-2026-10-13-金沢-03",
+        "date": "2026-10-13",
+        "bytes": 1782595
+      },
+      {
+        "file": "bd9d7cb55408688aa4e6c07266ec55930b51baa99efac3c22a82b08d87b1038b.json",
+        "sha256": "bd9d7cb55408688aa4e6c07266ec55930b51baa99efac3c22a82b08d87b1038b",
+        "raceId": "nar-2026-10-12-川崎-04",
+        "date": "2026-10-12",
+        "bytes": 1714848
+      },
+      {
+        "file": "becec0e607da7316198a6f834738925bb078707d06a16dc47b3f27e47477e07f.json",
+        "sha256": "becec0e607da7316198a6f834738925bb078707d06a16dc47b3f27e47477e07f",
+        "raceId": "jra-2026-10-11-東京-12",
+        "date": "2026-10-11",
+        "bytes": 4724952
+      },
+      {
+        "file": "bf358e1bd705da9fddd36455254f15c8d8042cc9f9c0a2e001e5eb91c08e40e3.json",
+        "sha256": "bf358e1bd705da9fddd36455254f15c8d8042cc9f9c0a2e001e5eb91c08e40e3",
+        "raceId": "nar-2026-10-10-佐賀-08",
+        "date": "2026-10-10",
+        "bytes": 2366956
+      },
+      {
+        "file": "bf4a3e171c820a0eaa27f9d2f8e343e521d256c5f5c7ffa6e42535cf33ef28ba.json",
+        "sha256": "bf4a3e171c820a0eaa27f9d2f8e343e521d256c5f5c7ffa6e42535cf33ef28ba",
+        "raceId": "jra-2026-10-10-京都-08",
+        "date": "2026-10-10",
+        "bytes": 1225421
+      },
+      {
+        "file": "bfd1fa75837308d32f4874b9cbfc0c29dca67b605c884856ac3ce1c8bf54bcec.json",
+        "sha256": "bfd1fa75837308d32f4874b9cbfc0c29dca67b605c884856ac3ce1c8bf54bcec",
+        "raceId": "nar-2026-10-11-佐賀-08",
+        "date": "2026-10-11",
+        "bytes": 2432307
+      },
+      {
+        "file": "c0b4b408de065a8bc1ae927bf13b7653b98682e5e2efeeb8556c8b8948bf2303.json",
+        "sha256": "c0b4b408de065a8bc1ae927bf13b7653b98682e5e2efeeb8556c8b8948bf2303",
+        "raceId": "jra-2026-10-11-東京-08",
+        "date": "2026-10-11",
+        "bytes": 4829640
+      },
+      {
+        "file": "c0c017f97f29c536c563446058204daea18aafb729d586998989357f9439333a.json",
+        "sha256": "c0c017f97f29c536c563446058204daea18aafb729d586998989357f9439333a",
+        "raceId": "nar-2026-10-13-名古屋-09",
+        "date": "2026-10-13",
+        "bytes": 2176909
+      },
+      {
+        "file": "c225b82ac67536feb9ef773987ad9019ca60ed3314768b482143d322c9266021.json",
+        "sha256": "c225b82ac67536feb9ef773987ad9019ca60ed3314768b482143d322c9266021",
+        "raceId": "nar-2026-10-11-帯広ば-09",
+        "date": "2026-10-11",
+        "bytes": 2514130
+      },
+      {
+        "file": "c253d2485f96d459ab3543070d0d11f5a4902c6e6f81992c7dd899b451ff7ea1.json",
+        "sha256": "c253d2485f96d459ab3543070d0d11f5a4902c6e6f81992c7dd899b451ff7ea1",
+        "raceId": "nar-2026-10-13-盛岡-07",
+        "date": "2026-10-13",
+        "bytes": 2405844
+      },
+      {
+        "file": "c31a8a36ee2e46fcdc84c02e2ac2e8474f1351ab18572cf368e043a628ea13d5.json",
+        "sha256": "c31a8a36ee2e46fcdc84c02e2ac2e8474f1351ab18572cf368e043a628ea13d5",
+        "raceId": "nar-2026-10-11-盛岡-12",
+        "date": "2026-10-11",
+        "bytes": 2769020
+      },
+      {
+        "file": "c39e201878ac5f6dce7147cfa40c98ae574cd82ed5767231a9b140ef8e40a6d7.json",
+        "sha256": "c39e201878ac5f6dce7147cfa40c98ae574cd82ed5767231a9b140ef8e40a6d7",
+        "raceId": "jra-2026-10-10-東京-06",
+        "date": "2026-10-10",
+        "bytes": 444313
+      },
+      {
+        "file": "c559403da8782b23fdc6732114752e29ed23e8ff721c67bd74f6d039b4b177ae.json",
+        "sha256": "c559403da8782b23fdc6732114752e29ed23e8ff721c67bd74f6d039b4b177ae",
+        "raceId": "nar-2026-10-13-門別-02",
+        "date": "2026-10-13",
+        "bytes": 3001687
+      },
+      {
+        "file": "c561bc7e09793dce6da756eaaa9b72d384d5e9eb3a929a57bc8dad8f9d0a50c7.json",
+        "sha256": "c561bc7e09793dce6da756eaaa9b72d384d5e9eb3a929a57bc8dad8f9d0a50c7",
+        "raceId": "nar-2026-10-12-川崎-03",
+        "date": "2026-10-12",
+        "bytes": 1500953
+      },
+      {
+        "file": "c6e496f38701d4a368e7ccba37470a562c423e794648bf819791a81ad0cf3610.json",
+        "sha256": "c6e496f38701d4a368e7ccba37470a562c423e794648bf819791a81ad0cf3610",
+        "raceId": "nar-2026-10-11-佐賀-07",
+        "date": "2026-10-11",
+        "bytes": 2280767
+      },
+      {
+        "file": "c726a9dd179f49edb21ed7b680093fc57895ec6d7d11428e99da06d55567afbc.json",
+        "sha256": "c726a9dd179f49edb21ed7b680093fc57895ec6d7d11428e99da06d55567afbc",
+        "raceId": "jra-2026-10-11-京都-05",
+        "date": "2026-10-11",
+        "bytes": 413566
+      },
+      {
+        "file": "ca1df3cbd4b55277e29a7984bff01c1963990ba6951e3277f31b9af7dae28399.json",
+        "sha256": "ca1df3cbd4b55277e29a7984bff01c1963990ba6951e3277f31b9af7dae28399",
+        "raceId": "nar-2026-10-13-門別-08",
+        "date": "2026-10-13",
+        "bytes": 2044519
+      },
+      {
+        "file": "caa102e4e23b258185e16c47d6057ba1b67e8bd12b1d5a9e16d3fb20da529020.json",
+        "sha256": "caa102e4e23b258185e16c47d6057ba1b67e8bd12b1d5a9e16d3fb20da529020",
+        "raceId": "nar-2026-10-11-佐賀-06",
+        "date": "2026-10-11",
+        "bytes": 2499352
+      },
+      {
+        "file": "cb058ce14a3e84d0800b983e5d878fed8575c6105f51ddd9502c9f417ca55b58.json",
+        "sha256": "cb058ce14a3e84d0800b983e5d878fed8575c6105f51ddd9502c9f417ca55b58",
+        "raceId": "nar-2026-10-10-佐賀-07",
+        "date": "2026-10-10",
+        "bytes": 2201860
+      },
+      {
+        "file": "cd25d8b27e9acdcd83d29a267a9f3e0a8349db2fcbd8fa0db741fd1da4d22433.json",
+        "sha256": "cd25d8b27e9acdcd83d29a267a9f3e0a8349db2fcbd8fa0db741fd1da4d22433",
+        "raceId": "nar-2026-10-10-佐賀-12",
+        "date": "2026-10-10",
+        "bytes": 3041873
+      },
+      {
+        "file": "cddbba92c38fae79939ee49f0497894d1fab506f880dd54411fe89f7b3767d79.json",
+        "sha256": "cddbba92c38fae79939ee49f0497894d1fab506f880dd54411fe89f7b3767d79",
+        "raceId": "nar-2026-10-13-川崎-04",
+        "date": "2026-10-13",
+        "bytes": 2552993
+      },
+      {
+        "file": "d0d7144479e8cc34a5dfdd1052de236d04055a1bf04fff0b7ba088f7e3874e86.json",
+        "sha256": "d0d7144479e8cc34a5dfdd1052de236d04055a1bf04fff0b7ba088f7e3874e86",
+        "raceId": "jra-2026-10-10-東京-04",
+        "date": "2026-10-10",
+        "bytes": 504988
+      },
+      {
+        "file": "d1091e1bd4a6716bcf60481da639e05cf5d36e6b0333e93ec5221ae9ca14953a.json",
+        "sha256": "d1091e1bd4a6716bcf60481da639e05cf5d36e6b0333e93ec5221ae9ca14953a",
+        "raceId": "nar-2026-10-12-盛岡-12",
+        "date": "2026-10-12",
+        "bytes": 1969130
+      },
+      {
+        "file": "d1831283b495f44f0dcf4a915a3cc9de274fc4c3c374c28520b6a334fa563dfc.json",
+        "sha256": "d1831283b495f44f0dcf4a915a3cc9de274fc4c3c374c28520b6a334fa563dfc",
+        "raceId": "jra-2026-10-11-京都-01",
+        "date": "2026-10-11",
+        "bytes": 3198704
+      },
+      {
+        "file": "d1b7b489862b7af6ea8e09d9e9838e31da315a8ed009d2d505c016be595da228.json",
+        "sha256": "d1b7b489862b7af6ea8e09d9e9838e31da315a8ed009d2d505c016be595da228",
+        "raceId": "nar-2026-10-13-金沢-02",
+        "date": "2026-10-13",
+        "bytes": 2160537
+      },
+      {
+        "file": "d2f5212ca401c513bde0cd80778cad6eb49945fc0331c64ffece75a755a21809.json",
+        "sha256": "d2f5212ca401c513bde0cd80778cad6eb49945fc0331c64ffece75a755a21809",
+        "raceId": "jra-2026-10-11-東京-06",
+        "date": "2026-10-11",
+        "bytes": 4992061
+      },
+      {
+        "file": "d3a470808407077c27aa12346601090880d4fae1eada65902f2040b01f7f9f58.json",
+        "sha256": "d3a470808407077c27aa12346601090880d4fae1eada65902f2040b01f7f9f58",
+        "raceId": "jra-2026-10-10-京都-04",
+        "date": "2026-10-10",
+        "bytes": 3370174
+      },
+      {
+        "file": "d42ba2e0d232f05168b210939fccf4a4b82d3682f5dae4b3db6cf9b8e03d1c80.json",
+        "sha256": "d42ba2e0d232f05168b210939fccf4a4b82d3682f5dae4b3db6cf9b8e03d1c80",
+        "raceId": "jra-2026-10-10-東京-08",
+        "date": "2026-10-10",
+        "bytes": 2852806
+      },
+      {
+        "file": "d442954eccbe3ebddd5278fff9c962dacd5f9415bbf6a911421af89dc1fa69d7.json",
+        "sha256": "d442954eccbe3ebddd5278fff9c962dacd5f9415bbf6a911421af89dc1fa69d7",
+        "raceId": "nar-2026-10-10-帯広ば-01",
+        "date": "2026-10-10",
+        "bytes": 2534936
+      },
+      {
+        "file": "d7caf69abcdfc8ea78f02df8be67d23834edf4a6890e4527cf184563d226aef1.json",
+        "sha256": "d7caf69abcdfc8ea78f02df8be67d23834edf4a6890e4527cf184563d226aef1",
+        "raceId": "nar-2026-10-11-金沢-09",
+        "date": "2026-10-11",
+        "bytes": 1568571
+      },
+      {
+        "file": "dcf22d68fdbe63ea33b6e77ea920f0dd06b74b962651e26d995d1f3e6f46f34b.json",
+        "sha256": "dcf22d68fdbe63ea33b6e77ea920f0dd06b74b962651e26d995d1f3e6f46f34b",
+        "raceId": "jra-2026-10-12-京都-05",
+        "date": "2026-10-12",
+        "bytes": 343596
+      },
+      {
+        "file": "df9f0e1cad251225741e5c32952fc0031e7ce2412bceaca5e5825749b079d9b4.json",
+        "sha256": "df9f0e1cad251225741e5c32952fc0031e7ce2412bceaca5e5825749b079d9b4",
+        "raceId": "nar-2026-10-12-川崎-12",
+        "date": "2026-10-12",
+        "bytes": 2316489
+      },
+      {
+        "file": "dfcd13c27e5934c684d59f632cc224e036576343b650b6eb8422d12fdd4bf720.json",
+        "sha256": "dfcd13c27e5934c684d59f632cc224e036576343b650b6eb8422d12fdd4bf720",
+        "raceId": "nar-2026-10-11-佐賀-01",
+        "date": "2026-10-11",
+        "bytes": 1853040
+      },
+      {
+        "file": "e17897d74c8fdde0f1b7ee90128450ad4785236ed8c7228772ebaf9d7fc3dc2b.json",
+        "sha256": "e17897d74c8fdde0f1b7ee90128450ad4785236ed8c7228772ebaf9d7fc3dc2b",
+        "raceId": "nar-2026-10-12-佐賀-11",
+        "date": "2026-10-12",
+        "bytes": 3216274
+      },
+      {
+        "file": "e1d448c520dfa65be202eb7c93ece91c1c27340456b111fa66949d7fe45e296b.json",
+        "sha256": "e1d448c520dfa65be202eb7c93ece91c1c27340456b111fa66949d7fe45e296b",
+        "raceId": "jra-2026-10-12-東京-08",
+        "date": "2026-10-12",
+        "bytes": 1592216
+      },
+      {
+        "file": "e2dd2509c5fc7a28663a51fa7b4549161fce3339fb275f91130100345d6ee138.json",
+        "sha256": "e2dd2509c5fc7a28663a51fa7b4549161fce3339fb275f91130100345d6ee138",
+        "raceId": "nar-2026-10-10-帯広ば-05",
+        "date": "2026-10-10",
+        "bytes": 2360416
+      },
+      {
+        "file": "e3c04f5380ca11c25e1f6caac137755aa8bccd39d3d2e4ca8f77726b23952859.json",
+        "sha256": "e3c04f5380ca11c25e1f6caac137755aa8bccd39d3d2e4ca8f77726b23952859",
+        "raceId": "nar-2026-10-11-佐賀-05",
+        "date": "2026-10-11",
+        "bytes": 2562468
+      },
+      {
+        "file": "e3e5c5693dc43fc815f23fcbbec7cc99f01d937b838938c706b007eb8f8e034a.json",
+        "sha256": "e3e5c5693dc43fc815f23fcbbec7cc99f01d937b838938c706b007eb8f8e034a",
+        "raceId": "jra-2026-10-12-京都-04",
+        "date": "2026-10-12",
+        "bytes": 596752
+      },
+      {
+        "file": "e4153c7f7163244e3d7c5573165e45d1ce08e405b863379d54e53f877cc682cc.json",
+        "sha256": "e4153c7f7163244e3d7c5573165e45d1ce08e405b863379d54e53f877cc682cc",
+        "raceId": "nar-2026-10-10-高知-10",
+        "date": "2026-10-10",
+        "bytes": 1964099
+      },
+      {
+        "file": "e670a1d5929af64cb5ac2fac56d54155a9b9a3f91a71209dd2c3acad65847212.json",
+        "sha256": "e670a1d5929af64cb5ac2fac56d54155a9b9a3f91a71209dd2c3acad65847212",
+        "raceId": "nar-2026-10-10-高知-03",
+        "date": "2026-10-10",
+        "bytes": 1961322
+      },
+      {
+        "file": "e6f6b694f566f70cb7d6afe461c9a317d80e16afcd8ae26eae56952c0d3c8bb8.json",
+        "sha256": "e6f6b694f566f70cb7d6afe461c9a317d80e16afcd8ae26eae56952c0d3c8bb8",
+        "raceId": "nar-2026-10-10-高知-02",
+        "date": "2026-10-10",
+        "bytes": 2349414
+      },
+      {
+        "file": "e78b44559ec432a09082a8a79cac3b15470173b6f33cf41ead0b3826e7d29e43.json",
+        "sha256": "e78b44559ec432a09082a8a79cac3b15470173b6f33cf41ead0b3826e7d29e43",
+        "raceId": "nar-2026-10-11-金沢-08",
+        "date": "2026-10-11",
+        "bytes": 1872232
+      },
+      {
+        "file": "e79be08f599948147524bfc5d40c39f3f5a5b5fa67fc2bdf5b3d9100df974aca.json",
+        "sha256": "e79be08f599948147524bfc5d40c39f3f5a5b5fa67fc2bdf5b3d9100df974aca",
+        "raceId": "jra-2026-10-12-東京-02",
+        "date": "2026-10-12",
+        "bytes": 3181786
+      },
+      {
+        "file": "e84f8e92b58dd33d323014eede1be37a2362ae5c9abfd0da44573e4997fbdaf2.json",
+        "sha256": "e84f8e92b58dd33d323014eede1be37a2362ae5c9abfd0da44573e4997fbdaf2",
+        "raceId": "nar-2026-10-12-盛岡-10",
+        "date": "2026-10-12",
+        "bytes": 2537640
+      },
+      {
+        "file": "e909f68a816760eb41d3511bbc510a92850690b07673b814eba750ca9a1264a4.json",
+        "sha256": "e909f68a816760eb41d3511bbc510a92850690b07673b814eba750ca9a1264a4",
+        "raceId": "jra-2026-10-10-東京-12",
+        "date": "2026-10-10",
+        "bytes": 5069834
+      },
+      {
+        "file": "e9c138ae19b2111d1c498b477114fe58bbc3f091609bfc193e0f69407e398adb.json",
+        "sha256": "e9c138ae19b2111d1c498b477114fe58bbc3f091609bfc193e0f69407e398adb",
+        "raceId": "nar-2026-10-11-高知-07",
+        "date": "2026-10-11",
+        "bytes": 2774830
+      },
+      {
+        "file": "ea226cdc842fb77eab4ce8d9b9e00500243adbd91b9691f49c53b3d52ba1692f.json",
+        "sha256": "ea226cdc842fb77eab4ce8d9b9e00500243adbd91b9691f49c53b3d52ba1692f",
+        "raceId": "nar-2026-10-11-佐賀-02",
+        "date": "2026-10-11",
+        "bytes": 2187090
+      },
+      {
+        "file": "ea892e4b986a8bf19b6a5ba6105c3b20cc8749aafc94b3d00e77f1f47172c137.json",
+        "sha256": "ea892e4b986a8bf19b6a5ba6105c3b20cc8749aafc94b3d00e77f1f47172c137",
+        "raceId": "nar-2026-10-11-高知-04",
+        "date": "2026-10-11",
+        "bytes": 2356853
+      },
+      {
+        "file": "eaff7118739149ccc2a1d783883698c3dba986fcc1e393d3f047bee3e6c8cef5.json",
+        "sha256": "eaff7118739149ccc2a1d783883698c3dba986fcc1e393d3f047bee3e6c8cef5",
+        "raceId": "nar-2026-10-12-佐賀-05",
+        "date": "2026-10-12",
+        "bytes": 3216235
+      },
+      {
+        "file": "eb4ff680e0dce330f5b118549a7167aa960e0ce61856452ea74ea4e329f7f01c.json",
+        "sha256": "eb4ff680e0dce330f5b118549a7167aa960e0ce61856452ea74ea4e329f7f01c",
+        "raceId": "jra-2026-10-10-東京-07",
+        "date": "2026-10-10",
+        "bytes": 3972332
+      },
+      {
+        "file": "eb8034a1dcf9c9cd42c4cf1579ecb94282cea99af94b75133eb9e3915760c436.json",
+        "sha256": "eb8034a1dcf9c9cd42c4cf1579ecb94282cea99af94b75133eb9e3915760c436",
+        "raceId": "nar-2026-10-13-門別-11",
+        "date": "2026-10-13",
+        "bytes": 2624233
+      },
+      {
+        "file": "ec16d1df44b28c35d7383051930043b4825574d056755bd0c3edd27b60bd1133.json",
+        "sha256": "ec16d1df44b28c35d7383051930043b4825574d056755bd0c3edd27b60bd1133",
+        "raceId": "nar-2026-10-10-帯広ば-11",
+        "date": "2026-10-10",
+        "bytes": 2474889
+      },
+      {
+        "file": "ecef6d5495848fc590b4f117e18235c98fa9d37ec27e02defab9590b46eac190.json",
+        "sha256": "ecef6d5495848fc590b4f117e18235c98fa9d37ec27e02defab9590b46eac190",
+        "raceId": "nar-2026-10-10-高知-07",
+        "date": "2026-10-10",
+        "bytes": 1849673
+      },
+      {
+        "file": "ed55724b1b3fae75c8f7d73ec6e8a0666f995357466a754e0e9d52fd50f41dde.json",
+        "sha256": "ed55724b1b3fae75c8f7d73ec6e8a0666f995357466a754e0e9d52fd50f41dde",
+        "raceId": "nar-2026-10-12-帯広ば-06",
+        "date": "2026-10-12",
+        "bytes": 2619401
+      },
+      {
+        "file": "ed748ee859757f61488775d81c8f1ab72e12a94a0798ba086307dae0ecb5382d.json",
+        "sha256": "ed748ee859757f61488775d81c8f1ab72e12a94a0798ba086307dae0ecb5382d",
+        "raceId": "nar-2026-10-11-高知-01",
+        "date": "2026-10-11",
+        "bytes": 1374844
+      },
+      {
+        "file": "ee398f5de43d5191a8258d686a6de12c0d7c87a3a9214bc828886997f2980015.json",
+        "sha256": "ee398f5de43d5191a8258d686a6de12c0d7c87a3a9214bc828886997f2980015",
+        "raceId": "nar-2026-10-11-金沢-10",
+        "date": "2026-10-11",
+        "bytes": 889425
+      },
+      {
+        "file": "efb18d98a8fa0f1b7f5e131f8b4bb13cb50f0b159c882ca1d2b7f0f4c1d7b8ee.json",
+        "sha256": "efb18d98a8fa0f1b7f5e131f8b4bb13cb50f0b159c882ca1d2b7f0f4c1d7b8ee",
+        "raceId": "nar-2026-10-13-川崎-08",
+        "date": "2026-10-13",
+        "bytes": 2683682
+      },
+      {
+        "file": "f187da8ab4c8828c66c9a45f9ebd5f7048da1fcb9cf927b2812544b09352b6e1.json",
+        "sha256": "f187da8ab4c8828c66c9a45f9ebd5f7048da1fcb9cf927b2812544b09352b6e1",
+        "raceId": "jra-2026-10-12-京都-08",
+        "date": "2026-10-12",
+        "bytes": 2671432
+      },
+      {
+        "file": "f18c9f3e0e66981273d846e181f34f6b51edae2e1601db642a669f2cba282db0.json",
+        "sha256": "f18c9f3e0e66981273d846e181f34f6b51edae2e1601db642a669f2cba282db0",
+        "raceId": "jra-2026-10-11-京都-12",
+        "date": "2026-10-11",
+        "bytes": 6089054
+      },
+      {
+        "file": "f19f476437674f6e8da5aab1f2d495cc9fe2873c9960f9323e1a108891d0a310.json",
+        "sha256": "f19f476437674f6e8da5aab1f2d495cc9fe2873c9960f9323e1a108891d0a310",
+        "raceId": "nar-2026-10-13-盛岡-02",
+        "date": "2026-10-13",
+        "bytes": 2213266
+      },
+      {
+        "file": "f2ad253926ec14cdd6eb8683f502bbdf825945cdb6c184ccd672f42cc3960621.json",
+        "sha256": "f2ad253926ec14cdd6eb8683f502bbdf825945cdb6c184ccd672f42cc3960621",
+        "raceId": "nar-2026-10-13-名古屋-10",
+        "date": "2026-10-13",
+        "bytes": 2050284
+      },
+      {
+        "file": "f4344eb376822e6e8d6c94695a7b2354550d0a19545388a46a5e37fe4c2bac1c.json",
+        "sha256": "f4344eb376822e6e8d6c94695a7b2354550d0a19545388a46a5e37fe4c2bac1c",
+        "raceId": "nar-2026-10-11-帯広ば-11",
+        "date": "2026-10-11",
+        "bytes": 2637340
+      },
+      {
+        "file": "f451250a63554c71c979ac05c21d80ea237e5fecba1abf930c90d6bcfc91567d.json",
+        "sha256": "f451250a63554c71c979ac05c21d80ea237e5fecba1abf930c90d6bcfc91567d",
+        "raceId": "nar-2026-10-13-門別-05",
+        "date": "2026-10-13",
+        "bytes": 3104521
+      },
+      {
+        "file": "f5139e70f39c2d09a113c36f7f93bef016ebbade8b6daf51e7ce51e4b57ac498.json",
+        "sha256": "f5139e70f39c2d09a113c36f7f93bef016ebbade8b6daf51e7ce51e4b57ac498",
+        "raceId": "nar-2026-10-11-帯広ば-01",
+        "date": "2026-10-11",
+        "bytes": 2504706
+      },
+      {
+        "file": "f5150475723d7b5d83e506ddf1a2fac2f96d9142a3e0c357b0ec615642ca0474.json",
+        "sha256": "f5150475723d7b5d83e506ddf1a2fac2f96d9142a3e0c357b0ec615642ca0474",
+        "raceId": "nar-2026-10-13-名古屋-11",
+        "date": "2026-10-13",
+        "bytes": 2624625
+      },
+      {
+        "file": "f9bd21e3df224217d71d2417c1331f8d9dca0acc81255d723a549a8956fd739a.json",
+        "sha256": "f9bd21e3df224217d71d2417c1331f8d9dca0acc81255d723a549a8956fd739a",
+        "raceId": "nar-2026-10-11-高知-10",
+        "date": "2026-10-11",
+        "bytes": 1890563
+      },
+      {
+        "file": "f9e430f4d378d62c6e6d6385dd514ba175ee53db51378cb44d72c59952b5c999.json",
+        "sha256": "f9e430f4d378d62c6e6d6385dd514ba175ee53db51378cb44d72c59952b5c999",
+        "raceId": "jra-2026-10-10-京都-05",
+        "date": "2026-10-10",
+        "bytes": 444012
+      },
+      {
+        "file": "fa518c854cdffa9c27acb57dce88e1f8414ebba9feb93ccb1adb548dbcda5be6.json",
+        "sha256": "fa518c854cdffa9c27acb57dce88e1f8414ebba9feb93ccb1adb548dbcda5be6",
+        "raceId": "jra-2026-10-11-東京-04",
+        "date": "2026-10-11",
+        "bytes": 593332
+      },
+      {
+        "file": "fb979d08605b619191cdbc50498a9319a46f5e8e4315fac54e5b3148a3f40b07.json",
+        "sha256": "fb979d08605b619191cdbc50498a9319a46f5e8e4315fac54e5b3148a3f40b07",
+        "raceId": "nar-2026-10-13-川崎-03",
+        "date": "2026-10-13",
+        "bytes": 1427589
+      },
+      {
+        "file": "fbf9de23caee839102fddad2c34ddc2244fa6a087bc5c7a59e005fb014322fbd.json",
+        "sha256": "fbf9de23caee839102fddad2c34ddc2244fa6a087bc5c7a59e005fb014322fbd",
+        "raceId": "jra-2026-10-12-東京-09",
+        "date": "2026-10-12",
+        "bytes": 5249906
+      },
+      {
+        "file": "fc3bce337173ce38c19c31cead6f48c1d9b9f2378736bdb2ef8cd75bc6cc0bf5.json",
+        "sha256": "fc3bce337173ce38c19c31cead6f48c1d9b9f2378736bdb2ef8cd75bc6cc0bf5",
+        "raceId": "nar-2026-10-13-川崎-06",
+        "date": "2026-10-13",
+        "bytes": 1734646
+      },
+      {
+        "file": "fc80feb41a9e9c7385663906332b1bc7cfb97aaa9f606dacf25e480a20f9cc1b.json",
+        "sha256": "fc80feb41a9e9c7385663906332b1bc7cfb97aaa9f606dacf25e480a20f9cc1b",
+        "raceId": "nar-2026-10-10-佐賀-01",
+        "date": "2026-10-10",
+        "bytes": 1458917
+      },
+      {
+        "file": "fda4f7bc1172876918319ba2d45fbfea3552471affef12d9d1beff7be5804926.json",
+        "sha256": "fda4f7bc1172876918319ba2d45fbfea3552471affef12d9d1beff7be5804926",
+        "raceId": "jra-2026-10-12-東京-04",
+        "date": "2026-10-12",
+        "bytes": 3332281
+      },
+      {
+        "file": "fe4a2a3a30c6c53437a42bd4a052a7db072da0485df12302533613e453410049.json",
+        "sha256": "fe4a2a3a30c6c53437a42bd4a052a7db072da0485df12302533613e453410049",
+        "raceId": "nar-2026-10-10-佐賀-06",
+        "date": "2026-10-10",
+        "bytes": 2192010
+      }
+    ]
+  },
+  "evaluation": {
+    "sourceFiles": [
+      {
+        "file": "2026-10-07.json",
+        "sha256": "c43519602da6cafe42d33ca1110b0d28363c87b790bb9e21ce6acab0fe880f74"
+      },
+      {
+        "file": "2026-10-08.json",
+        "sha256": "6c6569d1333b3be823a3dd72928b8884a62f3312134f4daba8fe8c44ba362e72"
+      },
+      {
+        "file": "2026-10-09.json",
+        "sha256": "d5ee6b735f834d33f71547ed65d4221e48903a31f0bfc8515b2e55c6b6d4ed2b"
+      },
+      {
+        "file": "2026-10-10.json",
+        "sha256": "69f6e8b96bf74cb785e78822c00cd81253c6fa67e4a0d85d0870e726936b4f47"
+      },
+      {
+        "file": "2026-10-11.json",
+        "sha256": "1c1e715655a7be9e7a44cb41f3a059fa44ea8836cb205eafceb692e2cfec2734"
+      },
+      {
+        "file": "2026-10-12.json",
+        "sha256": "e4b6a9e67c21671e4566975a4f1fc6fca5f8ece0cba57faaa928ee1e6ce6bf39"
+      },
+      {
+        "file": "2026-10-13.json",
+        "sha256": "d34b3737b7698e930ba5498550de37953ec37943f50a737d7713562a9c4d6c84"
+      }
+    ],
+    "scheduledByDate": {
+      "2026-10-07": 47,
+      "2026-10-08": 47,
+      "2026-10-09": 34,
+      "2026-10-10": 59,
+      "2026-10-11": 80,
+      "2026-10-12": 71,
+      "2026-10-13": 58
+    },
+    "scheduledRaces": 396,
+    "eligibleFrozenRaces": 235,
+    "pairedProbabilityRaces": 235,
+    "exclusions": {
+      "missing-authentic-frozen-lock": 159,
+      "missing-unique-podium-or-dead-heat": 2
+    },
+    "archivedModelVersions": {
+      "evidence-v317-consensus-rebuild": 235
+    },
+    "probabilityValidity": {
+      "sealClockBeforeCapture": 89,
+      "decisionProbabilityInvalid": 0,
+      "p1ProbabilityInvalid": 0,
+      "p2ProbabilityInvalid": 0,
+      "p3ProbabilityInvalid": 0,
+      "top3MarginalAboveOne": 49
+    },
+    "allArchived": {
+      "baseline": {
+        "races": 235,
+        "logLoss": 2.1272943395512893,
+        "brier": 0.8501078318821247,
+        "top3SelectionPodiumRecall": 0.47659574468085103,
+        "leaderCalibration": [
+          {
+            "lower": 0,
+            "count": 12,
+            "meanPredicted": 0.07462700247182923,
+            "observed": 0.16666666666666666,
+            "wilson95": [
+              0.04696514218385378,
+              0.4480308622529734
+            ]
+          },
+          {
+            "lower": 0.1,
+            "count": 44,
+            "meanPredicted": 0.15910411358018497,
+            "observed": 0.13636363636363635,
+            "wilson95": [
+              0.06402954497555872,
+              0.2670945304851544
+            ]
+          },
+          {
+            "lower": 0.2,
+            "count": 85,
+            "meanPredicted": 0.2504667344925121,
+            "observed": 0.17647058823529413,
+            "wilson95": [
+              0.10996363561495573,
+              0.2709560303823717
+            ]
+          },
+          {
+            "lower": 0.3,
+            "count": 61,
+            "meanPredicted": 0.3385128264943736,
+            "observed": 0.39344262295081966,
+            "wilson95": [
+              0.28068351453037077,
+              0.5188274737102107
+            ]
+          },
+          {
+            "lower": 0.4,
+            "count": 19,
+            "meanPredicted": 0.44112811299621735,
+            "observed": 0.3684210526315789,
+            "wilson95": [
+              0.19149512745135072,
+              0.5896046683519693
+            ]
+          },
+          {
+            "lower": 0.5,
+            "count": 10,
+            "meanPredicted": 0.5455812285355852,
+            "observed": 0.4,
+            "wilson95": [
+              0.16818032970623614,
+              0.6873262302663417
+            ]
+          },
+          {
+            "lower": 0.6,
+            "count": 4,
+            "meanPredicted": 0.63824471,
+            "observed": 0.5,
+            "wilson95": [
+              0.15003898915214947,
+              0.8499610108478506
+            ]
+          }
+        ],
+        "top1Hits": 60,
+        "top1Rate": 0.2553191489361702,
+        "top1Wilson95": [
+          0.203815323910877,
+          0.31469372988646155
+        ],
+        "top2Hits": 101,
+        "top2Rate": 0.4297872340425532,
+        "top2Wilson95": [
+          0.36812388231503373,
+          0.4937091505137678
+        ],
+        "top3Hits": 128,
+        "top3Rate": 0.5446808510638298,
+        "top3Wilson95": [
+          0.48080101906143635,
+          0.6071234145929626
+        ]
+      },
+      "savedP1": {
+        "races": 235,
+        "logLoss": 2.12412302113782,
+        "brier": 0.84698843503944,
+        "top3SelectionPodiumRecall": 0.4709219858156028,
+        "leaderCalibration": [
+          {
+            "lower": 0,
+            "count": 28,
+            "meanPredicted": 0.07956752148015886,
+            "observed": 0.07142857142857142,
+            "wilson95": [
+              0.019812064115305755,
+              0.22645362568399052
+            ]
+          },
+          {
+            "lower": 0.1,
+            "count": 36,
+            "meanPredicted": 0.14618902958977187,
+            "observed": 0.2777777777777778,
+            "wilson95": [
+              0.1584833794013461,
+              0.43992489997397105
+            ]
+          },
+          {
+            "lower": 0.2,
+            "count": 75,
+            "meanPredicted": 0.2514517212841325,
+            "observed": 0.2,
+            "wilson95": [
+              0.1251214771419671,
+              0.30411282834771647
+            ]
+          },
+          {
+            "lower": 0.3,
+            "count": 60,
+            "meanPredicted": 0.33588154832805245,
+            "observed": 0.38333333333333336,
+            "wilson95": [
+              0.27088272374082023,
+              0.5098240417590008
+            ]
+          },
+          {
+            "lower": 0.4,
+            "count": 22,
+            "meanPredicted": 0.44204950702401796,
+            "observed": 0.36363636363636365,
+            "wilson95": [
+              0.19733204670366125,
+              0.5704829190986899
+            ]
+          },
+          {
+            "lower": 0.5,
+            "count": 12,
+            "meanPredicted": 0.557797660184127,
+            "observed": 0.3333333333333333,
+            "wilson95": [
+              0.13812009109121315,
+              0.6093779111272004
+            ]
+          },
+          {
+            "lower": 0.6,
+            "count": 2,
+            "meanPredicted": 0.6423398250000001,
+            "observed": 1.0,
+            "wilson95": [
+              0.34238022750665303,
+              1.0
+            ]
+          }
+        ],
+        "top1Hits": 64,
+        "top1Rate": 0.2723404255319149,
+        "top1Wilson95": [
+          0.2194269913522503,
+          0.3325770847896212
+        ],
+        "top2Hits": 101,
+        "top2Rate": 0.4297872340425532,
+        "top2Wilson95": [
+          0.36812388231503373,
+          0.4937091505137678
+        ],
+        "top3Hits": 125,
+        "top3Rate": 0.5319148936170213,
+        "top3Wilson95": [
+          0.46811800812842086,
+          0.5946851587675783
+        ]
+      },
+      "uniform": {
+        "races": 235,
+        "logLoss": 2.3625853397174805,
+        "brier": 0.9035250353179014,
+        "top3SelectionPodiumRecall": 0.3148936170212766,
+        "leaderCalibration": [
+          {
+            "lower": 0,
+            "count": 124,
+            "meanPredicted": 0.08051867026606116,
+            "observed": 0.11290322580645161,
+            "wilson95": [
+              0.0684559972521105,
+              0.1806138984955109
+            ]
+          },
+          {
+            "lower": 0.1,
+            "count": 111,
+            "meanPredicted": 0.1143000143000143,
+            "observed": 0.15315315315315314,
+            "wilson95": [
+              0.09787476373691051,
+              0.2316356692485959
+            ]
+          }
+        ],
+        "top1Hits": 31,
+        "top1Rate": 0.13191489361702127,
+        "top1Wilson95": [
+          0.09451245473358,
+          0.18115768706589463
+        ],
+        "top2Hits": 50,
+        "top2Rate": 0.2127659574468085,
+        "top2Wilson95": [
+          0.16527710537934642,
+          0.2694943925566598
+        ],
+        "top3Hits": 81,
+        "top3Rate": 0.3446808510638298,
+        "top3Wilson95": [
+          0.28685346040148774,
+          0.40750446070464896
+        ]
+      }
+    },
+    "byCircuit": {
+      "中央": {
+        "baseline": {
+          "races": 48,
+          "logLoss": 2.381865526380193,
+          "brier": 0.8872720710627456,
+          "top3SelectionPodiumRecall": 0.35416666666666663,
+          "leaderCalibration": [
+            {
+              "lower": 0,
+              "count": 12,
+              "meanPredicted": 0.07462700247182923,
+              "observed": 0.16666666666666666,
+              "wilson95": [
+                0.04696514218385378,
+                0.4480308622529734
+              ]
+            },
+            {
+              "lower": 0.1,
+              "count": 26,
+              "meanPredicted": 0.14767968280021573,
+              "observed": 0.11538461538461539,
+              "wilson95": [
+                0.04003244623610615,
+                0.2897590321171364
+              ]
+            },
+            {
+              "lower": 0.2,
+              "count": 10,
+              "meanPredicted": 0.22904275576562313,
+              "observed": 0.5,
+              "wilson95": [
+                0.236593090512564,
+                0.7634069094874361
+              ]
+            }
+          ],
+          "top1Hits": 10,
+          "top1Rate": 0.20833333333333334,
+          "top1Wilson95": [
+            0.11730272957905595,
+            0.34258901272617925
+          ],
+          "top2Hits": 15,
+          "top2Rate": 0.3125,
+          "top2Wilson95": [
+            0.19945683446587817,
+            0.4533307141589159
+          ],
+          "top3Hits": 21,
+          "top3Rate": 0.4375,
+          "top3Wilson95": [
+            0.30701269040654244,
+            0.5772498258017222
+          ]
+        },
+        "savedP1": {
+          "races": 48,
+          "logLoss": 2.469537011555411,
+          "brier": 0.9051218684311828,
+          "top3SelectionPodiumRecall": 0.3263888888888889,
+          "leaderCalibration": [
+            {
+              "lower": 0,
+              "count": 28,
+              "meanPredicted": 0.07956752148015886,
+              "observed": 0.07142857142857142,
+              "wilson95": [
+                0.019812064115305755,
+                0.22645362568399052
+              ]
+            },
+            {
+              "lower": 0.1,
+              "count": 20,
+              "meanPredicted": 0.12088037837702473,
+              "observed": 0.35,
+              "wilson95": [
+                0.18119182410108206,
+                0.5671457233147638
+              ]
+            }
+          ],
+          "top1Hits": 9,
+          "top1Rate": 0.1875,
+          "top1Wilson95": [
+            0.10191390954847647,
+            0.31939867149284695
+          ],
+          "top2Hits": 14,
+          "top2Rate": 0.2916666666666667,
+          "top2Wilson95": [
+            0.18241578926516536,
+            0.431792598095717
+          ],
+          "top3Hits": 18,
+          "top3Rate": 0.375,
+          "top3Wilson95": [
+            0.25215266760868205,
+            0.5163723648078473
+          ]
+        }
+      },
+      "地方": {
+        "baseline": {
+          "races": 187,
+          "logLoss": 2.0619498637877207,
+          "brier": 0.8405683480282754,
+          "top3SelectionPodiumRecall": 0.5080213903743316,
+          "leaderCalibration": [
+            {
+              "lower": 0.1,
+              "count": 18,
+              "meanPredicted": 0.17560606915125163,
+              "observed": 0.16666666666666666,
+              "wilson95": [
+                0.05836576805861446,
+                0.39222038103915724
+              ]
+            },
+            {
+              "lower": 0.2,
+              "count": 75,
+              "meanPredicted": 0.25332326498943064,
+              "observed": 0.13333333333333333,
+              "wilson95": [
+                0.07406584704043956,
+                0.2283316374469514
+              ]
+            },
+            {
+              "lower": 0.3,
+              "count": 61,
+              "meanPredicted": 0.3385128264943736,
+              "observed": 0.39344262295081966,
+              "wilson95": [
+                0.28068351453037077,
+                0.5188274737102107
+              ]
+            },
+            {
+              "lower": 0.4,
+              "count": 19,
+              "meanPredicted": 0.44112811299621735,
+              "observed": 0.3684210526315789,
+              "wilson95": [
+                0.19149512745135072,
+                0.5896046683519693
+              ]
+            },
+            {
+              "lower": 0.5,
+              "count": 10,
+              "meanPredicted": 0.5455812285355852,
+              "observed": 0.4,
+              "wilson95": [
+                0.16818032970623614,
+                0.6873262302663417
+              ]
+            },
+            {
+              "lower": 0.6,
+              "count": 4,
+              "meanPredicted": 0.63824471,
+              "observed": 0.5,
+              "wilson95": [
+                0.15003898915214947,
+                0.8499610108478506
+              ]
+            }
+          ],
+          "top1Hits": 50,
+          "top1Rate": 0.26737967914438504,
+          "top1Wilson95": [
+            0.20909416469237868,
+            0.3350300495238771
+          ],
+          "top2Hits": 86,
+          "top2Rate": 0.45989304812834225,
+          "top2Wilson95": [
+            0.3899858856890695,
+            0.5314148408999401
+          ],
+          "top3Hits": 107,
+          "top3Rate": 0.5721925133689839,
+          "top3Wilson95": [
+            0.5005291727950825,
+            0.6409495193447001
+          ]
+        },
+        "savedP1": {
+          "races": 187,
+          "logLoss": 2.035460606485176,
+          "brier": 0.8320664842223081,
+          "top3SelectionPodiumRecall": 0.5080213903743315,
+          "leaderCalibration": [
+            {
+              "lower": 0.1,
+              "count": 16,
+              "meanPredicted": 0.1778248436057058,
+              "observed": 0.1875,
+              "wilson95": [
+                0.06591599071428142,
+                0.4300888096197414
+              ]
+            },
+            {
+              "lower": 0.2,
+              "count": 75,
+              "meanPredicted": 0.2514517212841325,
+              "observed": 0.2,
+              "wilson95": [
+                0.1251214771419671,
+                0.30411282834771647
+              ]
+            },
+            {
+              "lower": 0.3,
+              "count": 60,
+              "meanPredicted": 0.33588154832805245,
+              "observed": 0.38333333333333336,
+              "wilson95": [
+                0.27088272374082023,
+                0.5098240417590008
+              ]
+            },
+            {
+              "lower": 0.4,
+              "count": 22,
+              "meanPredicted": 0.44204950702401796,
+              "observed": 0.36363636363636365,
+              "wilson95": [
+                0.19733204670366125,
+                0.5704829190986899
+              ]
+            },
+            {
+              "lower": 0.5,
+              "count": 12,
+              "meanPredicted": 0.557797660184127,
+              "observed": 0.3333333333333333,
+              "wilson95": [
+                0.13812009109121315,
+                0.6093779111272004
+              ]
+            },
+            {
+              "lower": 0.6,
+              "count": 2,
+              "meanPredicted": 0.6423398250000001,
+              "observed": 1.0,
+              "wilson95": [
+                0.34238022750665303,
+                1.0
+              ]
+            }
+          ],
+          "top1Hits": 55,
+          "top1Rate": 0.29411764705882354,
+          "top1Wilson95": [
+            0.23348364515630834,
+            0.36304008466727433
+          ],
+          "top2Hits": 87,
+          "top2Rate": 0.46524064171123,
+          "top2Wilson95": [
+            0.39517002526449546,
+            0.5367106044459795
+          ],
+          "top3Hits": 107,
+          "top3Rate": 0.5721925133689839,
+          "top3Wilson95": [
+            0.5005291727950825,
+            0.6409495193447001
+          ]
+        }
+      }
+    },
+    "coherentArchivedPodiumMetrics": {
+      "runnerRows": 2106,
+      "brierPerRunner": 0.1767851718143087,
+      "binaryLogLossPerRunner": 0.5334696169504619,
+      "scope": "saved P1+P2+P3 only where every runner sum <=1; not decisionProbability+P2+P3"
+    },
+    "archivedMarks": {
+      "◎": {
+        "runners": 142,
+        "winHits": 31,
+        "top3Hits": 68,
+        "winRate": 0.21830985915492956,
+        "top3Rate": 0.4788732394366197,
+        "winWilson95": [
+          0.1582759946017894,
+          0.2931831402224405
+        ],
+        "top3Wilson95": [
+          0.39835232140775706,
+          0.5605071137040601
+        ]
+      },
+      "☆": {
+        "runners": 145,
+        "winHits": 11,
+        "top3Hits": 37,
+        "winRate": 0.07586206896551724,
+        "top3Rate": 0.25517241379310346,
+        "winWilson95": [
+          0.042885732749187305,
+          0.13073161167515576
+        ],
+        "top3Wilson95": [
+          0.1911691856457023,
+          0.33181318390005676
+        ]
+      },
+      "注": {
+        "runners": 141,
+        "winHits": 11,
+        "top3Hits": 35,
+        "winRate": 0.07801418439716312,
+        "top3Rate": 0.24822695035460993,
+        "winWilson95": [
+          0.04411812731402492,
+          0.13429390354438042
+        ],
+        "top3Wilson95": [
+          0.18423736499118498,
+          0.325571493756267
+        ]
+      },
+      "☆+": {
+        "runners": 132,
+        "winHits": 15,
+        "top3Hits": 47,
+        "winRate": 0.11363636363636363,
+        "top3Rate": 0.3560606060606061,
+        "winWilson95": [
+          0.07008550377598652,
+          0.17903916784112006
+        ],
+        "top3Wilson95": [
+          0.2795059103512503,
+          0.4407562222119856
+        ]
+      },
+      "▲": {
+        "runners": 194,
+        "winHits": 23,
+        "top3Hits": 79,
+        "winRate": 0.11855670103092783,
+        "top3Rate": 0.4072164948453608,
+        "winWilson95": [
+          0.08031298120382138,
+          0.17161327893291758
+        ],
+        "top3Wilson95": [
+          0.3405322655975467,
+          0.47750385173301146
+        ]
+      },
+      "unmarked": {
+        "runners": 1425,
+        "winHits": 82,
+        "top3Hits": 281,
+        "winRate": 0.05754385964912281,
+        "top3Rate": 0.19719298245614036,
+        "winWilson95": [
+          0.0465999846712829,
+          0.07086683278740383
+        ],
+        "top3Wilson95": [
+          0.17736063947930517,
+          0.21865352663238927
+        ]
+      },
+      "○": {
+        "runners": 194,
+        "winHits": 42,
+        "top3Hits": 99,
+        "winRate": 0.21649484536082475,
+        "top3Rate": 0.5103092783505154,
+        "winWilson95": [
+          0.16434649562909698,
+          0.2796527517698306
+        ],
+        "top3Wilson95": [
+          0.44045144135002223,
+          0.5797667678354712
+        ]
+      },
+      "△": {
+        "runners": 183,
+        "winHits": 20,
+        "top3Hits": 59,
+        "winRate": 0.1092896174863388,
+        "top3Rate": 0.3224043715846995,
+        "winWilson95": [
+          0.07186990063645454,
+          0.1627753386879044
+        ],
+        "top3Wilson95": [
+          0.25893745282813296,
+          0.39317401959203035
+        ]
+      }
+    },
+    "failedLeaderRaces": [
+      {
+        "raceId": "nar-2026-10-07-園田-03",
+        "date": "2026-10-07",
+        "predicted": 1,
+        "winner": 7,
+        "winnerLogLoss": 1.8694269998691326,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-07-園田-10",
+        "date": "2026-10-07",
+        "predicted": 7,
+        "winner": 6,
+        "winnerLogLoss": 2.3731041284770438,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-07-園田-12",
+        "date": "2026-10-07",
+        "predicted": 3,
+        "winner": 10,
+        "winnerLogLoss": 3.333975006561668,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-07-大井-03",
+        "date": "2026-10-07",
+        "predicted": 9,
+        "winner": 5,
+        "winnerLogLoss": 2.5690537690466293,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-07-大井-06",
+        "date": "2026-10-07",
+        "predicted": 2,
+        "winner": 6,
+        "winnerLogLoss": 2.3102297289826463,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-07-大井-11",
+        "date": "2026-10-07",
+        "predicted": 15,
+        "winner": 3,
+        "winnerLogLoss": 2.523381401239907,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-07-笠松-10",
+        "date": "2026-10-07",
+        "predicted": 8,
+        "winner": 5,
+        "winnerLogLoss": 2.1083499522718903,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-07-門別-01",
+        "date": "2026-10-07",
+        "predicted": 8,
+        "winner": 7,
+        "winnerLogLoss": 2.9587745035416275,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-08-園田-03",
+        "date": "2026-10-08",
+        "predicted": 4,
+        "winner": 3,
+        "winnerLogLoss": 2.4291692451034987,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-08-園田-06",
+        "date": "2026-10-08",
+        "predicted": 4,
+        "winner": 3,
+        "winnerLogLoss": 1.9349618510994675,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-08-園田-11",
+        "date": "2026-10-08",
+        "predicted": 3,
+        "winner": 4,
+        "winnerLogLoss": 2.236320687052831,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-08-大井-02",
+        "date": "2026-10-08",
+        "predicted": 12,
+        "winner": 10,
+        "winnerLogLoss": 2.8541639536434644,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-08-大井-08",
+        "date": "2026-10-08",
+        "predicted": 6,
+        "winner": 7,
+        "winnerLogLoss": 1.7319654416713142,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-08-笠松-01",
+        "date": "2026-10-08",
+        "predicted": 7,
+        "winner": 6,
+        "winnerLogLoss": 1.9614582060848247,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-08-笠松-05",
+        "date": "2026-10-08",
+        "predicted": 8,
+        "winner": 3,
+        "winnerLogLoss": 1.6414615804876278,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-08-門別-04",
+        "date": "2026-10-08",
+        "predicted": 9,
+        "winner": 11,
+        "winnerLogLoss": 2.9103571010838762,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-08-門別-09",
+        "date": "2026-10-08",
+        "predicted": 11,
+        "winner": 12,
+        "winnerLogLoss": 2.0036302623892115,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-08-門別-11",
+        "date": "2026-10-08",
+        "predicted": 2,
+        "winner": 5,
+        "winnerLogLoss": 3.409216751022015,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-園田-01",
+        "date": "2026-10-09",
+        "predicted": 5,
+        "winner": 8,
+        "winnerLogLoss": 2.126461295967819,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-園田-02",
+        "date": "2026-10-09",
+        "predicted": 2,
+        "winner": 5,
+        "winnerLogLoss": 1.7290971695937831,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-園田-04",
+        "date": "2026-10-09",
+        "predicted": 5,
+        "winner": 3,
+        "winnerLogLoss": 2.075266031269365,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-園田-05",
+        "date": "2026-10-09",
+        "predicted": 2,
+        "winner": 7,
+        "winnerLogLoss": 2.366681695129958,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-園田-06",
+        "date": "2026-10-09",
+        "predicted": 8,
+        "winner": 3,
+        "winnerLogLoss": 2.086453689282884,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-園田-07",
+        "date": "2026-10-09",
+        "predicted": 2,
+        "winner": 10,
+        "winnerLogLoss": 1.5396133502394205,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-園田-08",
+        "date": "2026-10-09",
+        "predicted": 9,
+        "winner": 5,
+        "winnerLogLoss": 2.085145619041384,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-園田-10",
+        "date": "2026-10-09",
+        "predicted": 5,
+        "winner": 4,
+        "winnerLogLoss": 3.1002626893955774,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-園田-11",
+        "date": "2026-10-09",
+        "predicted": 2,
+        "winner": 5,
+        "winnerLogLoss": 2.223715708756477,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-園田-12",
+        "date": "2026-10-09",
+        "predicted": 1,
+        "winner": 8,
+        "winnerLogLoss": 2.52963464777829,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-大井-01",
+        "date": "2026-10-09",
+        "predicted": 7,
+        "winner": 5,
+        "winnerLogLoss": 3.620195527015144,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-大井-03",
+        "date": "2026-10-09",
+        "predicted": 3,
+        "winner": 4,
+        "winnerLogLoss": 2.0240854855375745,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-大井-05",
+        "date": "2026-10-09",
+        "predicted": 4,
+        "winner": 7,
+        "winnerLogLoss": 2.2779716054852,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-大井-06",
+        "date": "2026-10-09",
+        "predicted": 8,
+        "winner": 12,
+        "winnerLogLoss": 3.8292524931645304,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-大井-07",
+        "date": "2026-10-09",
+        "predicted": 3,
+        "winner": 7,
+        "winnerLogLoss": 3.6099085821896266,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-大井-09",
+        "date": "2026-10-09",
+        "predicted": 1,
+        "winner": 11,
+        "winnerLogLoss": 2.995697474159497,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-大井-10",
+        "date": "2026-10-09",
+        "predicted": 6,
+        "winner": 13,
+        "winnerLogLoss": 1.5848974089727115,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-笠松-04",
+        "date": "2026-10-09",
+        "predicted": 5,
+        "winner": 4,
+        "winnerLogLoss": 3.203872450635855,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-笠松-05",
+        "date": "2026-10-09",
+        "predicted": 3,
+        "winner": 7,
+        "winnerLogLoss": 3.424864859882364,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-笠松-06",
+        "date": "2026-10-09",
+        "predicted": 8,
+        "winner": 1,
+        "winnerLogLoss": 1.5555608987258203,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-笠松-07",
+        "date": "2026-10-09",
+        "predicted": 1,
+        "winner": 6,
+        "winnerLogLoss": 2.753473232929628,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-笠松-10",
+        "date": "2026-10-09",
+        "predicted": 7,
+        "winner": 2,
+        "winnerLogLoss": 3.847144385880596,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-笠松-11",
+        "date": "2026-10-09",
+        "predicted": 6,
+        "winner": 5,
+        "winnerLogLoss": 2.0129429577014735,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-09-笠松-12",
+        "date": "2026-10-09",
+        "predicted": 6,
+        "winner": 1,
+        "winnerLogLoss": 2.331388980263167,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-10-京都-01",
+        "date": "2026-10-10",
+        "predicted": 14,
+        "winner": 2,
+        "winnerLogLoss": 2.7795160406634096,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-10-京都-03",
+        "date": "2026-10-10",
+        "predicted": 4,
+        "winner": 6,
+        "winnerLogLoss": 2.289475303046754,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-10-京都-04",
+        "date": "2026-10-10",
+        "predicted": 14,
+        "winner": 2,
+        "winnerLogLoss": 2.4367698618664284,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-10-京都-05",
+        "date": "2026-10-10",
+        "predicted": 1,
+        "winner": 8,
+        "winnerLogLoss": 2.6390573296152584,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-10-東京-01",
+        "date": "2026-10-10",
+        "predicted": 9,
+        "winner": 4,
+        "winnerLogLoss": 3.16346429705668,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-10-東京-02",
+        "date": "2026-10-10",
+        "predicted": 7,
+        "winner": 12,
+        "winnerLogLoss": 2.6501175287444276,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-10-東京-03",
+        "date": "2026-10-10",
+        "predicted": 12,
+        "winner": 11,
+        "winnerLogLoss": 2.0971585246450037,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-10-東京-04",
+        "date": "2026-10-10",
+        "predicted": 1,
+        "winner": 15,
+        "winnerLogLoss": 2.772588722239781,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-10-東京-06",
+        "date": "2026-10-10",
+        "predicted": 1,
+        "winner": 9,
+        "winnerLogLoss": 2.6390573296152584,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-10-佐賀-07",
+        "date": "2026-10-10",
+        "predicted": 10,
+        "winner": 2,
+        "winnerLogLoss": 1.3999177799088391,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-10-佐賀-12",
+        "date": "2026-10-10",
+        "predicted": 5,
+        "winner": 13,
+        "winnerLogLoss": 1.8842027824529908,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-10-帯広ば-01",
+        "date": "2026-10-10",
+        "predicted": 9,
+        "winner": 7,
+        "winnerLogLoss": 3.4135658468711583,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-10-帯広ば-12",
+        "date": "2026-10-10",
+        "predicted": 1,
+        "winner": 7,
+        "winnerLogLoss": 1.6113497889057404,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-10-高知-05",
+        "date": "2026-10-10",
+        "predicted": 5,
+        "winner": 7,
+        "winnerLogLoss": 2.3845226464021456,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-10-高知-07",
+        "date": "2026-10-10",
+        "predicted": 1,
+        "winner": 3,
+        "winnerLogLoss": 2.0738675850790638,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-10-高知-09",
+        "date": "2026-10-10",
+        "predicted": 10,
+        "winner": 1,
+        "winnerLogLoss": 1.915019214773713,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-10-高知-10",
+        "date": "2026-10-10",
+        "predicted": 8,
+        "winner": 3,
+        "winnerLogLoss": 2.9085119917177424,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-10-高知-11",
+        "date": "2026-10-10",
+        "predicted": 1,
+        "winner": 11,
+        "winnerLogLoss": 1.787897695484183,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-京都-01",
+        "date": "2026-10-11",
+        "predicted": 13,
+        "winner": 1,
+        "winnerLogLoss": 3.2424162189942316,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-京都-03",
+        "date": "2026-10-11",
+        "predicted": 1,
+        "winner": 15,
+        "winnerLogLoss": 2.70805020110221,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-京都-05",
+        "date": "2026-10-11",
+        "predicted": 1,
+        "winner": 10,
+        "winnerLogLoss": 2.3025850929940455,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-京都-08",
+        "date": "2026-10-11",
+        "predicted": 9,
+        "winner": 7,
+        "winnerLogLoss": 2.7298238155574444,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-京都-10",
+        "date": "2026-10-11",
+        "predicted": 7,
+        "winner": 4,
+        "winnerLogLoss": 2.4972249902113544,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-東京-01",
+        "date": "2026-10-11",
+        "predicted": 6,
+        "winner": 14,
+        "winnerLogLoss": 1.9450354816883655,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-東京-03",
+        "date": "2026-10-11",
+        "predicted": 2,
+        "winner": 7,
+        "winnerLogLoss": 2.546403657021962,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-東京-04",
+        "date": "2026-10-11",
+        "predicted": 1,
+        "winner": 7,
+        "winnerLogLoss": 2.772588722239781,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-東京-05",
+        "date": "2026-10-11",
+        "predicted": 1,
+        "winner": 9,
+        "winnerLogLoss": 2.3978952727983707,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-東京-06",
+        "date": "2026-10-11",
+        "predicted": 7,
+        "winner": 5,
+        "winnerLogLoss": 2.9957858849905223,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-東京-08",
+        "date": "2026-10-11",
+        "predicted": 9,
+        "winner": 1,
+        "winnerLogLoss": 2.2787257154880822,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-11-東京-12",
+        "date": "2026-10-11",
+        "predicted": 8,
+        "winner": 10,
+        "winnerLogLoss": 3.15590643478242,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-佐賀-08",
+        "date": "2026-10-11",
+        "predicted": 4,
+        "winner": 6,
+        "winnerLogLoss": 2.106843416983241,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-佐賀-10",
+        "date": "2026-10-11",
+        "predicted": 10,
+        "winner": 8,
+        "winnerLogLoss": 3.92667989477178,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-佐賀-11",
+        "date": "2026-10-11",
+        "predicted": 14,
+        "winner": 8,
+        "winnerLogLoss": 2.3723685883781935,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-帯広ば-01",
+        "date": "2026-10-11",
+        "predicted": 2,
+        "winner": 3,
+        "winnerLogLoss": 2.61488709734417,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-帯広ば-05",
+        "date": "2026-10-11",
+        "predicted": 2,
+        "winner": 4,
+        "winnerLogLoss": 2.242328643058527,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-帯広ば-07",
+        "date": "2026-10-11",
+        "predicted": 5,
+        "winner": 9,
+        "winnerLogLoss": 1.7340855782744211,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-帯広ば-09",
+        "date": "2026-10-11",
+        "predicted": 8,
+        "winner": 7,
+        "winnerLogLoss": 1.7769315482311683,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-帯広ば-10",
+        "date": "2026-10-11",
+        "predicted": 6,
+        "winner": 10,
+        "winnerLogLoss": 2.6608657439780874,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-帯広ば-12",
+        "date": "2026-10-11",
+        "predicted": 2,
+        "winner": 3,
+        "winnerLogLoss": 1.489477505616576,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-盛岡-01",
+        "date": "2026-10-11",
+        "predicted": 6,
+        "winner": 1,
+        "winnerLogLoss": 2.579822699271885,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-盛岡-02",
+        "date": "2026-10-11",
+        "predicted": 3,
+        "winner": 8,
+        "winnerLogLoss": 2.1739147738142206,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-盛岡-03",
+        "date": "2026-10-11",
+        "predicted": 7,
+        "winner": 10,
+        "winnerLogLoss": 2.106469621328211,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-盛岡-09",
+        "date": "2026-10-11",
+        "predicted": 7,
+        "winner": 5,
+        "winnerLogLoss": 3.1933806176218646,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-盛岡-10",
+        "date": "2026-10-11",
+        "predicted": 1,
+        "winner": 6,
+        "winnerLogLoss": 2.7119115665102096,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-盛岡-12",
+        "date": "2026-10-11",
+        "predicted": 10,
+        "winner": 1,
+        "winnerLogLoss": 1.8475704265894886,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-金沢-03",
+        "date": "2026-10-11",
+        "predicted": 3,
+        "winner": 1,
+        "winnerLogLoss": 2.2825899452134415,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-金沢-04",
+        "date": "2026-10-11",
+        "predicted": 3,
+        "winner": 1,
+        "winnerLogLoss": 2.782703706647602,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-金沢-05",
+        "date": "2026-10-11",
+        "predicted": 9,
+        "winner": 6,
+        "winnerLogLoss": 2.4536332506554306,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-金沢-09",
+        "date": "2026-10-11",
+        "predicted": 1,
+        "winner": 6,
+        "winnerLogLoss": 2.727660022986548,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-高知-05",
+        "date": "2026-10-11",
+        "predicted": 1,
+        "winner": 9,
+        "winnerLogLoss": 1.6128351666067096,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-高知-07",
+        "date": "2026-10-11",
+        "predicted": 11,
+        "winner": 3,
+        "winnerLogLoss": 1.3259668563795395,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-高知-08",
+        "date": "2026-10-11",
+        "predicted": 1,
+        "winner": 8,
+        "winnerLogLoss": 1.82774904376893,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-高知-09",
+        "date": "2026-10-11",
+        "predicted": 4,
+        "winner": 3,
+        "winnerLogLoss": 3.085355494804868,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-高知-10",
+        "date": "2026-10-11",
+        "predicted": 7,
+        "winner": 3,
+        "winnerLogLoss": 1.6697743414070823,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-11-高知-11",
+        "date": "2026-10-11",
+        "predicted": 1,
+        "winner": 5,
+        "winnerLogLoss": 2.443256784055985,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-京都-01",
+        "date": "2026-10-12",
+        "predicted": 1,
+        "winner": 14,
+        "winnerLogLoss": 2.6007719953496022,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-京都-03",
+        "date": "2026-10-12",
+        "predicted": 12,
+        "winner": 5,
+        "winnerLogLoss": 2.274069921963133,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-京都-04",
+        "date": "2026-10-12",
+        "predicted": 1,
+        "winner": 12,
+        "winnerLogLoss": 2.7627746182915636,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-京都-05",
+        "date": "2026-10-12",
+        "predicted": 1,
+        "winner": 6,
+        "winnerLogLoss": 2.197224577336219,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-京都-06",
+        "date": "2026-10-12",
+        "predicted": 1,
+        "winner": 3,
+        "winnerLogLoss": 2.471316199469693,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-京都-07",
+        "date": "2026-10-12",
+        "predicted": 4,
+        "winner": 2,
+        "winnerLogLoss": 2.3240805743594666,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-京都-09",
+        "date": "2026-10-12",
+        "predicted": 1,
+        "winner": 4,
+        "winnerLogLoss": 2.552520595260115,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-京都-11",
+        "date": "2026-10-12",
+        "predicted": 13,
+        "winner": 1,
+        "winnerLogLoss": 2.592009348833041,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-京都-12",
+        "date": "2026-10-12",
+        "predicted": 6,
+        "winner": 10,
+        "winnerLogLoss": 2.5331353915900823,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-東京-03",
+        "date": "2026-10-12",
+        "predicted": 8,
+        "winner": 4,
+        "winnerLogLoss": 2.0765868202771425,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-東京-04",
+        "date": "2026-10-12",
+        "predicted": 4,
+        "winner": 3,
+        "winnerLogLoss": 2.323985149501157,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-東京-05",
+        "date": "2026-10-12",
+        "predicted": 1,
+        "winner": 12,
+        "winnerLogLoss": 2.4849066497880004,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-東京-06",
+        "date": "2026-10-12",
+        "predicted": 1,
+        "winner": 16,
+        "winnerLogLoss": 3.089550347132547,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-東京-07",
+        "date": "2026-10-12",
+        "predicted": 15,
+        "winner": 13,
+        "winnerLogLoss": 2.690344614020809,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-東京-10",
+        "date": "2026-10-12",
+        "predicted": 10,
+        "winner": 11,
+        "winnerLogLoss": 1.9246011768965885,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-東京-11",
+        "date": "2026-10-12",
+        "predicted": 7,
+        "winner": 2,
+        "winnerLogLoss": 2.2084800836735163,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "jra-2026-10-12-東京-12",
+        "date": "2026-10-12",
+        "predicted": 1,
+        "winner": 11,
+        "winnerLogLoss": 2.6338189936851224,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-佐賀-01",
+        "date": "2026-10-12",
+        "predicted": 10,
+        "winner": 3,
+        "winnerLogLoss": 3.1011212340608125,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-佐賀-02",
+        "date": "2026-10-12",
+        "predicted": 3,
+        "winner": 2,
+        "winnerLogLoss": 1.4726401850936182,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-佐賀-03",
+        "date": "2026-10-12",
+        "predicted": 1,
+        "winner": 9,
+        "winnerLogLoss": 1.5489176825358564,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-佐賀-04",
+        "date": "2026-10-12",
+        "predicted": 9,
+        "winner": 7,
+        "winnerLogLoss": 2.123185969016684,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-佐賀-05",
+        "date": "2026-10-12",
+        "predicted": 12,
+        "winner": 5,
+        "winnerLogLoss": 1.5433989494126767,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-佐賀-09",
+        "date": "2026-10-12",
+        "predicted": 9,
+        "winner": 4,
+        "winnerLogLoss": 3.2166632743642785,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-川崎-03",
+        "date": "2026-10-12",
+        "predicted": 5,
+        "winner": 3,
+        "winnerLogLoss": 2.951605346345147,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-川崎-09",
+        "date": "2026-10-12",
+        "predicted": 9,
+        "winner": 1,
+        "winnerLogLoss": 2.809986087502604,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-帯広ば-01",
+        "date": "2026-10-12",
+        "predicted": 5,
+        "winner": 4,
+        "winnerLogLoss": 2.09187662775722,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-帯広ば-05",
+        "date": "2026-10-12",
+        "predicted": 6,
+        "winner": 9,
+        "winnerLogLoss": 2.6168333320616797,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-帯広ば-06",
+        "date": "2026-10-12",
+        "predicted": 6,
+        "winner": 2,
+        "winnerLogLoss": 2.297422054497199,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-帯広ば-07",
+        "date": "2026-10-12",
+        "predicted": 10,
+        "winner": 7,
+        "winnerLogLoss": 2.2368689842350205,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-帯広ば-09",
+        "date": "2026-10-12",
+        "predicted": 6,
+        "winner": 3,
+        "winnerLogLoss": 3.1357645224586683,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-帯広ば-10",
+        "date": "2026-10-12",
+        "predicted": 4,
+        "winner": 9,
+        "winnerLogLoss": 1.7072947622515047,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-帯広ば-12",
+        "date": "2026-10-12",
+        "predicted": 3,
+        "winner": 6,
+        "winnerLogLoss": 2.0802130292075347,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-盛岡-02",
+        "date": "2026-10-12",
+        "predicted": 2,
+        "winner": 1,
+        "winnerLogLoss": 2.7115237368138043,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-盛岡-03",
+        "date": "2026-10-12",
+        "predicted": 8,
+        "winner": 10,
+        "winnerLogLoss": 1.6972295473899852,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-盛岡-04",
+        "date": "2026-10-12",
+        "predicted": 4,
+        "winner": 11,
+        "winnerLogLoss": 1.6846156026861154,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-盛岡-07",
+        "date": "2026-10-12",
+        "predicted": 9,
+        "winner": 1,
+        "winnerLogLoss": 2.5624660234893626,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-盛岡-11",
+        "date": "2026-10-12",
+        "predicted": 3,
+        "winner": 1,
+        "winnerLogLoss": 1.8752952304812047,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-12-盛岡-12",
+        "date": "2026-10-12",
+        "predicted": 2,
+        "winner": 1,
+        "winnerLogLoss": 1.6261573057848695,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-名古屋-04",
+        "date": "2026-10-13",
+        "predicted": 2,
+        "winner": 3,
+        "winnerLogLoss": 2.7820678980991844,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-名古屋-05",
+        "date": "2026-10-13",
+        "predicted": 7,
+        "winner": 11,
+        "winnerLogLoss": 1.96032236794252,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-名古屋-06",
+        "date": "2026-10-13",
+        "predicted": 11,
+        "winner": 4,
+        "winnerLogLoss": 2.40815741885773,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-名古屋-07",
+        "date": "2026-10-13",
+        "predicted": 9,
+        "winner": 3,
+        "winnerLogLoss": 2.0248118612565755,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-名古屋-08",
+        "date": "2026-10-13",
+        "predicted": 6,
+        "winner": 9,
+        "winnerLogLoss": 4.801876296329812,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-名古屋-09",
+        "date": "2026-10-13",
+        "predicted": 2,
+        "winner": 8,
+        "winnerLogLoss": 3.11418187630354,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-名古屋-10",
+        "date": "2026-10-13",
+        "predicted": 6,
+        "winner": 1,
+        "winnerLogLoss": 4.930831086397654,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-名古屋-11",
+        "date": "2026-10-13",
+        "predicted": 5,
+        "winner": 10,
+        "winnerLogLoss": 1.6097207624295609,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-名古屋-12",
+        "date": "2026-10-13",
+        "predicted": 7,
+        "winner": 3,
+        "winnerLogLoss": 3.145393048108397,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-川崎-01",
+        "date": "2026-10-13",
+        "predicted": 2,
+        "winner": 6,
+        "winnerLogLoss": 4.362394992388673,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-川崎-04",
+        "date": "2026-10-13",
+        "predicted": 2,
+        "winner": 4,
+        "winnerLogLoss": 2.6299674482313216,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-川崎-07",
+        "date": "2026-10-13",
+        "predicted": 9,
+        "winner": 1,
+        "winnerLogLoss": 2.0256796707114826,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-川崎-10",
+        "date": "2026-10-13",
+        "predicted": 8,
+        "winner": 1,
+        "winnerLogLoss": 2.1907877781773504,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-川崎-11",
+        "date": "2026-10-13",
+        "predicted": 2,
+        "winner": 4,
+        "winnerLogLoss": 2.439788132156428,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-盛岡-01",
+        "date": "2026-10-13",
+        "predicted": 9,
+        "winner": 1,
+        "winnerLogLoss": 1.4606308701554072,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-盛岡-03",
+        "date": "2026-10-13",
+        "predicted": 11,
+        "winner": 10,
+        "winnerLogLoss": 2.487149853867632,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-盛岡-04",
+        "date": "2026-10-13",
+        "predicted": 4,
+        "winner": 7,
+        "winnerLogLoss": 3.2597301015765097,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-盛岡-05",
+        "date": "2026-10-13",
+        "predicted": 8,
+        "winner": 10,
+        "winnerLogLoss": 2.790146267996119,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-盛岡-06",
+        "date": "2026-10-13",
+        "predicted": 11,
+        "winner": 6,
+        "winnerLogLoss": 1.8157001136023614,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-盛岡-07",
+        "date": "2026-10-13",
+        "predicted": 7,
+        "winner": 2,
+        "winnerLogLoss": 1.976001661261619,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-盛岡-08",
+        "date": "2026-10-13",
+        "predicted": 9,
+        "winner": 4,
+        "winnerLogLoss": 1.8975307458991966,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-盛岡-10",
+        "date": "2026-10-13",
+        "predicted": 11,
+        "winner": 4,
+        "winnerLogLoss": 4.2238413819163965,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-盛岡-11",
+        "date": "2026-10-13",
+        "predicted": 7,
+        "winner": 2,
+        "winnerLogLoss": 2.345605742808373,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-盛岡-12",
+        "date": "2026-10-13",
+        "predicted": 8,
+        "winner": 4,
+        "winnerLogLoss": 3.6939969460655693,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-金沢-02",
+        "date": "2026-10-13",
+        "predicted": 8,
+        "winner": 5,
+        "winnerLogLoss": 3.505033383300313,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-金沢-04",
+        "date": "2026-10-13",
+        "predicted": 4,
+        "winner": 6,
+        "winnerLogLoss": 2.3392939016477903,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-金沢-05",
+        "date": "2026-10-13",
+        "predicted": 6,
+        "winner": 5,
+        "winnerLogLoss": 3.6275006696907997,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-金沢-06",
+        "date": "2026-10-13",
+        "predicted": 5,
+        "winner": 1,
+        "winnerLogLoss": 1.5838460944939674,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-金沢-07",
+        "date": "2026-10-13",
+        "predicted": 3,
+        "winner": 10,
+        "winnerLogLoss": 2.8670244105145586,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-金沢-08",
+        "date": "2026-10-13",
+        "predicted": 7,
+        "winner": 9,
+        "winnerLogLoss": 1.9074856466478107,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-金沢-09",
+        "date": "2026-10-13",
+        "predicted": 1,
+        "winner": 3,
+        "winnerLogLoss": 2.306519412327795,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-金沢-10",
+        "date": "2026-10-13",
+        "predicted": 4,
+        "winner": 5,
+        "winnerLogLoss": 3.479741362987304,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-門別-01",
+        "date": "2026-10-13",
+        "predicted": 3,
+        "winner": 1,
+        "winnerLogLoss": 1.7058436421341203,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-門別-03",
+        "date": "2026-10-13",
+        "predicted": 1,
+        "winner": 7,
+        "winnerLogLoss": 1.8776851376307913,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-門別-05",
+        "date": "2026-10-13",
+        "predicted": 2,
+        "winner": 11,
+        "winnerLogLoss": 1.9728354221336595,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-門別-07",
+        "date": "2026-10-13",
+        "predicted": 5,
+        "winner": 7,
+        "winnerLogLoss": 1.7890730808027475,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-門別-08",
+        "date": "2026-10-13",
+        "predicted": 7,
+        "winner": 3,
+        "winnerLogLoss": 2.130619315899148,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-門別-09",
+        "date": "2026-10-13",
+        "predicted": 4,
+        "winner": 7,
+        "winnerLogLoss": 2.0416214342876557,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-門別-10",
+        "date": "2026-10-13",
+        "predicted": 3,
+        "winner": 5,
+        "winnerLogLoss": 1.3163557616318802,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      },
+      {
+        "raceId": "nar-2026-10-13-門別-12",
+        "date": "2026-10-13",
+        "predicted": 2,
+        "winner": 1,
+        "winnerLogLoss": 2.391020746525647,
+        "causalClassification": "not-identifiable-from-locked-probabilities-alone"
+      }
+    ],
+    "calibrationExperiment": {
+      "status": "completed-research-only",
+      "promote": false,
+      "split": {
+        "train": {
+          "races": 54,
+          "dates": [
+            "2026-10-07",
+            "2026-10-08",
+            "2026-10-09"
+          ]
+        },
+        "valid": {
+          "races": 73,
+          "dates": [
+            "2026-10-10",
+            "2026-10-11"
+          ]
+        },
+        "test": {
+          "races": 108,
+          "dates": [
+            "2026-10-12",
+            "2026-10-13"
+          ]
+        }
+      },
+      "head": "p1Probability",
+      "beta": 0.75,
+      "valid": {
+        "baseline": {
+          "races": 73,
+          "logLoss": 2.152072823333901,
+          "brier": 0.8551683275070876,
+          "top3SelectionPodiumRecall": 0.4794520547945205,
+          "leaderCalibration": [
+            {
+              "lower": 0,
+              "count": 8,
+              "meanPredicted": 0.07495941558441559,
+              "observed": 0.25,
+              "wilson95": [
+                0.071479212752109,
+                0.5907245696898311
+              ]
+            },
+            {
+              "lower": 0.1,
+              "count": 18,
+              "meanPredicted": 0.16072864105666873,
+              "observed": 0.16666666666666666,
+              "wilson95": [
+                0.05836576805861446,
+                0.39222038103915724
+              ]
+            },
+            {
+              "lower": 0.2,
+              "count": 26,
+              "meanPredicted": 0.24310484251958805,
+              "observed": 0.19230769230769232,
+              "wilson95": [
+                0.0850706114894241,
+                0.3787625711931699
+              ]
+            },
+            {
+              "lower": 0.3,
+              "count": 14,
+              "meanPredicted": 0.3495123868432832,
+              "observed": 0.42857142857142855,
+              "wilson95": [
+                0.21380798904474121,
+                0.6740935542034926
+              ]
+            },
+            {
+              "lower": 0.4,
+              "count": 4,
+              "meanPredicted": 0.4278469699794984,
+              "observed": 0.0,
+              "wilson95": [
+                0.0,
+                0.4898908364545973
+              ]
+            },
+            {
+              "lower": 0.5,
+              "count": 2,
+              "meanPredicted": 0.5704334499999999,
+              "observed": 0.5,
+              "wilson95": [
+                0.09453120573423074,
+                0.9054687942657693
+              ]
+            },
+            {
+              "lower": 0.6,
+              "count": 1,
+              "meanPredicted": 0.61022098,
+              "observed": 1.0,
+              "wilson95": [
+                0.20654931437723745,
+                1.0
+              ]
+            }
+          ],
+          "top1Hits": 18,
+          "top1Rate": 0.2465753424657534,
+          "top1Wilson95": [
+            0.16204464648051795,
+            0.35644445344224973
+          ],
+          "top2Hits": 32,
+          "top2Rate": 0.4383561643835616,
+          "top2Wilson95": [
+            0.3304534902599767,
+            0.552422236748264
+          ],
+          "top3Hits": 39,
+          "top3Rate": 0.5342465753424658,
+          "top3Wilson95": [
+            0.42098945719045805,
+            0.6440795833605193
+          ]
+        },
+        "candidate": {
+          "races": 73,
+          "logLoss": 2.1582374364673504,
+          "brier": 0.8533812402430125,
+          "top3SelectionPodiumRecall": 0.45662100456621,
+          "leaderCalibration": [
+            {
+              "lower": 0,
+              "count": 21,
+              "meanPredicted": 0.08150992642665829,
+              "observed": 0.09523809523809523,
+              "wilson95": [
+                0.02651876743807452,
+                0.2891413907391826
+              ]
+            },
+            {
+              "lower": 0.1,
+              "count": 20,
+              "meanPredicted": 0.17276977149527073,
+              "observed": 0.3,
+              "wilson95": [
+                0.1454772448676043,
+                0.5189728183535235
+              ]
+            },
+            {
+              "lower": 0.2,
+              "count": 24,
+              "meanPredicted": 0.24684535758513682,
+              "observed": 0.375,
+              "wilson95": [
+                0.21159367559548778,
+                0.5729003755732572
+              ]
+            },
+            {
+              "lower": 0.3,
+              "count": 5,
+              "meanPredicted": 0.3308327364414099,
+              "observed": 0.4,
+              "wilson95": [
+                0.11762077423264783,
+                0.769275718723987
+              ]
+            },
+            {
+              "lower": 0.4,
+              "count": 2,
+              "meanPredicted": 0.410014074053624,
+              "observed": 0.0,
+              "wilson95": [
+                0.0,
+                0.6576197724933469
+              ]
+            },
+            {
+              "lower": 0.5,
+              "count": 1,
+              "meanPredicted": 0.5006672661363513,
+              "observed": 1.0,
+              "wilson95": [
+                0.20654931437723745,
+                1.0
+              ]
+            }
+          ],
+          "top1Hits": 20,
+          "top1Rate": 0.273972602739726,
+          "top1Wilson95": [
+            0.18491444994664905,
+            0.38562988241690055
+          ],
+          "top2Hits": 32,
+          "top2Rate": 0.4383561643835616,
+          "top2Wilson95": [
+            0.3304534902599767,
+            0.552422236748264
+          ],
+          "top3Hits": 38,
+          "top3Rate": 0.5205479452054794,
+          "top3Wilson95": [
+            0.40781596889792504,
+            0.6312254554326613
+          ]
+        }
+      },
+      "test": {
+        "baseline": {
+          "races": 108,
+          "logLoss": 2.1126565165777347,
+          "brier": 0.836412413213749,
+          "top3SelectionPodiumRecall": 0.45987654320987653,
+          "leaderCalibration": [
+            {
+              "lower": 0,
+              "count": 4,
+              "meanPredicted": 0.0739621762466565,
+              "observed": 0.0,
+              "wilson95": [
+                0.0,
+                0.4898908364545973
+              ]
+            },
+            {
+              "lower": 0.1,
+              "count": 25,
+              "meanPredicted": 0.1572512036107982,
+              "observed": 0.12,
+              "wilson95": [
+                0.04166817150440358,
+                0.2995579392092732
+              ]
+            },
+            {
+              "lower": 0.2,
+              "count": 40,
+              "meanPredicted": 0.2504631660517399,
+              "observed": 0.225,
+              "wilson95": [
+                0.12316091323540743,
+                0.37503096742310027
+              ]
+            },
+            {
+              "lower": 0.3,
+              "count": 29,
+              "meanPredicted": 0.3362200560765142,
+              "observed": 0.4827586206896552,
+              "wilson95": [
+                0.3138609015268349,
+                0.6556897811800528
+              ]
+            },
+            {
+              "lower": 0.4,
+              "count": 7,
+              "meanPredicted": 0.43776977307160614,
+              "observed": 0.42857142857142855,
+              "wilson95": [
+                0.15821985525146975,
+                0.7495416354723428
+              ]
+            },
+            {
+              "lower": 0.5,
+              "count": 3,
+              "meanPredicted": 0.5320405984519506,
+              "observed": 0.3333333333333333,
+              "wilson95": [
+                0.06149194472039621,
+                0.7923403991979522
+              ]
+            }
+          ],
+          "top1Hits": 30,
+          "top1Rate": 0.2777777777777778,
+          "top1Wilson95": [
+            0.2020502650072486,
+            0.3687707837689989
+          ],
+          "top2Hits": 49,
+          "top2Rate": 0.4537037037037037,
+          "top2Wilson95": [
+            0.36301303665106843,
+            0.5475746818439831
+          ],
+          "top3Hits": 61,
+          "top3Rate": 0.5648148148148148,
+          "top3Wilson95": [
+            0.47067829246131926,
+            0.6544989016456084
+          ]
+        },
+        "candidate": {
+          "races": 108,
+          "logLoss": 2.1466873826668933,
+          "brier": 0.8474247371343074,
+          "top3SelectionPodiumRecall": 0.4567901234567901,
+          "leaderCalibration": [
+            {
+              "lower": 0,
+              "count": 14,
+              "meanPredicted": 0.07907401640408077,
+              "observed": 0.07142857142857142,
+              "wilson95": [
+                0.012722215247890939,
+                0.31468704424151117
+              ]
+            },
+            {
+              "lower": 0.1,
+              "count": 32,
+              "meanPredicted": 0.15608160670239446,
+              "observed": 0.1875,
+              "wilson95": [
+                0.08889544689565954,
+                0.3530915520137596
+              ]
+            },
+            {
+              "lower": 0.2,
+              "count": 46,
+              "meanPredicted": 0.24440035693205228,
+              "observed": 0.391304347826087,
+              "wilson95": [
+                0.26393225037829016,
+                0.5354315676837925
+              ]
+            },
+            {
+              "lower": 0.3,
+              "count": 14,
+              "meanPredicted": 0.3432094627469209,
+              "observed": 0.35714285714285715,
+              "wilson95": [
+                0.1634473175355414,
+                0.612355768960926
+              ]
+            },
+            {
+              "lower": 0.4,
+              "count": 2,
+              "meanPredicted": 0.4050521758621587,
+              "observed": 0.5,
+              "wilson95": [
+                0.09453120573423074,
+                0.9054687942657693
+              ]
+            }
+          ],
+          "top1Hits": 31,
+          "top1Rate": 0.28703703703703703,
+          "top1Wilson95": [
+            0.21019367798210079,
+            0.37850982709513636
+          ],
+          "top2Hits": 48,
+          "top2Rate": 0.4444444444444444,
+          "top2Wilson95": [
+            0.35424144424466086,
+            0.5384638179494009
+          ],
+          "top3Hits": 60,
+          "top3Rate": 0.5555555555555556,
+          "top3Wilson95": [
+            0.46153618205059904,
+            0.6457585557553391
+          ]
+        },
+        "uniform": {
+          "races": 108,
+          "logLoss": 2.386622085759635,
+          "brier": 0.9064281012197678,
+          "top3SelectionPodiumRecall": 0.34259259259259256,
+          "leaderCalibration": [
+            {
+              "lower": 0,
+              "count": 66,
+              "meanPredicted": 0.08252481945663764,
+              "observed": 0.09090909090909091,
+              "wilson95": [
+                0.04233297507051134,
+                0.18448729884965878
+              ]
+            },
+            {
+              "lower": 0.1,
+              "count": 42,
+              "meanPredicted": 0.1109315948601663,
+              "observed": 0.23809523809523808,
+              "wilson95": [
+                0.13480964224647127,
+                0.38527543868318304
+              ]
+            }
+          ],
+          "top1Hits": 16,
+          "top1Rate": 0.14814814814814814,
+          "top1Wilson95": [
+            0.0932953152945802,
+            0.2271713452678118
+          ],
+          "top2Hits": 29,
+          "top2Rate": 0.26851851851851855,
+          "top2Wilson95": [
+            0.19394901389668973,
+            0.35898957857856817
+          ],
+          "top3Hits": 43,
+          "top3Rate": 0.39814814814814814,
+          "top3Wilson95": [
+            0.31085681194636683,
+            0.49243616874274654
+          ]
+        }
+      },
+      "paired": {
+        "candidateMinusBaselineLogLoss": 0.0340308660891585,
+        "raceBootstrap95": [
+          -0.016877271290547228,
+          0.08417971692842259
+        ],
+        "resamples": 2000,
+        "limitation": "race-level bootstrap; same-day dependence and model drift not resolved"
+      },
+      "promotionReason": "archived engine differs from current main; seven days cannot establish all-course generalization"
+    },
+    "currentMainAccuracy": null,
+    "marketComparison": null,
+    "ticketReturn": null,
+    "limitations": [
+      "No verified prediction-time market odds in locked rows",
+      "Archive reports are selected available days, not all-course proof",
+      "Saved P1/decision probabilities are different archived heads",
+      "No current-main independent performance claim",
+      "No reconstructed or final features used"
+    ]
+  },
+  "originalsModified": 0,
+  "productionModelChanged": false,
+  "elapsedSeconds": 23.868099160000043
+}
