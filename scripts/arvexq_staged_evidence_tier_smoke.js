@@ -21,3 +21,7 @@ for (const [observed, expected] of [
   assert.notEqual(row.evaluation.tier, '3指標実測評価');
 }
 console.log('staged evidence-tier regression: PASS (0/1/2 observed)');
+
+// Recent form must not be represented as independently measured ability.
+assert.match(source, /researchFactors=\{ability:null,form:f\.recentForm,/);
+assert.doesNotMatch(source, /researchFactors=\{ability:f\.recentForm,form:f\.recentForm,/);
