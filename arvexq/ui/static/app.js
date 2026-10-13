@@ -4522,9 +4522,9 @@ window.addEventListener('pageshow',function(){setTimeout(fastReflectNow,120)},{p
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')setTimeout(fastReflectNow,120)},{passive:true});
 setInterval(function(){
   if(document.visibilityState==='hidden'||state.date!==today()||state.race||state.raceLoading||
-     state.track||state.picker||state.homePage)return;
+     state.picker||state.homePage)return;
   var shared=window.ARVEXQUnifiedHome;
-  if(!shared||!document.querySelector('.smart-shell.smart-home .arv-all-panel'))return;
+  if(!shared||!document.querySelector('.smart-shell.smart-home .arv-all-panel,.smart-venue-page .smart-race-row'))return;
   shared.syncLiveUI('horse',state.races||[],state.date,document);
 },10000);
 installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
