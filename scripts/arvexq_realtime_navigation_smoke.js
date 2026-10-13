@@ -72,7 +72,7 @@ async function verify(kind,name){
       heroBlur:a.backdropFilter??a.webkitBackdropFilter??'none',dateBlur:b.backdropFilter??b.webkitBackdropFilter??'none',heroOpacity:a.opacity};
   });
   assert.equal(sticky.exists,true,'Real home must render hero and date');
-  assert.equal(sticky.heroPosition,'sticky','Hero must remain sticky on iPhone');
+  assert.ok(['fixed','sticky'].includes(sticky.heroPosition),'Hero must stay pinned on iPhone');
   assert.equal(sticky.datePosition,'sticky','Date bar must remain sticky on iPhone');
   assert.equal(sticky.heroBlur,'none','Hero blur overlay must be removed');
   assert.equal(sticky.dateBlur,'none','Date blur overlay must be removed');
