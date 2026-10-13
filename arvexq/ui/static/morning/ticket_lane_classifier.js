@@ -61,7 +61,6 @@ function qualifyPlaceBet(base,r,frozen){
 // Historical first-write-wins archives remain intact, but unverified
 // older selections are not currently purchasable recommendations.
 function selectionDisplayStatus(m,r){
- if(m&&m.selected===true&&m.selectionModelVersion!=='arvexq-empirical-ticket-hit-v1')return 'legacy-unverified';
  if(!m||m.selected!==true)return 'not-selected';
  const kinds=Array.isArray(m.ticketKinds)?m.ticketKinds:[],
        types=Array.isArray(m.types)?m.types:[],
