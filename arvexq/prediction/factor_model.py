@@ -7,7 +7,6 @@ This model is experimental until authenticated pre-off performance validation.
 """
 from __future__ import annotations
 
-from statistics import median
 from typing import Any, Iterable
 
 from arvexq.core.runner_status import is_inactive_runner
@@ -31,10 +30,9 @@ def _number(v: Any) -> float | None:
 
 
 def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, float | None]:
-    """Collect the three measured axes from five earlier races, not prior AI scores."""
+    """Collect observed recent form and condition evidence, not prior AI scores."""
     runs = observed_runs(horse, race, limit=5)
     qualities: list[float] = []
-    closing: list[float] = []
     comparable_qualities: list[float] = []
     distance = _number(race.get("distance") or race.get("distanceM"))
     surface = str(race.get("surface") or "").strip()
@@ -49,27 +47,15 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
         if (distance and prior_distance and abs(distance - prior_distance) <= 150
                 and surface and str(run.get("surface") or "").strip() == surface):
             comparable_qualities.append(quality)
-        closing_rank = _number(run.get("last3fRank") or run.get("last600Rank"))
-        if closing_rank is not None and 1 <= closing_rank <= field:
-            closing.append((field - closing_rank) / (field - 1))
-        else:
-            percentile = _number(run.get("last3fPercentile"))
-            if percentile is not None and 0 <= percentile <= 1:
-                closing.append(percentile)
 
     weighted_form = None
-    peak_ability = None
     if qualities:
         weights = [5 - i for i in range(len(qualities))]
         weighted_form = sum(w * q for w, q in zip(weights, qualities)) / sum(weights)
-        peak_ability = (max(qualities) + median(qualities)) / 2
-    sectional = sum(closing) / len(closing) if closing else None
     return {
-        "trueRun": weighted_form,
+        "recentForm": weighted_form,
         "conditionForm": sum(comparable_qualities) / len(comparable_qualities) if comparable_qualities else None,
         "conditionRuns": float(len(comparable_qualities)),
-        "pure": peak_ability,
-        "sectional": sectional,
         "sample": float(len(qualities)),
     }
 
@@ -81,7 +67,7 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
     for horse in active:
         raw = collect_horse_raw_metrics(horse, race)
         past = analyze_past_performance(horse, race)
-        recent = raw.get("trueRun")
+        recent = raw.get("recentForm")
         comparable = raw.get("conditionForm")
         condition_runs = int(raw.get("conditionRuns") or 0)
         strength = min(MAX_CONDITION_WEIGHT, CONDITION_WEIGHT_PER_RUN * condition_runs) if comparable is not None else 0.0
