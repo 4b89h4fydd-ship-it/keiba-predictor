@@ -201,13 +201,19 @@ class ServerSealTests(unittest.TestCase):
     def test_server_capture_loads_current_browser_betting_dependencies(self):
         from pathlib import Path
         source = Path("scripts/arvexq_capture_prerace_bet.js").read_text(encoding="utf-8")
-        for module in ("bet_readiness.js", "no_axis_strategy.js",
-                       "main_strategy.js", "trifecta_strategy.js",
-                       "insurance_strategy.js", "three_way_engine.js",
-                       "ticket_lane_classifier.js", "podium_axis_guard.js"):
-            self.assertIn(module, source, module)
+        # The browser's current three-factor app.js owns tickets. The
+        # legacy strategy modules have been deleted and may not be imported.
+        self.assertIn("arvexq/ui/static/app.js", source)
+        self.assertIn("ticket_lane_classifier.js", source)
+        self.assertIn("bet_view.js", source)
         self.assertIn("vm.runInContext(lane", source)
-        self.assertIn("vm.runInContext(engine", source)
+        self.assertIn("vm.runInContext(view", source)
+        self.assertIn("vm.runInContext(source", source)
+        for retired in ("bet_readiness.js", "no_axis_strategy.js",
+                        "main_strategy.js", "trifecta_strategy.js",
+                        "insurance_strategy.js", "three_way_engine.js",
+                        "legacy_v213_order_model.js", "podium_axis_guard.js"):
+            self.assertNotIn(retired, source)
 
     def test_unavailable_js_ticket_is_retryable_not_an_immutable_skip(self):
         from scripts.arvexq_freeze_predictions import capture_original_bet
