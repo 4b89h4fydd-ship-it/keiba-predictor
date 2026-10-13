@@ -20,5 +20,6 @@ jobs:
       - run: python -m unittest discover -s tests -p test_browser_engine_parity.py -v
       - run: node --check arvexq/ui/static/app.js
       - run: node scripts/arvexq_frozen_marks_smoke.js
+      - run: node scripts/arvexq_capture_three_factor_smoke.js
       - run: python -m unittest discover -s tests -p test_prepost_mark_consistency.py -v
       - run: python -m unittest discover -s tests -p 'test_*.py' -q
