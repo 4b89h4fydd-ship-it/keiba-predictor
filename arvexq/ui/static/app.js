@@ -94,9 +94,11 @@ function favoriteHomeSection(){
     '<header class="arv-favorites-heading"><strong>★ お気に入りレース</strong><span>'+rows.length+'件</span></header>'+
     '<div class="arv-favorites-list">'+rows.map(function(saved){
       var r=state.races.find(function(x){return String(x.id)===String(saved.id)})||saved;
-      return '<div class="arv-favorite-home-row"><button type="button" class="arv-favorite-home-open" data-race="'+esc(r.id)+'">'+
+      var lifecycle=window.ARVEXQUnifiedHome&&window.ARVEXQUnifiedHome.raceStatus?
+        window.ARVEXQUnifiedHome.raceStatus('horse',r,state.date,new Date()):'upcoming';
+      return '<div class="arv-favorite-home-row"><button type="button" class="arv-favorite-home-open" data-race="'+esc(r.id)+'" data-race-state="'+esc(lifecycle)+'">'+
         '<span class="arv-favorite-race-label"><strong>'+esc(r.track||saved.track)+' '+esc(r.raceNumber||saved.raceNumber)+'R</strong><small>'+esc(r.title||saved.title||'')+'</small></span>'+
-        '<time>'+esc(r.startTime||saved.startTime||'--:--')+'</time><span aria-hidden="true">›</span></button>'+
+        '<span class="arv-favorite-home-meta"><time>'+esc(r.startTime||saved.startTime||'--:--')+'</time><em class="arv-race-state">'+esc(window.ARVEXQUnifiedHome?window.ARVEXQUnifiedHome.labelFor(lifecycle):'')+'</em></span><span aria-hidden="true">›</span></button>'+
         favoriteStarHtml({id:saved.id,date:saved.date},'arv-home-favorite-star')+'</div>'
     }).join('')+'</div></section>'
 }
@@ -3356,15 +3358,17 @@ function venueRaceRows(){
       Array.from({length:12},function(_,idx){
         var no=idx+1,r=rows.find(function(x){return n(x.raceNumber)===no});
         if(!r)return '<div class="smart-race-row disabled"><strong>'+no+'R</strong><span class="smart-race-time">--:--</span><span class="smart-race-title">レース情報待ち</span><span></span></div>';
-        var fin=isFinal(r),flash=isFlash(r),isNext=isTodayView&&!fin&&!flash&&String(r.id||'')===nextId,
-            started=isTodayView&&!fin&&!flash&&r.startTime&&mins(r.startTime)<now,
-            delta=isNext?Math.max(0,mins(r.startTime)-now):9999,
-            cls=fin?'final':(flash?'result-flash':(isNext?'next-race'+(delta<=10?' soon':''):(started?'result-awaiting':''))),
-            stateTag=fin?'<span class="race-state-pill final">確定</span>':
-                     (flash?'<span class="race-state-pill flash">速報</span>':
-                     (isNext?'<span class="race-state-pill next">'+(delta<=10?'次のレース・まもなく':'次のレース')+'</span>':
-                     (started?'<span class="race-state-pill awaiting">結果待ち</span>':'')));
-        return '<div class="arv-favorite-venue-item"><button class="smart-race-row '+cls+'" data-race="'+esc(r.id)+'">'+
+        var fin=isFinal(r),flash=isFlash(r),isNext=isTodayView&&String(r.id||'')===nextId,
+            lifecycle=window.ARVEXQUnifiedHome&&window.ARVEXQUnifiedHome.raceStatus?
+              window.ARVEXQUnifiedHome.raceStatus('horse',r,state.date,new Date()):
+              (fin||flash?'finished':(isTodayView&&r.startTime&&mins(r.startTime)<now?'elapsed':'upcoming')),
+            cls=fin||flash||lifecycle==='elapsed'||lifecycle==='finished'?'final':
+              (lifecycle==='running'?'running':(lifecycle==='soon'?'soon':(isNext?'next-race':''))),
+            label=fin?'確定':(flash?'速報':(window.ARVEXQUnifiedHome?window.ARVEXQUnifiedHome.labelFor(lifecycle):'')),
+            stateTag=label&&lifecycle!=='upcoming'?
+              '<span class="race-state-pill arv-race-state">'+esc(label)+'</span>':
+              (isNext?'<span class="race-state-pill next">次のレース</span>':'');
+        return '<div class="arv-favorite-venue-item"><button class="smart-race-row '+cls+'" data-race="'+esc(r.id)+'" data-race-state="'+esc(lifecycle)+'">'+
           '<strong>'+no+'R</strong>'+ 
           '<span class="smart-race-time">'+(fin?'確定':(flash?'速報':timeHtml(r)))+'</span>'+ 
           '<span class="smart-race-title">'+stateTag+'<b>'+esc(r.title||no+'R')+'</b><small>'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc((r.weather&&r.weather!=='不明')?r.weather:'天候待ち')+' / '+esc((r.condition&&r.condition!=='不明')?r.condition:'馬場待ち')+'</small></span>'+ 
