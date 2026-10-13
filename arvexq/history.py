@@ -35,8 +35,8 @@ def normalize_run(run: dict[str, Any]) -> dict[str, Any]:
         "bodyWeight": _pick(run, "bodyWeight", "horseWeight", "馬体重") or None,
         "fieldSize": _pick(run, "fieldSize", "runners", "頭数") or None,
         "opponentLevel": _pick(run, "opponentLevel", "classLevel", "相手レベル") or None,
-        "last3fRank": _pick(run, "last3fRank", "last600Rank", "上がり順位"),
-        "last3fPercentile": _pick(run, "last3fPercentile", "last600Percentile"),
+        "last3fRank": _pick(run, "last3fRank", "last3FRank", "last600Rank", "上がり順位"),
+        "last3fPercentile": _pick(run, "last3fPercentile", "last3FPercentile", "last600Percentile"),
         "margin": _pick(run, "margin", "marginSeconds", "beatenLength", "着差"),
         "index": _pick(run, "index", "performanceIndex", "指数") or None,
     }
