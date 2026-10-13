@@ -466,3 +466,31 @@ html body .smart-home .arv-favorite-home-open[data-race-state="running"]{backgro
 html body .smart-home .arv-favorite-home-open[data-race-state="elapsed"],
 html body .smart-home .arv-favorite-home-open[data-race-state="finished"]{background:#292d2a!important;border-color:#555c56!important}
 html body .smart-home .arv-home-favorite-star.active{background:#69502b!important;border-color:#e4bd6a!important;color:#ffe2a0!important}
+
+/* Complete charcoal override: root viewport, content, and child surfaces. */
+html,html body,html body:has(.smart-home){
+ background:#232522!important;background-color:#232522!important;
+}
+html body .smart-shell.smart-home,
+html body .smart-shell.smart-home>.smart-main.smart-home-main,
+html body .smart-shell.smart-home .smart-home-main,
+html body .smart-shell.smart-home .arv-unified-body,
+html body .smart-shell.smart-home .arv-all-home,
+html body .smart-shell.smart-home .arv-all-panel,
+html body .smart-shell.smart-home .arv-all-circuit,
+html body .smart-shell.smart-home .arv-all-venue{
+ background:#232522!important;background-image:none!important;
+ box-shadow:none!important;
+}
+html body .smart-shell.smart-home .arv-all-panel,
+html body .smart-shell.smart-home .arv-all-venue{
+ border:0!important;
+}
+html body .smart-shell.smart-home .arv-all-empty{color:#c5c4b9!important}
+html body .smart-shell.smart-home .arv-favorite-home-open{
+ background:#3b413b!important;
+}
+html body .smart-shell.smart-home .arv-favorite-home-open[data-race-state="soon"]{background:#705729!important}
+html body .smart-shell.smart-home .arv-favorite-home-open[data-race-state="running"]{background:#73343a!important}
+html body .smart-shell.smart-home .arv-favorite-home-open[data-race-state="elapsed"],
+html body .smart-shell.smart-home .arv-favorite-home-open[data-race-state="finished"]{background:#292c29!important}
