@@ -7,14 +7,14 @@ const w={};new Function('window',laneSource)(w);new Function('window',source)(w)
 new Function('window',fs.readFileSync('arvexq/ui/static/morning/frozen_ticket_evidence.js','utf8'))(w);
 const n=(v)=>Number(v)||0,chronological=(a,b)=>a.race.startTime.localeCompare(b.race.startTime);
 const rows=[
- {race:{id:'JRA-01',raceNumber:5,startTime:'13:10'},selection:{selected:true,score:70}},
- {race:{id:'NAR-02',raceNumber:10,startTime:'18:10'},selection:{selected:true,score:66}},
- {race:{id:'NAR-01',raceNumber:2,startTime:'10:00'},selection:{selected:true,score:72}},
- {race:{id:'NOT-QUALIFIED',raceNumber:1,startTime:'09:50'},selection:{selected:false,score:98}},
+ {race:{id:'JRA-01',raceNumber:5,startTime:'13:10'},selection:{selected:true,score:80,primaryType:'的中重視型',types:['的中重視型']}},
+ {race:{id:'NAR-02',raceNumber:10,startTime:'18:10'},selection:{selected:true,score:79,primaryType:'的中重視型',types:['的中重視型']}},
+ {race:{id:'NAR-01',raceNumber:2,startTime:'10:00'},selection:{selected:true,score:92,primaryType:'的中重視型',types:['的中重視型']}},
+ {race:{id:'NOT-QUALIFIED',raceNumber:1,startTime:'09:50'},selection:{selected:false,score:98,primaryType:'的中重視型',types:['的中重視型']}},
 ];
 const x=w.ARVEXQMorningSelection.allStrictQualifiers(rows,{n,chronological});
-assert.deepEqual(x.map(z=>z.race.id),['NAR-01','JRA-01','NAR-02'],'all eligible races kept, no max-one cap');
-assert.equal(w.ARVEXQMorningSelection.version,'strict-unlimited-morning-v1');
+assert.deepEqual(x.map(z=>z.race.id),['NAR-01','JRA-01'],'only hit-first 80+ candidate races visible');
+assert.equal(w.ARVEXQMorningSelection.version,'hit-first-80-morning-v2');
 console.log('MORNING_SELECTION_UNLIMITED_OK '+x.length);
 
 function laneTest(overrides={}){
