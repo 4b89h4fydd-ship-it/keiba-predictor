@@ -68,6 +68,5 @@ def evaluate():
 if __name__=="__main__":
     from sys import argv
     out=evaluate()
-    Path(argv[1]).write_text(json.dumps(out,ensure_ascii=False,indent=2)+"
-")
+    Path(argv[1]).write_text(json.dumps(out,ensure_ascii=False,indent=2)+chr(10))
     print("RESULT="+json.dumps(out,ensure_ascii=False))
