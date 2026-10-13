@@ -16,7 +16,7 @@ function render(r,p,deps){
   // Preserve the original recorded ticket types/marks even when it was frozen
   // under the pre-v346 engine. Never relabel historical "通常"/"押さえ"
   // as a v346 main/challenge/insurance decision after the off.
-  if(plan.fixedAt&&!/arvexq-true-run-pure-sectional-v1/.test(String(plan.engineVersion||plan.betStrategy||''))){
+  if(plan.fixedAt&&!/arvexq-true-run-pure-sectional-v[12]/.test(String(plan.engineVersion||plan.betStrategy||''))){
     var legacyItems=(plan.items||[]).map(function(z){
       return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'
         +esc(z.level||'旧方式')+'｜'+esc(z.kind||'券種')+'</b><span>'+esc(z.points||((z.combos||[]).length))+'点</span></div>'
