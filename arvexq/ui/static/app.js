@@ -1680,7 +1680,7 @@ function honmeiBadgeText(x){return x&&x.honmeiGrade?String(x.honmeiGrade):'';}
 function markRoleLabel(x){
   if(!x||x.markFrozen)return '';
   var win=x.predMark==='◎',axis=x.preOffAxisCandidate===true;
-  return win&&axis?'【単・軸】':win?'【単】':axis?'【軸】':'';
+  return win&&axis?'◎【単】 ◎【軸】':win?'◎【単】':axis?'◎【軸】':'';
 }
 function honmeiA11yText(x){return x&&x.predMark==='◎'?'◎・勝ち切る能力と3着内の安定性を総合評価した本命（的中保証ではありません）':'';}
 function racecardMarkLegend(r){
