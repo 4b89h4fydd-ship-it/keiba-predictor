@@ -35,12 +35,20 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
     runs = observed_runs(horse, race, limit=5)
     qualities: list[float] = []
     closing: list[float] = []
+    comparable_qualities: list[float] = []
+    distance = _number(race.get("distance") or race.get("distanceM"))
+    surface = str(race.get("surface") or "").strip()
     for run in runs:
         finish = _number(run.get("finish"))
         field = _number(run.get("fieldSize"))
         if finish is None or field is None or field <= 1 or not (1 <= finish <= field):
             continue
-        qualities.append((field - finish) / (field - 1))
+        quality = (field - finish) / (field - 1)
+        qualities.append(quality)
+        prior_distance = _number(run.get("distance"))
+        if (distance and prior_distance and abs(distance - prior_distance) <= 150
+                and surface and str(run.get("surface") or "").strip() == surface):
+            comparable_qualities.append(quality)
         closing_rank = _number(run.get("last3fRank") or run.get("last600Rank"))
         if closing_rank is not None and 1 <= closing_rank <= field:
             closing.append((field - closing_rank) / (field - 1))
@@ -58,6 +66,8 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
     sectional = sum(closing) / len(closing) if closing else None
     return {
         "trueRun": weighted_form,
+        "conditionForm": sum(comparable_qualities) / len(comparable_qualities) if comparable_qualities else None,
+        "conditionRuns": float(len(comparable_qualities)),
         "pure": peak_ability,
         "sectional": sectional,
         "sample": float(len(qualities)),
@@ -72,14 +82,14 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
         raw = collect_horse_raw_metrics(horse, race)
         past = analyze_past_performance(horse, race)
         recent = raw.get("trueRun")
-        comparable = past.get("comparableQuality")
-        condition_runs = int(past.get("comparableRuns") or 0)
+        comparable = raw.get("conditionForm")
+        condition_runs = int(raw.get("conditionRuns") or 0)
         strength = min(MAX_CONDITION_WEIGHT, CONDITION_WEIGHT_PER_RUN * condition_runs) if comparable is not None else 0.0
         score = (recent if comparable is None else
                  (1 - strength) * recent + strength * comparable) if recent is not None else 0.5
         factors = {
             "recentForm": raw.get("trueRun"),
-            "conditionForm": past.get("comparableQuality"),
+            "conditionForm": raw.get("conditionForm"),
         }
         available = sum(value is not None for value in factors.values())
         rows.append({
