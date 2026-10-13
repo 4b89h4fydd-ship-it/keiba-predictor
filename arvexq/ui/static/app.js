@@ -1067,7 +1067,7 @@ function strictSelectedRaceProfile(r,p){
     reason:selected?'発走前の実測2指標が有効（券種別的中率は独立審査）':'見送り: '+failed.join('・'),
     model:'arvexq-form-condition-no-sectional-proposal-v1'};
 }
-// Optional ☆ eligibility changes neither the ranking nor the 45/35/20 score.
+// Optional ☆ eligibility changes neither the ranking nor the 近走・条件 score.
 function eligibleOptionalStar(z,fourthScore){
   var f=z&&z.threeFactorValues||{},vals=[f.recentForm,f.conditionForm];
   if(!z||n(z.threeFactorCoverage,0)!==2||n(f.comparableRuns,0)<2||
@@ -1099,7 +1099,7 @@ function assignPredictionMarks(rows,r){
     rows.forEach(function(z){z.predMark='';z.predRank=999;z.hasFrozenEvaluation=false});
     r.honmeiDecisionFrontend={version:'arvexq-form-condition-no-sectional-proposal-v1',
       eligible:false,horseNumber:0,role:'none',confidenceGrade:'',
-      reason:'three-factor-evidence-missing'};
+      reason:'form-condition-evidence-missing'};
     return;
   }
   ordered=rows.slice().sort(function(a,b){return n(b.threeFactorScore)-n(a.threeFactorScore)||
@@ -1168,9 +1168,9 @@ function assignPredictionMarks(rows,r){
     z.podiumAxisEligible=z===axisRow&&grade==='A';
     z.singleWinSuitable=idx===0&&grade==='A';z.singleWinStrength=n(z.threeFactorScore);
     z.singleWinReason=idx===0?'同一3要素で1着・3着内の軸を判定':'';
-    z.attentionReason=idx===0?'TRUE RUN 45%＋PURE 35%＋SECTIONAL 20%｜信頼度'+grade:
+    z.attentionReason=idx===0?'近走5走＋同距離・馬場の実績｜信頼度'+grade:
       (idx<labels.length?'総合 '+Math.round(z.threeFactorScore*100)+'/100':
-       (z===starCandidate?'TRUE RUN・PURE・SECTIONALの複数独立根拠により選出':''));
+       (z===starCandidate?'同距離・馬場の観測実績により選出':''));
     var e=z.horse&&z.horse.integratedEvaluation;
     if(e){e.mark=z.predMark;e.honmeiRole=z.honmeiRole;e.honmeiGrade=z.honmeiGrade;
       e.honmeiEligible=z.podiumAxisEligible;}
@@ -1211,8 +1211,8 @@ function integratedGrades(r,rows){
       evidenceScore:null,
       predictionModel:'arvexq-form-condition-no-sectional-proposal-v1',
       confidence:coverage>=.72?'高':(coverage>=.45?'中':'低'),
-      tier:coverage>=1?'3指標実測評価':(coverage>=2/3?'2指標実測評価':'実測データ不足'),
-      mode:'近走内容45%・基礎能力35%・区間性能20%',
+      tier:coverage>=1?'3指標実測評価':(coverage>=1?'2指標実測評価':'実測データ不足'),
+      mode:'近走5走＋同距離・馬場適性',
       winProbability:n(x.winProbability),
       p1Probability:n(x.p1Probability),
       p2Probability:n(x.p2Probability),
@@ -1429,7 +1429,7 @@ function applyFrozenMarks(r,p){
   }else p.markFreeze={source:'provisional'};
   return p;
 }
-// Recompute marks only when the actual inputs to the single 45/35/20
+// Recompute marks only when the actual inputs to the single 近走・条件
 // model change. Historical audit scores, win odds and old evaluation marks
 // never enter this signature. Only the active pre-off race is recalculated.
 function threeFactorMarkInputSignature(r){
@@ -1467,7 +1467,7 @@ function predict(r){
   var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),minetaContext=rows.minetaContext||minetaRaceContext(rows,modelRace),
       tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,
       sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;
-  // Unified TRUE RUN/PURE/SECTIONAL authority for marks, rank and tickets.
+  // Unified RECENT FORM/CONDITION authority for marks, rank and tickets.
   assignPredictionMarks(rows,modelRace);
   integratedGrades(r,rows);
   for(i=0;i<sc.length;i++){
@@ -1478,7 +1478,7 @@ function predict(r){
   var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],
       plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),
       draft={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext};
-  // Finish visualization uses the final 45/35/20 probabilities.
+  // Finish visualization uses the final 近走・条件 probabilities.
   // Second pass: refresh the displayed outcome with the now-final P1/P2/P3 decision roles.
   var outcome=paceOutcomeModel(r,draft),cov=mean(rows.map(function(x){return x.coverage}));
   assignSingleWinCandidate(rows,modelRace);
@@ -1534,7 +1534,7 @@ function runnerDetailBody(r,p,x){
         t=(out.third||[]).some(function(z){return n(z.horse&&z.horse.horseNumber)===no});
     role=f?('1着候補・'+out.verdict):(s?'2着候補':(t?'3着候補':'相手候補'))
   }
-  // Only scores supplied by the authoritative three-factor model are shown.
+  // Only scores supplied by the authoritative form-condition model are shown.
   // Historical composite fields must never be presented as current factors.
   var ability=rf.ability,form=rf.form,klass=rf.classLevel,
       suit=rf.suitability,pace=rf.pace;
@@ -2309,11 +2309,11 @@ function buildAiBetPlan(r,p){
   function no(z){return n(z&&z.horse&&z.horse.horseNumber)}
   function item(level,kind,combos,reason){
     return {level:level,kind:kind,combos:combos,points:combos.length,
-      combo:betComboText(kind,combos),reason:reason||'同じ45/35/20モデルから抽出'};
+      combo:betComboText(kind,combos),reason:reason||'同じ近走・条件モデルから抽出'};
   }
   var items=[],tri=[],i,j,k,w=[],sum=0,top=n(ordered[0].threeFactorScore);
   rows.forEach(function(z){var v=Math.exp((n(z.threeFactorScore)-top)/.15);w.push(v);sum+=v});
-  // Ordered trifecta outcomes use the very same three-factor strengths and
+  // Ordered trifecta outcomes use the very same form-condition strengths and
   // Plackett-Luce ranking as ◎○▲, never an independent ticket predictor.
   if(active){
     items.push(item('本線','馬連',[[no(ordered[0]),no(ordered[1])]],
@@ -2345,7 +2345,7 @@ function buildAiBetPlan(r,p){
         trifectaReviewed:true,trifectaDecision:trifecta?'採用':'見送り',
         trifectaReason:trifecta?'◎の差と発走前根拠が順序判断条件を通過':'順序信頼または◎の差が不足',
         insuranceDecision:active?'採用':'見送り',
-        reason:active?'45%近走内容・35%基礎能力・20%区間性能による同一モデルの本線':
+        reason:active?'近走5走と同距離・馬場の実測根拠による同一モデルの本線':
           selected.reason+'／データ充足の審査が必要',
         expectedValueReason:'各券種の的中率・期待値は検証で校正されていません。',
         referenceBudget:{points:items.reduce(function(v,x){return v+x.points},0)},
@@ -3540,7 +3540,7 @@ function stylePositionMap(r,p){var rows=(p.rows||[]).slice().sort(function(a,b){
 function runnerStyleSection(r,p){
   var diagnosisReady=diagnosisCurrent(r),
       cadenceText=window.ARVEXQLiveOdds.status(r);
-  // Only current three-factor marks are displayed; no V313 correction badge.
+  // Only current form-condition marks are displayed; no V313 correction badge.
   return '<section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
     +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">'+(r._entryOnly?'出走表を先に表示しています。履歴・能力評価を取得中です。':'取得済みデータでAI評価を先に計算中。更新後は馬名タップの詳細と展開予想へ反映します。')+'</div>':'')
     +'<div class="racecard-table">'
