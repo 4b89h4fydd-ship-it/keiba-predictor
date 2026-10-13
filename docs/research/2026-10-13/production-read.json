@@ -1,0 +1,26 @@
+[
+  {
+    "url": "https://kraizweb1.4b89h4fydd.workers.dev/",
+    "status": 200,
+    "seconds": 0.4557223310000609,
+    "bytes": 7679,
+    "contentType": "text/html",
+    "arvexqHtml": true
+  },
+  {
+    "url": "https://kraiz-api.4b89h4fydd.workers.dev/api/day?date=2026-10-13&details=0",
+    "status": 200,
+    "seconds": 0.555356182999958,
+    "bytes": 19650,
+    "contentType": "application/json; charset=utf-8",
+    "raceCount": 58,
+    "races": 58,
+    "tracks": [
+      "名古屋",
+      "川崎",
+      "盛岡",
+      "金沢",
+      "門別"
+    ]
+  }
+]

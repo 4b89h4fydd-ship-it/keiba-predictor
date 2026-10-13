@@ -49,6 +49,13 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -q -r requirements.txt
 
+      - name: Temporal evaluation and research probability invariants
+        run: |
+          python -m unittest discover -s tests -p 'test_mass_temporal_split.py' -v
+          python -m unittest discover -s tests -p 'test_integrated_research.py' -v
+          python -m unittest discover -s tests -p 'test_research_rank_distribution.py' -v
+          python -m unittest discover -s tests -p 'test_prepost_mark_consistency.py' -v
+
       - name: Python syntax
         run: |
           python -m py_compile app.py build_static.py \
