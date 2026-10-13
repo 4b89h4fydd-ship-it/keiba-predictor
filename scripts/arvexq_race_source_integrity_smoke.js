@@ -15,9 +15,7 @@ assert(!open.includes('window.ARVEXQSavedSnapshot.available('),
 assert(open.indexOf('fetchRacecardOnly(id)')>open.indexOf('if(entryDataAvailable(state.race))'),
   'racecard request must only run as a last resort');
 assert(open.includes('seq!==state.detailSeq'),'never update after navigation');
-const alert=src.slice(src.indexOf('function homePickAlert('),src.indexOf('function smartHomeHub('));
-assert(alert.includes('arv-home-alert'));
-assert(!alert.includes('counts.central+counts.local>0'));
+assert(!src.includes('function homePickAlert('),'obsolete alert helper removed');
 assert.equal((src.match(/function specialForecastRaceCandidates\(/g)||[]).length,1);
 const workflow=fs.readFileSync('.github/workflows/arvexq-race-open-repair.yml','utf8');
 assert(workflow.includes('contents: read'));
