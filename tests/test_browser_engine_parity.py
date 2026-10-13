@@ -48,5 +48,21 @@ class EngineBrowserParity(unittest.TestCase):
             self.assertIsNone(z.get("sectional"))
 
 
+    def test_zero_distance_does_not_count_as_matching_condition(self):
+        race = {"date": "2026-10-14", "distance": 0, "surface": "ダート",
+                "horses": [{"horseNumber": 1, "recentRaces": [
+                    {"date": "2026-10-13", "finish": 2, "fieldSize": 10,
+                     "distance": 0, "surface": "ダート"}]}]}
+        python_row = rank_factor_model(race["horses"], race)[0]
+        result = subprocess.run(["node", "-e", JS], cwd=ROOT,
+                                input=json.dumps(race), text=True,
+                                capture_output=True, check=True, timeout=30)
+        browser_row = json.loads(result.stdout)[0]
+        self.assertIsNone(python_row["factors"]["conditionForm"])
+        self.assertIsNone(browser_row["conditionForm"])
+        self.assertEqual(browser_row["coverage"], python_row["primaryPillarCoverage"])
+        self.assertAlmostEqual(browser_row["score"], python_row["score"], places=12)
+
+
 if __name__ == "__main__":
     unittest.main()
