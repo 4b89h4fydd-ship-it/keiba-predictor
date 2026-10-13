@@ -6,7 +6,6 @@ replace pre-race marks, dynamic odds, seals, or the frozen morning race list.
 from __future__ import annotations
 from typing import Any
 
-from arvexq.prediction.factor_cards import evidence_card
 from arvexq.prediction.sectional_profile import profile
 from arvexq.prediction.bias_provenance import provenance
 
@@ -43,7 +42,21 @@ def attach_evidence(detail: dict[str, Any]) -> dict[str, Any]:
             horse["careerCoverage"] = {"version": "arvexq-career-coverage-ui-v1", "state": "acquisition-unverified",
                                        "acquisition": "unverified", "reason": f"coverage-error:{type(exc).__name__}"}
         horse["researchEvidence"] = {
-            "factors": evidence_card(horse, detail),
+            "factors": {
+                "version": "arvexq-true-run-pure-sectional-v1",
+                "items": [
+                    {"key": key, "weight": weight,
+                     "value": ((horse.get("integratedEvaluation") or {})
+                               .get("factorEvidence") or {})
+                              .get("pillarScores", {}).get(key),
+                     "available": ((horse.get("integratedEvaluation") or {})
+                                   .get("factorEvidence") or {})
+                                  .get("pillarScores", {}).get(key) is not None}
+                    for key, weight in (("trueRun", .45), ("pure", .35), ("sectional", .20))
+                ],
+                "calibrated": False,
+                "note": "Three-factor evidence is descriptive, never a hit probability.",
+            },
             "sectionals": profile(horse, detail),
             "status": "read-only-unverified-predictive-lift",
         }

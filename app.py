@@ -62,7 +62,7 @@ from bs4 import BeautifulSoup
 app = FastAPI(title="ARVEXQ", version="14.25-v329-racecard-stable")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-edge-2026.10-v53-consensus-rebuild"
+PREDICTION_ENGINE_VERSION = "arvexq-true-run-pure-sectional-v2"
 ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v300-final"
 AI_EVALUATION_VERSION = "evidence-v317-consensus-rebuild"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
@@ -3876,18 +3876,47 @@ def _build_prerace_prediction(detail:dict)->dict|None:
     horses=[h for h in (detail.get("horses") or []) if isinstance(h,dict) and int(h.get("horseNumber") or 0)>0 and not h.get("scratched") and not re.search(r"取消|除外|欠場",str(h.get("status") or ""))]
     if len(horses)<2:return None
     evals=[h.get("integratedEvaluation") if isinstance(h.get("integratedEvaluation"),dict) else {} for h in horses]
-    if sum(1 for e in evals if e)>=max(2,len(horses)//2):
-        p1=_prob_vector([float(e.get("p1Score") or 0) for e in evals])
-        p2=_prob_vector([float(e.get("p2Score") or 0) for e in evals])
-        p3=_prob_vector([float(e.get("p3Score") or 0) for e in evals])
-        cons=_prob_vector([float(e.get("winnerConsensusProbability") or 0) for e in evals])
-    else:return None
-    # ◎ is a betting-axis opinion for a top-three finish, not the top P1 head.
-    # No forced ◎ and no swapping P1 values to match an axis selection.
-    hon_idx=next((i for i,e in enumerate(evals) if str(e.get("mark") or "")=="◎"),None)
-    decision=list(cons if any(cons) else p1)
+    # The persisted predictions use the SAME three-factor authority as marks
+    # and ticket selection; never resurrect legacy P1/P2/P3 evaluations.
+    if sum(1 for e in evals if e.get("factorEvidence"))<max(2,len(horses)//2):
+        return None
+    scores=[max(0.,min(1.,float(e.get("coreAbilityScore") or 0)/100))
+            for e in evals]
+    observed=[int(((e.get("factorEvidence") or {}).get("primaryPillarCoverage") or
+                   sum(v is not None for v in
+                       ((e.get("factorEvidence") or {}).get("pillarScores") or {}).values())))
+              for e in evals]
+    if not any(observed):
+        return None
+    peak=max(scores)
+    strengths=[math.exp((v-peak)/.15) for v in scores]
+    total=sum(strengths)
+    p1=[v/total for v in strengths]
+    p2=[0.] * len(horses)
+    p3=[0.] * len(horses)
+    for i,w1 in enumerate(strengths):
+        remain=total-w1
+        if remain<=0:continue
+        for j,w2 in enumerate(strengths):
+            if i==j:continue
+            second=p1[i]*w2/remain
+            p2[j]+=second
+            last=remain-w2
+            if last>0:
+                for k,w3 in enumerate(strengths):
+                    if i!=k and j!=k:p3[k]+=second*w3/last
+    cons=list(p1)
+    decision=list(p1)
     win_idx=max(range(len(decision)),key=lambda i:decision[i])
-    win_e=evals[win_idx]
+    hon_idx=next((i for i,e in enumerate(evals)
+                  if str(e.get("mark") or "")=="◎"),None)
+    if hon_idx is not None and hon_idx!=win_idx:
+        # A divergent source is an integrity failure, not a second prediction path.
+        return None
+    lead=sorted(scores,reverse=True)
+    gap=lead[0]-lead[1] if len(lead)>=2 else 0.
+    strength_conf=max(0.,min(1.,.5*observed[win_idx]/3.+3.*max(0.,gap)))
+    strength_stable=observed[win_idx]==3 and gap>=.04
     rows=[]
     completeness=[]
     for i,(h,e) in enumerate(zip(horses,evals)):
@@ -3912,8 +3941,8 @@ def _build_prerace_prediction(detail:dict)->dict|None:
         "capturedAtEpoch":now,"capturedAtJst":_now_jst().isoformat(timespec="seconds"),"minutesToPost":minutes,
         "winnerNo":int(horses[win_idx].get("horseNumber") or 0),"winnerProbability":round(decision[win_idx],8),
         "honmeiHorseNumber":int(horses[hon_idx].get("horseNumber") or 0) if hon_idx is not None else 0,
-        "winnerConfidence":round(float(win_e.get("axisConfidence") or 0),8),
-        "winnerStable":bool(win_e.get("winnerDecisionStable")),
+        "winnerConfidence":round(strength_conf,8),
+        "winnerStable":bool(strength_stable),
         "fieldSize":len(rows),"markCount":mark_count,"dataQuality":quality,"horses":rows,
         "marketIndependent":True,"oddsStored":False,"status":"pre-race",
         "frozen":bool(state=="pre" and minutes is not None and minutes<=PRERACE_FREEZE_MINUTES),

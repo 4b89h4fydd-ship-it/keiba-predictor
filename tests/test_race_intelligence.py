@@ -3,7 +3,6 @@ import copy
 import unittest
 
 from arvexq.prediction.race_intelligence import attach_evidence
-from arvexq.prediction.factor_cards import evidence_card, weighted_experiment
 from arvexq.prediction.sectional_profile import profile
 from arvexq.prediction.bias_provenance import provenance
 from arvexq.results.auto_recap import build_race_recap
@@ -38,9 +37,9 @@ class RaceIntelligenceTests(unittest.TestCase):
         attach_evidence(self.race)
         h = self.race["horses"][0]
         factors = h["researchEvidence"]["factors"]
-        self.assertEqual(len(factors["items"]), 14)
-        self.assertGreater(factors["evidenceCoverage"], 0)
-        self.assertIsNone(next(x for x in factors["items"] if x["key"] == "pedigree")["measurements"] or None)
+        self.assertEqual(len(factors["items"]), 3)
+        self.assertFalse(factors["calibrated"])
+        self.assertEqual([x["key"] for x in factors["items"]], ["trueRun","pure","sectional"])
         sectionals = h["researchEvidence"]["sectionals"]
         self.assertEqual(len(sectionals["runs"]), 1, "future runs must never leak")
         self.assertEqual(sectionals["runs"][0]["early3FSeconds"], 35.6)
@@ -52,61 +51,19 @@ class RaceIntelligenceTests(unittest.TestCase):
         self.assertEqual(self.race["biasProvenance"]["estimated"]["source"], "ai-inference-not-official")
         self.assertFalse(self.race["biasProvenance"]["changesMorningMarks"])
 
-    def test_unverified_card_is_never_a_probability(self):
-        card = evidence_card(self.horse, self.race)
-        result = weighted_experiment(card, {"speed": .2, "early": .8})
-        self.assertIsNone(result["predictiveScore"])
+    def test_three_factors_do_not_create_a_parallel_predictor(self):
+        detail=copy.deepcopy(self.race)
+        detail["horses"][0]["integratedEvaluation"]["factorEvidence"]={
+            "pillarScores":{"trueRun":.8,"pure":.7,"sectional":.6}}
+        attach_evidence(detail)
+        card=detail["horses"][0]["researchEvidence"]["factors"]
+        self.assertEqual([x["key"] for x in card["items"]],
+                         ["trueRun","pure","sectional"])
+        self.assertEqual([x["weight"] for x in card["items"]],[.45,.35,.20])
+        self.assertEqual([x["value"] for x in card["items"]],[.8,.7,.6])
         self.assertFalse(card["calibrated"])
-        with self.assertRaises(ValueError):
-            weighted_experiment(card, {"pace": -1})
-        with self.assertRaises(ValueError):
-            weighted_experiment(card, {"unknown": 1})
-
-    def test_fourteen_factor_shadow_sealed_only_and_never_recomputed(self):
-        from arvexq.prediction.factor_challenger import build_factor_shadow
-        from arvexq.backtest.factor_challenger_evaluation import evaluate, aggregate
-        from arvexq.prediction.prerace_archive import seal_detail, JST
-        from datetime import datetime, timedelta
-        now = datetime(2026, 10, 9, 10, 30, tzinfo=JST)
-        race = copy.deepcopy(self.race)
-        race["startTime"] = "11:00"
-        race["horses"] = []
-        for no in range(1, 6):
-            h = copy.deepcopy(self.horse)
-            h["horseNumber"] = no
-            h["horseId"] = f"unique-{no}"
-            h["integratedEvaluation"]["components"].update({
-                "drawScore": .5, "bodyWeightScore": .7, "goingFit": .7,
-                "pedigreeScore": .6, "jockeyScore": .6, "trainerScore": .7,
-                "distanceFit": .8, "courseFit": .65})
-            h["recentRaces"][0]["finish"] = no
-            race["horses"].append(h)
-        base = build_factor_shadow(race)
-        self.assertEqual(base["mode"], "frozen-shadow-only-not-for-betting")
-        self.assertTrue(base["sufficient"], "well-covered race must produce a frozen research challenger")
-        self.assertIsNone(base["winnerProbability"])
-        lock = {"raceId": race["id"], "raceDate": race["date"],
-                "capturedAtEpoch": int(now.timestamp()),
-                "horses": [{"horseNumber": no, "mark": {"1":"◎","2":"○","3":"▲"}.get(str(no),"△")}
-                           for no in range(1, 6)]}
-        locked = seal_detail(race, lock, now)
-        self.assertIn("researchFactorShadow", locked)
-        original = copy.deepcopy(locked["researchFactorShadow"])
-        locked["horses"][0]["recentRaces"].append({
-            "date": "2026-10-11", "finish": 1, "fieldSize": 8})
-        self.assertEqual(original, locked["researchFactorShadow"])
-        locked["result"] = {"status": "確定", "finishers": [
-            {"horseNumber": 1, "finish": 1}, {"horseNumber": 2, "finish": 2},
-            {"horseNumber": 3, "finish": 3}]}
-        report = evaluate(locked)
-        # Sparse evidence may produce a withheld shadow, which is correct.
-        if not original["sufficient"]:
-            self.assertIsNone(report)
-        if original["sufficient"]:
-            self.assertFalse(report["usedPostoffRecalculation"])
-            self.assertEqual(aggregate([report, report])["raceCount"], 1)
-            locked["researchFactorShadow"]["rows"][0]["researchRankScore"] = .999
-            self.assertIsNone(evaluate(locked), "tampering must fail the original hash")
+        self.assertNotIn("predictiveScore",card)
+        self.assertEqual(detail["preRaceBet"],self.race["preRaceBet"])
 
     def test_review_only_after_official_confirmation(self):
         detail = copy.deepcopy(self.race)

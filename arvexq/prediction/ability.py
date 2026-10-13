@@ -15,7 +15,7 @@ def horse_evidence(h: dict[str, Any], race: dict[str, Any]) -> dict[str, Any]:
 
 
 def rank_ability(horses: Iterable[dict[str, Any]], race: dict[str, Any]) -> list[dict[str, Any]]:
-    """Compatibility ranking backed by the four-pillar consensus model.
+    """Compatibility ranking backed by the three-factor TRUE RUN/PURE/SECTIONAL model.
 
     `abilityScore` is a within-race head-to-head dominance score, not a win probability.
     No arbitrary percentage blend of factors is used to create the final order.
@@ -53,7 +53,7 @@ def apply_ability_ranking(detail: dict[str, Any]) -> dict[str, Any]:
         h["abilityEvidence"] = {
             "rank": row["abilityRank"],
             "score": row["abilityScore"],
-            "scoreMeaning": "field-relative four-pillar head-to-head dominance; not win probability",
+            "scoreMeaning": "three-factor score; not hit probability",
             "wins": row["evidenceWins"],
             "weak": row["evidenceWeak"],
             "sample": row["sample"],
@@ -69,7 +69,7 @@ def apply_ability_ranking(detail: dict[str, Any]) -> dict[str, Any]:
             "name": r["horse"].get("name") or "",
             "rank": r["abilityRank"],
             "score": r["abilityScore"],
-            "scoreMeaning": "field-relative four-pillar head-to-head dominance; not win probability",
+            "scoreMeaning": "three-factor score; not hit probability",
             "sample": r["sample"],
             "evidenceWins": r["evidenceWins"],
             "evidenceWeak": r["evidenceWeak"],

@@ -52,7 +52,6 @@ jobs:
       - name: Python syntax
         run: |
           python -m py_compile app.py build_static.py \
-            arvexq/prediction/honmei_gate.py \
             arvexq/prediction/final_marks.py \
             arvexq/pipeline/fingerprints.py \
             arvexq/ingest/orchestrator.py \
@@ -123,15 +122,9 @@ jobs:
       - name: Betting marks and ticket reconciliation regression
         run: |
           node --check arvexq/ui/static/app.js
+          node scripts/arvexq_three_factor_parity_smoke.js
           node --check arvexq/ui/static/research/research_view.js
           node scripts/arvexq_research_view_smoke.js
-          node scripts/arvexq_bet_mark_alignment_smoke.js
-          node --check arvexq/ui/static/betting/podium_axis_guard.js
-          node scripts/arvexq_podium_axis_guard_smoke.js
-          node --check arvexq/ui/static/betting/no_axis_strategy.js
-          node scripts/arvexq_three_way_bet_smoke.js
-          node scripts/arvexq_bet_usability_smoke.js
-          node scripts/arvexq_bet_selection_independence_smoke.js
           node scripts/arvexq_result_continuous_smoke.js
           python -m unittest discover -s tests -p 'test_result_stalled_regressions.py' -v
           python -m unittest discover -s tests -p 'test_result_summary_real_finishers.py' -v
@@ -162,7 +155,6 @@ jobs:
         run: |
           node --check scripts/arvexq_pace_transition_smoke.js
           node scripts/arvexq_pace_transition_smoke.js
-          node scripts/arvexq_pace_evidence_bet_gate_smoke.js
           node scripts/arvexq_six_pace_metrics_smoke.js
 
       - name: D1 capacity fail-closed and storage safety regression
@@ -222,19 +214,14 @@ jobs:
           python -m unittest discover -s tests -p 'test_career_totals_evidence.py' -v
           python -m unittest discover -s tests -p 'test_jra_career_merge.py' -v
           python -m unittest discover -s tests -p 'test_official_changes.py' -v
-          python -m unittest discover -s tests -p 'test_podium_axis_gate.py' -v
           python -m unittest discover -s tests -p 'test_past_performance.py' -v
+          python -m unittest discover -s tests -p 'test_three_factor_unified.py' -v
           python -m unittest discover -s tests -p 'test_full_career.py' -v
           python -m unittest discover -s tests -p 'test_career_readiness.py' -v
           python -m unittest discover -s tests -p 'test_career_transport.py' -v
-          python -m unittest discover -s tests -p 'test_honmei_gate_relaxation.py' -v
-          python -m unittest discover -s tests -p 'test_honmei_gate_relaxation.py' -v
           python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
-          python -m unittest discover -s tests -p 'test_research_shadow.py' -v
-          python -m unittest discover -s tests -p 'test_research_evaluation.py' -v
           python -m unittest discover -s tests -p 'test_daily_archive_audit.py' -v
           python -m unittest discover -s tests -p 'test_race_intelligence.py' -v
-          python -m unittest discover -s tests -p 'test_factor_weight_calibration.py' -v
 
       - name: Architecture and operations guard
         run: |
@@ -348,34 +335,8 @@ jobs:
           assert enriched['preparedMeta']['supplementalSearch']['failures']
           assert enriched['horses'][0]['name']=='テスト馬'
 
-          # v344: ◎ requires a stable recent top-three history; it is not a
-          # synonym for the top-ranked winner. No blanket JRA ban.
-          from arvexq.prediction.honmei_gate import evaluate_honmei_gate
-          rich_rows=[
-              {'horse':{'horseNumber':1,'recentRaces':[{'date':f'2026-09-{i+10:02d}','finish':f,'fieldSize':12}
-                for i,f in enumerate([1,8,9,9,8])]},
-               'rank':1,'ability':.82,'record':.82,'suitability':.80,'pace':.85,
-               'pillarRanks':{'ability':1,'record':1,'suitability':1,'pace':1},'sample':5,
-               'evidenceFamilyCounts':{'ability':3,'record':4,'suitability':2,'pace':2},
-               'multiHead':{'winRank':1,'strengthRank':1,'strengthScore':.76}},
-              {'horse':{'horseNumber':2,'recentRaces':[{'date':f'2026-09-{i+10:02d}','finish':f,'fieldSize':12}
-                for i,f in enumerate([2,2,3,2,4])]},
-               'rank':2,'ability':.80,'record':.79,'suitability':.78,'pace':.77,
-               'pillarRanks':{'ability':2,'record':2,'suitability':2,'pace':2},'sample':5,
-               'evidenceFamilyCounts':{'ability':3,'record':4,'suitability':2,'pace':2},
-               'multiHead':{'winRank':2,'strengthRank':2,'strengthScore':.75}},
-          ]
-          rich_summary={'winnerHorseNumber':1,'winnerGap':0.05}
-          local_axis=evaluate_honmei_gate(rich_rows,rich_summary,{'circuit':'地方','date':'2026-10-09'})
-          assert local_axis['eligible'] and local_axis['horseNumber']==2, local_axis
-          central_axis=evaluate_honmei_gate(rich_rows,rich_summary,{'circuit':'中央','date':'2026-10-09'})
-          assert central_axis['eligible'] and central_axis['horseNumber']==2, central_axis
-          missing=copy.deepcopy(rich_rows)
-          missing[1]['horse']['recentRaces']=[]
-          assert not evaluate_honmei_gate(missing,rich_summary,{'circuit':'地方','date':'2026-10-09'})['eligible']
-          thin=copy.deepcopy(rich_rows)
-          thin[1]['evidenceFamilyCounts']['pace']=1
-          assert not evaluate_honmei_gate(thin,rich_summary,{'circuit':'中央','date':'2026-10-09'})['eligible']
+          # The retired independent axis gate is intentionally deleted.
+          # All marks are now generated from the shared three-factor model.
 
           old_final={'status':'確定','finishers':[{'finish':1,'horseNumber':1},{'finish':2,'horseNumber':2},{'finish':3,'horseNumber':3}]}
           flash={'status':'速報','finishers':[{'finish':1,'horseNumber':9}]}

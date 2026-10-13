@@ -107,7 +107,7 @@ if "ARVEXQ_TOUCH_ICON_180" not in binary_b64:
     raise RuntimeError("ARVEXQ_TOUCH_ICON_180 not found")
 
 BET_PATH = STATIC / "betting"
-BET_ASSETS = ("legacy_v213_order_model.js", "podium_axis_guard.js", "bet_readiness.js", "no_axis_strategy.js", "main_strategy.js", "trifecta_strategy.js", "insurance_strategy.js", "three_way_engine.js", "bet_view.js", "bet_ui.css")
+BET_ASSETS = ("bet_view.js", "bet_ui.css")
 for filename in BET_ASSETS:
     if not (BET_PATH / filename).is_file():
         raise RuntimeError(f"missing independent betting asset: {filename}")
@@ -271,7 +271,7 @@ for extra_asset in ("previous_ai_results.js",):
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
 model_version = strings.get("AI_EVALUATION_VERSION", "").removeprefix("evidence-")
-(DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"four-pillar-authoritative","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
+(DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"three-factor-authoritative","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
 redirects=["/venue /index.html 200","/race /index.html 200","/keiba /keiba/index.html 200"]
 for v in compat_app:redirects.append(f"/app-{v}.js /app-{BUILD_VERSION}.js 302")
 for v in compat_arvexq:redirects.append(f"/arvexq-app-{v}.js /arvexq-app-{BUILD_VERSION}.js 302")
