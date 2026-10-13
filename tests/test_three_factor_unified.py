@@ -87,6 +87,17 @@ class UnifiedThreeFactorTests(unittest.TestCase):
         v = row["pillarScores"]
         self.assertAlmostEqual(row["score"], row["score"])
 
+    def test_retired_metrics_are_not_computed_or_returned(self):
+        horse = self.race["horses"][0]
+        before = collect_horse_raw_metrics(horse, self.race)
+        self.assertEqual(set(before), {"recentForm", "conditionForm", "conditionRuns", "sample"})
+        for run in horse["recentRaces"] + horse["allPastRuns"]:
+            run["last3fRank"] = 1
+            run["last600Rank"] = 1
+            run["last3fPercentile"] = 1.0
+        after = collect_horse_raw_metrics(horse, self.race)
+        self.assertEqual(before, after)
+
     def test_future_results_and_old_model_do_not_affect_score(self):
         h=self.race["horses"][4]
         before=collect_horse_raw_metrics(h,self.race)
