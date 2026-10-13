@@ -1182,3 +1182,12 @@ html body .smart-shell.smart-home>.smart-main.smart-home-main,
 html.pwa-standalone body .smart-shell.smart-home>.smart-main.smart-home-main{
  padding-top:0!important;
 }
+
+/* Dedicated favorites shortcut and compact saved-races page */
+html body .smart-home .arv-unified-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important}
+html body .smart-home .arv-unified-action{min-width:0!important;padding:4px 2px!important}
+html body .smart-home .arv-unified-action-label{font-size:12px!important;white-space:nowrap!important}
+html body .arv-favorites-page .arv-favorites-home{display:block!important;margin:0!important;padding:4px 0!important;background:#fff!important;box-shadow:none!important}
+html body .arv-favorites-page .arv-favorites-list{gap:5px!important}
+html body .arv-favorites-page .arv-favorites-heading{margin:0 0 7px!important;color:#222!important}
+html body .arv-favorites-page .arv-favorites-empty{padding:20px 10px!important;text-align:center!important;color:#34404a!important}
