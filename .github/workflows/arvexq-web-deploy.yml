@@ -89,6 +89,24 @@ jobs:
           done
           test "$ok" = "1"
           echo "ARVEXQ production verified at $PROD"
+      - name: Verify production home palette CSS matches deployed build
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROD='https://kraizweb1.4b89h4fydd.workers.dev'
+          URL="$PROD/sports/unified-home.css?palette_check=$GITHUB_SHA"
+          curl -fSLsS --retry 6 --retry-delay 3 --max-time 30 -H 'Cache-Control: no-cache' "$URL" -o prod-unified-home.css
+          cmp dist/sports/unified-home.css prod-unified-home.css || {
+            echo '::error::DEPLOYED_HOME_CSS_DIFFERS_FROM_BUILD'
+            exit 1
+          }
+          grep -Fq 'ARVEXQ light theme v4: single final palette' prod-unified-home.css
+          grep -Fq 'background:#fffaf3!important' prod-unified-home.css
+          if grep -Fq 'ARVEXQ daylight warm palette final' prod-unified-home.css; then
+            echo '::error::OLD_DARK_PALETTE_STILL_PRESENT'
+            exit 1
+          fi
+          echo 'PRODUCTION_HOME_PALETTE_CSS_MATCH_OK'
       - name: Verify horse-only routes and removed boat endpoints
         shell: bash
         run: |
