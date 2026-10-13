@@ -304,3 +304,39 @@ html body .smart-home .arv-all-circuit+.arv-all-circuit{margin-top:9px!important
  html body .smart-home .arv-all-race strong{font-size:11px!important}
  html body .smart-home .arv-all-race small{font-size:8px!important}
 }
+
+/* Reference screenshot correction: screenshot dimensions are physical pixels.
+   At iPhone DPR 3 the reference race buttons are ~24 CSS px, not 38. */
+html body .smart-home .arv-all-panel{padding:7px 8px 8px!important}
+html body .smart-home .arv-all-panel .arv-all-title h2{font-size:17px!important;line-height:1.15!important}
+html body .smart-home .arv-all-panel .arv-all-circuit-label{margin:0 0 5px!important;padding:1px 0 3px!important}
+html body .smart-home .arv-all-panel .arv-all-circuit-label b{font-size:12px!important}
+html body .smart-home .arv-all-panel .arv-all-circuit:has(.arv-all-empty) .arv-all-empty{
+  font-size:10px!important;line-height:1.35!important;padding:2px 0!important
+}
+html body .smart-home .arv-all-venue{margin:4px 0 6px!important}
+html body .smart-home .arv-all-venue-head{
+  height:21px!important;min-height:21px!important;max-height:21px!important;
+  margin:0 0 3px!important;padding:0!important
+}
+html body .smart-home .arv-all-venue-head b{font-size:13px!important}
+html body .smart-home .arv-all-venue-head span{font-size:10px!important}
+html body .smart-home .arv-all-go{
+  height:21px!important;min-height:21px!important;max-height:21px!important;
+  padding:2px 7px!important;font-size:9px!important
+}
+html body .smart-home .arv-all-races-grid{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:3px!important
+}
+html body .smart-home .arv-all-race{
+  height:29px!important;min-height:29px!important;max-height:29px!important;
+  padding:1px 7px 1px 1px!important;gap:0!important;border-radius:6px!important
+}
+html body .smart-home .arv-all-race strong{font-size:11px!important;line-height:1.05!important}
+html body .smart-home .arv-all-race small{font-size:9px!important;line-height:1!important}
+html body .smart-home .arv-all-race:not(:disabled)::after{font-size:14px!important;right:2px!important}
+@media(max-width:355px){
+  html body .smart-home .arv-all-race{height:28px!important;min-height:28px!important;max-height:28px!important}
+  html body .smart-home .arv-all-race strong{font-size:10px!important}
+  html body .smart-home .arv-all-race small{font-size:8px!important}
+}
