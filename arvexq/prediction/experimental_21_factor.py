@@ -118,7 +118,7 @@ def scored(h: dict, race: dict) -> dict:
         known = [(w,facts[k]) for k,w in metrics if facts[k] is not None]
         cover = sum(w for w,_ in known)
         axes[name] = {
-            "value": (sum(w*v for w,v in known)/cover if cover >= .60 else None),
+            "value": (sum(w*v for w,v in known)/cover if abs(cover-1.0) < 1e-9 else None),
             "coverage": round(cover, 4),
             "weight": weight,
             "signals": {k: {"value": facts[k], "weight":w} for k,w in metrics},
@@ -127,7 +127,7 @@ def scored(h: dict, race: dict) -> dict:
     included = sum(x["weight"] for x in axes.values() if x["value"] is not None)
     # Avoid presenting an unobserved model fraction as real score.
     return {"version": VERSION, "horseNumber":h.get("horseNumber"),"axes":axes,
-            "score": round(100*total/included, 2) if included == 1 else None,
+            "score": round(100*total, 2) if abs(included-1.0)<1e-9 else None,
             "overallCoverage": round(sum(x["coverage"]*x["weight"] for x in axes.values()),4),
-            "status":"candidate-complete" if included == 1 else "insufficient-evidence",
+            "status":"candidate-complete" if abs(included-1.0)<1e-9 else "insufficient-evidence",
             "preoffRuns":len(runs), "notCalibrated":True}
