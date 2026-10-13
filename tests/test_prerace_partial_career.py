@@ -131,10 +131,10 @@ class PartialCareerSealTests(unittest.TestCase):
                      for i, day in enumerate((2, 7, 12, 17, 22))]
             horse["recentRaces"] = copy.deepcopy(dated)
             horse["allPastRuns"] = copy.deepcopy(dated)
+            audit = horse["_careerHistoryAudit"]
+            audit["reportedStarts"] = 5
+            audit["observedRuns"] = 5
             if horse["horseNumber"] > 4:
-                audit = horse["_careerHistoryAudit"]
-                audit["reportedStarts"] = 5
-                audit["observedRuns"] = 5
                 audit["complete"] = False
         ready = assess_career_readiness(detail)
         self.assertFalse(ready["ready"])
