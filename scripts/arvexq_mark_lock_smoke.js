@@ -12,7 +12,7 @@ const n=(v,d=0)=>v==null||!Number.isFinite(Number(v))?d:Number(v);
 const fn=new Function('localStorage','mins','today','nowMins','n','isScratchHorse','esc','isFinal','isFlash','hasAnyResultData',
   extract('raceMarkClock','predict')+
   extract('validatedHonmeiMetadata','racecardMarkLegend')+
-  'return {raceMarkClock,loadFrozenMarks,applyFrozenMarks};')(
+  'return {raceMarkClock,applyFrozenMarks};')(
     localStorage,t=>Number(t.slice(0,2))*60+Number(t.slice(3)),
     ()=>'2026-10-08',()=>minute,n,h=>!!h.scratched,v=>String(v),
     r=>r?.result?.status==='確定',r=>r?.result?.status==='速報',
@@ -25,10 +25,10 @@ function make(marks){
 }
 const old=make(['◎','○','▲','△']);
 assert.equal(fn.applyFrozenMarks(race,old).markFreeze.source,'live-before-post');
-assert.equal(fn.loadFrozenMarks(race),null,'old v345 local receipt is retired');
+assert.ok(!src.includes('loadFrozenMarks'),'old v345 local receipt is retired');
 minute=20*60+1;
 assert.equal(fn.applyFrozenMarks(race,old).markFreeze.source,'live-before-post');
-assert.equal(fn.loadFrozenMarks(race),null,'no v345 receipt is created');
+assert.ok(!src.includes('loadFrozenMarks'),'no v345 receipt loader exists');
 assert.equal(storage.size,0,'no obsolete mark receipt write');
 const next=make(['△','◎','○','▲']);
 fn.applyFrozenMarks(race,next);

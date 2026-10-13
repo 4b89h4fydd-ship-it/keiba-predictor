@@ -1235,10 +1235,8 @@ function raceMarkClock(r){
     started:resultPublished||!!date&&(date<current||(date===current&&post<9999&&nowMins()>=post)),
     remaining:date===current?post-nowMins():9999};
 }
-// Retired v345 device-only freeze is excluded from current UI.
-// Existing records remain untouched for external audit; new code never writes
-// or reuses them as present-day three-factor forecasts.
-function loadFrozenMarks(r){return null}
+// Retired v345 device-only frozen marks are not loaded or written by this UI.
+// Server-side pre-off receipts remain available for historical audit.
 // Server archive is trusted only with evidence of a genuine pre-off capture.
 function serverFrozenPrediction(r){
   if(!r||!r.id)return null;
@@ -1331,8 +1329,8 @@ function authorizedPreOffMarks(r){
 }
 function immutableArchivedPrediction(r){
   // Does not invoke ability, pace, winner or bet calculation after the off.
-  var lock=authorizedPreOffMarks(r),local=lock?null:loadFrozenMarks(r),
-      saved=lock?lock.horses:(local?local.marks:[]),byNo={},order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
+  var lock=authorizedPreOffMarks(r),
+      saved=lock?lock.horses:[],byNo={},order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
   saved.forEach(function(q){byNo[n(q.horseNumber||q.no,0)]=q});
   var rows=(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).map(function(h){
     var snap=byNo[n(h.horseNumber)]||{},ev=snap.lockedEvaluation||{},
@@ -1366,20 +1364,20 @@ function immutableArchivedPrediction(r){
   });
   return{rows:rows,occ:0,scenarios:[],plans:{},plan:null,coverage:0,
     pressure:0,arrangement:{},profile:{},outcome:null,
-    markFreeze:{source:lock&&lock.version==='arvexq-user-model-mark-revision-v1'?'user-model-revision':(lock&&lock.version==='arvexq-official-mark-revision-v1'?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':(lock?'server-prerace':(local?'local-prepost':'missing-prerace')))),
-      fixedAt:lock?String(lock.revisedAt||lock.fixedAt||lock.sealedAtJst||lock.capturedAtJst||''):(local?local.fixedAt:''),
+    markFreeze:{source:lock&&lock.version==='arvexq-user-model-mark-revision-v1'?'user-model-revision':(lock&&lock.version==='arvexq-official-mark-revision-v1'?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':(lock?'server-prerace':'missing-prerace'))),
+      fixedAt:lock?String(lock.revisedAt||lock.fixedAt||lock.sealedAtJst||lock.capturedAtJst||''):'',
       reason:String((lock&&lock.reason)||'')},
     engineVersion:'arvexq-archived-prerace-readonly-v346'};
 }
 function applyFrozenMarks(r,p){
   if(!r||!p||!Array.isArray(p.rows))return p;
-  var clock=raceMarkClock(r),server=authorizedPreOffMarks(r),record=server?null:loadFrozenMarks(r);
+  var clock=raceMarkClock(r),server=authorizedPreOffMarks(r);
   // Current pre-off marks are always calculated from the freshest race input.
   // Retain the first pre-off server/local receipt for later accuracy audits
   // and any already-fixed bet, but never let the receipt overwrite live marks.
   if(!clock.started){
     p.rows.forEach(function(z){z.markFrozen=false;z.computedLiveMark=String(z.predMark||'')});
-    p.markFreeze={source:'live-before-post',originalPreserved:!!(server||record),
+    p.markFreeze={source:'live-before-post',originalPreserved:!!server,
       reason:'発走前の最新データによるAI評価。保存済み予想・買い目は変更しません。'};
     return p
   }
@@ -1406,22 +1404,6 @@ function applyFrozenMarks(r,p){
     p.markFreeze={source:server.version==='arvexq-user-model-mark-revision-v1'?'user-model-revision':(server.version==='arvexq-official-mark-revision-v1'?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':'server-prerace')),
       fixedAt:server.revisedAt||server.fixedAt||server.sealedAtJst||server.capturedAtJst||'',
       reason:String(server.reason||'')};
-  }else if(record){
-    var byNo={};record.marks.forEach(function(z){byNo[n(z.no)]=z});
-    var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
-    p.rows.forEach(function(z){
-      var no=n(z.horse&&z.horse.horseNumber),snap=byNo[no],scratched=isScratchHorse(z.horse);
-      z.computedLiveMark=String(z.predMark||'');
-      z.predMark=!scratched&&snap?String(snap.mark||''):'';
-      z.predRank=order[z.predMark]||999;
-      var lockedHonmei=validatedHonmeiMetadata(snap);
-      z.honmeiRole=z.predMark==='◎'?lockedHonmei.honmeiRole:'';
-      z.honmeiGrade=z.predMark==='◎'?lockedHonmei.honmeiGrade:'';
-      z.podiumAxisEligible=z.predMark==='◎'&&lockedHonmei.honmeiGrade==='A'&&snap&&snap.podiumAxisEligible===true;
-      z.singleWinSuitable=!scratched&&!!(snap&&snap.single);
-      z.markFrozen=true;
-    });
-    p.markFreeze={source:'local-prepost',fixedAt:record.fixedAt,minutesBeforePost:record.fixedMinutesBeforePost};
   }else if(clock.started){
     var frozen=Array.isArray(r.preRacePrediction&&r.preRacePrediction.horses)?
       r.preRacePrediction.horses:[];
@@ -1777,9 +1759,9 @@ function validatedHonmeiMetadata(source){
 function honmeiBadgeText(x){return '';} // Retain locked A/B/C metadata without displaying the old role badges.
 function honmeiA11yText(x){return x&&x.predMark==='◎'?'◎・勝ち切る能力と3着内の安定性を総合評価した本命（的中保証ではありません）':'';}
 function racecardMarkLegend(r){
-  var server=serverFrozenPrediction(r),archive=window.ARVEXQSavedSnapshot&&window.ARVEXQSavedSnapshot.marks(r),stored=server?null:loadFrozenMarks(r),clock=raceMarkClock(r),
-      status=!clock.started?('発走前の最新AI印（更新あり）'+(server||stored?'／保存済み原本・買い目は維持':'')):
-        (server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':(stored?'端末の発走前印・固定済み':'発走前印の保存なし')));
+  var server=serverFrozenPrediction(r),archive=window.ARVEXQSavedSnapshot&&window.ARVEXQSavedSnapshot.marks(r),clock=raceMarkClock(r),
+      status=!clock.started?('発走前の最新AI印（更新あり）'+(server?'／保存済み原本・買い目は維持':'')):
+        (server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':'発走前印の保存なし'));
   var original=clock.started?authorizedPreOffMarks(r):null,
       axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
   return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 好走根拠が複数揃う場合だけ　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
@@ -2553,7 +2535,7 @@ function smartVenueCards(){
 
 function aiStoredMarks(detail){
   // Only verifiable pre-off snapshots count. Live horse evaluation is not evidence.
-  var server=authorizedPreOffMarks(detail),local=server?null:loadFrozenMarks(detail),saved=[];
+  var server=authorizedPreOffMarks(detail),saved=[];
   if(server)saved=server.horses.map(function(x){return {no:n(x.horseNumber),mark:String(x.mark||''),p:n(x.decisionProbability,0),confidence:n(server.winnerConfidence,0)}});
   else if(local){
     var off=Date.parse(String(detail.date||'')+'T'+String(detail.scheduledStartTime||detail.startTime||'').slice(0,5)+':00+09:00'),at=Date.parse(String(local.fixedAt||''));
