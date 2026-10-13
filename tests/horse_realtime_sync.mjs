@@ -47,13 +47,19 @@ assert.match(styles,/\.arv-all-race\.elapsed,\.arv-all-race\.finished/);
 assert.match(styles,/opacity:\.63/);
 const visual=fs.readFileSync('arvexq/ui/static/sports/unified-home.css','utf8');
 for(const token of [
-  'grid-template-columns:repeat(3,minmax(0,1fr))!important',
+  'grid-template-columns:repeat(6,minmax(0,1fr))!important',
   '.arv-all-race[data-race-state="soon"]',
   '.arv-all-race[data-race-state="running"]',
   '.arv-all-race[data-race-state="elapsed"]',
   '.smart-race-row[data-race-state="running"]',
   '.arv-favorite-home-open[data-race-state="soon"]'
 ])assert.ok(visual.includes(token),'Missing shared horizontal race visual: '+token);
+assert.ok(!visual.includes('grid-template-columns:repeat(3,minmax(0,1fr))!important'),
+  'Old 3-column override must be removed');
+assert.ok(visual.includes('height:46px!important'),'Race buttons must match compact reference height');
+assert.ok(visual.includes('.smart-home .arv-all-venue{') &&
+  visual.includes('background:transparent!important;border:0!important;box-shadow:none!important'),
+  'Separate venue card borders must be removed');
 assert.match(source,/button\.smart-race-row\[data-race-state\]/);
 assert.match(source,/button\.arv-favorite-home-open\[data-race-state\]/);
 console.log('HORSE_RACE_LIVE_JST_ADVANCE_OK');
