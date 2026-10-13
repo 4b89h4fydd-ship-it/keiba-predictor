@@ -25,6 +25,10 @@ assert.equal(state('10:01','東京-02').next,true);
 assert.equal(state('10:11','浦和-01').status,'running');
 assert.equal(state('10:15','浦和-01').status,'elapsed');
 assert.equal(home.labelFor('running'),'進行中');
+assert.equal(home.labelFor('soon'),'まもなく');
+assert.equal(home.labelFor('elapsed'),'結果待ち');
+assert.equal(home.raceStatus('horse',{...rows[0],raceStatus:'確定'},day,at('09:59')),'finished');
+assert.equal(home.raceStatus('horse',{...rows[0],raceStatus:'進行中'},day,at('10:10')),'running');
 assert.equal(state('10:11','浦和-02').next,true);
 assert.equal(state('09:59','浦和-03').status,'cancelled');
 assert.ok(home.liveModel('horse',rows,day,at('23:59')).some(r=>r.status==='elapsed'));
@@ -41,4 +45,15 @@ assert.match(ui,/10000/);
 const styles=fs.readFileSync('arvexq/ui/static/sports/all-races.css','utf8');
 assert.match(styles,/\.arv-all-race\.elapsed,\.arv-all-race\.finished/);
 assert.match(styles,/opacity:\.63/);
+const visual=fs.readFileSync('arvexq/ui/static/sports/unified-home.css','utf8');
+for(const token of [
+  'grid-template-columns:repeat(3,minmax(0,1fr))!important',
+  '.arv-all-race[data-race-state="soon"]',
+  '.arv-all-race[data-race-state="running"]',
+  '.arv-all-race[data-race-state="elapsed"]',
+  '.smart-race-row[data-race-state="running"]',
+  '.arv-favorite-home-open[data-race-state="soon"]'
+])assert.ok(visual.includes(token),'Missing shared horizontal race visual: '+token);
+assert.match(source,/button\.smart-race-row\[data-race-state\]/);
+assert.match(source,/button\.arv-favorite-home-open\[data-race-state\]/);
 console.log('HORSE_RACE_LIVE_JST_ADVANCE_OK');
