@@ -928,16 +928,6 @@ function sparseResetProfile(x,r,q){
   var score=clamp(frontMemoryVacancy*.62+fadeRecovery*.38,0,1);
   return{score:score,frontMemoryVacancy:frontMemoryVacancy,fadeRecovery:fadeRecovery,frontMemory:mem.score,frontMemoryCount:mem.frontCount,lastFrontFade:lastFrontFade,reasons:reasons.slice(0,2)}
 }
-var V207_WINNER_WEIGHTS={p1_saved:.09627194216236537,eval_score:.1679542499142859,race_perf:.1109979898310441,representative:.15169717690190784,distance:.08793497370101384,track:.06426941305845313,going:.036567118849402995,level:.03389237013978389,lap:.017947472883332174,jockey:.04752026893280671,trainer:.06245542349478168,body:.018494658513940915,condition_change:.01366060056696039,early3:.012600191153762295,ten:.015217007009379167,late_role:.044806043242146286,evidence:.017713099644633336};
-function v207Unit(v,d){var x=Number(v);if(!isFinite(x))return d==null?.5:d;if(x>1.5)x/=100;return clamp(x,0,1)}
-function v207Comp(e,names,d){var c=e&&e.components||{},i;for(i=0;i<names.length;i++)if(c[names[i]]!=null)return v207Unit(c[names[i]],d);return d}
-function v207WinnerScoreHorse(h){
-  h=h||{};var e=h.integratedEvaluation||{},pm=h.precomputedMetrics||{},fit=pm.fit||{},st=pm.style||{},samples=Math.max(n(st.samples),n(e.samples)),full=clamp(n(e.dataCompleteness,50)/100,0,1),evidence=clamp(.55*Math.min(1,samples/5)+.45*full,0,1),late=clamp(.42*v207Unit(st.moved3,0)+.32*v207Unit(st.mid,0)+.26*v207Unit(st.close,0),0,1),legacy=v207Unit(e.legacyP1Score!=null?e.legacyP1Score:e.p1Score,.5),f={
-    p1_saved:legacy,eval_score:v207Unit(e.score,.5),race_perf:v207Comp(e,['racePerformance'],.5),representative:v207Comp(e,['representative'],.5),distance:v207Comp(e,['distanceFit'],v207Unit(fit.distance,.5)),track:v207Comp(e,['courseFit'],v207Unit(fit.track,.5)),going:v207Comp(e,['goingFit'],v207Unit(fit.condition,.5)),level:v207Comp(e,['opponentLevelScore'],v207Unit(fit.level,.5)),lap:v207Comp(e,['lapScore'],.5),jockey:v207Comp(e,['jockeyScore','jockeyResults'],.5),trainer:v207Comp(e,['trainerScore','trainerResults'],.5),body:v207Comp(e,['bodyWeightScore'],.5),condition_change:v207Comp(e,['conditionChangeScore'],.5),early3:v207Unit(st.early3,0),ten:v207Unit(st.ten,.5),late_role:late,evidence:evidence
-  },sum=0,k;for(k in V207_WINNER_WEIGHTS)sum+=V207_WINNER_WEIGHTS[k]*f[k];return clamp(sum,0,1)
-}
-function v207UsesWinnerModel(r){return String(r&&r.circuit||'')==='地方'}
-
 // v312 recall guard: one dedicated third-place rescue candidate.
 // This is intentionally circuit-specific and market-independent.  It does NOT
 // widen the winner model; it only protects against the recurring "one horse
