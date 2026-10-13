@@ -1782,8 +1782,17 @@ function racecardMarkLegend(r){
       status=!clock.started?('発走前の最新AI印（更新あり）'+(server||stored?'／保存済み原本・買い目は維持':'')):
         (server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':(stored?'端末の発走前印・固定済み':'発走前印の保存なし')));
   var original=clock.started?authorizedPreOffMarks(r):null,
-      axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
-  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 好走根拠が複数揃う場合だけ　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
+      axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'',
+      frozenTicket=null;
+  // Legacy tickets are immutable. Their horse combinations must never be
+  // presented as if today's live three-factor marks generated them.
+  try{frozenTicket=frozenAiBetForRace(r)}catch(e){}
+  var previousMethod=!!(frozenTicket&&frozenTicket.fixedAt&&
+    !/arvexq-true-run-pure-sectional-v[12]/.test(String(frozenTicket.engineVersion||frozenTicket.betStrategy||''))),
+      distinctNote=previousMethod?
+        '<div class="arv-race-mark-source-note">この出走表は'+(clock.started?'発走前に保存した印':'現在のAI印')+
+        'です。買い目は別時点の旧方式で保存済みのため、買い目の馬番と印が一致しない場合があります。保存済み買い目は変更しません。</div>':'';
+  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 好走根拠が複数揃う場合だけ　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>'+distinctNote;
 }
 function racecardEntryRow(r,h,x){
   var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),

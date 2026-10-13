@@ -17,13 +17,23 @@ function render(r,p,deps){
   // under the pre-v346 engine. Never relabel historical "通常"/"押さえ"
   // as a v346 main/challenge/insurance decision after the off.
   if(plan.fixedAt&&!/arvexq-true-run-pure-sectional-v[12]/.test(String(plan.engineVersion||plan.betStrategy||''))){
+    var localSavedTime=String(plan.fixedAt||'');
+    // Always show JST for a Japanese pre-off ticket, not a raw UTC string.
+    try{
+      var moment=new Date(localSavedTime);
+      if(Number.isFinite(moment.getTime()))localSavedTime=
+        new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',
+          year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',
+          minute:'2-digit',hour12:false}).format(moment)+' JST';
+    }catch(e){}
     var legacyItems=(plan.items||[]).map(function(z){
       return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'
         +esc(z.level||'旧方式')+'｜'+esc(z.kind||'券種')+'</b><span>'+esc(z.points||((z.combos||[]).length))+'点</span></div>'
         +'<strong>'+esc(z.combo||betComboText(z.kind,z.combos||[]))+'</strong></div>'
     }).join('');
     return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">発走前保存済み買い目（旧方式）</div>'
-      +'<p class="arv-three-fixed">保存 '+esc(plan.fixedAt)+'</p>'
+      +'<p class="arv-three-fixed">保存 '+esc(localSavedTime)+'</p>'
+      +'<p class="arv-three-provisional"><strong>印と買い目の判定時点が異なります。</strong> この買い目は朝に旧方式で固定されました。現在の出走表の◎○▲△は最新方式で別途評価されるため、無印の馬が保存買い目に入る場合があります。買い目に合わせて印を後付けしません。</p>'
       +(legacyItems||'<p class="arv-three-skip">'+esc(plan.decision==='未取得'?'発走前の買い目保存に失敗。予想・購入は未取得です。':plan.reason||'当時の買い目は見送りでした。')+'</p>')
       +'<p class="arv-three-provisional">旧方式で保存された買い目は改変しません。新しい3方式への事後変換・的中結果を見た後の追加は禁止しています。</p>'
       +(plan.postLockNotice?'<p class="ai-bet-lock-notice">'+esc(plan.postLockNotice)+'</p>':'')
