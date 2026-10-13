@@ -1,0 +1,19 @@
+name: Sectional Coverage by Circuit
+on:
+  push:
+    branches: [codex/arvexq-sectional-postfix-audit]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: PYTHONPATH=. python scripts/arvexq_sectional_fix_measurement.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: circuit-sectional-coverage
+          path: research-output/sectional-availability.json

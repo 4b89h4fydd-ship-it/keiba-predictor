@@ -19,17 +19,21 @@ def audit():
         if hashlib.sha256(raw).hexdigest()!=obj["sha256"]:
             raise ValueError("hash mismatch")
         race=json.loads(raw)
+        circuit=str(race.get("circuit") or "unknown")
         totals["races"]+=1
+        totals[circuit+"Races"]+=1
         for horse in race.get("horses") or []:
             if not isinstance(horse,dict):
                 continue
             totals["horses"]+=1
+            totals[circuit+"Horses"]+=1
             runs=observed_runs(horse,race,limit=5)
             totals["runs"]+=len(runs)
             for run in runs:
                 n=normalize_run(run)
                 if n.get("last3fRank") is not None:
                     totals["sectionalRankAvailable"]+=1
+                    totals[circuit+"SectionalRankAvailable"]+=1
                 if n.get("last3fPercentile") is not None:
                     totals["sectionalPercentileAvailable"]+=1
                 if n.get("margin") is not None:
