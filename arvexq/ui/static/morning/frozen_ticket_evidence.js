@@ -11,7 +11,7 @@ function num(v){return Number.isInteger(Number(v))&&Number(v)>0?Number(v):0}
 function capture(r,p,plan,selection){
  if(!r||!r.id||!r.date||!p||!Array.isArray(p.rows)||
     !plan||!plan.betInputGate||plan.betInputGate.ready!==true||
-    !['通常買い','強く買う'].includes(plan.decision)||
+    !['購入候補','通常買い','強く買う'].includes(plan.decision)||
     !selection||selection.selected!==true)return null;
  const original=p.rows.filter(x=>x&&x.horse&&num(x.horse.horseNumber));
  const known=new Set(),marks=[];

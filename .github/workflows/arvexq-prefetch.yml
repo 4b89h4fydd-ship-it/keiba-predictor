@@ -362,6 +362,12 @@ jobs:
           fi
           jq '{races,analysis_ready,analysis_errors}' prefetch-report.json
 
+      - name: Calibrate ticket hit rates from sealed previous-day results
+        run: |
+          python scripts/arvexq_empirical_ticket_calibration.py \
+            --date "$TARGET_DATE" --api-base "$CLOUDFLARE_API_BASE"
+          echo "Calibration based only on pre-off saved model-v2 tickets and official results"
+
       - name: Freeze morning selected and special predictions for all races
         run: |
           # The same UI analysis logic runs headlessly on the full prepared day.
@@ -398,7 +404,9 @@ jobs:
           git checkout -B publish-morning-picks origin/main
           mkdir -p "$(dirname "$FILE")"
           cp /tmp/arvexq-morning-picks.json "$FILE"
-          git add "$FILE"
+          git add "$FILE" \
+            arvexq/ui/static/morning/hit_rate_records.json \
+            arvexq/ui/static/morning/hit_rate_calibration.json
           git commit -m "data: freeze morning picks for $TARGET_DATE"
           done_push=0
           for try in 1 2 3 4 5; do

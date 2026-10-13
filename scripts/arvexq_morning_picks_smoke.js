@@ -22,6 +22,7 @@ const receipt={version:win.ARVEXQMorningEvidence.VERSION,raceId:'one',raceDate:'
  ticketKinds:['ワイド'],modelVersion:'test-frozen-preoff'};
 const state={races:[
   {id:'one',date:'2026-10-10',circuit:'中央',track:'東京',raceNumber:1,startTime:'10:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:true,morningSelectedScore:86,morningSpecial:false,
+     morningSelectionModelVersion:'arvexq-empirical-ticket-hit-v1',
      morningPrimaryType:'的中重視型',morningSelectedTypes:['的中重視型'],morningSelectionReason:'朝の固定分類',morningTicketKinds:['ワイド']},
   {id:'old',date:'2026-10-10',circuit:'地方',track:'大井',raceNumber:2,startTime:'11:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:true,morningSelectedScore:87,morningSpecial:false},
   {id:'two',date:'2026-10-10',circuit:'地方',track:'高知',raceNumber:12,startTime:'20:30',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:false,morningSelectedScore:0,morningSpecial:true},
@@ -33,7 +34,7 @@ const api=helper(state,(v,d=0)=>Number.isFinite(Number(v))?Number(v):d,(a,b)=>a.
 assert(api.morningPickReady());
 assert.deepEqual(api.selectedRaceCandidates().map(x=>x.race.id),['one']);
 state.races[0].morningSelectedScore=79;
-assert.equal(api.selectedRaceCandidates().length,0,'archived below-80 races must be hidden from elite list');
+assert.equal(api.selectedRaceCandidates().length,1,'ability points do not decide archived hit-qualified selection');
 state.races[0].morningSelectedScore=86;
 assert.equal(api.selectedRaceCandidates()[0].selection.primaryType,'的中重視型');
 assert(!src.includes('function legacyMorningSelectionCandidates('),'old unverified selection panel removed');

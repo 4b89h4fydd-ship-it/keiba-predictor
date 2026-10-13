@@ -1,0 +1,12 @@
+{
+  "version": "arvexq-empirical-ticket-hit-v1",
+  "modelVersion": "arvexq-true-run-pure-sectional-v2",
+  "asOfDate": "2026-10-13",
+  "definition": "one main ticket hits if any combo wins",
+  "minimumSample": 30,
+  "minimumObservedHitRate": 0.8,
+  "minimumWilsonLower95": 0.65,
+  "totalVerifiedRaces": 0,
+  "buckets": {},
+  "status": "insufficient-evidence"
+}
