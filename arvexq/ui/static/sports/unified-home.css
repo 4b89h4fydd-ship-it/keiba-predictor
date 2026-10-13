@@ -1036,3 +1036,17 @@ html body .smart-shell.smart-home>.smart-main.smart-home-main{
   top:56.25vw!important;
  }
 }
+
+/* iOS regression: sticky computed successfully but did not hold while scrolling.
+   Use a viewport-fixed brand header and an equal-height in-flow clearance. */
+html body .smart-shell.smart-home>.arv-unified-hero{
+ position:fixed!important;top:0!important;
+ left:50%!important;transform:translateX(-50%)!important;
+ width:100%!important;max-width:920px!important;
+ height:min(56.25vw,517.5px)!important;aspect-ratio:auto!important;
+ z-index:180!important;
+}
+html body .smart-shell.smart-home>.smart-main.smart-home-main,
+html.pwa-standalone body .smart-shell.smart-home>.smart-main.smart-home-main{
+ padding-top:min(56.25vw,517.5px)!important;
+}
