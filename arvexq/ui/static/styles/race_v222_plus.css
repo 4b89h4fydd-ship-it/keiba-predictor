@@ -2278,3 +2278,47 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
 .rc-racecard-v336 .rc-horse-name .rc-horse-title{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important}
 .rc-racecard-v336 .rc-horse-name .rc-honmei-role{flex:0 0 auto!important;max-width:55%!important;font-size:10px!important;line-height:1.2!important;margin-left:4px!important;white-space:normal!important;color:#c8edff!important;font-weight:800!important}
 .ai-mark-name .ai-honmei-role{display:block!important;color:#8bd2ff!important;font-size:12px!important;font-weight:800!important;white-space:normal!important;line-height:1.4!important}
+
+/* Race favorites: display-only, independently saved on each iPhone. */
+.arv-favorite-star{
+  appearance:none!important;-webkit-appearance:none!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 38px!important;width:38px!important;height:38px!important;min-width:38px!important;
+  padding:0!important;margin:0!important;border:1px solid #506477!important;
+  border-radius:10px!important;background:#192b3a!important;color:#aab7c4!important;
+  font-size:25px!important;line-height:1!important;font-weight:750!important;
+  touch-action:manipulation;cursor:pointer;box-sizing:border-box!important
+}
+.arv-favorite-star.active{color:#efc960!important;background:#383223!important;border-color:#aa8e4c!important}
+.arv-favorite-title-row{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important;max-width:100%!important}
+.arv-favorite-title-row h1{min-width:0!important;flex:1 1 auto!important}
+.arv-detail-favorite-star{margin-left:auto!important}
+.arv-favorite-venue-item{position:relative!important;width:100%!important;min-width:0!important}
+.arv-favorite-venue-item>.smart-race-row{padding-right:48px!important}
+.arv-venue-favorite-star{
+  position:absolute!important;right:5px!important;top:50%!important;transform:translateY(-50%)!important;
+  z-index:2!important;flex:0 0 34px!important;width:34px!important;min-width:34px!important;
+  height:34px!important;font-size:22px!important
+}
+.arv-favorites-home{margin:0 0 12px!important;border:1px solid #445866!important;border-radius:12px!important;background:#12202b!important;overflow:hidden!important}
+.arv-favorites-heading{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:10px 12px!important;border-bottom:1px solid #374a59!important;color:#f3e4bf!important;font-size:14px!important}
+.arv-favorites-heading span{color:#a7bac6!important;font-size:12px!important}
+.arv-favorites-list{display:flex!important;flex-direction:column!important}
+.arv-favorite-home-row{display:flex!important;align-items:stretch!important;min-width:0!important;min-height:57px!important;border-bottom:1px solid #344652!important}
+.arv-favorite-home-row:last-child{border-bottom:0!important}
+.arv-favorite-home-open{
+  display:flex!important;align-items:center!important;gap:8px!important;
+  min-width:0!important;flex:1 1 auto!important;padding:8px 10px!important;
+  color:#e7edf2!important;background:transparent!important;border:0!important;text-align:left!important
+}
+.arv-favorite-race-label{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;gap:3px!important;min-width:0!important}
+.arv-favorite-race-label strong{font-size:14px!important;color:#e4ebf0!important}
+.arv-favorite-race-label small{font-size:11px!important;color:#9fb3c1!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.arv-favorite-home-open time{white-space:nowrap!important;font-size:12px!important;color:#ddc18b!important}
+.arv-home-favorite-star{align-self:center!important;margin:0 8px 0 0!important;flex-basis:34px!important;width:34px!important;min-width:34px!important;height:34px!important;font-size:22px!important}
+@media(max-width:380px){
+ .arv-favorite-star{flex-basis:34px!important;width:34px!important;min-width:34px!important;height:34px!important}
+ .arv-favorite-title-row{gap:4px!important}
+ .arv-favorite-home-open{gap:5px!important;padding:7px!important}
+ .arv-favorite-home-open time{font-size:11px!important}
+}
