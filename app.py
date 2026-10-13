@@ -59,7 +59,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 
-app = FastAPI(title="ARVEXQ", version="14.25-v329-racecard-stable")
+app = FastAPI(title="ARVEXQ", version="14.26-v330-racecard-stable")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-true-run-pure-sectional-v2"
@@ -183,7 +183,7 @@ MANIFEST = r'''{
   "theme_color":"#0b1220",
   "lang":"ja"
 }'''
-SW = r'''const RESET_TAG="arvexq-reset-v329";
+SW = r'''const RESET_TAG="arvexq-reset-v330";
 self.addEventListener("install",function(event){event.waitUntil(self.skipWaiting())});
 self.addEventListener("activate",function(event){
   event.waitUntil(caches.keys().then(function(keys){

@@ -23,7 +23,7 @@ class VersionedAssetCacheTest(unittest.TestCase):
             self.assertIn(prefix+"\n  Cache-Control: public, max-age=31536000, immutable",headers)
         self.assertIn("/racecards/*\n  Cache-Control: no-cache, must-revalidate",headers)
         self.assertIn("/sports/*\n  Cache-Control: no-cache, must-revalidate",headers)
-        self.assertIn("/app-v329.js\n  Cache-Control: no-cache, must-revalidate",headers)
+        self.assertRegex(headers, r"/app-v\d+\.js\n  Cache-Control: no-cache, must-revalidate")
 
 
 if __name__=="__main__":
