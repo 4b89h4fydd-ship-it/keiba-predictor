@@ -1050,3 +1050,34 @@ html body .smart-shell.smart-home>.smart-main.smart-home-main,
 html.pwa-standalone body .smart-shell.smart-home>.smart-main.smart-home-main{
  padding-top:min(56.25vw,517.5px)!important;
 }
+
+/* Plain white, unpinned home. Brand hero is no longer rendered by app.js. */
+html body,html body .smart-shell,html body .smart-shell.smart-home,
+html body .smart-shell.smart-home>.smart-main.smart-home-main,
+html body .smart-shell.smart-home .arv-unified-body{
+ background:#fff!important;color:#242b30!important;
+}
+html body .smart-shell.smart-home>.smart-main.smart-home-main,
+html.pwa-standalone body .smart-shell.smart-home>.smart-main.smart-home-main{
+ padding-top:0!important;margin-top:0!important;
+}
+html body .smart-shell.smart-home .arv-unified-body>.arv-unified-date{
+ position:relative!important;top:auto!important;z-index:auto!important;
+ background:#fff!important;border:1px solid #d6dce0!important;
+ border-radius:6px!important;box-shadow:none!important;color:#252c31!important;
+}
+html body .smart-shell.smart-home .arv-unified-body>.arv-unified-date *{
+ color:#252c31!important;
+}
+html body .smart-shell.smart-home .arv-unified-action,
+html body .smart-shell.smart-home .arv-all-race,
+html body .smart-shell.smart-home .arv-all-venue,
+html body .smart-shell.smart-home .arv-all-panel,
+html body .smart-shell.smart-home .arv-favorites-home{
+ box-shadow:none!important;
+}
+html body .smart-home-subpage,
+html body .smart-venue-page,
+html body .smart-venue-page .smart-main{
+ background:#fff!important;
+}
