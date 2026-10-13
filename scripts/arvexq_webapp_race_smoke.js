@@ -9,7 +9,7 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
 // otherwise trigger a deliberate first-visit redirect in WebKit.
 const fs = require('node:fs');
 const html = fs.readFileSync('arvexq/ui/static/index.html','utf8');
-const markerMatch = html.match(/var tag="(arvexq-hard-reset-[^"]+)"/);
+const markerMatch = html.match(/var tag="(arvexq-(?:hard-reset|horse-only-reset)-[^"]+)"/);
 if (!markerMatch) throw new Error('index.html hard-reset marker not found');
 const resetMarker = markerMatch[1];
 const swReloadMarker = 'v329-racecard-stable-20261007';
