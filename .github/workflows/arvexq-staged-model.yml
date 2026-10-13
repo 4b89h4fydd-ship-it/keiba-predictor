@@ -27,5 +27,5 @@ jobs:
       - run: node scripts/arvexq_three_factor_parity_smoke.js
       - run: python -m unittest discover -s tests -p test_prepost_mark_consistency.py -v
       - run: python scripts/arvexq_preoff_snapshot_inventory.py
-      - run: python -m scripts.arvexq_pr112_retrospective_validation
+      - run: python -m scripts.arvexq_pr112_retrospective_execution
       - run: python -m unittest discover -s tests -p 'test_*.py' -q
