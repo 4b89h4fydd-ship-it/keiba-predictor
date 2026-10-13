@@ -2273,3 +2273,8 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
     font-size:8px!important;letter-spacing:-1px!important;padding:1px 0!important;
   }
 }
+
+/* Explicit pre-off role labels: preserve the name's ellipsis but never hide ◎【単】/◎【軸】. */
+.rc-racecard-v336 .rc-horse-name .rc-horse-title{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important}
+.rc-racecard-v336 .rc-horse-name .rc-honmei-role{flex:0 0 auto!important;max-width:55%!important;font-size:10px!important;line-height:1.2!important;margin-left:4px!important;white-space:normal!important;color:#c8edff!important;font-weight:800!important}
+.ai-mark-name .ai-honmei-role{display:block!important;color:#8bd2ff!important;font-size:12px!important;font-weight:800!important;white-space:normal!important;line-height:1.4!important}
