@@ -1266,3 +1266,44 @@ html body .smart-race-page .smart-race-tabs button.active,
 html body .smart-race-page .smart-race-tabs button[aria-selected="true"]{
  background:#e4e9ec!important;color:#18242d!important;border-bottom:2px solid #576d79!important;
 }
+
+/* Mobile race detail legibility: no dark islands or pale text on white */
+html body .smart-shell:has(.smart-race-page) .smart-race-topbar,
+html body .smart-shell:has(.smart-race-page) .smart-race-topbar button,
+html body .smart-race-page .smart-race-tabs,
+html body .smart-race-page .smart-race-tabs button{
+ background:#fff!important;color:#1c252b!important;border-color:#cbd3d8!important;
+ box-shadow:none!important;text-shadow:none!important;
+}
+html body .smart-shell:has(.smart-race-page) .smart-race-topbar *{
+ color:#1c252b!important;opacity:1!important;
+}
+html body .smart-race-page .smart-race-tabs button.active{
+ background:#e9edf0!important;color:#141e24!important;border-bottom:2px solid #52636f!important;
+}
+html body .smart-race-page .racecard-row,
+html body .smart-race-page .racecard-row .rc-v336-info,
+html body .smart-race-page .racecard-row .rc-horse-main{
+ background:#fff!important;
+}
+html body .smart-race-page .racecard-row .rc-horse-title,
+html body .smart-race-page .racecard-row .rc-sexage,
+html body .smart-race-page .racecard-row .carry,
+html body .smart-race-page .racecard-row .jockey,
+html body .smart-race-page .racecard-row .rc-v339-weight,
+html body .smart-race-page .racecard-row .rc-weight-delta,
+html body .smart-race-page .racecard-row .rc-v336-odds .pop{
+ color:#1c252b!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-race-page .racecard-row .rc-v339-weight b{color:#29353c!important}
+html body .smart-race-page .racecard-mark-legend,
+html body .smart-race-page .racecard-mark-legend :not(.rc-ai-mark),
+html body .smart-race-page .rc-mark-legend,
+html body .smart-race-page .rc-mark-legend :not(.rc-ai-mark){
+ color:#26343b!important;opacity:1!important;
+}
+html body .smart-race-page .smart-race-head .smart-circuit-chip{
+ background:#f0f3f5!important;color:#24333b!important;border-color:#b5c3ca!important;
+}
+html body .smart-race-page .smart-race-head{padding:7px!important}
+html body .smart-race-page .racecard-row{margin-bottom:3px!important}
