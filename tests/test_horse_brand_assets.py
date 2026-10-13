@@ -11,8 +11,8 @@ class HorseBrandAssetsTest(unittest.TestCase):
         self.assertTrue((STATIC/'arvexq-icon-source-192.png').read_bytes().startswith(bytes([137,80,78,71])))
         self.assertTrue((STATIC/'arvexq-icon-source-512.png').read_bytes().startswith(bytes([137,80,78,71])))
         shell=(STATIC/'index.html').read_text(encoding='utf-8')
-        self.assertIn('manifest-arvexq-v360.webmanifest',shell)
-        self.assertIn('arvexq-touch-v360.png',shell)
+        self.assertIn('manifest-arvexq-v361.webmanifest',shell)
+        self.assertIn('arvexq-touch-v361.png',shell)
         self.assertNotIn('arvexq-sport-nav',shell)
         self.assertNotIn('/kyotei/',shell)
         self.assertNotIn('/sports/switch.css',shell)
@@ -27,9 +27,12 @@ class HorseBrandAssetsTest(unittest.TestCase):
         self.assertFalse((dist/'kyotei').exists())
         self.assertFalse((dist/'sports'/'boat-app').exists())
         self.assertFalse((dist/'sports'/'switch.css').exists())
-        self.assertEqual((dist/'arvexq-racing-hero.webp').read_bytes(),(STATIC/'cinematic-hero-webp.webp').read_bytes())
-        for name in ('arvexq-touch-v360.png','arvexq-icon-v360-192.png','arvexq-icon-v360-512.png','manifest-arvexq-v360.webmanifest'):
+        self.assertEqual((dist/'arvexq-racing-hero.webp').read_bytes(),(STATIC/'arvexq-horse-hero-v361.webp').read_bytes())
+        for name in ('arvexq-touch-v361.png','arvexq-icon-v361-192.png','arvexq-icon-v361-512.png','manifest-arvexq-v361.webmanifest'):
             self.assertTrue((dist/name).is_file(),name)
+        self.assertIn('arvexq-horse-hero-v361.webp', str(STATIC / 'arvexq-horse-hero-v361.webp'))
+        for source,output in [('arvexq-horse-icon-v361-192.png','arvexq-icon-v361-192.png'),('arvexq-horse-icon-v361-512.png','arvexq-icon-v361-512.png'),('arvexq-horse-touch-v361.png','arvexq-touch-v361.png')]:
+            self.assertEqual((STATIC/source).read_bytes(),(dist/output).read_bytes())
         self.assertTrue((dist/'keiba'/'index.html').is_file())
         self.assertFalse((dist/'sports'/'arvexq-unified-hero.webp').exists())
 if __name__=='__main__':
