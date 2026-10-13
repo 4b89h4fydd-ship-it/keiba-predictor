@@ -13,7 +13,7 @@ def _build_saved_sources(static: Path, dist: Path):
     if not directory.is_dir():
         return
     target = dist / 'odds-sources'
-    target.mkdir(exist_ok=True)
+    target.mkdir(parents=True, exist_ok=True)
     for path in directory.glob('????-??-??.json'):
         manifest = json.loads(path.read_text())
         if manifest.get('version') != 'arvexq-saved-snapshots-v1':
@@ -36,7 +36,7 @@ def _build_saved_sources(static: Path, dist: Path):
             if acquired:backups[rid] = acquired
             races[rid]['horses'] = [{'horseNumber': h['horseNumber'], 'name': h['name']} for h in d['horses']]
         backup_target = dist / 'odds-backups'
-        backup_target.mkdir(exist_ok=True)
+        backup_target.mkdir(parents=True, exist_ok=True)
         (backup_target / path.name).write_text(json.dumps({'version':'arvexq-saved-actual-odds-v1','date':manifest['date'],'races':backups},ensure_ascii=False,separators=(',', ':')),encoding='utf-8')
         (target / path.name).write_text(json.dumps({'version':'arvexq-odds-sources-v1',
             'date':manifest['date'],'races':races}, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
