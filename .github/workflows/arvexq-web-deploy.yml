@@ -146,6 +146,45 @@ jobs:
           print("PRODUCTION_RACECARD_BACKUP_OK",date,"races",source["raceCount"],
                 "horses",sum(len(r["horses"]) for r in source["races"]))
           PY
+      - name: Verify deployed official-odds roster manifest matches the build
+        shell: bash
+        run: |
+          DAY="$(TZ=Asia/Tokyo date +%F)"
+          CARD="dist/racecards/$DAY.json"
+          SOURCE="dist/odds-sources/$DAY.json"
+          if [ ! -s "$CARD" ]; then
+            echo "No verified dated racecard in this build; odds manifest check not applicable"
+            exit 0
+          fi
+          test -s "$SOURCE" || { echo "::error::ODDS_SOURCE_MANIFEST_MISSING"; exit 1; }
+          URL="https://kraizweb1.4b89h4fydd.workers.dev/odds-sources/$DAY.json?ci=$GITHUB_SHA"
+          curl -fsS --retry 3 --retry-delay 2 --max-time 30 \
+            -H 'cache-control: no-cache' "$URL" -o production-odds-sources.json
+          python - <<'PY'
+          import json
+          from datetime import datetime
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+          day=datetime.now(ZoneInfo('Asia/Tokyo')).date().isoformat()
+          entry=json.loads((Path('dist/racecards')/(day+'.json')).read_text(encoding='utf-8'))
+          built=json.loads((Path('dist/odds-sources')/(day+'.json')).read_text(encoding='utf-8'))
+          public=json.loads(Path('production-odds-sources.json').read_text(encoding='utf-8'))
+          if built != public:
+              raise SystemExit('PRODUCTION_ODDS_SOURCE_MISMATCH')
+          if built.get('version') != 'arvexq-odds-sources-v1' or built.get('date') != day:
+              raise SystemExit('PRODUCTION_ODDS_SOURCE_INVALID_VERSION')
+          actual=built.get('races') or {}
+          ids={r['id'] for r in entry['races']}
+          if len(ids) != entry['raceCount'] or not ids.issubset(set(actual)):
+              raise SystemExit('PRODUCTION_ODDS_SOURCE_COVERAGE_MISMATCH')
+          for race_id in ids:
+              row=actual[race_id]
+              if not (row.get('sourceSnapshotSha256') or row.get('sourceRacecardSha256')):
+                  raise SystemExit('PRODUCTION_ODDS_SOURCE_PROVENANCE_MISSING')
+              if not row.get('horses'):
+                  raise SystemExit('PRODUCTION_ODDS_SOURCE_RUNNERS_MISSING')
+          print('PRODUCTION_ODDS_SOURCE_MANIFEST_OK',day,'races',len(ids))
+          PY
       - name: Verify immutable morning pick archive from production
         shell: bash
         run: |
