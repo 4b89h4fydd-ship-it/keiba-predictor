@@ -1,0 +1,30 @@
+name: Sealed Conditional Challenger
+on:
+  push:
+    branches:
+      - codex/arvexq-frozen-rank-challenger-20261014
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Independent sealed-only regression
+        run: python -m unittest discover -s tests -p test_sealed_conditional_challenger.py -v
+      - name: Run research on verified pre-off locks and official results
+        run: |
+          mkdir -p research-output
+          PYTHONPATH=. python scripts/arvexq_sealed_conditional_challenger.py --start 2026-10-07 --end 2026-10-13 --out research-output/sealed-conditional-comparison.json
+      - name: Archive actual results, including blocked or insufficient cases
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sealed-conditional-comparison
+          path: research-output/sealed-conditional-comparison.json
+          if-no-files-found: warn
