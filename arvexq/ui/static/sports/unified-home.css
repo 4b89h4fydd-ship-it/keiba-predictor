@@ -1191,3 +1191,78 @@ html body .arv-favorites-page .arv-favorites-home{display:block!important;margin
 html body .arv-favorites-page .arv-favorites-list{gap:5px!important}
 html body .arv-favorites-page .arv-favorites-heading{margin:0 0 7px!important;color:#222!important}
 html body .arv-favorites-page .arv-favorites-empty{padding:20px 10px!important;text-align:center!important;color:#34404a!important}
+
+/* Race detail: consistent light surface, readable text and condensed layout.
+   Preserve jockey silks/frame colors and AI marks. */
+html body .smart-shell:has(.smart-race-page),
+html body .smart-shell:has(.smart-race-page) .smart-main,
+html body .smart-shell:has(.smart-race-page) .smart-race-topbar,
+html body .smart-race-page,
+html body .smart-race-page .card,
+html body .smart-race-page .accordion-panel,
+html body .smart-race-page .racecard-table,
+html body .smart-race-page .racecard-row,
+html body .smart-race-page .rc-v336-info,
+html body .smart-race-page .rc-horse-main,
+html body .smart-race-page .rc-v339-weight,
+html body .smart-race-page .rc-v336-odds,
+html body .smart-race-page .rc-v336-mark,
+html body .smart-race-page .smart-race-head,
+html body .smart-race-page .smart-race-tabs,
+html body .smart-race-page .smart-race-head-layout{
+ background:#fff!important;box-shadow:none!important;
+}
+html body .smart-shell:has(.smart-race-page) .smart-race-topbar,
+html body .smart-shell:has(.smart-race-page) .smart-race-topbar *{
+ color:#222b31!important;text-shadow:none!important;
+}
+html body .smart-race-page .smart-race-head,
+html body .smart-race-page .card{border:1px solid #e1e5e7!important;border-radius:5px!important}
+html body .smart-race-page .smart-race-head *:not(.smart-circuit-chip):not(.smart-inline-result):not(.smart-inline-result *),
+html body .smart-race-page .rc-horse-main .rc-horse-title,
+html body .smart-race-page .rc-v336-meta *,
+html body .smart-race-page .rc-v339-weight *,
+html body .smart-race-page .rc-v336-odds .pop{
+ color:#263139!important;text-shadow:none!important;
+}
+html body .smart-race-page .smart-race-head .arv-mark-fix-status,
+html body .smart-race-page .smart-race-head .smart-race-meta{color:#43515a!important}
+html body .smart-race-page .smart-race-result-side time{
+ color:#25303a!important;opacity:1!important;font-weight:850!important;
+}
+html body .smart-race-page .smart-inline-result,
+html body .smart-race-page .smart-race-result-side .smart-inline-result{
+ background:#f3f5f6!important;border:1px solid #aebcc4!important;color:#202b33!important;
+}
+html body .smart-race-page .smart-inline-result *{
+ color:#202b33!important;opacity:1!important;
+}
+html body .smart-race-page .racecard-row{
+ border:1px solid #d8dfe3!important;border-radius:4px!important;
+ margin:0 0 4px!important;min-height:62px!important;
+}
+html body .smart-race-page .rc-v336-info,
+html body .smart-race-page .rc-v339-weight,
+html body .smart-race-page .rc-v336-odds{
+ border-color:#dbe1e4!important;
+}
+html body .smart-race-page .rc-horse-title{color:#1d313e!important;font-weight:850!important}
+html body .smart-race-page .rc-v336-odds .odd:not(.single){color:#1c2931!important}
+html body .smart-race-page .rc-v336-odds .odd.single{color:#cc3344!important}
+html body .smart-race-page .rc-v336-meta *{font-size:12px!important}
+html body .smart-race-page .racecard-table{padding:0!important;margin:4px 0!important}
+html body .smart-race-page .racecard-mark-legend,
+html body .smart-race-page .diagnosis-refresh-note{margin:4px 0!important}
+html body .smart-race-page .diagnosis-refresh-note{
+ background:#f2f4f5!important;color:#26343c!important;border:1px solid #d5dde2!important;
+}
+html body .smart-race-page .diagnosis-refresh-note *{color:#26343c!important}
+html body .smart-race-page .card>h2{margin:0 0 5px!important;color:#222b31!important}
+html body .smart-race-page .smart-race-tabs button{
+ background:#f5f6f7!important;color:#243039!important;border:1px solid #dce2e5!important;
+ box-shadow:none!important;
+}
+html body .smart-race-page .smart-race-tabs button.active,
+html body .smart-race-page .smart-race-tabs button[aria-selected="true"]{
+ background:#e4e9ec!important;color:#18242d!important;border-bottom:2px solid #576d79!important;
+}
