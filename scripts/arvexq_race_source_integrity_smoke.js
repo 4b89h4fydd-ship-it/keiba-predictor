@@ -47,7 +47,7 @@ assert.deepEqual(counts('special'),{central:1,local:2});
 const rowStart=src.indexOf('function racecardEntryRow(');
 const rowEnd=src.indexOf('function morningSavedMarkRows(',rowStart);
 assert(rowStart>=0&&rowEnd>rowStart,'racecardEntryRow is required to show runners');
-assert.equal((src.match(/function racecardEntryRow\\(/g)||[]).length,1,'single renderer authority');
+assert.equal((src.match(/function racecardEntryRow\(/g)||[]).length,1,'single renderer authority');
 const renderRunner=new Function(
   'isScratchHorse','n','horseDisplayName','clamp',
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight',
@@ -67,8 +67,8 @@ assert.match(runnerHtml,/racecard-row/);
 assert.match(runnerHtml,/サンプル号/);
 assert.match(runnerHtml,/data-horse-open="7"/);
 assert.match(runnerHtml,/data-ai-mark="◎"/);
-assert.match(src,/function minimalRacecardPanel\\(/);
-assert.match(src,/function runnerStyleSection\\(/);
+assert.match(src,/function minimalRacecardPanel\(/);
+assert.match(src,/function runnerStyleSection\(/);
 console.log('ARVEXQ_SINGLE_SOURCE_RACE_OPEN_AND_PERSISTENT_ALERT_OK');
 
 const home=fs.readFileSync('arvexq/ui/static/sports/unified-home.js','utf8');
