@@ -52,7 +52,7 @@ def _build_verified_racecard_sources(static: Path, dist: Path):
     if not directory.is_dir():
         return
     target = dist / "odds-sources"
-    target.mkdir(exist_ok=True)
+    target.mkdir(parents=True, exist_ok=True)
     for path in sorted(directory.glob("????-??-??.json")):
         raw = path.read_bytes()
         day = path.stem
