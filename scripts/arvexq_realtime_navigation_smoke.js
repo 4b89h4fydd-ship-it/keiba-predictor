@@ -69,7 +69,7 @@ async function verify(kind,name){
     if(!hero||!date)return {exists:false};
     const a=getComputedStyle(hero),b=getComputedStyle(date);
     return {exists:true,heroPosition:a.position,datePosition:b.position,
-      heroBlur:a.backdropFilter,dateBlur:b.backdropFilter,heroOpacity:a.opacity};
+      heroBlur:a.backdropFilter??a.webkitBackdropFilter??'none',dateBlur:b.backdropFilter??b.webkitBackdropFilter??'none',heroOpacity:a.opacity};
   });
   assert.equal(sticky.exists,true,'Real home must render hero and date');
   assert.equal(sticky.heroPosition,'sticky','Hero must remain sticky on iPhone');
