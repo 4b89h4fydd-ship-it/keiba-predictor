@@ -13,10 +13,11 @@ function normalizedRace(_mode,r,day){
  const timestamp=clock&&/^\d{4}-\d{2}-\d{2}$/.test(String(day||''))?Date.parse(day+'T'+clock[1].padStart(2,'0')+':'+clock[2]+':00+09:00'):NaN;
  return {id:String(r.id),circuit:r.circuit,venue:String(r.track),number,timestamp,
    cancelled:/cancelled|canceled|abandoned|中止|取止|取消|不成立|除外/i.test(status),
-   confirmed:/confirmed|final|settled|finished|completed|確定|終了/i.test(status)};
+   confirmed:/confirmed|final|settled|finished|completed|確定|速報|終了/i.test(status),
+   running:/running|started|発走中|進行中/i.test(status)};
 }
-function raceStatus(mode,r,day,now=new Date()){const x=normalizedRace(mode,r,day);if(!x)return 'unknown';if(x.cancelled)return 'cancelled';if(x.confirmed)return 'finished';if(!Number.isFinite(x.timestamp))return 'unknown';const delta=x.timestamp-now.getTime();return delta<=0?'elapsed':delta<=600000?'soon':'upcoming'}
-const labelFor=code=>({finished:'確定',elapsed:'発走時刻経過',soon:'まもなく',upcoming:'発走前',cancelled:'中止',unknown:'時刻未取得'}[code]||'');
+function raceStatus(mode,r,day,now=new Date()){const x=normalizedRace(mode,r,day);if(!x)return 'unknown';if(x.cancelled)return 'cancelled';if(x.confirmed)return 'finished';if(x.running)return 'running';if(!Number.isFinite(x.timestamp))return 'unknown';const delta=x.timestamp-now.getTime();return delta<=-300000?'elapsed':delta<=0?'running':delta<=600000?'soon':'upcoming'}
+const labelFor=code=>({finished:'確定',elapsed:'結果待ち',running:'進行中',soon:'まもなく',upcoming:'発走前',cancelled:'中止',unknown:'時刻未取得'}[code]||'');
 function liveModel(mode,rows,day,now=new Date()){
  const all=(Array.isArray(rows)?rows:[]).map(r=>{const v=normalizedRace(mode,r,day);return v?{...v,status:raceStatus(mode,r,day,now),next:false}:null}).filter(Boolean);
  const nextByVenue=new Map();for(const v of all){if(v.status!=='soon'&&v.status!=='upcoming')continue;const key=v.circuit+'|'+v.venue,old=nextByVenue.get(key);if(!old||v.timestamp<old.timestamp||v.timestamp===old.timestamp&&v.number<old.number)nextByVenue.set(key,v)}
@@ -27,7 +28,7 @@ function liveSignature(mode,rows,day,now=new Date()){return liveModel(mode,rows,
 function syncLiveUI(mode,rows,day,scope,now=new Date()){
  const node=scope||root.document;if(!node?.querySelectorAll)return;const byId=new Map(liveModel(mode,rows,day,now).map(v=>[v.id,v]));
  for(const el of node.querySelectorAll('button.arv-all-race[data-race]')){const v=byId.get(el.getAttribute('data-race'));if(!v)continue;
- for(const cls of ['elapsed','finished','soon','upcoming','future','pending','next'])el.classList.toggle(cls,cls===v.status||cls==='next'&&v.next);
+ for(const cls of ['elapsed','finished','running','soon','upcoming','future','pending','next'])el.classList.toggle(cls,cls===v.status||cls==='next'&&v.next);
  el.setAttribute('data-race-state',v.status);const label=el.querySelector('.arv-race-state');if(label)label.textContent=labelFor(v.status);}
 }
 root.ARVEXQUnifiedHome=Object.freeze({hero,dateBar,buttons,liveModel,liveSignature,raceStatus,labelFor,syncLiveUI});
