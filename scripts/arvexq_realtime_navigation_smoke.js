@@ -3,6 +3,18 @@
 const {chromium,webkit,devices}=require('playwright');
 const assert=require('node:assert/strict');
 const base=(process.env.ARVEXQ_BASE_URL||'http://127.0.0.1:8790').replace(/\/$/,'');
+// WebKit may replace the page context while the PWA initial route is settling.
+async function evaluateAfterStableNavigation(page,fn){
+ for(let attempt=0;attempt<4;attempt++){
+  try{return await page.evaluate(fn)}
+  catch(error){
+   if(!/Execution context was destroyed|most likely because of a navigation/i.test(String(error))||attempt===3)throw error;
+   await page.waitForLoadState('domcontentloaded',{timeout:30000});
+   await page.waitForFunction(()=>Boolean(window.ARVEXQUnifiedHome&&window.ARVEXQHorsePortal),{timeout:30000});
+  }
+ }
+ throw Error('browser navigation did not stabilize');
+}
 async function verify(kind,name){
  const browser=await kind.launch({headless:true});
  try{
@@ -10,7 +22,7 @@ async function verify(kind,name){
   const errors=[];page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(base+'/?horse-grid-smoke='+Date.now(),{waitUntil:'domcontentloaded',timeout:50000});
   await page.waitForFunction(()=>Boolean(window.ARVEXQUnifiedHome&&window.ARVEXQHorsePortal),{timeout:45000});
-  const result=await page.evaluate(()=>{
+  const result=await evaluateAfterStableNavigation(page,()=>{
     const day='2026-10-12',rows=[
       {id:'jra-'+day+'-東京-01',circuit:'中央',track:'東京',raceNumber:1,startTime:'10:30'},
       {id:'jra-'+day+'-東京-02',circuit:'中央',track:'東京',raceNumber:2,startTime:'11:30'},
@@ -36,7 +48,8 @@ async function verify(kind,name){
       firstClickable:!first?.disabled,
       shortcutsAboveGrid:scope.querySelector('.arv-unified-actions')?.compareDocumentPosition(scope.querySelector('.arv-all-panel'))&Node.DOCUMENT_POSITION_FOLLOWING,
       navOnHome:document.querySelectorAll('.arvexq-sport-nav').length,
-      realtime:document.querySelectorAll('.arv-realtime-section').length
+      realtime:document.querySelectorAll('.arv-realtime-section').length,
+      alerts:scope.querySelectorAll('.arv-unified-alert').length
     };scope.remove();return result;
   });
   assert.deepEqual(result.actions,['厳選','特別','AI成績']);
@@ -46,6 +59,7 @@ async function verify(kind,name){
   assert.ok(result.opacity<0.8,'elapsed race must be darkened');
   assert.equal(result.firstClickable,true);assert.ok(result.shortcutsAboveGrid);
   assert.equal(result.navOnHome,0);assert.equal(result.realtime,0);
+  assert.equal(result.alerts,2,'selected and special warning icons are visible');
   assert.equal(errors.filter(e=>/ReferenceError|SyntaxError/.test(e)).length,0,errors.join('; '));
   console.log('HORSE_12R_IPHONE_GRID_OK',name);
  }finally{await browser.close()}
