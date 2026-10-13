@@ -5,6 +5,7 @@ from arvexq.prediction.final_marks import optional_star_candidate, CORE_MARKS, L
 def row(no, form, condition, score, samples=2):
     f = {"recentForm": form, "conditionForm": condition}
     return {"horse": {"horseNumber": no}, "score": score,
+            "raw": {"conditionRuns": samples},
             "pastPerformance": {"comparableRuns": samples},
             "primaryPillarCoverage": sum(x is not None for x in f.values()),
             "factors": f}
@@ -24,6 +25,12 @@ class TestOptionalStar(unittest.TestCase):
         self.assertIsNone(optional_star_candidate(base + [row(5, .77, .50, .70)]))
         self.assertIsNone(optional_star_candidate(base + [row(5, .85, None, .71)]))
         self.assertIsNone(optional_star_candidate(base + [row(5, .85, .80, .72, samples=1)]))
+
+    def test_old_secondary_count_cannot_override_authoritative_count(self):
+        base = [row(i, .85, .8, .92 - i * .04) for i in range(1, 5)]
+        candidate = row(5, .76, .71, .72, samples=1)
+        candidate["pastPerformance"]["comparableRuns"] = 5
+        self.assertIsNone(optional_star_candidate(base + [candidate]))
 
     def test_one_supported_star(self):
         base = [row(i, .85, .8, .92 - i * .04) for i in range(1, 5)]
