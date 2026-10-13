@@ -3365,9 +3365,7 @@ function venueRaceRows(){
             cls=fin||flash||lifecycle==='elapsed'||lifecycle==='finished'?'final':
               (lifecycle==='running'?'running':(lifecycle==='soon'?'soon':(isNext?'next-race':''))),
             label=fin?'確定':(flash?'速報':(window.ARVEXQUnifiedHome?window.ARVEXQUnifiedHome.labelFor(lifecycle):'')),
-            stateTag=label&&lifecycle!=='upcoming'?
-              '<span class="race-state-pill arv-race-state">'+esc(label)+'</span>':
-              (isNext?'<span class="race-state-pill next">次のレース</span>':'');
+            stateTag='<span class="race-state-pill arv-race-state">'+esc(label||'')+'</span>';
         return '<div class="arv-favorite-venue-item"><button class="smart-race-row '+cls+'" data-race="'+esc(r.id)+'" data-race-state="'+esc(lifecycle)+'">'+
           '<strong>'+no+'R</strong>'+ 
           '<span class="smart-race-time">'+(fin?'確定':(flash?'速報':timeHtml(r)))+'</span>'+ 
