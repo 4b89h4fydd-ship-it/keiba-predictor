@@ -1602,7 +1602,7 @@ html body .smart-shell.smart-home .arv-all-race[data-race-state="running"]:not(:
 html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled),
 html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"]:not(:disabled){
   background:#626660!important;border-color:#626660!important;
-  opacity:.82!important;filter:saturate(.5)!important;
+  opacity:.72!important;filter:saturate(.35)!important;
 }
 html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled) strong,
 html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled) small,
