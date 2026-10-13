@@ -26,6 +26,21 @@ assert(!src.includes('saved-snapshot-restored'),'legacy saved snapshot live rest
 assert(!fs.existsSync('scripts/arvexq_patch_race_open_reliability.py'));
 const full=fs.readFileSync('arvexq/prediction/honmei_gate.py','utf8');
 assert(full.includes('.32 * recent_score'),'must preserve existing scoring weights');
+// Regression: the active horse homepage still needs a read-only pick-count helper.
+// An old-home cleanup previously removed this shared function, crashing on launch.
+const countStart=src.indexOf('function homePickCounts(');
+const countEnd=src.indexOf('\n}',countStart)+2;
+assert(countStart>=0&&countEnd>countStart,'homePickCounts must exist for app boot');
+const countFunction=src.slice(countStart,countEnd);
+assert(src.includes('function renderHome(){')&&
+  src.slice(src.indexOf('function renderHome(){'),src.indexOf('function volatilityBadge(')).includes("homePickCounts('selected')"),
+  'current home must be able to read its selection counts');
+const counts=new Function('selectedRaceCandidates','specialForecastRaceCandidates',
+  countFunction+'; return homePickCounts;')(
+    c=>c==='中央'?[{id:'a'},{id:'b'}]:[{id:'c'}],
+    ()=>[{circuit:'中央'},{circuit:'地方'},{circuit:'地方'}]);
+assert.deepEqual(counts('selected'),{central:2,local:1});
+assert.deepEqual(counts('special'),{central:1,local:2});
 console.log('ARVEXQ_SINGLE_SOURCE_RACE_OPEN_AND_PERSISTENT_ALERT_OK');
 
 const home=fs.readFileSync('arvexq/ui/static/sports/unified-home.js','utf8');
