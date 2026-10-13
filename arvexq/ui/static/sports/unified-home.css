@@ -664,3 +664,52 @@ html body .smart-home .arv-all-empty{color:#505a51!important;font-size:12px!impo
  html body .smart-home .arv-all-race small{font-size:12px!important}
  html body .smart-home .arv-all-race strong{font-size:12px!important}
 }
+
+/* Shared accessible palette across home, venue and race detail */
+/* The original palette was scoped to .smart-home; internal routes are separate shells. */
+html body .smart-shell.smart-venue-page,
+html body .smart-shell.smart-venue-page .smart-main,
+html body .smart-shell:has(> .smart-main.smart-race-page),
+html body .smart-shell>.smart-main.smart-race-page,
+html body .smart-shell:has(.smart-race-page)>.smart-main{
+ background:#e2e3df!important;background-image:none!important;color:#28382e!important;
+}
+html body .smart-shell.smart-venue-page .smart-topbar,
+html body .smart-shell:has(> .smart-main.smart-race-page)>.smart-topbar{
+ background:#d3d9d2!important;border-color:#9ba89c!important;color:#25372a!important;
+}
+html body .smart-shell.smart-venue-page .smart-head-copy,
+html body .smart-shell.smart-venue-page .smart-head-copy strong,
+html body .smart-shell:has(> .smart-main.smart-race-page)>.smart-topbar .smart-head-copy,
+html body .smart-shell:has(> .smart-main.smart-race-page)>.smart-topbar .smart-head-copy strong{
+ color:#26392b!important;
+}
+/* Venue schedule matches the home's neutral-green buttons. */
+html body .smart-venue-page .smart-race-row{
+ background:#b1c3b6!important;border-color:#7e9886!important;color:#213427!important;
+}
+html body .smart-venue-page .smart-race-row .smart-race-title b,
+html body .smart-venue-page .smart-race-row .smart-race-title small{color:#263b2b!important}
+html body .smart-venue-page .smart-race-row[data-race-state="soon"]{background:#e5cd8b!important;border-color:#b18c39!important}
+html body .smart-venue-page .smart-race-row[data-race-state="running"]{background:#d69a9a!important;border-color:#ad6464!important}
+html body .smart-venue-page .smart-race-row[data-race-state="elapsed"],
+html body .smart-venue-page .smart-race-row[data-race-state="finished"]{background:#555b56!important;border-color:#414943!important;opacity:.78!important}
+html body .smart-venue-page .smart-race-row[data-race-state="elapsed"] .smart-race-title b,
+html body .smart-venue-page .smart-race-row[data-race-state="finished"] .smart-race-title b,
+html body .smart-venue-page .smart-race-row[data-race-state="elapsed"] .smart-race-title small,
+html body .smart-venue-page .smart-race-row[data-race-state="finished"] .smart-race-title small{color:#f4f5f0!important}
+/* Detail page: keep horse/odds/marks text contrast from their own card components,
+   while replacing the old surrounding blue with the same warm neutral surfaces. */
+html body .smart-race-page .smart-race-header,
+html body .smart-race-page .smart-race-info,
+html body .smart-race-page .smart-race-summary{
+ background:#d3d9d2!important;border-color:#a9b5aa!important;color:#23382b!important;
+}
+/* An explicit high-contrast status for missing central-meeting data. */
+html body .smart-home .arv-all-circuit .arv-all-empty,
+html body .smart-shell.smart-home .arv-all-circuit .arv-all-empty{
+ color:#27362b!important;opacity:1!important;font-size:13px!important;
+ font-weight:650!important;line-height:1.55!important;
+ background:#cbd2ca!important;padding:7px 9px!important;border-radius:7px!important;
+ text-shadow:none!important;
+}
