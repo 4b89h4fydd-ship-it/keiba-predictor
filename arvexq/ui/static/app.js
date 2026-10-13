@@ -1034,7 +1034,7 @@ function arvexqFactorValues(z,r){
     var dist=r&&r.distance!=null?Number(r.distance):null, surface=r&&r.surface||'';
     comparable=runs.filter(function(x){
       var q=x.source,rd=q.distance==null?null:Number(q.distance);
-      return dist!==null&&isFinite(dist)&&rd!==null&&isFinite(rd)&&
+      return dist!==null&&isFinite(dist)&&dist>0&&rd!==null&&isFinite(rd)&&rd>0&&
         Math.abs(rd-dist)<=150&&!!surface&&q.surface===surface;
     }).map(function(x){return x.quality});
     if(comparable.length){
