@@ -3,6 +3,9 @@ from __future__ import annotations
 import copy
 import json
 import unittest
+from datetime import datetime
+from arvexq.prediction.prerace_archive import JST, seal_detail
+from arvexq.prediction.mass_prerace_bridge import apply_mass_prerace_fields
 
 from arvexq.prediction.mass_feature_snapshot import _stable_hash, SNAPSHOT_VERSION
 from arvexq.prediction.mass_feature_transport import (
@@ -89,6 +92,34 @@ class MassFeatureTransportTest(unittest.TestCase):
         data["massFeatureSnapshot"]["rows"].clear()
         with self.assertRaises(ValueError):
             pack_mass_detail(data)
+
+
+    def test_missing_mass_features_cannot_be_rebuilt_after_post(self):
+        date = "2026-10-14"
+        detail = {"id": "R", "date": date, "startTime": "12:00",
+                  "circuit": "地方", "track": "大井", "raceNumber": 1,
+                  "distance": 1400, "surface": "ダート",
+                  "horses": [{"horseNumber": 1, "name": "A", "recentRaces": []},
+                             {"horseNumber": 2, "name": "B", "recentRaces": []}]}
+        start = datetime(2026, 10, 14, 11, 0, tzinfo=JST)
+        captured = datetime(2026, 10, 14, 10, 50, tzinfo=JST)
+        lock = {"raceId": "R", "raceDate": date,
+                "capturedAtEpoch": int(captured.timestamp()),
+                "horses": [{"horseNumber": 1, "mark": "◎"},
+                           {"horseNumber": 2, "mark": "○"}]}
+        sealed = seal_detail(detail, lock, now=start)
+        before = prepare_mass_prerace_fields(sealed, now=start)
+        self.assertIn("massFeatureSnapshot", before)
+        self.assertEqual(before["massFeatureCapturedAtEpoch"], int(start.timestamp()))
+        later = datetime(2026, 10, 14, 12, 5, tzinfo=JST)
+        self.assertEqual(prepare_mass_prerace_fields(sealed, now=later), {})
+        finalized = dict(sealed, result={"status": "確定"})
+        self.assertEqual(prepare_mass_prerace_fields(finalized, now=start), {})
+        persisted = apply_mass_prerace_fields(copy.deepcopy(sealed), before)
+        self.assertEqual(persisted["preRacePrediction"]["massFeatureCapturedAtEpoch"],
+                         int(start.timestamp()))
+        self.assertIn("massFeatureHash", prepare_mass_prerace_fields(persisted, now=later))
+
 
 
 if __name__=="__main__":
