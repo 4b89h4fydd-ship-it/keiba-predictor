@@ -1,0 +1,19 @@
+name: No Sectional Candidate
+on:
+  push:
+    branches: [codex/arvexq-no-sectional-challenger]
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: PYTHONPATH=. python scripts/arvexq_no_sectional_audit.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: no-sectional-comparison
+          path: research-output/no-sectional.json
