@@ -1431,3 +1431,15 @@ html body .smart-race-page .diagnosis-refresh-note{
  background:#f4eee3!important;color:#181818!important;border-color:#d5cbbb!important;
 }
 html body .smart-race-page .smart-inline-result *{color:#181818!important}
+
+/* Clear distinct win/axis role labels; avoid the prior low-contrast small text. */
+html body .smart-race-page .rc-honmei-role{
+ display:inline-flex!important;gap:3px!important;align-items:center!important;
+ vertical-align:middle!important;padding:0!important;border:none!important;background:transparent!important;
+ font-size:12px!important;line-height:1.35!important;font-weight:900!important;
+}
+html body .smart-race-page .arv-role-win{display:inline-block!important;color:#981e25!important;background:#f3d9d7!important;border:1px solid #b77e79!important;padding:1px 3px!important;border-radius:3px!important}
+html body .smart-race-page .arv-role-axis{display:inline-block!important;color:#153f80!important;background:#dce6f5!important;border:1px solid #859dbd!important;padding:1px 3px!important;border-radius:3px!important}
+html body .smart-race-page .rc-ai-mark[data-ai-mark] .rc-mark-main,
+html body .smart-race-page .rc-mark-box .rc-mark-main{font-weight:950!important;font-size:20px!important}
+html body .smart-race-page .rc-racecard-v339 .rc-v336-number{border:0!important;outline:0!important;box-shadow:none!important}
