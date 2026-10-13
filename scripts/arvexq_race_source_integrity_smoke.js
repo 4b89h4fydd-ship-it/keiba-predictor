@@ -48,17 +48,25 @@ const rowStart=src.indexOf('function racecardEntryRow(');
 const rowEnd=src.indexOf('function morningSavedMarkRows(',rowStart);
 assert(rowStart>=0&&rowEnd>rowStart,'racecardEntryRow is required to show runners');
 assert.equal((src.match(/function racecardEntryRow\(/g)||[]).length,1,'single renderer authority');
+// The real page defines markRoleLabel in the same script as racecardEntryRow.
+// Inject the production helper into this isolated renderer test, not a mock.
+const roleStart=src.indexOf('function markRoleLabel(');
+const roleEnd=src.indexOf('\n}',roleStart)+2;
+assert(roleStart>=0&&roleEnd>roleStart,'production markRoleLabel helper is required');
+const markRoleLabel=new Function(src.slice(roleStart,roleEnd)+';return markRoleLabel;')();
+assert.equal(markRoleLabel({predMark:'◎'}),'◎【単】');
 const renderRunner=new Function(
   'isScratchHorse','n','horseDisplayName','clamp',
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight',
   'carriedWeightText','esc','racecardOddsHtml','racecardMarkDisplay',
-  'honmeiA11yText','honmeiBadgeText',
+  'honmeiA11yText','honmeiBadgeText','markRoleLabel',
   src.slice(rowStart,rowEnd)+';return racecardEntryRow;'
 )(
   ()=>false, (x,d=0)=>Number.isFinite(Number(x))?Number(x):d,
   (_r,h)=>h.name, (x,lo,hi)=>Math.max(lo,Math.min(hi,x)),
   ()=>480, ()=>3, ()=>0, ()=>57, x=>String(x??''),
-  ()=>'<span>3.2</span>',x=>String(x||'—'),()=>'',()=>''
+  ()=>'<span>3.2</span>',x=>String(x||'—'),()=>'',()=>'',
+  markRoleLabel
 );
 const runnerHtml=renderRunner({id:'test'},{
   horseNumber:7,name:'サンプル号',frameNumber:4,sex:'牡',age:4,jockey:'騎手'
