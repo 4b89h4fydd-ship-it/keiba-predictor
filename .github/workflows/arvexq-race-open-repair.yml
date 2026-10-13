@@ -1,77 +1,26 @@
-name: ARVEXQ Race Open Repair
-
+name: ARVEXQ Race Open Integrity (read-only)
 on:
   push:
     branches: [main]
     paths:
-      - 'scripts/arvexq_patch_race_open_reliability.py'
       - 'arvexq/ui/static/app.js'
+      - 'scripts/arvexq_race_source_integrity_smoke.js'
       - '.github/workflows/arvexq-race-open-repair.yml'
   workflow_dispatch:
-
 permissions:
-  contents: write
-
-concurrency:
-  group: arvexq-race-open-repair
-  cancel-in-progress: true
-
+  contents: read
 jobs:
-  repair:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Apply repair
-        run: python scripts/arvexq_patch_race_open_reliability.py
-      - name: Validate runtime and preserved policies
-        shell: bash
+      - name: Validate current race opening without rewriting production code
         run: |
-          python -m py_compile scripts/arvexq_patch_race_open_reliability.py
           node --check arvexq/ui/static/app.js
-          python build_static.py
-          BUILD="$(tr -d '\r\n' < dist/build-version.txt)"
-          test "$BUILD" = "v329"
-          node --check "dist/app-$BUILD.js"
-          python - <<'PY'
-          from pathlib import Path
-          s=Path('arvexq/ui/static/app.js').read_text()
-          start=s.index('function raceDisplayCoreReady(')
-          end=s.index('\n}',start)+2
-          block=s[start:end]
-          assert 'carriedWeight' not in block
-          assert 'jockey' not in block
-          assert 'fieldSize' not in block
-          assert 'named>=Math.min' in block
-          assert "plan.lockPolicy='v355-prerace-model-evidence-30m'" in s
-          assert "String(r.track||'')==='高知'" in s
-          assert 'window.ARVEXQ_BUILD="v329";' in s
-          c0=s.index('function courseProfile(r){')
-          c1=s.index('\n}',c0)+2
-          assert 'r=r||{};' in s[c0:c1]
-          q0=s.index('function courseStageFrac(r,st){')
-          q1=s.index('\n}',q0)+2
-          assert 'r=r||{};' in s[q0:q1]
-          print('RACE_OPEN_POLICY_OK_V329')
-          PY
-      - name: Commit repair
-        shell: bash
-        run: |
-          if git diff --quiet -- arvexq/ui/static/app.js; then
-            echo 'race-open repair already applied'
-            exit 0
-          fi
-          git config user.name 'arvexq-bot'
-          git config user.email 'actions@users.noreply.github.com'
-          git add arvexq/ui/static/app.js
-          git commit -m 'fix: preserve Safari-safe race opening'
-          git pull --rebase origin main
-          git push
+          node scripts/arvexq_race_source_integrity_smoke.js
+          node scripts/arvexq_static_racecard_open_smoke.js
+          node scripts/arvexq_horse_portal_smoke.js
