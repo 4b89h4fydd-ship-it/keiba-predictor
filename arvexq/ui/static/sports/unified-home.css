@@ -1727,3 +1727,48 @@ html body .smart-race-page .ai-stage-tabs button:not(.active){background:#f5efe3
 /* Hero is now loaded from an existing, versioned image asset. */
 html body .smart-shell.smart-home>.arv-unified-hero{background:#fffaf3!important}
 html body .smart-shell.smart-home>.arv-unified-hero img{display:block!important;object-fit:cover!important}
+
+/* Approved paper-and-ink identity; top screen matches the brush image background. */
+html body .smart-shell.smart-home>.arv-unified-hero{
+ width:100%!important;max-width:920px!important;height:auto!important;
+ aspect-ratio:3/1!important;position:relative!important;inset:auto!important;
+ transform:none!important;margin:0 auto!important;padding:0!important;
+ background:#f6f2e8!important;border:0!important;box-shadow:none!important;
+}
+html body .smart-shell.smart-home>.arv-unified-hero img{
+ width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;
+ filter:none!important;opacity:1!important;display:block!important;
+}
+html,html body:has(.smart-home),
+html body .smart-shell.smart-home,
+html body .smart-shell.smart-home>.smart-main.smart-home-main,
+html body .smart-shell.smart-home .smart-home-main,
+html body .smart-shell.smart-home .arv-unified-body,
+html body .smart-shell.smart-home .arv-all-home,
+html body .smart-shell.smart-home .arv-all-panel,
+html body .smart-shell.smart-home .arv-all-circuit,
+html body .smart-shell.smart-home .arv-all-venue,
+html body .smart-shell.smart-home .arv-favorites-home{
+ background:#f6f2e8!important;background-image:none!important;color:#000!important;
+}
+html body .smart-shell.smart-home .arv-unified-date{background:#fff9ee!important;color:#000!important;border-color:#c0b09b!important}
+html body .smart-shell.smart-home .arv-unified-action{color:#000!important}
+html body .smart-shell.smart-home .arv-unified-action-label,
+html body .smart-shell.smart-home .arv-unified-action-icon,
+html body .smart-shell.smart-home .arv-unified-chevron,
+html body .smart-shell.smart-home .arv-all-title h2,
+html body .smart-shell.smart-home .arv-all-circuit-label b,
+html body .smart-shell.smart-home .arv-all-circuit-label small,
+html body .smart-shell.smart-home .arv-all-venue-head b,
+html body .smart-shell.smart-home .arv-all-venue-head span,
+html body .smart-shell.smart-home .arv-all-empty,
+html body .smart-shell.smart-home .arv-all-go,
+html body .smart-shell.smart-home .arv-favorites-heading,
+html body .smart-shell.smart-home .arv-favorites-empty{color:#000!important}
+html body .smart-shell.smart-home .arv-all-race:not(:disabled) strong,
+html body .smart-shell.smart-home .arv-all-race:not(:disabled) small,
+html body .smart-shell.smart-home .arv-all-race:not(:disabled)::after{color:#000!important}
+html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled) strong,
+html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled) small,
+html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"]:not(:disabled) strong,
+html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"]:not(:disabled) small{color:#fff!important}
