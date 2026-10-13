@@ -19,6 +19,7 @@ jobs:
       - run: python -m unittest discover -s tests -p test_optional_star_marks.py -v
       - run: python -m unittest discover -s tests -p test_browser_engine_parity.py -v
       - run: node --check arvexq/ui/static/app.js
+      - run: node scripts/arvexq_staged_evidence_tier_smoke.js
       - run: node scripts/arvexq_frozen_marks_smoke.js
       - run: node scripts/arvexq_capture_three_factor_smoke.js
       - run: node scripts/arvexq_three_factor_parity_smoke.js
