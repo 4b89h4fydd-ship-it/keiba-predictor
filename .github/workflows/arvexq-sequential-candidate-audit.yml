@@ -1,0 +1,26 @@
+name: Sequential Candidate Audit
+on:
+  push:
+    branches: [codex/arvexq-next-evaluation]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run sequential comparison
+        run: |
+          mkdir -p research-output
+          PYTHONPATH=. python scripts/arvexq_sequential_candidate_audit.py research-output/sequential.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sequential-candidate-audit
+          path: research-output/sequential.json
+          if-no-files-found: warn
