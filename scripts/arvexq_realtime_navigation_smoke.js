@@ -72,7 +72,7 @@ async function verify(kind,name){
   assert.equal(simpleHome.hero,false,'Hero image should be removed');
   assert.equal(simpleHome.background,'rgb(255, 255, 255)','Home should be white');
   assert.equal(simpleHome.datePosition,'relative','Date should scroll naturally');
-  assert.deepEqual(result.actions,['厳選','特別','AI成績']);
+  assert.deepEqual(result.actions,['厳選','特別','AI成績','お気に入り']);
   assert.equal(result.fullGrid,24);assert.equal(result.booked,3);
   assert.equal(result.firstNext,1);assert.equal(result.nextAfter,2);
   assert.equal(result.firstState,'elapsed');assert.equal(result.firstText,'結果待ち');
