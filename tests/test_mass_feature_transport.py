@@ -116,6 +116,14 @@ class MassFeatureTransportTest(unittest.TestCase):
         self.assertEqual(persisted["preRacePrediction"]["massFeatureCapturedAtEpoch"],
                          int(start.timestamp()))
         self.assertIn("massFeatureHash", prepare_mass_prerace_fields(persisted, now=later))
+        persisted["result"] = {"status": "確定", "finishers": [
+            {"horseNumber": 1, "finish": 1}, {"horseNumber": 2, "finish": 2}]}
+        trusted = frozen_training_rows_from_detail(persisted)
+        self.assertEqual(len(trusted), 2)
+        self.assertEqual(sum(row["labelWin"] for row in trusted), 1)
+        forged = copy.deepcopy(persisted)
+        forged["massFeatureCapturedAtEpoch"] = int(later.timestamp())
+        self.assertEqual(frozen_training_rows_from_detail(forged), [])
 
 
 
