@@ -1008,3 +1008,31 @@ html body .smart-race-page .smart-race-head .smart-race-result-side time{
 html body .smart-race-page .smart-race-content{margin-top:6px!important}
 html body .smart-race-page .smart-race-head{margin-bottom:5px!important;padding:10px!important}
 html body .smart-race-page .smart-race-tabs{margin:5px 0!important}
+
+/* Restore the approved sticky hero/date and prevent translucency on iPhone. */
+html body .smart-shell.smart-home{
+ overflow-x:clip!important;overflow-y:visible!important;
+}
+html body .smart-shell.smart-home>.arv-unified-hero{
+ position:sticky!important;top:0!important;left:auto!important;
+ z-index:180!important;transform:none!important;
+ isolation:isolate!important;opacity:1!important;
+ background:#071018!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ box-shadow:none!important;filter:none!important;
+}
+html body .smart-shell.smart-home>.arv-unified-hero img{
+ opacity:1!important;filter:none!important;transform:none!important;
+}
+html body .smart-shell.smart-home .arv-unified-body>.arv-unified-date{
+ position:sticky!important;top:min(56.25vw,517.5px)!important;z-index:179!important;
+ background:#fff!important;opacity:1!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+html body .smart-shell.smart-home>.smart-main.smart-home-main{
+ padding-top:0!important;margin-top:0!important;overflow:visible!important;
+}
+@media(max-width:390px){
+ html body .smart-shell.smart-home .arv-unified-body>.arv-unified-date{
+  top:56.25vw!important;
+ }
+}
