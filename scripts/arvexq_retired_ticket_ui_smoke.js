@@ -7,7 +7,7 @@ const base={fixedAt:'2026-10-12T21:54:31.159Z',items:[{level:'本線',kind:'馬�
 assert.equal(filter({...base,engineVersion:'arvexq-old-v345'}),null);
 assert.equal(filter({...base,engineVersion:'three-way-v346'}),null);
 assert.equal(filter({...base,engineVersion:undefined}),null);
-const modern={...base,engineVersion:'arvexq-true-run-pure-sectional-v2'};
+const modern={...base,engineVersion:'arvexq-form-condition-no-sectional-proposal-v1'};
 assert.equal(filter(modern),modern);
 const code=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8');
 const root={};new Function('window',code)(root);
