@@ -27,9 +27,15 @@ function liveModel(mode,rows,day,now=new Date()){
 function liveSignature(mode,rows,day,now=new Date()){return liveModel(mode,rows,day,now).map(v=>v.id+':'+v.status+(v.next?':next':'')).join('|')}
 function syncLiveUI(mode,rows,day,scope,now=new Date()){
  const node=scope||root.document;if(!node?.querySelectorAll)return;const byId=new Map(liveModel(mode,rows,day,now).map(v=>[v.id,v]));
- for(const el of node.querySelectorAll('button.arv-all-race[data-race]')){const v=byId.get(el.getAttribute('data-race'));if(!v)continue;
- for(const cls of ['elapsed','finished','running','soon','upcoming','future','pending','next'])el.classList.toggle(cls,cls===v.status||cls==='next'&&v.next);
- el.setAttribute('data-race-state',v.status);const label=el.querySelector('.arv-race-state');if(label)label.textContent=labelFor(v.status);}
+ for(const el of node.querySelectorAll('button.arv-all-race[data-race],button.smart-race-row[data-race-state],button.arv-favorite-home-open[data-race-state]')){
+  const v=byId.get(el.getAttribute('data-race'));if(!v)continue;
+  if(el.classList.contains('arv-all-race')){
+    for(const cls of ['elapsed','finished','running','soon','upcoming','future','pending','next'])
+      el.classList.toggle(cls,cls===v.status||cls==='next'&&v.next);
+  }
+  el.setAttribute('data-race-state',v.status);
+  const label=el.querySelector('.arv-race-state');if(label)label.textContent=labelFor(v.status);
+ }
 }
 root.ARVEXQUnifiedHome=Object.freeze({hero,dateBar,buttons,liveModel,liveSignature,raceStatus,labelFor,syncLiveUI});
 })(typeof window!=='undefined'?window:globalThis);
