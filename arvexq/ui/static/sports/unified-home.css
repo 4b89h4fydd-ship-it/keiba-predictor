@@ -109,44 +109,53 @@ html body .smart-home .arv-all-panel{
   background:linear-gradient(160deg,#263f50,#1c3343)!important;
   border-color:#7897a9!important;box-shadow:none!important;
 }
+/* The reference has no separate card frame around each venue. */
 html body .smart-home .arv-all-venue{
-  background:#223e53!important;border-color:#658da8!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  border-radius:0!important;padding:0!important;margin:9px 0 0!important;
+}
+html body .smart-home .arv-all-venue-head{
+  display:flex!important;align-items:center!important;padding:0 1px 5px!important;
+  border:0!important;background:transparent!important;
+}
+html body .smart-home .arv-all-venue-head>div{
+  padding-left:7px!important;border-left:3px solid #53c9f7!important;
 }
 html body .smart-home .arv-all-circuit-label{border-color:#64869a!important}
 html body .smart-home .arv-all-go{
   color:#d6effc!important;background:#325977!important;border-color:#81b2ce!important;
 }
+/* Exact second-reference geometry: 1R–6R / 7R–12R, even on iPhone. */
 html body .smart-home .arv-all-races-grid{
-  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  gap:7px!important;min-width:0!important;
+  display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:4px!important;min-width:0!important;width:100%!important;
 }
 html body .smart-home .arv-all-race{
-  display:grid!important;grid-template-columns:32px minmax(0,1fr)!important;
-  grid-template-rows:minmax(16px,auto) minmax(14px,auto)!important;
-  justify-content:stretch!important;align-content:center!important;
-  align-items:center!important;gap:2px 5px!important;
-  min-width:0!important;width:100%!important;min-height:57px!important;
-  padding:6px 5px!important;box-sizing:border-box!important;
-  border:1px solid #7298b0!important;border-radius:10px!important;
+  position:relative!important;display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;align-content:center!important;
+  gap:2px!important;min-width:0!important;width:100%!important;
+  height:46px!important;min-height:46px!important;max-height:46px!important;
+  padding:3px 9px 3px 1px!important;box-sizing:border-box!important;
+  border:1px solid #7298b0!important;border-radius:8px!important;
   background:linear-gradient(160deg,#345c77,#294a62)!important;
-  color:#eef6fc!important;box-shadow:none!important;text-align:left!important;
-  opacity:1;
+  color:#eef6fc!important;box-shadow:none!important;text-align:center!important;
+  opacity:1;white-space:nowrap!important;
+}
+html body .smart-home .arv-all-race:not(:disabled)::after{
+  content:"›";position:absolute;right:3px;top:50%;transform:translateY(-50%);
+  color:#b6d5e7;font-size:18px;line-height:1;pointer-events:none;
 }
 html body .smart-home .arv-all-race strong{
-  grid-column:1!important;grid-row:1/span 2!important;
-  font-size:16px!important;line-height:1.15!important;text-align:center!important;
-  color:#eff7fc!important;
+  display:block!important;font-size:13px!important;line-height:1.1!important;
+  text-align:center!important;color:#eff7fc!important;
 }
 html body .smart-home .arv-all-race small{
-  grid-column:2!important;grid-row:1!important;
-  min-width:0!important;font-size:10px!important;line-height:1.15!important;
-  color:#d4e6f1!important;text-align:center!important;white-space:nowrap!important;
+  display:block!important;min-width:0!important;font-size:10px!important;
+  line-height:1.1!important;color:#d4e6f1!important;
+  text-align:center!important;white-space:nowrap!important;
 }
-html body .smart-home .arv-all-race .arv-race-state{
-  display:block!important;grid-column:2!important;grid-row:2!important;
-  min-width:0!important;font-size:9px!important;line-height:1.2!important;
-  color:#d0e3ee!important;text-align:center!important;white-space:nowrap!important;
-}
+/* Status stays in aria-label; the compact reference uses color, not a third row. */
+html body .smart-home .arv-all-race .arv-race-state{display:none!important}
 html body .smart-home .arv-all-race[data-race-state="soon"],
 html body .smart-home .arv-all-race.soon:not(.elapsed):not(.finished){
   background:linear-gradient(160deg,#826528,#61502f)!important;
@@ -251,16 +260,10 @@ html body .smart-venue-page .smart-race-row[data-race-state="elapsed"] .race-sta
 html body .smart-venue-page .smart-race-row[data-race-state="finished"] .race-state-pill.arv-race-state{
   background:#263640!important;border-color:#526674!important;color:#a9b6bf!important;
 }
-@media(min-width:600px){
-  html body .smart-home .arv-all-races-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
-}
-@media(min-width:800px){
-  html body .smart-home .arv-all-races-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important}
-}
 @media(max-width:355px){
-  html body .smart-home .arv-all-races-grid{gap:4px!important}
-  html body .smart-home .arv-all-race{grid-template-columns:27px minmax(0,1fr)!important;padding:5px 3px!important;gap:1px 2px!important;min-height:55px!important}
-  html body .smart-home .arv-all-race strong{font-size:14px!important}
+  html body .smart-home .arv-all-races-grid{gap:3px!important}
+  html body .smart-home .arv-all-race{padding:3px 7px 3px 0!important}
+  html body .smart-home .arv-all-race strong{font-size:12px!important}
   html body .smart-home .arv-all-race small{font-size:9px!important}
-  html body .smart-home .arv-all-race .arv-race-state{font-size:8px!important}
+  html body .smart-home .arv-all-race:not(:disabled)::after{font-size:16px;right:2px}
 }
