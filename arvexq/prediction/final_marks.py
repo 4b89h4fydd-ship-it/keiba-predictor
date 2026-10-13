@@ -9,15 +9,15 @@ CORE_MARKS = ("◎", "○", "▲", "△")
 LOWER_MARKS = ("☆",)
 
 def optional_star_candidate(ranked: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """Two distinct comparable prior conditions required for an optional star."""
+    """At least two comparable observed prior runs required for an optional star."""
     if len(ranked) < 5:
         return None
     fourth_score = float(ranked[3]["score"])
     for row in ranked[4:]:
         factors = row.get("factors") or {}
         form, condition = factors.get("recentForm"), factors.get("conditionForm")
-        past = row.get("pastPerformance") or {}
-        if form is None or condition is None or int(past.get("comparableRuns") or 0) < 2:
+        raw = row.get("raw") or {}
+        if form is None or condition is None or int(raw.get("conditionRuns") or 0) < 2:
             continue
         score = float(row["score"])
         if score >= 0.68 and fourth_score - score <= 0.075 and condition >= 0.70:
