@@ -1491,8 +1491,11 @@ function predict(r){
       return applyFrozenMarks(r,r._prediction);
     // A stale or older-engine in-memory result is discarded by recomputing
     // below. Historical pre-off seals and ticket receipts are not edited.
-  }else if(r._prediction)return applyFrozenMarks(r,r._prediction);
+  }else if(r._prediction&&r._prediction.engineVersion==='arvexq-archived-prerace-readonly-v346')
+    return applyFrozenMarks(r,r._prediction);
   if(started){
+    // A transition to post-time must discard any formerly live prediction;
+    // the only marks permitted now come from the immutable pre-off receipt.
     var archive=immutableArchivedPrediction(r);
     Object.defineProperty(r,'_prediction',{value:archive,configurable:true,writable:true,enumerable:false});
     return archive;
