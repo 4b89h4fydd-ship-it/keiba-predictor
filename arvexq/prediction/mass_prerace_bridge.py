@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Any
+from datetime import datetime
+from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock
 
 from arvexq.prediction.mass_feature_snapshot import (
     SNAPSHOT_VERSION,
@@ -15,6 +17,7 @@ FROZEN_MASS_KEYS = (
     "massFeatureSchemaVersion",
     "massFeatureSnapshotVersion",
     "massFeatureHash",
+    "massFeatureCapturedAtEpoch",
 )
 
 
@@ -35,7 +38,7 @@ def frozen_mass_fields(detail: dict[str, Any] | None) -> dict[str, Any]:
     return out
 
 
-def prepare_mass_prerace_fields(detail: dict[str, Any]) -> dict[str, Any]:
+def prepare_mass_prerace_fields(detail: dict[str, Any], *, now: datetime | None = None) -> dict[str, Any]:
     """Build the expensive mass-feature snapshot only when a pre-race lock exists.
 
     Existing frozen fields win. This makes repeated persistence cheap and immutable.
@@ -60,9 +63,18 @@ def prepare_mass_prerace_fields(detail: dict[str, Any]) -> dict[str, Any]:
         if snapshot.get("featureHash") != existing.get("massFeatureHash"):
             raise ValueError("frozen mass feature archive is not the pre-race evidence")
         return existing
+    # A valid pre-off lock is necessary, but not sufficient: an old lock can
+    # survive while the race finishes. Never regenerate missing features then.
+    post = post_at(detail)
+    clock = now if now is not None else datetime.now(JST)
+    if (not sealed_lock(detail) or post is None or clock.tzinfo is None or
+            clock.astimezone(JST) >= post or detail.get("result") or
+            str(detail.get("raceStatus") or "") in ("確定", "速報", "final", "official")):
+        return {}
     snapshot = build_mass_feature_snapshot(detail)
     return {
         "massFeatureSnapshot": snapshot,
+        "massFeatureCapturedAtEpoch": int(clock.timestamp()),
         "massFeatureSchemaVersion": FEATURE_SCHEMA_VERSION,
         "massFeatureSnapshotVersion": SNAPSHOT_VERSION,
         "massFeatureHash": snapshot.get("featureHash"),
@@ -82,5 +94,7 @@ def apply_mass_prerace_fields(detail: dict[str, Any], fields: dict[str, Any]) ->
         lock["massFeatureHash"] = detail.get("massFeatureHash")
         lock["massFeatureSchemaVersion"] = detail.get("massFeatureSchemaVersion")
         lock["massFeatureSnapshotVersion"] = detail.get("massFeatureSnapshotVersion")
+        if detail.get("massFeatureCapturedAtEpoch") is not None:
+            lock["massFeatureCapturedAtEpoch"] = detail["massFeatureCapturedAtEpoch"]
         detail["preRacePrediction"] = lock
     return detail
