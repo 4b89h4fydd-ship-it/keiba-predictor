@@ -1443,3 +1443,87 @@ html body .smart-race-page .arv-role-axis{display:inline-block!important;color:#
 html body .smart-race-page .rc-ai-mark[data-ai-mark] .rc-mark-main,
 html body .smart-race-page .rc-mark-box .rc-mark-main{font-weight:950!important;font-size:20px!important}
 html body .smart-race-page .rc-racecard-v339 .rc-v336-number{border:0!important;outline:0!important;box-shadow:none!important}
+
+/* Actual compact horse rows: override the legacy 68px internal min-heights.
+   Both rows, their five grid cells, and horse data lines must shrink together. */
+html body .smart-race-page .racecard-row.rc-racecard-v336.rc-racecard-v339{
+ height:54px!important;min-height:54px!important;max-height:54px!important;
+ grid-template-columns:26px 32px minmax(0,1fr) 42px 51px!important;
+ grid-template-rows:54px!important;
+ padding:0!important;margin:0 0 3px!important;gap:0!important;
+ border:1px solid #dad4c9!important;border-radius:4px!important;
+ overflow:hidden!important;align-items:stretch!important;
+}
+html body .smart-race-page .racecard-row.rc-racecard-v339>.rc-v336-mark,
+html body .smart-race-page .racecard-row.rc-racecard-v339>.rc-v336-number,
+html body .smart-race-page .racecard-row.rc-racecard-v339>.rc-v336-info,
+html body .smart-race-page .racecard-row.rc-racecard-v339>.rc-v339-weight,
+html body .smart-race-page .racecard-row.rc-racecard-v339>.rc-v336-odds,
+html body .smart-race-page .racecard-row.rc-racecard-v339>.rc-v336-info>.rc-horse-main{
+ min-height:0!important;height:54px!important;max-height:54px!important;
+ margin:0!important;padding-top:0!important;padding-bottom:0!important;
+ box-sizing:border-box!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-horse-main{
+ display:grid!important;grid-template-rows:27px 27px!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-horse-name{
+ min-height:0!important;height:27px!important;line-height:27px!important;
+ padding:0 4px!important;margin:0!important;
+ font-size:15.5px!important;font-weight:900!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-v336-meta{
+ height:27px!important;min-height:0!important;max-height:27px!important;
+ padding:0 4px!important;margin:0!important;column-gap:3px!important;
+ border-top:1px solid #ded9ce!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-v336-meta>*{
+ height:26px!important;min-height:0!important;line-height:26px!important;
+ font-size:11px!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-v336-number{
+ border:0!important;outline:0!important;box-shadow:none!important;
+ background:transparent!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-number{
+ height:36px!important;min-height:0!important;max-height:36px!important;
+ width:29px!important;margin:auto!important;padding:0!important;
+ line-height:36px!important;
+ border:0!important;outline:0!important;box-shadow:none!important;
+ font-size:17px!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-v336-mark{
+ border:0!important;box-shadow:none!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-mark-box{
+ min-height:0!important;border:0!important;box-shadow:none!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-v339-weight,
+html body .smart-race-page .rc-racecard-v339 .rc-v336-odds{
+ gap:1px!important;padding:1px!important;line-height:1.1!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-v339-weight b{
+ font-size:11px!important;line-height:1.25!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-honmei-role{
+ margin-left:2px!important;font-size:10px!important;
+}
+html body .smart-race-page .rc-racecard-v339 .arv-role-win,
+html body .smart-race-page .rc-racecard-v339 .arv-role-axis{
+ padding:0 2px!important;font-size:10px!important;
+}
+/* Save vertical room above the horses without hiding important information. */
+html body .smart-race-page{padding-top:0!important}
+html body .smart-race-page .smart-race-head{
+ padding:6px!important;margin:3px 0 4px!important;
+}
+html body .smart-race-page .card{padding:6px!important;margin:3px 0 5px!important}
+html body .smart-race-page .card>h2{margin:0 0 4px!important}
+html body .smart-race-page .racecard-table{margin:2px 0!important;padding:0!important}
+html body .smart-race-page .rc-mark-legend{margin:3px 0 5px!important;line-height:1.4!important}
+@media(max-width:365px){
+ html body .smart-race-page .racecard-row.rc-racecard-v336.rc-racecard-v339{
+  grid-template-columns:24px 29px minmax(0,1fr) 40px 47px!important;
+ }
+ html body .smart-race-page .rc-racecard-v339 .rc-horse-name{font-size:14px!important}
+}
