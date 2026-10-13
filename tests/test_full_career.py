@@ -171,5 +171,28 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(collect_horse_raw_metrics(b,RACE)["conditionForm"],
                          collect_horse_raw_metrics(a,RACE)["conditionForm"])
 
+    async def test_independent_older_ability_and_raw_context_evidence(self):
+        recent = [run(9, day, finish=8) for day in (25, 20, 15, 10, 5)]
+        older = [run(8, day, finish=2) for day in (20, 10, 1)]
+        older[0]["opponentLevel"] = 20
+        recent[0]["opponentLevel"] = 60
+        horse = {"recentRaces": recent, "allPastRuns": older + recent}
+        base = profile_career(horse, RACE)
+        self.assertEqual(base["olderAbilitySamples"], 3)
+        self.assertAlmostEqual(base["olderAbilityQuality"], 10 / 11, places=5)
+        self.assertEqual(base["opponentLevelObservedRuns"], 2)
+        self.assertEqual(base["opponentLevelMean"], 40)
+        self.assertEqual(base["earlyPositionObservedRuns"], 8)
+        self.assertAlmostEqual(base["earlyPositionMean"], 10 / 11, places=5)
+        changed = {**horse, "recentRaces": [dict(r, finish=10) for r in recent],
+                   "allPastRuns": older + [dict(r, finish=10) for r in recent] +
+                   [dict(run(10, 10, finish=1), opponentLevel=999)]}
+        after = profile_career(changed, RACE)
+        self.assertEqual(after["olderAbilityQuality"], base["olderAbilityQuality"])
+        self.assertEqual(after["olderAbilitySamples"], 3)
+        self.assertEqual(after["opponentLevelMean"], 40)
+        self.assertEqual(after["earlyPositionObservedRuns"], 8)
+        self.assertNotEqual(after["recentTop3Rate"], None)
+
 if __name__=="__main__":
     unittest.main()
