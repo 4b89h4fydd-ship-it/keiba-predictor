@@ -10,8 +10,9 @@ class CurrentHorseDetailFactors(unittest.TestCase):
         for old in ("x.resultsScore","x.levelFit","x.distFit","x.trackFit","x.condFit","x.ability","x.paceScore"):
             self.assertNotIn(old,detail)
         self.assertIn("var ability=rf.ability,form=rf.form,klass=rf.classLevel",detail)
-        self.assertIn("n(x.threeFactorCoverage,0)/3",detail)
-    def test_original_three_factor_unchanged(self):
+        self.assertIn("n(x.threeFactorCoverage,0)/2",detail)
+    def test_no_retired_sectional_scoring(self):
         s=S.read_text(encoding="utf-8")
-        self.assertIn("score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)",s)
+        self.assertIn("score=(1-strength)*recentForm+strength*conditionForm",s)
+        self.assertNotIn("score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)",s)
 if __name__=="__main__": unittest.main()
