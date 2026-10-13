@@ -713,3 +713,77 @@ html body .smart-shell.smart-home .arv-all-circuit .arv-all-empty{
  background:#cbd2ca!important;padding:7px 9px!important;border-radius:7px!important;
  text-shadow:none!important;
 }
+
+/* Consistent legible neutral theme across every ARVEXQ internal page. */
+html body .smart-shell:has(> .smart-main.smart-home-subpage),
+html body .smart-shell>.smart-main.smart-home-subpage,
+html body .smart-shell.smart-venue-page,
+html body .smart-shell.smart-venue-page>.smart-main,
+html body .smart-shell:has(> .smart-main.smart-race-page),
+html body .smart-shell>.smart-main.smart-race-page{
+ background:#e2e3df!important;background-image:none!important;color:#26382d!important;
+}
+html body .smart-shell:has(.smart-home-subpage)>.smart-topbar,
+html body .smart-shell:has(.smart-race-page)>.smart-topbar,
+html body .smart-shell.smart-venue-page>.smart-venue-topbar{
+ background:#d4d9d3!important;background-image:none!important;
+ color:#23392b!important;border-color:#a9b7aa!important;
+}
+html body .smart-shell:has(.smart-home-subpage)>.smart-topbar strong,
+html body .smart-shell:has(.smart-race-page)>.smart-topbar strong,
+html body .smart-shell.smart-venue-page>.smart-venue-topbar strong{color:#223a2a!important}
+html body .smart-shell .arv-dated-subbar .arv-sub-back,
+html body .smart-shell .arv-dated-subbar .arv-sub-close,
+html body .smart-shell .arv-dated-subbar .arv-sub-date{
+ background:#f1f1ea!important;border-color:#8f9f91!important;color:#24382b!important;
+}
+/* Previously navy summary tiles; use restrained mid-value cards for both categories. */
+html body .smart-home-subpage .arv-pick-circuit-page,
+html body .smart-home-subpage .arv-ai-venues,
+html body .smart-home-subpage .smart-ai-daily{background:#e2e3df!important;color:#26382d!important}
+html body .smart-home-subpage .arv-pick-circuit-btn,
+html body .smart-home-subpage .arv-ai-venue-card{
+ background:#b7c4b9!important;background-image:none!important;
+ border-color:#7e9784!important;color:#25392a!important;box-shadow:none!important;
+}
+html body .smart-home-subpage .arv-pick-circuit-btn *,
+html body .smart-home-subpage .arv-ai-venue-card *{color:#233a2a!important;text-shadow:none!important}
+html body .smart-home-subpage .smart-section-title,
+html body .smart-home-subpage .smart-ai-daily-head,
+html body .smart-home-subpage .arv-pick-circuit-page .smart-section-title{
+ background:#d3d9d2!important;color:#22362a!important;border-color:#a5b4a7!important;
+}
+html body .smart-home-subpage .smart-section-title *,
+html body .smart-home-subpage .smart-ai-daily-head *{color:#26382d!important}
+html body .smart-home-subpage .smart-ai-daily-grid>div,
+html body .smart-home-subpage .arv-ai-metrics>div{
+ background:#f0f0ea!important;border-color:#a1b1a5!important;color:#26382d!important;
+}
+html body .smart-home-subpage .smart-ai-daily-grid>div *,
+html body .smart-home-subpage .arv-ai-metrics>div *,
+html body .smart-home-subpage .smart-ai-daily .muted,
+html body .smart-home-subpage .smart-empty{color:#455b49!important}
+/* Venue: explicit contrast for the race number and post time (formerly near-white). */
+html body .smart-venue-page .smart-race-row:not(.final):not([data-race-state="elapsed"]):not([data-race-state="finished"]){
+ background:#b7c7ba!important;color:#203427!important;
+}
+html body .smart-venue-page .smart-race-row>strong,
+html body .smart-venue-page .smart-race-row .smart-race-time{
+ color:#1c3725!important;font-weight:900!important;font-size:16px!important;
+}
+html body .smart-venue-page .smart-race-row .smart-race-title,
+html body .smart-venue-page .smart-race-row .smart-race-title b,
+html body .smart-venue-page .smart-race-row .smart-race-title small{color:#25392a!important}
+html body .smart-venue-page .smart-race-row.final,
+html body .smart-venue-page .smart-race-row[data-race-state="elapsed"],
+html body .smart-venue-page .smart-race-row[data-race-state="finished"]{
+ background:#555b56!important;color:#fff!important
+}
+html body .smart-venue-page .smart-race-row.final>strong,
+html body .smart-venue-page .smart-race-row.final .smart-race-time,
+html body .smart-venue-page .smart-race-row.final .smart-race-title *,
+html body .smart-venue-page .smart-race-row[data-race-state="elapsed"]>strong,
+html body .smart-venue-page .smart-race-row[data-race-state="elapsed"] .smart-race-time,
+html body .smart-venue-page .smart-race-row[data-race-state="finished"]>strong,
+html body .smart-venue-page .smart-race-row[data-race-state="finished"] .smart-race-time{color:#f4f4ee!important}
+/* Do not introduce false results: all status behavior is unchanged. */
