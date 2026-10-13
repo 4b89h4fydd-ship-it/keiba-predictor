@@ -1323,3 +1323,111 @@ html body .smart-shell.smart-home>.arv-simple-brand img{
  display:block;width:min(100%,660px);height:auto;aspect-ratio:3/1;
  margin:0 auto;object-fit:contain;filter:none;opacity:1;
 }
+
+/* Washi UI refresh: coherent cream surfaces and strong ink contrast. */
+html body,html body #app,html body .smart-shell,html body .smart-main,
+html body .smart-home-subpage,html body .smart-race-page,
+html body .smart-venue-page,html body .smart-venue-page .smart-main{
+ background:#f6f2e8!important;color:#181818!important;
+}
+html body .smart-shell.smart-home>.arv-simple-brand,
+html body .smart-shell.smart-home>.smart-main.smart-home-main,
+html body .smart-shell.smart-home .arv-unified-body,
+html body .smart-home .arv-all-panel,
+html body .smart-home .arv-all-venue,
+html body .smart-home .arv-favorites-home{
+ background:#f6f2e8!important;
+}
+html body .smart-home .arv-unified-date,
+html body .smart-home .arv-unified-action,
+html body .smart-home .arv-all-race,
+html body .smart-race-page .card,
+html body .smart-race-page .accordion-panel,
+html body .smart-race-page .racecard-table,
+html body .smart-race-page .racecard-row,
+html body .smart-race-page .rc-v336-info,
+html body .smart-race-page .rc-horse-main,
+html body .smart-race-page .rc-v339-weight,
+html body .smart-race-page .rc-v336-odds,
+html body .smart-race-page .rc-v336-mark,
+html body .smart-race-page .smart-race-head,
+html body .smart-race-page .smart-race-tabs,
+html body .smart-race-page .smart-race-tabs button,
+html body .smart-home-subpage section,
+html body .smart-home-subpage .arv-ai-metrics>div,
+html body .smart-home-subpage .arv-pick-circuit-btn{
+ background:#faf8f2!important;color:#181818!important;box-shadow:none!important;
+}
+html body .smart-race-page .smart-race-topbar,
+html body .smart-shell:has(.smart-race-page) .smart-race-topbar,
+html body .smart-shell:has(.smart-race-page) .smart-race-topbar button,
+html body .smart-topbar,html body .arv-dated-subbar{
+ background:#f6f2e8!important;color:#171717!important;border-color:#d4cfc3!important;
+}
+html body .smart-shell:has(.smart-race-page) .smart-race-topbar *,
+html body .smart-home-subpage .smart-section-title *,
+html body .smart-race-page .smart-race-head *,
+html body .smart-race-page .rc-horse-title,
+html body .smart-race-page .rc-v336-meta *,
+html body .smart-race-page .rc-v339-weight *,
+html body .smart-race-page .rc-v336-odds .pop{
+ color:#171717!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-race-page .rc-v336-odds .odd.single{color:#b72035!important}
+html body .smart-race-page .rc-v336-odds .odd:not(.single){color:#171717!important}
+html body .smart-race-page .racecard-row.rc-racecard-v336.rc-racecard-v339{
+ min-height:58px!important;margin:0 0 3px!important;
+ border:1px solid #d5d0c6!important;border-radius:3px!important;
+ box-shadow:none!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-v336-info,
+html body .smart-race-page .rc-racecard-v339 .rc-v339-weight,
+html body .smart-race-page .rc-racecard-v339 .rc-v336-odds,
+html body .smart-race-page .rc-racecard-v339 .rc-horse-main{
+ min-height:58px!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-horse-main{grid-template-rows:30px 28px!important}
+html body .smart-race-page .rc-racecard-v339 .rc-horse-name{font-size:16px!important;font-weight:900!important}
+html body .smart-race-page .rc-racecard-v339 .rc-v336-meta{min-height:28px!important}
+html body .smart-race-page .rc-racecard-v339 .rc-v336-number,
+html body .smart-race-page .rc-racecard-v339 .rc-number{
+ box-shadow:none!important;outline:0!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-number{
+ border:0!important;border-radius:3px!important;
+}
+html body .smart-race-page .rc-racecard-v339 .rc-v336-number{
+ background:transparent!important;border:0!important;
+}
+html body .smart-race-page .rc-ai-mark,
+html body .smart-race-page .rc-mark-box,
+html body .smart-race-page .rc-mark-main,
+html body .smart-race-page .rc-mark-top,
+html body .smart-race-page .rc-mark-bottom{
+ font-weight:950!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-race-page .rc-ai-mark[data-ai-mark^="◎"]{color:#a41624!important}
+html body .smart-race-page .rc-ai-mark[data-ai-mark^="○"]{color:#b42246!important}
+html body .smart-race-page .rc-ai-mark[data-ai-mark^="▲"]{color:#9c3f00!important}
+html body .smart-race-page .rc-ai-mark[data-ai-mark^="△"]{color:#59409a!important}
+html body .smart-race-page .rc-ai-mark[data-ai-mark^="☆"]{color:#795700!important}
+html body .smart-race-page .rc-ai-mark[data-ai-mark^="注"]{color:#265b31!important}
+html body .smart-race-page .rc-honmei-role,
+html body .smart-race-page .rc-horse-name .rc-honmei-role{
+ color:#a41624!important;background:#f8e9e7!important;
+ border:1px solid #caa3a0!important;font-weight:950!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-race-page .rc-honmei-role:has(.axis){color:#123f83!important}
+html body .smart-race-page .racecard-mark-legend,
+html body .smart-race-page .racecard-mark-legend *{
+ opacity:1!important;color:#29231d!important;
+}
+html body .smart-race-page .smart-race-tabs button.active{
+ background:#eae3d5!important;color:#181818!important;border-color:#b9b0a2!important;
+}
+html body .smart-race-page .smart-inline-result,
+html body .smart-race-page .diagnosis-refresh-note{
+ background:#f4eee3!important;color:#181818!important;border-color:#d5cbbb!important;
+}
+html body .smart-race-page .smart-inline-result *{color:#181818!important}
