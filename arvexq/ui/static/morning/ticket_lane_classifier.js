@@ -14,7 +14,7 @@ function rankedRole(x,which){
 function hitCalibration(kind,points){
  const cal=global.ARVEXQTicketHitCalibration;
  if(!cal||cal.version!=='arvexq-empirical-ticket-hit-v1'||
-    cal.modelVersion!=='arvexq-true-run-pure-sectional-v2'||
+    cal.modelVersion!=='arvexq-form-condition-no-sectional-proposal-v1'||
     !/^20\d{2}-\d{2}-\d{2}$/.test(String(cal.asOfDate||'')))return null;
  const row=(cal.buckets||{})[String(kind)+'|'+String(points)];
  if(!row||row.qualified!==true||Number(row.sample)<30||
