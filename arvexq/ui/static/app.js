@@ -1081,7 +1081,7 @@ function assignPredictionMarks(rows,r){
   rows.forEach(function(z){var f=arvexqFactorValues(z,r);
     z.threeFactorScore=f.score;z.threeFactorCoverage=f.coverage;
     z.threeFactorValues={recentForm:f.recentForm,conditionForm:f.conditionForm,comparableRuns:f.comparableRuns,sample:f.sample};
-    z.researchFactors={ability:f.recentForm,form:f.recentForm,pace:null,suitability:f.conditionForm,classLevel:null,connections:null,pedigree:null};
+    z.researchFactors={ability:null,form:f.recentForm,pace:null,suitability:f.conditionForm,classLevel:null,connections:null,pedigree:null};
     z.researchModel='arvexq-form-condition-no-sectional-proposal-v1';
     z.researchConsensusScore=f.score;
     z.overallScoreExact=f.score*100;z.overallScore=f.score*100;z.overallRaw=f.score;
