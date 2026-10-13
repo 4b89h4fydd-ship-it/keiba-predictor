@@ -124,6 +124,7 @@ jobs:
         run: |
           node --check arvexq/ui/static/app.js
           node scripts/arvexq_three_factor_parity_smoke.js
+          node scripts/arvexq_empirical_selection_smoke.js
           node scripts/arvexq_retired_ticket_ui_smoke.js
           node scripts/arvexq_retired_mark_freeze_smoke.js
           node scripts/arvexq_retired_selection_history_smoke.js
@@ -223,6 +224,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_official_changes.py' -v
           python -m unittest discover -s tests -p 'test_past_performance.py' -v
           python -m unittest discover -s tests -p 'test_three_factor_unified.py' -v
+          python -m unittest discover -s tests -p 'test_empirical_ticket_calibration.py' -v
           python -m unittest discover -s tests -p 'test_full_career.py' -v
           python -m unittest discover -s tests -p 'test_career_readiness.py' -v
           python -m unittest discover -s tests -p 'test_career_transport.py' -v

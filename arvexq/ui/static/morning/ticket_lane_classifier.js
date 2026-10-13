@@ -2,7 +2,7 @@
    Relative model concentration is NOT a calibrated hit rate or expected return. */
 (function(global){
 'use strict';
-const VERSION='arvexq-morning-ticket-lanes-v3';
+const VERSION='arvexq-empirical-ticket-lanes-v1';
 const NAMES=['的中重視型','勝ち馬明確型','高配当狙い型'];
 function num(x,d=0){return x===null||x===undefined||x===''||!Number.isFinite(Number(x))?d:Number(x)}
 function clamp(x){return Math.max(0,Math.min(1,num(x)))}
@@ -11,103 +11,42 @@ function rankedRole(x,which){
  for(const k of keys){if(x&&x[k]!==undefined&&x[k]!==null&&Number.isFinite(Number(x[k])))return Math.max(0,Number(x[k]))}
  return null;
 }
+function hitCalibration(kind,points){
+ const cal=global.ARVEXQTicketHitCalibration;
+ if(!cal||cal.version!=='arvexq-empirical-ticket-hit-v1'||
+    cal.modelVersion!=='arvexq-true-run-pure-sectional-v2'||
+    !/^20\d{2}-\d{2}-\d{2}$/.test(String(cal.asOfDate||'')))return null;
+ const row=(cal.buckets||{})[String(kind)+'|'+String(points)];
+ if(!row||row.qualified!==true||Number(row.sample)<30||
+    Number(row.hitRate)<.80||Number(row.wilsonLower95)<.65)return null;
+ return row;
+}
 function classify(r,p,strict){
- const rows=((p&&p.rows)||[]).filter(z=>z&&z.horse&&num(z.horse.horseNumber)>0&&!z.horse.scratched&&!z.horse.withdrawn&&!/取消|除外|欠場/.test(String(z.horse.status||'')));
- const isCentral=String(r&&r.circuit||'')==='中央',field=rows.length,a=strict||{},
-       ready=clamp(a.readiness&&a.readiness.prediction),
-       coverage=clamp(p&&p.coverage),evidence=clamp(a.evidence),
-       scenario=clamp(a.scenarioProb),top3=clamp(a.top3mass),
-       margin=clamp(a.margin),winnerConf=clamp(a.winnerConfidence),
-       axis=rows.find(z=>z.predMark==='◎');
- const basic={field:field>=5,readiness:ready>=(isCentral?.58:.53),
-       coverage:coverage>=(isCentral?.40:.35),evidence:evidence>=(isCentral?.31:.27)};
- const basicOK=Object.keys(basic).every(k=>basic[k]);
- const ranking=rows.map(z=>({no:num(z.horse.horseNumber),p2:rankedRole(z,2),p3:rankedRole(z,3)}));
- const roleCoverage=field?ranking.filter(z=>z.p2!==null&&z.p3!==null).length/field:0;
- const place=ranking.map(z=>({...z,value:z.p2!==null&&z.p3!==null?z.p2+z.p3:0}))
-   .sort((x,y)=>y.value-x.value||x.no-y.no);
- const placeSum=place.reduce((s,z)=>s+z.value,0);
- const placeTop2=placeSum?place.slice(0,2).reduce((s,z)=>s+z.value,0)/placeSum:0;
- const placeTop3=placeSum?place.slice(0,3).reduce((s,z)=>s+z.value,0)/placeSum:0;
- const axisTop3=!!axis&&place.slice(0,3).some(z=>z.no===num(axis.horse.horseNumber));
- const noAxisPlace=!axis&&roleCoverage>=.75&&placeTop3>=.47&&placeTop2>=.31;
- const strongPlace=basicOK&&roleCoverage>=.60&&(axisTop3||noAxisPlace)&&
-       placeTop3>=Math.max(.43,Math.min(.80,3/Math.max(field,1)*1.04))&&
-       placeTop2>=Math.max(.28,Math.min(.59,2/Math.max(field,1)*1.02))&&
-       scenario>=(isCentral?.19:.15)&&num(a.score)>=(isCentral?52:48);
- const clearWinner=basicOK&&!!axis&&(a.selected===true||(
-       a.winnerStable===true&&winnerConf>=(isCentral?.65:.60)&&
-       margin>=(isCentral?.035:.028)&&top3>=(isCentral?.61:.59)&&
-       scenario>=(isCentral?.29:.22)&&num(a.score)>=(isCentral?66:60)&&
-       a.multiHeadAgreement!==false));
- const holes=rows.filter(z=>z.predMark==='☆+'||z.predMark==='☆');
- const holeIndex=place.findIndex(z=>holes.some(h=>num(h.horse.horseNumber)===z.no));
- const longshot=basicOK&&!!axis&&holes.length>0&&roleCoverage>=.70&&
-       holeIndex>=0&&holeIndex<=Math.min(5,field-1)&&a.winnerStable===true&&
-       winnerConf>=(isCentral?.60:.56)&&margin>=(isCentral?.022:.018)&&
-       scenario>=(isCentral?.29:.23)&&top3>=.55&&
-       num(a.score)>=(isCentral?62:57)&&a.multiHeadAgreement!==false;
- let types=[];
- if(strongPlace)types.push(NAMES[0]);
- if(clearWinner)types.push(NAMES[1]);
- if(longshot)types.push(NAMES[2]);
- const selected=basicOK&&types.length>0;
- const primaryType=types.includes(NAMES[1])&&a.selected===true?NAMES[1]:
-       types.includes(NAMES[0])?NAMES[0]:
-       types.includes(NAMES[1])?NAMES[1]:types[0]||'';
- const explanation={
-  '的中重視型':'2・3着の役割分布を重視。◎なしでもワイド・馬連・3連複を検討',
-  '勝ち馬明確型':'勝ち馬の安定性と上位差を重視。馬単・3連単を検討',
-  '高配当狙い型':'☆・☆+の相手適性と着順の筋を評価。高配当も的中も保証しない'
- };
- return {selected,score:selected?Math.max(0,Math.min(100,Math.round(num(a.score)))):0,
-     primaryType,types,reason:selected?explanation[primaryType]:'券種別評価または基礎データ条件を満たさない',
-     modelVersion:VERSION,metrics:{field,readiness:ready,coverage,evidence,scenario,
-     roleCoverage,placeTop2,placeTop3,winnerConf,margin},
-     gates:{...basic,hasHonmei:!!axis,noAxisPlace,strongPlace,clearWinner,longshot},
-     note:'券種別モデル評価であり、的中率・期待配当・期待値を表しません。'};
+ const rows=((p&&p.rows)||[]).filter(z=>z&&z.horse&&!z.horse.scratched&&!z.horse.withdrawn);
+ const good=rows.length>=5&&rows.filter(z=>Number(z.threeFactorCoverage)>=2).length>=Math.ceil(rows.length*.70);
+ return {selected:good,score:0,primaryType:'的中重視型',
+   types:good?['的中重視型']:[],reason:good?'券種別実測的中率検証待ち':'近走実測データ不足',
+   modelVersion:'arvexq-empirical-ticket-hit-v1',metrics:{coverage:good},
+   note:'厳選には保存済み買い目と確定結果の券種別的中率のみ使用。能力点は印専用。'};
 }
 // A public selected race must have a genuine, actionable morning recommendation.
 // Prediction quality alone is not a promise that a purchasable ticket exists.
 function ticketKinds(plan){
- if(!plan||!['通常買い','強く買う'].includes(String(plan.decision||''))||
+ if(!plan||!['購入候補','通常買い','強く買う'].includes(String(plan.decision||''))||
     !plan.betInputGate||plan.betInputGate.ready!==true)return [];
- const kinds=[];
- for(const item of (Array.isArray(plan.items)?plan.items:[])){
-  if(!item||!['本線','保険','3連単チャレンジ'].includes(String(item.level||''))||
-     !['ワイド','馬連','馬単','3連複','3連単'].includes(String(item.kind||'')))continue;
-  const combos=Array.isArray(item.combos)?item.combos:[];
-  if(!combos.length||!combos.every(c=>Array.isArray(c)&&
-      c.length===(item.kind==='3連単'||item.kind==='3連複'?3:2)&&
-      c.every(v=>Number.isInteger(Number(v))&&Number(v)>0)&&new Set(c.map(Number)).size===c.length))continue;
-  if(item.kind==='3連単'&&(combos.length<6||combos.length>12))continue;
-  if(!kinds.includes(item.kind))kinds.push(item.kind);
- }
- return kinds;
+ return [...new Set((plan.items||[]).filter(x=>x&&x.kind&&Array.isArray(x.combos)&&x.combos.length).map(x=>x.kind))];
 }
 function requireMorningTickets(selection,plan){
  if(!selection||selection.selected!==true)return selection;
- const kinds=ticketKinds(plan);
- // A type is publishable only when the generated ticket matches its
- // advertised objective. This also prevents a "high-payout" label for
- // a race whose 3連単 was declined.
- const supported=(selection.types||[]).filter(t=>
-   t===NAMES[0]&&kinds.some(k=>['ワイド','馬連','3連複'].includes(k))||
-   t===NAMES[1]&&kinds.some(k=>['馬単','3連単'].includes(k))||
-   t===NAMES[2]&&kinds.includes('3連単'));
- const has=supported.length>0;
- const primaryType=supported.includes(selection.primaryType)?selection.primaryType:(supported[0]||'');
- return {...selection,selected:has,primaryType,types:supported,
-    ticketKinds:kinds,
-    reason:has?({
-      [NAMES[0]]:'2・3着の役割分布と軸の安定性を重視',
-      [NAMES[1]]:'勝ち馬の安定性と上位差を重視',
-      [NAMES[2]]:'☆・☆+の穴馬と着順の筋を重視'
-    }[primaryType]+'｜朝の買い目成立：'+kinds.join('・')):
-      '朝の買い目がすべて見送り、または該当分類の券種が不成立のため厳選対象外'};
+ const kinds=ticketKinds(plan),main=(plan&&plan.items||[]).find(x=>x.level==='本線');
+ const bucket=main&&hitCalibration(main.kind,(main.combos||[]).length);
+ const selected=!!bucket&&kinds.includes(main.kind);
+ return {...selection,selected,score:selected?Math.round(bucket.hitRate*100):0,
+   hitRate:selected?bucket.hitRate:null,hitRateSamples:selected?bucket.sample:0,
+   hitRateWilsonLower:selected?bucket.wilsonLower95:null,
+   primaryType:selected?'的中重視型':'',types:selected?['的中重視型']:[],
+   ticketKinds:kinds,reason:selected?('本線'+main.kind+'の実測的中率'+(bucket.hitRate*100).toFixed(1)+'%｜'+bucket.sample+'レース'):'本線買い目の的中率検証不足（厳選見送り）'};
 }
-// Allow a quality-qualified place lane to reach the real bet engine without
-// falsely claiming the first-place winner is dominant.
 function hasMorningPlace(r,frozen){
  const pending=r&&r._arvexqMorningLaneCandidate;
  return !!((pending&&pending.selected===true&&Array.isArray(pending.types)&&pending.types.includes(NAMES[0]))||
@@ -122,6 +61,7 @@ function qualifyPlaceBet(base,r,frozen){
 // Historical first-write-wins archives remain intact, but unverified
 // older selections are not currently purchasable recommendations.
 function selectionDisplayStatus(m,r){
+ if(m&&m.selected===true&&m.selectionModelVersion!=='arvexq-empirical-ticket-hit-v1')return 'legacy-unverified';
  if(!m||m.selected!==true)return 'not-selected';
  const kinds=Array.isArray(m.ticketKinds)?m.ticketKinds:[],
        types=Array.isArray(m.types)?m.types:[],

@@ -65,6 +65,8 @@ const selectionModule=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js
 const selectedPipeline=fs.readFileSync('arvexq/ui/static/morning/selected_race_pipeline.js','utf8');
 const specialModule=fs.readFileSync('arvexq/ui/static/morning/special_selection.js','utf8');
 const laneModule=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8');
+const calibrationFile='arvexq/ui/static/morning/hit_rate_calibration.json';
+const calibration=fs.existsSync(calibrationFile)?JSON.parse(fs.readFileSync(calibrationFile,'utf8')):null;
 const evidenceModule=fs.readFileSync('arvexq/ui/static/morning/frozen_ticket_evidence.js','utf8');
 // Unified predictor in app.js owns all marks and tickets.
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
@@ -79,6 +81,7 @@ const ctx={window,document,localStorage:store,sessionStorage:store,console,
  navigator:window.navigator,location:window.location,setTimeout:()=>0,
  clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
 vm.createContext(ctx);
+window.ARVEXQTicketHitCalibration=calibration&&calibration.asOfDate===day?calibration:null;
 vm.runInContext(laneModule,ctx,{timeout:12000,filename:'ticket_lane_classifier.js'});
 vm.runInContext(evidenceModule,ctx,{timeout:12000,filename:'frozen_ticket_evidence.js'});
 vm.runInContext(selectionModule,ctx,{timeout:12000,filename:'selection_cut.js'});
@@ -118,6 +121,8 @@ for(const r of rows){
     types:Array.isArray(selectionById.get(String(r.id))?.types)?selectionById.get(String(r.id)).types.slice():[],
     selectionReason:String(selectionById.get(String(r.id))?.reason||''),
     selectionModelVersion:String(selectionById.get(String(r.id))?.modelVersion||''),
+    selectionHitRate:selectionById.get(String(r.id))?.hitRate??null,
+    selectionHitRateSamples:Number(selectionById.get(String(r.id))?.hitRateSamples)||0,
     ticketKinds:Array.isArray(selectionById.get(String(r.id))?.ticketKinds)?
       selectionById.get(String(r.id)).ticketKinds.slice():[],
     ticketEvidence:selectionById.get(String(r.id))?.evidence||null,

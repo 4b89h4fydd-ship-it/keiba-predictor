@@ -1066,13 +1066,11 @@ function strictSelectedRaceProfile(r,p){
   if(coverage<3)failed.push('3要素根拠不足');
   var measured=rows.filter(function(z){return n(z.threeFactorCoverage)>=2}).length;
   if(measured<Math.ceil(rows.length*.70))failed.push('近走実測根拠不足');
-  if(score<80)failed.push('80点未満');
-  if(margin<.04)failed.push('本命との差不足');
   if(top.predMark!=='◎')failed.push('◎不一致');
   var selected=!failed.length;
   return {selected:selected,score:score,top:n(top.p1Probability,0),margin:margin,
     coverage:coverage/3,readiness:ready,failed:failed,
-    reason:selected?'新方式80点以上・根拠充足':'見送り: '+failed.join('・'),
+    reason:selected?'発走前の3指標が有効（券種別的中率は独立審査）':'見送り: '+failed.join('・'),
     model:'arvexq-true-run-pure-sectional-v2'};
 }
 // Optional ☆ eligibility changes neither the ranking nor the 45/35/20 score.
@@ -2804,6 +2802,7 @@ function morningPickOf(r){
     version:'v1',fixedAt:String(r.morningPickFixedAt),
     selected:r.morningSelected===true,selectedScore:n(r.morningSelectedScore,0),
     special:r.morningSpecial===true,scope:n(r.morningPickScope,0),assessed:r.morningAssessed!==false,
+    selectionModelVersion:String(r.morningSelectionModelVersion||''),
      primaryType:String(r.morningPrimaryType||''),types:Array.isArray(r.morningSelectedTypes)?r.morningSelectedTypes.slice():[],
      selectionReason:String(r.morningSelectionReason||''),
      ticketKinds:Array.isArray(r.morningTicketKinds)?r.morningTicketKinds.slice():[],
@@ -2832,7 +2831,7 @@ function selectedRaceCandidates(circuit){
   // Published free selections require a frozen ticket-backed type.
   return (state.races||[]).filter(function(r){
     var m=morningPickOf(r);
-    return !!(r&&r.id&&m&&morningPublicStatus(r)==='actionable'&&n(m.selectedScore,0)>=80&&
+    return !!(r&&r.id&&m&&morningPublicStatus(r)==='actionable'&&String(m.selectionModelVersion||'')==='arvexq-empirical-ticket-hit-v1'&&
       String(m.primaryType||'')==='的中重視型'&&Array.isArray(m.types)&&m.types.includes('的中重視型')&&
       (!circuit||String(r.circuit||'')===String(circuit)))
   }).map(function(r){
