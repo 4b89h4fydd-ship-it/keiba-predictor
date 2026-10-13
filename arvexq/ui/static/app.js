@@ -1237,22 +1237,10 @@ function raceMarkClock(r){
     started:resultPublished||!!date&&(date<current||(date===current&&post<9999&&nowMins()>=post)),
     remaining:date===current?post-nowMins():9999};
 }
-function markFreezeKey(r){return 'arvexq:marks:frozen:v345:'+String(r&&r.date||'')+':'+String(r&&r.id||'')}
-function loadFrozenMarks(r){
-  try{
-    if(!r||!r.id)return null;
-    var record=JSON.parse(localStorage.getItem(markFreezeKey(r))||'null');
-    if(!record||record.version!=='v345'||String(record.raceId)!==String(r.id)||
-      String(record.date)!==String(r.date)||!Array.isArray(record.marks)||record.marks.length<3)return null;
-    var seen={};
-    for(var i=0;i<record.marks.length;i++){
-      var x=record.marks[i],no=n(x.no,0),mark=String(x.mark||'');
-      if(no<1||seen[no]||['','◎','○','▲','☆+','☆','△','注'].indexOf(mark)<0)return null;
-      seen[no]=1;
-    }
-    return record;
-  }catch(e){return null}
-}
+// Retired v345 device-only freeze is excluded from current UI.
+// Existing records remain untouched for external audit; new code never writes
+// or reuses them as present-day three-factor forecasts.
+function loadFrozenMarks(r){return null}
 // Server archive is trusted only with evidence of a genuine pre-off capture.
 function serverFrozenPrediction(r){
   if(!r||!r.id)return null;
@@ -1388,22 +1376,6 @@ function immutableArchivedPrediction(r){
 function applyFrozenMarks(r,p){
   if(!r||!p||!Array.isArray(p.rows))return p;
   var clock=raceMarkClock(r),server=authorizedPreOffMarks(r),record=server?null:loadFrozenMarks(r);
-  if(!server&&!record&&clock.valid&&!clock.started&&clock.remaining>=0&&clock.remaining<=10){
-    var rows=p.rows.filter(function(z){return z&&z.horse&&!isScratchHorse(z.horse)}),
-        marked=rows.filter(function(z){return !!String(z.predMark||'')}).length;
-    // Prevent a partial racecard or thin data from locking misleading marks.
-    if(!r._entryOnly&&rows.length>=3&&rows.length>=(r.horses||[]).filter(function(h){return !isScratchHorse(h)}).length&&
-      marked>=3&&n(p.coverage,0)>=.35){
-      record={version:'v345',raceId:String(r.id),date:String(r.date),fixedAt:new Date().toISOString(),
-        fixedMinutesBeforePost:clock.remaining,
-        marks:rows.map(function(z){var h=validatedHonmeiMetadata(z);return {no:n(z.horse.horseNumber),mark:String(z.predMark||''),
-          single:!!z.singleWinSuitable,honmeiRole:z.predMark==='◎'?h.honmeiRole:'',
-          honmeiGrade:z.predMark==='◎'?h.honmeiGrade:'',
-          podiumAxisEligible:z.predMark==='◎'&&z.podiumAxisEligible===true}})};
-      try{localStorage.setItem(markFreezeKey(r),JSON.stringify(record))}
-      catch(e){record=null}
-    }
-  }
   // Current pre-off marks are always calculated from the freshest race input.
   // Retain the first pre-off server/local receipt for later accuracy audits
   // and any already-fixed bet, but never let the receipt overwrite live marks.

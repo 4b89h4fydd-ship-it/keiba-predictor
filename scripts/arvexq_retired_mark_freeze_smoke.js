@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const s=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const start=s.indexOf('function loadFrozenMarks('),end=s.indexOf('// Server archive is trusted only',start);
+assert(start>=0&&end>start);
+const loader=new Function(s.slice(start,end)+'return loadFrozenMarks;')();
+assert.equal(loader({id:'nar-2026-10-13-盛岡-06'}),null);
+assert(!s.includes("record={version:'v345'"),'retired local mark seal must not be generated');
+assert(!s.includes('localStorage.setItem(markFreezeKey(r)'), 'retired local mark seal must not be written');
+assert(s.includes('function serverFrozenPrediction('),'immutable official archives retained');
+assert(s.includes('function assignPredictionMarks('),'current mark model retained');
+console.log('RETIRED_LOCAL_MARK_FREEZE_EXCLUDED_OK');
