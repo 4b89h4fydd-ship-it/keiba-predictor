@@ -201,13 +201,16 @@ class ServerSealTests(unittest.TestCase):
     def test_server_capture_loads_current_browser_betting_dependencies(self):
         from pathlib import Path
         source = Path("scripts/arvexq_capture_prerace_bet.js").read_text(encoding="utf-8")
-        for module in ("bet_readiness.js", "no_axis_strategy.js",
-                       "main_strategy.js", "trifecta_strategy.js",
-                       "insurance_strategy.js", "three_way_engine.js",
-                       "ticket_lane_classifier.js", "podium_axis_guard.js"):
+        for module in ("ticket_lane_classifier.js", "bet_view.js"):
             self.assertIn(module, source, module)
+        for retired in ("bet_readiness.js", "no_axis_strategy.js",
+                        "main_strategy.js", "trifecta_strategy.js",
+                        "insurance_strategy.js", "three_way_engine.js",
+                        "podium_axis_guard.js", "legacy_v213_order_model.js"):
+            self.assertNotIn(retired, source, retired)
         self.assertIn("vm.runInContext(lane", source)
-        self.assertIn("vm.runInContext(engine", source)
+        self.assertIn("vm.runInContext(view", source)
+        self.assertIn("arvexq-server-exact-js-bet-v2-three-factor", source)
 
     def test_unavailable_js_ticket_is_retryable_not_an_immutable_skip(self):
         from scripts.arvexq_freeze_predictions import capture_original_bet
