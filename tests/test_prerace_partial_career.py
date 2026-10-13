@@ -70,8 +70,11 @@ class PartialCareerSealTests(unittest.TestCase):
         self.assertEqual(len(original["careerEvidence"]["blockedHorses"]), 2)
         self.assertFalse(detail.get("preRacePrediction"), "input cannot be mutated")
 
-    def test_many_unverified_do_not_seal(self):
+    def test_missing_recent_evidence_still_refuses_to_seal(self):
         detail = race(count=14, verified=0)
+        for horse in detail['horses']:
+            horse['recentRaces'] = horse['recentRaces'][:2]
+            horse['allPastRuns'] = horse['allPastRuns'][:2]
         readiness = assess_career_readiness(detail)
         self.assertFalse(sufficiently_observed_partial_career(detail, readiness))
         forecast = apply_core_marks(copy.deepcopy(detail))
@@ -103,7 +106,7 @@ class PartialCareerSealTests(unittest.TestCase):
         self.assertEqual(forecast["predictionStatus"], "partial-career-evidence")
         self.assertFalse(forecast["careerReadiness"]["ready"])
         self.assertEqual(forecast["careerReadiness"]["predictionEvidencePolicy"],
-                         "all-active-five-dated-observed-total-unverified-v2")
+                         "three-dated-preoff-starts-per-unverified-horse-v3")
         result = prepare_seal(detail, now=NOW, assign=apply_core_marks, build=model)
         self.assertEqual(result["status"], "sealed", result)
         self.assertFalse(result["detail"]["preRacePrediction"]["careerEvidence"]["fullCareerVerified"])
@@ -119,6 +122,30 @@ class PartialCareerSealTests(unittest.TestCase):
         post = prepare_seal(detail, now=NOW + timedelta(minutes=31),
                             assign=apply_core_marks, build=model)
         self.assertEqual(post["status"], "started-no-new-lock")
+
+    def test_unverified_lifetime_audit_with_five_real_runs_can_seal(self):
+        detail = race(count=7, verified=4)
+        for horse in detail["horses"]:
+            source = horse["recentRaces"][0]
+            dated = [{**source, "date": f"2026-09-{day:02d}", "finish": (horse["horseNumber"] + i) % 8 + 1}
+                     for i, day in enumerate((2, 7, 12, 17, 22))]
+            horse["recentRaces"] = copy.deepcopy(dated)
+            horse["allPastRuns"] = copy.deepcopy(dated)
+            if horse["horseNumber"] > 4:
+                audit = horse["_careerHistoryAudit"]
+                audit["reportedStarts"] = 5
+                audit["observedRuns"] = 5
+                audit["complete"] = False
+        ready = assess_career_readiness(detail)
+        self.assertFalse(ready["ready"])
+        self.assertEqual(len(ready["blockedHorses"]), 3)
+        self.assertTrue(sufficiently_observed_partial_career(detail,ready))
+        forecast = apply_core_marks(copy.deepcopy(detail))
+        self.assertEqual(forecast["predictionStatus"], "partial-career-evidence")
+        self.assertEqual(sum(h["integratedEvaluation"]["mark"] == "◎" for h in forecast["horses"]), 1)
+        result = prepare_seal(detail, now=NOW, assign=apply_core_marks, build=model)
+        self.assertEqual(result["status"],"sealed",result)
+        self.assertFalse(result["detail"]["preRacePrediction"]["careerEvidence"]["fullCareerVerified"])
 
     def test_three_race_minimum_and_no_future_bypass(self):
         detail = race()
