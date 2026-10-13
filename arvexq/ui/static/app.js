@@ -1279,10 +1279,12 @@ function applyFrozenMarks(r,p){
   // Current pre-off marks are always calculated from the freshest race input.
   // Retain the first pre-off server/local receipt for later accuracy audits
   // and any already-fixed bet, but never let the receipt overwrite live marks.
-  if(!clock.started){
+  // A verified pre-off receipt is the sole display authority on both sides
+  // of the start. Never replace displayed marks with a different archive at off.
+  if(!clock.started&&!server){
     p.rows.forEach(function(z){z.markFrozen=false;z.computedLiveMark=String(z.predMark||'')});
-    p.markFreeze={source:'live-before-post',originalPreserved:!!server,
-      reason:'発走前の最新データによるAI評価。保存済み予想・買い目は変更しません。'};
+    p.markFreeze={source:'live-before-post',originalPreserved:false,
+      reason:'発走前の暫定AI印（保存原本はまだありません）。発走後は未保存印を再生成しません。'};
     return p
   }
   if(server){
@@ -1662,9 +1664,9 @@ function validatedHonmeiMetadata(source){
 function honmeiBadgeText(x){return '';} // Retain locked A/B/C metadata without displaying the old role badges.
 function honmeiA11yText(x){return x&&x.predMark==='◎'?'◎・勝ち切る能力と3着内の安定性を総合評価した本命（的中保証ではありません）':'';}
 function racecardMarkLegend(r){
-  var server=serverFrozenPrediction(r),archive=window.ARVEXQSavedSnapshot&&window.ARVEXQSavedSnapshot.marks(r),clock=raceMarkClock(r),
-      status=!clock.started?('発走前の最新AI印（更新あり）'+(server?'／保存済み原本・買い目は維持':'')):
-        (server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':'発走前印の保存なし'));
+  var server=authorizedPreOffMarks(r),clock=raceMarkClock(r),
+      status=server?'発走前保存印（発走前後で同一の原本）':
+        (!clock.started?'発走前の暫定AI印（原本未保存）':'発走前印の保存なし');
   var original=clock.started?authorizedPreOffMarks(r):null,
       axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
   return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 好走根拠が複数揃う場合だけ　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
