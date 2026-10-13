@@ -1155,3 +1155,30 @@ html body .smart-venue-page .smart-race-row:not(.final):not([data-race-state="el
 }
 html body .smart-race-page .smart-race-content,
 html body .smart-race-page .smart-race-head-layout{gap:5px!important}
+
+/* Plain wordmark: no haze, fixed hero or translucent top overlay. */
+html body .smart-shell.smart-home>.arv-simple-brand{
+ display:block!important;position:relative!important;top:auto!important;
+ z-index:auto!important;margin:0!important;padding:10px 9px 8px!important;
+ background:#fff!important;color:#151c21!important;
+ font-size:26px!important;font-weight:900!important;line-height:1.15!important;
+ letter-spacing:.075em!important;text-align:center!important;
+ border:0!important;border-bottom:1px solid #e3e6e8!important;
+ box-shadow:none!important;filter:none!important;opacity:1!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+html body .smart-shell.smart-home:before,
+html body .smart-shell.smart-home:after,
+html body .smart-shell.smart-home>.arv-simple-brand:before,
+html body .smart-shell.smart-home>.arv-simple-brand:after{
+ content:none!important;display:none!important;
+}
+html body .smart-shell.smart-home,
+html body .smart-shell.smart-home>.smart-main.smart-home-main{
+ background:#fff!important;filter:none!important;backdrop-filter:none!important;
+ -webkit-backdrop-filter:none!important;box-shadow:none!important;
+}
+html body .smart-shell.smart-home>.smart-main.smart-home-main,
+html.pwa-standalone body .smart-shell.smart-home>.smart-main.smart-home-main{
+ padding-top:0!important;
+}
