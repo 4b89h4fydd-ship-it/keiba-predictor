@@ -19,9 +19,12 @@ const state=(clock,id)=>home.liveModel('horse',rows,day,at(clock)).find(r=>r.id.
 assert.equal(home.liveModel('horse',rows,day,at('09:59')).length,5);
 assert.equal(state('09:59','東京-01').status,'soon');
 assert.equal(state('09:59','東京-01').next,true);
-assert.equal(state('10:01','東京-01').status,'elapsed');
+assert.equal(state('10:01','東京-01').status,'running');
+assert.equal(state('10:05','東京-01').status,'elapsed');
 assert.equal(state('10:01','東京-02').next,true);
-assert.equal(state('10:11','浦和-01').status,'elapsed');
+assert.equal(state('10:11','浦和-01').status,'running');
+assert.equal(state('10:15','浦和-01').status,'elapsed');
+assert.equal(home.labelFor('running'),'進行中');
 assert.equal(state('10:11','浦和-02').next,true);
 assert.equal(state('09:59','浦和-03').status,'cancelled');
 assert.ok(home.liveModel('horse',rows,day,at('23:59')).some(r=>r.status==='elapsed'));
