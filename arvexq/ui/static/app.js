@@ -1064,7 +1064,8 @@ function strictSelectedRaceProfile(r,p){
   var failed=[];
   if(rows.length<5)failed.push('頭数不足');
   if(coverage<3)failed.push('3要素根拠不足');
-  if(ready.prediction<.65)failed.push('出走前データ不足');
+  var measured=rows.filter(function(z){return n(z.threeFactorCoverage)>=2}).length;
+  if(measured<Math.ceil(rows.length*.70))failed.push('近走実測根拠不足');
   if(score<80)failed.push('80点未満');
   if(margin<.04)failed.push('本命との差不足');
   if(top.predMark!=='◎')failed.push('◎不一致');
@@ -2289,7 +2290,8 @@ function buildAiBetPlan(r,p){
   var selected=strictSelectedRaceProfile(r,p),ready=dataReadinessProfile(r,p),
       ordered=rows.slice().sort(function(a,b){return n(b.threeFactorScore)-n(a.threeFactorScore)}),
       field=rows.length,score=n(ordered[0].threeFactorScore),gap=score-n(ordered[1].threeFactorScore),
-      mark=ordered[0],isReady=ready.prediction>=.65&&n(mark.threeFactorCoverage)>=3,
+      mark=ordered[0],measured=rows.filter(function(z){return n(z.threeFactorCoverage)>=2}).length,
+      isReady=n(mark.threeFactorCoverage)>=3&&measured>=Math.ceil(field*.70),
       active=selected.selected&&isReady;
   function no(z){return n(z&&z.horse&&z.horse.horseNumber)}
   function item(level,kind,combos,reason){
@@ -2335,7 +2337,7 @@ function buildAiBetPlan(r,p){
         expectedValueReason:'各券種の的中率・期待値は検証で校正されていません。',
         referenceBudget:{points:items.reduce(function(v,x){return v+x.points},0)},
         dataReadiness:ready,betInputGate:{ready:isReady,missing:isReady?[]:['3要素または出走前データ不足']},
-        betWarnings:!isReady?['近走・能力・区間の数値不足']:[],
+        betWarnings:!isReady?['直近5走・区間の実測根拠不足']:[],
         p1Model:'arvexq-true-run-pure-sectional-v2',
         p2Model:'plackett-luce-same-score',p3Model:'plackett-luce-same-score',
         roles:{p1:ordered.slice(0,4).map(function(x){return {no:no(x),p:n(x.p1Probability)}}),
