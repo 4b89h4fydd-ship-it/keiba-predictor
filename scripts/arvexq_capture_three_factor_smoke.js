@@ -34,4 +34,21 @@ assert(out.items.every(x=>x.level==='本線'||x.level==='保険'||x.level==='3�
 assert(!out.items.some(x=>x.kind==='旧方式'));
 assert.equal(out.singleWinHorseNumber,1);
 assert.match(out.version,/three-factor/);
+// Rich, dated three-factor evidence must not be rejected for missing
+// unrelated weather, body weights or jockey completeness.
+const observationOnly={...race,weather:'不明',condition:'不明',
+  horses:horses.map(h=>({...h,jockey:'',bodyWeight:null,winOdds:null}))};
+const runObserved=child.spawnSync(process.execPath,['scripts/arvexq_capture_prerace_bet.js'],
+  {input:JSON.stringify(observationOnly),encoding:'utf8',timeout:30000});
+assert.equal(runObserved.status,0,
+  'observed histories wrongly blocked by obsolete full-diagnosis readiness: '+String(runObserved.stderr).slice(0,1500));
+const observed=JSON.parse(runObserved.stdout);
+assert.equal(observed.decision,'購入候補');
+assert(observed.items.some(z=>z.level==='本線'));
+// Equally, no measured SECTIONAL -> no manufactured trusted ticket.
+const sparse={...race,horses:horses.map(h=>({...h,recentRaces:
+  h.recentRaces.map(v=>({...v,last3fRank:null,last3fPercentile:null}))}))};
+const runSparse=child.spawnSync(process.execPath,['scripts/arvexq_capture_prerace_bet.js'],
+  {input:JSON.stringify(sparse),encoding:'utf8',timeout:30000});
+assert.notEqual(runSparse.status,0,'no sectionals must not seal a bogus 80-point winner');
 console.log('SERVER_PREOFF_CAPTURE_THREE_FACTOR_OK',out.items.map(i=>i.kind).join(','));
