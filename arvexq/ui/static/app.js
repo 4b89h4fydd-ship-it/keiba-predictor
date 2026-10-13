@@ -1680,18 +1680,19 @@ function validatedHonmeiMetadata(source){
 }
 function honmeiBadgeText(x){return x&&x.honmeiGrade?String(x.honmeiGrade):'';}
 function markRoleLabel(x){
-  if(!x||x.markFrozen)return '';
-  var win=x.predMark==='◎',axis=x.preOffAxisCandidate===true;
+  if(!x)return '';
+  var win=x.predMark==='◎'&&(x.markFrozen?x.honmeiRole==='win':true),
+      axis=x.markFrozen?(x.predMark==='◎'&&x.honmeiRole==='axis'||x.podiumAxisEligible===true):x.preOffAxisCandidate===true;
   return win&&axis?'◎【単】 ◎【軸】':win?'◎【単】':axis?'◎【軸】':'';
 }
 function honmeiA11yText(x){return x&&x.predMark==='◎'?'◎・勝ち切る能力と3着内の安定性を総合評価した本命（的中保証ではありません）':'';}
 function racecardMarkLegend(r){
   var server=authorizedPreOffMarks(r),clock=raceMarkClock(r),
-      status=server?'発走前保存印（発走前後で同一の原本）':
+      status=clock.started&&server?'発走前保存印（発走前後で同一の原本）':
         (!clock.started?'発走前の最新AI印':'発走前印の保存なし');
   var original=clock.started?authorizedPreOffMarks(r):null,
       axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
-  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 好走根拠が複数揃う場合だけ　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
+  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎【単】</b> 勝ち切る能力　<b>◎【軸】</b> 3着内の安定性（該当なしもあり）　<b>○</b> 1・2着　<b>▲</b> 2・3着　<b>△</b> 3着　<b>☆</b> 展開で上昇　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
 }
 function racecardEntryRow(r,h,x){
   var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
@@ -1707,7 +1708,7 @@ function racecardEntryRow(r,h,x){
     +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(x&&x.predMark||'')+'" aria-label="'+esc(String(x&&x.predMark||'—').replace(/\+/g,'＋')+(x&&x.predMark==='◎'?'、'+honmeiA11yText(x):'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':''))+'"><span class="rc-mark-main">'+racecardMarkDisplay(x&&x.predMark)+'</span>'+(markRoleLabel(x)?'<small style="display:block;font-size:9px">'+esc(markRoleLabel(x))+'</small>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
     +'<button type="button" class="rc-v336-number"'+openAttr+detailLabel+disabled+'><span class="rc-number frame'+fr+'">'+esc(no)+'</span></button>'
     +'<div class="rc-v336-info"><button type="button" class="rc-horse-main"'+openAttr+detailLabel+disabled+'>'
-      +'<span class="rc-horse-name">'+esc(name)+'</span>'
+      +'<span class="rc-horse-name">'+esc(name)+(markRoleLabel(x)&&!scratch?' <small class="rc-honmei-role" style="font-size:11px;font-weight:700;white-space:normal">'+esc(markRoleLabel(x))+'</small>':'')+'</span>'
       +'<span class="rc-v336-meta"><span class="rc-sexage">'+esc(h.sex||'—')+esc(h.age||'—')+'</span>'
       +'<span class="carry">'+esc(carriedWeightText(h))+'</span><span class="jockey">'+esc(h.jockey||'—')+'</span></span>'
     +'</button></div>'
@@ -2302,7 +2303,7 @@ function aiBetRecommendation(r,p){
 
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎【単】は勝ち切る能力、◎【軸】は3着内の安定性を別判定します。○は1・2着、▲は2・3着、△は3着、☆は展開上昇候補。モデル値は未校正です。発走後は保存済み予想のみ表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(x.predMark==='◎'?'<small>'+esc(honmeiBadgeText(x)==='未保存'?'◎：当時の役割・信頼度未保存':'◎'+honmeiBadgeText(x)+'｜'+(x.honmeiRole==='win'?'1着向き':'3着内の軸向き')+'｜信頼度'+x.honmeiGrade)+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎【単】は勝ち切る能力、◎【軸】は3着内の安定性を別判定します。○は1・2着、▲は2・3着、△は3着、☆は展開上昇候補。モデル値は未校正です。発走後は保存済み予想のみ表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(markRoleLabel(x)||mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(x.predMark==='◎'?'<small>'+esc(markRoleLabel(x)?markRoleLabel(x)+'｜'+(x.honmeiGrade?'信頼度'+x.honmeiGrade:'モデル推定（未校正）'):'保存印：当時の単・軸役割は未記録')+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
