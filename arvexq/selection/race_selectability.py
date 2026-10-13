@@ -7,7 +7,7 @@ from arvexq.prediction.jra_class_evidence import class_ordinal
 from arvexq.prediction.jra_sectional_evidence import run_sectional_percentile
 
 MODEL_VERSION = "arvexq-race-selectability-v2"
-PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
+PRIMARY_PILLARS = ("trueRun", "pure", "sectional")
 
 
 def _f(value: Any) -> float | None:

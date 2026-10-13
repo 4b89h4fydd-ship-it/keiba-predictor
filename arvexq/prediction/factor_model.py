@@ -7,55 +7,9 @@ from arvexq.core.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import analyze_past_performance, observed_runs
 from arvexq.prediction.career_profile import profile_career
 
-MODEL_VERSION = "arvexq-four-pillar-consensus-v7-full-career"
-PRIMARY_PILLARS = ("ability", "record", "suitability", "pace")
-
-# Correlated measurements from the same underlying observation are collapsed first.
-# This prevents one past run from becoming several independent votes merely because
-# it produced peak/median, career/recent and win/top3 statistics at the same time.
-SIGNAL_FAMILIES = {
-    "ability": (
-        # Direct published speed indices and derived metres/second are different
-        # scales. Keep them in one correlated family but never mix their raw values.
-        ("ability_speed_index_peak", "ability_speed_index_median", "ability_clock_speed_peak", "ability_clock_speed_median"),
-        ("ability_peak_finish",),
-        ("ability_sectional",),
-        ("ability_true_run",),
-        ("ability_pure",),
-        ("ability_research",),
-    ),
-    "record": (
-        ("record_career", "record_recent", "record_recent_context", "record_career_stability"),
-        ("record_win_rate", "record_top3_rate"),
-        ("record_level", "record_class_edge", "record_class_research"),
-        ("record_representative",),
-        ("record_race_performance",),
-        ("record_form_research",),
-    ),
-    "suitability": (
-        ("suit_distance_history", "suit_track_history", "suit_going_history", "suit_surface_history", "suit_comparable_recent", "suit_comparable_career"),
-        ("suit_distance_model", "suit_track_model", "suit_going_model", "suit_surface_model"),
-        ("suit_research",),
-    ),
-    "pace": (
-        ("pace_scenario",),
-        ("pace_state", "pace_front_hold_recent"),
-        ("pace_research",),
-        ("pace_track_speed_fit",),
-        ("pace_hidden_effort",),
-    ),
-    "support": (
-        ("support_pedigree", "support_pedigree_distance", "support_pedigree_surface", "support_pedigree_research"),
-        ("support_body", "support_body_change", "support_carried_weight"),
-        ("support_weather",),
-        ("support_draw",),
-        ("support_condition_change", "support_freshness"),
-        ("support_age_sex",),
-        ("support_jockey", "support_trainer", "support_connections"),
-        ("support_bias", "support_bias_model"),
-    ),
-}
-
+MODEL_VERSION = "arvexq-true-run-pure-sectional-45-35-20-v1"
+PRIMARY_PILLARS = ("trueRun", "pure", "sectional")
+SCORE_WEIGHTS = {"trueRun": .45, "pure": .35, "sectional": .20}
 
 def _f(value: Any) -> float | None:
     try:
@@ -265,150 +219,67 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
     }
 
 
-def _relative(values: list[float | None]) -> list[float | None]:
-    """Race-relative rank percentile. No magnitude coefficient is introduced."""
-    valid = sorted(v for v in values if v is not None)
-    if not valid:
-        return [None for _ in values]
-    if len(valid) == 1:
-        return [0.5 if v is not None else None for v in values]
-    out: list[float | None] = []
-    for value in values:
-        if value is None:
-            out.append(None)
-            continue
-        less = sum(1 for x in valid if x < value)
-        equal = sum(1 for x in valid if x == value)
-        rank = less + (equal - 1) / 2.0
-        out.append(rank / (len(valid) - 1))
-    return out
 
-
-def _pillar(values: list[float | None]) -> float | None:
-    available = [v for v in values if v is not None]
-    return float(median(available)) if available else None
-
-
-def _rank_map(rows: list[dict[str, Any]], key: str) -> dict[int, int]:
-    """Rank equal evidence equally; missing evidence must never become horse-number rank."""
-    values = sorted({float(row[key]) for row in rows if row.get(key) is not None}, reverse=True)
-    by_value = {value: idx + 1 for idx, value in enumerate(values)}
-    missing_rank = len(values) + 1
-    return {
-        id(row): by_value.get(float(row[key]), missing_rank) if row.get(key) is not None else missing_rank
-        for row in rows
-    }
+def _sectional_from_history(horse: dict[str, Any], race: dict[str, Any]) -> float | None:
+    observations = []
+    for run in observed_runs(horse, race, limit=5):
+        rank = _f(run.get("last3fRank") or run.get("last600Rank"))
+        field = _f(run.get("fieldSize"))
+        if rank is not None and field is not None and field > 1 and 1 <= rank <= field:
+            observations.append((field-rank)/(field-1))
+    return _mean(observations)
 
 
 def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) -> list[dict[str, Any]]:
+    """Authoritative TRUE RUN 45 + PURE 35 + SECTIONAL 20. Not hit probability."""
     active = [h for h in horses if isinstance(h, dict) and not is_inactive_runner(h)]
-    rows = [{"horse": h, "raw": collect_horse_raw_metrics(h, race),
-             "pastPerformance": analyze_past_performance(h, race),
-              "careerProfile": profile_career(h, race)} for h in active]
-    if not rows:
+    rows = []
+    for horse in active:
+        raw = collect_horse_raw_metrics(horse, race)
+        past = analyze_past_performance(horse, race)
+        ev = horse.get("integratedEvaluation") or {}
+        audit = ev.get("v218Audit") or ev.get("v217Audit") or {}
+        if not isinstance(audit, dict):
+            audit = {}
+        factors = {
+            "trueRun": _first(_unit(audit.get("trueRun")),
+                              _unit(raw.get("ability_true_run")),
+                              _unit(past.get("recentFormQuality"))),
+            "pure": _first(_unit(audit.get("pure")), _unit(raw.get("ability_pure"))),
+            "sectional": _first(_unit(audit.get("sectional")),
+                                _unit(raw.get("ability_sectional")),
+                                _sectional_from_history(horse, race)),
+        }
+        available = sum(value is not None for value in factors.values())
+        score = sum(weight * (factors[key] if factors[key] is not None else .5)
+                    for key, weight in SCORE_WEIGHTS.items())
+        rows.append({
+            "horse": horse, "raw": raw, "pastPerformance": past,
+            "careerProfile": profile_career(horse, race),
+            "score": score, "factors": factors,
+            "pillarScores": factors.copy(), "sample": int(raw.get("sample") or 0),
+            "evidenceCounts": {k: int(v is not None) for k, v in factors.items()},
+            "evidenceFamilyCounts": {k: int(v is not None) for k, v in factors.items()},
+            "primaryPillarCoverage": available, "primaryEvidenceCount": available,
+            "supportTieBreakWins": 0, "modelVersion": MODEL_VERSION,
+        })
+    if not any(row["primaryPillarCoverage"] for row in rows):
         return []
-
-    metric_names = sorted({k for row in rows for k in row["raw"] if k != "sample"})
-    relative_by_metric = {
-        metric: _relative([row["raw"].get(metric) for row in rows])
-        for metric in metric_names
-    }
-    groups = {
-        "ability": [m for m in metric_names if m.startswith("ability_")],
-        "record": [m for m in metric_names if m.startswith("record_")],
-        "suitability": [m for m in metric_names if m.startswith("suit_")],
-        "pace": [m for m in metric_names if m.startswith("pace_")],
-        "support": [m for m in metric_names if m.startswith("support_")],
-    }
-
+    for key in PRIMARY_PILLARS:
+        distinct = sorted({r["factors"][key] for r in rows if r["factors"][key] is not None},
+                          reverse=True)
+        for row in rows:
+            val = row["factors"][key]
+            row.setdefault("pillarRanks", {})[key] = (
+                distinct.index(val) + 1 if val is not None else len(distinct) + 1
+            )
+    rows.sort(key=lambda row: (-row["score"], -row["primaryPillarCoverage"],
+                               -row["sample"], int(row["horse"].get("horseNumber") or 999)))
     for i, row in enumerate(rows):
-        row["metricRelative"] = {m: relative_by_metric[m][i] for m in metric_names}
-        scores: dict[str, float | None] = {}
-        counts: dict[str, int] = {}
-        family_counts: dict[str, int] = {}
-        for pillar, metrics in groups.items():
-            vals = [relative_by_metric[m][i] for m in metrics]
-            counts[pillar] = sum(v is not None for v in vals)
-
-            # Collapse correlated metrics inside each evidence family before the
-            # pillar median. Each family therefore contributes at most one signal.
-            collapsed: list[float] = []
-            for family in SIGNAL_FAMILIES[pillar]:
-                family_value = _pillar([relative_by_metric[m][i] for m in family])
-                if family_value is not None:
-                    collapsed.append(family_value)
-            scores[pillar] = _pillar(collapsed)
-            family_counts[pillar] = len(collapsed)
-        row["pillarScores"] = scores
-        row["evidenceCounts"] = counts
-        row["evidenceFamilyCounts"] = family_counts
-        row["sample"] = int(row["raw"].get("sample") or 0)
-        row["primaryEvidenceCount"] = sum(counts[p] for p in PRIMARY_PILLARS)
-        row["primaryPillarCoverage"] = sum(counts[p] > 0 for p in PRIMARY_PILLARS)
-        for pillar in (*PRIMARY_PILLARS, "support"):
-            row[pillar] = scores[pillar]
-
-    # If the new model has no primary evidence at all, do not manufacture a ranking.
-    # The caller can keep the existing prediction or flag the race as data-insufficient.
-    if not any(row["primaryEvidenceCount"] > 0 for row in rows):
-        return []
-
-    pillar_ranks = {pillar: _rank_map(rows, pillar) for pillar in (*PRIMARY_PILLARS, "support")}
-    for row in rows:
-        row["pillarRanks"] = {pillar: pillar_ranks[pillar][id(row)] for pillar in pillar_ranks}
-        row["primaryRankSum"] = sum(row["pillarRanks"][p] for p in PRIMARY_PILLARS)
-        row["pairwiseWins"] = 0
-        row["pairwiseLosses"] = 0
-        row["pairwiseTies"] = 0
-        row["supportTieBreakWins"] = 0
-
-    for i in range(len(rows)):
-        for j in range(i + 1, len(rows)):
-            a, b = rows[i], rows[j]
-            aw = bw = compared = 0
-            for pillar in PRIMARY_PILLARS:
-                av, bv = a[pillar], b[pillar]
-                if av is None or bv is None:
-                    continue
-                compared += 1
-                if av == bv:
-                    continue
-                if av > bv:
-                    aw += 1
-                else:
-                    bw += 1
-            if aw > bw:
-                a["pairwiseWins"] += 1
-                b["pairwiseLosses"] += 1
-            elif bw > aw:
-                b["pairwiseWins"] += 1
-                a["pairwiseLosses"] += 1
-            else:
-                sa, sb = a["support"], b["support"]
-                # Support is a tie-break only when primary evidence was actually compared.
-                if compared > 0 and sa is not None and sb is not None and sa != sb:
-                    winner, loser = (a, b) if sa > sb else (b, a)
-                    winner["pairwiseWins"] += 1
-                    loser["pairwiseLosses"] += 1
-                    winner["supportTieBreakWins"] += 1
-                else:
-                    a["pairwiseTies"] += 1
-                    b["pairwiseTies"] += 1
-
-    rows.sort(
-        key=lambda r: (
-            -r["pairwiseWins"],
-            r["pairwiseLosses"],
-            -r["primaryPillarCoverage"],
-            r["primaryRankSum"],
-            r["pillarRanks"]["support"],
-            -r["sample"],
-            int(r["horse"].get("horseNumber") or 999),
-        )
-    )
-    field = max(1, len(rows) - 1)
-    for idx, row in enumerate(rows, 1):
-        row["rank"] = idx
-        row["dominanceScore"] = round(100.0 * row["pairwiseWins"] / field, 1) if len(rows) > 1 else 50.0
-        row["modelVersion"] = MODEL_VERSION
+        row["rank"] = i + 1
+        row["dominanceScore"] = round(row["score"] * 100, 2)
+        row["pairwiseWins"] = sum(row["score"] > other["score"] for other in rows if other is not row)
+        row["pairwiseLosses"] = sum(row["score"] < other["score"] for other in rows if other is not row)
+        row["pairwiseTies"] = len(rows) - 1 - row["pairwiseWins"] - row["pairwiseLosses"]
+        row["metricRelative"] = {}
     return rows
