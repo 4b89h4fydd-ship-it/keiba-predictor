@@ -1296,11 +1296,13 @@ function applyFrozenMarks(r,p){
   // and any already-fixed bet, but never let the receipt overwrite live marks.
   // A verified pre-off receipt is the sole display authority on both sides
   // of the start. Never replace displayed marks with a different archive at off.
-  if(!clock.started&&!server){
+  if(!clock.started){
+    // Live upcoming marks must never be overwritten by an older morning receipt.
+    // The receipt itself stays immutable for post-off display and historical audits.
     p.rows.forEach(function(z){z.markFrozen=false;z.computedLiveMark=String(z.predMark||'')});
-    p.markFreeze={source:'live-before-post',originalPreserved:false,
-      reason:'発走前の暫定AI印（保存原本はまだありません）。発走後は未保存印を再生成しません。'};
-    return p
+    p.markFreeze={source:'live-before-post',originalPreserved:!!server,
+      reason:server?'発走前の最新AI印（朝の保存原本は監査用に維持）':'発走前の暫定AI印（原本未保存）。発走後は未保存印を再生成しません。'};
+    return p;
   }
   if(server){
     var remote={};server.horses.forEach(function(q){remote[n(q.horseNumber)]=q});
@@ -1686,7 +1688,7 @@ function honmeiA11yText(x){return x&&x.predMark==='◎'?'◎・勝ち切る能�
 function racecardMarkLegend(r){
   var server=authorizedPreOffMarks(r),clock=raceMarkClock(r),
       status=server?'発走前保存印（発走前後で同一の原本）':
-        (!clock.started?'発走前の暫定AI印（原本未保存）':'発走前印の保存なし');
+        (!clock.started?'発走前の最新AI印':'発走前印の保存なし');
   var original=clock.started?authorizedPreOffMarks(r):null,
       axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
   return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 好走根拠が複数揃う場合だけ　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
