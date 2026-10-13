@@ -4,9 +4,28 @@ from typing import Any
 from arvexq.prediction.factor_model import MODEL_VERSION, PRIMARY_PILLARS, rank_factor_model
 from arvexq.prediction.career_readiness import attach_career_readiness
 
-MARK_ENGINE_VERSION = "arvexq-true-run-pure-sectional-marks-v1"
-CORE_MARKS = ("◎", "○", "▲")
-LOWER_MARKS = ("☆", "△", "注")
+MARK_ENGINE_VERSION = "arvexq-true-run-pure-sectional-marks-v2-optional-star"
+CORE_MARKS = ("◎", "○", "▲", "△")
+LOWER_MARKS = ("☆",)
+
+def optional_star_candidate(ranked: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Optional one-star promotion only; scoring, ranking and archives are unchanged."""
+    if len(ranked) < 5:
+        return None
+    fourth_score = float(ranked[3]["score"])
+    for row in ranked[4:]:
+        factors = row.get("factors") or {}
+        values = [factors.get(key) for key in ("trueRun", "pure", "sectional")]
+        if int(row.get("primaryPillarCoverage") or 0) != 3 or any(v is None for v in values):
+            continue
+        score = float(row["score"])
+        strong = sum(float(v) >= .68 for v in values)
+        if score >= .68 and fourth_score - score <= .075 and strong >= 2 and (
+            float(values[0]) >= .70 or float(values[2]) >= .70
+        ):
+            return row["horse"]
+    return None
+
 
 def sufficiently_observed_partial_career(
     detail: dict[str, Any], readiness: dict[str, Any]
@@ -162,9 +181,12 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             "horseNumber": int(h.get("horseNumber") or 0),
             "name": h.get("name") or "", **evidence,
         })
-    # One ranking owns all marks. 注 is reserved and never a forced sixth rank.
-    for row, mark in zip(ranked, ("◎", "○", "▲", "△", "☆")):
+    # One ranking owns the four mandatory marks; ☆ needs independent evidence.
+    for row, mark in zip(ranked, CORE_MARKS):
         row["horse"]["integratedEvaluation"]["mark"] = mark
+    star = optional_star_candidate(ranked)
+    if star is not None:
+        star["integratedEvaluation"]["mark"] = "☆"
     for row in ranked:
         row["horse"]["integratedEvaluation"]["rank"] = row["rank"]
     detail["markEngineVersion"] = MARK_ENGINE_VERSION
