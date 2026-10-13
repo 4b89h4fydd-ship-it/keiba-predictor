@@ -62,37 +62,16 @@ async function verify(kind,name){
       alerts:scope.querySelectorAll('.arv-unified-alert').length
     };scope.remove();return result;
   });
-  // Verify the actual home hero no longer scrolls away on iPhone.
-  const sticky=await evaluateAfterStableNavigation(page,()=>{
-    const hero=document.querySelector('.smart-home>.arv-unified-hero');
-    const date=document.querySelector('.smart-home .arv-unified-date');
-    if(!hero||!date)return {exists:false};
-    const a=getComputedStyle(hero),b=getComputedStyle(date);
-    return {exists:true,heroPosition:a.position,datePosition:b.position,
-      heroBlur:a.backdropFilter??a.webkitBackdropFilter??'none',dateBlur:b.backdropFilter??b.webkitBackdropFilter??'none',heroOpacity:a.opacity};
+  const simpleHome=await evaluateAfterStableNavigation(page,()=>{
+    const home=document.querySelector('.smart-shell.smart-home');
+    const date=home?.querySelector('.arv-unified-date');
+    return {hero:!!home?.querySelector('.arv-unified-hero'),
+      background:home?getComputedStyle(home).backgroundColor:null,
+      datePosition:date?getComputedStyle(date).position:null};
   });
-  assert.equal(sticky.exists,true,'Real home must render hero and date');
-  assert.ok(['fixed','sticky'].includes(sticky.heroPosition),'Hero must stay pinned on iPhone');
-  assert.equal(sticky.datePosition,'sticky','Date bar must remain sticky on iPhone');
-  assert.equal(sticky.heroBlur,'none','Hero blur overlay must be removed');
-  assert.equal(sticky.dateBlur,'none','Date blur overlay must be removed');
-  const scrollCheck=await evaluateAfterStableNavigation(page,async()=>{
-    const hero=document.querySelector('.smart-home>.arv-unified-hero');
-    if(!hero)return {found:false};
-    const before=hero.getBoundingClientRect().top;
-    const probe=document.createElement('div');
-    probe.style.cssText='height:1300px;pointer-events:none';
-    document.querySelector('.smart-home .smart-main')?.appendChild(probe);
-    window.scrollTo(0,180);
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    const after=hero.getBoundingClientRect().top,scroll=window.scrollY;
-    probe.remove();window.scrollTo(0,0);
-    return {found:true,before,after,scroll};
-  });
-  assert.equal(scrollCheck.found,true);
-  assert.ok(scrollCheck.scroll>70,'Actual page scroll did not happen');
-  assert.ok(Math.abs(scrollCheck.after-scrollCheck.before)<3,
-    'Hero moved while scrolling: '+JSON.stringify(scrollCheck));
+  assert.equal(simpleHome.hero,false,'Hero image should be removed');
+  assert.equal(simpleHome.background,'rgb(255, 255, 255)','Home should be white');
+  assert.equal(simpleHome.datePosition,'relative','Date should scroll naturally');
   assert.deepEqual(result.actions,['厳選','特別','AI成績']);
   assert.equal(result.fullGrid,24);assert.equal(result.booked,3);
   assert.equal(result.firstNext,1);assert.equal(result.nextAfter,2);
