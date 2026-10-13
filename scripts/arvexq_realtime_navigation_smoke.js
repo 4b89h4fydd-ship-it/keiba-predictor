@@ -69,8 +69,8 @@ async function verify(kind,name){
       background:home?getComputedStyle(home).backgroundColor:null,
       datePosition:date?getComputedStyle(date).position:null};
   });
-  assert.equal(simpleHome.hero,false,'Hero image should be removed');
-  assert.equal(simpleHome.background,'rgb(255, 255, 255)','Home should be white');
+  assert.equal(simpleHome.hero,true,'Home hero should be rendered');
+  assert.equal(simpleHome.background,'rgb(255, 250, 243)','Home should use approved cream color');
   assert.equal(simpleHome.datePosition,'relative','Date should scroll naturally');
   assert.deepEqual(result.actions,['厳選','特別','AI成績','お気に入り']);
   assert.equal(result.fullGrid,24);assert.equal(result.booked,3);
