@@ -147,7 +147,7 @@ const legacyHtml=viewGlobal.ARVEXQBetView.render(race,prediction,{
  buildAiBetPlan:()=>legacyPlan,esc:String,n,isFinal:()=>true,
  raceMarkClock:()=>({started:true}),aiBetExplanationHtml:()=>'',betComboText:()=>''
 });
-assert.match(legacyHtml,/新しい◎の役割・信頼度は当時未記録/);
+assert.match(legacyHtml,/発走前に保存した本命と買い目を維持（役割を後付けしません）/);
 assert.doesNotMatch(legacyHtml,/◎なし・軸固定なし/,'do not retroactively relabel saved v346 forecast');
 const confused=policy({...base(),audit:{orderConfidence:.03}},race,prediction);
 assert.equal(confused.trifectaDecision,'見送り','low ordering confidence blocks trifecta');
