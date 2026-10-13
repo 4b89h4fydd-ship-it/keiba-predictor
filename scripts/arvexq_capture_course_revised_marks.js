@@ -3,7 +3,7 @@
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm');
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
+const boot="installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);";
 if(!root.includes(boot))throw Error('JS boot anchor changed');
 const source=root.replace(boot,'window.__captureMarks={predict,state};');
 const memory=new Map(),store={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
@@ -15,8 +15,6 @@ Promise,RegExp,parseInt,parseFloat,isFinite,encodeURIComponent,decodeURIComponen
 navigator:window.navigator,location:window.location,setTimeout:()=>0,clearTimeout:()=>{},
 setInterval:()=>0,clearInterval:()=>{}};
 vm.createContext(ctx);
-vm.runInContext(fs.readFileSync('arvexq/ui/static/betting/podium_axis_guard.js','utf8'),
- ctx,{timeout:12000,filename:'podium_axis_guard.js'});
 vm.runInContext(source,ctx,{timeout:12000,filename:'app.js'});
 const detail=JSON.parse(fs.readFileSync(0,'utf8'));
 const earliest=Date.parse(String(detail.date||'')+'T'+String(detail.startTime||'').slice(0,5)+':00+09:00');

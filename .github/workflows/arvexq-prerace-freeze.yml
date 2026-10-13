@@ -7,6 +7,9 @@ name: ARVEXQ Server Pre-Race Seal
     paths:
       - scripts/arvexq_freeze_predictions.py
       - scripts/arvexq_capture_prerace_bet.js
+      - scripts/arvexq_capture_course_revised_marks.js
+      - arvexq/ui/static/app.js
+      - scripts/arvexq_prerace_capture_dependency_smoke.js
       - scripts/arvexq_prerace_bet_integrity.py
       - tests/test_prerace_archive.py
       - tests/test_prerace_bet_recovery.py
@@ -53,6 +56,8 @@ jobs:
       - name: Server seal unit regressions
         run: |
           node --check scripts/arvexq_capture_prerace_bet.js
+          node --check scripts/arvexq_capture_course_revised_marks.js
+          node scripts/arvexq_prerace_capture_dependency_smoke.js
           python -m unittest discover -s tests -p 'test_prerace_archive.py' -v
           python -m unittest discover -s tests -p 'test_prerace_partial_career.py' -v
           python -m unittest discover -s tests -p 'test_prerace_bet_recovery.py' -v
