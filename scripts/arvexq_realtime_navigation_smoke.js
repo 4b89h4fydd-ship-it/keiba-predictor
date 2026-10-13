@@ -29,13 +29,17 @@ async function verify(kind,name){
       {id:'nar-'+day+'-大井-01',circuit:'地方',track:'大井',raceNumber:1,startTime:'10:50'}
     ];
     const home=window.ARVEXQUnifiedHome,portal=window.ARVEXQHorsePortal;
-    const scope=document.createElement('div');scope.innerHTML=home.dateBar(day)+home.buttons('horse')+
+    const scope=document.createElement('div');scope.className='smart-shell smart-home';scope.innerHTML=home.dateBar(day)+home.buttons('horse')+
       portal.home(rows,{date:day,today:day,nowMinutes:610});
     document.body.appendChild(scope);
     const initial=home.liveModel('horse',rows,day,new Date(day+'T10:20:00+09:00'));
     const after=home.liveModel('horse',rows,day,new Date(day+'T10:40:00+09:00'));
     home.syncLiveUI('horse',rows,day,scope,new Date(day+'T10:40:00+09:00'));
     const first=scope.querySelector('[data-race="'+rows[0].id+'"]');
+    const grid=scope.querySelector('.arv-all-races-grid');
+    const raceTiles=[...grid.querySelectorAll('.arv-all-race')];
+    const venue=grid.closest('.arv-all-venue');
+    const top=i=>raceTiles[i].getBoundingClientRect().top;
     const result={
       actions:[...scope.querySelectorAll('.arv-unified-action-label')].map(e=>e.textContent),
       fullGrid:scope.querySelectorAll('.arv-all-panel button.arv-all-race').length,
@@ -46,6 +50,12 @@ async function verify(kind,name){
       firstText:first?.querySelector('.arv-race-state')?.textContent,
       opacity:first?Number(getComputedStyle(first).opacity):1,
       firstClickable:!first?.disabled,
+      columns:getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).length,
+      topRowSix:Math.abs(top(0)-top(5))<1,
+      secondRowStartsAtSeven:top(6)>top(0)+30,
+      tileHeight:raceTiles[0].getBoundingClientRect().height,
+      venueBorder:getComputedStyle(venue).borderTopWidth,
+      arrowContent:getComputedStyle(raceTiles[0],'::after').content,
       shortcutsAboveGrid:scope.querySelector('.arv-unified-actions')?.compareDocumentPosition(scope.querySelector('.arv-all-panel'))&Node.DOCUMENT_POSITION_FOLLOWING,
       navOnHome:document.querySelectorAll('.arvexq-sport-nav').length,
       realtime:document.querySelectorAll('.arv-realtime-section').length,
@@ -58,6 +68,12 @@ async function verify(kind,name){
   assert.equal(result.firstState,'elapsed');assert.equal(result.firstText,'結果待ち');
   assert.ok(result.opacity<0.8,'elapsed race must be darkened');
   assert.equal(result.firstClickable,true);assert.ok(result.shortcutsAboveGrid);
+  assert.equal(result.columns,6,'Reference image requires exactly six races per row');
+  assert.equal(result.topRowSix,true,'1R through 6R must remain in the first row');
+  assert.equal(result.secondRowStartsAtSeven,true,'7R must start the second row');
+  assert.ok(result.tileHeight>=44&&result.tileHeight<=48,'Reference tiles must be compact');
+  assert.equal(result.venueBorder,'0px','Venue inner frame must be removed');
+  assert.notEqual(result.arrowContent,'none','Each clickable race tile needs a small arrow');
   assert.equal(result.navOnHome,0);assert.equal(result.realtime,0);
   assert.equal(result.alerts,2,'selected and special warning icons are visible');
   assert.equal(errors.filter(e=>/ReferenceError|SyntaxError/.test(e)).length,0,errors.join('; '));
