@@ -56,7 +56,7 @@ for(const token of [
 ])assert.ok(visual.includes(token),'Missing shared horizontal race visual: '+token);
 assert.ok(!visual.includes('grid-template-columns:repeat(3,minmax(0,1fr))!important'),
   'Old 3-column override must be removed');
-assert.ok(visual.includes('height:38px!important'),'Race buttons must match compact reference height');
+assert.ok(visual.includes('height:29px!important'),'Race buttons must match compact reference height');
 assert.ok(visual.includes('.smart-home .arv-all-venue{') &&
   visual.includes('background:transparent!important;border:0!important;box-shadow:none!important'),
   'Separate venue card borders must be removed');
