@@ -145,8 +145,9 @@ def fetch_previous_day(api_base, target_date):
     try:
         day = get_json(base + "/api/day?date=" + prev + "&details=0")
     except Exception as exc:
-        print("HIT_RATE_DAY_UNAVAILABLE", prev, str(exc))
-        return []
+        raise RuntimeError(f"HIT_RATE_DAY_UNAVAILABLE {prev}: {exc}") from exc
+    if not isinstance(day, dict) or not isinstance(day.get("races"), list):
+        raise RuntimeError(f"HIT_RATE_DAY_INVALID {prev}: missing races array")
     ids = [str(r["id"]) for r in day.get("races") or []
            if isinstance(r, dict) and r.get("id")]
     def one(rid):
@@ -154,10 +155,12 @@ def fetch_previous_day(api_base, target_date):
             obj = get_json(base + "/api/race/" + urllib.parse.quote(rid, safe=""))
             return obj.get("detail") if isinstance(obj.get("detail"), dict) else obj
         except Exception as exc:
-            print("HIT_RATE_RACE_UNAVAILABLE", rid, str(exc))
-            return None
+            raise RuntimeError(f"HIT_RATE_RACE_UNAVAILABLE {rid}: {exc}") from exc
     with ThreadPoolExecutor(max_workers=6) as pool:
-        return [x for x in pool.map(one, ids) if isinstance(x, dict)]
+        details = list(pool.map(one, ids))
+    if any(not isinstance(x, dict) for x in details):
+        raise RuntimeError(f"HIT_RATE_RACE_INVALID {prev}: malformed response")
+    return details
 
 
 def main():
