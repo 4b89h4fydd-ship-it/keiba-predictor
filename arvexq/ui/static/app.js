@@ -1080,7 +1080,7 @@ function assignPredictionMarks(rows,r){
   var field=rows.length,ordered,topScore,total=0,weights=[],i,j,k;
   rows.forEach(function(z){var f=arvexqFactorValues(z,r);
     z.threeFactorScore=f.score;z.threeFactorCoverage=f.coverage;
-    z.threeFactorValues={recentForm:f.recentForm,conditionForm:f.conditionForm,comparableRuns:f.comparableRuns};
+    z.threeFactorValues={recentForm:f.recentForm,conditionForm:f.conditionForm,comparableRuns:f.comparableRuns,sample:f.sample};
     z.researchFactors={ability:f.recentForm,form:f.recentForm,pace:null,suitability:f.conditionForm,classLevel:null,connections:null,pedigree:null};
     z.researchModel='arvexq-form-condition-no-sectional-proposal-v1';
     z.researchConsensusScore=f.score;
@@ -1119,7 +1119,7 @@ function assignPredictionMarks(rows,r){
     }
   }
   var top=ordered[0],runner=ordered[1],gap=n(top.threeFactorScore)-n(runner&&runner.threeFactorScore);
-  var grade=top.threeFactorCoverage===2&&n(top.threeFactorScore)>=.80&&gap>=.04?'A':
+  var grade=top.threeFactorCoverage===2&&n(top.threeFactorValues&&top.threeFactorValues.sample)>=3&&n(top.threeFactorScore)>=.80&&gap>=.04?'A':
             (top.threeFactorCoverage>=2&&n(top.threeFactorScore)>=.65?'B':'C');
   rows.forEach(function(z,idx){
     z.p1Probability=p1[idx];z.p2Probability=p2[idx];z.p3Probability=p3[idx];
