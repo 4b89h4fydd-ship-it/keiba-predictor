@@ -38,7 +38,7 @@ const horses=Array.from({length:7},(_,i)=>({
 const race={id:'nar-2099-01-10-園田-08',date:'2099-01-10',startTime:'23:00',
  circuit:'地方',track:'園田',raceNumber:8,fieldSize:7,surface:'ダート',
  distance:1400,condition:'良',weather:'晴',horses};
-function marks(p){return p.rows.filter(z=>z.predMark==='◎').map(z=>Number(z.horse.horseNumber))}
+function marks(p){return Array.from(p.rows).filter(z=>z.predMark==='◎').map(z=>Number(z.horse.horseNumber))}
 function score(p,no){return Number(p.rows.find(z=>Number(z.horse.horseNumber)===no).threeFactorScore)}
 const first=predict(race);
 assert.deepEqual(marks(first),[1],'initial single ◎');
