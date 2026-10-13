@@ -34,7 +34,13 @@ function classify(r,p,strict){
 function ticketKinds(plan){
  if(!plan||!['購入候補','通常買い','強く買う'].includes(String(plan.decision||''))||
     !plan.betInputGate||plan.betInputGate.ready!==true)return [];
- return [...new Set((plan.items||[]).filter(x=>x&&x.kind&&Array.isArray(x.combos)&&x.combos.length).map(x=>x.kind))];
+ const widths={'ワイド':2,'馬連':2,'馬単':2,'3連複':3,'3連単':3};
+ return [...new Set((plan.items||[]).filter(x=>x&&widths[x.kind]&&
+   ['本線','保険','3連単チャレンジ'].includes(x.level)&&
+   Array.isArray(x.combos)&&x.combos.length>=1&&x.combos.length<=12&&
+   x.combos.every(c=>Array.isArray(c)&&c.length===widths[x.kind]&&
+      c.every(v=>Number.isInteger(Number(v))&&Number(v)>0)&&
+      new Set(c.map(Number)).size===c.length)).map(x=>x.kind))];
 }
 function requireMorningTickets(selection,plan){
  if(!selection||selection.selected!==true)return selection;
