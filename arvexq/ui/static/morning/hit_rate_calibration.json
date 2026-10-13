@@ -1,6 +1,6 @@
 {
   "version": "arvexq-empirical-ticket-hit-v1",
-  "modelVersion": "arvexq-true-run-pure-sectional-v2",
+  "modelVersion": "arvexq-form-condition-no-sectional-proposal-v1",
   "asOfDate": "2026-10-14",
   "definition": "one main-ticket item wins if any pre-off combination hit",
   "minimumSample": 30,
