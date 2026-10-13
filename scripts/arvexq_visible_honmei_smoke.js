@@ -19,6 +19,6 @@ const card=src.slice(src.indexOf('function racecardEntryRow('),src.indexOf('func
 assert(card.includes('rc-honmei-role'),'visible horse-name role must render');
 assert(card.includes('markRoleLabel(x)&&!scratch'),'scratch rows must never get role label beside name');
 const panel=src.slice(src.indexOf('function aiMarksPanel('),src.indexOf('function betPanel('));
-assert(panel.includes('markRoleLabel(x)||mark'),'AI panel must display role label');
+assert(panel.includes('ai-honmei-role')&&panel.includes('markRoleLabel(x)'), 'AI panel must display role label by horse name');
 assert(src.includes('◎【単】</b> 勝ち切る能力')&&src.includes('◎【軸】</b> 3着内の安定性'));
 console.log('VISIBLE_HONMEI_ROLES_OK');
