@@ -55,7 +55,7 @@ async function verify(kind,name){
   assert.deepEqual(result.actions,['厳選','特別','AI成績']);
   assert.equal(result.fullGrid,24);assert.equal(result.booked,3);
   assert.equal(result.firstNext,1);assert.equal(result.nextAfter,2);
-  assert.equal(result.firstState,'elapsed');assert.equal(result.firstText,'発走時刻経過');
+  assert.equal(result.firstState,'elapsed');assert.equal(result.firstText,'結果待ち');
   assert.ok(result.opacity<0.8,'elapsed race must be darkened');
   assert.equal(result.firstClickable,true);assert.ok(result.shortcutsAboveGrid);
   assert.equal(result.navOnHome,0);assert.equal(result.realtime,0);
