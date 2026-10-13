@@ -118,6 +118,28 @@ def _needs_history(horse: dict[str, Any], *, cutoff: str, limit: int) -> bool:
     return len(runs) < limit or _first_corner_coverage(horse, cutoff, limit) < min(3, len(runs))
 
 
+def _observed_sectional_rank_count(horse: dict[str, Any], cutoff: str = "", limit: int = 5) -> int:
+    """Count actual prior-run sectional positions, not fabricated pace scores."""
+    runs = _merge_runs(
+        horse.get("recentRaces") or [],
+        horse.get("allPastRuns") or [],
+        cutoff=cutoff,
+        limit=limit,
+    )
+    seen = 0
+    for row in runs:
+        value = next((row[k] for k in ("last3fRank", "last3FRank", "last600Rank", "上がり順位")
+                      if row.get(k) not in (None, "", 0)), None)
+        try:
+            field = int(row.get("fieldSize") or 0)
+            rank = float(value)
+            if field > 1 and 1 <= rank <= field and rank.is_integer():
+                seen += 1
+        except (TypeError, ValueError):
+            pass
+    return seen
+
+
 def _measured_horse_first3f_count(horse: dict[str, Any], cutoff: str = "", limit: int = 5) -> int:
     """Observed individual early-3F time only; never race-level pace figures."""
     runs = _merge_runs(
@@ -314,14 +336,27 @@ async def enrich_race_missing(
             )
             if full_search or _needs_history(horse, cutoff=cutoff, limit=min(5, history_limit)):
                 domains.append(("horse_history", None))
-            elif measured_feeds and (_measured_horse_first3f_count(horse, cutoff, history_limit) < 2 or _horse_early_timing_count(horse, cutoff, history_limit) < 2):
-                # Full corner history still lacks measured per-horse early splits:
-                # ask only the licensed split providers, not every official adapter.
+            elif measured_feeds and (
+                _measured_horse_first3f_count(horse, cutoff, history_limit) < 2
+                or _horse_early_timing_count(horse, cutoff, history_limit) < 2
+                or (
+                    _observed_sectional_rank_count(horse, cutoff, history_limit) < 2
+                    and horse.get("_sectionalFetchAttemptedAt") != date_key(cutoff)
+                )
+            ):
+                # Only licensed measured-history providers. Limit retry for missing
+                # sectional rank to once per target race date; otherwise a feed
+                # with no sectional observations would be refetched endlessly.
                 domains.append(("horse_history", measured_feeds))
             if _needs_pedigree(horse):
                 domains.append(("pedigree", None))
             if _needs_connections(horse):
                 domains.append(("jockey_trainer", None))
+
+            if any(domain == "horse_history" and only_sources == measured_feeds
+                   for domain, only_sources in domains):
+                horse["_sectionalFetchAttemptedAt"] = date_key(cutoff)
+                changed = True
 
             history_sources: list[str] = []
             history_failed: list[str] = []
