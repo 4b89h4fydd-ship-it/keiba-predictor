@@ -30,11 +30,13 @@ def optional_star_candidate(ranked: list[dict[str, Any]]) -> dict[str, Any] | No
 def sufficiently_observed_partial_career(
     detail: dict[str, Any], readiness: dict[str, Any]
 ) -> bool:
-    """A high-coverage field may be forecast without calling ingestion complete.
+    """Allow a clearly labelled provisional pre-off forecast from real recent runs.
 
-    This is not a whole-career verification: it only permits an explicitly
-    labelled pre-off provisional prediction if missing acquisition audits affect
-    at most two runners, with several dated, usable runs for each.
+    A full-career verification is NOT needed by this three-factor model, which
+    uses the last five dated starts. Each runner whose lifetime-data audit is
+    incomplete must nevertheless have at least three distinct valid pre-off
+    races. Reject contradictory reported totals and unknown runner identities.
+    Never reclassify any lifetime history as fully verified.
     """
     from arvexq.prediction.past_performance import observed_runs
 
@@ -47,46 +49,33 @@ def sufficiently_observed_partial_career(
         and not any(x in str(h.get("status") or "") for x in ("取消", "除外", "欠場"))
     ]
     total = len(horses)
-    complete = int(readiness.get("completeHorses") or 0)
     blocked = readiness.get("blockedHorses") or []
-    if total < 5 or total != int(readiness.get("activeHorses") or 0):
+    if total < 5 or total != int(readiness.get("activeHorses") or 0) or not blocked:
         return False
-    # An observed, date-bounded history is usable evidence even when the
-    # provider's lifetime start-count verification endpoint is unavailable.
-    # This is NOT evidence of full career completeness. Require every active
-    # horse to have five distinct, usable pre-race dated starts, and reject
-    # contradictory counts or identity/cutoff errors.
-    if complete < max(4, (4 * total + 4) // 5) or not 0 < len(blocked) <= 2:
-        if len(blocked) != total:
-            return False
-        by_no = {int(h["horseNumber"]): h for h in horses}
-        acceptable = {"provider-fetch-failed", "reported-starts-unknown"}
-        for entry in blocked:
-            horse = by_no.get(int(entry.get("horseNumber") or 0))
-            if (not horse or not str(horse.get("name") or "").strip()
-                    or entry.get("reason") not in acceptable
-                    or entry.get("reportedStarts") is not None):
-                return False
-            try:
-                runs = observed_runs(horse, detail, limit=None)
-            except (ValueError, TypeError, KeyError):
-                return False
-            if len({str(run.get("date") or "") for run in runs}) < 5:
-                return False
-        return True
     by_no = {int(h["horseNumber"]): h for h in horses}
+    disallowed = {"identity-mismatch", "future-race-evidence",
+                  "reported-starts-contradiction", "race-identity-mismatch"}
     for entry in blocked:
         horse = by_no.get(int(entry.get("horseNumber") or 0))
         if not horse or not str(horse.get("name") or "").strip():
             return False
+        if str(entry.get("reason") or "") in disallowed:
+            return False
         try:
-            runs = observed_runs(horse, detail, limit=None)
+            runs = observed_runs(horse, detail, limit=5)
         except (ValueError, TypeError, KeyError):
             return False
         if len(runs) < 3:
             return False
+        observed = int(entry.get("observedRuns") or 0)
+        reported = entry.get("reportedStarts")
+        if reported is not None:
+            try:
+                if int(reported) < observed or int(reported) < len(runs):
+                    return False
+            except (TypeError, ValueError):
+                return False
     return True
-
 
 
 def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
@@ -113,9 +102,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     if limited:
         readiness["predictionEligible"] = True
         readiness["predictionEvidencePolicy"] = (
-            "all-active-five-dated-observed-total-unverified-v2"
-            if int(readiness.get("completeHorses") or 0) == 0
-            else "80pct-verified-max2-unverified-min3-observed-v1"
+            "three-dated-preoff-starts-per-unverified-horse-v3"
         )
     ranked = rank_factor_model(horses, detail)
     for horse in horses:
