@@ -9,7 +9,9 @@ class UpstreamCaseTests(unittest.TestCase):
         self.assertEqual(n["last3fRank"],3)
         self.assertEqual(n["last3fPercentile"],0.8)
         h={"horseNumber":1,"recentRaces":[r]}
-        self.assertAlmostEqual(collect_horse_raw_metrics(h,{"date":"2026-10-14"})["sectional"],0.75)
+        raw = collect_horse_raw_metrics(h,{"date":"2026-10-14"})
+        self.assertAlmostEqual(raw["recentForm"],7/8)
+        self.assertNotIn("sectional",raw)
     def test_unobserved_still_unknown(self):
         r={"date":"2026-10-10","finish":2,"fieldSize":9}
         self.assertIsNone(normalize_run(r)["last3fRank"])
