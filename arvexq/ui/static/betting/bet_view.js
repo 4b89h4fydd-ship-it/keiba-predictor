@@ -55,7 +55,8 @@ function render(r,p,deps){
     +(plan.postLockNotice?'<p class="ai-bet-lock-notice">'+esc(plan.postLockNotice)+'</p>':'')
     +explanation
     +'<div class="bet-mark-guide"><b>'+esc(savedV346?'保存時点の印の見方':'印の見方（券種ごとに役割を再判定）')+'</b><div class="bet-mark-grid">'
-    +'<span><i>◎</i>単勝・3着内の両面から評価した本命（的中保証ではありません）</span>'
+    +'<span><i>【単】</i>◎【単】 勝ち切る能力・1着向き（的中保証ではありません）</span>'
+    +'<span><i>【軸】</i>◎【軸】 3着以内の安定性・軸向き（的中保証ではありません）</span>'
     +'<span><i>○</i>1・2着向き</span><span><i>▲</i>2・3着向き</span>'
     +'<span><i>△</i>3着向き</span><span><i>☆</i>複数の好走根拠を満たす場合のみ（毎回必須ではありません）</span>'
     +'</div></div><p class="arv-three-reason">'+esc(plan.reason||'')+'</p></div>'
