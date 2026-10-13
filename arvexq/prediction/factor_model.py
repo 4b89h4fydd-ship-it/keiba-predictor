@@ -75,8 +75,8 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
         comparable = past.get("comparableQuality")
         condition_runs = int(past.get("comparableRuns") or 0)
         strength = min(MAX_CONDITION_WEIGHT, CONDITION_WEIGHT_PER_RUN * condition_runs) if comparable is not None else 0.0
-        score = ((1 - strength) * recent + strength * comparable
-                 if recent is not None else 0.5)
+        score = (recent if comparable is None else
+                 (1 - strength) * recent + strength * comparable) if recent is not None else 0.5
         factors = {
             "recentForm": raw.get("trueRun"),
             "conditionForm": past.get("comparableQuality"),
