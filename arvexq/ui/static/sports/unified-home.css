@@ -581,3 +581,56 @@ html body .smart-home .arv-favorite-home-open[data-race-state="soon"]{background
 html body .smart-home .arv-favorite-home-open[data-race-state="running"]{background:#edadb0!important}
 html body .smart-home .arv-favorite-home-open[data-race-state="elapsed"],
 html body .smart-home .arv-favorite-home-open[data-race-state="finished"]{background:#606760!important;color:#f4f4ee!important}
+
+/* Reduced palette and legible post times: 6 across, 2 rows, no clutter. */
+html,html body,html body:has(.smart-home){background:#e2e3df!important;background-color:#e2e3df!important}
+html body .smart-shell.smart-home,
+html body .smart-shell.smart-home>.smart-main.smart-home-main,
+html body .smart-shell.smart-home .smart-home-main,
+html body .smart-shell.smart-home .arv-unified-body,
+html body .smart-shell.smart-home .arv-all-home,
+html body .smart-shell.smart-home .arv-all-panel,
+html body .smart-shell.smart-home .arv-all-circuit,
+html body .smart-shell.smart-home .arv-all-venue{background:#e2e3df!important;background-image:none!important}
+html body .smart-home .arv-unified-action[data-action-kind="selected"],
+html body .smart-home .arv-unified-action[data-action-kind="special"],
+html body .smart-home .arv-unified-action[data-action-kind="stats"]{
+ background:#c7ccc6!important;border-color:#a3ada4!important;color:#29352d!important;
+}
+html body .smart-home .arv-unified-action-icon,
+html body .smart-home .arv-unified-chevron{color:#35483b!important}
+html body .smart-home .arv-unified-date{background:#d3d8d0!important;border-color:#a6afa4!important;color:#30382f!important}
+html body .smart-home .arv-all-race,
+html body .smart-home .arv-all-race:not(:disabled){
+ background:#b1c3b6!important;border-color:#7e9886!important;color:#1b3022!important;
+}
+html body .smart-home .arv-all-race strong{font-size:12px!important;font-weight:850!important;line-height:1.05!important;color:#203226!important}
+html body .smart-home .arv-all-race small{
+ display:block!important;font-size:11px!important;font-weight:850!important;
+ line-height:1.05!important;letter-spacing:-.02em!important;color:#172e20!important;
+}
+html body .smart-home .arv-all-race{
+ height:40px!important;min-height:40px!important;max-height:40px!important;
+ padding:2px 5px 2px 0!important;gap:1px!important;
+}
+html body .smart-home .arv-all-race:not(:disabled)::after{font-size:12px!important;right:1px!important;color:#405e4d!important}
+html body .smart-home .arv-all-race[data-race-state="soon"]{
+ background:#e5cd8b!important;border-color:#b18c39!important
+}
+html body .smart-home .arv-all-race[data-race-state="running"]{
+ background:#d69a9a!important;border-color:#ad6464!important
+}
+html body .smart-home .arv-all-race[data-race-state="elapsed"],
+html body .smart-home .arv-all-race[data-race-state="finished"]{
+ background:#555b56!important;border-color:#414943!important;opacity:.7!important
+}
+html body .smart-home .arv-all-race[data-race-state="elapsed"] strong,
+html body .smart-home .arv-all-race[data-race-state="finished"] strong,
+html body .smart-home .arv-all-race[data-race-state="elapsed"] small,
+html body .smart-home .arv-all-race[data-race-state="finished"] small{color:#f1f3ef!important}
+html body .smart-home .arv-all-race:disabled{background:#bfc5bf!important;border-color:#a1aaa1!important}
+html body .smart-home .arv-favorite-home-open{background:#bfcac0!important;border-color:#93a698!important}
+@media(max-width:355px){
+ html body .smart-home .arv-all-race{height:39px!important;min-height:39px!important;max-height:39px!important}
+ html body .smart-home .arv-all-race small{font-size:10px!important}
+}
