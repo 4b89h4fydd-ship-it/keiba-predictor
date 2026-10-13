@@ -1000,12 +1000,6 @@ function dataReadinessProfile(r,p){
   if(card<.90)missing.push('出馬表');if(hist<.70)missing.push('近走');if(env<.50)missing.push('馬場');if(analysis<.45)missing.push('診断');if(actual<.65)missing.push('実オッズ');
   return{prediction:prediction,market:market,card:card,history:hist,actualOdds:actual,bodyWeight:body,environment:env,analysis:analysis,missing:missing}
 }
-function v317NormComponent(z,names,defv){
-  var e=z&&z.horse&&z.horse.integratedEvaluation||{},c=e.components||{};
-  for(var i=0;i<names.length;i++){if(c[names[i]]!==undefined&&c[names[i]]!==null)return clamp(n(c[names[i]],defv),0,1)}
-  return clamp(n(defv,.5),0,1)
-}
-function v317Audit(z){var e=z&&z.horse&&z.horse.integratedEvaluation||{};return e.v218Audit||e.v217Audit||z.v218Audit||z.v217Audit||{}}
 function arvexqFactorValues(z,r){
   // Mirrors Python: actual pre-race five-run evidence only; no old composite.
   var h=z&&z.horse||{},cutoff=String(r&&r.date||''),
