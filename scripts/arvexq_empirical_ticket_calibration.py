@@ -16,7 +16,7 @@ from pathlib import Path
 import urllib.parse
 import urllib.request
 
-MODEL = "arvexq-true-run-pure-sectional-v2"
+MODEL = "arvexq-form-condition-no-sectional-proposal-v1"
 VERSION = "arvexq-empirical-ticket-hit-v1"
 MIN_SAMPLES = 30
 TARGET_HIT_RATE = 0.80
