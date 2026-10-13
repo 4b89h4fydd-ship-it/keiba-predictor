@@ -41,7 +41,7 @@ def evaluate():
             n=int(z["horse"]["horseNumber"])
             for key,value in candidates(z["horse"],detail).items():
                 variants.setdefault(key,{})[n]=value
-        for name,values in variants.items():
+        if "reliability" not in variants or set(variants["reliability"]) != set(variants["current"]):\n            coverage["common-set-missing"]+=1\n            continue\n        for name,values in variants.items():
             if set(values)!=set(variants["current"]) or order[0] not in values:
                 coverage[name]+=1
                 continue
