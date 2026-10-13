@@ -12,7 +12,8 @@ class PrePostMarkConsistency(unittest.TestCase):
   result=subprocess.run(['node','scripts/arvexq_frozen_marks_smoke.js'],
                         cwd=root,capture_output=True,text=True,timeout=30)
   self.assertEqual(result.returncode,0,result.stdout+result.stderr)
- def test_three_factor_weights_are_intact(self):
+ def test_no_sectional_score_in_live_frontend(self):
   s=S.read_text(encoding='utf-8')
-  self.assertIn('score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)',s)
+  self.assertIn('score=(1-strength)*recentForm+strength*conditionForm',s)
+  self.assertNotIn('score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)',s)
 if __name__=='__main__':unittest.main()
