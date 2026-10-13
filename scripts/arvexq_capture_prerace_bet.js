@@ -3,13 +3,9 @@
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto');
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const strategies=['podium_axis_guard.js','bet_readiness.js','no_axis_strategy.js','main_strategy.js','trifecta_strategy.js',
- 'insurance_strategy.js'].map(name=>({name,code:fs.readFileSync('arvexq/ui/static/betting/'+name,'utf8')}));
 const lane=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8');
-const legacy=fs.readFileSync('arvexq/ui/static/betting/legacy_v213_order_model.js','utf8');
-const engine=fs.readFileSync('arvexq/ui/static/betting/three_way_engine.js','utf8');
 const view=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8');
-const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
+const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 if(!root.includes(boot))throw Error('UI boot anchor changed');
 const source=root.replace(boot,'window.__arvexqServer={predict,buildAiBetPlan,state};');
 const saved=new Map();
@@ -26,9 +22,6 @@ const ctx={window,document:doc,localStorage:store,sessionStorage:store,console,
  navigator:window.navigator,location:window.location,setTimeout:()=>0,
  clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
 vm.createContext(ctx);
-strategies.forEach(({name,code})=>vm.runInContext(code,ctx,{timeout:12000,filename:name}));
-vm.runInContext(legacy,ctx,{timeout:12000,filename:'legacy_v213_order_model.js'});
-vm.runInContext(engine,ctx,{timeout:12000,filename:'three_way_engine.js'});
 vm.runInContext(lane,ctx,{timeout:12000,filename:'ticket_lane_classifier.js'});
 vm.runInContext(view,ctx,{timeout:12000,filename:'bet_view.js'});
 vm.runInContext(source,ctx,{timeout:12000,filename:'app.js'});
@@ -40,8 +33,8 @@ exported.state.track=String(race.track||'');
 exported.state.races=[{id:race.id,date:race.date,circuit:race.circuit,track:race.track,
  raceNumber:race.raceNumber,startTime:race.startTime,title:race.title||''}];
 exported.state.race=race;
-const status={version:'arvexq-server-exact-js-bet-v1',
- jsHash:crypto.createHash('sha256').update(root).update('\0').update(legacy).update('\0').update(strategies.map(x=>x.code).join('\0')).update('\0').update(engine).update('\0').update(lane).digest('hex')};
+const status={version:'arvexq-server-exact-js-bet-v2-three-factor',
+ jsHash:crypto.createHash('sha256').update(root).update('\0').update(lane).update('\0').update(view).digest('hex')};
 try{
  const prediction=exported.predict(race);
  const result=exported.buildAiBetPlan(race,prediction);
