@@ -1406,22 +1406,6 @@ function applyFrozenMarks(r,p){
     p.markFreeze={source:server.version==='arvexq-user-model-mark-revision-v1'?'user-model-revision':(server.version==='arvexq-official-mark-revision-v1'?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':'server-prerace')),
       fixedAt:server.revisedAt||server.fixedAt||server.sealedAtJst||server.capturedAtJst||'',
       reason:String(server.reason||'')};
-  }else if(record){
-    var byNo={};record.marks.forEach(function(z){byNo[n(z.no)]=z});
-    var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
-    p.rows.forEach(function(z){
-      var no=n(z.horse&&z.horse.horseNumber),snap=byNo[no],scratched=isScratchHorse(z.horse);
-      z.computedLiveMark=String(z.predMark||'');
-      z.predMark=!scratched&&snap?String(snap.mark||''):'';
-      z.predRank=order[z.predMark]||999;
-      var lockedHonmei=validatedHonmeiMetadata(snap);
-      z.honmeiRole=z.predMark==='◎'?lockedHonmei.honmeiRole:'';
-      z.honmeiGrade=z.predMark==='◎'?lockedHonmei.honmeiGrade:'';
-      z.podiumAxisEligible=z.predMark==='◎'&&lockedHonmei.honmeiGrade==='A'&&snap&&snap.podiumAxisEligible===true;
-      z.singleWinSuitable=!scratched&&!!(snap&&snap.single);
-      z.markFrozen=true;
-    });
-    p.markFreeze={source:'local-prepost',fixedAt:record.fixedAt,minutesBeforePost:record.fixedMinutesBeforePost};
   }else if(clock.started){
     var frozen=Array.isArray(r.preRacePrediction&&r.preRacePrediction.horses)?
       r.preRacePrediction.horses:[];
@@ -1779,7 +1763,7 @@ function honmeiA11yText(x){return x&&x.predMark==='◎'?'◎・勝ち切る能�
 function racecardMarkLegend(r){
   var server=serverFrozenPrediction(r),archive=window.ARVEXQSavedSnapshot&&window.ARVEXQSavedSnapshot.marks(r),clock=raceMarkClock(r),
       status=!clock.started?('発走前の最新AI印（更新あり）'+(server?'／保存済み原本・買い目は維持':'')):
-        (server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':(stored?'端末の発走前印・固定済み':'発走前印の保存なし')));
+        (server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':'発走前印の保存なし'));
   var original=clock.started?authorizedPreOffMarks(r):null,
       axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
   return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 好走根拠が複数揃う場合だけ　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
