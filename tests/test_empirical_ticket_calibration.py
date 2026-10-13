@@ -1,6 +1,7 @@
 import unittest
+from unittest.mock import patch
 from scripts.arvexq_empirical_ticket_calibration import (
-    MODEL, sealed_result, summarize, ticket_hit, wilson_lower, selected_main_ticket,
+    MODEL, sealed_result, summarize, ticket_hit, wilson_lower, selected_main_ticket, fetch_previous_day,
 )
 class EmpiricalHitCalibrationTests(unittest.TestCase):
     def ticket(self, at, kind="ワイド", engine=MODEL):
@@ -17,6 +18,25 @@ class EmpiricalHitCalibrationTests(unittest.TestCase):
                 {"finish": 3, "horseNumber": 3},
             ]},
         }
+    def test_failed_day_fetch_is_not_zero_sample(self):
+        with patch("scripts.arvexq_empirical_ticket_calibration.get_json", side_effect=OSError("offline")):
+            with self.assertRaisesRegex(RuntimeError, "HIT_RATE_DAY_UNAVAILABLE"):
+                fetch_previous_day("https://example.invalid", "2026-10-13")
+
+    def test_failed_race_fetch_is_not_zero_sample(self):
+        def fake_fetch(url):
+            if "/api/day?" in url:
+                return {"races": [{"id": "race-1"}]}
+            raise OSError("race offline")
+        with patch("scripts.arvexq_empirical_ticket_calibration.get_json", side_effect=fake_fetch):
+            with self.assertRaisesRegex(RuntimeError, "HIT_RATE_RACE_UNAVAILABLE"):
+                fetch_previous_day("https://example.invalid", "2026-10-13")
+
+    def test_bad_day_shape_rejected(self):
+        with patch("scripts.arvexq_empirical_ticket_calibration.get_json", return_value={}):
+            with self.assertRaisesRegex(RuntimeError, "HIT_RATE_DAY_INVALID"):
+                fetch_previous_day("https://example.invalid", "2026-10-13")
+
     def test_preoff_wide_hit(self):
         item = sealed_result(self.ticket("2026-10-12T13:30:00+09:00"), "2026-10-13")
         self.assertIsNotNone(item)
