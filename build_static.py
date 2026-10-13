@@ -163,8 +163,8 @@ if fingerprint_replacements != 1 or ("?fix=" + core_asset_hash) not in index_htm
 manifest = strings["MANIFEST"]
 # PWA icons must change their URLs when replaced, otherwise iOS retains the old
 # icon after users install or update the horse-only app.
-manifest = manifest.replace("arvexq-icon-v175-192.png","arvexq-icon-v360-192.png")
-manifest = manifest.replace("arvexq-icon-v175-512.png","arvexq-icon-v360-512.png")
+manifest = manifest.replace("arvexq-icon-v175-192.png","arvexq-icon-v361-192.png")
+manifest = manifest.replace("arvexq-icon-v175-512.png","arvexq-icon-v361-512.png")
 sw = strings["SW"]
 
 # Prediction/mark logic is owned by arvexq/ui/static/app.js and the server-side
@@ -232,7 +232,7 @@ for route in ("venue", "race"):
 compat_css = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v130")
 compat_app = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303","v147","v146","v145","v141","v140","v139","v138","v137","v136","v133")
 compat_arvexq = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303")
-for name in ("manifest-arvexq-v360.webmanifest","manifest-arvexq-v181.webmanifest","manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
+for name in ("manifest-arvexq-v361.webmanifest","manifest-arvexq-v360.webmanifest","manifest-arvexq-v181.webmanifest","manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
     (DIST / name).write_text(manifest, encoding="utf-8")
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
 (DIST / f"sw-{BUILD_VERSION}-reset.js").write_text(sw, encoding="utf-8")
@@ -290,6 +290,7 @@ headers=[
     "/manifest-arvexq-v175.webmanifest","  Cache-Control: no-cache, must-revalidate",
     "/manifest-arvexq-v181.webmanifest","  Cache-Control: no-cache, must-revalidate",
     "/manifest-arvexq-v360.webmanifest","  Cache-Control: no-cache, must-revalidate",
+    "/manifest-arvexq-v361.webmanifest","  Cache-Control: no-cache, must-revalidate",
     "/sw.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
     f"/sw-{BUILD_VERSION}-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
     "/sw-v328-reset.js","  Cache-Control: no-store, no-cache, must-revalidate, max-age=0","  Service-Worker-Allowed: /",
@@ -340,6 +341,27 @@ for label, data in (
 assets={"CINEMATIC_HERO_WEBP":"arvexq-racing-hero.webp","CINEMATIC_DETAIL_WEBP":"arvexq-racing-detail.webp","HERO_HORSE_WEBP":"hero-horse.webp","PACE_PREVIEW_WEBP":"pace-preview.webp","ARVEXQ_LOGO_WEBP":"arvexq-logo.webp"}
 for var,filename in assets.items():
     if var in binary_b64:(DIST / filename).write_bytes(base64.b64decode(binary_b64[var]))
+
+# Approved horse-only ARVEXQ branding (October 2026); no boat imagery.
+# Publish both fingerprinted icons and the main hero under its existing URL.
+BRAND_FILES = {
+    "arvexq-horse-hero-v361.webp": ("arvexq-racing-hero.webp",),
+    "arvexq-horse-icon-v361-192.png": ("arvexq-icon-v361-192.png",),
+    "arvexq-horse-icon-v361-512.png": ("arvexq-icon-v361-512.png",),
+    "arvexq-horse-touch-v361.png": ("arvexq-touch-v361.png",),
+}
+for filename, outputs in BRAND_FILES.items():
+    source_file = STATIC / filename
+    if not source_file.is_file():
+        raise RuntimeError(f"Missing approved ARVEXQ branding: {filename}")
+    data = source_file.read_bytes()
+    if filename.endswith(".webp"):
+        if not data.startswith(b"RIFF") or data[8:12] != b"WEBP":
+            raise RuntimeError(f"Invalid hero WebP file: {filename}")
+    elif not data.startswith(bytes((137,80,78,71,13,10,26,10))):
+        raise RuntimeError(f"Invalid PNG icon: {filename}")
+    for output in outputs:
+        (DIST / output).write_bytes(data)
 
 print(f"ARVEXQ static build complete: {DIST}")
 print(f"BUILD: {BUILD_VERSION}")

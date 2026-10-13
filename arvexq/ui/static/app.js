@@ -2278,33 +2278,15 @@ function validatedHonmeiMetadata(source){
   return{honmeiRole:role==='win'||role==='axis'?role:'',
     honmeiGrade:['A','B','C'].indexOf(grade)>=0?grade:''}
 }
-function honmeiBadgeText(x){
-  if(!x||x.predMark!=='◎')return '';
-  var q=validatedHonmeiMetadata(x);
-  if(!q.honmeiRole||!q.honmeiGrade)return '未保存';
-  if(q.honmeiGrade!=='A')return q.honmeiGrade;
-  if(q.honmeiRole==='win'&&x.podiumAxisEligible===true)
-    return '【単】【軸】';
-  return q.honmeiRole==='win'?'【単】':'【軸】';
-}
-function honmeiA11yText(x){
-  if(!x||x.predMark!=='◎')return '';
-  var q=validatedHonmeiMetadata(x);
-  if(!q.honmeiRole||!q.honmeiGrade)return '◎・発走前の役割と信頼度は保存されていません';
-  return '◎・'+(q.honmeiRole==='win'?'1着向き':'3着内の軸向き')+
-    '・信頼度'+q.honmeiGrade+(q.honmeiGrade==='C'?'・相対本命（軸固定不可）':'');
-}
-
+function honmeiBadgeText(x){return '';} // Retain locked A/B/C metadata without displaying the old role badges.
+function honmeiA11yText(x){return x&&x.predMark==='◎'?'◎・勝ち切る能力と3着内の安定性を総合評価した本命（的中保証ではありません）':'';}
 function racecardMarkLegend(r){
   var server=serverFrozenPrediction(r),archive=window.ARVEXQSavedSnapshot&&window.ARVEXQSavedSnapshot.marks(r),stored=server?null:loadFrozenMarks(r),clock=raceMarkClock(r),
       status=!clock.started?('発走前の最新AI印（更新あり）'+(server||stored?'／保存済み原本・買い目は維持':'')):
         (server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':(stored?'端末の発走前印・固定済み':'発走前印の保存なし')));
   var original=clock.started?authorizedPreOffMarks(r):null,
       axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
-  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎【単】</b> 1着向き・信頼度A　<b>◎【軸】</b> 3着内の軸向き・信頼度A　<b>◎B</b> 相対本命・中　<b>◎C</b> 相対本命・軸固定なし　<span class="rc-legend-single">単</span> 独立した単勝評価　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>'
-}
-function racecardEntryRow(r,h,x){
-  if(!h||n(h.horseNumber)<=0)return'';
+  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 展開次第で3着内　<b>注</b> 特に注意　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
   var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
       fr=clamp(n(h.frameNumber,no),1,8),curBw=currentBodyWeight(h),
       deltaValue=currentBodyWeightChange(h),pastBw=!curBw?referenceBodyWeight(h):0,
@@ -3000,7 +2982,7 @@ function aiBetRecommendation(r,p){
 
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は原則1頭。1着向き／3着内の軸向きと信頼度A・B・Cを買い目にも反映。信頼度Cは軸固定を保証しません。発走後は保存済み予想だけを表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(x.predMark==='◎'?'<small>'+esc(honmeiBadgeText(x)==='未保存'?'◎：当時の役割・信頼度未保存':'◎'+honmeiBadgeText(x)+'｜'+(x.honmeiRole==='win'?'1着向き':'3着内の軸向き')+'｜信頼度'+x.honmeiGrade)+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は勝ち切る能力と3着内の安定性を総合評価した本命。○は1・2着、▲は2・3着、△は3着、☆は展開次第、注は特別な注意馬。発走後は保存済み予想のみ表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(x.predMark==='◎'?'<small>'+esc(honmeiBadgeText(x)==='未保存'?'◎：当時の役割・信頼度未保存':'◎'+honmeiBadgeText(x)+'｜'+(x.honmeiRole==='win'?'1着向き':'3着内の軸向き')+'｜信頼度'+x.honmeiGrade)+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
@@ -3454,7 +3436,8 @@ function selectedRaceCandidates(circuit){
   // Published free selections require a frozen ticket-backed type.
   return (state.races||[]).filter(function(r){
     var m=morningPickOf(r);
-    return !!(r&&r.id&&m&&morningPublicStatus(r)==='actionable'&&
+    return !!(r&&r.id&&m&&morningPublicStatus(r)==='actionable'&&n(m.selectedScore,0)>=80&&
+      String(m.primaryType||'')==='的中重視型'&&Array.isArray(m.types)&&m.types.includes('的中重視型')&&
       (!circuit||String(r.circuit||'')===String(circuit)))
   }).map(function(r){
     var m=morningPickOf(r);
@@ -3512,7 +3495,7 @@ function selectedRaceBetPreview(r){
 }
 function smartSelectedRaces(forceOpen){
   var central=selectedRaceCandidates('中央'),local=selectedRaceCandidates('地方'),open=forceOpen?true:!!selectedSectionsOpen.selected,total=central.length+local.length;
-  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>朝一に全対象を判定・固定｜基準通過の全件を表示</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
+  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>朝固定の的中重視型・内部評価80点以上のみ（的中率ではありません）</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
 }
 function computeMorningSpecialRaceCandidates(){
  if(!window.ARVEXQSpecialSelection)throw Error('special selection module missing');

@@ -1,11 +1,11 @@
-/* ARVEXQ morning selection: all strict-quality qualifiers, no arbitrary daily cap.
+/* ARVEXQ morning selection: only hit-first 80+ ticket-backed qualifiers, no arbitrary daily cap.
  * Deterministic only; no live odds, results, DOM, or post-off selection.
  */
 (function(global){
 'use strict';
 function allStrictQualifiers(rows,helpers){
  const n=helpers.n,chronological=helpers.chronological;
- return (rows||[]).filter(function(z){return !!(z&&z.race&&z.selection&&z.selection.selected===true&&n(z.race.raceNumber)>0)}).slice().sort(chronological);
+ return (rows||[]).filter(function(z){return !!(z&&z.race&&z.selection&&z.selection.selected===true&&n(z.selection.score)>=80&&String(z.selection.primaryType||'')==='的中重視型'&&Array.isArray(z.selection.types)&&z.selection.types.includes('的中重視型')&&n(z.race.raceNumber)>0)}).slice().sort(chronological);
 }
-global.ARVEXQMorningSelection=Object.freeze({allStrictQualifiers:allStrictQualifiers,version:'strict-unlimited-morning-v1'});
+global.ARVEXQMorningSelection=Object.freeze({allStrictQualifiers:allStrictQualifiers,version:'hit-first-80-morning-v2'});
 })(window);

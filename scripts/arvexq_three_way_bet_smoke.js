@@ -11,31 +11,28 @@ new Function('window',strategySrc)(betGlobal);
 new Function('window',moduleSrc)(betGlobal);
 const betViewSource=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8');
 const raceCss=fs.readFileSync('arvexq/ui/static/styles/race_v222_plus.css','utf8');
-assert.ok(src.includes('rc-honmei-grade'),'reliability must render below ◎ in horsecard');
-assert.ok(raceCss.includes('.rc-honmei-grade'),'compact confidence badge CSS must be present');
-// The new label helper deliberately refuses to invent metadata absent from
-// an immutable pre-off receipt. Legacy receipts must not show unexplained ◎.
+// Old role/grade codes are stored for immutable past predictions but hidden
+// from current display; ◎ remains a single visible symbol.
 const helperStart=src.indexOf('function validatedHonmeiMetadata(');
 const helperEnd=src.indexOf('function racecardMarkLegend(',helperStart);
-assert.ok(helperStart>=0&&helperEnd>helperStart,'honmei role rendering helper missing');
+assert.ok(helperStart>=0&&helperEnd>helperStart,'honmei helper missing');
 const labels=new Function(src.slice(helperStart,helperEnd)+
   'return {honmeiBadgeText,honmeiA11yText};')();
-assert.equal(labels.honmeiBadgeText({predMark:'◎',honmeiRole:'win',honmeiGrade:'A'}),'【単】');
-assert.equal(labels.honmeiBadgeText({predMark:'◎',honmeiRole:'axis',honmeiGrade:'A'}),'【軸】');
-assert.equal(labels.honmeiBadgeText({predMark:'◎',honmeiRole:'win',honmeiGrade:'A',podiumAxisEligible:true}),'【単】【軸】');
-assert.equal(labels.honmeiBadgeText({predMark:'◎',honmeiRole:'axis',honmeiGrade:'B'}),'B');
-assert.equal(labels.honmeiBadgeText({predMark:'◎',honmeiRole:'axis',honmeiGrade:'C'}),'C');
-assert.equal(labels.honmeiBadgeText({predMark:'◎'}),'未保存');
-assert.match(labels.honmeiA11yText({predMark:'◎'}),/保存されていません/);
-assert.match(labels.honmeiA11yText({predMark:'◎',honmeiRole:'axis',honmeiGrade:'C'}),/軸固定不可/);
+for (const input of [
+  {predMark:'◎',honmeiRole:'win',honmeiGrade:'A'},
+  {predMark:'◎',honmeiRole:'axis',honmeiGrade:'A'},
+  {predMark:'◎',honmeiRole:'axis',honmeiGrade:'B'},
+  {predMark:'◎',honmeiRole:'axis',honmeiGrade:'C'},
+  {predMark:'◎'}
+]) {
+  assert.equal(labels.honmeiBadgeText(input),'','old trust badge must be hidden');
+  assert.match(labels.honmeiA11yText(input),/本命/);
+}
+assert.ok(betViewSource.includes('<i>◎</i>単勝・3着内'),'new simple ◎ explanation missing');
+for(const retired of ['<i>◎【単】','<i>◎【軸】','<i>◎B','<i>◎C'])
+  assert.ok(!betViewSource.includes(retired),'retired mark still shown: '+retired);
 assert.match(src,/podiumAxisEligible:z\.predMark==='◎'&&z\.podiumAxisEligible===true/,'pre-off A eligibility must be sealed too');
 assert.match(src,/honmeiRole:mark==='◎'\?honmei\.honmeiRole/,'archived marks must restore their original role');
-assert.ok(raceCss.includes('.rc-honmei-grade.rc-honmei-grade-role'),
- 'A-role must fit beneath ◎ on small displays');
-for(const label of ['◎【単】','◎【軸】','◎B','◎C'])
-  assert.ok(betViewSource.includes(label),'betting legend missing '+label);
-assert.ok(!betViewSource.includes('<i>◎【単】A</i>'),'obsolete A suffix in betting guide');
-assert.ok(!betViewSource.includes('<i>◎【軸】A</i>'),'obsolete A suffix in betting guide');
 const policy=(base,r,p)=>betGlobal.ARVEXQThreeWayBet.compose(base,r,p,{
  n,clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),isScratchHorse:h=>!!h.scratched,
  betComboText:(kind,cs)=>cs.map(c=>c.join(kind==='馬単'||kind==='3連単'?' → ':' - ')).join(' / ')
@@ -150,7 +147,7 @@ const legacyHtml=viewGlobal.ARVEXQBetView.render(race,prediction,{
  buildAiBetPlan:()=>legacyPlan,esc:String,n,isFinal:()=>true,
  raceMarkClock:()=>({started:true}),aiBetExplanationHtml:()=>'',betComboText:()=>''
 });
-assert.match(legacyHtml,/新しい◎の役割・信頼度は当時未記録/);
+assert.match(legacyHtml,/発走前に保存した本命と買い目を維持（役割を後付けしません）/);
 assert.doesNotMatch(legacyHtml,/◎なし・軸固定なし/,'do not retroactively relabel saved v346 forecast');
 const confused=policy({...base(),audit:{orderConfidence:.03}},race,prediction);
 assert.equal(confused.trifectaDecision,'見送り','low ordering confidence blocks trifecta');
