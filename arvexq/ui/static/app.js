@@ -3678,8 +3678,9 @@ function homePickCounts(kind){
   }
 }
 function homePickAlert(counts){
-  return counts&&counts.central+counts.local>0
-    ?'<span class="arv-home-alert" aria-hidden="true">!</span>':''
+  // Persistent section marker. Loading or sparse morning selection must not
+  // cause the symbol to vanish from the selected/special home buttons.
+  return '<span class="arv-home-alert" aria-hidden="true">!</span>'
 }
 function smartHomeHub(){
   var hasCentral=state.races.some(function(x){return x.circuit==='中央'}),hasLocal=state.races.some(function(x){return x.circuit==='地方'}),finished=allTodayRacesFinished(),circuits='',middle='',
@@ -4621,35 +4622,37 @@ function openRace(id,keepStack,skipHistory,preservePanel){
   // Start the verified local roster without waiting for the slower D1/full-history path.
   hydrateStaticRacecardFirst(id,seq,initial);
   if(entryDataAvailable(initial))fetchSelectedRaceOdds(id,seq);
-  if(window.ARVEXQSavedSnapshot)window.ARVEXQSavedSnapshot.available(String(initial.date||state.date),id,edgeFetchJson).then(function(saved){
-    if(seq!==state.detailSeq||!saved||!state.race||String(state.race.id)!==String(id))return;
-    state.race=applySummaryEnvironment(mergeRaceReflection(saved,state.race,null,row));
-    state.race._savedSnapshotFallback=true;state.race._entryOnly=false;state.race._savedPreoffOriginal=saved._savedPreoffOriginal;state.race._savedOriginalField=saved._savedOriginalField;
-    applyMorningArchive([state.race]);
-    instantTrackDetails[String(id)]=state.race;saveDetailCache(id,state.race);
-    updateDetailSections(id,state.race,true);render();
-    if(!entryDataAvailable(initial))fetchSelectedRaceOdds(id,seq)
-  });
-  fetchRacecardOnly(id).then(function(card){
-    if(seq!==state.detailSeq||!card||!state.race||String(state.race.id)!==String(id))return;
-    // A compact roster cannot downgrade a full snapshot already shown.
-    if(entryDataAvailable(state.race)&&!state.race._entryOnly)delete card._entryOnly;
-    state.race=applySummaryEnvironment(mergeRaceReflection(state.race,card,null,null));
-    instantTrackDetails[String(id)]=state.race;saveDetailCache(id,state.race);
-    updateDetailSections(id,state.race,true);render();
-    if(!entryDataAvailable(initial))fetchSelectedRaceOdds(id,seq)
-  });
-  // Even stale snapshots paint first; all updates are confined to this race.
-  fetchEdgeRace(id,true,3).then(function(body){
+  // One authoritative detail request. The dated immutable factual card is
+  // painted immediately above; retired parallel racecard/snapshot fetches no
+  // longer race to replace a healthy D1 detail.
+  fetchEdgeRace(id,true,2).then(function(body){
     if(seq!==state.detailSeq||!state.race||String(state.race.id)!==String(id))return;
     if(body){
       state.race=applySummaryEnvironment(mergeRaceReflection(state.race,body,null,null));
-      instantTrackDetails[String(id)]=state.race;saveDetailCache(id,state.race)
+      instantTrackDetails[String(id)]=state.race;saveDetailCache(id,state.race);
     }
-    updateDetailSections(id,state.race,!!body);render()
+    if(entryDataAvailable(state.race)){
+      updateDetailSections(id,state.race,true);render();
+      if(!entryDataAvailable(initial))fetchSelectedRaceOdds(id,seq);
+      return;
+    }
+    // Only when D1 and the vetted dated archive could not supply any runners,
+    // ask the narrow racecard endpoint once. It is not a second live source.
+    return fetchRacecardOnly(id).then(function(card){
+      if(seq!==state.detailSeq||!state.race||String(state.race.id)!==String(id))return;
+      if(card&&entryDataAvailable(card)){
+        state.race=applySummaryEnvironment(mergeRaceReflection(state.race,card,null,row));
+        instantTrackDetails[String(id)]=state.race;saveDetailCache(id,state.race);
+        st.error='';
+        traceRaceDetail(id,'racecard-last-resort',{horses:(card.horses||[]).length});
+        fetchSelectedRaceOdds(id,seq);
+      }
+      updateDetailSections(id,state.race,!!card);render();
+    });
   }).catch(function(error){
     if(seq!==state.detailSeq)return;
-    st.error=String(error&&error.message||error);updateDetailSections(id,state.race,false);render()
+    st.error=String(error&&error.message||error);
+    updateDetailSections(id,state.race,false);render()
   })
 }
 
@@ -5172,14 +5175,6 @@ function fastReflectNow(){
 }
 window.addEventListener('pageshow',function(){setTimeout(fastReflectNow,120)},{passive:true});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')setTimeout(fastReflectNow,120)},{passive:true});
-// Final morning-snapshot membership guard. Keep this after all other UI
-// helper declarations so no live title/odds update can restore dynamic picks.
-function specialForecastRaceCandidates(){
-  return (state.races||[]).filter(function(r){
-    var m=morningPickOf(r);
-    return !!(r&&r.id&&m&&m.special===true)
-  }).slice().sort(raceChronologicalCompare)
-}
 setInterval(function(){
   if(document.visibilityState==='hidden'||state.date!==today()||state.race||state.raceLoading||
      state.track||state.picker||state.homePage)return;

@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   patch:
@@ -21,10 +21,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Patch same-day bias learning
-        env:
-          PYTHONPATH: '.'
-        run: python scripts/arvexq_fix_sameday_bias_lock.py
       - name: Validate
         env:
           PYTHONPATH: '.'
@@ -38,13 +34,3 @@ jobs:
           assert 'str(result.get("status") or "")!="確定"' in SOURCE
           print('same-day-bias-lock-safe')
           PY
-      - name: Commit
-        run: |
-          if [ -z "$(git status --porcelain -- arvexq/domain/legacy_evaluation.py)" ]; then
-            echo 'already current'; exit 0
-          fi
-          git config user.name 'arvexq-bot'
-          git config user.email 'actions@users.noreply.github.com'
-          git add arvexq/domain/legacy_evaluation.py
-          git commit -m 'fix: require pre-race locks for same-day miss learning'
-          git push

@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   patch:
@@ -21,8 +21,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Apply final input lock policy
-        run: python scripts/arvexq_patch_bet_lock_policy.py
       - name: Validate lock policy
         run: |
           python -m py_compile scripts/arvexq_patch_bet_lock_policy.py scripts/arvexq_patch_special_races.py
@@ -40,16 +38,3 @@ jobs:
               assert "v327-final-input-window-30m" in text
           print('bet-lock-policy-validated')
           PY
-      - name: Commit synchronized policy
-        run: |
-          TARGETS="arvexq/ui/static/app.js scripts/arvexq_patch_special_races.py"
-          if [ -z "$(git status --porcelain -- $TARGETS)" ]; then
-            echo 'Bet lock policy already synchronized'
-            exit 0
-          fi
-          git config user.name 'arvexq-bot'
-          git config user.email 'actions@users.noreply.github.com'
-          git add $TARGETS
-          git commit -m 'bet: persist final-input lock policy'
-          git pull --rebase origin main
-          git push
