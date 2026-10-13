@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const start=src.indexOf('function markRoleLabel(');
+const end=src.indexOf('\nfunction honmeiA11yText(',start);
+assert(start>0&&end>start);
+const label=new Function(src.slice(start,end)+';return markRoleLabel;')();
+assert.equal(label({predMark:'◎',preOffAxisCandidate:false,markFrozen:false}),'◎【単】');
+assert.equal(label({predMark:'◎',preOffAxisCandidate:true,markFrozen:false}),'◎【単】 ◎【軸】');
+assert.equal(label({predMark:'▲',preOffAxisCandidate:true,markFrozen:false}),'◎【軸】');
+assert.equal(label({predMark:'◎',markFrozen:true,honmeiRole:'axis'}),'◎【軸】');
+assert.equal(label({predMark:'◎',markFrozen:true,honmeiRole:'win'}),'◎【単】');
+assert.equal(label({predMark:'◎',markFrozen:true,honmeiRole:''}),'');
+assert.equal(label({predMark:'',preOffAxisCandidate:true,markFrozen:false}),'◎【軸】');
+assert.equal(label(null),'');
+const card=src.slice(src.indexOf('function racecardEntryRow('),src.indexOf('function morningSavedMarkRows('));
+assert(card.includes('rc-honmei-role'),'visible horse-name role must render');
+assert(card.includes('markRoleLabel(x)&&!scratch'),'scratch rows must never get role label beside name');
+const panel=src.slice(src.indexOf('function aiMarksPanel('),src.indexOf('function betPanel('));
+assert(panel.includes('markRoleLabel(x)||mark'),'AI panel must display role label');
+assert(src.includes('◎【単】</b> 勝ち切る能力')&&src.includes('◎【軸】</b> 3着内の安定性'));
+console.log('VISIBLE_HONMEI_ROLES_OK');
