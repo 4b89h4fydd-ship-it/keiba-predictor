@@ -7,6 +7,7 @@ permissions:
 jobs:
   isolated:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,3 +20,4 @@ jobs:
       - run: node --check arvexq/ui/static/app.js
       - run: node scripts/arvexq_frozen_marks_smoke.js
       - run: python -m unittest discover -s tests -p test_prepost_mark_consistency.py -v
+      - run: python -m unittest discover -s tests -p 'test_*.py' -q
