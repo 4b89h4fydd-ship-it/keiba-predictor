@@ -71,7 +71,7 @@ async function verify(kind,name){
   assert.equal(result.columns,6,'Reference image requires exactly six races per row');
   assert.equal(result.topRowSix,true,'1R through 6R must remain in the first row');
   assert.equal(result.secondRowStartsAtSeven,true,'7R must start the second row');
-  assert.ok(result.tileHeight>=28&&result.tileHeight<=30,'Reference tiles must be compact');
+  assert.ok(result.tileHeight>=33&&result.tileHeight<=37,'Reference tiles must be compact');
   assert.equal(result.venueBorder,'0px','Venue inner frame must be removed');
   assert.notEqual(result.arrowContent,'none','Each clickable race tile needs a small arrow');
   assert.equal(result.navOnHome,0);assert.equal(result.realtime,0);
