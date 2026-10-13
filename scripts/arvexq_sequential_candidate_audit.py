@@ -41,7 +41,10 @@ def evaluate():
             n=int(z["horse"]["horseNumber"])
             for key,value in candidates(z["horse"],detail).items():
                 variants.setdefault(key,{})[n]=value
-        if "reliability" not in variants or set(variants["reliability"]) != set(variants["current"]):\n            coverage["common-set-missing"]+=1\n            continue\n        for name,values in variants.items():
+        if "reliability" not in variants or set(variants["reliability"]) != set(variants["current"]):
+            coverage["common-set-missing"]+=1
+            continue
+        for name,values in variants.items():
             if set(values)!=set(variants["current"]) or order[0] not in values:
                 coverage[name]+=1
                 continue
@@ -65,5 +68,6 @@ def evaluate():
 if __name__=="__main__":
     from sys import argv
     out=evaluate()
-    Path(argv[1]).write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\n")
+    Path(argv[1]).write_text(json.dumps(out,ensure_ascii=False,indent=2)+"
+")
     print("RESULT="+json.dumps(out,ensure_ascii=False))
