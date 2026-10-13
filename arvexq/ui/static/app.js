@@ -1195,7 +1195,7 @@ function analysisRace(r){
 }
 function integratedGrades(r,rows){
   rows.forEach(function(x){
-    var score=n(x.overallScore,50),coverage=n(x.coverage,0);
+    var score=n(x.overallScore,50),coverage=n(x.threeFactorCoverage,0)/3;
     x.modelScore=score;
     x.evidenceScore=null;
     x.evaluation={
@@ -1203,10 +1203,10 @@ function integratedGrades(r,rows){
       grade:x.overallGrade||'C',
       modelScore:score,
       evidenceScore:null,
-      predictionModel:(predictionProfile(r)||{}).version||'',
+      predictionModel:'arvexq-true-run-pure-sectional-v2',
       confidence:coverage>=.72?'高':(coverage>=.45?'中':'低'),
-      tier:coverage>=.72?'フルデータ評価':(coverage>=.45?'限定データ評価':'基礎データ評価'),
-      mode:'近走5走・通過順・展開・市場乖離',
+      tier:coverage>=1?'3指標実測評価':(coverage>=2/3?'2指標実測評価':'実測データ不足'),
+      mode:'近走内容45%・基礎能力35%・区間性能20%',
       winProbability:n(x.winProbability),
       p1Probability:n(x.p1Probability),
       p2Probability:n(x.p2Probability),
@@ -1465,9 +1465,34 @@ function applyFrozenMarks(r,p){
   }else p.markFreeze={source:'provisional'};
   return p;
 }
+// Recompute marks only when the actual inputs to the single 45/35/20
+// model change. Historical audit scores, win odds and old evaluation marks
+// never enter this signature. Only the active pre-off race is recalculated.
+function threeFactorMarkInputSignature(r){
+  var modelRace=analysisRace(r);
+  return JSON.stringify({
+    engine:'arvexq-true-run-pure-sectional-v2',
+    raceId:String(r&&r.id||''),date:String(r&&r.date||''),
+    raceMode:raceMode(r),
+    runners:(modelRace.horses||[]).map(function(h){
+      var factor=arvexqFactorValues({horse:h},modelRace);
+      return [n(h.horseNumber,0),String(h.name||''),factor.coverage,
+        factor.trueRun,factor.pure,factor.sectional];
+    }).sort(function(a,b){return a[0]-b[0]})
+  });
+}
 function predict(r){
-  if(r._prediction)return applyFrozenMarks(r,r._prediction);
-  if(raceMarkClock(r).started){
+  var started=raceMarkClock(r).started,markSignature=null;
+  if(!started){
+    markSignature=threeFactorMarkInputSignature(r);
+    if(r._prediction&&
+        r._prediction.engineVersion==='arvexq-true-run-pure-sectional-v2'&&
+        r._prediction.markInputSignature===markSignature)
+      return applyFrozenMarks(r,r._prediction);
+    // A stale or older-engine in-memory result is discarded by recomputing
+    // below. Historical pre-off seals and ticket receipts are not edited.
+  }else if(r._prediction)return applyFrozenMarks(r,r._prediction);
+  if(started){
     var archive=immutableArchivedPrediction(r);
     Object.defineProperty(r,'_prediction',{value:archive,configurable:true,writable:true,enumerable:false});
     return archive;
@@ -1492,6 +1517,7 @@ function predict(r){
   assignSingleWinCandidate(rows,modelRace);
   var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext,outcome:outcome,
     engineVersion:'arvexq-true-run-pure-sectional-v2',markEngineVersion:'arvexq-true-run-pure-sectional-v2',
+    markInputSignature:markSignature,
     researchAudit:{expertAIConsensusV317:true,marketBlindFactorsV317:true,podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true,diagnosisPaceOutcomeLinkedV318:true,marksLinkedToOutcomeV318:true,betsLinkedToOutcomeV318:true}};
   applyFrozenMarks(r,result);
   Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
