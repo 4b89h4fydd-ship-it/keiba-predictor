@@ -1528,8 +1528,10 @@ html body .smart-race-page .rc-mark-legend{margin:3px 0 5px!important;line-heigh
  html body .smart-race-page .rc-racecard-v339 .rc-horse-name{font-size:14px!important}
 }
 
-/* ARVEXQ daylight warm palette final */
-html,html body,html body:has(.smart-home){background:#a5a390!important}
+/* ARVEXQ light theme v4: single final palette, no competing dark override. */
+html,html body,html body:has(.smart-home){
+  background:#fffaf3!important;background-color:#fffaf3!important;
+}
 html body .smart-shell.smart-home,
 html body .smart-shell.smart-home>.smart-main.smart-home-main,
 html body .smart-shell.smart-home .smart-home-main,
@@ -1537,35 +1539,92 @@ html body .smart-shell.smart-home .arv-unified-body,
 html body .smart-shell.smart-home .arv-all-home,
 html body .smart-shell.smart-home .arv-all-panel,
 html body .smart-shell.smart-home .arv-all-circuit,
-html body .smart-shell.smart-home .arv-all-venue{background:#a5a390!important;background-image:none!important;color:#252a20!important}
-html body .smart-home .arv-all-title h2,
-html body .smart-home .arv-all-circuit-label b,
-html body .smart-home .arv-all-venue-head b{color:#22291f!important}
-html body .smart-home .arv-all-circuit-label{border-color:#646d5c!important}
-html body .smart-home .arv-all-venue-head span,
-html body .smart-home .arv-all-empty{color:#354537!important}
-html body .smart-home .arv-unified-date{background:#f3d5a6!important;border-color:#98713f!important;color:#392e20!important}
-html body .smart-home .arv-unified-action[data-action-kind="selected"]{background:#f4ce7c!important;border-color:#ad822f!important;color:#312818!important}
-html body .smart-home .arv-unified-action[data-action-kind="special"]{background:#d1aee3!important;border-color:#9263aa!important;color:#34223c!important}
-html body .smart-home .arv-unified-action[data-action-kind="stats"]{background:#a4ddbd!important;border-color:#518b6a!important;color:#203c2d!important}
-html body .smart-home .arv-unified-action-icon,
-html body .smart-home .arv-unified-chevron{color:inherit!important}
-html body .smart-home .arv-all-go{background:#e9dac0!important;border-color:#967b54!important;color:#352c1e!important}
-html body .smart-home .arv-all-race:not(:disabled){background:#a8d9b4!important;border-color:#5a9671!important;color:#1d402b!important;filter:none!important;opacity:1!important}
-html body .smart-home .arv-all-race:not(:disabled) strong,
-html body .smart-home .arv-all-race:not(:disabled) small,
-html body .smart-home .arv-all-race:not(:disabled)::after{color:#1d402b!important}
-html body .smart-home .arv-all-race[data-race-state="soon"]:not(:disabled){background:#f8d67e!important;border-color:#a77a2e!important}
-html body .smart-home .arv-all-race[data-race-state="running"]:not(:disabled){background:#f2a2a2!important;border-color:#ac4855!important}
-html body .smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled),
-html body .smart-home .arv-all-race[data-race-state="finished"]:not(:disabled){background:#596158!important;border-color:#697068!important;opacity:.72!important;filter:saturate(.2)!important}
-html body .smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled) strong,
-html body .smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled) small,
-html body .smart-home .arv-all-race[data-race-state="finished"]:not(:disabled) strong,
-html body .smart-home .arv-all-race[data-race-state="finished"]:not(:disabled) small{color:#f4f1e9!important}
-html body .smart-home .arv-favorite-home-open{background:#9ed5b3!important;border-color:#5d8c6e!important;color:#203e29!important}
-html body .smart-home .arv-favorite-home-open[data-race-state="soon"]{background:#f4d080!important}
-html body .smart-home .arv-favorite-home-open[data-race-state="running"]{background:#eca3a3!important}
-html body .smart-home .arv-favorite-home-open[data-race-state="elapsed"],
-html body .smart-home .arv-favorite-home-open[data-race-state="finished"]{background:#596058!important;color:#f1f1e9!important}
-html body .smart-home .arv-favorites-heading{color:#3a3023!important;border-color:#707667!important}
+html body .smart-shell.smart-home .arv-all-venue,
+html body .smart-shell.smart-home .arv-favorites-home{
+  background:#fffaf3!important;background-image:none!important;
+  color:#24251e!important;box-shadow:none!important;
+}
+html body .smart-shell.smart-home .arv-unified-date{
+  background:#fff3d9!important;background-image:none!important;
+  border-color:#d7b581!important;color:#342e24!important;
+}
+html body .smart-shell.smart-home .arv-unified-date>span{color:#342e24!important}
+html body .smart-shell.smart-home .arv-unified-action{
+  background:#f7edda!important;color:#2d2924!important;
+  border-color:#d7c3a3!important;box-shadow:none!important;
+}
+html body .smart-shell.smart-home .arv-unified-action[data-action-kind="selected"]{
+  background:#ffde8b!important;border-color:#cc9e44!important;color:#443010!important;
+}
+html body .smart-shell.smart-home .arv-unified-action[data-action-kind="special"]{
+  background:#e6c5fa!important;border-color:#ad7ac5!important;color:#432651!important;
+}
+html body .smart-shell.smart-home .arv-unified-action[data-action-kind="stats"]{
+  background:#b5efd1!important;border-color:#6baf8e!important;color:#194933!important;
+}
+html body .smart-shell.smart-home .arv-unified-action[data-action-kind="favorites"]{
+  background:#ffd6cc!important;border-color:#cb9282!important;color:#60352c!important;
+}
+html body .smart-shell.smart-home .arv-unified-action-icon,
+html body .smart-shell.smart-home .arv-unified-chevron,
+html body .smart-shell.smart-home .arv-unified-action-label{color:inherit!important;text-shadow:none!important}
+html body .smart-shell.smart-home .arv-all-title h2,
+html body .smart-shell.smart-home .arv-all-circuit-label b,
+html body .smart-shell.smart-home .arv-all-venue-head b{
+  color:#29251e!important;text-shadow:none!important;
+}
+html body .smart-shell.smart-home .arv-all-circuit-label{border-color:#d5cbb7!important}
+html body .smart-shell.smart-home .arv-all-circuit-label small,
+html body .smart-shell.smart-home .arv-all-venue-head span,
+html body .smart-shell.smart-home .arv-all-empty{color:#655c4c!important}
+html body .smart-shell.smart-home .arv-all-venue-head>div{border-left-color:#b88b56!important}
+html body .smart-shell.smart-home .arv-all-go{
+  background:#f4e5ce!important;border-color:#c7a778!important;color:#443525!important;
+}
+html body .smart-shell.smart-home .arv-all-race:not(:disabled){
+  background:#c8ecd5!important;background-image:none!important;
+  border-color:#80b795!important;color:#20392b!important;
+  opacity:1!important;filter:none!important;box-shadow:none!important;
+}
+html body .smart-shell.smart-home .arv-all-race:not(:disabled) strong,
+html body .smart-shell.smart-home .arv-all-race:not(:disabled) small,
+html body .smart-shell.smart-home .arv-all-race:not(:disabled)::after{
+  color:#20392b!important;text-shadow:none!important;
+}
+html body .smart-shell.smart-home .arv-all-race[data-race-state="soon"]:not(:disabled){
+  background:#ffe09a!important;border-color:#cb9e44!important;
+  opacity:1!important;filter:none!important;
+}
+html body .smart-shell.smart-home .arv-all-race[data-race-state="running"]:not(:disabled){
+  background:#ffb7b7!important;border-color:#c8757b!important;
+  opacity:1!important;filter:none!important;
+}
+html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled),
+html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"]:not(:disabled){
+  background:#626660!important;border-color:#626660!important;
+  opacity:.82!important;filter:saturate(.5)!important;
+}
+html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled) strong,
+html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled) small,
+html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"]:not(:disabled) strong,
+html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"]:not(:disabled) small{color:#fff!important}
+html body .smart-shell.smart-home .arv-all-race:disabled{
+  background:#e1e1d9!important;border-color:#c6c6bd!important;
+  color:#74746d!important;opacity:.6!important;
+}
+html body .smart-shell.smart-home .arv-favorite-home-open{
+  background:#e0f1e4!important;border-color:#a0c2a7!important;color:#26382b!important;
+}
+html body .smart-shell.smart-home .arv-favorite-home-open[data-race-state="soon"]{
+  background:#ffe5af!important;border-color:#c8a155!important;
+}
+html body .smart-shell.smart-home .arv-favorite-home-open[data-race-state="running"]{
+  background:#ffd1d0!important;border-color:#c77b7b!important;
+}
+html body .smart-shell.smart-home .arv-favorite-home-open[data-race-state="elapsed"],
+html body .smart-shell.smart-home .arv-favorite-home-open[data-race-state="finished"]{
+  background:#6a7069!important;border-color:#6a7069!important;color:#fff!important;
+}
+html body .smart-shell.smart-home .arv-favorites-heading{
+  color:#44331e!important;border-color:#d9cdb9!important;
+}
