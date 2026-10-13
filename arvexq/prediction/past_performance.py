@@ -58,8 +58,21 @@ def observed_runs(horse: dict[str, Any], race: dict[str, Any], limit: int | None
         return []
     # A D1 detail may carry older starts in the lossless gzip sidecar.
     # Expand only for whole-career analysis; the UI's five-run lane stays fast.
-    if limit is None and isinstance(horse.get("careerArchive"), dict):
-        horse = recover_horse(horse, cutoff.isoformat())
+    archive = horse.get("careerArchive")
+    if isinstance(archive, dict):
+        visible = merge_career(
+            horse.get("allPastRuns"), horse.get("recentRaces"), cutoff.isoformat())
+        # The sidecar is the authoritative lossless source when the compact
+        # visible history is incomplete. Avoid decompressing on the usual
+        # complete five-run fast path.
+        claimed = archive.get("storedRunCount")
+        try:
+            total = int(claimed)
+        except (TypeError, ValueError):
+            total = 0
+        requested = 5 if limit is None else max(0, int(limit))
+        if limit is None or (len(visible) < requested and total > len(visible)):
+            horse = recover_horse(horse, cutoff.isoformat())
     candidates: list[dict[str, Any]] = []
     for key in KEYS:
         if isinstance(horse.get(key), list):
