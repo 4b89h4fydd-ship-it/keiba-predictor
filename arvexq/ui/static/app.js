@@ -2154,16 +2154,22 @@ function verifiedSavedAiBet(r,plan){
   if(!isFinite(off)||!isFinite(at)||at>=off)return null;
   return plan
 }
+function currentBetEnginePlan(plan){
+  // Historical sealed tickets remain in audit storage, not in the live UI.
+  // Never re-derive or relabel a legacy ticket after the off.
+  return plan&&/^arvexq-true-run-pure-sectional-v[12]$/.test(
+    String(plan.engineVersion||plan.betStrategy||''))?plan:null
+}
 function frozenAiBetForRace(r){
   if(!r||!r.id)return null;
-  var server=verifiedSavedAiBet(r,r.preRaceBet);
+  var server=currentBetEnginePlan(verifiedSavedAiBet(r,r.preRaceBet));
   if(server)return server;
   var mod=window.ARVEXQMorningEvidence,original=r.morningTicketEvidence;
   if(mod&&mod.verify(r,original)){
-    var fixed=verifiedSavedAiBet(r,mod.sealedPlan(r,original));
+    var fixed=currentBetEnginePlan(verifiedSavedAiBet(r,mod.sealedPlan(r,original)));
     if(fixed)return fixed
   }
-  return verifiedSavedAiBet(r,loadStoredAiBet(r.id,true))
+  return currentBetEnginePlan(verifiedSavedAiBet(r,loadStoredAiBet(r.id,true)))
 }
 // Outcome context is explanatory: it must not reorder or exclude ticket combos.
 function attachBetOutcomeAudit(plan,r,p){
