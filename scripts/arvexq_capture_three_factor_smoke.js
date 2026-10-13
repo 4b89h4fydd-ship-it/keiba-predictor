@@ -26,14 +26,14 @@ const run=child.spawnSync(process.execPath,['scripts/arvexq_capture_prerace_bet.
   {input:JSON.stringify(race),encoding:'utf8',timeout:30000});
 assert.equal(run.status,0,'preoff capture failed: '+String(run.stderr||run.stdout).slice(0,5000));
 const out=JSON.parse(run.stdout);
-assert.equal(out.engineVersion,'arvexq-true-run-pure-sectional-v2');
+assert.equal(out.engineVersion,'arvexq-form-condition-no-sectional-proposal-v1');
 assert.equal(out.honmei.horseNumber,1);
 assert.equal(out.decision,'購入候補');
 assert(out.items.length>=1,'new unified method must produce purchasable tickets');
 assert(out.items.every(x=>x.level==='本線'||x.level==='保険'||x.level==='3連単チャレンジ'));
 assert(!out.items.some(x=>x.kind==='旧方式'));
 assert.equal(out.singleWinHorseNumber,1);
-assert.match(out.version,/three-factor/);
+assert.match(out.version,/form-condition/);
 // Rich, dated three-factor evidence must not be rejected for missing
 // unrelated weather, body weights or jockey completeness.
 const observationOnly={...race,weather:'不明',condition:'不明',
@@ -45,10 +45,11 @@ assert.equal(runObserved.status,0,
 const observed=JSON.parse(runObserved.stdout);
 assert.equal(observed.decision,'購入候補');
 assert(observed.items.some(z=>z.level==='本線'));
-// Equally, no measured SECTIONAL -> no manufactured trusted ticket.
+// Missing sectional observations cannot invalidate observed pre-off recent form.
 const sparse={...race,horses:horses.map(h=>({...h,recentRaces:
   h.recentRaces.map(v=>({...v,last3fRank:null,last3fPercentile:null}))}))};
 const runSparse=child.spawnSync(process.execPath,['scripts/arvexq_capture_prerace_bet.js'],
   {input:JSON.stringify(sparse),encoding:'utf8',timeout:30000});
-assert.notEqual(runSparse.status,0,'no sectionals must not seal a bogus 80-point winner');
-console.log('SERVER_PREOFF_CAPTURE_THREE_FACTOR_OK',out.items.map(i=>i.kind).join(','));
+assert.equal(runSparse.status,0,'missing sectional rank must not block observed five-run predictions: '+String(runSparse.stderr));
+assert.equal(JSON.parse(runSparse.stdout).engineVersion,out.engineVersion);
+console.log('SERVER_PREOFF_CAPTURE_FORM_CONDITION_OK',out.items.map(i=>i.kind).join(','));
