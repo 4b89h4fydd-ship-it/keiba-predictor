@@ -1,10 +1,9 @@
-"""One authoritative pre-off horse scoring model.
+"""Staged pre-off score: observed recent form and matching condition evidence.
 
-TRUE RUN 45%: recency-weighted actual finish quality over five observed starts.
-PURE 35%: peak and median finish quality over the same history.
-SECTIONAL 20%: actual last-600-metre finishing rank (or published percentile).
-Only observed dated pre-off runs are used. The scores are NOT probabilities.
-No old composite grades, four-pillar votes, or historical mark predictions enter.
+The active score does not use sectional rank or duplicate peak-finish scores.
+Its conditional adjustment is capped at 25% and uses only observed earlier
+runs on matching surface and within 150 m. Scores are not probabilities.
+This model is experimental until authenticated pre-off performance validation.
 """
 from __future__ import annotations
 
@@ -17,7 +16,8 @@ from arvexq.prediction.career_profile import profile_career
 
 MODEL_VERSION = "arvexq-form-condition-no-sectional-proposal-v1"
 PRIMARY_PILLARS = ("recentForm", "conditionForm")
-SCORE_WEIGHTS = {"recentForm": 1.0, "conditionForm": 0.0}
+CONDITION_WEIGHT_PER_RUN = 0.08
+MAX_CONDITION_WEIGHT = 0.25
 
 
 def _number(v: Any) -> float | None:
@@ -68,11 +68,15 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
     """The only ranking for core score, marks, saved probabilities, and bets."""
     active = [h for h in horses if isinstance(h, dict) and not is_inactive_runner(h)]
     rows = []
-    from arvexq.research.no_sectional_candidate import score as measured_score
     for horse in active:
         raw = collect_horse_raw_metrics(horse, race)
-        score = measured_score(horse, race)
         past = analyze_past_performance(horse, race)
+        recent = raw.get("trueRun")
+        comparable = past.get("comparableQuality")
+        condition_runs = int(past.get("comparableRuns") or 0)
+        strength = min(MAX_CONDITION_WEIGHT, CONDITION_WEIGHT_PER_RUN * condition_runs) if comparable is not None else 0.0
+        score = ((1 - strength) * recent + strength * comparable
+                 if recent is not None else 0.5)
         factors = {
             "recentForm": raw.get("trueRun"),
             "conditionForm": past.get("comparableQuality"),
