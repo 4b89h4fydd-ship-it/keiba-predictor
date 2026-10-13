@@ -40,10 +40,12 @@ assert.equal(result.rows[0].honmeiRole,'','legacy server marks without role must
 assert.equal(result.rows[0].honmeiGrade,'','do not invent grade from post-result evaluation');
 const live=runner(false)(race,{rows:[{horse:race.horses[0],predMark:'△',overallScore:66},
  {horse:race.horses[1],predMark:'▲',overallScore:65}]});
-assert.deepEqual(live.rows.map(x=>x.predMark),['◎','○'],
- 'verified pre-off original must remain identical before and after race start');
-assert.equal(live.rows[0].overallScore,90,'pre-off must show the same saved evaluation');
-assert.equal(live.markFreeze.source,'official-course-revision');
-assert.equal(live.rows[0].markFrozen,true);
+assert.deepEqual(live.rows.map(x=>x.predMark),['△','▲'],
+ 'pre-off live marks must reflect the latest predictor inputs');
+assert.equal(live.rows[0].overallScore,66,'pre-off keeps new score; frozen original is audit-only');
+assert.equal(live.markFreeze.source,'live-before-post');
+assert.equal(live.rows[0].markFrozen,false);
+assert.equal(live.markFreeze.originalPreserved,true);
+assert.deepEqual(frozen.horses.map(x=>x.mark),['◎','○'],'archive never changes');
 assert.ok(!src.includes('function applyServerAuthoritativeMarks('));
-console.log('FROZEN_MARKS_VALID_PRODUCTION_CODE_PASS postoff=original preoff=original');
+console.log('FROZEN_MARKS_VALID_PRODUCTION_CODE_PASS postoff=original preoff=latest');
