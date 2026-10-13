@@ -125,6 +125,7 @@ jobs:
           node --check arvexq/ui/static/app.js
           node scripts/arvexq_three_factor_parity_smoke.js
           node scripts/arvexq_empirical_selection_smoke.js
+          python -m unittest tests.test_empirical_ticket_calibration -v
           node scripts/arvexq_retired_ticket_ui_smoke.js
           node scripts/arvexq_retired_mark_freeze_smoke.js
           node scripts/arvexq_retired_selection_history_smoke.js
