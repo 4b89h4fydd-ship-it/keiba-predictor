@@ -2,6 +2,8 @@ name: Staged No Sectional Model
 on:
   push:
     branches: [codex/arvexq-two-axis-staged-model]
+  pull_request:
+    branches: [main]
 permissions:
   contents: read
 jobs:
