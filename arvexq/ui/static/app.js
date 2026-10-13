@@ -312,45 +312,6 @@ function raceLiveBias(r,rows){
 // v313: same-day mark correction.  Only races that have already finished at the
 // same venue/date are allowed to influence later marks.  One result is never enough:
 // activation starts at two completed races and is strongly shrunk until 4-5 races.
-function sameDayCorrectionProfileV313(r,rows){
-  rows=rows||[];
-  var date=String(r&&r.date||state.date||''),circuit=String(r&&r.circuit||state.circuit||''),track=String(r&&r.track||state.track||''),raceNo=n(r&&r.raceNumber,99),
-      completed=0,markRaces=0,fullHit=0,styleN=0,podiumFront=0,podiumLate=0,missN=0,missFront=0,missLate=0,frameN=0,inner=0,outer=0,source=[];
-  (state.races||[]).forEach(function(z){
-    if(!z||String(z.date||date)!==date||String(z.circuit||'')!==circuit||String(z.track||'')!==track||n(z.raceNumber,99)>=raceNo)return;
-    var d=resultDetailForTrend(z),fs=((d&&d.result||{}).finishers||[]).filter(function(x){return n(x&&x.finish)>0}).sort(function(a,b){return n(a.finish)-n(b.finish)}).slice(0,3);
-    if(fs.length<3)return;
-    completed++;source.push(n(z.raceNumber));
-    var marks=aiStoredMarks(d),marked={};marks.forEach(function(x){if(['◎','○','▲','☆+','☆','△','注'].indexOf(String(x.mark||''))>=0)marked[n(x.no)]=1});
-    var comparable=Object.keys(marked).length>0;if(comparable){markRaces++;var all=fs.every(function(f){return !!marked[n(f.horseNumber)]});if(all)fullHit++}
-    var field=Math.max(1,n(d.fieldSize,(d.horses||[]).length||fs.length)),frontCut=Math.max(2,Math.ceil(field*.25)),lateCut=Math.max(frontCut+1,Math.ceil(field*.55));
-    fs.forEach(function(f){
-      var cp=(f.cornerPositions||[]).filter(function(v){return n(v)>0}),pos=n(cp[0],0),isFront=pos>0&&pos<=frontCut,isLate=pos>0&&pos>=lateCut;
-      if(pos){styleN++;if(isFront)podiumFront++;if(isLate)podiumLate++}
-      var h=(d.horses||[]).find(function(q){return n(q.horseNumber)===n(f.horseNumber)})||{},fr=n(f.frameNumber,n(h.frameNumber,0));
-      if(fr){frameN++;var maxFrame=Math.max(2,Math.min(8,Math.ceil(field/2))),inside=clamp(1-(fr-1)/Math.max(1,maxFrame-1),0,1);inner+=inside;outer+=1-inside}
-      if(comparable&&!marked[n(f.horseNumber)]){missN++;if(isFront)missFront++;if(isLate)missLate++}
-    })
-  });
-  var sample=completed>=2?clamp((completed-1)/4,0,1):0,coverage=markRaces?fullHit/markRaces:.83,deficit=markRaces?clamp((.83-coverage)/.50,0,1):0,
-      frontShare=styleN?podiumFront/styleN:.34,lateShare=styleN?podiumLate/styleN:.26,innerShare=frameN?inner/frameN:.5,
-      missFrontShare=missN?missFront/missN:.33,missLateShare=missN?missLate/missN:.33,
-      evidence=clamp(sample*(.62+.38*Math.min(1,styleN/9))*(.72+.28*Math.min(1,completed/4)),0,1),
-      frontSignal=clamp((frontShare-.34)*2.15+(missFrontShare-.33)*deficit*.80,-.42,.42)*evidence,
-      lateSignal=clamp((lateShare-.26)*2.30+(missLateShare-.33)*deficit*.88,-.42,.42)*evidence,
-      innerSignal=clamp((innerShare-.5)*1.65,-.30,.30)*evidence,byNo={};
-  rows.forEach(function(z){
-    var h=z.horse||{},rt=styleRates(h,r),early=clamp(rt.front*.52+rt.stalk*.30+rt.early3*.18,0,1),late=clamp(rt.mid*.30+rt.close*.48+rt.moved3*.22,0,1),
-        fr=n(h.frameNumber,0),maxFrame=Math.max(2,Math.min(8,Math.ceil(Math.max(2,rows.length)/2))),inside=fr?clamp(1-(fr-1)/Math.max(1,maxFrame-1),0,1):.5,
-        raw=frontSignal*(early-late)+lateSignal*(late-early)+innerSignal*(inside-.5)*1.35,
-        coreScale=markRaces>=3?1:(markRaces>=2?.55:.35),
-        markBoost=clamp(raw,-.06,.06),winBoost=clamp(raw*.18*coreScale,-.012,.012),p2Boost=clamp(raw*.38*coreScale,-.030,.030),p3Boost=clamp(raw*.65*(.75+.25*deficit)*coreScale,-.055,.055);
-    byNo[n(h.horseNumber)]={markBoost:markBoost,winBoost:winBoost,p2Boost:p2Boost,p3Boost:p3Boost,early:early,late:late,inside:inside}
-  });
-  var flow=(lateSignal>=.055&&lateSignal>=Math.abs(frontSignal)*.85)?'差し・追込':((frontSignal>=.055&&frontSignal>=Math.abs(lateSignal)*.85)?'前残り':(frontSignal<=-.055?'前不利':(lateSignal<=-.055?'差し不利':'')));
-  if(!flow&&Math.abs(innerSignal)>=.06)flow=innerSignal>0?'内寄り':'外寄り';
-  return {active:evidence>=.18&&completed>=2,completed:completed,markRaces:markRaces,evidence:evidence,coverage:coverage,deficit:deficit,frontSignal:frontSignal,lateSignal:lateSignal,innerSignal:innerSignal,flowLabel:flow||'中立',sourceRaces:source,byNo:byNo}
-}
 function sameDayTrendSignatureV313(r,rows){
   // Observational results are not an approved trigger for recalculating marks.
   return 'morning-fixed-official-condition-only-v346'
@@ -3543,10 +3504,8 @@ function stylePositionMap(r,p){var rows=(p.rows||[]).slice().sort(function(a,b){
 function runnerStyleSection(r,p){
   var diagnosisReady=diagnosisCurrent(r),
       cadenceText=window.ARVEXQLiveOdds.status(r),
-      dayCorr=sameDayCorrectionProfileV313(r,p.rows||[]),
-      dayNote=dayCorr.active?('<div class="diagnosis-refresh-note" style="margin:7px 0"><b>当日補正 ON</b>　前'+dayCorr.completed+'R反映 / '+(dayCorr.markRaces?('印内3頭 '+Math.round(dayCorr.coverage*100)+'%'):'印比較待ち')+' / '+esc(dayCorr.flowLabel)+'傾向　<small>当日の傾向は分析参考のみ。朝の固定印は変更しません</small></div>'):'';
+      // Only current three-factor marks are displayed; no V313 correction badge.
   return '<section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
-    +dayNote
     +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">'+(r._entryOnly?'出走表を先に表示しています。履歴・能力評価を取得中です。':'取得済みデータでAI評価を先に計算中。更新後は馬名タップの詳細と展開予想へ反映します。')+'</div>':'')
     +'<div class="racecard-table">'
     +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
