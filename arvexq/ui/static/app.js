@@ -1211,7 +1211,7 @@ function integratedGrades(r,rows){
       evidenceScore:null,
       predictionModel:'arvexq-form-condition-no-sectional-proposal-v1',
       confidence:coverage>=.72?'高':(coverage>=.45?'中':'低'),
-      tier:coverage>=1?'3指標実測評価':(coverage>=1?'2指標実測評価':'実測データ不足'),
+      tier:coverage>=1?'2指標実測評価':(coverage>=.5?'1指標実測評価':'実測データ不足'),
       mode:'近走5走＋同距離・馬場適性',
       winProbability:n(x.winProbability),
       p1Probability:n(x.p1Probability),
