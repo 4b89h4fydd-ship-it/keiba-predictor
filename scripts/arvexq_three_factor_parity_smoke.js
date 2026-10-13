@@ -48,6 +48,12 @@ const cases=[
                    {date:'2026-10-13',fieldSize:11,finish:2,last3fRank:3}]}},
   {label:'future only is not evidence',race:{date:'2026-10-14'},
    horse:{recentRaces:[{date:'2026-10-14',fieldSize:12,finish:1,last3fRank:1}]}},
+  {label:'pastRaces alias contributes to five-run evidence',race:{date:'2026-10-14'},
+   horse:{pastRaces:[{raceDate:'2026/10/13',fieldSize:9,finishPosition:2,last3fRank:1}]}},
+  {label:'runs alias and invalid future date excluded',race:{date:'2026-10-14'},
+   horse:{runs:[{date:'2026.10.11',runners:10,finish:4,last3fRank:3},
+                {date:'2026-10-14',runners:12,finish:1,last3fRank:1},
+                {date:'2026-02-30',runners:11,finish:1,last3fRank:1}]}},
 ];
 const py=String.raw`import json,sys
 from arvexq.prediction.factor_model import collect_horse_raw_metrics
