@@ -9,8 +9,8 @@ function take(name){
   assert(a>=0&&b>a,'missing '+name);
   return src.slice(a,b+2);
 }
-const code=['morningPickOf','morningPickReady','morningPublicStatus','legacyMorningSelectionCandidates','selectedRaceCandidates','specialForecastRaceCandidates']
-  .map(take).join('\n')+'\nreturn {morningPickReady,legacyMorningSelectionCandidates,morningPublicStatus,selectedRaceCandidates,specialForecastRaceCandidates};';
+const code=['morningPickOf','morningPickReady','morningPublicStatus','selectedRaceCandidates','specialForecastRaceCandidates']
+  .map(take).join('\n')+'\nreturn {morningPickReady,morningPublicStatus,selectedRaceCandidates,specialForecastRaceCandidates};';
 const win={};
 new Function('window',fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8'))(win);
 new Function('window',fs.readFileSync('arvexq/ui/static/morning/frozen_ticket_evidence.js','utf8'))(win);
@@ -36,7 +36,7 @@ state.races[0].morningSelectedScore=79;
 assert.equal(api.selectedRaceCandidates().length,0,'archived below-80 races must be hidden from elite list');
 state.races[0].morningSelectedScore=86;
 assert.equal(api.selectedRaceCandidates()[0].selection.primaryType,'的中重視型');
-assert.deepEqual(api.legacyMorningSelectionCandidates('地方').map(x=>x.id),['old']);
+assert(!src.includes('function legacyMorningSelectionCandidates('),'old unverified selection panel removed');
 assert.equal(api.morningPublicStatus(state.races[1]),'legacy-unverified');
 assert.equal(api.selectedRaceCandidates('地方').length,0);
 assert.deepEqual(api.selectedRaceCandidates()[0].selection.ticketKinds,['ワイド']);

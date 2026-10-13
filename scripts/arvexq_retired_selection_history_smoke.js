@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+assert(!src.includes('function legacyMorningSelectionCandidates('));
+assert(!src.includes('arv-pick-history'));
+assert(!src.includes('朝選定（買い目原本未確認）'));
+assert(src.includes('function selectedRaceCandidates('));
+assert(src.includes("n(m.selectedScore,0)>=80"),'hit-focused current selection gate retained');
+assert(src.includes('function selectedCircuitPage('));
+assert(src.includes("function homeCircuitChooser("));
+console.log('RETIRED_UNVERIFIED_SELECTION_HISTORY_HIDDEN_OK');
