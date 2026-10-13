@@ -62,6 +62,20 @@ async function verify(kind,name){
       alerts:scope.querySelectorAll('.arv-unified-alert').length
     };scope.remove();return result;
   });
+  // Verify the actual home hero no longer scrolls away on iPhone.
+  const sticky=await evaluateAfterStableNavigation(page,()=>{
+    const hero=document.querySelector('.smart-home>.arv-unified-hero');
+    const date=document.querySelector('.smart-home .arv-unified-date');
+    if(!hero||!date)return {exists:false};
+    const a=getComputedStyle(hero),b=getComputedStyle(date);
+    return {exists:true,heroPosition:a.position,datePosition:b.position,
+      heroBlur:a.backdropFilter,dateBlur:b.backdropFilter,heroOpacity:a.opacity};
+  });
+  assert.equal(sticky.exists,true,'Real home must render hero and date');
+  assert.equal(sticky.heroPosition,'sticky','Hero must remain sticky on iPhone');
+  assert.equal(sticky.datePosition,'sticky','Date bar must remain sticky on iPhone');
+  assert.equal(sticky.heroBlur,'none','Hero blur overlay must be removed');
+  assert.equal(sticky.dateBlur,'none','Date blur overlay must be removed');
   assert.deepEqual(result.actions,['厳選','特別','AI成績']);
   assert.equal(result.fullGrid,24);assert.equal(result.booked,3);
   assert.equal(result.firstNext,1);assert.equal(result.nextAfter,2);
