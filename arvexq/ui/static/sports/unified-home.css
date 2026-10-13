@@ -11,7 +11,9 @@
 .arv-unified-action-icon{display:flex;align-items:center;justify-content:center;width:31px;height:28px;font-size:23px;color:#84dfff;filter:drop-shadow(0 0 5px rgba(73,164,254,.6));line-height:1}
 .arv-unified-action[data-action-kind="selected"] .arv-unified-action-icon{color:#f4d487}
 .arv-unified-action-label{font-size:14px;font-weight:900;white-space:nowrap;line-height:1.2}
-.arv-unified-action>span:last-child{position:absolute;right:5px;top:4px;font-size:15px;color:#83cfff}
+.arv-unified-chevron{position:absolute;right:5px;top:4px;font-size:15px;color:#83cfff}
+.arv-unified-action .arv-unified-alert{position:absolute;right:8px;top:7px;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1px solid #ff7185;background:#511120;color:#fff;font-size:17px;font-weight:950;line-height:1;box-shadow:0 0 10px rgba(255,55,80,.65);z-index:1}
+.arv-unified-action:has(.arv-unified-alert) .arv-unified-chevron{display:none}
 .arv-unified-action:focus-visible,.arv-unified-date:focus-within{outline:3px solid #f5d376;outline-offset:2px}
 .arv-all-home{display:contents}
 .smart-shell.smart-home>.arv-unified-hero{margin-top:0!important}

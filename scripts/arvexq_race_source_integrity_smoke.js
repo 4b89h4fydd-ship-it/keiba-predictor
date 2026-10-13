@@ -22,7 +22,17 @@ assert.equal((src.match(/function specialForecastRaceCandidates\(/g)||[]).length
 const workflow=fs.readFileSync('.github/workflows/arvexq-race-open-repair.yml','utf8');
 assert(workflow.includes('contents: read'));
 assert(!workflow.includes('git push')&&!workflow.includes('Apply repair'));
+assert(!src.includes('function smartHomeHub('),'old unused home removed');
+assert(src.includes('evictRetiredRaceCaches();'),'obsolete device race caches must be evicted');
+assert(!src.includes('saved-snapshot-restored'),'legacy saved snapshot live restore removed');
 assert(!fs.existsSync('scripts/arvexq_patch_race_open_reliability.py'));
 const full=fs.readFileSync('arvexq/prediction/honmei_gate.py','utf8');
 assert(full.includes('.32 * recent_score'),'must preserve existing scoring weights');
 console.log('ARVEXQ_SINGLE_SOURCE_RACE_OPEN_AND_PERSISTENT_ALERT_OK');
+
+const home=fs.readFileSync('arvexq/ui/static/sports/unified-home.js','utf8');
+const style=fs.readFileSync('arvexq/ui/static/sports/unified-home.css','utf8');
+const root={};new Function('window',home)(root);
+const actions=root.ARVEXQUnifiedHome.buttons();
+assert.equal((actions.match(/class="arv-unified-alert"/g)||[]).length,2,'selected and special need !');
+assert.match(style,/arv-unified-alert/);

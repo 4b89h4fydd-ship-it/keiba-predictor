@@ -51,10 +51,11 @@ var dailyAiStats={date:"",loading:false,done:false,total:0,finalCount:0,winHits:
 var previousAiStats={date:"",loading:false,done:false,total:0,finalCount:0,winHits:0,markHits:0,fullPodiumHits:0,markedPodiumSum:0,rows:[],error:""},previousAiStatsJob=0;
 var liveCenterOpen=false,liveCenterTrack="",liveCenterCircuit="";
 
-function cacheKey(d,c){return "arvexq:"+String(window.ARVEXQ_BUILD||"dev")+":races:"+d+":"+(c||state.circuit||"")}
+var ARVEXQ_RACE_CACHE_SCHEMA="horse-race-source-v362";
+function cacheKey(d,c){return "arvexq:"+ARVEXQ_RACE_CACHE_SCHEMA+":races:"+d+":"+(c||state.circuit||"")}
 function loadRaceCache(d,c){try{var raw=localStorage.getItem(cacheKey(d,c));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(d>=today()&&Date.now()-n(x.ts)>2*60000)return null;return x.rows}catch(e){return null}}
 function saveRaceCache(d,c,rows){try{localStorage.setItem(cacheKey(d,c),JSON.stringify({ts:Date.now(),rows:rows}))}catch(e){}}
-function fullBundleKey(d){return "arvexq:"+String(window.ARVEXQ_BUILD||"dev")+":fullbundle:"+String(d||"")}
+function fullBundleKey(d){return "arvexq:"+ARVEXQ_RACE_CACHE_SCHEMA+":fullbundle:"+String(d||"")}
 function saveFullBundle(d,body){
   try{
     if(!body||body.complete!==true||!(body.races||[]).length||!(body.details||[]).length)return;
@@ -70,9 +71,21 @@ function loadFullBundle(d){
     return x.body
   }catch(e){return null}
 }
-function detailCacheKey(id){return "arvexq:"+String(window.ARVEXQ_BUILD||"dev")+":detail:"+String(id||"")}
+function detailCacheKey(id){return "arvexq:"+ARVEXQ_RACE_CACHE_SCHEMA+":detail:"+String(id||"")}
 function loadDetailCache(id,allowStale){try{var raw=localStorage.getItem(detailCacheKey(id));if(!raw)return null;var x=JSON.parse(raw);if(!x||!x.row)return null;var age=Date.now()-n(x.ts);if(!allowStale&&x.row.date>=today()&&age>2*60000)return null;var r=x.row;if(!raceDisplayCoreReady(r,r))return null;return r}catch(e){return null}}
 function saveDetailCache(id,row){try{if(!id||!row||!raceDisplayCoreReady(row,row))return;localStorage.setItem(detailCacheKey(id),JSON.stringify({ts:Date.now(),row:row}))}catch(e){}}
+// On upgrade, discard only obsolete device race data, never saved forecasts.
+function evictRetiredRaceCaches(){
+  try{
+    var marker="arvexq:race-source-schema";
+    if(localStorage.getItem(marker)===ARVEXQ_RACE_CACHE_SCHEMA)return;
+    for(var i=localStorage.length-1;i>=0;i--){
+      var key=String(localStorage.key(i)||"");
+      if(/^arvexq:[^:]+:(races|fullbundle|detail):/.test(key))localStorage.removeItem(key);
+    }
+    localStorage.setItem(marker,ARVEXQ_RACE_CACHE_SCHEMA)
+  }catch(e){}
+}
 function installPwaCache(){
   // Online-first stability: stale service workers were intercepting fresh v329
   // assets/API navigation on iPhone. Unregister them and use normal HTTP cache.
@@ -2462,18 +2475,8 @@ function fetchEdgeRace(id,forceNetwork,retryLimit){
       var message=String(error&&error.message||error);
       if(index+1<maxAttempts&&!/http (?:404|400)/i.test(message))return new Promise(function(resolve){setTimeout(resolve,(index+1)*1000)}).then(function(){return attempt(index+1)});
       st.error=message;updateDetailSections(id,cached||row,false);
-      var recovery=window.ARVEXQSavedSnapshot;
-      if(!recovery)return entryDataAvailable(cached)?cached:null;
-      return recovery.available(String((row||cached||{}).date||state.date),key,edgeFetchJson).then(function(saved){
-        if(!saved)return entryDataAvailable(cached)?cached:null;
-        var recovered=mergeRaceReflection(saved,cached,null,row);
-        recovered._savedSnapshotFallback=true;recovered._entryOnly=false;
-        applyMorningArchive([recovered]);
-        instantTrackDetails[key]=recovered;saveDetailCache(key,recovered);
-        updateDetailSections(id,recovered,true);
-        traceRaceDetail(id,'saved-snapshot-restored',{horses:recovered.horses.length});
-        return recovered
-      })
+      // Immutable pre-race archives remain for audits, not live roster recovery.
+      return entryDataAvailable(cached)?cached:null
     })
   }
   return attempt(0).finally(function(){st.busy=false})
@@ -3662,41 +3665,7 @@ function smartHomeHero(){
   if(shared)return shared.hero();
   return '<div class="arv-unified-hero"><img src="/arvexq-racing-hero.webp" alt="ARVEXQ"></div>';
 }
-function allTodayRacesFinished(){
-  var rows=(state.races||[]).filter(function(r){return r&&r.id});
-  return rows.length>0&&rows.every(function(r){return isFinal(r)})
-}
-function homePickCounts(kind){
-  if(kind==='selected')return{
-    central:selectedRaceCandidates('中央').length,
-    local:selectedRaceCandidates('地方').length
-  };
-  var rows=specialForecastRaceCandidates();
-  return{
-    central:rows.filter(function(r){return String(r.circuit||'')==='中央'}).length,
-    local:rows.filter(function(r){return String(r.circuit||'')==='地方'}).length
-  }
-}
-function homePickAlert(counts){
-  // Persistent section marker. Loading or sparse morning selection must not
-  // cause the symbol to vanish from the selected/special home buttons.
-  return '<span class="arv-home-alert" aria-hidden="true">!</span>'
-}
-function smartHomeHub(){
-  var hasCentral=state.races.some(function(x){return x.circuit==='中央'}),hasLocal=state.races.some(function(x){return x.circuit==='地方'}),finished=allTodayRacesFinished(),circuits='',middle='',
-      selectedCounts=homePickCounts('selected'),specialCounts=homePickCounts('special');
-  if(hasCentral)circuits+='<button type="button" class="arv-home-hub-btn" data-home-page="central"><b>中央</b><span>開催場 ›</span></button>';
-  if(hasLocal)circuits+='<button type="button" class="arv-home-hub-btn" data-home-page="local"><b>地方</b><span>開催場 ›</span></button>';
-  if(!circuits)circuits='<div class="arv-home-hub-loading">'+(state.error?'開催情報の公開待ち・自動再取得中':'開催情報を取得中')+'</div>';
-  middle=finished
-    ?'<div class="arv-home-hub-row single"><button type="button" class="arv-home-hub-btn primary" data-home-page="ai-stats"><b>本日のAI成績</b><span>開催場ごとの成績 ›</span></button></div>'
-    :smartLiveRaceSection();
-  return '<section class="arv-home-hub">'+
-    '<div class="arv-home-hub-row circuits '+(!hasCentral&&hasLocal?'single':'')+'">'+circuits+'</div>'+
-    middle+
-    '<div class="arv-home-hub-row"><button type="button" class="arv-home-hub-btn" data-home-page="selected" aria-label="厳選レースを開く"><b>厳選レース</b><span class="arv-home-end">'+homePickAlert(selectedCounts)+'<i aria-hidden="true">›</i></span></button><button type="button" class="arv-home-hub-btn" data-home-page="special" aria-label="特別予想を開く"><b>特別予想</b><span class="arv-home-end">'+homePickAlert(specialCounts)+'<i aria-hidden="true">›</i></span></button></div>'+
-  '</section>'
-}
+// Unused legacy home hub removed; unified horse home is authoritative.
 function aiStatsMarkText(row){
   var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
   return (row.marks||[]).slice().sort(function(a,b){return n(order[a.mark],99)-n(order[b.mark],99)||n(a.no)-n(b.no)}).map(function(x){return x.mark+x.no}).join(' ')||'印なし'
@@ -5182,5 +5151,5 @@ setInterval(function(){
   if(!shared||!document.querySelector('.smart-shell.smart-home .arv-all-panel'))return;
   shared.syncLiveUI('horse',state.races||[],state.date,document);
 },10000);
-installNavigation();installEdgeBack();installPullRefresh();installPwaCache();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
+installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
 })();
