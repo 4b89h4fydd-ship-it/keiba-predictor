@@ -1791,7 +1791,9 @@ function racecardEntryRow(r,h,x){
     +'</div>';
 }
 function morningSavedMarkRows(r){
-  var snap=authorizedPreOffMarks(r),byNo={};
+  // A pre-off loading/partial racecard must not display archived marks as live AI output.
+  // Verified receipts may be shown after the off only for historical review.
+  var snap=raceMarkClock(r).started?authorizedPreOffMarks(r):null,byNo={};
   if(snap&&Array.isArray(snap.horses)){
     snap.horses.forEach(function(z){byNo[n(z&&z.horseNumber,0)]=z})
   }
