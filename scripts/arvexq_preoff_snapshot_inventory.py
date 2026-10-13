@@ -33,7 +33,16 @@ def inspect_envelope(envelope):
     if not isinstance(race, dict):
         return {"state": "not-race-object"}
     circuit = str(race.get("circuit") or "unknown")
-    locked = isinstance(race.get("preRacePrediction"), dict)
+    lock = race.get("preRacePrediction")
+    locked = isinstance(lock, dict)
+    archive = race.get("massFeatureArchive")
+    snapshot = race.get("massFeatureSnapshot")
+    frozen = archive if isinstance(archive, dict) else snapshot if isinstance(snapshot, dict) else None
+    mass_hash = str(race.get("massFeatureHash") or "")
+    lock_hash = str((lock or {}).get("massFeatureHash") or "") if locked else ""
+    origin_declared = isinstance(archive, dict) and archive.get("originHashVerified") is True
+    mass_linked = bool(frozen and mass_hash and lock_hash and
+                       frozen.get("featureHash") == mass_hash == lock_hash)
     captured = timestamp(envelope.get("capturedAt") or envelope.get("savedAt"))
     race_date = str(race.get("date") or "")
     post_time = str(race.get("scheduledStartTime") or race.get("startTime") or "")
@@ -46,6 +55,8 @@ def inspect_envelope(envelope):
     candidate = bool(captured and post and captured < post and
                      not race.get("result") and not race.get("payouts"))
     return {"state": "hash-valid", "circuit": circuit, "lockedForecast": locked,
+            "massPresent": frozen is not None, "massLinked": mass_linked,
+            "originDeclaredVerified": origin_declared and mass_linked,
             "candidate": candidate}
 
 
@@ -70,6 +81,10 @@ def main(root=Path("arvexq/ui/static/saved-snapshots")):
         if item["lockedForecast"]:
             box["sealedPredictionPresent"] += 1
             counts["sealedPredictionPresent"] += 1
+        for key in ("massPresent", "massLinked", "originDeclaredVerified"):
+            if item[key]:
+                box[key] += 1
+                counts[key] += 1
         if item["candidate"]:
             box["preoffCaptureCandidates"] += 1
             counts["preoffCaptureCandidates"] += 1
