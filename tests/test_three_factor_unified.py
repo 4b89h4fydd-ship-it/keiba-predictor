@@ -66,6 +66,8 @@ class UnifiedThreeFactorTests(unittest.TestCase):
         self.assertEqual([h["integratedEvaluation"]["mark"] for h in ordered],
                          ["◎", "○", "▲", "△", ""])
         self.assertEqual(detail["honmeiDecision"]["horseNumber"], ordered[0]["horseNumber"])
+        self.assertEqual(detail["honmeiDecision"]["axisMeaning"],
+                         "relative-form-condition-score-not-probability")
         self.assertEqual(sum(h["integratedEvaluation"]["mark"] == "◎" for h in ordered), 1)
         self.assertNotIn("multiHeadSummary", detail)
 
