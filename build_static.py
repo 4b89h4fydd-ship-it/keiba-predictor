@@ -263,7 +263,7 @@ for filename in SPORT_FILES:
     shutil.copy2(SPORT_DIR / filename, DIST / "sports" / filename)
 
 # Independent UI feature modules kept outside the main app bundle.
-for extra_asset in ("previous_ai_results.js",):
+for extra_asset in ("previous_ai_results.js", "arvexq-brush-logo.svg"):
     src = STATIC / extra_asset
     if not src.is_file():
         raise RuntimeError(f"extra UI asset not found: {src}")
