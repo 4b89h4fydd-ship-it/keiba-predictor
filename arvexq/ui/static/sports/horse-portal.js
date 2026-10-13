@@ -26,7 +26,7 @@
     return opts.date<opts.today?"elapsed":"upcoming";
   }
   function liveLabel(code){
-    return ({finished:"確定",elapsed:"発走時刻経過",soon:"まもなく",
+    return ({finished:"確定",elapsed:"結果待ち",running:"進行中",soon:"まもなく",
       upcoming:"発走前",cancelled:"中止",unknown:"未取得"})[code]||"";
   }
   function allRaces(rows,opts={}){
