@@ -122,6 +122,7 @@ jobs:
       - name: Betting marks and ticket reconciliation regression
         run: |
           node --check arvexq/ui/static/app.js
+          node scripts/arvexq_three_factor_parity_smoke.js
           node --check arvexq/ui/static/research/research_view.js
           node scripts/arvexq_research_view_smoke.js
           node scripts/arvexq_result_continuous_smoke.js
