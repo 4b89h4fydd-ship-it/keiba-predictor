@@ -11,6 +11,6 @@ class OldWinnerModelRemoved(unittest.TestCase):
         s=SOURCE.read_text(encoding="utf-8")
         self.assertIn("function arvexqFactorValues(z,r)",s)
         self.assertIn("assignPredictionMarks(rows,modelRace);",s)
-        self.assertIn("score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)",s)
+        self.assertIn("score=(1-strength)*recentForm+strength*conditionForm",s)
 if __name__=="__main__":
     unittest.main()
