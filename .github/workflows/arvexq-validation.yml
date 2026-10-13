@@ -124,6 +124,7 @@ jobs:
         run: |
           node --check arvexq/ui/static/app.js
           node scripts/arvexq_three_factor_parity_smoke.js
+          node scripts/arvexq_retired_ticket_ui_smoke.js
           node scripts/arvexq_live_mark_refresh_smoke.js
           python -m unittest discover -s tests -p 'test_optional_star_marks.py' -v
           node scripts/arvexq_optional_star_smoke.js
