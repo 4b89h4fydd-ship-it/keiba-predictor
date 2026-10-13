@@ -166,10 +166,10 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
         b={"recentRaces":recent,"allPastRuns":old+recent}
         self.assertEqual(analyze_past_performance(a,RACE)["top3"],analyze_past_performance(b,RACE)["top3"])
         self.assertGreater(profile_career(b,RACE)["top3Rate"],profile_career(a,RACE)["top3Rate"])
-        self.assertEqual(collect_horse_raw_metrics(b,RACE)["trueRun"],
-                         collect_horse_raw_metrics(a,RACE)["trueRun"])
-        self.assertEqual(collect_horse_raw_metrics(b,RACE)["pure"],
-                         collect_horse_raw_metrics(a,RACE)["pure"])
+        self.assertEqual(collect_horse_raw_metrics(b,RACE)["recentForm"],
+                         collect_horse_raw_metrics(a,RACE)["recentForm"])
+        self.assertEqual(collect_horse_raw_metrics(b,RACE)["conditionForm"],
+                         collect_horse_raw_metrics(a,RACE)["conditionForm"])
 
 if __name__=="__main__":
     unittest.main()
