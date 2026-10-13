@@ -69,11 +69,8 @@ class MassFeatureTransportTest(unittest.TestCase):
         packed["result"]={"status":"確定","finishers":[
             {"horseNumber":1,"finish":2},{"horseNumber":2,"finish":1},{"horseNumber":3,"finish":3}]}
         rows=frozen_training_rows_from_detail(packed)
-        self.assertEqual(len(rows),3)
-        self.assertEqual(sum(row["labelWin"] for row in rows),1)
-        self.assertEqual(next(row for row in rows if row["labelWin"])["horseNumber"],2)
-        self.assertEqual(rows[0]["featureHash"],original["massFeatureHash"])
-        self.assertEqual(rows[0]["features"],original["massFeatureSnapshot"]["rows"][0]["features"])
+        self.assertEqual(len(rows),0)
+        # Legacy hash-valid data without authenticated capture time is not training evidence.
 
     def test_corruption_wrong_race_and_hash_fail_closed(self):
         packed=pack_mass_detail(historical_detail(False))
