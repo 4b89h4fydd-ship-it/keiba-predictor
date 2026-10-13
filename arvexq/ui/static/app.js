@@ -889,47 +889,6 @@ function sparseResetProfile(x,r,q){
   var score=clamp(frontMemoryVacancy*.62+fadeRecovery*.38,0,1);
   return{score:score,frontMemoryVacancy:frontMemoryVacancy,fadeRecovery:fadeRecovery,frontMemory:mem.score,frontMemoryCount:mem.frontCount,lastFrontFade:lastFrontFade,reasons:reasons.slice(0,2)}
 }
-// v312 recall guard: one dedicated third-place rescue candidate.
-// This is intentionally circuit-specific and market-independent.  It does NOT
-// widen the winner model; it only protects against the recurring "one horse
-// missing" failure where a lower win-ranked runner still has a credible P3 path.
-function thirdRescueScoreV312(r,z,field){
-  field=Math.max(1,n(field,1));z=z||{};
-  var e=z.horse&&z.horse.integratedEvaluation||{},a=e.v218Audit||e.v217Audit||z.v218Audit||z.v217Audit||{},uniform=1/field,
-      p3rel=clamp(n(z.p3Probability)/(Math.max(.0001,uniform)*1.55),0,1),p3rank=clamp((7-n(z.p3Rank,99))/6,0,1),
-      trueRun=clamp(n(a.trueRun,.5),0,1),sectional=clamp(n(a.sectional,n(z.lapScore,.5)),0,1),scenario=clamp(n(a.positionScenario,n(z.paceScore,50)/100),0,1),
-      coverage=clamp(n(z.edgeEvidence,n(z.coverage,.5)),0,1),recent3=recentTop3Rate(z.horse),live=clamp((n(z.liveDrawFit,.5)+n(z.liveStyleFit,.5))/2,0,1),roleRecall=clamp(n(z.p3RecallScore,0),0,1),score;
-  if(String(r&&r.circuit||'')==='中央'){
-    var frag=clamp(n(z.winnerRisk)*.45+n(z.frontCost)*.24+n(z.fade)*n(z.needLead)*.21+n(z.outerStress)*.10,0,1);
-    score=.21*p3rel+.12*p3rank+.13*clamp(n(z.latePower,.5),0,1)+.12*trueRun+.10*sectional+.09*scenario+.06*clamp(n(z.move,.5),0,1)+.05*coverage+.12*roleRecall;
-    score-=.050*frag;
-  }else{
-    score=.20*p3rel+.12*p3rank+.12*clamp(n(z.posCons,.5),0,1)+.11*clamp(n(z.trackFit,.5),0,1)+.10*scenario+.07*clamp(n(z.move,.5),0,1)+.06*recent3+.05*live+.05*coverage+.12*roleRecall;
-  }
-  return clamp(score,0,1)
-}
-function thirdRescueCandidateV312(r,rows,exclude){
-  rows=rows||[];exclude=exclude||[];var field=Math.max(1,rows.length),uniform=1/field,cand=rows.filter(function(z){
-    if(!z||exclude.indexOf(z)>=0)return false;
-    var p3=n(z.p3Probability),rank=n(z.p3Rank,99),hist=(z.horse&&z.horse.recentRaces||[]).length;
-    return (rank<=6||p3>=uniform*.78)&&(n(z.coverage)>=.25||n(z.styleSamples)>=2||hist>=2)
-  });
-  cand.forEach(function(z){z.thirdRescueScore=thirdRescueScoreV312(r,z,field)});
-  cand.sort(function(a,b){return n(b.thirdRescueScore)-n(a.thirdRescueScore)||n(a.p3Rank,99)-n(b.p3Rank,99)||n(b.p3Probability)-n(a.p3Probability)});
-  var q=cand[0]||null;if(!q)return null;
-  var floor=String(r&&r.circuit||'')==='中央'?.47:.48;
-  return n(q.thirdRescueScore)>=floor?q:null
-}
-function comboHasV312(list,combo){var k=(combo||[]).join('>');return (list||[]).some(function(c){return (c||[]).join('>')===k})}
-function appendRescueRankedV312(base,ranked,rescueNo,maxExtra,minRatio,thirdOnly){
-  base=base||[];ranked=ranked||[];rescueNo=n(rescueNo);if(!rescueNo||!ranked.length)return base;var top=n(ranked[0]&&ranked[0].score),added=0,i,z,c;
-  for(i=0;i<ranked.length&&added<maxExtra;i++){
-    z=ranked[i];c=z&&z.combo;if(!c||c.indexOf(rescueNo)<0)continue;if(thirdOnly&&n(c[2])!==rescueNo)continue;
-    if(top>0&&n(z.score)<top*minRatio)continue;if(comboHasV312(base,c))continue;base.push(c.slice());added++
-  }
-  return base
-}
-
 function raceTargetProfile(r,p){
   var rows=(p&&p.rows)||[],holes=rows.filter(function(x){return n(x.winRank)>=4&&n(x.bombScore)>=58&&n(x.edgeScore)>=56&&(n(x.p2Rank)<=5||n(x.p3Rank)<=6||n(x.p1Probability)>=1/Math.max(1,rows.length)*.52)}).sort(function(a,b){return n(b.bombScore)-n(a.bombScore)||n(b.roleUpside)-n(a.roleUpside)||n(b.edgeScore)-n(a.edgeScore)}),
       h1=holes[0]?n(holes[0].bombScore):0,h2=holes[1]?n(holes[1].bombScore):0,
