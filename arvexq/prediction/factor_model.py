@@ -15,9 +15,9 @@ from arvexq.core.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import analyze_past_performance, observed_runs
 from arvexq.prediction.career_profile import profile_career
 
-MODEL_VERSION = "arvexq-true-run-pure-sectional-45-35-20-v2"
-PRIMARY_PILLARS = ("trueRun", "pure", "sectional")
-SCORE_WEIGHTS = {"trueRun": .45, "pure": .35, "sectional": .20}
+MODEL_VERSION = "arvexq-form-condition-no-sectional-proposal-v1"
+PRIMARY_PILLARS = ("recentForm", "conditionForm")
+SCORE_WEIGHTS = {"recentForm": 1.0, "conditionForm": 0.0}
 
 
 def _number(v: Any) -> float | None:
@@ -68,18 +68,23 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
     """The only ranking for core score, marks, saved probabilities, and bets."""
     active = [h for h in horses if isinstance(h, dict) and not is_inactive_runner(h)]
     rows = []
+    from arvexq.research.no_sectional_candidate import score as measured_score
     for horse in active:
         raw = collect_horse_raw_metrics(horse, race)
-        factors = {key: raw.get(key) for key in PRIMARY_PILLARS}
+        score = measured_score(horse, race)
+        past = analyze_past_performance(horse, race)
+        factors = {
+            "recentForm": raw.get("trueRun"),
+            "conditionForm": past.get("comparableQuality"),
+        }
         available = sum(value is not None for value in factors.values())
-        score = sum(weight * (factors[key] if factors[key] is not None else .5)
-                    for key, weight in SCORE_WEIGHTS.items())
         rows.append({
             "horse": horse, "raw": raw,
-            "pastPerformance": analyze_past_performance(horse, race),
+            "pastPerformance": past,
             "careerProfile": profile_career(horse, race),
-            "score": score, "factors": factors,
-            "pillarScores": factors.copy(), "sample": int(raw.get("sample") or 0),
+            "score": score if score is not None else 0.5,
+            "factors": factors, "pillarScores": factors.copy(),
+            "sample": int(raw.get("sample") or 0),
             "evidenceCounts": {k: int(v is not None) for k, v in factors.items()},
             "evidenceFamilyCounts": {k: int(v is not None) for k, v in factors.items()},
             "primaryPillarCoverage": available, "primaryEvidenceCount": available,
