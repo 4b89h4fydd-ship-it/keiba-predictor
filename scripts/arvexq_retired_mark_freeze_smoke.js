@@ -1,9 +1,9 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const s=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const start=s.indexOf('function loadFrozenMarks('),end=s.indexOf('// Server archive is trusted only',start);
-assert(start>=0&&end>start);
-const loader=new Function(s.slice(start,end)+'return loadFrozenMarks;')();
-assert.equal(loader({id:'nar-2026-10-13-盛岡-06'}),null);
+assert(!s.includes('loadFrozenMarks'),'retired device-only mark loader must be removed');
+assert(!s.includes('saveFrozenMarks'),'retired device-only mark saver must be removed');
+assert(!s.includes('local-prepost'),'retired local override must be removed');
+assert(!s.includes('端末の発走前印・固定済み'),'retired device mark legend must be removed');
 assert(!s.includes("record={version:'v345'"),'retired local mark seal must not be generated');
 assert(!s.includes('localStorage.setItem(markFreezeKey(r)'), 'retired local mark seal must not be written');
 assert(s.includes('function serverFrozenPrediction('),'immutable official archives retained');
