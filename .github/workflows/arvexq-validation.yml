@@ -178,6 +178,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_static_racecard_backup.py' -v
           python -m unittest discover -s tests -p 'test_morning_ticket_publisher.py' -v
           node scripts/arvexq_frozen_marks_smoke.js
+          node scripts/arvexq_visible_honmei_smoke.js
           python -m unittest discover -s tests -p test_saved_snapshot_recovery.py -v
           node scripts/arvexq_race_identity_smoke.js
           node scripts/arvexq_api_storage_smoke.mjs
