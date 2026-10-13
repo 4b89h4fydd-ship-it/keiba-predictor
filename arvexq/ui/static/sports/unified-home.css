@@ -89,3 +89,178 @@ html body .arv-dated-subbar .arv-sub-date>input{position:absolute;inset:0;width:
 
 
 @media(max-width:360px){.arv-realtime-grid{gap:5px}.arv-realtime-race{padding:7px;min-height:59px}.arv-realtime-race>b{font-size:17px}.arv-realtime-race .arv-realtime-clock{font-size:12px}}
+
+/* ARVEXQ lightened horizontal race states v1 — scoped visual update only. */
+html body .smart-shell.smart-home,
+html body .smart-shell.smart-venue-page,
+html body .smart-shell:has(> .smart-main.smart-race-page){
+  background:linear-gradient(180deg,#172e40 0%,#1c3343 54%,#142936 100%)!important;
+}
+html body .smart-home .arv-unified-body{color:#e9f2f8!important}
+html body .smart-home .arv-unified-date{
+  background:linear-gradient(120deg,#2a506c,#326180,#2b5069)!important;
+  border-color:#83b8d5!important;box-shadow:none!important;
+}
+html body .smart-home .arv-unified-action{
+  background:linear-gradient(160deg,#305773,#213c52)!important;
+  border-color:#77a8c7!important;box-shadow:none!important;
+}
+html body .smart-home .arv-all-panel{
+  background:linear-gradient(160deg,#263f50,#1c3343)!important;
+  border-color:#7897a9!important;box-shadow:none!important;
+}
+html body .smart-home .arv-all-venue{
+  background:#223e53!important;border-color:#658da8!important;
+}
+html body .smart-home .arv-all-circuit-label{border-color:#64869a!important}
+html body .smart-home .arv-all-go{
+  color:#d6effc!important;background:#325977!important;border-color:#81b2ce!important;
+}
+html body .smart-home .arv-all-races-grid{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:7px!important;min-width:0!important;
+}
+html body .smart-home .arv-all-race{
+  display:grid!important;grid-template-columns:32px minmax(0,1fr)!important;
+  grid-template-rows:minmax(16px,auto) minmax(14px,auto)!important;
+  justify-content:stretch!important;align-content:center!important;
+  align-items:center!important;gap:2px 5px!important;
+  min-width:0!important;width:100%!important;min-height:57px!important;
+  padding:6px 5px!important;box-sizing:border-box!important;
+  border:1px solid #7298b0!important;border-radius:10px!important;
+  background:linear-gradient(160deg,#345c77,#294a62)!important;
+  color:#eef6fc!important;box-shadow:none!important;text-align:left!important;
+  opacity:1;
+}
+html body .smart-home .arv-all-race strong{
+  grid-column:1!important;grid-row:1/span 2!important;
+  font-size:16px!important;line-height:1.15!important;text-align:center!important;
+  color:#eff7fc!important;
+}
+html body .smart-home .arv-all-race small{
+  grid-column:2!important;grid-row:1!important;
+  min-width:0!important;font-size:10px!important;line-height:1.15!important;
+  color:#d4e6f1!important;text-align:center!important;white-space:nowrap!important;
+}
+html body .smart-home .arv-all-race .arv-race-state{
+  display:block!important;grid-column:2!important;grid-row:2!important;
+  min-width:0!important;font-size:9px!important;line-height:1.2!important;
+  color:#d0e3ee!important;text-align:center!important;white-space:nowrap!important;
+}
+html body .smart-home .arv-all-race[data-race-state="soon"],
+html body .smart-home .arv-all-race.soon:not(.elapsed):not(.finished){
+  background:linear-gradient(160deg,#826528,#61502f)!important;
+  border-color:#edc66d!important;color:#fff4db!important;
+  box-shadow:inset 0 0 0 1px rgba(255,218,118,.14)!important;
+}
+html body .smart-home .arv-all-race[data-race-state="soon"] strong,
+html body .smart-home .arv-all-race[data-race-state="soon"] small,
+html body .smart-home .arv-all-race[data-race-state="soon"] .arv-race-state{color:#fff2cc!important}
+html body .smart-home .arv-all-race[data-race-state="running"],
+html body .smart-home .arv-all-race.running{
+  background:linear-gradient(160deg,#873c46,#632d39)!important;
+  border-color:#eb7c87!important;color:#fff0f2!important;
+  box-shadow:inset 0 0 0 1px rgba(249,133,144,.14)!important;
+}
+html body .smart-home .arv-all-race[data-race-state="running"] strong,
+html body .smart-home .arv-all-race[data-race-state="running"] small,
+html body .smart-home .arv-all-race[data-race-state="running"] .arv-race-state{color:#ffedf0!important}
+html body .smart-home .arv-all-race[data-race-state="elapsed"],
+html body .smart-home .arv-all-race[data-race-state="finished"],
+html body .smart-home .arv-all-race.elapsed,
+html body .smart-home .arv-all-race.finished{
+  background:linear-gradient(160deg,#192632,#17212b)!important;
+  border-color:#3b4d59!important;color:#8999a5!important;
+  opacity:.63!important;filter:saturate(.28)!important;box-shadow:none!important;
+}
+html body .smart-home .arv-all-race.elapsed strong,
+html body .smart-home .arv-all-race.finished strong{color:#a0adb7!important}
+html body .smart-home .arv-all-race.elapsed small,
+html body .smart-home .arv-all-race.finished small,
+html body .smart-home .arv-all-race.elapsed .arv-race-state,
+html body .smart-home .arv-all-race.finished .arv-race-state{color:#8999a5!important}
+html body .smart-home .arv-all-race.unavailable,
+html body .smart-home .arv-all-race:disabled{
+  background:#21323f!important;border-color:#455b69!important;
+  opacity:.42!important;filter:grayscale(.5)!important;box-shadow:none!important;
+}
+html body .smart-home .arv-all-race.next:not(.soon):not(.running):not(.elapsed):not(.finished){
+  border-color:#91bdd9!important;box-shadow:inset 0 0 0 1px #91bdd9!important;
+}
+/* Shared long rows on venue and favorites. */
+html body .smart-venue-page .arv-favorite-venue-item{margin:0 0 7px!important}
+html body .smart-venue-page .smart-race-row{
+  width:100%!important;min-height:62px!important;border-radius:10px!important;
+  background:#305065!important;border:1px solid #668ba4!important;
+  box-shadow:none!important;padding-right:48px!important;
+}
+html body .smart-venue-page .smart-race-row .smart-race-title b{color:#e8f2f8!important}
+html body .smart-venue-page .smart-race-row .smart-race-title small{color:#bacfdd!important}
+html body .smart-venue-page .smart-race-row[data-race-state="soon"],
+html body .smart-home .arv-favorite-home-open[data-race-state="soon"]{
+  background:linear-gradient(105deg,#78612e,#51482f)!important;border-color:#e6be66!important;
+}
+html body .smart-venue-page .smart-race-row[data-race-state="running"],
+html body .smart-home .arv-favorite-home-open[data-race-state="running"]{
+  background:linear-gradient(105deg,#793843,#4d2c38)!important;border-color:#df7b87!important;
+}
+html body .smart-venue-page .smart-race-row[data-race-state="elapsed"],
+html body .smart-venue-page .smart-race-row[data-race-state="finished"],
+html body .smart-home .arv-favorite-home-open[data-race-state="elapsed"],
+html body .smart-home .arv-favorite-home-open[data-race-state="finished"]{
+  background:#1a2934!important;border-color:#41515c!important;opacity:.72!important;
+  box-shadow:none!important;
+}
+html body .smart-home .arv-favorites-home{
+  border-color:#7296ac!important;background:#223d50!important;
+}
+html body .smart-home .arv-favorites-heading{
+  border-color:#5f8194!important;color:#f0dfb7!important;
+}
+html body .smart-home .arv-favorite-home-row{
+  min-height:61px!important;border-color:#547387!important;gap:4px!important;padding:3px 6px!important;
+}
+html body .smart-home .arv-favorite-home-open{
+  min-height:53px!important;border:1px solid #688ca4!important;border-radius:10px!important;
+  background:#305065!important;color:#eff6fa!important;padding:7px 9px!important;
+}
+html body .smart-home .arv-favorite-home-meta{
+  display:flex!important;flex-direction:column!important;gap:2px!important;
+  align-items:center!important;justify-content:center!important;white-space:nowrap!important;
+}
+html body .smart-home .arv-favorite-home-meta .arv-race-state{
+  font-size:10px!important;font-style:normal!important;font-weight:750!important;
+}
+html body .smart-home .arv-favorite-home-open[data-race-state="soon"] .arv-race-state{color:#ffe09b!important}
+html body .smart-home .arv-favorite-home-open[data-race-state="running"] .arv-race-state{color:#ffa8b2!important}
+html body .smart-home .arv-favorite-home-open[data-race-state="elapsed"] .arv-race-state,
+html body .smart-home .arv-favorite-home-open[data-race-state="finished"] .arv-race-state{color:#9cabb7!important}
+html body .smart-home .arv-home-favorite-star{background:#30485a!important;border-color:#758e9d!important}
+html body .smart-home .arv-home-favorite-star.active{color:#f2d18b!important;background:#54472f!important;border-color:#d1b16d!important}
+html body .smart-venue-page .race-state-pill.arv-race-state{
+  display:inline-flex!important;align-items:center!important;
+  background:#35546a!important;border:1px solid #779ab0!important;color:#deebf3!important;
+}
+html body .smart-venue-page .smart-race-row[data-race-state="soon"] .race-state-pill.arv-race-state{
+  background:#6b5328!important;border-color:#e5bd66!important;color:#ffe3a1!important;
+}
+html body .smart-venue-page .smart-race-row[data-race-state="running"] .race-state-pill.arv-race-state{
+  background:#692e3b!important;border-color:#df7b87!important;color:#ffc3c9!important;
+}
+html body .smart-venue-page .smart-race-row[data-race-state="elapsed"] .race-state-pill.arv-race-state,
+html body .smart-venue-page .smart-race-row[data-race-state="finished"] .race-state-pill.arv-race-state{
+  background:#263640!important;border-color:#526674!important;color:#a9b6bf!important;
+}
+@media(min-width:600px){
+  html body .smart-home .arv-all-races-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+@media(min-width:800px){
+  html body .smart-home .arv-all-races-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+}
+@media(max-width:355px){
+  html body .smart-home .arv-all-races-grid{gap:4px!important}
+  html body .smart-home .arv-all-race{grid-template-columns:27px minmax(0,1fr)!important;padding:5px 3px!important;gap:1px 2px!important;min-height:55px!important}
+  html body .smart-home .arv-all-race strong{font-size:14px!important}
+  html body .smart-home .arv-all-race small{font-size:9px!important}
+  html body .smart-home .arv-all-race .arv-race-state{font-size:8px!important}
+}
