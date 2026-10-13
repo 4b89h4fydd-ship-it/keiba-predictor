@@ -69,7 +69,7 @@ function render(r,p,deps){
     +'<span><i>◎</i>単勝・3着内の両面から評価した本命（的中保証ではありません）</span>'
     +'<span><i>○</i>1・2着向き</span><span><i>▲</i>2・3着向き</span>'
     +'<span><i>△</i>3着向き</span><span><i>☆</i>展開次第で3着内</span>'
-    +'<span><i>注</i>本当に注意が必要な場合のみ</span>'
+    +'<span><i>☆</i>は必須ではなく、複数の好走根拠が揃った場合のみ選出</span>'
     +'</div></div><p class="arv-three-reason">'+esc(plan.reason||'')+'</p></div>'
 }
 global.ARVEXQBetView=Object.freeze({render:render});

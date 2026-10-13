@@ -1510,7 +1510,7 @@ function assignPredictionMarks(rows,r){
   rows.forEach(function(z,i){z.axisProbability=scores[i]/Math.max(.0001,sum)});
   var general=rows.slice().sort(function(a,b){return n(b.axisProbability)-n(a.axisProbability)||p1(b)-p1(a)||n(b.overallRaw)-n(a.overallRaw)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});general.forEach(function(z,i){z.axisRank=i+1});
   var sorted=[];if(winLeader)sorted.push(winLeader);general.forEach(function(z){if(sorted.indexOf(z)<0)sorted.push(z)});
-  function take(row,mark){if(!row||selected.indexOf(row)>=0)return false;row.predMark=mark;selected.push(row);return true}
+  function take(row,mark){if(!row||selected.indexOf(row)>=0||isScratchHorse(row.horse))return false;row.predMark=mark;selected.push(row);return true}
 
   function secondRecall(z){
     var recent=recentTop3Rate(z.horse),q;
@@ -1609,54 +1609,48 @@ function assignPredictionMarks(rows,r){
     axisLeader.attentionReason='◎ '+(axisRole==='win'?'1着向き':'3着内の軸向き')+
       '｜信頼度'+axisGrade+(honmeiEligible?'｜厳格な軸条件通過':'｜相対本命・軸固定は別審査');
   }
-  var secondPick=p2Recall.find(function(z){return selected.indexOf(z)<0})||sorted.find(function(z){return selected.indexOf(z)<0});
+  var secondPick=p2Recall.find(function(z){return selected.indexOf(z)<0&&!isScratchHorse(z.horse)})||sorted.find(function(z){return selected.indexOf(z)<0&&!isScratchHorse(z.horse)});
   take(secondPick,'○');
-  var thirdCore=podiumRecall.find(function(z){return selected.indexOf(z)<0&&(n(z.p2RecallRank)<=5||n(z.p3RecallRank)<=5||n(z.axisRank)<=4)})||podiumRecall.find(function(z){return selected.indexOf(z)<0});
+  var thirdCore=podiumRecall.find(function(z){return selected.indexOf(z)<0&&!isScratchHorse(z.horse)&&(n(z.p2RecallRank)<=5||n(z.p3RecallRank)<=5||n(z.axisRank)<=4)})||podiumRecall.find(function(z){return selected.indexOf(z)<0&&!isScratchHorse(z.horse)});
   take(thirdCore,'▲');
 
-  // ☆+ is reserved for a remaining runner that still owns genuine first-place upside.
-  var plusPool=rows.filter(function(z){return selected.indexOf(z)<0&&p1(z)>=uniform*.72&&n(z.podiumRecallScore)>=.48&&(trueRun(z)>=.46||scenario(z)>=.50||n(z.p2RecallRank)<=4)});
-  plusPool.sort(function(a,b){var au=p1(a)*.34+n(a.podiumRecallScore)*.34+n(a.p2RecallScore)*.16+n(a.p3RecallScore)*.16,bu=p1(b)*.34+n(b.podiumRecallScore)*.34+n(b.p2RecallScore)*.16+n(b.p3RecallScore)*.16;return bu-au});
-  var plus=plusPool[0]||null;if(plus){take(plus,'☆+');plus.attentionReason='1着余地＋2/3着役の複線候補'}
-
-  // ☆ is the strongest remaining third-place role, independent of win rank.
-  var showPick=p3Recall.find(function(z){return selected.indexOf(z)<0&&(n(z.p3RecallRank)<=6||n(z.p3Probability)>=uniform*.72)})||p3Recall.find(function(z){return selected.indexOf(z)<0});
-  if(showPick){take(showPick,'☆');showPick.attentionReason='3着役 '+Math.round(n(showPick.p3RecallScore)*100)+'/100｜'+(centralRace?'上がり・TRUE RUN・区間/展開':'位置取り再現・同場/展開・近走3着内')}
-
-  // △ remains the dedicated rescue lane: a horse can be weak on win rank but
-  // cannot be discarded if it has a different credible route into third.
+  // The four core symbols are obligatory when at least four active runners
+  // have a valid pre-off forecast. △ is a third-place candidate, not a fill-in alert.
+  // Reject withdrawn runners and preserve distinct symbols for distinct horses.
   var rescue=thirdRescueCandidateV312(r,rows,selected);
-  if(rescue){take(rescue,'△');rescue.thirdRescue=true;rescue.attentionReason='3着救済 '+Math.round(n(rescue.thirdRescueScore)*100)+'/100｜'+(centralRace?'上がり・TRUE RUN・区間/展開':'位置取り再現・同場/展開・近走3着内')}
-  // If the race itself is uncertain, keep one softer third-role lane instead of
-  // pretending the remaining field is safely discardable.
-  if(!rescue&&field>=10&&(!stable||(dayCorr.active&&dayCorr.deficit>=.22))){var softRescue=p3Recall.find(function(z){return selected.indexOf(z)<0&&n(z.p3RecallRank)<=7&&n(z.edgeEvidence,n(z.coverage,.5))>=.20});if(softRescue){take(softRescue,'△');softRescue.thirdRescue=true;softRescue.attentionReason='難解戦の3着保険｜P3 '+Math.round(n(softRescue.p3RecallScore)*100)+'/100'}}
-
-  // The final coverage lane protects role diversity. Hard/unstable 10-11 runner
-  // races may use the seventh mark; strong/easy races remain compact.
-  var hardRecallRace=!stable||conf<(centralRace?.70:.64)||(dayCorr.active&&dayCorr.deficit>=.22),
-      targetMarks=Math.min(field,field>=12?7:(field>=10&&hardRecallRace?7:(field>=7?6:Math.min(field,5))));
-  var diversityPool=rows.filter(function(z){return selected.indexOf(z)<0&&n(z.edgeEvidence,n(z.coverage,.5))>=.22&&(n(z.recallDiversityHits)>=2||n(z.recallDiversityBest)<=2)&&n(z.podiumRecallScore)>=.36}).sort(function(a,b){return n(b.recallDiversityScore)-n(a.recallDiversityScore)||n(b.p3RecallScore)-n(a.p3RecallScore)});
-  if(selected.length<targetMarks&&diversityPool.length){var dv=diversityPool[0];take(dv,'注');dv.attentionReason='独立根拠の拾い漏れ防止｜'+n(dv.recallDiversityHits)+'軸上位 / P3 '+Math.round(n(dv.p3RecallScore)*100)}
-  var coveragePool=rows.filter(function(z){return selected.indexOf(z)<0}).sort(function(a,b){
-    var ar=Math.min(n(a.p2RecallRank,99),n(a.p3RecallRank,99),n(a.axisRank,99)),br=Math.min(n(b.p2RecallRank,99),n(b.p3RecallRank,99),n(b.axisRank,99));
-    var au=n(a.podiumRecallScore)*.56+n(a.p2RecallScore)*.17+n(a.p3RecallScore)*.20+n(a.edgeEvidence,n(a.coverage,.5))*.07+(ar<=5?.05:0),
-        bu=n(b.podiumRecallScore)*.56+n(b.p2RecallScore)*.17+n(b.p3RecallScore)*.20+n(b.edgeEvidence,n(b.coverage,.5))*.07+(br<=5?.05:0);
-    return bu-au||ar-br||n(b.axisProbability)-n(a.axisProbability)
-  });
-  var alertLabels=selected.some(function(z){return z.predMark==='注'})?[]:['注'],ci=0;
-  while(selected.length<targetMarks&&ci<coveragePool.length&&alertLabels.length){
-    var z=coveragePool[ci++],eligible=(n(z.podiumRecallScore)>=.43||n(z.p2RecallRank)<=5||n(z.p3RecallRank)<=6||n(z.axisRank)<=6);
-    if(!eligible)continue;
-    var mark='注';
-    alertLabels.length=0;take(z,mark);z.attentionReason='候補完全包含の最終ガード｜P2 '+Math.round(n(z.p2RecallScore)*100)+' / P3 '+Math.round(n(z.p3RecallScore)*100)
+  if(!rescue||selected.indexOf(rescue)>=0||isScratchHorse(rescue.horse))
+    rescue=p3Recall.find(function(z){return selected.indexOf(z)<0&&!isScratchHorse(z.horse)})||
+      sorted.find(function(z){return selected.indexOf(z)<0&&!isScratchHorse(z.horse)});
+  if(take(rescue,'△')){
+    rescue.thirdRescue=true;
+    rescue.attentionReason='3着候補｜P3 '+Math.round(n(rescue.p3RecallScore)*100)+'/100｜'+
+      (centralRace?'上がり・近走内容・相手関係・展開':'同場・位置取り再現・近走内容・展開');
   }
-  // v316 shadow swap: only the lowest alert lane can be replaced. Core marks
-  // (◎○▲☆+☆△) are never rewritten by this guard.
-  var shadowPool=rows.filter(function(z){return selected.indexOf(z)<0&&n(z.recallDiversityHits)>=2&&n(z.edgeEvidence,n(z.coverage,.5))>=.24}).sort(function(a,b){return n(b.recallDiversityScore)-n(a.recallDiversityScore)}),
-      weakPool=selected.filter(function(z){return z.predMark==='注'}).sort(function(a,b){return n(a.recallDiversityScore)-n(b.recallDiversityScore)});
-  if(shadowPool.length&&weakPool.length){var sh=shadowPool[0],wk=weakPool[0];if(n(sh.recallDiversityScore)>=n(wk.recallDiversityScore)+.055){var mk=wk.predMark;wk.predMark='';selected.splice(selected.indexOf(wk),1);take(sh,mk);sh.attentionReason='最終シャドー救済｜独立'+n(sh.recallDiversityHits)+'軸で上位'}}
+
+  // ☆ replaces both the old automatic ☆ and the old 注 / ☆+ coverage lanes.
+  // It is optional (at most one) and requires independent evidence, good
+  // data coverage and a credible route into the top three; no fixed mark count.
+  var starPool=rows.filter(function(z){
+    return selected.indexOf(z)<0&&!isScratchHorse(z.horse)&&
+      n(z.edgeEvidence,n(z.coverage,0))>=.40&&
+      n(z.p3RecallRank,99)<=Math.min(5,field)&&
+      n(z.p3RecallScore)>=.38&&n(z.podiumRecallScore)>=.43&&
+      n(z.recallDiversityHits,0)>=2&&
+      (scenario(z)>=.52||trueRun(z)>=.52||n(z.p2RecallRank,99)<=3)
+  }).sort(function(x,y){
+    return n(y.recallDiversityScore)-n(x.recallDiversityScore)||
+      n(y.p3RecallScore)-n(x.p3RecallScore)||
+      n(y.podiumRecallScore)-n(x.podiumRecallScore)||
+      n(x.horse.horseNumber)-n(y.horse.horseNumber)
+  });
+  if(starPool.length){
+    var special=starPool[0];
+    if(take(special,'☆'))special.attentionReason=
+      '条件付き3着内候補｜独立根拠'+n(special.recallDiversityHits)+'系統'+
+      '／P3 '+Math.round(n(special.p3RecallScore)*100)+'/100';
+  }
   if(dayCorr.active){selected.forEach(function(z){if(n(z.sameDayMarkBoost)>.012){z.attentionReason=(z.attentionReason?z.attentionReason+'｜':'')+'当日'+dayCorr.flowLabel+'補正'}})}
-  var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};rows.slice().sort(function(a,b){return n(order[a.predMark],99)-n(order[b.predMark],99)||n(b.axisProbability)-n(a.axisProbability)||p1(b)-p1(a)}).forEach(function(z,idx){z.predRank=idx+1});
+  var order={'◎':1,'○':2,'▲':3,'△':4,'☆':5};rows.slice().sort(function(a,b){return n(order[a.predMark],99)-n(order[b.predMark],99)||n(b.axisProbability)-n(a.axisProbability)||p1(b)-p1(a)}).forEach(function(z,idx){z.predRank=idx+1});
   if(winLeader){winLeader.circuitMethod=method.id;winLeader.sameDayCorrection=dayCorr;winLeader.axisReason=method.id+' / 共通因子7＋相対比較 / '+winLeader.winDecisionReason+' / P1差 '+(p1Gap*100).toFixed(1)+'pt / 独立1着 '+(n(winLeader.winEvidenceProbability)*100).toFixed(1)+'% / 対戦 '+(n(winLeader.pairwiseWinRate)*100).toFixed(1)+'% / 統合 '+(n(winLeader.winnerConsensusProbability)*100).toFixed(1)+'% / 軸信頼 '+Math.round(conf*100)+'/100'+(dayCorr.active?' / 当日'+dayCorr.flowLabel+'補正 '+Math.round(dayCorr.evidence*100)+'/100':'')}
 }
 
@@ -2299,7 +2293,7 @@ function racecardMarkLegend(r){
         (server?'サーバー発走前印・固定済み':(archive?'発走前の保存予想原本（最終固定未確認）':(stored?'端末の発走前印・固定済み':'発走前印の保存なし')));
   var original=clock.started?authorizedPreOffMarks(r):null,
       axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
-  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 展開次第で3着内　<b>注</b> 特に注意　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
+  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 本命　<b>○</b> 1・2着向き　<b>▲</b> 2・3着向き　<b>△</b> 3着向き　<b>☆</b> 条件が揃う場合のみ3着内候補　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
   var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
       fr=clamp(n(h.frameNumber,no),1,8),curBw=currentBodyWeight(h),
       deltaValue=currentBodyWeightChange(h),pastBw=!curBw?referenceBodyWeight(h):0,
@@ -2985,14 +2979,14 @@ function aiBetRecommendation(r,p){
 
 function aiMarksPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は勝ち切る能力と3着内の安定性を総合評価した本命。○は1・2着、▲は2・3着、△は3着、☆は展開次第、注は特別な注意馬。発走後は保存済み予想のみ表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(x.predMark==='◎'?'<small>'+esc(honmeiBadgeText(x)==='未保存'?'◎：当時の役割・信頼度未保存':'◎'+honmeiBadgeText(x)+'｜'+(x.honmeiRole==='win'?'1着向き':'3着内の軸向き')+'｜信頼度'+x.honmeiGrade)+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
+  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は勝ち切る能力と3着内の安定性を総合評価した本命。○は1・2着、▲は2・3着、△は3着向き。☆は距離・馬場・展開・近走内容など複数の根拠が揃う場合だけ付けます。発走後は保存済み予想のみ表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=x.predMark||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(x.predMark==='◎'?'<small>'+esc(honmeiBadgeText(x)==='未保存'?'◎：当時の役割・信頼度未保存':'◎'+honmeiBadgeText(x)+'｜'+(x.honmeiRole==='win'?'1着向き':'3着内の軸向き')+'｜信頼度'+x.honmeiGrade)+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
 }
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse&&a.horse.horseNumber,999)-n(b.horse&&b.horse.horseNumber,999)});
   var details='<div class="diagnosis-merged-list">'+rows.map(function(x,i){
     var h=x.horse,e=x.evaluation||{},confidence=esc(e.confidence||'低'),rank=n(x.overallRank,i+1),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,bwLabel=bw?bw:(refbw?('前走 '+refbw+'kg'):(isFinal(r)?'結果確認中':'計量待ち'));
-    var reason=(x.overallReasons||[]).join(' / ')+(n(x.bombScore)>=65?' / BOMB '+n(x.bombScore)+' EDGE '+n(x.edgeScore)+' '+(x.upsetReasons||[]).slice(0,2).join('・'):'')+(x.predMark==='注'&&x.attentionReason?' / 注目理由 '+x.attentionReason:'');
+    var reason=(x.overallReasons||[]).join(' / ')+(n(x.bombScore)>=65?' / BOMB '+n(x.bombScore)+' EDGE '+n(x.edgeScore)+' '+(x.upsetReasons||[]).slice(0,2).join('・'):'')+(x.predMark==='☆'&&x.attentionReason?' / ☆の根拠 '+x.attentionReason:'');
     return '<article class="horse-card diagnosis-merged-row">'
       +'<div class="diagnosis-merged-head">'
         +'<span class="diag-check-cell"><span class="rc-horse-check '+(isHorseChecked(r,h.horseNumber)?'checked':'')+'" data-horse-check="'+esc(h.horseNumber)+'">'+horseCheckGlyph(r,h.horseNumber)+'</span></span>'

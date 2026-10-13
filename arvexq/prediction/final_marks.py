@@ -7,41 +7,36 @@ from arvexq.prediction.multi_head import MODEL_VERSION as MULTI_HEAD_MODEL_VERSI
 from arvexq.prediction.honmei_gate import evaluate_honmei_gate
 from arvexq.prediction.career_readiness import attach_career_readiness
 
-MARK_ENGINE_VERSION = "arvexq-four-pillar-marks-v8-honmei-role"
-CORE_MARKS = ("◎", "○", "▲")
-LOWER_MARKS = ("☆+", "☆", "△", "注")
+MARK_ENGINE_VERSION = "arvexq-five-marks-v9-optional-star"
+CORE_MARKS = ("◎", "○", "▲", "△")
+LOWER_MARKS = ("☆",)
 
 
-def _plus_candidate(remaining_rows: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """Pick ☆+ from setup/upside evidence before legacy route leadership."""
-    if not remaining_rows:
-        return None
+def _star_candidate(remaining_rows: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Optional ☆: credible top-three upside supported by independent factors.
 
-    upside = [r for r in remaining_rows if (r.get("multiHead") or {}).get("upsideCandidate")]
-    if upside:
-        upside.sort(
-            key=lambda r: (
-                int((r.get("multiHead") or {}).get("upsideRank") or 999),
-                int((r.get("multiHead") or {}).get("winRank") or 999),
-                int((r.get("horse") or {}).get("horseNumber") or 999),
-            )
-        )
-        return upside[0]["horse"]
-
-    routes = ("ability", "suitability", "pace", "support")
-    leaders: dict[str, set[int]] = {}
-    for route in routes:
-        vals = [r.get(route) for r in remaining_rows if r.get(route) is not None]
-        if not vals:
-            leaders[route] = set()
-            continue
-        best = max(float(v) for v in vals)
-        leaders[route] = {id(r) for r in remaining_rows if r.get(route) is not None and float(r[route]) == best}
+    No use of popularity or odds. Missing observations never count as support.
+    A relative high rank without distinct evidence does not earn ☆.
+    """
+    qualified: list[dict[str, Any]] = []
     for row in remaining_rows:
-        hits = sum(id(row) in leaders[route] for route in routes)
-        if hits >= 2:
-            return row["horse"]
-    return None
+        signal = row.get("multiHead") or {}
+        factors = [row.get(key) for key in ("suitability", "pace", "support")]
+        distinct = sum(value is not None for value in factors)
+        if (signal.get("upsideCandidate") is True
+                and int(signal.get("upsideRank") or 999) <= 3
+                and int(signal.get("winRank") or 999) <= 4
+                and int(signal.get("setupLift") or 0) >= 1
+                and distinct >= 2):
+            qualified.append(row)
+    if not qualified:
+        return None
+    qualified.sort(key=lambda row: (
+        int((row.get("multiHead") or {}).get("upsideRank") or 999),
+        int((row.get("multiHead") or {}).get("winRank") or 999),
+        int((row.get("horse") or {}).get("horseNumber") or 999),
+    ))
+    return qualified[0]["horse"]
 
 
 
@@ -228,28 +223,25 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             }
         )
 
-    # The ◎ candidate may be a 1st-place winner or a reliable podium axis.
+    # Four mandatory symbols for a forecast with >=4 eligible active runners.
+    # These are ordered roles, not calibrated finish probabilities.
     remaining_rows = [row for row in ranked_rows if row["horse"] is not axis_horse]
     core_assignments = ()
     if axis_horse is not None:
         core_assignments += (("◎", axis_horse),)
-    if remaining_rows:
-        core_assignments += (("○", remaining_rows.pop(0)["horse"]),)
-    if remaining_rows:
-        core_assignments += (("▲", remaining_rows.pop(0)["horse"]),)
+    for mark in ("○", "▲", "△"):
+        if remaining_rows:
+            core_assignments += ((mark, remaining_rows.pop(0)["horse"]),)
     for mark, horse in core_assignments:
         horse["integratedEvaluation"]["mark"] = mark
-    plus = _plus_candidate(remaining_rows)
-    used: set[int] = set()
-    if plus is not None:
-        plus["integratedEvaluation"]["mark"] = "☆+"
-        used.add(id(plus))
 
-    leftovers = [r["horse"] for r in remaining_rows if id(r["horse"]) not in used]
-    for mark, horse in zip(("☆", "△", "注"), leftovers[:3]):
-        horse["integratedEvaluation"]["mark"] = mark
+    # Optional, at most one ☆. No automatic 注 / ☆+ / fill-to-count lane.
+    if len(ranked_rows) >= 5:
+        star = _star_candidate(remaining_rows)
+        if star is not None:
+            star["integratedEvaluation"]["mark"] = "☆"
 
-    mark_order = {"◎": 1, "○": 2, "▲": 3, "☆+": 4, "☆": 5, "△": 6, "注": 7}
+    mark_order = {"◎": 1, "○": 2, "▲": 3, "△": 4, "☆": 5}
     marked = sorted(
         ranked,
         key=lambda h: (
@@ -270,6 +262,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         "honmei=one candidate with win/axis role and A/B/C reliability (C is not a fixed ticket axis); "
         "heads=strength(ability+record), win(ability+record+suitability+pace), "
         "upside(suitability+pace+support), market-risk(popularity-vs-model); "
+        "marks=mandatory ◎○▲△ when forecast available, optional ☆ only with independent setup evidence; "
         "support=pedigree+weather/going+bias+draw+body/weight+condition-change+freshness+age/sex+jockey+trainer"
     )
     return detail
