@@ -902,3 +902,36 @@ html body .smart-venue-page .smart-race-row[data-race-state="elapsed"]>strong,
 html body .smart-venue-page .smart-race-row[data-race-state="elapsed"] .smart-race-time,
 html body .smart-venue-page .smart-race-row[data-race-state="finished"]>strong,
 html body .smart-venue-page .smart-race-row[data-race-state="finished"] .smart-race-time{color:#fff!important}
+
+/* Compact spacing pass: preserve legible numbers and start times. */
+html body .smart-home .arv-unified-body{padding:5px 6px 10px!important;gap:5px!important}
+html body .smart-home .arv-unified-actions{margin:2px 0 3px!important;gap:5px!important}
+html body .smart-home .arv-unified-action{min-height:44px!important;height:44px!important;padding:3px!important}
+html body .smart-home .arv-all-panel{margin:0!important;padding:1px 0 5px!important}
+html body .smart-home .arv-all-title{margin:0 0 4px!important}
+html body .smart-home .arv-all-title h2{margin:0!important}
+html body .smart-home .arv-all-circuit-label{margin:3px 0 4px!important;padding:1px 0 3px!important}
+html body .smart-home .arv-all-circuit+.arv-all-circuit{margin-top:7px!important}
+html body .smart-home .arv-all-venue{margin:5px 0 7px!important;padding:0!important}
+html body .smart-home .arv-all-venue-head{height:24px!important;min-height:24px!important;margin:0 0 3px!important}
+html body .smart-home .arv-all-races-grid{gap:3px!important}
+html body .smart-home .arv-all-race{height:49px!important;min-height:49px!important;max-height:49px!important}
+html body .smart-home .arv-all-race small{font-size:14px!important}
+html body .smart-home .arv-favorites-home{margin:3px 0 5px!important;padding:3px 0!important}
+html body .smart-home .arv-favorite-home-row{margin:0 0 3px!important;padding:2px!important;min-height:48px!important}
+html body .smart-venue-page .smart-main{padding-left:7px!important;padding-right:7px!important}
+html body .smart-venue-page .smart-race-section{margin:5px 0!important;padding:0!important}
+html body .smart-venue-page .smart-race-list{gap:5px!important}
+html body .smart-venue-page .smart-race-row{min-height:60px!important;margin:0!important}
+html body .smart-home-subpage{padding:8px 8px 14px!important}
+html body .smart-home-subpage .arv-pick-circuit-page,
+html body .smart-home-subpage .smart-ai-daily,
+html body .smart-home-subpage .arv-ai-venues{margin:4px 0 9px!important;padding:7px!important}
+html body .smart-home-subpage .arv-pick-circuit-grid,
+html body .smart-home-subpage .smart-ai-daily-grid{gap:7px!important}
+html body .smart-home-subpage .arv-pick-circuit-btn{padding:9px!important;min-height:72px!important}
+@media(max-width:355px){
+ html body .smart-home .arv-unified-body{padding-left:4px!important;padding-right:4px!important}
+ html body .smart-home .arv-all-race{height:47px!important;min-height:47px!important;max-height:47px!important}
+ html body .smart-home .arv-all-race small{font-size:12px!important}
+}
