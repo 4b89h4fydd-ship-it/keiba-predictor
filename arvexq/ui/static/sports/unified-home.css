@@ -414,3 +414,55 @@ html body .smart-home .arv-favorite-home-open{min-height:48px!important;padding:
  html body .smart-home .arv-all-race strong{font-size:11px!important}
  html body .smart-home .arv-all-race small{font-size:8px!important}
 }
+
+/* ARVEXQ charcoal multicolor palette: distinct readable categories */
+html body .smart-shell.smart-home{background:linear-gradient(180deg,#262725,#242a26 55%,#1c2421)!important;color:#f6f3e9!important}
+html body .smart-home .arv-unified-date{background:linear-gradient(115deg,#414039,#575044)!important;border-color:#988976!important;color:#fff5e5!important}
+html body .smart-home .arv-unified-action{background:linear-gradient(145deg,#484039,#302e2b)!important;border-color:#a38d73!important;color:#fff6eb!important}
+html body .smart-home .arv-unified-action[data-action-kind="selected"]{background:linear-gradient(145deg,#65512c,#433925)!important;border-color:#d3ac64!important}
+html body .smart-home .arv-unified-action[data-action-kind="special"]{background:linear-gradient(145deg,#57405f,#382f44)!important;border-color:#b89bc9!important}
+html body .smart-home .arv-unified-action[data-action-kind="stats"]{background:linear-gradient(145deg,#31574e,#2b423e)!important;border-color:#91bea7!important}
+html body .smart-home .arv-unified-action-icon,
+html body .smart-home .arv-unified-chevron{color:#f0e4cb!important;filter:none!important}
+html body .smart-home .arv-all-panel{color:#f8f5ef!important}
+html body .smart-home .arv-all-circuit-label{border-color:#756c5f!important}
+html body .smart-home .arv-all-circuit-label b{color:#f0e7d6!important}
+html body .smart-home .arv-all-venue-head>div{border-left-color:#d6aa68!important}
+html body .smart-home .arv-all-venue-head b{color:#f5f0e5!important}
+html body .smart-home .arv-all-venue-head span{color:#c9b9a0!important}
+html body .smart-home .arv-all-go{background:#474136!important;border-color:#9e896a!important;color:#f7e8ca!important}
+html body .smart-home .arv-all-race,
+html body .smart-home .arv-all-race:not(:disabled){
+  background:linear-gradient(180deg,#405a48,#304638)!important;border-color:#84a68c!important;
+  color:#f4f8ed!important;box-shadow:none!important
+}
+html body .smart-home .arv-all-race strong{color:#fffdf6!important}
+html body .smart-home .arv-all-race small{color:#e0eadd!important}
+html body .smart-home .arv-all-race:not(:disabled)::after{color:#d8e4c8!important}
+html body .smart-home .arv-all-race[data-race-state="soon"],
+html body .smart-home .arv-all-race.soon:not(.elapsed):not(.finished){
+ background:linear-gradient(180deg,#8a692b,#654c25)!important;border-color:#f1cc73!important;
+ color:#fff5d9!important
+}
+html body .smart-home .arv-all-race[data-race-state="running"],
+html body .smart-home .arv-all-race.running{
+ background:linear-gradient(180deg,#913f48,#702f39)!important;border-color:#f08b90!important;
+ color:#fff0ed!important
+}
+html body .smart-home .arv-all-race[data-race-state="elapsed"],
+html body .smart-home .arv-all-race[data-race-state="finished"],
+html body .smart-home .arv-all-race.elapsed,
+html body .smart-home .arv-all-race.finished{
+ background:#282c2a!important;border-color:#4d514d!important;
+ color:#a9aba6!important;opacity:.63!important;filter:saturate(.24)!important
+}
+html body .smart-home .arv-all-race.unavailable,
+html body .smart-home .arv-all-race:disabled{background:#333836!important;border-color:#555c57!important;opacity:.4!important}
+html body .smart-home .arv-favorites-heading{border-color:#6b685c!important;color:#f3d69c!important}
+html body .smart-home .arv-favorite-home-row{border-color:#5f6258!important}
+html body .smart-home .arv-favorite-home-open{background:#3f4840!important;border-color:#879781!important;color:#f5f4e9!important}
+html body .smart-home .arv-favorite-home-open[data-race-state="soon"]{background:#715829!important;border-color:#dfb864!important}
+html body .smart-home .arv-favorite-home-open[data-race-state="running"]{background:#70333b!important;border-color:#d77682!important}
+html body .smart-home .arv-favorite-home-open[data-race-state="elapsed"],
+html body .smart-home .arv-favorite-home-open[data-race-state="finished"]{background:#292d2a!important;border-color:#555c56!important}
+html body .smart-home .arv-home-favorite-star.active{background:#69502b!important;border-color:#e4bd6a!important;color:#ffe2a0!important}
