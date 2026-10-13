@@ -345,7 +345,7 @@ for var,filename in assets.items():
 # Approved horse-only ARVEXQ branding (October 2026); no boat imagery.
 # Publish both fingerprinted icons and the main hero under its existing URL.
 BRAND_FILES = {
-    "arvexq-horse-hero-v361.webp": ("arvexq-racing-hero.webp",),
+    "arvexq-horse-hero-v361.webp": ("arvexq-racing-hero.webp", "arvexq-horse-hero-v361.webp"),
     "arvexq-horse-icon-v361-192.png": ("arvexq-icon-v361-192.png",),
     "arvexq-horse-icon-v361-512.png": ("arvexq-icon-v361-512.png",),
     "arvexq-horse-touch-v361.png": ("arvexq-touch-v361.png",),
