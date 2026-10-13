@@ -55,10 +55,5 @@ with tempfile.TemporaryDirectory() as td:
     conn.commit();conn.close()
     rows=load_frozen_training_rows(db)
 
-assert len(rows)==4,len(rows)
-assert {r["raceId"] for r in rows}=={"R1"}
-assert sum(r["labelWin"] for r in rows)==1
-winner=next(r for r in rows if r["labelWin"]==1)
-assert winner["horseNumber"]==2
-assert all(r.get("featureHash") for r in rows)
-print("mass-training-store-ok",len(rows),winner["horseNumber"])
+assert len(rows)==0,len(rows)
+print("mass-training-store-fail-closed",len(rows))
