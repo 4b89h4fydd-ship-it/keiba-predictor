@@ -30,7 +30,7 @@ def sufficiently_observed_partial_career(
 ) -> bool:
     """Allow a clearly labelled provisional pre-off forecast from real recent runs.
 
-    A full-career verification is NOT needed by this three-factor model, which
+    A full-career verification is NOT needed by this two-factor proposal, which
     uses the last five dated starts. Each runner whose lifetime-data audit is
     incomplete must nevertheless have at least three distinct valid pre-off
     races. Reject contradictory reported totals and unknown runner identities.
@@ -113,7 +113,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             e.pop(old, None)
     detail.pop("multiHeadSummary", None)
     if not ranked:
-        detail["predictionStatus"] = "insufficient-three-factor-evidence"
+        detail["predictionStatus"] = "insufficient-form-condition-evidence"
         detail.pop("factorRanking", None)
         detail.pop("honmeiDecision", None)
         return detail
@@ -130,8 +130,8 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         "version": MARK_ENGINE_VERSION, "eligible": grade == "A",
         "horseNumber": axis_no, "displayHonmei": True, "confidenceGrade": grade,
         "role": "win", "fixedAxisAllowed": grade == "A", "axisScore": round(leader["score"], 6),
-        "axisMargin": round(gap, 6), "axisMeaning": "relative-three-factor-score-not-probability",
-        "reason": "three-factor-confidence" if grade == "A" else "relative-honmei-not-fixed",
+        "axisMargin": round(gap, 6), "axisMeaning": "relative-form-condition-score-not-probability",
+        "reason": "form-condition-evidence" if grade == "A" else "relative-honmei-not-fixed",
         "axisCandidates": [
             {"horseNumber": int(z["horse"].get("horseNumber") or 0),
              "score": round(z["score"], 6), "coverage": z["primaryPillarCoverage"]}
