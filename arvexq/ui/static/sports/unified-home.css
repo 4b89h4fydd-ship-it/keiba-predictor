@@ -935,3 +935,76 @@ html body .smart-home-subpage .arv-pick-circuit-btn{padding:9px!important;min-he
  html body .smart-home .arv-all-race{height:47px!important;min-height:47px!important;max-height:47px!important}
  html body .smart-home .arv-all-race small{font-size:12px!important}
 }
+
+/* Legibility corrections based on iPhone screenshots: no dark-on-dark notices. */
+html body .smart-home-subpage .smart-ai-daily,
+html body .smart-home-subpage .arv-ai-venues,
+html body .smart-home-subpage .arv-pick-circuit-page{
+ background:transparent!important;border-color:#c0c7ca!important;color:#273038!important;
+ box-shadow:none!important;
+}
+html body .smart-home-subpage .smart-empty,
+html body .smart-home-subpage .fixed-pick-empty,
+html body .smart-home-subpage .fixed-pick-box-body,
+html body .smart-home-subpage .arv-ai-venues .smart-empty,
+html body .smart-home-subpage .arv-ai-venues .smart-empty *,
+html body .smart-home-subpage .smart-ai-daily .muted{
+ background:#f8f9f8!important;color:#2d383f!important;opacity:1!important;
+ text-shadow:none!important;
+}
+html body .smart-home-subpage .smart-empty,
+html body .smart-home-subpage .arv-ai-venues .smart-empty{
+ display:block!important;min-height:52px!important;padding:16px 9px!important;
+ text-align:center!important;font-size:15px!important;font-weight:750!important;
+}
+html body .smart-home-subpage .smart-section-title{
+ display:flex!important;align-items:center!important;gap:8px!important;
+ min-height:38px!important;margin:0 0 6px!important;padding:7px 9px!important;
+}
+html body .smart-home-subpage .smart-section-title>div{
+ display:flex!important;flex-wrap:wrap!important;align-items:baseline!important;gap:4px 9px!important
+}
+html body .smart-home-subpage .smart-section-title b{font-size:16px!important;line-height:1.3!important}
+html body .smart-home-subpage .smart-section-title small{
+ font-size:12px!important;line-height:1.3!important;color:#47535b!important
+}
+html body .smart-home-subpage .smart-ai-daily-grid>div,
+html body .smart-home-subpage .arv-ai-metrics>div{
+ padding:11px 4px!important;min-height:80px!important;
+}
+html body .smart-home-subpage .smart-ai-daily-grid>div small,
+html body .smart-home-subpage .arv-ai-metrics>div small{
+ font-size:13px!important;color:#35434c!important
+}
+html body .smart-home-subpage .smart-ai-daily-grid>div strong,
+html body .smart-home-subpage .arv-ai-metrics>div strong{
+ color:#202b33!important;font-size:25px!important
+}
+html body .smart-home-subpage .smart-ai-daily-grid>div em,
+html body .smart-home-subpage .arv-ai-metrics>div em{
+ color:#445059!important;font-size:13px!important
+}
+/* Detail is already dark: make its surrounding canvas dark as well instead of
+   leaving an abrupt bright page with dark components. */
+html body .smart-shell:has(>.smart-main.smart-race-page),
+html body .smart-shell>.smart-main.smart-race-page{
+ background:#20282d!important;color:#eef2f3!important;
+}
+html body .smart-shell:has(>.smart-main.smart-race-page)>.smart-topbar{
+ background:#303c43!important;border-color:#64747c!important;color:#f7f9fa!important;
+}
+html body .smart-shell:has(>.smart-main.smart-race-page)>.smart-topbar .smart-head-copy strong{color:#f7f9fa!important}
+html body .smart-race-page .smart-race-head,
+html body .smart-race-page .smart-race-header,
+html body .smart-race-page .smart-race-info,
+html body .smart-race-page .smart-race-summary{
+ background:#303b41!important;color:#f3f6f6!important;border-color:#5b7078!important;
+}
+html body .smart-race-page .smart-race-head h1,
+html body .smart-race-page .smart-race-meta,
+html body .smart-race-page .smart-race-head .smart-race-result-side time{
+ color:#f4f6f6!important;
+}
+html body .smart-race-page .smart-race-content{margin-top:6px!important}
+html body .smart-race-page .smart-race-head{margin-bottom:5px!important;padding:10px!important}
+html body .smart-race-page .smart-race-tabs{margin:5px 0!important}
