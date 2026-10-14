@@ -126,16 +126,34 @@ jobs:
 
           if [ "$RACES" -le 0 ]; then
             echo "Historical D1 day absent; discovering once from source collectors."
-            curl -fsS --max-time 120 \
+            # Historical discovery is asynchronous. The first forced response
+            # may be empty while the official collectors are still running.
+            # Poll the canonical bootstrap instead of treating that response
+            # as a verified zero-race historical day.
+            curl -fsS --max-time 35 \
               "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$HISTORY_DATE&force=1" \
               -o history-bootstrap.json || true
             FALLBACK=$(jq '.races // [] | length' history-bootstrap.json 2>/dev/null || echo 0)
+            for attempt in $(seq 1 20); do
+              if [ "$FALLBACK" -gt 0 ]; then break; fi
+              sleep 3
+              curl -fsS --max-time 10 \
+                "http://127.0.0.1:8000/api/v1/site-bootstrap?date=$HISTORY_DATE" \
+                -o history-bootstrap.json || true
+              FALLBACK=$(jq '.races // [] | length' history-bootstrap.json 2>/dev/null || echo 0)
+              echo "HISTORY_DISCOVERY_POLL attempt=$attempt races=$FALLBACK"
+            done
             if [ "$FALLBACK" -gt 0 ]; then
               mv history-bootstrap.json history-bundle.json
             fi
             RACES=$(jq '.races // [] | length' history-bundle.json 2>/dev/null || echo 0)
           fi
           echo "History repair source races=$RACES"
+          if [ "$RACES" -le 0 ]; then
+            echo "::error::HISTORY_SOURCE_EMPTY date=$HISTORY_DATE D1 and collector returned zero races; no data was backfilled"
+            tail -n 60 /tmp/arvexq-history.log || true
+            exit 1
+          fi
 
       - name: Repair missing fields only
         run: |
