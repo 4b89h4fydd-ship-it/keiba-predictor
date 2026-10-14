@@ -127,6 +127,12 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             if not isinstance(found, dict):
                 continue
             finishers = found.get("finishers") or []
+            print("NAR_OFFICIAL_PRIOR_SOURCE", at, track, no,
+                  "rows=", len(finishers),
+                  "withTime=", sum(bool(f.get("timeSeconds")) for f in finishers),
+                  "withMargin=", sum(bool(f.get("marginText")) for f in finishers),
+                  "with3F=", sum(bool(f.get("last3FSeconds")) for f in finishers))
+
             matched = [f for f in finishers if
                        str(f.get("name") or "").strip() == known_name]
             if len(matched) != 1:
