@@ -151,11 +151,17 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         if len(runs) >= 2:
             usable.append(horse)
     limited = not full
-    detail["predictionStatus"] = "partial-career-evidence" if limited else "ready"
-    readiness["predictionEligible"] = len(usable) >= 2
+    partial_observed = limited and sufficiently_observed_partial_career(detail, readiness)
+    detail["predictionStatus"] = (
+        "ready" if full else
+        "partial-career-evidence" if partial_observed else
+        "waiting-for-full-career"
+    )
+    readiness["predictionEligible"] = (full or partial_observed) and len(usable) >= 2
     if limited:
-        readiness["predictionEvidencePolicy"] = "individual-two-observed-preoff-runs-v1"
-    ranked = rank_factor_model(usable, detail) if len(usable) >= 2 else []
+        readiness["predictionEvidencePolicy"] = "three-dated-preoff-starts-per-unverified-horse-v3"
+    ranked = (rank_factor_model(usable, detail)
+              if readiness["predictionEligible"] else [])
     for horse in horses:
         e = horse.setdefault("integratedEvaluation", {})
         e["mark"] = ""
@@ -166,7 +172,8 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             e.pop(old, None)
     detail.pop("multiHeadSummary", None)
     if not ranked:
-        detail["predictionStatus"] = "insufficient-three-factor-evidence"
+        if detail["predictionStatus"] != "waiting-for-full-career":
+            detail["predictionStatus"] = "insufficient-three-factor-evidence"
         detail.pop("factorRanking", None)
         detail.pop("honmeiDecision", None)
         return detail

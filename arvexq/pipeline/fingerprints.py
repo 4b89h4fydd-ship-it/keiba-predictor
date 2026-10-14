@@ -54,7 +54,6 @@ def analysis_input_hash(detail: dict[str, Any]) -> str:
             "recentRaces": horse.get("recentRaces") or [],
             "allPastRuns": horse.get("allPastRuns") or [],
             "careerStats": horse.get("careerStats") or {},
-            "integratedEvaluation": horse.get("integratedEvaluation") or {},
             "pedigree": horse.get("pedigree") or horse.get("bloodline") or {},
         })
     value = {
