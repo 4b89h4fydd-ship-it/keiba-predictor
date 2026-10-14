@@ -109,7 +109,7 @@ async function verify(kind,name){
     }
     fx.remove();return result;
   });
-  const dark=color=>{const a=(color||'').match(/\\d+(?:\\.\\d+)?/g);if(!a||a.length<3)return false;const nums=a.slice(0,3).map(Number);return nums.reduce((sum,v)=>sum+v,0)<350};
+  const dark=color=>{const a=(color||'').match(/\d+(?:\.\d+)?/g);if(!a||a.length<3)return false;const nums=a.slice(0,3).map(Number);return nums.reduce((sum,v)=>sum+v,0)<350};
   for(const k of ['raceHeader','raceTabFrame','raceTab','specialHeader','paceHeader','paceExplanation','paceDiagram','paceTrack','horseHeader','horseOverall','horseInfo','betSection']){
     assert.ok(paper[k]&&!dark(paper[k].bg),'Dark surface still visible: '+k+' '+JSON.stringify(paper[k]));
   }
