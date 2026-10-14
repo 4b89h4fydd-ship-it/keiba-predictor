@@ -248,6 +248,7 @@ def _birth_year(horse: dict[str, Any], cutoff: str) -> int | None:
         age = int(re.sub(r"\D", "", str(horse.get("age") or "")) or 0)
     except ValueError:
         return None
-    return int(cutoff[:4]) - age if age and cutoff else None
+    # Japanese official age is counted from 1 on January 1 of the birth year.
+    return int(cutoff[:4]) - age + 1 if age and cutoff else None
 
 
