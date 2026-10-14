@@ -89,6 +89,16 @@ class VerifiedCareerTests(unittest.TestCase):
         self.assertEqual(nk._birth_year({"age": 4}, "2026-10-11"), 2023)
         self.assertEqual(nk._birth_year({"age": "牡4"}, "2026-10-11"), 2023)
 
+    def test_partial_listing_with_verified_birth_year_retains_observed_runs(self):
+        horse_id = "2023100001"
+        actual = nk.fetch_verified_career(
+            site(listing(5), 16, search=source(hid=horse_id),
+                 pages={horse_id: (listing(5), 16)}),
+            {"name": NAME, "age": 4}, RACE, 200)
+        self.assertEqual(len(actual["recentRaces"]), 5)
+        self.assertNotIn("careerStartEvidence", actual)
+        self.assertTrue(all(r["date"] < RACE["date"] for r in actual["recentRaces"]))
+
     def test_missing_page_row_never_proves_entire_career(self):
         self.assertEqual(nk.fetch_verified_career(site(listing(15),16),
                          {"name":NAME},RACE,200),{})
