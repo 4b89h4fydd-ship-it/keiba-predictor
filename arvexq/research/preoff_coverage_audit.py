@@ -32,6 +32,14 @@ def audit_races(races):
             if raw.get("sectional") is None and raw.get("trueRun") is not None:
                 count["neutralImputedSectional"]+=1
                 c["neutralImputedSectional"]+=1
-    return {"overall":dict(count),
-            "byCircuit":{k:dict(v) for k,v in sorted(by_circuit.items())},
+    def summarize(c):
+        out = dict(c)
+        horses = c["horses"]
+        out["noObservedRuns"] = c["withoutFiveRunEvidence"]
+        out["fiveRunComplete"] = horses - c["fewerThanFiveRuns"]
+        out["fiveRunCoverageRate"] = (out["fiveRunComplete"] / horses if horses else None)
+        out["missingAnyRunRate"] = (c["withoutFiveRunEvidence"] / horses if horses else None)
+        return out
+    return {"overall":summarize(count),
+            "byCircuit":{k:summarize(v) for k,v in sorted(by_circuit.items())},
             "disclaimer":"Coverage diagnosis, not prediction quality or observed future accuracy"}
