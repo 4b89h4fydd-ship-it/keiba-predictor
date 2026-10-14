@@ -2956,7 +2956,7 @@ def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
         bw=None;chg=None;mb=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",val("bw"))
         if mb:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
         mp=re.search(r"\d+",val("pop"));pop=int(mp.group()) if mp else None
-        finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val("fin"),"horseNumber":no,"frameNumber":frame,"name":name,"sex":sx,"age":age,"carriedWeight":cw,"jockey":_clean(val("jockey")),"trainer":_clean(val("trainer")),"timeSeconds":tm,"last3FSeconds":last3f,"marginText":val("margin"),"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,"popularity":pop})
+        finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val("fin"),"horseNumber":no,"frameNumber":frame,"name":name,"sex":sx,"age":age,"carriedWeight":cw,"jockey":_clean(val("jockey")),"trainer":_clean(val("trainer")),"timeSeconds":tm,"last3FSeconds":last3f,"marginText":margin_text,"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,"popularity":pop})
     sectionals=sorted({float(x.get("last3FSeconds")) for x in finishers if x.get("last3FSeconds") not in (None,"") and float(x.get("last3FSeconds"))>0})
     for x in finishers:
         try:s=float(x.get("last3FSeconds")) if x.get("last3FSeconds") not in (None,"") else 0.0
@@ -5309,7 +5309,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                 bwtxt=val("bw") or _clean(tr.get_text(" ",strip=True))
                 mbw=re.search(r"(?<!\d)(\d{3,4})\s*(?:kg)?\s*[（(]\s*([+\-]?\d+)\s*[）)]",bwtxt)
                 if mbw:bw=int(mbw.group(1));chg=int(mbw.group(2))
-                tm=0.0;mt=re.search(r"(\d+):(\d{2}(?:\.\d+)?)",val("time"))
+                tm=0.0;mt=re.search(r"(\d+):(\d{1,2}(?:\.\d+)?)",unicodedata.normalize("NFKC",val("time")))
                 if mt:tm=int(mt.group(1))*60+float(mt.group(2))
                 corners=[]
                 ctext=val("corner")
@@ -5332,6 +5332,13 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                     if token:
                         try:last3f=float(token.group())
                         except (TypeError,ValueError):last3f=None
+                margin_text=val("margin")
+                if not margin_text and idx.get("margin",-1)<0:
+                    t_idx=idx.get("time",-1)
+                    if t_idx>=0 and t_idx+1<len(vals):
+                        candidate=unicodedata.normalize("NFKC",vals[t_idx+1]).strip()
+                        if re.fullmatch(r"(?:クビ|ハナ|アタマ|大差|同着|[0-9]+(?:[/][0-9]+)?)",candidate):
+                            margin_text=candidate
                 finishers.append({
                     "finish":fin,"finishLabel":f"{fin}着","horseNumber":no,
                     "frameNumber":fr or int((no+1)//2),"name":name or next((nm for nm,hno in known.items() if hno==no),""),
