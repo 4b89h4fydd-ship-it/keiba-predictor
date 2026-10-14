@@ -6,6 +6,7 @@ on:
       - .github/workflows/arvexq-abcde-research.yml
       - scripts/arvexq_sequential_candidate_audit.py
       - arvexq/research/mineta_position_proxy.py
+      - arvexq/research/mineta_field_proxy.py
   workflow_dispatch:
 permissions:
   contents: read
