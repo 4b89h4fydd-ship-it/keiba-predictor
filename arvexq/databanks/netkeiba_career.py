@@ -226,17 +226,28 @@ def fetch_verified_career(get: Callable[[str], str], horse: dict[str, Any],
     matches = []
     for cand in candidates[:4]:
         listing_html = get(f"{BASE}/horse/result/{cand['id']}/")
-        stats = build_stats(parse_listing(listing_html),
-                            parse_total(get(f"{BASE}/horse/{cand['id']}/")),
-                            cutoff, cand["id"])
-        if stats is None or not known <= set(stats["startDates"]):
+        listing = parse_listing(listing_html)
+        if listing is None or any(not r.get("date") or r.get("kind") == "unknown" for r in listing):
             continue
-        runs = parse_verified_runs(listing_html, cutoff, stats["startDates"], limit)
+        dates = sorted({r["date"] for r in listing
+                        if r["kind"] != "not-started" and r["date"] < cutoff})
+        if not known <= set(dates):
+            continue
+        # The birth year or an observed prior start must independently verify
+        # this exact-name candidate before partial performance is accepted.
+        runs = parse_verified_runs(listing_html, cutoff, dates, limit)
+        try:
+            total = parse_total(get(f"{BASE}/horse/{cand['id']}/"))
+        except Exception:
+            total = None
+        stats = build_stats(listing, total, cutoff, cand["id"])
+        if stats is None and (not runs or not (born is not None or known)):
+            continue
         matches.append((stats, runs))
     if len(matches) != 1:
         return {}
     stats, runs = matches[0]
-    output = {"careerStartEvidence": stats}
+    output = {"careerStartEvidence": stats} if stats else {}
     if runs:
         output["allPastRuns"] = runs
         output["recentRaces"] = runs[:5]
