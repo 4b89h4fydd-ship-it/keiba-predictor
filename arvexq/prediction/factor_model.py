@@ -1,14 +1,13 @@
 """One authoritative pre-off horse scoring model.
 
 TRUE RUN 45%: recency-weighted actual finish quality over five observed starts.
-PURE 35%: peak and median finish quality over the same history.
+PURE 35%: independent observed opponent-strength evidence (not finish quality).
 SECTIONAL 20%: actual last-600-metre finishing rank (or published percentile).
 Only observed dated pre-off runs are used. The scores are NOT probabilities.
 No old composite grades, four-pillar votes, or historical mark predictions enter.
 """
 from __future__ import annotations
 
-from statistics import median
 from typing import Any, Iterable
 
 from arvexq.core.runner_status import is_inactive_runner
@@ -50,11 +49,15 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
                 closing.append(percentile)
 
     weighted_form = None
-    peak_ability = None
+    independent_ability = []
+    for run in runs:
+        level = _number(run.get("opponentLevel"))
+        if level is not None and 0 <= level <= 1:
+            independent_ability.append(level)
+    peak_ability = sum(independent_ability) / len(independent_ability) if independent_ability else None
     if qualities:
         weights = [5 - i for i in range(len(qualities))]
         weighted_form = sum(w * q for w, q in zip(weights, qualities)) / sum(weights)
-        peak_ability = (max(qualities) + median(qualities)) / 2
     sectional = sum(closing) / len(closing) if closing else None
     return {
         "trueRun": weighted_form,
