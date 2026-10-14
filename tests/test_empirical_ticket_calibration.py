@@ -28,8 +28,8 @@ class EmpiricalHitCalibrationTests(unittest.TestCase):
             records["jra-"+str(i)] = {"date":"2026-10-12","circuit":"中央",
                 "model": MODELS["中央"],"kind":"ワイド","points":1,"hit":False}
         result = summarize(records, "2026-10-13")
-        self.assertTrue(result["byCircuit"]["地方"]["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
-        self.assertFalse(result["byCircuit"]["中央"]["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
+        self.assertTrue(result["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
+        self.assertFalse(result["byCircuit"]["中央"]["buckets"]["ワイド|1"]["qualified"])
         self.assertEqual(result["byCircuit"]["地方"]["totalVerifiedRaces"], 32)
         self.assertEqual(result["byCircuit"]["中央"]["totalVerifiedRaces"], 32)
         legacy = {"old": {"date":"2026-10-12","circuit":"地方",
@@ -70,7 +70,7 @@ class EmpiricalHitCalibrationTests(unittest.TestCase):
     def test_fail_closed_without_sample(self):
         record = {"x": {"id":"x","date":"2026-10-12","circuit":"地方","model":MODEL,"kind":"ワイド","points":1,"hit":True}}
         result=summarize(record,"2026-10-13")
-        self.assertFalse(result["byCircuit"]["地方"]["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
+        self.assertFalse(result["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
         self.assertEqual(result["status"],"insufficient-evidence")
         self.assertLess(wilson_lower(1,1),.65)
     def test_calibrated_group_needs_real_hit_rate(self):
