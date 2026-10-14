@@ -41,7 +41,7 @@ try{
  if(!result)throw Error('betting model returned no pre-off plan; capture is retryable');
  if(result.captureStatus==='engine-missing'||result.dataStatus==='engine-unavailable'||
     result.decision==='データ不足'||result.betInputGate&&result.betInputGate.ready===false)
-   throw Error('betting model inputs or modules unavailable; cannot seal a fabricated skip');
+   throw Error('betting inputs incomplete: '+JSON.stringify({decision:result.decision,gate:result.betInputGate||null,readiness:result.dataReadiness||null,horseCount:(race.horses||[]).length,rankedCount:(prediction.rows||[]).length})+'; no fabricated skip was sealed');
  {
    const out=JSON.parse(JSON.stringify(result));
    out.version=status.version;out.jsHash=status.jsHash;
