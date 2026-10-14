@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Research ONLY. Find five completed NAR races with independently measured
+"""Research ONLY. Find completed NAR races with independently measured
 prior-race winner-time gaps for EVERY active entrant; never fill missing margins.
 Existing immutable snapshots are read, never rewritten. Retrospective study.
 """
@@ -23,7 +23,7 @@ from arvexq.research.mineta_field_proxy import score_race
 from arvexq.research.margin_abcde_candidate import score as margin_score
 from scripts.arvexq_current_prediction_audit import api_json, finish_order
 
-VERSION = "arvexq-mineta-complete-observed-margin-five-v1"
+VERSION = "arvexq-mineta-complete-observed-margin-extended-v2"
 METHODS = ("mineta","mineta_current_60_40","mineta_margin_60_40","mineta_current_margin_60_20_20")
 NAR_CODES = {"帯広ば","帯広","盛岡","水沢","浦和","船橋","大井","川崎",
              "金沢","笠松","名古屋","園田","姫路","高知","佐賀","門別"}
@@ -123,7 +123,49 @@ def official_observation(key, name, source, finishers):
     return result,"observed"
 
 
-def evaluate(max_candidates=20,max_requests=180):
+def summarize_comparisons(races):
+    """Same race denominator; no threshold fitting or post-result score changes."""
+    report={}
+    for method in METHODS:
+        n=len(races)
+        hits=sum(r["predictions"][method]["winnerRank"]==1 for r in races)
+        third=sum(r["predictions"][method]["winnerTop3"] for r in races)
+        by_track={}
+        for track in sorted({str(r["track"]) for r in races}):
+            subset=[r for r in races if str(r["track"])==track]
+            by_track[track]={
+                "races":len(subset),
+                "winnerHits":sum(r["predictions"][method]["winnerRank"]==1 for r in subset),
+                "winnerTop3Hits":sum(r["predictions"][method]["winnerTop3"] for r in subset),
+            }
+        dates=sorted({r["date"] for r in races})
+        cutoff=dates[len(dates)//2] if dates else None
+        periods={}
+        for label, subset in (
+                ("earlier",[r for r in races if cutoff and r["date"]<cutoff]),
+                ("later",[r for r in races if cutoff and r["date"]>=cutoff])):
+            periods[label]={"races":len(subset),
+                "winnerHits":sum(r["predictions"][method]["winnerRank"]==1 for r in subset),
+                "winnerTop3Hits":sum(r["predictions"][method]["winnerTop3"] for r in subset)}
+        report[method]={"races":n,"winnerHits":hits,"winnerTop3Hits":third,
+            "winRate":hits/n if n else None,"winnerTop3Rate":third/n if n else None,
+            "byTrack":by_track,"byPeriod":periods}
+    paired={}
+    primary=METHODS[1]
+    for challenger in METHODS[2:]:
+        gain=[r for r in races if r["predictions"][challenger]["winnerRank"]==1 and
+              r["predictions"][primary]["winnerRank"]!=1]
+        loss=[r for r in races if r["predictions"][primary]["winnerRank"]==1 and
+              r["predictions"][challenger]["winnerRank"]!=1]
+        paired[challenger]={"beatsCurrentBlend":len(gain),"losesToCurrentBlend":len(loss),
+            "bothWin":sum(r["predictions"][primary]["winnerRank"]==1 and
+                          r["predictions"][challenger]["winnerRank"]==1 for r in races),
+            "winnerGainRaceIds":[r["raceId"] for r in gain],
+            "winnerLossRaceIds":[r["raceId"] for r in loss]}
+    return report,paired
+
+
+def evaluate(max_candidates=80,max_requests=650,target_complete=25):
     dates=[(date(2026,10,7)+timedelta(days=i)).isoformat() for i in range(7)]
     outcomes={}
     for at in dates:
@@ -205,15 +247,14 @@ def evaluate(max_candidates=20,max_requests=180):
             "winner":order[0],"starterCount":len(nos),
             "verifiedObservedMargins":len(nos),
             "predictions":projected})
-        if len(final)>=5:break
-    compare={k:{"races":len(final),
-                "winnerHits":sum(r["predictions"][k]["winnerRank"]==1 for r in final),
-                "winnerTop3Hits":sum(r["predictions"][k]["winnerTop3"] for r in final)}
-             for k in METHODS}
+        if len(final)>=target_complete:break
+    compare,paired=summarize_comparisons(final)
     return {
-        "version":VERSION,"status":"five-complete" if len(final)==5 else "insufficient-complete-races",
-        "sameFiveRaces":len(final),"candidateRaces":available,"candidatesAttempted":len(candidates),
+        "version":VERSION,"status":"target-complete" if len(final)>=target_complete else "limited-complete-races",
+        "sameRaceCount":len(final),"targetComplete":target_complete,"candidateRaces":available,"candidatesAttempted":len(candidates),
         "officialPriorResultRequests":len(keys),"sourceCoverage":dict(source_stats),
+        "pairedVersusMinetaCurrent":paired,
+        "distinctDates":sorted({r["date"] for r in final}),
         "excludedCandidates":skip,"raceRows":final,"methods":compare,
         "centralComparison":"not-evaluated: NAR-specific official source",
         "productionPromoted":False,
@@ -221,22 +262,24 @@ def evaluate(max_candidates=20,max_requests=180):
         "limitations":["Historical saved snapshots can contain later backfills; this is not verified original pre-off blind accuracy.",
                        "Mineta concept represented by observable field-position proxy, not Mineta's proprietary predictions.",
                        "Runner-relative finish times are derived from actual published official past results; unknown observations are never imputed.",
-                       "A complete historical race is scored only if every active runner has a dated prior measured winner-time gap."]
+                       "A complete historical race is scored only if every active runner has a dated prior measured winner-time gap.",
+                       "Non-random availability of official history can bias this retrospective sample; chronological split is descriptive, not an independent blind holdout."]
     }
 
 
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--out",type=Path,required=True)
-    p.add_argument("--max-candidates",type=int,default=20)
-    p.add_argument("--max-requests",type=int,default=180)
+    p.add_argument("--max-candidates",type=int,default=80)
+    p.add_argument("--max-requests",type=int,default=650)
+    p.add_argument("--target-complete",type=int,default=25)
     a=p.parse_args()
-    report=evaluate(a.max_candidates,a.max_requests)
+    report=evaluate(a.max_candidates,a.max_requests,a.target_complete)
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print("MINETA_COMPLETE_PILOT="+json.dumps({
-        k:report[k] for k in ("status","sameFiveRaces","candidateRaces","candidatesAttempted",
-        "officialPriorResultRequests","sourceCoverage","methods","raceRows")},ensure_ascii=False))
+        k:report[k] for k in ("status","sameRaceCount","targetComplete","candidateRaces","candidatesAttempted",
+        "officialPriorResultRequests","sourceCoverage","methods","pairedVersusMinetaCurrent","distinctDates","raceRows")},ensure_ascii=False))
 
 
 if __name__=="__main__":
