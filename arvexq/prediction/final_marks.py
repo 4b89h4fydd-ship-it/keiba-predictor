@@ -148,14 +148,20 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             continue
         # Debutants have no earlier race evidence and must not receive
         # synthetic rankings; require two real, dated prior performances.
-        if len(runs) >= 2:
+        if len(runs) >= 3:
             usable.append(horse)
     limited = not full
-    detail["predictionStatus"] = "partial-career-evidence" if limited else "ready"
-    readiness["predictionEligible"] = len(usable) >= 2
+    # A partial field is sealable only if every active runner meets the same
+    # minimum observed-runs gate. Do not silently exclude a poorly observed
+    # entrant and seal a misleading complete-field forecast.
+    partial_safe = full or sufficiently_observed_partial_career(detail, readiness)
+    detail["predictionStatus"] = ("ready" if full else
+                                  "partial-career-evidence" if partial_safe else
+                                  "waiting-for-full-career")
+    readiness["predictionEligible"] = len(usable) >= 2 and partial_safe
     if limited:
-        readiness["predictionEvidencePolicy"] = "individual-two-observed-preoff-runs-v1"
-    ranked = rank_factor_model(usable, detail) if len(usable) >= 2 else []
+        readiness["predictionEvidencePolicy"] = "three-dated-preoff-starts-per-unverified-horse-v3"
+    ranked = rank_factor_model(usable, detail) if len(usable) >= 2 and partial_safe else []
     for horse in horses:
         e = horse.setdefault("integratedEvaluation", {})
         e["mark"] = ""
@@ -166,7 +172,8 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             e.pop(old, None)
     detail.pop("multiHeadSummary", None)
     if not ranked:
-        detail["predictionStatus"] = "insufficient-three-factor-evidence"
+        if detail["predictionStatus"] != "waiting-for-full-career":
+            detail["predictionStatus"] = "insufficient-three-factor-evidence"
         detail.pop("factorRanking", None)
         detail.pop("honmeiDecision", None)
         return detail
