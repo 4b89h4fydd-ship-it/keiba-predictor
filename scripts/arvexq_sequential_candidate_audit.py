@@ -77,6 +77,11 @@ def evaluate():
         mixed_keys=("mineta_current_60_40","mineta_margin_60_40","mineta_current_margin_60_20_20")
         mixed_order={key:sorted(variants[key],key=lambda n:(-variants[key][n],n))
                      for key in mixed_keys if key in variants}
+        raw_field_counts={k:0 for k in ("margin","marginSeconds","timeBehindWinner","time","opponentLevel")}
+        for z in rows:
+            for run in observed_runs(z["horse"],detail,limit=5):
+                for k in raw_field_counts:
+                    if run.get(k) not in (None,""): raw_field_counts[k]+=1
         if circuit in ("中央", "地方"):
             pilot.append({
                 "date": str(detail.get("date") or ""),
@@ -90,6 +95,7 @@ def evaluate():
                                       if order[0] in current_order else None),
                 "currentTop3Hit": order[0] in current_order[:3],
                 "rankedHorses": len(current_order),
+                "historicalInputFieldCounts":raw_field_counts,
                 "fieldAwareObservedHorses":len(field_scores),
                 "mixedForecasts":{key:{"topHorse":mixed_order[key][0],"winnerRank":mixed_order[key].index(order[0])+1 if order[0] in mixed_order[key] else None} if key in mixed_order else {"status":"missing-required-evidence"} for key in mixed_keys},
                 "positionObservedHorses": len(position_scores),
