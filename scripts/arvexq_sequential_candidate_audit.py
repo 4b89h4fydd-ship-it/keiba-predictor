@@ -11,11 +11,14 @@ from pathlib import Path
 from scripts.arvexq_current_prediction_audit import api_json,finish_order,scrub_for_replay
 from arvexq.prediction.factor_model import rank_factor_model
 from arvexq.research.sequential_challengers import candidates
-from arvexq.research.margin_abcde_candidate import score as margin_abcde_score
+from arvexq.research.margin_abcde_candidate import score as margin_abcde_score, num
+from arvexq.prediction.past_performance import observed_runs
 
 def evaluate():
     results=defaultdict(lambda: {"races":0,"top1":0,"top3":0,"logLossSum":0.})
     coverage=defaultdict(int)
+    evidence=defaultdict(lambda: defaultdict(int))
+    pilot=[]
     outcomes={}
     for offset in range(7):
         day=(date(2026,10,7)+timedelta(days=offset)).isoformat()
@@ -38,13 +41,41 @@ def evaluate():
         rows=rank_factor_model(detail.get("horses") or [],detail)
         if len(rows)<3: continue
         variants={"current":{int(z["horse"]["horseNumber"]):z["score"] for z in rows}}
+        circuit = "中央" if str(detail.get("circuit") or "") in ("中央","JRA") else "地方" if str(detail.get("circuit") or "") in ("地方","NAR") else "不明"
         for z in rows:
             n=int(z["horse"]["horseNumber"])
+            ev=evidence[circuit]
+            ev["horses"]+=1
+            runs=observed_runs(z["horse"],detail,limit=5)
+            if any(num(x.get("marginSeconds")) is not None or num(x.get("timeBehindWinner")) is not None for x in runs):ev["A_marginObserved"]+=1
+            if any(num(x.get("opponentLevel")) is not None for x in runs):ev["B_opponentObserved"]+=1
+            if any(x.get("track")==detail.get("track") and x.get("surface") and x.get("surface")==detail.get("surface") and num(x.get("distance")) is not None and num(detail.get("distance")) is not None and abs(num(x.get("distance"))-num(detail.get("distance")))<=150 for x in runs):ev["C_courseObserved"]+=1
+            if any(isinstance(x.get("cornerPositions"),list) and len(x.get("cornerPositions"))>=2 for x in runs):ev["D_cornerObserved"]+=1
             candidate = margin_abcde_score(z["horse"], detail)
             if candidate is not None:
                 variants.setdefault("margin_abcde_352520155", {})[n] = candidate["score"]
             for key,value in candidates(z["horse"],detail).items():
                 variants.setdefault(key,{})[n]=value
+        current_order = sorted(variants["current"], key=lambda n: (-variants["current"][n], n))
+        abcde_scores = variants.get("margin_abcde_352520155", {})
+        if circuit in ("中央", "地方"):
+            pilot.append({
+                "date": str(detail.get("date") or ""),
+                "raceId": str(detail.get("id") or ""),
+                "circuit": circuit,
+                "track": str(detail.get("track") or ""),
+                "raceNumber": int(detail.get("raceNumber") or 0),
+                "actualWinner": order[0],
+                "currentTop": current_order[0],
+                "currentWinnerRank": (current_order.index(order[0]) + 1
+                                      if order[0] in current_order else None),
+                "currentTop3Hit": order[0] in current_order[:3],
+                "rankedHorses": len(current_order),
+                "abcdeEligibleHorses": len(abcde_scores),
+                "abcdeComparable": set(abcde_scores) == set(variants["current"]),
+                "abcdeTop": (sorted(abcde_scores, key=lambda n: (-abcde_scores[n], n))[0]
+                             if set(abcde_scores) == set(variants["current"]) else None),
+            })
         if "reliability" not in variants or set(variants["reliability"]) != set(variants["current"]):
             coverage["common-set-missing"]+=1
             continue
@@ -60,12 +91,20 @@ def evaluate():
             m["races"]+=1;m["top1"]+=int(ranked[0]==order[0])
             m["top3"]+=int(order[0] in ranked[:3])
             m["logLossSum"]+=-math.log(max(p,1e-15))
-    return {"version":"research-retrospective-v2","inputEnvelopes":envelopes,
+    jra=[r for r in pilot if r["circuit"]=="中央"]
+    nar=[r for r in pilot if r["circuit"]=="地方"]
+    five=(jra[:2]+nar[:3])
+    if len(five)<5:
+        used={r["raceId"] for r in five}
+        five.extend(r for r in pilot if r["raceId"] not in used)
+    return {"version":"research-retrospective-v2","fiveRacePilot":five[:5],
+            "pilotSelection":"up to 2 JRA and 3 NAR from dated snapshots with observed winners",,"inputEnvelopes":envelopes,
             "matchedResultRaces":len(outcomes),
             "results":{k:{**v,"top1Rate":v["top1"]/v["races"],
                 "top3Rate":v["top3"]/v["races"],
                 "meanLogLoss":v["logLossSum"]/v["races"]}
                 for k,v in results.items() if v["races"]},
+            "evidenceCoverageByCircuit":{c:dict(v) for c,v in evidence.items()},
             "missingEvidenceByVariant":dict(coverage),
             "warning":"Retrospective snapshot inputs may contain post-race changes; not exact pre-off evidence. Different candidate coverage and fixed uncalibrated temperature. Not promotion proof."}
 
