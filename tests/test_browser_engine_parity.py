@@ -64,5 +64,37 @@ class EngineBrowserParity(unittest.TestCase):
         self.assertAlmostEqual(browser_row["score"], python_row["score"], places=12)
 
 
+    def test_jra_and_nar_have_independent_scoring_paths(self):
+        dates = ["2026-10-12", "2026-10-10", "2026-10-08",
+                 "2026-10-06", "2026-10-04"]
+        horses = [{"horseNumber": 1, "recentRaces": [
+            {"date": day, "finish": finish, "fieldSize": 12, "distance": 1400,
+             "surface": "ダート", "track": "園田" if i != 2 else "笠松"}
+            for i, (day, finish) in enumerate(zip(dates, [1, 2, 5, 6, 8]))]},
+                  {"horseNumber": 2, "recentRaces": [
+                      {"date": dates[i], "finish": finish, "fieldSize": 12,
+                       "distance": 1400, "surface": "ダート", "track": "笠松"}
+                      for i, finish in enumerate([3, 5, 3, 5, 3])]}]
+        scores = {}
+        for circuit, track, expected_version in (
+                ("中央", "東京", "arvexq-jra-momentum-condition-stage-v1"),
+                ("地方", "園田", "arvexq-nar-track-condition-stage-v1")):
+            race = {"date": "2026-10-14", "circuit": circuit, "track": track,
+                    "distance": 1400, "surface": "ダート", "horses": horses}
+            p = subprocess.run(["node", "-e", JS], cwd=ROOT, input=json.dumps(race),
+                               text=True, capture_output=True, check=True, timeout=30)
+            browser = json.loads(p.stdout)
+            ranking = rank_factor_model(horses, race)
+            by_no = {int(row["horse"]["horseNumber"]): row for row in ranking}
+            for row in browser:
+                py = by_no[row["no"]]
+                self.assertEqual(row["modelVersion"], expected_version)
+                self.assertEqual(py["modelVersion"], expected_version)
+                self.assertAlmostEqual(row["score"], py["score"], places=12)
+            scores[circuit] = by_no[1]["score"]
+        self.assertNotEqual(scores["中央"], scores["地方"],
+                            "circuit-specific scores must not be aliases")
+
+
 if __name__ == "__main__":
     unittest.main()
