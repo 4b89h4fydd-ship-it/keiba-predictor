@@ -104,8 +104,6 @@ class NarOfficialArchive:
             pairs = [(item(race, 50 + i), ranks(item(race, 58 + i))) for i in range(8)]
             pairs = [(label, ranks_) for label, ranks_ in pairs if label and ranks_]
             positions = [order.get(no) for _, order in pairs]
-            if not any(p is not None for p in positions):
-                continue
             laps = [float(item(race, i)) for i in range(35, 50) if item(race, i) and re.fullmatch(r"\d+(?:\.\d+)?", item(race, i))]
             run = {
                 "date": date(item(h, 1)), "track": item(h, 0),
@@ -118,6 +116,12 @@ class NarOfficialArchive:
                 "raceLapScope": "whole_race_not_individual_horse",
                 "narOfficialCsv": True,
             }
+            margin = item(h, 33)
+            if margin and margin not in ("-", "--"):
+                run["marginText"] = margin
+            late = item(h, 34)
+            if re.fullmatch(r"[0-9]{2}[.][0-9]", late):
+                run["last3fSeconds"] = float(late)
             dob = date(item(h, 10))
             self.by_name[name].append((run, dob))
         for records in self.by_name.values():

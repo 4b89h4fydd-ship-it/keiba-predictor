@@ -36,7 +36,7 @@ def horse(name="サンプル", number=10, dob="20180310", date="20260930"):
     row = [""] * 36
     row[0:3] = ["大井", date, "4"]
     row[3], row[5], row[6] = "5", str(number), name
-    row[10], row[14], row[31], row[34] = dob, "矢野貴", "2", "38.2"
+    row[10], row[14], row[31], row[33], row[34] = dob, "矢野貴", "2", "0.3", "38.2"
     return row
 
 
@@ -69,6 +69,8 @@ class NarOfficialCsvTests(unittest.TestCase):
             self.assertEqual(item["frameNumber"], 5)
             self.assertEqual(item["distance"], 1400)
             self.assertEqual(item["finish"], 2)
+            self.assertEqual(item["marginText"], "0.3")
+            self.assertEqual(item["last3fSeconds"], 38.2)
             self.assertAlmostEqual(item["raceFirst3FSeconds"], 35.4)
             self.assertNotIn("horseFirst3FSeconds", item)
             self.assertEqual(index.horse_history(
