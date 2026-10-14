@@ -136,6 +136,10 @@ jobs:
           python -m http.server 8790 --directory dist >/tmp/arvexq-horse-local.log 2>&1 &
           sleep 2
           ARVEXQ_BASE_URL=http://127.0.0.1:8790 node scripts/arvexq_realtime_navigation_smoke.js
+      - name: Local paper palette computed-style regression
+        shell: bash
+        run: |
+          ARVEXQ_BASE_URL=http://127.0.0.1:8790 node scripts/arvexq_paper_palette_smoke.js
       - name: Local iPhone Chromium and WebKit pull-to-refresh
         env:
           ARVEXQ_BASE_URL: http://127.0.0.1:8790
