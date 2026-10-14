@@ -43,6 +43,15 @@ jobs:
                   if ('2026' in text or '9月' in text or '中山' in text):
                       found=re.search(r"pw01s[^\s\"'<>]+",str(node))
                       if found and found.group() not in seen:todo.append(found.group())
+          cname='pw01srl10062026040420260913/75'
+          html=app._jra_request('https://www.jra.go.jp/JRADB/accessS.html',cname,0)
+          Path('meeting.html').write_text(html)
+          links=app.JRA_RESULT_CNAME_RE.findall(html)
+          print('RESULT_LINKS',links)
+          cname=next(x for x in links if app._jra_any_race_no(x)==11)
+          html=app._jra_request('https://www.jra.go.jp/JRADB/accessS.html',cname,0)
+          Path('result.html').write_text(html)
+          print('PARSED',json.dumps(app._jra_parse_result(cname),ensure_ascii=False)[:5000])
           PY
       - uses: actions/upload-artifact@v4
         if: always()
