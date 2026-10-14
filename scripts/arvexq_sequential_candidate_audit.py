@@ -98,7 +98,7 @@ def evaluate():
         used={r["raceId"] for r in five}
         five.extend(r for r in pilot if r["raceId"] not in used)
     return {"version":"research-retrospective-v2","fiveRacePilot":five[:5],
-            "pilotSelection":"up to 2 JRA and 3 NAR from dated snapshots with observed winners",,"inputEnvelopes":envelopes,
+            "pilotSelection":"up to 2 JRA and 3 NAR from dated snapshots with observed winners","inputEnvelopes":envelopes,
             "matchedResultRaces":len(outcomes),
             "results":{k:{**v,"top1Rate":v["top1"]/v["races"],
                 "top3Rate":v["top3"]/v["races"],
