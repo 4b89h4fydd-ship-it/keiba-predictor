@@ -4,7 +4,7 @@ from typing import Any
 from arvexq.prediction.factor_model import MODEL_VERSION, PRIMARY_PILLARS, rank_factor_model
 from arvexq.prediction.career_readiness import attach_career_readiness
 
-MARK_ENGINE_VERSION = "arvexq-true-run-pure-sectional-marks-v3-pace-star"
+MARK_ENGINE_VERSION = "arvexq-true-run-pure-sectional-marks-v4-individual-evidence"
 CORE_MARKS = ("◎", "○", "▲", "△")
 LOWER_MARKS = ("☆",)
 
@@ -126,25 +126,36 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     horses = [h for h in (detail.get("horses") or []) if isinstance(h, dict)]
     readiness = detail.get("careerReadiness") or {}
     full = readiness.get("ready") is True
-    limited = not full and sufficiently_observed_partial_career(detail, readiness)
-    if not full and not limited:
-        for h in horses:
-            e = h.get("integratedEvaluation")
-            if isinstance(e, dict):
-                e["mark"] = ""
-                e.pop("rank", None)
-        detail.pop("factorRanking", None)
-        detail.pop("honmeiDecision", None)
-        detail.pop("multiHeadSummary", None)
-        detail["predictionStatus"] = "waiting-for-full-career"
-        return detail
+    # Incomplete lifetime acquisition is not proof that observed pre-off runs
+    # are unusable. Qualify each runner independently instead of blanking the
+    # whole race because one runner's lifetime record is unfinished.
+    from arvexq.prediction.past_performance import observed_runs
+    from arvexq.core.runner_status import is_inactive_runner
+    disallowed = {"identity-mismatch", "future-race-evidence",
+                  "reported-starts-contradiction", "race-identity-mismatch"}
+    blocked = {int(x.get("horseNumber") or 0): x for x in readiness.get("blockedHorses", [])
+               if isinstance(x, dict)}
+    usable = []
+    for horse in horses:
+        if is_inactive_runner(horse) or int(horse.get("horseNumber") or 0) < 1:
+            continue
+        item = blocked.get(int(horse["horseNumber"]), {})
+        if item.get("reason") in disallowed:
+            continue
+        try:
+            runs = observed_runs(horse, detail, limit=5)
+        except (TypeError, ValueError, KeyError):
+            continue
+        # Debutants have no earlier race evidence and must not receive
+        # synthetic rankings; require two real, dated prior performances.
+        if len(runs) >= 2:
+            usable.append(horse)
+    limited = not full
     detail["predictionStatus"] = "partial-career-evidence" if limited else "ready"
+    readiness["predictionEligible"] = len(usable) >= 2
     if limited:
-        readiness["predictionEligible"] = True
-        readiness["predictionEvidencePolicy"] = (
-            "three-dated-preoff-starts-per-unverified-horse-v3"
-        )
-    ranked = rank_factor_model(horses, detail)
+        readiness["predictionEvidencePolicy"] = "individual-two-observed-preoff-runs-v1"
+    ranked = rank_factor_model(usable, detail) if len(usable) >= 2 else []
     for horse in horses:
         e = horse.setdefault("integratedEvaluation", {})
         e["mark"] = ""
