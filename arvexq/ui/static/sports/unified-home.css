@@ -1900,3 +1900,64 @@ html body .smart-shell .pace-stage-menu-btn b,
 html body .smart-shell .pace-stage-menu-btn small{color:#000!important;text-shadow:none!important}
 html body .smart-shell .pace-stage-menu-btn.active{background:#f4d694!important}
 html body .smart-shell .pace-formation-track{background:#fffaf1!important}
+
+/* Contrast and dark-header fix 20261014 */
+/* These headers are siblings of <main>, not descendants of it. */
+html body .smart-shell>header.smart-topbar,
+html body .smart-shell>header.smart-race-topbar,
+html body .smart-shell>header.arv-dated-subbar,
+html body .smart-shell>header.smart-section-topbar,
+html body .smart-shell.pace-stage-shell>header.pace-stage-topbar{
+ background:#f6f2e8!important;background-image:none!important;
+ border-color:#d0c3af!important;color:#000!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+html body .smart-shell>header.smart-topbar .smart-head-copy,
+html body .smart-shell>header.smart-topbar .smart-head-copy strong,
+html body .smart-shell>header.smart-topbar .smart-head-copy small,
+html body .smart-shell>header.smart-topbar .arv-sub-date,
+html body .smart-shell>header.smart-topbar .arv-sub-date span,
+html body .smart-shell>header.smart-race-topbar .smart-head-copy strong,
+html body .smart-shell.pace-stage-shell>header.pace-stage-topbar .pace-stage-top-title,
+html body .smart-shell.pace-stage-shell>header.pace-stage-topbar .pace-stage-top-title *{
+ color:#000!important;text-shadow:none!important;opacity:1!important;
+}
+html body .smart-shell>header.smart-topbar button,
+html body .smart-shell>header.smart-race-topbar button,
+html body .smart-shell.pace-stage-shell>header.pace-stage-topbar button{
+ background:#fff8ed!important;color:#000!important;border-color:#cbb99f!important;
+ box-shadow:none!important;
+}
+/* Navigation tab outer shell, not only its children. */
+html body .smart-shell .smart-race-tab-wrap,
+html body .smart-shell .smart-race-tab-shell,
+html body .smart-shell .smart-race-tab-bar,
+html body .smart-shell .smart-race-tabs-wrap,
+html body .smart-shell .smart-race-tabs-container,
+html body .smart-shell .smart-race-panels,
+html body .smart-shell .smart-race-tabs{
+ background:#f6f2e8!important;background-image:none!important;
+ box-shadow:none!important;border-color:#d0c3af!important;
+}
+/* Special picks used white and pale blue letters on pale paper. */
+html body .smart-shell .smart-fixed-picks,
+html body .smart-shell .smart-fixed-picks-head,
+html body .smart-shell .smart-fixed-picks-head *,
+html body .smart-shell .fixed-pick-box-body,
+html body .smart-shell .fixed-pick-row,
+html body .smart-shell .fixed-pick-row *,
+html body .smart-shell .arv-direct-picks,
+html body .smart-shell .arv-direct-picks *,
+html body .smart-shell .fixed-pick-empty,
+html body .smart-shell .fixed-pick-empty *{
+ color:#000!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .fixed-pick-row{
+ background:#fffaf0!important;border-color:#d0c3af!important;
+}
+html body .smart-shell .smart-fixed-picks-head,
+html body .smart-shell .fixed-pick-box-body{
+ background:#f6f2e8!important;border-color:#d0c3af!important;
+}
+html body .smart-shell .fixed-pick-row :is(small,time,em),
+html body .smart-shell .smart-fixed-picks-head small{color:#000!important;opacity:1!important}
