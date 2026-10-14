@@ -47,9 +47,40 @@ jobs:
           python build_static.py
           nohup python -m http.server 8790 --directory dist >/tmp/arvexq-horse-ui.log 2>&1 &
           sleep 2
-      - name: Verify paper backgrounds and readable text on iPhone
+      - name: Check paper theme header
         env:
           ARVEXQ_BASE_URL: http://127.0.0.1:8790
+          ARVEXQ_PAPER_FOCUS: raceHeader,raceHeaderTitle,specialHeader,paceHeader,horseHeader
+        run: node scripts/arvexq_paper_palette_smoke.js
+      - name: Check paper theme race navigation
+        if: always()
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8790
+          ARVEXQ_PAPER_FOCUS: raceTabFrame,raceTab
+        run: node scripts/arvexq_paper_palette_smoke.js
+      - name: Check paper theme special forecast text
+        if: always()
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8790
+          ARVEXQ_PAPER_FOCUS: specialText,specialSubtitle,specialRowText
+        run: node scripts/arvexq_paper_palette_smoke.js
+      - name: Check paper theme pace panels
+        if: always()
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8790
+          ARVEXQ_PAPER_FOCUS: paceExplanation,paceDiagram,paceTrack
+        run: node scripts/arvexq_paper_palette_smoke.js
+      - name: Check paper theme horse diagnosis panels
+        if: always()
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8790
+          ARVEXQ_PAPER_FOCUS: horseOverall,horseInfo
+        run: node scripts/arvexq_paper_palette_smoke.js
+      - name: Check paper theme betting panels
+        if: always()
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8790
+          ARVEXQ_PAPER_FOCUS: betSection
         run: node scripts/arvexq_paper_palette_smoke.js
       - name: Verify local horse-only 1R-12R layout and darkening on iPhone
         env:
