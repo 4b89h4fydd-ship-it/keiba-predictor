@@ -995,7 +995,14 @@ function arvexqFactorValues(z,r){
   }
   var h=z&&z.horse||{},cutoff=canonicalDay(r&&(r.date||r.raceDate)),
       byDay=Object.create(null),runs=[];
-  if(!cutoff)return {recentForm:null,conditionForm:null,comparableRuns:0,coverage:0,sample:0,score:.5,modelVersion:'arvexq-form-condition-no-sectional-proposal-v1'};
+  if(!cutoff){
+    var code=String(r&&(r.circuit||r.raceCircuit)||'').trim().toUpperCase();
+    var noDateVersion=code==='中央'||code==='JRA'||code==='CENTRAL'?'arvexq-jra-momentum-condition-stage-v1':
+      code==='地方'||code==='NAR'||code==='LOCAL'?'arvexq-nar-track-condition-stage-v1':
+      'arvexq-form-condition-no-sectional-proposal-v1';
+    return {recentForm:null,conditionForm:null,comparableRuns:0,coverage:0,sample:0,
+      score:.5,modelVersion:noDateVersion};
+  }
   ['recentRaces','allPastRuns','pastRaces','history','runs'].forEach(function(key){
     (Array.isArray(h[key])?h[key]:[]).forEach(function(q){
       if(!q||typeof q!=='object'||Array.isArray(q))return;
