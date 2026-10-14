@@ -84,6 +84,11 @@ class VerifiedCareerTests(unittest.TestCase):
         self.assertNotIn("last3fRank", rows[0])
         self.assertNotIn("marginSeconds", rows[0])
 
+    def test_japanese_racing_age_birth_year_identity(self):
+        # A 4yo in 2026 was born in 2023, not 2022.
+        self.assertEqual(nk._birth_year({"age": 4}, "2026-10-11"), 2023)
+        self.assertEqual(nk._birth_year({"age": "牡4"}, "2026-10-11"), 2023)
+
     def test_missing_page_row_never_proves_entire_career(self):
         self.assertEqual(nk.fetch_verified_career(site(listing(15),16),
                          {"name":NAME},RACE,200),{})
