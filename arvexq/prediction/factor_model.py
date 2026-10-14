@@ -18,6 +18,22 @@ PRIMARY_PILLARS = ("recentForm", "conditionForm")
 CONDITION_WEIGHT_PER_RUN = 0.08
 MAX_CONDITION_WEIGHT = 0.25
 
+# Explicit circuit-specific experimental models. No retrospective tuning is
+# promoted to a published win probability without independent validation.
+CIRCUIT_POLICIES = {
+    "中央": {"version": "arvexq-jra-form-condition-experimental-v1", "conditionPerRun": 0.04, "conditionCap": 0.12},
+    "地方": {"version": "arvexq-nar-form-condition-experimental-v1", "conditionPerRun": 0.08, "conditionCap": 0.25},
+}
+
+
+def circuit_policy(race):
+    circuit = str(race.get("circuit") or race.get("raceCircuit") or "").upper()
+    key = "中央" if circuit in ("中央", "JRA", "CENTRAL") else "地方" if circuit in ("地方", "NAR", "LOCAL") else None
+    if key is None:
+        return {"version": MODEL_VERSION, "conditionPerRun": CONDITION_WEIGHT_PER_RUN, "conditionCap": MAX_CONDITION_WEIGHT}
+    return CIRCUIT_POLICIES[key]
+
+
 
 def _number(v: Any) -> float | None:
     try:
@@ -64,13 +80,14 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
     """The only ranking for core score, marks, saved probabilities, and bets."""
     active = [h for h in horses if isinstance(h, dict) and not is_inactive_runner(h)]
     rows = []
+    policy = circuit_policy(race)
     for horse in active:
         raw = collect_horse_raw_metrics(horse, race)
         past = analyze_past_performance(horse, race)
         recent = raw.get("recentForm")
         comparable = raw.get("conditionForm")
         condition_runs = int(raw.get("conditionRuns") or 0)
-        strength = min(MAX_CONDITION_WEIGHT, CONDITION_WEIGHT_PER_RUN * condition_runs) if comparable is not None else 0.0
+        strength = min(policy["conditionCap"], policy["conditionPerRun"] * condition_runs) if comparable is not None else 0.0
         score = (recent if comparable is None else
                  (1 - strength) * recent + strength * comparable) if recent is not None else 0.5
         factors = {
@@ -88,7 +105,7 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
             "evidenceCounts": {k: int(v is not None) for k, v in factors.items()},
             "evidenceFamilyCounts": {k: int(v is not None) for k, v in factors.items()},
             "primaryPillarCoverage": available, "primaryEvidenceCount": available,
-            "supportTieBreakWins": 0, "modelVersion": MODEL_VERSION,
+            "supportTieBreakWins": 0, "modelVersion": policy["version"],
         })
     if not any(row["primaryPillarCoverage"] for row in rows):
         return []
