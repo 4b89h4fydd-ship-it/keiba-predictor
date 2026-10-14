@@ -1409,9 +1409,19 @@ def _download_nar_month_only(year: int, month: int) -> tuple[int, int, bytes, Pa
         },
     )
     with urllib.request.urlopen(request, timeout=float(os.getenv("NAR_FAST_TIMEOUT_SEC", "22"))) as response:
+        status = response.status
+        content_type = response.headers.get("Content-Type", "")
+        final_url = response.geturl()
         data = response.read()
     if not zipfile.is_zipfile(io.BytesIO(data)):
-        raise RuntimeError(f"NAR {year:04d}-{month:02d} was not ZIP")
+        # Never store an HTML error page as a historical archive.
+        # Surface response diagnostics without leaking page content or credentials.
+        raise RuntimeError(
+            f"NAR {year:04d}-{month:02d} was not ZIP"
+            f" status={status} content_type={content_type[:100]!r}"
+            f" bytes={len(data)} redirected={final_url != url}"
+            f" leading_magic={data[:8].hex()}"
+        )
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(data)
     return year, month, data, dest
