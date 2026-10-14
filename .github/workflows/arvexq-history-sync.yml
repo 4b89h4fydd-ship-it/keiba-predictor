@@ -197,7 +197,7 @@ jobs:
             exit 1
           fi
           jq '{races,missingCard:(.missing_card|length),missingResult:(.missing_result|length),missingPayout:(.missing_payout|length)}' history-report.json
-          grep 'NAR_OFFICIAL_PRIOR_SOURCE' history-repair.log | head -n 40 || true
+          grep -E 'NAR_OFFICIAL_PRIOR_(SOURCE|MATCH)' history-repair.log | head -n 60 || true
 
       - name: Push repaired historical day to D1
         run: |
