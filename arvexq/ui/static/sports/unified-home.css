@@ -1850,3 +1850,53 @@ html body .smart-shell .arv-favorite-home-open[data-race-state="running"]{backgr
 html body .smart-shell .arv-favorite-home-open[data-race-state="elapsed"],
 html body .smart-shell .arv-favorite-home-open[data-race-state="finished"]{background:#ded7ca!important}
 html body .smart-shell .arv-unified-hero{background:var(--arv-paper)!important}
+
+/* Race/horse/pace exact class coverage: eliminate dark cards v5 */
+html body .smart-shell.horse-detail-page-shell>.horse-detail-topbar,
+html body .smart-shell.pace-stage-shell>.smart-race-topbar.pace-stage-topbar,
+html body .smart-shell .horse-detail-topbar,
+html body .smart-shell .pace-stage-topbar{
+ background:#f6f2e8!important;background-image:none!important;color:#000!important;
+ border-color:#d1c2a9!important;box-shadow:none!important;
+}
+html body .smart-shell .horse-detail-top-title,
+html body .smart-shell .horse-detail-top-title *,
+html body .smart-shell .pace-stage-top-title,
+html body .smart-shell .pace-stage-top-title *{color:#000!important;text-shadow:none!important}
+html body .smart-shell .horse-detail-step,
+html body .smart-shell .horse-detail-close,
+html body .smart-shell .pace-stage-step,
+html body .smart-shell .pace-stage-close{
+ background:#fff8e9!important;color:#000!important;border-color:#ccb99e!important;
+}
+html body .smart-shell .horse-detail-page .runner-overall-head,
+html body .smart-shell .horse-detail-page .horse-info-cell,
+html body .smart-shell .horse-detail-page .horse-info-grid,
+html body .smart-shell .horse-detail-page .runner-check,
+html body .smart-shell .horse-detail-page .detail-heading,
+html body .smart-shell .horse-detail-page .runner-overall,
+html body .smart-shell .horse-detail-page .runner-profile,
+html body .smart-shell .horse-detail-page .runner-scores,
+html body .smart-shell .pace-stage-explain,
+html body .smart-shell .pace-stage-narrative,
+html body .smart-shell .pace-stage-jump,
+html body .smart-shell .pace-formation-card,
+html body .smart-shell .pace-formation-next,
+html body .smart-shell .pace-formation-track,
+html body .smart-shell .pace-stage-menu,
+html body .smart-shell .pace-stage-menu-group,
+html body .smart-shell .pace-stage-menu-btn,
+html body .smart-shell .pace-stage-entry,
+html body .smart-shell .pace-stage-entry-btn{
+ background:#f6f2e8!important;background-image:none!important;color:#000!important;
+ border-color:#d1c2a9!important;box-shadow:none!important;
+}
+html body .smart-shell .horse-detail-page .horse-info-cell small,
+html body .smart-shell .horse-detail-page .horse-info-cell b,
+html body .smart-shell .horse-detail-page .detail-heading,
+html body .smart-shell .pace-stage-explain *,
+html body .smart-shell .pace-stage-narrative *,
+html body .smart-shell .pace-stage-menu-btn b,
+html body .smart-shell .pace-stage-menu-btn small{color:#000!important;text-shadow:none!important}
+html body .smart-shell .pace-stage-menu-btn.active{background:#f4d694!important}
+html body .smart-shell .pace-formation-track{background:#fffaf1!important}
