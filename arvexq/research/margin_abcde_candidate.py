@@ -59,7 +59,7 @@ def score(horse, race):
                "C":mean(suitable) if suitable else None,
                "D":mean(pace) if pace else None, "E":None}
     present = [key for key,v in factors.items() if v is not None]
-    if len(present)<3 or "B" not in present or "C" not in present:
+    if "A" not in present:
         return None
     total = sum(WEIGHTS[key] for key in present)
     return {"score":sum(WEIGHTS[key]*factors[key] for key in present)/total,
