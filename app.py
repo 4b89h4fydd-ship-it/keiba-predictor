@@ -693,7 +693,14 @@ def _jra_parse_past_cell(cell, cutoff:str) -> dict | None:
         after=re.split(r"\s+(?:\d{1,2}着|\d{1,2}頭|\d+番)",after,1)[0]
         title=after[:60].strip()
     tm=_jra_parse_time_seconds(txt)
-    return {"date":iso,"track":track,"title":title,"distance":dist,"surface":surface,"condition":cond,"weather":"不明","fieldSize":field,"finish":finish,"timeSeconds":tm,"cornerPositions":corners,"carriedWeight":weight,"raceId":rid,"source":"JRA公式"}
+    # JRA past-run card includes "3F 36.2 対戦馬名(0.3)": this is
+    # winning-time difference, not the current target race result.
+    # Do not treat arbitrary parentheses (popularity, bodyweight) as margins.
+    margin_match=re.search(r"3F\s*\d{2}(?:\.\d)?\s+[^()]+?\(([+-]?\d+(?:\.\d+)?)\)",txt)
+    margin=float(margin_match.group(1)) if margin_match else None
+    if margin is not None and finish==1:margin=0.0
+    if margin is not None and margin<0:margin=None
+    return {"date":iso,"track":track,"title":title,"distance":dist,"surface":surface,"condition":cond,"weather":"不明","fieldSize":field,"finish":finish,"timeSeconds":tm,"marginSeconds":margin,"cornerPositions":corners,"carriedWeight":weight,"raceId":rid,"source":"JRA公式"}
 
 def _jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
     if not cname:return []
