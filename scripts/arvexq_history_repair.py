@@ -8,6 +8,7 @@ missing result/payout; only incomplete cards use the heavier race preparation.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import copy
 import json
 import os
@@ -169,6 +170,61 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
         if attempt == 1 and pending_ids():
             time.sleep(float(os.getenv("ARVEXQ_HISTORY_RETRY_SLEEP_SEC", "2")))
 
+    # Repair prediction-input history independently of card/result completeness.
+    # The prior early exit left complete racecards with empty sectional and
+    # margin evidence permanently untouched.
+    from arvexq.ingest.fallback_enrichment import enrich_race_missing
+    from arvexq.prediction.past_performance import observed_runs
+    factor_scanned = factor_changed = 0
+    missing_before = missing_after = 0
+    for rid in ids:
+        base = by_id.get(rid)
+        if not isinstance(base, dict) or not base.get("horses"):
+            continue
+        horses = active_horses(base)
+        incomplete = []
+        for horse in horses:
+            runs = observed_runs(horse, base, limit=5)
+            if not runs:
+                incomplete.append(horse)
+                continue
+            if len(runs) < 5 or any(
+                not (run.get("last3fRank") or run.get("last600Rank") or
+                     run.get("last3fPercentile") or run.get("last3f") or
+                     run.get("last3fSeconds") or run.get("last3FRank"))
+                or not (run.get("marginText") or run.get("marginSeconds") or
+                        run.get("timeBehindWinner") or run.get("margin"))
+                for run in runs
+            ):
+                incomplete.append(horse)
+        missing_before += len(incomplete)
+        if not incomplete:
+            continue
+        factor_scanned += 1
+        try:
+            # Existing registered providers only; keep the original frozen
+            # forecasts and tickets unchanged.
+            enriched = asyncio.run(enrich_race_missing(
+                base, history_limit=200, max_parallel_horses=4))
+            if enriched != base:
+                by_id[rid] = enriched
+                changed_ids.add(rid)
+                factor_changed += 1
+                _seed_base(rid, enriched)
+            missing_after += sum(
+                1 for h in active_horses(by_id[rid])
+                if len(observed_runs(h, by_id[rid], limit=5)) < 5
+                or any(not (q.get("marginText") or q.get("marginSeconds") or
+                            q.get("timeBehindWinner") or q.get("margin"))
+                       for q in observed_runs(h, by_id[rid], limit=5))
+            )
+        except Exception as exc:
+            errors[rid] = f"factor-backfill: {type(exc).__name__}: {exc}"
+            missing_after += len(incomplete)
+    print("HISTORY_FACTOR_BACKFILL", "racesScanned=", factor_scanned,
+          "racesChanged=", factor_changed, "horsesMissingBefore=", missing_before,
+          "horsesStillMissing=", missing_after)
+
     missing_card = []
     missing_result = []
     missing_payout = []
@@ -218,6 +274,10 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
             "missing_result_count": len(missing_result),
             "missing_payout_count": len(missing_payout),
             "history_complete": bool(ids) and not missing_card and not missing_result and not missing_payout,
+            "factor_races_scanned": factor_scanned,
+            "factor_races_changed": factor_changed,
+            "factor_horses_missing_before": missing_before,
+            "factor_horses_missing_after": missing_after,
             "history_repaired_at": int(time.time()),
         },
     }
