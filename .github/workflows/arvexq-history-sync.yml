@@ -13,6 +13,7 @@ name: ARVEXQ History Repair
       - scripts/arvexq_history_repair.py
       - arvexq/databanks/netkeiba_career.py
       - arvexq/databanks/legacy_bridge.py
+      - app.py
       - arvexq/databanks/nar_official_csv.py
       - arvexq/infra/legacy_stores.py
       - arvexq/ingest/fallback_enrichment.py
