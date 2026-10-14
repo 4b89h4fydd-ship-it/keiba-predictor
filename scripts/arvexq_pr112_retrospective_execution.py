@@ -74,8 +74,11 @@ def alternative_scores(ranked, weight):
         prior = career.get("olderAbilityQuality")
         sample = int(career.get("olderAbilitySamples") or 0)
         shrink = weight * min(1., sample / 5.) if sample >= 3 and prior is not None else 0.
-        out[num] = (1. - shrink) * float(row["score"]) + shrink * (
-            0.5 + 0.65 * (float(prior) - 0.5))
+        if not shrink:
+            out[num] = float(row["score"])
+        else:
+            out[num] = (1. - shrink) * float(row["score"]) + shrink * (
+                0.5 + 0.65 * (float(prior) - 0.5))
     return out
 
 
