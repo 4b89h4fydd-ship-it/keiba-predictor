@@ -1,0 +1,39 @@
+name: ARVEXQ JRA Margin Source Probe
+"on":
+  push:
+    branches: [fix/jra-observed-margins]
+    paths: [.github/workflows/arvexq-jra-margin-probe.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
+      RACEDB_AUTO_UPDATE: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install -q -r requirements.txt
+      - name: Inspect existing official result discovery
+        run: |
+          python - <<'PY'
+          import app,json,re
+          from pathlib import Path
+          for label,url in [('index','https://www.jra.go.jp/JRADB/accessS.html'),('calendar','https://www.jra.go.jp/keiba/calendar2026/2026/9/0913.html')]:
+              html=app._jra_request(url,None,0)
+              Path(label+'.html').write_text(html)
+              print(label,'len',len(html),'cnames',re.findall(r'pw01[^\s\"\'<>]+',html)[:100])
+          PY
+          python scripts/arvexq_fetch_d1_bundle.py --api-base https://kraiz-api.4b89h4fydd.workers.dev --date 2026-10-12 --out before.json --report hydration.json --workers 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jra-margin-probe
+          path: |
+            *.html
+            before.json
+            hydration.json
