@@ -96,6 +96,64 @@ def _nar_store_adapters(namespace: dict[str, Any]):
     return history, connections
 
 
+def _nar_official_past_result_adapter(namespace: dict[str, Any]):
+    """Fetch one *prior* NAR race from official results, never the target race."""
+    getter = _pick(namespace, "_nar_official_result_fast")
+    if getter is None:
+        return None
+
+    def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
+        from arvexq.ingest.full_career import date_key
+        target = date_key(race.get("date"))
+        if not target:
+            return {}
+        known_name = str(horse.get("name") or "").strip()
+        known_runs = horse.get("allPastRuns") or horse.get("recentRaces") or []
+        for run in known_runs[: max(1, min(int(limit or 5), 5))]:
+            if not isinstance(run, dict):
+                continue
+            at = date_key(run.get("date") or run.get("raceDate"))
+            track = str(run.get("track") or "").strip()
+            no = int(run.get("raceNumber") or run.get("raceNo") or 0)
+            if not at or at >= target or not track or not 1 <= no <= 12:
+                continue
+            if all(run.get(k) not in (None, "", 0) for k in
+                   ("last3fSeconds", "timeBehindWinner")):
+                continue
+            previous = {"date": at, "track": track, "raceNumber": no,
+                        "horses": [{"name": known_name,
+                                    "horseNumber": run.get("horseNumber") or 0}]}
+            found = getter(previous)
+            if not isinstance(found, dict):
+                continue
+            finishers = found.get("finishers") or []
+            matched = [f for f in finishers if
+                       str(f.get("name") or "").strip() == known_name]
+            if len(matched) != 1:
+                continue
+            row = matched[0]
+            observed = dict(run)
+            observed["date"], observed["track"], observed["raceNumber"] = at, track, no
+            seconds = row.get("last3FSeconds")
+            if seconds is not None and 15 <= float(seconds) <= 90:
+                observed["last3f"] = float(seconds)
+                observed["last3fSeconds"] = float(seconds)
+            if row.get("marginText") not in (None, ""):
+                observed["marginText"] = row["marginText"]
+            winner = next((x.get("timeSeconds") for x in finishers
+                           if x.get("finish") == 1 and x.get("timeSeconds")), None)
+            own = row.get("timeSeconds")
+            if winner and own and 0 <= float(own) - float(winner) <= 30:
+                observed["timeBehindWinner"] = round(float(own) - float(winner), 2)
+            if any(key in observed and observed.get(key) not in (None, "")
+                   for key in ("last3fSeconds", "marginText", "timeBehindWinner")):
+                observed["source"] = "NAR official historical results"
+                return {"recentRaces": [observed], "allPastRuns": [observed]}
+        return {}
+
+    return fetch
+
+
 def _netkeiba_verified_career_adapter(namespace: dict[str, Any]):
     """One identity-verified heavy provider for complete past runs and starts."""
     import os
@@ -144,6 +202,14 @@ def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:
     )
     if nar.fetchers:
         registry.register(nar)
+
+    nar_results = _nar_official_past_result_adapter(namespace)
+    if nar_results is not None:
+        registry.register(DataSource(
+            name="nar_official_past_results", circuit="NAR", priority=12,
+            capabilities=SourceCapabilities(horse_history=True),
+            fetchers={"horse_history": nar_results},
+        ))
 
     netkeiba = build_netkeiba_source(
         odds=_pick(namespace, "_netkeiba_live_win_odds"),
