@@ -11,6 +11,7 @@ from pathlib import Path
 from scripts.arvexq_current_prediction_audit import api_json,finish_order,scrub_for_replay
 from arvexq.prediction.factor_model import rank_factor_model
 from arvexq.research.sequential_challengers import candidates
+from arvexq.research.margin_abcde_candidate import score as margin_abcde_score
 
 def evaluate():
     results=defaultdict(lambda: {"races":0,"top1":0,"top3":0,"logLossSum":0.})
@@ -39,6 +40,9 @@ def evaluate():
         variants={"current":{int(z["horse"]["horseNumber"]):z["score"] for z in rows}}
         for z in rows:
             n=int(z["horse"]["horseNumber"])
+            candidate = margin_abcde_score(z["horse"], detail)
+            if candidate is not None:
+                variants.setdefault("margin_abcde_352520155", {})[n] = candidate["score"]
             for key,value in candidates(z["horse"],detail).items():
                 variants.setdefault(key,{})[n]=value
         if "reliability" not in variants or set(variants["reliability"]) != set(variants["current"]):
