@@ -2065,3 +2065,41 @@ html body .smart-shell :is(
  .smart-race-content .pace-conclusion,
  .smart-race-content .pace-formation-card
 ){color:#303030!important;opacity:1!important;text-shadow:none!important}
+
+
+/* Readability follow-up: replace illegible cyan/light-blue type with deep brown.
+   Keep ARVEXQ dark badge, horse silks, and filled buttons unaffected. */
+html body .smart-shell.bet-detail-page-shell .arv-three-bet :is(
+ h1,h2,h3,h4,p,small,em,label,li,
+ .ai-bet-title,.ai-bet-sub,.ai-bet-score,.ai-bet-meta,
+ .arv-bet-quality,.arv-bet-quality b,.arv-bet-quality em,
+ .arv-bet-status,.arv-three-provisional,.arv-three-fixed,
+ .arv-three-reason,.arv-three-ev,.arv-three-skip,
+ .arv-three-budget,.arv-three-budget-hint,.arv-three-ticket-reason,
+ .arv-three-ticket-head,.arv-three-count,.arv-three-check,
+ .ai-bet-why,.bet-mark-guide
+){color:#28241e!important;opacity:1!important;text-shadow:none!important}
+html body .smart-shell.bet-detail-page-shell .arv-three-bet :is(
+ .ai-bet-title,.arv-three-section h3,.arv-three-budget strong,
+ .arv-three-ticket-head b,.arv-bet-quality b,.arv-three-check b
+){color:#774012!important;opacity:1!important}
+html body .smart-shell.bet-detail-page-shell .arv-three-bet :is(
+ .ai-bet-meta span,.ai-bet-meta small,.arv-three-section p,
+ .arv-three-ticket p,.arv-three-ticket strong,.arv-three-budget span
+){color:#28241e!important;opacity:1!important}
+html body .smart-shell .smart-race-content :is(
+ .pace-panel-direct,.pace-stage-menu-card,.pace-text-timeline,
+ .pace-conclusion,.pace-stage-explain,.pace-formation-card
+) :is(h1,h2,h3,h4,p,small,span,strong,b,em,li){
+ color:#28241e!important;opacity:1!important;text-shadow:none!important
+}
+html body .smart-shell .smart-race-content :is(
+ .pace-panel-direct,.pace-stage-menu-card,.pace-text-timeline,
+ .pace-conclusion,.pace-stage-explain,.pace-formation-card
+) :is(h2,h3,.pace-title,.pace-headline,.pace-primary,.pace-action){
+ color:#774012!important;opacity:1!important
+}
+html body .smart-shell .smart-race-content :is(
+ .pace-formation-tap-hint,.ai-stage-event,.ai-stage-event small,
+ .pace-stage-narrative,.pace-stage-menu-btn small
+){color:#28241e!important;opacity:1!important;text-shadow:none!important}
