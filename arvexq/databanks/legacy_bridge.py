@@ -109,7 +109,7 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             return {}
         known_name = str(horse.get("name") or "").strip()
         known_runs = horse.get("allPastRuns") or horse.get("recentRaces") or []
-        for run in known_runs[: max(1, min(int(limit or 5), 5))]:
+        for run in known_runs[:1]:
             if not isinstance(run, dict):
                 continue
             at = date_key(run.get("date") or run.get("raceDate"))
