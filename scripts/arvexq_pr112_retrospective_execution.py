@@ -124,7 +124,9 @@ def main():
         # with the last three dates held out from exploratory calibration.
         phase = "holdout" if str(race.get("date") or "") >= "2026-10-11" else "explore"
         collect(metrics[(circuit, phase, "baseline")], vals, outcome[0])
-        for weight in (0.1, 0.2, 0.3):
+        counts[circuit+"|"+phase+"|olderAvailable"] += sum(1 for row in ranked if (row.get("careerProfile") or {}).get("olderAbilitySamples",0)>=3)
+        counts[circuit+"|"+phase+"|runners"] += len(ranked)
+        for weight in (0.1, 0.2, 0.3, 0.4, 0.5, 0.65):
             alt = alternative_scores(ranked, weight)
             collect(metrics[(circuit, phase, f"olderAbility_{weight}")], alt, outcome[0])
         original = locked_ranking(race)
