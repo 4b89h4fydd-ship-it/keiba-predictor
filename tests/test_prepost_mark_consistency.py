@@ -14,6 +14,9 @@ class PrePostMarkConsistency(unittest.TestCase):
   self.assertEqual(result.returncode,0,result.stdout+result.stderr)
  def test_no_sectional_score_in_live_frontend(self):
   s=S.read_text(encoding='utf-8')
-  self.assertIn('score=(1-strength)*recentForm+strength*conditionForm',s)
+  self.assertIn('var jraStrength=Math.min(.12,.04*comparable.length)',s)
+  self.assertIn('var narStrength=Math.min(.25,.08*comparable.length)',s)
+  self.assertIn('score+=.06*Math.max(-.30,Math.min(.30,momentum))',s)
+  self.assertIn('score=.90*score+.10*',s)
   self.assertNotIn('score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)',s)
 if __name__=='__main__':unittest.main()
