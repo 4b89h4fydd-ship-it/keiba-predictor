@@ -43,7 +43,7 @@ jobs:
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
       ARVEXQ_HISTORY_DAYS: "365"
-      ARVEXQ_FACTOR_BACKFILL_OFFSET: ${{ github.run_number }}
+      ARVEXQ_FACTOR_BACKFILL_OFFSET: ${{ github.event_name == 'push' && '0' || github.run_number }}
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
       PIP_NO_INPUT: "1"
 
@@ -74,8 +74,8 @@ jobs:
             test "$TARGET" \< "$(TZ=Asia/Tokyo date +%F)"
             SLOT=$(( ( $(TZ=Asia/Tokyo date +%s) - $(TZ=Asia/Tokyo date -d "$TARGET" +%s) ) / 86400 ))
           elif [ "$GITHUB_EVENT_NAME" = "push" ]; then
-            # Start one older historical day immediately after this change.
-            SLOT=30
+            # Verify recent JRA collection first when parser code changes.
+            SLOT=3
             TARGET=$(TZ=Asia/Tokyo date -d "$SLOT days ago" +%F)
           elif [ $(( GITHUB_RUN_NUMBER % 2 )) -eq 0 ]; then
             # Preserve frequent repairs of the seven most recent days.
