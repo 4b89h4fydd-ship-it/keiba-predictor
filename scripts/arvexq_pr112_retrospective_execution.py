@@ -142,6 +142,20 @@ def main():
               "byCircuitAndMethod": {"|".join(key): summary(box)
                   for key, box in sorted(metrics.items())},
               "experimentPolicy": "Explore 2026-10-07 through 10, holdout 11 through 13; candidate is not a production approval.",
+              "featureCoverageShift": {
+                  circuit: {
+                      phase: {
+                          "available": counts[circuit+"|"+phase+"|olderAvailable"],
+                          "runners": counts[circuit+"|"+phase+"|runners"],
+                          "fraction": round(counts[circuit+"|"+phase+"|olderAvailable"] /
+                              max(1, counts[circuit+"|"+phase+"|runners"]), 6)}
+                      for phase in ("explore", "holdout")}
+                  for circuit in ("中央", "地方")},
+              "candidateDeploymentEligible": False,
+              "candidateDeploymentBlockers": [
+                  "unverified_preoff_features",
+                  "explore_to_holdout_older_career_coverage_shift",
+                  "no_head_to_head_sealed_baseline"],
               "authenticatedPreoffFeatureRaces": 0,
               "note": "NON-PREOFF retrospective replay; candidate uses stored mutable feature histories. Fixed temperature 5 for relative log loss/Brier only. Do not merge based on this."}
     print("PR112_RETROSPECTIVE_AUDIT=" + json.dumps(output, ensure_ascii=False))
