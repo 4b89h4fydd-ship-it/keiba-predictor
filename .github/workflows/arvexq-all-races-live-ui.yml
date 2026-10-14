@@ -41,14 +41,18 @@ jobs:
         run: |
           npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium webkit
-      - name: Verify local horse-only 1R-12R layout and darkening on iPhone
-        env:
-          ARVEXQ_BASE_URL: http://127.0.0.1:8790
+      - name: Build and serve local ARVEXQ for computed UI checks
         run: |
           set -euo pipefail
           python build_static.py
-          python -m http.server 8790 --directory dist >/tmp/arvexq-horse-ui.log 2>&1 &
+          nohup python -m http.server 8790 --directory dist >/tmp/arvexq-horse-ui.log 2>&1 &
           sleep 2
-          node scripts/arvexq_paper_palette_smoke.js
-          node scripts/arvexq_realtime_navigation_smoke.js
+      - name: Verify paper backgrounds and readable text on iPhone
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8790
+        run: node scripts/arvexq_paper_palette_smoke.js
+      - name: Verify local horse-only 1R-12R layout and darkening on iPhone
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8790
+        run: node scripts/arvexq_realtime_navigation_smoke.js
           echo "HORSE_ALL_VENUES_12R_LOCAL_VERIFIED"
