@@ -984,26 +984,26 @@ html body .smart-home-subpage .smart-ai-daily-grid>div em,
 html body .smart-home-subpage .arv-ai-metrics>div em{
  color:#445059!important;font-size:13px!important
 }
-/* Detail is already dark: make its surrounding canvas dark as well instead of
-   leaving an abrupt bright page with dark components. */
+/* Retired conflicting dark-detail fallback. Use the approved ink-on-paper
+   palette at the original high-specificity selectors instead of layering overrides. */
 html body .smart-shell:has(>.smart-main.smart-race-page),
 html body .smart-shell>.smart-main.smart-race-page{
- background:#20282d!important;color:#eef2f3!important;
+ background:#f6f2e8!important;color:#000!important;
 }
 html body .smart-shell:has(>.smart-main.smart-race-page)>.smart-topbar{
- background:#303c43!important;border-color:#64747c!important;color:#f7f9fa!important;
+ background:#f6f2e8!important;border-color:#d5c7b0!important;color:#000!important;
 }
-html body .smart-shell:has(>.smart-main.smart-race-page)>.smart-topbar .smart-head-copy strong{color:#f7f9fa!important}
+html body .smart-shell:has(>.smart-main.smart-race-page)>.smart-topbar .smart-head-copy strong{color:#000!important}
 html body .smart-race-page .smart-race-head,
 html body .smart-race-page .smart-race-header,
 html body .smart-race-page .smart-race-info,
 html body .smart-race-page .smart-race-summary{
- background:#303b41!important;color:#f3f6f6!important;border-color:#5b7078!important;
+ background:#f6f2e8!important;color:#000!important;border-color:#d5c7b0!important;
 }
 html body .smart-race-page .smart-race-head h1,
 html body .smart-race-page .smart-race-meta,
 html body .smart-race-page .smart-race-head .smart-race-result-side time{
- color:#f4f6f6!important;
+ color:#000!important;
 }
 html body .smart-race-page .smart-race-content{margin-top:6px!important}
 html body .smart-race-page .smart-race-head{margin-bottom:5px!important;padding:10px!important}
