@@ -156,7 +156,7 @@ jobs:
           fi
 
       - name: Audit D1 evidence before repair
-        run: python scripts/arvexq_d1_evidence_coverage.py --input history-bundle.json --output evidence-before.json
+        run: PYTHONPATH=. python scripts/arvexq_d1_evidence_coverage.py --input history-bundle.json --output evidence-before.json
 
       - name: Repair missing fields only
         run: |
@@ -268,9 +268,9 @@ jobs:
         if: always()
         run: |
           if [ -f history-verified.json ]; then
-            python scripts/arvexq_d1_evidence_coverage.py --input history-verified.json --output evidence-after.json
+            PYTHONPATH=. python scripts/arvexq_d1_evidence_coverage.py --input history-verified.json --output evidence-after.json
           elif [ -f history-bundle.json ]; then
-            python scripts/arvexq_d1_evidence_coverage.py --input history-bundle.json --output evidence-after.json
+            PYTHONPATH=. python scripts/arvexq_d1_evidence_coverage.py --input history-bundle.json --output evidence-after.json
           fi
 
       - name: Archive D1 evidence coverage
