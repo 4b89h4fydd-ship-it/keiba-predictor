@@ -69,6 +69,21 @@ class VerifiedCareerTests(unittest.TestCase):
         horse = {"name":NAME,**actual}
         self.assertTrue(audit_career(horse, RACE["date"],200,[nk.SOURCE])["complete"])
 
+    def test_verified_listing_keeps_observed_sectional_and_margin(self):
+        heads = HEADERS + ["上り", "着差"]
+        cells = ["2026/08/01", "1大井2", "C2", "12", "2", "テスト",
+                 "55", "ダ1200", "良", "1:15.5", "3-4-4-3",
+                 "480(+0)", "37.8", "クビ"]
+        html = ("<table><tr>" + "".join("<th>"+v+"</th>" for v in heads) +
+                "</tr><tr>" + "".join("<td>"+v+"</td>" for v in cells) +
+                "</tr></table>")
+        rows = nk.parse_verified_runs(html, RACE["date"], ["2026-08-01"])
+        self.assertEqual(len(rows), 1)
+        self.assertAlmostEqual(rows[0]["last3fSeconds"], 37.8)
+        self.assertEqual(rows[0]["marginText"], "クビ")
+        self.assertNotIn("last3fRank", rows[0])
+        self.assertNotIn("marginSeconds", rows[0])
+
     def test_missing_page_row_never_proves_entire_career(self):
         self.assertEqual(nk.fetch_verified_career(site(listing(15),16),
                          {"name":NAME},RACE,200),{})
