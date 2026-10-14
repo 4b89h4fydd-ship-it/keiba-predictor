@@ -177,7 +177,10 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
     from arvexq.prediction.past_performance import observed_runs
     factor_scanned = factor_changed = 0
     missing_before = missing_after = 0
+    max_factor_races = max(1, int(os.getenv("ARVEXQ_FACTOR_BACKFILL_RACES", "2")))
     for rid in ids:
+        if factor_scanned >= max_factor_races:
+            break
         base = by_id.get(rid)
         if not isinstance(base, dict) or not base.get("horses"):
             continue
