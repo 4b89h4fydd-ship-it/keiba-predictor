@@ -42,7 +42,7 @@ function marks(p){return Array.from(p.rows).filter(z=>z.predMark==='◎').map(z=
 function score(p,no){return Number(p.rows.find(z=>Number(z.horse.horseNumber)===no).threeFactorScore)}
 const first=predict(race);
 assert.deepEqual(marks(first),[1],'initial single ◎');
-assert.equal(first.engineVersion,'arvexq-form-condition-no-sectional-proposal-v1');
+assert.equal(first.engineVersion,'arvexq-nar-track-condition-stage-v1');
 const noDataChange=predict(race);
 assert.equal(noDataChange,first,'no input change should reuse the cached live prediction');
 race.horses[0].winOdds=91;
