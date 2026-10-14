@@ -49,6 +49,18 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(raw["sample"],5)
         self.assertEqual(analyze_past_performance(horse,RACE)["datedRuns"],5)
         self.assertEqual(len(src["recentRaces"]),5)
+    async def test_invalid_visible_five_can_recover_scoreable_archived_runs(self):
+        from arvexq.ingest.career_transport import pack_horse
+        dated = [run(9, day, finish=finish) for day, finish in
+                 [(1,1),(5,2),(10,3),(15,4),(20,5),(25,6)]]
+        original = {"allPastRuns":dated,"recentRaces":dated[-5:]}
+        stored = pack_horse(original,"2026-10-10")
+        stored["recentRaces"] = [dict(x,finish=None) for x in stored["recentRaces"][:2]]
+        stored["allPastRuns"] = stored["recentRaces"]
+        recovered = observed_runs(stored,RACE,limit=5)
+        self.assertEqual(len(recovered),5)
+        self.assertTrue(all(x["finish"]>=1 for x in recovered))
+
     async def test_no_dated_history_cannot_be_fabricated(self):
         source={"horseNumber":1,"name":"sample","recentRaces":[{"finish":1,"fieldSize":12}]}
         reg=DataBankRegistry()
