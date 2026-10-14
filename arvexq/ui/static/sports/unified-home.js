@@ -13,7 +13,7 @@ function normalizedRace(_mode,r,day){
  const timestamp=clock&&/^\d{4}-\d{2}-\d{2}$/.test(String(day||''))?Date.parse(day+'T'+clock[1].padStart(2,'0')+':'+clock[2]+':00+09:00'):NaN;
  return {id:String(r.id),circuit:r.circuit,venue:String(r.track),number,timestamp,
    cancelled:/cancelled|canceled|abandoned|中止|取止|取消|不成立|除外/i.test(status),
-   confirmed:/confirmed|final|settled|finished|completed|確定|速報|終了/i.test(status),
+   confirmed:/confirmed|final|settled|finished|completed|確定/i.test(status),
    running:/running|started|発走中|進行中/i.test(status)};
 }
 function raceStatus(mode,r,day,now=new Date()){const x=normalizedRace(mode,r,day);if(!x)return 'unknown';if(x.cancelled)return 'cancelled';if(x.confirmed)return 'finished';if(x.running)return 'running';if(!Number.isFinite(x.timestamp))return 'unknown';const delta=x.timestamp-now.getTime();return delta<=-300000?'elapsed':delta<=0?'running':delta<=600000?'soon':'upcoming'}
@@ -34,7 +34,13 @@ function syncLiveUI(mode,rows,day,scope,now=new Date()){
       el.classList.toggle(cls,cls===v.status||cls==='next'&&v.next);
   }
   el.setAttribute('data-race-state',v.status);
-  const label=el.querySelector('.arv-race-state');if(label)label.textContent=labelFor(v.status);
+  let label=el.querySelector('.arv-race-state');
+  if(!label){
+   label=root.document.createElement('span');label.className='arv-race-state arv-race-status-label';
+   label.setAttribute('aria-live','off');
+   el.appendChild(label);
+  }
+  label.textContent=labelFor(v.status);
  }
 }
 root.ARVEXQUnifiedHome=Object.freeze({hero,dateBar,buttons,liveModel,liveSignature,raceStatus,labelFor,syncLiveUI});
