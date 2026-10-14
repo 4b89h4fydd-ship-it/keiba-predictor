@@ -2131,3 +2131,50 @@ html body .smart-shell.smart-home :is(.smart-topbar,.arv-unified-body,.smart-hom
  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
  filter:none!important;mix-blend-mode:normal!important;
 }
+
+
+/* 2026-10-14 race status contrast regression: scope after the global paper reset.
+   Status is data-driven; never color a race as confirmed before result confirmation. */
+html body .smart-shell.smart-home .arv-all-race[data-race-state="soon"],
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state="soon"],
+html body .smart-shell .arv-favorite-home-open[data-race-state="soon"]{
+ background:#f8cb62!important;background-image:none!important;border:2px solid #9a6400!important;
+ color:#241900!important;opacity:1!important;filter:none!important
+}
+html body .smart-shell.smart-home .arv-all-race[data-race-state="running"],
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state="running"],
+html body .smart-shell .arv-favorite-home-open[data-race-state="running"]{
+ background:#ed8e8e!important;background-image:none!important;border:2px solid #ab2727!important;
+ color:#310909!important;opacity:1!important;filter:none!important
+}
+html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"],
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state="elapsed"],
+html body .smart-shell .arv-favorite-home-open[data-race-state="elapsed"]{
+ background:#e2ddd3!important;background-image:none!important;border:2px solid #83796b!important;
+ color:#28241f!important;opacity:1!important;filter:none!important
+}
+html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"],
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state="finished"],
+html body .smart-shell .arv-favorite-home-open[data-race-state="finished"]{
+ background:#464f56!important;background-image:none!important;border:2px solid #27343b!important;
+ color:#fff!important;opacity:1!important;filter:none!important
+}
+html body .smart-shell :is(.arv-all-race,.smart-race-row,.arv-favorite-home-open)[data-race-state="finished"] :is(strong,small,b,time,span,.smart-race-time,.arv-race-state),
+html body .smart-shell :is(.arv-all-race,.smart-race-row,.arv-favorite-home-open)[data-race-state="finished"]::after{
+ color:#fff!important;opacity:1!important;text-shadow:none!important
+}
+html body .smart-shell :is(.arv-all-race,.smart-race-row,.arv-favorite-home-open)[data-race-state="soon"] :is(strong,small,b,time,span,.smart-race-time,.arv-race-state),
+html body .smart-shell :is(.arv-all-race,.smart-race-row,.arv-favorite-home-open)[data-race-state="running"] :is(strong,small,b,time,span,.smart-race-time,.arv-race-state),
+html body .smart-shell :is(.arv-all-race,.smart-race-row,.arv-favorite-home-open)[data-race-state="elapsed"] :is(strong,small,b,time,span,.smart-race-time,.arv-race-state){
+ color:#231e19!important;opacity:1!important;text-shadow:none!important
+}
+/* Differentiate the race result panel from the surrounding paper card. */
+html body .smart-shell .smart-race-page .smart-race-result-side,
+html body .smart-shell .smart-race-page .smart-inline-result{
+ background:#e1e7e8!important;background-image:none!important;
+ border:2px solid #637984!important;color:#17272e!important;opacity:1!important;
+}
+html body .smart-shell .smart-race-page .smart-race-result-side :is(time,b,strong,span,small),
+html body .smart-shell .smart-race-page .smart-inline-result :is(b,strong,span,small){
+ color:#17272e!important;opacity:1!important;text-shadow:none!important
+}
