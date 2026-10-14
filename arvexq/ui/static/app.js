@@ -1039,7 +1039,8 @@ function arvexqFactorValues(z,r){
     }).map(function(x){return x.quality});
     if(comparable.length){
       conditionForm=comparable.reduce(function(a,v){return a+v},0)/comparable.length;
-      var strength=Math.min(.25,.08*comparable.length);
+      var circuit=String(r&&((r.circuit||r.raceCircuit)||'')).toUpperCase(),isJra=circuit==='中央'||circuit==='JRA'||circuit==='CENTRAL';
+      var strength=Math.min(isJra?.12:.25,(isJra?.04:.08)*comparable.length);
       score=(1-strength)*recentForm+strength*conditionForm;
     }else score=recentForm;
   }
