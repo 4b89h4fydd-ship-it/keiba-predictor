@@ -28,6 +28,13 @@ assert.equal(run.status,0,'preoff capture failed: '+String(run.stderr||run.stdou
 const out=JSON.parse(run.stdout);
 assert.equal(out.engineVersion,'arvexq-nar-track-condition-stage-v1');
 assert.equal(out.honmei.horseNumber,1);
+const jraRace={...race,id:'jra-2099-01-10-東京-01',circuit:'中央',track:'東京'};
+const jraRun=child.spawnSync(process.execPath,['scripts/arvexq_capture_prerace_bet.js'],
+  {input:JSON.stringify(jraRace),encoding:'utf8',timeout:30000});
+assert.equal(jraRun.status,0,'JRA preoff capture failed: '+String(jraRun.stderr||jraRun.stdout).slice(0,1200));
+const jraOut=JSON.parse(jraRun.stdout);
+assert.equal(jraOut.engineVersion,'arvexq-jra-momentum-condition-stage-v1');
+assert.notEqual(jraOut.engineVersion,out.engineVersion,'JRA and NAR engine versions cannot alias');
 assert.equal(out.decision,'購入候補');
 assert(out.items.length>=1,'new unified method must produce purchasable tickets');
 assert(out.items.every(x=>x.level==='本線'||x.level==='保険'||x.level==='3連単チャレンジ'));
