@@ -1961,3 +1961,63 @@ html body .smart-shell .fixed-pick-box-body{
 }
 html body .smart-shell .fixed-pick-row :is(small,time,em),
 html body .smart-shell .smart-fixed-picks-head small{color:#000!important;opacity:1!important}
+
+/* Exact rendered DOM palette repair v6: race-nav-v230, sibling header, pace and betting */
+html body .smart-shell>header.smart-topbar,
+html body .smart-shell>header.smart-race-topbar,
+html body .smart-shell>header.pace-stage-topbar,
+html body .smart-shell>header.horse-detail-topbar,
+html body .smart-shell>header.arv-dated-subbar,
+html body .smart-shell>header.smart-section-topbar{
+ background:#f6f2e8!important;background-image:none!important;color:#000!important;
+ border:0!important;border-bottom:1px solid #d5c7b0!important;
+ box-shadow:none!important;
+}
+html body .smart-shell>header.smart-topbar :is(strong,small,span,b),
+html body .smart-shell>header.smart-race-topbar :is(strong,small,span,b),
+html body .smart-shell>header.pace-stage-topbar :is(strong,small,span,b),
+html body .smart-shell>header.horse-detail-topbar :is(strong,small,span,b){
+ color:#000!important;text-shadow:none!important;opacity:1!important;
+}
+html body .smart-race-page .race-nav-v230,
+html body .smart-race-page .race-nav-v230-row,
+html body .smart-race-page .race-nav-v230-top{
+ background:#f6f2e8!important;background-image:none!important;
+ border-color:#d5c7b0!important;box-shadow:none!important;
+}
+html body .smart-race-page .race-nav-v230-btn{
+ background:#fffaf0!important;background-image:none!important;
+ border-color:#cbb99e!important;color:#000!important;box-shadow:none!important;
+}
+html body .smart-race-page .race-nav-v230-btn.active{
+ background:#f2d68c!important;border-color:#bfa166!important;color:#000!important;
+}
+html body .smart-race-page .race-nav-v230-btn *,
+html body .smart-race-page .race-nav-v230-label,
+html body .smart-race-page .race-nav-v230-caret{color:#000!important;text-shadow:none!important}
+html body .smart-shell .smart-fixed-picks-head :is(b,small,em,span),
+html body .smart-shell .fixed-pick-row :is(b,small,time,em,span),
+html body .smart-shell .arv-direct-picks :is(b,small,time,em,span),
+html body .smart-shell .smart-fixed-picks-head,
+html body .smart-shell .fixed-pick-box-body{color:#000!important;opacity:1!important}
+html body .smart-shell.pace-stage-shell .pace-stage-explain,
+html body .smart-shell.pace-stage-shell .pace-formation-card,
+html body .smart-shell.pace-stage-shell .pace-formation-track,
+html body .smart-shell.pace-stage-shell .pace-stage-jump,
+html body .smart-shell.pace-stage-shell .pace-stage-narrative,
+html body .smart-shell.pace-stage-shell .pace-stage-menu{
+ background:#f6f2e8!important;background-image:none!important;
+ border-color:#d5c7b0!important;box-shadow:none!important;color:#000!important;
+}
+html body .smart-shell.pace-stage-shell .pace-stage-explain :is(p,span,small,b,strong,h2),
+html body .smart-shell.pace-stage-shell .pace-formation-card :is(p,span,small,b,strong,h2){
+ color:#000!important;opacity:1!important;
+}
+html body .smart-shell.horse-detail-page-shell .horse-info-cell,
+html body .smart-shell.horse-detail-page-shell .runner-overall-head{
+ background:#fffaf0!important;color:#000!important;border-color:#d5c7b0!important;
+}
+html body .smart-shell.horse-detail-page-shell .horse-info-cell :is(small,b,span),
+html body .smart-shell.horse-detail-page-shell .runner-overall-head :is(small,b,span){
+ color:#000!important;opacity:1!important;
+}
