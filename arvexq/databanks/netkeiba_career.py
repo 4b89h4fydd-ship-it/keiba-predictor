@@ -235,16 +235,14 @@ def fetch_verified_career(get: Callable[[str], str], horse: dict[str, Any],
             continue
         # The birth year or an observed prior start must independently verify
         # this exact-name candidate before partial performance is accepted.
-        if not (born is not None or known):
-            continue
         runs = parse_verified_runs(listing_html, cutoff, dates, limit)
-        if not runs:
-            continue
         try:
             total = parse_total(get(f"{BASE}/horse/{cand['id']}/"))
         except Exception:
             total = None
         stats = build_stats(listing, total, cutoff, cand["id"])
+        if stats is None and (not runs or not (born is not None or known)):
+            continue
         matches.append((stats, runs))
     if len(matches) != 1:
         return {}
