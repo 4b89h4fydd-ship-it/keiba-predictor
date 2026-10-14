@@ -696,7 +696,7 @@ def _jra_parse_past_cell(cell, cutoff:str) -> dict | None:
     # JRA past-run card includes "3F 36.2 対戦馬名(0.3)": this is
     # winning-time difference, not the current target race result.
     # Do not treat arbitrary parentheses (popularity, bodyweight) as margins.
-    margin_match=re.search(r"3F\s*\d{2}(?:\.\d)?\s+[^()]+?\(([+-]?\d+(?:\.\d+)?)\)",txt)
+    margin_match=re.search(r"3F\s*\d{2}(?:\.\d)?\s+[^()]+?\s*\(([+-]?\d+(?:\.\d+)?)\)",txt)
     margin=float(margin_match.group(1)) if margin_match else None
     if margin is not None and finish==1:margin=0.0
     if margin is not None and margin<0:margin=None
