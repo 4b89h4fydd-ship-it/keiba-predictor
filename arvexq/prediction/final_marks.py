@@ -119,6 +119,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         return detail
     detail["factorRanking"] = []
     leader = ranked[0]
+    active_model_version = leader["modelVersion"]
     gap = leader["score"] - ranked[1]["score"] if len(ranked) > 1 else 0.
     complete = leader["primaryPillarCoverage"] == 2
     grade = ("A" if complete and leader["score"] >= .80 and gap >= .04 and leader["sample"] >= 3
@@ -149,7 +150,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             "evidenceFamilyCounts": row["evidenceFamilyCounts"],
             "primaryPillarCoverage": row["primaryPillarCoverage"],
             "rawMetrics": row["raw"], "sample": row["sample"],
-            "modelVersion": MODEL_VERSION,
+            "modelVersion": row["modelVersion"],
         }
         e["coreAbilityRank"] = row["rank"]
         e["coreAbilityScore"] = row["dominanceScore"]
@@ -175,6 +176,12 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     for row in ranked:
         row["horse"]["integratedEvaluation"]["rank"] = row["rank"]
     detail["markEngineVersion"] = MARK_ENGINE_VERSION
-    detail["predictionModelVersion"] = MODEL_VERSION
-    detail["markMethod"] = "recent five-run form + observed condition adjustment; staged, not calibrated"
+    detail["predictionModelVersion"] = active_model_version
+    detail["markMethod"] = (
+        "JRA: recent five-run momentum + conservative surface/distance match; experimental"
+        if str(detail.get("circuit") or "").upper() in ("中央", "JRA", "CENTRAL")
+        else "NAR: same-track performance + surface/distance match; experimental"
+        if str(detail.get("circuit") or "").upper() in ("地方", "NAR", "LOCAL")
+        else "unspecified-circuit: recent five-run evidence only; experimental"
+    )
     return detail
