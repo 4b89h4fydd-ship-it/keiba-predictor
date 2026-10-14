@@ -14,6 +14,7 @@ from arvexq.research.sequential_challengers import candidates
 
 def evaluate():
     results=defaultdict(lambda: {"races":0,"top1":0,"top3":0,"logLossSum":0.})
+    by_circuit=defaultdict(lambda: defaultdict(lambda: {"races":0,"top1":0,"top3":0,"logLossSum":0.}))
     coverage=defaultdict(int)
     outcomes={}
     for offset in range(7):
@@ -44,6 +45,7 @@ def evaluate():
         if "reliability" not in variants or set(variants["reliability"]) != set(variants["current"]):
             coverage["common-set-missing"]+=1
             continue
+        circuit = "中央" if str(detail.get("circuit") or "").upper() in ("中央", "JRA") else ("地方" if str(detail.get("circuit") or "").upper() in ("地方", "NAR") else "不明")
         for name,values in variants.items():
             if set(values)!=set(variants["current"]) or order[0] not in values:
                 coverage[name]+=1
@@ -56,12 +58,20 @@ def evaluate():
             m["races"]+=1;m["top1"]+=int(ranked[0]==order[0])
             m["top3"]+=int(order[0] in ranked[:3])
             m["logLossSum"]+=-math.log(max(p,1e-15))
+            c=by_circuit[circuit][name]
+            c["races"]+=1
+            c["top1"]+=int(ranked[0]==order[0])
+            c["top3"]+=int(order[0] in ranked[:3])
+            c["logLossSum"]+=-math.log(max(p,1e-15))
     return {"version":"research-retrospective-v2","inputEnvelopes":envelopes,
             "matchedResultRaces":len(outcomes),
             "results":{k:{**v,"top1Rate":v["top1"]/v["races"],
                 "top3Rate":v["top3"]/v["races"],
                 "meanLogLoss":v["logLossSum"]/v["races"]}
                 for k,v in results.items() if v["races"]},
+            "byCircuit":{circuit:{name:{**v,"top1Rate":v["top1"]/v["races"],
+                "top3Rate":v["top3"]/v["races"],"meanLogLoss":v["logLossSum"]/v["races"]}
+                for name,v in group.items() if v["races"]} for circuit,group in by_circuit.items()},
             "missingEvidenceByVariant":dict(coverage),
             "warning":"Retrospective snapshot inputs may contain post-race changes; not exact pre-off evidence. Different candidate coverage and fixed uncalibrated temperature. Not promotion proof."}
 
