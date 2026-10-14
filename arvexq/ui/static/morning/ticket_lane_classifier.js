@@ -14,7 +14,7 @@ function rankedRole(x,which){
 function hitCalibration(kind,points,circuit){
  const cal=global.ARVEXQTicketHitCalibration;
  if(!cal||cal.version!=='arvexq-empirical-ticket-hit-v1'||
-    !/^20\\d{2}-\\d{2}-\\d{2}$/.test(String(cal.asOfDate||'')))return null;
+    !/^20\d{2}-\d{2}-\d{2}$/.test(String(cal.asOfDate||'')))return null;
  const expected=circuit==='中央'?'arvexq-jra-momentum-condition-stage-v1':
    circuit==='地方'?'arvexq-nar-track-condition-stage-v1':null;
  const group=cal.byCircuit&&cal.byCircuit[circuit];
