@@ -1,23 +1,22 @@
 """One authoritative pre-off horse scoring model.
 
 TRUE RUN 45%: recency-weighted actual finish quality over five observed starts.
-PURE 35%: peak and median finish quality over the same history.
-SECTIONAL 20%: actual last-600-metre finishing rank (or published percentile).
+PURE 35%: independent observed opponent-strength evidence (not finish quality).
+SECTIONAL: excluded; reliable coverage not established.
 Only observed dated pre-off runs are used. The scores are NOT probabilities.
 No old composite grades, four-pillar votes, or historical mark predictions enter.
 """
 from __future__ import annotations
 
-from statistics import median
 from typing import Any, Iterable
 
 from arvexq.core.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import analyze_past_performance, observed_runs
 from arvexq.prediction.career_profile import profile_career
 
-MODEL_VERSION = "arvexq-true-run-pure-sectional-45-35-20-v2"
-PRIMARY_PILLARS = ("trueRun", "pure", "sectional")
-SCORE_WEIGHTS = {"trueRun": .45, "pure": .35, "sectional": .20}
+MODEL_VERSION = "arvexq-true-run-pure-56-44-v3"
+PRIMARY_PILLARS = ("trueRun", "pure")
+SCORE_WEIGHTS = {"trueRun": .56, "pure": .44}
 
 
 def _number(v: Any) -> float | None:
@@ -34,32 +33,26 @@ def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> di
     """Collect the three measured axes from five earlier races, not prior AI scores."""
     runs = observed_runs(horse, race, limit=5)
     qualities: list[float] = []
-    closing: list[float] = []
     for run in runs:
         finish = _number(run.get("finish"))
         field = _number(run.get("fieldSize"))
         if finish is None or field is None or field <= 1 or not (1 <= finish <= field):
             continue
         qualities.append((field - finish) / (field - 1))
-        closing_rank = _number(run.get("last3fRank") or run.get("last600Rank"))
-        if closing_rank is not None and 1 <= closing_rank <= field:
-            closing.append((field - closing_rank) / (field - 1))
-        else:
-            percentile = _number(run.get("last3fPercentile"))
-            if percentile is not None and 0 <= percentile <= 1:
-                closing.append(percentile)
 
     weighted_form = None
-    peak_ability = None
+    independent_ability = []
+    for run in runs:
+        level = _number(run.get("opponentLevel"))
+        if level is not None and 0 <= level <= 1:
+            independent_ability.append(level)
+    peak_ability = sum(independent_ability) / len(independent_ability) if independent_ability else None
     if qualities:
         weights = [5 - i for i in range(len(qualities))]
         weighted_form = sum(w * q for w, q in zip(weights, qualities)) / sum(weights)
-        peak_ability = (max(qualities) + median(qualities)) / 2
-    sectional = sum(closing) / len(closing) if closing else None
     return {
         "trueRun": weighted_form,
         "pure": peak_ability,
-        "sectional": sectional,
         "sample": float(len(qualities)),
     }
 
