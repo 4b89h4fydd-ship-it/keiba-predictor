@@ -150,6 +150,7 @@ def parse_verified_runs(html: str, cutoff: str, start_dates: list[str],
         i_time, i_corner = col("タイム"), col("通過")
         i_weight, i_jockey = col("斤量"), col("騎手")
         i_body, i_cond = col("馬体重"), col("馬場")
+        i_last3f, i_margin = col("上り", "上がり"), col("着差")
         rows = []
         for tr in trs[1:]:
             vals = [c.get_text(" ", strip=True) for c in tr.find_all(["th", "td"])]
@@ -193,6 +194,17 @@ def parse_verified_runs(html: str, cutoff: str, start_dates: list[str],
             body = re.search(r"^\d{3,4}", value(i_body))
             if body: run["bodyWeight"] = int(body.group())
             if value(i_cond): run["condition"] = value(i_cond)
+            # Preserve published finishing 3F time; never invent a rank.
+            last3f_text = value(i_last3f).replace("．", ".").strip()
+            if re.fullmatch(r"\d{1,2}\.\d{1,2}", last3f_text):
+                last3f = float(last3f_text)
+                if 15.0 <= last3f <= 90.0:
+                    run["last3f"] = last3f
+                    run["last3fSeconds"] = last3f
+            # 着差 may denote lengths (ハナ/クビ/1/2), not seconds.
+            margin_text = value(i_margin)
+            if margin_text and margin_text not in ("-", "--", "－"):
+                run["marginText"] = margin_text
             rows.append(run)
         return sorted(rows, key=lambda r: r["date"], reverse=True)[:max(1, int(limit))]
     return []
