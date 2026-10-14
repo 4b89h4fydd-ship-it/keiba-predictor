@@ -16,6 +16,47 @@ from arvexq.prediction.past_performance import observed_runs
 from arvexq.research.mineta_position_proxy import position_proxy
 from arvexq.research.mineta_field_proxy import score_race as mineta_field_scores
 
+def summarize_five(five):
+    chosen=five[:5]
+    labels={
+        "mineta_field_proxy":"Mineta observable-position proxy only",
+        "mineta_current_60_40":"Mineta 60% + current 40%",
+        "mineta_margin_60_40":"Mineta 60% + margin-focused 40%",
+        "mineta_current_margin_60_20_20":"Mineta 60% + current 20% + margin-focused 20%",
+    }
+    comparison={}
+    for name,label in labels.items():
+        comparable=[]
+        for race in chosen:
+            forecast=(race.get("mixedForecasts") or {}).get(name) or {}
+            if isinstance(forecast.get("winnerRank"),int) and forecast.get("winnerRank")>0:
+                comparable.append((race,forecast))
+        hits=sum(x["winnerRank"]==1 for _,x in comparable)
+        top3=sum(x["winnerRank"]<=3 for _,x in comparable)
+        comparison[name]={
+            "label":label,"eligible":len(comparable),"fiveRaceCount":len(chosen),
+            "top1Hits":hits,"winnerTop3Hits":top3,
+            "top1Rate":round(hits/len(comparable),6) if comparable else None,
+            "winnerTop3Rate":round(top3/len(comparable),6) if comparable else None,
+            "completeSameFive":len(comparable)==5 and len(chosen)==5,
+            "byCircuit":{c:{
+                "eligible":sum(r["circuit"]==c for r,_ in comparable),
+                "top1Hits":sum(r["circuit"]==c and x["winnerRank"]==1 for r,x in comparable)
+            } for c in ("中央","地方")},
+        }
+    shared=[r for r in chosen if all(
+        (r.get("mixedForecasts") or {}).get(name,{}).get("winnerRank") is not None
+        for name in labels)]
+    same_five={
+        "races":len(chosen),"fullyComparableRaces":len(shared),
+        "allThreeCombinationsComparableOnFive":len(chosen)==5 and len(shared)==5,
+        "labels":labels,
+        "missingMethodCount":{k:5-v["eligible"] for k,v in comparison.items()},
+        "warning":"No evidence-free margins or positions are invented; unavailable means untested, not a loss.",
+    }
+    return comparison, same_five
+
+
 def evaluate():
     results=defaultdict(lambda: {"races":0,"top1":0,"top3":0,"logLossSum":0.})
     coverage=defaultdict(int)
@@ -74,7 +115,7 @@ def evaluate():
         abcde_scores = variants.get("margin_abcde_352520155", {})
         position_scores = variants.get("mineta_position_proxy", {})
         position_order = sorted(position_scores, key=lambda n: (-position_scores[n],n)) if set(position_scores)==set(variants["current"]) else []
-        mixed_keys=("mineta_current_60_40","mineta_margin_60_40","mineta_current_margin_60_20_20")
+        mixed_keys=("mineta_field_proxy","mineta_current_60_40","mineta_margin_60_40","mineta_current_margin_60_20_20")
         mixed_order={key:sorted(variants[key],key=lambda n:(-variants[key][n],n))
                      for key in mixed_keys if key in variants}
         raw_field_counts={k:0 for k in ("margin","marginSeconds","timeBehindWinner","time","opponentLevel")}
@@ -128,7 +169,10 @@ def evaluate():
     if len(five)<5:
         used={r["raceId"] for r in five}
         five.extend(r for r in pilot if r["raceId"] not in used)
-    return {"version":"research-retrospective-v2","fiveRacePilot":five[:5],
+    chosen=five[:5]
+    comparison,same_five=summarize_five(chosen)
+    return {"version":"research-retrospective-v3","fiveRacePilot":chosen,
+            "fiveRaceComparison":comparison,"sameFiveCoverage":same_five,
             "pilotSelection":"up to 2 JRA and 3 NAR from dated snapshots with observed winners","inputEnvelopes":envelopes,
             "matchedResultRaces":len(outcomes),
             "results":{k:{**v,"top1Rate":v["top1"]/v["races"],
