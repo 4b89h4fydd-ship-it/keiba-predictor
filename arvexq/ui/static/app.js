@@ -1131,7 +1131,7 @@ function assignPredictionMarks(rows,r){
     if(ev){ev.score=z.overallScore;ev.grade=z.overallGrade;ev.modelVersion=f.modelVersion;}
     if(z.evaluation){z.evaluation.score=z.overallScore;z.evaluation.grade=z.overallGrade;
       z.evaluation.modelScore=z.overallScore;z.evaluation.predictionModel=f.modelVersion;
-      z.evaluation.mode='近走5走＋同距離・馬場適性（実測のみ）';}
+      z.evaluation.mode=arvexqRacePolicy(r).id.indexOf('arvexq-jra-')===0?'中央・近走の変化＋条件適性':'地方・同一競馬場の実績＋条件適性';}
   });
   if(rows.every(function(z){return z.threeFactorCoverage===0})){
     rows.forEach(function(z){z.predMark='';z.predRank=999;z.hasFrozenEvaluation=false});
@@ -1206,7 +1206,7 @@ function assignPredictionMarks(rows,r){
     z.podiumAxisEligible=z===axisRow&&grade==='A';
     z.singleWinSuitable=idx===0&&grade==='A';z.singleWinStrength=n(z.threeFactorScore);
     z.singleWinReason=idx===0?'近走・条件の実績から1着と3着内を別判定':'';
-    z.attentionReason=idx===0?'近走5走＋同距離・馬場の実績｜信頼度'+grade:
+    z.attentionReason=idx===0?(arvexqRacePolicy(r).id.indexOf('arvexq-jra-')===0?'中央：近走の変化＋条件':'地方：同一競馬場＋条件')+'｜信頼度'+grade:
       (idx<labels.length?'総合 '+Math.round(z.threeFactorScore*100)+'/100':
        (z===starCandidate?'同距離・馬場の観測実績により選出':''));
     var e=z.horse&&z.horse.integratedEvaluation;
@@ -1250,7 +1250,7 @@ function integratedGrades(r,rows){
       predictionModel:arvexqRacePolicy(r).id,
       confidence:coverage>=.72?'高':(coverage>=.45?'中':'低'),
       tier:coverage>=1?'2指標実測評価':(coverage>=.5?'1指標実測評価':'実測データ不足'),
-      mode:'近走5走＋同距離・馬場適性',
+      mode:arvexqRacePolicy(r).id.indexOf('arvexq-jra-')===0?'中央・近走の変化＋条件適性':'地方・同一競馬場の実績＋条件適性',
       winProbability:n(x.winProbability),
       p1Probability:n(x.p1Probability),
       p2Probability:n(x.p2Probability),
