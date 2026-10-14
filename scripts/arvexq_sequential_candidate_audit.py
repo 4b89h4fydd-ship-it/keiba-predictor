@@ -13,6 +13,7 @@ from arvexq.prediction.factor_model import rank_factor_model
 from arvexq.research.sequential_challengers import candidates
 from arvexq.research.margin_abcde_candidate import score as margin_abcde_score, num
 from arvexq.prediction.past_performance import observed_runs
+from arvexq.research.mineta_position_proxy import position_proxy
 
 def evaluate():
     results=defaultdict(lambda: {"races":0,"top1":0,"top3":0,"logLossSum":0.})
@@ -51,6 +52,9 @@ def evaluate():
             if any(num(x.get("opponentLevel")) is not None for x in runs):ev["B_opponentObserved"]+=1
             if any(x.get("track")==detail.get("track") and x.get("surface") and x.get("surface")==detail.get("surface") and num(x.get("distance")) is not None and num(detail.get("distance")) is not None and abs(num(x.get("distance"))-num(detail.get("distance")))<=150 for x in runs):ev["C_courseObserved"]+=1
             if any(isinstance(x.get("cornerPositions"),list) and len(x.get("cornerPositions"))>=2 for x in runs):ev["D_cornerObserved"]+=1
+            position = position_proxy(z["horse"], detail)
+            if position is not None:
+                variants.setdefault("mineta_position_proxy", {})[n] = position
             candidate = margin_abcde_score(z["horse"], detail)
             if candidate is not None:
                 variants.setdefault("margin_abcde_352520155", {})[n] = candidate["score"]
@@ -58,6 +62,8 @@ def evaluate():
                 variants.setdefault(key,{})[n]=value
         current_order = sorted(variants["current"], key=lambda n: (-variants["current"][n], n))
         abcde_scores = variants.get("margin_abcde_352520155", {})
+        position_scores = variants.get("mineta_position_proxy", {})
+        position_order = sorted(position_scores, key=lambda n: (-position_scores[n],n)) if set(position_scores)==set(variants["current"]) else []
         if circuit in ("中央", "地方"):
             pilot.append({
                 "date": str(detail.get("date") or ""),
@@ -71,6 +77,10 @@ def evaluate():
                                       if order[0] in current_order else None),
                 "currentTop3Hit": order[0] in current_order[:3],
                 "rankedHorses": len(current_order),
+                "positionObservedHorses": len(position_scores),
+                "positionComparable": bool(position_order),
+                "positionTop": position_order[0] if position_order else None,
+                "positionWinnerRank": (position_order.index(order[0])+1 if position_order and order[0] in position_order else None),
                 "abcdeEligibleHorses": len(abcde_scores),
                 "abcdeComparable": set(abcde_scores) == set(variants["current"]),
                 "abcdeTop": (sorted(abcde_scores, key=lambda n: (-abcde_scores[n], n))[0]

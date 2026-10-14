@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/arvexq-abcde-research.yml
       - scripts/arvexq_sequential_candidate_audit.py
+      - arvexq/research/mineta_position_proxy.py
   workflow_dispatch:
 permissions:
   contents: read
