@@ -2957,7 +2957,7 @@ def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
         bw=None;chg=None;mb=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",val("bw"))
         if mb:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
         mp=re.search(r"\d+",val("pop"));pop=int(mp.group()) if mp else None
-        finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val("fin"),"horseNumber":no,"frameNumber":frame,"name":name,"sex":sx,"age":age,"carriedWeight":cw,"jockey":_clean(val("jockey")),"trainer":_clean(val("trainer")),"timeSeconds":tm,"last3FSeconds":last3f,"marginText":margin_text,"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,"popularity":pop})
+        finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val("fin"),"horseNumber":no,"frameNumber":frame,"name":name,"sex":sx,"age":age,"carriedWeight":cw,"jockey":_clean(val("jockey")),"trainer":_clean(val("trainer")),"timeSeconds":tm,"last3FSeconds":last3f,"marginText":"","cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,"popularity":pop})
     sectionals=sorted({float(x.get("last3FSeconds")) for x in finishers if x.get("last3FSeconds") not in (None,"") and float(x.get("last3FSeconds"))>0})
     for x in finishers:
         try:s=float(x.get("last3FSeconds")) if x.get("last3FSeconds") not in (None,"") else 0.0
