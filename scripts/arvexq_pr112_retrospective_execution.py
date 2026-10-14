@@ -65,6 +65,24 @@ def locked_ranking(race):
     return scored
 
 
+def alternative_scores(ranked, weight):
+    """Independent older-than-five form; never reuse the recent five as ability."""
+    out = {}
+    for row in ranked:
+        num = int(row["horse"].get("horseNumber") or 0)
+        career = row.get("careerProfile") or {}
+        prior = career.get("olderAbilityQuality")
+        sample = int(career.get("olderAbilitySamples") or 0)
+        shrink = weight * min(1., sample / 5.) if sample >= 3 and prior is not None else 0.
+        out[num] = (1. - shrink) * float(row["score"]) + shrink * (
+            0.5 + 0.65 * (float(prior) - 0.5))
+    return out
+
+
+def compact(box):
+    return summary(box)
+
+
 def main():
     target_dates = [(date(2026, 10, 7)+timedelta(days=i)).isoformat() for i in range(7)]
     outcomes = {}
@@ -99,6 +117,13 @@ def main():
             continue
         counts["candidateRetrospectiveRaces"] += 1
         collect(metrics[(circuit, "candidateRetrospective")], vals, outcome[0])
+        # Candidate exploration must be scored against the same winner/roster,
+        # with the last three dates held out from exploratory calibration.
+        phase = "holdout" if str(race.get("date") or "") >= "2026-10-11" else "explore"
+        collect(metrics[(circuit, phase, "baseline")], vals, outcome[0])
+        for weight in (0.1, 0.2, 0.3):
+            alt = alternative_scores(ranked, weight)
+            collect(metrics[(circuit, phase, f"olderAbility_{weight}")], alt, outcome[0])
         original = locked_ranking(race)
         original_vals = dict(original)
         if len(original_vals) == len(vals) and set(original_vals) == set(vals):
@@ -109,8 +134,9 @@ def main():
     output = {"version": "arvexq-pr112-retrospective-execution-v1",
               "dates": target_dates, "officialResults": len(outcomes),
               "failedDates": failed_dates, "counts": dict(counts),
-              "byCircuitAndMethod": {c + "|" + method: summary(box)
-                  for (c, method), box in sorted(metrics.items())},
+              "byCircuitAndMethod": {"|".join(key): summary(box)
+                  for key, box in sorted(metrics.items())},
+              "experimentPolicy": "Explore 2026-10-07 through 10, holdout 11 through 13; candidate is not a production approval.",
               "authenticatedPreoffFeatureRaces": 0,
               "note": "NON-PREOFF retrospective replay; candidate uses stored mutable feature histories. Fixed temperature 5 for relative log loss/Brier only. Do not merge based on this."}
     print("PR112_RETROSPECTIVE_AUDIT=" + json.dumps(output, ensure_ascii=False))
