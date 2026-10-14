@@ -11,11 +11,13 @@ from pathlib import Path
 from scripts.arvexq_current_prediction_audit import api_json,finish_order,scrub_for_replay
 from arvexq.prediction.factor_model import rank_factor_model
 from arvexq.research.sequential_challengers import candidates
-from arvexq.research.margin_abcde_candidate import score as margin_abcde_score
+from arvexq.research.margin_abcde_candidate import score as margin_abcde_score, num
+from arvexq.prediction.past_performance import observed_runs
 
 def evaluate():
     results=defaultdict(lambda: {"races":0,"top1":0,"top3":0,"logLossSum":0.})
     coverage=defaultdict(int)
+    evidence=defaultdict(lambda: defaultdict(int))
     outcomes={}
     for offset in range(7):
         day=(date(2026,10,7)+timedelta(days=offset)).isoformat()
@@ -38,8 +40,16 @@ def evaluate():
         rows=rank_factor_model(detail.get("horses") or [],detail)
         if len(rows)<3: continue
         variants={"current":{int(z["horse"]["horseNumber"]):z["score"] for z in rows}}
+        circuit = "中央" if str(detail.get("circuit") or "") in ("中央","JRA") else "地方" if str(detail.get("circuit") or "") in ("地方","NAR") else "不明"
         for z in rows:
             n=int(z["horse"]["horseNumber"])
+            ev=evidence[circuit]
+            ev["horses"]+=1
+            runs=observed_runs(z["horse"],detail,limit=5)
+            if any(num(x.get("marginSeconds")) is not None or num(x.get("timeBehindWinner")) is not None for x in runs):ev["A_marginObserved"]+=1
+            if any(num(x.get("opponentLevel")) is not None for x in runs):ev["B_opponentObserved"]+=1
+            if any(x.get("track")==detail.get("track") and x.get("surface") and x.get("surface")==detail.get("surface") and num(x.get("distance")) is not None and num(detail.get("distance")) is not None and abs(num(x.get("distance"))-num(detail.get("distance")))<=150 for x in runs):ev["C_courseObserved"]+=1
+            if any(isinstance(x.get("cornerPositions"),list) and len(x.get("cornerPositions"))>=2 for x in runs):ev["D_cornerObserved"]+=1
             candidate = margin_abcde_score(z["horse"], detail)
             if candidate is not None:
                 variants.setdefault("margin_abcde_352520155", {})[n] = candidate["score"]
@@ -66,6 +76,7 @@ def evaluate():
                 "top3Rate":v["top3"]/v["races"],
                 "meanLogLoss":v["logLossSum"]/v["races"]}
                 for k,v in results.items() if v["races"]},
+            "evidenceCoverageByCircuit":{c:dict(v) for c,v in evidence.items()},
             "missingEvidenceByVariant":dict(coverage),
             "warning":"Retrospective snapshot inputs may contain post-race changes; not exact pre-off evidence. Different candidate coverage and fixed uncalibrated temperature. Not promotion proof."}
 
