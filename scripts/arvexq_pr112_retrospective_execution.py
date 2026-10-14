@@ -119,6 +119,20 @@ def main():
             counts["missingCandidateInputs"] += 1
             continue
         counts["candidateRetrospectiveRaces"] += 1
+        observed = [row for row in ranked if row.get("sample", 0) >= 3]
+        complete = [row for row in ranked if row.get("sample", 0) >= 5]
+        counts[circuit+"|races"] += 1
+        counts[circuit+"|runners"] += len(ranked)
+        counts[circuit+"|threeRuns"] += len(observed)
+        counts[circuit+"|fiveRuns"] += len(complete)
+        counts[circuit+"|zeroRuns"] += sum(row.get("sample", 0) == 0 for row in ranked)
+        counts[circuit+"|winnerMissingThreeRuns"] += int(
+            next((row.get("sample", 0) for row in ranked
+                  if int(row["horse"].get("horseNumber") or 0) == outcome[0]), 0) < 3)
+        tier = ("complete" if len(complete) == len(ranked) else
+                "mostlyComplete" if len(complete) >= 0.8 * len(ranked) else
+                "incomplete")
+        collect(metrics[(circuit, "coverage", tier)], vals, outcome[0])
         collect(metrics[(circuit, "candidateRetrospective")], vals, outcome[0])
         # Candidate exploration must be scored against the same winner/roster,
         # with the last three dates held out from exploratory calibration.
