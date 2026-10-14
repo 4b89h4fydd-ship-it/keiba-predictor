@@ -33,7 +33,7 @@ def sweep(races, holdout_fraction=.25):
                 wins += int(int(ranked[0]['horseNumber']) == winner)
                 top3 += int(any(int(h['horseNumber']) == winner for h in ranked[:3]))
             return {'races':eligible,'wins':wins,'winnerTop3':top3,'winRate':wins/eligible if eligible else None,'top3Rate':top3/eligible if eligible else None}
-        candidates = [(a,b,100-a-b) for a in range(0,101,5) for b in range(0,101-a,5)]
+        candidates = [(a,b,100-a-b) for a in range(0,101,1) for b in range(0,101-a,1)]
         scored = [(evaluate(train,tuple(w/100 for w in candidate)),candidate) for candidate in candidates]
         valid = [(s,w) for s,w in scored if s['races'] >= 20]
         if not valid:
