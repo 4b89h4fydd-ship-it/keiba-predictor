@@ -1772,3 +1772,81 @@ html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"]:not(:
 html body .smart-shell.smart-home .arv-all-race[data-race-state="elapsed"]:not(:disabled) small,
 html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"]:not(:disabled) strong,
 html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"]:not(:disabled) small{color:#fff!important}
+
+/* ARVEXQ GLOBAL PAPER THEME: all screens, panels, tabs, and buttons */
+:root{--arv-paper:#f6f2e8;--arv-paper-raised:#fff9ef;--arv-paper-border:#d1c2a9;--arv-ink:#000}
+html,html body,html body .smart-shell,html body .smart-shell .smart-main,
+html body .smart-home,html body .smart-venue-page,html body .smart-home-subpage,
+html body .smart-race-page,html body .horse-detail-page-shell,
+html body .bet-detail-page-shell,html body .pace-stage-page-shell{
+ background:var(--arv-paper)!important;background-image:none!important;color:var(--arv-ink)!important;
+}
+html body .smart-shell :is(
+ .smart-topbar,.smart-race-topbar,.arv-dated-subbar,.smart-race-head,.smart-race-header,
+ .smart-race-info,.smart-race-summary,.smart-race-content,.smart-race-head-layout,
+ .smart-race-tabs,.smart-race-section,.smart-venue-head,.smart-race-list,
+ .card,.smart-fixed-picks,.smart-ai-daily,.arv-pick-circuit-page,.arv-ai-venues,
+ .arv-all-panel,.arv-all-venue,.arv-favorites-home,.arv-favorites-page,
+ .pace-panel-direct,.pace-stage-menu-card,.pace-text-timeline,.pace-formation-track,
+ .ai-stage-event,.arv-three-bet,.arv-three-section,.arv-three-ticket,.ai-bet-meta,
+ .racecard-table,.racecard-row,.rc-racecard-v339,.smart-inline-result,.diagnosis-refresh-note,
+ .smart-race-row,.arv-favorite-home-row,.arv-favorite-home-open,
+ .smart-race-tabs>div,.smart-loading,.smart-empty
+ ){
+ background:var(--arv-paper)!important;background-image:none!important;
+ color:var(--arv-ink)!important;box-shadow:none!important;
+ border-color:var(--arv-paper-border)!important;
+}
+html body .smart-shell :is(
+ .smart-topbar,.smart-race-topbar,.arv-dated-subbar,.smart-race-tabs,
+ .racecard-table,.arv-three-bet,.arv-three-section
+ )::before,
+html body .smart-shell :is(
+ .smart-topbar,.smart-race-topbar,.arv-dated-subbar,.smart-race-tabs,
+ .racecard-table,.arv-three-bet,.arv-three-section
+ )::after{background:transparent!important;box-shadow:none!important}
+html body .smart-shell :is(
+ .arv-sub-back,.arv-sub-close,.smart-race-tabs button,
+ .smart-race-tabs button:not(.active),.smart-race-tabs button.active,
+ .pace-stage-menu-btn,.arv-pick-circuit-btn,.arv-ai-venue-card,
+ .arv-all-go,.arv-unified-date,.arv-unified-action,
+ .arv-home-favorite-star,.arv-favorite-star,.arv-favorite-venue-star,
+ .smart-race-result-side,.race-state-pill,.arv-race-state
+ ){
+ background:var(--arv-paper-raised)!important;background-image:none!important;
+ color:#000!important;border-color:var(--arv-paper-border)!important;
+ box-shadow:none!important;
+}
+html body .smart-shell .smart-race-tabs button.active{
+ background:#f6da9c!important;border-color:#b89850!important;
+}
+html body .smart-shell :is(
+ .smart-topbar,.smart-race-topbar,.arv-dated-subbar,
+ .smart-race-head,.smart-race-info,.smart-race-summary,
+ .smart-race-tabs,.smart-fixed-picks,.arv-three-bet,
+ .pace-panel-direct,.pace-stage-menu-card
+ ){backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html body .smart-shell :is(
+ .smart-topbar,.smart-race-topbar,.arv-dated-subbar,
+ .smart-race-head,.smart-race-info,.smart-race-tabs,
+ .smart-race-tabs button,.smart-race-tabs button *,
+ .arv-three-bet h2,.arv-three-bet h3,
+ .pace-stage-menu-card,.pace-panel-direct
+ ){text-shadow:none!important}
+html body .smart-shell :is(
+ .smart-topbar strong,.smart-race-topbar strong,.arv-dated-subbar strong,
+ .smart-race-head h1,.smart-race-head h2,.smart-race-head b,
+ .smart-race-tabs button,.card>h2,.card>h3,
+ .arv-three-bet h2,.arv-three-bet h3,
+ .smart-race-summary,.smart-race-info
+ ){color:#000!important}
+/* Keep runner frame colors, prediction marks, and status distinctions. */
+html body .smart-shell .arv-all-race[data-race-state="soon"]{background:#ffdf9c!important}
+html body .smart-shell .arv-all-race[data-race-state="running"]{background:#ffc0c0!important}
+html body .smart-shell .arv-all-race[data-race-state="elapsed"],
+html body .smart-shell .arv-all-race[data-race-state="finished"]{background:#ded7ca!important}
+html body .smart-shell .arv-favorite-home-open[data-race-state="soon"]{background:#ffdf9c!important}
+html body .smart-shell .arv-favorite-home-open[data-race-state="running"]{background:#ffc0c0!important}
+html body .smart-shell .arv-favorite-home-open[data-race-state="elapsed"],
+html body .smart-shell .arv-favorite-home-open[data-race-state="finished"]{background:#ded7ca!important}
+html body .smart-shell .arv-unified-hero{background:var(--arv-paper)!important}
