@@ -2222,3 +2222,32 @@ html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"] .arv
 html body .smart-shell.smart-home .arv-all-race:not(:disabled)::after{
  content:none!important;display:none!important
 }
+
+
+/* Result ACTION button (not its outer wrapper): state-specific, visible on race detail. */
+html body .smart-shell .smart-inline-result,
+html body .smart-shell .smart-race-result-side .smart-inline-result{
+ background:#efd48b!important;background-image:none!important;
+ border:2px solid #a47717!important;border-radius:11px!important;
+ color:#332506!important;box-shadow:none!important;opacity:1!important;
+}
+html body .smart-shell .smart-inline-result :is(span,strong,b),
+html body .smart-shell .smart-race-result-side .smart-inline-result :is(span,strong,b){
+ color:#332506!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .smart-inline-result.final,
+html body .smart-shell .smart-race-result-side .smart-inline-result.final{
+ background:#2d6b50!important;background-image:none!important;
+ border:2px solid #16442f!important;color:#fff!important;
+}
+html body .smart-shell .smart-inline-result.final :is(span,strong,b){
+ color:#fff!important
+}
+html body .smart-shell .smart-inline-result.flash,
+html body .smart-shell .smart-race-result-side .smart-inline-result.flash{
+ background:#f2b769!important;background-image:none!important;
+ border:2px solid #aa5a11!important;color:#35200a!important
+}
+html body .smart-shell .smart-inline-result.flash :is(span,strong,b){
+ color:#35200a!important
+}
