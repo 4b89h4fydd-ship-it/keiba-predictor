@@ -2,6 +2,8 @@
 const {chromium,webkit,devices}=require('playwright');
 const assert=require('node:assert/strict');
 const base=(process.env.ARVEXQ_BASE_URL||'http://127.0.0.1:8790').replace(/\/$/,'');
+const FOCUS=new Set((process.env.ARVEXQ_PAPER_FOCUS||'').split(',').filter(Boolean));
+const focus=k=>!FOCUS.size||FOCUS.has(k);
 const fixture=[
  '<div class="smart-shell paper-race"><header class="smart-topbar smart-topbar-clean smart-race-topbar"><div class="smart-head-copy"><strong>園田 1R</strong></div></header><main class="smart-main smart-race-page"><div class="race-nav-v230"><div class="race-nav-v230-row race-nav-v230-top"><button class="race-nav-v230-btn active"><span class="race-nav-v230-label">出走表</span></button></div></div></main></div>',
  '<div class="smart-shell paper-special"><header class="smart-topbar smart-section-topbar arv-dated-subbar"><div class="smart-head-copy"><strong>地方 特別予想</strong></div></header><main class="smart-main smart-home-subpage"><section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>地方 特別予想</b><small>メイン・重賞</small></span></div><div class="fixed-pick-box-body"><button class="fixed-pick-row arv-direct-pick-row"><span><b>園田11R</b><small>開催レース</small></span><time>16:05</time></button></div></section></main></div>',
@@ -37,9 +39,11 @@ async function run(browserType,name){
    root.remove();return values;
   },{fixture,selectors});
   for(const k of ['raceHeader','raceTabFrame','raceTab','specialHeader','paceHeader','paceExplanation','paceDiagram','paceTrack','horseHeader','horseOverall','horseInfo','betSection']){
+   if(!focus(k))continue;
    assert.ok(output[k]&&brightness(output[k].bg)>490,'Dark background '+name+'/'+k+': '+JSON.stringify(output[k]));
   }
   for(const k of ['raceHeaderTitle','specialText','specialSubtitle','specialRowText']){
+   if(!focus(k))continue;
    assert.ok(output[k]&&brightness(output[k].text)<200,'Pale text '+name+'/'+k+': '+JSON.stringify(output[k]));
    assert.equal(output[k].opacity,'1','Low-opacity text '+name+'/'+k);
   }
