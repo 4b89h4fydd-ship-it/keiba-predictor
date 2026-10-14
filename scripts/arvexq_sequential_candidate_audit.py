@@ -14,6 +14,7 @@ from arvexq.research.sequential_challengers import candidates
 from arvexq.research.margin_abcde_candidate import score as margin_abcde_score, num
 from arvexq.prediction.past_performance import observed_runs
 from arvexq.research.mineta_position_proxy import position_proxy
+from arvexq.research.mineta_field_proxy import score_race as mineta_field_scores
 
 def evaluate():
     results=defaultdict(lambda: {"races":0,"top1":0,"top3":0,"logLossSum":0.})
@@ -60,10 +61,22 @@ def evaluate():
                 variants.setdefault("margin_abcde_352520155", {})[n] = candidate["score"]
             for key,value in candidates(z["horse"],detail).items():
                 variants.setdefault(key,{})[n]=value
+        field_scores=mineta_field_scores([z["horse"] for z in rows],detail)
+        full=set(variants["current"])
+        if set(field_scores)==full:
+            variants["mineta_field_proxy"]=field_scores
+            variants["mineta_current_60_40"]={n:.6*field_scores[n]+.4*variants["current"][n] for n in full}
+            margin=variants.get("margin_abcde_352520155",{})
+            if set(margin)==full:
+                variants["mineta_margin_60_40"]={n:.6*field_scores[n]+.4*margin[n] for n in full}
+                variants["mineta_current_margin_60_20_20"]={n:.6*field_scores[n]+.2*variants["current"][n]+.2*margin[n] for n in full}
         current_order = sorted(variants["current"], key=lambda n: (-variants["current"][n], n))
         abcde_scores = variants.get("margin_abcde_352520155", {})
         position_scores = variants.get("mineta_position_proxy", {})
         position_order = sorted(position_scores, key=lambda n: (-position_scores[n],n)) if set(position_scores)==set(variants["current"]) else []
+        mixed_keys=("mineta_current_60_40","mineta_margin_60_40","mineta_current_margin_60_20_20")
+        mixed_order={key:sorted(variants[key],key=lambda n:(-variants[key][n],n))
+                     for key in mixed_keys if key in variants}
         if circuit in ("中央", "地方"):
             pilot.append({
                 "date": str(detail.get("date") or ""),
@@ -77,6 +90,8 @@ def evaluate():
                                       if order[0] in current_order else None),
                 "currentTop3Hit": order[0] in current_order[:3],
                 "rankedHorses": len(current_order),
+                "fieldAwareObservedHorses":len(field_scores),
+                "mixedForecasts":{key:{"topHorse":mixed_order[key][0],"winnerRank":mixed_order[key].index(order[0])+1 if order[0] in mixed_order[key] else None} if key in mixed_order else {"status":"missing-required-evidence"} for key in mixed_keys},
                 "positionObservedHorses": len(position_scores),
                 "positionComparable": bool(position_order),
                 "positionTop": position_order[0] if position_order else None,
