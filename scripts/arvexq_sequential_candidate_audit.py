@@ -19,6 +19,7 @@ from arvexq.research.mineta_field_proxy import score_race as mineta_field_scores
 def summarize_five(five):
     chosen=five[:5]
     labels={
+        "current":"Current three-factor 45/35/20 baseline",
         "mineta_field_proxy":"Mineta observable-position proxy only",
         "mineta_current_60_40":"Mineta 60% + current 40%",
         "mineta_margin_60_40":"Mineta 60% + margin-focused 40%",
@@ -28,7 +29,8 @@ def summarize_five(five):
     for name,label in labels.items():
         comparable=[]
         for race in chosen:
-            forecast=(race.get("mixedForecasts") or {}).get(name) or {}
+            forecast=({"winnerRank":race.get("currentWinnerRank")} if name=="current"
+                      else (race.get("mixedForecasts") or {}).get(name) or {})
             if isinstance(forecast.get("winnerRank"),int) and forecast.get("winnerRank")>0:
                 comparable.append((race,forecast))
         hits=sum(x["winnerRank"]==1 for _,x in comparable)
@@ -45,7 +47,8 @@ def summarize_five(five):
             } for c in ("中央","地方")},
         }
     shared=[r for r in chosen if all(
-        (r.get("mixedForecasts") or {}).get(name,{}).get("winnerRank") is not None
+        (r.get("currentWinnerRank") if name=="current" else
+         (r.get("mixedForecasts") or {}).get(name,{}).get("winnerRank")) is not None
         for name in labels)]
     same_five={
         "races":len(chosen),"fullyComparableRaces":len(shared),
