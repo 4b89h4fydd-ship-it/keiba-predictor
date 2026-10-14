@@ -13,10 +13,11 @@ const q=lanes.classify({circuit:'地方',raceNumber:1},{rows},{score:40});
 assert.equal(q.selected,true,'ability score of 40 must NOT exclude empirically qualified bets');
 const plan={decision:'購入候補',betInputGate:{ready:true},items:[{level:'本線',kind:'ワイド',combos:[[1,2]]}]};
 assert(!lanes.requireMorningTickets(q,plan).selected,'no observed sample must not claim high hit probability');
-ctx.window.ARVEXQTicketHitCalibration={version:'arvexq-empirical-ticket-hit-v1',modelVersion:'arvexq-true-run-pure-sectional-v2',
- asOfDate:'2026-10-13',buckets:{'ワイド|1':{kind:'ワイド',points:1,sample:32,wins:28,hitRate:.875,wilsonLower95:.72,qualified:true}}};
+ctx.window.ARVEXQTicketHitCalibration={version:'arvexq-empirical-ticket-hit-v1',
+ asOfDate:'2026-10-13',byCircuit:{'地方':{modelVersion:'arvexq-true-run-pure-sectional-v2',
+ buckets:{'ワイド|1':{kind:'ワイド',points:1,sample:32,wins:28,hitRate:.875,wilsonLower95:.72,qualified:true}}}}};
 assert.equal(lanes.requireMorningTickets(q,plan).selected,false,'retired model hit rates must not authorize new tickets');
-ctx.window.ARVEXQTicketHitCalibration.modelVersion='arvexq-form-condition-no-sectional-proposal-v1';
+ctx.window.ARVEXQTicketHitCalibration.byCircuit['地方'].modelVersion='arvexq-nar-track-condition-stage-v1';
 const good=lanes.requireMorningTickets(q,plan);
 assert.equal(good.selected,true);
 assert.equal(good.score,88);
@@ -25,6 +26,7 @@ assert.equal(JSON.parse(JSON.stringify(selection.allStrictQualifiers([{race:{id:
  n:Number,chronological:()=>0}))).length,1);
 const wrong={...plan,items:[{level:'本線',kind:'馬連',combos:[[1,2]]}]};
 assert.equal(lanes.requireMorningTickets(q,wrong).selected,false,'do not use wide hit rate for exacta pair');
-ctx.window.ARVEXQTicketHitCalibration.buckets['ワイド|1'].sample=2;
+assert.equal(lanes.requireMorningTickets({...q,circuit:'中央'},plan).selected,false,'do not use NAR samples for JRA tickets');
+ctx.window.ARVEXQTicketHitCalibration.byCircuit['地方'].buckets['ワイド|1'].sample=2;
 assert.equal(lanes.requireMorningTickets(q,plan).selected,false);
 console.log('ARVEXQ_EMPIRICAL_TICKET_SELECTION_OK');
