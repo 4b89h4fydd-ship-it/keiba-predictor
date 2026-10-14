@@ -13,6 +13,6 @@ class CurrentHorseDetailFactors(unittest.TestCase):
         self.assertIn("n(x.threeFactorCoverage,0)/2",detail)
     def test_no_retired_sectional_scoring(self):
         s=S.read_text(encoding="utf-8")
-        self.assertIn("score=(1-strength)*recentForm+strength*conditionForm",s)
+        self.assertIn("var jraStrength=Math.min(.12,.04*comparable.length)",s)
         self.assertNotIn("score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)",s)
 if __name__=="__main__": unittest.main()
