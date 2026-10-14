@@ -44,6 +44,7 @@ import hashlib
 import io
 import html as html_lib
 import os
+import unicodedata
 import re
 import sqlite3
 import threading
