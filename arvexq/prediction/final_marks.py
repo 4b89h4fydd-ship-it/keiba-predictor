@@ -4,27 +4,67 @@ from typing import Any
 from arvexq.prediction.factor_model import MODEL_VERSION, PRIMARY_PILLARS, rank_factor_model
 from arvexq.prediction.career_readiness import attach_career_readiness
 
-MARK_ENGINE_VERSION = "arvexq-true-run-pure-sectional-marks-v2-optional-star"
+MARK_ENGINE_VERSION = "arvexq-true-run-pure-sectional-marks-v3-pace-star"
 CORE_MARKS = ("◎", "○", "▲", "△")
 LOWER_MARKS = ("☆",)
 
-def optional_star_candidate(ranked: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """Optional one-star promotion only; scoring, ranking and archives are unchanged."""
+def optional_star_candidate(
+    ranked: list[dict[str, Any]], race: dict[str, Any] | None = None
+) -> dict[str, Any] | None:
+    """Select one evidence-backed pace upside runner outside the four core marks.
+
+    Only recorded pre-off pace fit and observed finishing/run style are used.
+    Different cutoffs reflect JRA vs local racing, without awarding a star
+    purely for an adequate overall factor score.
+    """
     if len(ranked) < 5:
         return None
+    race = race or {}
+    circuit = str(race.get("circuit") or "")
+    local = circuit in ("地方", "NAR", "local")
+    score_floor = .55 if local else .60
+    gap_ceiling = .19 if local else .15
+    pace_floor = .66 if local else .72
     fourth_score = float(ranked[3]["score"])
+    eligible = []
     for row in ranked[4:]:
+        horse = row["horse"]
         factors = row.get("factors") or {}
-        values = [factors.get(key) for key in ("trueRun", "pure", "sectional")]
-        if int(row.get("primaryPillarCoverage") or 0) != 3 or any(v is None for v in values):
+        if row.get("primaryPillarCoverage", 0) < 2:
             continue
         score = float(row["score"])
-        strong = sum(float(v) >= .68 for v in values)
-        if score >= .68 and fourth_score - score <= .075 and strong >= 2 and (
-            float(values[0]) >= .70 or float(values[2]) >= .70
+        if score < score_floor or fourth_score - score > gap_ceiling:
+            continue
+        # Pace-fit must be observed in the race data, not manufactured.
+        fit = horse.get("paceFitScore")
+        if fit is None:
+            fit = horse.get("paceFit")
+        if fit is None:
+            fit = horse.get("展開適性")
+        if isinstance(fit, dict):
+            fit = fit.get("score")
+        try:
+            pace_fit = float(fit)
+        except (ValueError, TypeError):
+            continue
+        if pace_fit > 1:
+            pace_fit /= 100
+        if not (0 <= pace_fit <= 1) or pace_fit < pace_floor:
+            continue
+        # Upside also needs independent recent-race sectional OR pace evidence.
+        sectional = factors.get("sectional")
+        true_run = factors.get("trueRun")
+        if not (
+            sectional is not None and float(sectional) >= (.63 if local else .68)
+            or true_run is not None and float(true_run) >= (.68 if local else .72)
         ):
-            return row["horse"]
-    return None
+            continue
+        eligible.append((pace_fit, score, horse))
+    if not eligible:
+        return None
+    eligible.sort(key=lambda value: (-value[0], -value[1],
+                                    int(value[2].get("horseNumber") or 999)))
+    return eligible[0][2]
 
 
 def sufficiently_observed_partial_career(
@@ -171,7 +211,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     # One ranking owns the four mandatory marks; ☆ needs independent evidence.
     for row, mark in zip(ranked, CORE_MARKS):
         row["horse"]["integratedEvaluation"]["mark"] = mark
-    star = optional_star_candidate(ranked)
+    star = optional_star_candidate(ranked, detail)
     if star is not None:
         star["integratedEvaluation"]["mark"] = "☆"
     for row in ranked:
