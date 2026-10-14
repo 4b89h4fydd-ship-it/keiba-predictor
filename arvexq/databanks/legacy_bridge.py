@@ -151,6 +151,11 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             own = row.get("timeSeconds")
             if winner and own and 0 <= float(own) - float(winner) <= 30:
                 observed["timeBehindWinner"] = round(float(own) - float(winner), 2)
+            print("NAR_OFFICIAL_PRIOR_MATCH", at, track, no,
+                  "winnerTime=", winner, "horseTime=", own,
+                  "gap=", observed.get("timeBehindWinner"),
+                  "3F=", observed.get("last3fSeconds"),
+                  "marginText=", bool(observed.get("marginText")))
             if any(key in observed and observed.get(key) not in (None, "")
                    for key in ("last3fSeconds", "marginText", "timeBehindWinner")):
                 observed["source"] = "NAR official historical results"
