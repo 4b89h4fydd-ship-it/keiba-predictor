@@ -2103,3 +2103,31 @@ html body .smart-shell .smart-race-content :is(
  .pace-formation-tap-hint,.ai-stage-event,.ai-stage-event small,
  .pace-stage-narrative,.pace-stage-menu-btn small
 ){color:#28241e!important;opacity:1!important;text-shadow:none!important}
+
+
+/* Top-screen haze regression: render brand artwork at native SVG sharpness,
+   suppress any legacy translucent veil without changing page layout. */
+html body .smart-shell.smart-home>.arv-unified-hero,
+html body .smart-shell.smart-home>.arv-simple-brand{
+ opacity:1!important;filter:none!important;backdrop-filter:none!important;
+ -webkit-backdrop-filter:none!important;mix-blend-mode:normal!important;
+ background:#f6f2e8!important;background-image:none!important;
+ box-shadow:none!important;text-shadow:none!important;
+}
+html body .smart-shell.smart-home>.arv-unified-hero::before,
+html body .smart-shell.smart-home>.arv-unified-hero::after,
+html body .smart-shell.smart-home>.arv-simple-brand::before,
+html body .smart-shell.smart-home>.arv-simple-brand::after{
+ display:none!important;content:none!important;
+}
+html body .smart-shell.smart-home>.arv-unified-hero img,
+html body .smart-shell.smart-home>.arv-simple-brand img{
+ display:block!important;opacity:1!important;filter:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ transform:none!important;mix-blend-mode:normal!important;
+ image-rendering:auto!important;
+}
+html body .smart-shell.smart-home :is(.smart-topbar,.arv-unified-body,.smart-home-main){
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ filter:none!important;mix-blend-mode:normal!important;
+}
