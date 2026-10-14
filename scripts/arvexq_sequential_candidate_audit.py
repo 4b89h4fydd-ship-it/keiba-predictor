@@ -18,6 +18,7 @@ def evaluate():
     results=defaultdict(lambda: {"races":0,"top1":0,"top3":0,"logLossSum":0.})
     coverage=defaultdict(int)
     evidence=defaultdict(lambda: defaultdict(int))
+    pilot=[]
     outcomes={}
     for offset in range(7):
         day=(date(2026,10,7)+timedelta(days=offset)).isoformat()
@@ -55,6 +56,26 @@ def evaluate():
                 variants.setdefault("margin_abcde_352520155", {})[n] = candidate["score"]
             for key,value in candidates(z["horse"],detail).items():
                 variants.setdefault(key,{})[n]=value
+        current_order = sorted(variants["current"], key=lambda n: (-variants["current"][n], n))
+        abcde_scores = variants.get("margin_abcde_352520155", {})
+        if circuit in ("中央", "地方"):
+            pilot.append({
+                "date": str(detail.get("date") or ""),
+                "raceId": str(detail.get("id") or ""),
+                "circuit": circuit,
+                "track": str(detail.get("track") or ""),
+                "raceNumber": int(detail.get("raceNumber") or 0),
+                "actualWinner": order[0],
+                "currentTop": current_order[0],
+                "currentWinnerRank": (current_order.index(order[0]) + 1
+                                      if order[0] in current_order else None),
+                "currentTop3Hit": order[0] in current_order[:3],
+                "rankedHorses": len(current_order),
+                "abcdeEligibleHorses": len(abcde_scores),
+                "abcdeComparable": set(abcde_scores) == set(variants["current"]),
+                "abcdeTop": (sorted(abcde_scores, key=lambda n: (-abcde_scores[n], n))[0]
+                             if set(abcde_scores) == set(variants["current"]) else None),
+            })
         if "reliability" not in variants or set(variants["reliability"]) != set(variants["current"]):
             coverage["common-set-missing"]+=1
             continue
@@ -70,7 +91,14 @@ def evaluate():
             m["races"]+=1;m["top1"]+=int(ranked[0]==order[0])
             m["top3"]+=int(order[0] in ranked[:3])
             m["logLossSum"]+=-math.log(max(p,1e-15))
-    return {"version":"research-retrospective-v2","inputEnvelopes":envelopes,
+    jra=[r for r in pilot if r["circuit"]=="中央"]
+    nar=[r for r in pilot if r["circuit"]=="地方"]
+    five=(jra[:2]+nar[:3])
+    if len(five)<5:
+        used={r["raceId"] for r in five}
+        five.extend(r for r in pilot if r["raceId"] not in used)
+    return {"version":"research-retrospective-v2","fiveRacePilot":five[:5],
+            "pilotSelection":"up to 2 JRA and 3 NAR from dated snapshots with observed winners",,"inputEnvelopes":envelopes,
             "matchedResultRaces":len(outcomes),
             "results":{k:{**v,"top1Rate":v["top1"]/v["races"],
                 "top3Rate":v["top3"]/v["races"],
