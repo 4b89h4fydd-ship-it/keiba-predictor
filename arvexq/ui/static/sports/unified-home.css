@@ -2251,3 +2251,22 @@ html body .smart-shell .smart-race-result-side .smart-inline-result.flash{
 html body .smart-shell .smart-inline-result.flash :is(span,strong,b){
  color:#35200a!important
 }
+
+
+/* Favorite stars: clear bronze/gold on cream, no black icon. */
+html body .smart-shell :is(.arv-favorite-star,.arv-home-favorite-star,.arv-venue-favorite-star,.arv-detail-favorite-star){
+ color:#a66512!important;background:#fff1cc!important;
+ border-color:#c39245!important;text-shadow:none!important;opacity:1!important;
+}
+html body .smart-shell :is(.arv-favorite-star,.arv-home-favorite-star,.arv-venue-favorite-star,.arv-detail-favorite-star).active{
+ color:#fff1bb!important;background:#a66512!important;border-color:#8d5009!important;
+}
+/* The race-result control keeps its status colors, but loses the unwanted frame.
+   Scope the wrapper separately; do not erase its text or its result-status fill. */
+html body .smart-shell .smart-race-page .smart-race-result-side{
+ border:0!important;outline:0!important;box-shadow:none!important;
+ background:transparent!important;padding:0!important;
+}
+html body .smart-shell .smart-race-page :is(.smart-inline-result,.smart-race-result-side .smart-inline-result){
+ border:0!important;outline:0!important;box-shadow:none!important;
+}
