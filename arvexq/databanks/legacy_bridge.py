@@ -42,6 +42,68 @@ def _jra_history_adapter(namespace: dict[str, Any]):
     return fetch
 
 
+def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
+    """Use the linked JRA result of one dated earlier start, not the target."""
+    parse_result = _pick(namespace, "_jra_parse_result")
+    profile_runs = _pick(namespace, "_jra_profile_runs")
+    if parse_result is None or profile_runs is None:
+        return None
+
+    def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
+        import base64
+        from arvexq.ingest.full_career import date_key
+        cutoff = date_key(race.get("date"))
+        name = str(horse.get("name") or "").strip()
+        cname = str(horse.get("_jraHorseCname") or horse.get("jraHorseCname") or "").strip()
+        if not cutoff or not name or not cname or int(limit or 5) <= 5:
+            return {}
+        # The JRA horse profile has race-linked prior starts; no guessed URL.
+        prior = profile_runs(cname, cutoff, 5) or []
+        for run in prior[:2]:
+            at = date_key(run.get("date"))
+            rid = str(run.get("raceId") or "")
+            if not at or at >= cutoff or not rid.startswith("jraresult-"):
+                continue
+            try:
+                encoded = rid[len("jraresult-"):]
+                result_cname = base64.urlsafe_b64decode(
+                    encoded + "=" * (-len(encoded) % 4)).decode("utf-8")
+            except (ValueError, UnicodeDecodeError):
+                continue
+            # Cross-check returned race identity; parsing the link is not proof.
+            result = parse_result(result_cname, {"date":at,"track":run.get("track")})
+            if not isinstance(result, dict) or date_key(result.get("date")) != at:
+                continue
+            if str(result.get("track") or "") != str(run.get("track") or ""):
+                continue
+            finishers = (result.get("result") or {}).get("finishers") or []
+            matching = [row for row in finishers
+                        if str(row.get("name") or "").strip() == name]
+            winners = [row for row in finishers
+                       if row.get("finish") == 1 and row.get("timeSeconds")]
+            if len(matching) != 1 or len(winners) != 1:
+                continue
+            own = matching[0].get("timeSeconds")
+            if not own:
+                continue
+            diff = round(float(own) - float(winners[0]["timeSeconds"]), 2)
+            if not 0 <= diff <= 30:
+                continue
+            observed = dict(run)
+            observed["timeBehindWinner"] = diff
+            observed["marginEvidenceSource"] = "JRA official linked prior result"
+            late = matching[0].get("last3FSeconds")
+            if late is not None and 15 <= float(late) <= 90:
+                observed["last3fSeconds"] = float(late)
+            corners = matching[0].get("cornerPositions")
+            if isinstance(corners, list) and corners:
+                observed["cornerPositions"] = corners
+            return {"recentRaces":[observed],"allPastRuns":[observed]}
+        return {}
+
+    return fetch
+
+
 def _nar_store_adapters(namespace: dict[str, Any]):
     store_cls = namespace.get("NarStore")
     if not callable(store_cls):
@@ -200,6 +262,14 @@ def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:
     )
     if jra.fetchers:
         registry.register(jra)
+
+    jra_prior = _jra_official_prior_result_adapter(namespace)
+    if jra_prior is not None:
+        registry.register(DataSource(
+            name="jra_official_prior_results", circuit="JRA", priority=12,
+            capabilities=SourceCapabilities(horse_history=True),
+            fetchers={"horse_history": jra_prior},
+        ))
 
     nar_history, nar_connections = _nar_store_adapters(namespace)
     nar = build_nar_source(
