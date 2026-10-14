@@ -70,8 +70,53 @@ async function verify(kind,name){
       datePosition:date?getComputedStyle(date).position:null};
   });
   assert.equal(simpleHome.hero,true,'Home hero should be rendered');
-  assert.equal(simpleHome.background,'rgb(255, 250, 243)','Home should use approved cream color');
+  assert.equal(simpleHome.background,'rgb(246, 242, 232)','Home must match the approved brush-logo paper background');
   assert.equal(simpleHome.datePosition,'relative','Date should scroll naturally');
+  // Fixture DOM uses actual classes from app.js. Assert *computed*, not just source CSS.
+  const paper=await evaluateAfterStableNavigation(page,()=>{
+    const fx=document.createElement('div');
+    fx.innerHTML=[
+      '<div class="smart-shell paper-race-fixture"><header class="smart-topbar smart-topbar-clean smart-race-topbar"><div class="smart-head-copy"><strong>園田 1R</strong></div></header><main class="smart-main smart-race-page"><div class="race-nav-v230"><div class="race-nav-v230-row race-nav-v230-top"><button class="race-nav-v230-btn active"><span class="race-nav-v230-label">出走表</span></button></div></div></main></div>',
+      '<div class="smart-shell paper-special-fixture"><header class="smart-topbar smart-section-topbar arv-dated-subbar"><div class="smart-head-copy"><strong>地方 特別予想</strong></div></header><main class="smart-main smart-home-subpage"><section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>地方 特別予想</b><small>メイン・重賞</small></span></div><div class="fixed-pick-box-body"><button class="fixed-pick-row arv-direct-pick-row"><span><b>園田11R</b><small>開催レース</small></span><time>16:05</time></button></div></section></main></div>',
+      '<div class="smart-shell pace-stage-shell paper-pace-fixture"><header class="smart-topbar smart-race-topbar pace-stage-topbar"><div class="pace-stage-top-title"><strong>スタート</strong></div></header><main class="smart-main smart-race-page pace-stage-page"><section class="pace-stage-explain"><h2>スタート直後</h2><p class="pace-stage-narrative">隊列予想</p></section><section class="pace-formation-card"><div class="pace-formation-track">隊列図</div></section></main></div>',
+      '<div class="smart-shell horse-detail-page-shell paper-horse-fixture"><header class="smart-topbar smart-race-topbar horse-detail-topbar"><div class="horse-detail-top-title"><strong>馬詳細</strong></div></header><main class="smart-main smart-race-page horse-detail-page"><section class="card"><div class="horse-detail"><div class="runner-overall-box"><div class="runner-overall-head"><span class="label">AI総合評価</span></div></div><div class="horse-info-grid"><div class="horse-info-cell"><small>騎手</small><b>未取得</b></div></div></div></section></main></div>',
+      '<div class="smart-shell bet-detail-page-shell paper-bet-fixture"><main class="smart-main smart-race-page"><section class="card bet-card-clean"><div class="arv-three-bet"><div class="arv-three-section"><h3>本線</h3></div></div></section></main></div>'
+    ].join('');
+    fx.style.cssText='position:absolute;left:-10000px;top:0;width:393px;pointer-events:none';
+    document.body.appendChild(fx);
+    const selectors={
+      raceHeader:'.paper-race-fixture>header',
+      raceHeaderTitle:'.paper-race-fixture .smart-head-copy strong',
+      raceTabFrame:'.paper-race-fixture .race-nav-v230-top',
+      raceTab:'.paper-race-fixture .race-nav-v230-btn',
+      specialHeader:'.paper-special-fixture>header',
+      specialText:'.paper-special-fixture .smart-fixed-picks-head b',
+      specialSubtitle:'.paper-special-fixture .smart-fixed-picks-head small',
+      specialRowText:'.paper-special-fixture .fixed-pick-row small',
+      paceHeader:'.paper-pace-fixture>header',
+      paceExplanation:'.paper-pace-fixture .pace-stage-explain',
+      paceDiagram:'.paper-pace-fixture .pace-formation-card',
+      paceTrack:'.paper-pace-fixture .pace-formation-track',
+      horseHeader:'.paper-horse-fixture>header',
+      horseOverall:'.paper-horse-fixture .runner-overall-head',
+      horseInfo:'.paper-horse-fixture .horse-info-cell',
+      betSection:'.paper-bet-fixture .arv-three-bet'
+    };
+    const result={};
+    for(const [label,selector] of Object.entries(selectors)){
+      const el=fx.querySelector(selector),css=el&&getComputedStyle(el);
+      result[label]=css?{bg:css.backgroundColor,foreground:css.color,opacity:css.opacity}:null;
+    }
+    fx.remove();return result;
+  });
+  const dark=color=>{const a=(color||'').match(/\\d+(?:\\.\\d+)?/g);if(!a||a.length<3)return false;const nums=a.slice(0,3).map(Number);return nums.reduce((sum,v)=>sum+v,0)<350};
+  for(const k of ['raceHeader','raceTabFrame','raceTab','specialHeader','paceHeader','paceExplanation','paceDiagram','paceTrack','horseHeader','horseOverall','horseInfo','betSection']){
+    assert.ok(paper[k]&&!dark(paper[k].bg),'Dark surface still visible: '+k+' '+JSON.stringify(paper[k]));
+  }
+  for(const k of ['raceHeaderTitle','specialText','specialSubtitle','specialRowText']){
+    assert.ok(paper[k]&&dark(paper[k].foreground),'Unreadable pale text on paper: '+k+' '+JSON.stringify(paper[k]));
+    assert.equal(paper[k].opacity,'1','Transparent/washed-out text: '+k);
+  }
   assert.deepEqual(result.actions,['厳選','特別','AI成績','お気に入り']);
   assert.equal(result.fullGrid,24);assert.equal(result.booked,3);
   assert.equal(result.firstNext,1);assert.equal(result.nextAfter,2);
