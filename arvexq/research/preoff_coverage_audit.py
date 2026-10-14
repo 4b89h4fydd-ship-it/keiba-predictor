@@ -25,13 +25,10 @@ def audit_races(races):
             if len(runs)<5:
                 count["fewerThanFiveRuns"]+=1
                 c["fewerThanFiveRuns"]+=1
-            for field in ("trueRun","pure","sectional"):
+            for field in ("recentForm","conditionForm"):
                 if raw.get(field) is None:
                     count[field+"Missing"]+=1
                     c[field+"Missing"]+=1
-            if raw.get("sectional") is None and raw.get("trueRun") is not None:
-                count["neutralImputedSectional"]+=1
-                c["neutralImputedSectional"]+=1
     return {"overall":dict(count),
             "byCircuit":{k:dict(v) for k,v in sorted(by_circuit.items())},
             "disclaimer":"Coverage diagnosis, not prediction quality or observed future accuracy"}

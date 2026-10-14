@@ -33,7 +33,7 @@ exported.state.track=String(race.track||'');
 exported.state.races=[{id:race.id,date:race.date,circuit:race.circuit,track:race.track,
  raceNumber:race.raceNumber,startTime:race.startTime,title:race.title||''}];
 exported.state.race=race;
-const status={version:'arvexq-server-exact-js-bet-v2-three-factor',
+const status={version:'arvexq-server-exact-js-bet-v3-form-condition',
  jsHash:crypto.createHash('sha256').update(root).update('\0').update(lane).update('\0').update(view).digest('hex')};
 try{
  const prediction=exported.predict(race);

@@ -11,12 +11,15 @@ function rankedRole(x,which){
  for(const k of keys){if(x&&x[k]!==undefined&&x[k]!==null&&Number.isFinite(Number(x[k])))return Math.max(0,Number(x[k]))}
  return null;
 }
-function hitCalibration(kind,points){
+function hitCalibration(kind,points,circuit){
  const cal=global.ARVEXQTicketHitCalibration;
  if(!cal||cal.version!=='arvexq-empirical-ticket-hit-v1'||
-    cal.modelVersion!=='arvexq-true-run-pure-sectional-v2'||
     !/^20\d{2}-\d{2}-\d{2}$/.test(String(cal.asOfDate||'')))return null;
- const row=(cal.buckets||{})[String(kind)+'|'+String(points)];
+ const expected=circuit==='中央'?'arvexq-jra-momentum-condition-stage-v1':
+   circuit==='地方'?'arvexq-nar-track-condition-stage-v1':null;
+ const group=cal.byCircuit&&cal.byCircuit[circuit];
+ if(!expected||!group||group.modelVersion!==expected)return null;
+ const row=(group.buckets||{})[String(kind)+'|'+String(points)];
  if(!row||row.qualified!==true||Number(row.sample)<30||
     Number(row.hitRate)<.80||Number(row.wilsonLower95)<.65)return null;
  return row;
@@ -24,7 +27,10 @@ function hitCalibration(kind,points){
 function classify(r,p,strict){
  const rows=((p&&p.rows)||[]).filter(z=>z&&z.horse&&!z.horse.scratched&&!z.horse.withdrawn);
  const good=rows.length>=5&&rows.filter(z=>Number(z.threeFactorCoverage)>=2).length>=Math.ceil(rows.length*.70);
- return {selected:good,score:0,primaryType:'的中重視型',
+ const rawCircuit=String(r&&r.circuit||'');
+ const circuit=rawCircuit==='中央'||rawCircuit==='JRA'?'中央':
+   rawCircuit==='地方'||rawCircuit==='NAR'?'地方':'';
+ return {circuit:circuit,selected:good,score:0,primaryType:'的中重視型',
    types:good?['的中重視型']:[],reason:good?'券種別実測的中率検証待ち':'近走実測データ不足',
    modelVersion:'arvexq-empirical-ticket-hit-v1',metrics:{coverage:good},
    note:'厳選には保存済み買い目と確定結果の券種別的中率のみ使用。能力点は印専用。'};
@@ -45,7 +51,7 @@ function ticketKinds(plan){
 function requireMorningTickets(selection,plan){
  if(!selection||selection.selected!==true)return selection;
  const kinds=ticketKinds(plan),main=(plan&&plan.items||[]).find(x=>x.level==='本線');
- const bucket=main&&hitCalibration(main.kind,(main.combos||[]).length);
+ const bucket=main&&hitCalibration(main.kind,(main.combos||[]).length,selection.circuit);
  const selected=!!bucket&&kinds.includes(main.kind);
  return {...selection,selected,score:selected?Math.round(bucket.hitRate*100):0,
    hitRate:selected?bucket.hitRate:null,hitRateSamples:selected?bucket.sample:0,

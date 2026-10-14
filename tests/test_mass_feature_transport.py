@@ -3,6 +3,9 @@ from __future__ import annotations
 import copy
 import json
 import unittest
+from datetime import datetime
+from arvexq.prediction.prerace_archive import JST, seal_detail
+from arvexq.prediction.mass_prerace_bridge import apply_mass_prerace_fields
 
 from arvexq.prediction.mass_feature_snapshot import _stable_hash, SNAPSHOT_VERSION
 from arvexq.prediction.mass_feature_transport import (
@@ -66,11 +69,8 @@ class MassFeatureTransportTest(unittest.TestCase):
         packed["result"]={"status":"確定","finishers":[
             {"horseNumber":1,"finish":2},{"horseNumber":2,"finish":1},{"horseNumber":3,"finish":3}]}
         rows=frozen_training_rows_from_detail(packed)
-        self.assertEqual(len(rows),3)
-        self.assertEqual(sum(row["labelWin"] for row in rows),1)
-        self.assertEqual(next(row for row in rows if row["labelWin"])["horseNumber"],2)
-        self.assertEqual(rows[0]["featureHash"],original["massFeatureHash"])
-        self.assertEqual(rows[0]["features"],original["massFeatureSnapshot"]["rows"][0]["features"])
+        self.assertEqual(len(rows),0)
+        # Legacy hash-valid data without authenticated capture time is not training evidence.
 
     def test_corruption_wrong_race_and_hash_fail_closed(self):
         packed=pack_mass_detail(historical_detail(False))
@@ -89,6 +89,42 @@ class MassFeatureTransportTest(unittest.TestCase):
         data["massFeatureSnapshot"]["rows"].clear()
         with self.assertRaises(ValueError):
             pack_mass_detail(data)
+
+
+    def test_missing_mass_features_cannot_be_rebuilt_after_post(self):
+        date = "2026-10-14"
+        detail = {"id": "R", "date": date, "startTime": "12:00",
+                  "circuit": "地方", "track": "大井", "raceNumber": 1,
+                  "distance": 1400, "surface": "ダート",
+                  "horses": [{"horseNumber": 1, "name": "A", "recentRaces": []},
+                             {"horseNumber": 2, "name": "B", "recentRaces": []}]}
+        start = datetime(2026, 10, 14, 11, 0, tzinfo=JST)
+        captured = datetime(2026, 10, 14, 10, 50, tzinfo=JST)
+        lock = {"raceId": "R", "raceDate": date,
+                "capturedAtEpoch": int(captured.timestamp()),
+                "horses": [{"horseNumber": 1, "mark": "◎"},
+                           {"horseNumber": 2, "mark": "○"}]}
+        sealed = seal_detail(detail, lock, now=start)
+        before = prepare_mass_prerace_fields(sealed, now=start)
+        self.assertIn("massFeatureSnapshot", before)
+        self.assertEqual(before["massFeatureCapturedAtEpoch"], int(start.timestamp()))
+        later = datetime(2026, 10, 14, 12, 5, tzinfo=JST)
+        self.assertEqual(prepare_mass_prerace_fields(sealed, now=later), {})
+        finalized = dict(sealed, result={"status": "確定"})
+        self.assertEqual(prepare_mass_prerace_fields(finalized, now=start), {})
+        persisted = apply_mass_prerace_fields(copy.deepcopy(sealed), before)
+        self.assertEqual(persisted["preRacePrediction"]["massFeatureCapturedAtEpoch"],
+                         int(start.timestamp()))
+        self.assertIn("massFeatureHash", prepare_mass_prerace_fields(persisted, now=later))
+        persisted["result"] = {"status": "確定", "finishers": [
+            {"horseNumber": 1, "finish": 1}, {"horseNumber": 2, "finish": 2}]}
+        trusted = frozen_training_rows_from_detail(persisted)
+        self.assertEqual(len(trusted), 2)
+        self.assertEqual(sum(row["labelWin"] for row in trusted), 1)
+        forged = copy.deepcopy(persisted)
+        forged["massFeatureCapturedAtEpoch"] = int(later.timestamp())
+        self.assertEqual(frozen_training_rows_from_detail(forged), [])
+
 
 
 if __name__=="__main__":

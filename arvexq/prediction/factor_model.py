@@ -1,23 +1,24 @@
-"""One authoritative pre-off horse scoring model.
+"""Staged pre-off score: observed recent form and matching condition evidence.
 
-TRUE RUN 45%: recency-weighted actual finish quality over five observed starts.
-PURE 35%: peak and median finish quality over the same history.
-SECTIONAL 20%: actual last-600-metre finishing rank (or published percentile).
-Only observed dated pre-off runs are used. The scores are NOT probabilities.
-No old composite grades, four-pillar votes, or historical mark predictions enter.
+The active score does not use sectional rank or duplicate peak-finish scores.
+Its conditional adjustment is capped at 25% and uses only observed earlier
+runs on matching surface and within 150 m. Scores are not probabilities.
+This model is experimental until authenticated pre-off performance validation.
 """
 from __future__ import annotations
 
-from statistics import median
 from typing import Any, Iterable
 
 from arvexq.core.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import analyze_past_performance, observed_runs
 from arvexq.prediction.career_profile import profile_career
+from arvexq.prediction.circuit_models import (circuit_key, jra_score, nar_score, JRA_MODEL_VERSION, NAR_MODEL_VERSION)
 
-MODEL_VERSION = "arvexq-true-run-pure-sectional-45-35-20-v2"
-PRIMARY_PILLARS = ("trueRun", "pure", "sectional")
-SCORE_WEIGHTS = {"trueRun": .45, "pure": .35, "sectional": .20}
+MODEL_VERSION = "arvexq-form-condition-no-sectional-proposal-v1"
+PRIMARY_PILLARS = ("recentForm", "conditionForm")
+CONDITION_WEIGHT_PER_RUN = 0.08
+MAX_CONDITION_WEIGHT = 0.25
+
 
 
 def _number(v: Any) -> float | None:
@@ -31,35 +32,32 @@ def _number(v: Any) -> float | None:
 
 
 def collect_horse_raw_metrics(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, float | None]:
-    """Collect the three measured axes from five earlier races, not prior AI scores."""
+    """Collect observed recent form and condition evidence, not prior AI scores."""
     runs = observed_runs(horse, race, limit=5)
     qualities: list[float] = []
-    closing: list[float] = []
+    comparable_qualities: list[float] = []
+    distance = _number(race.get("distance") or race.get("distanceM"))
+    surface = str(race.get("surface") or "").strip()
     for run in runs:
         finish = _number(run.get("finish"))
         field = _number(run.get("fieldSize"))
         if finish is None or field is None or field <= 1 or not (1 <= finish <= field):
             continue
-        qualities.append((field - finish) / (field - 1))
-        closing_rank = _number(run.get("last3fRank") or run.get("last600Rank"))
-        if closing_rank is not None and 1 <= closing_rank <= field:
-            closing.append((field - closing_rank) / (field - 1))
-        else:
-            percentile = _number(run.get("last3fPercentile"))
-            if percentile is not None and 0 <= percentile <= 1:
-                closing.append(percentile)
+        quality = (field - finish) / (field - 1)
+        qualities.append(quality)
+        prior_distance = _number(run.get("distance"))
+        if (distance and prior_distance and abs(distance - prior_distance) <= 150
+                and surface and str(run.get("surface") or "").strip() == surface):
+            comparable_qualities.append(quality)
 
     weighted_form = None
-    peak_ability = None
     if qualities:
         weights = [5 - i for i in range(len(qualities))]
         weighted_form = sum(w * q for w, q in zip(weights, qualities)) / sum(weights)
-        peak_ability = (max(qualities) + median(qualities)) / 2
-    sectional = sum(closing) / len(closing) if closing else None
     return {
-        "trueRun": weighted_form,
-        "pure": peak_ability,
-        "sectional": sectional,
+        "recentForm": weighted_form,
+        "conditionForm": sum(comparable_qualities) / len(comparable_qualities) if comparable_qualities else None,
+        "conditionRuns": float(len(comparable_qualities)),
         "sample": float(len(qualities)),
     }
 
@@ -68,22 +66,39 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
     """The only ranking for core score, marks, saved probabilities, and bets."""
     active = [h for h in horses if isinstance(h, dict) and not is_inactive_runner(h)]
     rows = []
+    circuit = circuit_key(race)
     for horse in active:
         raw = collect_horse_raw_metrics(horse, race)
-        factors = {key: raw.get(key) for key in PRIMARY_PILLARS}
+        past = analyze_past_performance(horse, race)
+        recent = raw.get("recentForm")
+        comparable = raw.get("conditionForm")
+        runs = observed_runs(horse, race, limit=5)
+        if circuit == "JRA":
+            score = jra_score(raw, runs)
+            model_version = JRA_MODEL_VERSION
+        elif circuit == "NAR":
+            score = nar_score(raw, runs, race)
+            model_version = NAR_MODEL_VERSION
+        else:
+            # No unknown-circuit dispatch to the JRA or NAR predictor.
+            score = float(recent) if recent is not None else 0.5
+            model_version = MODEL_VERSION
+        factors = {
+            "recentForm": raw.get("recentForm"),
+            "conditionForm": raw.get("conditionForm"),
+        }
         available = sum(value is not None for value in factors.values())
-        score = sum(weight * (factors[key] if factors[key] is not None else .5)
-                    for key, weight in SCORE_WEIGHTS.items())
         rows.append({
             "horse": horse, "raw": raw,
-            "pastPerformance": analyze_past_performance(horse, race),
+            "pastPerformance": past,
             "careerProfile": profile_career(horse, race),
-            "score": score, "factors": factors,
-            "pillarScores": factors.copy(), "sample": int(raw.get("sample") or 0),
+            "score": score if score is not None else 0.5,
+            "factors": factors, "pillarScores": factors.copy(),
+            "sample": int(raw.get("sample") or 0),
             "evidenceCounts": {k: int(v is not None) for k, v in factors.items()},
             "evidenceFamilyCounts": {k: int(v is not None) for k, v in factors.items()},
             "primaryPillarCoverage": available, "primaryEvidenceCount": available,
-            "supportTieBreakWins": 0, "modelVersion": MODEL_VERSION,
+            "supportTieBreakWins": 0, "modelVersion": model_version,
         })
     if not any(row["primaryPillarCoverage"] for row in rows):
         return []

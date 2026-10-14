@@ -27,9 +27,11 @@ assert(offer.selected,'low ability score does not disqualify a ticket with prior
 const goodPlan={decision:'購入候補',betInputGate:{ready:true},items:[{level:'本線',kind:'ワイド',combos:[[1,2]]}]};
 assert.equal(lanes.requireMorningTickets(offer,goodPlan).selected,false,'no calibration -> no elite pick');
 w.ARVEXQTicketHitCalibration={version:'arvexq-empirical-ticket-hit-v1',
- modelVersion:'arvexq-true-run-pure-sectional-v2',asOfDate:'2026-10-13',
+ asOfDate:'2026-10-13',byCircuit:{'地方':{modelVersion:'arvexq-true-run-pure-sectional-v2',
  buckets:{'ワイド|1':{kind:'ワイド',points:1,sample:32,wins:28,
- hitRate:.875,wilsonLower95:.72,qualified:true}}};
+ hitRate:.875,wilsonLower95:.72,qualified:true}}}}};
+assert.equal(lanes.requireMorningTickets(offer,goodPlan).selected,false,'old model calibration is prohibited');
+w.ARVEXQTicketHitCalibration.byCircuit['地方'].modelVersion='arvexq-nar-track-condition-stage-v1';
 const selected=lanes.requireMorningTickets(offer,goodPlan);
 assert.equal(selected.selected,true);
 assert.equal(selected.hitRate,.875);
@@ -41,7 +43,7 @@ assert.equal(lanes.requireMorningTickets(offer,{...goodPlan,decision:'見送り'
 assert.equal(lanes.requireMorningTickets(offer,{...goodPlan,betInputGate:{ready:false}}).selected,false);
 assert.equal(lanes.requireMorningTickets(offer,{...goodPlan,
  items:[{level:'本線',kind:'ワイド',combos:[[1,1]]}]}).selected,false,'invalid combos');
-w.ARVEXQTicketHitCalibration.buckets['ワイド|1'].sample=3;
+w.ARVEXQTicketHitCalibration.byCircuit['地方'].buckets['ワイド|1'].sample=3;
 assert.equal(lanes.requireMorningTickets(offer,goodPlan).selected,false);
 // Previously archived tickets remain verifiable as historical receipts.
 const oldRace={id:'old-original',date:'2026-10-11',startTime:'12:00'};

@@ -13,12 +13,15 @@ class SectionalStorageTests(unittest.TestCase):
         recovered=recover_horse(horse,"2026-10-14")
         self.assertEqual(recovered["recentRaces"][0]["last3FRank"],3)
         actual=collect_horse_raw_metrics(horse,{"date":"2026-10-14"})
-        self.assertAlmostEqual(actual["sectional"],7/9)
+        self.assertAlmostEqual(actual["recentForm"],8/9)
+        self.assertNotIn("sectional",actual)
     def test_unobserved_sectional_remains_unknown(self):
         horse=pack_horse({"horseNumber":1,"recentRaces":[
             {"date":"2026-10-10","finish":2,"fieldSize":10}
         ]},"2026-10-14")
-        self.assertIsNone(collect_horse_raw_metrics(horse,{"date":"2026-10-14"})["sectional"])
+        raw = collect_horse_raw_metrics(horse,{"date":"2026-10-14"})
+        self.assertAlmostEqual(raw["recentForm"],8/9)
+        self.assertNotIn("sectional",raw)
 
 if __name__=="__main__":
     unittest.main()

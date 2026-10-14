@@ -1,12 +1,24 @@
 {
   "version": "arvexq-empirical-ticket-hit-v1",
-  "modelVersion": "arvexq-true-run-pure-sectional-v2",
   "asOfDate": "2026-10-14",
   "definition": "one main-ticket item wins if any pre-off combination hit",
   "minimumSample": 30,
   "minimumObservedHitRate": 0.8,
   "minimumWilsonLower95": 0.65,
   "totalVerifiedRaces": 0,
-  "buckets": {},
-  "status": "insufficient-evidence"
+  "status": "insufficient-evidence",
+  "byCircuit": {
+    "中央": {
+      "modelVersion": "arvexq-jra-momentum-condition-stage-v1",
+      "totalVerifiedRaces": 0,
+      "buckets": {},
+      "status": "insufficient-evidence"
+    },
+    "地方": {
+      "modelVersion": "arvexq-nar-track-condition-stage-v1",
+      "totalVerifiedRaces": 0,
+      "buckets": {},
+      "status": "insufficient-evidence"
+    }
+  }
 }

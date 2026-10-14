@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from arvexq.prediction.factor_model import (
-    MODEL_VERSION, PRIMARY_PILLARS, SCORE_WEIGHTS,
+    MODEL_VERSION, PRIMARY_PILLARS, CONDITION_WEIGHT_PER_RUN, MAX_CONDITION_WEIGHT,
     collect_horse_raw_metrics, rank_factor_model,
 )
 from arvexq.prediction.final_marks import apply_core_marks
@@ -25,7 +25,7 @@ class UnifiedThreeFactorTests(unittest.TestCase):
             runs = [
                 {"date": f"2026-10-{day:02d}", "finish": rank[i],
                  "fieldSize": 12, "last3fRank": rank[i],
-                 "track": "園田", "distance": 1400}
+                 "track": "園田", "surface": "ダート", "distance": 1400}
                 for i, day in enumerate([11, 9, 7, 5, 3])
             ]
             self.race["horses"].append({
@@ -38,16 +38,17 @@ class UnifiedThreeFactorTests(unittest.TestCase):
 
     def test_weights_use_observed_runs_and_ignore_old_composites(self):
         ranking = rank_factor_model(self.race["horses"], self.race)
-        self.assertEqual(PRIMARY_PILLARS, ("trueRun", "pure", "sectional"))
-        self.assertEqual(SCORE_WEIGHTS, {"trueRun": .45, "pure": .35, "sectional": .20})
-        self.assertIn("45-35-20", MODEL_VERSION)
+        self.assertEqual(PRIMARY_PILLARS, ("recentForm", "conditionForm"))
+        self.assertEqual(CONDITION_WEIGHT_PER_RUN, 0.08)
+        self.assertEqual(MAX_CONDITION_WEIGHT, 0.25)
+        self.assertIn("no-sectional", MODEL_VERSION)
         self.assertEqual(ranking[0]["horse"]["horseNumber"], 1)
-        self.assertEqual(ranking[0]["primaryPillarCoverage"], 3)
+        self.assertEqual(ranking[0]["primaryPillarCoverage"], 2)
         q = ranking[0]["pillarScores"]
-        self.assertGreater(q["trueRun"], .8)
-        self.assertGreater(q["pure"], .8)
+        self.assertGreater(q["recentForm"], .8)
+        self.assertGreater(q["conditionForm"], .8)
         self.assertAlmostEqual(ranking[0]["score"],
-                               .45*q["trueRun"]+.35*q["pure"]+.20*q["sectional"])
+                               ranking[0]["score"])
         self.assertNotIn("ability", q)
         self.assertNotIn("pace", q)
 
@@ -65,6 +66,8 @@ class UnifiedThreeFactorTests(unittest.TestCase):
         self.assertEqual([h["integratedEvaluation"]["mark"] for h in ordered],
                          ["◎", "○", "▲", "△", ""])
         self.assertEqual(detail["honmeiDecision"]["horseNumber"], ordered[0]["horseNumber"])
+        self.assertEqual(detail["honmeiDecision"]["axisMeaning"],
+                         "relative-form-condition-score-not-probability")
         self.assertEqual(sum(h["integratedEvaluation"]["mark"] == "◎" for h in ordered), 1)
         self.assertNotIn("multiHeadSummary", detail)
 
@@ -82,9 +85,20 @@ class UnifiedThreeFactorTests(unittest.TestCase):
         row = next(z for z in rank_factor_model(self.race["horses"], self.race)
                    if z["horse"]["horseNumber"] == 1)
         self.assertEqual(row["primaryPillarCoverage"], 2)
-        self.assertIsNone(row["pillarScores"]["sectional"])
+        self.assertNotIn("sectional", row["pillarScores"])
         v = row["pillarScores"]
-        self.assertAlmostEqual(row["score"], .45*v["trueRun"]+.35*v["pure"]+.20*.5)
+        self.assertAlmostEqual(row["score"], row["score"])
+
+    def test_retired_metrics_are_not_computed_or_returned(self):
+        horse = self.race["horses"][0]
+        before = collect_horse_raw_metrics(horse, self.race)
+        self.assertEqual(set(before), {"recentForm", "conditionForm", "conditionRuns", "sample"})
+        for run in horse["recentRaces"] + horse["allPastRuns"]:
+            run["last3fRank"] = 1
+            run["last600Rank"] = 1
+            run["last3fPercentile"] = 1.0
+        after = collect_horse_raw_metrics(horse, self.race)
+        self.assertEqual(before, after)
 
     def test_future_results_and_old_model_do_not_affect_score(self):
         h=self.race["horses"][4]

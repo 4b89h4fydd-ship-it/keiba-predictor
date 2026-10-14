@@ -49,6 +49,18 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(raw["sample"],5)
         self.assertEqual(analyze_past_performance(horse,RACE)["datedRuns"],5)
         self.assertEqual(len(src["recentRaces"]),5)
+    async def test_invalid_visible_five_can_recover_scoreable_archived_runs(self):
+        from arvexq.ingest.career_transport import pack_horse
+        dated = [run(9, day, finish=finish) for day, finish in
+                 [(1,1),(5,2),(10,3),(15,4),(20,5),(25,6)]]
+        original = {"allPastRuns":dated,"recentRaces":dated[-5:]}
+        stored = pack_horse(original,"2026-10-10")
+        stored["recentRaces"] = [dict(x,finish=None) for x in stored["recentRaces"][:2]]
+        stored["allPastRuns"] = stored["recentRaces"]
+        recovered = observed_runs(stored,RACE,limit=5)
+        self.assertEqual(len(recovered),5)
+        self.assertTrue(all(x["finish"]>=1 for x in recovered))
+
     async def test_no_dated_history_cannot_be_fabricated(self):
         source={"horseNumber":1,"name":"sample","recentRaces":[{"finish":1,"fieldSize":12}]}
         reg=DataBankRegistry()
@@ -166,10 +178,33 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
         b={"recentRaces":recent,"allPastRuns":old+recent}
         self.assertEqual(analyze_past_performance(a,RACE)["top3"],analyze_past_performance(b,RACE)["top3"])
         self.assertGreater(profile_career(b,RACE)["top3Rate"],profile_career(a,RACE)["top3Rate"])
-        self.assertEqual(collect_horse_raw_metrics(b,RACE)["trueRun"],
-                         collect_horse_raw_metrics(a,RACE)["trueRun"])
-        self.assertEqual(collect_horse_raw_metrics(b,RACE)["pure"],
-                         collect_horse_raw_metrics(a,RACE)["pure"])
+        self.assertEqual(collect_horse_raw_metrics(b,RACE)["recentForm"],
+                         collect_horse_raw_metrics(a,RACE)["recentForm"])
+        self.assertEqual(collect_horse_raw_metrics(b,RACE)["conditionForm"],
+                         collect_horse_raw_metrics(a,RACE)["conditionForm"])
+
+    async def test_independent_older_ability_and_raw_context_evidence(self):
+        recent = [run(9, day, finish=8) for day in (25, 20, 15, 10, 5)]
+        older = [run(8, day, finish=2) for day in (20, 10, 1)]
+        older[0]["opponentLevel"] = 20
+        recent[0]["opponentLevel"] = 60
+        horse = {"recentRaces": recent, "allPastRuns": older + recent}
+        base = profile_career(horse, RACE)
+        self.assertEqual(base["olderAbilitySamples"], 3)
+        self.assertAlmostEqual(base["olderAbilityQuality"], 10 / 11, places=5)
+        self.assertEqual(base["opponentLevelObservedRuns"], 2)
+        self.assertEqual(base["opponentLevelMean"], 40)
+        self.assertEqual(base["earlyPositionObservedRuns"], 8)
+        self.assertAlmostEqual(base["earlyPositionMean"], 10 / 11, places=5)
+        changed = {**horse, "recentRaces": [dict(r, finish=10) for r in recent],
+                   "allPastRuns": older + [dict(r, finish=10) for r in recent] +
+                   [dict(run(10, 10, finish=1), opponentLevel=999)]}
+        after = profile_career(changed, RACE)
+        self.assertEqual(after["olderAbilityQuality"], base["olderAbilityQuality"])
+        self.assertEqual(after["olderAbilitySamples"], 3)
+        self.assertEqual(after["opponentLevelMean"], 40)
+        self.assertEqual(after["earlyPositionObservedRuns"], 8)
+        self.assertNotEqual(after["recentTop3Rate"], None)
 
 if __name__=="__main__":
     unittest.main()

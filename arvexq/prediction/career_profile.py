@@ -2,7 +2,7 @@
 from __future__ import annotations
 from statistics import mean, pstdev
 from typing import Any
-from arvexq.prediction.past_performance import observed_runs, _number
+from arvexq.prediction.past_performance import observed_runs, _number, _positions
 
 def profile_career(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any]:
     rows = observed_runs(horse, race, limit=None)
@@ -15,6 +15,8 @@ def profile_career(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any
     grouped: dict[str, list[float]] = {k: [] for k in ("track","distance","surface","going")}
     representative = None
     class_seen = time_seen = margin_seen = sectional_seen = 0
+    opponent_levels: list[float] = []
+    early_positions: list[float] = []
     for row in rows:
         field, finish = int(row["fieldSize"]), int(row["finish"])
         quality = (field - finish) / (field - 1)
@@ -39,12 +41,20 @@ def profile_career(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any
                     "jockey": row.get("jockey"), "carriedWeight": row.get("carriedWeight"),
                     "class": row.get("class") or row.get("className"),
                 }
+        observed_level = _number(row.get("opponentLevel"))
+        if observed_level is not None:
+            opponent_levels.append(observed_level)
+        passage = _positions(row.get("cornerPositions") or row.get("passing"))
+        if passage and 1 <= passage[0] <= field:
+            early_positions.append((field - passage[0]) / (field - 1))
         class_seen += bool(row.get("class") or row.get("className") or
-                           _number(row.get("opponentLevel")) is not None)
+                           observed_level is not None)
         time_seen += bool(row.get("timeSeconds") or row.get("time"))
         margin_seen += bool(_number(row.get("margin") or row.get("marginSeconds")) is not None)
         sectional_seen += bool(_number(row.get("last3f")) is not None)
     recent = rows[:5]
+    older = rows[5:]
+    older_qualities = [(r["fieldSize"] - r["finish"]) / (r["fieldSize"] - 1) for r in older]
     audit = horse.get("_careerHistoryAudit") if isinstance(horse.get("_careerHistoryAudit"),dict) else {}
     return {
         "version": "arvexq-observed-career-profile-v1",
@@ -53,6 +63,12 @@ def profile_career(horse: dict[str, Any], race: dict[str, Any]) -> dict[str, Any
         "top3Rate": round(sum(row["finish"] <= 3 for row in rows)/len(rows), 5) if rows else None,
         "recentTop3": sum(row["finish"] <= 3 for row in recent),
         "recentTop3Rate": round(sum(row["finish"] <= 3 for row in recent)/len(recent), 5) if recent else None,
+        "olderAbilityQuality": round(mean(older_qualities),5) if older_qualities else None,
+        "olderAbilitySamples": len(older_qualities),
+        "opponentLevelMean": round(mean(opponent_levels),5) if opponent_levels else None,
+        "opponentLevelObservedRuns": len(opponent_levels),
+        "earlyPositionMean": round(mean(early_positions),5) if early_positions else None,
+        "earlyPositionObservedRuns": len(early_positions),
         "peakFinishQuality": round(max(qualities),5) if qualities else None,
         "stability": round(max(0,1-pstdev(qualities)),5) if len(qualities)>1 else None,
         "comparableRuns": len(comparable),

@@ -210,7 +210,7 @@ class ServerSealTests(unittest.TestCase):
             self.assertNotIn(retired, source, retired)
         self.assertIn("vm.runInContext(lane", source)
         self.assertIn("vm.runInContext(view", source)
-        self.assertIn("arvexq-server-exact-js-bet-v2-three-factor", source)
+        self.assertIn("arvexq-server-exact-js-bet-v3-form-condition", source)
 
     def test_unavailable_js_ticket_is_retryable_not_an_immutable_skip(self):
         from scripts.arvexq_freeze_predictions import capture_original_bet

@@ -4,17 +4,18 @@ const a=src.indexOf('function eligibleOptionalStar('),b=src.indexOf('function as
 assert(a>=0&&b>a);
 const n=(v,d=0)=>v==null?d:(!Number.isFinite(Number(v))?d:Number(v));
 const accepts=new Function('n',src.slice(a,b)+'return eligibleOptionalStar')(n);
-const z=(a,b,c,score)=>({threeFactorCoverage:[a,b,c].filter(x=>x!=null).length,threeFactorScore:score,
-  threeFactorValues:{trueRun:a,pure:b,sectional:c}});
-assert.equal(accepts(z(.76,.71,.67,.72),.76),true);
-assert.equal(accepts(z(.77,.5,.55,.70),.76),false);
-assert.equal(accepts(z(.85,null,.75,.71),.76),false);
-assert.equal(accepts(z(.76,.71,.67,.64),.76),false);
-assert.equal(accepts(z(.76,.71,.67,.72),.82),false);
+const z=(form,condition,score,samples=2)=>({threeFactorCoverage:(form!=null?1:0)+(condition!=null?1:0),
+  threeFactorScore:score,threeFactorValues:{recentForm:form,conditionForm:condition,comparableRuns:samples}});
+assert.equal(accepts(z(.76,.71,.72),.76),true);
+assert.equal(accepts(z(.77,.5,.70),.76),false);
+assert.equal(accepts(z(.85,null,.71),.76),false);
+assert.equal(accepts(z(.76,.71,.72,1),.76),false);
+assert.equal(accepts(z(.76,.71,.64),.76),false);
+assert.equal(accepts(z(.76,.71,.72),.82),false);
 const mark=src.slice(b,src.indexOf('function assignSingleWinCandidate(',b));
 assert(mark.includes("var labels=['◎','○','▲','△']"));
 assert(mark.includes('eligibleOptionalStar(z,fourthScore)'));
 assert(!mark.includes("'注'")&&!mark.includes("'☆+'"));
 const bet=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8');
 assert(!bet.includes('<i>注</i>'));
-console.log('OPTIONAL_STAR_THREE_FACTOR_OK');
+console.log('OPTIONAL_STAR_FORM_CONDITION_OK');

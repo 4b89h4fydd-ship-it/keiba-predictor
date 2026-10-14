@@ -16,7 +16,8 @@ from pathlib import Path
 import urllib.parse
 import urllib.request
 
-MODEL = "arvexq-true-run-pure-sectional-v2"
+from arvexq.prediction.circuit_models import JRA_MODEL_VERSION, NAR_MODEL_VERSION
+MODELS = {"中央": JRA_MODEL_VERSION, "地方": NAR_MODEL_VERSION}
 VERSION = "arvexq-empirical-ticket-hit-v1"
 MIN_SAMPLES = 30
 TARGET_HIT_RATE = 0.80
@@ -30,10 +31,10 @@ def get_json(url: str):
         return json.loads(response.read().decode("utf-8"))
 
 
-def selected_main_ticket(bet):
+def selected_main_ticket(bet, circuit):
     if not isinstance(bet, dict):
         return None
-    if bet.get("engineVersion") != MODEL or bet.get("captureStatus") == "failed":
+    if (circuit not in MODELS or bet.get("engineVersion") != MODELS[circuit]) or bet.get("captureStatus") == "failed":
         return None
     if str(bet.get("decision") or "") not in {"購入候補", "通常買い", "強く買う"}:
         return None
@@ -71,7 +72,8 @@ def sealed_result(detail, cutoff_date):
     if not isinstance(detail, dict) or str(detail.get("date") or "") >= cutoff_date:
         return None
     bet = detail.get("preRaceBet") or {}
-    item = selected_main_ticket(bet)
+    circuit = str(detail.get("circuit") or "")
+    item = selected_main_ticket(bet, circuit)
     if item is None:
         return None
     try:
@@ -101,7 +103,7 @@ def sealed_result(detail, cutoff_date):
     kind, combos = item
     target = tuple(finishers[i] for i in (1, 2, 3))
     return {"id": str(detail.get("id")), "date": str(detail.get("date")),
-            "model": MODEL, "kind": kind, "points": len(combos),
+            "circuit": circuit, "model": MODELS[circuit], "kind": kind, "points": len(combos),
             "hit": any(ticket_hit(kind, combo, target) for combo in combos)}
 
 
@@ -115,28 +117,39 @@ def wilson_lower(wins, count, z=1.96):
 
 
 def summarize(records, target_date):
-    valid = [v for v in records.values() if v.get("model") == MODEL
-             and str(v.get("date") or "") < target_date]
-    buckets = {}
-    for item in valid:
-        key = str(item["kind"]) + "|" + str(item["points"])
-        box = buckets.setdefault(key, {"kind": item["kind"], "points": item["points"],
-                                       "sample": 0, "wins": 0})
-        box["sample"] += 1
-        box["wins"] += int(bool(item["hit"]))
-    for box in buckets.values():
-        count, wins = box["sample"], box["wins"]
-        box["hitRate"] = round(wins / count, 6)
-        box["wilsonLower95"] = round(wilson_lower(wins, count), 6)
-        box["qualified"] = (count >= MIN_SAMPLES and
-                            box["hitRate"] >= TARGET_HIT_RATE and
-                            box["wilsonLower95"] >= MIN_WILSON_LOWER)
-    return {"version": VERSION, "modelVersion": MODEL, "asOfDate": target_date,
+    """Separate sealed-bet evidence by sport circuit and prediction version."""
+    by_circuit = {}
+    total = 0
+    for circuit, model in MODELS.items():
+        valid = [v for v in records.values() if isinstance(v, dict)
+                 and v.get("circuit") == circuit and v.get("model") == model
+                 and str(v.get("date") or "") < target_date]
+        buckets = {}
+        for item in valid:
+            key = str(item["kind"]) + "|" + str(item["points"])
+            box = buckets.setdefault(key, {"kind": item["kind"], "points": item["points"],
+                                           "sample": 0, "wins": 0})
+            box["sample"] += 1
+            box["wins"] += int(bool(item["hit"]))
+        for box in buckets.values():
+            count, wins = box["sample"], box["wins"]
+            box["hitRate"] = round(wins / count, 6)
+            box["wilsonLower95"] = round(wilson_lower(wins, count), 6)
+            box["qualified"] = (count >= MIN_SAMPLES and
+                                box["hitRate"] >= TARGET_HIT_RATE and
+                                box["wilsonLower95"] >= MIN_WILSON_LOWER)
+        by_circuit[circuit] = {"modelVersion": model, "totalVerifiedRaces": len(valid),
+                               "buckets": buckets,
+                               "status": "verified" if any(b["qualified"] for b in buckets.values())
+                               else "insufficient-evidence"}
+        total += len(valid)
+    return {"version": VERSION, "asOfDate": target_date,
             "definition": "one main-ticket item wins if any pre-off combination hit",
             "minimumSample": MIN_SAMPLES, "minimumObservedHitRate": TARGET_HIT_RATE,
             "minimumWilsonLower95": MIN_WILSON_LOWER,
-            "totalVerifiedRaces": len(valid), "buckets": buckets,
-            "status": "verified" if any(b["qualified"] for b in buckets.values()) else "insufficient-evidence"}
+            "totalVerifiedRaces": total, "byCircuit": by_circuit,
+            "status": "verified" if any(v["status"] == "verified" for v in by_circuit.values())
+            else "insufficient-evidence"}
 
 
 def fetch_previous_day(api_base, target_date):
@@ -191,7 +204,8 @@ def main():
     Path(args.records).write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     Path(args.output).write_text(json.dumps(cal, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("EMPIRICAL_TICKET_HIT_AUDIT", json.dumps({"verified":cal["totalVerifiedRaces"],
-          "qualifiedBuckets":[k for k,v in cal["buckets"].items() if v["qualified"]],
+          "qualifiedByCircuit":{key:[k for k, v in group["buckets"].items() if v["qualified"]]
+                                for key, group in cal["byCircuit"].items()},
           "asOf":args.date}, ensure_ascii=False))
 
 
