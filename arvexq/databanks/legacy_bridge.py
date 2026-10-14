@@ -161,6 +161,14 @@ def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:
             fetchers={"horse_history": career_totals},
         ))
 
+    # Use locally supplied official NAR CSV archives when configured.
+    from .nar_official_csv import register_nar_official_archive
+    try:
+        register_nar_official_archive(registry)
+    except (OSError, ValueError, RuntimeError) as exc:
+        import logging
+        logging.getLogger(__name__).warning("NAR official CSV unavailable: %s", exc)
+
     # Unlimited opt-in licensed providers complement official/NAR stores. Bad
     # configuration must not take the existing official feeds offline.
     try:
