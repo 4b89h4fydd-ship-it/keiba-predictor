@@ -12,6 +12,7 @@ name: ARVEXQ History Repair
     paths:
       - scripts/arvexq_history_repair.py
       - arvexq/databanks/netkeiba_career.py
+      - arvexq/infra/legacy_stores.py
       - arvexq/ingest/fallback_enrichment.py
       - arvexq/ingest/full_career.py
       - scripts/arvexq_result_repair.py
