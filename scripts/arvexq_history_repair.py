@@ -178,7 +178,11 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
     factor_scanned = factor_changed = 0
     missing_before = missing_after = 0
     max_factor_races = max(1, int(os.getenv("ARVEXQ_FACTOR_BACKFILL_RACES", "2")))
-    for rid in ids:
+    # Rotate the two-race heavy-fetch window; do not retry the first two
+    # incomplete races on every run while starving all other runners.
+    offset = max(0, int(os.getenv("ARVEXQ_FACTOR_BACKFILL_OFFSET", "0")))
+    rotating_ids = ids[offset % len(ids):] + ids[:offset % len(ids)] if ids else []
+    for rid in rotating_ids:
         if factor_scanned >= max_factor_races:
             break
         base = by_id.get(rid)
