@@ -7,7 +7,7 @@ const source = fs.readFileSync('arvexq/ui/static/app.js', 'utf8');
 const start = source.indexOf('function integratedGrades(');
 const end = source.indexOf('\n// v345:', start);
 assert.ok(start >= 0 && end > start, 'integratedGrades source was not found');
-const context = { n: (value, fallback = 0) => Number.isFinite(Number(value)) && value != null ? Number(value) : fallback };
+const context = { n: (value, fallback = 0) => Number.isFinite(Number(value)) && value != null ? Number(value) : fallback, arvexqRacePolicy: () => ({id:'arvexq-form-condition-no-sectional-proposal-v1'}) };
 const integratedGrades = vm.runInNewContext('(' + source.slice(start, end) + ')', context);
 
 for (const [observed, expected] of [
