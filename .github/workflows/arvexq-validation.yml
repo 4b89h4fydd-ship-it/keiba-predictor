@@ -55,6 +55,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_integrated_research.py' -v
           python -m unittest discover -s tests -p 'test_research_rank_distribution.py' -v
           python -m unittest discover -s tests -p 'test_prepost_mark_consistency.py' -v
+          python -m unittest discover -s tests -p 'test_prediction_input_fingerprint.py' -v
 
       - name: Python syntax
         run: |
