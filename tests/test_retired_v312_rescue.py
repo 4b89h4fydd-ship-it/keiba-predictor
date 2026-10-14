@@ -9,5 +9,5 @@ class RetiredV312Rescue(unittest.TestCase):
     def test_current_prediction_untouched(self):
         s=SOURCE.read_text(encoding="utf-8")
         self.assertIn("function assignPredictionMarks(rows,r)",s)
-        self.assertIn("score=(1-strength)*recentForm+strength*conditionForm",s)
+        self.assertIn("var jraStrength=Math.min(.12,.04*comparable.length)",s)
 if __name__=="__main__":unittest.main()
