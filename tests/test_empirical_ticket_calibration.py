@@ -28,8 +28,8 @@ class EmpiricalHitCalibrationTests(unittest.TestCase):
             records["jra-"+str(i)] = {"date":"2026-10-12","circuit":"中央",
                 "model": MODELS["中央"],"kind":"ワイド","points":1,"hit":False}
         result = summarize(records, "2026-10-13")
-        self.assertTrue(result["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
-        self.assertFalse(result["byCircuit"]["中央"]["buckets"]["ワイド|1"]["qualified"])
+        self.assertTrue(result["byCircuit"]["地方"]["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
+        self.assertFalse(result["byCircuit"]["中央"]["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
         self.assertEqual(result["byCircuit"]["地方"]["totalVerifiedRaces"], 32)
         self.assertEqual(result["byCircuit"]["中央"]["totalVerifiedRaces"], 32)
         legacy = {"old": {"date":"2026-10-12","circuit":"地方",
@@ -70,13 +70,13 @@ class EmpiricalHitCalibrationTests(unittest.TestCase):
     def test_fail_closed_without_sample(self):
         record = {"x": {"id":"x","date":"2026-10-12","circuit":"地方","model":MODEL,"kind":"ワイド","points":1,"hit":True}}
         result=summarize(record,"2026-10-13")
-        self.assertFalse(result["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
+        self.assertFalse(result["byCircuit"]["地方"]["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
         self.assertEqual(result["status"],"insufficient-evidence")
         self.assertLess(wilson_lower(1,1),.65)
     def test_calibrated_group_needs_real_hit_rate(self):
-        examples={str(i):{"id":str(i),"date":"2026-10-12","model":MODEL,"kind":"ワイド","points":1,"hit":i<28} for i in range(32)}
+        examples={str(i):{"id":str(i),"date":"2026-10-12","circuit":"地方","model":MODEL,"kind":"ワイド","points":1,"hit":i<28} for i in range(32)}
         res=summarize(examples,"2026-10-13")
-        self.assertTrue(res["buckets"]["ワイド|1"]["qualified"])
-        examples.update({str(i):{"id":str(i),"date":"2026-10-12","model":MODEL,"kind":"ワイド","points":1,"hit":False} for i in range(9)})
-        self.assertFalse(summarize(examples,"2026-10-13")["buckets"]["ワイド|1"]["qualified"])
+        self.assertTrue(res["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
+        examples.update({str(i):{"id":str(i),"date":"2026-10-12","circuit":"地方","model":MODEL,"kind":"ワイド","points":1,"hit":False} for i in range(9)})
+        self.assertFalse(summarize(examples,"2026-10-13")["byCircuit"]["地方"]["buckets"]["ワイド|1"]["qualified"])
 if __name__=="__main__": unittest.main()
