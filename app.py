@@ -179,8 +179,8 @@ MANIFEST = r'''{
   "icons":[{"src":"/arvexq-icon-v175-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"/arvexq-icon-v175-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}],
   "scope":"/",
   "display":"standalone",
-  "background_color":"#041126",
-  "theme_color":"#0b1220",
+  "background_color":"#f6f2e8",
+  "theme_color":"#f6f2e8",
   "lang":"ja"
 }'''
 SW = r'''const RESET_TAG="arvexq-reset-v330";
