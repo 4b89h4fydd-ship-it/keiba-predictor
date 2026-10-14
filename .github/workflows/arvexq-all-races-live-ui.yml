@@ -8,6 +8,8 @@ on:
       - 'arvexq/ui/static/sports/unified-home.js'
       - 'arvexq/ui/static/sports/horse-portal.js'
       - 'arvexq/ui/static/sports/all-races.css'
+      - 'arvexq/ui/static/styles/race_v222_plus.css'
+      - 'arvexq/ui/static/sports/unified-home.css'
       - 'arvexq/ui/static/sports/horse-portal.js'
       - 'tests/horse_realtime_sync.mjs'
       - 'scripts/arvexq_realtime_navigation_smoke.js'
