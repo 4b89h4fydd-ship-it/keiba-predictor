@@ -2021,3 +2021,47 @@ html body .smart-shell.horse-detail-page-shell .horse-info-cell :is(small,b,span
 html body .smart-shell.horse-detail-page-shell .runner-overall-head :is(small,b,span){
  color:#000!important;opacity:1!important;
 }
+
+
+/* 2026-10-14 accessibility repair: paper background requires ink, never legacy white/cyan text.
+   Limit overrides to betting and pace explanations; keep status/mark chips untouched. */
+html body .smart-shell.bet-detail-page-shell .arv-three-bet :is(
+ .ai-bet-title,.ai-bet-head,.ai-bet-meta,.ai-bet-meta span,.ai-bet-meta b,
+ .arv-bet-quality,.arv-bet-status,.arv-three-provisional,.arv-three-fixed,
+ .arv-three-reason,.arv-three-ev,.arv-three-section h3,
+ .arv-three-ticket-head,.arv-three-ticket-head b,.arv-three-count,
+ .arv-three-ticket-reason,.arv-three-skip,.arv-three-budget,
+ .arv-three-budget strong,.arv-three-budget span,.arv-three-budget-hint,
+ .arv-three-check,.arv-three-check b,.arv-three-check p,
+ .ai-bet-why,.ai-bet-why b,.ai-bet-why p,
+ .bet-mark-guide,.bet-mark-guide b,.bet-mark-grid span,
+ p,small
+){color:#171717!important;opacity:1!important;text-shadow:none!important}
+html body .smart-shell.bet-detail-page-shell .arv-three-bet :is(
+ .ai-bet-meta>span,.arv-three-section,.arv-three-ticket,
+ .arv-three-combo,.arv-three-check,.ai-bet-why,.bet-mark-guide
+){background:#fff9ef!important;background-image:none!important;border-color:#c7b698!important}
+html body .smart-shell.bet-detail-page-shell .arv-three-bet .arv-three-combo{color:#171717!important}
+html body .smart-shell.bet-detail-page-shell .arv-three-bet :is(
+ .ai-bet-meta b,.arv-three-budget strong
+){font-weight:800!important}
+html body .smart-shell .smart-race-page :is(
+ .pace-panel-direct,.pace-panel-direct p,.pace-panel-direct small,
+ .pace-panel-direct span,.pace-panel-direct b,.pace-panel-direct strong,
+ .pace-panel-direct h2,.pace-panel-direct h3,
+ .pace-text-timeline,.pace-text-timeline p,.pace-text-timeline small,
+ .pace-text-timeline span,.pace-text-timeline b,
+ .pace-stage-menu-card,.pace-stage-menu-card small,.pace-stage-menu-card span,
+ .ai-stage-event,.ai-stage-event p,.ai-stage-event small,.ai-stage-event span
+){color:#171717!important;opacity:1!important;text-shadow:none!important}
+html body .smart-shell .smart-race-page :is(
+ .pace-panel-direct,.pace-stage-menu-card,.pace-text-timeline,.ai-stage-event
+){background:#f6f2e8!important;border-color:#c7b698!important}
+html body .smart-shell :is(
+ .smart-race-content .muted,.smart-race-content .small,
+ .smart-race-content .note,.smart-race-content small,
+ .smart-race-content .pace-narrative,.smart-race-content .pace-stage-narrative,
+ .smart-race-content .pace-stage-explain,
+ .smart-race-content .pace-conclusion,
+ .smart-race-content .pace-formation-card
+){color:#303030!important;opacity:1!important;text-shadow:none!important}
