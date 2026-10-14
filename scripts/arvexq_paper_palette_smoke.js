@@ -28,6 +28,8 @@ async function run(browserType,name){
  try{
   const page=await browser.newPage({...devices['iPhone 15 Pro'],locale:'ja-JP'});
   await page.goto(base+'/?paper-probe='+Date.now(),{waitUntil:'domcontentloaded',timeout:50000});
+  const actualTheme=await page.locator('meta[name="theme-color"]').getAttribute('content');
+  assert.equal(actualTheme,'#f6f2e8','Browser chrome must use the approved paper background');
   const output=await page.evaluate(({fixture,selectors})=>{
    const root=document.createElement('div');root.style.cssText='position:absolute;top:0;left:-9999px;width:393px';
    root.innerHTML=fixture;document.body.appendChild(root);
