@@ -55,10 +55,15 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
         cutoff = date_key(race.get("date"))
         name = str(horse.get("name") or "").strip()
         cname = str(horse.get("_jraHorseCname") or horse.get("jraHorseCname") or "").strip()
-        if not cutoff or not name or not cname or int(limit or 5) <= 5:
+        if not cutoff or not name or int(limit or 5) <= 5:
             return {}
-        # The JRA horse profile has race-linked prior starts; no guessed URL.
-        prior = profile_runs(cname, cutoff, 5) or []
+        # Prefer already saved JRA official result links; not all D1 horses
+        # retain the original JRA horse-profile cname across hydration.
+        prior = [r for r in [
+            *(horse.get("allPastRuns") or []), *(horse.get("recentRaces") or [])
+        ] if isinstance(r, dict) and str(r.get("raceId") or "").startswith("jraresult-")]
+        if not prior and cname:
+            prior = profile_runs(cname, cutoff, 5) or []
         for run in prior[:2]:
             at = date_key(run.get("date"))
             rid = str(run.get("raceId") or "")
