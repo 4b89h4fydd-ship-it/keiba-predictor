@@ -12,26 +12,12 @@ from typing import Any, Iterable
 from arvexq.core.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import analyze_past_performance, observed_runs
 from arvexq.prediction.career_profile import profile_career
+from arvexq.prediction.circuit_models import (circuit_key, jra_score, nar_score, JRA_MODEL_VERSION, NAR_MODEL_VERSION)
 
 MODEL_VERSION = "arvexq-form-condition-no-sectional-proposal-v1"
 PRIMARY_PILLARS = ("recentForm", "conditionForm")
 CONDITION_WEIGHT_PER_RUN = 0.08
 MAX_CONDITION_WEIGHT = 0.25
-
-# Explicit circuit-specific experimental models. No retrospective tuning is
-# promoted to a published win probability without independent validation.
-CIRCUIT_POLICIES = {
-    "中央": {"version": "arvexq-jra-form-condition-experimental-v1", "conditionPerRun": 0.04, "conditionCap": 0.12},
-    "地方": {"version": "arvexq-nar-form-condition-experimental-v1", "conditionPerRun": 0.08, "conditionCap": 0.25},
-}
-
-
-def circuit_policy(race):
-    circuit = str(race.get("circuit") or race.get("raceCircuit") or "").upper()
-    key = "中央" if circuit in ("中央", "JRA", "CENTRAL") else "地方" if circuit in ("地方", "NAR", "LOCAL") else None
-    if key is None:
-        return {"version": MODEL_VERSION, "conditionPerRun": CONDITION_WEIGHT_PER_RUN, "conditionCap": MAX_CONDITION_WEIGHT}
-    return CIRCUIT_POLICIES[key]
 
 
 
@@ -80,16 +66,23 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
     """The only ranking for core score, marks, saved probabilities, and bets."""
     active = [h for h in horses if isinstance(h, dict) and not is_inactive_runner(h)]
     rows = []
-    policy = circuit_policy(race)
+    circuit = circuit_key(race)
     for horse in active:
         raw = collect_horse_raw_metrics(horse, race)
         past = analyze_past_performance(horse, race)
         recent = raw.get("recentForm")
         comparable = raw.get("conditionForm")
-        condition_runs = int(raw.get("conditionRuns") or 0)
-        strength = min(policy["conditionCap"], policy["conditionPerRun"] * condition_runs) if comparable is not None else 0.0
-        score = (recent if comparable is None else
-                 (1 - strength) * recent + strength * comparable) if recent is not None else 0.5
+        runs = observed_runs(horse, race, limit=5)
+        if circuit == "JRA":
+            score = jra_score(raw, runs)
+            model_version = JRA_MODEL_VERSION
+        elif circuit == "NAR":
+            score = nar_score(raw, runs, race)
+            model_version = NAR_MODEL_VERSION
+        else:
+            # No unknown-circuit dispatch to the JRA or NAR predictor.
+            score = float(recent) if recent is not None else 0.5
+            model_version = MODEL_VERSION
         factors = {
             "recentForm": raw.get("recentForm"),
             "conditionForm": raw.get("conditionForm"),
@@ -105,7 +98,7 @@ def rank_factor_model(horses: Iterable[dict[str, Any]], race: dict[str, Any]) ->
             "evidenceCounts": {k: int(v is not None) for k, v in factors.items()},
             "evidenceFamilyCounts": {k: int(v is not None) for k, v in factors.items()},
             "primaryPillarCoverage": available, "primaryEvidenceCount": available,
-            "supportTieBreakWins": 0, "modelVersion": policy["version"],
+            "supportTieBreakWins": 0, "modelVersion": model_version,
         })
     if not any(row["primaryPillarCoverage"] for row in rows):
         return []
