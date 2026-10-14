@@ -10,12 +10,13 @@ class SameFiveMinetaComparison(unittest.TestCase):
         races=[]
         for i in range(5):
             races.append({"raceId":str(i),"circuit":"中央" if i<2 else "地方",
+                          "currentWinnerRank":1 if i<2 else 3,
                           "mixedForecasts":{m:{"topHorse":i+1,
                               "winnerRank":1 if i<2 else 3} for m in METHODS}})
         comp,coverage=summarize_five(races)
         self.assertTrue(coverage["allThreeCombinationsComparableOnFive"])
         self.assertEqual(coverage["fullyComparableRaces"],5)
-        for name in METHODS:
+        for name in ("current",)+METHODS:
             self.assertEqual(comp[name]["eligible"],5)
             self.assertEqual(comp[name]["top1Hits"],2)
             self.assertEqual(comp[name]["winnerTop3Hits"],5)
@@ -23,7 +24,7 @@ class SameFiveMinetaComparison(unittest.TestCase):
             self.assertEqual(comp[name]["byCircuit"]["地方"]["eligible"],3)
 
     def test_missing_margin_does_not_count_as_defeat_or_win(self):
-        rows=[{"raceId":str(i),"circuit":"地方",
+        rows=[{"raceId":str(i),"circuit":"地方","currentWinnerRank":1,
                "mixedForecasts":{name:({"status":"missing-required-evidence"}
                     if name=="mineta_margin_60_40" else
                     {"winnerRank":1}) for name in METHODS}} for i in range(5)]
