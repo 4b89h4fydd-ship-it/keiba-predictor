@@ -9,4 +9,4 @@ class RemovedV317Helpers(unittest.TestCase):
     def test_current_model_unchanged(self):
         s=S.read_text(encoding='utf8')
         self.assertIn('function arvexqFactorValues(z,r)',s)
-        self.assertIn('score=(1-strength)*recentForm+strength*conditionForm',s)
+        self.assertIn('var jraStrength=Math.min(.12,.04*comparable.length)',s)
