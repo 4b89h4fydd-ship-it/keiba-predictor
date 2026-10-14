@@ -3,9 +3,7 @@ Each race: {circuit,date,winnerHorseNumber,horses:[{horseNumber,trueRun,pure,sec
 No result-derived features permitted. No production model mutation.
 """
 import argparse
-import itertools
 import json
-from collections import defaultdict
 
 
 def sweep(races, holdout_fraction=.25):
@@ -27,6 +25,8 @@ def sweep(races, holdout_fraction=.25):
                     continue
                 if any(any(h.get(k) is None for k in ('trueRun','pure','sectional')) for h in horses):
                     continue  # Do not fabricate missing evidence
+                if any(any(not (0 <= float(h[k]) <= 1) for k in ('trueRun','pure','sectional')) for h in horses):
+                    continue  # Reject out-of-range inputs
                 ranked = sorted(horses,key=lambda h: -sum(weights[i]*float(h[k]) for i,k in enumerate(('trueRun','pure','sectional'))))
                 eligible += 1
                 winner = int(race['winnerHorseNumber'])
@@ -39,9 +39,13 @@ def sweep(races, holdout_fraction=.25):
         if not valid:
             out[circuit] = {'error':'insufficient-complete-training-races','trainRaces':len(train),'testRaces':len(test)}
             continue
-        best = max(valid,key=lambda x:(x[0]['winRate'],x[0]['top3Rate'],-abs(x[1][0]-45)))
+        # Avoid overfitting a single winner: favor top-3 capture, then win rate.
+        best = max(valid,key=lambda x:(x[0]['top3Rate'],x[0]['winRate'],-sum(abs(a-b) for a,b in zip(x[1],(45,35,20)))))
         baseline = (.45,.35,.20)
-        out[circuit] = {'cutoffDate':cutoff,'bestWeightsPercent':best[1], 'training':best[0], 'holdout':evaluate(test,tuple(w/100 for w in best[1])), 'baselineHoldout':evaluate(test,baseline)}
+        held = evaluate(test,tuple(w/100 for w in best[1]))
+        base = evaluate(test,baseline)
+        improved = (held['races'] >= 20 and held['races'] == base['races'] and held['top3Rate'] > base['top3Rate'] and held['winRate'] >= base['winRate'])
+        out[circuit] = {'cutoffDate':cutoff,'bestWeightsPercent':best[1], 'training':best[0], 'holdout':held, 'baselineHoldout':base, 'eligibleForPromotion':bool(improved), 'note':'research-only; never auto-promote on retrospective replay'}
     return out
 
 
