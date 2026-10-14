@@ -2200,3 +2200,25 @@ html body .smart-shell .smart-race-page .smart-race-result-side{
  background:#f2db9f!important;border:2px solid #a77923!important;color:#251b07!important;
 }
 html body .smart-shell .smart-race-page .smart-race-result-side :is(time,b,strong,span,small){color:#251b07!important;opacity:1!important}
+
+
+/* Restore explicit status words ON THE TOP screen (legacy rule hid them). */
+html body .smart-shell.smart-home .arv-all-race .arv-race-state{
+ display:block!important;visibility:visible!important;
+ position:static!important;min-width:0!important;max-width:100%!important;
+ margin:1px 0 0!important;padding:1px 2px!important;
+ font-size:10px!important;line-height:1.1!important;font-weight:900!important;
+ overflow:hidden!important;text-overflow:clip!important;white-space:nowrap!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ color:#242019!important;opacity:1!important;text-shadow:none!important
+}
+html body .smart-shell.smart-home .arv-all-race{
+ min-height:53px!important;height:53px!important;max-height:none!important;
+ padding:4px 2px!important;gap:1px!important;
+}
+html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"] .arv-race-state{
+ color:#fff!important
+}
+html body .smart-shell.smart-home .arv-all-race:not(:disabled)::after{
+ content:none!important;display:none!important
+}
