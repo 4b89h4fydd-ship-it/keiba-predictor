@@ -4,7 +4,7 @@ from typing import Any
 from arvexq.prediction.factor_model import MODEL_VERSION, PRIMARY_PILLARS, rank_factor_model
 from arvexq.prediction.career_readiness import attach_career_readiness
 
-MARK_ENGINE_VERSION = "arvexq-true-run-pure-sectional-marks-v2-optional-star"
+MARK_ENGINE_VERSION = "arvexq-true-run-pure-marks-v3-optional-star"
 CORE_MARKS = ("◎", "○", "▲", "△")
 LOWER_MARKS = ("☆",)
 
@@ -15,13 +15,13 @@ def optional_star_candidate(ranked: list[dict[str, Any]]) -> dict[str, Any] | No
     fourth_score = float(ranked[3]["score"])
     for row in ranked[4:]:
         factors = row.get("factors") or {}
-        values = [factors.get(key) for key in ("trueRun", "pure", "sectional")]
-        if int(row.get("primaryPillarCoverage") or 0) != 3 or any(v is None for v in values):
+        values = [factors.get(key) for key in PRIMARY_PILLARS]
+        if int(row.get("primaryPillarCoverage") or 0) != 2 or any(v is None for v in values):
             continue
         score = float(row["score"])
         strong = sum(float(v) >= .68 for v in values)
         if score >= .68 and fourth_score - score <= .075 and strong >= 2 and (
-            float(values[0]) >= .70 or float(values[2]) >= .70
+            float(values[0]) >= .70 or float(values[1]) >= .70
         ):
             return row["horse"]
     return None
@@ -32,7 +32,7 @@ def sufficiently_observed_partial_career(
 ) -> bool:
     """Allow a clearly labelled provisional pre-off forecast from real recent runs.
 
-    A full-career verification is NOT needed by this three-factor model, which
+    A full-career verification is NOT needed by this two-factor model, which
     uses the last five dated starts. Each runner whose lifetime-data audit is
     incomplete must nevertheless have at least three distinct valid pre-off
     races. Reject contradictory reported totals and unknown runner identities.
@@ -109,20 +109,20 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         e = horse.setdefault("integratedEvaluation", {})
         e["mark"] = ""
         e["markEngineVersion"] = MARK_ENGINE_VERSION
-        e["markSource"] = "true-run-pure-sectional-45-35-20"
+        e["markSource"] = "true-run-pure-56-44"
         for old in ("multiHead", "strengthHeadRank", "winHeadRank", "upsideHeadRank",
                     "upsideCandidate", "dangerPopular", "podiumAxisScore"):
             e.pop(old, None)
     detail.pop("multiHeadSummary", None)
     if not ranked:
-        detail["predictionStatus"] = "insufficient-three-factor-evidence"
+        detail["predictionStatus"] = "insufficient-two-factor-evidence"
         detail.pop("factorRanking", None)
         detail.pop("honmeiDecision", None)
         return detail
     detail["factorRanking"] = []
     leader = ranked[0]
     gap = leader["score"] - ranked[1]["score"] if len(ranked) > 1 else 0.
-    complete = leader["primaryPillarCoverage"] == 3
+    complete = leader["primaryPillarCoverage"] == 2
     grade = ("A" if complete and leader["score"] >= .80 and gap >= .04 and leader["sample"] >= 3
              else "B" if leader["primaryPillarCoverage"] >= 2 and leader["score"] >= .65
              else "C")
@@ -132,8 +132,8 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         "version": MARK_ENGINE_VERSION, "eligible": grade == "A",
         "horseNumber": axis_no, "displayHonmei": True, "confidenceGrade": grade,
         "role": "win", "fixedAxisAllowed": grade == "A", "axisScore": round(leader["score"], 6),
-        "axisMargin": round(gap, 6), "axisMeaning": "relative-three-factor-score-not-probability",
-        "reason": "three-factor-confidence" if grade == "A" else "relative-honmei-not-fixed",
+        "axisMargin": round(gap, 6), "axisMeaning": "relative-two-factor-score-not-probability",
+        "reason": "two-factor-confidence" if grade == "A" else "relative-honmei-not-fixed",
         "axisCandidates": [
             {"horseNumber": int(z["horse"].get("horseNumber") or 0),
              "score": round(z["score"], 6), "coverage": z["primaryPillarCoverage"]}
@@ -145,7 +145,7 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         e = h.setdefault("integratedEvaluation", {})
         evidence = {
             "rank": row["rank"], "dominanceScore": row["dominanceScore"],
-            "scoreMeaning": "TRUE RUN 45 + PURE 35 + SECTIONAL 20, not probability",
+            "scoreMeaning": "TRUE RUN 56 + PURE 44, not probability",
             "pillarScores": row["pillarScores"], "pillarRanks": row["pillarRanks"],
             "evidenceCounts": row["evidenceCounts"],
             "evidenceFamilyCounts": row["evidenceFamilyCounts"],
@@ -178,5 +178,5 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
         row["horse"]["integratedEvaluation"]["rank"] = row["rank"]
     detail["markEngineVersion"] = MARK_ENGINE_VERSION
     detail["predictionModelVersion"] = MODEL_VERSION
-    detail["markMethod"] = "TRUE RUN45%＋PURE35%＋SECTIONAL20%; unified marks and betting"
+    detail["markMethod"] = "TRUE RUN56%＋PURE44%; unified marks and betting"
     return detail
