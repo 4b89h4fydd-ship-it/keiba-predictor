@@ -2178,3 +2178,25 @@ html body .smart-shell .smart-race-page .smart-race-result-side :is(time,b,stron
 html body .smart-shell .smart-race-page .smart-inline-result :is(b,strong,span,small){
  color:#17272e!important;opacity:1!important;text-shadow:none!important
 }
+
+
+/* Visible race status labels, including when older markup did not contain them. */
+html body .smart-shell :is(button.arv-all-race,button.smart-race-row,button.arv-favorite-home-open){position:relative}
+html body .smart-shell .arv-race-status-label{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ position:relative!important;width:max-content!important;max-width:100%!important;
+ margin:3px 0 0!important;padding:2px 7px!important;
+ border-radius:5px!important;border:1px solid #746c5e!important;
+ background:#f6f2e8!important;color:#25221e!important;
+ font-size:11px!important;line-height:1.4!important;font-weight:900!important;
+ white-space:nowrap!important;opacity:1!important;text-shadow:none!important
+}
+html body .smart-shell [data-race-state="soon"] .arv-race-status-label{background:#805100!important;border-color:#805100!important;color:#fff!important}
+html body .smart-shell [data-race-state="running"] .arv-race-status-label{background:#a21822!important;border-color:#a21822!important;color:#fff!important}
+html body .smart-shell [data-race-state="elapsed"] .arv-race-status-label{background:#786a58!important;border-color:#786a58!important;color:#fff!important}
+html body .smart-shell [data-race-state="finished"] .arv-race-status-label{background:#193c30!important;border-color:#193c30!important;color:#fff!important}
+/* Result card: make the status panel stand out from the cream paper. */
+html body .smart-shell .smart-race-page .smart-race-result-side{
+ background:#f2db9f!important;border:2px solid #a77923!important;color:#251b07!important;
+}
+html body .smart-shell .smart-race-page .smart-race-result-side :is(time,b,strong,span,small){color:#251b07!important;opacity:1!important}
