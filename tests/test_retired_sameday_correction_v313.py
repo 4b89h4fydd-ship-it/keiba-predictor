@@ -10,5 +10,5 @@ class RetiredSameDayCorrection(unittest.TestCase):
         s=APP.read_text(encoding="utf-8")
         self.assertIn("function sameDayTrendSignatureV313(",s)
         self.assertIn("function assignPredictionMarks(rows,r)",s)
-        self.assertIn("score=(1-strength)*recentForm+strength*conditionForm",s)
+        self.assertIn("var jraStrength=Math.min(.12,.04*comparable.length)",s)
 if __name__=="__main__": unittest.main()
