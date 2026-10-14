@@ -2,6 +2,11 @@ name: ARVEXQ History Repair
 
 "on":
   workflow_dispatch:
+    inputs:
+      date:
+        description: "Historical target date YYYY-MM-DD (blank = rotation)"
+        required: false
+        type: string
   push:
     branches: [main]
     paths:
@@ -29,7 +34,7 @@ jobs:
       ARVEXQ_DATA_CORE: "0"
       RACEDB_AUTO_UPDATE: "0"
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
-      ARVEXQ_HISTORY_DAYS: "7"
+      ARVEXQ_HISTORY_DAYS: "365"
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
       PIP_NO_INPUT: "1"
 
@@ -48,15 +53,33 @@ jobs:
         run: python -m pip install -q -r requirements.txt
 
       - name: Set history date
+        env:
+          REQUESTED_DATE: ${{ inputs.date }}
         run: |
-          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
-            SLOT=1
+          set -euo pipefail
+          if [ -n "$REQUESTED_DATE" ]; then
+            [[ "$REQUESTED_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || exit 1
+            TARGET=$(TZ=Asia/Tokyo date -d "$REQUESTED_DATE" +%F)
+            test "$TARGET" = "$REQUESTED_DATE"
+            test "$TARGET" != "$(TZ=Asia/Tokyo date +%F)"
+            test "$TARGET" \< "$(TZ=Asia/Tokyo date +%F)"
+            SLOT=$(( ( $(TZ=Asia/Tokyo date +%s) - $(TZ=Asia/Tokyo date -d "$TARGET" +%s) ) / 86400 ))
+          elif [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            # Start one older historical day immediately after this change.
+            SLOT=30
+            TARGET=$(TZ=Asia/Tokyo date -d "$SLOT days ago" +%F)
+          elif [ $(( GITHUB_RUN_NUMBER % 2 )) -eq 0 ]; then
+            # Preserve frequent repairs of the seven most recent days.
+            SLOT=$(( (GITHUB_RUN_NUMBER / 2 - 1) % 7 + 1 ))
+            TARGET=$(TZ=Asia/Tokyo date -d "$SLOT days ago" +%F)
           else
-            SLOT=$(( (GITHUB_RUN_NUMBER - 1) % ARVEXQ_HISTORY_DAYS + 1 ))
+            # Work back through the previous year using the same safe D1 repair pipeline.
+            SLOT=$(( ((GITHUB_RUN_NUMBER - 1) / 2) % (ARVEXQ_HISTORY_DAYS - 7) + 8 ))
+            TARGET=$(TZ=Asia/Tokyo date -d "$SLOT days ago" +%F)
           fi
           echo "HISTORY_OFFSET=$SLOT" >> "$GITHUB_ENV"
-          echo "HISTORY_DATE=$(TZ=Asia/Tokyo date -d "$SLOT days ago" +%F)" >> "$GITHUB_ENV"
-          echo "History target=-${SLOT}d event=$GITHUB_EVENT_NAME"
+          echo "HISTORY_DATE=$TARGET" >> "$GITHUB_ENV"
+          echo "History target=$TARGET offset=$SLOT event=$GITHUB_EVENT_NAME"
 
       - name: Restore ARVEXQ data cache
         uses: actions/cache/restore@v4
