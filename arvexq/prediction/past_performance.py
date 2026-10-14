@@ -71,7 +71,18 @@ def observed_runs(horse: dict[str, Any], race: dict[str, Any], limit: int | None
         except (TypeError, ValueError):
             total = 0
         requested = 5 if limit is None else max(0, int(limit))
-        if limit is None or (len(visible) < requested and total > len(visible)):
+        # Visible history count is not sufficient: some compressed rows may
+        # lack valid field size/finish data even when five entries are present.
+        # Scoreable starts, rather than raw rows, decide whether the verified
+        # lossless archive must be recovered. Never synthesize unknown finishes.
+        scored_visible = 0
+        for existing in visible:
+            norm = normalize_run(existing)
+            field = _number(norm.get("fieldSize"))
+            finish = _number(norm.get("finish"))
+            if field is not None and field >= 2 and finish is not None and 1 <= finish <= field:
+                scored_visible += 1
+        if limit is None or (scored_visible < requested and total > len(visible)):
             horse = recover_horse(horse, cutoff.isoformat())
     candidates: list[dict[str, Any]] = []
     for key in KEYS:
