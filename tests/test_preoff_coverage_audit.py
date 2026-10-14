@@ -12,6 +12,11 @@ class CoverageAuditTests(unittest.TestCase):
         self.assertEqual(out["overall"]["horses"],2)
         self.assertEqual(out["overall"]["withoutFiveRunEvidence"],1)
         self.assertEqual(out["overall"]["sectionalMissing"],2)
+        self.assertEqual(out["overall"]["fiveRunComplete"],0)
+        self.assertEqual(out["overall"]["fiveRunCoverageRate"],0.0)
+        self.assertEqual(out["overall"]["noObservedRuns"],1)
+        self.assertEqual(out["overall"]["missingAnyRunRate"],0.5)
+        self.assertEqual(out["byCircuit"]["中央"]["fiveRunCoverageRate"],0.0)
         self.assertEqual(out["overall"]["neutralImputedSectional"],1)
         self.assertEqual(out["byCircuit"]["中央"]["races"],1)
 
