@@ -26,7 +26,7 @@ const run=child.spawnSync(process.execPath,['scripts/arvexq_capture_prerace_bet.
   {input:JSON.stringify(race),encoding:'utf8',timeout:30000});
 assert.equal(run.status,0,'preoff capture failed: '+String(run.stderr||run.stdout).slice(0,5000));
 const out=JSON.parse(run.stdout);
-assert.equal(out.engineVersion,'arvexq-form-condition-no-sectional-proposal-v1');
+assert.equal(out.engineVersion,'arvexq-nar-track-condition-stage-v1');
 assert.equal(out.honmei.horseNumber,1);
 assert.equal(out.decision,'購入候補');
 assert(out.items.length>=1,'new unified method must produce purchasable tickets');
