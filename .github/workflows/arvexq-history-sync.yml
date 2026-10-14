@@ -136,6 +136,11 @@ jobs:
             RACES=$(jq '.races // [] | length' history-bundle.json 2>/dev/null || echo 0)
           fi
           echo "History repair source races=$RACES"
+          if [ "$RACES" -le 0 ]; then
+            echo "::error::HISTORY_SOURCE_EMPTY date=$HISTORY_DATE D1 and collector returned zero races; no data was backfilled"
+            tail -n 60 /tmp/arvexq-history.log || true
+            exit 1
+          fi
 
       - name: Repair missing fields only
         run: |
