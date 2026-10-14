@@ -995,7 +995,7 @@ function arvexqFactorValues(z,r){
   }
   var h=z&&z.horse||{},cutoff=canonicalDay(r&&(r.date||r.raceDate)),
       byDay=Object.create(null),runs=[];
-  if(!cutoff)return {trueRun:null,pure:null,sectional:null,coverage:0,score:.5};
+  if(!cutoff)return {recentForm:null,conditionForm:null,comparableRuns:0,coverage:0,sample:0,score:.5,modelVersion:'arvexq-form-condition-no-sectional-proposal-v1'};
   ['recentRaces','allPastRuns','pastRaces','history','runs'].forEach(function(key){
     (Array.isArray(h[key])?h[key]:[]).forEach(function(q){
       if(!q||typeof q!=='object'||Array.isArray(q))return;
@@ -1027,6 +1027,11 @@ function arvexqFactorValues(z,r){
     runs.push({source:q,quality:(field-finish)/(field-1),field:field});
   });
   var quality=runs.map(function(x){return x.quality}),recentForm=null,conditionForm=null,score=.5,comparable=[];
+  var circuit=String(r&&((r.circuit||r.raceCircuit)||'')).trim().toUpperCase(),
+      isJra=circuit==='中央'||circuit==='JRA'||circuit==='CENTRAL',
+      isNar=circuit==='地方'||circuit==='NAR'||circuit==='LOCAL';
+  var modelVersion=isJra?'arvexq-jra-momentum-condition-stage-v1':
+    isNar?'arvexq-nar-track-condition-stage-v1':'arvexq-form-condition-no-sectional-proposal-v1';
   if(quality.length){
     var total=0,weight=0;
     quality.forEach(function(v,i){var w=5-i;total+=w*v;weight+=w});
@@ -1039,13 +1044,34 @@ function arvexqFactorValues(z,r){
     }).map(function(x){return x.quality});
     if(comparable.length){
       conditionForm=comparable.reduce(function(a,v){return a+v},0)/comparable.length;
-      var circuit=String(r&&((r.circuit||r.raceCircuit)||'')).toUpperCase(),isJra=circuit==='中央'||circuit==='JRA'||circuit==='CENTRAL';
-      var strength=Math.min(isJra?.12:.25,(isJra?.04:.08)*comparable.length);
-      score=(1-strength)*recentForm+strength*conditionForm;
-    }else score=recentForm;
+    }
+    score=recentForm;
+    if(isJra){
+      if(comparable.length){
+        var jraStrength=Math.min(.12,.04*comparable.length);
+        score=(1-jraStrength)*score+jraStrength*conditionForm;
+      }
+      if(quality.length>=4){
+        var momentum=(quality[0]+quality[1]-quality[quality.length-1]-quality[quality.length-2])/2;
+        score+=.06*Math.max(-.30,Math.min(.30,momentum));
+      }
+    }else if(isNar){
+      if(comparable.length){
+        var narStrength=Math.min(.25,.08*comparable.length);
+        score=(1-narStrength)*score+narStrength*conditionForm;
+      }
+      var track=String(r&&r.track||'').trim();
+      var sameTrack=track?runs.filter(function(x){return String(x.source.track||'').trim()===track})
+        .map(function(x){return x.quality}):[];
+      if(sameTrack.length>=2){
+        score=.90*score+.10*(sameTrack.reduce(function(a,b){return a+b},0)/sameTrack.length);
+      }
+    }
+    score=Math.max(0,Math.min(1,score));
   }
   return {recentForm:recentForm,conditionForm:conditionForm,comparableRuns:comparable.length,
-    coverage:(recentForm!==null?1:0)+(conditionForm!==null?1:0),sample:runs.length,score:score};
+    coverage:(recentForm!==null?1:0)+(conditionForm!==null?1:0),sample:runs.length,
+    score:score,modelVersion:modelVersion};
 }
 function arvexqRacePolicy(r){
   return {id:'arvexq-form-condition-no-sectional-proposal-v1',
