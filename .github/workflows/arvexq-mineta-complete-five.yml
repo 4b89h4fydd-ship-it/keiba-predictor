@@ -1,4 +1,4 @@
-name: ARVEXQ Mineta Complete Evidence Five
+name: ARVEXQ Mineta Complete Evidence Comparison
 on:
   push:
     branches: [main]
@@ -12,7 +12,7 @@ permissions:
 jobs:
   evidence-five:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 25
     env:
       ARVEXQ_BOOTSTRAP_WARM: "0"
       ARVEXQ_DATA_CORE: "0"
@@ -25,10 +25,10 @@ jobs:
       - run: python -m pip install -q -r requirements.txt
       - name: Check observed data and identity tests
         run: PYTHONPATH=. python -m unittest discover -s tests -p test_mineta_complete_observations.py -v
-      - name: Find five fully comparable NAR races and run all models
+      - name: Compare up to 25 fully comparable NAR races
         run: |
           mkdir -p research-output
-          PYTHONPATH=. python scripts/arvexq_mineta_evidence_complete_pilot.py --out research-output/mineta-complete-five.json --max-candidates 30 --max-requests 280
+          PYTHONPATH=. python scripts/arvexq_mineta_evidence_complete_pilot.py --out research-output/mineta-complete-five.json --max-candidates 80 --max-requests 650 --target-complete 25
       - uses: actions/upload-artifact@v4
         if: always()
         with:
