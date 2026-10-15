@@ -53,8 +53,17 @@ def main() -> int:
     # Live deltas can contain old D1 snapshots whose feature hash was
     # already inconsistent before this run. Preserve bytes, mark them
     # unverified, and disallow subsequent training instead of fabricating.
-    live_delta = bool((payload.get("meta") or {}).get("live_delta"))
-    details = [pack_detail(unpack_full_snapshot(x), preserve_unverified_legacy=live_delta)
+    meta = payload.get("meta") or {}
+    live_delta = bool(meta.get("live_delta"))
+    # A historical repair only enriches an already frozen D1 race. The
+    # archived featureHash may predate the current serializer and no longer
+    # match the unchanged source feature rows. Preserve those original bytes
+    # and label their origin explicitly UNVERIFIED; never change the hash,
+    # generate replacement pre-off features, or allow training to read them.
+    historical_repair = meta.get("source") == "github-actions-history-missing-only-v2"
+    allow_original_unverified = live_delta or historical_repair
+    details = [pack_detail(unpack_full_snapshot(x),
+                           preserve_unverified_legacy=allow_original_unverified)
                for x in source_details]
     unverified = [
         race_id(d) for d in details
