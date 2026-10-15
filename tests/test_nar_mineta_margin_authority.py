@@ -80,9 +80,13 @@ class NarAuthorityTests(unittest.TestCase):
                          [("mineta", .60), ("margin", .40)])
         self.assertNotIn("trueRun", [x["key"] for x in factors["items"]])
 
-    def test_star_mark_matches_browser_observed_upside_gate(self):
+    def test_star_mark_requires_independent_race_pace_evidence(self):
         from unittest.mock import patch
         d = race()
+        # Runner #5 can advance strongly from a wide/late position when three
+        # competitors have displayed early pace. This is not a rank-five rule.
+        d["horses"][4]["recentRaces"][-1].update(
+            finish=2, cornerPositions=[8, 8, 8], timeBehindWinner=.2)
         scores = (.90, .83, .75, .69, .66, .58)
         rows = [
             {"horse": h, "score": scores[i], "sample": 5,
@@ -93,7 +97,11 @@ class NarAuthorityTests(unittest.TestCase):
         with patch("arvexq.prediction.observed_model.rank_observed", return_value=rows):
             apply_nar_marks(d)
         marks = [h["integratedEvaluation"]["mark"] for h in d["horses"]]
-        self.assertEqual(marks, ["◎", "○", "▲", "△", "☆", ""])
+        self.assertEqual(marks, ["◎", "○", "注", "▲", "☆", "△"])
+        # Actual pre-off evidence may supersede the original third/fourth
+        # scored roles, but never overwrites the ◎○ model leaders.
+        self.assertEqual(len([m for m in marks if m == "☆"]), 1)
+        self.assertEqual(len([m for m in marks if m == "注"]), 1)
 
     def test_central_dispatch_never_uses_nar_model(self):
         with self.assertRaises(ValueError):

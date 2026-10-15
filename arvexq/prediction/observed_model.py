@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from arvexq.core.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import observed_runs
+from arvexq.prediction.special_marks import allocate_special_marks
 from arvexq.research.mineta_field_proxy import score_race as mineta_scores
 from arvexq.research.margin_abcde_candidate import score as margin_score
 
@@ -114,18 +115,26 @@ def apply_observed_marks(detail):
             e.pop(k, None)
         e.update(mark="", markSource=version, markEngineVersion=version,
                  honmeiRole="", honmeiGrade="", honmeiEligible=False)
-    marks = ("◎", "○", "▲", "△")
-    fourth = ranked[3] if len(ranked) >= 4 else None
-    # Match the browser: optional observed pace upside, never automatic fifth.
-    star = next((row for row in ranked[4:]
-                 if fourth is not None and row["score"] >= .55
-                 and fourth["score"] - row["score"] <= .075
-                 and row["factors"]["mineta"] >= .55), None)
+    # Independent pre-off ☆/注 allocation from PR #181. Keep original
+    # ranked horses untouched. Only the JRA evidence view is filtered to
+    # the matching flat/jump discipline and verified official history.
+    special_rows = []
+    for row in ranked:
+        evidence_horse = _course_history(row["horse"], detail)
+        if version == JRA_MODEL_VERSION:
+            evidence_horse = dict(evidence_horse)
+            for key in ("recentRaces", "allPastRuns", "pastRaces", "history", "runs"):
+                if isinstance(evidence_horse.get(key), list):
+                    evidence_horse[key] = [q for q in evidence_horse[key] if _verified_jra_proof(q)]
+        special_rows.append({**row, "horse": evidence_horse})
+    special = allocate_special_marks(special_rows, detail)
     detail["factorRanking"] = []
     for i, row in enumerate(ranked):
         h = row["horse"]
         e = h["integratedEvaluation"]
-        e.update(mark=marks[i] if i < len(marks) else ("☆" if row is star else ""),
+        evidence = special.get(int(h["horseNumber"]), {})
+        e.update(mark=evidence.get("mark", ""),
+                 specialMarkEvidence={k: v for k, v in evidence.items() if k != "mark"},
                  coreAbilityRank=i + 1, coreAbilityScore=round(row["score"] * 100, 2),
                  honmeiRole="win" if i == 0 else "",
                  honmeiGrade=grade if i == 0 else "",

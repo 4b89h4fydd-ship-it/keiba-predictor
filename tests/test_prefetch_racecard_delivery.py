@@ -119,6 +119,35 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         self.assertEqual(len(merged["horses"][0]["recentRaces"]), 1)
         self.assertEqual(merged["preRaceBet"], incoming["preRaceBet"])
 
+    def test_fully_observed_nar_6040_is_current_without_full_lifetime(self) -> None:
+        from arvexq.prediction.nar_model import apply_nar_marks, MODEL_VERSION
+        rows = []
+        for no in range(1, 6):
+            runs = [
+                {"date": f"2026-10-{day:02d}", "track": "大井",
+                 "distance": 1400, "surface": "ダート", "fieldSize": 8,
+                 "finish": no, "cornerPositions": [no, no],
+                 "timeBehindWinner": .25 * (no - 1), "opponentLevel": .6}
+                for day in (1, 2, 3, 4, 5)
+            ]
+            rows.append({"horseNumber": no, "frameNumber": no,
+                         "name": f"馬{no}", "recentRaces": runs})
+        detail = {"id": "nar-2026-10-15-大井-01", "date": "2026-10-15",
+                  "circuit": "地方", "track": "大井", "surface": "ダート",
+                  "distance": 1400, "horses": rows,
+                  "preparedMeta": {"diagnosisReady": True, "careerReady": False}}
+        apply_nar_marks(detail)
+        self.assertEqual(detail["predictionModelVersion"], MODEL_VERSION)
+        self.assertTrue(prefetch._analysis_ready(detail))
+        detail["preparedMeta"]["analysisInputHash"] = prefetch.analysis_input_hash(detail)
+        self.assertTrue(prefetch._analysis_current(detail))
+        detail["narObservedCoverage"]["allObserved"] = False
+        self.assertFalse(prefetch._analysis_ready(detail))
+        self.assertFalse(prefetch._analysis_current(detail))
+        detail["narObservedCoverage"]["allObserved"] = True
+        detail["predictionModelVersion"] = "arvexq-retired-nar-scores"
+        self.assertFalse(prefetch._analysis_ready(detail))
+
     def test_network_enrichment_is_bounded_and_preserves_failed_card(self) -> None:
         from threading import Lock
         from time import sleep

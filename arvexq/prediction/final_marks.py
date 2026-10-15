@@ -7,6 +7,9 @@ separately by the archive module, not recalculated here.
 from __future__ import annotations
 from arvexq.prediction.observed_model import apply_observed_marks
 
+CORE_MARKS = ("◎", "○", "▲", "△")
+LOWER_MARKS = ("☆", "注")
+
 
 def apply_core_marks(detail):
     return apply_observed_marks(detail)
