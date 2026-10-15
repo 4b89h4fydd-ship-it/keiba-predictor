@@ -2136,7 +2136,9 @@ def _parse_nar_live_odds_html(html:str)->dict:
     rank=0;last=None
     for ix,(odd,no) in enumerate(ranked,1):
         if last is None or odd!=last:rank=ix
-        if not out[no].get("popularity"):out[no]["popularity"]=rank
+        # Both parse passes can update the official odds after reading a
+        # popularity cell. Never keep a rank from the earlier odds snapshot.
+        out[no]["popularity"]=rank
         last=odd
     return out
 
@@ -6726,6 +6728,11 @@ def _merge_live_market_rows(race_id:str, fresh_rows:list[dict], saved:dict|None=
         except Exception:no=0
         if not no:continue
         z=by_no.setdefault(no,{"horseNumber":no})
+        fresh_odds=h.get("winOdds")
+        if fresh_odds not in (None,"") and str(fresh_odds)!=str(z.get("winOdds") or ""):
+            # An older stored popularity must not be attached to a newly
+            # published price when the upstream row has no current rank.
+            z.pop("popularity",None)
         for k,v in h.items():
             if k=="horseNumber":continue
             if v not in (None,""):z[k]=v
