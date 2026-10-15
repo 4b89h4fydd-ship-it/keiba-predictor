@@ -135,13 +135,32 @@ def allocate_special_marks(ranked: list[dict[str, Any]], race: dict[str, Any]
         else:
             mark = selected.get(no, "")
         evidence[no]["mark"] = mark
-    for row in ranked[2:]:
-        no = int(row["horse"].get("horseNumber") or 0)
-        if evidence[no]["mark"]:
-            continue
-        assigned = {item["mark"] for item in evidence.values()}
-        for mark in ("▲", "△"):
-            if mark not in assigned:
-                evidence[no]["mark"] = mark
-                break
+    # Give ○ its existing win-contender role. Choose ▲ for expected second/third
+    # and △ for third-place propensity, rather than reusing overall rank order.
+    import math
+    available = [row for row in ranked[2:] if not evidence[int(row["horse"]["horseNumber"])]["mark"]]
+    if available:
+        strengths = [math.exp((float(row["score"]) - float(ranked[0]["score"])) / .15) for row in ranked]
+        total = sum(strengths)
+        p2, p3 = [0.] * len(ranked), [0.] * len(ranked)
+        if total > 0:
+            for i, wi in enumerate(strengths):
+                other = total - wi
+                if other <= 0: continue
+                for j, wj in enumerate(strengths):
+                    if i == j: continue
+                    second = wi / total * wj / other
+                    p2[j] += second
+                    left = other - wj
+                    if left > 0:
+                        for k, wk in enumerate(strengths):
+                            if k != i and k != j: p3[k] += second * wk / left
+        idx = {int(row["horse"]["horseNumber"]): i for i, row in enumerate(ranked)}
+        triangle = max(available, key=lambda row: (p2[idx[int(row["horse"]["horseNumber"])]] + p3[idx[int(row["horse"]["horseNumber"])]], -int(row["horse"]["horseNumber"])))
+        triangle_no = int(triangle["horse"]["horseNumber"])
+        evidence[triangle_no]["mark"] = "▲"
+        rest = [row for row in available if int(row["horse"]["horseNumber"]) != triangle_no]
+        if rest:
+            delta = max(rest, key=lambda row: (p3[idx[int(row["horse"]["horseNumber"])]], -int(row["horse"]["horseNumber"])))
+            evidence[int(delta["horse"]["horseNumber"])]["mark"] = "△"
     return evidence
