@@ -1296,7 +1296,10 @@ function assignObservedPredictionMarks(rows,r){
     return b.axisScore-a.axisScore||b.z.narScore-a.z.narScore
   })[0]:null;
   valid.forEach(function(z){z.preOffAxisCandidate=!!(axis&&axis.z===z);
-    z.podiumAxisEligible=z.preOffAxisCandidate&&grade==='A'});
+    z.podiumAxisEligible=z.preOffAxisCandidate&&grade==='A';
+    if(z.preOffAxisCandidate&&z.predMark!=='◎')z.honmeiRole='axis';
+    if(z.horse&&z.horse.integratedEvaluation){z.horse.integratedEvaluation.independentAxisCandidate=z.preOffAxisCandidate;
+      z.horse.integratedEvaluation.podiumAxisEligible=z.podiumAxisEligible;}});
   r.honmeiDecisionFrontend={version:observedModelVersion(r),eligible:grade==='A',
     horseNumber:n(first.horse.horseNumber),role:'win',confidenceGrade:grade,
     axisScore:first.narScore,axisGap:gap,reason:complete?'observed-nar-mineta-margin':'partial-observed'};
@@ -1527,9 +1530,10 @@ function immutableArchivedPrediction(r){
     });
     var honmei=validatedHonmeiMetadata(snap);
     return{horse:h,predMark:mark,predRank:order[mark]||999,markFrozen:!!saved.length,
-      honmeiRole:mark==='◎'?honmei.honmeiRole:'',
+      honmeiRole:mark==='◎'?honmei.honmeiRole:(honmei.honmeiRole==='axis'?'axis':''),
       honmeiGrade:mark==='◎'?honmei.honmeiGrade:'',
-      podiumAxisEligible:mark==='◎'&&honmei.honmeiGrade==='A'&&snap.podiumAxisEligible===true,
+      podiumAxisEligible:snap.podiumAxisEligible===true,
+      preOffAxisCandidate:snap.independentAxisCandidate===true||snap.podiumAxisEligible===true,
       hasFrozenEvaluation:ev.score!=null,
       overallRaw:ev.score!=null?n(ev.score):null,overallGrade:String(ev.grade||'—'),
       overallScore:ev.score!=null?n(ev.score):null,overallScoreExact:ev.score!=null?n(ev.score):null,
@@ -1574,9 +1578,10 @@ function applyFrozenMarks(r,p){
       z.computedLiveMark=String(z.predMark||'');z.predMark=scratched?'':String(q.mark||'');
       z.predRank=order[z.predMark]||999;z.markFrozen=true;
       var lockedHonmei=validatedHonmeiMetadata(q);
-      z.honmeiRole=z.predMark==='◎'?lockedHonmei.honmeiRole:'';
+      z.honmeiRole=z.predMark==='◎'?lockedHonmei.honmeiRole:(lockedHonmei.honmeiRole==='axis'?'axis':'');
       z.honmeiGrade=z.predMark==='◎'?lockedHonmei.honmeiGrade:'';
-      z.podiumAxisEligible=z.predMark==='◎'&&lockedHonmei.honmeiGrade==='A'&&q.podiumAxisEligible===true;
+      z.podiumAxisEligible=q.podiumAxisEligible===true;
+      z.preOffAxisCandidate=q.independentAxisCandidate===true||q.podiumAxisEligible===true;
       z.singleWinSuitable=!scratched&&(!!q.singleWinSuitable||
         (n((r.preRaceBet||{}).singleWinHorseNumber,0)>0&&
          n((r.preRaceBet||{}).singleWinHorseNumber)===n(z.horse&&z.horse.horseNumber)));
@@ -1933,7 +1938,7 @@ function honmeiBadgeText(x){return x&&x.honmeiGrade?String(x.honmeiGrade):'';}
 function markRoleLabel(x){
   if(!x)return '';
   var win=x.predMark==='◎'&&(x.markFrozen?x.honmeiRole==='win':true),
-      axis=x.markFrozen?(x.predMark==='◎'&&x.honmeiRole==='axis'||x.podiumAxisEligible===true):x.preOffAxisCandidate===true;
+      axis=x.markFrozen?((x.predMark==='◎'&&x.honmeiRole==='axis')||x.preOffAxisCandidate===true||x.podiumAxisEligible===true):x.preOffAxisCandidate===true;
   return win&&axis?'◎【単】 ◎【軸】':win?'◎【単】':axis?'◎【軸】':'';
 }
 // An independently selected ◎【軸】 is an actual visible recommendation
