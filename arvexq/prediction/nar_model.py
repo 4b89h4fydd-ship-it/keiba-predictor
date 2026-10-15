@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from arvexq.core.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import observed_runs
+from arvexq.prediction.special_marks import allocate_special_marks
 from arvexq.research.mineta_field_proxy import score_race as mineta_scores
 from arvexq.research.margin_abcde_candidate import score as margin_score
 
@@ -60,18 +61,14 @@ def apply_nar_marks(detail):
             e.pop(k, None)
         e.update(mark="", markSource=MODEL_VERSION, markEngineVersion=MODEL_VERSION,
                  honmeiRole="", honmeiGrade="", honmeiEligible=False)
-    marks = ("◎", "○", "▲", "△")
-    fourth = ranked[3] if len(ranked) >= 4 else None
-    # Match the browser: optional observed pace upside, never automatic fifth.
-    star = next((row for row in ranked[4:]
-                 if fourth is not None and row["score"] >= .55
-                 and fourth["score"] - row["score"] <= .075
-                 and row["factors"]["mineta"] >= .55), None)
+    special = allocate_special_marks(ranked, detail)
     detail["factorRanking"] = []
     for i, row in enumerate(ranked):
         h = row["horse"]
         e = h["integratedEvaluation"]
-        e.update(mark=marks[i] if i < len(marks) else ("☆" if row is star else ""),
+        observed = special.get(int(h["horseNumber"]), {})
+        e.update(mark=observed.get("mark", ""),
+                 specialMarkEvidence={k: v for k, v in observed.items() if k != "mark"},
                  coreAbilityRank=i + 1, coreAbilityScore=round(row["score"] * 100, 2),
                  honmeiRole="win" if i == 0 else "",
                  honmeiGrade=grade if i == 0 else "",

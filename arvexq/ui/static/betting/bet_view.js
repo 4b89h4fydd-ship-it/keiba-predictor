@@ -15,7 +15,7 @@ function render(r,p,deps){
   if(!plan)return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><p class="muted">'+((isFinal(r)||raceMarkClock(r).started)?'発走前買い目未保存（発走後の後付け予想は作成しません）':'発走前予想を取得中。未保存の買い目は暫定判定です。')+'</p></div>';
   // Fail closed when called directly with a retired plan. A historic pre-off
   // receipt is an audit artifact, never a current actionable buy ticket.
-  if(plan.fixedAt&&!/^arvexq-true-run-pure-sectional-v[12]$/.test(
+  if(plan.fixedAt&&!/^(?:arvexq-true-run-pure-sectional-v[12]|arvexq-nar-mineta-margin-60-40-v1)$/.test(
       String(plan.engineVersion||plan.betStrategy||'')))
     return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><p class="muted">現行方式の発走前買い目は未保存です。旧方式の買い目は現在の予想に表示しません。</p></div>';
   var dataUnavailable=plan.decision==='データ不足'||plan.decision==='未取得'||
@@ -58,7 +58,7 @@ function render(r,p,deps){
     +'<span><i>【単】</i>◎【単】 勝ち切る能力・1着向き（的中保証ではありません）</span>'
     +'<span><i>【軸】</i>◎【軸】 3着以内の安定性・軸向き（的中保証ではありません）</span>'
     +'<span><i>○</i>1・2着向き</span><span><i>▲</i>2・3着向き</span>'
-    +'<span><i>△</i>3着向き</span><span><i>☆</i>複数の好走根拠を満たす場合のみ（毎回必須ではありません）</span>'
+    +'<span><i>△</i>3着向き</span><span><i>☆</i>実測の追い上げ・前争いを評価</span><span><i>注</i>着差・同条件・相手関係などの見落とし注意馬</span>'
     +'</div></div><p class="arv-three-reason">'+esc(plan.reason||'')+'</p></div>'
 }
 global.ARVEXQBetView=Object.freeze({render:render});
