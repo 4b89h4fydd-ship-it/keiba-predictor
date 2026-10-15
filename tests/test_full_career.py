@@ -4,7 +4,6 @@ import unittest
 from arvexq.ingest.full_career import merge_career, audit_career
 from arvexq.prediction.career_profile import profile_career
 from arvexq.prediction.past_performance import observed_runs, analyze_past_performance
-from arvexq.prediction.factor_model import collect_horse_raw_metrics
 from arvexq.databanks.registry import DataBankRegistry,DataSource,SourceCapabilities
 from arvexq.ingest.fallback_enrichment import enrich_race_missing
 
@@ -45,8 +44,6 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(career["datedRuns"],10)
         self.assertEqual(career["comparableRuns"],10)
         self.assertEqual(career["recentRuns"],5)
-        raw=collect_horse_raw_metrics(horse,RACE)
-        self.assertEqual(raw["sample"],5)
         self.assertEqual(analyze_past_performance(horse,RACE)["datedRuns"],5)
         self.assertEqual(len(src["recentRaces"]),5)
     async def test_no_dated_history_cannot_be_fabricated(self):
@@ -166,10 +163,7 @@ class CareerTests(unittest.IsolatedAsyncioTestCase):
         b={"recentRaces":recent,"allPastRuns":old+recent}
         self.assertEqual(analyze_past_performance(a,RACE)["top3"],analyze_past_performance(b,RACE)["top3"])
         self.assertGreater(profile_career(b,RACE)["top3Rate"],profile_career(a,RACE)["top3Rate"])
-        self.assertEqual(collect_horse_raw_metrics(b,RACE)["trueRun"],
-                         collect_horse_raw_metrics(a,RACE)["trueRun"])
-        self.assertEqual(collect_horse_raw_metrics(b,RACE)["pure"],
-                         collect_horse_raw_metrics(a,RACE)["pure"])
+        self.assertEqual(observed_runs(b,RACE), observed_runs(a,RACE))
 
 if __name__=="__main__":
     unittest.main()

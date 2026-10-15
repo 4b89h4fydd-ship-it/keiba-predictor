@@ -78,7 +78,7 @@ jobs:
           node scripts/arvexq_full_snapshot_smoke.mjs
           node scripts/arvexq_api_chunk_export_smoke.mjs
           node scripts/arvexq_saved_ticket_smoke.js
-          node scripts/arvexq_capture_three_factor_smoke.js
+          node scripts/arvexq_capture_jra_6040_smoke.js
           node scripts/arvexq_capture_nar_6040_smoke.js
           node scripts/arvexq_saved_odds_smoke.mjs
           python -m unittest tests.test_saved_actual_odds
@@ -93,7 +93,7 @@ jobs:
 
       - name: Modular API helpers and isolated behavior regressions
         run: |
-          python -m py_compile arvexq/ui/icon_assets.py arvexq/prediction/legacy_model_tables.py \
+          python -m py_compile arvexq/ui/icon_assets.py arvexq/prediction/course_speed_baselines.py \
             arvexq/ingest/pure_parsers.py arvexq/prediction/pure_diagnostics.py \
             arvexq/infra/pure_snapshots.py
           python -m unittest discover -s tests -p 'test_app_pure_modules.py' -v
@@ -133,7 +133,6 @@ jobs:
       - name: Betting marks and ticket reconciliation regression
         run: |
           node --check arvexq/ui/static/app.js
-          node scripts/arvexq_three_factor_parity_smoke.js
           node scripts/arvexq_bet_role_guide_smoke.js
           node scripts/arvexq_race_source_integrity_smoke.js
           node scripts/arvexq_empirical_selection_smoke.js
@@ -206,7 +205,7 @@ jobs:
 
       - name: NAR dedicated Mineta-margin scoring and isolated marks
         run: |
-          python -m unittest tests.test_nar_mineta_margin_authority -v
+          python -m unittest tests.test_nar_mineta_margin_authority tests.test_unified_jra_nar_observed_authority -v
           python -m unittest tests.test_nar_official_prior_margin_backfill -v
           python -m unittest tests.test_no_retired_ranker_execution -v
           node --check arvexq/ui/static/app.js
@@ -248,7 +247,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_jra_career_merge.py' -v
           python -m unittest discover -s tests -p 'test_official_changes.py' -v
           python -m unittest discover -s tests -p 'test_past_performance.py' -v
-          python -m unittest discover -s tests -p 'test_three_factor_unified.py' -v
+          python -m unittest tests.test_unified_jra_nar_observed_authority -v
           python -m unittest discover -s tests -p 'test_empirical_ticket_calibration.py' -v
           python -m unittest discover -s tests -p 'test_full_career.py' -v
           python -m unittest discover -s tests -p 'test_career_readiness.py' -v
@@ -332,7 +331,8 @@ jobs:
                        {'horseNumber':2,'name':'テスト馬2','jockey':'騎手B','carriedWeight':55.0,'recentRaces':[{'finish':2}]},
                        {'horseNumber':3,'name':'テスト馬3','jockey':'騎手C','carriedWeight':56.0,'recentRaces':[{'finish':3}]}],
             'preparedMeta':{'diagnosisReady':True,'careerReady':True},'preRacePrediction':{'mark':'◎','score':88},'predictionAudit':{'locked':True},
-            'predictionModelVersion':prefetch.FOUR_PILLAR_MODEL_VERSION,
+            'predictionModelVersion':prefetch.model_version({'circuit':'地方'}),
+            'predictionStatus':'ready', 'observedModelCoverage':{'allObserved':True},
           }
           base['preparedMeta']['analysisInputHash']=analysis_input_hash(base)
           fresh={'id':base['id'],'weather':'曇','condition':'稍重','horses':[{'horseNumber':1,'bodyWeight':486,'bodyWeightChange':6,'winOdds':2.8}]}
@@ -370,7 +370,7 @@ jobs:
           assert enriched['horses'][0]['name']=='テスト馬'
 
           # The retired independent axis gate is intentionally deleted.
-          # All marks are now generated from the shared three-factor model.
+          # All marks now follow the shared observed 60/40 scorer.
 
           old_final={'status':'確定','finishers':[{'finish':1,'horseNumber':1},{'finish':2,'horseNumber':2},{'finish':3,'horseNumber':3}]}
           flash={'status':'速報','finishers':[{'finish':1,'horseNumber':9}]}
@@ -381,12 +381,12 @@ jobs:
           assert upgraded['horses'][0]['name']=='テスト馬' and upgraded['preRacePrediction']==base['preRacePrediction']
           assert upgraded['result']['status']=='確定'
 
-          # A local race cannot be current with obsolete JRA factor-model marks.
-          assert not prefetch._analysis_current(base)
+          # The current NAR 60/40 and JRA 60/40 both use their own version IDs.
+          assert prefetch._analysis_current(base)
           jra_base=copy.deepcopy(base)
           jra_base['circuit']='中央'
           jra_base['id']='jra-2026-10-04-東京-01'
-          jra_base['predictionModelVersion']=prefetch.FOUR_PILLAR_MODEL_VERSION
+          jra_base['predictionModelVersion']=prefetch.model_version(jra_base)
           jra_base['preparedMeta']['analysisInputHash']=analysis_input_hash(jra_base)
           assert prefetch._analysis_current(jra_base)
           changed=copy.deepcopy(jra_base);changed['horses'][0]['bodyWeight']=488

@@ -12,7 +12,11 @@ class PrePostMarkConsistency(unittest.TestCase):
   result=subprocess.run(['node','scripts/arvexq_frozen_marks_smoke.js'],
                         cwd=root,capture_output=True,text=True,timeout=30)
   self.assertEqual(result.returncode,0,result.stdout+result.stderr)
- def test_three_factor_weights_are_intact(self):
+ def test_both_circuits_use_single_observed_6040_score(self):
   s=S.read_text(encoding='utf-8')
-  self.assertIn('score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)',s)
+  self.assertIn('z.narScore=available ? .60*position+.40*margin.score : null;',s)
+  self.assertIn("var ARVEXQ_JRA_MODEL='arvexq-jra-mineta-margin-60-40-v1'",s)
+  self.assertIn("var ARVEXQ_NAR_MODEL='arvexq-nar-mineta-margin-60-40-v1'",s)
+  self.assertNotIn('function arvexqFactorValues',s)
+  self.assertNotIn('arvexq-true-run-pure-sectional-v2',s)
 if __name__=='__main__':unittest.main()

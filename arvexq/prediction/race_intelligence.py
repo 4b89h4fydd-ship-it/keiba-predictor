@@ -41,31 +41,11 @@ def attach_evidence(detail: dict[str, Any]) -> dict[str, Any]:
         except Exception as exc:  # evidence decoration must never block delivery
             horse["careerCoverage"] = {"version": "arvexq-career-coverage-ui-v1", "state": "acquisition-unverified",
                                        "acquisition": "unverified", "reason": f"coverage-error:{type(exc).__name__}"}
+        from arvexq.prediction.observed_model import model_version
+        evidence = (horse.get("integratedEvaluation") or {}).get("narModelEvidence") or {}
         horse["researchEvidence"] = {
             "factors": {
-                "version": "arvexq-true-run-pure-sectional-v1",
-                "items": [
-                    {"key": key, "weight": weight,
-                     "value": ((horse.get("integratedEvaluation") or {})
-                               .get("factorEvidence") or {})
-                              .get("pillarScores", {}).get(key),
-                     "available": ((horse.get("integratedEvaluation") or {})
-                                   .get("factorEvidence") or {})
-                                  .get("pillarScores", {}).get(key) is not None}
-                    for key, weight in (("trueRun", .45), ("pure", .35), ("sectional", .20))
-                ],
-                "calibrated": False,
-                "note": "Three-factor evidence is descriptive, never a hit probability.",
-            },
-            "sectionals": profile(horse, detail),
-            "status": "read-only-unverified-predictive-lift",
-        }
-        if str(detail.get("circuit") or "") in ("地方", "NAR", "local"):
-            # The old three-factor explanations are JRA-only.
-            from arvexq.prediction.nar_model import MODEL_VERSION as nar_version
-            evidence = (horse.get("integratedEvaluation") or {}).get("narModelEvidence") or {}
-            horse["researchEvidence"]["factors"] = {
-                "version": nar_version,
+                "version": model_version(detail),
                 "items": [
                     {"key": "mineta", "weight": .60, "value": evidence.get("mineta"),
                      "available": evidence.get("mineta") is not None},
@@ -73,9 +53,11 @@ def attach_evidence(detail: dict[str, Any]) -> dict[str, Any]:
                      "available": evidence.get("margin") is not None}
                 ],
                 "calibrated": False,
-                "note": "NAR 60/40 relative scores are not verified hit probabilities."
-            }
-            horse["researchEvidence"]["status"] = "nar-observed-only"
+                "note": "Observed 60/40 relative model scores are not verified hit probabilities.",
+            },
+            "sectionals": profile(horse, detail),
+            "status": "jra-observed-official-proofs" if str(detail.get("circuit") or "") in ("中央", "JRA", "central") else "nar-observed-only",
+        }
         count += 1
     detail["researchEvidenceVersion"] = "arvexq-race-intelligence-v1"
     detail["researchEvidenceHorses"] = count

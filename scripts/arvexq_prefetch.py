@@ -27,8 +27,7 @@ if str(ROOT) not in sys.path:
 import app
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
 from arvexq.prediction.career_readiness import assess_career_readiness, attach_career_readiness
-from arvexq.prediction.factor_model import MODEL_VERSION as FOUR_PILLAR_MODEL_VERSION
-from arvexq.prediction.nar_model import MODEL_VERSION as NAR_MODEL_VERSION
+from arvexq.prediction.observed_model import model_version
 from arvexq.prediction.race_intelligence import attach_evidence
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 from arvexq.ingest.full_career import merge_career
@@ -183,28 +182,16 @@ def _recover_existing_racecards(date: str) -> dict[str, dict[str, Any]]:
 def _analysis_ready(detail: dict[str, Any] | None) -> bool:
     if not isinstance(detail, dict):
         return False
+    coverage = detail.get("observedModelCoverage") or {}
     pm = detail.get("preparedMeta") or {}
-    if str(detail.get("circuit") or "") in ("地方", "NAR", "local"):
-        # Current local 60/40 needs observed margins and positions for every
-        # active runner, NOT an independently verified lifetime-start count.
-        # Do not promote incomplete local scores or archived old marks.
-        coverage = detail.get("narObservedCoverage") or {}
-        return bool(pm.get("diagnosisReady") is True
-                    and coverage.get("allObserved") is True
-                    and detail.get("predictionStatus") == "ready"
-                    and detail.get("predictionModelVersion") == NAR_MODEL_VERSION)
-    return bool(pm.get("diagnosisReady") and pm.get("careerReady") is True
-                and assess_career_readiness(detail).get("ready"))
+    return bool(pm.get("diagnosisReady") is True
+                and coverage.get("allObserved") is True
+                and detail.get("predictionStatus") == "ready"
+                and detail.get("predictionModelVersion") == model_version(detail))
 
 
 def _analysis_current(detail: dict[str, Any] | None) -> bool:
     if not isinstance(detail, dict) or not _analysis_ready(detail):
-        return False
-    # Both circuits have their OWN one authoritative model. Never demand
-    # JRA's 45/35/20 version of a completed local 60/40 diagnosis.
-    is_nar = str(detail.get("circuit") or "") in ("地方", "NAR", "local")
-    expected = NAR_MODEL_VERSION if is_nar else FOUR_PILLAR_MODEL_VERSION
-    if str(detail.get("predictionModelVersion") or "") != expected:
         return False
     pm = detail.get("preparedMeta") if isinstance(detail.get("preparedMeta"), dict) else {}
     saved = str(pm.get("analysisInputHash") or "")

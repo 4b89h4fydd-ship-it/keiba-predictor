@@ -1,7 +1,7 @@
 import copy
 import unittest
 from arvexq.prediction.final_marks import apply_core_marks
-from arvexq.prediction.nar_model import MODEL_VERSION, apply_nar_marks, rank_nar
+from arvexq.prediction.observed_model import MODEL_VERSION, apply_nar_marks, rank_nar
 from arvexq.research.mineta_field_proxy import score_race
 from arvexq.research.margin_abcde_candidate import score as margin_score
 
@@ -58,8 +58,8 @@ class NarAuthorityTests(unittest.TestCase):
         for run in d["horses"][5]["recentRaces"]:
             run.pop("timeBehindWinner")
         apply_nar_marks(d)
-        self.assertFalse(d["narObservedCoverage"]["allObserved"])
-        self.assertEqual(d["narObservedCoverage"]["fullyObserved"], 5)
+        self.assertFalse(d["observedModelCoverage"]["allObserved"])
+        self.assertEqual(d["observedModelCoverage"]["fullyObserved"], 5)
         self.assertEqual(d["horses"][5]["integratedEvaluation"]["mark"], "")
         self.assertNotEqual(d["predictionStatus"], "ready")
 
@@ -94,7 +94,7 @@ class NarAuthorityTests(unittest.TestCase):
              "marginCoverage": .8, "modelVersion": MODEL_VERSION, "rank": i + 1}
             for i, h in enumerate(d["horses"])
         ]
-        with patch("arvexq.prediction.nar_model.rank_nar", return_value=rows):
+        with patch("arvexq.prediction.observed_model.rank_observed", return_value=rows):
             apply_nar_marks(d)
         marks = [h["integratedEvaluation"]["mark"] for h in d["horses"]]
         self.assertEqual(marks, ["◎", "○", "注", "▲", "☆", "△"])

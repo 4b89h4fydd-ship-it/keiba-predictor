@@ -107,16 +107,20 @@ class ServerSealTests(unittest.TestCase):
             return card
         result = prepare_seal(d, now=self.now, assign=missing_career,
                               build=lambda _: self.fail("no lock from unverified careers"))
-        self.assertEqual(result["status"], "waiting-for-full-career")
-        self.assertEqual(result["activeHorses"], 3)
-        self.assertEqual(result["completeHorses"], 2)
-        self.assertEqual(result["blockedHorses"][0]["reason"], "reported-starts-unknown")
+        self.assertEqual(result["status"], "incomplete-prediction")
+        self.assertEqual(result["predictionStatus"], "waiting-for-full-career")
+        self.assertEqual(result["observedCoverage"], {})
         self.assertNotIn("preRacePrediction", d)
 
     def test_evaluation_and_marks_are_as_captured(self):
-        result = prepare_seal(self.d, now=self.now, assign=lambda x:x,
+        def already_verified(x):
+            # This test exercises archival fidelity, not model evidence. The
+            # separate JRA/NAR authority test proves observed inputs.
+            x["predictionStatus"]="ready"
+            return x
+        result = prepare_seal(self.d, now=self.now, assign=already_verified,
                               build=lambda x:forecast(x,self.now))
-        self.assertEqual(result["status"], "sealed")
+        self.assertEqual(result["status"], "sealed", result)
         record = result["detail"]["preRacePrediction"]
         self.assertEqual(record["horses"][1]["lockedEvaluation"]["score"], 80)
         self.assertEqual(record["freezePolicy"], SEALED_VERSION)
@@ -302,6 +306,7 @@ class ServerSealTests(unittest.TestCase):
             seen.extend(h["horseNumber"] for h in data["horses"])
             for h, mark in zip(data["horses"],("◎", "○", "▲")):
                 h["integratedEvaluation"]["mark"] = mark
+            data["predictionStatus"] = "ready"
             return data
         def build_active(wd):
             active = deepcopy(wd)
@@ -309,7 +314,7 @@ class ServerSealTests(unittest.TestCase):
             return forecast(active,self.now)
         result = prepare_seal(d, now=self.now, assign=assign_core,
                               build=build_active)
-        self.assertEqual(result["status"], "sealed")
+        self.assertEqual(result["status"], "sealed", result)
         self.assertEqual(seen, [1,2,3])
         self.assertEqual(len(result["detail"]["horses"]),4)
         locked = result["detail"]["preRacePrediction"]["horses"]

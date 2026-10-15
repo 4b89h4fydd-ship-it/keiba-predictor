@@ -33,15 +33,15 @@ class RaceIntelligenceTests(unittest.TestCase):
                      "aiTrackBias": {"frontBack": "前寄り", "sampleRaces": 2}}
 
     def test_evidence_only_already_available_and_preoff(self):
-        # Central retains three factors; NAR now exposes the independent 60/40 axes.
+        # Both circuits expose one shared 60/40 observed model with separate source evidence.
         self.race.update(circuit='中央', id='jra-2026-10-09-東京-03', track='東京')
         original = copy.deepcopy(self.race)
         attach_evidence(self.race)
         h = self.race["horses"][0]
         factors = h["researchEvidence"]["factors"]
-        self.assertEqual(len(factors["items"]), 3)
+        self.assertEqual(len(factors["items"]), 2)
         self.assertFalse(factors["calibrated"])
-        self.assertEqual([x["key"] for x in factors["items"]], ["trueRun","pure","sectional"])
+        self.assertEqual([x["key"] for x in factors["items"]], ["mineta","margin"])
         sectionals = h["researchEvidence"]["sectionals"]
         self.assertEqual(len(sectionals["runs"]), 1, "future runs must never leak")
         self.assertEqual(sectionals["runs"][0]["early3FSeconds"], 35.6)
@@ -54,17 +54,16 @@ class RaceIntelligenceTests(unittest.TestCase):
         self.assertFalse(self.race["biasProvenance"]["changesMorningMarks"])
 
     def test_three_factors_do_not_create_a_parallel_predictor(self):
-        # Central retains three factors; NAR now exposes the independent 60/40 axes.
+        # Both circuits expose one shared 60/40 observed model with separate source evidence.
         self.race.update(circuit='中央', id='jra-2026-10-09-東京-03', track='東京')
         detail=copy.deepcopy(self.race)
-        detail["horses"][0]["integratedEvaluation"]["factorEvidence"]={
-            "pillarScores":{"trueRun":.8,"pure":.7,"sectional":.6}}
+        detail["horses"][0]["integratedEvaluation"]["narModelEvidence"]={"mineta":.8,"margin":.7}
         attach_evidence(detail)
         card=detail["horses"][0]["researchEvidence"]["factors"]
         self.assertEqual([x["key"] for x in card["items"]],
-                         ["trueRun","pure","sectional"])
-        self.assertEqual([x["weight"] for x in card["items"]],[.45,.35,.20])
-        self.assertEqual([x["value"] for x in card["items"]],[.8,.7,.6])
+                         ["mineta","margin"])
+        self.assertEqual([x["weight"] for x in card["items"]],[.60,.40])
+        self.assertEqual([x["value"] for x in card["items"]],[.8,.7])
         self.assertFalse(card["calibrated"])
         self.assertNotIn("predictiveScore",card)
         self.assertEqual(detail["preRaceBet"],self.race["preRaceBet"])

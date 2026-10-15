@@ -2,7 +2,6 @@
 from __future__ import annotations
 import unittest
 from arvexq.prediction.past_performance import analyze_past_performance, observed_runs
-from arvexq.prediction.factor_model import collect_horse_raw_metrics
 from arvexq.features.horse_features import build_horse_features
 
 
@@ -37,9 +36,6 @@ class PastFiveContextTests(unittest.TestCase):
         features = build_horse_features({"horseNumber": 1, **d}, RACE)
         self.assertEqual(features["historySamples"], 5)
         self.assertEqual(features["pastPerformance"]["top3"], 4)
-        raw = collect_horse_raw_metrics(d, RACE)
-        self.assertIsNotNone(raw["trueRun"])
-        self.assertIsNotNone(raw["pure"])
 
     def test_not_comparable_is_not_claimed_to_be_bad_or_good(self):
         runs = [run("2026-09-20", 1, distance=1800),
@@ -69,9 +65,6 @@ class PastFiveContextTests(unittest.TestCase):
         self.assertEqual(context["datedRuns"], 0)
         self.assertIsNone(context["top3Rate"])
         self.assertEqual(context["status"], "missing-dated-past-runs")
-        raw = collect_horse_raw_metrics(horse, RACE)
-        self.assertIsNone(raw["trueRun"])
-        self.assertIsNone(raw["sectional"])
 
     def test_date_at_or_after_off_never_used(self):
         h = {"recentRaces": [run("2026-10-09", 1), run("2026-10-10", 1)]}
