@@ -213,13 +213,17 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
         return None
 
     def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
-        from arvexq.ingest.full_career import date_key
+        from arvexq.ingest.full_career import date_key, merge_career
         target = date_key(race.get("date"))
         if not target:
             return {}
         known_name = str(horse.get("name") or "").strip()
-        known_runs = horse.get("allPastRuns") or horse.get("recentRaces") or []
-        for run in known_runs[:1]:
+        known_runs = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), target)
+        fallback_sectional = None
+        # The newest official race can have no times/row yet. Try the next
+        # recorded starts within the same verified five-run window, not only
+        # the very first row. No additional data provider is introduced.
+        for run in known_runs[:max(1, min(5, int(limit or 5)))]:
             if not isinstance(run, dict):
                 continue
             at = date_key(run.get("date") or run.get("raceDate"))
@@ -227,8 +231,9 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             no = int(run.get("raceNumber") or run.get("raceNo") or 0)
             if not at or at >= target or not track or not 1 <= no <= 12:
                 continue
-            if all(run.get(k) not in (None, "", 0) for k in
-                   ("last3fSeconds", "timeBehindWinner")):
+            if (run.get("last3fSeconds") not in (None, "", 0)
+                    and any(run.get(k) not in (None, "")
+                            for k in ("marginSeconds", "timeBehindWinner"))):
                 continue
             previous = {"date": at, "track": track, "raceNumber": no,
                         "horses": [{"name": known_name,
@@ -266,10 +271,16 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
                   "gap=", observed.get("timeBehindWinner"),
                   "3F=", observed.get("last3fSeconds"),
                   "marginText=", bool(observed.get("marginText")))
-            if any(key in observed and observed.get(key) not in (None, "")
-                   for key in ("last3fSeconds", "marginText", "timeBehindWinner")):
+            if observed.get("timeBehindWinner") not in (None, "") or observed.get("marginSeconds") not in (None, ""):
                 observed["source"] = "NAR official historical results"
                 return {"recentRaces": [observed], "allPastRuns": [observed]}
+            if (fallback_sectional is None
+                    and any(observed.get(key) not in (None, "")
+                            for key in ("last3fSeconds", "marginText"))):
+                fallback_sectional = observed
+        if fallback_sectional is not None:
+            fallback_sectional["source"] = "NAR official historical results"
+            return {"recentRaces": [fallback_sectional], "allPastRuns": [fallback_sectional]}
         return {}
 
     return fetch

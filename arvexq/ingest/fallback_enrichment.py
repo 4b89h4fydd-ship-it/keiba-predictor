@@ -125,6 +125,28 @@ def _needs_jra_margins(horse: dict[str, Any], cutoff: str) -> bool:
                    ("marginSeconds", "timeBehindWinner")) for row in runs)
 
 
+def _needs_nar_margins(horse: dict[str, Any], cutoff: str) -> bool:
+    """Seek *existing official result evidence* when no prior time margin was observed.
+
+    One true measured margin suffices to make the NAR 60/40 score eligible for
+    that horse. Never substitute finishing place, popularity, or neutral scores.
+    A zero-second winner margin counts as valid evidence.
+    """
+    runs = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)[:5]
+    if not runs:
+        return False
+    def measured(row: dict[str, Any]) -> bool:
+        for key in ("marginSeconds", "timeBehindWinner"):
+            value = row.get(key)
+            try:
+                if value not in (None, "") and 0 <= float(value) <= 30:
+                    return True
+            except (TypeError, ValueError, OverflowError):
+                continue
+        return False
+    return not any(measured(run) for run in runs)
+
+
 def _observed_sectional_rank_count(horse: dict[str, Any], cutoff: str = "", limit: int = 5) -> int:
     """Count actual prior-run sectional positions, not fabricated pace scores."""
     runs = _merge_runs(
@@ -346,6 +368,11 @@ async def enrich_race_missing(
             elif circuit == "JRA" and _needs_jra_margins(horse, cutoff) and bank_registry.get("jra_official_prior_results"):
                 # Missing margins need the result adapter, not a redundant card/profile fetch.
                 domains.append(("horse_history", {"jra_official_prior_results"} | measured_feeds))
+            elif circuit == "NAR" and _needs_nar_margins(horse, cutoff) and bank_registry.get("nar_official_past_results"):
+                # The original five runs can have positions yet no winner-time gap.
+                # Use the ALREADY REGISTERED official NAR result adapter only;
+                # never add a parallel scraper or fall back to legacy scores.
+                domains.append(("horse_history", {"nar_official_past_results"}))
             elif measured_feeds and (
                 _measured_horse_first3f_count(horse, cutoff, history_limit) < 2
                 or _horse_early_timing_count(horse, cutoff, history_limit) < 2

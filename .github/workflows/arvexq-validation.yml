@@ -207,6 +207,7 @@ jobs:
       - name: NAR dedicated Mineta-margin scoring and isolated marks
         run: |
           python -m unittest tests.test_nar_mineta_margin_authority -v
+          python -m unittest tests.test_nar_official_prior_margin_backfill -v
           python -m unittest tests.test_no_retired_ranker_execution -v
           node --check arvexq/ui/static/app.js
 
