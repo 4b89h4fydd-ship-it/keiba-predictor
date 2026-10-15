@@ -75,14 +75,16 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     await Promise.all([worker(),worker(),worker()]);
     const r=chosen.find(r=>r.circuit==='地方')||chosen[0],page=await context.newPage();
     await page.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
-    const initialResponse=page.waitForResponse(res=>res.url().includes('/api/live-odds/'));
+    // Consume rejection even if another assertion closes the browser first;
+    // a missing actual response is still an explicit failure when awaited.
+    const initialResponse=page.waitForResponse(res=>res.url().includes('/api/live-odds/'),{timeout:20000}).catch(()=>null);
     await check(page,r);
-    assert.equal((await initialResponse).status(),200,'independent initial source request');
+    assert.equal((await initialResponse)?.status(),200,'independent initial source request');
     await page.waitForTimeout(250);
     const before=await page.locator('.rc-ai-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark')));
-    const response=page.waitForResponse(res=>res.url().includes('/api/live-odds/')&&res.url().includes('force=1'));
+    const response=page.waitForResponse(res=>res.url().includes('/api/live-odds/')&&res.url().includes('force=1'),{timeout:20000}).catch(()=>null);
     await page.locator('[data-action="odds-update"]').click();
-    assert.equal((await response).status(),200,'manual source update with D1 API aborted');
+    assert.equal((await response)?.status(),200,'manual source update with D1 API aborted');
     await page.waitForTimeout(300);
     assert.deepEqual(await page.locator('.rc-ai-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark'))),before,'odds refresh must not rewrite saved marks');
     await page.close();
