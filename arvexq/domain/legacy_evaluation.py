@@ -1226,20 +1226,15 @@ def install_evaluation_core(namespace: dict) -> None:
     code = compile(SOURCE, '<arvexq:evaluation_core>', 'exec')
     exec(code, namespace, namespace)
 
-    # Final marks must follow the current ability/record engine. The legacy ranker is
-    # retained only for auxiliary diagnostics and lower-mark context.
+    # One sole scorer per circuit. The embedded v207/v212/v3xx ranker is
+    # retained as inert historical code until the surrounding legacy
+    # diagnostics are extracted, but it must never run in live prediction:
+    # its old coefficients are neither NAR nor JRA's current scoring method.
     from arvexq.prediction.final_marks import apply_core_marks
 
-    legacy_rank = namespace.get('_rank_evaluations')
-    if callable(legacy_rank) and not getattr(legacy_rank, '_arvexq_core_marks_wrapped', False):
-        def _rank_evaluations_core_marks(detail):
-            if isinstance(detail, dict) and str(detail.get('circuit') or '') in ('地方', 'NAR', 'local'):
-                # Local races never execute the retired legacy evaluator.
-                return apply_core_marks(detail)
-            result = legacy_rank(detail)
-            target = result if isinstance(result, dict) else detail
-            return apply_core_marks(target)
+    def _rank_evaluations_core_marks(detail):
+        return apply_core_marks(detail)
 
-        _rank_evaluations_core_marks._arvexq_core_marks_wrapped = True
-        _rank_evaluations_core_marks.__name__ = '_rank_evaluations'
-        namespace['_rank_evaluations'] = _rank_evaluations_core_marks
+    _rank_evaluations_core_marks._arvexq_core_marks_wrapped = True
+    _rank_evaluations_core_marks.__name__ = '_rank_evaluations'
+    namespace['_rank_evaluations'] = _rank_evaluations_core_marks
