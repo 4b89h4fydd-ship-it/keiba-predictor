@@ -22,7 +22,7 @@ jobs:
       RACEDB_AUTO_UPDATE: "0"
       ARVEXQ_FACTOR_BACKFILL_RACES: "24"
       ARVEXQ_FACTOR_BACKFILL_OFFSET: "0"
-      KEIBA_DATA_DIR: ${{ runner.temp }}/jra-margin-verification
+      KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-jra-margin-verification
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
       API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
     steps:

@@ -18,7 +18,7 @@ jobs:
       ARVEXQ_DATA_CORE: "0"
       RACEDB_AUTO_UPDATE: "0"
       ARVEXQ_FACTOR_BACKFILL_RACES: "24"
-      KEIBA_DATA_DIR: ${{ runner.temp }}/jra-margin-probe
+      KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-jra-margin-probe
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
