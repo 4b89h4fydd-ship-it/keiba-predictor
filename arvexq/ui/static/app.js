@@ -218,7 +218,11 @@ function historicalWindow(h,r){
     a.forEach(function(v,j){if(n(b[j],0)<=0&&n(v,0)>0)b[j]=v});
     if(!old.earlyTiming&&rr.earlyTiming&&typeof rr.earlyTiming==='object')old.earlyTiming=rr.earlyTiming;
     if(b.length)old.cornerPositions=b;
-    if(!n(old.finish)&&n(rr.finish))old.finish=rr.finish
+    if(!n(old.finish)&&n(rr.finish))old.finish=rr.finish;
+    ['timeBehindWinner','marginSeconds','marginEvidenceSource','marginEvidence',
+      'opponentLevel','surface','distance','raceNumber'].forEach(function(k){
+      if((old[k]==null||old[k]==='')&&rr[k]!=null&&rr[k]!=='')old[k]=rr[k]
+    })
   });
   out.sort(function(a,b){return b.date.localeCompare(a.date)||
     n(b.raceNumber,n(b.raceNo,0))-n(a.raceNumber,n(a.raceNo,0))});
@@ -1049,10 +1053,12 @@ function arvexqFactorValues(z,r){
     score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)};
 }
 function arvexqRacePolicy(r){
+  if(isNarRace(r))return {id:ARVEXQ_NAR_MODEL,value:{unverifiedRate:true}};
   return {id:'arvexq-true-run-pure-sectional-v2',
     value:{cov:.52,ready:.64,oddsCoverage:.85,ev:1.25,edge:66,evidence:.52,kelly:.030,score:80}};
 }
 function strictSelectedRaceProfile(r,p){
+  if(isNarRace(r))return narSelectedRaceProfile(r,p);
   var rows=((p&&p.rows)||[]).filter(function(z){return z&&z.horse&&!isScratchHorse(z.horse)}),
       ready=dataReadinessProfile(r,p),ordered=rows.slice().sort(function(a,b){return n(b.threeFactorScore)-n(a.threeFactorScore)}),
       top=ordered[0]||{},next=ordered[1]||{},score=Math.round(n(top.threeFactorScore,0)*100),
@@ -1078,7 +1084,232 @@ function eligibleOptionalStar(z,fourthScore){
   return score>=.68&&n(fourthScore,0)-score<=.075&&strong>=2&&
     (n(f.trueRun,0)>=.70||n(f.sectional,0)>=.70);
 }
+
+/* NAR-only authoritative live model. No 45/35/20 scoring or historical fallback. */
+var ARVEXQ_NAR_MODEL='arvexq-nar-mineta-margin-60-40-v1';
+function isNarRace(r){return ['地方','NAR','local'].indexOf(String(r&&r.circuit||''))>=0}
+function narMeasured(v){if(v==null||v==='')return null;var x=Number(v);return isFinite(x)?x:null}
+function narMarginParts(h,r){
+  var runs=historicalWindow(h,r),margins=[],ability=[],suit=[],pace=[],i,q,v,f,field,level,positions,first,last;
+  runs.forEach(function(run){
+    v=narMeasured(run.marginSeconds);if(v===null)v=narMeasured(run.timeBehindWinner);
+    if(v!==null&&v>=0&&v<=30)margins.push(Math.exp(-v));
+    f=narMeasured(run.finish);field=narMeasured(run.fieldSize);level=narMeasured(run.opponentLevel);
+    if(level!==null&&level>=0&&level<=1&&f!==null&&field>1&&f>=1&&f<=field)
+      ability.push((field-f)/(field-1)*(.5+.5*level));
+    var dist=narMeasured(run.distance),target=narMeasured(r.distance);
+    if(dist!==null&&target!==null&&Math.abs(dist-target)<=150&&run.surface&&
+       run.surface===r.surface&&run.track===r.track&&f!==null&&field>1&&f>=1&&f<=field)
+      suit.push((field-f)/(field-1));
+    positions=run.cornerPositions;
+    if(Array.isArray(positions)&&positions.length>=2&&field>1){
+      first=narMeasured(positions[0]);last=narMeasured(positions[positions.length-1]);
+      if(first!==null&&last!==null&&first>=1&&last>=1&&first<=field&&last<=field)
+        pace.push(.5+(first-last)/(2*(field-1)));
+    }
+  });
+  if(!margins.length)return null;
+  var sum=function(a){return a.reduce(function(x,y){return x+y},0)};
+  var weighted=0,den=0;
+  margins.forEach(function(v,i){var w=margins.length-i;weighted+=w*v;den+=w});
+  var factors={A:weighted/den,B:ability.length?sum(ability)/ability.length:null,
+    C:suit.length?sum(suit)/suit.length:null,D:pace.length?sum(pace)/pace.length:null};
+  var weights={A:.35,B:.25,C:.20,D:.15},numerator=0,coverage=0;
+  Object.keys(factors).forEach(function(k){
+    if(factors[k]!==null){numerator+=weights[k]*factors[k];coverage+=weights[k]}
+  });
+  return {score:numerator/coverage,coverage:coverage,measuredMargins:margins.length}
+}
+function narScoreRows(rows,r){
+  var measurements={},all=[],number,rs,first,field,position,valid,fronts,frame;
+  rows.forEach(function(z){
+    var h=z.horse||{},no=Number(h.horseNumber),runs=historicalWindow(h,r),start=runs[0];
+    if(!start||!Array.isArray(start.cornerPositions)||!start.cornerPositions.length)return;
+    field=narMeasured(start.fieldSize);first=narMeasured(start.cornerPositions[0]);
+    if(field===null||field<=1||first===null||first<1||first>field)return;
+    fronts=[];
+    runs.forEach(function(run){
+      var corners=run.cornerPositions,fs=narMeasured(run.fieldSize),f;
+      if(!Array.isArray(corners)||!corners.length||fs===null||fs<=1)return;
+      f=narMeasured(corners[0]);if(f!==null&&f>=1&&f<=fs)fronts.push((fs-f)/(fs-1));
+    });
+    if(!fronts.length)return;
+    frame=narMeasured(h.frameNumber);if(frame===null)frame=narMeasured(h.horseNumber);
+    if(frame===null)return;
+    measurements[no]={front:fronts.reduce(function(a,b){return a+b},0)/fronts.length,
+      previousFront:first<=3,frame:frame};
+    all.push(no);
+  });
+  var count=all.length,share=count?all.filter(function(no){return measurements[no].previousFront}).length/count:0;
+  rows.forEach(function(z){
+    var h=z.horse||{},no=Number(h.horseNumber),m=measurements[no],margin=narMarginParts(h,r),position=null;
+    if(count>=2&&m){
+      var outer=all.filter(function(n){
+        return n!==no&&measurements[n].front>m.front&&measurements[n].frame>m.frame
+      }).length;
+      position=.75*m.front*(1-.20*share)+.25/(1+outer);
+    }
+    var available=position!==null&&margin!==null;
+    z.narEvidence={position:position,margin:margin&&margin.score,marginCoverage:margin&&margin.coverage,
+      measuredMargins:margin&&margin.measuredMargins,available:available,
+      sample:historicalWindow(h,r).length};
+    z.narScore=available?.60*position+.40*margin.score:null;
+  });
+}
+function narMarkSignature(r){
+  var x=analysisRace(r),rows=(x.horses||[]).map(function(h){return {horse:h}});
+  narScoreRows(rows,x);
+  return JSON.stringify({engine:ARVEXQ_NAR_MODEL,id:String(r.id||''),date:r.date,
+    runners:rows.map(function(z){return [n(z.horse.horseNumber),z.narScore,
+      z.narEvidence.position,z.narEvidence.margin,z.narEvidence.measuredMargins]}).sort(function(a,b){return a[0]-b[0]})});
+}
+function narSelectedRaceProfile(r,p){
+  var rows=(p&&p.rows||[]).filter(function(z){return z.horse&&!isScratchHorse(z.horse)}),
+      good=rows.filter(function(z){return z.narEvidence&&z.narEvidence.available}),
+      ordered=good.slice().sort(function(a,b){return b.narScore-a.narScore}),
+      gap=ordered.length>1?ordered[0].narScore-ordered[1].narScore:0,
+      eligible=rows.length>=5&&good.length===rows.length&&gap>=.055&&
+        ordered[0].narEvidence.sample>=3;
+  return {selected:eligible,score:ordered.length?Math.round(ordered[0].narScore*100):null,
+    margin:gap,coverage:rows.length?good.length/rows.length:0,
+    failed:eligible?[]:['地方の全頭実測着差・位置取り、または本命の差が不足'],
+    reason:eligible?'地方60/40の実測根拠が全頭揃った':'見送り：地方の実測根拠不足',
+    model:ARVEXQ_NAR_MODEL}
+}
+function assignNarPredictionMarks(rows,r){
+  narScoreRows(rows,r);
+  var valid=rows.filter(function(z){return z.narEvidence.available}),
+      complete=valid.length===rows.length&&rows.length>=2;
+  valid.sort(function(a,b){return b.narScore-a.narScore||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
+  var first=valid[0],second=valid[1],gap=first&&second?first.narScore-second.narScore:0,
+      grade=complete&&rows.length>=5&&gap>=.055&&first.narEvidence.sample>=3?'A':complete?'B':'C',
+      labels=['◎','○','▲','△'];
+  rows.forEach(function(z){
+    var f=z.narEvidence,has=f.available,score=z.narScore,ev=z.horse&&z.horse.integratedEvaluation;
+    z.threeFactorScore=has?score:null;z.threeFactorCoverage=has?2:0;
+    z.threeFactorValues={mineta:f.position,margin:f.margin};
+    z.researchFactors={mineta:f.position,margin:f.margin};
+    z.researchModel=ARVEXQ_NAR_MODEL;z.researchConsensusScore=score;
+    z.overallScoreExact=has?score*100:null;z.overallScore=has?score*100:null;
+    z.overallRaw=score;z.hasFrozenEvaluation=has;z.modelScore=has?score*100:null;
+    z.overallGrade=has?grade:'C';z.predRank=999;z.predMark='';
+    z.honmeiGrade='';z.honmeiRole='';z.preOffAxisCandidate=false;
+    z.singleWinSuitable=false;z.p1Probability=null;z.p2Probability=null;z.p3Probability=null;
+    z.attentionReason=has?'地方60%位置取り＋40%実測着差':'地方の実測位置取り・着差不足';
+    if(ev){ev.score=z.overallScore;ev.grade=z.overallGrade;ev.modelVersion=ARVEXQ_NAR_MODEL;ev.mark='';}
+    if(z.evaluation){z.evaluation.score=z.overallScore;z.evaluation.grade=z.overallGrade;
+      z.evaluation.modelScore=z.overallScore;z.evaluation.predictionModel=ARVEXQ_NAR_MODEL;
+      z.evaluation.mode='みねた位置取り60%＋実測着差40%';}
+  });
+  if(!first){
+    r.honmeiDecisionFrontend={version:ARVEXQ_NAR_MODEL,eligible:false,horseNumber:0,reason:'missing-observations'};
+    r.predictionModelVersion=ARVEXQ_NAR_MODEL;return;
+  }
+  var fourth=valid[3],star=valid.length>=5&&fourth?valid.slice(4).find(function(z){
+    return z.narScore>=.55&&fourth.narScore-z.narScore<=.075&&z.narEvidence.position>=.55
+  }):null;
+  valid.forEach(function(z,i){
+    z.predRank=i+1;z.predMark=i<4?labels[i]:(z===star?'☆':'');
+    z.honmeiRole=i===0?'win':'';z.honmeiGrade=i===0?grade:'';
+    z.singleWinSuitable=i===0&&grade==='A';z.singleWinStrength=z.narScore;
+    z.winRank=i+1;z.p1Rank=i+1;z.attentionReason=(i===0?'本命 '+grade+'｜':'')+
+      'みねた60%・実測着差40%｜'+Math.round(z.narScore*100)+'/100';
+    var ev=z.horse&&z.horse.integratedEvaluation;
+    if(ev){ev.mark=z.predMark;ev.honmeiRole=z.honmeiRole;ev.honmeiGrade=z.honmeiGrade;
+      ev.honmeiEligible=i===0&&grade==='A'}
+  });
+  // No field-wide probabilities from partial historical evidence.
+  if(complete){
+    var weights=rows.map(function(z){return Math.exp((z.narScore-first.narScore)/.15)}),
+        total=weights.reduce(function(a,b){return a+b},0),p1=weights.map(function(w){return w/total}),
+        p2=weights.map(function(){return 0}),p3=weights.map(function(){return 0}),i,j,k;
+    for(i=0;i<rows.length;i++)for(j=0;j<rows.length;j++)if(i!==j){
+      var denom=total-weights[i],rest=denom-weights[j];if(denom<=0)continue;
+      var secondP=p1[i]*weights[j]/denom;p2[j]+=secondP;
+      if(rest>0)for(k=0;k<rows.length;k++)if(k!==i&&k!==j)p3[k]+=secondP*weights[k]/rest;
+    }
+    rows.forEach(function(z,i){
+      z.p1Probability=p1[i];z.p2Probability=p2[i];z.p3Probability=p3[i];
+      z.winProbability=p1[i];z.podiumRecallScore=p1[i]+p2[i]+p3[i];
+      z.axisProbability=z.podiumRecallScore/3;z.p2RecallScore=p2[i];z.p3RecallScore=p3[i];
+      z.bombScore=Math.round(z.podiumRecallScore*100);z.edgeScore=50;
+      z.p1Rank=1+rows.filter(function(x){return x.p1Probability>z.p1Probability}).length;
+      z.p2Rank=1+rows.filter(function(x){return x.p2Probability>z.p2Probability}).length;
+      z.p3Rank=1+rows.filter(function(x){return x.p3Probability>z.p3Probability}).length;
+    });
+  }
+  var axis=complete?valid.map(function(z){
+    var runs=historicalWindow(z.horse,r),observed=runs.filter(function(run){
+      var f=narMeasured(run.finish),fs=narMeasured(run.fieldSize);
+      return f!==null&&fs>=f&&f>=1
+    });
+    return {z:z,sample:observed.length,ratio:observed.length?
+      observed.filter(function(q){return Number(q.finish)<=3}).length/observed.length:0}
+  }).filter(function(x){return x.sample>=3}).sort(function(a,b){
+    return b.ratio-a.ratio||b.z.narScore-a.z.narScore
+  })[0]:null;
+  valid.forEach(function(z){z.preOffAxisCandidate=!!(axis&&axis.z===z);
+    z.podiumAxisEligible=z.preOffAxisCandidate&&grade==='A'});
+  r.honmeiDecisionFrontend={version:ARVEXQ_NAR_MODEL,eligible:grade==='A',
+    horseNumber:n(first.horse.horseNumber),role:'win',confidenceGrade:grade,
+    axisScore:first.narScore,axisGap:gap,reason:complete?'observed-nar-mineta-margin':'partial-observed'};
+  r.predictionModelVersion=ARVEXQ_NAR_MODEL;
+}
+function buildNarBetPlan(r,p){
+  var rows=(p&&p.rows||[]).filter(function(z){return z&&z.horse&&!isScratchHorse(z.horse)});
+  if(rows.length<4)return null;
+  var selection=narSelectedRaceProfile(r,p),
+      ordered=rows.filter(function(z){return z.narEvidence&&z.narEvidence.available})
+        .sort(function(a,b){return b.narScore-a.narScore}),ready=rows.length===ordered.length,
+      strong=selection.selected,items=[];
+  function no(x){return n(x&&x.horse&&x.horse.horseNumber)}
+  function item(level,kind,combos,reason){return {level:level,kind:kind,combos:combos,points:combos.length,
+    combo:betComboText(kind,combos),reason:reason}}
+  if(ready&&ordered.length>=4){
+    items.push(item('本線','馬連',[[no(ordered[0]),no(ordered[1])]],'地方60/40の◎○'));
+    items.push(item('保険','ワイド',[[no(ordered[0]),no(ordered[2])]],'地方60/40の◎▲'));
+    if(strong){
+      var first=ordered[0],tri=[],weights=rows.map(function(z){return Math.exp((z.narScore-first.narScore)/.15)}),
+          total=weights.reduce(function(a,b){return a+b},0);
+      for(var i=0;i<rows.length;i++)for(var j=0;j<rows.length;j++)if(i!==j)
+        for(var k=0;k<rows.length;k++)if(i!==k&&j!==k){
+          var d1=total-weights[i],d2=d1-weights[j];
+          if(d1>0&&d2>0&&no(rows[i])===no(first))
+            tri.push({combo:[no(rows[i]),no(rows[j]),no(rows[k])],
+              weight:weights[i]/total*weights[j]/d1*weights[k]/d2});
+        }
+      tri.sort(function(a,b){return b.weight-a.weight});
+      items.push(item('3連単チャレンジ','3連単',tri.slice(0,6).map(function(x){return x.combo}),
+        '地方60/40の◎1着固定・順序上位6点'));
+    }
+  }
+  var trifecta=items.some(function(x){return x.kind==='3連単'});
+  var plan={raceId:String(r.id||''),raceDate:String(r.date||''),items:items,
+    engineVersion:ARVEXQ_NAR_MODEL,betStrategy:ARVEXQ_NAR_MODEL,
+    betQuality:ordered.length?Math.round(ordered[0].narScore*100):0,
+    decision:ready?'購入候補':'見送り',featuredRace:isFeaturedBetRace(r,p),
+    selectionAudit:selection,honmei:{horseNumber:ordered.length?no(ordered[0]):0,role:'win',
+      grade:ordered.length?ordered[0].honmeiGrade:''},
+    noAxis:!ready,referenceOnly:!strong,trifectaReviewed:true,
+    trifectaDecision:trifecta?'採用':'見送り',
+    trifectaReason:trifecta?'実測全頭＋上位差の条件を通過':'実測全頭または順序根拠不足',
+    insuranceDecision:ready?'採用':'見送り',
+    reason:ready?'地方専用みねた60%・着差40%の発走前実測モデル':'地方の全頭実測着差・位置取り不足',
+    expectedValueReason:'モデル点・順位確率は校正済み的中率ではありません。',
+    referenceBudget:{points:items.reduce(function(a,b){return a+b.points},0)},
+    dataReadiness:dataReadinessProfile(r,p),
+    betInputGate:{ready:ready,missing:ready?[]:['地方全頭の実測着差・位置取り不足']},
+    betWarnings:ready?[]:['実測データ不足につき買い目見送り'],
+    p1Model:ARVEXQ_NAR_MODEL,p2Model:'plackett-luce-same-nar-score',
+    p3Model:'plackett-luce-same-nar-score',
+    roles:{p1:ordered.slice(0,4).map(function(x){return {no:no(x),p:x.p1Probability}}),
+      p2:ordered.slice().sort(function(a,b){return n(b.p2Probability)-n(a.p2Probability)}).slice(0,5).map(function(x){return {no:no(x),p:x.p2Probability}}),
+      p3:ordered.slice().sort(function(a,b){return n(b.p3Probability)-n(a.p3Probability)}).slice(0,6).map(function(x){return {no:no(x),p:x.p3Probability}})}};
+  saveStoredAiBet(r,plan);return plan
+}
+
 function assignPredictionMarks(rows,r){
+  if(isNarRace(r))return assignNarPredictionMarks(rows,r);
   if(!rows.length)return;
   var field=rows.length,ordered,topScore,total=0,weights=[],i,j,k;
   rows.forEach(function(z){var f=arvexqFactorValues(z,r);
@@ -1436,6 +1667,7 @@ function applyFrozenMarks(r,p){
 // model change. Historical audit scores, win odds and old evaluation marks
 // never enter this signature. Only the active pre-off race is recalculated.
 function threeFactorMarkInputSignature(r){
+  if(isNarRace(r))return narMarkSignature(r);
   var modelRace=analysisRace(r);
   return JSON.stringify({
     engine:'arvexq-true-run-pure-sectional-v2',
@@ -1449,11 +1681,12 @@ function threeFactorMarkInputSignature(r){
   });
 }
 function predict(r){
+  var modelVersion=isNarRace(r)?ARVEXQ_NAR_MODEL:'arvexq-true-run-pure-sectional-v2';
   var started=raceMarkClock(r).started,markSignature=null;
   if(!started){
     markSignature=threeFactorMarkInputSignature(r);
     if(r._prediction&&
-        r._prediction.engineVersion==='arvexq-true-run-pure-sectional-v2'&&
+        r._prediction.engineVersion===modelVersion&&
         r._prediction.markInputSignature===markSignature)
       return applyFrozenMarks(r,r._prediction);
     // A stale or older-engine in-memory result is discarded by recomputing
@@ -1486,9 +1719,9 @@ function predict(r){
   var outcome=paceOutcomeModel(r,draft),cov=mean(rows.map(function(x){return x.coverage}));
   assignSingleWinCandidate(rows,modelRace);
   var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext,outcome:outcome,
-    engineVersion:'arvexq-true-run-pure-sectional-v2',markEngineVersion:'arvexq-true-run-pure-sectional-v2',
+    engineVersion:modelVersion,markEngineVersion:modelVersion,
     markInputSignature:markSignature,
-    researchAudit:{expertAIConsensusV317:true,marketBlindFactorsV317:true,podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true,diagnosisPaceOutcomeLinkedV318:true,marksLinkedToOutcomeV318:true,betsLinkedToOutcomeV318:true}};
+    researchAudit:isNarRace(r)?{narModel:ARVEXQ_NAR_MODEL,observedOnly:true,legacyNARRanker:false}: {expertAIConsensusV317:true,marketBlindFactorsV317:true,podiumRecallV312:true,sameDayFlowV313:true,sectional:true,probabilityRegularization:true,conservativeProbabilityGuardV260:true,predictionMarketIndependent:true,marketUsedForEdgeEvOnly:true,liveTrackBias:true,robustLiveTrackSpeedV300:true,historicalDrawBias:true,strongerP2P3Roles:true,conditionalPlaceRoles:true,markRolesV246:true,winnerSelectorV300Independent:true,immutablePreRaceAuditV300:true,dateBlockedWinnerLearningV300:true,raceTypeTicketV300:true,pairwiseDuelV300:true,fullOrderSequential:true,strictReadinessV300:true,actualOddsEvOnlyV300:true,oddsCoverageV247:true,diagnosisPaceOutcomeLinkedV318:true,marksLinkedToOutcomeV318:true,betsLinkedToOutcomeV318:true}};
   applyFrozenMarks(r,result);
   Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
   return result
@@ -2138,7 +2371,7 @@ function verifiedSavedAiBet(r,plan){
 function currentBetEnginePlan(plan){
   // Historical sealed tickets remain in audit storage, not in the live UI.
   // Never re-derive or relabel a legacy ticket after the off.
-  return plan&&/^arvexq-true-run-pure-sectional-v[12]$/.test(
+  return plan&&/^(arvexq-true-run-pure-sectional-v[12]|arvexq-nar-mineta-margin-60-40-v1)$/.test(
     String(plan.engineVersion||plan.betStrategy||''))?plan:null
 }
 function frozenAiBetForRace(r){
@@ -2301,6 +2534,7 @@ function buildAiBetPlan(r,p){
   var started=raceMarkClock(r).started,stored=frozenAiBetForRace(r);
   if(stored)return immutableStoredAiBetView(r,stored);
   if(isFinal(r)||started)return null;
+  if(isNarRace(r))return buildNarBetPlan(r,p);
   var rows=((p&&p.rows)||[]).filter(function(x){return x&&x.horse&&!isScratchHorse(x.horse)});
   if(rows.length<4)return null;
   var selected=strictSelectedRaceProfile(r,p),ready=dataReadinessProfile(r,p),
