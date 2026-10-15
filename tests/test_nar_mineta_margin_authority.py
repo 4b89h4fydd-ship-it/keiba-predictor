@@ -70,6 +70,16 @@ class NarAuthorityTests(unittest.TestCase):
         self.assertIsNotNone(margin_score(d["horses"][0], d))
         self.assertIsNotNone(rank_nar(d["horses"], d))
 
+    def test_local_evidence_exposes_only_new_two_axes(self):
+        from arvexq.prediction.race_intelligence import attach_evidence
+        d = apply_nar_marks(race())
+        attach_evidence(d)
+        factors = d["horses"][0]["researchEvidence"]["factors"]
+        self.assertEqual(factors["version"], MODEL_VERSION)
+        self.assertEqual([(x["key"], x["weight"]) for x in factors["items"]],
+                         [("mineta", .60), ("margin", .40)])
+        self.assertNotIn("trueRun", [x["key"] for x in factors["items"]])
+
     def test_central_dispatch_never_uses_nar_model(self):
         with self.assertRaises(ValueError):
             apply_nar_marks({"circuit": "中央", "date": "2026-10-12", "horses": []})
