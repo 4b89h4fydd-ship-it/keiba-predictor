@@ -126,9 +126,10 @@ async function verify(kind,name){
   assert.equal(result.columns,6,'Reference image requires exactly six races per row');
   assert.equal(result.topRowSix,true,'1R through 6R must remain in the first row');
   assert.equal(result.secondRowStartsAtSeven,true,'7R must start the second row');
-  assert.ok(result.tileHeight>=47&&result.tileHeight<=50,'Reference tiles must be compact');
+  // Current approved top cards show a third line for the explicit race status.
+  assert.ok(result.tileHeight>=52&&result.tileHeight<=56,'Race tiles must fit 3-line status layout');
   assert.equal(result.venueBorder,'0px','Venue inner frame must be removed');
-  assert.notEqual(result.arrowContent,'none','Each clickable race tile needs a small arrow');
+  assert.equal(result.arrowContent,'none','Top tiles show their race-status label, not the retired arrow');
   assert.equal(result.navOnHome,0);assert.equal(result.realtime,0);
   assert.equal(result.alerts,2,'selected and special warning icons are visible');
   assert.equal(errors.filter(e=>/ReferenceError|SyntaxError/.test(e)).length,0,errors.join('; '));
