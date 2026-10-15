@@ -122,6 +122,9 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
     """One marks authority; old four-pillar and podium-axis paths deleted."""
     if not isinstance(detail, dict):
         return detail
+    if str(detail.get('circuit') or '') in ('地方', 'NAR', 'local'):
+        from arvexq.prediction.nar_model import apply_nar_marks
+        return apply_nar_marks(detail)
     attach_career_readiness(detail)
     horses = [h for h in (detail.get("horses") or []) if isinstance(h, dict)]
     readiness = detail.get("careerReadiness") or {}
