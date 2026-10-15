@@ -49,6 +49,9 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
     if parse_result is None:
         return None
 
+    import inspect
+    strict_result = "strict_errors" in inspect.signature(parse_result).parameters
+
     def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
         import base64
         import math
@@ -83,7 +86,8 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
                 except (ValueError, UnicodeDecodeError):
                     continue
                 try:
-                    result = parse_result(result_cname, {"date": at, "track": run.get("track")})
+                    result = parse_result(result_cname, {"date": at, "track": run.get("track")},
+                                          **({"strict_errors": True} if strict_result else {}))
                 except Exception as exc:
                     fetch_errors.append({"date": at, "track": run.get("track"), "error": f"{type(exc).__name__}: {exc}"})
                     continue
