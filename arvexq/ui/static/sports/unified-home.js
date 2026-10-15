@@ -20,8 +20,8 @@ function officialStatus(r){
 function normalizedRace(_mode,r,day){
  if(!r||!r.id||!r.track||!['中央','地方'].includes(r.circuit))return null;
  const number=Number(r.raceNumber||r.raceNo);if(!Number.isInteger(number)||number<1||number>12)return null;
- const clock=/^([01]?\\d|2[0-3]):([0-5]\\d)/.exec(String(r.startTime||r.scheduledStartTime||''));
- const timestamp=clock&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(day||''))?
+ const clock=/^([01]?\d|2[0-3]):([0-5]\d)/.exec(String(r.startTime||r.scheduledStartTime||''));
+ const timestamp=clock&&/^\d{4}-\d{2}-\d{2}$/.test(String(day||''))?
    Date.parse(day+'T'+clock[1].padStart(2,'0')+':'+clock[2]+':00+09:00'):NaN;
  const status=officialStatus(r);
  return {id:String(r.id),circuit:r.circuit,venue:String(r.track),number,timestamp,
