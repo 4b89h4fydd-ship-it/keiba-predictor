@@ -24,8 +24,10 @@ assert(!src.includes('function smartHomeHub('),'old unused home removed');
 assert(src.includes('evictRetiredRaceCaches();'),'obsolete device race caches must be evicted');
 assert(!src.includes('saved-snapshot-restored'),'legacy saved snapshot live restore removed');
 assert(!fs.existsSync('scripts/arvexq_patch_race_open_reliability.py'));
-const model=fs.readFileSync('arvexq/prediction/factor_model.py','utf8');
-assert(model.includes('SCORE_WEIGHTS = {"trueRun": .45, "pure": .35, "sectional": .20}'),'one authoritative 45/35/20 ranking');
+const model=fs.readFileSync('arvexq/prediction/observed_model.py','utf8');
+assert(model.includes('score = .60 * position + .40 * margin["score"]'),'one authoritative observed 60/40 ranking');
+assert(!fs.existsSync('arvexq/prediction/factor_model.py'),'retired central three-factor scorer must be physically deleted');
+assert(!fs.existsSync('arvexq/prediction/nar_model.py'),'duplicate local scorer must be physically deleted');
 assert(!fs.existsSync('arvexq/prediction/honmei_gate.py'),'retired parallel axis scorer must be deleted');
 // Regression: the active horse homepage still needs a read-only pick-count helper.
 // An old-home cleanup previously removed this shared function, crashing on launch.
