@@ -65,9 +65,13 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
         if not prior and cname and profile_runs:
             prior = profile_runs(cname, cutoff, 5) or []
         observed_runs = []
+        fetch_errors = []
         for run in prior[:5]:
             at = date_key(run.get("date"))
             if not at or at >= cutoff:
+                continue
+            # Previously verified starts are preserved; retry only missing proof.
+            if run.get("marginEvidence") and run.get("timeBehindWinner") is not None:
                 continue
             rid = str(run.get("raceId") or "")
             result = None
@@ -78,9 +82,17 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
                         encoded + "=" * (-len(encoded) % 4)).decode("utf-8")
                 except (ValueError, UnicodeDecodeError):
                     continue
-                result = parse_result(result_cname, {"date": at, "track": run.get("track")})
+                try:
+                    result = parse_result(result_cname, {"date": at, "track": run.get("track")})
+                except Exception as exc:
+                    fetch_errors.append({"date": at, "track": run.get("track"), "error": f"{type(exc).__name__}: {exc}"})
+                    continue
             elif resolve:
-                result = resolve(horse, run)
+                try:
+                    result = resolve(horse, run)
+                except Exception as exc:
+                    fetch_errors.append({"date": at, "track": run.get("track"), "error": f"{type(exc).__name__}: {exc}"})
+                    continue
             if not isinstance(result, dict) or date_key(result.get("date")) != at:
                 continue
             if clean(result.get("track")) != clean(run.get("track")):
@@ -128,7 +140,10 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
             if isinstance(corners, list) and corners:
                 observed["cornerPositions"] = corners
             observed_runs.append(observed)
-        return {"recentRaces": observed_runs, "allPastRuns": observed_runs} if observed_runs else {}
+        output = {"recentRaces": observed_runs, "allPastRuns": observed_runs} if observed_runs else {}
+        if fetch_errors:
+            output["historyFetchErrors"] = fetch_errors
+        return output
 
     return fetch
 

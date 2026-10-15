@@ -2974,7 +2974,16 @@ def _jra_resolve_prior_results(horse: dict, run: dict) -> dict | None:
             lock = _jra_prior_result_locks.setdefault(cname, threading.Lock())
         with lock:
             if cname not in _jra_prior_parsed_cache:
-                result = _jra_parse_result(cname)
+                result = None
+                for attempt in range(2):
+                    try:
+                        result = _jra_parse_result(cname, strict_errors=True)
+                        break
+                    except Exception as exc:
+                        if attempt == 1:
+                            raise
+                        print("JRA_PRIOR_RESULT_RETRY", cname, type(exc).__name__, flush=True)
+                        time.sleep(.3)
                 if not isinstance(result, dict):
                     raise ValueError("JRA official prior result parse failed: " + cname)
                 _jra_prior_parsed_cache[cname] = result
@@ -2995,10 +3004,11 @@ def _jra_resolve_prior_results(horse: dict, run: dict) -> dict | None:
     return matches[0] if len(matches) == 1 else None
 
 
-def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
+def _jra_parse_result(result_cname:str,base:dict|None=None, *, strict_errors: bool = False)->dict|None:
     if not result_cname:return None
     try:html=_jra_request("https://www.jra.go.jp/JRADB/accessS.html",result_cname,20)
     except Exception as exc:
+        if strict_errors:raise
         print("JRA official result fetch failed",result_cname,exc);return None
     soup=BeautifulSoup(html,"html.parser");full=_jra_text(soup)
     date=_jra_date_from_cname(result_cname) or str((base or {}).get("date") or "")

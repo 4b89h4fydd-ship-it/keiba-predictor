@@ -390,6 +390,12 @@ async def enrich_race_missing(
                              else history_failed).append(result.source)
                         failures.append({"source": result.source, "domain": domain, "error": result.error or "failed"})
                         continue
+                    if domain == "horse_history" and isinstance(result.data, dict):
+                        reported = result.data.get("historyFetchErrors")
+                        if isinstance(reported, list) and reported:
+                            history_failed.append(result.source)
+                            failures.extend({"source": result.source, "domain": domain,
+                                             "error": str(item)} for item in reported)
                     if result.data in (None, "", [], {}):
                         continue
                     changed = _apply_payload(
