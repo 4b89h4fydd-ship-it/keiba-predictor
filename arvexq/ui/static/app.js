@@ -1282,7 +1282,10 @@ function assignNarPredictionMarks(rows,r){
     z.predRank=i+1;z.predMark=special.mark||'';
     z.specialMarkEvidence=special;
     z.specialMarkReason=z.predMark==='☆'?'展開上昇：実測追い上げ＋前争い':
-      (z.predMark==='注'?'注意材料：'+(special.noteReasons||[]).join('・'):'');
+      (z.predMark==='注'?'注意材料：'+(special.noteReasons||[]).map(function(key){return {
+        'close-margin':'僅差負け','same-course-distance-podium':'同コース距離好走',
+        'strong-opposition-podium':'強敵相手に好走','earlier-peak':'近走5走内の好走'
+      }[key]||key}).join('・'):'');
     z.honmeiRole=i===0?'win':'';z.honmeiGrade=i===0?grade:'';
     z.singleWinSuitable=i===0&&grade==='A';z.singleWinStrength=z.narScore;
     z.winRank=i+1;z.p1Rank=i+1;z.attentionReason=(i===0?'本命 '+grade+'｜':'')+
@@ -1471,7 +1474,10 @@ function assignPredictionMarks(rows,r){
     z.predMark=special.mark||'';
     z.specialMarkEvidence=special;
     z.specialMarkReason=z.predMark==='☆'?'展開上昇：実測追い上げ＋前争い':
-      (z.predMark==='注'?'注意材料：'+(special.noteReasons||[]).join('・'):'');
+      (z.predMark==='注'?'注意材料：'+(special.noteReasons||[]).map(function(key){return {
+        'close-margin':'僅差負け','same-course-distance-podium':'同コース距離好走',
+        'strong-opposition-podium':'強敵相手に好走','earlier-peak':'近走5走内の好走'
+      }[key]||key}).join('・'):'');
     z.honmeiRole=idx===0?'win':'';
     z.preOffAxisCandidate=z===axisRow;
     z.honmeiGrade=idx===0?grade:'';
