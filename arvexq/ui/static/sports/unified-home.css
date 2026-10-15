@@ -2013,14 +2013,29 @@ html body .smart-shell.pace-stage-shell .pace-stage-explain :is(p,span,small,b,s
 html body .smart-shell.pace-stage-shell .pace-formation-card :is(p,span,small,b,strong,h2){
  color:#000!important;opacity:1!important;
 }
-html body .smart-shell.horse-detail-page-shell .horse-info-cell,
-html body .smart-shell.horse-detail-page-shell .runner-overall-head{
- background:#fffaf0!important;color:#000!important;border-color:#d5c7b0!important;
+/* Horse detail must use the same approved paper as the home and outer card.
+   Cover the actual overall FRAME (not only its head), grade/mark boxes, evidence,
+   career rows and research panels. Leave prediction mark hues and race states intact. */
+html body .smart-shell.horse-detail-page-shell .horse-detail-page :is(
+ .runner-overall-box,.runner-overall-head,.horse-info-grid,.horse-info-cell,
+ .overall-grade,.runner-overall-mark,.overall-reasons i,
+ .recent,.recent-open,.arv-research-card,.arv-research-item
+){
+ background:var(--arv-paper)!important;background-image:none!important;
+ border-color:var(--arv-paper-border)!important;box-shadow:none!important;
 }
-html body .smart-shell.horse-detail-page-shell .horse-info-cell :is(small,b,span),
-html body .smart-shell.horse-detail-page-shell .runner-overall-head :is(small,b,span){
- color:#000!important;opacity:1!important;
-}
+html body .smart-shell.horse-detail-page-shell .horse-detail-page :is(
+ .runner-overall-box,.runner-overall-head,.horse-info-cell,.overall-grade,
+ .recent,.recent-open,.arv-research-card,.arv-research-item
+){color:#1c1c1c!important}
+html body .smart-shell.horse-detail-page-shell .horse-detail-page :is(
+ .runner-overall-head .label,.runner-overall-score,.horse-info-cell small,
+ .horse-info-cell b,.detail-heading,.recent,.recent-head,.recent-head b,
+ .recent-head strong,.recent-list-title,.overall-reasons i,
+ .arv-research-card summary,.arv-research-card h3,.arv-research-card h4,
+ .arv-research-item b,.arv-research-item span,
+ .arv-research-sectional,.arv-research-foot
+){color:#1c1c1c!important;opacity:1!important;text-shadow:none!important}
 
 
 /* 2026-10-14 accessibility repair: paper background requires ink, never legacy white/cyan text.
