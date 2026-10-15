@@ -114,6 +114,7 @@ def apply_observed_marks(detail):
         if version == JRA_MODEL_VERSION:
             history = [run for run in history if _verified_jra_proof(run)]
         valid = []
+        suitability = []
         for run in history:
             try:
                 finish = int(run.get("finish") or 0)
@@ -122,12 +123,24 @@ def apply_observed_marks(detail):
                 continue
             if 1 <= finish <= field and field >= 2:
                 valid.append(finish)
+                try:
+                    distance_match = abs(float(run.get("distance")) - float(detail.get("distance"))) <= 150
+                except (TypeError, ValueError):
+                    distance_match = False
+                if distance_match and run.get("surface") == detail.get("surface"):
+                    suitability.append(finish <= 3)
         if len(valid) >= 3:
-            ratio = sum(finish <= 3 for finish in valid) / len(valid)
-            axis_candidates.append((ratio, row["score"], -int(row["horse"]["horseNumber"]), row))
+            podium = sum(finish <= 3 for finish in valid)
+            ratio = podium / len(valid)
+            # Three observed runs minimum; shrink the place rate and use
+            # observed same-surface/distance results as a secondary signal.
+            stable = (podium + 1) / (len(valid) + 2)
+            comparable = sum(suitability) / len(suitability) if suitability else stable
+            axis_score = .65 * stable + .20 * comparable + .15 * row["score"]
+            axis_candidates.append((axis_score, row["score"], -int(row["horse"]["horseNumber"]), row, ratio))
     axis_row = max(axis_candidates, default=None)
     axis_no = int(axis_row[3]["horse"]["horseNumber"]) if axis_row and full else 0
-    axis_ratio = axis_row[0] if axis_row else None
+    axis_ratio = axis_row[4] if axis_row else None
     old_fields = ("multiHead", "strengthHeadRank", "winHeadRank", "upsideHeadRank",
                   "upsideCandidate", "dangerPopular", "podiumAxisScore",
                   "factorEvidence", "coreAbilityRank", "coreAbilityScore", "primaryPillars")
@@ -136,7 +149,8 @@ def apply_observed_marks(detail):
         for k in old_fields:
             e.pop(k, None)
         e.update(mark="", markSource=version, markEngineVersion=version,
-                 honmeiRole="", honmeiGrade="", honmeiEligible=False)
+                 honmeiRole="", honmeiGrade="", honmeiEligible=False,
+                 podiumAxisEligible=False)
     # Independent pre-off ☆/注 allocation from PR #181. Keep original
     # ranked horses untouched. Only the JRA evidence view is filtered to
     # the matching flat/jump discipline and verified official history.
@@ -186,6 +200,7 @@ def apply_observed_marks(detail):
         "displayHonmei": bool(top), "confidenceGrade": grade if top else "",
         "role": "win", "axisHorseNumber": axis_no,
         "axisPlaceRatio": round(axis_ratio, 6) if axis_ratio is not None else None,
+        "axisStabilityScore": round(axis_row[0], 6) if axis_row else None,
         "fixedAxisAllowed": bool(axis_no and grade == "A"),
         "axisScore": round(top["score"], 6) if top else None,
         "axisMargin": round(gap, 6), "axisMeaning": "uncalibrated-relative-model-score",
