@@ -61,7 +61,7 @@ class ObservedAuthorityTests(unittest.TestCase):
         self.assertEqual(len(ranks),5)
         jump=copy.deepcopy(d)
         jump["analysisMode"]="障害"
-        self.assertEqual(len(rank_jra(jump["horses"],jump)),1)
+        self.assertEqual(len(rank_jra(jump["horses"],jump)),0)  # One observed jump horse cannot establish field occupancy
 
     def test_zero_seconds_are_observed_with_official_proof(self):
         d=race("中央")
