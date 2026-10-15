@@ -1938,7 +1938,7 @@ function honmeiBadgeText(x){return x&&x.honmeiGrade?String(x.honmeiGrade):'';}
 function markRoleLabel(x){
   if(!x)return '';
   var win=x.predMark==='◎'&&(x.markFrozen?x.honmeiRole==='win':true),
-      axis=x.markFrozen?(x.preOffAxisCandidate===true||x.podiumAxisEligible===true):x.preOffAxisCandidate===true;
+      axis=x.markFrozen?((x.predMark==='◎'&&x.honmeiRole==='axis')||x.preOffAxisCandidate===true||x.podiumAxisEligible===true):x.preOffAxisCandidate===true;
   return win&&axis?'◎【単】 ◎【軸】':win?'◎【単】':axis?'◎【軸】':'';
 }
 // An independently selected ◎【軸】 is an actual visible recommendation
