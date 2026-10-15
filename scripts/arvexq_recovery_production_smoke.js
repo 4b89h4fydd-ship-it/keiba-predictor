@@ -107,7 +107,9 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     // to satisfy a stale UI test.
     for(const circuit of ['中央','地方']){
       const tracks=[...new Set(records.filter(r=>r.circuit===circuit).map(r=>r.track))];
-      assert.ok(tracks.length>0,'no verified '+circuit+' race venues in audit');
+      // Some calendar days have NAR only (or JRA only). Verify exactly the
+      // venues present rather than inventing events to satisfy the fixture.
+      if(!tracks.length){console.log('PRODUCTION_NO_SCHEDULED_CIRCUIT',circuit,day);continue;}
       await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
       for(const track of tracks){
         await home.locator('.arv-all-panel [data-track="'+track+'"][data-circuit="'+circuit+'"]').first()
