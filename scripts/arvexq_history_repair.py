@@ -224,7 +224,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, 
             # Existing registered providers only; keep the original frozen
             # forecasts and tickets unchanged.
             enriched = asyncio.run(enrich_race_missing(
-                base, history_limit=200, max_parallel_horses=8 if central_margins_only else 4,
+                base, history_limit=200, max_parallel_horses=4,
                 bank_registry=selected_bank))
             if central_margins_only and (enriched.get("preparedMeta") or {}).get("supplementalSearch", {}).get("failures"):
                 errors[rid] = str(enriched["preparedMeta"]["supplementalSearch"]["failures"])
@@ -234,6 +234,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, 
                 factor_changed += 1
                 if not central_margins_only:
                     _seed_base(rid, enriched)
+            print("JRA_MARGIN_RACE_REPAIRED", rid, "changed=", enriched != base, flush=True) if central_margins_only else None
             missing_after += sum(
                 1 for h in active_horses(by_id[rid])
                 if len(observed_runs(h, by_id[rid], limit=5)) < 5

@@ -20,6 +20,7 @@ jobs:
       ARVEXQ_BOOTSTRAP_WARM: "0"
       ARVEXQ_DATA_CORE: "0"
       RACEDB_AUTO_UPDATE: "0"
+      JRA_OFFICIAL_TIMEOUT_SEC: "12"
       ARVEXQ_FACTOR_BACKFILL_RACES: "24"
       ARVEXQ_FACTOR_BACKFILL_OFFSET: "0"
       KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-jra-margin-verification
@@ -39,9 +40,23 @@ jobs:
       - name: Repair only JRA prior-run measurements through existing providers
         run: |
           python scripts/arvexq_history_repair.py --bundle before.json --payload repaired.json --report repair-report.json --workers 1 --central-margins-only
-          PYTHONPATH=. python scripts/arvexq_jra_margin_audit.py --input repaired.json --output audit-collected.json --require-positive
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          before=json.loads(Path('before.json').read_text())
+          changes=json.loads(Path('repaired.json').read_text())
+          by={d['id']:d for d in before['details']}
+          by.update({d['id']:d for d in changes['details']})
+          before['details']=list(by.values())
+          Path('collected.json').write_text(json.dumps(before,ensure_ascii=False))
+          PY
+          PYTHONPATH=. python scripts/arvexq_jra_margin_audit.py --input collected.json --output audit-collected.json --require-positive
       - name: Publish protected race-scoped updates to D1
         run: |
+          if [ "$(jq '.details | length' repaired.json)" -eq 0 ]; then
+            echo 'JRA margins already preserved; no D1 overwrite needed'
+            exit 0
+          fi
           python scripts/arvexq_sync_batches.py --input repaired.json --out-dir batches
           for file in batches/batch-*.json; do
             PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$API_BASE"
@@ -51,7 +66,7 @@ jobs:
       - name: Independently reload D1 and verify every proof and frozen original
         run: |
           python scripts/arvexq_fetch_d1_bundle.py --api-base "$API_BASE" --date 2026-10-12 --out reloaded.json --report reload-hydration.json --workers 4
-          PYTHONPATH=. python scripts/arvexq_jra_margin_audit.py --input reloaded.json --expected repaired.json --output audit-reloaded.json --require-positive
+          PYTHONPATH=. python scripts/arvexq_jra_margin_audit.py --input reloaded.json --expected collected.json --output audit-reloaded.json --require-positive
       - name: Compare all four methods on identical complete JRA inputs
         run: PYTHONPATH=. python scripts/arvexq_jra_mineta_observed_comparison.py comparison.json --bundle reloaded.json --date 2026-10-12
       - uses: actions/upload-artifact@v4

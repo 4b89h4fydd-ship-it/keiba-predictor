@@ -52,6 +52,23 @@ class JraMarginRoundtrip(unittest.TestCase):
         get.assert_called_once();self.assertEqual(out['horses'][0]['recentRaces'][0]['timeBehindWinner'],0)
         get.reset_mock();d['circuit']='NAR';asyncio.run(enrich_race_missing(d,bank_registry=reg));get.assert_not_called()
 
+    def test_one_failed_start_keeps_successes_and_reports_retry(self):
+        rows=[{'date':f'2026-09-{i:02d}','track':'東京','finish':2,'fieldSize':10} for i in range(1,6)]
+        def resolve(horse,run):
+            if run['date']=='2026-09-03':raise TimeoutError('official timeout')
+            return {'date':run['date'],'track':'東京','raceNumber':1,'resultCname':'published',
+                    'result':{'finishers':[{'name':'勝馬','finish':1,'timeSeconds':95.1},
+                                         {'name':'対象馬','finish':2,'timeSeconds':95.5}]}}
+        fetch=_jra_official_prior_result_adapter({'_jra_parse_result':Mock(), '_jra_resolve_prior_results':resolve})
+        out=fetch({'name':'対象馬','recentRaces':rows},{'date':'2026-10-12'},5)
+        self.assertEqual(len(out['allPastRuns']),4)
+        self.assertEqual(len(out['historyFetchErrors']),1)
+        self.assertEqual(out['historyFetchErrors'][0]['date'],'2026-09-03')
+        resolve_mock=Mock(side_effect=resolve)
+        again=_jra_official_prior_result_adapter({'_jra_parse_result':Mock(), '_jra_resolve_prior_results':resolve_mock})
+        again({'name':'対象馬','recentRaces':out['allPastRuns']+[rows[2]]},{'date':'2026-10-12'},5)
+        self.assertEqual(resolve_mock.call_count,1)
+
     def test_d1_visible_rows_and_lossless_archive_keep_seconds_and_proof(self):
         run={'date':'2026-09-01','track':'東京','finish':1,'fieldSize':10,
              'timeBehindWinner':0.0,'marginText':'','marginEvidenceSource':'JRA official',
