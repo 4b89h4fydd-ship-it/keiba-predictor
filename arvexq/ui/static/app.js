@@ -1533,7 +1533,7 @@ function immutableArchivedPrediction(r){
       honmeiRole:mark==='◎'?honmei.honmeiRole:(honmei.honmeiRole==='axis'?'axis':''),
       honmeiGrade:mark==='◎'?honmei.honmeiGrade:'',
       podiumAxisEligible:snap.podiumAxisEligible===true,
-      preOffAxisCandidate:snap.independentAxisCandidate===true||snap.podiumAxisEligible===true||honmei.honmeiRole==='axis',
+      preOffAxisCandidate:snap.independentAxisCandidate===true||snap.podiumAxisEligible===true,
       hasFrozenEvaluation:ev.score!=null,
       overallRaw:ev.score!=null?n(ev.score):null,overallGrade:String(ev.grade||'—'),
       overallScore:ev.score!=null?n(ev.score):null,overallScoreExact:ev.score!=null?n(ev.score):null,
@@ -1581,7 +1581,7 @@ function applyFrozenMarks(r,p){
       z.honmeiRole=z.predMark==='◎'?lockedHonmei.honmeiRole:(lockedHonmei.honmeiRole==='axis'?'axis':'');
       z.honmeiGrade=z.predMark==='◎'?lockedHonmei.honmeiGrade:'';
       z.podiumAxisEligible=q.podiumAxisEligible===true;
-      z.preOffAxisCandidate=q.independentAxisCandidate===true||q.podiumAxisEligible===true||lockedHonmei.honmeiRole==='axis';
+      z.preOffAxisCandidate=q.independentAxisCandidate===true||q.podiumAxisEligible===true;
       z.singleWinSuitable=!scratched&&(!!q.singleWinSuitable||
         (n((r.preRaceBet||{}).singleWinHorseNumber,0)>0&&
          n((r.preRaceBet||{}).singleWinHorseNumber)===n(z.horse&&z.horse.horseNumber)));
@@ -1938,7 +1938,7 @@ function honmeiBadgeText(x){return x&&x.honmeiGrade?String(x.honmeiGrade):'';}
 function markRoleLabel(x){
   if(!x)return '';
   var win=x.predMark==='◎'&&(x.markFrozen?x.honmeiRole==='win':true),
-      axis=x.markFrozen?(x.honmeiRole==='axis'||x.preOffAxisCandidate===true||x.podiumAxisEligible===true):x.preOffAxisCandidate===true;
+      axis=x.markFrozen?(x.preOffAxisCandidate===true||x.podiumAxisEligible===true):x.preOffAxisCandidate===true;
   return win&&axis?'◎【単】 ◎【軸】':win?'◎【単】':axis?'◎【軸】':'';
 }
 // An independently selected ◎【軸】 is an actual visible recommendation
