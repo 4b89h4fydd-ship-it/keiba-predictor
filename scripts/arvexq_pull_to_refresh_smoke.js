@@ -5,7 +5,7 @@ const base=(process.env.ARVEXQ_BASE_URL||'http://127.0.0.1:8788').replace(/\/$/,
 async function swipe(page){
   await page.evaluate(()=>{scrollTo(0,0)});
   // WebKit commits scrollTo asynchronously; don't simulate a gesture mid-scroll.
-  await page.waitForFunction(()=>Math.max(0,window.scrollY||0,document.scrollingElement?.scrollTop||0)<=2,{timeout:10000});
+  await page.waitForFunction(()=>Math.max(0,window.scrollY||0,document.scrollingElement?.scrollTop||0)<=2,null,{timeout:10000});
   return page.evaluate(()=>{
     scrollTo(0,0);
     const target=document.querySelector('.arv-unified-hero img')||document.body;
@@ -48,13 +48,13 @@ async function check(browserType,browserName){
       await page.waitForFunction(()=>{
         const el=document.querySelector('#arvexq-pull-refresh');
         return !!el&&!el.classList.contains('refreshing')&&el.querySelector('b')?.textContent==='下に引いて更新';
-      },{timeout:25000});
+      },null,{timeout:25000});
       const second=await swipe(page);
       assert.equal(second.after,first.after+1,browserName+' '+pagePath+' second swipe not dispatched');
       await page.waitForFunction(()=>{
         const el=document.querySelector('#arvexq-pull-refresh');
         return !!el&&!el.classList.contains('refreshing')&&el.querySelector('b')?.textContent==='下に引いて更新';
-      },{timeout:25000});
+      },null,{timeout:25000});
       assert.equal(await page.locator('#arvexq-pull-refresh').count(),1,'duplicate refresh indicator');
       assert.equal(errors.filter(e=>/ReferenceError|SyntaxError|not a function/.test(e)).length,0,errors.join('; '));
 
