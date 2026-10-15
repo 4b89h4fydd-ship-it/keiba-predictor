@@ -54,7 +54,8 @@ const instrumented = source.replace(boot, `
  assert.equal(await t.page.locator('.race-nav-v230-top .race-nav-v230-btn').count(),3);
  assert.deepEqual(await t.page.locator('.race-nav-v230-top .race-nav-v230-label').allTextContents(),['出走表','展開予想','買い目']);
  await t.page.waitForFunction(id=>testDetail.detailState(id).entry==='error'&&!testDetail.detailState(id).busy,id);
- assert.equal(t.requests.length,3);assert.ok(t.requests[1].at-t.requests[0].at>=900);assert.ok(t.requests[2].at-t.requests[1].at>=1900);
+ // fetchEdgeRace now has exactly two bounded attempts, not the retired 3 retries.
+ assert.equal(t.requests.length,2);assert.ok(t.requests[1].at-t.requests[0].at>=900);
  assert.equal(await t.page.locator('.notice,.smart-loading').count(),0);
  recovered=true;await t.page.evaluate(id=>testDetail.openRace(id,true,true,true),id);await t.page.waitForSelector('.racecard-row');
  assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);
@@ -76,7 +77,7 @@ const instrumented = source.replace(boot, `
  const rects=await t.page.locator('.race-nav-v230-top .race-nav-v230-btn').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return [r.width,r.height,s.padding,s.fontSize,s.lineHeight,s.boxSizing]}));assert.deepEqual(rects[0],rects[1]);
  const layout=await t.page.evaluate(()=>{const h=document.querySelector('.smart-race-title-stack h1'),time=document.querySelector('.smart-race-result-side');return {title:h.getBoundingClientRect().toJSON(),time:time.getBoundingClientRect().toJSON(),lineHeight:parseFloat(getComputedStyle(h).lineHeight),clamp:getComputedStyle(h).webkitLineClamp}});
  assert.equal(layout.clamp,'2');assert.ok(layout.title.height<=layout.lineHeight*2+1);assert.ok(layout.title.bottom<=layout.time.top+1||layout.title.right<=layout.time.left+1);
- console.log('503 x3 -> summary stays visible -> retry restores roster; 3 equal tabs, bet page and 2-line title PASS');
+ console.log('503 x2 -> summary stays visible -> retry restores roster; 3 equal tabs, bet page and 2-line title PASS');
  await t.page.close();
  const card={...base,fieldSize:detail.horses.length,horses:detail.horses.map(h=>({horseNumber:h.horseNumber,name:h.name,frameNumber:h.frameNumber,jockey:h.jockey,sex:h.sex,age:h.age,carriedWeight:h.carriedWeight}))};
  let recoverFull=false;
