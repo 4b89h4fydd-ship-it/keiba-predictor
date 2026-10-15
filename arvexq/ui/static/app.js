@@ -1093,7 +1093,7 @@ function narMarginParts(h,r){
   var runs=historicalWindow(h,r),margins=[],ability=[],suit=[],pace=[],i,q,v,f,field,level,positions,first,last;
   runs.forEach(function(run){
     v=narMeasured(run.marginSeconds);if(v===null)v=narMeasured(run.timeBehindWinner);
-    if(v!==null&&v>=0&&v<=30)margins.push(Math.exp(-v));
+    if(v!==null&&v>=-30&&v<=30)margins.push(Math.exp(-Math.max(0,v)));
     f=narMeasured(run.finish);field=narMeasured(run.fieldSize);level=narMeasured(run.opponentLevel);
     if(level!==null&&level>=0&&level<=1&&f!==null&&field>1&&f>=1&&f<=field)
       ability.push((field-f)/(field-1)*(.5+.5*level));
@@ -1153,7 +1153,7 @@ function narScoreRows(rows,r){
     z.narEvidence={position:position,margin:margin&&margin.score,marginCoverage:margin&&margin.coverage,
       measuredMargins:margin&&margin.measuredMargins,available:available,
       sample:historicalWindow(h,r).length};
-    z.narScore=available?.60*position+.40*margin.score:null;
+    z.narScore=available ? .60*position+.40*margin.score : null;
   });
 }
 function narMarkSignature(r){
