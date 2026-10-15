@@ -4515,6 +4515,10 @@ function load(force){
             })
         });
 
+        // A delayed static/D1 list must not roll a verified official final
+        // back into 結果待ち when the page reloads or date summaries refresh.
+        if(window.ARVEXQUnifiedHome&&window.ARVEXQUnifiedHome.mergePublishedStatuses)
+          window.ARVEXQUnifiedHome.mergePublishedStatuses(rows,state.races);
         state.races=applyMorningArchive(rows);
         saveRaceCache(d,'__ALL__',state.races);
         state.loading=false;
