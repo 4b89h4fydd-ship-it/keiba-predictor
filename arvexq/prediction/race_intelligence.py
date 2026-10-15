@@ -60,6 +60,22 @@ def attach_evidence(detail: dict[str, Any]) -> dict[str, Any]:
             "sectionals": profile(horse, detail),
             "status": "read-only-unverified-predictive-lift",
         }
+        if str(detail.get("circuit") or "") in ("地方", "NAR", "local"):
+            # The old three-factor explanations are JRA-only.
+            from arvexq.prediction.nar_model import MODEL_VERSION as nar_version
+            evidence = (horse.get("integratedEvaluation") or {}).get("narModelEvidence") or {}
+            horse["researchEvidence"]["factors"] = {
+                "version": nar_version,
+                "items": [
+                    {"key": "mineta", "weight": .60, "value": evidence.get("mineta"),
+                     "available": evidence.get("mineta") is not None},
+                    {"key": "margin", "weight": .40, "value": evidence.get("margin"),
+                     "available": evidence.get("margin") is not None}
+                ],
+                "calibrated": False,
+                "note": "NAR 60/40 relative scores are not verified hit probabilities."
+            }
+            horse["researchEvidence"]["status"] = "nar-observed-only"
         count += 1
     detail["researchEvidenceVersion"] = "arvexq-race-intelligence-v1"
     detail["researchEvidenceHorses"] = count
