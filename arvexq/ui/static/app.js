@@ -1339,8 +1339,8 @@ function buildNarBetPlan(r,p){
   function item(level,kind,combos,reason){return {level:level,kind:kind,combos:combos,points:combos.length,
     combo:betComboText(kind,combos),reason:reason}}
   if(ready&&ordered.length>=4){
-    items.push(item('本線','馬連',[[no(ordered[0]),no(ordered[1])]],'地方60/40の◎○'));
-    items.push(item('保険','ワイド',[[no(ordered[0]),no(ordered[2])]],'地方60/40の◎▲'));
+    items.push(item('本線','馬連',[[no(ordered[0]),no(ordered[1])]],'地方60/40の◎と総合2位'));
+    items.push(item('保険','ワイド',[[no(ordered[0]),no(ordered[2])]],'地方60/40の◎と総合3位'));
     if(strong){
       var first=ordered[0],tri=[],weights=rows.map(function(z){return Math.exp((z.narScore-first.narScore)/.15)}),
           total=weights.reduce(function(a,b){return a+b},0);
@@ -2659,9 +2659,9 @@ function buildAiBetPlan(r,p){
   // Plackett-Luce ranking as ◎○▲, never an independent ticket predictor.
   if(active){
     items.push(item('本線','馬連',[[no(ordered[0]),no(ordered[1])]],
-      '◎と○の組合せ（3要素による1・2着候補）'));
+      '◎と総合2位の組合せ（3要素による1・2着候補）'));
     items.push(item('保険','ワイド',[[no(ordered[0]),no(ordered[2])]],
-      '◎と▲の3着内組合せ'));
+      '◎と総合3位の3着内組合せ'));
     if(gap>=.055){
       for(i=0;i<field;i++)for(j=0;j<field;j++)if(i!==j)
         for(k=0;k<field;k++)if(i!==k&&j!==k){
