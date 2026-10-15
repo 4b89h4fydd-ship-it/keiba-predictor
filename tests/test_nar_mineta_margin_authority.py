@@ -97,7 +97,11 @@ class NarAuthorityTests(unittest.TestCase):
         with patch("arvexq.prediction.nar_model.rank_nar", return_value=rows):
             apply_nar_marks(d)
         marks = [h["integratedEvaluation"]["mark"] for h in d["horses"]]
-        self.assertEqual(marks, ["◎", "○", "▲", "△", "☆", ""])
+        self.assertEqual(marks, ["◎", "○", "注", "▲", "☆", "△"])
+        # Actual pre-off evidence may supersede the original third/fourth
+        # scored roles, but never overwrites the ◎○ model leaders.
+        self.assertEqual(len([m for m in marks if m == "☆"]), 1)
+        self.assertEqual(len([m for m in marks if m == "注"]), 1)
 
     def test_central_dispatch_never_uses_nar_model(self):
         with self.assertRaises(ValueError):
