@@ -3,69 +3,11 @@ from __future__ import annotations
 from typing import Any
 from arvexq.prediction.factor_model import MODEL_VERSION, PRIMARY_PILLARS, rank_factor_model
 from arvexq.prediction.career_readiness import attach_career_readiness
+from arvexq.prediction.special_marks import allocate_special_marks
 
-MARK_ENGINE_VERSION = "arvexq-true-run-pure-sectional-marks-v4-individual-evidence"
+MARK_ENGINE_VERSION = "arvexq-true-run-pure-sectional-marks-v5-special-evidence"
 CORE_MARKS = ("◎", "○", "▲", "△")
-LOWER_MARKS = ("☆",)
-
-def optional_star_candidate(
-    ranked: list[dict[str, Any]], race: dict[str, Any] | None = None
-) -> dict[str, Any] | None:
-    """Select one evidence-backed pace upside runner outside the four core marks.
-
-    Only recorded pre-off pace fit and observed finishing/run style are used.
-    Different cutoffs reflect JRA vs local racing, without awarding a star
-    purely for an adequate overall factor score.
-    """
-    if len(ranked) < 5:
-        return None
-    race = race or {}
-    circuit = str(race.get("circuit") or "")
-    local = circuit in ("地方", "NAR", "local")
-    score_floor = .55 if local else .60
-    gap_ceiling = .19 if local else .15
-    pace_floor = .66 if local else .72
-    fourth_score = float(ranked[3]["score"])
-    eligible = []
-    for row in ranked[4:]:
-        horse = row["horse"]
-        factors = row.get("factors") or {}
-        if row.get("primaryPillarCoverage", 0) < 2:
-            continue
-        score = float(row["score"])
-        if score < score_floor or fourth_score - score > gap_ceiling:
-            continue
-        # Pace-fit must be observed in the race data, not manufactured.
-        fit = horse.get("paceFitScore")
-        if fit is None:
-            fit = horse.get("paceFit")
-        if fit is None:
-            fit = horse.get("展開適性")
-        if isinstance(fit, dict):
-            fit = fit.get("score")
-        try:
-            pace_fit = float(fit)
-        except (ValueError, TypeError):
-            continue
-        if pace_fit > 1:
-            pace_fit /= 100
-        if not (0 <= pace_fit <= 1) or pace_fit < pace_floor:
-            continue
-        # Upside also needs independent recent-race sectional OR pace evidence.
-        sectional = factors.get("sectional")
-        true_run = factors.get("trueRun")
-        if not (
-            sectional is not None and float(sectional) >= (.63 if local else .68)
-            or true_run is not None and float(true_run) >= (.68 if local else .72)
-        ):
-            continue
-        eligible.append((pace_fit, score, horse))
-    if not eligible:
-        return None
-    eligible.sort(key=lambda value: (-value[0], -value[1],
-                                    int(value[2].get("horseNumber") or 999)))
-    return eligible[0][2]
-
+LOWER_MARKS = ("☆", "注")
 
 def sufficiently_observed_partial_career(
     detail: dict[str, Any], readiness: dict[str, Any]
@@ -229,12 +171,16 @@ def apply_core_marks(detail: dict[str, Any]) -> dict[str, Any]:
             "horseNumber": int(h.get("horseNumber") or 0),
             "name": h.get("name") or "", **evidence,
         })
-    # One ranking owns the four mandatory marks; ☆ needs independent evidence.
-    for row, mark in zip(ranked, CORE_MARKS):
-        row["horse"]["integratedEvaluation"]["mark"] = mark
-    star = optional_star_candidate(ranked, detail)
-    if star is not None:
-        star["integratedEvaluation"]["mark"] = "☆"
+    # ◎○ retain main-model leadership. Independent ☆/注 evidence can
+    # supersede ▲/△; unclaimed core marks pass to the next ranked runners.
+    special = allocate_special_marks(ranked, detail)
+    for row in ranked:
+        horse = row["horse"]
+        no = int(horse.get("horseNumber") or 0)
+        evidence = special.get(no, {})
+        e = horse["integratedEvaluation"]
+        e["mark"] = evidence.get("mark", "")
+        e["specialMarkEvidence"] = {k: v for k, v in evidence.items() if k != "mark"}
     for row in ranked:
         row["horse"]["integratedEvaluation"]["rank"] = row["rank"]
     detail["markEngineVersion"] = MARK_ENGINE_VERSION
