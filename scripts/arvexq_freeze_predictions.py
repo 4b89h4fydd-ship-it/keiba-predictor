@@ -101,14 +101,6 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
             return {"status": "incomplete-prediction",
                     "observedCoverage": ranked.get("observedModelCoverage") or {},
                     "predictionStatus": ranked.get("predictionStatus") or "unavailable"}
-        if ranked.get("predictionStatus") == "waiting-for-full-career":
-            career = ranked.get("careerReadiness") or {}
-            return {
-                "status": "waiting-for-full-career",
-                "completeHorses": int(career.get("completeHorses") or 0),
-                "activeHorses": int(career.get("activeHorses") or len(active)),
-                "blockedHorses": list(career.get("blockedHorses") or [])[:8],
-            }
         ranked_horses = {
             int(h.get("horseNumber") or 0): h
             for h in (ranked.get("horses") or [])
@@ -129,20 +121,6 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
                     "predictionModelVersion", "winConfidenceEvidence"):
             if key in ranked:
                 working[key] = copy.deepcopy(ranked[key])
-        if ranked.get("predictionStatus") == "partial-career-evidence":
-            working["predictionStatus"] = "partial-career-evidence"
-            working["careerReadiness"] = copy.deepcopy(ranked.get("careerReadiness") or {})
-        lock = build(working)
-        if isinstance(lock, dict) and working.get("predictionStatus") == "partial-career-evidence":
-            current = working.get("careerReadiness") or {}
-            lock["careerEvidence"] = {
-                "fullCareerVerified": False,
-                "status": "partially-observed-preoff",
-                "predictionEvidencePolicy": current.get("predictionEvidencePolicy"),
-                "completeHorses": current.get("completeHorses"),
-                "activeHorses": current.get("activeHorses"),
-                "blockedHorses": copy.deepcopy(current.get("blockedHorses") or []),
-            }
         if isinstance(lock, dict):
             # Preserve the morning's original marks. Only an authenticated
             # official-condition change may supply a later pre-off revision.
