@@ -44,7 +44,7 @@ class JraMarginRoundtrip(unittest.TestCase):
         row={'date':'2026-09-01','finish':2,'fieldSize':10,'cornerPositions':[3,2]}
         rows=[{**row,'date':f'2026-09-{i:02d}'} for i in range(1,6)]
         get=Mock(return_value={'recentRaces':[{**r,'timeBehindWinner':0.0} for r in rows]})
-        reg=DataBankRegistry();reg.register(DataSource(name='jra_test',circuit='JRA',priority=1,
+        reg=DataBankRegistry();reg.register(DataSource(name='jra_official_prior_results',circuit='JRA',priority=1,
              capabilities=SourceCapabilities(horse_history=True),fetchers={'horse_history':get}))
         d={'date':'2026-10-12','circuit':'JRA','horses':[{'name':'対象馬','recentRaces':rows,
                    'pedigree':{'sire':'父'},'jockeyStats':{'n':1},'trainerStats':{'n':1}}]}

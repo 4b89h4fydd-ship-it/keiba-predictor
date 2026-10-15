@@ -341,10 +341,11 @@ async def enrich_race_missing(
                     and not previous_audit.get("evidenceAttempted"))
                 or not previous_audit.get("fetchAttempted", bool(previous_audit.get("providersAttempted")))
             )
-            if full_search or _needs_history(horse, cutoff=cutoff, limit=min(5, history_limit)) or (
-                circuit == "JRA" and _needs_jra_margins(horse, cutoff)
-            ):
+            if full_search or _needs_history(horse, cutoff=cutoff, limit=min(5, history_limit)):
                 domains.append(("horse_history", None))
+            elif circuit == "JRA" and _needs_jra_margins(horse, cutoff) and bank_registry.get("jra_official_prior_results"):
+                # Missing margins need the result adapter, not a redundant card/profile fetch.
+                domains.append(("horse_history", {"jra_official_prior_results"} | measured_feeds))
             elif measured_feeds and (
                 _measured_horse_first3f_count(horse, cutoff, history_limit) < 2
                 or _horse_early_timing_count(horse, cutoff, history_limit) < 2

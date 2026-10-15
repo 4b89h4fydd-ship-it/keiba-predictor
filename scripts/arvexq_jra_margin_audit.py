@@ -13,6 +13,13 @@ def measure(bundle):
         counts['races']+=1
         for h in d.get('horses') or []:
             counts['horses']+=1;found=False
+            duplicates={}
+            for r in [*(h.get('recentRaces') or []),*(h.get('allPastRuns') or [])]:
+                if not isinstance(r,dict) or not r.get('marginEvidence'):continue
+                k=r.get('date');signature=(r.get('timeBehindWinner'),r.get('marginEvidence'))
+                if k in duplicates and duplicates[k]!=signature:
+                    errors.append({'id':d['id'],'horse':h['name'],'date':k,'reason':'conflicting-visible-proof'})
+                duplicates[k]=signature
             for r in merge_career(h.get('allPastRuns'),h.get('recentRaces'),d['date'])[:5]:
                 counts['runs']+=1
                 value=r.get('timeBehindWinner')
