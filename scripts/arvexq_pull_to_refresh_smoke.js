@@ -8,7 +8,9 @@ async function swipe(page){
   await page.waitForFunction(()=>Math.max(0,window.scrollY||0,document.scrollingElement?.scrollTop||0)<=2,null,{timeout:10000});
   return page.evaluate(()=>{
     scrollTo(0,0);
-    const target=document.querySelector('.arv-unified-hero img')||document.body;
+    // A swipe on a link/button intentionally does not refresh. Dispatch on a
+    // stable neutral surface, not a hero image that may become a linked control.
+    const target=document.body;
     // Playwright WebKit exposes TouchEvent but Touch has an illegal public
     // constructor on Linux. Dispatch DOM touch-shaped events instead; the
     // application listens for these standard payload fields.
