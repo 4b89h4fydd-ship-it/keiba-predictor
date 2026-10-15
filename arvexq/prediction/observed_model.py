@@ -39,7 +39,9 @@ def _course_history(horse, race):
 
 def _verified_jra_proof(run):
     """JRA margins must be tied to observed official results, not an estimate."""
-    v = run.get("marginSeconds", run.get("timeBehindWinner"))
+    v = run.get("marginSeconds")
+    if v is None or v == "":
+        v = run.get("timeBehindWinner")
     if v is None or v == "":
         return False
     try:
@@ -137,8 +139,8 @@ def apply_observed_marks(detail):
                                         "dominanceScore": round(row["score"] * 100, 2),
                                         "factors": row["factors"], "modelVersion": version})
     detail["predictionStatus"] = ("ready" if full and len(ranked) >= 2 else
-                                  "partial-nar-observed-inputs" if ranked else
-                                  "insufficient-nar-observed-inputs")
+                                  "partial-observed-inputs" if ranked else
+                                  "insufficient-observed-inputs")
     detail["markEngineVersion"] = version
     detail["predictionModelVersion"] = version
     detail["markMethod"] = ("中央" if version == JRA_MODEL_VERSION else "地方") + "専用：みねた位置取り代理指標60%＋実測着差40%"
