@@ -61,11 +61,17 @@ def apply_nar_marks(detail):
         e.update(mark="", markSource=MODEL_VERSION, markEngineVersion=MODEL_VERSION,
                  honmeiRole="", honmeiGrade="", honmeiEligible=False)
     marks = ("◎", "○", "▲", "△")
+    fourth = ranked[3] if len(ranked) >= 4 else None
+    # Match the browser: optional observed pace upside, never automatic fifth.
+    star = next((row for row in ranked[4:]
+                 if fourth is not None and row["score"] >= .55
+                 and fourth["score"] - row["score"] <= .075
+                 and row["factors"]["mineta"] >= .55), None)
     detail["factorRanking"] = []
     for i, row in enumerate(ranked):
         h = row["horse"]
         e = h["integratedEvaluation"]
-        e.update(mark=marks[i] if i < len(marks) else "",
+        e.update(mark=marks[i] if i < len(marks) else ("☆" if row is star else ""),
                  coreAbilityRank=i + 1, coreAbilityScore=round(row["score"] * 100, 2),
                  honmeiRole="win" if i == 0 else "",
                  honmeiGrade=grade if i == 0 else "",
