@@ -1,0 +1,1565 @@
+{
+  "evaluatedCodeCommit": "4db0a7ef333417d376f3483f3d339e787793df55",
+  "adopted": false,
+  "productionChanged": false,
+  "comparison": {
+    "all": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "ids": [],
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "ids": [],
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "ids": [
+              "nar-2026-10-10-佐賀-03",
+              "nar-2026-10-10-佐賀-08",
+              "nar-2026-10-10-佐賀-07",
+              "nar-2026-10-10-佐賀-01",
+              "nar-2026-10-10-佐賀-05",
+              "nar-2026-10-10-佐賀-02",
+              "nar-2026-10-11-佐賀-01",
+              "nar-2026-10-10-佐賀-09",
+              "nar-2026-10-11-佐賀-03",
+              "nar-2026-10-11-佐賀-04",
+              "nar-2026-10-08-園田-04",
+              "nar-2026-10-09-園田-03",
+              "nar-2026-10-09-園田-04"
+            ],
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 6,
+              "axis": 6,
+              "second": 5,
+              "third": 3,
+              "delta": 2,
+              "covered": 31,
+              "specialHits": 9,
+              "specialPicks": 15,
+              "specialPrecision": 0.6
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "ids": [
+              "nar-2026-10-14-名古屋-02",
+              "nar-2026-10-13-名古屋-02",
+              "nar-2026-10-14-名古屋-01",
+              "nar-2026-10-12-佐賀-02"
+            ],
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 3,
+              "second": 1,
+              "third": 3,
+              "delta": 2,
+              "covered": 11,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "unchanged": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: no primary improvement",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "blend": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: second regressed",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 4,
+              "axis": 6,
+              "second": 4,
+              "third": 4,
+              "delta": 2,
+              "covered": 30,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 2,
+              "second": 0,
+              "third": 4,
+              "delta": 1,
+              "covered": 11,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "win": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: no primary improvement",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 6,
+              "axis": 6,
+              "second": 4,
+              "third": 3,
+              "delta": 0,
+              "covered": 27,
+              "specialHits": 7,
+              "specialPicks": 15,
+              "specialPrecision": 0.4666666666666667
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "axis": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 3,
+              "axis": 7,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 3,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "slots": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 3,
+              "axis": 6,
+              "second": 5,
+              "third": 5,
+              "delta": 3,
+              "covered": 31,
+              "specialHits": 9,
+              "specialPicks": 15,
+              "specialPrecision": 0.6
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 4,
+              "delta": 1,
+              "covered": 11,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "special": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: no primary improvement",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "without-blend": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 6,
+              "axis": 7,
+              "second": 4,
+              "third": 3,
+              "delta": 2,
+              "covered": 31,
+              "specialHits": 9,
+              "specialPicks": 15,
+              "specialPrecision": 0.6
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 3,
+              "second": 1,
+              "third": 4,
+              "delta": 1,
+              "covered": 11,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "without-win": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: second regressed",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 4,
+              "axis": 6,
+              "second": 5,
+              "third": 4,
+              "delta": 2,
+              "covered": 31,
+              "specialHits": 9,
+              "specialPicks": 15,
+              "specialPrecision": 0.6
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 3,
+              "second": 0,
+              "third": 3,
+              "delta": 2,
+              "covered": 11,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "without-axis": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 6,
+              "axis": 6,
+              "second": 5,
+              "third": 3,
+              "delta": 2,
+              "covered": 31,
+              "specialHits": 9,
+              "specialPicks": 15,
+              "specialPrecision": 0.6
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 2,
+              "covered": 11,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "without-slots": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 6,
+              "axis": 6,
+              "second": 4,
+              "third": 2,
+              "delta": 2,
+              "covered": 30,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 3,
+              "second": 1,
+              "third": 4,
+              "delta": 1,
+              "covered": 11,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    },
+    "without-special": {
+      "status": "blocked",
+      "gateFailures": [
+        "中央: fewer than 30 paired holdout races",
+        "中央: no primary improvement",
+        "中央: special-mark precision evidence insufficient",
+        "地方: fewer than 30 paired holdout races",
+        "地方: special-mark precision evidence insufficient"
+      ],
+      "holdoutStart": "2026-10-12",
+      "pairedRaces": 17,
+      "skipped": {
+        "incomplete-observations": 2
+      },
+      "groups": {
+        "中央": {
+          "early": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          },
+          "holdout": {
+            "races": 0,
+            "baseline": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            },
+            "candidate": {
+              "win": 0,
+              "axis": 0,
+              "second": 0,
+              "third": 0,
+              "delta": 0,
+              "covered": 0,
+              "specialHits": 0,
+              "specialPicks": 0,
+              "specialPrecision": null
+            }
+          }
+        },
+        "地方": {
+          "early": {
+            "races": 13,
+            "baseline": {
+              "win": 3,
+              "axis": 6,
+              "second": 6,
+              "third": 5,
+              "delta": 0,
+              "covered": 28,
+              "specialHits": 8,
+              "specialPicks": 15,
+              "specialPrecision": 0.5333333333333333
+            },
+            "candidate": {
+              "win": 6,
+              "axis": 6,
+              "second": 5,
+              "third": 3,
+              "delta": 2,
+              "covered": 31,
+              "specialHits": 9,
+              "specialPicks": 15,
+              "specialPrecision": 0.6
+            }
+          },
+          "holdout": {
+            "races": 4,
+            "baseline": {
+              "win": 2,
+              "axis": 2,
+              "second": 1,
+              "third": 3,
+              "delta": 1,
+              "covered": 10,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            },
+            "candidate": {
+              "win": 2,
+              "axis": 3,
+              "second": 1,
+              "third": 3,
+              "delta": 2,
+              "covered": 11,
+              "specialHits": 1,
+              "specialPicks": 3,
+              "specialPrecision": 0.3333333333333333
+            }
+          }
+        }
+      },
+      "inputSources": {
+        "immutable-snapshot-plus-verified-official-prior-results": 14,
+        "provided-card": 3
+      },
+      "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+      "productionChanged": false
+    }
+  },
+  "limitations": [
+    "17 eligible NAR races only; no eligible JRA comparison",
+    "Partial bounded official recovery; many source inputs still incomplete",
+    "Retrospective replay, not guaranteed original pre-off availability",
+    "Early period 13 races and late period 4; no statistically validated generalization"
+  ]
+}
