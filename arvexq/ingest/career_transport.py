@@ -24,6 +24,7 @@ BROWSER_FIELDS = frozenset({
     "track","venue","surface","trackType","distance","distanceM",
     "condition","going","weather","fieldSize","runners","finish",
     "finishPosition","rank","margin","marginSeconds","beatenLength",
+    "timeBehindWinner","marginText","marginEvidenceSource","marginEvidence",
     "timeSeconds","time","last3f","last600","last3FSeconds",
     "last3fRank","last3FRank","last600Rank","上がり順位",
     "last3fPercentile","last3FPercentile","last600Percentile",

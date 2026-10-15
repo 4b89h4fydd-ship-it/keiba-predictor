@@ -2895,6 +2895,106 @@ def _jra_any_race_no(cname:str)->int:
     m=re.search(r"pw01(?:d|s)de(?:01|10)\d{2}\d{4}\d{4}(\d{2})20\d{6}/",cname or "",re.I)
     return int(m.group(1)) if m else 0
 
+# The historical result menu publishes month tokens (objParam) and meeting links.
+# Use those actual official links when D1's original source has no horse cname.
+_jra_prior_lookup_lock = threading.RLock()
+_jra_prior_month_cache = {}
+_jra_prior_meeting_cache = {}
+_jra_prior_parsed_cache = {}
+_jra_prior_result_meta = {}
+_jra_prior_result_locks = {}
+
+def _jra_prior_result_cnames(iso_date: str, track: str) -> list[str]:
+    if track not in JRA_TRACK_CODE_BY_NAME or not re.fullmatch(r"20\d{2}-\d{2}-\d{2}", iso_date):
+        return []
+    month = iso_date[:7].replace("-", "")
+    key = (iso_date, track)
+    with _jra_prior_lookup_lock:
+        if key in _jra_prior_meeting_cache:
+            return list(_jra_prior_meeting_cache[key])
+        if month not in _jra_prior_month_cache:
+            home = _jra_request("https://www.jra.go.jp/", None, 86400)
+            seed = re.search(r"doAction\('/JRADB/accessS.html',\s*'(pw01skl[^']+)'", home)
+            if not seed:
+                raise ValueError("JRA past-results menu link absent")
+            menu = _jra_request("https://www.jra.go.jp/JRADB/accessS.html", seed.group(1), 86400)
+            published = dict(re.findall(r'objParam\["(\d{4})"\]="([0-9A-Fa-f]{2})"', menu))
+            current = re.search(r'var\s+yearMonth\s*=\s*"(\d{6})"', menu)
+            if month[2:] not in published or not current:
+                raise ValueError("JRA month selector token absent for " + month)
+            selector = "pw01skl" + ("00" if month >= current.group(1) else "10") + month + "/" + published[month[2:]]
+            _jra_prior_month_cache[month] = _jra_request("https://www.jra.go.jp/JRADB/accessS.html", selector, 86400)
+        html = _jra_prior_month_cache[month]
+        token = iso_date.replace("-", "")
+        code = JRA_TRACK_CODE_BY_NAME[track]
+        links = list(dict.fromkeys(_jra_norm_cname(x) for x in re.findall(
+            r"pw01srl(?:01|10)\d{18}(?:/|%2F)[0-9A-Fa-f]{2}", html, re.I)))
+        meetings = [x for x in links if x.startswith("pw01srl10" + code) or x.startswith("pw01srl01" + code)]
+        meetings = [x for x in meetings if token + "/" in x]
+        if len(meetings) != 1:
+            return []
+        page = _jra_request("https://www.jra.go.jp/JRADB/accessS.html", meetings[0], 86400)
+        results = list(dict.fromkeys(_jra_norm_cname(x) for x in JRA_RESULT_CNAME_RE.findall(page)))
+        results = [x for x in results if _jra_date_from_cname(x) == iso_date and _jra_any_track(x) == track]
+        if not results:
+            raise ValueError("JRA meeting returned no result links: " + meetings[0])
+        soup = BeautifulSoup(page, "html.parser")
+        for tr in soup.select("#race_list tbody tr"):
+            link = _jra_attr_cname(tr, JRA_RESULT_CNAME_RE)
+            distance = re.search(r"[\d,]+", _jra_text(tr.select_one(".dist")))
+            if link and distance:
+                _jra_prior_result_meta[link] = {"distance": int(distance.group().replace(",", "")),
+                                              "surface": _jra_text(tr.select_one(".course"))}
+        _jra_prior_meeting_cache[key] = results
+        return list(results)
+
+def _jra_resolve_prior_results(horse: dict, run: dict) -> dict | None:
+    """Resolve a source-less start by observed identity, never by inferred time."""
+    import unicodedata
+    def clean(value):
+        return "".join(unicodedata.normalize("NFKC", str(value or "")).split())
+    at = str(run.get("date") or "")
+    track = str(run.get("track") or "")
+    name = clean(horse.get("name"))
+    cnames = _jra_prior_result_cnames(at, track)
+    no = int(run.get("raceNumber") or 0)
+    if no:
+        cnames = [c for c in cnames if _jra_any_race_no(c) == no]
+    if run.get("distance"):
+        cnames = [c for c in cnames if not _jra_prior_result_meta.get(c) or
+                  _jra_prior_result_meta[c]["distance"] == int(run["distance"])]
+    def surface(value):
+        return "障害" if "障" in value or "→" in value else "芝" if "芝" in value else "ダート" if "ダ" in value else ""
+    if surface(str(run.get("surface") or "")):
+        cnames = [c for c in cnames if not _jra_prior_result_meta.get(c) or
+                  surface(_jra_prior_result_meta[c]["surface"]) == surface(str(run["surface"]))]
+    matches = []
+    for cname in cnames:
+        with _jra_prior_lookup_lock:
+            lock = _jra_prior_result_locks.setdefault(cname, threading.Lock())
+        with lock:
+            if cname not in _jra_prior_parsed_cache:
+                result = _jra_parse_result(cname)
+                if not isinstance(result, dict):
+                    raise ValueError("JRA official prior result parse failed: " + cname)
+                _jra_prior_parsed_cache[cname] = result
+            result = _jra_prior_parsed_cache[cname]
+        if result.get("date") != at or result.get("track") != track:
+            continue
+        if run.get("distance") and int(result.get("distance") or 0) != int(run["distance"]):
+            continue
+        rows = [r for r in (result.get("result") or {}).get("finishers") or [] if clean(r.get("name")) == name]
+        if len(rows) != 1:
+            continue
+        row = rows[0]
+        if run.get("finish") and int(row.get("finish") or 0) != int(run["finish"]):
+            continue
+        if run.get("timeSeconds") and abs(float(run["timeSeconds"]) - float(row.get("timeSeconds") or 0)) > .11:
+            continue
+        matches.append(result)
+    return matches[0] if len(matches) == 1 else None
+
+
 def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
     if not result_cname:return None
     try:html=_jra_request("https://www.jra.go.jp/JRADB/accessS.html",result_cname,20)
@@ -2937,7 +3037,7 @@ def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
             for k in keys:
                 if k in v:return i
         return -1
-    ix={"fin":hidx("着順"),"frame":hidx("枠"),"no":hidx("馬番"),"name":hidx("馬名"),"sexage":hidx("性齢"),"cw":hidx("負担重量","斤量"),"jockey":hidx("騎手名","騎手"),"time":hidx("タイム"),"last3f":hidx("推定上り","上り"),"corner":hidx("コーナー通過順位","コーナー通過順"),"bw":hidx("馬体重"),"trainer":hidx("調教師名","調教師"),"pop":hidx("単勝人気","人気")}
+    ix={"fin":hidx("着順"),"frame":hidx("枠"),"no":hidx("馬番"),"name":hidx("馬名"),"sexage":hidx("性齢"),"cw":hidx("負担重量","斤量"),"jockey":hidx("騎手名","騎手"),"time":hidx("タイム"),"margin":hidx("着差"),"last3f":hidx("推定上り","上り"),"corner":hidx("コーナー通過順位","コーナー通過順"),"bw":hidx("馬体重"),"trainer":hidx("調教師名","調教師"),"pop":hidx("単勝人気","人気")}
     finishers=[]
     for tr in table.find_all("tr"):
         tds=tr.find_all("td")
@@ -2957,7 +3057,7 @@ def _jra_parse_result(result_cname:str,base:dict|None=None)->dict|None:
         bw=None;chg=None;mb=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",val("bw"))
         if mb:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
         mp=re.search(r"\d+",val("pop"));pop=int(mp.group()) if mp else None
-        finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val("fin"),"horseNumber":no,"frameNumber":frame,"name":name,"sex":sx,"age":age,"carriedWeight":cw,"jockey":_clean(val("jockey")),"trainer":_clean(val("trainer")),"timeSeconds":tm,"last3FSeconds":last3f,"marginText":"","cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,"popularity":pop})
+        finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val("fin"),"horseNumber":no,"frameNumber":frame,"name":name,"sex":sx,"age":age,"carriedWeight":cw,"jockey":_clean(val("jockey")),"trainer":_clean(val("trainer")),"timeSeconds":tm,"last3FSeconds":last3f,"marginText":val("margin"),"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,"popularity":pop})
     sectionals=sorted({float(x.get("last3FSeconds")) for x in finishers if x.get("last3FSeconds") not in (None,"") and float(x.get("last3FSeconds"))>0})
     for x in finishers:
         try:s=float(x.get("last3FSeconds")) if x.get("last3FSeconds") not in (None,"") else 0.0

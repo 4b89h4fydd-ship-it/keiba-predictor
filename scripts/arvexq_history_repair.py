@@ -110,10 +110,13 @@ def merge_history(old: dict[str, Any] | None, new: dict[str, Any] | None) -> dic
     return out
 
 
-def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) -> int:
+def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, central_margins_only: bool = False) -> int:
     bundle = read_json(bundle_path)
     rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
     details = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id")]
+    if central_margins_only:
+        rows = [r for r in rows if r.get("circuit") in ("JRA", "中央")]
+        details = [d for d in details if d.get("circuit") in ("JRA", "中央")]
     by_id = {str(d["id"]): d for d in details}
     row_by_id = {str(r["id"]): r for r in rows}
     ids = [str(r["id"]) for r in rows]
@@ -138,7 +141,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
             return rid, None, f"{type(exc).__name__}: {exc}", "card" if not card_complete(base) else "result"
 
     for attempt in (1, 2):
-        pending = pending_ids()
+        pending = [] if central_margins_only else pending_ids()
         if not pending:
             break
         print(f"HISTORY_REPAIR pass={attempt} pending={len(pending)}")
@@ -175,6 +178,12 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
     # margin evidence permanently untouched.
     from arvexq.ingest.fallback_enrichment import enrich_race_missing
     from arvexq.prediction.past_performance import observed_runs
+    from arvexq.databanks.registry import DataBankRegistry, registry
+    from arvexq.ingest.career_transport import recover_horse
+    selected_bank = registry
+    if central_margins_only:
+        selected_bank = DataBankRegistry()
+        selected_bank.register(registry.get("jra_official_prior_results"))
     factor_scanned = factor_changed = 0
     missing_before = missing_after = 0
     max_factor_races = max(1, int(os.getenv("ARVEXQ_FACTOR_BACKFILL_RACES", "2")))
@@ -188,6 +197,9 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
         base = by_id.get(rid)
         if not isinstance(base, dict) or not base.get("horses"):
             continue
+        if central_margins_only:
+            base = copy.deepcopy(base)
+            base["horses"] = [recover_horse(h, base["date"]) for h in base["horses"]]
         horses = active_horses(base)
         incomplete = []
         for horse in horses:
@@ -212,12 +224,16 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int) 
             # Existing registered providers only; keep the original frozen
             # forecasts and tickets unchanged.
             enriched = asyncio.run(enrich_race_missing(
-                base, history_limit=200, max_parallel_horses=4))
+                base, history_limit=200, max_parallel_horses=8 if central_margins_only else 4,
+                bank_registry=selected_bank))
+            if central_margins_only and (enriched.get("preparedMeta") or {}).get("supplementalSearch", {}).get("failures"):
+                errors[rid] = str(enriched["preparedMeta"]["supplementalSearch"]["failures"])
             if enriched != base:
                 by_id[rid] = enriched
                 changed_ids.add(rid)
                 factor_changed += 1
-                _seed_base(rid, enriched)
+                if not central_margins_only:
+                    _seed_base(rid, enriched)
             missing_after += sum(
                 1 for h in active_horses(by_id[rid])
                 if len(observed_runs(h, by_id[rid], limit=5)) < 5
@@ -325,9 +341,10 @@ def main() -> int:
     p.add_argument("--bundle", default="history-bundle.json")
     p.add_argument("--payload", default="history-payload.json")
     p.add_argument("--report", default="history-report.json")
+    p.add_argument("--central-margins-only", action="store_true")
     p.add_argument("--workers", type=int, default=4)
     args = p.parse_args()
-    return repair(args.bundle, args.payload, args.report, args.workers)
+    return repair(args.bundle, args.payload, args.report, args.workers, args.central_margins_only)
 
 
 if __name__ == "__main__":

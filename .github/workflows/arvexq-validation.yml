@@ -203,6 +203,10 @@ jobs:
           node scripts/arvexq_morning_evidence_smoke.js
           python -m unittest discover -s tests -p 'test_live_delta_guard.py' -v
 
+      - name: JRA observed margins and lossless transfer regressions
+        run: |
+          python -m unittest tests.test_jra_margin_roundtrip tests.test_jra_prior_result_margin_enrichment tests.test_jra_result_margin_nameerror -v
+
       - name: Historical sync SQLite contention and D1 batch regressions
         run: |
           python -m py_compile scripts/arvexq_sqlite_runtime_guard.py scripts/arvexq_history_repair.py scripts/arvexq_sync_batches.py

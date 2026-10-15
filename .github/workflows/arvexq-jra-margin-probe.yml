@@ -2,60 +2,40 @@ name: ARVEXQ JRA Margin Source Probe
 "on":
   push:
     branches: [fix/jra-observed-margins]
-    paths: [.github/workflows/arvexq-jra-margin-probe.yml]
+    paths:
+      - app.py
+      - arvexq/databanks/legacy_bridge.py
+      - arvexq/ingest/career_transport.py
+      - .github/workflows/arvexq-jra-margin-probe.yml
 permissions:
   contents: read
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 40
     env:
       ARVEXQ_BOOTSTRAP_WARM: "0"
       ARVEXQ_DATA_CORE: "0"
       RACEDB_AUTO_UPDATE: "0"
+      ARVEXQ_FACTOR_BACKFILL_RACES: "24"
+      KEIBA_DATA_DIR: ${{ runner.temp }}/jra-margin-probe
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: python -m pip install -q -r requirements.txt
-      - name: Inspect existing official result discovery
+      - name: Read-only observed JRA collection test
         run: |
-          python - <<'PY'
-          import app,json,re
-          from pathlib import Path
-          from bs4 import BeautifulSoup
-          home=app._jra_request('https://www.jra.go.jp/',None,0)
-          seed=re.search(r"doAction\('/JRADB/accessS.html',\s*'(pw01skl[^']+)'",home).group(1)
-          todo=[seed];seen=set()
-          for step in range(4):
-              if not todo:break
-              cname=todo.pop(0);seen.add(cname)
-              html=app._jra_request('https://www.jra.go.jp/JRADB/accessS.html',cname,0)
-              Path('step-'+str(step)+'.html').write_text(html)
-              soup=BeautifulSoup(html,'html.parser')
-              main=soup.select_one('#main') or soup
-              print('STEP',step,cname,main.get_text(' ',strip=True)[-10000:])
-              links=re.findall(r"pw01s[^\s\"'<>]+",html)
-              print('LINKS',links[-100:])
-              # Follow 2026 annual selector, then September date selector.
-              for node in soup.find_all(['a','option']):
-                  text=node.get_text(' ',strip=True)
-                  if ('2026' in text or '9月' in text or '中山' in text):
-                      found=re.search(r"pw01s[^\s\"'<>]+",str(node))
-                      if found and found.group() not in seen:todo.append(found.group())
-          cname='pw01srl10062026040420260913/75'
-          html=app._jra_request('https://www.jra.go.jp/JRADB/accessS.html',cname,0)
-          Path('meeting.html').write_text(html)
-          links=app.JRA_RESULT_CNAME_RE.findall(html)
-          print('RESULT_LINKS',links)
-          cname=next(x for x in links if app._jra_any_race_no(x)==11)
-          html=app._jra_request('https://www.jra.go.jp/JRADB/accessS.html',cname,0)
-          Path('result.html').write_text(html)
-          print('PARSED',json.dumps(app._jra_parse_result(cname),ensure_ascii=False)[:5000])
-          PY
+          python scripts/arvexq_fetch_d1_bundle.py --api-base https://kraiz-api.4b89h4fydd.workers.dev --date 2026-10-12 --out before.json --report hydration.json --workers 4
+          PYTHONPATH=. python scripts/arvexq_jra_margin_audit.py --input before.json --output audit-before.json
+          python scripts/arvexq_history_repair.py --bundle before.json --payload repaired.json --report repair-report.json --workers 1 --central-margins-only
+          PYTHONPATH=. python scripts/arvexq_jra_margin_audit.py --input repaired.json --output audit-collected.json --require-positive
+          PYTHONPATH=. python scripts/arvexq_jra_mineta_observed_comparison.py comparison.json --bundle repaired.json --date 2026-10-12
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: jra-margin-probe
+          name: jra-margin-probe-summary
           path: |
-            *.html
+            audit-*.json
+            comparison.json
+          if-no-files-found: warn
