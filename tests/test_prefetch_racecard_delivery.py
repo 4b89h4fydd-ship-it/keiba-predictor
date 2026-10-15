@@ -120,7 +120,7 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         self.assertEqual(merged["preRaceBet"], incoming["preRaceBet"])
 
     def test_fully_observed_nar_6040_is_current_without_full_lifetime(self) -> None:
-        from arvexq.prediction.nar_model import apply_nar_marks, MODEL_VERSION
+        from arvexq.prediction.observed_model import apply_nar_marks, MODEL_VERSION
         rows = []
         for no in range(1, 6):
             runs = [
@@ -141,10 +141,10 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         self.assertTrue(prefetch._analysis_ready(detail))
         detail["preparedMeta"]["analysisInputHash"] = prefetch.analysis_input_hash(detail)
         self.assertTrue(prefetch._analysis_current(detail))
-        detail["narObservedCoverage"]["allObserved"] = False
+        detail["observedModelCoverage"]["allObserved"] = False
         self.assertFalse(prefetch._analysis_ready(detail))
         self.assertFalse(prefetch._analysis_current(detail))
-        detail["narObservedCoverage"]["allObserved"] = True
+        detail["observedModelCoverage"]["allObserved"] = True
         detail["predictionModelVersion"] = "arvexq-retired-nar-scores"
         self.assertFalse(prefetch._analysis_ready(detail))
 
