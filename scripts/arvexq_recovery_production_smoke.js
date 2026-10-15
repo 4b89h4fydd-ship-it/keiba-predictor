@@ -57,9 +57,9 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
       // Published odds update independently of the base racecard request.
       // Wait for actual DOM values; timeout remains a hard failure, never a fake odd.
       await page.waitForFunction(()=>Array.from(document.querySelectorAll('.rc-odds .odd'))
-        .some(el=>/^\\d/.test(el.textContent.trim())),null,{timeout:15000});
+        .some(el=>/^\d/.test(el.textContent.trim())),null,{timeout:15000});
       odds=await page.locator('.rc-odds .odd').allTextContents();
-      assert.ok(odds.some(x=>/^\\d/.test(x)),'no acquired odds for '+r.id);
+      assert.ok(odds.some(x=>/^\d/.test(x)),'no acquired odds for '+r.id);
     }
     else if(published===false)console.log('ODDS_NOT_YET_PUBLISHED '+r.id+' shown='+JSON.stringify(Array.from(new Set(odds))));
     else console.log('ODDS_SOURCE_UNAVAILABLE '+r.id+' shown='+JSON.stringify(Array.from(new Set(odds))));
