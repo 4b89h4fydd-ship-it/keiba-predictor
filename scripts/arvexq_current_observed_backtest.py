@@ -86,12 +86,44 @@ def collect(api,days,stop):
         if stop and len(races)>=stop:break
     return races,errors
 
+def enrich_historical_jra(details, maximum):
+    """Attempt independent historical entry/official past-margin collection.
+    The label is removed BEFORE any historical information is requested."""
+    import app as prod
+    tried=0;found=0;errors=[]
+    for d in details:
+        if tried>=maximum:break
+        if str(d.get("circuit") or "") not in ("中央","JRA","central"):continue
+        if not (d.get("result") or {}).get("finishers"):continue
+        tried+=1
+        label=d.get("result")
+        pre=copy.deepcopy(d)
+        pre.pop("result",None)
+        for h in pre.get("horses") or []:
+            for k in ("finishPosition","currentFinish","resultTime","winOdds","popularity","marketProbability"):
+                h.pop(k,None)
+        try:
+            # Production historical parser already handles IDs / card formats.
+            parsed=prod._netkeiba_detail_rows(pre) or []
+            if not parsed:raise ValueError("historical-entry-card-empty")
+            pre["horses"]=parsed
+            pre=prod._strip_excluded(prod._apply_enrichment(str(d.get("id") or ""),pre))
+            pre=prod._attach_stored_career(pre)
+            if any(h.get("recentRaces") or h.get("allPastRuns") for h in pre.get("horses") or []):
+                d["horses"]=pre["horses"]
+                found+=1
+        except Exception as exc:
+            errors.append({"id":d.get("id"),"error":str(exc)[:190]})
+        d["result"]=label
+    return {"attempted":tried,"withHistory":found,"errors":errors}
+
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--api",default="https://kraiz-api.4b89h4fydd.workers.dev")
     p.add_argument("--days",type=int,default=21)
     p.add_argument("--max-races",type=int,default=500)
     p.add_argument("--input",action="append",default=[])
+    p.add_argument("--enrich-jra",type=int,default=0)
     p.add_argument("--out",default="research-output/current-observed-6040")
     args=p.parse_args()
     details=[];errors=[]
@@ -100,7 +132,9 @@ def main():
             payload=json.loads(Path(filename).read_text(encoding="utf-8"))
             details.extend(payload.get("details") or [])
     else:details,errors=collect(args.api,args.days,args.max_races)
+    enrichment=enrich_historical_jra(details,args.enrich_jra) if args.enrich_jra else None
     report=evaluate(details)
+    if enrichment is not None:report["jraHistoricalEnrichment"]=enrichment
     report["fetchErrors"]=errors
     report["fetchedRaceCount"]=len(details)
     report["currentMethod"]="arvexq observed 60% positioning + 40% margin, not archived forecast"
