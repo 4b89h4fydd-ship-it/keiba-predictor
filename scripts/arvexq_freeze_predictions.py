@@ -121,6 +121,7 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
                     "predictionModelVersion", "winConfidenceEvidence"):
             if key in ranked:
                 working[key] = copy.deepcopy(ranked[key])
+        lock = build(working)
         if isinstance(lock, dict):
             # Preserve the morning's original marks. Only an authenticated
             # official-condition change may supply a later pre-off revision.
