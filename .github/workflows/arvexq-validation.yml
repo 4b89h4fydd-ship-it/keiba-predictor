@@ -78,7 +78,7 @@ jobs:
           node scripts/arvexq_full_snapshot_smoke.mjs
           node scripts/arvexq_api_chunk_export_smoke.mjs
           node scripts/arvexq_saved_ticket_smoke.js
-          node scripts/arvexq_capture_three_factor_smoke.js
+          node scripts/arvexq_capture_jra_6040_smoke.js
           node scripts/arvexq_capture_nar_6040_smoke.js
           node scripts/arvexq_saved_odds_smoke.mjs
           python -m unittest tests.test_saved_actual_odds
@@ -206,7 +206,7 @@ jobs:
 
       - name: NAR dedicated Mineta-margin scoring and isolated marks
         run: |
-          python -m unittest tests.test_nar_mineta_margin_authority -v
+          python -m unittest tests.test_nar_mineta_margin_authority tests.test_unified_jra_nar_observed_authority -v
           python -m unittest tests.test_nar_official_prior_margin_backfill -v
           python -m unittest tests.test_no_retired_ranker_execution -v
           node --check arvexq/ui/static/app.js
@@ -248,7 +248,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_jra_career_merge.py' -v
           python -m unittest discover -s tests -p 'test_official_changes.py' -v
           python -m unittest discover -s tests -p 'test_past_performance.py' -v
-          python -m unittest discover -s tests -p 'test_three_factor_unified.py' -v
+          python -m unittest tests.test_unified_jra_nar_observed_authority -v
           python -m unittest discover -s tests -p 'test_empirical_ticket_calibration.py' -v
           python -m unittest discover -s tests -p 'test_full_career.py' -v
           python -m unittest discover -s tests -p 'test_career_readiness.py' -v
