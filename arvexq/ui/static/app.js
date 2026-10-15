@@ -194,7 +194,15 @@ function smartVal(v){if(v==null||v==='')return'—';var x=Number(v);if(isFinite(
 function sourceCollectionSection(h,r){var src=(r.dataSources||[]).filter(function(z){return String(z)!=='SmartRc'}),es=h.collectionState||{},ped=h&&h.pedigree||{},busy=es.status==='running',hasBase=!!(h&&(h.name||h.jockey||h.trainer)),hasRich=!!(h&&((h.recentRaces||[]).length||ped.sire||ped.dam||ped.damsire||h.owner||h.producer||h.debutNoHistory||Object.keys(h.extraSources||{}).length)),txt=busy?'取得中':(hasRich||es.status==='complete'?'取得済':(es.status==='error'?'再取得可':(hasBase?'基本情報取得済':'未取得')));return'<div class="detail-heading">情報取得</div><button type="button" class="horse-fetch-btn" data-horse-fetch="'+esc(h.horseNumber)+'">'+(busy?'取得中…':'この馬の情報取得')+'</button><div class="horse-fetch-note">予想はJRA/NAR公式の直近5走・通過順を中心に使用。Smart出走表のテン・上がり系指標は現在使用しません。</div><div class="source-strip"><span class="source-chip '+(busy?'busy':(hasRich||es.status==='complete'?'good':'neutral'))+'">'+esc(txt)+'</span>'+src.map(function(z){return'<span class="source-chip good">'+esc(z)+'</span>'}).join('')+'</div>'+(es.error?'<div class="muted">'+esc(es.error)+'</div>':'')}
 function raceSourceStrip(r){var src=r.dataSources||[],es=r.enrichmentSearch||{},chips=[];for(var i=0;i<src.length;i++)chips.push('<span class="source-chip good">'+esc(src[i])+'</span>');if(!chips.length)chips.push('<span class="source-chip neutral">自動取得待ち</span>');if(es.status==='running')chips.unshift('<span class="source-chip busy">情報取得中</span>');return'<div class="source-strip">'+chips.join('')+'</div>'}
 function horseByNo(r,no){var hs=r.horses||[],i;for(i=0;i<hs.length;i++)if(n(hs[i].horseNumber)===n(no))return hs[i];return null}
-function resultStatus(r){var s=String(r&&r.result&&r.result.status||"");if(s==="速報"||s==="確定")return s;if(r&&r.raceStatus==="速報")return"速報";if(r&&r.raceStatus==="確定")return"確定";return""}
+function resultStatus(r){
+  // D1 may publish an official 確定 summary after the cached detail was 速報.
+  // A stale detail must not downgrade the newer confirmed summary.
+  var stored=String(r&&r.result&&r.result.status||""),
+      summary=String(r&&r.raceStatus||"");
+  if(stored==="確定"||summary==="確定")return "確定";
+  if(stored==="速報"||summary==="速報")return "速報";
+  return "";
+}
 function isFinal(r){return resultStatus(r)==="確定"}
 function isFlash(r){return resultStatus(r)==="速報"}
 function hasAnyResultData(r){return ((r&&r.result||{}).finishers||[]).some(function(x){return n(x&&x.finish)>0})}
