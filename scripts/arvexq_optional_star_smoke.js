@@ -8,8 +8,8 @@ function historicalWindow(h,r){
  return (h.recentRaces||[]).filter(v=>String(v.date)<String(r.date))
     .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
 }
-const alloc=new Function('historicalWindow','n',src.slice(start,end)+
-  'return assignIndependentSpecialMarks')(historicalWindow,n);
+const alloc=new Function('observedHistory','n','isNarRace','verifiedJraMargin',src.slice(start,end)+
+  'return assignIndependentSpecialMarks')(historicalWindow,n,()=>true,()=>true);
 const race={date:'2026-10-15',track:'園田',distance:1400,surface:'ダート'};
 const ordered=Array.from({length:7},(_,idx)=>{
  const no=idx+1;
