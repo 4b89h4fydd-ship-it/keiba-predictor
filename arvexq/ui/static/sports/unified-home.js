@@ -81,6 +81,10 @@ function syncLiveUI(mode,rows,day,scope,now=new Date()){
   if(el.classList.contains('smart-race-row')){
    for(const cls of ['final','flash','running','soon'])
     el.classList.toggle(cls,cls===(v.status==='finished'?'final':v.status));
+   if(v.status==='finished'||v.status==='flash'){
+    const time=el.querySelector('.smart-race-time');
+    if(time)time.textContent=labelFor(v.status);
+   }
   }
   if(el.getAttribute('aria-label'))el.setAttribute('aria-label',v.venue+' '+v.number+'R '+labelFor(v.status));
   let label=el.querySelector('.arv-race-state');
