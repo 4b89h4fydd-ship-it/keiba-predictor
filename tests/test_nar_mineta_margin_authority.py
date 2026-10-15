@@ -80,6 +80,21 @@ class NarAuthorityTests(unittest.TestCase):
                          [("mineta", .60), ("margin", .40)])
         self.assertNotIn("trueRun", [x["key"] for x in factors["items"]])
 
+    def test_star_mark_matches_browser_observed_upside_gate(self):
+        from unittest.mock import patch
+        d = race()
+        scores = (.90, .83, .75, .69, .66, .58)
+        rows = [
+            {"horse": h, "score": scores[i], "sample": 5,
+             "factors": {"mineta": .60, "margin": scores[i]},
+             "marginCoverage": .8, "modelVersion": MODEL_VERSION, "rank": i + 1}
+            for i, h in enumerate(d["horses"])
+        ]
+        with patch("arvexq.prediction.nar_model.rank_nar", return_value=rows):
+            apply_nar_marks(d)
+        marks = [h["integratedEvaluation"]["mark"] for h in d["horses"]]
+        self.assertEqual(marks, ["◎", "○", "▲", "△", "☆", ""])
+
     def test_central_dispatch_never_uses_nar_model(self):
         with self.assertRaises(ValueError):
             apply_nar_marks({"circuit": "中央", "date": "2026-10-12", "horses": []})
