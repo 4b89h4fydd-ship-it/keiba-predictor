@@ -120,7 +120,7 @@ class ServerSealTests(unittest.TestCase):
             return x
         result = prepare_seal(self.d, now=self.now, assign=already_verified,
                               build=lambda x:forecast(x,self.now))
-        self.assertEqual(result["status"], "sealed")
+        self.assertEqual(result["status"], "sealed", result)
         record = result["detail"]["preRacePrediction"]
         self.assertEqual(record["horses"][1]["lockedEvaluation"]["score"], 80)
         self.assertEqual(record["freezePolicy"], SEALED_VERSION)
@@ -314,7 +314,7 @@ class ServerSealTests(unittest.TestCase):
             return forecast(active,self.now)
         result = prepare_seal(d, now=self.now, assign=assign_core,
                               build=build_active)
-        self.assertEqual(result["status"], "sealed")
+        self.assertEqual(result["status"], "sealed", result)
         self.assertEqual(seen, [1,2,3])
         self.assertEqual(len(result["detail"]["horses"]),4)
         locked = result["detail"]["preRacePrediction"]["horses"]
