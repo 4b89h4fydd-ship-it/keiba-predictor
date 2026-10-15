@@ -174,7 +174,22 @@ function raceHasBrokenFrames(r){var hs=(r&&r.horses)||[];if(hs.length<=8)return 
 function frame(h){var raw=n(h&&h.frameNumber,0),no=n(h&&h.horseNumber,0),r=state&&state.race?state.race:null,total=r&&r.horses?(r.horses.length||0):0;if(raceHasBrokenFrames(r))return derivedFrame(no,total);if(raw>=1&&raw<=8)return raw;return derivedFrame(no,total)}
 function badge(h){return '<span class="frame-badge frame'+frame(h)+'">'+esc(h&&h.horseNumber)+'</span>'}
 function winOddsText(h){var v=h&&h.winOdds;if(v==null||v===''||Number(v)<=0)return'—';var x=Number(v);return isFinite(x)?(Math.round(x*10)/10).toFixed(1):String(v)}
-function popularityText(h){var p=n(h&&h.popularity,0);return p>0?p+'人気':'—'}
+// A rank saved at a different market timestamp must never be paired with new
+// displayed odds. Derive popularity only from a complete, homogeneous visible
+// win-odds field; otherwise show 未取得 rather than an incorrect old rank.
+function marketPopularity(h,r){
+  var race=r||(state&&state.race),field=(race&&race.horses)||[];
+  if(!h||isScratchHorse(h)||!(n(h.winOdds)>0))return 0;
+  var active=field.filter(function(z){return z&&n(z.horseNumber)>0&&!isScratchHorse(z)});
+  if(active.length<2)return 0;
+  var forecast=!!h.oddsForecast||/予想|forecast/i.test(String(h.oddsSource||''));
+  if(active.some(function(z){
+    return !(z.winOdds!=null&&z.winOdds!==''&&isFinite(Number(z.winOdds))&&Number(z.winOdds)>0)||
+      (!!z.oddsForecast||/予想|forecast/i.test(String(z.oddsSource||'')))!==forecast;
+  }))return 0;
+  return 1+active.filter(function(z){return Number(z.winOdds)<Number(h.winOdds)}).length;
+}
+function popularityText(h){var p=marketPopularity(h);return p>0?p+'人気':'—'}
 function smartVal(v){if(v==null||v==='')return'—';var x=Number(v);if(isFinite(x))return (Math.round(x*10)/10).toString();return String(v)}
 function sourceCollectionSection(h,r){var src=(r.dataSources||[]).filter(function(z){return String(z)!=='SmartRc'}),es=h.collectionState||{},ped=h&&h.pedigree||{},busy=es.status==='running',hasBase=!!(h&&(h.name||h.jockey||h.trainer)),hasRich=!!(h&&((h.recentRaces||[]).length||ped.sire||ped.dam||ped.damsire||h.owner||h.producer||h.debutNoHistory||Object.keys(h.extraSources||{}).length)),txt=busy?'取得中':(hasRich||es.status==='complete'?'取得済':(es.status==='error'?'再取得可':(hasBase?'基本情報取得済':'未取得')));return'<div class="detail-heading">情報取得</div><button type="button" class="horse-fetch-btn" data-horse-fetch="'+esc(h.horseNumber)+'">'+(busy?'取得中…':'この馬の情報取得')+'</button><div class="horse-fetch-note">予想はJRA/NAR公式の直近5走・通過順を中心に使用。Smart出走表のテン・上がり系指標は現在使用しません。</div><div class="source-strip"><span class="source-chip '+(busy?'busy':(hasRich||es.status==='complete'?'good':'neutral'))+'">'+esc(txt)+'</span>'+src.map(function(z){return'<span class="source-chip good">'+esc(z)+'</span>'}).join('')+'</div>'+(es.error?'<div class="muted">'+esc(es.error)+'</div>':'')}
 function raceSourceStrip(r){var src=r.dataSources||[],es=r.enrichmentSearch||{},chips=[];for(var i=0;i<src.length;i++)chips.push('<span class="source-chip good">'+esc(src[i])+'</span>');if(!chips.length)chips.push('<span class="source-chip neutral">自動取得待ち</span>');if(es.status==='running')chips.unshift('<span class="source-chip busy">情報取得中</span>');return'<div class="source-strip">'+chips.join('')+'</div>'}
@@ -1669,7 +1684,7 @@ function horseModal(r,p){var no=n(state.horseModalNo,0);if(!no)return'';var rows
 function miniPacePreview(r){return '<div class="home-ai-preview-photo mini-flow-demo"><div class="mini-flow-axis"><span>← 後方</span><b>隊列イメージ</b><span>前方 →</span></div><div class="mini-flow-line"></div><i class="mini-flow-dot d1">1</i><i class="mini-flow-dot d2">4</i><i class="mini-flow-dot d3">7</i><i class="mini-flow-dot d4">10</i><div class="mini-flow-caption">写真背景なし・右が前</div></div>'}
 function raceNumbers(r){var track=r?r.track:state.track,rs=state.races.filter(function(x){return x.track===track&&x.circuit===(r?r.circuit:state.circuit)}),out='';for(var i=1;i<=12;i++){var found=rs.find(function(x){return n(x.raceNumber)===i});out+='<button '+(found?'data-race="'+esc(found.id)+'"':'disabled')+' class="'+(r&&n(r.raceNumber)===i?'active':'')+'">'+i+'R</button>'}return '<nav class="race-numbers">'+out+'</nav>'}
 function evaluationText(x){var e=x.evaluation||{},p=state.pred&&state.pred.profile||null;return (p?esc(p.label)+'　':'')+esc(e.mode||'基礎')+' / '+esc(e.tier||'基礎データ評価')+'　データ充足度 '+n(e.dataCompleteness)+'%　評価信頼度 '+esc(e.confidence||'低')+(e.tied?'　同点は馬番順':'')}
-function oddsText(h){var ok=h&&h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0,pop=n(h&&h.popularity,0);return '単勝 '+(ok?esc((Math.round(n(h.winOdds)*10)/10).toFixed(1))+'倍':'--.-倍')+'　'+(pop>0?esc(pop)+'人気':'--人気')}
+function oddsText(h){var ok=h&&h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0,pop=marketPopularity(h);return '単勝 '+(ok?esc((Math.round(n(h.winOdds)*10)/10).toFixed(1))+'倍':'--.-倍')+'　'+(pop>0?esc(pop)+'人気':'--人気')}
 function oddsClass(h){var o=n(h&&h.winOdds,0);return o>0&&o<10?'odds-single':''}
 
 
@@ -1864,10 +1879,10 @@ function pendingDetailPanel(r){
   if(key==='result')return resultPanel(r);
   return '<section class="card" data-section-state="'+esc(status)+'"><h2>'+esc(labels[key]||'出走表')+'</h2><p role="status">'+(status==='empty'?'出走馬0頭を確認しました。':(status==='error'?'この項目を取得できませんでした。取得済みの情報は表示を継続します。':'この項目を取得中です。'))+'</p>'+(status==='error'?'<button type="button" data-detail-retry="'+esc(r.id)+'">再試行</button>':'')+'</section>'
 }
-function racecardOddsHtml(h){
+function racecardOddsHtml(h,r){
   if(isScratchHorse(h))return '<span class="odd scratch-odds">取消</span><span class="pop scratch-note">出走取消</span>';
   var valid=h&&h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0,
-      value=valid?n(h.winOdds):0,pop=n(h&&h.popularity,0),
+      value=valid?n(h.winOdds):0,pop=marketPopularity(h,r),
       forecast=!!(h&&h.oddsForecast)||/予想|forecast/i.test(String(h&&h.oddsSource||''));
   return '<span class="odd '+(value>0&&value<10?'single':'')+'">'+esc(valid?(Math.round(value*10)/10).toFixed(1):'未取得')+'</span>'
     +'<span class="pop">'+(forecast?'予想 ':'')+(pop>0?esc(pop)+'人気':'未取得')+'</span>';
@@ -1923,7 +1938,7 @@ function racecardEntryRow(r,h,x){
     +'<div class="rc-v339-weight'+(curBw?'':' pending')+'" aria-label="'+esc(weightHint)+'">'
       +'<b>'+esc(weightMain)+'</b><span class="rc-weight-delta">'+esc(weightDelta||'　')+'</span>'
     +'</div>'
-    +'<div class="rc-v336-odds rc-odds" data-odds-no="'+esc(no)+'">'+racecardOddsHtml(h)+'</div>'
+    +'<div class="rc-v336-odds rc-odds" data-odds-no="'+esc(no)+'">'+racecardOddsHtml(h,r)+'</div>'
     +'</div>';
 }
 function morningSavedMarkRows(r){
