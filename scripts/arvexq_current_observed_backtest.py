@@ -115,7 +115,8 @@ def enrich_historical_jra(details, maximum):
         except Exception as exc:
             errors.append({"id":d.get("id"),"error":str(exc)[:190]})
         d["result"]=label
-    return {"attempted":tried,"withHistory":found,"errors":errors}
+    return {"attempted":tried,"withHistory":found,"errors":errors,
+            "example": [{"id": d.get("id"),"track":d.get("track"),"horseEvidence":[{"horseNumber":h.get("horseNumber"),"runs":len(h.get("recentRaces") or h.get("allPastRuns") or []),"keys":list((h.get("recentRaces") or h.get("allPastRuns") or [{}])[0].keys())[:25]} for h in (d.get("horses") or [])[:3]]} for d in details if str(d.get("circuit") or "") in ("中央","JRA","central")][:3]}
 
 def main():
     p=argparse.ArgumentParser()
