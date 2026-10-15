@@ -6,6 +6,9 @@ from arvexq.domain import legacy_evaluation
 
 
 class NoRetiredRankerExecution(unittest.TestCase):
+    def test_retired_ranker_definition_is_deleted(self):
+        self.assertNotIn("def _rank_evaluations(detail):", legacy_evaluation.SOURCE)
+
     def test_circuit_specific_authority_ignores_old_ranker(self):
         executed = []
         def current(detail):
