@@ -173,6 +173,12 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, 
         if attempt == 1 and pending_ids():
             time.sleep(float(os.getenv("ARVEXQ_HISTORY_RETRY_SLEEP_SEC", "2")))
 
+    # A genuine winner has exactly zero seconds behind the winner.
+    # Presence, not truthiness, determines whether the margin was acquired.
+    def has_observed_margin(run: dict[str, Any]) -> bool:
+        return any(run.get(key) is not None and run.get(key) != ""
+                   for key in ("marginText", "marginSeconds", "timeBehindWinner", "margin"))
+
     # Repair prediction-input history independently of card/result completeness.
     # The prior early exit left complete racecards with empty sectional and
     # margin evidence permanently untouched.
@@ -211,8 +217,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, 
                 not (run.get("last3fRank") or run.get("last600Rank") or
                      run.get("last3fPercentile") or run.get("last3f") or
                      run.get("last3fSeconds") or run.get("last3FRank"))
-                or not (run.get("marginText") or run.get("marginSeconds") or
-                        run.get("timeBehindWinner") or run.get("margin"))
+                or not has_observed_margin(run)
                 for run in runs
             ):
                 incomplete.append(horse)
@@ -238,8 +243,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, 
             missing_after += sum(
                 1 for h in active_horses(by_id[rid])
                 if len(observed_runs(h, by_id[rid], limit=5)) < 5
-                or any(not (q.get("marginText") or q.get("marginSeconds") or
-                            q.get("timeBehindWinner") or q.get("margin"))
+                or any(not has_observed_margin(q)
                        for q in observed_runs(h, by_id[rid], limit=5))
             )
         except Exception as exc:
