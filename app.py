@@ -4763,11 +4763,9 @@ def _precompute_detail_metrics(detail: dict) -> dict:
                 horse["lapScore"]=round(sectional,6)
         except Exception:
             pass
-        # NAR uses only its dedicated 60/40 scoring authority; no old local evaluation.
-        if str(detail.get('circuit') or '') in ('地方', 'NAR', 'local'):
-            horse['integratedEvaluation'] = {}
-        else:
-            horse["integratedEvaluation"]=_integrated_evaluation(horse,detail)
+        # JRA/NAR use one observed 60/40 scorer; never call the retired
+        # synthetic integrated evaluation for either circuit.
+        horse["integratedEvaluation"] = {}
         try:
             horse["precomputedMetrics"]={"style":_pc_style_metrics(metric_horse,detail),"fit":_pc_fit_metrics(metric_horse,detail),"sectional":{"score":horse.get("officialSectionalScore"),"samples":horse.get("officialSectionalSamples",0)}}
         except Exception:
