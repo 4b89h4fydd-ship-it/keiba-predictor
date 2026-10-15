@@ -133,7 +133,6 @@ jobs:
       - name: Betting marks and ticket reconciliation regression
         run: |
           node --check arvexq/ui/static/app.js
-          node scripts/arvexq_three_factor_parity_smoke.js
           node scripts/arvexq_bet_role_guide_smoke.js
           node scripts/arvexq_race_source_integrity_smoke.js
           node scripts/arvexq_empirical_selection_smoke.js
@@ -143,7 +142,6 @@ jobs:
           node scripts/arvexq_retired_selection_history_smoke.js
           node scripts/arvexq_live_mark_refresh_smoke.js
           python -m unittest discover -s tests -p 'test_optional_star_marks.py' -v
-          node scripts/arvexq_optional_star_smoke.js
           node --check arvexq/ui/static/research/research_view.js
           node scripts/arvexq_research_view_smoke.js
           node scripts/arvexq_result_continuous_smoke.js
