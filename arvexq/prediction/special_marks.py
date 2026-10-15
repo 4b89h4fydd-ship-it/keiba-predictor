@@ -79,7 +79,9 @@ def _evidence(runs: list[dict[str, Any]], race: dict[str, Any],
             earlier_peak = True
     # ☆ needs both an observed finishing gain and a plausible pace-collapse
     # setting. It is not a fifth-place award or general factor-score gate.
-    star_ok = len(runs) >= 2 and front >= 3 and bool(advancing) and podium >= 1
+    # A single genuine run can support a special mark when it contains
+    # enough independent observations; never synthesize missing runs.
+    star_ok = len(runs) >= 1 and front >= 3 and bool(advancing) and podium >= 1
     star_strength = (.50 * min(1., max(advancing, default=0.) * 3)
                      + .30 * min(1., len(advancing) / 2)
                      + .20 * min(1., front / 5)) if star_ok else 0.
@@ -89,14 +91,15 @@ def _evidence(runs: list[dict[str, Any]], race: dict[str, Any],
     ) if present]
     # Two independent forms of proof, including at least one actual podium,
     # prevent 注 from becoming a catch-all for any poor recent finisher.
-    note_ok = len(runs) >= 2 and podium >= 1 and len(flags) >= 2
+    note_ok = len(runs) >= 1 and podium >= 1 and len(flags) >= 2
     note_strength = (.40 + .15 * min(4, len(flags))
                      + .05 * min(2, podium)) if note_ok else 0.
     return {"star": bool(star_ok), "note": bool(note_ok),
             "starStrength": round(star_strength, 6),
             "noteStrength": round(note_strength, 6),
             "frontPressureRunners": front, "closingGainRuns": len(advancing),
-            "podiumRuns": podium, "noteReasons": flags}
+            "podiumRuns": podium, "noteReasons": flags,
+            "evidenceRuns": len(runs), "limitedEvidence": len(runs) < 2}
 
 
 def allocate_special_marks(ranked: list[dict[str, Any]], race: dict[str, Any]
