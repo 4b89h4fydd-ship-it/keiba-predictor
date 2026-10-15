@@ -121,6 +121,7 @@ const instrumented = source.replace(boot, `
  console.log('Malformed odds array and failed pace presenter isolated PASS');await t.page.close();
  t=await setup(route=>route.fulfill({json:{ok:true,detail:{...base,fieldSize:0,horses:[]},summary:base}}));
  await t.page.evaluate(id=>testDetail.openRace(id),id);await t.page.waitForFunction(id=>testDetail.detailState(id).entry==='empty',id);
+ assert.equal(t.requests.length,1,'Confirmed 0-horse response must not retry another source');
  await t.page.waitForFunction(()=>document.querySelector('.smart-race-meta')?.textContent.includes('0頭'),null,{timeout:12000});
  console.log('Explicit confirmed zero entries only -> empty PASS');await t.page.close();
  t=await setup(route=>route.fulfill({json:{ok:true,detail:{...detail,id:'wrong-id'}}}));await t.page.evaluate(id=>testDetail.openRace(id),id);

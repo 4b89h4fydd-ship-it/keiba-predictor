@@ -4244,6 +4244,14 @@ function openRace(id,keepStack,skipHistory,preservePanel){
       if(!entryDataAvailable(initial))fetchSelectedRaceOdds(id,seq);
       return;
     }
+    // An explicit 0-horse official response is different from a failed fetch.
+    // Keep its confirmed-empty state instead of allowing a failed secondary
+    // racecard request to downgrade it to "loading" forever.
+    if(body&&Array.isArray(body.horses)&&body.horses.length===0&&
+       body.fieldSize!=null&&Number(body.fieldSize)===0){
+      updateDetailSections(id,state.race,true);render();
+      return;
+    }
     // Only when D1 and the vetted dated archive could not supply any runners,
     // ask the narrow racecard endpoint once. It is not a second live source.
     return fetchRacecardOnly(id).then(function(card){
