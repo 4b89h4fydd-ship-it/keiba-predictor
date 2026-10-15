@@ -4515,6 +4515,10 @@ function load(force){
             })
         });
 
+        // A delayed static/D1 list must not roll a verified official final
+        // back into 結果待ち when the page reloads or date summaries refresh.
+        if(window.ARVEXQUnifiedHome&&window.ARVEXQUnifiedHome.mergePublishedStatuses)
+          window.ARVEXQUnifiedHome.mergePublishedStatuses(rows,state.races);
         state.races=applyMorningArchive(rows);
         saveRaceCache(d,'__ALL__',state.races);
         state.loading=false;
@@ -4610,12 +4614,44 @@ function fastReflectNow(){
 }
 window.addEventListener('pageshow',function(){setTimeout(fastReflectNow,120)},{passive:true});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')setTimeout(fastReflectNow,120)},{passive:true});
+// The 10-second clock repaint alone cannot discover published official results:
+// it only sees yesterday's in-memory race summary. Every 30 seconds, retrieve
+// the lightweight D1 summary and merge ONLY official result states. This does
+// not refresh odds/diagnoses or rewrite frozen pre-race evaluations.
+var homeOfficialStatusBusy=false,homeOfficialStatusLastFetch=0;
+function refreshHomeOfficialStatuses(){
+  if(homeOfficialStatusBusy||document.visibilityState==='hidden'||state.date!==today()||
+     state.race||state.raceLoading||state.picker||state.homePage||!state.races.length)
+    return Promise.resolve(false);
+  var shared=window.ARVEXQUnifiedHome;
+  if(!shared||typeof shared.mergePublishedStatuses!=='function')return Promise.resolve(false);
+  var now=Date.now();
+  if(now-homeOfficialStatusLastFetch<30000)return Promise.resolve(false);
+  homeOfficialStatusLastFetch=now;homeOfficialStatusBusy=true;
+  var date=state.date,seq=state.requestSeq;
+  return fetch('https://kraiz-api.4b89h4fydd.workers.dev/api/day?date='+
+    encodeURIComponent(date)+'&details=0&t='+now,{cache:'no-store'})
+    .then(function(res){if(!res.ok)throw Error('official-status '+res.status);return res.json()})
+    .then(function(body){
+      if(seq!==state.requestSeq||state.date!==date||state.race||state.homePage)return false;
+      var rows=Array.isArray(body)?body:body&&body.races;
+      if(!Array.isArray(rows)||!rows.length)return false;
+      var changed=shared.mergePublishedStatuses(state.races,rows);
+      if(changed){
+        saveRaceCache(date,'__ALL__',state.races);
+        shared.syncLiveUI('horse',state.races,date,document);
+      }
+      return !!changed;
+    }).catch(function(){return false})
+    .finally(function(){homeOfficialStatusBusy=false});
+}
 setInterval(function(){
   if(document.visibilityState==='hidden'||state.date!==today()||state.race||state.raceLoading||
      state.picker||state.homePage)return;
   var shared=window.ARVEXQUnifiedHome;
   if(!shared||!document.querySelector('.smart-shell.smart-home .arv-all-panel,.smart-venue-page .smart-race-row'))return;
   shared.syncLiveUI('horse',state.races||[],state.date,document);
+  refreshHomeOfficialStatuses();
 },10000);
 installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
 })();
