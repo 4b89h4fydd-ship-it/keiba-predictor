@@ -57,18 +57,23 @@ const roleEnd=src.indexOf('\n}',roleStart)+2;
 assert(roleStart>=0&&roleEnd>roleStart,'production markRoleLabel helper is required');
 const markRoleLabel=new Function(src.slice(roleStart,roleEnd)+';return markRoleLabel;')();
 assert.equal(markRoleLabel({predMark:'◎'}),'◎【単】');
+const visibleStart=src.indexOf('function visiblePredictionMark(');
+const visibleEnd=src.indexOf('function honmeiA11yText(',visibleStart);
+assert(visibleStart>=0&&visibleEnd>visibleStart,'shared visible axis mark helper required');
+const visiblePredictionMark=new Function('isScratchHorse','markRoleLabel',
+  src.slice(visibleStart,visibleEnd)+'return visiblePredictionMark;')(()=>false,markRoleLabel);
 const renderRunner=new Function(
   'isScratchHorse','n','horseDisplayName','clamp',
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight',
   'carriedWeightText','esc','racecardOddsHtml','racecardMarkDisplay',
-  'honmeiA11yText','honmeiBadgeText','markRoleLabel',
+  'honmeiA11yText','honmeiBadgeText','markRoleLabel','visiblePredictionMark',
   src.slice(rowStart,rowEnd)+';return racecardEntryRow;'
 )(
   ()=>false, (x,d=0)=>Number.isFinite(Number(x))?Number(x):d,
   (_r,h)=>h.name, (x,lo,hi)=>Math.max(lo,Math.min(hi,x)),
   ()=>480, ()=>3, ()=>0, ()=>57, x=>String(x??''),
   ()=>'<span>3.2</span>',x=>String(x||'—'),()=>'',()=>'',
-  markRoleLabel
+  markRoleLabel,visiblePredictionMark
 );
 const runnerHtml=renderRunner({id:'test'},{
   horseNumber:7,name:'サンプル号',frameNumber:4,sex:'牡',age:4,jockey:'騎手'
