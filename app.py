@@ -3962,21 +3962,39 @@ def _build_prerace_prediction(detail:dict)->dict|None:
     if not isinstance(detail,dict) or _snapshot_final(detail):return None
     state,minutes=_prediction_clock_state(detail)
     if state not in {"pre","future"}:return None
-    horses=[h for h in (detail.get("horses") or []) if isinstance(h,dict) and int(h.get("horseNumber") or 0)>0 and not h.get("scratched") and not re.search(r"取消|除外|欠場",str(h.get("status") or ""))]
+    horses=[h for h in (detail.get("horses") or []) if isinstance(h,dict) and int(h.get("horseNumber") or 0)>0 and not h.get("scratched") and not h.get("withdrawn") and not re.search(r"取消|除外|欠場",str(h.get("status") or ""))]
     if len(horses)<2:return None
     evals=[h.get("integratedEvaluation") if isinstance(h.get("integratedEvaluation"),dict) else {} for h in horses]
-    # The persisted predictions use the SAME three-factor authority as marks
-    # and ticket selection; never resurrect legacy P1/P2/P3 evaluations.
-    if sum(1 for e in evals if e.get("factorEvidence"))<max(2,len(horses)//2):
+    # PR #180 unified JRA/NAR marks under observed 60/40. The retired JRA
+    # TRUE RUN/PURE/SECTIONAL factorEvidence is always absent. Trust only
+    # the new ranker's independently observed Mineta/official-margin inputs,
+    # with circuit-specific model identity and complete active-runner proof.
+    from arvexq.prediction.observed_model import model_version
+    expected_model=model_version(detail)
+    coverage=detail.get("observedModelCoverage") or {}
+    if (detail.get("predictionModelVersion")!=expected_model or
+        detail.get("predictionStatus")!="ready" or
+        coverage.get("allObserved") is not True or
+        int(coverage.get("horses") or 0)!=len(horses) or
+        int(coverage.get("fullyObserved") or 0)!=len(horses)):
         return None
-    scores=[max(0.,min(1.,float(e.get("coreAbilityScore") or 0)/100))
-            for e in evals]
-    observed=[int(((e.get("factorEvidence") or {}).get("primaryPillarCoverage") or
-                   sum(v is not None for v in
-                       ((e.get("factorEvidence") or {}).get("pillarScores") or {}).values())))
-              for e in evals]
-    if not any(observed):
-        return None
+    scores=[]
+    observed=[]
+    for e in evals:
+        factors=e.get("narModelEvidence") or {}  # current shared 60/40 evidence field
+        try:
+            position=float(factors["mineta"])
+            margin=float(factors["margin"])
+            sample=int(factors["sample"])
+            score=float(e["coreAbilityScore"])/100.
+        except (KeyError, TypeError, ValueError):
+            return None
+        if (e.get("markEngineVersion")!=expected_model or
+            not all(math.isfinite(v) and 0.<=v<=1.
+                    for v in (position,margin,score)) or sample<1):
+            return None
+        observed.append(2)
+        scores.append(score)
     peak=max(scores)
     strengths=[math.exp((v-peak)/.15) for v in scores]
     total=sum(strengths)
@@ -4004,8 +4022,8 @@ def _build_prerace_prediction(detail:dict)->dict|None:
         return None
     lead=sorted(scores,reverse=True)
     gap=lead[0]-lead[1] if len(lead)>=2 else 0.
-    strength_conf=max(0.,min(1.,.5*observed[win_idx]/3.+3.*max(0.,gap)))
-    strength_stable=observed[win_idx]==3 and gap>=.04
+    strength_conf=max(0.,min(1.,.5*observed[win_idx]/2.+3.*max(0.,gap)))
+    strength_stable=observed[win_idx]==2 and gap>=.04
     rows=[]
     completeness=[]
     for i,(h,e) in enumerate(zip(horses,evals)):
@@ -4024,7 +4042,7 @@ def _build_prerace_prediction(detail:dict)->dict|None:
     mark_count=sum(1 for x in rows if x.get("mark"))
     payload={
         "version":PRERACE_AUDIT_VERSION,"modelVersion":AI_EVALUATION_VERSION,"predictionEngine":PREDICTION_ENGINE_VERSION,
-        "circuitMethod":_v312_method(str(detail.get("circuit") or "")).get("id"),
+        "circuitMethod":expected_model,
         "raceId":str(detail.get("id") or ""),"raceDate":str(detail.get("date") or ""),"circuit":str(detail.get("circuit") or ""),
         "track":str(detail.get("track") or ""),"raceNumber":int(detail.get("raceNumber") or 0),"startTime":str(detail.get("startTime") or ""),
         "capturedAtEpoch":now,"capturedAtJst":_now_jst().isoformat(timespec="seconds"),"minutesToPost":minutes,
