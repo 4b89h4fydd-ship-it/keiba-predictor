@@ -62,7 +62,7 @@ def attach_evidence(detail: dict[str, Any]) -> dict[str, Any]:
         }
         if str(detail.get("circuit") or "") in ("地方", "NAR", "local"):
             # The old three-factor explanations are JRA-only.
-            from arvexq.prediction.nar_model import MODEL_VERSION as nar_version
+            from arvexq.prediction.observed_model import NAR_MODEL_VERSION as nar_version
             evidence = (horse.get("integratedEvaluation") or {}).get("narModelEvidence") or {}
             horse["researchEvidence"]["factors"] = {
                 "version": nar_version,
