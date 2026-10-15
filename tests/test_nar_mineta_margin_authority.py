@@ -80,9 +80,13 @@ class NarAuthorityTests(unittest.TestCase):
                          [("mineta", .60), ("margin", .40)])
         self.assertNotIn("trueRun", [x["key"] for x in factors["items"]])
 
-    def test_star_mark_matches_browser_observed_upside_gate(self):
+    def test_star_mark_requires_independent_race_pace_evidence(self):
         from unittest.mock import patch
         d = race()
+        # Runner #5 can advance strongly from a wide/late position when three
+        # competitors have displayed early pace. This is not a rank-five rule.
+        d["horses"][4]["recentRaces"][-1].update(
+            finish=2, cornerPositions=[8, 8, 8], timeBehindWinner=.2)
         scores = (.90, .83, .75, .69, .66, .58)
         rows = [
             {"horse": h, "score": scores[i], "sample": 5,
