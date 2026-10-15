@@ -121,7 +121,8 @@ const instrumented = source.replace(boot, `
  console.log('Malformed odds array and failed pace presenter isolated PASS');await t.page.close();
  t=await setup(route=>route.fulfill({json:{ok:true,detail:{...base,fieldSize:0,horses:[]},summary:base}}));
  await t.page.evaluate(id=>testDetail.openRace(id),id);await t.page.waitForFunction(id=>testDetail.detailState(id).entry==='empty',id);
- assert.ok((await t.page.locator('.smart-race-meta').textContent()).includes('0頭'));console.log('Explicit confirmed zero entries only -> empty PASS');await t.page.close();
+ await t.page.waitForFunction(()=>document.querySelector('.smart-race-meta')?.textContent.includes('0頭'),null,{timeout:12000});
+ console.log('Explicit confirmed zero entries only -> empty PASS');await t.page.close();
  t=await setup(route=>route.fulfill({json:{ok:true,detail:{...detail,id:'wrong-id'}}}));await t.page.evaluate(id=>testDetail.openRace(id),id);
  await t.page.waitForFunction(id=>!!testDetail.detailState(id).error&&!testDetail.detailState(id).busy,id);
  assert.ok(await t.page.evaluate(()=>testDetail.trace.some(x=>(x.message||'').includes('id mismatch'))));assert.equal(await t.page.locator('.racecard-row').count(),0);console.log('Mismatched race IDs rejected with trace PASS');await t.page.close();
