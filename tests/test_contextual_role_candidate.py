@@ -1,11 +1,44 @@
 import copy
 import unittest
+import tempfile
+import json
+import gzip
+import base64
+import hashlib
+from pathlib import Path
+from unittest.mock import patch
 from arvexq.research.contextual_role_candidate import predict,context_weight,comparable
 from tests.test_nar_mineta_margin_authority import race
-from scripts.arvexq_contextual_role_comparison import evaluate
+from scripts.arvexq_contextual_role_comparison import evaluate,restore_card
 
 
 class ContextualRoleTests(unittest.TestCase):
+    def test_day_index_is_restored_from_hash_verified_original(self):
+        original=race();thin={'id':original['id'],'date':original['date'],'horses':[],
+            'result':{'finishers':[{'finish':1,'horseNumber':1}]}}
+        raw=json.dumps(original).encode();digest=hashlib.sha256(raw).hexdigest()
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            (root/(digest+'.json')).write_text(json.dumps({'bytes':len(raw),'sha256':digest,
+                'gzipBase64':base64.b64encode(gzip.compress(raw)).decode()}))
+            (root/(original['date']+'.json')).write_text(json.dumps({'races':{
+                original['id']:{'file':digest+'.json','sha256':digest}}}))
+            restored=restore_card(thin,root)
+            self.assertEqual(restored['horses'],original['horses'])
+            self.assertEqual(restored['result'],thin['result'])
+            self.assertTrue(predict(restored)['fullyObserved'])
+            (root/(digest+'.json')).write_text(json.dumps({'bytes':len(raw),'sha256':'bad',
+                'gzipBase64':base64.b64encode(gzip.compress(raw)).decode()}))
+            with self.assertRaisesRegex(ValueError,'integrity'):restore_card(thin,root)
+
+    def test_missing_original_uses_full_race_api_not_sparse_day(self):
+        original=race();thin={'id':original['id'],'date':original['date'],'horses':[]}
+        with tempfile.TemporaryDirectory() as directory, patch(
+                'scripts.arvexq_contextual_role_comparison.api_json',return_value={'detail':original}) as fetch:
+            restored=restore_card(thin,Path(directory))
+            self.assertEqual(restored['horses'],original['horses'])
+            self.assertIn('/api/race/',fetch.call_args.args[0])
+
     def test_separate_roles_and_normalized_joint(self):
         r=race();original=copy.deepcopy(r);p=predict(r)
         self.assertEqual(r,original)
