@@ -47,13 +47,20 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     await diagnosis.locator('summary').click();
     assert.equal(await diagnosis.locator('.diagnosis-merged-row').count(),roster.horses.length);
     // Only factual acquired odds or an explicit missing status can appear.
-    const odds=await page.locator('.rc-odds .odd').allTextContents();
+    let odds=await page.locator('.rc-odds .odd').allTextContents();
     odds.forEach(x=>assert.ok(/^(?:\d+\.\d|未取得|取消)$/.test(x),'invalid odds text '+x));
     // Before the official source publishes (e.g. NAR overnight) no acquired odds can exist;
     // the roster must then show only the explicit missing status. Once the source has
     // odds the screen must show some acquired value.
     const published=await oddsPublished(r.id);
-    if(published===true)assert.ok(odds.some(x=>/^\d/.test(x)),'no acquired odds for '+r.id);
+    if(published===true){
+      // Published odds update independently of the base racecard request.
+      // Wait for actual DOM values; timeout remains a hard failure, never a fake odd.
+      await page.waitForFunction(()=>Array.from(document.querySelectorAll('.rc-odds .odd'))
+        .some(el=>/^\\d/.test(el.textContent.trim())),null,{timeout:15000});
+      odds=await page.locator('.rc-odds .odd').allTextContents();
+      assert.ok(odds.some(x=>/^\\d/.test(x)),'no acquired odds for '+r.id);
+    }
     else if(published===false)console.log('ODDS_NOT_YET_PUBLISHED '+r.id+' shown='+JSON.stringify(Array.from(new Set(odds))));
     else console.log('ODDS_SOURCE_UNAVAILABLE '+r.id+' shown='+JSON.stringify(Array.from(new Set(odds))));
     const red=await page.evaluate(()=>Array.from(document.querySelectorAll('.rc-odds .odd.single')).map(x=>({value:Number(x.textContent),color:getComputedStyle(x).color})));
