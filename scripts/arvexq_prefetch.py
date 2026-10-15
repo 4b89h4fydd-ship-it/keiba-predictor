@@ -27,7 +27,7 @@ if str(ROOT) not in sys.path:
 import app
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
 from arvexq.prediction.career_readiness import assess_career_readiness, attach_career_readiness
-from arvexq.prediction.factor_model import MODEL_VERSION as FOUR_PILLAR_MODEL_VERSION
+from arvexq.prediction.observed_model import model_version
 from arvexq.prediction.race_intelligence import attach_evidence
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 from arvexq.ingest.full_career import merge_career
