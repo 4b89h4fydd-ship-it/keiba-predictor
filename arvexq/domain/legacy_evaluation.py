@@ -1233,6 +1233,9 @@ def install_evaluation_core(namespace: dict) -> None:
     legacy_rank = namespace.get('_rank_evaluations')
     if callable(legacy_rank) and not getattr(legacy_rank, '_arvexq_core_marks_wrapped', False):
         def _rank_evaluations_core_marks(detail):
+            if isinstance(detail, dict) and str(detail.get('circuit') or '') in ('地方', 'NAR', 'local'):
+                # Local races never execute the retired legacy evaluator.
+                return apply_core_marks(detail)
             result = legacy_rank(detail)
             target = result if isinstance(result, dict) else detail
             return apply_core_marks(target)
