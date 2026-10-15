@@ -173,6 +173,7 @@ def apply_observed_marks(detail):
                  specialMarkEvidence={k: v for k, v in evidence.items() if k != "mark"},
                  coreAbilityRank=i + 1, coreAbilityScore=round(row["score"] * 100, 2),
                  honmeiRole="win" if i == 0 else ("axis" if int(h["horseNumber"]) == axis_no else ""),
+                 independentAxisCandidate=bool(axis_no and int(h["horseNumber"]) == axis_no),
                  honmeiGrade=grade if i == 0 else "",
                  honmeiEligible=bool(i == 0 and grade == "A"),
                  podiumAxisEligible=bool(axis_no and int(h["horseNumber"]) == axis_no),
@@ -202,7 +203,7 @@ def apply_observed_marks(detail):
         "axisPlaceRatio": round(axis_ratio, 6) if axis_ratio is not None else None,
         "axisStabilityScore": round(axis_row[0], 6) if axis_row else None,
         "fixedAxisAllowed": bool(axis_no and grade == "A"),
-        "axisScore": round(top["score"], 6) if top else None,
+        "axisScore": round(axis_row[0], 6) if axis_row else None,
         "axisMargin": round(gap, 6), "axisMeaning": "uncalibrated-relative-model-score",
         "reason": "observed-mineta-margin-60-40" if full else "incomplete-observations"}
     detail.pop("multiHeadSummary", None)
