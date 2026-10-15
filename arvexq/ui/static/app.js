@@ -986,7 +986,7 @@ function arvexqRacePolicy(r){
 function strictSelectedRaceProfile(r,p){return observedSelectedRaceProfile(r,p);}
 
 function independentSpecialEvidence(h,r,front){
-  var runs=observedHistory(h,r).filter(function(z){
+  var runs=observedHistory(h,r).filter(function(q){return isNarRace(r)||verifiedJraMargin(q)}).filter(function(z){
     var f=Number(z.finish||z.finishPosition),size=Number(z.fieldSize);
     return isFinite(f)&&isFinite(size)&&size>=2&&f>=1&&f<=size;
   }),advance=[],podium=0,same=false,highLevel=false,closeMargin=false,earlier=false,
@@ -1024,7 +1024,7 @@ function independentSpecialEvidence(h,r,front){
 }
 function assignIndependentSpecialMarks(ordered,r){
   var front=ordered.filter(function(z){
-    return observedHistory(z.horse,r).filter(function(run){
+    return observedHistory(z.horse,r).filter(function(q){return isNarRace(r)||verifiedJraMargin(q)}).filter(function(run){
       var f=Number(run.finish||run.finishPosition),size=Number(run.fieldSize);
       return isFinite(f)&&isFinite(size)&&size>=2&&f>=1&&f<=size;
     }).slice(0,3).some(function(run){
