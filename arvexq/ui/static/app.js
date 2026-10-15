@@ -1434,6 +1434,25 @@ function analysisRace(r){
   return Object.assign({},r,{horses:active,fieldSize:active.length||n(r.fieldSize)})
 }
 function integratedGrades(r,rows){
+  if(isNarRace(r)){
+    rows.forEach(function(x){
+      var evidence=x.narEvidence||{},available=evidence.available===true,
+          score=available?x.narScore*100:null;
+      x.modelScore=score;x.evidenceScore=null;
+      x.evaluation={score:score,grade:x.overallGrade||'C',modelScore:score,
+        evidenceScore:null,predictionModel:ARVEXQ_NAR_MODEL,
+        confidence:available?'実測':'不足',
+        tier:available?'位置取り・着差の実測2指標':'実測データ不足',
+        mode:'地方専用：みねた位置取り60%＋着差40%',
+        winProbability:available?x.p1Probability:null,
+        p1Probability:available?x.p1Probability:null,
+        p2Probability:available?x.p2Probability:null,
+        p3Probability:available?x.p3Probability:null,
+        p1Rank:x.p1Rank||null,p2Rank:x.p2Rank||null,p3Rank:x.p3Rank||null,
+        marketProbability:x.marketProbability||null};
+    });
+    return;
+  }
   rows.forEach(function(x){
     var score=n(x.overallScore,50),coverage=n(x.threeFactorCoverage,0)/3;
     x.modelScore=score;
@@ -1778,7 +1797,7 @@ function runnerDetailBody(r,p,x){
     +'<div class="runner-overall-box"><div class="runner-overall-head"><span class="label">AI総合評価</span><strong class="overall-grade '+gradeClass(x.overallGrade)+'">'+esc(x.overallGrade||'C')+'</strong><span class="runner-overall-mark" data-ai-mark="'+esc(x.predMark||'')+'">'+esc(x.predMark||'—')+'</span><span class="runner-overall-score">総合 '+esc(overallScoreText(x))+'</span></div>'+
     '<div class="overall-reasons"><i class="good">'+esc(role)+'</i>'+(reasons.length?reasons.map(function(z){var warn=String(z).indexOf('注意')>=0||String(z).indexOf('不足')>=0;return '<i class="'+(warn?'warn':'good')+'">'+esc(z)+'</i>'}).join(''):'')+'</div></div>'+
     '<div class="detail-heading">基本情報</div><div class="horse-info-grid"><div class="horse-info-cell"><small>馬番 / 枠</small><b>'+esc(h.horseNumber)+'番 / '+esc(h.frameNumber||frame(h))+'枠</b></div><div class="horse-info-cell"><small>性齢 / 斤量</small><b>'+esc(h.sex||'—')+esc(h.age||'—')+' / '+esc(carriedWeightText(h))+'</b></div><div class="horse-info-cell"><small>脚質</small><b>'+esc(styleTxt)+'</b></div><div class="horse-info-cell"><small>騎手</small><b>'+esc(h.jockey||'—')+'</b></div><div class="horse-info-cell"><small>調教師</small><b>'+esc(h.trainer||'—')+'</b></div><div class="horse-info-cell"><small>馬体重</small><b>'+(bodyTxt?esc(bodyTxt):'—')+'</b></div></div>'+
-    '<div class="detail-heading">能力・実績・適性</div><div class="horse-info-grid">'+scoreCell('能力',ability)+scoreCell('近況・実績',form)+scoreCell('相手レベル',klass)+scoreCell('条件適性',suit)+scoreCell('展開適性',pace)+scoreCell('データ充足',n(x.threeFactorCoverage,0)/3)+'</div>'+
+    '<div class="detail-heading">能力・実績・適性</div><div class="horse-info-grid">'+(isNarRace(r)?scoreCell('位置取り 60%',rf.mineta)+scoreCell('実測着差 40%',rf.margin)+scoreCell('実測充足',x.narEvidence&&x.narEvidence.available?1:null):scoreCell('能力',ability)+scoreCell('近況・実績',form)+scoreCell('相手レベル',klass)+scoreCell('条件適性',suit)+scoreCell('展開適性',pace)+scoreCell('データ充足',n(x.threeFactorCoverage,0)/3))+'</div>'+
     '<div class="detail-heading">脚質・今回の勝ち筋</div>'+(x.minetaNotes&&x.minetaNotes.length?'<div class="muted" style="margin:-2px 0 8px;font-size:11px">今回位置：'+esc(x.expected||'不明')+'｜'+esc(x.minetaNotes.join('・'))+'</div>':'')+'<div class="horse-info-grid"><div class="horse-info-cell"><small>逃げ率</small><b>'+esc(sp[0]==null?'—':sp[0]+'%')+'</b></div><div class="horse-info-cell"><small>先行率</small><b>'+esc(sp[1]==null?'—':sp[1]+'%')+'</b></div><div class="horse-info-cell"><small>差し率</small><b>'+esc(sp[2]==null?'—':sp[2]+'%')+'</b></div><div class="horse-info-cell"><small>追込率</small><b>'+esc(sp[3]==null?'—':sp[3]+'%')+'</b></div><div class="horse-info-cell"><small>前残り力</small><b>'+pct(x.frontStay)+'</b></div><div class="horse-info-cell"><small>差し込み力</small><b>'+pct(x.comeFromBehind)+'</b></div></div>'+
     '<div class="muted">脚質＝近走5走の初角位置／前残り・差し込み＝推定スコア（的中確率ではありません）。初角4番手内→4角・ゴール4番手内 '+esc(x.finishEvidence.holdWins)+'/'+esc(x.finishEvidence.holdSamples)+'走、4角4番手以下→3着内 '+esc(x.finishEvidence.closingWins)+'/'+esc(x.finishEvidence.closingSamples)+'走を評価。</div><div class="recent-list-title">近走データ（直近5走）</div>'+careerCoverageLine(h)+(recent.length?recent.map(function(rr){var rid=rr.raceId||((r.circuit==='地方'&&rr.date&&rr.track&&n(rr.raceNumber))?('nar-'+rr.date+'-'+rr.track+'-'+String(n(rr.raceNumber)).padStart(2,'0')):'');return '<div class="recent"><div class="recent-head"><b>'+esc(rr.date||'—')+' '+esc(rr.track||'—')+' '+(n(rr.raceNumber)?esc(rr.raceNumber)+'R ':'')+esc(rr.distance||'—')+'m</b><strong>'+esc(rr.finish||rr.finishPosition||'—')+'着</strong></div><div>'+fmtTime(rr.timeSeconds)+'　'+esc(rr.condition||'不明')+' / '+esc(rr.weather||'不明')+'</div><div class="muted">'+(rr.title?esc(rr.title)+'　':'')+'通過 '+esc((rr.cornerPositions||[]).join('-')||'—')+'　頭数 '+esc(rr.fieldSize||'—')+(saneCarriedWeightValue(rr.carriedWeight,rr.bodyWeight)?'　斤量 '+esc(String(saneCarriedWeightValue(rr.carriedWeight,rr.bodyWeight)).replace(/\.0$/,''))+'kg':'')+(rr.jockey?'　騎手 '+esc(rr.jockey):'')+'</div>'+(rid?'<button type="button" class="recent-open" data-past-race="'+esc(rid)+'">この過去レースを見る</button>':'')+'</div>'}).join(''):'<div class="empty compact">過去データを確認できませんでした</div>')+researchHorsePanel(r,h)+'</div>'
 }
