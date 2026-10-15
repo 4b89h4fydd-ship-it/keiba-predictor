@@ -1062,11 +1062,26 @@ function assignIndependentSpecialMarks(ordered,r){
     var no=Number(z.horse.horseNumber);
     evidence[no].mark=idx===0?'◎':idx===1?'○':(choice[no]||'');
   });
-  ordered.slice(2).forEach(function(z){
-    var e=evidence[Number(z.horse.horseNumber)];if(e.mark)return;
-    if(!used.coreTriangle){e.mark='▲';used.coreTriangle=true}
-    else if(!used.coreDelta){e.mark='△';used.coreDelta=true}
-  });
+  // Match Python's role-aware ▲ (second/third) and △ (third) allocation.
+  var remaining=ordered.slice(2).filter(function(z){return !evidence[Number(z.horse.horseNumber)].mark;});
+  if(remaining.length){
+    var peak=ordered[0].narScore,ww=ordered.map(function(z){return Math.exp((z.narScore-peak)/.15);}),
+        total=ww.reduce(function(a,b){return a+b},0),p2=ww.map(function(){return 0}),p3=ww.map(function(){return 0});
+    for(var i=0;i<ww.length;i++)for(var j=0;j<ww.length;j++)if(i!==j){
+      var rem=total-ww[i],left=rem-ww[j];if(rem<=0)continue;
+      var second=ww[i]/total*ww[j]/rem;p2[j]+=second;
+      if(left>0)for(var k=0;k<ww.length;k++)if(k!==i&&k!==j)p3[k]+=second*ww[k]/left;
+    }
+    function ix(z){return ordered.indexOf(z)}
+    remaining.sort(function(a,b){return (p2[ix(b)]+p3[ix(b)])-(p2[ix(a)]+p3[ix(a)])||
+      Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
+    var triangle=remaining.shift();evidence[Number(triangle.horse.horseNumber)].mark='▲';
+    if(remaining.length){
+      remaining.sort(function(a,b){return p3[ix(b)]-p3[ix(a)]||
+        Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
+      evidence[Number(remaining[0].horse.horseNumber)].mark='△';
+    }
+  }
   return evidence;
 }
 function specialMarkInputSignature(r){
