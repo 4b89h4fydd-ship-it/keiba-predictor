@@ -78,6 +78,17 @@ assert.match(ui,/homeOfficialStatusLastFetch<30000/);
 assert.match(ui,/refreshHomeOfficialStatuses\(\);/);
 assert.match(ui,/mergePublishedStatuses\(rows,state\.races\)/,
   'initial listing cannot downgrade server-confirmed races when fallback is stale');
+const statusStart=ui.indexOf('function resultStatus('),
+      statusEnd=ui.indexOf('function isFinal(',statusStart);
+assert.ok(statusStart>=0&&statusEnd>statusStart,'production result-status authority exists');
+const resultStatus=new Function(ui.slice(statusStart,statusEnd)+'return resultStatus')();
+assert.equal(resultStatus({raceStatus:'確定',result:{status:'速報'}}),'確定',
+  'newer official D1 final supersedes cached preliminary detail');
+assert.equal(resultStatus({raceStatus:'速報',result:{status:'確定'}}),'確定',
+  'newer detail final never gets downgraded');
+assert.equal(resultStatus({raceStatus:'速報',result:{status:''}}),'速報');
+assert.equal(resultStatus({raceStatus:'',result:{status:''}}),'',
+  'never invent a result from passage of time');
 assert.match(ui,/10000/);
 const styles=fs.readFileSync('arvexq/ui/static/sports/all-races.css','utf8');
 assert.match(styles,/\.arv-all-race\.elapsed,\.arv-all-race\.finished/);
