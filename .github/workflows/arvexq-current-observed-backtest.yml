@@ -22,7 +22,7 @@ jobs:
       - name: Test historical replay behavior
         run: python -m unittest tests.test_current_observed_backtest -v
       - name: Fetch past race inputs and evaluate CURRENT model
-        run: python -m scripts.arvexq_current_observed_backtest --days 28 --max-races 500 --out research-output/current-observed-6040
+        run: python -m scripts.arvexq_current_observed_backtest --days 28 --max-races 500 --enrich-jra 8 --out research-output/current-observed-6040
       - name: Preserve fetched coverage and comparison results
         if: always()
         uses: actions/upload-artifact@v4
