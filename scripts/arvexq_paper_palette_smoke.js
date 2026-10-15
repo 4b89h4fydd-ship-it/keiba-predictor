@@ -30,7 +30,11 @@ async function run(browserType,name){
   await page.goto(base+'/?paper-probe='+Date.now(),{waitUntil:'domcontentloaded',timeout:50000});
   const actualTheme=await page.locator('meta[name="theme-color"]').getAttribute('content');
   assert.equal(actualTheme,'#f6f2e8','Browser chrome must use the approved paper background');
-  const output=await page.evaluate(({fixture,selectors})=>{
+  // PWA can replace the document after domcontentloaded; retry only navigation races.
+  let output;
+  for(let attempt=0;attempt<4;attempt++){
+   try{
+    output=await page.evaluate(({fixture,selectors})=>{
    const root=document.createElement('div');root.style.cssText='position:absolute;top:0;left:-9999px;width:393px';
    root.innerHTML=fixture;document.body.appendChild(root);
    const values={};
@@ -39,7 +43,13 @@ async function run(browserType,name){
     const css=getComputedStyle(el);values[k]={bg:css.backgroundColor,text:css.color,opacity:css.opacity};
    }
    root.remove();return values;
-  },{fixture,selectors});
+    },{fixture,selectors});
+    break;
+   }catch(error){
+    if(attempt===3||!/Execution context was destroyed|most likely because of a navigation/i.test(String(error)))throw error;
+    await page.waitForLoadState('domcontentloaded',{timeout:30000});
+   }
+  }
   for(const k of ['raceHeader','raceTabFrame','raceTab','specialHeader','paceHeader','paceExplanation','paceDiagram','paceTrack','horseHeader','horseOverall','horseInfo','betSection']){
    if(!focus(k))continue;
    assert.ok(output[k]&&brightness(output[k].bg)>490,'Dark background '+name+'/'+k+': '+JSON.stringify(output[k]));

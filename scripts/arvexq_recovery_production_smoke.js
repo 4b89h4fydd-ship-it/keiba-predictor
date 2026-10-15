@@ -38,7 +38,9 @@ const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
     const roster=cards.find(c=>c.id===r.id)||r;
     await page.waitForFunction(count=>document.querySelectorAll('.racecard-row').length===count,roster.horses.length,{timeout:20000});
     assert.equal(await page.locator('.racecard-row').count(),roster.horses.length,'complete official roster '+r.id);
-    const names=await page.locator('.rc-horse-name').allTextContents();
+    // .rc-horse-name includes the optional new ◎【単】/◎【軸】 role suffix.
+    // Compare the horse-name element alone, not its explanatory mark label.
+    const names=await page.locator('.rc-horse-title').allTextContents();
     roster.horses.forEach(h=>assert.ok(names.includes(h.name),'runner identity missing '+r.id+' '+h.name));
     await page.waitForFunction(()=>document.querySelectorAll('.diagnosis-merged-row').length===document.querySelectorAll('.racecard-row').length,null,{timeout:20000});
     const diagnosis=page.locator('details.card').filter({has:page.locator('.diagnosis-merged-list')});
