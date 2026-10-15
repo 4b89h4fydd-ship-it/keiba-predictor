@@ -93,7 +93,7 @@ jobs:
 
       - name: Modular API helpers and isolated behavior regressions
         run: |
-          python -m py_compile arvexq/ui/icon_assets.py arvexq/prediction/legacy_model_tables.py \
+          python -m py_compile arvexq/ui/icon_assets.py arvexq/prediction/course_speed_baselines.py \
             arvexq/ingest/pure_parsers.py arvexq/prediction/pure_diagnostics.py \
             arvexq/infra/pure_snapshots.py
           python -m unittest discover -s tests -p 'test_app_pure_modules.py' -v
