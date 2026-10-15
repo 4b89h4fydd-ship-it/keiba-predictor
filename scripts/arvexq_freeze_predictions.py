@@ -95,6 +95,12 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
         ranked = assign(core_input)
         if not isinstance(ranked, dict):
             return {"status": "incomplete-prediction"}
+        # The current 60/40 model must have complete measured active runners.
+        # A retrospective old model must never fill missing margin/corner rows.
+        if ranked.get("predictionStatus") != "ready":
+            return {"status": "incomplete-prediction",
+                    "observedCoverage": ranked.get("observedModelCoverage") or {},
+                    "predictionStatus": ranked.get("predictionStatus") or "unavailable"}
         if ranked.get("predictionStatus") == "waiting-for-full-career":
             career = ranked.get("careerReadiness") or {}
             return {
