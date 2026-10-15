@@ -74,7 +74,7 @@ jobs:
         if: always()
         env:
           ARVEXQ_BASE_URL: http://127.0.0.1:8790
-          ARVEXQ_PAPER_FOCUS: horseOverall,horseInfo
+          ARVEXQ_PAPER_FOCUS: horseFrame,horseOverall,horseGrade,horseMark,horseReason,horseInfo,horseRecent,horseResearch,horseResearchItem,horseResearchTitle
         run: node scripts/arvexq_paper_palette_smoke.js
       - name: Check paper theme betting panels
         if: always()
