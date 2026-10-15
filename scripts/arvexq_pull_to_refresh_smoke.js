@@ -52,7 +52,8 @@ async function check(browserType,browserName){
         return !!el&&!el.classList.contains('refreshing')&&el.querySelector('b')?.textContent==='下に引いて更新';
       },null,{timeout:25000});
       const second=await swipe(page);
-      assert.equal(second.after,first.after+1,browserName+' '+pagePath+' second swipe not dispatched');
+      // Evaluate each gesture within its own active document; a PWA navigation may reset its counter.
+      assert.equal(second.after,second.before+1,browserName+' '+pagePath+' second swipe not dispatched');
       await page.waitForFunction(()=>{
         const el=document.querySelector('#arvexq-pull-refresh');
         return !!el&&!el.classList.contains('refreshing')&&el.querySelector('b')?.textContent==='下に引いて更新';
