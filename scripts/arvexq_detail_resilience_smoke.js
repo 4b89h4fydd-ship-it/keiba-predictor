@@ -88,10 +88,10 @@ const instrumented = source.replace(boot, `
  await t.page.evaluate(id=>testDetail.openRace(id),id);await t.page.waitForSelector('.racecard-row');
  assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);
  await t.page.waitForFunction(id=>testDetail.detailState(id).odds==='loaded',id);
- await t.page.waitForFunction(id=>!!testDetail.detailState(id).error&&!testDetail.detailState(id).busy,id);
+ await t.page.waitForFunction(id=>testDetail.trace.some(x=>x.raceId===id&&x.event==='failed')&&!testDetail.detailState(id).busy,id);
  assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);
  assert.equal(await t.page.locator('.notice,.smart-loading').count(),0);
- assert.ok(await t.page.evaluate(id=>!!testDetail.detailState(id).error,id),'detail outage must be recorded');
+ assert.ok(await t.page.evaluate(id=>testDetail.trace.some(x=>x.raceId===id&&x.event==='failed'),id),'detail outage must be recorded after roster recovery');
  await t.page.locator('[data-panel="pace"]').click();
  await t.page.locator('[data-panel="entry"]').click();assert.equal(await t.page.locator('.racecard-row').count(),detail.horses.length);
  assert.equal(await t.page.evaluate(()=>testDetail.state.race._entryOnly),true);

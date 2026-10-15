@@ -12,8 +12,10 @@ const records=Object.entries(manifest.races).map(([id,ref])=>{
   const e=JSON.parse(fs.readFileSync(path.join(directory,ref.file)));
   return JSON.parse(zlib.gunzipSync(Buffer.from(e.gzipBase64,'base64')));
 });
+// WebKit checks real venues for this date, not a hardcoded historical card list.
 const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
-  ['京都','東京','佐賀','帯広ば','高知'].map(track=>records.find(r=>r.track===track&&r.raceNumber===(track==='高知'?3:9))).filter(Boolean):records;
+  [...new Set(records.map(r=>r.track))].map(track=>records.find(r=>r.track===track)).filter(Boolean):records;
+assert.ok(chosen.length>0,'No verified current-day race data available');
 (async()=>{
   const browser=await type.launch({headless:true,...(process.env.CHROMIUM_PATH&&type===chromium?{executablePath:process.env.CHROMIUM_PATH}:{})});
   const context=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
