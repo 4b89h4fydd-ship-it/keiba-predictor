@@ -180,16 +180,18 @@ def _recover_existing_racecards(date: str) -> dict[str, dict[str, Any]]:
 
 
 def _analysis_ready(detail: dict[str, Any] | None) -> bool:
-    if not isinstance(detail, dict): return False
+    if not isinstance(detail, dict):
+        return False
+    coverage = detail.get("observedModelCoverage") or {}
     pm = detail.get("preparedMeta") or {}
-    return bool(pm.get("diagnosisReady") and pm.get("careerReady") is True and assess_career_readiness(detail).get("ready"))
+    return bool(pm.get("diagnosisReady") is True
+                and coverage.get("allObserved") is True
+                and detail.get("predictionStatus") == "ready"
+                and detail.get("predictionModelVersion") == model_version(detail))
 
 
 def _analysis_current(detail: dict[str, Any] | None) -> bool:
     if not isinstance(detail, dict) or not _analysis_ready(detail):
-        return False
-    # A code-only model change must invalidate otherwise identical cached marks.
-    if str(detail.get("predictionModelVersion") or "") != FOUR_PILLAR_MODEL_VERSION:
         return False
     pm = detail.get("preparedMeta") if isinstance(detail.get("preparedMeta"), dict) else {}
     saved = str(pm.get("analysisInputHash") or "")
