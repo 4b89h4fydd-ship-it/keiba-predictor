@@ -3994,18 +3994,42 @@ def _build_prerace_prediction(detail:dict)->dict|None:
     horses=[h for h in (detail.get("horses") or []) if isinstance(h,dict) and int(h.get("horseNumber") or 0)>0 and not h.get("scratched") and not re.search(r"取消|除外|欠場",str(h.get("status") or ""))]
     if len(horses)<2:return None
     evals=[h.get("integratedEvaluation") if isinstance(h.get("integratedEvaluation"),dict) else {} for h in horses]
-    # The persisted predictions use the SAME three-factor authority as marks
-    # and ticket selection; never resurrect legacy P1/P2/P3 evaluations.
-    if sum(1 for e in evals if e.get("factorEvidence"))<max(2,len(horses)//2):
-        return None
+    # Use the circuit's actual current marks authority. NAR has ONLY the
+    # observed Mineta position and historical margin factors (60/40), NOT
+    # JRA's TRUE RUN/PURE/SECTIONAL factorEvidence. Requiring JRA evidence
+    # here rejected every otherwise-valid local pre-off forecast.
+    is_nar=str(detail.get("circuit") or "") in {"地方","NAR","local"}
+    if is_nar:
+        from arvexq.prediction.nar_model import MODEL_VERSION as nar_version
+        if detail.get("predictionModelVersion")!=nar_version:
+            return None
+        observed=[]
+        for e in evals:
+            factors=e.get("narModelEvidence") or {}
+            valid=all(isinstance(factors.get(k),(int,float))
+                      and math.isfinite(float(factors[k])) and 0.<=float(factors[k])<=1.
+                      for k in ("mineta","margin"))
+            valid=valid and int(factors.get("sample") or 0)>=1
+            valid=valid and str(e.get("markEngineVersion") or "")==nar_version
+            observed.append(2 if valid else 0)
+        # Never create approximate win/podium probabilities for a missing
+        # runner, and never silently switch to the deleted legacy ranker.
+        # This is the same all-runner evidence requirement as the NAR JS
+        # betting engine.
+        if len(horses)<3 or any(value!=2 for value in observed):
+            return None
+    else:
+        # JRA retains its own observed three-factor policy unchanged.
+        if sum(1 for e in evals if e.get("factorEvidence"))<max(2,len(horses)//2):
+            return None
+        observed=[int(((e.get("factorEvidence") or {}).get("primaryPillarCoverage") or
+                       sum(v is not None for v in
+                           ((e.get("factorEvidence") or {}).get("pillarScores") or {}).values())))
+                  for e in evals]
+        if not any(observed):
+            return None
     scores=[max(0.,min(1.,float(e.get("coreAbilityScore") or 0)/100))
             for e in evals]
-    observed=[int(((e.get("factorEvidence") or {}).get("primaryPillarCoverage") or
-                   sum(v is not None for v in
-                       ((e.get("factorEvidence") or {}).get("pillarScores") or {}).values())))
-              for e in evals]
-    if not any(observed):
-        return None
     peak=max(scores)
     strengths=[math.exp((v-peak)/.15) for v in scores]
     total=sum(strengths)
@@ -4033,8 +4057,9 @@ def _build_prerace_prediction(detail:dict)->dict|None:
         return None
     lead=sorted(scores,reverse=True)
     gap=lead[0]-lead[1] if len(lead)>=2 else 0.
-    strength_conf=max(0.,min(1.,.5*observed[win_idx]/3.+3.*max(0.,gap)))
-    strength_stable=observed[win_idx]==3 and gap>=.04
+    required_axes=2 if is_nar else 3
+    strength_conf=max(0.,min(1.,.5*observed[win_idx]/required_axes+3.*max(0.,gap)))
+    strength_stable=observed[win_idx]==required_axes and gap>=.04
     rows=[]
     completeness=[]
     for i,(h,e) in enumerate(zip(horses,evals)):
@@ -4053,7 +4078,8 @@ def _build_prerace_prediction(detail:dict)->dict|None:
     mark_count=sum(1 for x in rows if x.get("mark"))
     payload={
         "version":PRERACE_AUDIT_VERSION,"modelVersion":AI_EVALUATION_VERSION,"predictionEngine":PREDICTION_ENGINE_VERSION,
-        "circuitMethod":_v312_method(str(detail.get("circuit") or "")).get("id"),
+        "circuitMethod":str(detail.get("predictionModelVersion") or "") if is_nar else
+            _v312_method(str(detail.get("circuit") or "")).get("id"),
         "raceId":str(detail.get("id") or ""),"raceDate":str(detail.get("date") or ""),"circuit":str(detail.get("circuit") or ""),
         "track":str(detail.get("track") or ""),"raceNumber":int(detail.get("raceNumber") or 0),"startTime":str(detail.get("startTime") or ""),
         "capturedAtEpoch":now,"capturedAtJst":_now_jst().isoformat(timespec="seconds"),"minutesToPost":minutes,
