@@ -117,8 +117,12 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
                 old = dict(horse.get("integratedEvaluation") or {})
                 old["mark"] = ""
                 horse["integratedEvaluation"] = old
+        # The new 60/40 forecast builder verifies both exact model identity
+        # and complete measured-runner coverage. These are properties of the
+        # freshly ranked active field, not of the old unranked D1 racecard.
         for key in ("honmeiDecision", "factorRanking", "markEngineVersion",
-                    "predictionModelVersion", "winConfidenceEvidence"):
+                    "predictionModelVersion", "predictionStatus",
+                    "observedModelCoverage", "winConfidenceEvidence"):
             if key in ranked:
                 working[key] = copy.deepcopy(ranked[key])
         lock = build(working)
