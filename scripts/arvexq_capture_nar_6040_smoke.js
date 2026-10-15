@@ -25,6 +25,12 @@ assert.equal(plan.honmei.horseNumber,1);
 assert.equal(plan.decision,'購入候補');
 assert(plan.items.some(x=>x.level==='本線'&&x.kind==='馬連'));
 assert(plan.items.every(x=>['本線','保険','3連単チャレンジ'].includes(x.level)));
+// An older allPastRuns array must not hide new official proof in recentRaces.
+const split={...race,horses:horses.map(h=>({
+  ...h,allPastRuns:h.recentRaces.map(q=>({...q,timeBehindWinner:null}))
+}))};
+const splitResult=capture(split);
+assert.equal(splitResult.status,0,'NAR recentRaces proof lost behind stale allPastRuns: '+String(splitResult.stderr).slice(0,1000));
 const broken={...race,horses:horses.map((h,i)=>i===6?
  {...h,recentRaces:h.recentRaces.map(q=>({...q,timeBehindWinner:null}))}:h)};
 const refused=capture(broken);
