@@ -14,6 +14,17 @@ class VersionedAssetCacheTest(unittest.TestCase):
             self.assertTrue(urls, prefix)
             self.assertTrue(all("?v=__ARVEXQ_" in u for u in urls), (prefix,urls))
 
+    def test_version_manifest_names_current_live_model_not_retired_factor_scorer(self):
+        import json
+        dist = ROOT / "dist"
+        manifest = dist / "version.json"
+        if not manifest.exists():
+            self.skipTest("run static build first")
+        version = json.loads(manifest.read_text(encoding="utf-8"))
+        self.assertEqual(version["shell"], "observed-mineta-margin-authoritative")
+        self.assertEqual(version["model"], "arvexq-mineta-margin-observed-60-40-v1")
+        self.assertNotIn("three-factor", str(version).lower())
+
     def test_immutable_headers_are_only_on_versioned_asset_families(self):
         dist = ROOT / "dist"
         if not (dist / "_headers").exists():
