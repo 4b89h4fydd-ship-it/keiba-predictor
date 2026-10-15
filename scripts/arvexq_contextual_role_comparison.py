@@ -62,7 +62,7 @@ def outcome(order, marks, axis):
                 specialHits=sum(n in top for n in special),specialPicks=len(special))
 
 
-def evaluate(cards):
+def evaluate(cards, predictor=predict):
     accepted=[]; skipped=Counter();sources=Counter();seen=set()
     for d in cards:
         identity=(d.get('date'),d.get('id'))
@@ -73,7 +73,7 @@ def evaluate(cards):
         r=stripped(d)
         if not isinstance(r.get('horses'),list): skipped['no-card']+=1;continue
         baseline=apply_observed_marks(copy.deepcopy(r))
-        candidate=predict(r)
+        candidate=predictor(r)
         if not baseline['observedModelCoverage']['allObserved'] or not candidate['fullyObserved']:
             skipped['incomplete-observations']+=1;continue
         bmarks={int(h['horseNumber']):h.get('integratedEvaluation',{}).get('mark','') for h in baseline['horses']}

@@ -6,9 +6,10 @@ All constants are hypotheses; validation must precede any live replacement.
 from __future__ import annotations
 
 import math
+import copy
 from statistics import mean, pstdev
 from arvexq.core.runner_status import is_inactive_runner
-from arvexq.prediction.observed_model import rank_observed, _course_history, _verified_jra_proof, model_version, JRA_MODEL_VERSION
+from arvexq.prediction.observed_model import rank_observed, apply_observed_marks, _course_history, _verified_jra_proof, model_version, JRA_MODEL_VERSION
 from arvexq.prediction.past_performance import observed_runs
 from arvexq.prediction.special_marks import allocate_special_marks
 
@@ -79,7 +80,15 @@ def joint_probabilities(rows):
     return joint
 
 
-def predict(race):
+def predict(race, components=None):
+    components=set(('blend','win','axis','slots','special') if components is None else components)
+    if components-set(('blend','win','axis','slots','special')):raise ValueError('unknown candidate component')
+    requested_components=sorted(components)
+    special_ready=bool(race.get('surface') and number(race.get('distance')) is not None)
+    # Unknown target conditions do not prove that historical form cannot recur.
+    # Do not demote existing marks on a comparison whose applicability is unknown.
+    if not special_ready:components.discard('special')
+    baseline=apply_observed_marks(copy.deepcopy(race))
     ranked = rank_observed(race.get('horses') or [], race)
     histories = {int(row['horse']['horseNumber']): history(row['horse'], race) for row in ranked}
     front = sum(any(valid_first(q) is not None and valid_first(q) <= 3 for q in runs[:3]) for runs in histories.values())
@@ -89,6 +98,7 @@ def predict(race):
     position_weight = max(.35, min(.70, .60 - .20 * pressure +
                           (.05 if distance is not None and distance <= 1400 else 0) -
                           (.05 if distance is not None and distance >= 2000 else 0)))
+    if 'blend' not in components:position_weight=.60
     for row in ranked:
         runs = histories[int(row['horse']['horseNumber'])]
         weighted = [(q, context_weight(q, race, i)) for i, q in enumerate(runs)]
@@ -109,7 +119,10 @@ def predict(race):
         # Empirical slot tendencies have limited influence in a five-run sample.
         trust = min(1., len(runs)/5)
         row['contextScore'] = base
-        row['roles'] = {name: (1-.30*trust)*base + .30*trust*rate for name,rate in zip(('win','second','third'),rates)}
+        row['baselineScore']=row['score'];row['score']=base
+        row['roles'] = {name: ((1-.30*trust)*base + .30*trust*rate
+            if ('win' if name=='win' else 'slots') in components else base)
+            for name,rate in zip(('win','second','third'),rates)}
         axis = .50 * base + .50 * top3 - .10 * pstdev(quality)
         if pace_fit is not None: axis -= .10 * (1-pace_fit)
         row['roles']['axis'] = axis
@@ -120,11 +133,13 @@ def predict(race):
             marginWeight=1-position_weight)
     win_order = sorted(ranked, key=lambda row:(-row['roles']['win'],int(row['horse']['horseNumber'])))
     special = allocate_special_marks(win_order, race)
-    marks = {}
+    marks = {no:e.get('mark','') for no,e in special.items()}
     if win_order:
         marks[int(win_order[0]['horse']['horseNumber'])] = '◎'
     remaining = list(win_order[1:])
-    for label, key in (('○','win'),('▲','second'),('△','third')):
+    if 'slots' in components:
+        marks={int(win_order[0]['horse']['horseNumber']):'◎'} if win_order else {}
+    for label, key in ((('○','win'),('▲','second'),('△','third')) if 'slots' in components else ()):
         if not remaining: break
         # ○ evaluates first/second aptitude; ▲ second/third aptitude.
         def score(row):
@@ -135,10 +150,12 @@ def predict(race):
         remaining.remove(chosen)
     # Compare special evidence before final core allocation: keep only reproducible
     # special marks, and preserve existing primary ◎/○ roles.
-    for label, flag in (('☆','star'),('注','note')):
+    if 'special' in components:
+        marks={no:mark for no,mark in marks.items() if mark not in ('☆','注')}
+    for label, flag in ((('☆','star'),('注','note')) if components.intersection(('slots','special')) else ()):
         candidates = [row for row in win_order[2:] if special[int(row['horse']['horseNumber'])].get(flag)
-                      and row['roleEvidence']['reproductionRuns'] > 0]
-        if label == '☆':
+                      and ('special' not in components or row['roleEvidence']['reproductionRuns'] > 0)]
+        if label == '☆' and 'special' in components:
             candidates = [row for row in candidates if row['roleEvidence']['paceFit'] is not None
                           and row['roleEvidence']['paceFit'] >= .6]
         candidates = [row for row in candidates if marks.get(int(row['horse']['horseNumber'])) not in ('◎','○','☆','注')]
@@ -157,7 +174,13 @@ def predict(race):
     active = [h for h in race.get('horses',[]) if not is_inactive_runner(h)]
     full = len(ranked)==len(active) and len(ranked)>=3
     joint = joint_probabilities(ranked) if full else []
+    axis_no=int(axis['horse']['horseNumber']) if axis and full else 0
+    if 'axis' not in components:axis_no=baseline['honmeiDecision']['axisHorseNumber']
+    if not components:
+        marks={int(h['horseNumber']):h.get('integratedEvaluation',{}).get('mark','') for h in baseline['horses']}
+        for row in ranked:row['mark']=marks.get(int(row['horse']['horseNumber']),'')
     return dict(version=VERSION, rows=ranked, marks=marks,
-                axisHorseNumber=int(axis['horse']['horseNumber']) if axis and full else 0,
+                axisHorseNumber=axis_no,components=sorted(components),requestedComponents=requested_components,
+                componentEligibility={'special':special_ready},
                 fullyObserved=full, joint=joint,
                 status='research-only-unvalidated')

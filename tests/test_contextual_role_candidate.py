@@ -13,6 +13,28 @@ from scripts.arvexq_contextual_role_comparison import evaluate,restore_card
 
 
 class ContextualRoleTests(unittest.TestCase):
+    def test_disabling_components_exactly_preserves_live_marks_and_axis(self):
+        from arvexq.prediction.observed_model import apply_observed_marks
+        original=race();base=apply_observed_marks(copy.deepcopy(original));p=predict(original,components=())
+        self.assertEqual(p['marks'],{h['horseNumber']:h['integratedEvaluation']['mark'] for h in base['horses']})
+        self.assertEqual(p['axisHorseNumber'],base['honmeiDecision']['axisHorseNumber'])
+
+    def test_axis_only_cannot_change_core_or_special_marks(self):
+        r=race()
+        self.assertEqual(predict(r,components=('axis',))['marks'],predict(r,components=())['marks'])
+
+    def test_special_proposals_never_duplicate_an_existing_mark(self):
+        from tests.test_optional_star_marks import make_race
+        for components in (('axis',),('blend',),('win',),('slots',),('special',),None):
+            marks=[m for m in predict(make_race(),components=components)['marks'].values() if m]
+            self.assertEqual(len(marks),len(set(marks)))
+
+    def test_unknown_target_surface_does_not_masquerade_as_failed_reproduction(self):
+        r=race();r['surface']=''
+        proposed=predict(r,components=('special',));base=predict(r,components=())
+        self.assertFalse(proposed['componentEligibility']['special'])
+        self.assertEqual(proposed['marks'],base['marks'])
+
     def test_day_index_is_restored_from_hash_verified_original(self):
         original=race();thin={'id':original['id'],'date':original['date'],'horses':[],
             'result':{'finishers':[{'finish':1,'horseNumber':1}]}}
