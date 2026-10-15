@@ -12,7 +12,7 @@ from arvexq.prediction.final_marks import apply_core_marks
 
 class UnifiedThreeFactorTests(unittest.TestCase):
     def setUp(self):
-        self.race = {"date": "2026-10-13", "circuit": "地方", "track": "園田",
+        self.race = {"date": "2026-10-13", "circuit": "中央", "track": "東京",
                      "distance": 1400, "surface": "ダート", "horses": []}
         finishes = {
             1: [1, 2, 1, 2, 1],
@@ -25,7 +25,7 @@ class UnifiedThreeFactorTests(unittest.TestCase):
             runs = [
                 {"date": f"2026-10-{day:02d}", "finish": rank[i],
                  "fieldSize": 12, "last3fRank": rank[i],
-                 "track": "園田", "distance": 1400}
+                 "track": "東京", "distance": 1400}
                 for i, day in enumerate([11, 9, 7, 5, 3])
             ]
             self.race["horses"].append({
