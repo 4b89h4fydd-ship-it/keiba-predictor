@@ -29,7 +29,6 @@ def _jra_history_adapter(namespace: dict[str, Any]):
         cname = str(
             horse.get("_jraHorseCname")
             or horse.get("jraHorseCname")
-            or horse.get("name")
             or ""
         ).strip()
         date = str(race.get("date") or "")
@@ -43,68 +42,93 @@ def _jra_history_adapter(namespace: dict[str, Any]):
 
 
 def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
-    """Use the linked JRA result of one dated earlier start, not the target."""
+    """Enrich every recent dated start through the canonical JRA result parser."""
     parse_result = _pick(namespace, "_jra_parse_result")
     profile_runs = _pick(namespace, "_jra_profile_runs")
-    if parse_result is None or profile_runs is None:
+    resolve = _pick(namespace, "_jra_resolve_prior_results")
+    if parse_result is None:
         return None
 
     def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
         import base64
-        from arvexq.ingest.full_career import date_key
+        import math
+        import unicodedata
+        from arvexq.ingest.full_career import date_key, merge_career
+        def clean(value):
+            return "".join(unicodedata.normalize("NFKC", str(value or "")).split())
         cutoff = date_key(race.get("date"))
-        name = str(horse.get("name") or "").strip()
+        name = clean(horse.get("name"))
         cname = str(horse.get("_jraHorseCname") or horse.get("jraHorseCname") or "").strip()
-        if not cutoff or not name or int(limit or 5) <= 5:
+        if not cutoff or not name:
             return {}
-        # Prefer already saved JRA official result links; not all D1 horses
-        # retain the original JRA horse-profile cname across hydration.
-        prior = [r for r in [
-            *(horse.get("allPastRuns") or []), *(horse.get("recentRaces") or [])
-        ] if isinstance(r, dict) and str(r.get("raceId") or "").startswith("jraresult-")]
-        if not prior and cname:
+        prior = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)
+        if not prior and cname and profile_runs:
             prior = profile_runs(cname, cutoff, 5) or []
-        for run in prior[:2]:
+        observed_runs = []
+        for run in prior[:5]:
             at = date_key(run.get("date"))
+            if not at or at >= cutoff:
+                continue
             rid = str(run.get("raceId") or "")
-            if not at or at >= cutoff or not rid.startswith("jraresult-"):
-                continue
-            try:
+            result = None
+            if rid.startswith("jraresult-"):
                 encoded = rid[len("jraresult-"):]
-                result_cname = base64.urlsafe_b64decode(
-                    encoded + "=" * (-len(encoded) % 4)).decode("utf-8")
-            except (ValueError, UnicodeDecodeError):
-                continue
-            # Cross-check returned race identity; parsing the link is not proof.
-            result = parse_result(result_cname, {"date":at,"track":run.get("track")})
+                try:
+                    result_cname = base64.urlsafe_b64decode(
+                        encoded + "=" * (-len(encoded) % 4)).decode("utf-8")
+                except (ValueError, UnicodeDecodeError):
+                    continue
+                result = parse_result(result_cname, {"date": at, "track": run.get("track")})
+            elif resolve:
+                result = resolve(horse, run)
             if not isinstance(result, dict) or date_key(result.get("date")) != at:
                 continue
-            if str(result.get("track") or "") != str(run.get("track") or ""):
+            if clean(result.get("track")) != clean(run.get("track")):
+                continue
+            if run.get("raceNumber") and int(result.get("raceNumber") or 0) != int(run["raceNumber"]):
+                continue
+            if run.get("distance") and int(result.get("distance") or run["distance"]) != int(run["distance"]):
                 continue
             finishers = (result.get("result") or {}).get("finishers") or []
-            matching = [row for row in finishers
-                        if str(row.get("name") or "").strip() == name]
-            winners = [row for row in finishers
-                       if row.get("finish") == 1 and row.get("timeSeconds")]
+            matching = [row for row in finishers if clean(row.get("name")) == name]
+            winners = [row for row in finishers if row.get("finish") == 1 and row.get("timeSeconds")]
             if len(matching) != 1 or len(winners) != 1:
                 continue
-            own = matching[0].get("timeSeconds")
-            if not own:
+            row, winner = matching[0], winners[0]
+            own = row.get("timeSeconds")
+            if not own or (run.get("finish") and int(run["finish"]) != int(row.get("finish") or 0)):
                 continue
-            diff = round(float(own) - float(winners[0]["timeSeconds"]), 2)
-            if not 0 <= diff <= 30:
+            # Do not attach a different start to the saved horse, even with the same name.
+            if run.get("timeSeconds") and abs(float(run["timeSeconds"]) - float(own)) > .11:
+                continue
+            diff = round(float(own) - float(winner["timeSeconds"]), 2)
+            if not math.isfinite(diff) or not 0 <= diff <= 30:
                 continue
             observed = dict(run)
             observed["timeBehindWinner"] = diff
             observed["marginEvidenceSource"] = "JRA official linked prior result"
-            late = matching[0].get("last3FSeconds")
+            observed["marginEvidence"] = {
+                "horseName": row["name"], "date": at, "track": result["track"],
+                "raceNumber": result.get("raceNumber"), "resultCname": result.get("resultCname"),
+                "winnerName": winner["name"], "winnerTimeSeconds": winner["timeSeconds"],
+                "horseTimeSeconds": own, "timeBehindWinner": diff,
+            }
+            if result.get("resultCname"):
+                observed["raceId"] = "jraresult-" + base64.urlsafe_b64encode(
+                    result["resultCname"].encode()).decode().rstrip("=")
+                observed["raceNumber"] = result.get("raceNumber")
+            if row.get("marginText"):
+                observed["marginText"] = row["marginText"]
+            late = row.get("last3FSeconds")
             if late is not None and 15 <= float(late) <= 90:
                 observed["last3fSeconds"] = float(late)
-            corners = matching[0].get("cornerPositions")
+            if row.get("last3FRank") is not None:
+                observed["last3fRank"] = row["last3FRank"]
+            corners = row.get("cornerPositions")
             if isinstance(corners, list) and corners:
                 observed["cornerPositions"] = corners
-            return {"recentRaces":[observed],"allPastRuns":[observed]}
-        return {}
+            observed_runs.append(observed)
+        return {"recentRaces": observed_runs, "allPastRuns": observed_runs} if observed_runs else {}
 
     return fetch
 

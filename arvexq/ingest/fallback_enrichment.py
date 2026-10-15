@@ -118,6 +118,13 @@ def _needs_history(horse: dict[str, Any], *, cutoff: str, limit: int) -> bool:
     return len(runs) < limit or _first_corner_coverage(horse, cutoff, limit) < min(3, len(runs))
 
 
+def _needs_jra_margins(horse: dict[str, Any], cutoff: str) -> bool:
+    """Zero seconds is valid winning evidence, not a missing value."""
+    runs = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)[:5]
+    return any(all(row.get(k) in (None, "") for k in
+                   ("marginSeconds", "timeBehindWinner")) for row in runs)
+
+
 def _observed_sectional_rank_count(horse: dict[str, Any], cutoff: str = "", limit: int = 5) -> int:
     """Count actual prior-run sectional positions, not fabricated pace scores."""
     runs = _merge_runs(
@@ -336,6 +343,9 @@ async def enrich_race_missing(
             )
             if full_search or _needs_history(horse, cutoff=cutoff, limit=min(5, history_limit)):
                 domains.append(("horse_history", None))
+            elif circuit == "JRA" and _needs_jra_margins(horse, cutoff) and bank_registry.get("jra_official_prior_results"):
+                # Missing margins need the result adapter, not a redundant card/profile fetch.
+                domains.append(("horse_history", {"jra_official_prior_results"} | measured_feeds))
             elif measured_feeds and (
                 _measured_horse_first3f_count(horse, cutoff, history_limit) < 2
                 or _horse_early_timing_count(horse, cutoff, history_limit) < 2

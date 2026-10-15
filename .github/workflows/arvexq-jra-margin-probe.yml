@@ -1,0 +1,41 @@
+name: ARVEXQ JRA Margin Source Probe
+"on":
+  push:
+    branches: [fix/jra-observed-margins]
+    paths:
+      - app.py
+      - arvexq/databanks/legacy_bridge.py
+      - arvexq/ingest/career_transport.py
+      - .github/workflows/arvexq-jra-margin-probe.yml
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      ARVEXQ_FACTOR_BACKFILL_RACES: "24"
+      KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-jra-margin-probe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install -q -r requirements.txt
+      - name: Read-only observed JRA collection test
+        run: |
+          python scripts/arvexq_fetch_d1_bundle.py --api-base https://kraiz-api.4b89h4fydd.workers.dev --date 2026-10-12 --out before.json --report hydration.json --workers 4
+          PYTHONPATH=. python scripts/arvexq_jra_margin_audit.py --input before.json --output audit-before.json
+          python scripts/arvexq_history_repair.py --bundle before.json --payload repaired.json --report repair-report.json --workers 1 --central-margins-only
+          PYTHONPATH=. python scripts/arvexq_jra_margin_audit.py --input repaired.json --output audit-collected.json --require-positive
+          PYTHONPATH=. python scripts/arvexq_jra_mineta_observed_comparison.py comparison.json --bundle repaired.json --date 2026-10-12
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jra-margin-probe-summary
+          path: |
+            audit-*.json
+            comparison.json
+          if-no-files-found: warn
