@@ -130,6 +130,8 @@ def apply_observed_marks(detail):
                  honmeiRole="win" if i == 0 else "",
                  honmeiGrade=grade if i == 0 else "",
                  honmeiEligible=bool(i == 0 and grade == "A"),
+                 score=round(row["score"] * 100, 2), samples=row["sample"],
+                 neutralPrior=False, confidence="実測",
                  narModelEvidence={"mineta": row["factors"]["mineta"],
                                    "margin": row["factors"]["margin"],
                                    "marginCoverage": row["marginCoverage"],
