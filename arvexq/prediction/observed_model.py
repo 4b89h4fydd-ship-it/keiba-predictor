@@ -106,6 +106,41 @@ def apply_observed_marks(detail):
     top = ranked[0] if ranked else None
     grade = ("A" if full and len(ranked) >= 5 and gap >= .055 and top["sample"] >= 3 else
              "B" if full and len(ranked) >= 2 else "C")
+    # Axis is independently selected by observed top-three stability.
+    # Do not confuse a win ranking with an evidence-backed podium role.
+    axis_candidates = []
+    for row in ranked:
+        history = observed_runs(_course_history(row["horse"], detail), detail, limit=5)
+        if version == JRA_MODEL_VERSION:
+            history = [run for run in history if _verified_jra_proof(run)]
+        valid = []
+        suitability = []
+        for run in history:
+            try:
+                finish = int(run.get("finish") or 0)
+                field = int(run.get("fieldSize") or 0)
+            except (TypeError, ValueError):
+                continue
+            if 1 <= finish <= field and field >= 2:
+                valid.append(finish)
+                try:
+                    distance_match = abs(float(run.get("distance")) - float(detail.get("distance"))) <= 150
+                except (TypeError, ValueError):
+                    distance_match = False
+                if distance_match and run.get("surface") == detail.get("surface"):
+                    suitability.append(finish <= 3)
+        if len(valid) >= 3:
+            podium = sum(finish <= 3 for finish in valid)
+            ratio = podium / len(valid)
+            # Three observed runs minimum; shrink the place rate and use
+            # observed same-surface/distance results as a secondary signal.
+            stable = (podium + 1) / (len(valid) + 2)
+            comparable = sum(suitability) / len(suitability) if suitability else stable
+            axis_score = .65 * stable + .20 * comparable + .15 * row["score"]
+            axis_candidates.append((axis_score, row["score"], -int(row["horse"]["horseNumber"]), row, ratio))
+    axis_row = max(axis_candidates, default=None)
+    axis_no = int(axis_row[3]["horse"]["horseNumber"]) if axis_row and full else 0
+    axis_ratio = axis_row[4] if axis_row else None
     old_fields = ("multiHead", "strengthHeadRank", "winHeadRank", "upsideHeadRank",
                   "upsideCandidate", "dangerPopular", "podiumAxisScore",
                   "factorEvidence", "coreAbilityRank", "coreAbilityScore", "primaryPillars")
@@ -114,7 +149,8 @@ def apply_observed_marks(detail):
         for k in old_fields:
             e.pop(k, None)
         e.update(mark="", markSource=version, markEngineVersion=version,
-                 honmeiRole="", honmeiGrade="", honmeiEligible=False)
+                 honmeiRole="", honmeiGrade="", honmeiEligible=False,
+                 podiumAxisEligible=False)
     # Independent pre-off ☆/注 allocation from PR #181. Keep original
     # ranked horses untouched. Only the JRA evidence view is filtered to
     # the matching flat/jump discipline and verified official history.
@@ -136,9 +172,10 @@ def apply_observed_marks(detail):
         e.update(mark=evidence.get("mark", ""),
                  specialMarkEvidence={k: v for k, v in evidence.items() if k != "mark"},
                  coreAbilityRank=i + 1, coreAbilityScore=round(row["score"] * 100, 2),
-                 honmeiRole="win" if i == 0 else "",
+                 honmeiRole="win" if i == 0 else ("axis" if int(h["horseNumber"]) == axis_no else ""),
                  honmeiGrade=grade if i == 0 else "",
                  honmeiEligible=bool(i == 0 and grade == "A"),
+                 podiumAxisEligible=bool(axis_no and int(h["horseNumber"]) == axis_no),
                  score=round(row["score"] * 100, 2), samples=row["sample"],
                  neutralPrior=False, confidence="実測",
                  narModelEvidence={"mineta": row["factors"]["mineta"],
@@ -161,7 +198,10 @@ def apply_observed_marks(detail):
         "version": version, "eligible": grade == "A",
         "horseNumber": int(top["horse"]["horseNumber"]) if top else 0,
         "displayHonmei": bool(top), "confidenceGrade": grade if top else "",
-        "role": "win", "fixedAxisAllowed": grade == "A",
+        "role": "win", "axisHorseNumber": axis_no,
+        "axisPlaceRatio": round(axis_ratio, 6) if axis_ratio is not None else None,
+        "axisStabilityScore": round(axis_row[0], 6) if axis_row else None,
+        "fixedAxisAllowed": bool(axis_no and grade == "A"),
         "axisScore": round(top["score"], 6) if top else None,
         "axisMargin": round(gap, 6), "axisMeaning": "uncalibrated-relative-model-score",
         "reason": "observed-mineta-margin-60-40" if full else "incomplete-observations"}

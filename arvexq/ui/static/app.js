@@ -1031,7 +1031,7 @@ function independentSpecialEvidence(h,r,front){
     if(f<=3&&isFinite(level)&&level>=.65&&level<=1)highLevel=true;
     if(idx>0&&f<=3&&runs.length&&Number(runs[0].finish||runs[0].finishPosition)>=4)earlier=true;
   });
-  var star=runs.length>=2&&front>=3&&advance.length>0&&podium>=1;
+  var star=runs.length>=1&&front>=3&&advance.length>0&&podium>=1;
   var starStrength=star?.50*Math.min(1,Math.max.apply(null,advance)*3)+
     .30*Math.min(1,advance.length/2)+.20*Math.min(1,front/5):0;
   var reasons=[];
@@ -1039,11 +1039,11 @@ function independentSpecialEvidence(h,r,front){
   if(same)reasons.push('same-course-distance-podium');
   if(highLevel)reasons.push('strong-opposition-podium');
   if(earlier)reasons.push('earlier-peak');
-  var note=runs.length>=2&&podium>=1&&reasons.length>=2;
+  var note=runs.length>=1&&podium>=1&&reasons.length>=2;
   return {star:star,note:note,starStrength:Math.round(starStrength*1e6)/1e6,
     noteStrength:note?Math.round((.40+.15*Math.min(4,reasons.length)+.05*Math.min(2,podium))*1e6)/1e6:0,
     frontPressureRunners:front,closingGainRuns:advance.length,podiumRuns:podium,
-    noteReasons:reasons,mark:''};
+    noteReasons:reasons,evidenceRuns:runs.length,limitedEvidence:runs.length<2,mark:''};
 }
 function assignIndependentSpecialMarks(ordered,r){
   var front=ordered.filter(function(z){
@@ -1070,11 +1070,26 @@ function assignIndependentSpecialMarks(ordered,r){
     var no=Number(z.horse.horseNumber);
     evidence[no].mark=idx===0?'◎':idx===1?'○':(choice[no]||'');
   });
-  ordered.slice(2).forEach(function(z){
-    var e=evidence[Number(z.horse.horseNumber)];if(e.mark)return;
-    if(!used.coreTriangle){e.mark='▲';used.coreTriangle=true}
-    else if(!used.coreDelta){e.mark='△';used.coreDelta=true}
-  });
+  // Match Python's role-aware ▲ (second/third) and △ (third) allocation.
+  var remaining=ordered.slice(2).filter(function(z){return !evidence[Number(z.horse.horseNumber)].mark;});
+  if(remaining.length){
+    var peak=ordered[0].narScore,ww=ordered.map(function(z){return Math.exp((z.narScore-peak)/.15);}),
+        total=ww.reduce(function(a,b){return a+b},0),p2=ww.map(function(){return 0}),p3=ww.map(function(){return 0});
+    for(var i=0;i<ww.length;i++)for(var j=0;j<ww.length;j++)if(i!==j){
+      var rem=total-ww[i],left=rem-ww[j];if(rem<=0)continue;
+      var second=ww[i]/total*ww[j]/rem;p2[j]+=second;
+      if(left>0)for(var k=0;k<ww.length;k++)if(k!==i&&k!==j)p3[k]+=second*ww[k]/left;
+    }
+    function ix(z){return ordered.indexOf(z)}
+    remaining.sort(function(a,b){return (p2[ix(b)]+p3[ix(b)])-(p2[ix(a)]+p3[ix(a)])||
+      Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
+    var triangle=remaining.shift();evidence[Number(triangle.horse.horseNumber)].mark='▲';
+    if(remaining.length){
+      remaining.sort(function(a,b){return p3[ix(b)]-p3[ix(a)]||
+        Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
+      evidence[Number(remaining[0].horse.horseNumber)].mark='△';
+    }
+  }
   return evidence;
 }
 function specialMarkInputSignature(r){
@@ -1270,10 +1285,15 @@ function assignObservedPredictionMarks(rows,r){
       var f=narMeasured(run.finish),fs=narMeasured(run.fieldSize);
       return f!==null&&fs>=f&&f>=1
     });
-    return {z:z,sample:observed.length,ratio:observed.length?
-      observed.filter(function(q){return Number(q.finish)<=3}).length/observed.length:0}
+    var podium=observed.filter(function(q){return Number(q.finish)<=3}).length,
+        stable=(podium+1)/(observed.length+2),comparable=observed.filter(function(q){
+          var d=narMeasured(q.distance),target=narMeasured(r.distance);
+          return d!==null&&target!==null&&Math.abs(d-target)<=150&&q.surface===r.surface;
+        }),same=comparable.length?comparable.filter(function(q){return Number(q.finish)<=3}).length/comparable.length:stable;
+    return {z:z,sample:observed.length,ratio:observed.length?podium/observed.length:0,
+      axisScore:.65*stable+.20*same+.15*z.narScore}
   }).filter(function(x){return x.sample>=3}).sort(function(a,b){
-    return b.ratio-a.ratio||b.z.narScore-a.z.narScore
+    return b.axisScore-a.axisScore||b.z.narScore-a.z.narScore
   })[0]:null;
   valid.forEach(function(z){z.preOffAxisCandidate=!!(axis&&axis.z===z);
     z.podiumAxisEligible=z.preOffAxisCandidate&&grade==='A'});
