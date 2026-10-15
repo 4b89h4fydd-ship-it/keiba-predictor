@@ -63,43 +63,14 @@ from bs4 import BeautifulSoup
 app = FastAPI(title="ARVEXQ", version="14.26-v330-racecard-stable")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-true-run-pure-sectional-v2"
+PREDICTION_ENGINE_VERSION = "arvexq-mineta-margin-observed-60-40-v1"
 ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v300-final"
 AI_EVALUATION_VERSION = "evidence-v317-consensus-rebuild"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
-from arvexq.prediction.legacy_model_tables import (
-    V207_WINNER_MODEL_VERSION,
-    V207_VALIDATED_CIRCUITS,
-    V207_WINNER_WEIGHTS,
-    V207_BACKTEST_AUDIT,
-    V212_P2_MODEL_VERSION,
-    V212_P2_MODEL_INTERCEPT,
-    V212_P2_MODEL_COEFFICIENTS,
-    V212_ROLE_AUDIT,
-    V213_ROLE_MODEL_VERSION,
-    V213_VALIDATED_CIRCUITS,
-    V213_FEATURES,
-    V213_MEAN,
-    V213_SCALE,
-    V213_P1_COEF,
-    V213_P2_COEF,
-    V213_P3_COEF,
-    V213_BLEND,
-    V213_BACKTEST_AUDIT,
-    V215_PRO_MODEL_VERSION,
-    V215_P1_BLEND,
-    V215_FEATURES,
-    V215_MEAN,
-    V215_SCALE,
-    V215_P1_COEF,
-    V215_SPEED_BASE_EXACT,
-    V215_SPEED_BASE_TRACK_DISTANCE,
-    V215_SPEED_BASE_DISTANCE_GOING,
-    V215_SPEED_GLOBAL,
-    V215_DRAW_STATS,
-    V215_TRACK_DRAW_STATS,
-    V215_RESEARCH_AUDIT,
+from arvexq.prediction.course_speed_baselines import (
+    V215_SPEED_BASE_EXACT, V215_SPEED_BASE_TRACK_DISTANCE,
+    V215_SPEED_BASE_DISTANCE_GOING, V215_SPEED_GLOBAL,
 )
 
 
