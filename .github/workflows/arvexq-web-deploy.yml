@@ -66,6 +66,7 @@ jobs:
         run: |
           PROD='https://kraizweb1.4b89h4fydd.workers.dev'
           ok=0
+          expected="$(cat dist/version.json)"
           for i in $(seq 1 24); do
             headers="$(mktemp)"
             body="$(mktemp)"
@@ -75,7 +76,7 @@ jobs:
               if grep -qi 'content-type:.*text/html' "$headers" && grep -qi '<html' "$body" && ! grep -q '"service":"KRAIZ API"' "$body"; then
                 version="$(curl -fsS --max-time 10 -H 'Cache-Control: no-cache' "$PROD/version.json?ci=$GITHUB_SHA-$i" 2>/dev/null || true)"
                 echo "production version: ${version:-<no-response>}"
-                if printf '%s' "$version" | grep -q "\"build\":\"$BUILD\""; then
+                if [ "$version" = "$expected" ]; then
                   ok=1
                   break
                 fi
