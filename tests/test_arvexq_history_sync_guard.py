@@ -87,6 +87,55 @@ class SqliteHistorySyncTests(unittest.TestCase):
             verify_published(payload, base="https://unit.invalid",
                              read=lambda base, rid: changed)
 
+    def test_old_frozen_feature_hash_is_preserved_but_not_trained(self):
+        # A legacy D1 race may contain genuine historical feature bytes with
+        # a hash from an older serializer. Enriching results or career history
+        # must not forge a fresh featureHash or overwrite the pre-off forecast.
+        from arvexq.prediction.mass_feature_snapshot import _stable_hash
+        from arvexq.ingest.full_snapshot_codec import unpack_detail
+        from arvexq.prediction.mass_training_store import frozen_training_rows_from_detail
+        frozen = {
+            "raceId": "nar-2026-09-15-園田-03", "date": "2026-09-15",
+            "horseCount": 1, "rows": [{"horseNumber": 1, "features": {"pace": .6}}]
+        }
+        frozen["featureHash"] = _stable_hash(frozen)
+        original_hash = frozen["featureHash"]
+        # Simulate old historical source rows differing from their declared hash.
+        frozen["rows"][0]["features"]["pace"] = .7
+        prediction = {"modelVersion": "frozen-before-off", "horseNumber": 1}
+        detail = {
+            "id": frozen["raceId"], "date": frozen["date"], "circuit": "地方",
+            "horses": [{"horseNumber": 1, "name": "保存馬"}],
+            "preRacePrediction": prediction,
+            "massFeatureSnapshot": frozen, "massFeatureHash": original_hash,
+            "result": {"status": "確定", "finishers": [{"horseNumber": 1, "finish": 1}]}
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            def invoke(source):
+                payload = root / "source.json"
+                payload.write_text(json.dumps({"meta": {"source": source},
+                                              "details": [detail]}, ensure_ascii=False), encoding="utf-8")
+                dest = root / "batch"
+                return subprocess.run([sys.executable, str(ROOT / "scripts/arvexq_sync_batches.py"),
+                                       "--input", str(payload), "--out-dir", str(dest)],
+                                      cwd=str(ROOT), capture_output=True, text=True,
+                                      timeout=30), dest
+            bad, _ = invoke("normal-live-unknown")
+            self.assertNotEqual(bad.returncode, 0, "Never silently bypass feature origin checks")
+            good, output = invoke("github-actions-history-missing-only-v2")
+            self.assertEqual(good.returncode, 0, good.stderr[-2000:])
+            self.assertIn("MASS_FEATURE_LEGACY_UNVERIFIED", good.stdout)
+            batch = json.loads((output / "batch-0001.json").read_text(encoding="utf-8"))
+            saved = unpack_detail(batch["details"][0])
+            self.assertEqual(saved["preRacePrediction"], prediction)
+            self.assertEqual(saved["massFeatureHash"], original_hash)
+            self.assertEqual(saved["massFeatureArchive"]["featureHash"], original_hash)
+            self.assertIs(saved["massFeatureArchive"]["originHashVerified"], False)
+            self.assertEqual(saved["massFeatureArchive"]["originStatus"],
+                             "legacy-unverified-not-for-training")
+            self.assertEqual(frozen_training_rows_from_detail(saved), [])
+
     def test_split_batched_history_payload_retains_race_scope(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)
