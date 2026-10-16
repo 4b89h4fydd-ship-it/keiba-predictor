@@ -1157,6 +1157,37 @@ function narMarginParts(h,r){
   });
   return {score:numerator/coverage,coverage:coverage,measuredMargins:margins.length}
 }
+function observedHistoryRateEvidence(h,r){
+  var runs=observedHistory(h,r),target=isNarRace(r)?'NAR':'JRA';
+  var jra=['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉'];
+  var nar=['門別','帯広','盛岡','水沢','浦和','船橋','大井','川崎','金沢','笠松','名古屋','園田','姫路','高知','佐賀'];
+  function circuit(q){
+    var explicit=String(q.circuit||q.organization||'').toLowerCase();
+    if(['中央','jra','central'].indexOf(explicit)>=0)return 'JRA';
+    if(['地方','nar','local'].indexOf(explicit)>=0)return 'NAR';
+    var track=String(q.track||'');
+    return jra.indexOf(track)>=0?'JRA':nar.indexOf(track)>=0?'NAR':null;
+  }
+  var same=runs.filter(function(q){return circuit(q)===target});
+  var other=runs.filter(function(q){return circuit(q)&&circuit(q)!==target});
+  var nRuns=same.length,win=0,pair=0,place=0;
+  same.forEach(function(q){var f=narMeasured(q.finish);if(f===1)win++;if(f!==null&&f<=2)pair++;if(f!==null&&f<=3)place++});
+  var shrink=nRuns/(nRuns+8),level=narMeasured(r.opponentLevel),quality=[];
+  if(level!==null&&level>=0&&level<=1)other.forEach(function(q){
+    var l=narMeasured(q.opponentLevel),f=narMeasured(q.finish),sz=narMeasured(q.fieldSize);
+    if(l!==null&&l>=0&&l<=1&&f!==null&&sz>1&&f>=1&&f<=sz)
+      quality.push(((sz-f)/(sz-1))*(.5+.5*l));
+  });
+  return {starts:nRuns,otherCircuitStarts:other.length,
+    winRate:nRuns?win/nRuns:null,top2Rate:nRuns?pair/nRuns:null,
+    top3Rate:nRuns?place/nRuns:null,
+    winEvidence:nRuns?shrink*(win/nRuns-.12):0,
+    top2Evidence:nRuns?shrink*(pair/nRuns-.25):0,
+    top3Evidence:nRuns?shrink*(place/nRuns-.38):0,
+    transferClassSignal:quality.length?(quality.reduce(function(a,b){return a+b},0)/quality.length-.5)*quality.length/(quality.length+8):0,
+    transferClassEvidenceStarts:quality.length,
+    probabilityStatus:'uncalibrated-model-estimate'};
+}
 function narScoreRows(rows,r){
   var measurements={},all=[],number,rs,first,field,position,valid,fronts,frame;
   rows.forEach(function(z){
@@ -1190,7 +1221,10 @@ function narScoreRows(rows,r){
     z.narEvidence={position:position,margin:margin&&margin.score,marginCoverage:margin&&margin.coverage,
       measuredMargins:margin&&margin.measuredMargins,available:available,
       sample:observedHistory(h,r).length};
-    z.narScore=available ? .60*position+.40*margin.score : null;
+    z.historicalRates=observedHistoryRateEvidence(h,r);
+    var rate=z.historicalRates,base=available?.60*position+.40*margin.score:null;
+    z.narScore=available?(base+.12*rate.winEvidence+.06*rate.top2Evidence+
+      .04*rate.top3Evidence+.04*rate.transferClassSignal):null;
   });
 }
 function observedMarkSignature(r){
@@ -1225,7 +1259,7 @@ function assignObservedPredictionMarks(rows,r){
     var f=z.narEvidence,has=f.available,score=z.narScore,ev=z.horse&&z.horse.integratedEvaluation;
     z.threeFactorScore=has?score:null;z.threeFactorCoverage=has?2:0;
     z.threeFactorValues={mineta:f.position,margin:f.margin};
-    z.researchFactors={mineta:f.position,margin:f.margin};
+    z.researchFactors={mineta:f.position,margin:f.margin,historicalRates:z.historicalRates};
     z.researchModel=observedModelVersion(r);z.researchConsensusScore=score;
     z.overallScoreExact=has?score*100:null;z.overallScore=has?score*100:null;
     z.overallRaw=score;z.hasFrozenEvaluation=has;z.modelScore=has?score*100:null;
@@ -1235,7 +1269,7 @@ function assignObservedPredictionMarks(rows,r){
     z.predRank=999;z.predMark='';
     z.honmeiGrade='';z.honmeiRole='';z.preOffAxisCandidate=false;
     z.singleWinSuitable=false;z.p1Probability=null;z.p2Probability=null;z.p3Probability=null;
-    z.attentionReason=has?observedCircuitLabel(r)+'60%位置取り＋40%実測着差':observedCircuitLabel(r)+'の実測位置取り・着差不足';
+    z.attentionReason=has?observedCircuitLabel(r)+'60/40基礎＋勝率・連対率・3着内率・転入補正':observedCircuitLabel(r)+'の実測位置取り・着差不足';
     if(ev){ev.score=z.overallScore;ev.grade=z.overallGrade;ev.modelVersion=observedModelVersion(r);ev.mark='';}
     if(z.evaluation){z.evaluation.score=z.overallScore;z.evaluation.grade=z.overallGrade;
       z.evaluation.modelScore=z.overallScore;z.evaluation.predictionModel=observedModelVersion(r);
@@ -1294,7 +1328,8 @@ function assignObservedPredictionMarks(rows,r){
           return d!==null&&target!==null&&Math.abs(d-target)<=150&&q.surface===r.surface;
         }),same=comparable.length?comparable.filter(function(q){return Number(q.finish)<=3}).length/comparable.length:stable;
     return {z:z,sample:observed.length,ratio:observed.length?podium/observed.length:0,
-      axisScore:.65*stable+.20*same+.15*z.narScore}
+      axisScore:.45*stable+.15*same+.15*z.narScore+
+        .15*(.38+(z.historicalRates||{}).top3Evidence||0)+.10*(z.podiumRecallScore||0)}
   }).filter(function(x){return x.sample>=3}).sort(function(a,b){
     return b.axisScore-a.axisScore||b.z.narScore-a.z.narScore
   })[0]:null;
@@ -1333,7 +1368,7 @@ function buildObservedBetPlan(r,p){
         }
       tri.sort(function(a,b){return b.weight-a.weight});
       items.push(item('3連単チャレンジ','3連単',tri.slice(0,6).map(function(x){return x.combo}),
-        observedCircuitLabel(r)+'60/40の◎1着固定・順序上位6点'));
+        observedCircuitLabel(r)+'60/40基礎＋過去実績・転入補正による◎1着固定・順序上位6点'));
     }
   }
   var trifecta=items.some(function(x){return x.kind==='3連単'});
@@ -1379,7 +1414,7 @@ function buildObservedBetPlan(r,p){
     trifectaDecision:trifecta?'採用':'見送り',
     trifectaReason:trifecta?'実測全頭＋上位差の条件を通過':'実測全頭または順序根拠不足',
     insuranceDecision:ready?'採用':'見送り',
-    reason:ready?observedCircuitLabel(r)+'専用みねた60%・着差40%の発走前実測モデル':observedCircuitLabel(r)+'の全頭実測着差・位置取り不足',
+    reason:ready?observedCircuitLabel(r)+'専用60/40基礎＋過去実績・転入補正の発走前実測モデル':observedCircuitLabel(r)+'の全頭実測着差・位置取り不足',
     expectedValueReason:'モデル点・順位確率は校正済み的中率ではありません。',
     referenceBudget:{points:items.reduce(function(a,b){return a+b.points},0)},
     dataReadiness:dataReadinessProfile(r,p),
