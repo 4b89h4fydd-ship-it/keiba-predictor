@@ -327,6 +327,29 @@ class NarOfficialMetadataTests(unittest.TestCase):
             "surface": "", "direction": "", "class_condition": ""})
 
 
+    def test_new_sparse_race_archive_preserves_known_race_details(self):
+        import tempfile
+        from pathlib import Path
+        from app import NarStore, RaceRow
+        def race(title, start, distance, field):
+            return RaceRow(
+                track="金沢", date="2026-10-12", race_no=1,
+                start_time=start, title=title, distance=distance,
+                weather="不明", condition="不明", field_size=field,
+                prize=(0, 0, 0, 0, 0), corners=[],
+            )
+        with tempfile.TemporaryDirectory() as root:
+            store = NarStore(Path(root) / "race.sqlite3")
+            store.import_rows([race("確定レース名", "12:35", 1400, 9)], [])
+            store.import_rows([race("", "", 0, 0)], [])
+            saved = store.conn.execute(
+                "SELECT title,start_time,distance,field_size FROM races "
+                "WHERE track=? AND date=? AND race_no=?",
+                ("金沢", "2026-10-12", 1),
+            ).fetchone()
+            self.assertEqual(tuple(saved), ("確定レース名", "12:35", 1400, 9))
+            store.conn.close()
+
     def test_invalid_horse_identity_does_not_write_database(self):
         import io
         import csv
