@@ -1337,25 +1337,36 @@ function buildObservedBetPlan(r,p){
     }
   }
   var trifecta=items.some(function(x){return x.kind==='3連単'});
-  // Disjoint ordered finishing outcomes: sum exact 3連単 combinations only.
-  // This is an uncalibrated model estimate, NOT a backtested hit rate.
+  // Mutually exclusive top-three finishing orders under the existing PL weights.
+  // Each ticket's occurrence probability follows its own betting rules.
   var trifectaProbability=null;
-  if(ready&&trifecta){
+  if(ready&&rows.length>=3){
     var raceWeights=rows.map(function(z){return Math.exp((z.narScore-ordered[0].narScore)/.15)}),
         raceTotal=raceWeights.reduce(function(a,b){return a+b},0),
-        byNumber={};
-    rows.forEach(function(z,i){byNumber[no(z)]=raceWeights[i]});
-    var unique={};
-    trifectaProbability=0;
-    items.filter(function(z){return z.kind==='3連単'}).forEach(function(item){
-      (item.combos||[]).forEach(function(combo){
-        var key=combo.join('-'),a=byNumber[combo[0]],b=byNumber[combo[1]],c=byNumber[combo[2]];
-        if(unique[key]||!a||!b||!c||new Set(combo).size!==3)return;
-        unique[key]=true;
-        trifectaProbability+=(a/raceTotal)*(b/(raceTotal-a))*(c/(raceTotal-a-b));
+        runnerNos=rows.map(no),orders=[];
+    for(var i=0;i<rows.length;i++)for(var j=0;j<rows.length;j++)if(i!==j)
+      for(var k=0;k<rows.length;k++)if(k!==i&&k!==j){
+        var probability=(raceWeights[i]/raceTotal)
+          *(raceWeights[j]/(raceTotal-raceWeights[i]))
+          *(raceWeights[k]/(raceTotal-raceWeights[i]-raceWeights[j]));
+        orders.push({order:[runnerNos[i],runnerNos[j],runnerNos[k]],p:probability});
+      }
+    items.forEach(function(item){
+      item.comboProbabilities=(item.combos||[]).map(function(combo){
+        var event={kind:item.kind,combos:[combo]},total=0;
+        orders.forEach(function(o){if(betItemHit(event,o.order))total+=o.p});
+        return Math.round(total*10000)/100;
       });
     });
-    trifectaProbability=Math.round(trifectaProbability*10000)/100; // percentage, two decimals
+    var triOrders={};
+    items.filter(function(item){return item.kind==='3連単'}).forEach(function(item){
+      (item.combos||[]).forEach(function(combo){triOrders[combo.join('-')]=true});
+    });
+    trifectaProbability=Object.keys(triOrders).length?0:null;
+    if(trifectaProbability!==null){
+      orders.forEach(function(o){if(triOrders[o.order.join('-')])trifectaProbability+=o.p});
+      trifectaProbability=Math.round(trifectaProbability*10000)/100;
+    }
   }
   var plan={raceId:String(r.id||''),raceDate:String(r.date||''),items:items,
     engineVersion:observedModelVersion(r),betStrategy:observedModelVersion(r),
