@@ -2,11 +2,22 @@
 import sqlite3
 import unittest
 from arvexq.ingest.nar_official_metadata import (
-    official_race_metadata, migrate_race_metadata, update_race_metadata,
+    official_race_metadata, migrate_race_metadata, update_race_metadata, audit_official_race_metadata,
 )
 
 
 class NarOfficialMetadataTests(unittest.TestCase):
+    def test_official_csv_completeness_audit(self):
+        rows = [["金沢", "ダート", "右", "C2"], ["金沢", "", "左", ""]]
+        before = [list(row) for row in rows]
+        audit = audit_official_race_metadata(rows, {
+            "surface": 1, "direction": 2, "class_condition": 3})
+        self.assertEqual(audit["raceRows"], 2)
+        self.assertEqual(audit["observed"], {
+            "surface": 1, "direction": 2, "class_condition": 1})
+        self.assertEqual(audit["coveragePercent"]["surface"], 50.0)
+        self.assertEqual(rows, before)
+
     def test_existing_rows_survive_migration_and_missing_csv_values(self):
         conn = sqlite3.connect(":memory:")
         conn.execute("CREATE TABLE races(track TEXT,date TEXT,race_no INTEGER,title TEXT)")
