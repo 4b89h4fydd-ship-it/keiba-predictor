@@ -1,6 +1,7 @@
 /* Real production rosters, independent odds, saved diagnoses and outage recovery. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib');
 const {chromium,webkit,devices}=require('playwright');
+const verifyHonmeiRoles=require('./arvexq_honmei_dom_contract');
 const directory='arvexq/ui/static/saved-snapshots';
 const day=process.env.ARVEXQ_AUDIT_DATE||fs.readdirSync(directory).filter(f=>/^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort().at(-1).slice(0,10);
 const manifest=JSON.parse(fs.readFileSync(path.join(directory,day+'.json')));
@@ -65,7 +66,11 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     else console.log('ODDS_SOURCE_UNAVAILABLE '+r.id+' shown='+JSON.stringify(Array.from(new Set(odds))));
     const red=await page.evaluate(()=>Array.from(document.querySelectorAll('.rc-odds .odd.single')).map(x=>({value:Number(x.textContent),color:getComputedStyle(x).color})));
     red.forEach(x=>{assert.ok(x.value>0&&x.value<10);const c=x.color.match(/\d+/g).map(Number);assert.ok(c[0]>c[1]*1.25&&c[0]>c[2]*1.15,'single digit odds must be red')});
-    assert.ok((await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count())<=1);
+    const roles=await page.locator('.racecard-row').evaluateAll(rows=>rows.map(row=>({
+      mark:row.querySelector('.rc-ai-mark')?.getAttribute('data-ai-mark')||'',
+      win:!!row.querySelector('.arv-role-win'),axis:!!row.querySelector('.arv-role-axis')
+    })));
+    verifyHonmeiRoles(roles,r.id);
     assert.equal(errors.length,0,'runtime errors '+errors.join(';'));
     page.off('pageerror',onerror);
     console.log('PRODUCTION_RECOVERY_PASS '+r.id+' horses='+r.horses.length+' diagnosis='+r.horses.length);

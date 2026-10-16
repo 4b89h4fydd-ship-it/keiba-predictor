@@ -2,10 +2,10 @@ name: ARVEXQ Recovery Regression
 on:
   pull_request:
     branches: [main]
-    paths: ['arvexq/ui/static/**', 'scripts/arvexq_detail_resilience_smoke.js', 'scripts/arvexq_pull_to_refresh_smoke.js', 'scripts/arvexq_recovery_production_smoke.js', '.github/workflows/arvexq-recovery-regression.yml']
+    paths: ['arvexq/ui/static/**', 'scripts/arvexq_detail_resilience_smoke.js', 'scripts/arvexq_pull_to_refresh_smoke.js', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
   push:
     branches: [main]
-    paths: ['arvexq/ui/static/**', 'scripts/arvexq_recovery_production_smoke.js', '.github/workflows/arvexq-recovery-regression.yml']
+    paths: ['arvexq/ui/static/**', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
 permissions:
   contents: read
 jobs:
@@ -44,6 +44,8 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright@1.56.1
       - run: npx playwright install --with-deps chromium webkit
+      - name: Independent win and axis role DOM contract
+        run: node scripts/arvexq_honmei_dom_contract_test.js
       - name: Production full card, original receipts and API-outage checks
         env:
           ARVEXQ_BASE_URL: https://kraizweb1.4b89h4fydd.workers.dev
