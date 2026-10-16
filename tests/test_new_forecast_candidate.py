@@ -3,18 +3,22 @@ from __future__ import annotations
 from copy import deepcopy
 from unittest import TestCase
 from arvexq.prediction.new_forecast import build_forecast, VERSION
+from arvexq.prediction.learned_scenarios import fit_model
+from test_learned_scenarios import training_race, target
 from test_unified_jra_nar_observed_authority import race
 
 class ReplacementForecastTests(TestCase):
     def test_both_circuits_preserve_input_and_produce_one_honmei(self):
         for circuit in ("中央", "地方"):
             with self.subTest(circuit=circuit):
-                source = race(circuit)
+                source = target(circuit)
                 original = deepcopy(source)
-                result = build_forecast(source)
+                model = fit_model([training_race(circuit)], circuit=circuit)
+                result = build_forecast(source, model)
                 self.assertEqual(source, original)
                 self.assertEqual(result["predictionModelVersion"], VERSION)
-                self.assertEqual(result["predictionStatus"], "ready")
+                self.assertEqual(result["predictionStatus"], "candidate-analysis")
+                self.assertFalse(result["productionEligible"])
                 marks = [h for h in result["horses"] if h["integratedEvaluation"]["mark"] == "◎"]
                 self.assertEqual(len(marks), 1)
                 self.assertEqual(result["honmeiDecision"]["horseNumber"], marks[0]["horseNumber"])

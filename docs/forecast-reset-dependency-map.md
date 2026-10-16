@@ -9,6 +9,6 @@ Verified against branch feature/forecast-reset-20261016.
 - Rendering: arvexq/ui/static/betting/bet_view.js renders buildAiBetPlan output. build_static.py compiles app.js into app-v330.js for index.html.
 - Historical protection: prerace_archive.py preserves preRacePrediction/preRaceBet; arvexq/infra/race_stores.py preserves earlier sealed snapshots; app.js::applyFrozenMarks and frozenAiBetForRace display pre-off receipts.
 - Risk: app.js::buildAiBetPlan currently generates post-race revised tickets. These must remain separate from original pre-off records and never be counted as prospective hits.
-- Candidate new_forecast.py is not wired to either runtime and remains uncalibrated. Do not deploy it until both paths are replaced and tested.
+- Candidate new_forecast.py now requires a dated learned_scenarios model artifact. The hand-weighted candidate scorer and its unused whole_career_scenarios module were removed. The challenger is not wired to either runtime and remains uncalibrated. Do not deploy it until both paths are replaced and tested.
 
 Replacement must update backend ranking, server audit/freeze, browser prediction, browser betting and historical display together. Source inspection does not verify live D1 backups or production deployment.

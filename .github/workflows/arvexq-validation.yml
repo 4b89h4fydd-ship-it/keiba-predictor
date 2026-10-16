@@ -72,6 +72,13 @@ jobs:
             scripts/arvexq_history_repair.py \
             scripts/arvexq_sqlite_health.py
 
+      - name: Learned scenario challenger and all-kind comparison
+        run: |
+          python -m unittest discover -s tests -p 'test_learned_scenarios.py' -v
+          python -m unittest discover -s tests -p 'test_scenario_tickets.py' -v
+          python -m unittest discover -s tests -p 'test_all_kind_ticket_metrics.py' -v
+          python -m unittest discover -s tests -p 'test_new_forecast_candidate.py' -v
+
       - name: Lossless full snapshot compression and immutability
         run: |
           python -m unittest tests.test_full_snapshot_codec

@@ -1,130 +1,144 @@
-"""ARVEXQ replacement forecast (candidate; must pass regression before deployment).
+"""Replacement forecast challenger: learned evidence -> scenarios -> roles -> bets.
 
-Uses date-bounded full-career observations and scenario evidence, without the
-retired observed 60/40 scorer. Probabilities are deliberately NOT calibrated.
+Not installed in production until real-data and cross-runtime acceptance passes.
+An absent trained model never falls back to the retired fixed-weight candidate.
 """
 from __future__ import annotations
 
 from copy import deepcopy
-from math import exp
-from arvexq.prediction.whole_career_scenarios import analyze_race, VERSION as EVIDENCE_VERSION
-from arvexq.core.runner_status import is_inactive_runner
+from datetime import datetime
+import re
+from statistics import median
 
-VERSION = "arvexq-whole-career-forecast-v2-candidate"
-MARKS = ("◎", "○", "▲", "△", "☆", "注")
+from arvexq.betting.scenario_tickets import compare_tickets
+from arvexq.prediction.learned_scenarios import VERSION, active_horses, predict_model, race_evidence
+from arvexq.prediction.prerace_archive import JST, post_at
 
-
-def _fraction(value, default=0.0):
-    try:
-        return max(0.0, min(1.0, float(value))) if value is not None else default
-    except (ValueError, TypeError):
-        return default
-
-
-def _style(report, name):
-    styles = report["observedPositionStyles"]
-    return styles.get(name, 0) / max(1, sum(styles.values()))
-
-
-def _score(report, pressure):
-    """Interpretable evidence aggregation, not trained weights or hit rates."""
-    win = report["winRate"]
-    place = report["top3Rate"]
-    if win is None or place is None:
-        return None
-    n = report["observedStarts"]
-    reliability = n / (n + 8.0)
-    suited = report["comparableTop3Rate"]
-    stable = 0.5 * _fraction(win) + 0.5 * _fraction(place)
-    conditions = _fraction(suited, _fraction(place))
-    pace = (_style(report, "差し") + _style(report, "追込")) if pressure >= 3 else (
-        _style(report, "逃げ") + _style(report, "先行"))
-    return reliability * (0.6 * stable + 0.25 * conditions + 0.15 * pace)
+GRADE_DEFINITIONS = {
+    'A': '未使用データで検証済みの方式で勝ち切りと安定性の根拠が揃う',
+    'B': '観測範囲の根拠が揃い展開比較でも有力だが実測精度は未検証',
+    'C': '履歴の欠損または展開・推定の不確実性が大きい',
+}
+MARK_DEFINITIONS = {
+    '◎': '勝ち切りが最有力で上位入線の安定性も比較上位の中心馬',
+    '○': '中心馬に対する勝ち切りの逆転候補', '▲': '展開変化にも上位入線の可能性を残す有力馬',
+    '△': '条件次第で上位を狙う相手', '☆': '特定の展開で中心馬を逆転する候補',
+    '注': '追い上げなど見落としやすい観測根拠を持つ馬',
+}
 
 
-def _probabilities(ranked):
-    """Ordered-position estimates, explicitly uncalibrated."""
-    if len(ranked) < 3:
-        return {}
-    hi = max(x["score"] for x in ranked)
-    weights = [exp(max(-30.0, (x["score"] - hi) / 0.15)) for x in ranked]
-    total = sum(weights)
-    result = {int(r["horseNumber"]): [0.0, 0.0, 0.0] for r in ranked}
-    for i, wi in enumerate(weights):
-        p1 = wi / total
-        result[int(ranked[i]["horseNumber"])][0] += p1
-        for j, wj in enumerate(weights):
-            if i == j:
-                continue
-            p2 = p1 * wj / (total - wi)
-            result[int(ranked[j]["horseNumber"])][1] += p2
-            for k, wk in enumerate(weights):
-                if k not in (i, j):
-                    result[int(ranked[k]["horseNumber"])][2] += p2 * wk / (total - wi - wj)
-    return {n: {"winProbability": round(v[0], 8),
-                "top2Probability": round(v[0] + v[1], 8),
-                "top3Probability": round(sum(v), 8),
-                "probabilityStatus": "uncalibrated-candidate"} for n, v in result.items()}
+def _name(value):
+    # Race numbers, ASCII names and embedded numeric horse-name suffixes cannot
+    # leak into the Japanese-only prose. Identity remains in structured rows.
+    text = re.sub(r'[^ぁ-ゖァ-ヺ一-龯々ー]', '', str(value or ''))
+    return text or 'この馬'
 
 
-def _text(ranked, pressure):
-    if not ranked:
-        return "各馬の過去走を十分に確認できず、勝ち馬を判断できない。"
-    leader = ranked[0]
-    situation = ("前へ行きたい馬が複数おり、先行争いが激しくなる可能性がある。"
-                 if pressure >= 3 else "序盤の隊列が落ち着き、位置取りと仕掛けが重要となる可能性がある。")
-    others = "。対抗馬にも逆転の余地がある。" if len(ranked) >= 2 else "。"
-    return (situation + leader.get("name", "本命候補") +
-            "は過去の勝ち切りと上位入線の実績を踏まえて中心視する" + others)
+def _decide(analysis):
+    reports, scenarios = analysis['reports'], analysis['scenarios']
+    if not scenarios:
+        return {}, {}, {}
+    ranges = {}
+    for report in reports:
+        no = report['horseNumber']
+        wins = [s['probabilities'][no]['win'] for s in scenarios]
+        podium = [s['probabilities'][no]['top3'] for s in scenarios]
+        ranges[no] = {'win': [min(wins), max(wins)], 'top3': [min(podium), max(podium)]}
+    win_leader = min(ranges, key=lambda n: (-ranges[n]['win'][0], -ranges[n]['top3'][0], n))
+    stability = median(p['top3'][0] for p in ranges.values())
+    # Do not quietly choose a different, lower-win horse as a second axis.
+    if ranges[win_leader]['top3'][0] < stability:
+        return {}, ranges, {'reason': '勝ち切り最有力馬の安定性が比較上位に届かない'}
+    marks, reasons = {win_leader: '◎'}, {win_leader: '各展開の勝ち切り下限が最上位で上位入線の安定性も比較上位'}
+    remaining = set(ranges)-{win_leader}
+    if remaining:
+        rival = min(remaining, key=lambda n: (-ranges[n]['win'][1], -ranges[n]['win'][0], n))
+        marks[rival] = '○'; reasons[rival] = '成立可能な展開で勝ち切りの逆転可能性が最も高い相手'
+        remaining.remove(rival)
+    if remaining:
+        third = min(remaining, key=lambda n: (-ranges[n]['top3'][0], n))
+        marks[third] = '▲'; reasons[third] = '展開変化を含めた上位入線の下限が残る相手の中で最上位'
+        remaining.remove(third)
+    for no in sorted(remaining):
+        report = next(r for r in reports if r['horseNumber'] == no)
+        if any(s['probabilities'][no]['win'] > s['probabilities'][win_leader]['win'] for s in scenarios):
+            marks[no] = '☆'; reasons[no] = '位置取りが変わる想定の中に中心馬を勝ち切りで上回る場合がある'
+        elif (report['featureValues']['closing_gain'] or 0) > 0:
+            marks[no] = '注'; reasons[no] = '過去走で直線の追い上げが観測されている'
+        elif ranges[no]['top3'][1] >= stability:
+            marks[no] = '△'; reasons[no] = '有利な想定では上位入線の可能性が比較水準に達する'
+    return marks, ranges, reasons
 
 
-def build_forecast(detail):
-    """Preserve original sealed forecasts; return an independently scored copy."""
+def build_forecast(detail, model=None):
     result = deepcopy(detail)
-    reports = analyze_race(result)
-    active = [h for h in result.get("horses", []) if isinstance(h, dict)
-              and h.get("horseNumber") and not is_inactive_runner(h)]
-    lookup = {int(r["horseNumber"]): r for r in reports["horseReports"]}
-    rows = []
-    for horse in active:
-        number = int(horse["horseNumber"])
-        report = lookup.get(number)
-        score = _score(report, reports["possibleLeadContenders"]) if report else None
-        if score is not None:
-            rows.append({"horseNumber": number, "name": horse.get("name") or "",
-                         "score": score, "report": report})
-    rows.sort(key=lambda r: (-r["score"], r["horseNumber"]))
-    complete = bool(active) and len(rows) == len(active)
-    probability = _probabilities(rows) if complete else {}
-    # A missing runner may never be silently ignored to advertise a ready forecast.
-    marks = {r["horseNumber"]: MARKS[i] if i < len(MARKS) else ""
-             for i, r in enumerate(rows)} if complete else {}
-    for horse in result.get("horses", []):
+    start = post_at(detail)
+    retrospective = bool(detail.get('result')) or bool(start and datetime.now(JST) >= start)
+    result['analysisType'] = 'retrospective' if retrospective else 'preoff-candidate'
+    result['analysisLabel'] = '事後分析' if retrospective else '発走前の検証候補'
+    result['predictionModelVersion'] = result['markEngineVersion'] = VERSION
+    result['markDefinitions'], result['gradeDefinitions'] = MARK_DEFINITIONS.copy(), GRADE_DEFINITIONS.copy()
+    result['probabilityModelStatus'] = 'uncalibrated'
+    result['productionEligible'] = False
+    if model is None:
+        analysis = {'reports': race_evidence(detail), 'scenarios': [], 'status': 'missing-trained-model'}
+    else:
+        analysis = predict_model(detail, model)
+    result['scenarioAnalysis'] = analysis
+    reports = {r['horseNumber']: r for r in analysis['reports']}
+    marks, ranges, reasons = _decide(analysis)
+    active = {int(h['horseNumber']) for h in active_horses(detail)}
+    head = next((no for no, mark in marks.items() if mark == '◎'), 0)
+    result['predictionStatus'] = 'candidate-analysis' if head else (
+        'no-unified-honmei' if analysis['scenarios'] else analysis['status'])
+    result['honmeiDecision'] = {'version': VERSION, 'horseNumber': head, 'axisHorseNumber': head,
+                                'role': 'win-axis', 'eligible': False, 'displayHonmei': bool(head),
+                                'confidenceGrade': 'B' if head and all(r['careerComplete'] for r in reports.values()) else 'C',
+                                'fixedAxisAllowed': False,
+                                'reason': reasons.get(head) or reasons.get('reason') or '検証済み学習モデルまたは全頭根拠が不足'}
+    prose = []
+    if analysis['scenarios']:
+        prose.append('通常の隊列に加え、前の位置を取り合う場合と後ろに控える場合の影響を比較する。展開の発生頻度は未確認であり、特定の流れを断定しない。')
+    else:
+        prose.append('学習済みの検証モデルまたは全頭の過去走が不足しており、本命と買い目の確定を見送る。')
+    if head:
+        prose.append(_name(reports[head]['name'])+'を中心候補とする。'+reasons[head]+'ためである。ただし推定精度の実測検証が済むまでは軸としての信頼を断定しない。')
+    for horse in result.get('horses', []):
         if not isinstance(horse, dict):
             continue
-        no = int(horse.get("horseNumber") or 0)
-        e = horse.setdefault("integratedEvaluation", {})
-        e["mark"] = marks.get(no, "")
-        e["markSource"] = VERSION
-        e["markEngineVersion"] = VERSION
-        e["honmeiRole"] = "win-axis" if marks.get(no) == "◎" else ""
-        e["podiumAxisEligible"] = marks.get(no) == "◎"
-        e["modelProbabilities"] = probability.get(no, {})
-        e["wholeCareerEvidence"] = lookup.get(no, {})
-    head = rows[0] if complete and rows else None
-    no = head["horseNumber"] if head else 0
-    result["predictionStatus"] = "ready" if complete and len(rows) >= 3 else "insufficient-whole-career-evidence"
-    result["predictionModelVersion"] = VERSION
-    result["markEngineVersion"] = VERSION
-    result["markMethod"] = "全過去走と位置取り、展開、勝ち切り、上位入線の実績を総合判断"
-    result["forecastText"] = _text(rows if complete else [], reports["possibleLeadContenders"])
-    result["probabilityModelStatus"] = "uncalibrated-candidate"
-    result["observedModelCoverage"] = {"horses": len(active), "fullyObserved": len(rows), "allObserved": complete}
-    result["factorRanking"] = [{"horseNumber": r["horseNumber"], "name": r["name"], "rank": i + 1,
-                                "dominanceScore": round(r["score"] * 100, 2), "modelVersion": VERSION}
-                               for i, r in enumerate(rows)]
-    result["honmeiDecision"] = {"version": VERSION, "eligible": bool(no), "horseNumber": no,
-                                "displayHonmei": bool(no), "confidenceGrade": "C",
-                                "role": "win-axis", "axisHorseNumber": no, "fixedAxisAllowed": False}
-    result["forecastEvidenceVersion"] = EVIDENCE_VERSION
+        no = int(horse.get('horseNumber') or 0)
+        ev = horse.setdefault('integratedEvaluation', {})
+        ev.update({'mark': marks.get(no, ''), 'markSource': VERSION, 'markEngineVersion': VERSION,
+                   'honmeiRole': 'win-axis' if no == head else '', 'podiumAxisEligible': no == head and bool(head),
+                   'modelProbabilities': ranges.get(no, {}), 'markReason': reasons.get(no, ''),
+                   'wholeCareerEvidence': reports.get(no, {}), 'grade': 'C'})
+        if no not in active:
+            continue
+        r = reports[no]
+        parts = [_name(r['name'])+'は']
+        if not r['observedStarts']:
+            parts.append('日付を確認できる過去走がなく、能力と展開適性を判断できない。')
+        else:
+            f = r['featureValues']
+            if f['closing_gain'] is not None and f['closing_gain'] > 0:
+                parts.append('直線で位置を上げた実績がある。')
+            elif f['closing_gain'] is not None and f['closing_gain'] < 0:
+                parts.append('直線で位置を下げる傾向があり、仕掛けと持続力が課題となる。')
+            else:
+                parts.append('確認できた着順と位置取りから比較する。')
+            if r['transfer']:
+                parts.append(r['transfer']+'で、相手関係が変わる影響の大きさは未検証である。')
+            if f['same_distance_finish'] is None or f['same_surface_finish'] is None:
+                parts.append('今回と同じ距離や馬場種別の比較材料に不足がある。')
+            if not r['careerComplete']:
+                parts.append('過去走の網羅性は未確認であり、確認範囲の成績を通算実績とは断定しない。')
+        if no in reasons:
+            parts.append(reasons[no]+'。')
+        ev['forecastText'] = ''.join(parts)
+        prose.append(ev['forecastText'])
+    result['forecastText'] = ''.join(prose)
+    result['recommendedBetPlan'] = (compare_tickets(result, analysis['scenarios'], model_version=VERSION)
+                                    if head else {'decision': '見送り', 'items': [], 'reason': result['honmeiDecision']['reason']})
+    # preRacePrediction / preRaceBet remain byte-for-byte equivalent values.
+    # Never seal this retrospective analysis as an original forecast.
     return result

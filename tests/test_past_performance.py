@@ -69,6 +69,7 @@ class PastFiveContextTests(unittest.TestCase):
     def test_candidate_full_career_does_not_mutate_preoff_original(self):
         from copy import deepcopy
         from arvexq.prediction.new_forecast import build_forecast
+        from arvexq.prediction.learned_scenarios import fit_model
         horses = [
             {"horseNumber": i, "name": "候補馬", "recentRaces": [
                 run("2026-09-27", i),
@@ -76,15 +77,20 @@ class PastFiveContextTests(unittest.TestCase):
                 run("2026-09-07", min(10, i + 2)),
             ]} for i in range(1, 5)
         ]
-        race = {**RACE, "circuit": "地方", "horses": horses,
+        race = {**RACE, "id": "nar-candidate-test", "circuit": "地方", "horses": horses,
                 "preRacePrediction": {"original": "sealed"},
                 "preRaceBet": {"original": "ticket"}}
         original = deepcopy(race)
-        candidate = build_forecast(race)
+        training = deepcopy(race)
+        training.update({"date": "2026-10-08", "id": "nar-training-test",
+                         "result": {"status": "確定", "finishers": [
+                             {"horseNumber": i, "finish": i} for i in range(1, 5)]}})
+        model = fit_model([training], circuit="地方")
+        candidate = build_forecast(race, model)
         self.assertEqual(race, original)
         self.assertEqual(candidate["preRacePrediction"], original["preRacePrediction"])
         self.assertEqual(candidate["preRaceBet"], original["preRaceBet"])
-        self.assertEqual(candidate["predictionStatus"], "ready")
+        self.assertEqual(candidate["predictionStatus"], "candidate-analysis")
         self.assertEqual(sum(h["integratedEvaluation"]["mark"] == "◎"
                              for h in candidate["horses"]), 1)
         self.assertNotIn("%", candidate["forecastText"])
