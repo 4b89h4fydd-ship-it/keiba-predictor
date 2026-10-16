@@ -1911,6 +1911,18 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
     out.oddsUpdatedAt=String((oddsRows||[]).reduce(function(mx,z){return Math.max(mx,n(z&&((z.updatedAt!=null)?z.updatedAt:z.updated_at),0))},0)||out.oddsUpdatedAt||'');
     out.liveFieldsMerged=true
   }
+  // A roster-first/static fallback is not permanent. Once the authoritative
+  // detail supplies dated horse histories, let the normal pre-off mark engine
+  // start; otherwise the inherited _entryOnly flag suppresses predictions.
+  // A partial roster/odds-only response must not clear the gate.
+  var fullHistoryReceived=Array.isArray(incoming.horses)&&incoming.horses.some(function(h){
+    return h&&((Array.isArray(h.recentRaces)&&h.recentRaces.length>0)||
+      (Array.isArray(h.allPastRuns)&&h.allPastRuns.length>0));
+  });
+  if(fullHistoryReceived){
+    delete out._entryOnly;
+    delete out._staticRacecardFallback;
+  }
   if(typeof window!=='undefined'&&window.ARVEXQRaceIdentity)out=window.ARVEXQRaceIdentity.sanitize(out);
   return mergeResultHorseFields(out)
 }
