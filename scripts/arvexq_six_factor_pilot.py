@@ -16,6 +16,7 @@ from itertools import permutations
 
 from arvexq.prediction.observed_model import rank_observed
 from arvexq.prediction.twelve_factor_research import evidence
+from arvexq.prediction.mark_first_bets_research import assign_marks,tickets_from_marks,check_hits
 from scripts.arvexq_current_prediction_audit import finish_order, scrub_for_replay, mark_rows, lock_rank
 
 def _highest(v):
@@ -100,19 +101,26 @@ def ingest(detail, metrics, exclusions, records):
         exclusions["no-comparable-feature-evidence"]+=1
         return
     circuit="JRA" if str(detail.get("circuit") or "") in ("中央","JRA","central") else "NAR"
-    predicted=tickets(ranking)
+    marks=assign_marks(ranking)
+    wagers=tickets_from_marks(marks)
     finish=tuple(actual[:3])
-    hit=finish in predicted
+    checks=check_hits(wagers,finish)
+    market_hits={kind:any(fn(tuple(t)) for t in wagers[kind]) for kind,fn in checks.items()}
+    predicted=wagers['3連単']
+    hit=market_hits['3連単']
     m=metrics[circuit]["newV3Research"]
     m["races"]+=1
     m["winnerTop1"]+=int(ranking[0]==finish[0])
     m["winnerTop3"]+=int(finish[0] in ranking[:3])
     m["trifecta10Hits"]+=int(hit)
     m["ticketPoints"]+=len(predicted)
+    for kind,was_hit in market_hits.items():
+        m["market_"+kind+"_hits"]+=int(was_hit)
+        m["market_"+kind+"_points"]+=len(wagers[kind])
     records.append({"date":str(detail.get("date") or ""),"raceId":str(detail.get("id") or ""),
         "circuit":circuit,"track":str(detail.get("track") or ""),
         "raceNumber":detail.get("raceNumber"),"rankedTop5":ranking[:5],
-        "tickets":[list(v) for v in predicted],"actualTop3":list(finish),
+        "marks":marks,"marketTickets":{k:[list(v) for v in ts] for k,ts in wagers.items()},"marketHits":market_hits,"tickets":[list(v) for v in predicted],"actualTop3":list(finish),
         "trifectaHit":hit,"predictedWinnerHit":ranking[0]==finish[0]})
     exclusions["evaluated"]+=1
 
