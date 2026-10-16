@@ -84,6 +84,39 @@ class NarOfficialMetadataTests(unittest.TestCase):
             limited = source.horse_history({"name": "検証馬"}, {"date": "2026-10-09"}, limit=3)
             self.assertEqual(len(limited["allPastRuns"]), 3)
 
+    def test_overlapping_archive_rows_keep_complementary_observations(self):
+        import csv
+        import io
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from arvexq.databanks.nar_official_csv import NarOfficialArchive
+        race = [""] * 66
+        race[0], race[1], race[2] = "金沢", "20261012", "1"
+        first = [""] * 35
+        first[0], first[1], first[2], first[5], first[6] = "金沢", "20261012", "1", "1", "検証馬"
+        first[16] = "51.0"
+        second = first.copy()
+        second[16] = ""
+        second[31] = "1"
+        second[34] = "36.1"
+        with tempfile.TemporaryDirectory() as folder:
+            paths = []
+            for name, horse in (("daily.zip", first), ("monthly.zip", second)):
+                path = Path(folder) / name
+                with zipfile.ZipFile(path, "w") as bundle:
+                    for filename, rows in (("x_racelist.csv", [race]), ("x_horselist.csv", [horse])):
+                        output = io.StringIO()
+                        csv.writer(output).writerows(rows)
+                        bundle.writestr(filename, output.getvalue().encode("utf-8-sig"))
+                paths.append(path)
+            rows = NarOfficialArchive(paths).horse_history(
+                {"name": "検証馬"}, {"date": "2026-10-13"})["allPastRuns"]
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]["carriedWeight"], 51.0)
+            self.assertEqual(rows[0]["finish"], 1)
+            self.assertEqual(rows[0]["last3fSeconds"], 36.1)
+
     def test_overlapping_archives_prefer_more_complete_observed_horse_record(self):
         import csv
         import io
