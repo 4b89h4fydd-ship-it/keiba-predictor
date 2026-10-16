@@ -12,8 +12,8 @@ from arvexq.prediction.special_marks import allocate_special_marks
 from arvexq.research.mineta_field_proxy import score_race as mineta_scores
 from arvexq.research.margin_abcde_candidate import score as margin_score
 
-NAR_MODEL_VERSION = "arvexq-nar-mineta-margin-60-40-v1"
-JRA_MODEL_VERSION = "arvexq-jra-mineta-margin-60-40-v1"
+NAR_MODEL_VERSION = "arvexq-nar-observed-consensus-v1"
+JRA_MODEL_VERSION = "arvexq-jra-observed-consensus-v1"
 MODEL_VERSION = NAR_MODEL_VERSION
 
 
@@ -197,9 +197,12 @@ def rank_observed(horses, race):
             continue
         runs = observed_runs(scoring_h, race, limit=5)
         rates = _history_rates(h, race)
-        base = .60 * position + .40 * margin["score"]
-        score = (base + .12 * rates["winEvidence"] + .06 * rates["top2Evidence"]
-                 + .04 * rates["top3Evidence"] + .04 * rates["transferClassSignal"])
+        observations = [position, margin["score"]]
+        if rates["starts"] >= 2:
+            observations.append((rates["winRate"] + rates["top2Rate"] + rates["top3Rate"]) / 3)
+        if rates["transferClassEvidenceStarts"] >= 2:
+            observations.append(0.5 + rates["transferClassSignal"])
+        score = sum(observations) / len(observations)
         rows.append(dict(horse=h, score=score, factors={"mineta": position, "margin": margin["score"]},
                          marginCoverage=margin["coverage"], sample=len(runs), historicalRates=rates, modelVersion=model_version(race)))
     rows.sort(key=lambda row: (-row["score"], int(row["horse"]["horseNumber"])))
@@ -327,7 +330,7 @@ def apply_observed_marks(detail):
         "fixedAxisAllowed": bool(axis_no and grade == "A"),
         "axisScore": round(axis_row[0], 6) if axis_row else None,
         "axisMargin": round(gap, 6), "axisMeaning": "uncalibrated-relative-model-score",
-        "reason": "observed-mineta-margin-60-40" if full else "incomplete-observations"}
+        "reason": "observed-consensus-v1" if full else "incomplete-observations"}
     detail.pop("multiHeadSummary", None)
     return detail
 
