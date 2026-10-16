@@ -66,6 +66,29 @@ class PastFiveContextTests(unittest.TestCase):
         self.assertIsNone(context["top3Rate"])
         self.assertEqual(context["status"], "missing-dated-past-runs")
 
+    def test_candidate_full_career_does_not_mutate_preoff_original(self):
+        from copy import deepcopy
+        from arvexq.prediction.new_forecast import build_forecast
+        horses = [
+            {"horseNumber": i, "name": "候補馬", "recentRaces": [
+                run("2026-09-27", i),
+                run("2026-09-17", min(10, i + 1)),
+                run("2026-09-07", min(10, i + 2)),
+            ]} for i in range(1, 5)
+        ]
+        race = {**RACE, "circuit": "地方", "horses": horses,
+                "preRacePrediction": {"original": "sealed"},
+                "preRaceBet": {"original": "ticket"}}
+        original = deepcopy(race)
+        candidate = build_forecast(race)
+        self.assertEqual(race, original)
+        self.assertEqual(candidate["preRacePrediction"], original["preRacePrediction"])
+        self.assertEqual(candidate["preRaceBet"], original["preRaceBet"])
+        self.assertEqual(candidate["predictionStatus"], "ready")
+        self.assertEqual(sum(h["integratedEvaluation"]["mark"] == "◎"
+                             for h in candidate["horses"]), 1)
+        self.assertNotIn("%", candidate["forecastText"])
+
     def test_date_at_or_after_off_never_used(self):
         h = {"recentRaces": [run("2026-10-09", 1), run("2026-10-10", 1)]}
         self.assertEqual(analyze_past_performance(h, RACE)["datedRuns"], 0)
