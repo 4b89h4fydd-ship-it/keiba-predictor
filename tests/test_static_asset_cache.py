@@ -22,7 +22,10 @@ class VersionedAssetCacheTest(unittest.TestCase):
             self.skipTest("run static build first")
         version = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(version["shell"], "observed-mineta-margin-authoritative")
-        self.assertEqual(version["model"], "arvexq-mineta-margin-observed-60-40-v1")
+        from arvexq.prediction.observed_model import JRA_MODEL_VERSION, NAR_MODEL_VERSION
+        family = JRA_MODEL_VERSION.replace("arvexq-jra-", "arvexq-")
+        self.assertEqual(family, NAR_MODEL_VERSION.replace("arvexq-nar-", "arvexq-"))
+        self.assertEqual(version["model"], family)
         self.assertNotIn("three-factor", str(version).lower())
 
     def test_immutable_headers_are_only_on_versioned_asset_families(self):
