@@ -5437,7 +5437,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                         try:last3f=float(token.group())
                         except (TypeError,ValueError):last3f=None
                 margin_text=val("margin")
-                if not margin_text and idx.get("margin",-1)<0:
+                if not margin_text:
                     t_idx=idx.get("time",-1)
                     if t_idx>=0 and t_idx+1<len(vals):
                         candidate=unicodedata.normalize("NFKC",vals[t_idx+1]).strip()
