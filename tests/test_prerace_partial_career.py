@@ -37,7 +37,7 @@ class OfficialEvidenceSealTests(unittest.TestCase):
         before=copy.deepcopy(d)
         marks=apply_core_marks(copy.deepcopy(d))
         self.assertEqual(marks["predictionStatus"],"ready")
-        self.assertEqual(marks["predictionModelVersion"],"arvexq-jra-observed-consensus-v1")
+        self.assertEqual(marks["predictionModelVersion"],"arvexq-jra-observed-consensus-v2")
         sealed=prepare_seal(d,now=NOW,assign=apply_core_marks,build=build)
         self.assertEqual(sealed["status"],"sealed",sealed)
         self.assertEqual(d,before)

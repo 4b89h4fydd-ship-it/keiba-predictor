@@ -1,0 +1,39 @@
+name: ARVEXQ Observed Candidate Regression
+on:
+  pull_request:
+    branches: [main]
+    paths: ['arvexq/prediction/**', 'arvexq/ui/static/app.js', 'scripts/arvexq_observed*', 'tests/test_observed*', '.github/workflows/arvexq-observed-regression.yml']
+permissions:
+  contents: read
+jobs:
+  prediction:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Source-scoping, cross-runtime parity and ticket event regressions
+        run: |
+          python -m unittest tests.test_observed_archive_scope tests.test_observed_browser_parity tests.test_unified_jra_nar_observed_authority tests.test_prepost_mark_consistency tests.test_prerace_partial_career -v
+          node scripts/arvexq_capture_nar_6040_smoke.js
+          node scripts/arvexq_capture_jra_6040_smoke.js
+          node scripts/arvexq_live_mark_refresh_smoke.js
+          node --check arvexq/ui/static/app.js
+          python -m py_compile scripts/arvexq_observed_release_audit.py
+      - name: Publish historical release gate without adopting a regressing model
+        run: |
+          python - <<'PY'
+          import json,os
+          report=json.load(open('docs/verification/20261016-observed-release-audit.json'))
+          gate=report['releaseGate']
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('## Observed consensus candidate\n\n')
+              f.write(f"Historical races: {report['races']}\n\n")
+              f.write('Production adoption: '+('ELIGIBLE FOR REVIEW' if gate['passed'] else 'BLOCKED: historical accuracy regression')+'\n\n')
+              f.write('Technical regression checks are independent of the statistical adoption gate.\n\n')
+              f.write('```json\n'+json.dumps(gate,ensure_ascii=False,indent=2)+'\n```\n')
+          PY
