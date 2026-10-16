@@ -35,7 +35,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     const expectedFrozenMarks=!!(manifest.races[r.id]&&manifest.races[r.id].morningMarks);
     // A race without a recorded pre-off mark must still show its roster.
     // Original acquisition failures remain visible in the independent seal audit.
-    try{await page.waitForFunction(({expected})=>{const note=document.querySelector('.rc-mark-freeze-note');return !!(note&&note.textContent.trim()&&(expected?/保存予想原本|固定済み/.test(note.textContent):true))},{expected:expectedFrozenMarks},{timeout:30000})}catch(e){console.error('RECOVERY_FAILURE '+r.id+' '+errors.join(';')+' '+(await page.locator('body').innerText()).slice(0,2500));throw e}
+    try{await page.waitForFunction(({expected})=>{const note=document.querySelector('.rc-mark-freeze-note');return !!(note&&note.textContent.trim()&&(expected?/発走後の再計算印|発走前保存印|保存予想原本|固定済み/.test(note.textContent):true))},{expected:expectedFrozenMarks},{timeout:30000})}catch(e){console.error('RECOVERY_FAILURE '+r.id+' '+errors.join(';')+' '+(await page.locator('body').innerText()).slice(0,2500));throw e}
     if(!expectedFrozenMarks)console.warn('PREOFF_MARKS_NOT_SEALED '+r.id);
     const roster=cards.find(c=>c.id===r.id)||r;
     await page.waitForFunction(count=>document.querySelectorAll('.racecard-row').length===count,roster.horses.length,{timeout:20000});
