@@ -97,18 +97,25 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     await check(page,r);
     const firstSource=await initialResponse;
     if(firstSource?.status()===429){
-      // Production rate limiting is not an API-outage recovery success.
-      // Surface its actual status and retry the isolated check only after
-      // the server-advertised window, with a strict upper bound.
-      const retryAfter=Number(firstSource.headers()['retry-after']||'2');
-      const delay=Math.min(30000,Math.max(1000,(Number.isFinite(retryAfter)?retryAfter:2)*1000));
-      console.warn('RATE_LIMITED_INITIAL_SOURCE status=429 retryMs='+delay);
-      await page.waitForTimeout(delay);
-      const recovered=await page.evaluate(async id=>{
-        const response=await fetch('/api/live-odds/'+encodeURIComponent(id));
-        return response.status;
-      },r.id);
-      assert.equal(recovered,200,'independent source retry after HTTP 429');
+      // The full-card sweep can exhaust the public odds quota. Retry with a
+      // bounded cooldown; HTTP 429 remains a failure if the quota does not
+      // recover. Do not fabricate odds or silently skip the outage test.
+      const serverWait=Number(firstSource.headers()['retry-after']);
+      const advertised=Number.isFinite(serverWait)&&serverWait>0?serverWait*1000:10000;
+      let recovered=429;
+      for(const delay of [Math.min(60000,Math.max(10000,advertised)),30000,60000]){
+        console.warn('RATE_LIMITED_INITIAL_SOURCE status='+recovered+' retryMs='+delay);
+        await page.waitForTimeout(delay);
+        recovered=await page.evaluate(async id=>{
+          try {
+            const response=await fetch('/api/live-odds/'+encodeURIComponent(id));
+            return response.status;
+          } catch (_) { return 0; }
+        },r.id);
+        if(recovered===200)break;
+        if(recovered!==429)break;
+      }
+      assert.equal(recovered,200,'independent source must recover from HTTP 429');
     }else{
       assert.equal(firstSource?.status(),200,'independent initial source request');
     }
