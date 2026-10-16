@@ -52,6 +52,35 @@ class NarOfficialMetadataTests(unittest.TestCase):
             self.assertEqual(result["horseRowsWithCarriedWeight"], 1)
             self.assertEqual(original_bytes, archive_path.read_bytes())
 
+    def test_history_excludes_target_day_and_future_results(self):
+        import csv
+        import io
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from arvexq.databanks.nar_official_csv import NarOfficialArchive
+        race_rows, horse_rows = [], []
+        for day in (10, 12, 14):
+            date = f"202610{day:02d}"
+            race = [""] * 66
+            horse = [""] * 35
+            for row in (race, horse):
+                row[0], row[1], row[2] = "金沢", date, "1"
+            horse[5], horse[6], horse[31] = "1", "検証馬", "1"
+            race_rows.append(race)
+            horse_rows.append(horse)
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "source.zip"
+            with zipfile.ZipFile(path, "w") as bundle:
+                for name, rows in (("r_racelist.csv", race_rows),
+                                   ("h_horselist.csv", horse_rows)):
+                    stream = io.StringIO()
+                    csv.writer(stream).writerows(rows)
+                    bundle.writestr(name, stream.getvalue().encode("utf-8-sig"))
+            runs = NarOfficialArchive([path]).horse_history(
+                {"name": "検証馬"}, {"date": "2026-10-12"})["allPastRuns"]
+            self.assertEqual([row["date"] for row in runs], ["2026-10-10"])
+
     def test_default_official_history_retains_more_than_five_runs(self):
         import csv
         import io
