@@ -5,8 +5,8 @@ from arvexq.prediction.six_factor_research import signals
 
 RACE = {"date":"2026-10-16","track":"京都","surface":"芝","distance":1600,"direction":"右"}
 def run(**kw):
-    return {"date":"2026-10-01","track":"京都","surface":"芝","distance":1600,"direction":"右",
-            "finish":2,"fieldSize":10,"marginSeconds":0.2,"cornerPositions":"5-4-3",**kw}
+    return {**{"date":"2026-10-01","track":"京都","surface":"芝","distance":1600,"direction":"右",
+            "finish":2,"fieldSize":10,"marginSeconds":0.2,"cornerPositions":"5-4-3"},**kw}
 
 class SixFactorTests(unittest.TestCase):
     def score(self, rows, race=None):
