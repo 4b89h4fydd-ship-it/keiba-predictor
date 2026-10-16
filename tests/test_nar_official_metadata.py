@@ -327,6 +327,37 @@ class NarOfficialMetadataTests(unittest.TestCase):
             "surface": "", "direction": "", "class_condition": ""})
 
 
+    def test_orphan_horse_rows_do_not_mark_official_sync(self):
+        import io
+        import csv
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from app import NarArchiveParser, NarStore, NarSync, RACE_IDX, HORSE_IDX
+        race = [""] * 66
+        horse = [""] * 35
+        for row in (race, horse):
+            row[0], row[1] = "金沢", "20261012"
+        race[RACE_IDX["race_no"]] = "1"
+        horse[HORSE_IDX["race_no"]] = "2"
+        horse[HORSE_IDX["horse_no"]] = "1"
+        horse[HORSE_IDX["name"]] = "検証馬"
+        with tempfile.TemporaryDirectory() as root:
+            store = NarStore(Path(root) / "audit.sqlite3")
+            sync = NarSync.__new__(NarSync)
+            sync.parser, sync.store = NarArchiveParser(), store
+            data = io.BytesIO()
+            with zipfile.ZipFile(data, "w") as archive:
+                for name, rows in (("test_racelist.csv", [race]),
+                                   ("test_horselist.csv", [horse])):
+                    stream = io.StringIO()
+                    csv.writer(stream).writerows(rows)
+                    archive.writestr(name, stream.getvalue().encode("utf-8-sig"))
+            with self.assertRaises(ValueError):
+                sync.import_zip_bytes(data.getvalue(), "orphan-test", Path(root) / "orphan.zip")
+            self.assertIsNone(store.synced_at("orphan-test"))
+            store.conn.close()
+
     def test_empty_archive_does_not_mark_official_sync_complete(self):
         import io
         import tempfile
