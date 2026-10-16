@@ -61,22 +61,58 @@ def _active(h):
     return isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0 and not is_inactive_runner(h)
 
 
+_JRA_TRACKS = frozenset(("札幌", "函館", "福島", "新潟", "東京", "中山",
+                         "中京", "京都", "阪神", "小倉"))
+
+
+def _run_circuit(run):
+    explicit = str(run.get("circuit") or run.get("organization") or "").strip().lower()
+    if explicit in ("中央", "jra", "central"):
+        return "JRA"
+    if explicit in ("地方", "nar", "local"):
+        return "NAR"
+    track = str(run.get("track") or "").strip()
+    if track in _JRA_TRACKS:
+        return "JRA"
+    # Do not infer from an arbitrary missing or unknown track.
+    if track in ("門別", "帯広", "盛岡", "水沢", "浦和", "船橋", "大井", "川崎",
+                 "金沢", "笠松", "名古屋", "園田", "姫路", "高知", "佐賀"):
+        return "NAR"
+    return None
+
+
 def _history_rates(horse, race):
-    """Observed date-bounded career slice, never future data or an invented lifetime rate."""
+    """Split observed histories by circuit; never equate JRA and NAR classes.
+
+    Only known same-circuit performances influence the adjusted score.
+    Cross-circuit starts are retained as documented transfer evidence but not
+    assigned an invented equivalent-class multiplier.
+    """
     runs = observed_runs(_course_history(horse, race), race, limit=None)
-    n = len(runs)
-    wins = sum(int(r["finish"]) == 1 for r in runs)
-    top2 = sum(int(r["finish"]) <= 2 for r in runs)
-    top3 = sum(int(r["finish"]) <= 3 for r in runs)
+    target = "JRA" if model_version(race) == JRA_MODEL_VERSION else "NAR"
+    same = [r for r in runs if _run_circuit(r) == target]
+    other = [r for r in runs if _run_circuit(r) not in (target, None)]
+    unknown = [r for r in runs if _run_circuit(r) is None]
+    n = len(same)
+    wins = sum(int(r["finish"]) == 1 for r in same)
+    top2 = sum(int(r["finish"]) <= 2 for r in same)
+    top3 = sum(int(r["finish"]) <= 3 for r in same)
     shrink = n / (n + 8.0) if n else 0.0
+    latest = _run_circuit(runs[0]) if runs else None
     return {
-        "starts": n,
+        "starts": n, "recordedStarts": len(runs),
+        "sameCircuitStarts": n, "otherCircuitStarts": len(other),
+        "unknownCircuitStarts": len(unknown),
+        "latestRecordedCircuit": latest,
+        "targetCircuit": target,
+        "transferEvidence": bool(other),
         "winRate": wins / n if n else None,
         "top2Rate": top2 / n if n else None,
         "top3Rate": top3 / n if n else None,
         "winEvidence": shrink * (wins / n - 0.12) if n else 0.0,
         "top2Evidence": shrink * (top2 / n - 0.25) if n else 0.0,
         "top3Evidence": shrink * (top3 / n - 0.38) if n else 0.0,
+        "comparability": "same-circuit-only; cross-circuit-class-unverified",
     }
 
 
