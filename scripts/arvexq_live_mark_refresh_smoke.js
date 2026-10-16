@@ -45,7 +45,7 @@ function marks(p){return Array.from(p.rows).filter(z=>z.predMark==='◎').map(z=
 function score(p,no){return Number(p.rows.find(z=>Number(z.horse.horseNumber)===no).threeFactorScore)}
 const first=predict(race);
 assert.deepEqual(marks(first),[1],'initial single ◎');
-assert.equal(first.engineVersion,'arvexq-jra-mineta-margin-60-40-v1');
+assert.equal(first.engineVersion,'arvexq-jra-observed-consensus-v1');
 const noDataChange=predict(race);
 assert.equal(noDataChange,first,'no input change should reuse the cached live prediction');
 race.horses[0].winOdds=91;
@@ -63,7 +63,7 @@ assert.equal(predict(race),changed,'future starts cannot affect the pre-off scor
 // pre-start receipts remain separate and immutable.
 race.raceStatus='発走済';
 const revised=predict(race);
-assert.equal(revised.engineVersion,'arvexq-jra-mineta-margin-60-40-v1');
+assert.equal(revised.engineVersion,'arvexq-jra-observed-consensus-v1');
 assert.equal(revised.postRaceRevision,true);
 assert.deepEqual(marks(revised),[2]);
 assert.equal(predict(race),revised,'post-race revision stays stable');
