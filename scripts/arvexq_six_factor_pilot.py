@@ -17,6 +17,7 @@ from itertools import permutations
 from arvexq.prediction.observed_model import rank_observed
 from arvexq.prediction.twelve_factor_research import evidence
 from arvexq.prediction.mark_first_bets_research import assign_marks,tickets_from_marks,check_hits
+from arvexq.prediction.condition_records_v3 import record_splits
 from scripts.arvexq_current_prediction_audit import finish_order, scrub_for_replay, mark_rows, lock_rank
 
 def _highest(v):
@@ -73,6 +74,34 @@ def six_order(detail):
         -len(strengths[item[0]]),item[0]))
     return [n for n,_,_ in ranking],{n:ev for n,_,ev in ranking},{n:len(strengths[n]) for n,_,_ in ranking}
 
+def condition_order(detail):
+    """Independent raw-record candidate: prior exact-distance top-three rate,
+    then same track-distance rate, then career top-three rate. No weighted scores.
+    Uses only completed starts before the race and abstains if all are absent.
+    """
+    candidates=[]
+    for horse in detail.get("horses") or []:
+        if not isinstance(horse,dict) or str(horse.get("status") or "") in ("取消","除外"):
+            continue
+        no=int(horse.get("horseNumber") or 0)
+        if no<=0:
+            continue
+        splits=record_splits(horse,detail)["splits"]
+        exact=splits["trackDistance"]
+        distance=splits["sameDistance"]
+        career=splits["career"]
+        # Prioritize same-distance evidence; unavailable observations rank
+        # after known observations rather than fabricating a win percentage.
+        key=(distance["top3Rate"] if distance["top3Rate"] is not None else -1.0,
+             exact["top3Rate"] if exact["top3Rate"] is not None else -1.0,
+             career["top3Rate"] if career["top3Rate"] is not None else -1.0,
+             distance["starts"],career["starts"])
+        candidates.append((no,key,career["starts"]))
+    if not any(row[2] for row in candidates):
+        return []
+    candidates.sort(key=lambda row:(tuple(-x for x in row[1]),row[0]))
+    return [row[0] for row in candidates]
+
 def tickets(rank):
     """Fixed 10-ticket research envelope across top five, not tuned to outcome."""
     head = rank[:5]
@@ -101,6 +130,19 @@ def ingest(detail, metrics, exclusions, records):
         exclusions["no-comparable-feature-evidence"]+=1
         return
     circuit="JRA" if str(detail.get("circuit") or "") in ("中央","JRA","central") else "NAR"
+    candidate=condition_order(clean)
+    if len(candidate)>=5:
+        trial_marks=assign_marks(candidate)
+        trial_wagers=tickets_from_marks(trial_marks)
+        trial_checks=check_hits(trial_wagers,tuple(actual[:3]),field_size=len(candidate))
+        trial_hits={kind:any(fn(tuple(t)) for t in trial_wagers[kind]) for kind,fn in trial_checks.items()}
+        trial=metrics[circuit]["conditionEvidenceCandidate"]
+        trial["races"]+=1
+        trial["winnerTop1"]+=int(candidate[0]==actual[0])
+        trial["winnerTop3"]+=int(actual[0] in candidate[:3])
+        trial["allTop3Marked"]+=int(all(x in trial_marks.values() for x in actual[:3]))
+        for kind,yes in trial_hits.items():
+            trial["market_"+kind+"_hits"]+=int(yes)
     marks=assign_marks(ranking)
     wagers=tickets_from_marks(marks)
     finish=tuple(actual[:3])
@@ -211,7 +253,7 @@ def main():
         for name, m in variants.items():
             n=m["races"]
             report["byCircuit"][circuit][name]={**dict(m),"winnerTop1Rate":m["winnerTop1"]/n,
-                "winnerTop3Rate":m["winnerTop3"]/n,"trifecta10HitRate":m["trifecta10Hits"]/n}
+                "winnerTop3Rate":m["winnerTop3"]/n,"trifecta10HitRate":m["trifecta10Hits"]/n if m["trifecta10Hits"] else 0}
     with open(args.output,"w",encoding="utf8") as output:
         json.dump(report,output,ensure_ascii=False,indent=2)
     print("RESULT="+json.dumps(report,ensure_ascii=False),flush=True)
