@@ -144,14 +144,15 @@ class NarOfficialArchive:
         for records in self.by_name.values():
             records.sort(key=lambda pair: pair[0]["date"], reverse=True)
 
-    def horse_history(self, horse, race, limit=5):
+    def horse_history(self, horse, race, limit=None):
         cutoff = date(race.get("date"))
         dob = date(horse.get("birthDate") or horse.get("birthday"))
         if not cutoff:
             return {}
         matched = [run.copy() for run, birth in self.by_name.get(normalize(horse.get("name")), [])
                    if run["date"] < cutoff and not (dob and birth and dob != birth)]
-        return {"recentRaces": matched[:5], "allPastRuns": matched[:max(1, int(limit))]} if matched else {}
+        full_runs = matched if limit is None else matched[:max(1, int(limit))]
+        return {"recentRaces": matched[:5], "allPastRuns": full_runs} if matched else {}
 
 
 def register_nar_official_archive(registry: DataBankRegistry, paths=None):
