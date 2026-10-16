@@ -27,7 +27,7 @@ function render(r,p,deps){
     return '<section class="arv-three-section"><h3>'+esc(label)+'</h3>'
       +(body||'<p class="arv-three-skip">'+(dataUnavailable?'データ不足・未取得：':'見送り：')+esc(dataUnavailable?(plan.dataMissing||[]).join('／')||plan.reason||reason||'発走前情報が揃っていません':reason||'購入条件を満たさず')+'</p>')+'</section>';
   }
-  var total=plan.referenceBudget||{},status=plan.fixedAt?'発走前固定':'暫定・未保存',
+  var total=plan.referenceBudget||{},status=plan.fixedAt?'発走前固定':(plan.postRaceRevision?'事後分析（発走後再計算）':'暫定・未保存'),
       savedV346=!!plan.fixedAt&&String(plan.engineVersion||plan.betStrategy||'').includes('three-way-v346'),
       hon=plan.honmei||{},
       axisLabel=savedV346?'発走前に保存した本命と買い目を維持（役割を後付けしません）':hon.horseNumber?
@@ -49,7 +49,7 @@ function render(r,p,deps){
     +(total.totalYen!=null?'<span>100円/点換算 '+esc(total.totalYen)+'円</span>':'')+'</div>'
     +'<p class="arv-three-budget-hint">購入額は投票時に指定</p>'
     +'<p class="arv-three-ev">'+esc(plan.expectedValueReason||'券種別の的中率・回収率・期待値は、保存済み実績を検証できるまで表示しません。')+'</p>'
-    +(plan.fixedAt?'<p class="arv-three-fixed">保存 '+esc(plan.fixedAt)+'</p>':'<p class="arv-three-provisional">発走前の保存が完了するまでは暫定です。発走後に買い目を新規作成しません。</p>')
+    +(plan.fixedAt?'<p class="arv-three-fixed">保存 '+esc(plan.fixedAt)+'</p>':(plan.postRaceRevision?'<p class="arv-three-provisional">発走後の再計算結果です。発走前に確定した買い目ではなく、的中率の検証には使用しません。</p>':'<p class="arv-three-provisional">発走前の保存が完了するまでは暫定です。発走後に買い目を新規作成しません。</p>'))
     +(plan.postLockNotice?'<p class="ai-bet-lock-notice">'+esc(plan.postLockNotice)+'</p>':'')
     +explanation
     +'<div class="bet-mark-guide"><b>'+esc(savedV346?'保存時点の印の見方':'印の見方（予想を基に評価）')+'</b><div class="bet-mark-grid">'
