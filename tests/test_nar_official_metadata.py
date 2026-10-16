@@ -7,6 +7,36 @@ from arvexq.ingest.nar_official_metadata import (
 
 
 class NarOfficialMetadataTests(unittest.TestCase):
+    def test_existing_narsync_zip_registers_official_history(self):
+        import csv
+        import io
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from arvexq.databanks.legacy_bridge import register_legacy_sources
+        from arvexq.databanks.registry import registry
+        with tempfile.TemporaryDirectory() as folder:
+            archive_path = Path(folder) / "202610_race.zip"
+            race, horse = [""] * 66, [""] * 35
+            for row in (race, horse):
+                row[0], row[1], row[2] = "金沢", "20261010", "1"
+            horse[5], horse[6], horse[31] = "1", "検証馬", "1"
+            with zipfile.ZipFile(archive_path, "w") as z:
+                for name, data in (("official_racelist.csv", [race]),
+                                   ("official_horselist.csv", [horse])):
+                    stream = io.StringIO()
+                    csv.writer(stream).writerows(data)
+                    z.writestr(name, stream.getvalue().encode("utf-8-sig"))
+            with patch.dict("os.environ", {"ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES": ""}):
+                register_legacy_sources({"ARCHIVE_DIR": Path(folder)})
+            provider = registry.get("nar_official_csv")
+            self.assertIsNotNone(provider)
+            result = provider.fetchers["horse_history"](
+                {"name": "検証馬"}, {"date": "2026-10-12"})
+            self.assertEqual(len(result["allPastRuns"]), 1)
+            registry._sources.pop("nar_official_csv", None)
+
     def test_official_csv_completeness_audit(self):
         rows = [["金沢", "ダート", "右", "C2"], ["金沢", "", "左", ""]]
         before = [list(row) for row in rows]
