@@ -327,6 +327,29 @@ class NarOfficialMetadataTests(unittest.TestCase):
             "surface": "", "direction": "", "class_condition": ""})
 
 
+    def test_later_official_result_enriches_preoff_entry_without_losing_identity(self):
+        import tempfile
+        from pathlib import Path
+        from app import NarStore, EntryRow
+        def row(finish, seconds, jockey, trainer):
+            return EntryRow(
+                track="金沢", date="2026-10-12", race_no=1,
+                frame_no=1, horse_no=1, name="検証馬", sex="牡", age=4,
+                carried_weight=55.0, jockey=jockey, trainer=trainer,
+                finish=finish, time_seconds=seconds,
+            )
+        with tempfile.TemporaryDirectory() as root:
+            store = NarStore(Path(root) / "result.sqlite3")
+            store.import_rows([], [row(0, 0.0, "騎手A", "調教師B")])
+            store.import_rows([], [row(2, 84.6, "", "")])
+            saved = store.conn.execute(
+                "SELECT name,jockey,trainer,finish,time_seconds FROM entries "
+                "WHERE track=? AND date=? AND race_no=? AND horse_no=?",
+                ("金沢", "2026-10-12", 1, 1),
+            ).fetchone()
+            self.assertEqual(tuple(saved), ("検証馬", "騎手A", "調教師B", 2, 84.6))
+            store.conn.close()
+
     def test_sparse_nar_entry_reimport_keeps_observed_results(self):
         import tempfile
         from pathlib import Path
