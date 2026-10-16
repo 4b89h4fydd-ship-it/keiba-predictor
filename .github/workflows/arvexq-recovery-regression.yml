@@ -54,3 +54,16 @@ jobs:
           ARVEXQ_BASE_URL: https://kraizweb1.4b89h4fydd.workers.dev
           ARVEXQ_BROWSER: webkit
         run: node scripts/arvexq_recovery_production_smoke.js
+
+      - name: Historical JRA and NAR production full-card and outage verification
+        env:
+          ARVEXQ_BASE_URL: https://kraizweb1.4b89h4fydd.workers.dev
+          ARVEXQ_AUDIT_DATE: '2026-10-12'
+          ARVEXQ_BROWSER: chromium
+        run: node scripts/arvexq_recovery_production_smoke.js
+      - name: Historical JRA and NAR iPhone WebKit production verification
+        env:
+          ARVEXQ_BASE_URL: https://kraizweb1.4b89h4fydd.workers.dev
+          ARVEXQ_AUDIT_DATE: '2026-10-12'
+          ARVEXQ_BROWSER: webkit
+        run: node scripts/arvexq_recovery_production_smoke.js
