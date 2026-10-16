@@ -1337,9 +1337,30 @@ function buildObservedBetPlan(r,p){
     }
   }
   var trifecta=items.some(function(x){return x.kind==='3連単'});
+  // Disjoint ordered finishing outcomes: sum exact 3連単 combinations only.
+  // This is an uncalibrated model estimate, NOT a backtested hit rate.
+  var trifectaProbability=null;
+  if(ready&&trifecta){
+    var raceWeights=rows.map(function(z){return Math.exp((z.narScore-ordered[0].narScore)/.15)}),
+        raceTotal=raceWeights.reduce(function(a,b){return a+b},0),
+        byNumber={};
+    rows.forEach(function(z,i){byNumber[no(z)]=raceWeights[i]});
+    var unique={};
+    trifectaProbability=0;
+    items.filter(function(z){return z.kind==='3連単'}).forEach(function(item){
+      (item.combos||[]).forEach(function(combo){
+        var key=combo.join('-'),a=byNumber[combo[0]],b=byNumber[combo[1]],c=byNumber[combo[2]];
+        if(unique[key]||!a||!b||!c||new Set(combo).size!==3)return;
+        unique[key]=true;
+        trifectaProbability+=(a/raceTotal)*(b/(raceTotal-a))*(c/(raceTotal-a-b));
+      });
+    });
+    trifectaProbability=Math.round(trifectaProbability*10000)/100; // percentage, two decimals
+  }
   var plan={raceId:String(r.id||''),raceDate:String(r.date||''),items:items,
     engineVersion:observedModelVersion(r),betStrategy:observedModelVersion(r),
     betQuality:ordered.length?Math.round(ordered[0].narScore*100):0,
+    trifectaOccurrenceProbability:trifectaProbability,
     decision:ready?'購入候補':'見送り',featuredRace:isFeaturedBetRace(r,p),
     selectionAudit:selection,honmei:{horseNumber:ordered.length?no(ordered[0]):0,role:'win',
       grade:ordered.length?ordered[0].honmeiGrade:''},
