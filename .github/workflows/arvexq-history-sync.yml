@@ -252,27 +252,10 @@ jobs:
             --out history-verified.json \
             --report history-verified-report.json \
             --workers 4
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          report=json.loads(Path('history-report.json').read_text(encoding='utf-8'))
-          day=json.loads(Path('history-verified.json').read_text(encoding='utf-8'))
-          by={str(d.get('id') or ''):d for d in (day.get('details') or []) if isinstance(d,dict)}
-          expected=int(report.get('races') or 0)
-          if expected and len(by)<expected:
-              raise SystemExit(f'D1 historical details short: {len(by)}/{expected}')
-          unresolved=set(report.get('missing_card') or [])|set(report.get('missing_result') or [])|set(report.get('missing_payout') or [])
-          visible_fail=[]
-          for rid,d in by.items():
-              if rid in unresolved:continue
-              r=d.get('result') or {};status=str(r.get('status') or '')
-              if status in {'中止','取止','取消','不成立'}:continue
-              ranks={int(x.get('finish') or 0) for x in (r.get('finishers') or []) if isinstance(x,dict)}
-              if not all(i in ranks for i in (1,2,3)) or not (r.get('payouts') or []):visible_fail.append(rid)
-          print('HISTORY_D1 details=',len(by),'unresolved=',len(unresolved),'unexpectedIncomplete=',len(visible_fail))
-          if visible_fail:
-              raise SystemExit('D1 lost repaired historical result/payout: '+','.join(visible_fail[:10]))
-          PY
+          PYTHONPATH=. python scripts/arvexq_verify_history_bundle.py \
+            --report history-report.json \
+            --day history-verified.json \
+            --output history-verdict.json
 
       - name: Audit D1 evidence after repair
         if: always()
