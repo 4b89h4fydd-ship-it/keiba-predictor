@@ -1,0 +1,35 @@
+name: ARVEXQ Recovery Regression
+on:
+  pull_request:
+    branches: [main]
+    paths: ['arvexq/ui/static/**', 'scripts/arvexq_detail_resilience_smoke.js', 'scripts/arvexq_pull_to_refresh_smoke.js', '.github/workflows/arvexq-recovery-regression.yml']
+  push:
+    branches: [main]
+    paths: ['arvexq/ui/static/**', '.github/workflows/arvexq-recovery-regression.yml']
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Build and start exact candidate assets
+        run: |
+          python build_static.py
+          python -m http.server 8788 --directory dist >/tmp/arvexq-http.log 2>&1 &
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
+      - name: Detail outage and full-history recovery
+        run: node scripts/arvexq_detail_resilience_smoke.js
+      - name: iPhone Chromium and WebKit pull-to-refresh
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8788
+        run: node scripts/arvexq_pull_to_refresh_smoke.js
