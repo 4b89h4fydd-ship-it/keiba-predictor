@@ -142,8 +142,12 @@ SOURCE = (
     "                      weather=CASE WHEN excluded.weather NOT IN ('','不明') THEN excluded.weather ELSE races.weather END,\n"
     "                      condition=CASE WHEN excluded.condition NOT IN ('','不明') THEN excluded.condition ELSE races.condition END,\n"
     '                      field_size=CASE WHEN excluded.field_size>0 THEN excluded.field_size ELSE races.field_size END,\n'
-    '                      prize1=excluded.prize1,prize2=excluded.prize2,prize3=excluded.prize3,\n'
-    '                      prize4=excluded.prize4,prize5=excluded.prize5,corners_json=excluded.corners_json\n'
+    "                      prize1=CASE WHEN excluded.prize1>0 THEN excluded.prize1 ELSE races.prize1 END,\n"
+    "                      prize2=CASE WHEN excluded.prize2>0 THEN excluded.prize2 ELSE races.prize2 END,\n"
+    "                      prize3=CASE WHEN excluded.prize3>0 THEN excluded.prize3 ELSE races.prize3 END,\n"
+    "                      prize4=CASE WHEN excluded.prize4>0 THEN excluded.prize4 ELSE races.prize4 END,\n"
+    "                      prize5=CASE WHEN excluded.prize5>0 THEN excluded.prize5 ELSE races.prize5 END,\n"
+    "                      corners_json=CASE WHEN excluded.corners_json!='[]' THEN excluded.corners_json ELSE races.corners_json END\n"
     '                    """,\n'
     '                    (\n'
     '                        r.track, r.date, r.race_no, r.start_time, r.start_time, r.title, r.distance, r.weather, r.condition,\n'
