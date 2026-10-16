@@ -268,9 +268,11 @@ SOURCE = (
     '        return int(row["prize"] or 0)\n'
     '\n'
     '    def recent_races(self, horse_name: str, cutoff: str, limit: int = 5) -> list[dict]:\n'
+    "        from arvexq.ingest.nar_official_metadata import migrate_race_metadata\n"
+    "        migrate_race_metadata(self.conn)\n"
     '        rows = self.conn.execute(\n'
     '            """\n'
-    '            SELECT e.*, r.title, r.distance, r.weather, r.condition, r.field_size, r.prize1,\n'
+    '            SELECT e.*, r.title, r.distance, r.weather, r.condition, r.surface, r.direction, r.class_condition, r.field_size, r.prize1,\n'
     '                (SELECT MIN(w.time_seconds) FROM entries w\n'
     '                 WHERE w.track=e.track AND w.date=e.date AND w.race_no=e.race_no\n'
     '                   AND w.finish=1 AND w.time_seconds>0) AS winner_time_seconds\n'
@@ -292,6 +294,9 @@ SOURCE = (
     '                "distance": int(row["distance"] or 0),\n'
     '                "condition": row["condition"] or "不明",\n'
     '                "weather": row["weather"] or "不明",\n'
+    "                \"surface\": row[\"surface\"] or \"\",\n"
+    "                \"direction\": row[\"direction\"] or \"\",\n"
+    "                \"class\": row[\"class_condition\"] or \"\",\n"
     '                "finish": int(row["finish"] or 0),\n'
     '                "timeSeconds": float(row["time_seconds"] or 0),\n'    '                "timeBehindWinner": (round(float(row["time_seconds"]) - float(row["winner_time_seconds"]), 2)\n'
     '                                     if row["time_seconds"] and row["winner_time_seconds"]\n'
