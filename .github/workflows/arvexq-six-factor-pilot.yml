@@ -14,6 +14,8 @@ on:
     paths:
       - 'arvexq/prediction/six_factor_research.py'
       - 'arvexq/prediction/twelve_factor_research.py'
+      - 'arvexq/prediction/condition_records_v3.py'
+      - 'tests/test_condition_records_v3.py'
       - 'tests/test_six_factor_research.py'
       - 'scripts/arvexq_six_factor_pilot.py'
       - '.github/workflows/arvexq-six-factor-pilot.yml'
@@ -33,6 +35,8 @@ jobs:
         run: pip install -r requirements.txt
       - name: Check six-factor tests
         run: python -m unittest discover -s tests -p test_six_factor_research.py -v
+      - name: Check exact actual condition rates
+        run: python -m unittest discover -s tests -p test_condition_records_v3.py -v
       - name: Run historical comparison
         run: python scripts/arvexq_six_factor_pilot.py --days "${{ inputs.days || '7' }}" --end-date "${{ inputs.end_date || '2026-10-15' }}" --output six-factor-pilot.json
       - uses: actions/upload-artifact@v4
