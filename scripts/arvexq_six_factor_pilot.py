@@ -104,13 +104,15 @@ def ingest(detail, metrics, exclusions, records):
     marks=assign_marks(ranking)
     wagers=tickets_from_marks(marks)
     finish=tuple(actual[:3])
-    checks=check_hits(wagers,finish)
+    checks=check_hits(wagers,finish,field_size=len(ranking))
     market_hits={kind:any(fn(tuple(t)) for t in wagers[kind]) for kind,fn in checks.items()}
     predicted=wagers['3連単']
     hit=market_hits['3連単']
     m=metrics[circuit]["newV3Research"]
     m["races"]+=1
     m["winnerTop1"]+=int(ranking[0]==finish[0])
+    m["markedTop3Count"]+=sum(n in marks.values() for n in finish)
+    m["allTop3Marked"]+=int(all(n in marks.values() for n in finish))
     m["winnerTop3"]+=int(finish[0] in ranking[:3])
     m["trifecta10Hits"]+=int(hit)
     m["ticketPoints"]+=len(predicted)
@@ -120,7 +122,7 @@ def ingest(detail, metrics, exclusions, records):
     records.append({"date":str(detail.get("date") or ""),"raceId":str(detail.get("id") or ""),
         "circuit":circuit,"track":str(detail.get("track") or ""),
         "raceNumber":detail.get("raceNumber"),"rankedTop5":ranking[:5],
-        "marks":marks,"marketTickets":{k:[list(v) for v in ts] for k,ts in wagers.items()},"marketHits":market_hits,"tickets":[list(v) for v in predicted],"actualTop3":list(finish),
+        "marks":marks,"marketTickets":{k:[list(v) for v in ts] for k,ts in wagers.items()},"marketHits":market_hits,"fieldSize":len(ranking),"tickets":[list(v) for v in predicted],"actualTop3":list(finish),
         "trifectaHit":hit,"predictedWinnerHit":ranking[0]==finish[0]})
     exclusions["evaluated"]+=1
 
