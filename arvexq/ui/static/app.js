@@ -1704,6 +1704,10 @@ function predict(r){
         horses:result.rows.map(function(z){return {horseNumber:n(z.horse&&z.horse.horseNumber),
           mark:String(z.predMark||''),rank:n(z.predRank,0)}})}))}
     catch(e){}
+    result.retrospectiveMarks=result.rows.map(function(z){return {
+      horseNumber:n(z.horse&&z.horse.horseNumber),mark:String(z.predMark||'')
+    }});
+    applyFrozenMarks(r,result);
   }else applyFrozenMarks(r,result);
   Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
   return result
@@ -2546,6 +2550,7 @@ function buildAiBetPlan(r,p){
           updatedAt:revised.revisedAt,engineVersion:revised.engineVersion,
           items:revised.items,decision:revised.decision}))}catch(e){}
     }
+    if(stored)return immutableStoredAiBetView(r,stored);
     return revised||null;
   }
   if(stored)return immutableStoredAiBetView(r,stored);
