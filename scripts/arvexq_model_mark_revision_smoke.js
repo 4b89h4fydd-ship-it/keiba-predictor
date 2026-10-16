@@ -3,7 +3,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const i=root.indexOf('function latestOfficialMarkRevision(r){'),
-      j=root.indexOf('function immutableArchivedPrediction(r){',i);
+      j=root.indexOf('function applyFrozenMarks(r,p){',i);
 assert(i>=0&&j>i,'model mark reader has a distinct explicit approval branch');
 const source=root.slice(i,j);
 const n=(v,d=0)=>v==null||v===''||!Number.isFinite(Number(v))?d:Number(v);
