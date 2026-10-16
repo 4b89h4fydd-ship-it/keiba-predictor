@@ -7,7 +7,6 @@ const manifest=JSON.parse(fs.readFileSync(path.join(directory,day+'.json')));
 const cards=JSON.parse(fs.readFileSync('arvexq/ui/static/racecards/'+day+'.json')).races;
 const base=process.env.ARVEXQ_BASE_URL||'https://kraizweb1.4b89h4fydd.workers.dev';
 const type=process.env.ARVEXQ_BROWSER==='webkit'?webkit:chromium;
-const marker=fs.readFileSync('arvexq/ui/static/index.html','utf8').match(/var tag="([^"]+)"/)[1];
 const records=Object.entries(manifest.races).map(([id,ref])=>{
   const e=JSON.parse(fs.readFileSync(path.join(directory,ref.file)));
   return JSON.parse(zlib.gunzipSync(Buffer.from(e.gzipBase64,'base64')));
@@ -19,7 +18,6 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
 (async()=>{
   const browser=await type.launch({headless:true,...(process.env.CHROMIUM_PATH&&type===chromium?{executablePath:process.env.CHROMIUM_PATH}:{})});
   const context=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
-  await context.addInitScript(key=>{if(localStorage.getItem(key)!=='1')localStorage.setItem(key,'1')},marker);
   let cursor=0;
   async function oddsPublished(id){
     try{const res=await fetch(base+'/api/live-odds/'+encodeURIComponent(id),{signal:AbortSignal.timeout(20000)});
