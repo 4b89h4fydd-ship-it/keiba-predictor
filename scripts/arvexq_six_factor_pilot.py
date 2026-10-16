@@ -70,7 +70,7 @@ def six_order(detail):
     ranking=sorted(rows,key=lambda item:(
         -(sum(strengths[item[0]])/len(strengths[item[0]]) if strengths[item[0]] else -1),
         -len(strengths[item[0]]),item[0]))
-    return [n for n,_,_ in ranking],{n:ev for n,_,ev in ranking}
+    return [n for n,_,_ in ranking],{n:ev for n,_,ev in ranking},{n:len(strengths[n]) for n,_,_ in ranking}
 
 def tickets(rank):
     """Fixed 10-ticket research envelope across top five, not tuned to outcome."""
@@ -89,12 +89,15 @@ def ingest(detail, metrics, exclusions, records):
         return
     clean=scrub_for_replay(copy.deepcopy(detail),str(detail.get("date") or ""))
     try:
-        ranking, ev=six_order(clean)
+        ranking, ev, coverage=six_order(clean)
     except Exception as exc:
         exclusions["compute-error:"+type(exc).__name__]+=1
         return
     if len(ranking)<5:
         exclusions["fewer-than-five-runners"]+=1
+        return
+    if not any(coverage.values()):
+        exclusions["no-comparable-feature-evidence"]+=1
         return
     circuit="JRA" if str(detail.get("circuit") or "") in ("中央","JRA","central") else "NAR"
     predicted=tickets(ranking)
