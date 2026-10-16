@@ -109,8 +109,18 @@ class NarOfficialArchive:
             if not key[0][1] or not key[1]:
                 continue
             previous = best_entries.get(key)
-            if previous is None or sum(bool(v.strip()) for v in h) > sum(bool(v.strip()) for v in previous):
+            if previous is None:
                 best_entries[key] = h
+            else:
+                # Prefer the more complete observation for conflicting values,
+                # then fill only blanks from the other official row.
+                richer, other = (h, previous) if sum(bool(v.strip()) for v in h) > sum(bool(v.strip()) for v in previous) else (previous, h)
+                width = max(len(richer), len(other))
+                best_entries[key] = [
+                    (richer[i] if i < len(richer) and str(richer[i]).strip()
+                     else other[i] if i < len(other) else "")
+                    for i in range(width)
+                ]
         for h in best_entries.values():
             race = race_rows.get(race_key(h))
             no = number(item(h, 5))
