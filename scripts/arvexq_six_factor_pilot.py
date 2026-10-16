@@ -116,6 +116,12 @@ def ingest(detail, metrics, exclusions, records):
         "trifectaHit":hit,"predictedWinnerHit":ranking[0]==finish[0]})
     exclusions["evaluated"]+=1
 
+def fetch_full(base, race_id):
+    url=base.rstrip("/")+"/api/race/"+urllib.parse.quote(str(race_id),safe="")
+    with urllib.request.urlopen(urllib.request.Request(url,headers={"User-Agent":"ARVEXQ-v3-full-race-audit/1"}),timeout=60) as response:
+        data=json.load(response)
+    return data.get("detail") if isinstance(data.get("detail"),dict) else None
+
 def fetch(base, day):
     url=base.rstrip("/")+"/api/day?"+urllib.parse.urlencode({"date":day,"details":"1"})
     with urllib.request.urlopen(urllib.request.Request(url,headers={"User-Agent":"ARVEXQ-six-factor-pilot/1"}),timeout=60) as response:
@@ -128,6 +134,7 @@ def main():
     p.add_argument("--end-date",default="2026-10-15")
     p.add_argument("--api-base",default="https://kraiz-api.4b89h4fydd.workers.dev")
     p.add_argument("--output",required=True)
+    p.add_argument("--full-per-circuit",type=int,default=30)
     args=p.parse_args()
     if not 1<=args.days<=30: p.error("days must be 1..30")
     detail=[]
@@ -141,6 +148,36 @@ def main():
             day=fetch(args.api_base,dt)
             detail+=day
             print("DAY",dt,"details",len(day),flush=True)
+    # /api/day is a compact listing that omits historical arrays.
+    # Always load /api/race/{id} to recover archived original observations.
+    picked={"JRA":0,"NAR":0}
+    restored=[]
+    retrieval=Counter()
+    for row in detail:
+        if not isinstance(row,dict):
+            continue
+        circuit="JRA" if str(row.get("circuit") or "") in ("中央","JRA","central") else "NAR"
+        if picked[circuit]>=args.full_per_circuit:
+            continue
+        try:
+            full=fetch_full(args.api_base,row.get("id"))
+        except Exception as exc:
+            retrieval["fetch-error:"+type(exc).__name__]+=1
+            continue
+        if full is None:
+            retrieval["missing-full-snapshot"]+=1
+            continue
+        horses=full.get("horses") or []
+        has_history=any(isinstance(h,dict) and (
+            h.get("recentRaces") or h.get("allPastRuns") or h.get("careerArchive"))
+            for h in horses)
+        if not has_history:
+            retrieval["full-snapshot-no-history"]+=1
+            continue
+        restored.append(full)
+        picked[circuit]+=1
+    detail=restored
+    print("FULL_SNAPSHOT",dict(picked),dict(retrieval),flush=True)
     metrics=defaultdict(lambda: defaultdict(lambda:Counter()))
     exclusions=Counter()
     records=[]
@@ -158,7 +195,7 @@ def main():
             ingest(row,metrics,exclusions,records)
     report={"version":"v3-new-model-only-retrospective-v1",
             "warning":"RETROSPECTIVE ONLY: race details may contain updated pre-off features and are not genuine frozen inputs; 10-ticket construction is an arbitrary identical comparison envelope, not an optimized product bet.",
-            "receivedDetails":len(detail),"coverage":dict(exclusions),"byCircuit":{},"inputDiagnostics":diagnostics,"raceResults":records}
+            "receivedDetails":len(detail),"fullSnapshotRetrieval":dict(retrieval),"coverage":dict(exclusions),"byCircuit":{},"inputDiagnostics":diagnostics,"raceResults":records}
     for circuit, variants in metrics.items():
         report["byCircuit"][circuit]={}
         for name, m in variants.items():
