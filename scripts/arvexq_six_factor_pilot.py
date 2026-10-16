@@ -16,7 +16,7 @@ from itertools import permutations
 
 from arvexq.prediction.observed_model import rank_observed
 from arvexq.prediction.twelve_factor_research import evidence
-from scripts.arvexq_current_prediction_audit import finish_order, scrub_for_replay
+from scripts.arvexq_current_prediction_audit import finish_order, scrub_for_replay, mark_rows, lock_rank
 
 def _highest(v):
     return float(v) if v is not None else -999.0
@@ -81,6 +81,11 @@ def ingest(detail, metrics, exclusions):
     actual=tuple(finish[:3])
     if len(baseline)<5:
         exclusions["current-fewer-than-five-ranked"]+=1
+        lock=detail.get("preRacePrediction") or {}
+        locked=mark_rows(lock.get("horses"),lock=True) if isinstance(lock,dict) else []
+        if len(locked)>=5:
+            baseline=lock_rank(locked)
+            exclusions["used-original-locked-baseline"]+=1
     if len(candidate)<5:
         exclusions["candidate-fewer-than-five-ranked"]+=1
     if set(baseline)!=set(candidate):
