@@ -327,6 +327,25 @@ class NarOfficialMetadataTests(unittest.TestCase):
             "surface": "", "direction": "", "class_condition": ""})
 
 
+    def test_empty_archive_does_not_mark_official_sync_complete(self):
+        import io
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from app import NarArchiveParser, NarStore, NarSync
+        with tempfile.TemporaryDirectory() as root:
+            store = NarStore(Path(root) / "test.sqlite3")
+            sync = NarSync.__new__(NarSync)
+            sync.parser, sync.store = NarArchiveParser(), store
+            output = io.BytesIO()
+            with zipfile.ZipFile(output, "w") as archive:
+                archive.writestr("empty_racelist.csv", "")
+                archive.writestr("empty_horselist.csv", "")
+            with self.assertRaises((ValueError, IndexError)):
+                sync.import_zip_bytes(output.getvalue(), "empty-test", Path(root) / "empty.zip")
+            self.assertIsNone(store.synced_at("empty-test"))
+            store.conn.close()
+
     def test_real_archive_ingestion_store_and_readback(self):
         """Exercise actual importer against a deterministic official-shaped ZIP."""
         import io
