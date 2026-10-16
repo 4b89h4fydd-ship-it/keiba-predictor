@@ -36,7 +36,7 @@ jobs:
       - name: Run historical comparison
         run: python scripts/arvexq_six_factor_pilot.py --days "${{ inputs.days || '7' }}" --end-date "${{ inputs.end_date || '2026-10-15' }}" --output six-factor-pilot.json
       - uses: actions/upload-artifact@v4
-        if: always() && github.event_name == 'workflow_dispatch'
+        if: always()
         with:
           name: six-factor-pilot
           path: six-factor-pilot.json
