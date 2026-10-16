@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from unittest import TestCase
 from arvexq.prediction.new_forecast import build_forecast, VERSION
-from tests.test_unified_jra_nar_observed_authority import race
+from test_unified_jra_nar_observed_authority import race
 
 class ReplacementForecastTests(TestCase):
     def test_both_circuits_preserve_input_and_produce_one_honmei(self):
