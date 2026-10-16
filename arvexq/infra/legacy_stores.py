@@ -472,6 +472,7 @@ SOURCE = (
     "            if paths:\n"
     "                register_nar_official_archive(registry, paths=paths)\n"
     "        except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:\n"
+    '            import logging\n'
     "            logging.getLogger(__name__).warning('NAR career archive refresh unavailable: %s', exc)\n"
     '        return {"races": len(races), "entries": len(entries), "cacheKey": cache_key}\n'
     '\n'
