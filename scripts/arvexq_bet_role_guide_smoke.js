@@ -14,11 +14,11 @@ const deps={
  raceMarkClock:()=>({started:false}),aiBetExplanationHtml:()=>'',betComboText:()=>''
 };
 const html=renderer({},{},deps);
-assert.match(html,/<i>【単】<\/i>◎【単】/);
-assert.match(html,/<i>【軸】<\/i>◎【軸】/);
+assert.match(html,/<i>◎<\/i>勝ち切る能力と3着内の安定性/);
+assert.doesNotMatch(html,/<i>【(?:単|軸)】<\/i>/);
 assert.match(html,/<i>☆<\/i>/);
 assert.doesNotMatch(html,/☆\+/);
-assert.doesNotMatch(html,/的中率80%|的中率100%/);
+assert.match(html,/目標の的中率80%以上.*保証するものではありません/);
 const historic={...plan,fixedAt:'2026-10-08T10:20:00+09:00',
  engineVersion:'arvexq-bets-old-v317',
  items:[{level:'本線',kind:'馬連',points:1,combo:'2 - 6',combos:[[2,6]]}]};
