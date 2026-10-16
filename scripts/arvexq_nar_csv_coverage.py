@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 
 from arvexq.databanks.nar_official_csv import rows_from_archive, race_key, item
 from arvexq.ingest.nar_official_metadata import audit_official_race_metadata
 
 
-def audit(paths):
+def audit(paths, target_date=None):
     races = {}
     horses = []
     source_files = []
@@ -32,6 +32,22 @@ def audit(paths):
     matched = [h for h in horses if race_key(h) in races]
     missing_race = len(horses) - len(matched)
     weights = sum(bool(item(h, 16).strip()) for h in matched)
+    # Availability is measured from dated archive rows only. It does not
+    # establish that a horse's lifetime career is fully represented.
+    unique_starts = defaultdict(set)
+    for h in matched:
+        identity = (item(h, 6).strip(), item(h, 10).strip())
+        unique_starts[identity].add(race_key(h))
+    target_horses = {}
+    if target_date:
+        for h in matched:
+            key = race_key(h)
+            if key[1] != target_date:
+                continue
+            identity = (item(h, 6).strip(), item(h, 10).strip())
+            earlier = {start for start in unique_starts[identity] if start[1] < target_date}
+            target_horses[(key, int(item(h, 5) or 0))] = len(earlier)
+    zero_history = sum(count == 0 for count in target_horses.values())
     entries_by_race = Counter(race_key(h) for h in matched)
     no_horse_races = [key for key in races if not entries_by_race[key]]
     missing_by_track = Counter(key[0] for key in no_horse_races)
@@ -41,6 +57,10 @@ def audit(paths):
         "sourceFiles": source_files,
         "raceMetadata": coverage,
         "horseRows": len(horses),
+        "targetDate": target_date,
+        "targetHorsesWithRaceRows": len(target_horses) if target_date else None,
+        "targetHorsesWithNoEarlierArchiveRuns": zero_history if target_date else None,
+        "targetHorsesWithEarlierArchiveRuns": len(target_horses) - zero_history if target_date else None,
         "raceRowsWithHorseEntries": len(races) - len(no_horse_races),
         "raceRowsWithoutHorseEntries": len(no_horse_races),
         "raceRowsWithoutHorseEntriesByTrack": dict(sorted(missing_by_track.items())),
@@ -65,8 +85,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archives", nargs="+", help="Local NAR official CSV ZIP or directory")
     parser.add_argument("--output", help="Optional JSON report path")
+    parser.add_argument("--target-date", help="Target race date YYYY-MM-DD for prior-run coverage")
     args = parser.parse_args()
-    report = audit(args.archives)
+    report = audit(args.archives, target_date=args.target_date)
     rendered = json.dumps(report, ensure_ascii=False, indent=2)
     if args.output:
         from pathlib import Path
