@@ -26,7 +26,7 @@ def race():
 
 
 class NarAuthorityTests(unittest.TestCase):
-    def test_blend_is_exactly_60_40_of_observed_inputs(self):
+    def test_consensus_uses_observed_inputs(self):
         d = race()
         rows = rank_nar(d["horses"], d)
         self.assertEqual(len(rows), len(d["horses"]))
@@ -35,7 +35,13 @@ class NarAuthorityTests(unittest.TestCase):
             h = row["horse"]
             no = h["horseNumber"]
             margin = margin_score(h, d)
-            self.assertAlmostEqual(row["score"], .60 * positions[no] + .40 * margin["score"] + .12 * row["historicalRates"]["winEvidence"] + .06 * row["historicalRates"]["top2Evidence"] + .04 * row["historicalRates"]["top3Evidence"] + .04 * row["historicalRates"]["transferClassSignal"])
+            rates = row["historicalRates"]
+            axes = [positions[no], margin["score"]]
+            if rates["starts"] >= 2:
+                axes.append((rates["winRate"] + rates["top2Rate"] + rates["top3Rate"]) / 3)
+            if rates["transferClassEvidenceStarts"] >= 2:
+                axes.append(.5 + rates["transferClassSignal"])
+            self.assertAlmostEqual(row["score"], sum(axes) / len(axes))
 
     def test_new_marks_replace_old_fields_and_leave_seal_untouched(self):
         d = race()
