@@ -49,6 +49,9 @@ class PastFiveContextTests(unittest.TestCase):
         self.assertEqual(all_runs({"recentRaces": [original]})[0]["class"], "C2")
         self.assertEqual(normalize_run({"date": "2026-09-20"})["weather"], "")
         self.assertEqual(normalize_run({"date": "2026-09-20"})["class"], "")
+        aliased = normalize_run({"date": "2026-09-20", "class_condition": "B2", "courseDirection": "右"})
+        self.assertEqual(aliased["class"], "B2")
+        self.assertEqual(aliased["direction"], "右")
 
     def test_not_comparable_is_not_claimed_to_be_bad_or_good(self):
         runs = [run("2026-09-20", 1, distance=1800),
