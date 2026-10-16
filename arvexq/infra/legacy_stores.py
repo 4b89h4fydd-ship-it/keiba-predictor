@@ -423,6 +423,9 @@ SOURCE = (
     '        races, entries = self.parser.parse(data)\n'
     "        if not races or not entries:\n"
     "            raise ValueError('NAR archive lacks usable race or horse rows; sync not recorded')\n"
+    "        race_ids = {(r.track, r.date, r.race_no) for r in races}\n"
+    "        if any((e.track, e.date, e.race_no) not in race_ids for e in entries):\n"
+    "            raise ValueError('NAR archive has horse rows without matching race rows')\n"
     '        self.store.import_rows(races, entries)\n'
     "        # Enrich only existing rows using observed official CSV columns.\n"
     "        from arvexq.ingest.nar_official_metadata import (\n"
