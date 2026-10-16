@@ -136,10 +136,10 @@ SOURCE = (
     '                                      prize1,prize2,prize3,prize4,prize5,corners_json)\n'
     '                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)\n'
     '                    ON CONFLICT(track,date,race_no) DO UPDATE SET\n'
-    '                      start_time=excluded.start_time,title=excluded.title,distance=excluded.distance,\n'
+    '                      start_time=CASE WHEN excluded.start_time<>'' THEN excluded.start_time ELSE races.start_time END,\n                      title=CASE WHEN excluded.title<>'' THEN excluded.title ELSE races.title END,\n                      distance=CASE WHEN excluded.distance>0 THEN excluded.distance ELSE races.distance END,\n'
     "                      weather=CASE WHEN excluded.weather NOT IN ('','不明') THEN excluded.weather ELSE races.weather END,\n"
     "                      condition=CASE WHEN excluded.condition NOT IN ('','不明') THEN excluded.condition ELSE races.condition END,\n"
-    '                      field_size=excluded.field_size,\n'
+    '                      field_size=CASE WHEN excluded.field_size>0 THEN excluded.field_size ELSE races.field_size END,\n'
     '                      prize1=excluded.prize1,prize2=excluded.prize2,prize3=excluded.prize3,\n'
     '                      prize4=excluded.prize4,prize5=excluded.prize5,corners_json=excluded.corners_json\n'
     '                    """,\n'
