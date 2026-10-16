@@ -5,7 +5,7 @@ from copy import deepcopy
 from unittest import TestCase
 
 from arvexq.prediction.observed_model import apply_observed_marks
-from tests.test_unified_jra_nar_observed_authority import race
+from test_unified_jra_nar_observed_authority import race
 
 
 class UnifiedHonmeiRegression(TestCase):
