@@ -1,0 +1,41 @@
+name: ARVEXQ Six Factor Retrospective Pilot
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: Days to compare
+        default: '7'
+        required: false
+      end_date:
+        description: Last completed race date
+        default: '2026-10-15'
+        required: false
+  pull_request:
+    paths:
+      - 'arvexq/prediction/six_factor_research.py'
+      - 'tests/test_six_factor_research.py'
+      - 'scripts/arvexq_six_factor_pilot.py'
+      - '.github/workflows/arvexq-six-factor-pilot.yml'
+permissions:
+  contents: read
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Setup runtime
+        run: pip install -r requirements.txt
+      - name: Check six-factor tests
+        run: python -m unittest discover -s tests -p test_six_factor_research.py -v
+      - name: Run historical comparison
+        if: github.event_name == 'workflow_dispatch'
+        run: python scripts/arvexq_six_factor_pilot.py --days "${{ inputs.days || '7' }}" --end-date "${{ inputs.end_date || '2026-10-15' }}" --output six-factor-pilot.json
+      - uses: actions/upload-artifact@v4
+        if: always() && github.event_name == 'workflow_dispatch'
+        with:
+          name: six-factor-pilot
+          path: six-factor-pilot.json
+          if-no-files-found: ignore
