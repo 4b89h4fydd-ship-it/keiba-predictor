@@ -82,43 +82,35 @@ def tickets(rank):
         (head[0],head[2],head[3]), (head[0],head[1],head[4])
     ] if len(head)>=5 else list(permutations(head,3))[:10]
 
-def ingest(detail, metrics, exclusions):
-    finish = finish_order(detail)
-    if len(finish)<3:
-        exclusions["incomplete-result"] += 1
+def ingest(detail, metrics, exclusions, records):
+    actual=finish_order(detail)
+    if len(actual)<3:
+        exclusions["incomplete-result"]+=1
         return
-    clean = scrub_for_replay(copy.deepcopy(detail),str(detail.get("date") or ""))
+    clean=scrub_for_replay(copy.deepcopy(detail),str(detail.get("date") or ""))
     try:
-        baseline = [int(r["horse"]["horseNumber"]) for r in rank_observed(clean.get("horses") or [],clean)]
-        candidate, evidence = six_order(clean)
-    except Exception as error:
-        exclusions["computation-error:"+type(error).__name__]+=1
+        ranking, ev=six_order(clean)
+    except Exception as exc:
+        exclusions["compute-error:"+type(exc).__name__]+=1
         return
-    circuit = "JRA" if str(detail.get("circuit") or "") in ("中央","JRA","central") else "NAR"
-    actual=tuple(finish[:3])
-    if len(baseline)<5:
-        exclusions["current-fewer-than-five-ranked"]+=1
-        lock=detail.get("preRacePrediction") or {}
-        locked=mark_rows(lock.get("horses"),lock=True) if isinstance(lock,dict) else []
-        if len(locked)>=5:
-            baseline=lock_rank(locked)
-            exclusions["used-original-locked-baseline"]+=1
-    if len(candidate)<5:
-        exclusions["candidate-fewer-than-five-ranked"]+=1
-    if set(baseline)!=set(candidate):
-        exclusions["ranked-horse-set-mismatch"]+=1
-    # Compare on precisely the same horses. Never fill missing baseline
-    # runners with candidate ranks or the actual finishing order.
-    if len(baseline)<5 or len(candidate)<5 or set(baseline)!=set(candidate):
-        exclusions["not-comparable-complete-rankings"]+=1
+    if len(ranking)<5:
+        exclusions["fewer-than-five-runners"]+=1
         return
-    for name,order in (("current",baseline),("twelveFactor",candidate)):
-        m=metrics[circuit][name]
-        m["races"]+=1
-        m["winnerTop1"]+=int(order[0]==actual[0])
-        m["winnerTop3"]+=int(actual[0] in order[:3])
-        m["trifecta10Hits"]+=int(actual in tickets(order))
-        m["ticketPoints"]+=len(tickets(order))
+    circuit="JRA" if str(detail.get("circuit") or "") in ("中央","JRA","central") else "NAR"
+    predicted=tickets(ranking)
+    finish=tuple(actual[:3])
+    hit=finish in predicted
+    m=metrics[circuit]["newV3Research"]
+    m["races"]+=1
+    m["winnerTop1"]+=int(ranking[0]==finish[0])
+    m["winnerTop3"]+=int(finish[0] in ranking[:3])
+    m["trifecta10Hits"]+=int(hit)
+    m["ticketPoints"]+=len(predicted)
+    records.append({"date":str(detail.get("date") or ""),"raceId":str(detail.get("id") or ""),
+        "circuit":circuit,"track":str(detail.get("track") or ""),
+        "raceNumber":detail.get("raceNumber"),"rankedTop5":ranking[:5],
+        "tickets":[list(v) for v in predicted],"actualTop3":list(finish),
+        "trifectaHit":hit,"predictedWinnerHit":ranking[0]==finish[0]})
     exclusions["evaluated"]+=1
 
 def fetch(base, day):
@@ -148,12 +140,13 @@ def main():
             print("DAY",dt,"details",len(day),flush=True)
     metrics=defaultdict(lambda: defaultdict(lambda:Counter()))
     exclusions=Counter()
+    records=[]
     for row in detail:
         if isinstance(row,dict):
-            ingest(row,metrics,exclusions)
-    report={"version":"twelve-factor-retrospective-pilot-v1",
+            ingest(row,metrics,exclusions,records)
+    report={"version":"v3-new-model-only-retrospective-v1",
             "warning":"RETROSPECTIVE ONLY: race details may contain updated pre-off features and are not genuine frozen inputs; 10-ticket construction is an arbitrary identical comparison envelope, not an optimized product bet.",
-            "receivedDetails":len(detail),"coverage":dict(exclusions),"byCircuit":{}}
+            "receivedDetails":len(detail),"coverage":dict(exclusions),"byCircuit":{},"raceResults":records}
     for circuit, variants in metrics.items():
         report["byCircuit"][circuit]={}
         for name, m in variants.items():
