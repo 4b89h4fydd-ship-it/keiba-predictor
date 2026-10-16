@@ -421,6 +421,8 @@ SOURCE = (
     '\n'
     '    def import_zip_bytes(self, data: bytes, cache_key: str, archive_path: Path) -> dict:\n'
     '        races, entries = self.parser.parse(data)\n'
+    "        if not races or not entries:\n"
+    "            raise ValueError('NAR archive lacks usable race or horse rows; sync not recorded')\n"
     '        self.store.import_rows(races, entries)\n'
     "        # Enrich only existing rows using observed official CSV columns.\n"
     "        from arvexq.ingest.nar_official_metadata import (\n"
