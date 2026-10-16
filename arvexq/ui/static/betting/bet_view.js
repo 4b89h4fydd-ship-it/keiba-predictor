@@ -55,7 +55,7 @@ function render(r,p,deps){
     +'<div class="bet-mark-guide"><b>'+esc(savedV346?'保存時点の印の見方':'印の見方（予想を基に評価）')+'</b><div class="bet-mark-grid">'
     +'<span><i>◎</i>勝ち切る能力と3着内の安定性を総合した最有力馬。単・軸で別の馬には分けません。</span>'
     +'<span><i>○</i>◎に最も匹敵し逆転を狙える相手</span><span><i>▲</i>◎・○に匹敵する実力馬</span>'
-    +'<span><i>△</i>3着向き</span><span><i>☆</i>実測の追い上げ・前争いを評価</span><span><i>注</i>着差・同条件・相手関係などの見落とし注意馬</span>'
+    +'<span><i>△</i>展開や条件次第で上位を争う相手</span><span><i>☆</i>展開がハマれば有力馬を逆転できる相手</span><span><i>注</i>能力・適性・過去実績に根拠のある見落とし注意馬</span>'
     +'</div></div><p class="arv-three-reason">'+esc(plan.reason||'')+'</p></div>'
 }
 global.ARVEXQBetView=Object.freeze({render:render});
