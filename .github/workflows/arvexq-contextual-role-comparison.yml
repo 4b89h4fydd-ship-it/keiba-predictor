@@ -1,0 +1,39 @@
+name: ARVEXQ Contextual Role Comparison
+on:
+  push:
+    branches: [codex/contextual-role-five-issues]
+  pull_request:
+    paths:
+      - 'arvexq/research/contextual_role_candidate.py'
+      - 'scripts/arvexq_contextual_role_comparison.py'
+      - 'tests/test_contextual_role_candidate.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: contextual-role-comparison-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Verify candidate and existing observed authority
+        run: python -m unittest tests.test_contextual_role_candidate tests.test_nar_mineta_margin_authority tests.test_optional_star_marks tests.test_unified_jra_nar_observed_authority -v
+      - name: Compare 28 complete days with a chronological holdout
+        env:
+          PYTHONPATH: '.'
+          ARVEXQ_COMPARISON_DAYS: '28'
+        run: python -u scripts/arvexq_contextual_role_comparison.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: contextual-role-comparison
+          path: contextual-role-comparison.json
+          if-no-files-found: ignore
+          retention-days: 14

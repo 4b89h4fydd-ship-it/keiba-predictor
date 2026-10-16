@@ -1,0 +1,141 @@
+{
+  "status": "blocked",
+  "gateFailures": [
+    "中央: fewer than 30 paired holdout races",
+    "中央: no primary improvement",
+    "中央: special-mark precision evidence insufficient",
+    "地方: fewer than 30 paired holdout races",
+    "地方: second regressed",
+    "地方: covered regressed",
+    "地方: special-mark precision evidence insufficient"
+  ],
+  "holdoutStart": "2026-10-09",
+  "pairedRaces": 3,
+  "skipped": {
+    "incomplete-observations": 1282,
+    "no-final-top3": 1
+  },
+  "groups": {
+    "中央": {
+      "early": {
+        "races": 0,
+        "ids": [],
+        "baseline": {
+          "win": 0,
+          "axis": 0,
+          "second": 0,
+          "third": 0,
+          "delta": 0,
+          "covered": 0,
+          "specialHits": 0,
+          "specialPicks": 0,
+          "specialPrecision": null
+        },
+        "candidate": {
+          "win": 0,
+          "axis": 0,
+          "second": 0,
+          "third": 0,
+          "delta": 0,
+          "covered": 0,
+          "specialHits": 0,
+          "specialPicks": 0,
+          "specialPrecision": null
+        }
+      },
+      "holdout": {
+        "races": 0,
+        "ids": [],
+        "baseline": {
+          "win": 0,
+          "axis": 0,
+          "second": 0,
+          "third": 0,
+          "delta": 0,
+          "covered": 0,
+          "specialHits": 0,
+          "specialPicks": 0,
+          "specialPrecision": null
+        },
+        "candidate": {
+          "win": 0,
+          "axis": 0,
+          "second": 0,
+          "third": 0,
+          "delta": 0,
+          "covered": 0,
+          "specialHits": 0,
+          "specialPicks": 0,
+          "specialPrecision": null
+        }
+      }
+    },
+    "地方": {
+      "early": {
+        "races": 1,
+        "ids": [
+          "nar-2026-10-08-園田-04"
+        ],
+        "baseline": {
+          "win": 0,
+          "axis": 1,
+          "second": 0,
+          "third": 1,
+          "delta": 0,
+          "covered": 2,
+          "specialHits": 1,
+          "specialPicks": 2,
+          "specialPrecision": 0.5
+        },
+        "candidate": {
+          "win": 0,
+          "axis": 1,
+          "second": 0,
+          "third": 1,
+          "delta": 1,
+          "covered": 2,
+          "specialHits": 0,
+          "specialPicks": 0,
+          "specialPrecision": null
+        }
+      },
+      "holdout": {
+        "races": 2,
+        "ids": [
+          "nar-2026-10-09-園田-03",
+          "nar-2026-10-09-園田-04"
+        ],
+        "baseline": {
+          "win": 0,
+          "axis": 2,
+          "second": 2,
+          "third": 1,
+          "delta": 0,
+          "covered": 6,
+          "specialHits": 2,
+          "specialPicks": 3,
+          "specialPrecision": 0.6666666666666666
+        },
+        "candidate": {
+          "win": 1,
+          "axis": 2,
+          "second": 1,
+          "third": 1,
+          "delta": 0,
+          "covered": 5,
+          "specialHits": 0,
+          "specialPicks": 0,
+          "specialPrecision": null
+        }
+      }
+    }
+  },
+  "inputSources": {
+    "full-saved-api-replay": 3
+  },
+  "warning": "Retrospective replay of date-bounded histories. Not a sealed pre-off forecast or proof of future accuracy.",
+  "productionChanged": false,
+  "fetchErrors": [],
+  "start": "2026-09-17",
+  "end": "2026-10-14"
+}
