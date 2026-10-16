@@ -192,7 +192,7 @@ def apply_observed_marks(detail):
             stable = (podium + 1) / (len(valid) + 2)
             comparable = sum(suitability) / len(suitability) if suitability else stable
             axis_score = (.45 * stable + .15 * comparable + .15 * row["score"]
-                          + .15 * (.38 + row["historicalRates"]["top3Evidence"])
+                          + .15 * (.38 + row.get("historicalRates", {}).get("top3Evidence", 0.0))
                           + .10 * probabilities.get(int(row["horse"]["horseNumber"]), {}).get("top3Probability", 0.0))
             axis_candidates.append((axis_score, row["score"], -int(row["horse"]["horseNumber"]), row, ratio))
     axis_row = max(axis_candidates, default=None)
