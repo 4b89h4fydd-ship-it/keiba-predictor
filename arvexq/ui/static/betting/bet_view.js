@@ -24,7 +24,9 @@ function render(r,p,deps){
     var items=(plan.items||[]).filter(function(z){return z.level===level});
     var body=items.map(function(z){
       return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(z.kind)+'</b><span class="arv-three-count">'+esc(z.points)+'点</span></div>'
-        +ticketCombos(z,esc,betComboText)
+        +(z.comboProbabilities&&z.comboProbabilities.length===(z.combos||[]).length
+          ?(z.combos||[]).map(function(combo,i){return '<div class="arv-three-ticket-prob"><strong>'+esc(combo.join('-'))+'</strong><span>推定発生確率 '+esc(z.comboProbabilities[i])+'%</span></div>'}).join('')
+          :ticketCombos(z,esc,betComboText))
         +(z.reason?'<p class="arv-three-ticket-reason">'+esc(z.reason)+'</p>':'')+'</div>'
     }).join('');
     return '<section class="arv-three-section"><h3>'+esc(label)+'</h3>'
