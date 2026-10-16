@@ -1102,8 +1102,8 @@ function specialMarkInputSignature(r){
 }
 
 /* Only live observed 60/40 prediction authority for both JRA and NAR. */
-var ARVEXQ_NAR_MODEL='arvexq-nar-mineta-margin-60-40-v1';
-var ARVEXQ_JRA_MODEL='arvexq-jra-mineta-margin-60-40-v1';
+var ARVEXQ_NAR_MODEL='arvexq-nar-observed-consensus-v1';
+var ARVEXQ_JRA_MODEL='arvexq-jra-observed-consensus-v1';
 function isObservedCircuit(r){return isNarRace(r)||['中央','JRA','central'].indexOf(String(r&&r.circuit||''))>=0}
 function observedModelVersion(r){return isNarRace(r)?ARVEXQ_NAR_MODEL:ARVEXQ_JRA_MODEL}
 function observedCircuitLabel(r){return isNarRace(r)?'地方':'中央'}
@@ -1222,9 +1222,16 @@ function narScoreRows(rows,r){
       measuredMargins:margin&&margin.measuredMargins,available:available,
       sample:observedHistory(h,r).length};
     z.historicalRates=observedHistoryRateEvidence(h,r);
-    var rate=z.historicalRates,base=available?.60*position+.40*margin.score:null;
-    z.narScore=available?(base+.12*rate.winEvidence+.06*rate.top2Evidence+
-      .04*rate.top3Evidence+.04*rate.transferClassSignal):null;
+    var rate=z.historicalRates,observations=[];
+    // Model candidate: independently measured positioning, margin and career rates.
+    if(position!==null)observations.push(position);
+    if(margin!==null)observations.push(margin.score);
+    if(rate.starts>=2)observations.push((rate.winRate+rate.top2Rate+rate.top3Rate)/3);
+    if(rate.transferClassEvidenceStarts>=2)observations.push(.5+rate.transferClassSignal);
+    available=margin!==null&&observations.length>=2;
+    z.narEvidence.available=available;
+    z.narEvidence.observedAxes=observations.length;
+    z.narScore=available?observations.reduce(function(a,b){return a+b},0)/observations.length:null;
   });
 }
 function observedMarkSignature(r){

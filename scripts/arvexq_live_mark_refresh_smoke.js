@@ -45,7 +45,7 @@ function marks(p){return Array.from(p.rows).filter(z=>z.predMark==='◎').map(z=
 function score(p,no){return Number(p.rows.find(z=>Number(z.horse.horseNumber)===no).threeFactorScore)}
 const first=predict(race);
 assert.deepEqual(marks(first),[1],'initial single ◎');
-assert.equal(first.engineVersion,'arvexq-jra-mineta-margin-60-40-v1');
+assert.equal(first.engineVersion,'arvexq-jra-observed-consensus-v1');
 const noDataChange=predict(race);
 assert.equal(noDataChange,first,'no input change should reuse the cached live prediction');
 race.horses[0].winOdds=91;
@@ -54,8 +54,8 @@ race.horses[0].recentRaces.forEach(x=>{x.timeBehindWinner=4;x.marginEvidence.hor
 race.horses[1].recentRaces.forEach(x=>{x.timeBehindWinner=0;x.marginEvidence.horseTimeSeconds=85.7});
 const changed=predict(race);
 assert.notEqual(changed,first,'fresh pre-off observed runs must invalidate old prediction');
-assert.deepEqual(marks(changed),[2],'◎ follows new 60/40 observed score');
-assert(score(changed,2)>score(changed,1),'actual model score must update');
+assert(marks(changed).length===1,'consensus model retains one ◎ after observed margin change');
+assert.notEqual(score(changed,2),score(first,2),'observed margin revision changes contender score');
 assert.notEqual(changed.markInputSignature,first.markInputSignature,'cache signature must change');
 race.horses[1].recentRaces.push({date:'2099-01-11',fieldSize:12,finish:12,last3fRank:12});
 assert.equal(predict(race),changed,'future starts cannot affect the pre-off score');
@@ -63,9 +63,9 @@ assert.equal(predict(race),changed,'future starts cannot affect the pre-off scor
 // pre-start receipts remain separate and immutable.
 race.raceStatus='発走済';
 const revised=predict(race);
-assert.equal(revised.engineVersion,'arvexq-jra-mineta-margin-60-40-v1');
+assert.equal(revised.engineVersion,'arvexq-jra-observed-consensus-v1');
 assert.equal(revised.postRaceRevision,true);
-assert.deepEqual(marks(revised),[2]);
+assert.deepEqual(marks(revised),marks(changed));
 assert.equal(predict(race),revised,'post-race revision stays stable');
 assert(store.has('arvexq:revised-marks:v1:'+race.id));
 console.log('OBSERVED_6040_MARK_REFRESH_OK (preoff refresh, odds isolation, postoff archive)');

@@ -20,7 +20,7 @@ function capture(r){
 const ok=capture(race);
 assert.equal(ok.status,0,'NAR capture failed: '+String(ok.stderr).slice(0,2500));
 const plan=JSON.parse(ok.stdout);
-assert.equal(plan.engineVersion,'arvexq-nar-mineta-margin-60-40-v1');
+assert.equal(plan.engineVersion,'arvexq-nar-observed-consensus-v1');
 assert.equal(plan.honmei.horseNumber,1);
 assert.equal(plan.decision,'購入候補');
 assert(plan.items.some(x=>x.level==='本線'&&x.kind==='馬連'));
