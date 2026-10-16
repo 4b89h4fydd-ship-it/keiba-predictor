@@ -171,7 +171,13 @@ class NarOfficialArchive:
         dob = date(horse.get("birthDate") or horse.get("birthday"))
         if not cutoff:
             return {}
-        matched = [run.copy() for run, birth in self.by_name.get(normalize(horse.get("name")), [])
+        records = self.by_name.get(normalize(horse.get("name")), [])
+        known_birthdates = {birth for _, birth in records if birth}
+        if not dob and len(known_birthdates) > 1:
+            # Same-name horses with different recorded births cannot be
+            # identified reliably without the target horse birth date.
+            return {}
+        matched = [run.copy() for run, birth in records
                    if run["date"] < cutoff and not (dob and birth and dob != birth)]
         full_runs = matched if limit is None else matched[:max(1, int(limit))]
         return {"recentRaces": matched[:5], "allPastRuns": full_runs} if matched else {}
