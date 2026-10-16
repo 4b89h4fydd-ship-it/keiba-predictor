@@ -235,7 +235,7 @@ def apply_observed_marks(detail):
                  honmeiEligible=bool(i == 0 and grade == "A"),
                  podiumAxisEligible=bool(axis_no and int(h["horseNumber"]) == axis_no),
                  score=round(row["score"] * 100, 2), samples=row["sample"],
-                 historicalRates=row["historicalRates"],
+                 historicalRates=row.get("historicalRates", _history_rates(h, detail)),
                  modelProbabilities=probabilities.get(int(h["horseNumber"]), {}),
                  neutralPrior=False, confidence="実測",
                  narModelEvidence={"mineta": row["factors"]["mineta"],
