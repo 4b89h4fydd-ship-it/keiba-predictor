@@ -327,6 +327,30 @@ class NarOfficialMetadataTests(unittest.TestCase):
             "surface": "", "direction": "", "class_condition": ""})
 
 
+    def test_sparse_nar_entry_reimport_keeps_observed_results(self):
+        import tempfile
+        from pathlib import Path
+        from app import NarStore, EntryRow
+        def entry(jockey, trainer, finish, seconds):
+            return EntryRow(
+                track="金沢", date="2026-10-12", race_no=1,
+                frame_no=1, horse_no=1, name="検証馬", sex="牡", age=4,
+                carried_weight=55.0 if jockey else 0.0,
+                jockey=jockey, trainer=trainer, finish=finish,
+                time_seconds=seconds,
+            )
+        with tempfile.TemporaryDirectory() as root:
+            store = NarStore(Path(root) / "entries.sqlite3")
+            store.import_rows([], [entry("騎手A", "調教師B", 2, 84.6)])
+            store.import_rows([], [entry("", "", 0, 0.0)])
+            saved = store.conn.execute(
+                "SELECT jockey,trainer,finish,time_seconds,carried_weight "
+                "FROM entries WHERE track=? AND date=? AND race_no=? AND horse_no=?",
+                ("金沢", "2026-10-12", 1, 1),
+            ).fetchone()
+            self.assertEqual(tuple(saved), ("騎手A", "調教師B", 2, 84.6, 55.0))
+            store.conn.close()
+
     def test_new_sparse_race_archive_preserves_known_race_details(self):
         import tempfile
         from pathlib import Path
