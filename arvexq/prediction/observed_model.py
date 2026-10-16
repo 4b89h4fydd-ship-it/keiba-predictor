@@ -93,6 +93,27 @@ def _history_rates(horse, race):
     same = [r for r in runs if _run_circuit(r) == target]
     other = [r for r in runs if _run_circuit(r) not in (target, None)]
     unknown = [r for r in runs if _run_circuit(r) is None]
+    # Only independently observed, normalized opponent-strength evidence can
+    # support a cross-circuit class adjustment. Otherwise keep it unknown.
+    def _level(run):
+        try:
+            value = float(run.get("opponentLevel"))
+            return value if 0.0 <= value <= 1.0 else None
+        except (TypeError, ValueError):
+            return None
+
+    target_level = _level(race)
+    comparable_cross = [r for r in other if _level(r) is not None and target_level is not None]
+    # Relative form within observed opponent strength, not a hardcoded JRA bonus.
+    # Use a very conservative reliability shrinkage; the weight must later
+    # be calibrated against sealed pre-off races before production adoption.
+    transfer_quality = [
+        ((r["fieldSize"] - r["finish"]) / (r["fieldSize"] - 1)) * (0.5 + 0.5 * _level(r))
+        for r in comparable_cross if r["fieldSize"] > 1
+    ]
+    transfer_signal = (sum(transfer_quality) / len(transfer_quality) - 0.5) * (
+        len(transfer_quality) / (len(transfer_quality) + 8.0)
+    ) if transfer_quality else 0.0
     n = len(same)
     wins = sum(int(r["finish"]) == 1 for r in same)
     top2 = sum(int(r["finish"]) <= 2 for r in same)
@@ -106,13 +127,17 @@ def _history_rates(horse, race):
         "latestRecordedCircuit": latest,
         "targetCircuit": target,
         "transferEvidence": bool(other),
+        "transferClassEvidenceStarts": len(transfer_quality),
+        "targetOpponentLevel": target_level,
+        "transferClassSignal": transfer_signal,
+        "transferClassStatus": "observed-opponent-proxy-uncalibrated" if transfer_quality else "unknown-no-comparable-opponent-evidence",
         "winRate": wins / n if n else None,
         "top2Rate": top2 / n if n else None,
         "top3Rate": top3 / n if n else None,
         "winEvidence": shrink * (wins / n - 0.12) if n else 0.0,
         "top2Evidence": shrink * (top2 / n - 0.25) if n else 0.0,
         "top3Evidence": shrink * (top3 / n - 0.38) if n else 0.0,
-        "comparability": "same-circuit-only; cross-circuit-class-unverified",
+        "comparability": "same-circuit-only; cross-circuit-opponent-proxy-unverified",
     }
 
 
@@ -173,7 +198,8 @@ def rank_observed(horses, race):
         runs = observed_runs(scoring_h, race, limit=5)
         rates = _history_rates(h, race)
         base = .60 * position + .40 * margin["score"]
-        score = base + .12 * rates["winEvidence"] + .06 * rates["top2Evidence"] + .04 * rates["top3Evidence"]
+        score = (base + .12 * rates["winEvidence"] + .06 * rates["top2Evidence"]
+                 + .04 * rates["top3Evidence"] + .04 * rates["transferClassSignal"])
         rows.append(dict(horse=h, score=score, factors={"mineta": position, "margin": margin["score"]},
                          marginCoverage=margin["coverage"], sample=len(runs), historicalRates=rates, modelVersion=model_version(race)))
     rows.sort(key=lambda row: (-row["score"], int(row["horse"]["horseNumber"])))
