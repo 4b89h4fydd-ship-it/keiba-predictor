@@ -2060,8 +2060,8 @@ function honmeiA11yText(x){return x&&markRoleLabel(x)?
   markRoleLabel(x)+'・'+(x.predMark==='◎'?'勝ち切る能力':'3着以内の軸候補')+'（的中保証ではありません）':'';}
 function racecardMarkLegend(r){
   var server=authorizedPreOffMarks(r),clock=raceMarkClock(r),
-      status=clock.started&&server?'発走前保存印（発走前後で同一の原本）':
-        (!clock.started?'発走前の最新AI印':'発走前印の保存なし');
+      status=clock.started?'発走後の再計算印（発走前原本とは別）':
+        '発走前の最新AI印';
   var original=clock.started?authorizedPreOffMarks(r):null,
       axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
   return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎【単】</b> 勝ち切る能力　<b>◎【軸】</b> 3着内の安定性（該当なしもあり）　<b>○</b> 1・2着　<b>▲</b> 2・3着　<b>△</b> 3着　<b>☆</b> 展開で上昇　<b>注</b> 見落とし注意　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
