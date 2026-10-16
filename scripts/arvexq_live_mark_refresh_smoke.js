@@ -66,6 +66,7 @@ const revised=predict(race);
 assert.equal(revised.engineVersion,'arvexq-jra-observed-consensus-v1');
 assert.equal(revised.postRaceRevision,true);
 assert.deepEqual(marks(revised),[]);
+assert.deepEqual(revised.retrospectiveMarks.filter(z=>z.mark==='◎').map(z=>z.horseNumber),marks(changed));
 assert.equal(predict(race),revised,'post-race revision stays stable');
 assert(store.has('arvexq:revised-marks:v1:'+race.id));
 console.log('OBSERVED_6040_MARK_REFRESH_OK (preoff refresh, odds isolation, postoff archive)');
