@@ -34,7 +34,6 @@ jobs:
       - name: Check six-factor tests
         run: python -m unittest discover -s tests -p test_six_factor_research.py -v
       - name: Run historical comparison
-        if: github.event_name == 'workflow_dispatch'
         run: python scripts/arvexq_six_factor_pilot.py --days "${{ inputs.days || '7' }}" --end-date "${{ inputs.end_date || '2026-10-15' }}" --output six-factor-pilot.json
       - uses: actions/upload-artifact@v4
         if: always() && github.event_name == 'workflow_dispatch'
