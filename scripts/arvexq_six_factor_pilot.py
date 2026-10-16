@@ -15,7 +15,7 @@ from datetime import date, timedelta
 from itertools import permutations
 
 from arvexq.prediction.observed_model import rank_observed
-from arvexq.prediction.six_factor_research import signals
+from arvexq.prediction.twelve_factor_research import evidence
 from scripts.arvexq_current_prediction_audit import finish_order, scrub_for_replay
 
 def _highest(v):
@@ -39,7 +39,7 @@ def six_order(detail):
             continue
         if number <= 0 or str(horse.get("status") or "") in ("取消", "除外"):
             continue
-        e = signals(horse,detail)
+        e = evidence(horse,detail)["exactCourse"]
         course = e["exactCourseTop3Rate"] if e["exactCourseStarts"] >= 2 else None
         key = (
             int(course is not None),
@@ -121,7 +121,7 @@ def main():
     for row in detail:
         if isinstance(row,dict):
             ingest(row,metrics,exclusions)
-    report={"version":"six-factor-retrospective-pilot-v1",
+    report={"version":"twelve-factor-retrospective-pilot-v1",
             "warning":"RETROSPECTIVE ONLY: race details may contain updated pre-off features and are not genuine frozen inputs; 10-ticket construction is an arbitrary identical comparison envelope, not an optimized product bet.",
             "receivedDetails":len(detail),"coverage":dict(exclusions),"byCircuit":{}}
     for circuit, variants in metrics.items():
