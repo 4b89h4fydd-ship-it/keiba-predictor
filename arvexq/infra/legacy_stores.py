@@ -426,6 +426,10 @@ SOURCE = (
     "        race_ids = {(r.track, r.date, r.race_no) for r in races}\n"
     "        if any((e.track, e.date, e.race_no) not in race_ids for e in entries):\n"
     "            raise ValueError('NAR archive has horse rows without matching race rows')\n"
+    "        if any(not r.track or not r.date or r.race_no <= 0 for r in races):\n"
+    "            raise ValueError('NAR archive includes invalid race identity')\n"
+    "        if any(not e.track or not e.date or e.race_no <= 0 or e.horse_no <= 0 or not e.name for e in entries):\n"
+    "            raise ValueError('NAR archive includes invalid horse identity')\n"
     '        self.store.import_rows(races, entries)\n'
     "        # Enrich only existing rows using observed official CSV columns.\n"
     "        from arvexq.ingest.nar_official_metadata import (\n"
