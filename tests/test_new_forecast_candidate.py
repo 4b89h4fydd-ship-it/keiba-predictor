@@ -19,7 +19,8 @@ class ReplacementForecastTests(TestCase):
                 self.assertEqual(len(marks), 1)
                 self.assertEqual(result["honmeiDecision"]["horseNumber"], marks[0]["horseNumber"])
                 self.assertEqual(result["honmeiDecision"]["axisHorseNumber"], marks[0]["horseNumber"])
-                self.assertNotIn("%", result["forecastText"])\n                self.assertNotIn("点", result["forecastText"])
+                self.assertNotIn("%", result["forecastText"])
+                self.assertNotIn("点", result["forecastText"])
     def test_missing_history_is_not_promoted_to_prediction(self):
         detail = race("地方")
         detail["horses"][0]["recentRaces"] = []
