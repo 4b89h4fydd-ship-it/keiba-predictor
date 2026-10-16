@@ -107,7 +107,6 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       console.log('PRODUCTION_SAVED_NUMBERED_TICKET_API_OUTAGE_PASS '+id+' '+kind);
     }
     const fresh=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
-    await fresh.addInitScript(key=>{if(localStorage.getItem(key)!=='1')localStorage.setItem(key,'1')},marker);
     await fresh.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
     const home=await fresh.newPage();
     await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
