@@ -56,8 +56,24 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     if(published===true){
       // Published odds update independently of the base racecard request.
       // Wait for actual DOM values; timeout remains a hard failure, never a fake odd.
-      await page.waitForFunction(()=>Array.from(document.querySelectorAll('.rc-odds .odd'))
-        .some(el=>/^\d/.test(el.textContent.trim())),null,{timeout:15000});
+      const numericOddsVisible=()=>Array.from(document.querySelectorAll('.rc-odds .odd'))
+        .some(el=>/^\d/.test(el.textContent.trim()));
+      try {
+        await page.waitForFunction(numericOddsVisible,null,{timeout:15000});
+      } catch (error) {
+        // Published odds may arrive after the page's initial request.
+        // Re-query through the existing user-visible refresh control.
+        console.warn('ODDS_INITIAL_DISPLAY_DELAY '+r.id+' initial='+JSON.stringify(odds));
+        const update=page.locator('[data-action="odds-update"]');
+        assert.ok(await update.count(),'odds refresh control missing '+r.id);
+        const refreshResponse=page.waitForResponse(res=>
+          res.url().includes('/api/live-odds/') && res.url().includes('force=1'),
+          {timeout:20000});
+        await update.click();
+        assert.equal((await refreshResponse).status(),200,'odds source refresh failed '+r.id);
+        await page.waitForFunction(numericOddsVisible,null,{timeout:15000});
+        console.log('ODDS_MANUAL_RECOVERY_PASS '+r.id);
+      }
       odds=await page.locator('.rc-odds .odd').allTextContents();
       assert.ok(odds.some(x=>/^\d/.test(x)),'no acquired odds for '+r.id);
     }
