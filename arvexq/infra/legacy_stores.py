@@ -442,6 +442,12 @@ SOURCE = (
     "            raise ValueError('NAR archive includes invalid race identity')\n"
     "        if any(not e.track or not e.date or e.race_no <= 0 or e.horse_no <= 0 or not e.name for e in entries):\n"
     "            raise ValueError('NAR archive includes invalid horse identity')\n"
+    "        seen_horses = {}\n"
+    "        for e in entries:\n"
+    "            key = (e.track, e.date, e.race_no, e.horse_no)\n"
+    "            previous = seen_horses.setdefault(key, e.name)\n"
+    "            if previous != e.name:\n"
+    "                raise ValueError('NAR archive has conflicting horse names for the same race number')\n"
     '        self.store.import_rows(races, entries)\n'
     "        # Enrich only existing rows using observed official CSV columns.\n"
     "        from arvexq.ingest.nar_official_metadata import (\n"
