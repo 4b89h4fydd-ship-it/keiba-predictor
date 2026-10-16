@@ -36,6 +36,7 @@ def audit(paths):
     no_horse_races = [key for key in races if not entries_by_race[key]]
     missing_by_track = Counter(key[0] for key in no_horse_races)
     unmatched_by_track = Counter(race_key(h)[0] for h in horses if race_key(h) not in races)
+    unmatched_race_keys = Counter(race_key(h) for h in horses if race_key(h) not in races)
     return {
         "sourceFiles": source_files,
         "raceMetadata": coverage,
@@ -44,6 +45,7 @@ def audit(paths):
         "raceRowsWithoutHorseEntries": len(no_horse_races),
         "raceRowsWithoutHorseEntriesByTrack": dict(sorted(missing_by_track.items())),
         "unmatchedHorseRowsByTrack": dict(sorted(unmatched_by_track.items())),
+        "unmatchedHorseRaceKeys": [{"track": key[0], "date": key[1], "raceNumber": key[2], "horseRows": count} for key, count in sorted(unmatched_race_keys.items())],
         "raceKeysWithoutHorseEntries": [list(key) for key in sorted(no_horse_races)],
         "horseRowsMatchingRacePercent": round(len(matched) * 100 / len(horses), 2) if horses else None,
         "horseRowsWithRace": len(matched),
