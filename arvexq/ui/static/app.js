@@ -1228,7 +1228,7 @@ function narScoreRows(rows,r){
     if(margin!==null)observations.push(margin.score);
     if(rate.starts>=2)observations.push((rate.winRate+rate.top2Rate+rate.top3Rate)/3);
     if(rate.transferClassEvidenceStarts>=2)observations.push(.5+rate.transferClassSignal);
-    available=observations.length>=2;
+    available=margin!==null&&observations.length>=2;
     z.narEvidence.available=available;
     z.narEvidence.observedAxes=observations.length;
     z.narScore=available?observations.reduce(function(a,b){return a+b},0)/observations.length:null;
