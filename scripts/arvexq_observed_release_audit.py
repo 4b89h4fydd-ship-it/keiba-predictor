@@ -106,6 +106,23 @@ def main():
             row['original']={'marks':mark_metrics({x['horseNumber']:x.get('mark','') for x in lock['horses']},order),
                              'tickets':ticket_metrics(bet,order),'capturedAt':lock.get('capturedAtJst')}
         else:row['original']=None
+        if lock:
+            marks={z['horseNumber']:z.get('mark','') for z in lock['horses']}
+            original_honmei=next((no for no,m in marks.items() if m=='◎'),None)
+            bets=bet or {}
+            tri=[c for item in bets.get('items',[]) if item.get('kind')=='3連単' for c in item.get('combos',[])]
+            first_nos=sorted({c[0] for c in tri if len(c)==3})
+            if not tri:reason='no-trifecta-offered'
+            elif any(hit('3連単',c,order) for c in tri):reason='hit'
+            elif order[0] not in first_nos:reason='actual-winner-excluded-from-ticket-first-slot'
+            elif not any(len(c)==3 and c[0]==order[0] and c[1]==order[1] for c in tri):reason='actual-first-second-pair-not-selected'
+            else:reason='actual-third-horse-not-selected-for-correct-first-second-pair'
+            row['originalMissAnalysis']={'predictedHonmei':original_honmei,
+                'honmeiActualFinish':order.index(original_honmei)+1 if original_honmei in order else None,
+                'actualPodiumMarks':[{'horseNumber':no,'mark':marks.get(no,'')} for no in order[:3]],
+                'trifectaPoints':len(tri),'ticketFirstSlotHorses':first_nos,'mechanicalMissReason':reason,
+                'causalRacingExplanation':'not-established-from-available-preoff-record'}
+        else:row['originalMissAnalysis']={'mechanicalMissReason':'missing-valid-preoff-original-not-reconstructed'}
         for lane,source in [('before',before),('after',after)]:
             r=source[rid];marks=mark_metrics({x['no']:x['mark'] for x in r['rows']},order)
             row[lane]={'marks':marks,'tickets':ticket_metrics(r['plan'],order)}
