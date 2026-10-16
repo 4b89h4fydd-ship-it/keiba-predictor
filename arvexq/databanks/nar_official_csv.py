@@ -101,19 +101,22 @@ class NarOfficialArchive:
                     horse_rows.extend(row for row in rows if race_key(row)[1])
         self.race_count = len(race_rows)
         self.by_name = defaultdict(list)
-        seen_entries = set()
+        # Repeated daily/monthly records may differ in completeness.
+        # Select the most populated observed row without inventing values.
+        best_entries = {}
         for h in horse_rows:
+            key = (race_key(h), number(item(h, 5)))
+            if not key[0][1] or not key[1]:
+                continue
+            previous = best_entries.get(key)
+            if previous is None or sum(bool(v.strip()) for v in h) > sum(bool(v.strip()) for v in previous):
+                best_entries[key] = h
+        for h in best_entries.values():
             race = race_rows.get(race_key(h))
             no = number(item(h, 5))
             name = normalize(item(h, 6))
             if not race or not no or not name:
                 continue
-            # Monthly and daily official archives overlap. A physical run is
-            # identified by date/course/race/horse number, not ZIP member.
-            entry_key = (race_key(h), no)
-            if entry_key in seen_entries:
-                continue
-            seen_entries.add(entry_key)
             pairs = [(item(race, 50 + i), ranks(item(race, 58 + i))) for i in range(8)]
             pairs = [(label, ranks_) for label, ranks_ in pairs if label and ranks_]
             positions = [order.get(no) for _, order in pairs]
