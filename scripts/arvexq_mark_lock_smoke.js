@@ -47,7 +47,7 @@ const noHistory=fn.applyFrozenMarks(onOtherDevice,make(['◎','○','▲','☆']
 assert.equal(noHistory.markFreeze.source,'missing-prerace');
 assert.ok(noHistory.rows.every(z=>z.predMark===''),'no post-hoc inferred opinion');
 assert.ok(!src.includes('function applyServerAuthoritativeMarks('),'obsolete server mark overwriter deleted');
-assert.match(src,/if\(started\)\{[\s\S]*?var archive=immutableArchivedPrediction\(r\)/,'post-start archive path');
+assert.match(src,/result\.postRaceRevision=true/,'post-start revision path');
 assert.match(src,/markInputSignature===markSignature/,'fresh factor signature required for live cache reuse');
 assert.match(src,/resultPublished=isFinal\(r\)\|\|isFlash\(r\)\|\|hasAnyResultData\(r\)/);
 console.log('ARVEXQ_MARK_PREOFF_LATEST_OK preoff=updated old_local=retired postoff=no_guess scratch=safe');

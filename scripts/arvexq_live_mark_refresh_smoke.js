@@ -59,11 +59,13 @@ assert(score(changed,2)>score(changed,1),'actual model score must update');
 assert.notEqual(changed.markInputSignature,first.markInputSignature,'cache signature must change');
 race.horses[1].recentRaces.push({date:'2099-01-11',fieldSize:12,finish:12,last3fRank:12});
 assert.equal(predict(race),changed,'future starts cannot affect the pre-off score');
-// After the off, no live 60/40 observed prediction is permitted to be republished as
-// a new historical mark, even if a live result is still cached in memory.
+// Completed races can be rerun as labeled revisions while their original
+// pre-start receipts remain separate and immutable.
 race.raceStatus='発走済';
-const archived=predict(race);
-assert.equal(archived.engineVersion,'arvexq-archived-prerace-readonly-v346');
-assert(archived.rows.every(z=>!z.predMark),'no genuine saved forecast -> no retrospectively fabricated marks');
-assert.equal(predict(race),archived,'post-time immutable archive is stable');
+const revised=predict(race);
+assert.equal(revised.engineVersion,'arvexq-jra-mineta-margin-60-40-v1');
+assert.equal(revised.postRaceRevision,true);
+assert.deepEqual(marks(revised),[2]);
+assert.equal(predict(race),revised,'post-race revision stays stable');
+assert(store.has('arvexq:revised-marks:v1:'+race.id));
 console.log('OBSERVED_6040_MARK_REFRESH_OK (preoff refresh, odds isolation, postoff archive)');

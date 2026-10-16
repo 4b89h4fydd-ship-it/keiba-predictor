@@ -1698,16 +1698,18 @@ function predict(r){
       return applyFrozenMarks(r,r._prediction);
     // A stale or older-engine in-memory result is discarded by recomputing
     // below. Historical pre-off seals and ticket receipts are not edited.
-  }else if(r._prediction&&r._prediction.engineVersion==='arvexq-archived-prerace-readonly-v346')
-    return applyFrozenMarks(r,r._prediction);
-  if(started){
-    // A transition to post-time must discard any formerly live prediction;
-    // the only marks permitted now come from the immutable pre-off receipt.
-    var archive=immutableArchivedPrediction(r);
-    Object.defineProperty(r,'_prediction',{value:archive,configurable:true,writable:true,enumerable:false});
-    return archive;
-  }
-  var modelRace=analysisRace(r),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),minetaContext=rows.minetaContext||minetaRaceContext(rows,modelRace),
+  }else if(r._prediction&&r._prediction.postRaceRevision===true&&
+            r._prediction.engineVersion===modelVersion)return r._prediction;
+  // Today's completed races are recalculated using the SAME prediction model,
+  // but not the result, finishing order or post-race popularity/odds.
+  // Display this separately as a retrospective revision, not an original seal.
+  var modelInput=started?Object.assign({},r,{
+    result:null,raceStatus:'',
+    horses:(r.horses||[]).map(function(h){return Object.assign({},h,{
+      winOdds:null,popularity:null,bodyWeight:null,bodyWeightChange:null
+    })})
+  }):r;
+  var modelRace=analysisRace(modelInput),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),minetaContext=rows.minetaContext||minetaRaceContext(rows,modelRace),
       tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,
       sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;
   // Unified TRUE RUN/PURE/SECTIONAL authority for marks, rank and tickets.
@@ -1729,7 +1731,16 @@ function predict(r){
     engineVersion:modelVersion,markEngineVersion:modelVersion,
     markInputSignature:markSignature,
     researchAudit:{model:modelVersion,observedOnly:true,legacyRankersRemoved:true,officialJraProofRequired:!isNarRace(r)}};
-  applyFrozenMarks(r,result);
+  if(started){
+    result.postRaceRevision=true;
+    result.revisionComputedAt=new Date().toISOString();
+    try{localStorage.setItem('arvexq:revised-marks:v1:'+String(r.id),
+      JSON.stringify({raceId:String(r.id),date:String(r.date),version:modelVersion,
+        updatedAt:result.revisionComputedAt,
+        horses:result.rows.map(function(z){return {horseNumber:n(z.horse&&z.horse.horseNumber),
+          mark:String(z.predMark||''),rank:n(z.predRank,0)}})}))}
+    catch(e){}
+  }else applyFrozenMarks(r,result);
   Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
   return result
 }
@@ -2561,8 +2572,19 @@ function paceEvidenceProfile(r,p){
 }
 function buildAiBetPlan(r,p){
   var started=raceMarkClock(r).started,stored=frozenAiBetForRace(r);
+  if(started){
+    var revised=buildObservedBetPlan(r,p);
+    if(revised){
+      revised.postRaceRevision=true;
+      revised.revisedAt=new Date().toISOString();
+      try{localStorage.setItem('arvexq:revised-bets:v1:'+String(r.id),
+        JSON.stringify({raceId:String(r.id),date:String(r.date),
+          updatedAt:revised.revisedAt,engineVersion:revised.engineVersion,
+          items:revised.items,decision:revised.decision}))}catch(e){}
+    }
+    return revised||null;
+  }
   if(stored)return immutableStoredAiBetView(r,stored);
-  if(isFinal(r)||started)return null;
   return buildObservedBetPlan(r,p);
 }
 
