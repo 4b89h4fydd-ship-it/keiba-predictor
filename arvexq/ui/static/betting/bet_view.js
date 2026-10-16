@@ -38,7 +38,7 @@ function render(r,p,deps){
       explanation=aiBetExplanationHtml(plan);
   return '<div class="ai-bet-box arv-three-bet">'
     +'<div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div>'
-    +'<div class="ai-bet-meta"><span class="arv-bet-quality"><small>内部評価（的中率ではありません）</small><b>'+esc(plan.betQuality==null?'未算出':plan.betQuality)+'<em>/100</em></b></span>'
+    +'<div class="ai-bet-meta"><span class="arv-bet-quality"><small>3連単買い目 発生確率（モデル推定）</small><b>'+esc(plan.trifectaOccurrenceProbability==null?'未算出':(plan.trifectaOccurrenceProbability*100).toFixed(2))+'<em>'+ (plan.trifectaOccurrenceProbability==null?'':'%') +'</em></b></span>'
     +'<span class="arv-bet-status">'+esc(status)+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div>'
     +'<p class="arv-three-provisional">'+esc(axisLabel)+'</p>'
     +(plan.noAxis&&!dataUnavailable?'<p class="arv-three-provisional">'+esc(savedV346?'保存時点の軸なし判定を維持。':'◎信頼度Cまたは◎不在：軸を固定せずワイド・馬連・3連複を比較。馬単・3連単は見送ります。')+'</p>':'')
