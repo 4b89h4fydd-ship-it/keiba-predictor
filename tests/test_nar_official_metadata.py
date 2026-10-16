@@ -52,6 +52,38 @@ class NarOfficialMetadataTests(unittest.TestCase):
             self.assertEqual(result["horseRowsWithCarriedWeight"], 1)
             self.assertEqual(original_bytes, archive_path.read_bytes())
 
+    def test_same_name_different_birthdates_require_identity(self):
+        import csv
+        import io
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from arvexq.databanks.nar_official_csv import NarOfficialArchive
+        races, horses = [], []
+        for date, born in (("20261010", "20200101"), ("20261011", "20210101")):
+            race = [""] * 66
+            horse = [""] * 35
+            for row in (race, horse):
+                row[0], row[1], row[2] = "金沢", date, "1"
+            horse[5], horse[6], horse[10], horse[31] = "1", "同名検証馬", born, "1"
+            races.append(race)
+            horses.append(horse)
+        with tempfile.TemporaryDirectory() as folder:
+            archive_path = Path(folder) / "official.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                for filename, rows in (("sample_racelist.csv", races),
+                                       ("sample_horselist.csv", horses)):
+                    stream = io.StringIO()
+                    csv.writer(stream).writerows(rows)
+                    archive.writestr(filename, stream.getvalue().encode("utf-8-sig"))
+            source = NarOfficialArchive([archive_path])
+            race = {"date": "2026-10-12"}
+            self.assertEqual(source.horse_history({"name": "同名検証馬"}, race), {})
+            identified = source.horse_history(
+                {"name": "同名検証馬", "birthDate": "2020-01-01"}, race)
+            self.assertEqual(len(identified["allPastRuns"]), 1)
+            self.assertEqual(identified["allPastRuns"][0]["date"], "2026-10-10")
+
     def test_history_excludes_target_day_and_future_results(self):
         import csv
         import io
