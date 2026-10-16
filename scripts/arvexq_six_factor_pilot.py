@@ -48,11 +48,11 @@ def six_order(detail):
             "recentForm":axes["recentForm"]["podiumRate"],
             "beatenMargin":-axes["beatenMargin"]["seconds"] if axes["beatenMargin"]["seconds"] is not None else None,
             "runningStyle":axes["runningStyle"]["cornerGain"],
-            "racePace":None,
+            "racePace":(-abs(axes["racePace"]["entrantStyle"]-(0.25 if axes["racePace"]["observedFrontRunners"]>=3 else 0.75)) if axes["racePace"].get("entrantStyle") is not None else None),
             "podiumStability":axes["podiumStability"]["podiumRate"],
             "opponentStrength":axes["opponentStrength"]["meanObserved"],
             "winningAbility":axes["winningAbility"]["winRate"],
-            "crossCircuitTransfer":None,
+            "crossCircuitTransfer":axes["crossCircuitTransfer"]["targetPodiumRate"] if axes["crossCircuitTransfer"]["targetStarts"]>=2 else None,
         }
         rows.append((n,values,ev))
     # Compare horses on each available dimension before combining relative
