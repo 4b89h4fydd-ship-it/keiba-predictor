@@ -45,3 +45,26 @@ def update_race_metadata(conn: sqlite3.Connection, identity: tuple[str, str, int
         (*provided.values(), *identity),
     )
     return cursor.rowcount > 0
+
+
+def audit_official_race_metadata(rows: list[list[str]],
+                                 indexes: Mapping[str, int]) -> dict:
+    """Count observed metadata coverage without changing input rows."""
+    counts = {key: 0 for key in COLUMNS}
+    missing = {key: 0 for key in COLUMNS}
+    total = 0
+    for row in rows:
+        if not isinstance(row, list):
+            continue
+        total += 1
+        fields = official_race_metadata(row, indexes)
+        for key in COLUMNS:
+            if fields[key] and fields[key] != "不明":
+                counts[key] += 1
+            else:
+                missing[key] += 1
+    return {"raceRows": total, "observed": counts, "missing": missing,
+            "coveragePercent": {
+                key: round(counts[key] * 100 / total, 2) if total else None
+                for key in COLUMNS
+            }}
