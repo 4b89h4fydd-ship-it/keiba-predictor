@@ -1901,7 +1901,7 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
       (Array.isArray(h.allPastRuns)&&h.allPastRuns.length>0));
   });
   if(fullHistoryReceived){
-    delete out._entryOnly;
+    out._entryOnly=false;
     delete out._staticRacecardFallback;
   }
   if(typeof window!=='undefined'&&window.ARVEXQRaceIdentity)out=window.ARVEXQRaceIdentity.sanitize(out);
