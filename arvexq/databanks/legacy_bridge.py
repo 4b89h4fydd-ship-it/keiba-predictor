@@ -381,7 +381,7 @@ def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:
             folder = Path(archive_dir)
             if folder.is_dir():
                 existing = sorted(
-                    (p for p in folder.glob("*.zip") if p.is_file()),
+                    (p for p in folder.glob("*_race.zip") if p.is_file()),
                     key=lambda p: p.name,
                 )
         register_nar_official_archive(registry, paths=existing if existing else None)
