@@ -40,7 +40,7 @@ class ObservedAuthorityTests(unittest.TestCase):
                 for row in d["factorRanking"]:
                     self.assertAlmostEqual(
                         row["dominanceScore"],
-                        round((.6*row["factors"]["mineta"]+.4*row["factors"]["margin"])*100,2))
+                        round((.6*row["factors"]["mineta"]+.4*row["factors"]["margin"] + .12 * d["horses"][row["horseNumber"]-1]["integratedEvaluation"]["historicalRates"]["winEvidence"] + .06 * d["horses"][row["horseNumber"]-1]["integratedEvaluation"]["historicalRates"]["top2Evidence"] + .04 * d["horses"][row["horseNumber"]-1]["integratedEvaluation"]["historicalRates"]["top3Evidence"])*100,2))
                 self.assertEqual(d["observedModelCoverage"]["fullyObserved"],6)
 
     def test_jra_unverified_margins_not_scored_or_replaced_by_old_model(self):
