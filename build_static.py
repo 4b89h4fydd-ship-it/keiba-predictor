@@ -271,8 +271,8 @@ for extra_asset in ("previous_ai_results.js", "arvexq-brush-logo.svg"):
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
 model_version = strings.get("PREDICTION_ENGINE_VERSION", "")
-if not model_version or "mineta-margin-observed-60-40" not in model_version:
-    raise RuntimeError("Static build must identify the live observed 60/40 prediction model")
+if model_version != "arvexq-observed-consensus-v2":
+    raise RuntimeError("Static build must identify the active observed consensus model")
 (DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"observed-mineta-margin-authoritative","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
 redirects=["/venue /index.html 200","/race /index.html 200","/keiba /keiba/index.html 200"]
 for v in compat_app:redirects.append(f"/app-{v}.js /app-{BUILD_VERSION}.js 302")

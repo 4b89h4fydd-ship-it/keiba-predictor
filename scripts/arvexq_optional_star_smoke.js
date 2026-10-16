@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const start=src.indexOf('function independentSpecialEvidence(');
-const end=src.indexOf('/* Only live observed 60/40 prediction authority',start);
+const end=src.indexOf('/* Only live observed prediction authority',start);
 assert(start>=0&&end>start,'independent ☆/注 authority must exist');
 const n=(v,d=0)=>v==null?d:(Number.isFinite(Number(v))?Number(v):d);
 function historicalWindow(h,r){

@@ -1,4 +1,4 @@
-"""Single pre-off 60% observed positioning + 40% observed margin ranker.
+"""Single observed consensus of positioning, margins and dated career evidence.
 
 JRA and NAR share one scorer. Differences are explicit: JRA official result
 proof, JRA flat versus obstacle history, source surface and course identity.
@@ -8,12 +8,13 @@ from __future__ import annotations
 
 from arvexq.core.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import observed_runs
+from arvexq.ingest.career_transport import recover_horse
 from arvexq.prediction.special_marks import allocate_special_marks
 from arvexq.research.mineta_field_proxy import score_race as mineta_scores
 from arvexq.research.margin_abcde_candidate import score as margin_score
 
-NAR_MODEL_VERSION = "arvexq-nar-observed-consensus-v1"
-JRA_MODEL_VERSION = "arvexq-jra-observed-consensus-v1"
+NAR_MODEL_VERSION = "arvexq-nar-observed-consensus-v2"
+JRA_MODEL_VERSION = "arvexq-jra-observed-consensus-v2"
 MODEL_VERSION = NAR_MODEL_VERSION
 
 
@@ -31,10 +32,13 @@ def _course_history(horse, race):
     if model_version(race) != JRA_MODEL_VERSION:
         return horse
     jump = _is_obstacle(race) or str(race.get("analysisMode") or "") == "障害"
-    out = dict(horse)
+    # Expand before scoping: a later decompression must never resurrect
+    # excluded jump/flat runs or margins without official proof.
+    out = recover_horse(horse, str(race.get("date") or "")) if horse.get("careerArchive") else dict(horse)
+    out.pop("careerArchive", None)
     for key in ("recentRaces", "allPastRuns", "pastRaces", "history", "runs"):
-        if isinstance(horse.get(key), list):
-            out[key] = [x for x in horse[key] if isinstance(x, dict) and _is_obstacle(x) == jump]
+        if isinstance(out.get(key), list):
+            out[key] = [x for x in out[key] if isinstance(x, dict) and _is_obstacle(x) == jump]
     return out
 
 

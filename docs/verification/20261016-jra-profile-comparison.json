@@ -1,0 +1,1432 @@
+[
+  {
+    "profile": "equal",
+    "weights": [
+      0.3333333333333333,
+      0.3333333333333333,
+      0.3333333333333333
+    ],
+    "races": 24,
+    "honmeiWins": 4,
+    "fullRaces": 14,
+    "logLoss": 29.103932632193615,
+    "trifectaOffered": 1,
+    "trifectaHits": 0,
+    "allFullFieldTop10Hits": 0,
+    "rows": [
+      {
+        "id": "jra-2026-10-12-東京-04",
+        "honmei": 8,
+        "actual": [
+          7,
+          3,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-04",
+        "honmei": null,
+        "actual": [
+          12,
+          5,
+          13
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-12",
+        "honmei": 1,
+        "actual": [
+          11,
+          9,
+          13
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-06",
+        "honmei": null,
+        "actual": [
+          16,
+          14,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-03",
+        "honmei": 1,
+        "actual": [
+          5,
+          11,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-01",
+        "honmei": 7,
+        "actual": [
+          14,
+          8,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-08",
+        "honmei": 3,
+        "actual": [
+          9,
+          1,
+          7
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-08",
+        "honmei": 5,
+        "actual": [
+          5,
+          2,
+          1
+        ],
+        "full": true,
+        "selected": true,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-10",
+        "honmei": 5,
+        "actual": [
+          11,
+          1,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-05",
+        "honmei": null,
+        "actual": [
+          12,
+          6,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-06",
+        "honmei": null,
+        "actual": [
+          3,
+          7,
+          11
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-03",
+        "honmei": 1,
+        "actual": [
+          4,
+          11,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-02",
+        "honmei": 5,
+        "actual": [
+          2,
+          11,
+          12
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-07",
+        "honmei": 15,
+        "actual": [
+          13,
+          10,
+          11
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-07",
+        "honmei": 2,
+        "actual": [
+          2,
+          15,
+          9
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-11",
+        "honmei": 1,
+        "actual": [
+          2,
+          16,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-09",
+        "honmei": 10,
+        "actual": [
+          8,
+          13,
+          4
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-10",
+        "honmei": 5,
+        "actual": [
+          5,
+          2,
+          9
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-09",
+        "honmei": 12,
+        "actual": [
+          4,
+          3,
+          12
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-11",
+        "honmei": 15,
+        "actual": [
+          1,
+          4,
+          9
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-12",
+        "honmei": 1,
+        "actual": [
+          10,
+          12,
+          9
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-02",
+        "honmei": 12,
+        "actual": [
+          11,
+          10,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-05",
+        "honmei": null,
+        "actual": [
+          6,
+          2,
+          4
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-01",
+        "honmei": 15,
+        "actual": [
+          15,
+          6,
+          4
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      }
+    ],
+    "meanLogLoss": 2.0788523308709723
+  },
+  {
+    "profile": "position50_margin30_rates20",
+    "weights": [
+      0.5,
+      0.3,
+      0.2
+    ],
+    "races": 24,
+    "honmeiWins": 3,
+    "fullRaces": 14,
+    "logLoss": 31.457988222682125,
+    "trifectaOffered": 5,
+    "trifectaHits": 0,
+    "allFullFieldTop10Hits": 0,
+    "rows": [
+      {
+        "id": "jra-2026-10-12-東京-04",
+        "honmei": 8,
+        "actual": [
+          7,
+          3,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-04",
+        "honmei": null,
+        "actual": [
+          12,
+          5,
+          13
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-12",
+        "honmei": 14,
+        "actual": [
+          11,
+          9,
+          13
+        ],
+        "full": true,
+        "selected": true,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-06",
+        "honmei": null,
+        "actual": [
+          16,
+          14,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-03",
+        "honmei": 1,
+        "actual": [
+          5,
+          11,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-01",
+        "honmei": 8,
+        "actual": [
+          14,
+          8,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-08",
+        "honmei": 3,
+        "actual": [
+          9,
+          1,
+          7
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-08",
+        "honmei": 5,
+        "actual": [
+          5,
+          2,
+          1
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-10",
+        "honmei": 5,
+        "actual": [
+          11,
+          1,
+          10
+        ],
+        "full": true,
+        "selected": true,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-05",
+        "honmei": null,
+        "actual": [
+          12,
+          6,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-06",
+        "honmei": null,
+        "actual": [
+          3,
+          7,
+          11
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-03",
+        "honmei": 1,
+        "actual": [
+          4,
+          11,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-02",
+        "honmei": 5,
+        "actual": [
+          2,
+          11,
+          12
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-07",
+        "honmei": 16,
+        "actual": [
+          13,
+          10,
+          11
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-07",
+        "honmei": 16,
+        "actual": [
+          2,
+          15,
+          9
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-11",
+        "honmei": 13,
+        "actual": [
+          2,
+          16,
+          10
+        ],
+        "full": true,
+        "selected": true,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-09",
+        "honmei": 10,
+        "actual": [
+          8,
+          13,
+          4
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-10",
+        "honmei": 10,
+        "actual": [
+          5,
+          2,
+          9
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-09",
+        "honmei": 4,
+        "actual": [
+          4,
+          3,
+          12
+        ],
+        "full": true,
+        "selected": true,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-11",
+        "honmei": 15,
+        "actual": [
+          1,
+          4,
+          9
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-12",
+        "honmei": 16,
+        "actual": [
+          10,
+          12,
+          9
+        ],
+        "full": true,
+        "selected": true,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-02",
+        "honmei": 12,
+        "actual": [
+          11,
+          10,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-05",
+        "honmei": null,
+        "actual": [
+          6,
+          2,
+          4
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-01",
+        "honmei": 15,
+        "actual": [
+          15,
+          6,
+          4
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      }
+    ],
+    "meanLogLoss": 2.246999158763009
+  },
+  {
+    "profile": "position30_margin50_rates20",
+    "weights": [
+      0.3,
+      0.5,
+      0.2
+    ],
+    "races": 24,
+    "honmeiWins": 4,
+    "fullRaces": 14,
+    "logLoss": 27.896857235504925,
+    "trifectaOffered": 0,
+    "trifectaHits": 0,
+    "allFullFieldTop10Hits": 1,
+    "rows": [
+      {
+        "id": "jra-2026-10-12-東京-04",
+        "honmei": 8,
+        "actual": [
+          7,
+          3,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-04",
+        "honmei": null,
+        "actual": [
+          12,
+          5,
+          13
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-12",
+        "honmei": 1,
+        "actual": [
+          11,
+          9,
+          13
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-06",
+        "honmei": null,
+        "actual": [
+          16,
+          14,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-03",
+        "honmei": 1,
+        "actual": [
+          5,
+          11,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-01",
+        "honmei": 7,
+        "actual": [
+          14,
+          8,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-08",
+        "honmei": 3,
+        "actual": [
+          9,
+          1,
+          7
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-08",
+        "honmei": 5,
+        "actual": [
+          5,
+          2,
+          1
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-10",
+        "honmei": 5,
+        "actual": [
+          11,
+          1,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-05",
+        "honmei": null,
+        "actual": [
+          12,
+          6,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-06",
+        "honmei": null,
+        "actual": [
+          3,
+          7,
+          11
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-03",
+        "honmei": 1,
+        "actual": [
+          4,
+          11,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-02",
+        "honmei": 11,
+        "actual": [
+          2,
+          11,
+          12
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-07",
+        "honmei": 15,
+        "actual": [
+          13,
+          10,
+          11
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-07",
+        "honmei": 16,
+        "actual": [
+          2,
+          15,
+          9
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-11",
+        "honmei": 1,
+        "actual": [
+          2,
+          16,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-09",
+        "honmei": 10,
+        "actual": [
+          8,
+          13,
+          4
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-10",
+        "honmei": 5,
+        "actual": [
+          5,
+          2,
+          9
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-09",
+        "honmei": 12,
+        "actual": [
+          4,
+          3,
+          12
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-11",
+        "honmei": 15,
+        "actual": [
+          1,
+          4,
+          9
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-12",
+        "honmei": 16,
+        "actual": [
+          10,
+          12,
+          9
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-02",
+        "honmei": 11,
+        "actual": [
+          11,
+          10,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-05",
+        "honmei": null,
+        "actual": [
+          6,
+          2,
+          4
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-01",
+        "honmei": 15,
+        "actual": [
+          15,
+          6,
+          4
+        ],
+        "full": true,
+        "selected": false,
+        "hit": true
+      }
+    ],
+    "meanLogLoss": 1.9926326596789232
+  },
+  {
+    "profile": "position40_margin40_rates20",
+    "weights": [
+      0.4,
+      0.4,
+      0.2
+    ],
+    "races": 24,
+    "honmeiWins": 4,
+    "fullRaces": 14,
+    "logLoss": 29.45087115465747,
+    "trifectaOffered": 0,
+    "trifectaHits": 0,
+    "allFullFieldTop10Hits": 0,
+    "rows": [
+      {
+        "id": "jra-2026-10-12-東京-04",
+        "honmei": 8,
+        "actual": [
+          7,
+          3,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-04",
+        "honmei": null,
+        "actual": [
+          12,
+          5,
+          13
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-12",
+        "honmei": 14,
+        "actual": [
+          11,
+          9,
+          13
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-06",
+        "honmei": null,
+        "actual": [
+          16,
+          14,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-03",
+        "honmei": 1,
+        "actual": [
+          5,
+          11,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-01",
+        "honmei": 7,
+        "actual": [
+          14,
+          8,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-08",
+        "honmei": 3,
+        "actual": [
+          9,
+          1,
+          7
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-08",
+        "honmei": 5,
+        "actual": [
+          5,
+          2,
+          1
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-10",
+        "honmei": 5,
+        "actual": [
+          11,
+          1,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-05",
+        "honmei": null,
+        "actual": [
+          12,
+          6,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-06",
+        "honmei": null,
+        "actual": [
+          3,
+          7,
+          11
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-03",
+        "honmei": 1,
+        "actual": [
+          4,
+          11,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-02",
+        "honmei": 12,
+        "actual": [
+          2,
+          11,
+          12
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-07",
+        "honmei": 16,
+        "actual": [
+          13,
+          10,
+          11
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-07",
+        "honmei": 16,
+        "actual": [
+          2,
+          15,
+          9
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-11",
+        "honmei": 13,
+        "actual": [
+          2,
+          16,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-09",
+        "honmei": 10,
+        "actual": [
+          8,
+          13,
+          4
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-10",
+        "honmei": 5,
+        "actual": [
+          5,
+          2,
+          9
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-09",
+        "honmei": 4,
+        "actual": [
+          4,
+          3,
+          12
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-11",
+        "honmei": 15,
+        "actual": [
+          1,
+          4,
+          9
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-12",
+        "honmei": 16,
+        "actual": [
+          10,
+          12,
+          9
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-02",
+        "honmei": 12,
+        "actual": [
+          11,
+          10,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-05",
+        "honmei": null,
+        "actual": [
+          6,
+          2,
+          4
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-01",
+        "honmei": 15,
+        "actual": [
+          15,
+          6,
+          4
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      }
+    ],
+    "meanLogLoss": 2.103633653904105
+  },
+  {
+    "profile": "position25_margin60_rates15",
+    "weights": [
+      0.25,
+      0.6,
+      0.15
+    ],
+    "races": 24,
+    "honmeiWins": 7,
+    "fullRaces": 14,
+    "logLoss": 27.236710134604248,
+    "trifectaOffered": 2,
+    "trifectaHits": 0,
+    "allFullFieldTop10Hits": 1,
+    "rows": [
+      {
+        "id": "jra-2026-10-12-東京-04",
+        "honmei": 8,
+        "actual": [
+          7,
+          3,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-04",
+        "honmei": null,
+        "actual": [
+          12,
+          5,
+          13
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-12",
+        "honmei": 1,
+        "actual": [
+          11,
+          9,
+          13
+        ],
+        "full": true,
+        "selected": true,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-06",
+        "honmei": null,
+        "actual": [
+          16,
+          14,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-03",
+        "honmei": 6,
+        "actual": [
+          5,
+          11,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-01",
+        "honmei": 14,
+        "actual": [
+          14,
+          8,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-08",
+        "honmei": 9,
+        "actual": [
+          9,
+          1,
+          7
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-08",
+        "honmei": 5,
+        "actual": [
+          5,
+          2,
+          1
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-10",
+        "honmei": 5,
+        "actual": [
+          11,
+          1,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-05",
+        "honmei": null,
+        "actual": [
+          12,
+          6,
+          10
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-06",
+        "honmei": null,
+        "actual": [
+          3,
+          7,
+          11
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-03",
+        "honmei": 1,
+        "actual": [
+          4,
+          11,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-02",
+        "honmei": 11,
+        "actual": [
+          2,
+          11,
+          12
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-07",
+        "honmei": 15,
+        "actual": [
+          13,
+          10,
+          11
+        ],
+        "full": true,
+        "selected": true,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-07",
+        "honmei": 16,
+        "actual": [
+          2,
+          15,
+          9
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-11",
+        "honmei": 2,
+        "actual": [
+          2,
+          16,
+          10
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-09",
+        "honmei": 10,
+        "actual": [
+          8,
+          13,
+          4
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-10",
+        "honmei": 5,
+        "actual": [
+          5,
+          2,
+          9
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-09",
+        "honmei": 12,
+        "actual": [
+          4,
+          3,
+          12
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-11",
+        "honmei": 15,
+        "actual": [
+          1,
+          4,
+          9
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-12",
+        "honmei": 16,
+        "actual": [
+          10,
+          12,
+          9
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-02",
+        "honmei": 11,
+        "actual": [
+          11,
+          10,
+          6
+        ],
+        "full": true,
+        "selected": false,
+        "hit": false
+      },
+      {
+        "id": "jra-2026-10-12-京都-05",
+        "honmei": null,
+        "actual": [
+          6,
+          2,
+          4
+        ],
+        "full": false
+      },
+      {
+        "id": "jra-2026-10-12-東京-01",
+        "honmei": 15,
+        "actual": [
+          15,
+          6,
+          4
+        ],
+        "full": true,
+        "selected": false,
+        "hit": true
+      }
+    ],
+    "meanLogLoss": 1.9454792953288749
+  }
+]

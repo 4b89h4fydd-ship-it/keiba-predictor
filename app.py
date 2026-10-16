@@ -63,7 +63,7 @@ from bs4 import BeautifulSoup
 app = FastAPI(title="ARVEXQ", version="14.26-v330-racecard-stable")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
-PREDICTION_ENGINE_VERSION = "arvexq-mineta-margin-observed-60-40-v1"
+PREDICTION_ENGINE_VERSION = "arvexq-observed-consensus-v2"
 ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v300-final"
 AI_EVALUATION_VERSION = "evidence-v317-consensus-rebuild"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"

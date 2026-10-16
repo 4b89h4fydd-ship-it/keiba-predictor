@@ -218,7 +218,7 @@ function firstCornerNorm(rr){var p=rr&&rr.cornerPositions||[],x=n(p[0],0);if(!x)
 function lastCornerNorm(rr){var p=rr&&rr.cornerPositions||[],x=n(p[p.length-1],0);if(!x)return null;return clamp(1-(x-1)/Math.max(1,raceField(rr)-1),0,1)}
 // Consistent pre-race window: deduplicate first, then take the newest five
 // starts. A sixth (older) race cannot substitute for a missing first corner.
-function historicalWindow(h,r){
+function historicalWindow(h,r,limit){
   function normDate(v){
     var t=String(v||'').replace(/\//g,'-').slice(0,10);
     return /^\d{8}$/.test(t)?t.slice(0,4)+'-'+t.slice(4,6)+'-'+t.slice(6,8):t
@@ -249,7 +249,7 @@ function historicalWindow(h,r){
   });
   out.sort(function(a,b){return b.date.localeCompare(a.date)||
     n(b.raceNumber,n(b.raceNo,0))-n(a.raceNumber,n(a.raceNo,0))});
-  return out.slice(0,5)
+  return limit===null?out:out.slice(0,limit==null?5:limit)
 }
 function validFirstCorner(rr){
   var p=n(rr&&rr.cornerPositions&&rr.cornerPositions[0],0),field=n(rr&&rr.fieldSize,0);
@@ -1101,14 +1101,14 @@ function specialMarkInputSignature(r){
   }).sort(function(a,b){return a[0]-b[0]});
 }
 
-/* Only live observed 60/40 prediction authority for both JRA and NAR. */
-var ARVEXQ_NAR_MODEL='arvexq-nar-observed-consensus-v1';
-var ARVEXQ_JRA_MODEL='arvexq-jra-observed-consensus-v1';
+/* Only live observed prediction authority for both JRA and NAR. */
+var ARVEXQ_NAR_MODEL='arvexq-nar-observed-consensus-v2';
+var ARVEXQ_JRA_MODEL='arvexq-jra-observed-consensus-v2';
 function isObservedCircuit(r){return isNarRace(r)||['中央','JRA','central'].indexOf(String(r&&r.circuit||''))>=0}
 function observedModelVersion(r){return isNarRace(r)?ARVEXQ_NAR_MODEL:ARVEXQ_JRA_MODEL}
 function observedCircuitLabel(r){return isNarRace(r)?'地方':'中央'}
-function observedHistory(h,r){
-  var runs=historicalWindow(h,r);
+function observedHistory(h,r,limit){
+  var runs=historicalWindow(h,r,null);
   if(!isNarRace(r)){
     var jump=raceMode(r)==='障害';
     runs=runs.filter(function(q){
@@ -1116,7 +1116,8 @@ function observedHistory(h,r){
       return /障害|ジャンプ|J[・･.]?G|\bJS\b/i.test(mode)===jump;
     });
   }
-  return runs;
+  runs=runs.filter(function(q){var f=narMeasured(q.finish),sz=narMeasured(q.fieldSize);return sz>=2&&f>=1&&f<=sz});
+  return limit===null?runs:runs.slice(0,5);
 }
 function verifiedJraMargin(q){
   if(isNarRace(q&&q._race||{}))return true;
@@ -1128,6 +1129,7 @@ function isNarRace(r){return ['地方','NAR','local'].indexOf(String(r&&r.circui
 function narMeasured(v){if(v==null||v==='')return null;var x=Number(v);return isFinite(x)?x:null}
 function narMarginParts(h,r){
   var runs=observedHistory(h,r),margins=[],ability=[],suit=[],pace=[],i,q,v,f,field,level,positions,first,last;
+  if(!isNarRace(r))runs=runs.filter(verifiedJraMargin);
   runs.forEach(function(run){
     v=narMeasured(run.marginSeconds);if(v===null)v=narMeasured(run.timeBehindWinner);
     if(v!==null&&v>=-30&&v<=30&&(isNarRace(r)||verifiedJraMargin(run)))margins.push(Math.exp(-Math.max(0,v)));
@@ -1158,7 +1160,7 @@ function narMarginParts(h,r){
   return {score:numerator/coverage,coverage:coverage,measuredMargins:margins.length}
 }
 function observedHistoryRateEvidence(h,r){
-  var runs=observedHistory(h,r),target=isNarRace(r)?'NAR':'JRA';
+  var runs=observedHistory(h,r,null),target=isNarRace(r)?'NAR':'JRA';
   var jra=['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉'];
   var nar=['門別','帯広','盛岡','水沢','浦和','船橋','大井','川崎','金沢','笠松','名古屋','園田','姫路','高知','佐賀'];
   function circuit(q){
@@ -1228,7 +1230,7 @@ function narScoreRows(rows,r){
     if(margin!==null)observations.push(margin.score);
     if(rate.starts>=2)observations.push((rate.winRate+rate.top2Rate+rate.top3Rate)/3);
     if(rate.transferClassEvidenceStarts>=2)observations.push(.5+rate.transferClassSignal);
-    available=margin!==null&&observations.length>=2;
+    available=position!==null&&margin!==null;
     z.narEvidence.available=available;
     z.narEvidence.observedAxes=observations.length;
     z.narScore=available?observations.reduce(function(a,b){return a+b},0)/observations.length:null;
@@ -1251,7 +1253,7 @@ function observedSelectedRaceProfile(r,p){
   return {selected:eligible,score:ordered.length?Math.round(ordered[0].narScore*100):null,
     margin:gap,coverage:rows.length?good.length/rows.length:0,
     failed:eligible?[]:[observedCircuitLabel(r)+'の全頭実測着差・位置取り、または本命の差が不足'],
-    reason:eligible?observedCircuitLabel(r)+'60/40の実測根拠が全頭揃った':'見送り：地方の実測根拠不足',
+    reason:eligible?observedCircuitLabel(r)+'観測統合の実測根拠が全頭揃った':'見送り：地方の実測根拠不足',
     model:observedModelVersion(r)}
 }
 function assignObservedPredictionMarks(rows,r){
@@ -1276,11 +1278,11 @@ function assignObservedPredictionMarks(rows,r){
     z.predRank=999;z.predMark='';
     z.honmeiGrade='';z.honmeiRole='';z.preOffAxisCandidate=false;
     z.singleWinSuitable=false;z.p1Probability=null;z.p2Probability=null;z.p3Probability=null;
-    z.attentionReason=has?observedCircuitLabel(r)+'60/40基礎＋勝率・連対率・3着内率・転入補正':observedCircuitLabel(r)+'の実測位置取り・着差不足';
+    z.attentionReason=has?observedCircuitLabel(r)+'観測統合基礎＋勝率・連対率・3着内率・転入補正':observedCircuitLabel(r)+'の実測位置取り・着差不足';
     if(ev){ev.score=z.overallScore;ev.grade=z.overallGrade;ev.modelVersion=observedModelVersion(r);ev.mark='';}
     if(z.evaluation){z.evaluation.score=z.overallScore;z.evaluation.grade=z.overallGrade;
       z.evaluation.modelScore=z.overallScore;z.evaluation.predictionModel=observedModelVersion(r);
-      z.evaluation.mode='みねた位置取り60%＋実測着差40%';}
+      z.evaluation.mode='位置取り・着差・過去実績の観測統合';}
   });
   if(!first){
     r.honmeiDecisionFrontend={version:observedModelVersion(r),eligible:false,horseNumber:0,reason:'missing-observations'};
@@ -1299,7 +1301,7 @@ function assignObservedPredictionMarks(rows,r){
     z.honmeiRole=i===0?'win':'';z.honmeiGrade=i===0?grade:'';
     z.singleWinSuitable=i===0&&grade==='A';z.singleWinStrength=z.narScore;
     z.winRank=i+1;z.p1Rank=i+1;z.attentionReason=(i===0?'本命 '+grade+'｜':'')+
-      (z.specialMarkReason||'みねた60%・実測着差40%')+'｜'+Math.round(z.narScore*100)+'/100';
+      (z.specialMarkReason||'位置取り・着差・過去実績')+'｜'+Math.round(z.narScore*100)+'/100';
     var ev=z.horse&&z.horse.integratedEvaluation;
     if(ev){ev.mark=z.predMark;ev.honmeiRole=z.honmeiRole;ev.honmeiGrade=z.honmeiGrade;
       ev.honmeiEligible=i===0&&grade==='A';ev.specialMarkEvidence=z.specialMarkEvidence}
@@ -1367,21 +1369,21 @@ function buildObservedBetPlan(r,p){
   function item(level,kind,combos,reason){return {level:level,kind:kind,combos:combos,points:combos.length,
     combo:betComboText(kind,combos),reason:reason}}
   if(ready&&ordered.length>=4){
-    items.push(item('本線','馬連',[[no(ordered[0]),no(ordered[1])]],observedCircuitLabel(r)+'60/40の◎○'));
-    items.push(item('保険','ワイド',[[no(ordered[0]),no(ordered[2])]],observedCircuitLabel(r)+'60/40の◎▲'));
+    items.push(item('本線','馬連',[[no(ordered[0]),no(ordered[1])]],observedCircuitLabel(r)+'観測統合の◎○'));
+    items.push(item('保険','ワイド',[[no(ordered[0]),no(ordered[2])]],observedCircuitLabel(r)+'観測統合の◎▲'));
     if(strong){
       var first=ordered[0],tri=[],weights=rows.map(function(z){return Math.exp((z.narScore-first.narScore)/.15)}),
           total=weights.reduce(function(a,b){return a+b},0);
       for(var i=0;i<rows.length;i++)for(var j=0;j<rows.length;j++)if(i!==j)
         for(var k=0;k<rows.length;k++)if(i!==k&&j!==k){
           var d1=total-weights[i],d2=d1-weights[j];
-          if(d1>0&&d2>0&&no(rows[i])===no(first))
+          if(d1>0&&d2>0)
             tri.push({combo:[no(rows[i]),no(rows[j]),no(rows[k])],
               weight:weights[i]/total*weights[j]/d1*weights[k]/d2});
         }
       tri.sort(function(a,b){return b.weight-a.weight});
-      items.push(item('3連単チャレンジ','3連単',tri.slice(0,6).map(function(x){return x.combo}),
-        observedCircuitLabel(r)+'60/40基礎＋過去実績・転入補正による◎1着固定・順序上位6点'));
+      items.push(item('3連単チャレンジ','3連単',tri.slice(0,10).map(function(x){return x.combo}),
+        observedCircuitLabel(r)+'観測統合基礎＋過去実績・転入補正による発生確率上位10点'));
     }
   }
   var trifecta=items.some(function(x){return x.kind==='3連単'});
@@ -1427,7 +1429,7 @@ function buildObservedBetPlan(r,p){
     trifectaDecision:trifecta?'採用':'見送り',
     trifectaReason:trifecta?'実測全頭＋上位差の条件を通過':'実測全頭または順序根拠不足',
     insuranceDecision:ready?'採用':'見送り',
-    reason:ready?observedCircuitLabel(r)+'専用60/40基礎＋過去実績・転入補正の発走前実測モデル':observedCircuitLabel(r)+'の全頭実測着差・位置取り不足',
+    reason:ready?observedCircuitLabel(r)+'専用観測統合基礎＋過去実績・転入補正の発走前実測モデル':observedCircuitLabel(r)+'の全頭実測着差・位置取り不足',
     expectedValueReason:'モデル点・順位確率は校正済み的中率ではありません。',
     referenceBudget:{points:items.reduce(function(a,b){return a+b.points},0)},
     dataReadiness:dataReadinessProfile(r,p),
@@ -1480,7 +1482,7 @@ function integratedGrades(r,rows){
       evidenceScore:null,predictionModel:observedModelVersion(r),
       confidence:available?'実測':'不足',
       tier:available?'位置取り・着差の実測2指標':'実測データ不足',
-      mode:observedCircuitLabel(r)+'専用：みねた位置取り60%＋実測着差40%',
+      mode:observedCircuitLabel(r)+'専用：位置取り・着差・過去実績の観測統合',
       winProbability:available?x.p1Probability:null,
       p1Probability:available?x.p1Probability:null,
       p2Probability:available?x.p2Probability:null,
@@ -1647,7 +1649,7 @@ function applyFrozenMarks(r,p){
   }else p.markFreeze={source:'provisional'};
   return p;
 }
-// Recompute marks only when the actual inputs to the single observed 60/40
+// Recompute marks only when the actual inputs to the single observed 観測統合
 // model change. Historical audit scores, win odds and old evaluation marks
 // never enter this signature. Only the active pre-off race is recalculated.
 function observedMarkInputSignature(r){return observedMarkSignature(r);}
@@ -1676,7 +1678,7 @@ function predict(r){
   var modelRace=analysisRace(modelInput),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),minetaContext=rows.minetaContext||minetaRaceContext(rows,modelRace),
       tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,
       sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;
-  // Unified TRUE RUN/PURE/SECTIONAL authority for marks, rank and tickets.
+  // Unified observed model authority for marks, rank and tickets.
   assignPredictionMarks(rows,modelRace);
   integratedGrades(r,rows);
   for(i=0;i<sc.length;i++){
@@ -1687,7 +1689,7 @@ function predict(r){
   var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],
       plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),
       draft={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext};
-  // Finish visualization uses the final observed 60/40-derived relative probabilities.
+  // Finish visualization uses the final observed 観測統合-derived relative probabilities.
   // Second pass: refresh the displayed outcome with the now-final P1/P2/P3 decision roles.
   var outcome=paceOutcomeModel(r,draft),cov=mean(rows.map(function(x){return x.coverage}));
   assignSingleWinCandidate(rows,modelRace);
@@ -2535,7 +2537,7 @@ function paceEvidenceProfile(r,p){
     source:'過去走初角順位による位置取り推定（実測テン1Fではない）'};
 }
 function buildAiBetPlan(r,p){
-  var started=raceMarkClock(r).started,stored=frozenAiBetForRace(r);
+  var started=raceMarkClock(r).started;
   if(started){
     var revised=buildObservedBetPlan(r,p);
     if(revised){
@@ -2548,7 +2550,6 @@ function buildAiBetPlan(r,p){
     }
     return revised||null;
   }
-  if(stored)return immutableStoredAiBetView(r,stored);
   return buildObservedBetPlan(r,p);
 }
 
