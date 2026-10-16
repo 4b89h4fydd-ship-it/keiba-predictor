@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('node:assert/strict'),verify=require('./arvexq_honmei_dom_contract');
+const win={mark:'◎',win:true,axis:false},axis={mark:'◎',win:false,axis:true};
+assert.doesNotThrow(()=>verify([win,axis],'independent roles'));
+assert.doesNotThrow(()=>verify([{mark:'◎',win:true,axis:true}],'same horse has both roles'));
+assert.doesNotThrow(()=>verify([win,{mark:'○',win:false,axis:true}],'core opponent also carries axis role'));
+assert.doesNotThrow(()=>verify([{mark:'◎',win:false,axis:false}],'one legacy original without recorded roles'));
+assert.throws(()=>verify([win,win],'duplicate winner'),/duplicate win role/);
+assert.throws(()=>verify([axis,axis],'duplicate axis'),/duplicate podium-axis role/);
+assert.throws(()=>verify([win,{mark:'◎',win:false,axis:false}],'untyped duplicate'),/unique axis role/);
+assert.throws(()=>verify([{mark:'◎'},{mark:'◎'}],'two untyped originals'),/unique win role/);
+assert.throws(()=>verify([win,axis,{mark:'◎'}],'third honmei'),/too many/);
+console.log('HONMEI_WIN_AXIS_DOM_CONTRACT_PASS');
