@@ -164,11 +164,17 @@ SOURCE = (
     '                                        jockey,trainer,status,finish,time_seconds,corner_positions_json)\n'
     '                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)\n'
     '                    ON CONFLICT(track,date,race_no,horse_no) DO UPDATE SET\n'
-    '                      frame_no=excluded.frame_no,name=excluded.name,sex=excluded.sex,age=excluded.age,\n'
-    '                      carried_weight=excluded.carried_weight,jockey=excluded.jockey,trainer=excluded.trainer,\n'
+    "                      frame_no=CASE WHEN excluded.frame_no>0 THEN excluded.frame_no ELSE entries.frame_no END,\n"
+    "                      name=CASE WHEN excluded.name!='' THEN excluded.name ELSE entries.name END,\n"
+    "                      sex=CASE WHEN excluded.sex!='' THEN excluded.sex ELSE entries.sex END,\n"
+    "                      age=CASE WHEN excluded.age>0 THEN excluded.age ELSE entries.age END,\n"
+    "                      carried_weight=CASE WHEN excluded.carried_weight>0 THEN excluded.carried_weight ELSE entries.carried_weight END,\n"
+    "                      jockey=CASE WHEN excluded.jockey!='' THEN excluded.jockey ELSE entries.jockey END,\n"
+    "                      trainer=CASE WHEN excluded.trainer!='' THEN excluded.trainer ELSE entries.trainer END,\n"
     "                      status=CASE WHEN entries.status<>'' THEN entries.status ELSE excluded.status END,\n"
-    '                      finish=excluded.finish,time_seconds=excluded.time_seconds,\n'
-    '                      corner_positions_json=excluded.corner_positions_json\n'
+    "                      finish=CASE WHEN excluded.finish>0 THEN excluded.finish ELSE entries.finish END,\n"
+    "                      time_seconds=CASE WHEN excluded.time_seconds>0 THEN excluded.time_seconds ELSE entries.time_seconds END,\n"
+    "                      corner_positions_json=CASE WHEN excluded.corner_positions_json!='[]' THEN excluded.corner_positions_json ELSE entries.corner_positions_json END\n"
     '                    """,\n'
     '                    (\n'
     '                        e.track, e.date, e.race_no, e.frame_no, e.horse_no, e.name, e.sex, e.age,\n'
