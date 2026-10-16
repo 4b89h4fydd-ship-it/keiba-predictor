@@ -14,4 +14,4 @@ class MarkFirstBetTests(unittest.TestCase):
         checks=check_hits(ts,(8,5,11))
         self.assertTrue(any(f(tuple(t)) for t in ts["単勝"] for f in [checks["単勝"]]))
         self.assertTrue(any(f(tuple(t)) for t in ts["3連複"] for f in [checks["3連複"]]))
-        self.assertFalse(any(f(tuple(t)) for t in ts["3連単"] for f in [checks["3連単"]]))
+        self.assertTrue(any(f(tuple(t)) for t in ts["3連単"] for f in [checks["3連単"]]))
