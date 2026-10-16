@@ -5,14 +5,6 @@ const timeout = Number(process.env.ARVEXQ_SMOKE_TIMEOUT || 20000);
 const browserName = String(process.env.ARVEXQ_BROWSER || 'chromium').toLowerCase();
 const browserType = browserName === 'webkit' ? webkit : chromium;
 const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(base);
-// Track the real index.html migration key: an outdated smoke fixture can
-// otherwise trigger a deliberate first-visit redirect in WebKit.
-const fs = require('node:fs');
-const html = fs.readFileSync('arvexq/ui/static/index.html','utf8');
-const markerMatch = html.match(/var tag="(arvexq-(?:hard-reset|horse-only-reset)-[^"]+)"/);
-if (!markerMatch) throw new Error('index.html hard-reset marker not found');
-const resetMarker = markerMatch[1];
-const swReloadMarker = 'v329-racecard-stable-20261007';
 
 (async () => {
   const browser = await browserType.launch({ headless: true });
@@ -22,12 +14,7 @@ const swReloadMarker = 'v329-racecard-stable-20261007';
   const consoleErrors = [];
   const httpFailures = [];
 
-  await page.addInitScript(({ resetMarker, swReloadMarker }) => {
-    try {
-      localStorage.setItem(resetMarker, '1');
-      localStorage.setItem('arvexq-sw-reload', swReloadMarker);
-    } catch (_) {}
-  }, { resetMarker, swReloadMarker });
+
 
   page.on('pageerror', err => pageErrors.push(String(err && err.stack || err)));
   page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
