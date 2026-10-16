@@ -420,6 +420,36 @@ class NarOfficialMetadataTests(unittest.TestCase):
             self.assertEqual(tuple(saved), ("確定レース名", "12:35", 1400, 9))
             store.conn.close()
 
+    def test_conflicting_duplicate_horse_numbers_rejected_before_import(self):
+        import tempfile
+        from pathlib import Path
+        from app import NarStore, NarSync, RaceRow, EntryRow
+        from unittest.mock import Mock
+        race = RaceRow(
+            track="金沢", date="2026-10-12", race_no=1,
+            start_time="12:35", title="検証", distance=1400,
+            weather="不明", condition="不明", field_size=2,
+            prize=(0, 0, 0, 0, 0), corners=[],
+        )
+        def horse(name):
+            return EntryRow(
+                track="金沢", date="2026-10-12", race_no=1,
+                frame_no=1, horse_no=1, name=name, sex="牡", age=4,
+                carried_weight=55, jockey="", trainer="", finish=0,
+                time_seconds=0,
+            )
+        with tempfile.TemporaryDirectory() as root:
+            store = NarStore(Path(root) / "test.sqlite3")
+            sync = NarSync.__new__(NarSync)
+            sync.parser = Mock()
+            sync.parser.parse.return_value = ([race], [horse("甲"), horse("乙")])
+            sync.store = store
+            with self.assertRaises(ValueError):
+                sync.import_zip_bytes(b"placeholder", "bad-duplicate", Path(root) / "dup.zip")
+            self.assertEqual(store.conn.execute("SELECT COUNT(*) FROM entries").fetchone()[0], 0)
+            self.assertIsNone(store.synced_at("bad-duplicate"))
+            store.conn.close()
+
     def test_invalid_horse_identity_does_not_write_database(self):
         import io
         import csv
