@@ -313,6 +313,8 @@ SOURCE = (
     '        ]\n'
     '\n'
     '    def races_json(self, iso_date: str) -> list[dict]:\n'
+    "        from arvexq.ingest.nar_official_metadata import migrate_race_metadata\n"
+    "        migrate_race_metadata(self.conn)\n"
     '        race_rows = self.conn.execute(\n'
     '            "SELECT * FROM races WHERE date=? ORDER BY track, race_no", (iso_date,)\n'
     '        ).fetchall()\n'
@@ -375,7 +377,9 @@ SOURCE = (
     '                    "weather": race["weather"] or "不明",\n'
     '                    "fieldSize": int(race["field_size"] or len(entries)),\n'
     '                    "racePrize1": int(race["prize1"] or 0),\n'
-    '                    "surface": "",\n'
+    "                    \"surface\": race[\"surface\"] or \"\",\n"
+    "                    \"direction\": race[\"direction\"] or \"\",\n"
+    "                    \"class\": race[\"class_condition\"] or \"\",\n"
     '                    "startTime": race["start_time"] or "",\n'
     '                    "scheduledStartTime": race["scheduled_start_time"] or race["start_time"] or "",\n'
     '                    "startTimeChanged": bool((race["scheduled_start_time"] or "") and (race["start_time"] or "") and race["scheduled_start_time"] != race["start_time"]),\n'
