@@ -463,6 +463,16 @@ SOURCE = (
     "            update_race_metadata(self.store.conn, identity, official_race_metadata(raw, RACE_IDX))\n"
     "        self.store.conn.commit()\n"
     '        self.store.mark_synced(cache_key, archive_path)\n'
+    "        # Refresh the official archive-backed history provider after this ZIP\n"
+    "        # has been committed. Startup registration alone misses later downloads.\n"
+    "        try:\n"
+    "            from arvexq.databanks.nar_official_csv import register_nar_official_archive\n"
+    "            from arvexq.databanks.registry import registry\n"
+    "            paths = sorted(ARCHIVE_DIR.glob('*_race.zip'))\n"
+    "            if paths:\n"
+    "                register_nar_official_archive(registry, paths=paths)\n"
+    "        except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:\n"
+    "            logging.getLogger(__name__).warning('NAR career archive refresh unavailable: %s', exc)\n"
     '        return {"races": len(races), "entries": len(entries), "cacheKey": cache_key}\n'
     '\n'
     '    def sync_daily(self, force: bool = False) -> dict:\n'
