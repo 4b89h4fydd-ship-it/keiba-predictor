@@ -1229,7 +1229,10 @@ function assignObservedPredictionMarks(rows,r){
     z.researchModel=observedModelVersion(r);z.researchConsensusScore=score;
     z.overallScoreExact=has?score*100:null;z.overallScore=has?score*100:null;
     z.overallRaw=score;z.hasFrozenEvaluation=has;z.modelScore=has?score*100:null;
-    z.overallGrade=has?grade:'C';z.predRank=999;z.predMark='';
+    // Overall grade is individual: the race-wide `grade` only measures honmei confidence.
+    var runnerRank=has?valid.indexOf(z)+1:0,runnerPct=has?runnerRank/valid.length:1;
+    z.overallGrade=!has?'C':(runnerPct<=.25&&score>=.65?'A':(runnerPct<=.70&&score>=.45?'B':'C'));
+    z.predRank=999;z.predMark='';
     z.honmeiGrade='';z.honmeiRole='';z.preOffAxisCandidate=false;
     z.singleWinSuitable=false;z.p1Probability=null;z.p2Probability=null;z.p3Probability=null;
     z.attentionReason=has?observedCircuitLabel(r)+'60%位置取り＋40%実測着差':observedCircuitLabel(r)+'の実測位置取り・着差不足';
