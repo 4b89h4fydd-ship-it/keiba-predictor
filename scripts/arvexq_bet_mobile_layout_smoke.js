@@ -59,7 +59,7 @@ const historical=renderer({},esc,n,()=>legacyPlan,()=>({vote:''}),
   ()=>'',()=>'')({track:'大井',raceNumber:7},{});
 assert.doesNotMatch(historical,/2 - 6/,'unverified old selection must remain hidden');
 assert.match(historical,/AI買い目/,'ticket section must render');
-assert.doesNotMatch(historical,/本線｜的中重視/,'old ticket is not relabelled');
+assert.doesNotMatch(historical,/2 - 6/,'old ticket combos are not relabelled as current picks');
 
 function extractFunction(name){
   const a=src.indexOf('function '+name+'('),b=src.indexOf('\n}',a);
