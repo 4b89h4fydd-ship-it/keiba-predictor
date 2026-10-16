@@ -7,6 +7,41 @@ from arvexq.ingest.nar_official_metadata import (
 
 
 class NarOfficialMetadataTests(unittest.TestCase):
+    def test_narsync_import_refreshes_archive_backed_history(self):
+        import csv
+        import io
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from unittest.mock import patch
+        import app
+        from arvexq.databanks.registry import registry
+        race, horse = [""] * 66, [""] * 35
+        for row in (race, horse):
+            row[0], row[1], row[2] = "金沢", "20261010", "1"
+        horse[5], horse[6], horse[31] = "1", "更新検証馬", "1"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "202610_race.zip"
+            stream = io.BytesIO()
+            with zipfile.ZipFile(stream, "w") as archive:
+                for name, rows in (("test_racelist.csv", [race]), ("test_horselist.csv", [horse])):
+                    output = io.StringIO()
+                    csv.writer(output).writerows(rows)
+                    archive.writestr(name, output.getvalue().encode("utf-8-sig"))
+            path.write_bytes(stream.getvalue())
+            store = app.NarStore(Path(directory) / "test.db")
+            sync = app.NarSync.__new__(app.NarSync)
+            sync.parser, sync.store = app.NarArchiveParser(), store
+            with patch.object(app, "ARCHIVE_DIR", Path(directory)):
+                sync.import_zip_bytes(stream.getvalue(), "monthly-test", path)
+            provider = registry.get("nar_official_csv")
+            self.assertIsNotNone(provider)
+            history = provider.fetchers["horse_history"](
+                {"name": "更新検証馬"}, {"date": "2026-10-12"})
+            self.assertEqual(len(history["allPastRuns"]), 1)
+            registry._sources.pop("nar_official_csv", None)
+            store.conn.close()
+
     def test_existing_narsync_zip_registers_official_history(self):
         import csv
         import io
