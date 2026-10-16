@@ -95,7 +95,23 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     // a missing actual response is still an explicit failure when awaited.
     const initialResponse=page.waitForResponse(res=>res.url().includes('/api/live-odds/'),{timeout:20000}).catch(()=>null);
     await check(page,r);
-    assert.equal((await initialResponse)?.status(),200,'independent initial source request');
+    const firstSource=await initialResponse;
+    if(firstSource?.status()===429){
+      // Production rate limiting is not an API-outage recovery success.
+      // Surface its actual status and retry the isolated check only after
+      // the server-advertised window, with a strict upper bound.
+      const retryAfter=Number(firstSource.headers()['retry-after']||'2');
+      const delay=Math.min(30000,Math.max(1000,(Number.isFinite(retryAfter)?retryAfter:2)*1000));
+      console.warn('RATE_LIMITED_INITIAL_SOURCE status=429 retryMs='+delay);
+      await page.waitForTimeout(delay);
+      const recovered=await page.evaluate(async id=>{
+        const response=await fetch('/api/live-odds/'+encodeURIComponent(id));
+        return response.status;
+      },r.id);
+      assert.equal(recovered,200,'independent source retry after HTTP 429');
+    }else{
+      assert.equal(firstSource?.status(),200,'independent initial source request');
+    }
     await page.waitForTimeout(250);
     const before=await page.locator('.rc-ai-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark')));
     const response=page.waitForResponse(res=>res.url().includes('/api/live-odds/')&&res.url().includes('force=1'),{timeout:20000}).catch(()=>null);
