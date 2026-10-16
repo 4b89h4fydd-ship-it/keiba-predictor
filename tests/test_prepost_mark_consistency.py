@@ -14,7 +14,9 @@ class PrePostMarkConsistency(unittest.TestCase):
   self.assertEqual(result.returncode,0,result.stdout+result.stderr)
  def test_both_circuits_use_single_observed_6040_score(self):
   s=S.read_text(encoding='utf-8')
-  self.assertIn('z.narScore=available ? .60*position+.40*margin.score : null;',s)
+  self.assertIn('base=available?.60*position+.40*margin.score:null;',s)
+  self.assertIn('.12*rate.winEvidence+.06*rate.top2Evidence+',s)
+  self.assertIn('.04*rate.top3Evidence+.04*rate.transferClassSignal',s)
   self.assertIn("var ARVEXQ_JRA_MODEL='arvexq-jra-mineta-margin-60-40-v1'",s)
   self.assertIn("var ARVEXQ_NAR_MODEL='arvexq-nar-mineta-margin-60-40-v1'",s)
   self.assertNotIn('function arvexqFactorValues',s)
