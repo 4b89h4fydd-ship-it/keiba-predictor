@@ -29,7 +29,7 @@ def race(circuit):
 
 
 class ObservedAuthorityTests(unittest.TestCase):
-    def test_same_6040_axes_and_separate_model_ids(self):
+    def test_consensus_axes_and_separate_model_ids(self):
         for circuit in ("中央","地方"):
             with self.subTest(circuit=circuit):
                 d=race(circuit)
@@ -38,9 +38,13 @@ class ObservedAuthorityTests(unittest.TestCase):
                                  JRA_MODEL_VERSION if circuit=="中央" else NAR_MODEL_VERSION)
                 self.assertEqual(d["factorRanking"][0]["modelVersion"], d["predictionModelVersion"])
                 for row in d["factorRanking"]:
-                    self.assertAlmostEqual(
-                        row["dominanceScore"],
-                        round((.6*row["factors"]["mineta"]+.4*row["factors"]["margin"] + .12 * d["horses"][row["horseNumber"]-1]["integratedEvaluation"]["historicalRates"]["winEvidence"] + .06 * d["horses"][row["horseNumber"]-1]["integratedEvaluation"]["historicalRates"]["top2Evidence"] + .04 * d["horses"][row["horseNumber"]-1]["integratedEvaluation"]["historicalRates"]["top3Evidence"])*100,2))
+                    rates = d["horses"][row["horseNumber"]-1]["integratedEvaluation"]["historicalRates"]
+                    axes = [row["factors"]["mineta"], row["factors"]["margin"]]
+                    if rates["starts"] >= 2:
+                        axes.append((rates["winRate"] + rates["top2Rate"] + rates["top3Rate"]) / 3)
+                    if rates["transferClassEvidenceStarts"] >= 2:
+                        axes.append(.5 + rates["transferClassSignal"])
+                    self.assertAlmostEqual(row["dominanceScore"], round(sum(axes)/len(axes)*100,2))
                 self.assertEqual(d["observedModelCoverage"]["fullyObserved"],6)
 
     def test_jra_unverified_margins_not_scored_or_replaced_by_old_model(self):
