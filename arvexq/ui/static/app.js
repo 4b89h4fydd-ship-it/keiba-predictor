@@ -1337,7 +1337,30 @@ function buildObservedBetPlan(r,p){
     }
   }
   var trifecta=items.some(function(x){return x.kind==='3連単'});
+  // Sum the mutually exclusive ordered finish probabilities for the displayed trifecta tickets.
+  // This is a model estimate, not an empirically calibrated hit rate.
+  var triProbability=null;
+  if(ready&&ordered.length>=4&&trifecta){
+    var scale=.15,base=ordered[0].narScore,
+        ws=ordered.map(function(z){return Math.exp((z.narScore-base)/scale)}),
+        sum=ws.reduce(function(a,b){return a+b},0),index={};
+    ordered.forEach(function(z,i){index[no(z)]=i});
+    var seen={};triProbability=0;
+    items.filter(function(x){return x.kind==='3連単'}).forEach(function(item){
+      (item.combos||[]).forEach(function(c){
+        if(!c||c.length!==3)return;
+        var a=index[n(c[0])],b=index[n(c[1])],d=index[n(c[2])],
+            key=c.map(n).join('-');
+        if(a==null||b==null||d==null||a===b||a===d||b===d||seen[key])return;
+        seen[key]=true;
+        var rem=sum-ws[a],last=rem-ws[b];
+        if(rem>0&&last>0)triProbability+=(ws[a]/sum)*(ws[b]/rem)*(ws[d]/last);
+      });
+    });
+    triProbability=Math.max(0,Math.min(1,triProbability));
+  }
   var plan={raceId:String(r.id||''),raceDate:String(r.date||''),items:items,
+    trifectaOccurrenceProbability:triProbability,
     engineVersion:observedModelVersion(r),betStrategy:observedModelVersion(r),
     betQuality:ordered.length?Math.round(ordered[0].narScore*100):0,
     decision:ready?'購入候補':'見送り',featuredRace:isFeaturedBetRace(r,p),
