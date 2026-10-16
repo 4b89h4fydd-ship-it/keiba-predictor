@@ -2392,10 +2392,10 @@ function verifiedSavedAiBet(r,plan){
   return plan
 }
 function currentBetEnginePlan(plan){
-  // Historical sealed tickets remain in audit storage, not in the live UI.
-  // Never re-derive or relabel a legacy ticket after the off.
-  return plan&&/^(arvexq-jra-mineta-margin-60-40-v1|arvexq-nar-mineta-margin-60-40-v1)$/.test(
-    String(plan.engineVersion||plan.betStrategy||''))?plan:null
+  // The historical receipt is view-only. The caller already verified its
+  // race identity and strictly pre-off timestamp. Engine migration must not
+  // erase previously frozen tickets or recalculate them using final results.
+  return plan&&Array.isArray(plan.items)&&plan.items.length?plan:null
 }
 function frozenAiBetForRace(r){
   if(!r||!r.id)return null;
