@@ -32,10 +32,15 @@ def audit(paths):
     matched = [h for h in horses if race_key(h) in races]
     missing_race = len(horses) - len(matched)
     weights = sum(bool(item(h, 16).strip()) for h in matched)
+    entries_by_race = Counter(race_key(h) for h in matched)
+    no_horse_races = [key for key in races if not entries_by_race[key]]
     return {
         "sourceFiles": source_files,
         "raceMetadata": coverage,
         "horseRows": len(horses),
+        "raceRowsWithHorseEntries": len(races) - len(no_horse_races),
+        "raceRowsWithoutHorseEntries": len(no_horse_races),
+        "horseRowsMatchingRacePercent": round(len(matched) * 100 / len(horses), 2) if horses else None,
         "horseRowsWithRace": len(matched),
         "horseRowsWithoutRace": missing_race,
         "horseRowsWithCarriedWeight": weights,
