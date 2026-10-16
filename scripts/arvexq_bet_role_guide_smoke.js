@@ -25,4 +25,13 @@ const historic={...plan,fixedAt:'2026-10-08T10:20:00+09:00',
 const old=renderer({},{},{...deps,buildAiBetPlan:()=>historic});
 assert.match(old,/発走前固定/);
 assert.match(old,/2 - 6/);
+const revised=renderer({},{},{...deps,buildAiBetPlan:()=>({...plan,postRaceRevision:true})});
+assert.match(revised,/事後分析（発走後再計算）/);
+assert.match(revised,/的中率の検証には使用しません/);
+const app=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const postBet=app.slice(app.indexOf('function buildAiBetPlan(r,p){'),app.indexOf('function betItemHit('));
+assert.match(postBet,/if\(stored\)return immutableStoredAiBetView\(r,stored\);/);
+const postMark=app.slice(app.indexOf('function predict(r){'),app.indexOf('function nextRace(){'));
+assert.match(postMark,/result\.retrospectiveMarks=result\.rows\.map/);
+assert.match(postMark,/result\.retrospectiveMarks[\s\S]*?applyFrozenMarks\(r,result\);/);
 console.log('BET_ROLE_GUIDE_AND_RETIRED_BETS_CONTRACT_OK');
