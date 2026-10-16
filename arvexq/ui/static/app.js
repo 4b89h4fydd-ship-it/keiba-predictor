@@ -1348,7 +1348,13 @@ function buildObservedBetPlan(r,p){
   if(rows.length<4)return null;
   var selection=observedSelectedRaceProfile(r,p),
       ordered=rows.filter(function(z){return z.narEvidence&&z.narEvidence.available})
-        .sort(function(a,b){return b.narScore-a.narScore}),ready=rows.length===ordered.length,
+        .sort(function(a,b){
+          var priority={'◎':0,'○':1,'▲':2,'△':3,'☆':4,'注':5};
+          var ma=String(a.predMark||''),mb=String(b.predMark||'');
+          var pa=Object.prototype.hasOwnProperty.call(priority,ma)?priority[ma]:99;
+          var pb=Object.prototype.hasOwnProperty.call(priority,mb)?priority[mb]:99;
+          return pa-pb||n(b.narScore)-n(a.narScore);
+        }),ready=rows.length===ordered.length,
       strong=selection.selected,items=[];
   function no(x){return n(x&&x.horse&&x.horse.horseNumber)}
   function item(level,kind,combos,reason){return {level:level,kind:kind,combos:combos,points:combos.length,
