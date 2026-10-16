@@ -350,6 +350,29 @@ class NarOfficialMetadataTests(unittest.TestCase):
             self.assertEqual(tuple(saved), ("検証馬", "騎手A", "調教師B", 2, 84.6))
             store.conn.close()
 
+    def test_sparse_race_refresh_preserves_prizes_and_corners(self):
+        import tempfile
+        from pathlib import Path
+        from app import NarStore, RaceRow
+        def race(prizes, corners):
+            return RaceRow(
+                track="金沢", date="2026-10-12", race_no=1,
+                start_time="12:35", title="検証R", distance=1400,
+                weather="不明", condition="不明", field_size=9,
+                prize=prizes, corners=corners,
+            )
+        with tempfile.TemporaryDirectory() as root:
+            store = NarStore(Path(root) / "race.sqlite3")
+            store.import_rows([race((100, 40, 25, 15, 10), [{1: 2, 2: 1}])], [])
+            store.import_rows([race((0, 0, 0, 0, 0), [])], [])
+            saved = store.conn.execute(
+                "SELECT prize1,prize2,prize3,prize4,prize5,corners_json "
+                "FROM races WHERE track='金沢' AND date='2026-10-12' AND race_no=1"
+            ).fetchone()
+            self.assertEqual(tuple(saved[:5]), (100, 40, 25, 15, 10))
+            self.assertNotEqual(saved[5], "[]")
+            store.conn.close()
+
     def test_sparse_nar_entry_reimport_keeps_observed_results(self):
         import tempfile
         from pathlib import Path
