@@ -37,6 +37,19 @@ class PastFiveContextTests(unittest.TestCase):
         self.assertEqual(features["historySamples"], 5)
         self.assertEqual(features["pastPerformance"]["top3"], 4)
 
+    def test_normalized_history_retains_observed_weather_and_class(self):
+        from arvexq.history import normalize_run, all_runs
+        original = {**run("2026-09-20", 2), "weather": "雨", "className": "C2"}
+        snapshot = dict(original)
+        normalized = normalize_run(original)
+        self.assertEqual(normalized["weather"], "雨")
+        self.assertEqual(normalized["class"], "C2")
+        self.assertEqual(original, snapshot)
+        self.assertEqual(all_runs({"recentRaces": [original]})[0]["weather"], "雨")
+        self.assertEqual(all_runs({"recentRaces": [original]})[0]["class"], "C2")
+        self.assertEqual(normalize_run({"date": "2026-09-20"})["weather"], "")
+        self.assertEqual(normalize_run({"date": "2026-09-20"})["class"], "")
+
     def test_not_comparable_is_not_claimed_to_be_bad_or_good(self):
         runs = [run("2026-09-20", 1, distance=1800),
                 run("2026-09-18", 1, surface="芝"),
