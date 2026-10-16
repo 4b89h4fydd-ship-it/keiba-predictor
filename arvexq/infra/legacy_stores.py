@@ -413,6 +413,19 @@ SOURCE = (
     '    def import_zip_bytes(self, data: bytes, cache_key: str, archive_path: Path) -> dict:\n'
     '        races, entries = self.parser.parse(data)\n'
     '        self.store.import_rows(races, entries)\n'
+    "        # Enrich only existing rows using observed official CSV columns.\n"
+    "        from arvexq.ingest.nar_official_metadata import (\n"
+    "            migrate_race_metadata, official_race_metadata, update_race_metadata,\n"
+    "        )\n"
+    "        race_rows = strip_header(read_csv_from_zip(data, '_racelist.csv'))\n"
+    "        migrate_race_metadata(self.store.conn)\n"
+    "        for raw in race_rows:\n"
+    "            if len(raw) < 33:\n"
+    "                continue\n"
+    "            identity = (_clean(raw[RACE_IDX['track']]), _iso_date(raw[RACE_IDX['date']]),\n"
+    "                        _int(raw[RACE_IDX['race_no']]))\n"
+    "            update_race_metadata(self.store.conn, identity, official_race_metadata(raw, RACE_IDX))\n"
+    "        self.store.conn.commit()\n"
     '        self.store.mark_synced(cache_key, archive_path)\n'
     '        return {"races": len(races), "entries": len(entries), "cacheKey": cache_key}\n'
     '\n'
