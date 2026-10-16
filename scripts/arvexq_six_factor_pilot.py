@@ -25,35 +25,52 @@ def _lowest(v):
     return -float(v) if v is not None else -999.0
 
 def six_order(detail):
-    """Hierarchical, not weighted percentages; ties broken by horse number.
+    """Field-relative consensus across all observable axes; no priority cascade.
 
-    Exact-course suitability is a primary differentiator only with >=2
-    comparable starts. Other factors are observed indicators, not inferred
-    probabilities. Absent evidence is counted instead of imputed.
+    A missing measurement abstains. One course match cannot veto the other
+    evidence. Race-pace and transfers remain explicit missing until verified.
     """
-    rows = []
+    rows=[]
     for horse in detail.get("horses") or []:
         try:
-            number = int(horse.get("horseNumber") or 0)
-        except (TypeError, ValueError):
+            n=int(horse.get("horseNumber") or 0)
+        except (ValueError,TypeError):
             continue
-        if number <= 0 or str(horse.get("status") or "") in ("取消", "除外"):
+        if n<=0 or str(horse.get("status") or "") in ("取消","除外"):
             continue
-        e = evidence(horse,detail)["exactCourse"]
-        course = e["exactCourseTop3Rate"] if e["exactCourseStarts"] >= 2 else None
-        key = (
-            int(course is not None),
-            _highest(course),
-            _highest(e["recentWeightedTop3Rate"]),
-            _lowest(e["recentWeightedMarginSeconds"]),
-            _highest(e["overallTop3Rate"]),
-            _highest(e["recentCornerToFinishGain"]),
-            _lowest(e["exactCourseMeanMarginSeconds"]),
-            -number,
-        )
-        rows.append((key, number, e))
-    rows.sort(reverse=True)
-    return [v[1] for v in rows], {v[1]:v[2] for v in rows}
+        ev=evidence(horse,detail)
+        axes=ev["axes"]
+        values={
+            "sameTrack":axes["sameTrack"]["podiumRate"] if axes["sameTrack"]["starts"]>=2 else None,
+            "sameDistance":axes["sameDistance"]["podiumRate"] if axes["sameDistance"]["starts"]>=2 else None,
+            "sameTurn":axes["sameTurn"]["podiumRate"] if axes["sameTurn"]["starts"]>=2 else None,
+            "sameSurface":axes["sameSurface"]["podiumRate"] if axes["sameSurface"]["starts"]>=2 else None,
+            "recentForm":axes["recentForm"]["podiumRate"],
+            "beatenMargin":-axes["beatenMargin"]["seconds"] if axes["beatenMargin"]["seconds"] is not None else None,
+            "runningStyle":axes["runningStyle"]["cornerGain"],
+            "racePace":None,
+            "podiumStability":axes["podiumStability"]["podiumRate"],
+            "opponentStrength":axes["opponentStrength"]["meanObserved"],
+            "winningAbility":axes["winningAbility"]["winRate"],
+            "crossCircuitTransfer":None,
+        }
+        rows.append((n,values,ev))
+    # Compare horses on each available dimension before combining relative
+    # rankings. Contributions are counted once per distinct observable axis.
+    strengths={n:[] for n,_,_ in rows}
+    names=list(rows[0][1]) if rows else []
+    for key in names:
+        present=[(n,v[key]) for n,v,_ in rows if v[key] is not None]
+        if len(present)<2:
+            continue
+        for n,value in present:
+            wins=sum(value>other for other_n,other in present if other_n!=n)
+            ties=sum(value==other for other_n,other in present if other_n!=n)
+            strengths[n].append((wins+.5*ties)/(len(present)-1))
+    ranking=sorted(rows,key=lambda item:(
+        -(sum(strengths[item[0]])/len(strengths[item[0]]) if strengths[item[0]] else -1),
+        -len(strengths[item[0]]),item[0]))
+    return [n for n,_,_ in ranking],{n:ev for n,_,ev in ranking}
 
 def tickets(rank):
     """Fixed 10-ticket research envelope across top five, not tuned to outcome."""
