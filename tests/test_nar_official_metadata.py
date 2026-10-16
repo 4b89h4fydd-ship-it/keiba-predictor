@@ -18,6 +18,37 @@ class NarOfficialMetadataTests(unittest.TestCase):
         self.assertEqual(audit["coveragePercent"]["surface"], 50.0)
         self.assertEqual(rows, before)
 
+    def test_read_only_archive_coverage_report(self):
+        import csv
+        import io
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from scripts.arvexq_nar_csv_coverage import audit
+        race = [""] * 66
+        for index, value in {0: "金沢", 1: "20261012", 2: "1",
+                             21: "ダート", 22: "右", 27: "C2"}.items():
+            race[index] = value
+        horse = [""] * 35
+        for index, value in {0: "金沢", 1: "20261012", 2: "1",
+                             5: "1", 6: "検証馬", 16: "▲ 51.0"}.items():
+            horse[index] = value
+        with tempfile.TemporaryDirectory() as temp:
+            archive_path = Path(temp) / "source.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                for name, rows in (("sample_racelist.csv", [race]),
+                                   ("sample_horselist.csv", [horse])):
+                    stream = io.StringIO()
+                    csv.writer(stream).writerows(rows)
+                    archive.writestr(name, stream.getvalue().encode("utf-8-sig"))
+            original_bytes = archive_path.read_bytes()
+            result = audit([archive_path])
+            self.assertEqual(result["raceMetadata"]["raceRows"], 1)
+            self.assertEqual(result["raceMetadata"]["observed"]["surface"], 1)
+            self.assertEqual(result["horseRowsWithRace"], 1)
+            self.assertEqual(result["horseRowsWithCarriedWeight"], 1)
+            self.assertEqual(original_bytes, archive_path.read_bytes())
+
     def test_archive_history_carries_official_context(self):
         import csv
         import io
