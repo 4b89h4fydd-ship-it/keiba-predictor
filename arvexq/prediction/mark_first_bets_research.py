@@ -27,13 +27,21 @@ def tickets_from_marks(marks):
         "3連単":list(permutations(values[:4],3))[:10],
     }
 
-def check_hits(tickets,finish):
+def check_hits(tickets,finish, *, field_size=None):
     if len(finish)<3: return {}
     first,second,third=finish[:3]
     top3={first,second,third}
+    # JRA place betting pays two places in fields of 5-7, three in 8+.
+    # Fields of four or fewer normally do not offer place betting.
+    if field_size is not None and field_size < 5:
+        place=set()
+    elif field_size is not None and field_size <= 7:
+        place={first,second}
+    else:
+        place=top3
     return {
         "単勝":lambda t:t[0]==first,
-        "複勝":lambda t:t[0] in top3,
+        "複勝":lambda t:t[0] in place,
         "馬連":lambda t:set(t)=={first,second},
         "ワイド":lambda t:set(t).issubset(top3),
         "馬単":lambda t:t==(first,second),
