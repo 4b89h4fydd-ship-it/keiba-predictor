@@ -23,6 +23,6 @@ const historic={...plan,fixedAt:'2026-10-08T10:20:00+09:00',
  engineVersion:'arvexq-bets-old-v317',
  items:[{level:'本線',kind:'馬連',points:1,combo:'2 - 6',combos:[[2,6]]}]};
 const old=renderer({},{},{...deps,buildAiBetPlan:()=>historic});
-assert.match(old,/現行方式の発走前買い目は未保存です/);
-assert.doesNotMatch(old,/2 - 6/);
+assert.match(old,/発走前固定/);
+assert.match(old,/2 - 6/);
 console.log('BET_ROLE_GUIDE_AND_RETIRED_BETS_CONTRACT_OK');
