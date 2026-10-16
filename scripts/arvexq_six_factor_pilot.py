@@ -77,12 +77,20 @@ def ingest(detail, metrics, exclusions):
     except Exception as error:
         exclusions["computation-error:"+type(error).__name__]+=1
         return
+    circuit = "JRA" if str(detail.get("circuit") or "") in ("中央","JRA","central") else "NAR"
+    actual=tuple(finish[:3])
+    if len(baseline)<5:
+        exclusions["current-fewer-than-five-ranked"]+=1
+    if len(candidate)<5:
+        exclusions["candidate-fewer-than-five-ranked"]+=1
+    if set(baseline)!=set(candidate):
+        exclusions["ranked-horse-set-mismatch"]+=1
+    # Compare on precisely the same horses. Never fill missing baseline
+    # runners with candidate ranks or the actual finishing order.
     if len(baseline)<5 or len(candidate)<5 or set(baseline)!=set(candidate):
         exclusions["not-comparable-complete-rankings"]+=1
         return
-    circuit = "JRA" if str(detail.get("circuit") or "") in ("中央","JRA","central") else "NAR"
-    actual=tuple(finish[:3])
-    for name,order in (("current",baseline),("sixFactor",candidate)):
+    for name,order in (("current",baseline),("twelveFactor",candidate)):
         m=metrics[circuit][name]
         m["races"]+=1
         m["winnerTop1"]+=int(order[0]==actual[0])
