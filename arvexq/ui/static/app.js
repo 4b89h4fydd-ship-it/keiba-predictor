@@ -1663,7 +1663,7 @@ function predict(r){
     // A stale or older-engine in-memory result is discarded by recomputing
     // below. Historical pre-off seals and ticket receipts are not edited.
   }else if(r._prediction&&r._prediction.postRaceRevision===true&&
-            r._prediction.engineVersion===modelVersion)return r._prediction;
+            r._prediction.engineVersion===modelVersion)return applyFrozenMarks(r,r._prediction);
   // Today's completed races are recalculated using the SAME prediction model,
   // but not the result, finishing order or post-race popularity/odds.
   // Display this separately as a retrospective revision, not an original seal.
