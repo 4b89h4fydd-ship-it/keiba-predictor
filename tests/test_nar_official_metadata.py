@@ -46,6 +46,9 @@ class NarOfficialMetadataTests(unittest.TestCase):
             self.assertEqual(result["raceMetadata"]["raceRows"], 1)
             self.assertEqual(result["raceMetadata"]["observed"]["surface"], 1)
             self.assertEqual(result["horseRowsWithRace"], 1)
+            self.assertEqual(result["raceRowsWithHorseEntries"], 1)
+            self.assertEqual(result["raceRowsWithoutHorseEntries"], 0)
+            self.assertEqual(result["horseRowsMatchingRacePercent"], 100.0)
             self.assertEqual(result["horseRowsWithCarriedWeight"], 1)
             self.assertEqual(original_bytes, archive_path.read_bytes())
 
