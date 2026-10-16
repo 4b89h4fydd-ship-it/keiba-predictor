@@ -96,7 +96,16 @@ class NarOfficialArchive:
                     for row in rows:
                         key = race_key(row)
                         if key[1] and key[2]:
-                            race_rows[key] = row
+                            previous = race_rows.get(key)
+                            if previous is None:
+                                race_rows[key] = row
+                            else:
+                                richer, other = (row, previous) if sum(bool(str(v).strip()) for v in row) > sum(bool(str(v).strip()) for v in previous) else (previous, row)
+                                race_rows[key] = [
+                                    (richer[i] if i < len(richer) and str(richer[i]).strip()
+                                     else other[i] if i < len(other) else "")
+                                    for i in range(max(len(richer), len(other)))
+                                ]
                 if "horselist" in filename:
                     horse_rows.extend(row for row in rows if race_key(row)[1])
         self.race_count = len(race_rows)
