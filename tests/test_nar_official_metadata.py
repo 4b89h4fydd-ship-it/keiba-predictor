@@ -18,6 +18,39 @@ class NarOfficialMetadataTests(unittest.TestCase):
         self.assertEqual(audit["coveragePercent"]["surface"], 50.0)
         self.assertEqual(rows, before)
 
+    def test_archive_history_carries_official_context(self):
+        import csv
+        import io
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from arvexq.databanks.nar_official_csv import NarOfficialArchive
+        race = [""] * 66
+        for idx, val in {0: "金沢", 1: "20261012", 2: "1", 21: "ダート",
+                         22: "右", 23: "1400", 24: "雨", 25: "重",
+                         26: "2", 27: "C2"}.items():
+            race[idx] = val
+        horse = [""] * 35
+        for idx, val in {0: "金沢", 1: "20261012", 2: "1",
+                         3: "1", 5: "1", 6: "検証馬", 14: "騎手",
+                         16: "▲ 51.0", 31: "1"}.items():
+            horse[idx] = val
+        with tempfile.TemporaryDirectory() as directory:
+            archive_path = Path(directory) / "nar.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                for name, rows in (("x_racelist.csv", [race]),
+                                   ("x_horselist.csv", [horse])):
+                    output = io.StringIO()
+                    csv.writer(output).writerows(rows)
+                    archive.writestr(name, output.getvalue().encode("utf-8-sig"))
+            history = NarOfficialArchive([archive_path]).horse_history(
+                {"name": "検証馬"}, {"date": "2026-10-13"})
+            row = history["allPastRuns"][0]
+            for field, expected in (("surface", "ダート"), ("direction", "右"),
+                                    ("weather", "雨"), ("condition", "重"),
+                                    ("class", "C2"), ("carriedWeight", 51.0)):
+                self.assertEqual(row[field], expected)
+
     def test_existing_rows_survive_migration_and_missing_csv_values(self):
         conn = sqlite3.connect(":memory:")
         conn.execute("CREATE TABLE races(track TEXT,date TEXT,race_no INTEGER,title TEXT)")
