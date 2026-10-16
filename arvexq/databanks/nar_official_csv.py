@@ -28,6 +28,12 @@ def number(value):
         return 0
 
 
+def carried_weight(value):
+    """Keep only an observed weight, including reduction-jockey prefixes."""
+    match = re.search(r"\d+(?:\.\d+)?", str(value or ""))
+    return float(match.group()) if match else None
+
+
 def date(value):
     x = str(value or "").replace("-", "").replace("/", "")
     return f"{x[:4]}-{x[4:6]}-{x[6:8]}" if len(x) == 8 and x.isascii() and x.isdigit() else ""
@@ -110,6 +116,10 @@ class NarOfficialArchive:
                 "raceNumber": number(item(h, 2)), "distance": number(item(race, 23)),
                 "horseNumber": no, "frameNumber": number(item(h, 3)),
                 "fieldSize": number(item(race, 26)), "jockey": item(h, 14),
+                "surface": item(race, 21), "direction": item(race, 22),
+                "weather": item(race, 24), "condition": item(race, 25),
+                "class": item(race, 27),
+                "carriedWeight": carried_weight(item(h, 16)),
                 "finish": number(item(h, 31)), "cornerNames": [x[0] for x in pairs],
                 "cornerPositions": positions, "raceLapTimes": laps,
                 "raceFirst3FSeconds": round(sum(laps[:3]), 2) if len(laps) >= 3 else None,
