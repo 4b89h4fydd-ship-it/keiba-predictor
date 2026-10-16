@@ -35,7 +35,7 @@ class NarAuthorityTests(unittest.TestCase):
             h = row["horse"]
             no = h["horseNumber"]
             margin = margin_score(h, d)
-            self.assertAlmostEqual(row["score"], .60 * positions[no] + .40 * margin["score"])
+            self.assertAlmostEqual(row["score"], .60 * positions[no] + .40 * margin["score"] + .12 * row["historicalRates"]["winEvidence"] + .06 * row["historicalRates"]["top2Evidence"] + .04 * row["historicalRates"]["top3Evidence"] + .04 * row["historicalRates"]["transferClassSignal"])
 
     def test_new_marks_replace_old_fields_and_leave_seal_untouched(self):
         d = race()
