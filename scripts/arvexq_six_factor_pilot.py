@@ -144,12 +144,21 @@ def main():
     metrics=defaultdict(lambda: defaultdict(lambda:Counter()))
     exclusions=Counter()
     records=[]
+    diagnostics=[]
     for row in detail:
         if isinstance(row,dict):
+            if len(diagnostics)<5:
+                horses=row.get("horses") or []
+                first=horses[0] if horses else {}
+                diagnostics.append({"raceId":row.get("id"),"date":row.get("date"),
+                    "raceKeys":list(row.keys()),"horseCount":len(horses),
+                    "firstHorseKeys":list(first.keys()) if isinstance(first,dict) else [],
+                    "historyCounts":{k:len(first.get(k) or []) for k in ("recentRaces","allPastRuns","history","runs","pastRaces") if isinstance(first,dict)},
+                    "firstHorseNumber":first.get("horseNumber") if isinstance(first,dict) else None})
             ingest(row,metrics,exclusions,records)
     report={"version":"v3-new-model-only-retrospective-v1",
             "warning":"RETROSPECTIVE ONLY: race details may contain updated pre-off features and are not genuine frozen inputs; 10-ticket construction is an arbitrary identical comparison envelope, not an optimized product bet.",
-            "receivedDetails":len(detail),"coverage":dict(exclusions),"byCircuit":{},"raceResults":records}
+            "receivedDetails":len(detail),"coverage":dict(exclusions),"byCircuit":{},"inputDiagnostics":diagnostics,"raceResults":records}
     for circuit, variants in metrics.items():
         report["byCircuit"][circuit]={}
         for name, m in variants.items():
