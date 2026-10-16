@@ -13,11 +13,6 @@ function render(r,p,deps){
  const {buildAiBetPlan,esc,n,isFinal,raceMarkClock,aiBetExplanationHtml,betComboText}=deps;
   var plan=buildAiBetPlan(r,p);
   if(!plan)return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><p class="muted">'+((isFinal(r)||raceMarkClock(r).started)?'発走前買い目未保存（発走後の後付け予想は作成しません）':'発走前予想を取得中。未保存の買い目は暫定判定です。')+'</p></div>';
-  // Fail closed when called directly with a retired plan. A historic pre-off
-  // receipt is an audit artifact, never a current actionable buy ticket.
-  if(plan.fixedAt&&!/^(?:arvexq-true-run-pure-sectional-v[12]|arvexq-nar-mineta-margin-60-40-v1)$/.test(
-      String(plan.engineVersion||plan.betStrategy||'')))
-    return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><p class="muted">現行方式の発走前買い目は未保存です。旧方式の買い目は現在の予想に表示しません。</p></div>';
   var dataUnavailable=plan.decision==='データ不足'||plan.decision==='未取得'||
       plan.dataStatus==='engine-unavailable'||plan.dataStatus==='insufficient-preoff-evidence';
   function renderGroup(level,label,reason){
