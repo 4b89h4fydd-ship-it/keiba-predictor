@@ -303,7 +303,7 @@ def apply_observed_marks(detail):
                  narModelEvidence={"mineta": row["factors"]["mineta"],
                                    "margin": row["factors"]["margin"],
                                    "marginCoverage": row["marginCoverage"],
-                                   "sample": row["sample"], "historicalRates": row["historicalRates"]})
+                                   "sample": row["sample"], "historicalRates": row.get("historicalRates", _history_rates(h, detail))})
         detail["factorRanking"].append({"horseNumber": int(h["horseNumber"]),
                                         "name": h.get("name") or "", "rank": row["rank"],
                                         "dominanceScore": round(row["score"] * 100, 2),
