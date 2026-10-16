@@ -25,8 +25,8 @@ assert(src.includes('evictRetiredRaceCaches();'),'obsolete device race caches mu
 assert(!src.includes('saved-snapshot-restored'),'legacy saved snapshot live restore removed');
 assert(!fs.existsSync('scripts/arvexq_patch_race_open_reliability.py'));
 const model=fs.readFileSync('arvexq/prediction/observed_model.py','utf8');
-assert(model.includes('base = .60 * position + .40 * margin["score"]'), 'single 60/40 base scoring authority');
-assert(model.includes('.12 * rates["winEvidence"]') && model.includes('rates["transferClassSignal"]'), 'pre-off history and transfer research adjustments');
+assert(model.includes('score = sum(observations) / len(observations)'), 'observed evidence consensus scoring authority');
+assert(model.includes('rates["transferClassEvidenceStarts"]') && model.includes('rates["top3Rate"]'), 'pre-off history and cross-circuit evidence');
 assert(!fs.existsSync('arvexq/prediction/factor_model.py'),'retired central three-factor scorer must be physically deleted');
 assert(!fs.existsSync('arvexq/prediction/nar_model.py'),'duplicate local scorer must be physically deleted');
 assert(!fs.existsSync('arvexq/prediction/honmei_gate.py'),'retired parallel axis scorer must be deleted');
