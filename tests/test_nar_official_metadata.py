@@ -327,6 +327,34 @@ class NarOfficialMetadataTests(unittest.TestCase):
             "surface": "", "direction": "", "class_condition": ""})
 
 
+    def test_invalid_horse_identity_does_not_write_database(self):
+        import io
+        import csv
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from app import NarArchiveParser, NarStore, NarSync, RACE_IDX, HORSE_IDX
+        race, horse = [""] * 66, [""] * 35
+        for row in (race, horse):
+            row[0], row[1], row[2] = "金沢", "20261012", "1"
+        horse[HORSE_IDX["horse_no"]] = "0"
+        horse[HORSE_IDX["name"]] = "検証馬"
+        with tempfile.TemporaryDirectory() as root:
+            store = NarStore(Path(root) / "audit.sqlite3")
+            sync = NarSync.__new__(NarSync)
+            sync.parser, sync.store = NarArchiveParser(), store
+            zipped = io.BytesIO()
+            with zipfile.ZipFile(zipped, "w") as archive:
+                for name, rows in (("sample_racelist.csv", [race]), ("sample_horselist.csv", [horse])):
+                    stream = io.StringIO()
+                    csv.writer(stream).writerows(rows)
+                    archive.writestr(name, stream.getvalue().encode("utf-8-sig"))
+            with self.assertRaises(ValueError):
+                sync.import_zip_bytes(zipped.getvalue(), "bad-id", Path(root) / "bad.zip")
+            self.assertEqual(store.conn.execute("SELECT COUNT(*) FROM races").fetchone()[0], 0)
+            self.assertIsNone(store.synced_at("bad-id"))
+            store.conn.close()
+
     def test_orphan_horse_rows_do_not_mark_official_sync(self):
         import io
         import csv
