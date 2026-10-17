@@ -45,6 +45,36 @@ class NarOfficialMetadataTests(unittest.TestCase):
             registry._sources.pop("nar_official_csv", None)
             store.conn.close()
 
+    def test_official_archive_refresh_keeps_previous_imports(self):
+        import csv
+        import io
+        import tempfile
+        import zipfile
+        from pathlib import Path
+        from arvexq.databanks.nar_official_csv import register_nar_official_archive
+        from arvexq.databanks.registry import DataBankRegistry
+        with tempfile.TemporaryDirectory() as folder:
+            paths = []
+            for index, name in enumerate(("旧馬", "新馬")):
+                path = Path(folder) / f"{index}_race.zip"
+                race, horse = [""] * 66, [""] * 35
+                for row in (race, horse):
+                    row[0], row[1], row[2] = "金沢", f"202610{10+index:02d}", "1"
+                horse[5], horse[6], horse[31] = "1", name, "1"
+                with zipfile.ZipFile(path, "w") as archive:
+                    for filename, rows in (("official_racelist.csv", [race]),
+                                           ("official_horselist.csv", [horse])):
+                        stream = io.StringIO()
+                        csv.writer(stream).writerows(rows)
+                        archive.writestr(filename, stream.getvalue().encode("utf-8-sig"))
+                paths.append(path)
+            bank = DataBankRegistry()
+            register_nar_official_archive(bank, paths=[paths[0]])
+            register_nar_official_archive(bank, paths=[paths[1]])
+            fetch = bank.get("nar_official_csv").fetchers["horse_history"]
+            for name in ("旧馬", "新馬"):
+                self.assertEqual(len(fetch({"name": name}, {"date": "2026-10-12"})["allPastRuns"]), 1)
+
     def test_existing_narsync_daily_zip_registers_official_history(self):
         import csv
         import io
