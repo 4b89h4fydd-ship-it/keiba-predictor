@@ -16,7 +16,9 @@ class PreoffLoadingMarksTest(unittest.TestCase):
 
     def test_retired_live_prediction_engine_is_not_executed(self):
         source = APP.read_text(encoding="utf-8")
-        active=source.split("function predict(r){",1)[1].split("\\nfunction nextRace()",1)[0]\n        self.assertNotIn("assignPredictionMarks(",active)\n        self.assertIn("learnedD1Prediction(r)",active)
+        active=source.split("function predict(r){",1)[1].split("function nextRace()",1)[0]
+        self.assertNotIn("assignPredictionMarks(",active)
+        self.assertIn("learnedD1Prediction(r)",active)
         self.assertNotIn("arvexq-true-run-pure-sectional-v2", source)
         self.assertIn("return assignObservedPredictionMarks(rows,r);", source)
 
