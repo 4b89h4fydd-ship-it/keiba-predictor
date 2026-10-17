@@ -32,3 +32,13 @@ class FreezeResearchCandidateTests(TestCase):
                 freeze_research_candidate(self.detail,{'researchLeader':None},folder,
                     captured_at=datetime(2026,10,18,3,0,tzinfo=timezone.utc))
             self.assertEqual(list(Path(folder).iterdir()),[])
+
+    def test_result_bearing_card_cannot_be_frozen_even_before_post(self):
+        before = datetime(2026, 10, 18, 3, 0, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as folder:
+            for field, value in [('result', {'status':'確定'}),
+                                 ('analysisType', 'retrospective')]:
+                detail = dict(self.detail, **{field:value})
+                with self.subTest(field=field), self.assertRaises(ValueError):
+                    freeze_research_candidate(detail,self.plan,folder,captured_at=before)
+            self.assertFalse(list(Path(folder).iterdir()))
