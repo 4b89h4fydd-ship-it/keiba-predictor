@@ -9,7 +9,7 @@ class RetiredSameDayCorrection(unittest.TestCase):
     def test_existing_mark_signature_and_three_factor_model_preserved(self):
         s=APP.read_text(encoding="utf-8")
         self.assertIn("function sameDayTrendSignatureV313(",s)
-        self.assertIn("function assignPredictionMarks(rows,r)",s)
+        self.assertNotIn("function assignPredictionMarks(",s)
         self.assertNotIn("score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)",s)
-        self.assertIn("function assignPredictionMarks(rows,r){return rows||[];}",s)
+        self.assertNotIn("function assignPredictionMarks(",s)
 if __name__=="__main__": unittest.main()

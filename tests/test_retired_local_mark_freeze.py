@@ -17,8 +17,12 @@ class RetiredLocalMarkFreezeTests(unittest.TestCase):
         self.assertNotIn("local-prepost", self.source)
         self.assertNotIn("端末の発走前印・固定済み", self.source)
 
-    def test_server_original_retained_for_audit(self):
-        self.assertIn("function serverFrozenPrediction(r)", self.source)
+    def test_archived_original_is_not_republished_by_legacy_view(self):
+        # Original immutable audit data stays in storage; retiring its HTML
+        # presentation must not require reinstating the old scoring engine.
+        self.assertNotIn("function serverFrozenPrediction(r)", self.source)
+        self.assertNotIn("function savedRevisionDiagnosisPanel(r,p)", self.source)
+        self.assertNotIn("function savedRevisionHorseDetail(r,x)", self.source)
         self.assertIn("function authorizedPreOffMarks(r)", self.source)
         self.assertNotIn("function applyFrozenMarks(r,p)", self.source)
         self.assertIn("ARVEXQProductionMarks.visible(x)", self.source)

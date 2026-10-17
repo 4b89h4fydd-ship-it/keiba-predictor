@@ -21,7 +21,7 @@ class PreoffLoadingMarksTest(unittest.TestCase):
         self.assertNotIn("learnedD1Prediction(r)",active)
         self.assertIn("ARVEXQProductionPrediction.build(r)",active)
         self.assertNotIn("arvexq-true-run-pure-sectional-v2", source)
-        self.assertIn("function assignPredictionMarks(rows,r){return rows||[];}", source)
+        self.assertNotIn("function assignPredictionMarks(", source)
 
 if __name__ == "__main__":
     unittest.main()

@@ -641,11 +641,6 @@ function isNarRace(r){return ['地方','NAR','local'].indexOf(String(r&&r.circui
 
 
 
-function assignPredictionMarks(rows,r){return rows||[];}
-
-// v343 — standalone win-only call, independent of ◎ and of market odds.
-
-
 function raceMode(r){r=r||{};if(['平地','新馬','障害'].indexOf(r.analysisMode)>=0)return r.analysisMode;var title=String(r.title||'');if(r.surface==='障害'||/障害|J[･・.]?G[ⅠⅡⅢ123]|\bJS\b|ジャンプ/i.test(title))return '障害';return /新馬|メイクデビュー/.test(title)?'新馬':'平地'}
 function saveRaceAnalysis(r,p){return}
 function isScratchHorse(h){var s=String(h&&h.status||'');return !!(h&&(h.scratched===true||h.withdrawn===true||/欠場|出走取消|取消|競走除外|除外/.test(s)))}
@@ -684,21 +679,6 @@ function raceMarkClock(r){
 // Retired v345 device-only frozen marks are not loaded or written by this UI.
 // Server-side pre-off receipts remain available for historical audit.
 // Server archive is trusted only with evidence of a genuine pre-off capture.
-function serverFrozenPrediction(r){
-  if(!r||!r.id)return null;
-  var q=r.preRacePrediction||{},clock=raceMarkClock(r);
-  if(!q.frozen||!clock.valid||String(q.raceId||'')!==String(r.id)||
-     String(q.raceDate||'')!==String(r.date)||!Array.isArray(q.horses)||q.horses.length<2)return null;
-  var post=Date.parse(String(r.date)+'T'+String(r.startTime||r.scheduledStartTime||'').slice(0,5)+':00+09:00'),
-      captured=n(q.capturedAtEpoch,0)*1000;
-  if(!isFinite(post)||!captured||captured>=post)return null;
-  var seen={};
-  for(var i=0;i<q.horses.length;i++){var v=q.horses[i]||{},no=n(v.horseNumber,0);
-    if(!no||seen[no]||['','◎','○','▲','☆+','☆','△','注'].indexOf(String(v.mark||''))<0)return null;
-    seen[no]=1;
-  }
-  return q;
-}
 function validMorningMarkSnapshot(r){
   var snap=r&&r.morningMarkSnapshot;
   // D1 can lose its prediction row while the original static morning receipt
@@ -790,35 +770,9 @@ function latestSavedForecastRevision(r){
 function revisionPercent(value){return value==null||!Number.isFinite(Number(value))?'未算出':(100*Number(value)).toFixed(1)+'%'}
 
 function savedRevisionOriginalHtml(r){
-  var original=serverFrozenPrediction(r),bet=verifiedSavedAiBet(r,r.preRaceBet);
-  if(!original&&!bet)return '';
-  var names={};(r.horses||[]).forEach(function(h){names[n(h.horseNumber)]=h.name});
-  return '<details '+(isFinal(r)?'open ':'')+'class="card forecast-original-history"><summary>保存済みの発走前予想・印・買い目</summary>'+
-    '<p class="muted">発走前に保存された原本です。確定後の結果から再計算した予想ではありません。</p>'+
-    (original?'<h3>印</h3>'+original.horses.map(function(h){return '<p>'+esc(h.mark||'—')+' '+esc(h.horseNumber)+' '+esc(names[n(h.horseNumber)]||'')+'</p>'}).join(''):'')+
-    (bet&&Array.isArray(bet.items)?'<h3>買い目</h3>'+bet.items.map(function(item){return '<p>'+esc(item.kind||'')+' '+esc(item.combo||JSON.stringify(item.combos||[]))+'</p>'}).join(''):'')+'</details>';
+  // Retired forecasts are not a public view. Their source archives remain untouched.
+  return '';
 }
-
-function savedRevisionDiagnosisPanel(r,p){
-  var v=p.savedForecastRevision;
-  return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><p class="muted">'+esc(v.analysisLabel)+'｜'+
-    esc(v.probabilityModelStatus==='uncalibrated'?'推定確率は未校正です。実測的中率ではありません。':v.probabilityModelStatus||'')+
-    '</p><p>'+esc(v.forecastText||'')+'</p><div class="diagnosis-merged-list">'+p.rows.map(function(x){
-      var h=x.horse,prob=x.forecastRevision.probabilities||{};
-      return '<article class="diagnosis-merged-row"><button data-horse-open="'+esc(h.horseNumber)+'">'+
-        esc(x.predMark||'—')+' '+esc(h.horseNumber)+' '+esc(h.name)+'</button><p>1着 '+revisionPercent(prob.win)+
-        '　連対 '+revisionPercent(prob.top2)+'　3着内 '+revisionPercent(prob.top3)+'</p><p>'+esc(x.forecastRevision.forecastText||'')+'</p></article>';
-    }).join('')+'</div></section>'+savedRevisionOriginalHtml(r);
-}
-function savedRevisionHorseDetail(r,x){
-  var h=x.horse,s=x.forecastRevision,prob=s.probabilities||{},history=s.observedHistory||{};
-  return '<section class="card"><h2>'+esc(x.predMark||'—')+' '+esc(h.name)+'</h2><p>'+esc(s.forecastText||s.reason||'')+
-    '</p><p>1着 '+revisionPercent(prob.win)+'　連対 '+revisionPercent(prob.top2)+'　3着内 '+revisionPercent(prob.top3)+'</p>'+
-    Object.keys(history).map(function(key){var group=history[key];return '<p>'+esc(({all:'全確認履歴',recent:'近走',sameDistance:'同距離',sameTrack:'同競馬場',sameDirection:'同回り',sameCondition:'同条件',recentSameCondition:'直近同条件'})[key]||key)+
-      '（'+esc(group.starts)+'走）：勝率 '+revisionPercent(group.win&&group.win.rate)+'　連対率 '+revisionPercent(group.top2&&group.top2.rate)+'　3着内率 '+revisionPercent(group.top3&&group.top3.rate)+'</p>'}).join('')+
-    '<h3>直近5走</h3>'+(h.recentRaces||[]).slice(0,5).map(function(run){return '<p>'+esc(run.date||'')+' '+esc(run.track||'')+' '+esc(run.distance||'')+'m '+esc(run.finish||'—')+'着</p>'}).join('')+'</section>';
-}
-
 function predict(r){return window.ARVEXQProductionPrediction.build(r);}
 
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
@@ -853,7 +807,6 @@ var CAREER_STATE_LABELS={'complete':'取得完了','complete-with-missing-fields
 function careerCoverageLabel(h){var c=h&&h.careerCoverage;if(!c||!c.state)return'';return CAREER_STATE_LABELS[c.state]||'取得未確認'}
 function careerCoverageLine(h){var c=h&&h.careerCoverage,label=careerCoverageLabel(h);if(!label)return'';var got=n(c.eligibleRuns,0),rep=c.reportedStarts;return '<div class="muted career-coverage" data-career-state="'+esc(c.state)+'" style="margin:2px 0 6px;font-size:11px">全キャリア：'+esc(label)+'（取得 '+esc(got)+'走'+(rep!=null?' / 総出走 '+esc(rep)+'走':'')+(n(c.unusableRecords,0)?' / 項目欠損 '+esc(c.unusableRecords)+'走':'')+'）</div>'}
 function runnerDetailBody(r,p,x){
-  if(x&&x.forecastRevision)return savedRevisionHorseDetail(r,x);
   var h=x.horse,displayName=horseDisplayName(r,h),recent=(h.recentRaces||h.allPastRuns||[]).slice(0,5),reasons=(x.overallReasons||[]).slice(0,4),bodyTxt=horseBodyWeightText(h),styleTxt=x.expected||x.pastStyle||'不明',
       rf=x.researchFactors||{},sp=styleDisplayPcts(x),out=(p&&p.outcome)||(raceMarkClock(r).started?null:paceOutcomeModel(r,p)),no=n(h.horseNumber),role=raceMarkClock(r).started?'発走前保存情報':'相手候補';
   // No model evidence must never be displayed as zero ability.
@@ -1676,7 +1629,6 @@ function aiBetRecommendation(r,p){return window.ARVEXQTicketFrame.contents();}
 function aiMarksPanel(r,p){return window.ARVEXQMarkFrame.render();}
 function betPanel(r,p){return window.ARVEXQTicketFrame.render();}
 function diagnosisPanel(r,p){
-  if(p&&p.savedForecastRevision)return savedRevisionDiagnosisPanel(r,p);
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse&&a.horse.horseNumber,999)-n(b.horse&&b.horse.horseNumber,999)});
   var details='<div class="diagnosis-merged-list">'+rows.map(function(x,i){
     var h=x.horse,e=x.evaluation||{},confidence=esc(e.confidence||'低'),rank=n(x.overallRank,i+1),bw=horseBodyWeightText(h),refbw=!bw?referenceBodyWeight(h):0,bwLabel=bw?bw:(refbw?('前走 '+refbw+'kg'):(isFinal(r)?'結果確認中':'計量待ち'));
@@ -1694,7 +1646,7 @@ function diagnosisPanel(r,p){
   return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><p class="muted diagnosis-tap-note">馬名をタップすると、直近5走・適性・騎手/調教師・血統までまとめて確認できます。</p>'+details+'</section>'
 }
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=window.ARVEXQPastRunView.visible(h,r,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中'),career=careerCoverageLabel(h);if(career)status+='・全キャリア'+career;return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
-function pacePanel(r,p){if(p&&p.savedForecastRevision)return '<section id="section-pace" class="card"><h2>展開分析</h2>'+((p.savedForecastRevision.scenarioSummaries||[]).map(function(s){return '<p>'+esc(s.label)+'</p>'}).join('')||'<p>観測履歴が不足しているため展開比較は未算出です。</p>')+'<p class="muted">各展開の発生頻度は未検証です。</p></section>';return '<section id="section-pace" class="card pace-panel-direct">'+paceBoard(r,p)+'</section>'}
+function pacePanel(r,p){return '<section id="section-pace" class="card pace-panel-direct">'+paceBoard(r,p)+'</section>'}
 function openHorseDetailPage(no){
   no=n(no,0);if(!no||!state.race)return;
   state.detailHorseNo=no;
@@ -1716,7 +1668,7 @@ function resultPanel(r){
       '<div class="muted result-status-compact">'+(final?'結果は確定扱いですが着順詳細は未取得です。':(String(r.date||'')<today()||String(r.date||'')===today()&&mins(r.startTime)<=nowMins()?'公式結果の反映待ちです。自動再確認しています。':'発走前・結果未確定'))+'</div><button type="button" data-detail-retry="'+esc(r.id)+'">結果を再確認</button>') +
   researchRecapPanel(r)+'</section>'
 }
-function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+(p.savedForecastRevision?savedRevisionDiagnosisPanel(r,p):window.ARVEXQDiagnosisView?window.ARVEXQDiagnosisView.render(r,p,{original:authorizedPreOffMarks,esc:esc,started:function(x){return raceMarkClock(x).started},scratch:isScratchHorse}):'')+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・展開予想から見たい項目を押してください。</div>'}
+function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+(window.ARVEXQDiagnosisView?window.ARVEXQDiagnosisView.render(r,p,{original:authorizedPreOffMarks,esc:esc,started:function(x){return raceMarkClock(x).started},scratch:isScratchHorse}):'')+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・展開予想から見たい項目を押してください。</div>'}
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side"><strong>'+(isFinal(r)?'確定':(isFlash(r)?'速報':timeHtml(r)))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
