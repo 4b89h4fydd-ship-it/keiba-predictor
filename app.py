@@ -404,8 +404,7 @@ def _jra_find_cname(iso_date:str,track:str,race_no:int)->str:
 def _jra_text(tag) -> str:
     return re.sub(r"\s+"," ",tag.get_text(" ",strip=True) if tag else "").strip()
 
-def _jra_iso_date(y:int,m:int,d:int)->str:
-    return f"{y:04d}-{m:02d}-{d:02d}"
+from arvexq.ingest.jra_time import _jra_iso_date, _jra_parse_time_seconds
 
 def _jra_date_from_cname(cname:str)->str:
     m=re.search(r"(20\d{6})/[0-9A-Fa-f]{2}$",cname or "")
@@ -419,11 +418,6 @@ def _jra_race_no_from_cname(cname:str)->int:
 def _jra_track_from_cname(cname:str)->str:
     m=re.search(r"pw01dde(?:01|10)(\d{2})",cname or "")
     return JRA_TRACK_CODES.get(m.group(1),"") if m else ""
-
-def _jra_parse_time_seconds(txt:str)->float:
-    m=re.search(r"(?<!\d)(\d{1,2}):(\d{2}\.\d)(?!\d)",txt or "")
-    if not m:return 0.0
-    return int(m.group(1))*60+float(m.group(2))
 
 def _jra_parse_past_cell(cell, cutoff:str) -> dict | None:
     txt=_jra_text(cell)
