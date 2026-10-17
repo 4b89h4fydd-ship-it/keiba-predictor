@@ -6,6 +6,9 @@ on:
   push:
     branches: [main, feature/forecast-reset-20261016]
     paths: ['arvexq/ui/static/**', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
+concurrency:
+  group: arvexq-recovery-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:

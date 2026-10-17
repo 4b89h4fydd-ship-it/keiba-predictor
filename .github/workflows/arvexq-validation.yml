@@ -24,7 +24,7 @@ name: ARVEXQ Validation
       - requirements.txt
 
 concurrency:
-  group: arvexq-validation-${{ github.ref }}
+  group: arvexq-validation-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
