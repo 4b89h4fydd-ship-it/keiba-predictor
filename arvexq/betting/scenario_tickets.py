@@ -148,8 +148,10 @@ def compare_tickets(detail: dict[str, Any], scenarios: list[dict[str, Any]], *,
                      if ticket_hit(kind, combo, o, frames=frames, place_places=place_places)}
                     for _, orders in distributions]
             probs = [sum(orders[i][1] for i in hit) for hit, (_, orders) in zip(hits, distributions)]
-            # Exclude combinations unsupported in any stated plausible scenario.
-            if min(probs) <= 0:
+            # A combination may hit in only some scenarios. Retain it so the
+            # union of up to ten tickets can cover complementary scenarios.
+            # Reject only a ticket that never hits in any modeled scenario.
+            if max(probs) <= 0:
                 continue
             prices = market_prices.get(kind, {})
             price = prices.get('-'.join(map(str, combo))) if isinstance(prices, dict) else None
