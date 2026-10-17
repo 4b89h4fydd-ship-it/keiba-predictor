@@ -13,7 +13,8 @@ def freeze_research_candidate(detail, plan, directory, *, captured_at=None):
     """Write a new receipt only before scheduled post; never overwrite one."""
     now = captured_at or datetime.now(timezone.utc)
     off = post_at(detail)
-    if not off or now.tzinfo is None or now.utcoffset() is None or now >= off:
+    if (detail.get('result') or detail.get('analysisType') == 'retrospective' or
+            not off or now.tzinfo is None or now.utcoffset() is None or now >= off):
         raise ValueError('verified future post and timezone-aware capture required')
     race_id = detail.get('id')
     candidate = plan.get('researchLeader') if isinstance(plan, dict) else None
