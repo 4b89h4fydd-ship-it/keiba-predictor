@@ -1462,16 +1462,23 @@
     {
       "id": 56,
       "name": "JRA・NAR転入転出判別",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "分離済",
+      "module": "arvexq.ingest.circuit_transfer",
+      "files": [
+        "arvexq/ingest/circuit_transfer.py",
+        "arvexq/ingest/transfer_history.py"
+      ],
+      "callers": [
+        "arvexq.ingest.transfer_history._history_rates"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "prior factual race history and target race",
+      "output": "observed JRA/NAR circuit and transfer classification",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_circuit_transfer_independent.py"
+      ],
+      "implementation_scope": "Connected to career evidence; production verification not complete; no prediction, mark or ticket calculation",
       "evidence": {
         "commit_sha": null,
         "unit": null,
