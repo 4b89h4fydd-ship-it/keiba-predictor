@@ -8,7 +8,7 @@ const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const css=['arvexq/ui/static/styles.css','arvexq/ui/static/styles/legacy_v118_v221.css',
  'arvexq/ui/static/styles/race_v222_plus.css','arvexq/ui/static/betting/bet_ui.css']
  .map(p=>fs.readFileSync(p,'utf8')).join('\n');
-const betView=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8');
+const frameSource=fs.readFileSync('arvexq/ui/static/forecast/ticket_frame.js','utf8');
 function extract(start,end){
   const a=src.indexOf('function '+start+'(');
   const b=src.indexOf('function '+end+'(',a+1);
@@ -17,49 +17,19 @@ function extract(start,end){
 }
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const n=(v,f=0)=>v!==null&&v!==undefined&&Number.isFinite(Number(v))?Number(v):f;
-const triCombos=[[4,6,2],[4,2,6],[4,7,2],[4,2,7],[4,6,8],[4,8,6],[4,7,8],[4,8,7],[4,2,8],[4,8,2],[4,6,7],[4,7,6]];
-const plan={decision:'通常買い',scenario:'前残り',scenarioProb:.4,betQuality:72,
-  items:[
-    {level:'本線',kind:'馬連',combos:[[4,6],[4,2]],points:2,combo:'4 - 6 / 4 - 2',reason:'的中重視'},
-    {level:'3連単チャレンジ',kind:'3連単',combos:triCombos,points:12,combo:triCombos.map(c=>c.join(' → ')).join(' / '),reason:'展開AIによる着順別比較'},
-    {level:'保険',kind:'ワイド',combos:[[6,7]],points:1,combo:'6 - 7',reason:'1着固定の逆転補完'},
-  ],trifectaReviewed:true,trifectaDecision:'採用',
-  insuranceDecision:'採用',referenceBudget:{points:15,totalYen:1500},expectedValue:null,
-  expectedValueReason:'未校正の的中確率から期待値は算出しません。',
-  reason:'三方式のモデル別選定。'};
-const renderer=new Function('window','esc','n','buildAiBetPlan','officialRaceLinks','aiBetExplanationHtml','cinematicFooter',
-  betView+'\n'+
-  "function aiBetRecommendation(r,p){return window.ARVEXQBetView.render(r,p,{buildAiBetPlan,esc,n,isFinal:()=>false,raceMarkClock:()=>({started:false}),aiBetExplanationHtml,betComboText:(k,cs)=>cs.map(c=>c.join(k===\'3連単\'?\' → \':\' - \')).join(\' / \')});}\n"+
+// Reproduce exactly the active, no-new-model betting frame. Historical ticket
+// recommendations must not be re-injected into a synthetic UI fixture.
+const renderer=new Function('window','esc','n','cinematicFooter',
+  frameSource+'\n'+
+  "function aiBetRecommendation(){return window.ARVEXQTicketFrame.contents();}\n"+
   extract('raceSubpageTopBar','horseDetailPage')+
   extract('betDetailPage','renderRace')+
   '\nreturn betDetailPage;');
-const html=renderer({},esc,n,()=>plan,()=>({vote:''}),
-  ()=>'<section class="ai-bet-why"><b>この買い目になった理由</b><p>購入は見送り</p></section>',()=>'')(
-    {track:'大井',raceNumber:7},{}
-  );
+const html=renderer({},esc,n,()=>'')({track:'大井',raceNumber:7},{});
 assert.match(html,/smart-race-subpage-topbar/);
 assert.match(html,/bet-detail-page-shell/);
-assert.match(html,/3連単買い目の推定発生確率/);
-assert.match(html,/本線｜的中重視/);
-assert.match(html,/3連単チャレンジ｜高配当重視/);
-assert.match(html,/保険｜本線補完/);
-assert.match(html,/class="arv-three-combos"/,'tickets should be visually separated');
-assert.match(html,/class="arv-bet-quality"/,'bet confidence displayed clearly');
-assert.match(html,/【単】/);
-assert.match(html,/◎【軸】/);
-assert.match(html,/<i>【単】<\/i>/);
-assert.match(html,/<i>【軸】<\/i>/);
-assert.match(html,/<i>☆<\/i>/);
-assert.doesNotMatch(html,/☆\+/,'retired + mark must not appear in current bets');
-
-const legacyPlan={...plan,engineVersion:'arvexq-bets-old-v317',
-  fixedAt:'2026-10-08T10:20:00+09:00',
-  items:[{level:'通常',kind:'馬連',points:1,combos:[[2,6]],combo:'2 - 6'}]};
-const historical=renderer({},esc,n,()=>legacyPlan,()=>({vote:''}),
-  ()=>'',()=>'')({track:'大井',raceNumber:7},{});
-assert.doesNotMatch(historical,/2 - 6/,'unverified old selection must remain hidden');
-assert.match(historical,/AI買い目/,'ticket section must render');
-assert.doesNotMatch(historical,/2 - 6/,'old ticket combos are not relabelled as current picks');
+assert.match(html,/class="ai-bet-box"/);
+assert.doesNotMatch(html,/◎|【単】|【軸】|3連単チャレンジ|arv-three-combos/);
 
 function extractFunction(name){
   const a=src.indexOf('function '+name+'('),b=src.indexOf('\n}',a);
@@ -126,20 +96,10 @@ async function test(type,label){
       assert.ok(result.header.top>=-e,label+' '+width+' header off-screen');
       assert.ok(result.scroll<=result.width+e,label+' '+width+' document horizontal scroll');
       for(const ticket of result.tickets){assert.ok(ticket.x>=result.box.x-e&&ticket.right<=result.box.right+e,label+' '+width+' ticket overflow '+JSON.stringify(result));}
-      assert.equal(result.markBadges.length,2,label+' '+width+' missing mark badges');
-      for(const mark of result.markBadges){
-        assert.ok(mark.width>=50&&mark.height<=45&&mark.whiteSpace==='nowrap',
-          label+' '+width+' mark badge wraps '+JSON.stringify(mark));
-      }
-      assert.ok(result.combos.length>=2,label+' '+width+' missing separate ticket combinations');
-      for(const combo of result.combos){
-        assert.ok(combo.x>=result.box.x-e&&combo.right<=result.box.right+e,
-          label+' '+width+' ticket combination off-screen '+JSON.stringify(combo));
-      }
-      for(const pill of result.pills){
-        assert.ok(pill.x>=result.box.x-e&&pill.right<=result.box.right+e,
-          label+' '+width+' metadata off-screen '+JSON.stringify(result));
-      }
+      assert.ok(result.box.x>=-e&&result.box.right<=result.width+e,
+        label+' '+width+' independent ticket frame overflow '+JSON.stringify(result));
+      assert.equal(result.markBadges.length,0,'retired marks must not reappear');
+      assert.equal(result.combos.length,0,'retired tickets must not reappear');
       // Three race tabs plus tappable formation are also checked at every width.
       for(let stage=0;stage<4;stage++){
         const app='<div class="smart-shell"><main class="smart-main smart-race-page">'+navHtml+diagrams[stage]+'</main></div>';
