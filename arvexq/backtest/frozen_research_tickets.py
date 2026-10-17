@@ -67,7 +67,6 @@ def evaluate_frozen_candidates(records):
         if race_id in seen_races:
             exclusions['duplicate-race'] += 1
             continue
-        seen_races.add(race_id)
         payouts, invalid = parse_official_payouts(result)
         paid = ticket_payout(kind, combos, payouts, invalid)
         if paid is None:
@@ -77,6 +76,7 @@ def evaluate_frozen_candidates(records):
         if circuit not in ('中央', '地方'):
             exclusions['unknown-circuit'] += 1
             continue
+        seen_races.add(race_id)
         groups[(circuit, kind)].append((paid, len(combos)))
     by_circuit = {}
     for circuit in ('中央', '地方'):
