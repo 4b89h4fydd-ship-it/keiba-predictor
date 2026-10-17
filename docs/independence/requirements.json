@@ -1633,16 +1633,23 @@
     {
       "id": 62,
       "name": "オッズ取得時刻",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.odds_capture_time",
+      "files": [
+        "arvexq/ingest/odds_capture_time.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_attach_nar_live_odds"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "actual timezone-aware acquisition instant",
+      "output": "Asia/Tokyo HH:MM:SS observation clock",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_odds_capture_time.py"
+      ],
+      "implementation_scope": "NAR official update integrated, remaining odds-source timestamps not yet migrated; no production verification",
       "evidence": {
         "commit_sha": null,
         "unit": null,

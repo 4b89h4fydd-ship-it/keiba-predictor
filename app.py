@@ -1767,6 +1767,8 @@ def _nar_live_odds(track:str,iso_date:str,race_no:int,force:bool=False)->dict:
             oldest=min(_nar_odds_cache.items(),key=lambda kv:kv[1][0])[0];_nar_odds_cache.pop(oldest,None)
     return out
 
+from arvexq.ingest.odds_capture_time import odds_observed_at
+
 def _attach_nar_live_odds(detail:dict)->dict:
     if not detail:return detail
     odds=_nar_live_odds(str(detail.get("track") or ""),str(detail.get("date") or ""),int(detail.get("raceNumber") or 0))
@@ -1774,7 +1776,7 @@ def _attach_nar_live_odds(detail:dict)->dict:
     for h in detail.get("horses",[]) or []:
         z=odds.get(int(h.get("horseNumber") or 0))
         if z:h.update({k:v for k,v in z.items() if v is not None and v!=""})
-    detail["oddsSource"]="NAR公式"; detail["oddsType"]="単勝実オッズ"; detail["oddsUpdatedAt"]=datetime.now().strftime("%H:%M:%S")
+    detail["oddsSource"]="NAR公式"; detail["oddsType"]="単勝実オッズ"; detail["oddsUpdatedAt"]=odds_observed_at()
     return detail
 
 def nar_race_detail(race_id: str) -> dict | None:
