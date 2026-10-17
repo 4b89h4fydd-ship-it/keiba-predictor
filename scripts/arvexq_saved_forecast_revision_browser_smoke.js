@@ -20,6 +20,8 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
    return route.fulfill({status:200,contentType:'text/html',body:'<html><body><div id="app"></div></body></html>'});
   });
   await page.goto('https://arvexq.test/');
+  for(const name of ['deduplicate','temporal','view']) await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/history/'+name+'.js','utf8')});
+
   for(const name of fs.readdirSync('arvexq/ui/static/forecast').filter(n=>n.endsWith('.js')))await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/forecast/'+name,'utf8')});
   await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/research/diagnosis_view.js','utf8')});await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/research/live_odds.js','utf8')});await page.addScriptTag({content:code});
   await page.evaluate(d=>{revisionTest.state.date=d.date;revisionTest.state.circuit=d.circuit;revisionTest.state.races=[d]},originalDetail);

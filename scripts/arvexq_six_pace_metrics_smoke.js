@@ -3,15 +3,17 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+// Supply the same independently assembled historical facts as the production bundle.
+for(const name of ['deduplicate','temporal','view'])new Function(fs.readFileSync('arvexq/ui/static/history/'+name+'.js','utf8'))();
 const a=src.indexOf('function historicalWindow('),b=src.indexOf('function minetaRaceContext(',a);
 assert.ok(a>=0&&b>a,'historical model section must be available');
 const n=(v,d=0)=>v===null||v===undefined||v===''||!Number.isFinite(Number(v))?d:Number(v);
 const clamp=(v,l,h)=>Math.max(l,Math.min(h,v));
 const weights=len=>Array.from({length:len},(_,i)=>Math.pow(.82,i));
 const weighted=(v,w,def=.5)=>{let num=0,den=0;v.forEach((val,i)=>{if(val!=null){num+=val*(w[i]??1);den+=w[i]??1;}});return den?num/den:def};
-const model=new Function('n','clamp','recencyWeights','raceField','weightedRate','mean','sameCondition',
+const model=new Function('window','n','clamp','recencyWeights','raceField','weightedRate','mean','sameCondition',
   src.slice(a,b)+'\nreturn {historicalWindow,styleRates,finishingEvidence,holdRate,lateGainScore,fadeRate,moveRate,breakReliability};')(
-  n,clamp,weights,r=>Math.max(4,n(r&&r.fieldSize,12)),weighted,
+  globalThis,n,clamp,weights,r=>Math.max(4,n(r&&r.fieldSize,12)),weighted,
   v=>v.reduce((q,x)=>q+x,0)/Math.max(v.length,1),(x,y)=>x===y);
 const target={date:'2026-10-08',track:'大井',distance:1400,condition:'良'};
 function run(day,first,last,finish,extra={}){
