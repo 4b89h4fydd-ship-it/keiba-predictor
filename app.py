@@ -2049,8 +2049,7 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
     return detail
 
 
-def _horse_key(value: str) -> str:
-    return re.sub(r"[\s\u3000]+", "", _clean(str(value or "")))
+from arvexq.ingest.horse_identity import _horse_key
 
 
 def _central_find_horse(race: dict, horse_name: str) -> tuple[dict | None, dict | None]:
