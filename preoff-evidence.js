@@ -14,8 +14,8 @@ function stable(value) {
   return JSON.stringify(value);
 }
 
-async function sha256(value) {
-  const bytes = new TextEncoder().encode(stable(value));
+async function sha256(value, canonicalText) {
+  const bytes = new TextEncoder().encode(canonicalText === undefined ? stable(value) : canonicalText);
   const hash = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, "0")).join("");
 }
@@ -87,9 +87,24 @@ export async function handlePreoffCapture(request, env, { now = () => Math.floor
     checkDocument(body.snapshot, body.receipt, now());
     const snap = body.snapshot, rec = body.receipt;
     const {featureHash, ...snapshotWithoutHash} = snap;
-    if (await sha256(snapshotWithoutHash) !== featureHash) throw new Error("snapshot hash mismatch");
+    const snapshotCoreText = body.snapshotCoreCanonical;
+    const receiptCoreText = body.receiptCoreCanonical;
+    if (typeof snapshotCoreText !== "string" || typeof receiptCoreText !== "string") {
+      throw new Error("canonical Python evidence strings required");
+    }
+    if (stable(JSON.parse(snapshotCoreText)) !== stable(snapshotWithoutHash)) {
+      throw new Error("snapshot canonical payload inconsistent");
+    }
+    if (await sha256(snapshotWithoutHash, snapshotCoreText) !== featureHash) {
+      throw new Error("snapshot hash mismatch");
+    }
     const {receiptHash, ...receiptWithoutHash} = rec;
-    if (await sha256(receiptWithoutHash) !== receiptHash) throw new Error("receipt hash mismatch");
+    if (stable(JSON.parse(receiptCoreText)) !== stable(receiptWithoutHash)) {
+      throw new Error("receipt canonical payload inconsistent");
+    }
+    if (await sha256(receiptWithoutHash, receiptCoreText) !== receiptHash) {
+      throw new Error("receipt hash mismatch");
+    }
     const identity = {raceId:rec.raceId,featureHash:rec.featureHash,capturedAtEpoch:rec.capturedAtEpoch};
     const captureId = await sha256(identity);
     // Only insert; conflicting identities or changed bytes never overwrite stored evidence.
