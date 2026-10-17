@@ -6,6 +6,7 @@ verified provenance; this module never computes candidate tickets from results.
 from collections import defaultdict
 from datetime import datetime
 from arvexq.backtest.ticket_metrics import parse_official_payouts, ticket_payout
+from arvexq.betting.scenario_tickets import canonical
 
 KINDS = ('単勝','複勝','枠連','馬連','馬単','ワイド','3連複','3連単')
 
@@ -29,6 +30,7 @@ def evaluate_frozen_candidates(records):
     """
     groups = defaultdict(list)
     exclusions = defaultdict(int)
+    seen_races = set()
     for record in records:
         if not isinstance(record, dict):
             exclusions['malformed-record'] += 1
@@ -51,6 +53,21 @@ def evaluate_frozen_candidates(records):
         if kind not in KINDS or not isinstance(combos, list) or not 1 <= len(combos) <= 10:
             exclusions['invalid-ticket'] += 1
             continue
+        try:
+            normalized = [canonical(kind, combo) for combo in combos]
+            if len(set(normalized)) != len(normalized):
+                raise ValueError('duplicate combinations')
+        except (TypeError, ValueError, KeyError):
+            exclusions['invalid-ticket'] += 1
+            continue
+        race_id = record.get('raceId')
+        if not isinstance(race_id, str) or not race_id.strip():
+            exclusions['missing-race-identity'] += 1
+            continue
+        if race_id in seen_races:
+            exclusions['duplicate-race'] += 1
+            continue
+        seen_races.add(race_id)
         payouts, invalid = parse_official_payouts(result)
         paid = ticket_payout(kind, combos, payouts, invalid)
         if paid is None:
