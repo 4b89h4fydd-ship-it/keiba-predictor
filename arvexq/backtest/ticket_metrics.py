@@ -18,7 +18,7 @@ def parse_official_payouts(result: dict[str, Any]):
             continue
         raw = str(row.get("combination") or "")
         numbers = [int(x) for x in re.findall(r"\d+", raw)]
-        expected = 3 if kind in {"3連単", "3連複"} else 2 if kind in {"ワイド", "馬連", "馬単"} else 1 if kind == "単勝" else 0
+        expected = 3 if kind in {"3連単", "3連複"} else 2 if kind in {"枠連", "ワイド", "馬連", "馬単"} else 1 if kind in {"単勝", "複勝"} else 0
         raw_amount = row.get("amount")
         try:
             amount = int(str(raw_amount).replace(",", "").replace("円", "").replace("¥", "").strip())
@@ -27,7 +27,7 @@ def parse_official_payouts(result: dict[str, Any]):
         if not expected or len(numbers) != expected or amount < 0:
             payout_invalid.add(kind)
             continue
-        if kind in {"ワイド", "馬連", "3連複"}:
+        if kind in {"枠連", "ワイド", "馬連", "3連複"}:
             numbers.sort()
         official_payouts.setdefault(kind, {})[tuple(numbers)] = amount
 
@@ -45,7 +45,7 @@ def ticket_payout(kind, combos, official_payouts, payout_invalid):
             except (TypeError, ValueError):
                 payout = None
                 break
-            if kind in {"ワイド", "馬連", "3連複"}:
+            if kind in {"枠連", "ワイド", "馬連", "3連複"}:
                 values.sort()
             payout += prices.get(tuple(values), 0)
     return payout

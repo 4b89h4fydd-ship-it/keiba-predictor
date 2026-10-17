@@ -96,5 +96,52 @@ class NarOfficialCsvTests(unittest.TestCase):
             ), {}, "date mismatch must not join to unrelated race")
 
 
-if __name__ == "__main__":
+
+class OfficialArchiveObservedFields(unittest.TestCase):
+    def test_full_evidence_clock_gap_and_identity_conflict(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'official.zip'
+            winner, runner = horse('勝馬', 1), horse()
+            winner[31], winner[32] = '1', '1230'
+            runner[32], runner[18] = '1234', '公式厩舎'
+            with zipfile.ZipFile(path, 'w') as z:
+                z.writestr('racelist.csv', encode([race()]))
+                z.writestr('horselist.csv', encode([winner, runner]))
+            archive = NarOfficialArchive([path])
+            result = archive.horse_history({'name': 'サンプル', 'birthDate': '20180310'}, {'date': '2026-10-17'})
+            run = result['allPastRuns'][0]
+            self.assertEqual(run['birthDate'], '2018-03-10')
+            self.assertEqual(run['trainer'], '公式厩舎')
+            self.assertEqual(run['timeSeconds'], 83.4)
+            self.assertEqual(run['marginSeconds'], .4)
+            self.assertEqual(run['marginEvidence'], {'winnerTimeSeconds': 83., 'horseTimeSeconds': 83.4})
+            self.assertEqual(result['recentRaces'], result['allPastRuns'])
+            wrong = Path(directory) / 'conflict.zip'
+            other = horse('別馬', 10)
+            with zipfile.ZipFile(wrong, 'w') as z:
+                z.writestr('horselist.csv', encode([other]))
+            with self.assertRaisesRegex(ValueError, 'identity'):
+                NarOfficialArchive([path, wrong])
+
+    def test_invalid_date_and_timing_are_unknown(self):
+        from arvexq.databanks.nar_official_csv import date, time_seconds
+        self.assertEqual(date('20260230'), '')
+        self.assertEqual(date('2026-02-28'), '2026-02-28')
+        self.assertIsNone(time_seconds('1600'))
+        self.assertIsNone(time_seconds('中止'))
+        self.assertEqual(time_seconds('594'), 59.4)
+
+    def test_future_namesake_cannot_remove_preoff_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'namesakes.zip'
+            with zipfile.ZipFile(path, 'w') as z:
+                z.writestr('racelist.csv', encode([race('20260930'), race('20261020')]))
+                z.writestr('horselist.csv', encode([horse(dob='',date='20260930'),
+                    horse(dob='20200101',date='20261020')]))
+            index = NarOfficialArchive([path])
+            result = index.horse_history({'name':'サンプル','birthDate':'20180310'}, {'date':'2026-10-17'})
+            self.assertEqual(len(result['allPastRuns']), 1)
+            self.assertEqual(result['allPastRuns'][0]['date'], '2026-09-30')
+
+if __name__ == '__main__':
     unittest.main()

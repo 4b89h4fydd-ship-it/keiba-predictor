@@ -1,0 +1,51 @@
+{
+  "version": "arvexq-learned-whole-career-scenarios-v2",
+  "trainDate": "2026-10-12",
+  "evaluateDate": "2026-10-16",
+  "validationStatus": "reused-archived-day-diagnostic-not-untouched-holdout",
+  "byCircuit": {
+    "中央": {
+      "targetRaces": 0,
+      "axisScoredRaces": 0,
+      "axisWins": 0,
+      "axisTop3": 0,
+      "axisWinRate": null,
+      "axisTop3Rate": null,
+      "recommendedRaces": 0,
+      "recommendedHitRate": null,
+      "returnRate": null,
+      "stakeYenAt100": 0,
+      "skipRate": null,
+      "statuses": {},
+      "target80Achieved": false,
+      "note": "事後診断。全見送りは的中率達成ではない。中央の評価対象がなければ不足。"
+    },
+    "地方": {
+      "targetRaces": 36,
+      "axisScoredRaces": 25,
+      "axisWins": 10,
+      "axisTop3": 17,
+      "axisWinRate": 0.4,
+      "axisTop3Rate": 0.68,
+      "recommendedRaces": 0,
+      "recommendedHitRate": null,
+      "returnRate": null,
+      "stakeYenAt100": 0,
+      "skipRate": 1.0,
+      "statuses": {
+        "candidate-analysis": 25,
+        "insufficient-history": 11
+      },
+      "target80Achieved": false,
+      "note": "事後診断。全見送りは的中率達成ではない。中央の評価対象がなければ不足。"
+    }
+  },
+  "limitations": [
+    "取得応答は事後保存。各入力が発走前に既知だったことの完全な証明はない",
+    "全過去走の網羅性は未確認",
+    "単純な位置取りの感度分析であり、展開発生頻度は未学習",
+    "現行ブラウザー・APIには未接続",
+    "未使用データ検証と推奨判断の校正が必要"
+  ],
+  "productionEligible": false
+}

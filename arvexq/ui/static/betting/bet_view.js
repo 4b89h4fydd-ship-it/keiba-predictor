@@ -27,18 +27,18 @@ function render(r,p,deps){
     return '<section class="arv-three-section"><h3>'+esc(label)+'</h3>'
       +(body||'<p class="arv-three-skip">'+(dataUnavailable?'データ不足・未取得：':'見送り：')+esc(dataUnavailable?(plan.dataMissing||[]).join('／')||plan.reason||reason||'発走前情報が揃っていません':reason||'購入条件を満たさず')+'</p>')+'</section>';
   }
-  var total=plan.referenceBudget||{},status=plan.fixedAt?'発走前固定':'暫定・未保存',
+  var total=plan.referenceBudget||{},status=plan.fixedAt?'発走前固定':(plan.postRaceRevision?'事後分析（発走後再計算）':'暫定・未保存'),
       savedV346=!!plan.fixedAt&&String(plan.engineVersion||plan.betStrategy||'').includes('three-way-v346'),
       hon=plan.honmei||{},
       axisLabel=savedV346?'発走前に保存した本命と買い目を維持（役割を後付けしません）':hon.horseNumber?
-       ('◎ '+hon.horseNumber+'番｜勝ち切る能力と3着内の安定性を総合評価（買い目は券種別に審査）'):'高信頼の軸なし・買い目は券種別に判断',
+       ('◎ '+hon.horseNumber+'番｜勝ち切る能力と3着内の安定性を兼ね備えた最有力馬（券種は全種類から比較）'):'高信頼の軸なし・買い目は券種別に判断',
       explanation=aiBetExplanationHtml(plan);
   return '<div class="ai-bet-box arv-three-bet">'
     +'<div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div>'
     +'<div class="ai-bet-meta"><span class="arv-bet-quality"><small>3連単買い目の推定発生確率</small><b>'+esc(plan.trifectaOccurrenceProbability==null?'未算出':plan.trifectaOccurrenceProbability)+'<em>'+ (plan.trifectaOccurrenceProbability==null?'':'%') +'</em></b></span>'
     +'<span class="arv-bet-status">'+esc(status)+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div>'
     +'<p class="arv-three-provisional">'+esc(axisLabel)+'</p>'
-    +'<p class="arv-three-provisional">発走前スコアによる未校正の推定値です。実際の的中率・保証値ではありません。</p>'
+    +'<p class="arv-three-provisional">全券種を比較し、根拠のある組み合わせをおすすめとして選定します。推定確率は未校正で、目標の的中率80%以上（望成90%以上）を保証するものではありません。</p>'
     +(plan.noAxis&&!dataUnavailable?'<p class="arv-three-provisional">'+esc(savedV346?'保存時点の軸なし判定を維持。':'◎信頼度Cまたは◎不在：軸を固定せずワイド・馬連・3連複を比較。馬単・3連単は見送ります。')+'</p>':'')
     +(plan.referenceOnly?'<p class="arv-three-provisional">通常レースの参考買い目。朝固定の厳選レースではありません。</p>':'')
     +((plan.betWarnings||[]).length?'<div class="arv-three-check"><b>購入前に確認</b><p>条件未確認：'+esc(plan.betWarnings.join('／'))+'</p><small>オッズ・期待値を確認してから購入判断してください。</small></div>':'')
@@ -49,14 +49,13 @@ function render(r,p,deps){
     +(total.totalYen!=null?'<span>100円/点換算 '+esc(total.totalYen)+'円</span>':'')+'</div>'
     +'<p class="arv-three-budget-hint">購入額は投票時に指定</p>'
     +'<p class="arv-three-ev">'+esc(plan.expectedValueReason||'券種別の的中率・回収率・期待値は、保存済み実績を検証できるまで表示しません。')+'</p>'
-    +(plan.fixedAt?'<p class="arv-three-fixed">保存 '+esc(plan.fixedAt)+'</p>':'<p class="arv-three-provisional">発走前の保存が完了するまでは暫定です。発走後に買い目を新規作成しません。</p>')
+    +(plan.fixedAt?'<p class="arv-three-fixed">保存 '+esc(plan.fixedAt)+'</p>':(plan.postRaceRevision?'<p class="arv-three-provisional">発走後の再計算結果です。発走前に確定した買い目ではなく、的中率の検証には使用しません。</p>':'<p class="arv-three-provisional">発走前の保存が完了するまでは暫定です。発走後に買い目を新規作成しません。</p>'))
     +(plan.postLockNotice?'<p class="ai-bet-lock-notice">'+esc(plan.postLockNotice)+'</p>':'')
     +explanation
-    +'<div class="bet-mark-guide"><b>'+esc(savedV346?'保存時点の印の見方':'印の見方（券種ごとに役割を再判定）')+'</b><div class="bet-mark-grid">'
-    +'<span><i>【単】</i>◎【単】 勝ち切る能力・1着向き（的中保証ではありません）</span>'
-    +'<span><i>【軸】</i>◎【軸】 3着以内の安定性・軸向き（的中保証ではありません）</span>'
-    +'<span><i>○</i>1・2着向き</span><span><i>▲</i>2・3着向き</span>'
-    +'<span><i>△</i>3着向き</span><span><i>☆</i>実測の追い上げ・前争いを評価</span><span><i>注</i>着差・同条件・相手関係などの見落とし注意馬</span>'
+    +'<div class="bet-mark-guide"><b>'+esc(savedV346?'保存時点の印の見方':'印の見方（予想を基に評価）')+'</b><div class="bet-mark-grid">'
+    +'<span><i>◎</i>勝ち切る能力と3着内の安定性を総合した最有力馬。単・軸で別の馬には分けません。</span>'
+    +'<span><i>○</i>◎に最も匹敵し逆転を狙える相手</span><span><i>▲</i>◎・○に匹敵する実力馬</span>'
+    +'<span><i>△</i>展開や条件次第で上位を争う相手</span><span><i>☆</i>展開がハマれば有力馬を逆転できる相手</span><span><i>注</i>能力・適性・過去実績に根拠のある見落とし注意馬</span>'
     +'</div></div><p class="arv-three-reason">'+esc(plan.reason||'')+'</p></div>'
 }
 global.ARVEXQBetView=Object.freeze({render:render});

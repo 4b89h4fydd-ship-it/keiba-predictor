@@ -14,15 +14,24 @@ const deps={
  raceMarkClock:()=>({started:false}),aiBetExplanationHtml:()=>'',betComboText:()=>''
 };
 const html=renderer({},{},deps);
-assert.match(html,/<i>【単】<\/i>◎【単】/);
-assert.match(html,/<i>【軸】<\/i>◎【軸】/);
+assert.match(html,/<i>◎<\/i>勝ち切る能力と3着内の安定性/);
+assert.doesNotMatch(html,/<i>【(?:単|軸)】<\/i>/);
 assert.match(html,/<i>☆<\/i>/);
 assert.doesNotMatch(html,/☆\+/);
-assert.doesNotMatch(html,/的中率80%|的中率100%/);
+assert.match(html,/目標の的中率80%以上.*保証するものではありません/);
 const historic={...plan,fixedAt:'2026-10-08T10:20:00+09:00',
  engineVersion:'arvexq-bets-old-v317',
  items:[{level:'本線',kind:'馬連',points:1,combo:'2 - 6',combos:[[2,6]]}]};
 const old=renderer({},{},{...deps,buildAiBetPlan:()=>historic});
 assert.match(old,/発走前固定/);
 assert.match(old,/2 - 6/);
+const revised=renderer({},{},{...deps,buildAiBetPlan:()=>({...plan,postRaceRevision:true})});
+assert.match(revised,/事後分析（発走後再計算）/);
+assert.match(revised,/的中率の検証には使用しません/);
+const app=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const postBet=app.slice(app.indexOf('function buildAiBetPlan(r,p){'),app.indexOf('function betItemHit('));
+assert.match(postBet,/if\(stored\)return immutableStoredAiBetView\(r,stored\);/);
+const postMark=app.slice(app.indexOf('function predict(r){'),app.indexOf('function nextRace(){'));
+assert.match(postMark,/result\.retrospectiveMarks=result\.rows\.map/);
+assert.match(postMark,/result\.retrospectiveMarks[\s\S]*?applyFrozenMarks\(r,result\);/);
 console.log('BET_ROLE_GUIDE_AND_RETIRED_BETS_CONTRACT_OK');

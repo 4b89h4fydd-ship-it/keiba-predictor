@@ -8,7 +8,8 @@ assert.ok(start>=0&&end>start, 'frozen marks entrypoint missing');
 const helpersStart=src.indexOf('function validatedHonmeiMetadata(');
 const helpersEnd=src.indexOf('function racecardMarkLegend(',helpersStart);
 assert.ok(helpersStart>=0&&helpersEnd>helpersStart,'frozen grade helper missing');
-const original=src.slice(helpersStart,helpersEnd)+'\n'+src.slice(start,end);
+const revisionStart=src.indexOf('function latestSavedForecastRevision('),revisionEnd=src.indexOf('function revisionPercent(',revisionStart);
+const original=src.slice(revisionStart,revisionEnd)+'\n'+src.slice(helpersStart,helpersEnd)+'\n'+src.slice(start,end);
 assert.doesNotMatch(original, /\block&&lock\.reason\b/, 'unbound lock regression');
 const frozen={version:'arvexq-official-mark-revision-v1',
   reason:'公式馬場変更', fixedAt:'2026-10-10T10:00:00+09:00',

@@ -1,0 +1,42 @@
+name: ARVEXQ Forecast Revision Backup
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/forecast-reset-20261016]
+    paths: ['.github/workflows/arvexq-revision-backup.yml']
+permissions:
+  contents: read
+concurrency:
+  group: arvexq-revision-backup
+  cancel-in-progress: false
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Export all original D1 tables and verify restored SQLite before revisions
+        run: python -u scripts/arvexq_backup_live_d1.py
+      - name: Compress verified read-only backup
+        run: |
+          python - <<'PY'
+          import gzip,shutil,json
+          from pathlib import Path
+          summary=json.loads(Path('/tmp/arvexq-complete-d1-summary.json').read_text())
+          assert summary['restore_verified'] and summary['original_sql_writes']==0
+          with open('/tmp/arvexq-complete-d1.sqlite3','rb') as source,gzip.open('/tmp/arvexq-complete-d1.sqlite3.gz','wb',compresslevel=6) as target:
+              shutil.copyfileobj(source,target)
+          print('VERIFIED_BACKUP_COMPRESSED',Path('/tmp/arvexq-complete-d1.sqlite3.gz').stat().st_size)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-d1-before-forecast-revisions-${{ github.run_id }}
+          path: |
+            /tmp/arvexq-complete-d1.sqlite3.gz
+            /tmp/arvexq-complete-d1-summary.json
+          retention-days: 14

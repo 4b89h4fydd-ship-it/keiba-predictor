@@ -7,16 +7,18 @@ name: ARVEXQ Validation
     paths:
       - app.py
       - build_static.py
+      - workers/**
       - arvexq/**
       - scripts/**
       - tests/**
       - .github/workflows/arvexq-*.yml
       - requirements.txt
   push:
-    branches: [main]
+    branches: [main, feature/forecast-reset-20261016]
     paths:
       - app.py
       - build_static.py
+      - workers/**
       - arvexq/**
       - scripts/**
       - tests/**
@@ -24,7 +26,7 @@ name: ARVEXQ Validation
       - requirements.txt
 
 concurrency:
-  group: arvexq-validation-${{ github.ref }}
+  group: arvexq-validation-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -47,7 +49,7 @@ jobs:
           cache-dependency-path: requirements.txt
 
       - name: Install dependencies
-        run: python -m pip install -q -r requirements.txt
+        run: python -m pip install -q -r requirements.txt pytest==9.1.1
 
       - name: Temporal evaluation and research probability invariants
         run: |
@@ -56,6 +58,9 @@ jobs:
           python -m unittest discover -s tests -p 'test_research_rank_distribution.py' -v
           python -m unittest discover -s tests -p 'test_prepost_mark_consistency.py' -v
           python -m unittest discover -s tests -p 'test_prediction_input_fingerprint.py' -v
+
+      - name: Full Python regression suite including official CSV and career evidence
+        run: PYTHONPATH=.:tests python -m pytest tests -q
 
       - name: Python syntax
         run: |
@@ -71,6 +76,13 @@ jobs:
             scripts/arvexq_result_repair.py \
             scripts/arvexq_history_repair.py \
             scripts/arvexq_sqlite_health.py
+
+      - name: Learned scenario challenger and all-kind comparison
+        run: |
+          python -m unittest discover -s tests -p 'test_learned_scenarios.py' -v
+          python -m unittest discover -s tests -p 'test_scenario_tickets.py' -v
+          python -m unittest discover -s tests -p 'test_all_kind_ticket_metrics.py' -v
+          python -m unittest discover -s tests -p 'test_new_forecast_candidate.py' -v
 
       - name: Lossless full snapshot compression and immutability
         run: |
@@ -152,6 +164,10 @@ jobs:
           node scripts/arvexq_scratch_live_smoke.js
           node scripts/arvexq_mark_lock_smoke.js
           node scripts/arvexq_visible_axis_mark_smoke.js
+          node scripts/arvexq_saved_forecast_revision_smoke.js
+          node scripts/arvexq_forecast_revision_api_smoke.mjs
+          node scripts/arvexq_unified_honmei_frontend_smoke.js
+          node scripts/arvexq_honmei_dom_contract_test.js
 
       - name: Official course revision and morning marks
         run: |

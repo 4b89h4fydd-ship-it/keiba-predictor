@@ -136,12 +136,18 @@ SOURCE = (
     '                                      prize1,prize2,prize3,prize4,prize5,corners_json)\n'
     '                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)\n'
     '                    ON CONFLICT(track,date,race_no) DO UPDATE SET\n'
-    '                      start_time=excluded.start_time,title=excluded.title,distance=excluded.distance,\n'
+    "                      start_time=CASE WHEN excluded.start_time!='' THEN excluded.start_time ELSE races.start_time END,\n"
+    "                      title=CASE WHEN excluded.title!='' THEN excluded.title ELSE races.title END,\n"
+    "                      distance=CASE WHEN excluded.distance>0 THEN excluded.distance ELSE races.distance END,\n"
     "                      weather=CASE WHEN excluded.weather NOT IN ('','不明') THEN excluded.weather ELSE races.weather END,\n"
     "                      condition=CASE WHEN excluded.condition NOT IN ('','不明') THEN excluded.condition ELSE races.condition END,\n"
-    '                      field_size=excluded.field_size,\n'
-    '                      prize1=excluded.prize1,prize2=excluded.prize2,prize3=excluded.prize3,\n'
-    '                      prize4=excluded.prize4,prize5=excluded.prize5,corners_json=excluded.corners_json\n'
+    '                      field_size=CASE WHEN excluded.field_size>0 THEN excluded.field_size ELSE races.field_size END,\n'
+    "                      prize1=CASE WHEN excluded.prize1>0 THEN excluded.prize1 ELSE races.prize1 END,\n"
+    "                      prize2=CASE WHEN excluded.prize2>0 THEN excluded.prize2 ELSE races.prize2 END,\n"
+    "                      prize3=CASE WHEN excluded.prize3>0 THEN excluded.prize3 ELSE races.prize3 END,\n"
+    "                      prize4=CASE WHEN excluded.prize4>0 THEN excluded.prize4 ELSE races.prize4 END,\n"
+    "                      prize5=CASE WHEN excluded.prize5>0 THEN excluded.prize5 ELSE races.prize5 END,\n"
+    "                      corners_json=CASE WHEN excluded.corners_json!='[]' THEN excluded.corners_json ELSE races.corners_json END\n"
     '                    """,\n'
     '                    (\n'
     '                        r.track, r.date, r.race_no, r.start_time, r.start_time, r.title, r.distance, r.weather, r.condition,\n'
@@ -162,11 +168,17 @@ SOURCE = (
     '                                        jockey,trainer,status,finish,time_seconds,corner_positions_json)\n'
     '                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)\n'
     '                    ON CONFLICT(track,date,race_no,horse_no) DO UPDATE SET\n'
-    '                      frame_no=excluded.frame_no,name=excluded.name,sex=excluded.sex,age=excluded.age,\n'
-    '                      carried_weight=excluded.carried_weight,jockey=excluded.jockey,trainer=excluded.trainer,\n'
+    "                      frame_no=CASE WHEN excluded.frame_no>0 THEN excluded.frame_no ELSE entries.frame_no END,\n"
+    "                      name=CASE WHEN excluded.name!='' THEN excluded.name ELSE entries.name END,\n"
+    "                      sex=CASE WHEN excluded.sex!='' THEN excluded.sex ELSE entries.sex END,\n"
+    "                      age=CASE WHEN excluded.age>0 THEN excluded.age ELSE entries.age END,\n"
+    "                      carried_weight=CASE WHEN excluded.carried_weight>0 THEN excluded.carried_weight ELSE entries.carried_weight END,\n"
+    "                      jockey=CASE WHEN excluded.jockey!='' THEN excluded.jockey ELSE entries.jockey END,\n"
+    "                      trainer=CASE WHEN excluded.trainer!='' THEN excluded.trainer ELSE entries.trainer END,\n"
     "                      status=CASE WHEN entries.status<>'' THEN entries.status ELSE excluded.status END,\n"
-    '                      finish=excluded.finish,time_seconds=excluded.time_seconds,\n'
-    '                      corner_positions_json=excluded.corner_positions_json\n'
+    "                      finish=CASE WHEN excluded.finish>0 THEN excluded.finish ELSE entries.finish END,\n"
+    "                      time_seconds=CASE WHEN excluded.time_seconds>0 THEN excluded.time_seconds ELSE entries.time_seconds END,\n"
+    "                      corner_positions_json=CASE WHEN excluded.corner_positions_json!='[]' THEN excluded.corner_positions_json ELSE entries.corner_positions_json END\n"
     '                    """,\n'
     '                    (\n'
     '                        e.track, e.date, e.race_no, e.frame_no, e.horse_no, e.name, e.sex, e.age,\n'
@@ -268,9 +280,11 @@ SOURCE = (
     '        return int(row["prize"] or 0)\n'
     '\n'
     '    def recent_races(self, horse_name: str, cutoff: str, limit: int = 5) -> list[dict]:\n'
+    "        from arvexq.ingest.nar_official_metadata import migrate_race_metadata\n"
+    "        migrate_race_metadata(self.conn)\n"
     '        rows = self.conn.execute(\n'
     '            """\n'
-    '            SELECT e.*, r.title, r.distance, r.weather, r.condition, r.field_size, r.prize1,\n'
+    '            SELECT e.*, r.title, r.distance, r.weather, r.condition, r.surface, r.direction, r.class_condition, r.field_size, r.prize1,\n'
     '                (SELECT MIN(w.time_seconds) FROM entries w\n'
     '                 WHERE w.track=e.track AND w.date=e.date AND w.race_no=e.race_no\n'
     '                   AND w.finish=1 AND w.time_seconds>0) AS winner_time_seconds\n'
@@ -292,6 +306,9 @@ SOURCE = (
     '                "distance": int(row["distance"] or 0),\n'
     '                "condition": row["condition"] or "不明",\n'
     '                "weather": row["weather"] or "不明",\n'
+    "                \"surface\": row[\"surface\"] or \"\",\n"
+    "                \"direction\": row[\"direction\"] or \"\",\n"
+    "                \"class\": row[\"class_condition\"] or \"\",\n"
     '                "finish": int(row["finish"] or 0),\n'
     '                "timeSeconds": float(row["time_seconds"] or 0),\n'    '                "timeBehindWinner": (round(float(row["time_seconds"]) - float(row["winner_time_seconds"]), 2)\n'
     '                                     if row["time_seconds"] and row["winner_time_seconds"]\n'
@@ -308,6 +325,8 @@ SOURCE = (
     '        ]\n'
     '\n'
     '    def races_json(self, iso_date: str) -> list[dict]:\n'
+    "        from arvexq.ingest.nar_official_metadata import migrate_race_metadata\n"
+    "        migrate_race_metadata(self.conn)\n"
     '        race_rows = self.conn.execute(\n'
     '            "SELECT * FROM races WHERE date=? ORDER BY track, race_no", (iso_date,)\n'
     '        ).fetchall()\n'
@@ -370,7 +389,9 @@ SOURCE = (
     '                    "weather": race["weather"] or "不明",\n'
     '                    "fieldSize": int(race["field_size"] or len(entries)),\n'
     '                    "racePrize1": int(race["prize1"] or 0),\n'
-    '                    "surface": "",\n'
+    "                    \"surface\": race[\"surface\"] or \"\",\n"
+    "                    \"direction\": race[\"direction\"] or \"\",\n"
+    "                    \"class\": race[\"class_condition\"] or \"\",\n"
     '                    "startTime": race["start_time"] or "",\n'
     '                    "scheduledStartTime": race["scheduled_start_time"] or race["start_time"] or "",\n'
     '                    "startTimeChanged": bool((race["scheduled_start_time"] or "") and (race["start_time"] or "") and race["scheduled_start_time"] != race["start_time"]),\n'
@@ -412,8 +433,49 @@ SOURCE = (
     '\n'
     '    def import_zip_bytes(self, data: bytes, cache_key: str, archive_path: Path) -> dict:\n'
     '        races, entries = self.parser.parse(data)\n'
+    "        if not races or not entries:\n"
+    "            raise ValueError('NAR archive lacks usable race or horse rows; sync not recorded')\n"
+    "        race_ids = {(r.track, r.date, r.race_no) for r in races}\n"
+    "        if any((e.track, e.date, e.race_no) not in race_ids for e in entries):\n"
+    "            raise ValueError('NAR archive has horse rows without matching race rows')\n"
+    "        if any(not r.track or not r.date or r.race_no <= 0 for r in races):\n"
+    "            raise ValueError('NAR archive includes invalid race identity')\n"
+    "        if any(not e.track or not e.date or e.race_no <= 0 or e.horse_no <= 0 or not e.name for e in entries):\n"
+    "            raise ValueError('NAR archive includes invalid horse identity')\n"
+    "        seen_horses = {}\n"
+    "        for e in entries:\n"
+    "            key = (e.track, e.date, e.race_no, e.horse_no)\n"
+    "            previous = seen_horses.setdefault(key, e.name)\n"
+    "            if previous != e.name:\n"
+    "                raise ValueError('NAR archive has conflicting horse names for the same race number')\n"
     '        self.store.import_rows(races, entries)\n'
+    "        # Enrich only existing rows using observed official CSV columns.\n"
+    "        from arvexq.ingest.nar_official_metadata import (\n"
+    "            migrate_race_metadata, official_race_metadata, update_race_metadata,\n"
+    "        )\n"
+    "        race_rows = strip_header(read_csv_from_zip(data, '_racelist.csv'))\n"
+    "        migrate_race_metadata(self.store.conn)\n"
+    "        for raw in race_rows:\n"
+    "            if len(raw) < 33:\n"
+    "                continue\n"
+    "            identity = (_clean(raw[RACE_IDX['track']]), _iso_date(raw[RACE_IDX['date']]),\n"
+    "                        _int(raw[RACE_IDX['race_no']]))\n"
+    "            update_race_metadata(self.store.conn, identity, official_race_metadata(raw, RACE_IDX))\n"
+    "        self.store.conn.commit()\n"
     '        self.store.mark_synced(cache_key, archive_path)\n'
+    "        # Refresh the official archive-backed history provider after this ZIP\n"
+    "        # has been committed. Startup registration alone misses later downloads.\n"
+    "        try:\n"
+    "            from arvexq.databanks.nar_official_csv import register_nar_official_archive\n"
+    "            from arvexq.databanks.registry import registry\n"
+    "            paths = sorted(p for p in ARCHIVE_DIR.glob('*.zip') if p.name.endswith('_race.zip') or p.name == 'daily_race.zip')\n"
+    "            if archive_path.is_file() and archive_path.suffix.lower() == '.zip' and archive_path not in paths:\n"
+    "                paths.append(archive_path)\n"
+    "            if paths:\n"
+    "                register_nar_official_archive(registry, paths=paths)\n"
+    "        except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:\n"
+    '            import logging\n'
+    "            logging.getLogger(__name__).warning('NAR career archive refresh unavailable: %s', exc)\n"
     '        return {"races": len(races), "entries": len(entries), "cacheKey": cache_key}\n'
     '\n'
     '    def sync_daily(self, force: bool = False) -> dict:\n'

@@ -57,7 +57,7 @@ const roleStart=src.indexOf('function markRoleLabel(');
 const roleEnd=src.indexOf('\n}',roleStart)+2;
 assert(roleStart>=0&&roleEnd>roleStart,'production markRoleLabel helper is required');
 const markRoleLabel=new Function(src.slice(roleStart,roleEnd)+';return markRoleLabel;')();
-assert.equal(markRoleLabel({predMark:'◎'}),'◎【単】');
+assert.equal(markRoleLabel({predMark:'◎'}),'◎ 本命');
 const visibleStart=src.indexOf('function visiblePredictionMark(');
 const visibleEnd=src.indexOf('function honmeiA11yText(',visibleStart);
 assert(visibleStart>=0&&visibleEnd>visibleStart,'shared visible axis mark helper required');

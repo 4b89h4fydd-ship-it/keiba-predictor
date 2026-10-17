@@ -1,4 +1,4 @@
-"""Build and reopen a complete logical backup of all five application tables.
+"""Build and reopen a complete logical backup of all original and versioned forecast application tables.
 
 Reads only the authenticated, fixed-query export endpoint. No original DB writes.
 """
@@ -28,7 +28,8 @@ def aggregate(hashes):
 def backup(fetch,destination):
     manifest=fetch({})
     assert manifest['ok'] and manifest['sql_writes']==0
-    assert set(manifest['tables'])=={'race_details','race_summaries','odds_current','odds_history','meta'}
+    required={'race_details','race_summaries','odds_current','odds_history','meta'}
+    assert required<=set(manifest['tables'])<=required|{'forecast_revisions','forecast_revision_current'}
     destination=Path(destination)
     if destination.exists():raise RuntimeError('backup destination already exists')
     conn=sqlite3.connect(destination)
@@ -64,12 +65,12 @@ def backup(fetch,destination):
             else:
                 offset=0
                 while True:
-                    result=fetch({'table':table,'offset':offset,'limit':500})
+                    result=fetch({'table':table,'offset':offset,'limit':50})
                     assert result['ok'] and result['table']==table
                     rows=result['rows']
                     for row in rows:insert(table,row)
                     offset+=len(rows)
-                    if len(rows)<500:break
+                    if len(rows)<50:break
         for schema in manifest['schema']:
             if schema['type']=='index':
                 assert re.match(r'^CREATE\s+(?:UNIQUE\s+)?INDEX\b',schema['sql'],re.I)

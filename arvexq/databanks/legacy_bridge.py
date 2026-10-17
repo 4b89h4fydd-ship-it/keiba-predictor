@@ -370,7 +370,21 @@ def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:
     # Use locally supplied official NAR CSV archives when configured.
     from .nar_official_csv import register_nar_official_archive
     try:
-        register_nar_official_archive(registry)
+        # Reuse the ZIP files already downloaded by NarSync when no explicit
+        # official-archive list was provided; do not create a new data route.
+        import os
+        from pathlib import Path
+        configured = os.getenv("ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES", "").strip()
+        archive_dir = namespace.get("ARCHIVE_DIR")
+        existing = []
+        if not configured and archive_dir is not None:
+            folder = Path(archive_dir)
+            if folder.is_dir():
+                existing = sorted(
+                    (p for p in folder.glob("*.zip") if p.is_file() and (p.name.endswith("_race.zip") or p.name == "daily_race.zip")),
+                    key=lambda p: p.name,
+                )
+        register_nar_official_archive(registry, paths=existing if existing else None)
     except (OSError, ValueError, RuntimeError) as exc:
         import logging
         logging.getLogger(__name__).warning("NAR official CSV unavailable: %s", exc)

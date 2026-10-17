@@ -17,8 +17,8 @@ const {markRoleLabel,visiblePredictionMark,honmeiA11yText}=roleFactory(isScratch
 const horse={horseNumber:6,name:'ホウオウバトラー',frameNumber:5,
   sex:'牡',age:3,jockey:'小笠鈴'};
 const x={horse,predMark:'',preOffAxisCandidate:true,markFrozen:false};
-assert.equal(markRoleLabel(x),'◎【軸】');
-assert.equal(visiblePredictionMark(x),'◎');
+assert.equal(markRoleLabel(x),'');
+assert.equal(visiblePredictionMark(x),'');
 assert.equal(x.predMark,'','original marks must not be mutated by display');
 assert.equal(visiblePredictionMark({...x,preOffAxisCandidate:false}),'');
 assert.equal(visiblePredictionMark({...x,predMark:'△'}),'△',
@@ -38,9 +38,9 @@ const render=new Function('isScratchHorse','n','horseDisplayName','clamp',
   ()=>0,()=>null,()=>0,s=>String(s),markRoleLabel,visiblePredictionMark,honmeiA11yText,
   m=>String(m||'—'),()=>'<em>odds</em>',()=> '55kg');
 const html=render({},horse,x);
-assert.match(html,/class="rc-mark-box rc-ai-mark" data-ai-mark="◎"/);
-assert.match(html,/<span class="rc-mark-main">◎<\/span>/);
-assert.match(html,/class="rc-honmei-role"[\s\S]*?◎【軸】/);
+assert.match(html,/class="rc-mark-box rc-ai-mark" data-ai-mark=""/);
+assert.match(html,/<span class="rc-mark-main">—<\/span>/);
+assert.doesNotMatch(html,/class="rc-honmei-role"/);
 assert.equal(x.predMark,'','HTML rendering cannot rewrite underlying score');
 const off=render({},horse,{...x,preOffAxisCandidate:false});
 assert.match(off,/data-ai-mark=""/);
@@ -52,4 +52,4 @@ for(const target of [
   "var h=x.horse,mark=visiblePredictionMark(x)||'—'",
   "data-ai-mark=\"'+esc(visiblePredictionMark(x))",
 ])assert(src.includes(target),'display authority missing '+target);
-console.log('VISIBLE_INDEPENDENT_AXIS_MARK_OK missing_core=shown_as_axis existing_marks_untouched frozen_immutable');
+console.log('UNIFIED_VISIBLE_HONMEI_OK no_independent_axis_promotion existing_marks_untouched frozen_immutable');

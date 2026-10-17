@@ -1,7 +1,6 @@
 """Audit pre-off evidence coverage; research-only and no model mutation."""
 from collections import Counter
 from arvexq.prediction.past_performance import observed_runs
-from arvexq.prediction.factor_model import collect_horse_raw_metrics
 
 
 def audit_races(races):
@@ -18,7 +17,11 @@ def audit_races(races):
             count["horses"]+=1
             c["horses"]+=1
             runs=observed_runs(horse,race,limit=5)
-            raw=collect_horse_raw_metrics(horse,race)
+            raw = {
+                'trueRun': True if runs else None,
+                'pure': True if any(r.get('opponentLevel') is not None for r in runs) else None,
+                'sectional': True if any(r.get('last3fRank') is not None for r in runs) else None,
+            }
             if not runs:
                 count["withoutFiveRunEvidence"]+=1
                 c["withoutFiveRunEvidence"]+=1
@@ -30,8 +33,8 @@ def audit_races(races):
                     count[field+"Missing"]+=1
                     c[field+"Missing"]+=1
             if raw.get("sectional") is None and raw.get("trueRun") is not None:
-                count["neutralImputedSectional"]+=1
-                c["neutralImputedSectional"]+=1
+                count["sectionalMissingWithObservedFinish"]+=1
+                c["sectionalMissingWithObservedFinish"]+=1
     def summarize(c):
         out = dict(c)
         horses = c["horses"]

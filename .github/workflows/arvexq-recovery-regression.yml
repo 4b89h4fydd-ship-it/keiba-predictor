@@ -2,10 +2,13 @@ name: ARVEXQ Recovery Regression
 on:
   pull_request:
     branches: [main]
-    paths: ['arvexq/ui/static/**', 'scripts/arvexq_detail_resilience_smoke.js', 'scripts/arvexq_pull_to_refresh_smoke.js', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
+    paths: ['arvexq/ui/static/**', 'scripts/arvexq_detail_resilience_smoke.js', 'scripts/arvexq_pull_to_refresh_smoke.js', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_saved_forecast_revision_browser_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
   push:
-    branches: [main]
-    paths: ['arvexq/ui/static/**', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
+    branches: [main, feature/forecast-reset-20261016]
+    paths: ['arvexq/ui/static/**', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_saved_forecast_revision_browser_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
+concurrency:
+  group: arvexq-recovery-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -27,6 +30,8 @@ jobs:
           python build_static.py
           python -m http.server 8788 --directory dist >/tmp/arvexq-http.log 2>&1 &
           for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
+      - name: Saved latest forecast revision and immutable original in mobile browser
+        run: node scripts/arvexq_saved_forecast_revision_browser_smoke.js
       - name: Detail outage and full-history recovery
         run: node scripts/arvexq_detail_resilience_smoke.js
       - name: iPhone Chromium and WebKit pull-to-refresh

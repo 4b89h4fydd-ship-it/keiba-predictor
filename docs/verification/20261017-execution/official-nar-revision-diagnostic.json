@@ -1,0 +1,33 @@
+{
+  "validationType": "retrospective-recalculation-diagnostic-not-untouched-preoff-holdout",
+  "byCircuit": {
+    "中央": {
+      "honmeiWinRate": null,
+      "honmeiTop3Rate": null,
+      "recommendedHitRate": null,
+      "recommendedReturnRate": null,
+      "accuracy80Achieved": false
+    },
+    "地方": {
+      "targetRaces": 36,
+      "recommendedRaces": 0,
+      "skippedRaces": 36,
+      "honmeiScored": 25,
+      "honmeiWins": 12,
+      "honmeiTop3": 20,
+      "honmeiWinRate": 0.48,
+      "honmeiTop3Rate": 0.8,
+      "recommendedHitRate": null,
+      "recommendedReturnRate": null,
+      "accuracy80Achieved": false
+    },
+    "unknown": {
+      "honmeiWinRate": null,
+      "honmeiTop3Rate": null,
+      "recommendedHitRate": null,
+      "recommendedReturnRate": null,
+      "accuracy80Achieved": false
+    }
+  },
+  "probabilityOrMarkFailures": []
+}

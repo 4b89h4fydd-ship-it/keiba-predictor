@@ -13,6 +13,7 @@ import unicodedata
 import zipfile
 from collections import defaultdict
 from pathlib import Path
+from datetime import datetime
 
 from .registry import DataBankRegistry, DataSource, SourceCapabilities
 
@@ -28,9 +29,29 @@ def number(value):
         return 0
 
 
+def carried_weight(value):
+    """Keep only an observed weight, including reduction-jockey prefixes."""
+    match = re.search(r"\d+(?:\.\d+)?", str(value or ""))
+    return float(match.group()) if match else None
+
+
 def date(value):
     x = str(value or "").replace("-", "").replace("/", "")
-    return f"{x[:4]}-{x[4:6]}-{x[6:8]}" if len(x) == 8 and x.isascii() and x.isdigit() else ""
+    try:
+        return datetime.strptime(x, "%Y%m%d").date().isoformat() if len(x) == 8 else ""
+    except ValueError:
+        return ""
+
+
+def time_seconds(value):
+    """Official mmssS timing, never a finishing-place or margin proxy."""
+    text = str(value or "").strip()
+    if not re.fullmatch(r"[0-9]{3,5}", text):
+        return None
+    seconds = int(text[-3:]) / 10
+    if seconds >= 60:
+        return None
+    return (int(text[:-3]) * 60 if len(text) > 3 else 0) + seconds
 
 
 def ranks(value):
@@ -83,19 +104,61 @@ def race_key(row):
 
 class NarOfficialArchive:
     def __init__(self, paths):
+        self.paths = tuple(str(path) for path in paths)
         race_rows, horse_rows = {}, []
-        for path in paths:
+        for path in self.paths:
             for filename, rows in rows_from_archive(path):
                 if "racelist" in filename:
                     for row in rows:
                         key = race_key(row)
                         if key[1] and key[2]:
-                            race_rows[key] = row
+                            previous = race_rows.get(key)
+                            if previous is None:
+                                race_rows[key] = row
+                            else:
+                                richer, other = (row, previous) if sum(bool(str(v).strip()) for v in row) > sum(bool(str(v).strip()) for v in previous) else (previous, row)
+                                race_rows[key] = [
+                                    (richer[i] if i < len(richer) and str(richer[i]).strip()
+                                     else other[i] if i < len(other) else "")
+                                    for i in range(max(len(richer), len(other)))
+                                ]
                 if "horselist" in filename:
                     horse_rows.extend(row for row in rows if race_key(row)[1])
         self.race_count = len(race_rows)
         self.by_name = defaultdict(list)
+        # Repeated daily/monthly records may differ in completeness.
+        # Select the most populated observed row without inventing values.
+        best_entries = {}
         for h in horse_rows:
+            key = (race_key(h), number(item(h, 5)))
+            if not key[0][1] or not key[1]:
+                continue
+            previous = best_entries.get(key)
+            if previous is None:
+                best_entries[key] = h
+            else:
+                if normalize(item(h, 6)) != normalize(item(previous, 6)) or (
+                    date(item(h, 10)) and date(item(previous, 10))
+                    and date(item(h, 10)) != date(item(previous, 10))
+                ):
+                    raise ValueError("conflicting horse identity in official archives")
+                # Prefer the more complete observation for conflicting values,
+                # then fill only blanks from the other official row.
+                richer, other = (h, previous) if sum(bool(v.strip()) for v in h) > sum(bool(v.strip()) for v in previous) else (previous, h)
+                width = max(len(richer), len(other))
+                best_entries[key] = [
+                    (richer[i] if i < len(richer) and str(richer[i]).strip()
+                     else other[i] if i < len(other) else "")
+                    for i in range(width)
+                ]
+        self.race_rows = race_rows
+        self.entry_rows = best_entries
+        winner_times = {}
+        for h in best_entries.values():
+            seconds = time_seconds(item(h, 32))
+            if number(item(h, 31)) == 1 and seconds is not None:
+                winner_times[race_key(h)] = seconds
+        for h in best_entries.values():
             race = race_rows.get(race_key(h))
             no = number(item(h, 5))
             name = normalize(item(h, 6))
@@ -110,12 +173,28 @@ class NarOfficialArchive:
                 "raceNumber": number(item(h, 2)), "distance": number(item(race, 23)),
                 "horseNumber": no, "frameNumber": number(item(h, 3)),
                 "fieldSize": number(item(race, 26)), "jockey": item(h, 14),
+                "surface": item(race, 21), "direction": item(race, 22),
+                "weather": item(race, 24), "condition": item(race, 25),
+                "class": item(race, 27),
+                "carriedWeight": carried_weight(item(h, 16)),
+                "trainer": item(h, 18), "birthDate": date(item(h, 10)),
+                "sire": item(h, 11), "dam": item(h, 12), "damsire": item(h, 13),
+                "timeSeconds": time_seconds(item(h, 32)),
+                "circuit": "地方", "source": "NAR公式CSV",
+                "raceId": f"nar-{date(item(h, 1))}-{item(h, 0)}-{number(item(h, 2)):02d}",
                 "finish": number(item(h, 31)), "cornerNames": [x[0] for x in pairs],
                 "cornerPositions": positions, "raceLapTimes": laps,
                 "raceFirst3FSeconds": round(sum(laps[:3]), 2) if len(laps) >= 3 else None,
                 "raceLapScope": "whole_race_not_individual_horse",
                 "narOfficialCsv": True,
             }
+            winner = winner_times.get(race_key(h))
+            seconds = run["timeSeconds"]
+            if run["finish"] > 0 and winner is not None and seconds is not None and seconds >= winner:
+                run["marginSeconds"] = round(seconds - winner, 3)
+                run["timeBehindWinner"] = run["marginSeconds"]
+                run["marginEvidenceSource"] = "nar_official_csv"
+                run["marginEvidence"] = {"winnerTimeSeconds": winner, "horseTimeSeconds": seconds}
             margin = item(h, 33)
             if margin and margin not in ("-", "--"):
                 run["marginText"] = margin
@@ -127,20 +206,42 @@ class NarOfficialArchive:
         for records in self.by_name.values():
             records.sort(key=lambda pair: pair[0]["date"], reverse=True)
 
-    def horse_history(self, horse, race, limit=5):
+    def horse_history(self, horse, race, limit=None):
         cutoff = date(race.get("date"))
         dob = date(horse.get("birthDate") or horse.get("birthday"))
         if not cutoff:
             return {}
-        matched = [run.copy() for run, birth in self.by_name.get(normalize(horse.get("name")), [])
+        records = [(run, birth) for run, birth in self.by_name.get(normalize(horse.get("name")), [])
+                   if run["date"] < cutoff]
+        known_birthdates = {birth for _, birth in records if birth}
+        if not dob and len(known_birthdates) > 1:
+            # Same-name horses with different recorded births cannot be
+            # identified reliably without the target horse birth date.
+            return {}
+        matched = [run.copy() for run, birth in records
                    if run["date"] < cutoff and not (dob and birth and dob != birth)]
-        return {"recentRaces": matched[:5], "allPastRuns": matched[:max(1, int(limit))]} if matched else {}
+        # A target with known DOB must not absorb undated-birth records when
+        # the archive also contains a distinct same-name horse.
+        if dob and any(birth and birth != dob for _, birth in records):
+            matched = [run.copy() for run, birth in records
+                       if run["date"] < cutoff and birth == dob]
+        # A caller may request five rows for the UI, but the analytical career
+        # evidence must not silently shrink to five starts.
+        return {"recentRaces": matched[:5], "allPastRuns": matched} if matched else {}
 
 
 def register_nar_official_archive(registry: DataBankRegistry, paths=None):
     if paths is None:
         env = os.getenv("ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES", "")
         paths = env.split(os.pathsep) if env else []
+    previous = registry.get("nar_official_csv")
+    if previous:
+        previous_fetch = previous.fetchers.get("horse_history")
+        previous_archive = getattr(previous_fetch, "__self__", None)
+        paths = list(dict.fromkeys([
+            *(str(path) for path in (paths or [])),
+            *(str(path) for path in getattr(previous_archive, "paths", ()) if Path(path).is_file()),
+        ]))
     if not paths:
         return None
     archive = NarOfficialArchive(paths)
