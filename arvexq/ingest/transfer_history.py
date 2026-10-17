@@ -3,17 +3,7 @@
 Never use outcomes dated on or after the target race date, nor merge
 incomparable JRA/NAR denominators.
 """
-_JRA_TRACKS = frozenset(("札幌","函館","福島","新潟","東京","中山","中京","京都","阪神","小倉"))
-_NAR_TRACKS = frozenset(("門別","帯広","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"))
-
-def _run_circuit(run):
-    explicit = str(run.get("circuit") or run.get("organization") or "").strip().lower()
-    if explicit in ("中央", "jra", "central"): return "JRA"
-    if explicit in ("地方", "nar", "local"): return "NAR"
-    track = str(run.get("track") or "").strip()
-    if track in _JRA_TRACKS: return "JRA"
-    if track in _NAR_TRACKS: return "NAR"
-    return None
+from arvexq.ingest.circuit_transfer import race_circuit as _run_circuit
 
 def _history_rates(horse, race):
     cutoff = str(race.get("date") or "")
