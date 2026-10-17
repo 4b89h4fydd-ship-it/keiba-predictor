@@ -8,7 +8,8 @@ from arvexq.backtest.freeze_research_candidate import freeze_research_candidate
 class FreezeResearchCandidateTests(TestCase):
     def setUp(self):
         self.detail = {'id':'nar-2026-10-18-test-01','date':'2026-10-18',
-                       'startTime':'14:00','circuit':'地方'}
+                       'startTime':'14:00','circuit':'地方',
+                       'horses':[{'horseNumber':1},{'horseNumber':2}]}
         self.plan = {'modelVersion':'research-v1','researchLeader': {
             'status':'research-only-not-a-recommendation',
             'kind':'単勝','combos':[[1]],'points':1}}
