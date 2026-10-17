@@ -673,6 +673,28 @@ jobs:
               --report morning-d1-audit.json
           fi
 
+      - name: Prepare previous-day research training corpus (optional)
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          TRAIN_DATE=$(date -u -d "$TARGET_DATE - 1 day" +%F)
+          mkdir -p .arvexq-data
+          if python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --date "$TRAIN_DATE" \
+            --out research-training-day.json \
+            --report research-training-fetch.json \
+            --workers 3 --allow-missing-details; then
+            python scripts/arvexq_train_research_models.py \
+              --input research-training-day.json \
+              --target-date "$TARGET_DATE" \
+              --output .arvexq-data/research-models.json \
+              --report research-training-model-report.json
+          else
+            echo "::warning::RESEARCH_TRAINING_UNAVAILABLE; no unverified model substituted"
+          fi
+
       - name: Capture optional preoff research candidates (not production picks)
         if: success()
         shell: bash
