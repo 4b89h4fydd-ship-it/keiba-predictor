@@ -406,14 +406,7 @@ def _jra_text(tag) -> str:
 
 from arvexq.ingest.jra_time import _jra_iso_date, _jra_parse_time_seconds
 
-def _jra_date_from_cname(cname:str)->str:
-    m=re.search(r"(20\d{6})/[0-9A-Fa-f]{2}$",cname or "")
-    if not m:return ""
-    x=m.group(1);return f"{x[:4]}-{x[4:6]}-{x[6:8]}"
-
-def _jra_race_no_from_cname(cname:str)->int:
-    m=re.search(r"pw01dde(?:01|10)\d{2}\d{4}\d{4}(\d{2})20\d{6}/",cname or "")
-    return int(m.group(1)) if m else 0
+from arvexq.ingest.jra_identifiers import _jra_date_from_cname, _jra_race_no_from_cname
 
 def _jra_track_from_cname(cname:str)->str:
     m=re.search(r"pw01dde(?:01|10)(\d{2})",cname or "")
