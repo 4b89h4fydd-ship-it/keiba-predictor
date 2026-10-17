@@ -2,10 +2,10 @@ name: ARVEXQ Recovery Regression
 on:
   pull_request:
     branches: [main]
-    paths: ['arvexq/ui/static/**', 'scripts/arvexq_detail_resilience_smoke.js', 'scripts/arvexq_pull_to_refresh_smoke.js', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
+    paths: ['arvexq/ui/static/**', 'scripts/arvexq_detail_resilience_smoke.js', 'scripts/arvexq_pull_to_refresh_smoke.js', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_saved_forecast_revision_browser_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
   push:
     branches: [main, feature/forecast-reset-20261016]
-    paths: ['arvexq/ui/static/**', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
+    paths: ['arvexq/ui/static/**', 'scripts/arvexq_recovery_production_smoke.js', 'scripts/arvexq_saved_forecast_revision_browser_smoke.js', 'scripts/arvexq_honmei_dom_contract.js', 'scripts/arvexq_honmei_dom_contract_test.js', '.github/workflows/arvexq-recovery-regression.yml']
 concurrency:
   group: arvexq-recovery-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true

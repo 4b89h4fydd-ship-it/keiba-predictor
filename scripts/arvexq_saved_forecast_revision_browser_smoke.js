@@ -3,6 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 const {chromium}=require(process.env.ARVEXQ_PLAYWRIGHT_MODULE||'playwright');
 const detail=JSON.parse(fs.readFileSync('tests/fixtures/forecast_revision_transport.json')).detail;
 const before=JSON.stringify(detail.preRacePrediction);
+const originalDetail=structuredClone(detail);delete originalDetail.forecastRevisions;delete originalDetail.currentForecastRevisionId;
 const source=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 assert(source.includes(boot));
@@ -15,13 +16,13 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
   await page.route('**/*',route=>{
    if(route.request().url().includes('/api/forecast-revisions/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,raceId:detail.id,forecastRevisions:detail.forecastRevisions,currentForecastRevisionId:detail.currentForecastRevisionId})});
    if(route.request().url().includes('/api/live-odds/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,raceId:detail.id,horses:[]})});
-   if(route.request().url().includes('/api/race/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,detail})});
+   if(route.request().url().includes('/api/race/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,detail:originalDetail})});
    return route.fulfill({status:200,contentType:'text/html',body:'<html><body><div id="app"></div></body></html>'});
   });
   await page.goto('https://arvexq.test/');await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/research/live_odds.js','utf8')});await page.addScriptTag({content:code});
-  await page.evaluate(d=>{revisionTest.state.date=d.date;revisionTest.state.circuit=d.circuit;revisionTest.state.races=[d]},detail);
+  await page.evaluate(d=>{revisionTest.state.date=d.date;revisionTest.state.circuit=d.circuit;revisionTest.state.races=[d]},originalDetail);
   await page.evaluate(id=>revisionTest.openRace(id),detail.id);
-  await page.waitForFunction(()=>document.querySelectorAll('.racecard-row').length===6);
+  await page.waitForFunction(()=>document.querySelectorAll('.racecard-row').length===6&&String(document.querySelector('.rc-mark-freeze-note')?.textContent).includes('最新保存版'));
   assert.equal(await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),1);
   assert.match(await page.locator('.rc-mark-freeze-note').innerText(),/最新保存版/);
   assert.equal(await page.locator('.diagnosis-merged-row').count(),6);
