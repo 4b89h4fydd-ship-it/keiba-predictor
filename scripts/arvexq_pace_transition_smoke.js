@@ -3,6 +3,8 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+// Supply the same independently assembled historical facts as the production bundle.
+for(const name of ['deduplicate','temporal','view'])new Function(fs.readFileSync('arvexq/ui/static/history/'+name+'.js','utf8'))();
 function extract(from,to){
   const a=src.indexOf(from),b=src.indexOf(to,a+from.length);
   assert.ok(a>=0&&b>a,'missing pace function '+from);
@@ -13,9 +15,9 @@ const n=(v,f=0)=>{
   const x=Number(v);return Number.isFinite(x)?x:f;
 };
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-const past=new Function('n','clamp','recencyWeights','raceField',
+const past=new Function('window','n','clamp','recencyWeights','raceField',
   extract('function historicalWindow(','function minetaRaceContext(')+'\nreturn minetaPastProfile;')(
-    n,clamp,count=>Array.from({length:count},(_,i)=>Math.pow(.85,i)),r=>n(r.fieldSize,12));
+    globalThis,n,clamp,count=>Array.from({length:count},(_,i)=>Math.pow(.85,i)),r=>n(r.fieldSize,12));
 const takeover=past({recentRaces:[{date:'2026-09-30',track:'大井',distance:1400,fieldSize:12,cornerPositions:[6,1,1,1]}]},{date:'2026-10-08',track:'大井',distance:1400});
 assert.equal(takeover.prevLeader,false,'midrace takeover cannot be a start lead');
 assert.equal(takeover.prevEarly,false,'midrace pass cannot be first-corner occupancy');
