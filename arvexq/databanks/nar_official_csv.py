@@ -180,8 +180,9 @@ class NarOfficialArchive:
             return {}
         matched = [run.copy() for run, birth in records
                    if run["date"] < cutoff and not (dob and birth and dob != birth)]
-        full_runs = matched if limit is None else matched[:max(1, int(limit))]
-        return {"recentRaces": matched[:5], "allPastRuns": full_runs} if matched else {}
+        # A caller may request five rows for the UI, but the analytical career
+        # evidence must not silently shrink to five starts.
+        return {"recentRaces": matched[:5], "allPastRuns": matched} if matched else {}
 
 
 def register_nar_official_archive(registry: DataBankRegistry, paths=None):
