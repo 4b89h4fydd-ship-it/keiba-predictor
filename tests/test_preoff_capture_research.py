@@ -31,7 +31,8 @@ def test_capture_does_not_use_predictions_or_mutate_source():
     assert race == saved
     assert receipt["capturedAtEpoch"] < receipt["postAtEpoch"]
     assert len(receipt["receiptHash"]) == 64
-    assert "mark" not in str(snapshot)
+    assert "integratedEvaluation" not in str(snapshot)
+    assert "preRacePrediction" not in str(snapshot)
     rows = from_frozen_snapshot(snapshot, receipt)
     assert len(rows["horses"]) == 4
     assert all("finish" not in h for h in rows["horses"])
