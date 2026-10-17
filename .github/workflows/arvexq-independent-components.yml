@@ -23,6 +23,8 @@ jobs:
       - run: python -m pip install -r requirements.txt pytest
       - name: Individual fields, production boundaries, observation readiness and evidence ledger
         run: python -m pytest -q tests/test_entry_field_contracts.py tests/test_forecast_production_boundaries.py tests/test_diagnosis_readiness.py tests/test_independence_evidence.py tests/test_environment_component_split.py
+      - name: NAR official confirmed result factual classification
+        run: python -m pytest -q tests/test_independent_official_result_status.py
       - name: Observed odds missingness and market delta independence
         run: python -m pytest -q tests/test_independent_odds_facts.py
       - name: JST-aware observed odds acquisition clock
