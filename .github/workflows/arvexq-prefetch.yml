@@ -673,6 +673,37 @@ jobs:
               --report morning-d1-audit.json
           fi
 
+      - name: Capture optional preoff research candidates (not production picks)
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL_PATH=".arvexq-data/research-models.json"
+          if [ ! -s "$MODEL_PATH" ]; then
+            echo "RESEARCH_CAPTURE_SKIPPED: earlier trained circuit models unavailable"
+            exit 0
+          fi
+          if [ ! -s prefetch-payload.json ]; then
+            echo "RESEARCH_CAPTURE_SKIPPED: no prepared race payload"
+            exit 0
+          fi
+          python scripts/arvexq_capture_batch_research.py \
+            --bundle prefetch-payload.json \
+            --models "$MODEL_PATH" \
+            --receipt-dir research-preoff-receipts \
+            --report research-preoff-capture-report.json
+
+      - name: Archive research-only preoff receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-research-preoff-${{ github.run_id }}
+          path: |
+            research-preoff-receipts/
+            research-preoff-capture-report.json
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Stop ARVEXQ
         if: always()
         run: |
