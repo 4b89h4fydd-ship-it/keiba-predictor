@@ -1433,9 +1433,7 @@ function buildObservedBetPlan(r,p){
   saveStoredAiBet(r,plan);return plan
 }
 
-function assignPredictionMarks(rows,r){
-  return assignObservedPredictionMarks(rows,r);
-}
+function assignPredictionMarks(rows,r){return rows||[];}
 
 // v343 — standalone win-only call, independent of ◎ and of market odds.
 function assignSingleWinCandidate(rows,r){
@@ -1743,31 +1741,7 @@ function learnedD1Prediction(r){
   p.markFreeze={source:'learned-d1',reason:'D1保存済み新方式'};
   return p;
 }
-function predict(r){
-  // The retired browser-side 60/40 engine has been removed from execution.
-  // Only the persisted learned forecast or a verified historical receipt may
-  // supply marks; never manufacture new predictions after the scheduled off.
-  var learned=learnedD1Prediction(r);
-  if(learned)return learned;
-  var revision=latestSavedForecastRevision(r);
-  if(revision)return predictionFromSavedRevision(r,revision);
-  var clock=raceMarkClock(r),receipt=clock.started?authorizedPreOffMarks(r):null;
-  var marks={};
-  if(receipt&&Array.isArray(receipt.horses)){
-    receipt.horses.forEach(function(h){marks[n(h.horseNumber,0)]=String(h.mark||'')});
-  }
-  var order={'◎':1,'○':2,'▲':3,'△':4,'☆':5,'注':6};
-  return {rows:(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0})
-    .map(function(h){var mark=isScratchHorse(h)?'':(marks[n(h.horseNumber)]||'');
-      return {horse:h,predMark:mark,predRank:order[mark]||999,
-        winProbability:null,p1Probability:null,p2Probability:null,p3Probability:null,
-        overallGrade:'C',expected:'新方式の予想は未保存',coverage:0,
-        markFrozen:!!receipt,singleWinSuitable:false};
-    }),scenarios:[],plans:{},plan:null,suit:{},occ:[],pressure:0,
-    arrangement:[],profile:{},coverage:0,
-    markFreeze:{source:receipt?'verified-prerace-history':'new-model-unavailable'},
-    engineVersion:'learned-d1-only',legacyEngineDisabled:true};
-}
+function predict(r){return {rows:(r.horses||[]).filter(h=>h&&n(h.horseNumber)>0).map(h=>({horse:h,predMark:"",predRank:999,winProbability:null,p1Probability:null,p2Probability:null,p3Probability:null,overallGrade:"",coverage:0})),scenarios:[],plans:{},plan:null,suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:0};}
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -2618,29 +2592,7 @@ function paceEvidenceProfile(r,p){
     observedHorses:valid,totalHorses:entries.length,reason:reasons.join('／')||'過去走の初角通過順位を確認',
     source:'過去走初角順位による位置取り推定（実測テン1Fではない）'};
 }
-function buildAiBetPlan(r,p){
-  var latestRevision=latestSavedForecastRevision(r);
-  if(latestRevision)return Object.assign({},latestRevision.betPlan||{decision:'見送り',items:[]},{
-    postRaceRevision:latestRevision.analysisType==='retrospective',revisedAt:latestRevision.createdAt,
-    revisionId:latestRevision.revisionId,engineVersion:latestRevision.modelVersion});
-  var started=raceMarkClock(r).started,stored=frozenAiBetForRace(r);
-  if(started){
-    var revised=buildObservedBetPlan(r,p);
-    if(revised){
-      revised.postRaceRevision=true;
-      revised.revisedAt=new Date().toISOString();
-      try{localStorage.setItem('arvexq:revised-bets:v1:'+String(r.id),
-        JSON.stringify({raceId:String(r.id),date:String(r.date),
-          updatedAt:revised.revisedAt,engineVersion:revised.engineVersion,
-          items:revised.items,decision:revised.decision}))}catch(e){}
-    }
-    if(stored)return immutableStoredAiBetView(r,stored);
-    return revised||null;
-  }
-  if(stored)return immutableStoredAiBetView(r,stored);
-  return buildObservedBetPlan(r,p);
-}
-
+function buildAiBetPlan(r,p){return {decision:"未設定",items:[]};}
 function betItemHit(item,order){
   if(!item||!order||!order.length)return false;var t=order.slice(0,3).map(n);
   return (item.combos||[]).some(function(c){var a=(c||[]).map(n);if(item.kind==='単勝')return t[0]===a[0];if(item.kind==='馬単')return t[0]===a[0]&&t[1]===a[1];if(item.kind==='馬連')return a.length===2&&a.slice().sort().join('-')===t.slice(0,2).sort().join('-');if(item.kind==='ワイド')return a.length===2&&t.slice(0,3).indexOf(a[0])>=0&&t.slice(0,3).indexOf(a[1])>=0;if(item.kind==='3連複')return a.length===3&&a.slice().sort().join('-')===t.slice(0,3).sort().join('-');if(item.kind==='3連単')return a.length===3&&a[0]===t[0]&&a[1]===t[1]&&a[2]===t[2];return false})
@@ -2664,17 +2616,8 @@ function copyCurrentBet(){
   else setBetCopyStatus(fallbackCopyText(text)?'買い目をコピーしました':'コピーできませんでした')
 }
 // Dedicated betting display: /betting/bet_view.js
-function aiBetRecommendation(r,p){
- if(!window.ARVEXQBetView||typeof window.ARVEXQBetView.render!=='function')
-  return '<div class="ai-bet-box"><b>買い目表示モジュール未取得</b><p>再読み込みしてください。保存済み予想は変更しません。</p></div>';
- return window.ARVEXQBetView.render(r,p,{buildAiBetPlan:buildAiBetPlan,esc:esc,n:n,
-  isFinal:isFinal,raceMarkClock:raceMarkClock,aiBetExplanationHtml:aiBetExplanationHtml,betComboText:betComboText});
-}
-
-function aiMarksPanel(r,p){
-  var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.predRank)-n(b.predRank)});
-  return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><p class="muted">◎は勝ち切る可能性と3着以内の安定性を合わせた1頭の本命です。○は1・2着、▲は2・3着、△は3着を重視し、☆は実測の追い上げと前争い、注は着差・同条件・相手関係などの好走根拠で選出します。未校正のモデル値は実際の的中率ではありません。発走後は保存済み予想のみ表示します。</p><div class="ai-mark-list">'+rows.map(function(x){var h=x.horse,mark=visiblePredictionMark(x)||'—',bw=horseBodyWeightText(h)||(isFinal(r)?'結果確認中':'取得中'),bomb=n(x.bombScore),reason=(x.attentionReason||(x.upsetReasons||[]).slice(0,2).join('・')),wp=(n(x.winnerDecisionProbability,n(x.winnerConsensusProbability,n(x.winProbability)))*100).toFixed(1),mp=(n(x.marketProbability)*100).toFixed(1);return '<button class="ai-mark-row" data-horse-open="'+esc(h.horseNumber)+'"><span class="ai-mark-symbol">'+esc(mark)+'</span>'+badge(h)+'<span class="ai-mark-name"><b>'+esc(h.name)+'</b>'+(!isScratchHorse(h)&&markRoleLabel(x)?'<small class="ai-honmei-role">'+esc(markRoleLabel(x))+'</small>':'')+(x.predMark==='◎'?'<small>'+esc(markRoleLabel(x)?markRoleLabel(x)+'｜'+(x.honmeiGrade?'信頼度'+x.honmeiGrade:'モデル推定（未校正）'):'保存印：当時の単・軸役割は未記録')+'</small>':'')+'<small>1着 '+esc(wp)+'%　P2 '+(n(x.p2Probability)*100).toFixed(1)+'%　P3 '+(n(x.p3Probability)*100).toFixed(1)+'%</small><small>市場 '+esc(mp)+'%　EDGE '+esc(x.edgeScore||50)+'</small><small>'+esc(x.overallGrade||'C')+' '+esc(overallScoreText(x))+'　馬体重 '+esc(bw)+'</small>'+(bomb>=55?'<small class="upset-line">BOMB '+esc(bomb)+'/100'+(reason?'　'+esc(reason):'')+'</small>':'')+'</span><span class="ai-mark-rank">勝率'+esc(x.winnerDecisionRank||x.winnerConsensusRank||x.winRank||'—')+'位</span></button>'}).join('')+'</div></section>'
-}
+function aiBetRecommendation(r,p){return '<div class="ai-bet-box"></div>';}
+function aiMarksPanel(r,p){return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><div class="ai-mark-list"></div></section>';}
 function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
 function diagnosisPanel(r,p){
   if(p&&p.savedForecastRevision)return savedRevisionDiagnosisPanel(r,p);
