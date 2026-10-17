@@ -1,6 +1,6 @@
 import unittest
 from arvexq.history import normalize_run
-from arvexq.prediction.factor_model import collect_horse_raw_metrics
+from arvexq.prediction.past_performance import observed_runs
 
 class UpstreamCaseTests(unittest.TestCase):
     def test_jra_source_field_aliases(self):
@@ -9,7 +9,7 @@ class UpstreamCaseTests(unittest.TestCase):
         self.assertEqual(n["last3fRank"],3)
         self.assertEqual(n["last3fPercentile"],0.8)
         h={"horseNumber":1,"recentRaces":[r]}
-        self.assertAlmostEqual(collect_horse_raw_metrics(h,{"date":"2026-10-14"})["sectional"],0.75)
+        self.assertAlmostEqual(observed_runs(h,{"date":"2026-10-14"})[0]["last3fRank"],3)
     def test_unobserved_still_unknown(self):
         r={"date":"2026-10-10","finish":2,"fieldSize":9}
         self.assertIsNone(normalize_run(r)["last3fRank"])

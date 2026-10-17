@@ -1,0 +1,146 @@
+[
+  {
+    "step": "Temporal evaluation and research probability invariants",
+    "exitCode": 0,
+    "seconds": 0.46,
+    "log": "/tmp/arvexq-validation-step-3.log"
+  },
+  {
+    "step": "NAR official CSV ingest and SQLite roundtrip",
+    "exitCode": 0,
+    "seconds": 0.65,
+    "log": "/tmp/arvexq-validation-step-4.log"
+  },
+  {
+    "step": "Python syntax",
+    "exitCode": 0,
+    "seconds": 0.24,
+    "log": "/tmp/arvexq-validation-step-5.log"
+  },
+  {
+    "step": "Learned scenario challenger and all-kind comparison",
+    "exitCode": 0,
+    "seconds": 0.6,
+    "log": "/tmp/arvexq-validation-step-6.log"
+  },
+  {
+    "step": "Lossless full snapshot compression and immutability",
+    "exitCode": 0,
+    "seconds": 11.64,
+    "log": "/tmp/arvexq-validation-step-7.log"
+  },
+  {
+    "step": "Audit mass feature snapshot producers and consumers",
+    "exitCode": 0,
+    "seconds": 0.01,
+    "log": "/tmp/arvexq-validation-step-8.log"
+  },
+  {
+    "step": "Audit giant app.py structure before modularization",
+    "exitCode": 0,
+    "seconds": 0.42,
+    "log": "/tmp/arvexq-validation-step-9.log"
+  },
+  {
+    "step": "Modular API helpers and isolated behavior regressions",
+    "exitCode": 0,
+    "seconds": 0.26,
+    "log": "/tmp/arvexq-validation-step-10.log"
+  },
+  {
+    "step": "Static PWA build and version guard",
+    "exitCode": 0,
+    "seconds": 10.86,
+    "log": "/tmp/arvexq-validation-step-11.log"
+  },
+  {
+    "step": "Horse modular asset caching",
+    "exitCode": 0,
+    "seconds": 0.07,
+    "log": "/tmp/arvexq-validation-step-12.log"
+  },
+  {
+    "step": "Horse-only brand, routes and 1R-12R statuses",
+    "exitCode": 0,
+    "seconds": 0.38,
+    "log": "/tmp/arvexq-validation-step-13.log"
+  },
+  {
+    "step": "Betting marks and ticket reconciliation regression",
+    "exitCode": 0,
+    "seconds": 3.14,
+    "log": "/tmp/arvexq-validation-step-14.log"
+  },
+  {
+    "step": "Official course revision and morning marks",
+    "exitCode": 0,
+    "seconds": 2.97,
+    "log": "/tmp/arvexq-validation-step-15.log"
+  },
+  {
+    "step": "Morning race selection remains immutable",
+    "exitCode": 0,
+    "seconds": 2.24,
+    "log": "/tmp/arvexq-validation-step-16.log"
+  },
+  {
+    "step": "Four-stage pace transition regression",
+    "exitCode": 0,
+    "seconds": 0.59,
+    "log": "/tmp/arvexq-validation-step-17.log"
+  },
+  {
+    "step": "D1 capacity fail-closed and storage safety regression",
+    "exitCode": 0,
+    "seconds": 11.08,
+    "log": "/tmp/arvexq-validation-step-18.log"
+  },
+  {
+    "step": "NAR dedicated Mineta-margin scoring and isolated marks",
+    "exitCode": 0,
+    "seconds": 0.56,
+    "log": "/tmp/arvexq-validation-step-19.log"
+  },
+  {
+    "step": "JRA observed margins and lossless transfer regressions",
+    "exitCode": 0,
+    "seconds": 0.51,
+    "log": "/tmp/arvexq-validation-step-20.log"
+  },
+  {
+    "step": "Historical sync SQLite contention and D1 batch regressions",
+    "exitCode": 0,
+    "seconds": 2.37,
+    "log": "/tmp/arvexq-validation-step-21.log"
+  },
+  {
+    "step": "Morning D1 integrity and immutable betting analytics regressions",
+    "exitCode": 0,
+    "seconds": 3.23,
+    "log": "/tmp/arvexq-validation-step-22.log"
+  },
+  {
+    "step": "Prefetch racecard delivery regression",
+    "exitCode": 0,
+    "seconds": 8.76,
+    "log": "/tmp/arvexq-validation-step-23.log"
+  },
+  {
+    "step": "Architecture and operations guard",
+    "exitCode": 0,
+    "seconds": 0.07,
+    "log": "/tmp/arvexq-validation-step-24.log"
+  },
+  {
+    "step": "Merge, hash, result, prefetch and history invariants",
+    "exitCode": 0,
+    "seconds": 0.75,
+    "log": "/tmp/arvexq-validation-step-25.log"
+  },
+  {
+    "step": "Validate workflow YAML files",
+    "exitCode": 0,
+    "seconds": 0.3,
+    "log": "/tmp/arvexq-validation-step-26.log"
+  }
+]

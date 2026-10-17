@@ -17,7 +17,7 @@ class CoverageAuditTests(unittest.TestCase):
         self.assertEqual(out["overall"]["noObservedRuns"],1)
         self.assertEqual(out["overall"]["missingAnyRunRate"],0.5)
         self.assertEqual(out["byCircuit"]["中央"]["fiveRunCoverageRate"],0.0)
-        self.assertEqual(out["overall"]["neutralImputedSectional"],1)
+        self.assertEqual(out["overall"]["sectionalMissingWithObservedFinish"],1)
         self.assertEqual(out["byCircuit"]["中央"]["races"],1)
 
 if __name__=="__main__":

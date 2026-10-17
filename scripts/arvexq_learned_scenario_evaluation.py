@@ -23,6 +23,8 @@ def run(source: Path, *, train_date: str, evaluate_date: str):
     corpus, hashes = [], {}
     for path in sorted(source.rglob('*.json')):
         wrapper = json.loads(path.read_text())
+        if not isinstance(wrapper, dict):
+            continue
         detail = wrapper.get('detail',wrapper)
         if not isinstance(detail,dict) or not detail.get('id') or not isinstance(detail.get('horses'),list):
             continue

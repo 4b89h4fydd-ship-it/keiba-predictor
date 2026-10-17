@@ -42,8 +42,9 @@ def _decide(analysis):
     for report in reports:
         no = report['horseNumber']
         wins = [s['probabilities'][no]['win'] for s in scenarios]
+        top2 = [s['probabilities'][no]['top2'] for s in scenarios]
         podium = [s['probabilities'][no]['top3'] for s in scenarios]
-        ranges[no] = {'win': [min(wins), max(wins)], 'top3': [min(podium), max(podium)]}
+        ranges[no] = {'win': [min(wins), max(wins)], 'top3': [min(podium), max(podium)], 'top2': [min(top2), max(top2)]}
     win_leader = min(ranges, key=lambda n: (-ranges[n]['win'][0], -ranges[n]['top3'][0], n))
     stability = median(p['top3'][0] for p in ranges.values())
     # Do not quietly choose a different, lower-win horse as a second axis.
@@ -97,8 +98,10 @@ def build_forecast(detail, model=None):
                                 'fixedAxisAllowed': False,
                                 'reason': reasons.get(head) or reasons.get('reason') or '検証済み学習モデルまたは全頭根拠が不足'}
     prose = []
-    if analysis['scenarios']:
+    if len(analysis['scenarios']) > 1:
         prose.append('通常の隊列に加え、前の位置を取り合う場合と後ろに控える場合の影響を比較する。展開の発生頻度は未確認であり、特定の流れを断定しない。')
+    elif analysis['scenarios']:
+        prose.append('通常の隊列だけを比較する。位置取りの観測不足により、前進や後方待機の展開比較はできない。')
     else:
         prose.append('学習済みの検証モデルまたは全頭の過去走が不足しており、本命と買い目の確定を見送る。')
     if head:
@@ -110,7 +113,8 @@ def build_forecast(detail, model=None):
         ev = horse.setdefault('integratedEvaluation', {})
         ev.update({'mark': marks.get(no, ''), 'markSource': VERSION, 'markEngineVersion': VERSION,
                    'honmeiRole': 'win-axis' if no == head else '', 'podiumAxisEligible': no == head and bool(head),
-                   'modelProbabilities': ranges.get(no, {}), 'markReason': reasons.get(no, ''),
+                   'modelProbabilities': ranges.get(no, {}),
+                   'modelProbabilityPercentRanges': {k: [100*v for v in bounds] for k, bounds in ranges.get(no, {}).items()}, 'markReason': reasons.get(no, ''),
                    'wholeCareerEvidence': reports.get(no, {}), 'grade': 'C'})
         if no not in active:
             continue

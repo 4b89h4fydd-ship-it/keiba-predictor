@@ -1,0 +1,63 @@
+{
+  "imports": [
+    {
+      "races": 1078,
+      "entries": 11394,
+      "cacheKey": "202601_race"
+    },
+    {
+      "races": 954,
+      "entries": 10061,
+      "cacheKey": "202602_race"
+    },
+    {
+      "races": 1310,
+      "entries": 13331,
+      "cacheKey": "202603_race"
+    },
+    {
+      "races": 1246,
+      "entries": 12788,
+      "cacheKey": "202604_race"
+    },
+    {
+      "races": 1396,
+      "entries": 14249,
+      "cacheKey": "202605_race"
+    },
+    {
+      "races": 1364,
+      "entries": 13848,
+      "cacheKey": "202606_race"
+    },
+    {
+      "races": 1400,
+      "entries": 14223,
+      "cacheKey": "202607_race"
+    },
+    {
+      "races": 1278,
+      "entries": 12733,
+      "cacheKey": "202608_race"
+    },
+    {
+      "races": 1387,
+      "entries": 14248,
+      "cacheKey": "202609_race"
+    },
+    {
+      "races": 34,
+      "entries": 341,
+      "cacheKey": "daily_race"
+    },
+    {
+      "races": 879,
+      "entries": 9032,
+      "cacheKey": "202610_race"
+    }
+  ],
+  "races": 12292,
+  "entries": 125907,
+  "integrity": "ok",
+  "reopenedEntries": 125907
+}

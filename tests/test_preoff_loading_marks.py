@@ -17,7 +17,8 @@ class PreoffLoadingMarksTest(unittest.TestCase):
     def test_live_prediction_engine_unchanged(self):
         source = APP.read_text(encoding="utf-8")
         self.assertIn("assignPredictionMarks(rows,modelRace);", source)
-        self.assertIn("arvexq-true-run-pure-sectional-v2", source)
+        self.assertNotIn("arvexq-true-run-pure-sectional-v2", source)
+        self.assertIn("return assignObservedPredictionMarks(rows,r);", source)
 
 if __name__ == "__main__":
     unittest.main()

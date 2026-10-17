@@ -17,7 +17,6 @@ from pathlib import Path
 import unicodedata
 
 from arvexq.core.runner_status import is_inactive_runner
-from arvexq.prediction.factor_model import rank_factor_model
 from arvexq.prediction.past_performance import observed_runs
 from arvexq.research.mineta_field_proxy import score_race
 from arvexq.research.margin_abcde_candidate import score as margin_score
@@ -166,105 +165,7 @@ def summarize_comparisons(races):
 
 
 def evaluate(max_candidates=80,max_requests=650,target_complete=25):
-    dates=[(date(2026,10,7)+timedelta(days=i)).isoformat() for i in range(7)]
-    outcomes={}
-    for at in dates:
-        data=api_json("https://kraiz-api.4b89h4fydd.workers.dev/api/day?date="+at+"&details=1")
-        for d in data.get("details") or []:
-            order=finish_order(d)
-            if len(order)>=3 and len(set(order[:3]))==3:
-                outcomes[(str(d.get("date") or ""),str(d.get("id") or ""))]=order
-    candidates,skip,available=gather_candidates(
-        Path("arvexq/ui/static/saved-snapshots"),outcomes,max_candidates)
-    required={}
-    for _,d,_,hs,refs in candidates:
-        for h in hs:
-            for key,_ in refs[int(h["horseNumber"])][:3]:
-                required[key]=None
-    keys=list(required)[:max_requests]
-    # Fixed upper bound and worker pool; query only actual earlier races.
-    os.environ["NAR_RESULT_TIMEOUT_SEC"]="3.5"
-    import app  # existing official result parser; no new scraper
-    fetched={}
-    with ThreadPoolExecutor(max_workers=10) as pool:
-        jobs={pool.submit(official_fetch,key):key for key in keys}
-        for future in as_completed(jobs):
-            key=jobs[future]
-            try: fetched[key]=future.result()
-            except Exception: fetched[key]=None
-    source_stats=Counter()
-    final=[]
-    for _,d,order,hs,refs in candidates:
-        complete=[]
-        for h in hs:
-            observation=None
-            no=int(h["horseNumber"])
-            for key,run in refs[no][:3]:
-                result,state=official_observation(key,h.get("name"),run,fetched.get(key))
-                source_stats[state]+=1
-                if result is not None:
-                    observation=result
-                    break
-            if observation is None:
-                break
-            hcopy=dict(h)
-            # Supplement one *previous* run and preserve other observations.
-            hcopy["recentRaces"]=[observation]+[
-                x for x in observed_runs(h,d,limit=5) if x.get("date")!=observation["date"]]
-            hcopy["allPastRuns"]=hcopy["recentRaces"]
-            complete.append(hcopy)
-        if len(complete)!=len(hs):
-            source_stats["incomplete-races"]+=1
-            continue
-        core=rank_factor_model(complete,d)
-        mineta=score_race(complete,d)
-        if len(core)!=len(complete) or len(mineta)!=len(complete):
-            source_stats["model-coverage-missing"]+=1
-            continue
-        nos=set(mineta)
-        current={int(x["horse"]["horseNumber"]):x["score"] for x in core}
-        margin={int(h["horseNumber"]):margin_score(h,d) for h in complete}
-        if any(margin[n] is None for n in nos):
-            source_stats["margin-model-coverage-missing"]+=1
-            continue
-        scores={
-            "mineta":mineta,
-            "mineta_current_60_40":{n:.6*mineta[n]+.4*current[n] for n in nos},
-            "mineta_margin_60_40":{n:.6*mineta[n]+.4*margin[n]["score"] for n in nos},
-            "mineta_current_margin_60_20_20":{
-                n:.6*mineta[n]+.2*current[n]+.2*margin[n]["score"] for n in nos},
-        }
-        projected={}
-        for method,values in scores.items():
-            ranks=sorted(nos,key=lambda n:(-values[n],n))
-            projected[method]={
-                "first":ranks[0],"winnerRank":ranks.index(order[0])+1,
-                "winnerTop3":order[0] in ranks[:3],
-                "scoreOfFirst":round(values[ranks[0]],6)}
-        final.append({
-            "raceId":d["id"],"date":d["date"],"circuit":"地方",
-            "track":d.get("track"),"raceNumber":d.get("raceNumber"),
-            "winner":order[0],"starterCount":len(nos),
-            "verifiedObservedMargins":len(nos),
-            "predictions":projected})
-        if len(final)>=target_complete:break
-    compare,paired=summarize_comparisons(final)
-    return {
-        "version":VERSION,"status":"target-complete" if len(final)>=target_complete else "limited-complete-races",
-        "sameRaceCount":len(final),"targetComplete":target_complete,"candidateRaces":available,"candidatesAttempted":len(candidates),
-        "officialPriorResultRequests":len(keys),"sourceCoverage":dict(source_stats),
-        "pairedVersusMinetaCurrent":paired,
-        "distinctDates":sorted({r["date"] for r in final}),
-        "excludedCandidates":skip,"raceRows":final,"methods":compare,
-        "centralComparison":"not-evaluated: NAR-specific official source",
-        "productionPromoted":False,
-        "retrospectiveOnly":True,
-        "limitations":["Historical saved snapshots can contain later backfills; this is not verified original pre-off blind accuracy.",
-                       "Mineta concept represented by observable field-position proxy, not Mineta's proprietary predictions.",
-                       "Runner-relative finish times are derived from actual published official past results; unknown observations are never imputed.",
-                       "A complete historical race is scored only if every active runner has a dated prior measured winner-time gap.",
-                       "Non-random availability of official history can bias this retrospective sample; chronological split is descriptive, not an independent blind holdout."]
-    }
+    raise RuntimeError("Retired fixed-weight comparison; use arvexq_learned_scenario_evaluation.py")
 
 
 def main():

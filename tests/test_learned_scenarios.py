@@ -109,3 +109,48 @@ class LearnedScenariosTests(TestCase):
         bad = deepcopy(model); bad['weights'][0] = float('nan')
         with self.assertRaises(ValueError):
             predict_model(target('地方'),bad)
+
+class WholeCareerRatesTests(TestCase):
+    def test_sampling_uncertainty_and_condition_scopes(self):
+        from arvexq.prediction.learned_scenarios import rate_evidence
+        two = rate_evidence([{'finish': 1}] * 2)
+        twenty = rate_evidence([{'finish': 1}] * 10 + [{'finish': 5}] * 10)
+        self.assertEqual(two['win']['percent'], 100)
+        self.assertEqual(twenty['win']['percent'], 50)
+        self.assertGreater(two['win']['intervalHalfWidth'], twenty['win']['intervalHalfWidth'])
+        empty = rate_evidence([])
+        self.assertIsNone(empty['win']['percent'])
+        d = target('地方'); d.update({'distance': 1400, 'track': '大井', 'surface': 'ダート', 'direction': '右'})
+        h = d['horses'][0]
+        for r in h['recentRaces']:
+            r.update({'distance': 1400, 'track': '大井', 'surface': 'ダート', 'direction': '右'})
+        h['recentRaces'][0]['direction'] = '左'
+        r = evidence(h,d)
+        self.assertEqual(r['rateEvidence']['all']['starts'], 5)
+        self.assertEqual(r['rateEvidence']['sameCondition']['starts'], 4)
+        self.assertEqual(r['rateEvidence']['sameDirection']['starts'], 4)
+        self.assertEqual(len(r['featureValues']),len(FEATURES))
+        d.pop('direction')
+        self.assertEqual(evidence(h,d)['rateEvidence']['sameCondition']['starts'], 0)
+
+    def test_joint_top_two_and_percent_ranges_are_consistent(self):
+        model = fit_model([training_race('地方')], circuit='地方')
+        d = target('地方')
+        result = build_forecast(d,model)
+        for scenario in result['scenarioAnalysis']['scenarios']:
+            probabilities = scenario['probabilities']
+            self.assertAlmostEqual(sum(p['top2'] for p in probabilities.values()), 2)
+            for p in probabilities.values():
+                self.assertLessEqual(p['win'],p['top2'])
+                self.assertLessEqual(p['top2'],p['top3'] + 1e-12)
+        for h in result['horses']:
+            ev = h['integratedEvaluation']
+            self.assertEqual(ev['modelProbabilityPercentRanges']['top2'], [100*p for p in ev['modelProbabilities']['top2']])
+
+    def test_jump_and_flat_histories_do_not_mix(self):
+        d = target('中央'); h = d['horses'][0]
+        before = evidence(h,d)['observedStarts']
+        h['allPastRuns'] = [{'date':'2025-01-01','finish':1,'fieldSize':10,'surface':'障害'}]
+        self.assertEqual(evidence(h,d)['observedStarts'], before)
+        d['surface'] = '障害芝'
+        self.assertEqual(evidence(h,d)['observedStarts'], 1)

@@ -9,5 +9,6 @@ class RetiredV312Rescue(unittest.TestCase):
     def test_current_prediction_untouched(self):
         s=SOURCE.read_text(encoding="utf-8")
         self.assertIn("function assignPredictionMarks(rows,r)",s)
-        self.assertIn("score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)",s)
+        self.assertNotIn("score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)",s)
+        self.assertIn("return assignObservedPredictionMarks(rows,r);",s)
 if __name__=="__main__":unittest.main()

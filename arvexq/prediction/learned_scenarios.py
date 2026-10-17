@@ -17,7 +17,7 @@ import json
 from arvexq.core.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import observed_runs, _number, _positions
 
-VERSION = 'arvexq-learned-whole-career-scenarios-v1'
+VERSION = 'arvexq-learned-whole-career-scenarios-v2'
 FEATURES = ('win_rate', 'top2_rate', 'top3_rate', 'finish_median', 'finish_peak',
             'recent_finish_mean', 'finish_spread', 'log_starts',
             'same_track_finish', 'same_distance_finish', 'same_surface_finish',
@@ -25,14 +25,19 @@ FEATURES = ('win_rate', 'top2_rate', 'top3_rate', 'finish_median', 'finish_peak'
             'late_position', 'closing_gain', 'rest_log_days', 'distance_change',
             'weight_change', 'same_jockey_finish', 'early_field_mean',
             'early_field_spread', 'early_relative', 'early_pressure_interaction',
-            'comparable_margin', 'comparable_sectional_rank')
+            'comparable_margin', 'comparable_sectional_rank',
+            'recent_win_rate', 'recent_top2_rate', 'recent_top3_rate',
+            'same_direction_win_rate', 'same_direction_top2_rate', 'same_direction_top3_rate',
+            'same_condition_win_rate', 'same_condition_top2_rate', 'same_condition_top3_rate',
+            'recent_same_condition_win_rate', 'recent_same_condition_top2_rate', 'recent_same_condition_top3_rate',
+            'win_sampling_error', 'top3_sampling_error', 'trainer_match', 'circuit_transfer')
 JRA_TRACKS = {'札幌', '函館', '福島', '新潟', '東京', '中山', '中京', '京都', '阪神', '小倉'}
 
 
 def race_family(detail):
     if '帯広' in str(detail.get('track') or ''):
         return 'banei'
-    if detail.get('surface') == '障害' or detail.get('analysisMode') == '障害':
+    if '障' in str(detail.get('surface') or '') or detail.get('analysisMode') == '障害' or '障害' in str(detail.get('title') or ''):
         return 'jumps'
     return 'flat'
 
@@ -60,8 +65,32 @@ def _position(row, last=False):
     return (row['fieldSize'] - p) / (row['fieldSize'] - 1) if 1 <= p <= row['fieldSize'] else None
 
 
+def rate_evidence(runs):
+    """Observed frequencies with Wilson 95% intervals, not current-race forecasts."""
+    n = len(runs)
+    result = {'starts': n, 'status': 'observed-history-not-predicted-probability'}
+    for key, rank in (('win', 1), ('top2', 2), ('top3', 3)):
+        hits = sum(r['finish'] <= rank for r in runs)
+        p = hits / n if n else None
+        interval = None
+        error = None
+        if n:
+            z = 1.959963984540054
+            denominator = 1 + z*z/n
+            center = (p + z*z/(2*n))/denominator
+            radius = z*sqrt(p*(1-p)/n + z*z/(4*n*n))/denominator
+            interval = [max(0., center-radius), min(1., center+radius)]
+            error = radius
+        result[key] = {'hits': hits, 'rate': p, 'percent': p*100 if n else None,
+                       'interval95': interval, 'intervalHalfWidth': error}
+    return result
+
+
 def evidence(horse, detail):
-    runs = observed_runs(horse, detail, limit=None)
+    # A jump start and a flat start are different events; never train one as
+    # interchangeable evidence for the other. Banei likewise has its own family.
+    runs = [r for r in observed_runs(horse, detail, limit=None)
+            if race_family(r) == race_family(detail)]
     qualities = [_quality(r) for r in runs]
     distance = _number(detail.get('distance'))
     surface, track = detail.get('surface'), detail.get('track')
@@ -70,6 +99,14 @@ def evidence(horse, detail):
     same_distance = [r for r in runs if distance and _number(r.get('distance')) == distance]
     comparable = [r for r in same_distance if surface and r.get('surface') == surface
                   and track and r.get('track') == track]
+    direction = detail.get('direction') or detail.get('courseDirection')
+    same_direction = [r for r in runs if direction and r.get('direction') == direction]
+    same_condition = [r for r in comparable if direction and r.get('direction') == direction]
+    rates = {name: rate_evidence(rows) for name, rows in (
+        ('all', runs), ('recent', runs[:5]), ('sameDistance', same_distance),
+        ('sameTrack', [r for r in runs if track and r.get('track') == track]),
+        ('sameDirection', same_direction), ('sameCondition', same_condition),
+        ('recentSameCondition', same_condition[:5]))}
     n = len(runs)
     early = [_position(r) for r in runs]
     late = [_position(r, True) for r in runs]
@@ -98,11 +135,16 @@ def evidence(horse, detail):
     old_track = recent.get('track')
     transfer = ('中央から地方' if old_track in JRA_TRACKS and detail.get('circuit') == '地方' else
                 '地方から中央' if old_track and old_track not in JRA_TRACKS and detail.get('circuit') == '中央' else None)
+    for scope in ('recent', 'sameDirection', 'sameCondition', 'recentSameCondition'):
+        values.extend(rates[scope][key]['rate'] for key in ('win', 'top2', 'top3'))
+    values.extend([rates['all']['win']['intervalHalfWidth'], rates['all']['top3']['intervalHalfWidth'],
+                   float(recent['trainer'] == horse['trainer']) if recent.get('trainer') and horse.get('trainer') else None,
+                   float(bool(transfer)) if old_track else None])
     fields = ('sire', 'dam', 'trainer', 'jockey', 'carriedWeight', 'bodyWeight', 'bodyWeightChange')
     return {'horseNumber': int(horse['horseNumber']), 'name': horse.get('name', ''),
             'observedStarts': n, 'careerComplete': audit.get('complete') is True,
             'careerCoverageStatus': audit.get('status', 'unverified'),
-            'featureValues': dict(zip(FEATURES, values)),
+            'featureValues': dict(zip(FEATURES, values)), 'rateEvidence': rates,
             'positionObservations': [v for v in early if v is not None],
             'transfer': transfer, 'missingFields': [k for k in fields if horse.get(k) in (None, '')],
             'sourceDates': [r['_raceDate'] for r in runs],
@@ -248,9 +290,11 @@ def predict_model(detail, model):
             continue
         utilities = [sum(w*x for w,x in zip(model['weights'],_vector(r,model['centers'],model['scales']))) for r in rows]
         orders = _orders(rows,utilities)
-        probs = {r['horseNumber']: {'win': 0., 'top3': 0.} for r in rows}
+        probs = {r['horseNumber']: {'win': 0., 'top2': 0., 'top3': 0.} for r in rows}
         for event in orders:
             probs[event['order'][0]]['win'] += event['probability']
+            for no in event['order'][:2]:
+                probs[no]['top2'] += event['probability']
             for no in event['order'][:3]:
                 probs[no]['top3'] += event['probability']
         scenarios.append({'id': name, 'label': label, 'orders': orders, 'probabilities': probs,

@@ -13,6 +13,7 @@ import unicodedata
 import zipfile
 from collections import defaultdict
 from pathlib import Path
+from datetime import datetime
 
 from .registry import DataBankRegistry, DataSource, SourceCapabilities
 
@@ -36,7 +37,21 @@ def carried_weight(value):
 
 def date(value):
     x = str(value or "").replace("-", "").replace("/", "")
-    return f"{x[:4]}-{x[4:6]}-{x[6:8]}" if len(x) == 8 and x.isascii() and x.isdigit() else ""
+    try:
+        return datetime.strptime(x, "%Y%m%d").date().isoformat() if len(x) == 8 else ""
+    except ValueError:
+        return ""
+
+
+def time_seconds(value):
+    """Official mmssS timing, never a finishing-place or margin proxy."""
+    text = str(value or "").strip()
+    if not re.fullmatch(r"[0-9]{3,5}", text):
+        return None
+    seconds = int(text[-3:]) / 10
+    if seconds >= 60:
+        return None
+    return (int(text[:-3]) * 60 if len(text) > 3 else 0) + seconds
 
 
 def ranks(value):
@@ -91,7 +106,7 @@ class NarOfficialArchive:
     def __init__(self, paths):
         self.paths = tuple(str(path) for path in paths)
         race_rows, horse_rows = {}, []
-        for path in paths:
+        for path in self.paths:
             for filename, rows in rows_from_archive(path):
                 if "racelist" in filename:
                     for row in rows:
@@ -122,6 +137,11 @@ class NarOfficialArchive:
             if previous is None:
                 best_entries[key] = h
             else:
+                if normalize(item(h, 6)) != normalize(item(previous, 6)) or (
+                    date(item(h, 10)) and date(item(previous, 10))
+                    and date(item(h, 10)) != date(item(previous, 10))
+                ):
+                    raise ValueError("conflicting horse identity in official archives")
                 # Prefer the more complete observation for conflicting values,
                 # then fill only blanks from the other official row.
                 richer, other = (h, previous) if sum(bool(v.strip()) for v in h) > sum(bool(v.strip()) for v in previous) else (previous, h)
@@ -131,6 +151,13 @@ class NarOfficialArchive:
                      else other[i] if i < len(other) else "")
                     for i in range(width)
                 ]
+        self.race_rows = race_rows
+        self.entry_rows = best_entries
+        winner_times = {}
+        for h in best_entries.values():
+            seconds = time_seconds(item(h, 32))
+            if number(item(h, 31)) == 1 and seconds is not None:
+                winner_times[race_key(h)] = seconds
         for h in best_entries.values():
             race = race_rows.get(race_key(h))
             no = number(item(h, 5))
@@ -150,12 +177,24 @@ class NarOfficialArchive:
                 "weather": item(race, 24), "condition": item(race, 25),
                 "class": item(race, 27),
                 "carriedWeight": carried_weight(item(h, 16)),
+                "trainer": item(h, 18), "birthDate": date(item(h, 10)),
+                "sire": item(h, 11), "dam": item(h, 12), "damsire": item(h, 13),
+                "timeSeconds": time_seconds(item(h, 32)),
+                "circuit": "地方", "source": "NAR公式CSV",
+                "raceId": f"nar-{date(item(h, 1))}-{item(h, 0)}-{number(item(h, 2)):02d}",
                 "finish": number(item(h, 31)), "cornerNames": [x[0] for x in pairs],
                 "cornerPositions": positions, "raceLapTimes": laps,
                 "raceFirst3FSeconds": round(sum(laps[:3]), 2) if len(laps) >= 3 else None,
                 "raceLapScope": "whole_race_not_individual_horse",
                 "narOfficialCsv": True,
             }
+            winner = winner_times.get(race_key(h))
+            seconds = run["timeSeconds"]
+            if run["finish"] > 0 and winner is not None and seconds is not None and seconds >= winner:
+                run["marginSeconds"] = round(seconds - winner, 3)
+                run["timeBehindWinner"] = run["marginSeconds"]
+                run["marginEvidenceSource"] = "nar_official_csv"
+                run["marginEvidence"] = {"winnerTimeSeconds": winner, "horseTimeSeconds": seconds}
             margin = item(h, 33)
             if margin and margin not in ("-", "--"):
                 run["marginText"] = margin
@@ -172,7 +211,8 @@ class NarOfficialArchive:
         dob = date(horse.get("birthDate") or horse.get("birthday"))
         if not cutoff:
             return {}
-        records = self.by_name.get(normalize(horse.get("name")), [])
+        records = [(run, birth) for run, birth in self.by_name.get(normalize(horse.get("name")), [])
+                   if run["date"] < cutoff]
         known_birthdates = {birth for _, birth in records if birth}
         if not dob and len(known_birthdates) > 1:
             # Same-name horses with different recorded births cannot be

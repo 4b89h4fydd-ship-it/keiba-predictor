@@ -1,0 +1,68 @@
+{
+  "202609_race.zip": {
+    "bytes": 1359644,
+    "sha256": "850c7749ee423f56869176bcc86d68156deca425c055beaf35cf90ba5ff7d2cb",
+    "downloadCompletedAt": "2026-10-17T00:59:31.540043+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=monthly&k_year=2026&k_month=9"
+  },
+  "202607_race.zip": {
+    "bytes": 1357657,
+    "sha256": "31ef6302ddb95e2b2cd4b9758c28b292d3cc93ebc4122592788ffffb59a89b5f",
+    "downloadCompletedAt": "2026-10-17T00:59:52.896747+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=monthly&k_year=2026&k_month=7"
+  },
+  "202602_race.zip": {
+    "bytes": 941511,
+    "sha256": "19446594eb1d67848bc42cebd990fbd5c7f2ced7fc8866593d66b6d7b3a51385",
+    "downloadCompletedAt": "2026-10-17T00:59:38.612875+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=monthly&k_year=2026&k_month=2"
+  },
+  "202610_race.zip": {
+    "bytes": 834607,
+    "sha256": "e21736827c5b0425ee55b34c2178c4b323166ee7049a0874f6e16587cef311c4",
+    "downloadCompletedAt": "2026-10-17T01:04:10.039091+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=monthly&k_year=2026&k_month=10"
+  },
+  "daily_race.zip": {
+    "bytes": 29413,
+    "sha256": "9d3332fb2acff8a4ebe129f5aaa4f1d40aa6f562047256cc48c3c44bba98b142",
+    "downloadCompletedAt": "2026-10-17T00:59:31.536541+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=daily"
+  },
+  "202603_race.zip": {
+    "bytes": 1262890,
+    "sha256": "844a2f9146226e99f5817f9018cfef09a3f10499d0c3f9d2e1cc466de0621565",
+    "downloadCompletedAt": "2026-10-17T00:59:38.672243+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=monthly&k_year=2026&k_month=3"
+  },
+  "202601_race.zip": {
+    "bytes": 1059227,
+    "sha256": "871928351eca4d2cd0f0346d5318db251ccc86fcc63477c6fa5bad06696f9ced",
+    "downloadCompletedAt": "2026-10-17T00:59:38.685101+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=monthly&k_year=2026&k_month=1"
+  },
+  "202608_race.zip": {
+    "bytes": 1211108,
+    "sha256": "65fba9e47ce11fbbd20c2ea69414a9dcde24d3767b17c27a1534c6164f9bf9cf",
+    "downloadCompletedAt": "2026-10-17T00:59:52.811525+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=monthly&k_year=2026&k_month=8"
+  },
+  "202605_race.zip": {
+    "bytes": 1360810,
+    "sha256": "c59865f6223e8749fb63d9ee43c41e1a01c3cd3e71f8e50e3647f750173fbb2a",
+    "downloadCompletedAt": "2026-10-17T00:59:45.827665+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=monthly&k_year=2026&k_month=5"
+  },
+  "202604_race.zip": {
+    "bytes": 1235458,
+    "sha256": "5eba1305f268d29fe0363f0155d60c66c67db4f40c4c0bcde3f42645d3dc6c2c",
+    "downloadCompletedAt": "2026-10-17T00:59:45.661990+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=monthly&k_year=2026&k_month=4"
+  },
+  "202606_race.zip": {
+    "bytes": 1321050,
+    "sha256": "90a524f2f9d0679448f5ebb72501fb14a258d059ed0580a6f07185d81ec8e859",
+    "downloadCompletedAt": "2026-10-17T00:59:45.754001+00:00",
+    "source": "https://www.keiba.go.jp/KeibaWeb/DataDownload/RaceDataDownload?type=monthly&k_year=2026&k_month=6"
+  }
+}

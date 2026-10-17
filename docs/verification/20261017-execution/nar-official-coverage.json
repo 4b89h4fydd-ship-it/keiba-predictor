@@ -1,0 +1,261 @@
+{
+  "targetRaces": 34,
+  "targetReportedFieldSizeTotal": 341,
+  "targetAcquiredEntries": 341,
+  "targetEntryCoveragePercent": 100.0,
+  "targetFieldSizeMismatches": [],
+  "targetEntryMissingFields": {
+    "birthDate": 0,
+    "jockey": 0,
+    "trainer": 0,
+    "carriedWeight": 0
+  },
+  "sourceFiles": [
+    {
+      "archive": "/tmp/arvexq-live-evidence/202601_race.zip",
+      "member": "202601_racelist.csv",
+      "rows": 1079
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202601_race.zip",
+      "member": "202601_payback.csv",
+      "rows": 1084
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202601_race.zip",
+      "member": "202601_horselist.csv",
+      "rows": 11395
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202602_race.zip",
+      "member": "202602_racelist.csv",
+      "rows": 955
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202602_race.zip",
+      "member": "202602_payback.csv",
+      "rows": 958
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202602_race.zip",
+      "member": "202602_horselist.csv",
+      "rows": 10062
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202603_race.zip",
+      "member": "202603_racelist.csv",
+      "rows": 1311
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202603_race.zip",
+      "member": "202603_payback.csv",
+      "rows": 1317
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202603_race.zip",
+      "member": "202603_horselist.csv",
+      "rows": 13332
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202604_race.zip",
+      "member": "202604_racelist.csv",
+      "rows": 1247
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202604_race.zip",
+      "member": "202604_payback.csv",
+      "rows": 1253
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202604_race.zip",
+      "member": "202604_horselist.csv",
+      "rows": 12789
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202605_race.zip",
+      "member": "202605_racelist.csv",
+      "rows": 1397
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202605_race.zip",
+      "member": "202605_payback.csv",
+      "rows": 1400
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202605_race.zip",
+      "member": "202605_horselist.csv",
+      "rows": 14250
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202606_race.zip",
+      "member": "202606_racelist.csv",
+      "rows": 1365
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202606_race.zip",
+      "member": "202606_payback.csv",
+      "rows": 1374
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202606_race.zip",
+      "member": "202606_horselist.csv",
+      "rows": 13849
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202607_race.zip",
+      "member": "202607_racelist.csv",
+      "rows": 1401
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202607_race.zip",
+      "member": "202607_payback.csv",
+      "rows": 1410
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202607_race.zip",
+      "member": "202607_horselist.csv",
+      "rows": 14224
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202608_race.zip",
+      "member": "202608_racelist.csv",
+      "rows": 1279
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202608_race.zip",
+      "member": "202608_payback.csv",
+      "rows": 1283
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202608_race.zip",
+      "member": "202608_horselist.csv",
+      "rows": 12734
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202609_race.zip",
+      "member": "202609_racelist.csv",
+      "rows": 1388
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202609_race.zip",
+      "member": "202609_payback.csv",
+      "rows": 1395
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202609_race.zip",
+      "member": "202609_horselist.csv",
+      "rows": 14249
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202610_race.zip",
+      "member": "202610_racelist.csv",
+      "rows": 880
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202610_race.zip",
+      "member": "202610_payback.csv",
+      "rows": 734
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/202610_race.zip",
+      "member": "202610_horselist.csv",
+      "rows": 9033
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/daily_race.zip",
+      "member": "20261017_racelist.csv",
+      "rows": 35
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/daily_race.zip",
+      "member": "20261017_payback.csv",
+      "rows": 1
+    },
+    {
+      "archive": "/tmp/arvexq-live-evidence/daily_race.zip",
+      "member": "20261017_horselist.csv",
+      "rows": 342
+    }
+  ],
+  "raceMetadata": {
+    "raceRows": 12292,
+    "observed": {
+      "surface": 10900,
+      "direction": 12292,
+      "class_condition": 12292
+    },
+    "missing": {
+      "surface": 1392,
+      "direction": 0,
+      "class_condition": 0
+    },
+    "coveragePercent": {
+      "surface": 88.68,
+      "direction": 100.0,
+      "class_condition": 100.0
+    }
+  },
+  "horseRows": 125907,
+  "targetDate": "2026-10-17",
+  "targetHorsesWithRaceRows": 341,
+  "targetHorsesWithNoEarlierArchiveRuns": 12,
+  "targetHorsesWithEarlierArchiveRuns": 329,
+  "targetHorsesWithFewerThanFiveEarlierRuns": 43,
+  "targetHistoryObservedRunCountDistribution": {
+    "0": 12,
+    "1": 4,
+    "2": 4,
+    "3": 11,
+    "4": 12,
+    "5": 10,
+    "6": 13,
+    "7": 20,
+    "8": 13,
+    "9": 16,
+    "10": 15,
+    "11": 17,
+    "12": 10,
+    "13": 19,
+    "14": 20,
+    "15": 19,
+    "16": 31,
+    "17": 17,
+    "18": 39,
+    "19": 27,
+    "20": 9,
+    "21": 3
+  },
+  "raceRowsWithHorseEntries": 12292,
+  "raceRowsWithoutHorseEntries": 0,
+  "raceRowsWithoutHorseEntriesByTrack": {},
+  "unmatchedHorseRowsByTrack": {},
+  "unmatchedHorseRaceKeys": [],
+  "raceKeysWithoutHorseEntries": [],
+  "horseRowsMatchingRacePercent": 100.0,
+  "horseRowsWithRace": 125907,
+  "horseRowsWithoutRace": 0,
+  "horseRowsWithCarriedWeight": 125907,
+  "horseRowsMissingCarriedWeight": 0,
+  "tracks": {
+    "佐賀": 971,
+    "名古屋": 1181,
+    "園田": 1209,
+    "大井": 903,
+    "姫路": 288,
+    "川崎": 636,
+    "帯広ば": 1416,
+    "水沢": 565,
+    "浦和": 516,
+    "盛岡": 593,
+    "笠松": 840,
+    "船橋": 600,
+    "金沢": 792,
+    "門別": 872,
+    "高知": 910
+  },
+  "limitations": [
+    "Coverage describes supplied CSV records, not all scheduled NAR races.",
+    "Horse-history completeness requires dated pre-race career-start evidence.",
+    "No pre-off prediction accuracy is estimated from these records."
+  ]
+}

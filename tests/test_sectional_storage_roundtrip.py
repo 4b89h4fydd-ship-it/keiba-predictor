@@ -1,6 +1,6 @@
 import unittest
 from arvexq.ingest.career_transport import pack_horse,recover_horse
-from arvexq.prediction.factor_model import collect_horse_raw_metrics
+from arvexq.prediction.past_performance import observed_runs
 
 class SectionalStorageTests(unittest.TestCase):
     def test_preserve_observed_feed_fields(self):
@@ -12,13 +12,13 @@ class SectionalStorageTests(unittest.TestCase):
         self.assertEqual(compact["last3FPercentile"],0.7)
         recovered=recover_horse(horse,"2026-10-14")
         self.assertEqual(recovered["recentRaces"][0]["last3FRank"],3)
-        actual=collect_horse_raw_metrics(horse,{"date":"2026-10-14"})
-        self.assertAlmostEqual(actual["sectional"],7/9)
+        actual=observed_runs(horse,{"date":"2026-10-14"})[0]
+        self.assertAlmostEqual(actual["last3fRank"],3)
     def test_unobserved_sectional_remains_unknown(self):
         horse=pack_horse({"horseNumber":1,"recentRaces":[
             {"date":"2026-10-10","finish":2,"fieldSize":10}
         ]},"2026-10-14")
-        self.assertIsNone(collect_horse_raw_metrics(horse,{"date":"2026-10-14"})["sectional"])
+        self.assertIsNone(observed_runs(horse,{"date":"2026-10-14"})[0]["last3fRank"])
 
 if __name__=="__main__":
     unittest.main()
