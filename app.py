@@ -4147,8 +4147,20 @@ def _attach_prerace_audit(detail:dict)->dict:
 
 
 def _compact_display_snapshot(detail: dict) -> dict:
-    """Display JSON only; full career remains in RaceDB.past_runs."""
+    """Display race facts only; prediction, marks and tickets are retired."""
     if not isinstance(detail,dict):return detail
+    detail=dict(detail)
+    for key in ("aiEvaluation", "factorRanking", "honmeiDecision", "preRacePrediction",
+                "predictionAudit", "frozenPredictionAudit", "winnerLearningProfile",
+                "betRecommendations", "recommendedBets", "tickets", "buyList", "bets",
+                "markMethod", "markEngineVersion", "predictionModelVersion"):
+        detail.pop(key, None)
+    detail["horses"] = [dict(h) for h in detail.get("horses", []) or []]
+    for h in detail["horses"]:
+        for key in ("integratedEvaluation", "mark", "honmeiRole", "modelProbabilities",
+                    "recommendedBets", "tickets", "bets"):
+            h.pop(key, None)
+    return detail
     detail=_attach_prerace_audit(detail)
     try:
         from arvexq.prediction.prerace_archive import evaluate_frozen_result
@@ -4771,9 +4783,13 @@ def _precompute_detail_metrics(detail: dict) -> dict:
             horse["precomputedMetrics"]={"style":_pc_style_metrics(metric_horse,detail),"fit":_pc_fit_metrics(metric_horse,detail),"sectional":{"score":horse.get("officialSectionalScore"),"samples":horse.get("officialSectionalSamples",0)}}
         except Exception:
             horse.setdefault("precomputedMetrics",{})
-    _rank_evaluations(detail)
-    detail["aiEvaluation"]={"version":AI_EVALUATION_VERSION,"horses":[{"horseNumber":h.get("horseNumber"),"name":h.get("name"),**h.get("integratedEvaluation",{})} for h in detail.get("horses",[])]}
-    detail["volatility"]=_race_volatility(detail)
+    # Prediction, marks and betting recommendations are retired.
+    for horse in detail.get("horses", []) or []:
+        horse.pop("integratedEvaluation", None)
+    detail.pop("aiEvaluation", None)
+    detail.pop("factorRanking", None)
+    detail.pop("honmeiDecision", None)
+    detail.pop("volatility", None)
     detail.setdefault("preparedMeta",{})["metricsPrecomputed"]=True
     return detail
 
