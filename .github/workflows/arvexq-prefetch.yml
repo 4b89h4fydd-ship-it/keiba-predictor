@@ -364,6 +364,8 @@ jobs:
           jq '{races,analysis_ready,analysis_errors}' prefetch-report.json
 
       - name: Prepare previous-day research training corpus (optional)
+        timeout-minutes: 5
+        continue-on-error: true
         if: success()
         shell: bash
         run: |
@@ -387,6 +389,8 @@ jobs:
           fi
 
       - name: Capture optional preoff research candidates (not production picks)
+        timeout-minutes: 5
+        continue-on-error: true
         if: success()
         shell: bash
         run: |
@@ -407,6 +411,8 @@ jobs:
             --report research-preoff-capture-report.json
 
       - name: Report research capture operational evidence
+        timeout-minutes: 1
+        continue-on-error: true
         if: always()
         shell: bash
         run: |
@@ -451,6 +457,8 @@ jobs:
           PY
 
       - name: Record research capture result in progress issue
+        timeout-minutes: 1
+        continue-on-error: true
         if: always()
         uses: actions/github-script@v7
         with:
