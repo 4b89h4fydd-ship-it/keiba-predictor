@@ -3726,7 +3726,11 @@ function horseDetailPage(r,p){
       +'<button type="button" class="smart-race-close horse-detail-close" data-action="close-race-subpage" aria-label="出走表へ戻る">×</button>'
     +'</header>'
     +'<main class="smart-main smart-race-page horse-detail-page"><section class="card">'
-    +(x?runnerDetailBody(r,p,x):'<div class="empty">馬情報を取得中です。</div>')
+    +(x&&p.legacyEngineDisabled?
+      '<h2>'+esc(h.name||'')+'</h2><p>新方式の予想は未保存です。過去走の事実のみ表示します。</p>'+
+      (h.recentRaces||[]).slice(0,5).map(function(run){return '<div class="recent">'+esc(run.date||'')+
+        ' '+esc(run.track||'')+' '+esc(run.distance||'')+'m '+esc(run.finish||'')+'着</div>'}).join(''):
+      (x?runnerDetailBody(r,p,x):'<div class="empty">馬情報を取得中です。</div>'))
     +'</section></main>'+cinematicFooter()+'</div>'
 }
 function betDetailPage(r,p){
