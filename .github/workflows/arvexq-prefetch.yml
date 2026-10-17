@@ -370,23 +370,41 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TRAIN_DATE=$(date -u -d "$TARGET_DATE - 1 day" +%F)
           mkdir -p .arvexq-data
           rm -f .arvexq-data/research-models.json
-          if python scripts/arvexq_fetch_d1_bundle.py \
-            --api-base "$CLOUDFLARE_API_BASE" \
-            --date "$TRAIN_DATE" \
-            --out research-training-day.json \
-            --report research-training-fetch.json \
-            --workers 3; then
-            python scripts/arvexq_train_research_models.py \
-              --input research-training-day.json \
-              --target-date "$TARGET_DATE" \
-              --output .arvexq-data/research-models.json \
-              --report research-training-model-report.json
-          else
-            echo "::warning::RESEARCH_TRAINING_UNAVAILABLE; no unverified model substituted"
-          fi
+          # Yesterday normally has NAR; the last preceding weekend is needed
+          # to train JRA on Saturdays when Friday has no JRA races.
+          python - <<'PY'
+          from datetime import date, timedelta
+          from pathlib import Path
+          target = date.fromisoformat(__import__('os').environ['TARGET_DATE'])
+          days = [target - timedelta(days=1)]
+          for offset in range(2, 9):
+              previous = target - timedelta(days=offset)
+              if previous.weekday() in (5, 6):
+                  days.append(previous)
+          Path('research-training-dates.txt').write_text(
+              '\n'.join(sorted({d.isoformat() for d in days}, reverse=True)[:3]) + '\n')
+          PY
+          mkdir -p research-training-inputs
+          while IFS= read -r TRAIN_DATE; do
+            if python scripts/arvexq_fetch_d1_bundle.py \
+              --api-base "$CLOUDFLARE_API_BASE" \
+              --date "$TRAIN_DATE" \
+              --out "research-training-inputs/$TRAIN_DATE.json" \
+              --report "research-training-inputs/$TRAIN_DATE-report.json" \
+              --workers 3; then
+              echo "RESEARCH_TRAINING_SOURCE_OK $TRAIN_DATE"
+            else
+              rm -f "research-training-inputs/$TRAIN_DATE.json"
+              echo "::warning::RESEARCH_TRAINING_SOURCE_UNAVAILABLE $TRAIN_DATE"
+            fi
+          done < research-training-dates.txt
+          python scripts/arvexq_train_research_models.py \
+            --input-dir research-training-inputs \
+            --target-date "$TARGET_DATE" \
+            --output .arvexq-data/research-models.json \
+            --report research-training-model-report.json
 
       - name: Capture optional preoff research candidates (not production picks)
         timeout-minutes: 5

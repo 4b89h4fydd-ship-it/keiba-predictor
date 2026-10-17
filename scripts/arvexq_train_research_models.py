@@ -27,17 +27,38 @@ def train_models(source, target_date):
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', type=Path, required=True)
+    inputs = parser.add_mutually_exclusive_group(required=True)
+    inputs.add_argument('--input', type=Path)
+    inputs.add_argument('--input-dir', type=Path)
     parser.add_argument('--target-date', required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--report', type=Path, required=True)
     args = parser.parse_args(argv)
-    models, errors = train_models(json.loads(args.input.read_text(encoding='utf-8')),args.target_date)
+    if args.input_dir:
+        source_files = sorted(p for p in args.input_dir.glob('*.json') if not p.name.endswith('-report.json'))
+        combined = {'details': []}
+        seen = set()
+        for file in source_files:
+            source = json.loads(file.read_text(encoding='utf-8'))
+            for detail in source.get('details', []):
+                if not isinstance(detail, dict):
+                    continue
+                identity = (detail.get('date'), detail.get('id'))
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                combined['details'].append(detail)
+    else:
+        source_files = [args.input]
+        combined = json.loads(args.input.read_text(encoding='utf-8'))
+    models, errors = train_models(combined, args.target_date)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(models,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     args.report.write_text(json.dumps({'trainedCircuits':sorted(models),
         'errors':errors,'source':'earlier-dated-frozen-d1-details',
-        'targetDate':args.target_date,'researchOnly':True},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+        'targetDate':args.target_date,'researchOnly':True,
+        'sourceDates':sorted({d.get('date') for d in combined['details'] if isinstance(d,dict) and d.get('date')}),
+        'inputFileCount':len(source_files),'eligibleRecordCount':sum(1 for d in combined['details'] if isinstance(d,dict) and (d.get('result') or {}).get('status') == '確定' and str(d.get('date') or '') < args.target_date)},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'trainedCircuits':sorted(models),'errors':errors},ensure_ascii=False))
 
 
