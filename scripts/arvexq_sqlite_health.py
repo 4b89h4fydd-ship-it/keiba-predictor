@@ -49,16 +49,24 @@ def _quick_check(path: Path) -> tuple[bool, str]:
         conn = sqlite3.connect(str(path), timeout=2.0)
         try:
             row = conn.execute("PRAGMA quick_check").fetchone()
+            value = str(row[0] if row else "").strip().lower()
+            if value != "ok":
+                return False, value or "empty quick_check result"
+            # quick_check works on a read-only cache too. Probe the same write
+            # lock later used by collectors without modifying user tables.
+            conn.execute("BEGIN IMMEDIATE")
+            conn.execute("ROLLBACK")
+            return True, "ok"
         finally:
             conn.close()
-        value = str(row[0] if row else "").strip().lower()
-        return value == "ok", value or "empty quick_check result"
     except Exception as exc:
         return False, f"{type(exc).__name__}: {exc}"
 
 
 def sanitize(root: Path) -> tuple[int, int, list[str]]:
     root.mkdir(parents=True, exist_ok=True)
+    if not os.access(root, os.W_OK):
+        raise PermissionError(f"SQLite cache directory is not writable: {root}")
 
     # WAL/SHM/journal files are process-local. Never reuse them on a new runner.
     for pattern in ("*-wal", "*-shm", "*-journal"):
@@ -76,7 +84,7 @@ def sanitize(root: Path) -> tuple[int, int, list[str]]:
         if ok:
             print("SQLITE_CACHE_OK", path)
             continue
-        print("SQLITE_CACHE_BAD", path, reason)
+        print("SQLITE_CACHE_BAD_OR_NOT_WRITABLE", path, reason)
         for sidecar in _sidecars(path):
             _unlink(sidecar)
         _unlink(path)
