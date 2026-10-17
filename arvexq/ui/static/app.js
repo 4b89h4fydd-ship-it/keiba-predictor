@@ -1876,6 +1876,13 @@ function mergeHorseReflection(oldH,newH,liveH){
       if(b.length>=a.length&&b.length)out[key]=b;
       return
     }
+    // A roster/odds response must never replace a D1 learned mark with an
+    // old integrated evaluation merely because the horse number matches.
+    if(key==='integratedEvaluation'){
+      var prior=out.integratedEvaluation||{},candidate=v||{};
+      if(String(prior.markEngineVersion||prior.markSource||'').indexOf('arvexq-learned-whole-career')===0&&
+         String(candidate.markEngineVersion||candidate.markSource||'').indexOf('arvexq-learned-whole-career')!==0)return;
+    }
     if(key==='scratched'){
       if(v===true||out[key]!==true)out[key]=!!v;
       return
@@ -1932,11 +1939,19 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
   Object.keys(incoming).forEach(function(key){
     var v=incoming[key];
     if(key==='horses'||key==='result')return;
+    if((key==='predictionModelVersion'||key==='predictionStatus'||key==='legacyPresentationDisabled')&&
+       String(base.predictionModelVersion||'').indexOf('arvexq-learned-whole-career')===0&&
+       String(incoming.predictionModelVersion||'')!==String(base.predictionModelVersion||''))return;
     if(reflectUseful(v))out[key]=v
   });
   Object.keys(summary).forEach(function(key){
     var v=summary[key];
     if(key==='horses'||key==='result')return;
+    // Day summaries may be stale or built by the retired scorer. Only a
+    // full detail can authoritatively replace its learned forecast version.
+    if((key==='predictionModelVersion'||key==='predictionStatus'||key==='legacyPresentationDisabled')&&
+       String(out.predictionModelVersion||'').indexOf('arvexq-learned-whole-career')===0&&
+       String(summary.predictionModelVersion||'')!==String(out.predictionModelVersion||''))return;
     if(reflectUseful(v))out[key]=v
   });
   var combinedResult=mergePublishedResult(base.result,incoming.result);
@@ -2226,7 +2241,10 @@ function fetchSelectedRaceOdds(id,seq,force){
 function fetchEdgeRace(id,forceNetwork,retryLimit){
   if(!id)return Promise.resolve(null);
   var key=String(id),cached=instantTrackDetails[key]||loadDetailCache(id,true),row=(state.races||[]).find(function(x){return String(x&&x.id||'')===key})||null;
-  if(!forceNetwork&&cached&&cached.date&&String(cached.date)<today()&&entryDataAvailable(cached))return Promise.resolve(cached);
+  // Historical summary/card caches can predate D1 learned publication.
+  // Revalidate them on race open instead of permanently pinning old marks.
+  // In a network outage, the existing cached racecard is retained below.
+
   var st=detailState(id),maxAttempts=retryLimit||2;
   st.error='';st.busy=true;st.attempts=0;
   updateDetailSections(id,cached||row,false);
