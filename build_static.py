@@ -239,41 +239,18 @@ for name in ("manifest-arvexq-v362.webmanifest","manifest-arvexq-v361.webmanifes
 for legacy_sw in ("v328", "v327", "v326", "v325", "v324", "v323", "v322", "v321", "v320", "v319", "v318"):
     (DIST / f"sw-{legacy_sw}-reset.js").write_text(sw, encoding="utf-8")
 
-# Keep betting modules as separate browser resources, not inlined into app.js.
-(DIST / "betting").mkdir(exist_ok=True)
-for filename in BET_ASSETS:
-    shutil.copy2(BET_PATH / filename, DIST / "betting" / filename)
-
-(DIST / "morning").mkdir(exist_ok=True)
-for filename in MORNING_MODULES:
-    shutil.copy2(MORNING_PATH / filename, DIST / "morning" / filename)
-
-# Preserve CSS cascade while serving large style groups separately.
+# Shell-only publication: do not ship prediction, betting, morning pick,
+# research, or stale diagnosis modules. Retain visual styles and branding.
 (DIST / "styles").mkdir(exist_ok=True)
 for filename in STYLE_MODULES:
     shutil.copy2(STYLE_DIR / filename, DIST / "styles" / filename)
-
-(DIST / "research").mkdir(exist_ok=True)
-for filename in RESEARCH_ASSETS:
-    shutil.copy2(RESEARCH_PATH / filename, DIST / "research" / filename)
-
-# Ship only horse racing UI resources.
 (DIST / "sports").mkdir(exist_ok=True)
 for filename in SPORT_FILES:
-    shutil.copy2(SPORT_DIR / filename, DIST / "sports" / filename)
-
-# Independent UI feature modules kept outside the main app bundle.
-for extra_asset in ("previous_ai_results.js", "arvexq-brush-logo.svg"):
-    src = STATIC / extra_asset
-    if not src.is_file():
-        raise RuntimeError(f"extra UI asset not found: {src}")
-    shutil.copy2(src, DIST / extra_asset)
+    if filename.endswith(".css"):
+        shutil.copy2(SPORT_DIR / filename, DIST / "sports" / filename)
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
-model_version = strings.get("PREDICTION_ENGINE_VERSION", "")
-if not model_version or "mineta-margin-observed-60-40" not in model_version:
-    raise RuntimeError("Static build must identify the live observed 60/40 prediction model")
-(DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"observed-mineta-margin-authoritative","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
+(DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"empty","prediction":False,"marks":False,"betting":False},ensure_ascii=False,separators=(",",":"))+"\\n",encoding="utf-8")
 redirects=["/venue /index.html 200","/race /index.html 200","/keiba /keiba/index.html 200"]
 for v in compat_app:redirects.append(f"/app-{v}.js /app-{BUILD_VERSION}.js 302")
 for v in compat_arvexq:redirects.append(f"/arvexq-app-{v}.js /arvexq-app-{BUILD_VERSION}.js 302")
@@ -373,15 +350,6 @@ print(f"ARVEXQ static build complete: {DIST}")
 print(f"BUILD: {BUILD_VERSION}")
 print(f"Files: {len(list(DIST.rglob('*')))}")
 
-# Daily pre-off selection archives are content-addressed by race date. Publish
-# exact immutable JSON files without altering their race membership on refresh.
-morning_dir = STATIC / "morning-picks"
-if morning_dir.is_dir():
-    target_dir = DIST / "morning-picks"
-    target_dir.mkdir(exist_ok=True)
-    for archive in morning_dir.glob("????-??-??.json"):
-        shutil.copy2(archive, target_dir / archive.name)
-
 # Lightweight, immutable factual racecard backup survives an unavailable D1.
 racecard_dir = STATIC / "racecards"
 if racecard_dir.is_dir():
@@ -390,9 +358,5 @@ if racecard_dir.is_dir():
     for archive in racecard_dir.glob("????-??-??.json"):
         shutil.copy2(archive, target_dir / archive.name)
 
-# Losslessly archived existing race originals, independent of D1 availability.
-if (STATIC / "saved-snapshots").is_dir():
-    shutil.copytree(STATIC / "saved-snapshots", DIST / "saved-snapshots")
+# No saved prediction archives or odds-derived pick sources in shell-only build.
 
-from scripts.arvexq_build_odds_sources import build_sources
-build_sources(STATIC, DIST)
