@@ -430,6 +430,16 @@ jobs:
           )
           output['receiptAudit'] = receipt_audit
           output['captureVerified'] = receipt_audit['verified']
+          # Surface zero-capture failures in the job summary without exposing cards.
+          with open(__import__('os').environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write('## ARVEXQ 発走前研究用予想の収集実績\\n\\n')
+              summary.write(f"- 学習結果あり: {output['trainingReportPresent']}\\n")
+              summary.write(f"- 収集結果あり: {output['captureReportPresent']}\\n")
+              summary.write(f"- 保存レシート件数: {output['receiptCount']}\\n")
+              summary.write(f"- 保存レシート整合性確認: {output['captureVerified']}\\n")
+              summary.write('- 注: 研究用予想であり、本番推奨や的中率80%達成を示さない\\n')
+          if not output['captureVerified']:
+              print('::warning::RESEARCH_PREOFF_CAPTURE_NOT_VERIFIED (see archived operational report)')
           Path('research-operational-report.json').write_text(
               json.dumps(output, ensure_ascii=False, indent=2) + '\\n')
           print('RESEARCH_CAPTURE_OPERATIONAL', json.dumps({
