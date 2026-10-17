@@ -14,13 +14,18 @@
 <link rel="stylesheet" href="/styles-arvexq-v330.css?fix=20261009-user-approved-v357">
 <link rel="stylesheet" href="/styles/legacy_v118_v221.css?v=__ARVEXQ_STYLE_MODULE_HASH__">
 <link rel="stylesheet" href="/styles/race_v222_plus.css?v=__ARVEXQ_STYLE_MODULE_HASH__">
-<link rel="stylesheet" href="/betting/bet_ui.css?v=__ARVEXQ_BET_ASSET_FINGERPRINT__">
-<link rel="stylesheet" href="/research/research_view.css?v=__ARVEXQ_RESEARCH_HASH__">
 <style>
-.smart-special-picks .fixed-pick-box-body{display:block!important}
-/* The complete ◎【単】/◎【軸】 labels belong beside the horse name, not in the 25-30px mark cell. */
-.rc-racecard-v339 .rc-v336-mark{overflow:hidden!important}
-.rc-racecard-v339 .rc-v336-mark .rc-mark-box>small{display:none!important}
+body{margin:0;background:#f6f2e8;color:#202820;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif}
+.arvexq-shell{max-width:720px;margin:auto;min-height:100dvh}
+.shell-head{padding:22px 18px 14px;border-bottom:1px solid #d9d6ce;display:flex;justify-content:space-between;align-items:center}
+.shell-brand{font-family:Georgia,serif;font-size:26px;letter-spacing:3px;font-weight:700}
+.shell-status{font-size:12px;color:#778076}
+.shell-body{padding:18px;display:grid;gap:14px}
+.shell-box{min-height:110px;border:1px solid #dedbd2;background:#fffef9;border-radius:14px;padding:18px}
+.shell-box h2{font-size:15px;margin:0;font-weight:600;color:#343b32}
+.shell-empty{height:55px}
+.shell-nav{display:flex;gap:10px;padding:14px 18px;border-top:1px solid #d9d6ce}
+.shell-nav span{flex:1;text-align:center;font-size:13px;color:#7a7d76}
 </style>
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v362-192.png">
@@ -32,24 +37,15 @@
 <link rel="stylesheet" href="/sports/pull-refresh.css?v=__ARVEXQ_SPORT_HASH__">
 </head>
 <body>
-<div id="app"><div class="boot">ARVEXQを起動中…</div></div>
-<script defer src="/betting/bet_view.js?v=__ARVEXQ_BET_ASSET_FINGERPRINT__"></script>
-<script defer src="/morning/ticket_lane_classifier.js?v=__ARVEXQ_MORNING_MODULE_HASH__"></script>
-<script defer src="/morning/selected_race_pipeline.js?v=__ARVEXQ_MORNING_MODULE_HASH__"></script>
-<script defer src="/morning/special_selection.js?v=__ARVEXQ_MORNING_MODULE_HASH__"></script>
-<script defer src="/morning/selection_cut.js?v=__ARVEXQ_MORNING_MODULE_HASH__"></script>
-<script defer src="/morning/frozen_ticket_evidence.js?v=__ARVEXQ_MORNING_MODULE_HASH__"></script>
-<script defer src="/morning/saved_ticket_receipt.js?v=__ARVEXQ_MORNING_MODULE_HASH__"></script>
-<script defer src="/research/local_evidence.js?v=__ARVEXQ_RESEARCH_HASH__"></script>
-<script defer src="/research/research_view.js?v=__ARVEXQ_RESEARCH_HASH__"></script>
-<script defer src="/research/race_identity.js?v=__ARVEXQ_RESEARCH_HASH__"></script>
-<script defer src="/research/diagnosis_view.js?v=__ARVEXQ_RESEARCH_HASH__"></script>
-<script defer src="/research/saved_snapshot.js?v=__ARVEXQ_RESEARCH_HASH__"></script>
-<script defer src="/research/live_odds.js?v=__ARVEXQ_RESEARCH_HASH__"></script>
-<script defer src="/research/static_racecard.js?v=__ARVEXQ_RESEARCH_HASH__"></script>
-<script defer src="/sports/pull-refresh.js?v=__ARVEXQ_SPORT_HASH__"></script>
-<script defer src="/sports/unified-home.js?v=__ARVEXQ_SPORT_HASH__"></script>
-<script defer src="/sports/horse-portal.js?v=__ARVEXQ_SPORT_HASH__"></script>
-<script defer src="/app-v330.js?fix=20261010-racecard-rescue-v358"></script>
+<div id="app" class="arvexq-shell">
+  <header class="shell-head"><div class="shell-brand">ARVEXQ</div><div class="shell-status">画面枠のみ</div></header>
+  <main class="shell-body">
+    <section class="shell-box"><h2>本日のレース</h2><div class="shell-empty"></div></section>
+    <section class="shell-box"><h2>開催場一覧</h2><div class="shell-empty"></div></section>
+    <section class="shell-box"><h2>レース詳細</h2><div class="shell-empty"></div></section>
+  </main>
+  <nav class="shell-nav" aria-label="ナビゲーション"><span>ホーム</span><span>開催場</span><span>レース</span></nav>
+</div>
+<script defer src="/app-v330.js?fix=20261017-shell-only"></script>
 </body>
 </html>
