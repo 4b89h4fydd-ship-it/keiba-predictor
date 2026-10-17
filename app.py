@@ -1769,13 +1769,19 @@ def _nar_live_odds(track:str,iso_date:str,race_no:int,force:bool=False)->dict:
 
 from arvexq.ingest.odds_capture_time import odds_observed_at
 
+from arvexq.ingest.odds_fields.missing import odds_missing
+from arvexq.ingest.odds_fields.delta import win_odds_delta
+
 def _attach_nar_live_odds(detail:dict)->dict:
     if not detail:return detail
     odds=_nar_live_odds(str(detail.get("track") or ""),str(detail.get("date") or ""),int(detail.get("raceNumber") or 0))
     if not odds:return detail
     for h in detail.get("horses",[]) or []:
         z=odds.get(int(h.get("horseNumber") or 0))
-        if z:h.update({k:v for k,v in z.items() if v is not None and v!=""})
+        if z:
+            delta=win_odds_delta(h.get("winOdds"),z.get("winOdds"))
+            h.update({k:v for k,v in z.items() if v is not None and v!=""})
+            if delta is not None: h["observedWinOddsDelta"]=delta
     detail["oddsSource"]="NAR公式"; detail["oddsType"]="単勝実オッズ"; detail["oddsUpdatedAt"]=odds_observed_at()
     return detail
 
@@ -4023,7 +4029,7 @@ def _restore_saved_odds(detail:dict)->dict:
                 rows=[{
                     "horseNumber":h.get("horseNumber"),"winOdds":h.get("winOdds"),
                     "popularity":h.get("popularity"),"oddsSource":h.get("oddsSource") or previous.get("oddsSource")
-                } for h in (previous.get("horses") or []) if h.get("winOdds") not in (None,"")]
+                } for h in (previous.get("horses") or []) if not odds_missing(h)]
                 if rows:
                     detail["oddsUpdatedAt"]=previous.get("oddsUpdatedAt") or detail.get("oddsUpdatedAt")
                     detail["oddsSource"]=previous.get("oddsSource") or detail.get("oddsSource")
