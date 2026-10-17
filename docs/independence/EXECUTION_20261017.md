@@ -59,3 +59,21 @@
 - JRA/NAR全レースの過去走・天候・取消・オッズ・結果・払戻・PWAの実動作確認が必要。
 
 この記録は全工程完了報告ではない。作業内容と本番で観測できた範囲だけを示す。
+
+## 2026-10-17 引き継ぎ後の追加実装と証拠（追記）
+
+- PR #247 main統合：`fbe81aeece4e402b4c3f0aaa842aab0c47920bd5`。
+- PR #249 過去走フォールバック修正：`fbb238d603277d53895354816d176a9bb1f1821b`。回帰CI合格。
+- PR #250 過去走の重複排除 (#55)、将来情報遮断 (#58)、予想に依存しない表示 (#182) を独立モジュールに分割して実呼び出し経路に接続。main統合 `dd1f650b473848927ebf12dc9b58cb5bfdc14d9c`。Validation https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39043647022 とブラウザ回帰 https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39043646995 が成功。
+- PR #251 はD1同期時の保存済み履歴の欠落を保護し、cloudflareへ `ee911ea3f497298a393027bfe0ed2aef9ce04f71` で統合。CI: https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39043867800
+- PR #252 は履歴が非空でも短縮される場合を保護し、`/api/sync` 結合テストを追加。cloudflare統合 `a8edf6a01723b8ca5443e1291ddb38024fcfd036`。CI: https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044071067
+- PR #253 はJRA公式過去走の13個の観測項目 (#42–54) を個別解析器へ分け、公式JRA解析経路に接続。main統合 `4253ab0153de61eab066a452378853b4bc8a97aa`。Validation https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860 と独立コンポーネントCI https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541980 が成功。
+
+### 残る問題
+
+- 200項目台帳は10「分離済」、34「解析済」、156「未着手」。全条件完了は **0/200**。
+- JRA過去走の個別抽出はNAR公式・netkeibaを含む全取得経路の独立化ではない。旧方式の全残存経路も未監査。
+- D1同期は既存履歴を短縮更新から保護するようになったが、すでに欠損していたデータの回復は別途必要。現時点でD1全保存原本・圧縮sidecarからの回復成功を確認できていない。
+- GitHub main/cloudflareへの統合は証明済みだが、統合後のCloudflare Web/APIデプロイ実行結果と本番挙動をこの引き継ぎ作業では確認できていない。成功として計上しない。
+- 承認済みの新予想方法が存在しないため、予想・印・買い目は無効状態を維持した。旧方式を復活させない。
+
