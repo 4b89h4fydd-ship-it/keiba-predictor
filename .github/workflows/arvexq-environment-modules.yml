@@ -1,0 +1,40 @@
+name: ARVEXQ Environment Modules
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'arvexq/ingest/nar_environment_parser.py'
+      - 'arvexq/ingest/nar_weather.py'
+      - 'arvexq/ingest/nar_going.py'
+      - 'arvexq/ingest/nar_scratches.py'
+      - 'arvexq/ingest/jra_environment_parser.py'
+      - 'arvexq/ingest/jra_weather.py'
+      - 'arvexq/ingest/jra_turf_going.py'
+      - 'arvexq/ingest/jra_dirt_going.py'
+      - 'arvexq/ingest/jra_obstacle_going.py'
+      - 'arvexq/ingest/environment_values.py'
+      - 'arvexq/ingest/field_normalization.py'
+      - 'tests/test_environment_component_split.py'
+      - 'tests/test_nar_environment_parser.py'
+      - 'tests/test_jra_environment_parser.py'
+      - '.github/workflows/arvexq-environment-modules.yml'
+
+jobs:
+  seven-components:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated test dependencies
+        run: python -m pip install -q beautifulsoup4 pytest
+      - name: Compile independent parsers
+        run: |
+          python -m py_compile arvexq/ingest/{nar_weather,nar_going,nar_scratches,jra_weather,jra_turf_going,jra_dirt_going,jra_obstacle_going,nar_environment_parser,jra_environment_parser}.py
+      - name: Verify independent NAR and JRA responsibilities and output compatibility
+        run: |
+          python -m pytest -q tests/test_environment_component_split.py tests/test_nar_environment_parser.py tests/test_jra_environment_parser.py
