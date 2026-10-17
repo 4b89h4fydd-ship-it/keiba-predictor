@@ -1,3 +1,4 @@
+import { publicRaceResponse } from "./public-race.js";
 import legacyWorker from "./worker.js";
 import { readRacecard, readRaceDisplay } from "./racecard.js";
 
@@ -16,7 +17,8 @@ function corsHeaders(request) {
   };
 }
 
-function withCors(response, request) {
+async function withCors(response, request) {
+  response = await publicRaceResponse(response, request);
   const headers = new Headers(response.headers);
   const cors = corsHeaders(request);
   for (const [key, value] of Object.entries(cors)) headers.set(key, value);

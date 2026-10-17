@@ -2,7 +2,7 @@ name: ARVEXQ API Deploy
 on:
   push:
     branches: [cloudflare]
-    paths: [worker.js, worker-entry.js, racecard.js, wrangler.jsonc, package.json, tests/**, .github/workflows/arvexq-api-deploy.yml]
+    paths: [worker.js, worker-entry.js, racecard.js, public-race.js, wrangler.jsonc, package.json, tests/**, .github/workflows/arvexq-api-deploy.yml]
   workflow_dispatch:
 permissions:
   contents: read
