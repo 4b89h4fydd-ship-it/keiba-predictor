@@ -1939,6 +1939,9 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
   Object.keys(incoming).forEach(function(key){
     var v=incoming[key];
     if(key==='horses'||key==='result')return;
+    if((key==='predictionModelVersion'||key==='predictionStatus'||key==='legacyPresentationDisabled')&&
+       String(base.predictionModelVersion||'').indexOf('arvexq-learned-whole-career')===0&&
+       String(incoming.predictionModelVersion||'')!==String(base.predictionModelVersion||''))return;
     if(reflectUseful(v))out[key]=v
   });
   Object.keys(summary).forEach(function(key){
