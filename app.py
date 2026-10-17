@@ -1635,6 +1635,8 @@ def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
 _nar_odds_cache_lock=threading.Lock()
 _nar_odds_cache:dict[str,tuple[float,dict]]={}
 
+from arvexq.ingest.place_odds import place_odds_pair
+
 def _parse_nar_live_odds_html(html:str)->dict:
     """Parse NAR official 単・複 page across header and positional layouts."""
     if not html:return {}
@@ -1706,6 +1708,10 @@ def _parse_nar_live_odds_html(html:str)->dict:
                     bw=int(bm.group(1));chg=int(bm.group(2)) if bm.group(2) is not None else None
                     break
             z=out.setdefault(no,{})
+            # Separate official 複勝 odds columns. No imputation from 単勝.
+            if len(vals)>5:
+                observed_place=place_odds_pair(vals[4],vals[5])
+                if observed_place:z.update(observed_place)
             if odds>0:z["winOdds"]=odds
             if bw:
                 z["bodyWeight"]=bw
