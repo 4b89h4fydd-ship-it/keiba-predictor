@@ -6,6 +6,7 @@ Uncalibrated output remains explicitly labelled and cannot claim betting accurac
 """
 from __future__ import annotations
 import argparse
+import concurrent.futures
 from collections import Counter
 import hashlib
 import json
@@ -84,7 +85,8 @@ def publish(ledger_path,base,token):
         data=encoded(value).encode() if value is not None else None
         req=urllib.request.Request(base.rstrip('/')+path,data=data,headers=headers)
         with urllib.request.urlopen(req,timeout=60) as response:return json.load(response)
-    for race_id,revision_id,raw,digest in db.execute('SELECT race_id,revision_id,payload_json,payload_sha256 FROM revisions ORDER BY race_id'):
+    def publish_one(row):
+        race_id,revision_id,raw,digest=row
         try:
             path='/api/forecast-revisions/'+urllib.parse.quote(race_id,safe='')
             before=request(path)
@@ -100,9 +102,16 @@ def publish(ledger_path,base,token):
             assert after.get('currentForecastRevisionId')==revision_id
             saved=next(r for r in after['forecastRevisions'] if r['revisionId']==revision_id)
             assert {k:v for k,v in saved.items() if k!='createdAt'}=={k:v for k,v in json.loads(raw).items() if k!='createdAt'}
-            verified+=1
-            if verified%50==0:print('PUBLISHED_AND_RELOADED',verified,flush=True)
-        except Exception as exc:failures.append({'raceId':race_id,'error':str(exc)})
+            return None
+        except Exception as exc:return {'raceId':race_id,'error':str(exc)}
+
+    rows=db.execute('SELECT race_id,revision_id,payload_json,payload_sha256 FROM revisions ORDER BY race_id').fetchall()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+        for result in pool.map(publish_one,rows):
+            if result is not None:failures.append(result)
+            else:
+                verified+=1
+                if verified%50==0:print('PUBLISHED_AND_RELOADED',verified,flush=True)
     expected=db.execute('SELECT COUNT(*) FROM revisions').fetchone()[0]
     report={'targetRevisions':expected,'verifiedRevisions':verified,'failures':failures,'allPublished':expected>0 and verified==expected and not failures,'originalSqlWrites':0}
     Path(str(ledger_path)+'.publish.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))

@@ -27,3 +27,35 @@ class SavedForecastRebuildTests(TestCase):
                 revision=json.loads(raw)
                 self.assertFalse(revision['productionEligible'])
                 self.assertTrue(latest_revision({'id':rid,'date':revision['raceDate'],'forecastRevisions':[revision],'currentForecastRevisionId':revision['revisionId']}))
+
+    def test_publish_verifies_reload_and_resumes_without_rewriting(self):
+        from io import BytesIO
+        from unittest.mock import patch
+        from hashlib import sha256
+        from scripts.arvexq_rebuild_saved_forecasts import publish
+        fixture=json.loads((Path(__file__).parent/'fixtures/forecast_revision_transport.json').read_text())['detail']
+        revision=fixture['forecastRevisions'][0];raw=json.dumps(revision,ensure_ascii=False,separators=(',',':'))
+        state={'revision':None,'posts':0,'corrupt':False}
+        def transport(request,timeout):
+            if request.data:
+                body=json.loads(request.data);state['posts']+=1
+                self.assertEqual(body['payloadSha256'],sha256(body['revisionRawJson'].encode()).hexdigest())
+                state['revision']=json.loads(body['revisionRawJson'])
+                result={'ok':True,'original_tables_modified':False}
+            else:
+                stored=state['revision'];pointer=stored['revisionId'] if stored else None
+                if state['corrupt']:pointer='wrong'
+                result={'ok':True,'forecastRevisions':[stored] if stored else [],'currentForecastRevisionId':pointer}
+            return BytesIO(json.dumps(result).encode())
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'ledger.sqlite3'
+            with sqlite3.connect(path) as db:
+                db.execute('CREATE TABLE revisions(race_id TEXT,revision_id TEXT,payload_json TEXT,payload_sha256 TEXT)')
+                db.execute('INSERT INTO revisions VALUES(?,?,?,?)',(revision['raceId'],revision['revisionId'],raw,sha256(raw.encode()).hexdigest()))
+            with patch('urllib.request.urlopen',side_effect=transport):
+                self.assertTrue(publish(path,'https://test','token')['allPublished'])
+                self.assertTrue(publish(path,'https://test','token')['allPublished'])
+                self.assertEqual(state['posts'],1)
+                state['corrupt']=True
+                failed=publish(path,'https://test','token')
+                self.assertFalse(failed['allPublished']);self.assertEqual(len(failed['failures']),1)
