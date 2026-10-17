@@ -10,5 +10,5 @@ def test_race_queue_is_sorted_and_deduplicated():
         {"id":"b","track":"園田","raceNumber":2,"startTime":"10:20"},
         {"id":"a","track":"園田","raceNumber":1,"startTime":"10:00"},
     ]
-    result = _commercial_target_rows(rows, 610)
+    result = _commercial_target_rows(rows, 615)
     assert [r["id"] for r in result] == ["b","a"]
