@@ -4147,29 +4147,14 @@ def _attach_prerace_audit(detail:dict)->dict:
 
 
 def _compact_display_snapshot(detail: dict) -> dict:
-    """Display race facts only; prediction, marks and tickets are retired."""
+    """Serve race facts without generating or exposing predictions or betting picks."""
     if not isinstance(detail,dict):return detail
-    detail=dict(detail)
+    out=dict(detail)
     for key in ("aiEvaluation", "factorRanking", "honmeiDecision", "preRacePrediction",
                 "predictionAudit", "frozenPredictionAudit", "winnerLearningProfile",
                 "betRecommendations", "recommendedBets", "tickets", "buyList", "bets",
                 "markMethod", "markEngineVersion", "predictionModelVersion"):
-        detail.pop(key, None)
-    detail["horses"] = [dict(h) for h in detail.get("horses", []) or []]
-    for h in detail["horses"]:
-        for key in ("integratedEvaluation", "mark", "honmeiRole", "modelProbabilities",
-                    "recommendedBets", "tickets", "bets"):
-            h.pop(key, None)
-    return detail
-    detail=_attach_prerace_audit(detail)
-    try:
-        from arvexq.prediction.prerace_archive import evaluate_frozen_result
-        frozen_audit=evaluate_frozen_result(detail)
-        if frozen_audit:
-            detail["frozenPredictionAudit"]=frozen_audit
-    except Exception as exc:
-        print("Frozen forecast audit unavailable",detail.get("id"),type(exc).__name__)
-    out=dict(detail)
+        out.pop(key, None)
     horses=[]
     for h in detail.get("horses",[]) or []:
         if not isinstance(h,dict):continue
@@ -4178,6 +4163,9 @@ def _compact_display_snapshot(detail: dict) -> dict:
         z["recentRaces"]=runs[:5]
         z.pop("allPastRuns",None)
         z.pop("evaluationSources",None)
+        for key in ("integratedEvaluation", "mark", "honmeiRole", "modelProbabilities",
+                    "recommendedBets", "tickets", "bets"):
+            z.pop(key,None)
         horses.append(z)
     out["horses"]=horses
     pm=dict(out.get("preparedMeta") or {})
@@ -4187,7 +4175,6 @@ def _compact_display_snapshot(detail: dict) -> dict:
         out["dataCoreHealth"]=_data_core_health(out);out["dataCoreVersion"]=ARVEXQ_DATA_CORE_VERSION
     except Exception:pass
     return out
-
 
 # ARVEXQ_EXTRACTED:install_race_stores
 from arvexq.infra.race_stores import install_race_stores as _arvexq_installer
