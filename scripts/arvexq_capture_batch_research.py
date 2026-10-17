@@ -15,6 +15,8 @@ def capture(bundle, models, receipt_dir):
     details = bundle.get('details') if isinstance(bundle, dict) else None
     if not isinstance(details, list):
         raise ValueError('bundle.details must be a list of race cards')
+    if not isinstance(models, dict):
+        raise ValueError('models must be a circuit-keyed dictionary')
     saved, skipped = [], {}
     for race in details:
         race_id = race.get('id') if isinstance(race, dict) else None
@@ -38,8 +40,10 @@ def capture(bundle, models, receipt_dir):
                 raise ValueError('not-before-post')
             path = freeze_research_candidate(race,prediction['recommendedBetPlan'],receipt_dir)
             saved.append({'raceId':race_id,'receipt':str(path)})
-        except (ValueError, FileExistsError, KeyError, TypeError) as exc:
-            skipped[race_id] = str(exc)
+        except Exception as exc:
+            # A malformed or oversized race must not block later race receipts.
+            # Include the error type for audit; do not mark a skipped race saved.
+            skipped[race_id] = type(exc).__name__ + ': ' + str(exc)
     return {'saved':saved, 'skipped':skipped, 'researchOnly':True,
             'independentlyVerifiedPreoff':False}
 
