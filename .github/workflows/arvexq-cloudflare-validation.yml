@@ -6,6 +6,8 @@ on:
     paths:
       - worker.js
       - worker-entry.js
+      - preoff-evidence.js
+      - migrations/**
       - racecard.js
       - public-race.js
       - tests/**
