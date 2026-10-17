@@ -1,5 +1,5 @@
 """Provider row composition. Field policies can be replaced independently."""
-from . import horse_number, frame_number, name, sex, age, carried_weight, jockey, trainer, body_weight, body_weight_change, win_odds, popularity, status, affiliation
+from . import horse_number, frame_number, name, sex, age, carried_weight, jockey, trainer, body_weight, body_weight_change, win_odds, popularity, status, affiliation, cancellation, race_excluded
 from .dom import horse_info
 
 FIELDS = {"name": name.extract, "sex": sex.extract, "age": age.extract,
@@ -18,7 +18,7 @@ def parse_row(row, index=None, *, extractors=None):
     if not horse_name or number <= 0: return None
     result = {key: adapter(row) for key, adapter in adapters.items() if key != "name"}
     result.update({"horseNumber": number, "frameNumber": frame_number.extract(row) or int((number + 1) // 2),
-                   "name": horse_name, "scratched": bool(result["status"]), "recentRaces": [],
+                   "name": horse_name, "scratched": (cancellation.from_status(result["status"]) or race_excluded.from_status(result["status"]) or result["status"] == "欠場"), "recentRaces": [],
                    "jockeyStats": {}, "trainerStats": {}, "jockeyProfile": {}, "trainerProfile": {},
                    "source": "netkeiba"})
     return result
