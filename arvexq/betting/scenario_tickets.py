@@ -195,7 +195,25 @@ def compare_tickets(detail: dict[str, Any], scenarios: list[dict[str, Any]], *,
                            '条件付き確率は目標内だが未使用データの実測検証が未完了')
         if entry['expectedReturnRange'] is None:
             entry['reason'] += '。発走前の券種別オッズ不足により期待回収は不明'
-    return {'version': VERSION, 'modelVersion': model_version,
+    # Research-only leader. This is *not* a recommended bet: modeled chance
+    # cannot substitute for independently measured pre-off accuracy.
+    eligible = [entry for entry in comparisons if entry['combos']
+                and entry['conditionalProbabilityRange'] is not None]
+    ranked = sorted(eligible, key=lambda entry: (
+        -entry['conditionalProbabilityRange'][0],
+        -(entry['expectedReturnRange'][0] if entry['expectedReturnRange'] is not None else -1),
+        entry['points'], KINDS.index(entry['kind'])))
+    research_leader = ({
+        'kind': ranked[0]['kind'],
+        'combos': ranked[0]['combos'],
+        'points': ranked[0]['points'],
+        'conditionalProbabilityRange': ranked[0]['conditionalProbabilityRange'],
+        'expectedReturnRange': ranked[0]['expectedReturnRange'],
+        'status': 'research-only-not-a-recommendation',
+    } if ranked else None)
+    return {'researchLeader': research_leader,
+            'eligibleCandidateKinds': len(eligible),
+            'version': VERSION, 'modelVersion': model_version,
             'raceId': detail.get('id'), 'honmeiHorseNumber': axis,
             'comparisons': comparisons, 'decision': '見送り', 'items': [],
             'reason': '候補の全券種比較。未使用データによる検証が完了するまで推奨を確定しない',
