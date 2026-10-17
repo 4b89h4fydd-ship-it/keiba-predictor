@@ -11,8 +11,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from arvexq.pipeline.persisted_inputs import _career_rows, _history_observations_retained
 
 
 def read(path: str) -> dict[str, Any]:
@@ -89,8 +96,13 @@ def repair_reason(prepared: Any, existing: Any) -> str:
         if not isinstance(horse, dict):
             continue
         old_h = old_horses.get(int(horse.get("horseNumber") or 0), {})
-        if len(horse.get("allPastRuns") or []) > len(old_h.get("allPastRuns") or []):
-            return "career_history_deeper"
+        try:
+            new_runs = _career_rows(horse, str(prepared.get("date") or ""))
+            old_runs = _career_rows(old_h, str(existing.get("date") or ""))
+        except (ValueError, TypeError, KeyError, RuntimeError):
+            return "career_archive_invalid"
+        if len(new_runs) > len(old_runs) or not _history_observations_retained(new_runs, old_runs):
+            return "career_history_missing_observations"
     return ""
 
 MORNING_FIELDS = ("morningPickVersion", "morningPickFixedAt", "morningPickScope",
