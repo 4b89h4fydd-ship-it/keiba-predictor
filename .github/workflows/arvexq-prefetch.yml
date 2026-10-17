@@ -18,8 +18,10 @@ name: ARVEXQ Full Prefetch
       - scripts/arvexq_fetch_d1_bundle.py
       - scripts/arvexq_protect_sync.py
       - scripts/arvexq_select_prefetch_repairs.py
+      - scripts/arvexq_verify_persisted_inputs.py
       - scripts/arvexq_sqlite_health.py
       - arvexq/pipeline/fingerprints.py
+      - arvexq/pipeline/persisted_inputs.py
       - arvexq/prediction/**
       - arvexq/ingest/**
       - arvexq/databanks/**
