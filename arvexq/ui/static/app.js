@@ -219,39 +219,7 @@ function firstCornerNorm(rr){var p=rr&&rr.cornerPositions||[],x=n(p[0],0);if(!x)
 function lastCornerNorm(rr){var p=rr&&rr.cornerPositions||[],x=n(p[p.length-1],0);if(!x)return null;return clamp(1-(x-1)/Math.max(1,raceField(rr)-1),0,1)}
 // Consistent pre-race window: deduplicate first, then take the newest five
 // starts. A sixth (older) race cannot substitute for a missing first corner.
-function historicalWindow(h,r){
-  function normDate(v){
-    var t=String(v||'').replace(/\//g,'-').slice(0,10);
-    return /^\d{8}$/.test(t)?t.slice(0,4)+'-'+t.slice(4,6)+'-'+t.slice(6,8):t
-  }
-  var target=normDate(r&&r.date),seen={},out=[];
-  if(!/^\d{4}-\d\d-\d\d$/.test(target))return[];
-  [].concat(h&&h.recentRaces||[],h&&h.allPastRuns||[]).forEach(function(rr){
-    if(!rr||typeof rr!=='object')return;
-    var d=normDate(rr.date||rr.raceDate),
-        no=n(rr.raceNumber,n(rr.raceNo,0)),
-        key=[d,String(rr.track||''),n(rr.distance,0),no].join('|');
-    if(!/^\d{4}-\d\d-\d\d$/.test(d)||d>=target)return;
-    if(!seen[key]){
-      seen[key]=Object.assign({},rr,{date:d});out.push(seen[key]);return
-    }
-    var old=seen[key],a=Array.isArray(rr.cornerPositions)?rr.cornerPositions:[],
-        b=Array.isArray(old.cornerPositions)?old.cornerPositions.slice():[];
-    // Prefer the earlier source's observed places; fill absent positions from
-    // another feed without discarding a verified first corner.
-    a.forEach(function(v,j){if(n(b[j],0)<=0&&n(v,0)>0)b[j]=v});
-    if(!old.earlyTiming&&rr.earlyTiming&&typeof rr.earlyTiming==='object')old.earlyTiming=rr.earlyTiming;
-    if(b.length)old.cornerPositions=b;
-    if(!n(old.finish)&&n(rr.finish))old.finish=rr.finish;
-    ['timeBehindWinner','marginSeconds','marginEvidenceSource','marginEvidence',
-      'opponentLevel','surface','distance','raceNumber'].forEach(function(k){
-      if((old[k]==null||old[k]==='')&&rr[k]!=null&&rr[k]!=='')old[k]=rr[k]
-    })
-  });
-  out.sort(function(a,b){return b.date.localeCompare(a.date)||
-    n(b.raceNumber,n(b.raceNo,0))-n(a.raceNumber,n(a.raceNo,0))});
-  return out.slice(0,5)
-}
+function historicalWindow(h,r){return window.ARVEXQPastRunView.visible(h,r,5)}
 function validFirstCorner(rr){
   var p=n(rr&&rr.cornerPositions&&rr.cornerPositions[0],0),field=n(rr&&rr.fieldSize,0);
   return Number.isInteger(p)&&p>=1&&(!field||p<=field)
@@ -1725,7 +1693,7 @@ function diagnosisPanel(r,p){
   }).join('')+'</div>';
   return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><p class="muted diagnosis-tap-note">馬名をタップすると、直近5走・適性・騎手/調教師・血統までまとめて確認できます。</p>'+details+'</section>'
 }
-function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=(h.allPastRuns||h.recentRaces||[]).slice(0,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中'),career=careerCoverageLabel(h);if(career)status+='・全キャリア'+career;return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
+function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=window.ARVEXQPastRunView.visible(h,r,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中'),career=careerCoverageLabel(h);if(career)status+='・全キャリア'+career;return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){if(p&&p.savedForecastRevision)return '<section id="section-pace" class="card"><h2>展開分析</h2>'+((p.savedForecastRevision.scenarioSummaries||[]).map(function(s){return '<p>'+esc(s.label)+'</p>'}).join('')||'<p>観測履歴が不足しているため展開比較は未算出です。</p>')+'<p class="muted">各展開の発生頻度は未検証です。</p></section>';return '<section id="section-pace" class="card pace-panel-direct">'+paceBoard(r,p)+'</section>'}
 function openHorseDetailPage(no){
   no=n(no,0);if(!no||!state.race)return;
@@ -2775,8 +2743,7 @@ function horseDetailPage(r,p){
     +'<main class="smart-main smart-race-page horse-detail-page"><section class="card">'
     +(x&&p.legacyEngineDisabled?
       '<h2>'+esc(h.name||'')+'</h2><p>新方式の予想は未保存です。過去走の事実のみ表示します。</p>'+
-      (h.recentRaces&&h.recentRaces.length?h.recentRaces:(h.allPastRuns||[])).slice(0,5).map(function(run){return '<div class="recent">'+esc(run.date||'')+
-        ' '+esc(run.track||'')+' '+esc(run.distance||'')+'m '+esc(run.finish||'')+'着</div>'}).join(''):
+      window.ARVEXQPastRunView.recentRows(h,r,esc):
       (x?runnerDetailBody(r,p,x):'<div class="empty">馬情報を取得中です。</div>'))
     +'</section></main>'+cinematicFooter()+'</div>'
 }
