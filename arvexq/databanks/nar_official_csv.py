@@ -180,6 +180,11 @@ class NarOfficialArchive:
             return {}
         matched = [run.copy() for run, birth in records
                    if run["date"] < cutoff and not (dob and birth and dob != birth)]
+        # A target with known DOB must not absorb undated-birth records when
+        # the archive also contains a distinct same-name horse.
+        if dob and any(birth and birth != dob for _, birth in records):
+            matched = [run.copy() for run, birth in records
+                       if run["date"] < cutoff and birth == dob]
         # A caller may request five rows for the UI, but the analytical career
         # evidence must not silently shrink to five starts.
         return {"recentRaces": matched[:5], "allPastRuns": matched} if matched else {}
