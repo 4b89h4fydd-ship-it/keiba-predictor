@@ -1329,16 +1329,23 @@
     {
       "id": 55,
       "name": "過去走重複排除",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "分離済",
+      "module": "arvexq.ui.static.history.deduplicate",
+      "files": [
+        "arvexq/ui/static/history/deduplicate.js"
+      ],
+      "callers": [
+        "arvexq/ui/static/app.js",
+        "arvexq/ui/bundle.py"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "historical run observations and race date",
+      "output": "detached deduplicated run observations",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "scripts/arvexq_history_independence_smoke.cjs"
+      ],
+      "implementation_scope": "Provide independent, nonmutating reconciliation of the two historical run source arrays; deployment and per-race verification pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1395,16 +1402,23 @@
     {
       "id": 58,
       "name": "未来結果混入防止",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "分離済",
+      "module": "arvexq.ui.static.history.temporal",
+      "files": [
+        "arvexq/ui/static/history/temporal.js"
+      ],
+      "callers": [
+        "arvexq/ui/static/app.js",
+        "arvexq/ui/bundle.py"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "historical run observations and race date",
+      "output": "strictly pre-race observations",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "scripts/arvexq_history_independence_smoke.cjs"
+      ],
+      "implementation_scope": "Filter current/future and invalid-date races before historical presentation; deployment and per-race verification pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -4165,16 +4179,26 @@
     {
       "id": 182,
       "name": "過去走表示",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "分離済",
+      "module": "arvexq.ui.static.history.view",
+      "files": [
+        "arvexq/ui/static/history/view.js"
+      ],
+      "callers": [
+        "arvexq/ui/static/app.js",
+        "arvexq/ui/bundle.py"
+      ],
+      "dependencies": [
+        "ARVEXQPastRunDeduplicate.merge",
+        "ARVEXQPastRunTemporal.beforeRace"
+      ],
+      "input": "historical run observations and race date",
+      "output": "escaped HTML history rows",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "scripts/arvexq_history_independence_smoke.cjs"
+      ],
+      "implementation_scope": "Present factual horse history independently of forecast or bet state; deployment and per-race verification pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
