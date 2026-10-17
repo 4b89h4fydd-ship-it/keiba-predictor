@@ -716,6 +716,38 @@ jobs:
             --receipt-dir research-preoff-receipts \
             --report research-preoff-capture-report.json
 
+      - name: Report research capture operational evidence
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          trained = Path('research-training-model-report.json')
+          capture = Path('research-preoff-capture-report.json')
+          output = {
+              'version': 'arvexq-research-operations-v1',
+              'trainingReportPresent': trained.is_file(),
+              'captureReportPresent': capture.is_file(),
+              'training': json.loads(trained.read_text()) if trained.is_file() else None,
+              'capture': json.loads(capture.read_text()) if capture.is_file() else None,
+              'receiptCount': len(list(Path('research-preoff-receipts').glob('*.json'))),
+              'productionRecommendedTicketsChanged': False,
+          }
+          output['captureVerified'] = (
+              output['captureReportPresent'] and
+              output['receiptCount'] > 0 and
+              len((output['capture'] or {}).get('saved') or []) == output['receiptCount']
+          )
+          Path('research-operational-report.json').write_text(
+              json.dumps(output, ensure_ascii=False, indent=2) + '\\n')
+          print('RESEARCH_CAPTURE_OPERATIONAL', json.dumps({
+              'trained': output['trainingReportPresent'],
+              'captured': output['captureVerified'],
+              'receipts': output['receiptCount'],
+          }))
+          PY
+
       - name: Archive research-only preoff receipts
         if: always()
         uses: actions/upload-artifact@v4
@@ -724,6 +756,9 @@ jobs:
           path: |
             research-preoff-receipts/
             research-preoff-capture-report.json
+            research-training-model-report.json
+            research-training-fetch.json
+            research-operational-report.json
           if-no-files-found: ignore
           retention-days: 30
 
