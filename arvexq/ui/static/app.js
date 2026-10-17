@@ -641,11 +641,6 @@ function isNarRace(r){return ['地方','NAR','local'].indexOf(String(r&&r.circui
 
 
 
-function assignPredictionMarks(rows,r){return rows||[];}
-
-// v343 — standalone win-only call, independent of ◎ and of market odds.
-
-
 function raceMode(r){r=r||{};if(['平地','新馬','障害'].indexOf(r.analysisMode)>=0)return r.analysisMode;var title=String(r.title||'');if(r.surface==='障害'||/障害|J[･・.]?G[ⅠⅡⅢ123]|\bJS\b|ジャンプ/i.test(title))return '障害';return /新馬|メイクデビュー/.test(title)?'新馬':'平地'}
 function saveRaceAnalysis(r,p){return}
 function isScratchHorse(h){var s=String(h&&h.status||'');return !!(h&&(h.scratched===true||h.withdrawn===true||/欠場|出走取消|取消|競走除外|除外/.test(s)))}
