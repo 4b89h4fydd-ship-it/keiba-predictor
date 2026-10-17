@@ -205,16 +205,23 @@
     {
       "id": 8,
       "name": "開催日取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.jra_identifiers",
+      "files": [
+        "arvexq/ingest/jra_identifiers.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official identifier / race card",
+      "output": "observed race identity or race-card field",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_independent_jra_race_identity.py"
+      ],
+      "implementation_scope": "JRA pathway wired, NAR and other input sources not all separated; production not verified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -227,16 +234,23 @@
     {
       "id": 9,
       "name": "開催場取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.race_fields.track",
+      "files": [
+        "arvexq/ingest/race_fields/track.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official identifier / race card",
+      "output": "observed race identity or race-card field",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_independent_jra_race_identity.py"
+      ],
+      "implementation_scope": "JRA pathway wired, NAR and other input sources not all separated; production not verified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -271,16 +285,23 @@
     {
       "id": 11,
       "name": "レース番号取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.jra_identifiers",
+      "files": [
+        "arvexq/ingest/jra_identifiers.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official identifier / race card",
+      "output": "observed race identity or race-card field",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_independent_jra_race_identity.py"
+      ],
+      "implementation_scope": "JRA pathway wired, NAR and other input sources not all separated; production not verified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -293,16 +314,23 @@
     {
       "id": 12,
       "name": "レース名取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.race_fields.title",
+      "files": [
+        "arvexq/ingest/race_fields/title.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official identifier / race card",
+      "output": "observed race identity or race-card field",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_independent_jra_race_identity.py"
+      ],
+      "implementation_scope": "JRA pathway wired, NAR and other input sources not all separated; production not verified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -457,16 +485,23 @@
     {
       "id": 18,
       "name": "出走頭数取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.race_fields.field_size",
+      "files": [
+        "arvexq/ingest/race_fields/field_size.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official identifier / race card",
+      "output": "observed race identity or race-card field",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_independent_jra_race_identity.py"
+      ],
+      "implementation_scope": "JRA pathway wired, NAR and other input sources not all separated; production not verified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
