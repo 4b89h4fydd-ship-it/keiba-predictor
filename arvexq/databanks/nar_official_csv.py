@@ -89,6 +89,7 @@ def race_key(row):
 
 class NarOfficialArchive:
     def __init__(self, paths):
+        self.paths = tuple(str(path) for path in paths)
         race_rows, horse_rows = {}, []
         for path in paths:
             for filename, rows in rows_from_archive(path):
@@ -187,6 +188,14 @@ def register_nar_official_archive(registry: DataBankRegistry, paths=None):
     if paths is None:
         env = os.getenv("ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES", "")
         paths = env.split(os.pathsep) if env else []
+    previous = registry.get("nar_official_csv")
+    if previous:
+        previous_fetch = previous.fetchers.get("horse_history")
+        previous_archive = getattr(previous_fetch, "__self__", None)
+        paths = list(dict.fromkeys([
+            *(str(path) for path in (paths or [])),
+            *(str(path) for path in getattr(previous_archive, "paths", ()) if Path(path).is_file()),
+        ]))
     if not paths:
         return None
     archive = NarOfficialArchive(paths)
