@@ -592,18 +592,19 @@ jobs:
           )
           git worktree remove /tmp/arvexq-calibration-publish
 
-      - name: Apply new learned forecast overlay to day predictions
+      - name: Replace legacy active forecasts in D1 publication payload
         run: |
-          if [ -s .arvexq-data/research-models.json ] && [ -s prefetch-payload.json ]; then
-            PYTHONPATH=. python scripts/arvexq_apply_learned_overlay.py \
-              --bundle prefetch-payload.json \
-              --models .arvexq-data/research-models.json \
-              --out prefetch-learned.json \
-              --report learned-overlay-report.json
-            mv prefetch-learned.json prefetch-payload.json
-          else
-            echo "::warning::LEARNED_OVERLAY_NOT_APPLIED: no earlier trained model"
+          MODEL_PATH=".arvexq-data/research-models.json"
+          if [ ! -s "$MODEL_PATH" ]; then
+            echo '{}' > "$MODEL_PATH"
           fi
+          PYTHONPATH=. python scripts/arvexq_apply_learned_overlay.py \
+            --bundle prefetch-payload.json \
+            --models "$MODEL_PATH" \
+            --out prefetch-learned.json \
+            --report learned-overlay-report.json
+          mv prefetch-learned.json prefetch-payload.json
+          echo "LEGACY_ACTIVE_FORECASTS_DISABLED"
 
       - name: Freeze morning selected and special predictions for all races
         run: |
