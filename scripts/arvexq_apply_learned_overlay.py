@@ -14,6 +14,40 @@ if str(ROOT) not in sys.path:
 from arvexq.prediction.new_forecast import build_forecast
 
 
+# Retired mutable presentation fields. Do not touch immutable pre-off records,
+# official result evidence, cards, historical runs or versioned audit archives.
+LEGACY_ACTIVE_FIELDS = (
+    'aiEvaluation', 'pacePrediction', 'predictionStatus',
+    'predictionModelVersion', 'markEngineVersion', 'markDefinitions',
+    'gradeDefinitions', 'scenarioAnalysis', 'honmeiDecision',
+    'recommendedBetPlan', 'forecastText', 'probabilityModelStatus',
+    'productionEligible',
+)
+
+
+def without_legacy_presentation(detail):
+    row = dict(detail)
+    for key in LEGACY_ACTIVE_FIELDS:
+        row.pop(key, None)
+    row['predictionStatus'] = 'new-model-unavailable'
+    row['recommendedBetPlan'] = {
+        'decision': '見送り', 'items': [],
+        'reason': '新方式の学習済みモデルを確認できないため旧予想を表示しない',
+    }
+    row['legacyPresentationDisabled'] = True
+    horses = []
+    for horse in row.get('horses') or []:
+        if not isinstance(horse, dict):
+            horses.append(horse)
+            continue
+        horse = dict(horse)
+        horse.pop('integratedEvaluation', None)
+        horses.append(horse)
+    if isinstance(row.get('horses'), list):
+        row['horses'] = horses
+    return row
+
+
 def apply(bundle, models):
     out = dict(bundle)
     details = []
@@ -26,11 +60,11 @@ def apply(bundle, models):
         model = models.get(circuit)
         if not isinstance(model, dict):
             skipped[str(detail['id'])] = 'no-earlier-circuit-model'
-            details.append(detail)
+            details.append(without_legacy_presentation(detail))
             continue
         if (model.get('training') or {}).get('lastDate', '9999') >= str(detail.get('date') or ''):
             skipped[str(detail['id'])] = 'training-date-not-earlier'
-            details.append(detail)
+            details.append(without_legacy_presentation(detail))
             continue
         try:
             updated = build_forecast(detail, model)
@@ -45,7 +79,7 @@ def apply(bundle, models):
             changed.append(str(detail['id']))
         except Exception as exc:
             skipped[str(detail['id'])] = type(exc).__name__ + ': ' + str(exc)
-            details.append(detail)
+            details.append(without_legacy_presentation(detail))
     out['details'] = details
     meta = dict(out.get('meta') or {})
     meta['learnedForecastOverlayCount'] = len(changed)
