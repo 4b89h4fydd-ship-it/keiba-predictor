@@ -13,7 +13,7 @@ name: ARVEXQ Validation
       - .github/workflows/arvexq-*.yml
       - requirements.txt
   push:
-    branches: [main]
+    branches: [main, feature/forecast-reset-20261016]
     paths:
       - app.py
       - build_static.py
