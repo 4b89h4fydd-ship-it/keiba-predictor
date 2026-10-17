@@ -5,7 +5,7 @@ import json
 import pytest
 
 from arvexq.forecast.preoff_capture import capture_preoff_features
-from arvexq.forecast.preoff_evidence_store import append_capture, open_store
+from arvexq.forecast.preoff_evidence_store import append_capture, open_store, digest
 from arvexq.forecast.preoff_d1_transport import prepare_payload, upload_capture
 
 JST = timezone(timedelta(hours=9))
@@ -25,6 +25,15 @@ def fixture(tmp_path):
               ]}
     snap, rec = capture_preoff_features(detail, [1, 2, 3, 4],
                                          now=datetime(2026, 8, 1, 11, 30, tzinfo=JST))
+    # Transport unit fixture stays small; real full-field payload limits are
+    # independently audited and must never be silently truncated by uploader.
+    for row in snap["rows"]:
+        row["features"] = {"static::age": float(row["features"]["static::age"]),
+                           "static::carried_weight": float(row["features"]["static::carried_weight"])}
+        row["featureCount"] = len(row["features"])
+    snap["featureHash"] = digest({k: v for k, v in snap.items() if k != "featureHash"})
+    rec["featureHash"] = snap["featureHash"]
+    rec["receiptHash"] = digest({k: v for k, v in rec.items() if k != "receiptHash"})
     conn = open_store(tmp_path / "capture.sqlite")
     cid = append_capture(conn, snap, rec, clock=rec["capturedAtEpoch"] + 5)
     return conn, cid, rec
