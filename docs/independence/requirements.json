@@ -337,16 +337,23 @@
     {
       "id": 14,
       "name": "発走時刻取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.race_fields.start_time",
+      "files": [
+        "arvexq/ingest/race_fields/start_time.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official race card",
+      "output": "source-observed independent race field",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_race_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official ingestion path connected; NAR and other source paths and production unverified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -359,16 +366,25 @@
     {
       "id": 15,
       "name": "芝・ダート・障害区分取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.race_fields.surface",
+      "files": [
+        "arvexq/ingest/race_fields/surface.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
+      "dependencies": [
+        "arvexq.ingest.race_fields.course"
+      ],
+      "input": "JRA official race card",
+      "output": "source-observed independent race field",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_race_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official ingestion path connected; NAR and other source paths and production unverified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -381,16 +397,25 @@
     {
       "id": 16,
       "name": "距離取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.race_fields.distance",
+      "files": [
+        "arvexq/ingest/race_fields/distance.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
+      "dependencies": [
+        "arvexq.ingest.race_fields.course"
+      ],
+      "input": "JRA official race card",
+      "output": "source-observed independent race field",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_race_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official ingestion path connected; NAR and other source paths and production unverified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -403,16 +428,23 @@
     {
       "id": 17,
       "name": "コース情報取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.race_fields.course",
+      "files": [
+        "arvexq/ingest/race_fields/course.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official race card",
+      "output": "source-observed independent race field",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_race_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official ingestion path connected; NAR and other source paths and production unverified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -447,16 +479,23 @@
     {
       "id": 19,
       "name": "賞金情報取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.race_fields.prize",
+      "files": [
+        "arvexq/ingest/race_fields/prize.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official race card",
+      "output": "source-observed independent race field",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_race_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official ingestion path connected; NAR and other source paths and production unverified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
