@@ -5,7 +5,7 @@ and result-dependent feature reconstruction are deliberately absent.
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timezone, timedelta
 from hashlib import sha256
 from math import exp, isfinite, log, sqrt
 import json
@@ -51,11 +51,19 @@ def _validate_race(race, *, labelled):
             or not isinstance(post, int) or isinstance(post, bool)
             or captured <= 0 or captured >= post):
         raise ValueError("independently captured pre-off timestamp required")
+    jst = timezone(timedelta(hours=9))
+    if datetime.fromtimestamp(post, jst).date().isoformat() != day:
+        raise ValueError("scheduled post date differs from race date")
     if not isinstance(race.get("snapshotHash"), str) or len(race["snapshotHash"]) < 16:
         raise ValueError("immutable snapshot identity required")
     horses = race.get("horses")
     if not isinstance(horses, list) or len(horses) < 3:
         raise ValueError("full field of three or more horses required")
+    declared = race.get("declaredHorseNumbers")
+    if (not isinstance(declared, list) or len(declared) != len(horses)
+            or any(type(n) is not int or n <= 0 for n in declared)
+            or len(set(declared)) != len(declared)):
+        raise ValueError("external active-runner roster required")
     numbers = set()
     winners = 0
     for horse in horses:
@@ -80,6 +88,8 @@ def _validate_race(race, *, labelled):
             if type(finish) is not int or finish <= 0 or finish > len(horses):
                 raise ValueError("complete positive finish labels required")
             winners += int(finish == 1)
+    if numbers != set(declared):
+        raise ValueError("active runners do not match the declared roster")
     if labelled and winners != 1:
         raise ValueError("exactly one winner required (dead heats need a separate model)")
     return race
