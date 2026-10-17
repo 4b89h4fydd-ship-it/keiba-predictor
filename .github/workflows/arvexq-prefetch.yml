@@ -734,11 +734,13 @@ jobs:
               'receiptCount': len(list(Path('research-preoff-receipts').glob('*.json'))),
               'productionRecommendedTicketsChanged': False,
           }
-          output['captureVerified'] = (
-              output['captureReportPresent'] and
-              output['receiptCount'] > 0 and
-              len((output['capture'] or {}).get('saved') or []) == output['receiptCount']
+          from arvexq.backtest.audit_research_capture import audit_capture
+          receipt_audit = audit_capture(
+              'research-preoff-receipts',
+              output['capture'] if output['captureReportPresent'] else None,
           )
+          output['receiptAudit'] = receipt_audit
+          output['captureVerified'] = receipt_audit['verified']
           Path('research-operational-report.json').write_text(
               json.dumps(output, ensure_ascii=False, indent=2) + '\\n')
           print('RESEARCH_CAPTURE_OPERATIONAL', json.dumps({
