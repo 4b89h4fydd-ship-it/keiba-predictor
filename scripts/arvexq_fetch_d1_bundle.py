@@ -16,6 +16,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
+from arvexq.ingest.full_snapshot_codec import KEY as FULL_PAYLOAD_KEY, unpack_detail
+
 
 def get_json(url: str, timeout: float, retries: int) -> dict[str, Any]:
     last: Exception | None = None
@@ -39,7 +41,10 @@ def detail_from_response(value: dict[str, Any], rid: str) -> dict[str, Any] | No
     candidates = [value, value.get("detail"), value.get("race")]
     for item in candidates:
         if isinstance(item, dict) and str(item.get("id") or "") == rid:
-            return item
+            detail = unpack_detail(item) if FULL_PAYLOAD_KEY in item else item
+            if str(detail.get("id") or "") != rid:
+                raise ValueError("restored full payload race identity mismatch")
+            return detail
     return None
 
 
