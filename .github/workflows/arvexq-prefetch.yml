@@ -680,6 +680,7 @@ jobs:
           set -euo pipefail
           TRAIN_DATE=$(date -u -d "$TARGET_DATE - 1 day" +%F)
           mkdir -p .arvexq-data
+          rm -f .arvexq-data/research-models.json
           if python scripts/arvexq_fetch_d1_bundle.py \
             --api-base "$CLOUDFLARE_API_BASE" \
             --date "$TRAIN_DATE" \
