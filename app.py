@@ -3094,22 +3094,7 @@ from arvexq.ingest.environment_values import _env_clean_weather, _env_clean_cond
 
 from arvexq.ingest.nar_environment_parser import _parse_nar_environment_html
 
-def _parse_jra_environment_html(html:str, surface:str="")->dict:
-    if not html:return {}
-    soup=BeautifulSoup(html,"html.parser")
-    full=_jra_text(soup)
-    out={"surfaceConditions":{}}
-    wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
-    if wm:out["weather"]=_env_clean_weather(wm.group(1))
-    for surf,label in (("芝","芝"),("ダート","ダート")):
-        cm=re.search(re.escape(label)+r"\s*[：:]?\s*(不良|稍重|重|良)",full)
-        if cm:out["surfaceConditions"][surf]=_env_clean_condition(cm.group(1))
-    if surface=="障害":
-        c=out["surfaceConditions"].get("芝") or out["surfaceConditions"].get("ダート")
-    else:
-        c=out["surfaceConditions"].get(surface)
-    if c:out["condition"]=c
-    return out
+from arvexq.ingest.jra_environment_parser import _parse_jra_environment_html
 
 def _environment_http_get(url:str, ttl:int=30)->str:
     now=time.time()
