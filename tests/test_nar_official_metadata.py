@@ -258,7 +258,8 @@ class NarOfficialMetadataTests(unittest.TestCase):
             self.assertEqual(len(complete["recentRaces"]), 5)
             self.assertEqual(len(complete["allPastRuns"]), 8)
             limited = source.horse_history({"name": "検証馬"}, {"date": "2026-10-09"}, limit=3)
-            self.assertEqual(len(limited["allPastRuns"]), 3)
+            self.assertEqual(len(limited["recentRaces"]), 5)
+            self.assertEqual(len(limited["allPastRuns"]), 8)
 
     def test_overlapping_race_rows_keep_course_and_going_observations(self):
         import csv
