@@ -2993,18 +2993,7 @@ _smart_cache_lock=threading.Lock(); _smart_cache:dict[str,tuple[float,dict]]={}
 _enrich_jobs_lock=threading.Lock(); _enrich_jobs:dict[str,dict]={}
 _enrich_data_lock=threading.Lock(); _enrich_data:dict[str,dict]={}
 
-def _safe_float(v):
-    try:
-        if v is None or v=="": return None
-        if isinstance(v,str):
-            m=re.search(r"-?\d+(?:\.\d+)?",v.replace(",","").strip())
-            if not m:return None
-            v=m.group(0)
-        return float(v)
-    except Exception:return None
-
-def _safe_int(v):
-    x=_safe_float(v); return int(x) if x is not None else None
+from arvexq.ingest.environment_values import _safe_float, _safe_int
 
 def _smart_normalize_row(x:dict)->dict|None:
     if not isinstance(x,dict):return None
@@ -3208,17 +3197,7 @@ _environment_state:dict[str,dict]={}
 _environment_http_lock=threading.Lock()
 _environment_http_cache:dict[str,tuple[float,dict]]={}
 
-def _env_clean_weather(v:str)->str:
-    s=_clean(v)
-    for x in ("小雨","小雪","晴","曇","雨","雪"):
-        if x in s:return x
-    return "不明"
-
-def _env_clean_condition(v:str)->str:
-    s=_clean(v)
-    for x in ("不良","稍重","重","良"):
-        if x in s:return x
-    return "不明"
+from arvexq.ingest.environment_values import _env_clean_weather, _env_clean_condition
 
 def _parse_nar_environment_html(html:str)->dict:
     if not html:return {}
