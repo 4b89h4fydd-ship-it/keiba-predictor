@@ -673,6 +673,60 @@ jobs:
               --report morning-d1-audit.json
           fi
 
+      - name: Prepare previous-day research training corpus (optional)
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          TRAIN_DATE=$(date -u -d "$TARGET_DATE - 1 day" +%F)
+          mkdir -p .arvexq-data
+          rm -f .arvexq-data/research-models.json
+          if python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --date "$TRAIN_DATE" \
+            --out research-training-day.json \
+            --report research-training-fetch.json \
+            --workers 3 --allow-missing-details; then
+            python scripts/arvexq_train_research_models.py \
+              --input research-training-day.json \
+              --target-date "$TARGET_DATE" \
+              --output .arvexq-data/research-models.json \
+              --report research-training-model-report.json
+          else
+            echo "::warning::RESEARCH_TRAINING_UNAVAILABLE; no unverified model substituted"
+          fi
+
+      - name: Capture optional preoff research candidates (not production picks)
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL_PATH=".arvexq-data/research-models.json"
+          if [ ! -s "$MODEL_PATH" ]; then
+            echo "RESEARCH_CAPTURE_SKIPPED: earlier trained circuit models unavailable"
+            exit 0
+          fi
+          if [ ! -s prefetch-payload.json ]; then
+            echo "RESEARCH_CAPTURE_SKIPPED: no prepared race payload"
+            exit 0
+          fi
+          python scripts/arvexq_capture_batch_research.py \
+            --bundle prefetch-payload.json \
+            --models "$MODEL_PATH" \
+            --receipt-dir research-preoff-receipts \
+            --report research-preoff-capture-report.json
+
+      - name: Archive research-only preoff receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-research-preoff-${{ github.run_id }}
+          path: |
+            research-preoff-receipts/
+            research-preoff-capture-report.json
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Stop ARVEXQ
         if: always()
         run: |
