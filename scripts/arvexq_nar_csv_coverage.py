@@ -86,13 +86,18 @@ def main():
     parser.add_argument("archives", nargs="+", help="Local NAR official CSV ZIP or directory")
     parser.add_argument("--output", help="Optional JSON report path")
     parser.add_argument("--target-date", help="Target race date YYYY-MM-DD for prior-run coverage")
+    parser.add_argument("--require-prior-history", action="store_true", help="Fail when any target runner lacks an earlier observed archive run; requires --target-date")
     args = parser.parse_args()
+    if args.require_prior_history and not args.target_date:
+        parser.error("--require-prior-history requires --target-date")
     report = audit(args.archives, target_date=args.target_date)
     rendered = json.dumps(report, ensure_ascii=False, indent=2)
     if args.output:
         from pathlib import Path
         Path(args.output).write_text(rendered + "\n", encoding="utf-8")
     print(rendered)
+    if args.require_prior_history and (not report["targetHorsesWithRaceRows"] or report["targetHorsesWithNoEarlierArchiveRuns"]):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
