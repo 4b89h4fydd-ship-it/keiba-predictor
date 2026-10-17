@@ -1,0 +1,61 @@
+name: ARVEXQ Revision Production Preflight
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/forecast-reset-20261016]
+    paths: ['.github/workflows/arvexq-revision-production-preflight.yml']
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Discover authorized account
+        run: |
+          if [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then exit 0; fi
+          npx --yes wrangler@4 whoami --json > /tmp/whoami.json
+          python - <<'PY'
+          import json,os
+          accounts=json.load(open('/tmp/whoami.json'))['accounts'];assert len(accounts)==1
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('CLOUDFLARE_ACCOUNT_ID='+accounts[0]['id']+'\n')
+          PY
+      - name: Preserve production source and confirm D1 binding and rollback versions
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,urllib.request
+          from pathlib import Path
+          out=Path('/tmp/production-before-revisions');out.mkdir()
+          base='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/'
+          report={}
+          for name in ('kraiz-api','kraizweb1'):
+              def fetch(suffix):
+                  req=urllib.request.Request(base+name+suffix,headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']})
+                  with urllib.request.urlopen(req,timeout=60) as r:return r.read()
+              raw=fetch('');(out/(name+'.multipart')).write_bytes(raw)
+              boundary=raw.split(b'\r\n',1)[0]
+              source=raw.split(b'\r\n\r\n',1)[1].rsplit(b'\r\n'+boundary,1)[0]
+              settings=json.loads(fetch('/settings'))['result']
+              versions=json.loads(fetch('/versions'))
+              (out/(name+'-settings.json')).write_text(json.dumps(settings))
+              (out/(name+'-versions.json')).write_text(json.dumps(versions))
+              if name=='kraiz-api':
+                  binding=next(b for b in settings['bindings'] if b['name']=='DB')
+                  assert binding['type']=='d1' and binding['id']=='c68ca1ac-357a-4c1f-81ce-0b6337716809'
+              report[name]={'sourceSha256':hashlib.sha256(source).hexdigest(),'multipartSha256':hashlib.sha256(raw).hexdigest(),'compatibilityDate':settings['compatibility_date'],'versions':versions.get('result')}
+          (out/'preflight.json').write_text(json.dumps(report,indent=2))
+          print(json.dumps(report,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cloudflare-before-forecast-revisions
+          path: /tmp/production-before-revisions
+          retention-days: 14
