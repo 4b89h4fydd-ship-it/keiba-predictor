@@ -1,4 +1,5 @@
 import { publicRaceResponse } from "./public-race.js";
+import { handlePreoffCapture } from "./preoff-evidence.js";
 import legacyWorker from "./worker.js";
 import { readRacecard, readRaceDisplay } from "./racecard.js";
 
@@ -144,6 +145,10 @@ export default {
 
     // Safari/WebKit can preflight fetch(..., {cache:'no-store'}). The legacy
     // worker returned a bare 204, which fails WebKit's CORS access-control check.
+    if (url.pathname === "/api/research/preoff-evidence") {
+      return handlePreoffCapture(request, env);
+    }
+
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
