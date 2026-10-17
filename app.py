@@ -496,6 +496,12 @@ def _jra_merge_runs(a:list[dict],b:list[dict],limit:int=5)->list[dict]:
     allr.sort(key=lambda r:str(r.get("date") or ""),reverse=True)
     return allr[:limit]
 
+from arvexq.ingest.race_fields.start_time import extract as jra_start_time
+from arvexq.ingest.race_fields.course import extract as jra_course
+from arvexq.ingest.race_fields.distance import extract as jra_distance
+from arvexq.ingest.race_fields.surface import extract as jra_surface
+from arvexq.ingest.race_fields.prize import extract_first_prize as jra_first_prize
+
 def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
     cache_sec=int(os.getenv("JRA_LIVE_ODDS_CACHE_SEC","45")) if date==_today_iso() else 600
@@ -517,12 +523,10 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     soup=BeautifulSoup(html,"html.parser")
     full=_jra_text(soup)
     if not date or not track or not race_no:return None
-    sm=re.search(r"発走時刻[：:]\s*(\d{1,2})時(\d{2})分",full)
-    start=f"{int(sm.group(1)):02d}:{sm.group(2)}" if sm else ""
-    dm=re.search(r"コース\s*[：:]?\s*([\d,]+)\s*メートル\s*[（(]([^）)]+)[）)]",full)
-    distance=int(dm.group(1).replace(",","")) if dm else 0
-    course_desc=dm.group(2) if dm else ""
-    surface="芝" if "芝" in course_desc else ("ダート" if "ダート" in course_desc else ("障害" if "障" in course_desc else ""))
+    start=jra_start_time(full)
+    course_desc,_=jra_course(full)
+    distance=jra_distance(full)
+    surface=jra_surface(full)
     weather="不明"; condition="不明"
     wm=re.search(r"天候\s*([^\s]+)",full)
     if wm:weather=wm.group(1)[:4]
@@ -538,11 +542,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
             continue
         title=tx;break
     if not title:title=f"{race_no}R"
-    prize1=0
-    pm=re.search(r"1着\s*([\d,.]+)",full)
-    if pm:
-        try:prize1=int(float(pm.group(1).replace(",",""))*10000)
-        except:pass
+    prize1=jra_first_prize(full)
     horses=[]
     withdrawn_entries=[]
     target_table=None
