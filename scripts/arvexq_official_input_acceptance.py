@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -14,7 +15,25 @@ from pathlib import Path
 import os
 
 
-def summarize_jra(races, target_date):
+def official_jra_roster_size(html):
+    from bs4 import BeautifulSoup
+    import re
+    soup=BeautifulSoup(html,'html.parser')
+    for table in soup.find_all('table'):
+        heading=table.find('thead') or table
+        if '馬番' not in heading.get_text() or '前走' not in heading.get_text():
+            continue
+        entries=[]
+        for row in table.find_all('tr'):
+            # Count official horse-profile identities in source rows independently
+            # of the racecard parser's horse-name and fieldSize output.
+            ids=re.findall(r'pw01dud[0-9]{12,}(?:/|%2F)[0-9A-Fa-f]{2}',str(row))
+            if ids:entries.append(ids[0].replace('%2F','/'))
+        return len(set(entries)) if entries else None
+    return None
+
+
+def summarize_jra(races, target_date, source_rosters=None):
     from arvexq.prediction.past_performance import observed_runs
     by_id = {}
     invalid = []
@@ -30,7 +49,7 @@ def summarize_jra(races, target_date):
         numbers = [h.get('horseNumber') for h in horses]
         histories = [len(observed_runs(h,race,limit=None)) for h in horses]
         rows.append({'raceId':rid, 'reportedFieldSize':race.get('fieldSize'),
-                     'acquiredEntries':len(horses), 'uniqueHorseNumbers':len(set(numbers)),
+                     'acquiredEntries':len(horses), 'sourceRosterEntries':(source_rosters or {}).get(rid), 'uniqueHorseNumbers':len(set(numbers)),
                      'invalidHorseNumbers':sum(type(n) is not int or n<=0 for n in numbers),
                      'observedPriorRuns':sum(histories),
                      'horsesWithPriorRuns':sum(n>0 for n in histories),
@@ -40,14 +59,16 @@ def summarize_jra(races, target_date):
                                       for key in ('name','jockey','trainer','carriedWeight')},
                      'lifetimeCompleteProven':False})
     horses = sum(r['acquiredEntries'] for r in rows)
-    expected = sum(r['reportedFieldSize'] or 0 for r in rows)
+    verified=all(r['sourceRosterEntries'] is not None for r in rows) and bool(rows)
+    expected=sum(r['sourceRosterEntries'] or 0 for r in rows) if verified else None
     return {'targetDate':target_date, 'races':len(rows), 'acquiredEntries':horses,
-            'reportedFieldSizeTotal':expected,
+            'officialSourceRosterTotal':expected, 'sourceRosterVerified':verified,
             'entryCoveragePercent':100*horses/expected if expected else None,
             'invalidRaceIds':invalid,
             'fieldMismatches':[r['raceId'] for r in rows if not r['acquiredEntries']
                                or r['acquiredEntries'] != r['reportedFieldSize']
-                               or r['acquiredEntries'] != r['uniqueHorseNumbers'] or r['invalidHorseNumbers']],
+                               or r['acquiredEntries'] != r['uniqueHorseNumbers'] or r['invalidHorseNumbers']
+                               or (r['sourceRosterEntries'] is not None and r['sourceRosterEntries'] != r['acquiredEntries'])],
             'observedPriorRuns':sum(r['observedPriorRuns'] for r in rows),
             'horsesWithPriorRuns':sum(r['horsesWithPriorRuns'] for r in rows),
             'horsesWithoutPriorRuns':sum(r['horsesWithoutPriorRuns'] for r in rows),
@@ -64,9 +85,43 @@ def acquire(output, target_date, min_races=30, nar_months=3):
               'stageOneComplete':False,'errors':[]}
     try:
         races = app.fetch_jra_official(target_date)
+        from arvexq.databanks.legacy_bridge import _jra_history_adapter
+        from arvexq.ingest.full_career import merge_career
+        fetch_history=_jra_history_adapter(vars(app))
+        history_errors=[]
+        def full_history(pair):
+            horse,race=pair
+            try:
+                payload=fetch_history(horse,race,500) if fetch_history else {}
+                merged=merge_career(horse.get('allPastRuns'),
+                    [*(horse.get('recentRaces') or []),*(payload.get('allPastRuns') or [])],target_date)
+                horse['allPastRuns']=merged
+                horse['recentRaces']=merged[:5]
+                horse['_careerHistoryAudit']={'complete':False,'status':'official-profile-observed-not-lifetime-certified',
+                    'requestedAtRaceDate':target_date,'observedRuns':len(merged),'requestedLimit':500}
+            except Exception as exc:
+                history_errors.append({'raceId':race.get('id'),'horseNumber':horse.get('horseNumber'),'error':str(exc)})
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            list(pool.map(full_history,[(h,r) for r in races for h in r.get('horses',[])]))
+        sources=output/'jra-official-html';sources.mkdir(exist_ok=True)
+        source_rosters={}
+        for race in races:
+            cname=race.get('jraCname') or ''
+            cache=app._jra_text_cache.get('https://www.jra.go.jp/JRADB/accessD.html|'+cname)
+            if cache:
+                source_rosters[race['id']]=official_jra_roster_size(cache[1])
+        source_index=[]
+        for key,(_,html) in app._jra_text_cache.items():
+            name=sha256(key.encode()).hexdigest()+'.html'
+            (sources/name).write_text(html)
+            source_index.append({'requestKey':key,'file':name,'sha256':sha256(html.encode()).hexdigest()})
+        (sources/'index.json').write_text(json.dumps(source_index,ensure_ascii=False,indent=2))
         data = json.dumps(races,ensure_ascii=False).encode()
         (output/'jra-official-racecards.json').write_bytes(data)
-        report['JRA'] = summarize_jra(races,target_date)
+        report['JRA'] = summarize_jra(races,target_date,source_rosters)
+        report['JRA']['fullHistoryErrors']=history_errors
+        report['JRA']['profileHistoryLimit']=500
+        report['JRA']['savedOfficialHtmlResponses']=len(source_index)
         report['JRA']['racecardsSha256'] = sha256(data).hexdigest()
     except Exception as exc:
         report['errors'].append({'circuit':'JRA','type':type(exc).__name__,'error':str(exc)})
@@ -87,7 +142,7 @@ def acquire(output, target_date, min_races=30, nar_months=3):
         report['errors'].append({'circuit':'NAR','type':type(exc).__name__,'error':str(exc)})
     jra, nar = report.get('JRA',{}), report.get('NAR',{})
     report['entryDeliveryGatePassed'] = bool(
-        jra.get('races',0)>=min_races and not jra.get('invalidRaceIds') and not jra.get('fieldMismatches')
+        jra.get('races',0)>=min_races and jra.get('sourceRosterVerified') is True and not jra.get('invalidRaceIds') and not jra.get('fieldMismatches')
         and nar.get('targetRaces',0)>=min_races and not nar.get('targetFieldSizeMismatches'))
     report['finishedAt'] = datetime.now(timezone.utc).isoformat()
     report['limitations'] = ['Entry delivery does not prove lifetime history completeness.',

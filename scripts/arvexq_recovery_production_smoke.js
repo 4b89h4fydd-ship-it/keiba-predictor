@@ -84,10 +84,14 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     red.forEach(x=>{assert.ok(x.value>0&&x.value<10);const c=x.color.match(/\d+/g).map(Number);assert.ok(c[0]>c[1]*1.25&&c[0]>c[2]*1.15,'single digit odds must be red')});
     const roles=await page.locator('.racecard-row').evaluateAll(rows=>rows.map(row=>({
       mark:row.querySelector('.rc-ai-mark')?.getAttribute('data-ai-mark')||'',
+      horseNumber:Number(row.querySelector('[data-horse-open]')?.getAttribute('data-horse-open')||0),
       win:!!row.querySelector('.arv-role-win'),axis:!!row.querySelector('.arv-role-axis')
     })));
-    verifyHonmeiRoles(roles,r.id);
-    assert.ok((await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count())<=1);
+    const deployedPolicy=await page.evaluate(()=>window.ARVEXQ_HONMEI_POLICY||'legacy');
+    const originalHonmei=(r.preRacePrediction?.horses||[]).filter(h=>h.mark==='◎').map(h=>Number(h.horseNumber));
+    verifyHonmeiRoles(roles,r.id,{legacyPolicy:deployedPolicy!=='unified-win-axis-v1',
+      originalHonmeiHorseNumbers:originalHonmei});
+    if(deployedPolicy!=='unified-win-axis-v1')console.log('PRODUCTION_LEGACY_HONMEI_POLICY '+r.id);
     // An intentionally aborted API prefetch may throw a WebKit access-control
     // pageerror. Ignore only that known effect inside the explicit outage
     // scenario; never ignore any other runtime error.
