@@ -9,6 +9,7 @@ from datetime import date, datetime, timezone, timedelta
 from hashlib import sha256
 from math import exp, isfinite, log, sqrt
 import json
+import re
 
 VERSION = "arvexq-race-softmax-research-v1"
 STATIC = frozenset(("age", "carried_weight", "body_weight",
@@ -23,12 +24,38 @@ def _digest(value):
     return sha256(raw.encode("utf-8")).hexdigest()
 
 
+_HISTORY = re.compile(
+    r"history::(?:all|same_track|same_surface|same_condition|same_track_surface|"
+    r"matched_clock_context|same_surface_condition|(?:same_track_|same_surface_)?distance_(?:100|200|400))"
+    r"::w(?:1|3|5|10|all)::"
+    r"(?:run_count|(?:finish_quality|win_flag|top2_flag|top3_flag|speed|clock_speed|"
+    r"early_speed|late_speed|position_quality|opponent_level|prize|margin|carried_weight|"
+    r"body_weight|distance)::(?:count|mean|median|max|min|last|std|q25|q75|trend|"
+    r"latest_minus_mean|latest_minus_median|range))"
+)
+_DELTA = re.compile(
+    r"delta::(?:same_track|same_surface|same_condition|distance_200|"
+    r"same_surface_distance_200|same_track_distance_200)_minus_"
+    r"(?:all|same_track|same_surface)::(?:finish_quality|speed|late_speed|"
+    r"position_quality|opponent_level)::w5"
+)
+_RELATIVE = re.compile(
+    r"relative::(.+)::(?:percentile|field_mean_delta|leader_gap|zscore)"
+)
+
+
 def _allowed_feature(key):
     if not isinstance(key, str) or any(block in key.lower() for block in BANNED):
         return False
-    return (key.startswith("history::") or key.startswith("relative::history::")
-            or key.startswith("delta::") or key.removeprefix("static::") in STATIC
-            and key.startswith("static::"))
+    if key.startswith("static::"):
+        return key[len("static::"):] in STATIC
+    if _HISTORY.fullmatch(key) or _DELTA.fullmatch(key):
+        return True
+    match = _RELATIVE.fullmatch(key)
+    return bool(match and (_HISTORY.fullmatch(match.group(1))
+                           or _DELTA.fullmatch(match.group(1))
+                           or match.group(1).startswith("static::")
+                           and match.group(1)[len("static::"):] in STATIC))
 
 
 def _validate_race(race, *, labelled):
