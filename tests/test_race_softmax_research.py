@@ -93,7 +93,7 @@ def test_training_rejects_mixed_circuits_families_and_insufficient_days():
         chronological_experiment(r)
     r = example()
     r[4] = make_race(r[4]["date"], family="jumps")
-    with pytest.raises(ValueError, match="separately"):
+    with pytest.raises(ValueError, match="separate"):
         chronological_experiment(r)
 
 
