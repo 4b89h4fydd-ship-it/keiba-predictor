@@ -14,6 +14,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from arvexq.pipeline.persisted_inputs import _career_rows, _history_observations_retained
+
 
 def read(path: str) -> dict[str, Any]:
     value = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -89,8 +91,13 @@ def repair_reason(prepared: Any, existing: Any) -> str:
         if not isinstance(horse, dict):
             continue
         old_h = old_horses.get(int(horse.get("horseNumber") or 0), {})
-        if len(horse.get("allPastRuns") or []) > len(old_h.get("allPastRuns") or []):
-            return "career_history_deeper"
+        try:
+            new_runs = _career_rows(horse, str(prepared.get("date") or ""))
+            old_runs = _career_rows(old_h, str(existing.get("date") or ""))
+        except (ValueError, TypeError, KeyError, RuntimeError):
+            return "career_archive_invalid"
+        if len(new_runs) > len(old_runs) or not _history_observations_retained(new_runs, old_runs):
+            return "career_history_missing_observations"
     return ""
 
 MORNING_FIELDS = ("morningPickVersion", "morningPickFixedAt", "morningPickScope",
