@@ -1728,16 +1728,23 @@
     {
       "id": 66,
       "name": "オッズ差分更新",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.odds_fields.delta",
+      "files": [
+        "arvexq/ingest/odds_fields/delta.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_attach_nar_live_odds"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "two observed win prices",
+      "output": "observed price difference or None",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_independent_odds_facts.py"
+      ],
+      "implementation_scope": "Active NAR live/restore integration; full source and production validation pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1794,16 +1801,23 @@
     {
       "id": 69,
       "name": "オッズ欠損判定",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.odds_fields.missing",
+      "files": [
+        "arvexq/ingest/odds_fields/missing.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_restore_saved_odds"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "stored observed win price",
+      "output": "missing-value classification",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_independent_odds_facts.py"
+      ],
+      "implementation_scope": "Active NAR live/restore integration; full source and production validation pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
