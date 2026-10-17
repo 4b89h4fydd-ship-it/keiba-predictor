@@ -384,7 +384,7 @@ jobs:
               if previous.weekday() in (5, 6):
                   days.append(previous)
           Path('research-training-dates.txt').write_text(
-              '\\n'.join(sorted({d.isoformat() for d in days}, reverse=True)[:3]) + '\\n')
+              '\n'.join(sorted({d.isoformat() for d in days}, reverse=True)[:3]) + '\n')
           PY
           mkdir -p research-training-inputs
           while IFS= read -r TRAIN_DATE; do
