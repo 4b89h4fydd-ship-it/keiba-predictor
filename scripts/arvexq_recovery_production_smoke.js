@@ -88,7 +88,6 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
   }
   async function worker(){while(cursor<chosen.length){const r=chosen[cursor++],page=await context.newPage();try{await check(page,r)}finally{await page.close()}}}
   try{
-    await Promise.all([worker(),worker(),worker()]);
     const r=chosen.find(r=>r.circuit==='地方')||chosen[0],page=await context.newPage();
     await page.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
     // Consume rejection even if another assertion closes the browser first;
@@ -127,6 +126,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     await page.waitForTimeout(300);
     assert.deepEqual(await page.locator('.rc-ai-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark'))),before,'odds refresh must not rewrite saved marks');
     await page.close();
+    await Promise.all([worker(),worker(),worker()]);
     // Exact recovered pre-off tickets must render even with the mutable API down.
     for(const [id,kind,patterns] of [
       ['nar-2026-10-10-高知-01','馬単',[/5\s*→\s*8/]],
