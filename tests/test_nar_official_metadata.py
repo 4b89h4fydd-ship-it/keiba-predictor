@@ -42,7 +42,7 @@ class NarOfficialMetadataTests(unittest.TestCase):
             registry._sources.pop("nar_official_csv", None)
             store.conn.close()
 
-    def test_existing_narsync_zip_registers_official_history(self):
+    def test_existing_narsync_daily_zip_registers_official_history(self):
         import csv
         import io
         import tempfile
@@ -52,7 +52,7 @@ class NarOfficialMetadataTests(unittest.TestCase):
         from arvexq.databanks.legacy_bridge import register_legacy_sources
         from arvexq.databanks.registry import registry
         with tempfile.TemporaryDirectory() as folder:
-            archive_path = Path(folder) / "202610_race.zip"
+            archive_path = Path(folder) / "daily_race.zip"
             race, horse = [""] * 66, [""] * 35
             for row in (race, horse):
                 row[0], row[1], row[2] = "金沢", "20261010", "1"
