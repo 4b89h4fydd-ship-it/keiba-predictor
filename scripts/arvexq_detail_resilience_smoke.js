@@ -72,6 +72,15 @@ const instrumented = source.replace(boot, `
  await t.page.locator('.rc-horse-main[data-horse-open="2"]').click();
  await t.page.waitForSelector('.horse-detail-page .recent');
  assert.equal(await t.page.locator('.horse-detail-page .recent').count(),Math.min(5,(detail.horses.find(h=>h.horseNumber===2).recentRaces||[]).length));
+ // A full-career-only source must retain factual history even without recentRaces.
+ await t.page.evaluate(()=>{
+   const horse=testDetail.state.race.horses.find(h=>h.horseNumber===2);
+   horse.allPastRuns=horse.recentRaces.slice();
+   horse.recentRaces=[];
+   testDetail.render();
+ });
+ await t.page.waitForSelector('.horse-detail-page .recent');
+ assert.equal(await t.page.locator('.horse-detail-page .recent').count(),5,'full-career-only history must be shown');
  await t.page.locator('[data-action="close-race-subpage"]').click();
  await t.page.locator('[data-panel="pace"]').click();await t.page.waitForSelector('#section-pace');
  await t.page.locator('[data-panel="entry"]').click();
