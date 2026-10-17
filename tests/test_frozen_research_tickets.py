@@ -3,7 +3,7 @@ from arvexq.backtest.frozen_research_tickets import evaluate_frozen_candidates
 
 
 def example():
-    return {'circuit':'地方','capturedAt':'2026-10-18T10:00:00+09:00',
+    return {'raceId':'nar-fixture-1','circuit':'地方','capturedAt':'2026-10-18T10:00:00+09:00',
             'scheduledOffAt':'2026-10-18T11:00:00+09:00',
             'preoffSourceVerified':True,'heldOutFromTraining':True,
             'candidate':{'kind':'単勝','combos':[[1]],
@@ -48,3 +48,13 @@ class FrozenResearchTicketTests(TestCase):
         out = evaluate_frozen_candidates([row, another])
         self.assertEqual(out['excluded']['invalid-ticket'], 1)
         self.assertEqual(out['excluded']['missing-frozen-candidate'], 1)
+
+    def test_duplicate_race_and_malformed_ticket_excluded(self):
+        original = example()
+        bad = example()
+        bad['raceId'] = 'different'
+        bad['candidate']['combos'] = [[1], [1]]
+        result = evaluate_frozen_candidates([original, original, bad])
+        self.assertEqual(result['byCircuit']['地方']['単勝']['evaluatedRaces'], 1)
+        self.assertEqual(result['excluded']['duplicate-race'], 1)
+        self.assertEqual(result['excluded']['invalid-ticket'], 1)
