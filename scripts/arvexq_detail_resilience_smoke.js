@@ -38,6 +38,7 @@ const instrumented = source.replace(boot, `
    await route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="app"></div></body></html>'});
   });
   await page.goto('https://arvexq.test/');
+  for(const name of fs.readdirSync(path.join(root,'arvexq/ui/static/forecast')).filter(n=>n.endsWith('.js')))await page.addScriptTag({content:fs.readFileSync(path.join(root,'arvexq/ui/static/forecast',name),'utf8')});
   await page.addStyleTag({content:['styles.css','styles/legacy_v118_v221.css','styles/race_v222_plus.css'].map(p=>fs.readFileSync(path.join(root,'arvexq/ui/static',p),'utf8')).join('\n')});
   await page.addScriptTag({content:fs.readFileSync(path.join(root,'arvexq/ui/static/research/live_odds.js'),'utf8')});
   await page.addScriptTag({content:instrumented});
