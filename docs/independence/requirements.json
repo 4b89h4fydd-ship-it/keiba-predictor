@@ -1043,16 +1043,24 @@
     {
       "id": 42,
       "name": "過去走日付",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.date",
+      "files": [
+        "arvexq/ingest/past_fields/date.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1065,16 +1073,24 @@
     {
       "id": 43,
       "name": "過去走競馬場",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.track",
+      "files": [
+        "arvexq/ingest/past_fields/track.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1087,16 +1103,24 @@
     {
       "id": 44,
       "name": "過去走距離",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.distance",
+      "files": [
+        "arvexq/ingest/past_fields/distance.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1109,16 +1133,24 @@
     {
       "id": 45,
       "name": "過去走馬場状態",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.going",
+      "files": [
+        "arvexq/ingest/past_fields/going.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1131,16 +1163,24 @@
     {
       "id": 46,
       "name": "過去走クラス",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.grade",
+      "files": [
+        "arvexq/ingest/past_fields/grade.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1153,16 +1193,24 @@
     {
       "id": 47,
       "name": "過去走着順",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.finish",
+      "files": [
+        "arvexq/ingest/past_fields/finish.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1175,16 +1223,24 @@
     {
       "id": 48,
       "name": "過去走走破時計",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.clock",
+      "files": [
+        "arvexq/ingest/past_fields/clock.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1197,16 +1253,24 @@
     {
       "id": 49,
       "name": "過去走着差",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.margin",
+      "files": [
+        "arvexq/ingest/past_fields/margin.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1219,16 +1283,24 @@
     {
       "id": 50,
       "name": "過去走通過順位",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.corners",
+      "files": [
+        "arvexq/ingest/past_fields/corners.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1241,16 +1313,24 @@
     {
       "id": 51,
       "name": "過去走上がり情報",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.last3f",
+      "files": [
+        "arvexq/ingest/past_fields/last3f.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1263,16 +1343,24 @@
     {
       "id": 52,
       "name": "過去走斤量",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.carried_weight",
+      "files": [
+        "arvexq/ingest/past_fields/carried_weight.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1285,16 +1373,24 @@
     {
       "id": 53,
       "name": "過去走騎手",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.jockey",
+      "files": [
+        "arvexq/ingest/past_fields/jockey.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1307,16 +1403,24 @@
     {
       "id": 54,
       "name": "過去走出走頭数",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.past_fields.field_size",
+      "files": [
+        "arvexq/ingest/past_fields/field_size.py",
+        "arvexq/ingest/past_fields/jra.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_past_cell",
+        "arvexq.ingest.past_fields.jra.parse_jra_history_cell"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA official historical cell text / DOM",
+      "output": "historical observation, no prediction",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_past_fields_independent.py"
+      ],
+      "implementation_scope": "JRA official path connected; NAR and external source adapters not yet migrated; not complete",
       "evidence": {
         "commit_sha": null,
         "unit": null,
