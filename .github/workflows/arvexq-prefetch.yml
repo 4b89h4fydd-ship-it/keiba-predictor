@@ -536,6 +536,7 @@ jobs:
           retention-days: 30
 
       - name: Calibrate ticket hit rates from sealed previous-day results
+        continue-on-error: true
         run: |
           python scripts/arvexq_empirical_ticket_calibration.py \
             --date "$TARGET_DATE" --api-base "$CLOUDFLARE_API_BASE"

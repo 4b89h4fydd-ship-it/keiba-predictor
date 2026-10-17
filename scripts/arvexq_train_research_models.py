@@ -2,7 +2,11 @@
 """Fit research models from a separate earlier dated D1 snapshot, never target races."""
 import argparse
 import json
+import sys
 from pathlib import Path
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 from arvexq.prediction.learned_scenarios import fit_model
 
 

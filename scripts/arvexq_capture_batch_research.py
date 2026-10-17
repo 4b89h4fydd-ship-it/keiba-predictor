@@ -6,7 +6,11 @@ The receipts are locally timed and still need independent provenance review.
 """
 import argparse
 import json
+import sys
 from pathlib import Path
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 from arvexq.prediction.new_forecast import build_forecast
 from arvexq.backtest.freeze_research_candidate import freeze_research_candidate
 
