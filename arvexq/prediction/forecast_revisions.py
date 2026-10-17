@@ -11,6 +11,7 @@ import json
 from math import isfinite
 
 from arvexq.prediction.new_forecast import build_forecast
+from arvexq.prediction.past_performance import observed_runs
 
 VERSION='arvexq-forecast-revision-v1'
 ORIGINAL_KEYS=('preRacePrediction','preRaceBet','morningMarkSnapshot','officialMarkRevisions',
@@ -62,7 +63,8 @@ def append_revision(detail, model=None, *, at=None):
         horses.append({'horseNumber':no,'mark':ev.get('mark',''),
             'reason':ev.get('markReason',''),'forecastText':ev.get('forecastText',''),
             'probabilities':probabilities,'probabilityRanges':ev.get('modelProbabilities',{}),
-            'observedHistory':(ev.get('wholeCareerEvidence') or {}).get('rateEvidence',{})})
+            'observedHistory':(ev.get('wholeCareerEvidence') or {}).get('rateEvidence',{}),
+            'recentRaces':[{k:r.get(k) for k in ('date','track','distance','surface','condition','finish','fieldSize','cornerPositions','last3fSeconds','marginSeconds') if r.get(k) is not None} for r in observed_runs(horse,detail,limit=5)]})
     if sum(h['mark']=='◎' for h in horses)>1:
         raise ValueError('multiple revision honmei')
     body={'version':VERSION,'raceId':detail['id'],'raceDate':detail['date'],

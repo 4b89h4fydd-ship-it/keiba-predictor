@@ -1662,6 +1662,7 @@ function predictionFromSavedRevision(r,v){
   var by={};v.horses.forEach(function(h){by[n(h.horseNumber)]=h});
   var rows=(r.horses||[]).map(function(h){var saved=by[n(h.horseNumber)],prob=saved.probabilities||{},
       horse=Object.assign({},h),mark=isScratchHorse(h)?'':String(saved.mark||'');
+    if(Array.isArray(saved.recentRaces))horse.recentRaces=saved.recentRaces;
     return {horse:horse,predMark:mark,predRank:({'◎':1,'○':2,'▲':3,'△':4,'☆':5,'注':6})[mark]||999,
       honmeiRole:mark==='◎'?'win-axis':'',preOffAxisCandidate:mark==='◎',podiumAxisEligible:false,
       honmeiGrade:'C',overallGrade:'C',overallScore:null,overallScoreExact:null,threeFactorCoverage:0,
