@@ -32,7 +32,10 @@ class NarOfficialMetadataTests(unittest.TestCase):
             store = app.NarStore(Path(directory) / "test.db")
             sync = app.NarSync.__new__(app.NarSync)
             sync.parser, sync.store = app.NarArchiveParser(), store
-            with patch.object(app, "ARCHIVE_DIR", Path(directory)):
+            # Imported ZIP can live outside the default NarSync archive folder.
+            separate_archive_dir = Path(directory) / "managed-archives"
+            separate_archive_dir.mkdir()
+            with patch.object(app, "ARCHIVE_DIR", separate_archive_dir):
                 sync.import_zip_bytes(stream.getvalue(), "monthly-test", path)
             provider = registry.get("nar_official_csv")
             self.assertIsNotNone(provider)
