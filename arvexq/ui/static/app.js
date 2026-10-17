@@ -1580,10 +1580,7 @@ function latestAuthorizedMarkRevision(r){
   if(!model)return official;
   return Date.parse(String(model.revisedAt||''))>Date.parse(String(official.revisedAt||''))?model:official
 }
-function authorizedPreOffMarks(r){
-  return latestAuthorizedMarkRevision(r)||validMorningMarkSnapshot(r)||serverFrozenPrediction(r)||
-    (typeof window!=='undefined'&&window.ARVEXQSavedSnapshot&&window.ARVEXQSavedSnapshot.marks(r))
-}
+function authorizedPreOffMarks(r){return null;}
 function applyFrozenMarks(r,p){
   if(!r||!p||!Array.isArray(p.rows))return p;
   var latestRevision=latestSavedForecastRevision(r);
@@ -2054,22 +2051,10 @@ function markRoleLabel(x){
   if(x.markFrozen&&x.honmeiRole==='win')return '保存印：◎（旧単勝）';
   return x.markFrozen&&x.honmeiRole!=='win-axis'?'保存印：◎':'◎ 本命';
 }
-function visiblePredictionMark(x){
-  if(!x||isScratchHorse(x.horse))return '';
-  return String(x.predMark||'');
-}
+function visiblePredictionMark(x){return '';}
 function honmeiA11yText(x){return x&&markRoleLabel(x)?
   markRoleLabel(x)+'・勝ち切りと3着内安定性を合わせた本命（的中保証ではありません）':'';}
-function racecardMarkLegend(r){
-  var latestRevision=latestSavedForecastRevision(r);
-  if(latestRevision)return '<div class="rc-mark-legend"><b>◎</b> 1頭の本命　<b>○▲△☆注</b> 比較上位・相手候補　<span class="rc-mark-freeze-note">'+esc(latestRevision.analysisType==='retrospective'?'事後分析（最新保存版。発走前原本とは別）':'最新の保存予想')+'</span></div>';
-  var server=authorizedPreOffMarks(r),clock=raceMarkClock(r),
-      status=clock.started?'発走後の再計算印（発走前原本とは別）':
-        '発走前の最新AI印';
-  var original=clock.started?authorizedPreOffMarks(r):null,
-      axisNote=original&&original.horses&&!original.horses.some(function(h){return h.mark==='◎'})?'軸なし｜相手上位馬を評価　':'';
-  return '<div class="rc-mark-legend">'+esc(axisNote)+'<b>◎</b> 勝ち切りと3着内安定性を合わせた1頭の本命　<b>○</b> 1・2着　<b>▲</b> 2・3着　<b>△</b> 3着　<b>☆</b> 展開で上昇　<b>注</b> 見落とし注意　<span class="rc-mark-freeze-note">'+esc(status)+'</span></div>';
-}
+function racecardMarkLegend(r){return '<div class="rc-mark-legend"></div>';}
 function racecardEntryRow(r,h,x){
   var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
       fr=clamp(n(h.frameNumber,no),1,8),curBw=currentBodyWeight(h),
@@ -2436,18 +2421,7 @@ function currentBetEnginePlan(plan){
   // erase previously frozen tickets or recalculate them using final results.
   return plan&&Array.isArray(plan.items)&&(plan.items.length||plan.decision==='見送り')?plan:null
 }
-function frozenAiBetForRace(r){
-  if(!r||!r.id)return null;
-  var server=currentBetEnginePlan(verifiedSavedAiBet(r,r.preRaceBet));
-  if(server)return server;
-  var mod=window.ARVEXQMorningEvidence,original=r.morningTicketEvidence;
-  if(mod&&mod.verify(r,original)){
-    var fixed=currentBetEnginePlan(verifiedSavedAiBet(r,mod.sealedPlan(r,original)));
-    if(fixed)return fixed
-  }
-  return currentBetEnginePlan(verifiedSavedAiBet(r,loadStoredAiBet(r.id)))
-}
-// Outcome context is explanatory: it must not reorder or exclude ticket combos.
+function frozenAiBetForRace(r){return null;}
 function attachBetOutcomeAudit(plan,r,p){
   if(!plan||!p||plan.fixedAt)return plan;
   var o=p.outcome||paceOutcomeModel(r,p);if(!o)return plan;
