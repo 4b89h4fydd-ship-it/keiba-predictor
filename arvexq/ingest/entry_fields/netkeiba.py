@@ -1,10 +1,10 @@
 """Provider row composition. Field policies can be replaced independently."""
-from . import horse_number, frame_number, name, sex, age, carried_weight, jockey, trainer, body_weight, body_weight_change, win_odds, popularity, status
+from . import horse_number, frame_number, name, sex, age, carried_weight, jockey, trainer, body_weight, body_weight_change, win_odds, popularity, status, affiliation
 from .dom import horse_info
 
 FIELDS = {"name": name.extract, "sex": sex.extract, "age": age.extract,
           "carriedWeight": carried_weight.extract, "jockey": jockey.extract,
-          "trainer": trainer.extract, "bodyWeight": body_weight.extract,
+          "trainer": trainer.extract, "affiliation": affiliation.extract, "bodyWeight": body_weight.extract,
           "bodyWeightChange": body_weight_change.extract, "winOdds": win_odds.extract,
           "popularity": popularity.extract, "status": status.extract}
 
