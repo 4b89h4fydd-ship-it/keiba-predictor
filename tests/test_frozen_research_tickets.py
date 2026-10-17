@@ -58,3 +58,12 @@ class FrozenResearchTicketTests(TestCase):
         self.assertEqual(result['byCircuit']['地方']['単勝']['evaluatedRaces'], 1)
         self.assertEqual(result['excluded']['duplicate-race'], 1)
         self.assertEqual(result['excluded']['invalid-ticket'], 1)
+
+    def test_invalid_first_record_does_not_reserve_race(self):
+        bad = example()
+        bad['result']['payouts'] = []
+        good = example()
+        out = evaluate_frozen_candidates([bad, good])
+        self.assertEqual(out['excluded']['missing-official-payout'], 1)
+        self.assertEqual(out['byCircuit']['地方']['単勝']['evaluatedRaces'], 1)
+        self.assertNotIn('duplicate-race', out['excluded'])
