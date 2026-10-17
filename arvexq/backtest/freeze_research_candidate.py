@@ -24,7 +24,12 @@ def freeze_research_candidate(detail, plan, directory, *, captured_at=None):
         raise ValueError('not a research candidate')
     if not isinstance(candidate.get('combos'), list) or not 1 <= len(candidate['combos']) <= 10:
         raise ValueError('invalid ticket count')
+    if not isinstance(detail.get('horses'), list) or len(detail['horses']) < 2:
+        raise ValueError('race needs at least two horse records')
+    source_hash = sha256(json.dumps(detail, sort_keys=True, ensure_ascii=False,
+        separators=(',', ':'), allow_nan=False).encode('utf-8')).hexdigest()
     snapshot = {
+        'sourceRaceSha256': source_hash,
         'raceId': race_id, 'circuit': detail.get('circuit'),
         'capturedAt': now.isoformat(), 'scheduledOffAt': off.isoformat(),
         'candidate': candidate, 'modelVersion': plan.get('modelVersion'),
