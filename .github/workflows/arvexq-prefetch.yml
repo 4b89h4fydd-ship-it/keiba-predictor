@@ -489,12 +489,27 @@ jobs:
             const count = report?.receiptCount ?? 'unknown';
             const audited = report?.captureVerified === true;
             const trained = report?.training?.trainedCircuits ?? [];
+            const skipped = report?.capture?.skipped ?? {};
+            const failureCounts = {};
+            if (skipped && typeof skipped === 'object' && !Array.isArray(skipped)) {
+              for (const reason of Object.values(skipped)) {
+                const key = String(reason || 'unknown').slice(0, 160);
+                failureCounts[key] = (failureCounts[key] || 0) + 1;
+              }
+            }
+            const topFailures = Object.entries(failureCounts)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 5)
+              .map(([reason, count]) => count + ' x ' + reason)
+              .join('; ') || 'none';
             const body = [
               'ARVEXQ automated research-only capture audit',
               '- workflow run: ' + context.serverUrl + '/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId,
               '- target date (JST): ' + process.env.TARGET_DATE,
               '- trained circuits: ' + (trained.length ? trained.join(', ') : 'none/unknown'),
               '- frozen research receipts: ' + count,
+              '- skipped race count: ' + Object.keys(skipped).length,
+              '- most frequent skip reasons: ' + topFailures,
               '- receipt integrity verified (local only): ' + audited,
               '- independently proven preoff / held-out: false',
               '- production ticket target 80%: not established'
