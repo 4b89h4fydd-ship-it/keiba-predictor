@@ -686,7 +686,7 @@ jobs:
             --date "$TRAIN_DATE" \
             --out research-training-day.json \
             --report research-training-fetch.json \
-            --workers 3 --allow-missing-details; then
+            --workers 3; then
             python scripts/arvexq_train_research_models.py \
               --input research-training-day.json \
               --target-date "$TARGET_DATE" \
