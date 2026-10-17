@@ -1573,16 +1573,23 @@
     {
       "id": 60,
       "name": "複勝オッズ",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.place_odds",
+      "files": [
+        "arvexq/ingest/place_odds.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_parse_nar_live_odds_html"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "official NAR place odds price columns",
+      "output": "observed placeOddsLow and placeOddsHigh or absence",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_independent_place_odds.py"
+      ],
+      "implementation_scope": "NAR official flat row integrated, JRA and other provider pathways pending; deployment not verified",
       "evidence": {
         "commit_sha": null,
         "unit": null,
