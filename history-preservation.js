@@ -3,8 +3,7 @@
 const RICH_KEYS = Object.freeze(['recentRaces','allPastRuns']);
 export function needsHistoryPreservation(detail) {
   return !!detail && Array.isArray(detail.horses) && detail.horses.some(h =>
-    h && Number(h.horseNumber ?? h.horse_no) > 0 &&
-    RICH_KEYS.some(key => !Array.isArray(h[key]) || h[key].length === 0));
+    h && Number(h.horseNumber ?? h.horse_no) > 0);
 }
 export function mergeStoredHorseHistory(incoming, previousHorses) {
   if (!incoming || !Array.isArray(incoming.horses) || !Array.isArray(previousHorses)) return incoming;
