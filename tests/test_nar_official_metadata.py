@@ -156,6 +156,14 @@ class NarOfficialMetadataTests(unittest.TestCase):
             self.assertEqual(result["horseRowsMatchingRacePercent"], 100.0)
             self.assertEqual(result["horseRowsWithCarriedWeight"], 1)
             self.assertEqual(original_bytes, archive_path.read_bytes())
+            from unittest.mock import patch
+            from contextlib import redirect_stdout
+            from scripts.arvexq_nar_csv_coverage import main
+            with patch("sys.argv", ["audit", str(archive_path), "--target-date", "2026-10-12", "--require-prior-history"]):
+                with redirect_stdout(io.StringIO()), self.assertRaises(SystemExit) as failure:
+                    main()
+            self.assertEqual(failure.exception.code, 1)
+
 
     def test_same_name_different_birthdates_require_identity(self):
         import csv
