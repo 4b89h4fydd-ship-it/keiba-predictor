@@ -82,13 +82,23 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     const red=await page.evaluate(()=>Array.from(document.querySelectorAll('.rc-odds .odd.single')).map(x=>({value:Number(x.textContent),color:getComputedStyle(x).color})));
     red.forEach(x=>{assert.ok(x.value>0&&x.value<10);const c=x.color.match(/\d+/g).map(Number);assert.ok(c[0]>c[1]*1.25&&c[0]>c[2]*1.15,'single digit odds must be red')});
     assert.ok((await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count())<=1);
-    assert.equal(errors.length,0,'runtime errors '+errors.join(';'));
+    // An intentionally aborted API prefetch may throw a WebKit access-control
+    // pageerror. Ignore only that known effect inside the explicit outage
+    // scenario; never ignore any other runtime error.
+    const unexpected=errors.filter(message=>!(
+      page._arvexqIntentionalApiOutage &&
+      /Fetch API cannot load/.test(message) &&
+      /kraiz-api\.4b89h4fydd\.workers\.dev\/api\//.test(message) &&
+      /due to access control checks/.test(message)
+    ));
+    assert.equal(unexpected.length,0,'runtime errors '+unexpected.join(';'));
     page.off('pageerror',onerror);
     console.log('PRODUCTION_RECOVERY_PASS '+r.id+' horses='+r.horses.length+' diagnosis='+r.horses.length);
   }
   async function worker(){while(cursor<chosen.length){const r=chosen[cursor++],page=await context.newPage();try{await check(page,r)}finally{await page.close()}}}
   try{
     const r=chosen.find(r=>r.circuit==='地方')||chosen[0],page=await context.newPage();
+    page._arvexqIntentionalApiOutage=true;
     await page.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
     // Consume rejection even if another assertion closes the browser first;
     // a missing actual response is still an explicit failure when awaited.
@@ -133,6 +143,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       ['nar-2026-10-10-高知-05','馬連',[/1\s*-\s*5/,/3\s*-\s*5/]]
     ].filter(([id])=>records.some(r=>r.id===id))){
       const ticketPage=await context.newPage();
+      ticketPage._arvexqIntentionalApiOutage=true;
       await ticketPage.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
       await check(ticketPage,records.find(r=>r.id===id));
       assert.equal(await ticketPage.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),1,'stored axis appears in roster before changing panel');
