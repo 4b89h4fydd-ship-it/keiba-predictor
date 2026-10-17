@@ -29,7 +29,11 @@ function fixture() {
 function request(body,{auth=true,method='POST'}={}) {
   return new Request('https://example.com/api/research/preoff-evidence',{method,
     headers:{...(auth?{authorization:'Bearer '+token}:{}),'content-type':'application/json'},
-    ...(method==='POST'?{body:JSON.stringify(body)}:{})});
+    ...(method==='POST'?{body:JSON.stringify({
+      ...body,
+      snapshotCoreCanonical:body.snapshotCoreCanonical ?? stable(Object.fromEntries(Object.entries(body.snapshot).filter(([k])=>k!=='featureHash'))),
+      receiptCoreCanonical:body.receiptCoreCanonical ?? stable(Object.fromEntries(Object.entries(body.receipt).filter(([k])=>k!=='receiptHash')))
+    })}:{})});
 }
 function db() {
   const rows=new Map();
@@ -71,4 +75,18 @@ test('rejects changed feature data and unverified runner identity',async()=>{
 test('fails closed when D1 migration is missing',async()=>{
   const unavailable={prepare(){return {bind(){return this},async run(){throw new Error('no such table: forecast_preoff_evidence')}}}};
   const r=await run(fixture(),unavailable);assert.equal(r.status,503);
+});
+
+test('Python float token 55.0 hashes exactly, not JavaScript 55',async()=>{
+  const d=db(), b=fixture();
+  b.snapshot.rows[0].features['static::age']=55;
+  const core=stable(Object.fromEntries(Object.entries(b.snapshot).filter(([k])=>k!=='featureHash')));
+  b.snapshotCoreCanonical=core.replace('"static::age":55','"static::age":55.0');
+  b.snapshot.featureHash=createHash('sha256').update(b.snapshotCoreCanonical).digest('hex');
+  b.receipt.featureHash=b.snapshot.featureHash;
+  b.receiptCoreCanonical=stable(Object.fromEntries(Object.entries(b.receipt).filter(([k])=>k!=='receiptHash')));
+  b.receipt.receiptHash=hash(Object.fromEntries(Object.entries(b.receipt).filter(([k])=>k!=='receiptHash')));
+  let r=await run(b,d);
+  assert.equal(r.status,201);
+  assert.equal(d.rows.size,1);
 });
