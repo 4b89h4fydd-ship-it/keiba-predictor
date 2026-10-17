@@ -468,7 +468,7 @@ SOURCE = (
     "        try:\n"
     "            from arvexq.databanks.nar_official_csv import register_nar_official_archive\n"
     "            from arvexq.databanks.registry import registry\n"
-    "            paths = sorted(ARCHIVE_DIR.glob('*_race.zip'))\n"
+    "            paths = sorted(p for p in ARCHIVE_DIR.glob('*.zip') if p.name.endswith('_race.zip') or p.name == 'daily_race.zip')\n"
     "            if paths:\n"
     "                register_nar_official_archive(registry, paths=paths)\n"
     "        except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:\n"
