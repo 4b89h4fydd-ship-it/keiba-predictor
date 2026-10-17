@@ -27,8 +27,32 @@ class OverlayTests(unittest.TestCase):
         with patch('scripts.arvexq_apply_learned_overlay.build_forecast',
                    return_value={'recommendedBetPlan': {'items': [{'kind': '単勝'}]}}):
             result, report = apply({'details': [detail]}, models)
-        self.assertEqual(result['details'], [detail])
+        self.assertEqual(result['details'][0]['id'], detail['id'])
+        self.assertEqual(result['details'][0]['predictionStatus'], 'new-model-unavailable')
+        self.assertEqual(result['details'][0]['recommendedBetPlan']['items'], [])
         self.assertIn('ValueError', report['skipped']['race-1'])
+
+    def test_missing_new_model_removes_legacy_display_but_keeps_frozen_original(self):
+        detail = {
+            'id': 'race-2', 'date': '2026-10-17', 'circuit': '中央',
+            'aiEvaluation': {'old': True}, 'predictionModelVersion': 'old',
+            'recommendedBetPlan': {'items': [{'kind': '馬単'}]},
+            'preRacePrediction': {'frozen': True},
+            'preRaceBet': {'frozen': True},
+            'horses': [{'horseNumber': 1, 'name': 'A',
+                        'allPastRuns': [{'date': '2026-10-01'}],
+                        'integratedEvaluation': {'mark': '◎'}}],
+        }
+        output, report = apply({'details': [detail]}, {})
+        row = output['details'][0]
+        self.assertNotIn('aiEvaluation', row)
+        self.assertNotIn('predictionModelVersion', row)
+        self.assertNotIn('integratedEvaluation', row['horses'][0])
+        self.assertEqual(row['recommendedBetPlan']['items'], [])
+        self.assertEqual(row['preRacePrediction'], detail['preRacePrediction'])
+        self.assertEqual(row['preRaceBet'], detail['preRaceBet'])
+        self.assertEqual(row['horses'][0]['allPastRuns'], detail['horses'][0]['allPastRuns'])
+        self.assertEqual(report['overlaid'], [])
 
 
 if __name__ == '__main__':
