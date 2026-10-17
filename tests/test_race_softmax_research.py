@@ -1,6 +1,6 @@
 """Tests for the entirely separate, unapproved race-level research learner."""
 from copy import deepcopy
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 import pytest
 
 from arvexq.forecast.race_softmax_research import (
@@ -9,10 +9,13 @@ from arvexq.forecast.race_softmax_research import (
 
 
 def make_race(day, *, circuit="中央", family="flat", winner=2):
+    jst = timezone(timedelta(hours=9))
+    post = int(datetime.fromisoformat(day + "T12:00:00").replace(tzinfo=jst).timestamp())
     return {
+        "declaredHorseNumbers": [1, 2, 3, 4],
         "raceId": f"{circuit}-{family}-{day}", "date": day,
         "circuit": circuit, "family": family,
-        "capturedAtEpoch": 1700000000, "postAtEpoch": 1700003600,
+        "capturedAtEpoch": post - 4 * 3600, "postAtEpoch": post,
         "snapshotHash": "sha256:0123456789abcdef0123456789abcdef",
         "horses": [
             {"horseNumber": n, "finish": 1 if n == winner else (n + 1 if n < winner else n),
@@ -65,6 +68,7 @@ def test_label_change_after_capture_cannot_modify_prediction():
     lambda r: r.update(capturedAtEpoch=r["postAtEpoch"]),
     lambda r: r.update(snapshotHash=""),
     lambda r: r["horses"].pop(),
+    lambda r: r.update(declaredHorseNumbers=[1, 2, 3]),
     lambda r: r["horses"][1].update(horseNumber=1),
     lambda r: r["horses"][0].update(scratched=True),
     lambda r: r["horses"][0]["features"].update({"market::win_odds": 1.1}),
@@ -76,10 +80,6 @@ def test_label_change_after_capture_cannot_modify_prediction():
 def test_invalid_provenance_field_or_label_fails_closed(mutate):
     race = make_race("2026-08-13")
     mutate(race)
-    if len(race["horses"]) == 3 and sum(h["finish"] == 1 for h in race["horses"]) == 1:
-        # Full field must also be reconciled to the external official runner list.
-        # The local learner cannot infer missing runners without a signed roster.
-        return
     with pytest.raises((ValueError, TypeError)):
         _validate_race(race, labelled=True)
 
