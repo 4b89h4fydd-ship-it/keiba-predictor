@@ -15,6 +15,9 @@ def train_models(source, target_date):
     models, errors = {}, {}
     for circuit in ('中央', '地方'):
         subset = [d for d in eligible if d.get('circuit') == circuit]
+        if not subset:
+            errors[circuit] = 'no eligible earlier finalized races'
+            continue
         try:
             models[circuit] = fit_model(subset, circuit=circuit)
         except ValueError as exc:
