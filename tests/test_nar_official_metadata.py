@@ -148,6 +148,8 @@ class NarOfficialMetadataTests(unittest.TestCase):
             self.assertEqual(as_of["targetHorsesWithRaceRows"], 1)
             self.assertEqual(as_of["targetHorsesWithNoEarlierArchiveRuns"], 1)
             self.assertEqual(as_of["targetHorsesWithEarlierArchiveRuns"], 0)
+            self.assertEqual(as_of["targetHorsesWithFewerThanFiveEarlierRuns"], 1)
+            self.assertEqual(as_of["targetHistoryObservedRunCountDistribution"], {0: 1})
             self.assertEqual(result["raceRowsWithHorseEntries"], 1)
             self.assertEqual(result["raceRowsWithoutHorseEntries"], 0)
             self.assertEqual(result["raceKeysWithoutHorseEntries"], [])
