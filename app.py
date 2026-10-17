@@ -414,51 +414,15 @@ def _jra_track_from_cname(cname:str)->str:
     m=re.search(r"pw01dde(?:01|10)(\d{2})",cname or "")
     return JRA_TRACK_CODES.get(m.group(1),"") if m else ""
 
+from arvexq.ingest.past_fields.jra import parse_jra_history_cell
+
 def _jra_parse_past_cell(cell, cutoff:str) -> dict | None:
-    txt=_jra_text(cell)
-    dm=re.search(r"(20\d{2})年(\d{1,2})月(\d{1,2})日",txt)
-    if not dm:return None
-    iso=_jra_iso_date(int(dm.group(1)),int(dm.group(2)),int(dm.group(3)))
-    if cutoff and iso>=cutoff:return None
-    track=""
-    for t in list(JRA_TRACK_CODES.values())+["門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"]:
-        if re.search(r"(?:日|\s)"+re.escape(t)+r"(?:\s|$)",txt): track=t;break
-    finish=0
-    fm=re.search(r"(?<!\d)(\d{1,2})\s*着(?!\d)",txt)
-    if fm: finish=int(fm.group(1))
-    field=0
-    fsm=re.search(r"(\d{1,2})\s*頭",txt)
-    if fsm: field=int(fsm.group(1))
-    dist=0; surface=""
-    dsm=re.search(r"(\d{3,4})(芝|ダ|障)",txt)
-    if dsm: dist=int(dsm.group(1)); surface=dsm.group(2)
-    cond="不明"
-    for c in ["不良","稍重","重","良"]:
-        if c in txt: cond=c;break
-    weight=0.0
-    wm=re.search(r"(\d{2}(?:\.\d)?)\s*kg",txt)
-    if wm: weight=float(wm.group(1))
-    corners=[]
-    for li in cell.find_all("li"):
-        z=_jra_text(li)
-        if re.fullmatch(r"\d{1,2}",z): corners.append(int(z))
+    # Provider-specific identity stays here; each observed field is parsed in
+    # its independently testable extractor and composed without forecasts.
     result_cname=_jra_attr_cname(cell,JRA_RESULT_CNAME_RE)
     rid=("jraresult-"+base64.urlsafe_b64encode(result_cname.encode()).decode().rstrip("=")) if result_cname else ""
-    # title is best-effort: text between track and class/finish data
-    title=""
-    if track:
-        after=txt.split(track,1)[1].strip()
-        after=re.split(r"\s+(?:\d{1,2}着|\d{1,2}頭|\d+番)",after,1)[0]
-        title=after[:60].strip()
-    tm=_jra_parse_time_seconds(txt)
-    # JRA past-run card includes "3F 36.2 対戦馬名(0.3)": this is
-    # winning-time difference, not the current target race result.
-    # Do not treat arbitrary parentheses (popularity, bodyweight) as margins.
-    margin_match=re.search(r"3F\s*\d{2}(?:\.\d)?\s+[^()]+?\s*\(([+-]?\d+(?:\.\d+)?)\)",txt)
-    margin=float(margin_match.group(1)) if margin_match else None
-    if margin is not None and finish==1:margin=0.0
-    if margin is not None and margin<0:margin=None
-    return {"date":iso,"track":track,"title":title,"distance":dist,"surface":surface,"condition":cond,"weather":"不明","fieldSize":field,"finish":finish,"timeSeconds":tm,"marginSeconds":margin,"cornerPositions":corners,"carriedWeight":weight,"raceId":rid,"source":"JRA公式"}
+    tracks=list(JRA_TRACK_CODES.values())+["門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"]
+    return parse_jra_history_cell(cell,cutoff,tracks,race_id=rid)
 
 def _jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
     if not cname:return []
