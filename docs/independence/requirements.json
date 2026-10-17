@@ -1896,16 +1896,23 @@
     {
       "id": 73,
       "name": "確定結果判定",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.result_status.confirmed",
+      "files": [
+        "arvexq/ingest/result_status/confirmed.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_nar_official_result_fast"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "observed official NAR result page text",
+      "output": "explicit confirmation boolean",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_independent_official_result_status.py"
+      ],
+      "implementation_scope": "Official NAR result path integrated; other provider and production verification pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
