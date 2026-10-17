@@ -25,8 +25,8 @@ assert(src.includes('evictRetiredRaceCaches();'),'obsolete device race caches mu
 assert(!src.includes('saved-snapshot-restored'),'legacy saved snapshot live restore removed');
 assert(!fs.existsSync('scripts/arvexq_patch_race_open_reliability.py'));
 const model=fs.readFileSync('arvexq/prediction/observed_model.py','utf8');
-assert(model.includes('score = sum(observations) / len(observations)'), 'observed evidence consensus scoring authority');
-assert(model.includes('rates["transferClassEvidenceStarts"]') && model.includes('rates["top3Rate"]'), 'pre-off history and cross-circuit evidence');
+assert(model.includes('clear_marks(detail)'), 'retired adapter clears old fields');
+assert(!model.includes('sum(observations)'), 'old scoring implementation removed');
 assert(!fs.existsSync('arvexq/prediction/factor_model.py'),'retired central three-factor scorer must be physically deleted');
 assert(!fs.existsSync('arvexq/prediction/nar_model.py'),'duplicate local scorer must be physically deleted');
 assert(!fs.existsSync('arvexq/prediction/honmei_gate.py'),'retired parallel axis scorer must be deleted');
@@ -61,8 +61,8 @@ assert.equal(markRoleLabel({predMark:'◎'}),'◎ 本命');
 const visibleStart=src.indexOf('function visiblePredictionMark(');
 const visibleEnd=src.indexOf('function honmeiA11yText(',visibleStart);
 assert(visibleStart>=0&&visibleEnd>visibleStart,'shared visible axis mark helper required');
-const visiblePredictionMark=new Function('isScratchHorse','markRoleLabel',
-  src.slice(visibleStart,visibleEnd)+'return visiblePredictionMark;')(()=>false,markRoleLabel);
+const visiblePredictionMark=new Function('window','isScratchHorse','markRoleLabel',
+  src.slice(visibleStart,visibleEnd)+'return visiblePredictionMark;')(require('./test_support/production_ui.cjs').window,()=>false,markRoleLabel);
 const renderRunner=new Function(
   'isScratchHorse','n','horseDisplayName','clamp',
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight',
@@ -82,7 +82,7 @@ const runnerHtml=renderRunner({id:'test'},{
 assert.match(runnerHtml,/racecard-row/);
 assert.match(runnerHtml,/サンプル号/);
 assert.match(runnerHtml,/data-horse-open="7"/);
-assert.match(runnerHtml,/data-ai-mark="◎"/);
+assert.match(runnerHtml,/data-ai-mark=""/);
 assert.match(src,/function minimalRacecardPanel\(/);
 assert.match(src,/function runnerStyleSection\(/);
 console.log('ARVEXQ_SINGLE_SOURCE_RACE_OPEN_AND_PERSISTENT_ALERT_OK');

@@ -605,509 +605,52 @@ function rowByNo(rows,no){var i;for(i=0;i<rows.length;i++)if(n(rows[i].horse.hor
 function pressureInfo(rows){var sorted=rows.slice().sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)}),p={},attacks=[],hot=[],segFor=[],segments=[],i,x,l,r,lp,rp,base,current=null;function attack(z){if(!z)return 0;base=z.goProbBase!=null?z.goProbBase:z.goProb;return clamp(base*(.46+.34*z.needLead+.20*z.ten),0,1.2)}for(i=0;i<sorted.length;i++){attacks[i]=attack(sorted[i]);hot[i]=attacks[i]>.50&&n(sorted[i].goProbBase,sorted[i].goProb)>=.44}for(i=0;i<sorted.length;i++){if(hot[i]){if(!current||i===0||!hot[i-1]||n(sorted[i].horse.horseNumber)-n(sorted[i-1].horse.horseNumber)!==1){current={idx:[]};segments.push(current)}current.idx.push(i);segFor[i]=current}else current=null}for(i=0;i<sorted.length;i++){x=sorted[i];l=i?sorted[i-1]:null;r=i<sorted.length-1?sorted[i+1]:null;lp=l&&n(x.horse.horseNumber)-n(l.horse.horseNumber)===1?attacks[i-1]:0;rp=r&&n(r.horse.horseNumber)-n(x.horse.horseNumber)===1?attacks[i+1]:0;var leftHot=lp>.50,rightHot=rp>.50,sandwich=leftHot&&rightHot?1:0,escapeSide=(leftHot||rightHot)&&!sandwich?1:0,adj=(leftHot?1:0)+(rightHot?1:0),near2=0;if(i>1&&n(x.horse.horseNumber)-n(sorted[i-2].horse.horseNumber)===2)near2+=attacks[i-2]*.14;if(i<sorted.length-2&&n(sorted[i+2].horse.horseNumber)-n(x.horse.horseNumber)===2)near2+=attacks[i+2]*.14;var seg=segFor[i]||null,clusterLen=seg?seg.idx.length:0,clusterPos=seg?seg.idx.indexOf(i):-1,lineMiddle=clusterLen>=3&&clusterPos>0&&clusterPos<clusterLen-1?1:0,lineEnd=clusterLen>=2&&(clusterPos===0||clusterPos===clusterLen-1)?1:0,innerEnd=lineEnd&&clusterPos===0?1:0,outerEnd=lineEnd&&clusterPos===clusterLen-1?1:0,lineEndRelief=lineEnd?(.05+.08*x.flexibility):0;if(outerEnd&&!rightHot)lineEndRelief+=.04;if(innerEnd&&!leftHot)lineEndRelief+=.025;var conflict=(lp+rp)*(.43+.38*x.needLead+.19*x.ten)*(1-.42*x.flexibility)+near2+lineMiddle*(.10+.10*x.needLead)+(clusterLen>=4?.04:0);conflict=Math.max(0,conflict-lineEndRelief*.42);var freeOuter=x.edge?(.055+.075*x.flexibility):0,lineRole=lineMiddle?'先行列中央':(outerEnd?'先行列外端':(innerEnd?'先行列最内':(lineEnd?'先行列端':'単独/飛び')));p[n(x.horse.horseNumber)]={adj:adj,sandwich:sandwich,escapeSide:escapeSide,conflict:clamp(conflict,0,1.7),freeOuter:freeOuter,left:lp,right:rp,leftHot:leftHot,rightHot:rightHot,selfAttack:attacks[i],clusterLen:clusterLen,lineMiddle:lineMiddle,lineEnd:lineEnd,innerEnd:innerEnd,outerEnd:outerEnd,lineEndRelief:lineEndRelief,lineRole:lineRole}}return p}
 function frontArrangement(rows,pressure){pressure=pressure||pressureInfo(rows);var field=Math.max(1,rows.length),front=rows.filter(function(x){return x.minetaEarlyIntent||x.expected==='逃げ候補'||x.expected==='先行'||x.goProb>=.50}).sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)}),segments=[],cur=[],i,x,no,prev=0;for(i=0;i<front.length;i++){x=front[i];no=n(x.horse.horseNumber);if(!cur.length||no===prev+1)cur.push(x);else{segments.push(cur);cur=[x]}prev=no}if(cur.length)segments.push(cur);var adjacentPairs=0,longest=0;for(i=0;i<segments.length;i++){longest=Math.max(longest,segments[i].length);adjacentPairs+=Math.max(0,segments[i].length-1)}var pattern=!front.length?'前候補なし':(front.length===1?'単独':(adjacentPairs===0?'飛び飛び':(longest>=3?'連続':'一部連続'))),innerCut=Math.ceil(field*.35),outerCut=Math.floor(field*.65)+1,innerCount=front.filter(function(z){return n(z.horse.horseNumber)<=innerCut}).length,outerCount=front.filter(function(z){return n(z.horse.horseNumber)>=outerCut}).length,innerShare=front.length?innerCount/front.length:0,outerShare=front.length?outerCount/front.length:0,concentrationText=innerShare>=.60?'内枠に集中':(outerShare>=.60?'外枠に集中':'内外に分散'),scored=rows.slice();for(i=0;i<scored.length;i++){x=scored[i];var q=pressure[n(x.horse.horseNumber)]||{};x.canYield=clamp(x.flexibility*.62+x.stalk*.20+(1-x.needLead)*.18,0,1)>=.55;x.leaderScore=clamp(x.goProb*.38+x.ten*.20+x.needLead*.17+x.breakSkill*.13+x.jockeyFront*.05+x.front*.05+(q.lineEndRelief||0)*.05-(q.conflict||0)*.04,0,1.3);x.secondScore=clamp(x.goProb*.34+x.stalk*.22+x.flexibility*.16+x.holdFront*.12+x.ability*.08+(q.lineEndRelief||0)*.05-(q.conflict||0)*.04,0,1.3);x.positionScore=clamp(x.goProb*.23+x.stalk*.24+x.mid*.13+x.flexibility*.13+x.ability*.12+x.turnSkill*.09+(1-x.frontCost)*.06,0,1.2)}var leadOrder=scored.filter(function(z){return z.minetaEarlyIntent||z.goProb>=.48}).sort(function(a,b){var ar=n(a.minetaLeadRank,99),br=n(b.minetaLeadRank,99);if(ar!==br)return ar-br;return b.leaderScore-a.leaderScore||n(a.horse.horseNumber)-n(b.horse.horseNumber)}),leadMax=leadOrder.length?leadOrder[0].leaderScore:0,leadCandidates=leadOrder.filter(function(z,idx){return idx<3&&((n(z.minetaLeadRank,0)>0)||(z.leaderScore>=leadMax-.085&&z.goProb>=.53))}),leadTop=leadCandidates[0]||leadOrder[0]||null,secondCandidates=scored.filter(function(z){return !leadTop||n(z.horse.horseNumber)!==n(leadTop.horse.horseNumber)}).filter(function(z){return z.goProb>=.42||z.stalk>=.28}).sort(function(a,b){return b.secondScore-a.secondScore}).slice(0,3),positionCandidates=scored.filter(function(z){return z.goProb>=.34||z.stalk>=.30||z.mid>=.34}).sort(function(a,b){return b.positionScore-a.positionScore}).slice(0,4),escapeSide=leadCandidates.filter(function(z){var q=pressure[n(z.horse.horseNumber)]||{};return q.escapeSide}),sandwich=leadCandidates.filter(function(z){var q=pressure[n(z.horse.horseNumber)]||{};return q.sandwich}),middleFront=front.filter(function(z){var q=pressure[n(z.horse.horseNumber)]||{};return q.lineMiddle}),highFade=front.filter(function(z){return z.fade>=.50}),hardLead=leadCandidates.filter(function(z){return z.needLead>=.58&&z.canYield===false});return{front:front,segments:segments,pattern:pattern,longest:longest,adjacentPairs:adjacentPairs,innerShare:innerShare,outerShare:outerShare,concentrationText:concentrationText,leadCandidates:leadCandidates,secondCandidates:secondCandidates,positionCandidates:positionCandidates,escapeSide:escapeSide,sandwich:sandwich,middleFront:middleFront,highFade:highFade,hardLeadCount:hardLead.length}}
 function tacticalContext(r,rows){var pressure=pressureInfo(rows),arr=frontArrangement(rows,pressure),collapseWatch=arr.highFade.length>=2,i,x,q;for(i=0;i<rows.length;i++){x=rows[i];q=pressure[n(x.horse.horseNumber)]||{};x.frontLineRole=q.lineRole||'単独/飛び';x.collapseBeneficiary=collapseWatch&&x.goProb<.58?clamp(x.comeFromBehind*.42+x.latePower*.22+x.move*.15+x.trafficTol*.12+x.ability*.09,0,1):0}arr.collapseWatch=collapseWatch;arr.collapseRecheck=collapseWatch?rows.filter(function(z){return z.goProb<.58&&(z.mid+z.close)>=.45}).sort(function(a,b){return b.collapseBeneficiary-a.collapseBeneficiary||b.comeFromBehind-a.comeFromBehind}).slice(0,2):[];return{pressure:pressure,arrangement:arr}}
-function scenarioModel(r,rows,pressure,arr){pressure=pressure||pressureInfo(rows);arr=arr||frontArrangement(rows,pressure);var front=rows.slice().sort(function(a,b){return b.goProb-a.goProb}),active=arr.front,top=active.slice().sort(function(a,b){return b.goProb-a.goProb}).slice(0,Math.min(5,active.length)),fade=top.length?mean(top.map(function(x){return x.fade})):0,hold=top.length?mean(top.map(function(x){return x.holdFront})):0,conf=top.length?mean(top.map(function(x){return (pressure[n(x.horse.horseNumber)]||{}).conflict||0})):0,sand=top.length?mean(top.map(function(x){return (pressure[n(x.horse.horseNumber)]||{}).sandwich||0})):0,flex=top.length?mean(top.map(function(x){return x.flexibility})):0,ct=rows.length?rows[0].course:courseTraits(r),cp=courseProfile(r),firstTurnRush=clamp(1-firstTurnDistance(r)/650,0,1),lead=arr.leadCandidates||[],leadGap=lead.length>1?Math.max(0,lead[0].leaderScore-lead[1].leaderScore):.20,clear=lead.length?clamp(leadGap*2.0+lead[0].holdFront*.10+(lead[0].lineEndRelief||0)*.08,0,.42):.12,cluster=clamp((arr.longest-1)/3,0,1),outerLoad=arr.outerShare*firstTurnRush*ct.turnLoad,frontVolume=clamp(active.length/Math.max(1,rows.length),0,1),stableLead=lead.length?clamp(lead[0].holdFront*.45+(1-lead[0].fade)*.30+lead[0].ten*.15+(lead[0].canYield?.10:0),0,1):0,hardMulti=Math.max(0,(arr.hardLeadCount||0)-1),spreadRelief=arr.pattern==='飛び飛び'?.08:(arr.pattern==='一部連続'?.035:0),A=.28+ct.frontBias*.24+clear*.20+hold*.12+(1-fade)*.075+(1-clamp(conf,0,1))*.05+flex*.03+stableLead*.045+spreadRelief*.035,C=.16+(1-ct.frontBias)*.09+ct.moveRoom*.09+fade*.17+clamp(conf,0,1)*.13+sand*.09+cluster*.06+outerLoad*.055+hardMulti*.055,B=.34+flex*.075+(1-Math.abs(A-C))*.035+spreadRelief*.03;if(arr.highFade.length>=2)C+=.045+Math.min(.055,(arr.highFade.length-2)*.018);if(frontVolume>.52)C+=cluster>.20?Math.min(.045,(frontVolume-.52)*.16):Math.min(.015,(frontVolume-.52)*.08);if(lead.length>1&&hardMulti===0)B+=.025;if(lead.length===1&&stableLead>.62)A+=.035;if(arr.pattern==='飛び飛び'&&flex>.52)C-=.025;A=clamp(A,.15,.68);B=clamp(B,.20,.52);C=clamp(C,.12,.60);var sum=A+B+C;A/=sum;B/=sum;C/=sum;return[{code:"A",title:"前残り",prob:A},{code:"B",title:"平均",prob:B},{code:"C",title:"前崩れ・差し届く",prob:C}]}
-function startOrder(rows){var p=pressureInfo(rows);return rows.slice().sort(function(a,b){function s(x){var q=p[n(x.horse.horseNumber)]||{};return x.goProb+x.needLead*.12+(q.freeOuter||0)-q.conflict*.035}return s(b)-s(a)||n(a.horse.horseNumber)-n(b.horse.horseNumber)})}
+
+
 function scenarioSuit(x,code,pressure){var q=pressure[n(x.horse.horseNumber)]||{},earlyCost=(q.conflict||0)*x.goProb*(.34+.42*x.needLead)*(1-.34*x.flexibility)+x.outerStress*.06+(q.lineMiddle||0)*x.goProb*.045-(q.lineEndRelief||0)*.025,frontStay=x.goProb*.27+x.holdFront*.31+(1-x.fade)*.12+x.ability*.18+x.stamina*.07+x.course.frontBias*.05-earlyCost*.16+(q.lineEndRelief||0)*.025,balanced=x.ability*.34+x.holdFront*.14+x.latePower*.13+x.move*.10+x.stamina*.10+x.goProb*.08+x.flexibility*.06+(1-x.fade)*.05+(q.lineEndRelief||0)*.015,close=x.ability*.26+x.latePower*.27+x.move*.17+x.mid*.08+x.close*.09+x.course.moveRoom*.07+x.trafficTol*.06+x.collapseBeneficiary*.10-x.goProb*.015;if(code==="A")return clamp(frontStay,0,1.25);if(code==="C")return clamp(close,0,1.25);return clamp(balanced,0,1.25)}
 function suitability(rows,sc,pressure){var out={};pressure=pressure||pressureInfo(rows);var i,x,win,place,show,j,q,scenarioScores=[],frontFadePenalty,baseWin,basePlace,baseShow;for(i=0;i<rows.length;i++){x=rows[i];win=place=show=0;scenarioScores=[];frontFadePenalty=x.goProb>=.50?Math.max(0,x.fade-.38)*x.goProb:0;for(j=0;j<sc.length;j++){q=scenarioSuit(x,sc[j].code,pressure);scenarioScores.push({code:sc[j].code,score:q});baseWin=q*.72+x.ability*.20+x.hold*.08-frontFadePenalty*.18;basePlace=q*.57+x.ability*.20+(1-x.fade)*.13+x.flexibility*.06+x.hold*.04-frontFadePenalty*.065;baseShow=q*.46+x.ability*.20+(1-x.fade)*.14+x.move*.09+x.flexibility*.06+x.hold*.05-frontFadePenalty*.030;if(x.goProb>=.52&&x.fade<=.25){baseWin+=.025;basePlace+=.018;baseShow+=.012}if(sc[j].code==='C'&&x.collapseBeneficiary>.60){basePlace+=.035;baseShow+=.025}win+=sc[j].prob*baseWin;place+=sc[j].prob*basePlace;show+=sc[j].prob*baseShow}win=clamp(win,0,1.25);place=clamp(place,0,1.25);show=clamp(show,0,1.25);var overall=win*.54+place*.29+show*.17;out[n(x.horse.horseNumber)]={win:win,place:place,show:show,overall:overall,rankScore:win*.62+place*.24+show*.14,scenario:scenarioScores}}return out}
-function cornerScores(r,rows,sc,suit){var pressure=pressureInfo(rows),top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0].code,out=[],i,x,z,q,s,earlyCost;for(i=0;i<rows.length;i++){x=rows[i];z=suit[n(x.horse.horseNumber)]||{overall:.5};q=pressure[n(x.horse.horseNumber)]||{};earlyCost=q.conflict*x.goProb*(.4+.4*x.needLead);s=x.goProb*.25+x.hold*.20+x.ability*.21+x.move*.11+(1-x.fade)*.11+z.overall*.12-earlyCost*.10;if(top==="A")s+=x.goProb*.11+x.hold*.07;if(top==="C")s+=x.move*.12+x.mid*.06+x.close*.08-x.goProb*.02;out.push({row:x,s:s})}return out.sort(function(a,b){return b.s-a.s}).map(function(z){return z.row})}
-function seedHash(v){var s=String(v||"race"),h=2166136261,i;for(i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-function prng(seed){var a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-function jitter(rng){return(rng()+rng()+rng()+rng()+rng()+rng()-3)/3}
-function chooseScenario(sc,rng){var u=rng(),c=0,i;for(i=0;i<sc.length;i++){c+=sc[i].prob;if(u<=c)return sc[i].code}return sc.length?sc[sc.length-1].code:"B"}
-function packStage(r,rows,scoreMap,laneMap,stage){var a=rows.slice().sort(function(x,y){return scoreMap[n(y.horse.horseNumber)]-scoreMap[n(x.horse.horseNumber)]||n(x.horse.horseNumber)-n(y.horse.horseNumber)}),lead=a.length?scoreMap[n(a[0].horse.horseNumber)]:0,out=[],i,x,no,diff,visualRankGap,scoreGap,lane,cp=courseProfile(r);for(i=0;i<a.length;i++){x=a[i];no=n(x.horse.horseNumber);diff=Math.max(0,lead-scoreMap[no]);visualRankGap=(stage<2?.0048:(stage<5?.0065:.0085))*i;scoreGap=diff*(stage<2?.030:(stage<5?.043:.060));lane=laneMap&&laneMap[no]!=null?laneMap[no]:Math.round((x.draw-.5)*4);if(i>0&&visualRankGap<.02)lane+=((i%3)-1);out.push({no:no,gap:clamp(visualRankGap+scoreGap,0,.42),lane:clamp(lane,-3,3)})}return out}
-function stageMap(pack){var o={},i;for(i=0;i<pack.length;i++)o[pack[i].no]=pack[i];return o}
-function stageByNo(pack,no){for(var i=0;i<pack.length;i++)if(n(pack[i].no)===n(no))return pack[i];return null}
-function simulateOne(r,rows,sc,suit,seed){var rng=prng(seed),code=chooseScenario(sc,rng),pressure=pressureInfo(rows),cp=courseProfile(r),ct=courseTraits(r),dist=n(r.distance,1200),distanceLoad=clamp((dist-1000)/1800,0,1),firstTurnRush=clamp(1-firstTurnDistance(r)/650,0,1),paceHeat=0,i,x,no,q,noise;var S0={},S1={},S2={},S3={},S4={},S5={},S6={},S7={},L0={},L1={},L2={},L3={},L4={},L5={},L6={},L7={},energy={};
-for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);q=pressure[no]||{};noise=jitter(rng);S0[no]=x.breakSkill*.50+x.goProb*.30+x.needLead*.08+x.jockeyFront*.05+(q.freeOuter||0)-q.conflict*.035+noise*.07;L0[no]=clamp(Math.round((x.draw-.5)*5),-3,3);energy[no]=1;if(x.goProb>.50)paceHeat+=x.goProb*(.45+.55*x.needLead)}
-paceHeat=clamp((paceHeat-1.10)/Math.max(.8,rows.length*.18),0,1.55);
-for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);q=pressure[no]||{};noise=jitter(rng);var rushCost=(q.conflict||0)*(.08+.11*x.needLead)+paceHeat*x.goProb*.045+firstTurnRush*x.outer*.045;energy[no]-=rushCost;S1[no]=S0[no]*.56+x.goProb*.20+x.breakSkill*.10+x.flexibility*.05-x.collapse*.035-rushCost*.22+noise*.065;L1[no]=clamp(L0[no]+(x.edge&&x.goProb>.55?-1:0)+(q.sandwich&&x.flexibility<.45?1:0),-3,3)}
-for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);q=pressure[no]||{};noise=jitter(rng);var turnCost=Math.abs(L1[no])*.012*ct.turnLoad+x.outer*firstTurnRush*.025+(q.sandwich||0)*(.035-.020*x.trafficTol);energy[no]-=turnCost;S2[no]=S1[no]*.48+x.hold*.16+x.turnSkill*.12+x.ability*.12+x.flexibility*.06-turnCost*.32+noise*.06;L2[no]=clamp(L1[no]+(x.inner&&x.goProb<.35?0:Math.round((x.flexibility-.5)*-1)),-3,3)}
-for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);noise=jitter(rng);var draft=(x.stalk*.045+x.mid*.025)*(1-x.needLead),leaderDrain=paceHeat*x.goProb*(.045+.055*x.needLead)*(1+.45*distanceLoad);energy[no]-=leaderDrain;S3[no]=S2[no]*.43+x.ability*.18+x.hold*.13+x.stamina*.10+draft+x.move*.05+noise*.065;L3[no]=clamp(L2[no]+(x.move>.45&&x.goProb<.45?(rng()>.5?1:-1):0),-3,3)}
-for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);noise=jitter(rng);var moveKick=x.move*(.08+.07*ct.moveRoom)+x.latePower*.055,wideCost=Math.max(0,Math.abs(L3[no])-1)*.018*ct.turnLoad;energy[no]-=wideCost;S4[no]=S3[no]*.42+x.ability*.17+x.stamina*.12+x.turnSkill*.09+moveKick-wideCost*.30+noise*.07;L4[no]=clamp(L3[no]+(x.move>.50?Math.round((rng()-.42)*2):0),-3,3)}
-var pack4=packStage(r,rows,S4,L4,4),map4=stageMap(pack4);
-for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);q=pressure[no]||{};noise=jitter(rng);var pos4=map4[no]||{gap:.2,lane:0},blocked=0;if(pos4.gap>.025&&Math.abs(pos4.lane)<=1&&x.trafficTol<.55&&rng()>.48)blocked=(.02+.06*(1-x.trafficTol));var scFit=scenarioSuit(x,code,pressure),fatigue=(1-energy[no])*.16+x.collapse*.07+paceHeat*x.goProb*.035*distanceLoad;S5[no]=S4[no]*.37+scFit*.16+x.ability*.15+x.stamina*.11+x.turnSkill*.07+x.latePower*.07-blocked-fatigue+noise*.075;L5[no]=clamp(L4[no]+(blocked>0?(rng()>.5?1:-1):0),-3,3)}
-for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);noise=jitter(rng);var straightBoost=x.latePower*(.10+.12*ct.straight)+x.move*.055*ct.moveRoom,frontKick=(code==="A"?x.goProb*.055+x.hold*.035:0),closeKick=(code==="C"?x.close*.07+x.move*.055:0),fatigue2=(1-energy[no])*.12+x.fade*.08;S6[no]=S5[no]*.34+x.ability*.20+x.stamina*.12+straightBoost+frontKick+closeKick-fatigue2+noise*.085;L6[no]=clamp(L5[no]+(x.latePower>.58&&Math.abs(L5[no])<3?(rng()>.5?1:-1):0),-3,3)}
-for(i=0;i<rows.length;i++){x=rows[i];no=n(x.horse.horseNumber);q=pressure[no]||{};noise=jitter(rng);var suitx=suit[no]||{overall:.5},uncert=(1-x.coverage)*.070*jitter(rng);S7[no]=S6[no]*.34+suitx.overall*.24+x.ability*.18+x.latePower*.10+x.stamina*.08+(1-x.fade)*.05-q.conflict*.015+noise*.09+uncert;L7[no]=L6[no]}
-var packs=[packStage(r,rows,S0,L0,0),packStage(r,rows,S1,L1,1),packStage(r,rows,S2,L2,2),packStage(r,rows,S3,L3,3),packStage(r,rows,S4,L4,4),packStage(r,rows,S5,L5,5),packStage(r,rows,S6,L6,6),packStage(r,rows,S7,L7,7)],maps=packs.map(stageMap),finish=packs[7];return{scenario:code,checkpoints:packs,maps:maps,start:packs[1],corner:packs[5],finish:finish,startMap:maps[1],cornerMap:maps[5],finishMap:maps[7],podium:finish.slice(0,3).map(function(z){return z.no}),paceHeat:paceHeat}}
-function generateSimulations(r,rows,sc,suit,count){var runs=[],stats={},scenarioCount={A:0,B:0,C:0},combo={},i,j,no,run,key;for(i=0;i<rows.length;i++){no=n(rows[i].horse.horseNumber);stats[no]={horse:rows[i].horse,win:0,second:0,third:0,top3:0,startRank:0,cornerRank:0,finishRank:0}}var base=seedHash([r.id,r.date,r.track,r.raceNumber,r.distance,(r.horses||[]).length].join("|"));for(i=0;i<count;i++){run=simulateOne(r,rows,sc,suit,(base+Math.imul(i+1,2654435761))>>>0);runs.push(run);scenarioCount[run.scenario]=(scenarioCount[run.scenario]||0)+1;key=run.podium.join("-");combo[key]=(combo[key]||0)+1;for(j=0;j<run.start.length;j++)stats[run.start[j].no].startRank+=j+1;for(j=0;j<run.corner.length;j++)stats[run.corner[j].no].cornerRank+=j+1;for(j=0;j<run.finish.length;j++)stats[run.finish[j].no].finishRank+=j+1;if(run.podium[0]){stats[run.podium[0]].win++;stats[run.podium[0]].top3++}if(run.podium[1]){stats[run.podium[1]].second++;stats[run.podium[1]].top3++}if(run.podium[2]){stats[run.podium[2]].third++;stats[run.podium[2]].top3++}}var summary=Object.keys(stats).map(function(k){var z=stats[k];z.no=n(k);z.winRate=z.win/count;z.secondRate=z.second/count;z.thirdRate=z.third/count;z.top3Rate=z.top3/count;z.avgStart=z.startRank/count;z.avgCorner=z.cornerRank/count;z.avgFinish=z.finishRank/count;z.markScore=z.winRate*.53+z.secondRate*.24+z.thirdRate*.13+z.top3Rate*.10;return z}).sort(function(a,b){return b.markScore-a.markScore||a.avgFinish-b.avgFinish});var first=summary[0]||null,rest=summary.slice(1),second=rest.slice().sort(function(a,b){return b.secondRate-a.secondRate||b.top3Rate-a.top3Rate})[0]||summary[1]||null,thirdPool=summary.filter(function(z){return(!first||z.no!==first.no)&&(!second||z.no!==second.no)}),third=thirdPool.slice().sort(function(a,b){return b.thirdRate-a.thirdRate||b.top3Rate-a.top3Rate})[0]||summary[2]||null,podium=[first,second,third].filter(Boolean),exact=0,setHit=0,target=podium.map(function(z){return z.no}),targetKey=target.join("-");exact=combo[targetKey]||0;for(i=0;i<runs.length;i++){var a=runs[i].podium.slice().sort(function(a,b){return a-b}),b=target.slice().sort(function(a,b){return a-b});if(a.length===b.length&&a.join("-")===b.join("-"))setHit++}return{count:count,runs:runs,summary:summary,podium:podium,exactRate:exact/count,setRate:setHit/count,scenarioCount:scenarioCount}}
-function avgOrder(rows,sim,key){var prop=key==="start"?"avgStart":(key==="corner"?"avgCorner":"avgFinish"),sm={};for(var i=0;i<sim.summary.length;i++)sm[sim.summary[i].no]=sim.summary[i][prop];return rows.slice().sort(function(a,b){return sm[n(a.horse.horseNumber)]-sm[n(b.horse.horseNumber)]})}
-function packScenarioStage(r,rows,scoreMap,laneMap,stage){var a=rows.slice().sort(function(x,y){return scoreMap[n(y.horse.horseNumber)]-scoreMap[n(x.horse.horseNumber)]||n(x.horse.horseNumber)-n(y.horse.horseNumber)}),lead=a.length?scoreMap[n(a[0].horse.horseNumber)]:0,out=[],i,x,no,diff,rankGap,scoreGap,lane;for(i=0;i<a.length;i++){x=a[i];no=n(x.horse.horseNumber);diff=Math.max(0,lead-scoreMap[no]);rankGap=(stage<=1?.010:(stage<=3?.013:.016))*i;scoreGap=diff*(stage<=1?.06:(stage<=3?.08:.10));lane=laneMap&&laneMap[no]!=null?laneMap[no]:Math.round((x.draw-.5)*4);if(i>0&&i%3===0)lane+=1;if(i>0&&i%4===0)lane-=1;out.push({no:no,gap:clamp(rankGap+scoreGap,0,.34),lane:clamp(lane,-3,3),score:scoreMap[no]})}return out}
-function rowsFromPack(rows,pack){var map={};for(var i=0;i<rows.length;i++)map[n(rows[i].horse.horseNumber)]=rows[i];return pack.map(function(z){return map[n(z.no)]}).filter(Boolean)}
-function eventOrderPack(rows,order,laneMap,stage){
-  var field=Math.max(1,order.length),out=[];
-  for(var i=0;i<order.length;i++){
-    var x=order[i],no=n(x.horse.horseNumber),lane=laneMap&&laneMap[no]!=null?laneMap[no]:Math.round((x.draw-.5)*4),
-        pos=field<=1?1:1-i/(field-1),gap=clamp((stage<=1?.012:(stage<=3?.016:.020))*i,0,.34);
-    out.push({no:no,gap:gap,lane:clamp(lane,-3,3),score:pos})
-  }
-  return out
-}
-function scenarioPlan(r,rows,sc,suit,pressure,arr){
-  var scenario=sc.slice().sort(function(a,b){return b.prob-a.prob})[0]||{code:'B',title:'平均',prob:1},code=scenario.code;
-  pressure=pressure||pressureInfo(rows);arr=arr||frontArrangement(rows,pressure);
-  var p=pressure,lanes={},i,x,no,q,ct=courseTraits(r),
-      firstRush=clamp(1-firstTurnDistance(r)/650,0,1),
-      longDistance=clamp((n(r.distance,1400)-1400)/1200,0,1),
-      frontRunners=(arr.front||[]).length,hardLeaders=Math.max(0,n(arr.hardLeadCount,0)-1),
-      paceHeat=clamp(Math.max(0,frontRunners-1)*.060+hardLeaders*.095+
-        (arr.middleFront||[]).length*.035+firstRush*Math.max(0,frontRunners-2)*.028,0,.65);
-  function exposure(z){
-    var qq=p[n(z.horse.horseNumber)]||{};
-    return clamp(paceHeat*(.18+n(z.goProb,.5)*.28+n(z.needLead,.3)*.18+
-      n(qq.conflict,0)*.22+n(z.frontCost,0)*.55)*(1+longDistance*.35),0,.52)
-  }
-  // Pre-race pace and ability only: neither odds nor results enter here.
-  function finishStrength(z){
-    var early=exposure(z),fade=n(z.fade,.25),late=n(z.latePower,.5);
-    return n(z.ability,.5)*.27+n(z.stamina,.5)*.18+late*.21+
-      n(z.comeFromBehind,.5)*.12+n(z.holdFront,.5)*.12+
-      n(z.lateGain,.5)*.05+n(z.trafficTol,.5)*.05-
-      early*.42-fade*(.055+early*.20)+
-      (code==='A'?n(z.frontStay,.5)*.07:0)+
-      (code==='C'?late*.05:0)
-  }
-  rows.forEach(function(z){lanes[n(z.horse.horseNumber)]=clamp(Math.round((z.draw-.5)*5),-3,3)});
 
-  function lex(list,keys){
-    return list.slice().sort(function(a,b){
-      for(var k=0;k<keys.length;k++){
-        var fn=keys[k],av=n(fn(a),0),bv=n(fn(b),0);
-        if(bv!==av)return bv-av
-      }
-      return n(a.horse.horseNumber)-n(b.horse.horseNumber)
-    })
-  }
-  function uniq(groups){
-    var seen={},out=[];
-    groups.forEach(function(g){(g||[]).forEach(function(z){var k=n(z.horse.horseNumber);if(!seen[k]){seen[k]=1;out.push(z)}})});
-    rows.forEach(function(z){var k=n(z.horse.horseNumber);if(!seen[k]){seen[k]=1;out.push(z)}});
-    return out
-  }
-  function idx(order,row){return order.indexOf(row)}
-  function move(order,row,delta){
-    var i=idx(order,row);if(i<0||!delta)return;
-    var ni=clamp(i+delta,0,order.length-1);
-    if(ni===i)return;
-    order.splice(i,1);order.splice(ni,0,row)
-  }
-  function moveTo(order,row,target){
-    var i=idx(order,row);if(i<0)return;
-    target=clamp(target,0,order.length-1);
-    if(i===target)return;
-    order.splice(i,1);order.splice(target,0,row)
-  }
-  function topRank(order,row){var i=idx(order,row);return i<0?999:i+1}
-  function isFront(z){return z.goProb>=.50||z.expected==='逃げ候補'||z.expected==='先行'}
-  function isStalk(z){return z.expected==='好位'||z.stalk>=.30}
-  function isCloser(z){return z.expected==='後方'||z.close>=.38||z.comeFromBehind>=.58}
 
-  // START: distinguish "who contests the lead" from "where they settle after losing it".
-  // A horse strong enough to be named in the lead battle cannot jump straight to midfield
-  // unless a concrete retreat / pressure event occurs.
-  var leaderPool=(arr.leadCandidates||[]).length?(arr.leadCandidates||[]):rows.filter(function(z){return z.goProb>=.50});
-  // Real first-corner lead and break/ten evidence decide the front battle.
-  leaderPool=leaderPool.slice().sort(function(a,b){
-    function score(z){
-      var past=z.minetaPast||{},sample=clamp(n(z.styleSamples,0)/3,0,1);
-      return n(z.goProb,.5)*.25+n(z.breakSkill,.5)*.21+n(z.ten,.5)*.18+
-        n(z.needLead,.5)*.12+n(z.jockeyFront,0)*.04+
-        (n(past.leadRate)*.12+n(past.earlyRate)*.045+(past.prevLeader?.04:0))*sample+
-        n(z.holdFront,.5)*.06+n(z.minetaLeadRank,0)*-.002
-    }
-    return score(b)-score(a)||n(a.horse.horseNumber)-n(b.horse.horseNumber)
-  });
-  var leader=leaderPool[0]||lex(rows,[function(z){return z.goProb},function(z){return z.breakSkill}])[0]||null,
-      leadBattlers=leaderPool.filter(function(z){return z!==leader}),
-      front=lex(rows.filter(function(z){return z!==leader&&leadBattlers.indexOf(z)<0&&isFront(z)}),[function(z){return z.goProb},function(z){return z.ten},function(z){return z.needLead}]),
-      stalk=lex(rows.filter(function(z){return z!==leader&&leadBattlers.indexOf(z)<0&&!isFront(z)&&isStalk(z)}),[function(z){return z.stalk},function(z){return z.posCons},function(z){return z.breakSkill}]),
-      middle=lex(rows.filter(function(z){return z!==leader&&leadBattlers.indexOf(z)<0&&!isFront(z)&&!isStalk(z)&&!isCloser(z)}),[function(z){return z.mid},function(z){return z.posCons}]),
-      rear=lex(rows.filter(function(z){return z!==leader&&leadBattlers.indexOf(z)<0&&!isFront(z)&&!isStalk(z)&&isCloser(z)}),[function(z){return z.close},function(z){return z.latePower}]),
-      orders=[];
-  // At the instant of the break, all genuine lead battlers stay in the front cluster.
-  orders[0]=uniq([[leader],leadBattlers,front,stalk,middle,rear]);
 
-  // FIRST TURN: predict the settling order after the lead battle.
-  // This is where a horse such as 7 can go from "challenged for the lead" to 2nd/3rd,
-  // rather than incorrectly being thrown into midfield.
-  orders[1]=orders[0].slice();
-  if(leader){
-    var settlePool=uniq([leadBattlers,(arr.secondCandidates||[]),front,stalk]).filter(function(z){return z&&z!==leader}).slice(0,Math.min(6,rows.length-1));
-    function settleScore(z){
-      var qq=p[n(z.horse.horseNumber)]||{},wasLead=leadBattlers.indexOf(z)>=0?1:0,
-          yieldPenalty=wasLead*n(z.needLead)*(1-n(z.canYield,.5))*.16;
-      return n(z.secondScore,.5)*.38+n(z.stalk,.3)*.15+n(z.flexibility,.5)*.12+n(z.breakSkill,.5)*.09+
-        n(z.ten,.5)*.08+n(z.ability,.5)*.08+n(z.posCons,.5)*.06+wasLead*.08+
-        (z.minetaEscapeOutside?.035:0)-(n(z.outerStress)*.06+n(qq.conflict)*.06+yieldPenalty)
-    }
-    settlePool.sort(function(a,b){return settleScore(b)-settleScore(a)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
-    var settleTop=settlePool.slice(0,Math.min(4,settlePool.length)),
-        rest=orders[1].filter(function(z){return z!==leader&&settleTop.indexOf(z)<0});
-    orders[1]=[leader].concat(settleTop,rest)
-  }
-  orders[1].slice(0,Math.min(6,orders[1].length)).forEach(function(z){
-    q=p[n(z.horse.horseNumber)]||{};
-    var explicitRetreat=(z.fade>=.58&&z.frontCost>=.14)||(z.outerStress>=.68&&z.goProb>=.46)||
-      (q.lineMiddle&&z.needLead>=.66&&z.flexibility<.40)||(q.sandwich&&z.flexibility<.38);
-    if(explicitRetreat)move(orders[1],z,1);
-    if(z.minetaEscapeOutside&&z.expected!=='逃げ候補'&&q.conflict<.55)move(orders[1],z,-1);
-    if(z.minetaDifferentStyleNeighbor&&q.conflict<.55)move(orders[1],z,-1)
-  });
-  if(leader&&topRank(orders[1],leader)>1)moveTo(orders[1],leader,0);
 
-  // BACKSTRETCH: mostly preserve established positions. Only obvious over-racing /
-  // early-pressure horses concede a place; flexible stalkers can tuck in.
-  orders[2]=orders[1].slice();
-  orders[2].slice(0,Math.min(6,orders[2].length)).forEach(function(z){
-    q=p[n(z.horse.horseNumber)]||{};
-    if(z.fade>=.58&&z.frontCost>=.14&&z.needLead>=.50)move(orders[2],z,1);
-    else if(z.canYield&&z.needLead>=.45&&topRank(orders[2],z)<=3&&q.conflict>=.55)move(orders[2],z,1)
-  });
 
-  // 3C: movers begin advancing. They gain only a small number of positions per
-  // phase; this is a transition, not a wholesale re-ranking.
-  orders[3]=orders[2].slice();
-  var movers3=lex(rows.filter(function(z){return z.move>=.55&&z.latePower>=.50&&topRank(orders[3],z)>3}),[
-    function(z){return z.move*.40+n(z.turnSkill,.5)*.22+z.latePower*.23+n(z.ability,.5)*.15},
-    function(z){return z.comeFromBehind}
-  ]);
-  movers3.slice(0,code==='C'?3:2).forEach(function(z){
-    var gain=(code==='C'&&paceHeat>=.22&&n(z.turnSkill,.5)>=.56)?2:1;
-    move(orders[3],z,-gain)
-  });
-  orders[3].slice(0,Math.min(5,orders[3].length)).forEach(function(z){
-    q=p[n(z.horse.horseNumber)]||{};
-    if(z.fade>=.62&&z.frontCost>=.15&&(q.sandwich||q.conflict>=.60))move(orders[3],z,1)
-  });
 
-  // 4C: commit moves, but maintain continuity. A closer cannot teleport from last
-  // to first in one step, and a leader does not collapse without fatigue evidence.
-  orders[4]=orders[3].slice();
-  var movers4=lex(rows.filter(function(z){return z.move>=.58&&z.latePower>=.56&&topRank(orders[4],z)>2}),[
-    function(z){return z.move*.38+z.latePower*.30+n(z.turnSkill,.5)*.17+n(z.ability,.5)*.15},
-    function(z){return z.comeFromBehind}
-  ]);
-  movers4.slice(0,code==='C'?3:2).forEach(function(z){
-    var gain=(code==='C'&&paceHeat>=.20&&ct.moveRoom>=.45)?2:1;
-    move(orders[4],z,-gain)
-  });
-  orders[4].slice(0,Math.min(5,orders[4].length)).forEach(function(z){
-    q=p[n(z.horse.horseNumber)]||{};
-    var severe=z.fade>=.68&&z.frontCost>=.18&&(q.sandwich||q.conflict>=.65);
-    if(severe)move(orders[4],z,1)
-  });
 
-  // STRAIGHT: resolve hold / fade / pass events. Position changes require a reason.
-  orders[5]=orders[4].slice();
-  var frontAt4=orders[4].slice(0,Math.min(4,orders[4].length));
-  frontAt4.forEach(function(z){
-    q=p[n(z.horse.horseNumber)]||{};
-    var stress=exposure(z),
-        severeFade=z.fade>=.67&&(stress>=.19||z.frontCost>=.18||q.conflict>=.70||q.sandwich),
-        moderateFade=z.fade>=.56&&(stress>=.13||z.frontCost>=.12||q.conflict>=.52),
-        strongHold=z.frontStay>=.66&&z.holdFront>=.56&&z.fade<.52&&stress<.24;
-    if(severeFade)move(orders[5],z,code==='C'?3:2);
-    else if(moderateFade)move(orders[5],z,1);
-    else if(strongHold&&topRank(orders[5],z)>topRank(orders[4],z))moveTo(orders[5],z,topRank(orders[4],z)-1)
-  });
 
-  var closers=lex(rows.filter(function(z){return isCloser(z)&&z.latePower>=.56&&z.comeFromBehind>=.56}),[
-    function(z){return z.comeFromBehind},function(z){return z.latePower},function(z){return z.move}
-  ]);
-  // Runners have finite overtaking capacity: each pass needs superiority to
-  // the horse directly ahead. No fixed -5 rank leap or magic lead restoration.
-  var straightRoom=clamp(ct.straight*.68+ct.moveRoom*.32,0,1);
-  closers.slice(0,code==='C'?3:2).sort(function(a,b){return finishStrength(b)-finishStrength(a)}).forEach(function(z){
-    var cap=1+(straightRoom>=.58?1:0)+(n(z.latePower,0)>=.69&&straightRoom>=.55?1:0);
-    if(code==='A')cap=Math.max(1,cap-1);
-    if(code==='C'&&paceHeat>=.26&&straightRoom>=.58)cap+=1;
-    for(var pass=0;pass<cap;pass++){
-      var at=orders[5].indexOf(z);if(at<=0)break;
-      var rival=orders[5][at-1];
-      var gap=topRank(orders[4],z)-topRank(orders[4],rival);
-      var required=.018+Math.max(0,gap-2)*.010+(code==='A'?.020:0);
-      if(finishStrength(z)<finishStrength(rival)+required)break;
-      move(orders[5],z,-1)
-    }
-  });
-  if(leader){
-    q=p[n(leader.horse.horseNumber)]||{};
-    var leaderCollapse=leader.fade>=.66&&(exposure(leader)>=.19||leader.frontCost>=.18||q.conflict>=.68||q.sandwich),
-        leaderHold=leader.frontStay>=.64&&leader.holdFront>=.54&&leader.fade<.55&&exposure(leader)<.24,
-        challenger=orders[5].slice(0,Math.max(1,topRank(orders[5],leader)-1)).some(function(z){
-          return finishStrength(z)>finishStrength(leader)+.025
-        });
-    if(leaderHold&&!leaderCollapse&&!challenger){
-      var cap=(code==='C'&&leader.frontStay<.72)?2:1;
-      if(topRank(orders[5],leader)>cap)moveTo(orders[5],leader,cap-1)
-    }
-  }
 
-  // Build display stages from actual state order. score is only a normalized
-  // screen-position rank for downstream compatibility; it is NOT the pace model.
-  var labels=['スタート','1コーナー','向正面','3コーナー','4コーナー','直線'],
-      keys=['start','first','back','turn3','turn4','straight'],packs=[],stages=[],markScore={};
-  for(i=0;i<6;i++){
-    packs[i]=eventOrderPack(rows,orders[i],lanes,i);
-    stages.push({key:keys[i],label:labels[i],pack:packs[i],model:'event-transition-v2'})
-  }
-  orders[5].forEach(function(z,idx){markScore[n(z.horse.horseNumber)]=orders[5].length<=1?1:1-idx/(orders[5].length-1)});
-  return{scenario:scenario,stages:stages,start:orders[0],corner:orders[4],straight:orders[5],markScore:markScore,model:'event-transition-v2'}
-}
+
+
+
+
+
+
 function gradeClass(g){return g==='S'?'grade-s':(g==='A'?'grade-a':(g==='B'?'grade-b':'grade-c'))}
-function predictionProfile(r){
-  var mode=raceMode(r);
-  if(mode==='障害')return{code:'JUMP',label:'障害専用モデル',version:'ARVEXQ-JUMP-v3'};
-  if(mode==='新馬')return{code:'DEBUT',label:'新馬専用モデル',version:'ARVEXQ-DEBUT-v3'};
-  if(r.circuit==='地方')return{code:'NAR',label:'地方専用モデル',version:'ARVEXQ-NAR-v3'};
-  return{code:'JRA',label:'中央専用モデル',version:'ARVEXQ-JRA-v3'}
-}
-function gradeRowsRelative(rows){
-  if(!rows.length)return;
-  var lo=Math.min.apply(null,rows.map(function(z){return z.overallRaw})),
-      hi=Math.max.apply(null,rows.map(function(z){return z.overallRaw}));
-  rows.forEach(function(z){
-    var rel=hi===lo?.5:(z.overallRaw-lo)/(hi-lo), exact=clamp(z.overallRaw*.80+(.44+.56*rel)*.20,0,1)*100;
-    z.overallScoreExact=Math.round(exact*10)/10;
-    z.overallScore=Math.round(exact)
-  });
-  // v155: rank by the unrounded model value first. The UI and marks reuse this rank,
-  // so horses tied at e.g. 76 points can no longer show the S horse in 3rd place.
-  rows.sort(function(a,b){return n(b.overallRaw)-n(a.overallRaw)||n(b.overallScore)-n(a.overallScore)||n(b.ability)-n(a.ability)||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
-  var m=rows.length;
-  rows.forEach(function(z,rank){
-    var pct=(rank+1)/m,score=z.overallScore;
-    z.overallRank=rank+1;
-    if((score>=83)||(pct<=.12&&score>=72))z.overallGrade='S';
-    else if((score>=73)||(pct<=.35&&score>=65))z.overallGrade='A';
-    else if((score>=60)||(pct<=.70))z.overallGrade='B';
-    else z.overallGrade='C';
-    if(!z.overallReasons.length)z.overallReasons.push('総合バランス型')
-  })
-}
-function baseGradeReasons(x,su,fitScore){
-  x.overallReasons=[];
-  if(x.ability>=.62)x.overallReasons.push('能力評価高め');
-  if(n(su.overall)>=.62)x.overallReasons.push('展開適性高め');
-  if(x.frontStay>=.64)x.overallReasons.push('前残り力');
-  if(x.comeFromBehind>=.64)x.overallReasons.push('差し込み力');
-  if(x.fade<=.25)x.overallReasons.push('下がり率低め');
-  if(fitScore>=.58)x.overallReasons.push('今回条件に実績');
-  if(x.bodyWeightKnown&&x.bodyWeightSuit>=.58)x.overallReasons.push('馬体重変動は安定圏');
-  if(x.bodyWeightKnown&&x.bodyWeightSuit<=.45)x.overallReasons.push('馬体重変動注意');
-  if(x.frontCost>=.12)x.overallReasons.push('隣接圧力注意');
-  if(x.fade>=.50)x.overallReasons.push('下がり率注意');
-  if(x.coverage<.45)x.overallReasons.push('データ補完中・複数ソース確認');
-  if((x.horse.recentRaces||[]).length<2||x.styleSamples<2)x.overallReasons.push('限定データ評価')
-}
-function recentPeakScore(h,r){
-  var runs=(h&&h.recentRaces)||[],best=.34,i,z,finish,field,sameTrack,sameDist,score;
-  for(i=0;i<Math.min(5,runs.length);i++){
-    z=runs[i]||{};finish=n(z.finish||z.finishPosition,99);field=Math.max(6,n(z.fieldSize,12));
-    sameTrack=String(z.track||'')===String(r.track||'')?1:0;
-    sameDist=Math.abs(n(z.distance)-n(r.distance))<=150?1:0;
-    score=.28;
-    if(finish<99)score+=clamp((field-finish)/Math.max(1,field-1),0,1)*.42;
-    if(finish<=3)score+=.10;
-    score+=sameTrack*.10+sameDist*.08;
-    if(score>best)best=score
-  }
-  return clamp(best,0,1)
-}
-function edgeSoftmax(values,temp){
-  if(!values||!values.length)return[];
-  temp=Math.max(.035,n(temp,.09));
-  var mx=Math.max.apply(null,values),ex=[],sum=0,i,v;
-  for(i=0;i<values.length;i++){v=Math.exp((values[i]-mx)/temp);ex.push(v);sum+=v}
-  if(!sum)return values.map(function(){return 1/values.length});
-  return ex.map(function(z){return z/sum})
-}
-function conservativeProbabilityGuard(values,evidence,role){
-  values=(values||[]).slice();if(!values.length)return[];
-  var sum=values.reduce(function(a,b){return a+Math.max(0,n(b))},0)||1,field=values.length,uniform=1/field,
-      ev=(evidence&&evidence.length)?mean(evidence.map(function(z){return clamp(n(z,.5),0,1)})):.5,
-      extra=field>10?Math.min(.035,(field-10)*.004):0,
-      cap=role==='p1'?.18:.22,
-      shrink=Math.min(cap,.045+(1-ev)*.125+extra),out=[];
-  values.forEach(function(v){var q=Math.max(0,n(v))/sum;out.push(uniform+(q-uniform)*(1-shrink))});
-  var z=out.reduce(function(a,b){return a+b},0)||1;return out.map(function(v){return v/z})
-}
-function tripRecoveryProfile(x,r){
-  var runs=(x.horse&&x.horse.recentRaces)||[],rr=runs[0]||{},field=Math.max(6,n(rr.fieldSize,12)),finish=n(rr.finish||rr.finishPosition,0),corners=rr.cornerPositions||[],first=corners.length?n(corners[0],0):0,last=corners.length?n(corners[corners.length-1],0):0,score=.50,reasons=[],gain=0;
-  if(finish>0&&last>0){
-    gain=(last-finish)/Math.max(5,field-1);
-    score+=clamp(gain,-.22,.34)*.55;
-    if(gain>=.12)reasons.push('前走4角から着順を上げた')
-  }
-  if(finish>Math.ceil(field*.55)&&n(x.lateGain)>=.60){score+=.07;reasons.push('着順以上の末脚')}
-  if(first>0&&first<=3&&finish>Math.ceil(field*.60)&&n(x.flexibility)>=.52){score+=.035;reasons.push('前走先行失速から形替わり余地')}
-  if(n(x.posCons)>=.64)score+=.025;
-  return{score:clamp(score,.28,.78),reasons:reasons.slice(0,2)}
-}
-function recentTop3Rate(h){
-  var runs=(h&&h.recentRaces)||[],m=Math.min(5,runs.length),i,hit=0,used=0,fin;
-  for(i=0;i<m;i++){fin=n(runs[i]&&runs[i].finish||runs[i]&&runs[i].finishPosition,0);if(fin>0){used++;if(fin<=3)hit++}}
-  return used?hit/used:.25
-}
-function sameConditionFrontMemory(x,r){
-  var runs=(x.horse&&((x.horse.allPastRuns&&x.horse.allPastRuns.length)?x.horse.allPastRuns:x.horse.recentRaces))||[],i,rr,corners,first,field,front=0,frontCount=0,matchCount=0,movedOnly=0,hold=0;
-  for(i=0;i<Math.min(5,runs.length);i++){
-    rr=runs[i]||{};
-    if(String(rr.track||'')!==String(r.track||''))continue;
-    if(Math.abs(n(rr.distance)-n(r.distance))>150)continue;
-    if(rr.surface&&r.surface&&String(rr.surface)!==String(r.surface))continue;
-    matchCount++;corners=rr.cornerPositions||[];first=corners.length?n(corners[0],0):0;field=Math.max(6,n(rr.fieldSize,12));
-    if(first>0&&first<=3){frontCount++;front=Math.max(front,clamp(1-(first-1)/Math.max(2,field-1),0,1));if(n(rr.finish||rr.finishPosition,99)<=3)hold=Math.max(hold,.85)}
-    else if(corners.some&&corners.some(function(v){return n(v)>0&&n(v)<=3}))movedOnly++;
-  }
-  return{score:frontCount?clamp(.58+front*.32+Math.min(2,frontCount)*.05,0,1):0,frontCount:frontCount,matchCount:matchCount,movedOnly:movedOnly,hold:hold}
-}
-function sparseResetProfile(x,r,q){
-  q=q||{};
-  var mem=sameConditionFrontMemory(x,r),vacancy=clamp(n(x.leadVacancyBoost)/.18,0,1),conflict=clamp(n(q.conflict),0,1),free=clamp(1-conflict,0,1),
-      runs=(x.horse&&x.horse.recentRaces)||[],rr=runs[0]||{},corners=rr.cornerPositions||[],first=corners.length?n(corners[0],0):0,field=Math.max(6,n(rr.fieldSize,12)),finish=n(rr.finish||rr.finishPosition,0),
-      lastFrontFade=first>0&&first<=3&&finish>Math.ceil(field*.55),frontMemoryVacancy=0,fadeRecovery=0,reasons=[];
-  // Validated rule: historical same-course/similar-distance early speed only matters when the current lead is actually vacant.
-  if(mem.score>=.58&&vacancy>=.28&&conflict<=.50){frontMemoryVacancy=clamp(mem.score*vacancy*free,0,1);if(frontMemoryVacancy>=.16)reasons.push('同場同距離の前付け記憶×今回ハナ余地')}
-  // Validated rule: a horse that went forward and faded last time is not blindly upgraded; pressure must ease today.
-  if(lastFrontFade&&vacancy>=.22&&conflict<=.45){fadeRecovery=clamp(vacancy*free,0,1);if(fadeRecovery>=.16)reasons.push('前走先行失速×今回は競り圧低下')}
-  var score=clamp(frontMemoryVacancy*.62+fadeRecovery*.38,0,1);
-  return{score:score,frontMemoryVacancy:frontMemoryVacancy,fadeRecovery:fadeRecovery,frontMemory:mem.score,frontMemoryCount:mem.frontCount,lastFrontFade:lastFrontFade,reasons:reasons.slice(0,2)}
-}
-function raceTargetProfile(r,p){
-  var rows=(p&&p.rows)||[],holes=rows.filter(function(x){return n(x.winRank)>=4&&n(x.bombScore)>=58&&n(x.edgeScore)>=56&&(n(x.p2Rank)<=5||n(x.p3Rank)<=6||n(x.p1Probability)>=1/Math.max(1,rows.length)*.52)}).sort(function(a,b){return n(b.bombScore)-n(a.bombScore)||n(b.roleUpside)-n(a.roleUpside)||n(b.edgeScore)-n(a.edgeScore)}),
-      h1=holes[0]?n(holes[0].bombScore):0,h2=holes[1]?n(holes[1].bombScore):0,
-      vol=n(r&&r.volatility&&r.volatility.score,0),volNorm=clamp(vol/18,0,1),
-      sc=(p&&p.scenarios)||[],uncertainty=0,cov=n(p&&p.coverage,0);
-  if(sc.length){var probs=sc.map(function(z){return n(z.prob)}).sort(function(a,b){return b-a});uncertainty=clamp(1-((probs[0]||0)-(probs[1]||0)),0,1)}
-  var resetMax=rows.length?Math.max.apply(null,rows.map(function(z){return n(z.sparseReset)})):0,roleMax=rows.length?Math.max.apply(null,rows.map(function(z){return n(z.roleUpside)/100})):0,
-      score=Math.round(clamp((h1/100)*.43+(h2/100)*.11+volNorm*.10+uncertainty*.07+cov*.10+resetMax*.12+roleMax*.07,0,1)*100),grade='C',label='本線寄り';
-  if(score>=78){grade='S';label='RESET/ROLE穴を頭まで検討'}
-  else if(score>=68){grade='A';label='ROLE穴を2・3着以上へ'}
-  else if(score>=57){grade='B';label='相手穴を拾う'}
-  return{score:score,grade:grade,label:label,holes:holes.slice(0,3)}
-}
-function raceSelectionProfile(r,p){return strictSelectedRaceProfile(r,p)}
-function dataReadinessProfile(r,p){
-  var hs=((r&&r.horses)||[]).filter(function(h){return !isScratchHorse(h)}),field=hs.length||1,
-      card=hs.filter(function(h){return String(h.name||'').trim()&&String(h.jockey||'').trim()}).length/field,
-      hist=mean(hs.map(function(h){if(h.debutNoHistory)return 1;return Math.min(5,((h.recentRaces||h.allPastRuns||[]).length))/5})),
-      actual=hs.filter(function(h){return n(h.winOdds)>1&&!h.oddsForecast&&!/予想|forecast/i.test(String(h.oddsSource||''))}).length/field,
-      body=hs.filter(function(h){var w=n(h.bodyWeight);return w>=250&&w<=800}).length/field,
-      env=((r&&r.weather&&String(r.weather)!=='不明')?.5:0)+((r&&r.condition&&String(r.condition)!=='不明')?.5:0),
-      analysis=clamp(n(p&&p.coverage,0),0,1),server=(r&&r.dataCoreHealth)||{},serverAnalysis=n(server.analysis&&server.analysis.completeness,0)/100,
-      // v302: readiness must not flip just because the clock entered a T-120 window.
-      // Body weight improves the model when published; unpublished weight is neutral.
-      bodyReady=body>0?body:1;
-  if(serverAnalysis>0)analysis=Math.max(analysis,serverAnalysis);
-  var prediction=clamp(card*.18+hist*.28+env*.15+analysis*.28+bodyReady*.11,0,1),
-      market=clamp(prediction*.72+actual*.28,0,1),missing=[];
-  if(card<.90)missing.push('出馬表');if(hist<.70)missing.push('近走');if(env<.50)missing.push('馬場');if(analysis<.45)missing.push('診断');if(actual<.65)missing.push('実オッズ');
-  return{prediction:prediction,market:market,card:card,history:hist,actualOdds:actual,bodyWeight:body,environment:env,analysis:analysis,missing:missing}
-}
-function arvexqRacePolicy(r){
-  return {id:observedModelVersion(r),value:{unverifiedRate:true}};
-}
-function strictSelectedRaceProfile(r,p){return observedSelectedRaceProfile(r,p);}
 
-function independentSpecialEvidence(h,r,front){
-  var runs=observedHistory(h,r).filter(function(q){return isNarRace(r)||verifiedJraMargin(q)}).filter(function(z){
-    var f=Number(z.finish||z.finishPosition),size=Number(z.fieldSize);
-    return isFinite(f)&&isFinite(size)&&size>=2&&f>=1&&f<=size;
-  }),advance=[],podium=0,same=false,highLevel=false,closeMargin=false,earlier=false,
-      dist=r.distance==null?NaN:Number(r.distance);
-  runs.forEach(function(z,idx){
-    var f=Number(z.finish||z.finishPosition),size=Number(z.fieldSize),
-        corners=Array.isArray(z.cornerPositions)?z.cornerPositions:[],
-        last=corners.length?Number(corners[corners.length-1]):NaN;
-    if(f<=3)podium++;
-    if(isFinite(last)&&last>=1&&last<=size&&last-f>=2&&f<=Math.ceil(size/2))
-      advance.push((last-f)/(size-1));
-    var margin=z.marginSeconds!=null&&z.marginSeconds!==''?Number(z.marginSeconds):
-      (z.timeBehindWinner!=null&&z.timeBehindWinner!==''?Number(z.timeBehindWinner):NaN);
-    if((isNarRace(r)||verifiedJraMargin(z))&&isFinite(margin)&&margin>=0&&margin<=.70&&f>2)closeMargin=true;
-    var d=z.distance==null?NaN:Number(z.distance);
-    if(f<=3&&isFinite(dist)&&isFinite(d)&&Math.abs(d-dist)<=150&&z.track&&z.track===r.track&&
-       z.surface&&z.surface===r.surface)same=true;
-    var level=z.opponentLevel==null?NaN:Number(z.opponentLevel);
-    if(f<=3&&isFinite(level)&&level>=.65&&level<=1)highLevel=true;
-    if(idx>0&&f<=3&&runs.length&&Number(runs[0].finish||runs[0].finishPosition)>=4)earlier=true;
-  });
-  var star=runs.length>=1&&front>=3&&advance.length>0&&podium>=1;
-  var starStrength=star?.50*Math.min(1,Math.max.apply(null,advance)*3)+
-    .30*Math.min(1,advance.length/2)+.20*Math.min(1,front/5):0;
-  var reasons=[];
-  if(closeMargin)reasons.push('close-margin');
-  if(same)reasons.push('same-course-distance-podium');
-  if(highLevel)reasons.push('strong-opposition-podium');
-  if(earlier)reasons.push('earlier-peak');
-  var note=runs.length>=1&&podium>=1&&reasons.length>=2;
-  return {star:star,note:note,starStrength:Math.round(starStrength*1e6)/1e6,
-    noteStrength:note?Math.round((.40+.15*Math.min(4,reasons.length)+.05*Math.min(2,podium))*1e6)/1e6:0,
-    frontPressureRunners:front,closingGainRuns:advance.length,podiumRuns:podium,
-    noteReasons:reasons,evidenceRuns:runs.length,limitedEvidence:runs.length<2,mark:''};
-}
-function assignIndependentSpecialMarks(ordered,r){
-  var front=ordered.filter(function(z){
-    return observedHistory(z.horse,r).filter(function(q){return isNarRace(r)||verifiedJraMargin(q)}).filter(function(run){
-      var f=Number(run.finish||run.finishPosition),size=Number(run.fieldSize);
-      return isFinite(f)&&isFinite(size)&&size>=2&&f>=1&&f<=size;
-    }).slice(0,3).some(function(run){
-      return Array.isArray(run.cornerPositions)&&Number(run.cornerPositions[0])>=1&&
-        Number(run.cornerPositions[0])<=3;
-    });
-  }).length,proposals=[],choice={},used={},evidence={};
-  ordered.forEach(function(z,idx){
-    var no=Number(z.horse.horseNumber),e=independentSpecialEvidence(z.horse,r,front);
-    evidence[no]=e;
-    if(idx<2)return;
-    if(e.star)proposals.push({no:no,idx:idx,mark:'☆',strength:e.starStrength});
-    if(e.note)proposals.push({no:no,idx:idx,mark:'注',strength:e.noteStrength});
-  });
-  proposals.sort(function(a,b){return b.strength-a.strength||a.idx-b.idx||a.no-b.no});
-  proposals.forEach(function(x){if(!choice[x.no]&&!used[x.mark]){
-    choice[x.no]=x.mark;used[x.mark]=true;
-  }});
-  ordered.forEach(function(z,idx){
-    var no=Number(z.horse.horseNumber);
-    evidence[no].mark=idx===0?'◎':idx===1?'○':(choice[no]||'');
-  });
-  // Match Python's role-aware ▲ (second/third) and △ (third) allocation.
-  var remaining=ordered.slice(2).filter(function(z){return !evidence[Number(z.horse.horseNumber)].mark;});
-  if(remaining.length){
-    var peak=ordered[0].narScore,ww=ordered.map(function(z){return Math.exp((z.narScore-peak)/.15);}),
-        total=ww.reduce(function(a,b){return a+b},0),p2=ww.map(function(){return 0}),p3=ww.map(function(){return 0});
-    for(var i=0;i<ww.length;i++)for(var j=0;j<ww.length;j++)if(i!==j){
-      var rem=total-ww[i],left=rem-ww[j];if(rem<=0)continue;
-      var second=ww[i]/total*ww[j]/rem;p2[j]+=second;
-      if(left>0)for(var k=0;k<ww.length;k++)if(k!==i&&k!==j)p3[k]+=second*ww[k]/left;
-    }
-    function ix(z){return ordered.indexOf(z)}
-    remaining.sort(function(a,b){return (p2[ix(b)]+p3[ix(b)])-(p2[ix(a)]+p3[ix(a)])||
-      Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
-    var triangle=remaining.shift();evidence[Number(triangle.horse.horseNumber)].mark='▲';
-    if(remaining.length){
-      remaining.sort(function(a,b){return p3[ix(b)]-p3[ix(a)]||
-        Number(a.horse.horseNumber)-Number(b.horse.horseNumber)});
-      evidence[Number(remaining[0].horse.horseNumber)].mark='△';
-    }
-  }
-  return evidence;
-}
-function specialMarkInputSignature(r){
-  return (r.horses||[]).map(function(h){
-    return [n(h.horseNumber),observedHistory(h,r).map(function(z){
-      return [z.date,z.finish,z.fieldSize,z.cornerPositions,z.marginSeconds,
-        z.timeBehindWinner,z.marginEvidenceSource,z.marginEvidence,z.opponentLevel,z.track,z.surface,z.distance]
-    })];
-  }).sort(function(a,b){return a[0]-b[0]});
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Only live observed 60/40 prediction authority for both JRA and NAR. */
 var ARVEXQ_NAR_MODEL='arvexq-nar-observed-consensus-v1';
 var ARVEXQ_JRA_MODEL='arvexq-jra-observed-consensus-v1';
 function isObservedCircuit(r){return isNarRace(r)||['中央','JRA','central'].indexOf(String(r&&r.circuit||''))>=0}
-function observedModelVersion(r){return isNarRace(r)?ARVEXQ_NAR_MODEL:ARVEXQ_JRA_MODEL}
-function observedCircuitLabel(r){return isNarRace(r)?'地方':'中央'}
+
+
 function observedHistory(h,r){
   var runs=historicalWindow(h,r);
   if(!isNarRace(r)){
@@ -1119,326 +662,21 @@ function observedHistory(h,r){
   }
   return runs;
 }
-function verifiedJraMargin(q){
-  if(isNarRace(q&&q._race||{}))return true;
-  var source=String(q.marginEvidenceSource||'').toLowerCase(),ev=q.marginEvidence||{};
-  return !!(ev&&typeof ev==='object'&&narMeasured(ev.winnerTimeSeconds)!==null&&
-    narMeasured(ev.horseTimeSeconds)!==null&&/(jra|official)/i.test(source));
-}
+
 function isNarRace(r){return ['地方','NAR','local'].indexOf(String(r&&r.circuit||''))>=0}
-function narMeasured(v){if(v==null||v==='')return null;var x=Number(v);return isFinite(x)?x:null}
-function narMarginParts(h,r){
-  var runs=observedHistory(h,r),margins=[],ability=[],suit=[],pace=[],i,q,v,f,field,level,positions,first,last;
-  runs.forEach(function(run){
-    v=narMeasured(run.marginSeconds);if(v===null)v=narMeasured(run.timeBehindWinner);
-    if(v!==null&&v>=-30&&v<=30&&(isNarRace(r)||verifiedJraMargin(run)))margins.push(Math.exp(-Math.max(0,v)));
-    f=narMeasured(run.finish);field=narMeasured(run.fieldSize);level=narMeasured(run.opponentLevel);
-    if(level!==null&&level>=0&&level<=1&&f!==null&&field>1&&f>=1&&f<=field)
-      ability.push((field-f)/(field-1)*(.5+.5*level));
-    var dist=narMeasured(run.distance),target=narMeasured(r.distance);
-    if(dist!==null&&target!==null&&Math.abs(dist-target)<=150&&run.surface&&
-       run.surface===r.surface&&run.track===r.track&&f!==null&&field>1&&f>=1&&f<=field)
-      suit.push((field-f)/(field-1));
-    positions=run.cornerPositions;
-    if(Array.isArray(positions)&&positions.length>=2&&field>1){
-      first=narMeasured(positions[0]);last=narMeasured(positions[positions.length-1]);
-      if(first!==null&&last!==null&&first>=1&&last>=1&&first<=field&&last<=field)
-        pace.push(.5+(first-last)/(2*(field-1)));
-    }
-  });
-  if(!margins.length)return null;
-  var sum=function(a){return a.reduce(function(x,y){return x+y},0)};
-  var weighted=0,den=0;
-  margins.forEach(function(v,i){var w=margins.length-i;weighted+=w*v;den+=w});
-  var factors={A:weighted/den,B:ability.length?sum(ability)/ability.length:null,
-    C:suit.length?sum(suit)/suit.length:null,D:pace.length?sum(pace)/pace.length:null};
-  var weights={A:.35,B:.25,C:.20,D:.15},numerator=0,coverage=0;
-  Object.keys(factors).forEach(function(k){
-    if(factors[k]!==null){numerator+=weights[k]*factors[k];coverage+=weights[k]}
-  });
-  return {score:numerator/coverage,coverage:coverage,measuredMargins:margins.length}
-}
-function observedHistoryRateEvidence(h,r){
-  var runs=observedHistory(h,r),target=isNarRace(r)?'NAR':'JRA';
-  var jra=['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉'];
-  var nar=['門別','帯広','盛岡','水沢','浦和','船橋','大井','川崎','金沢','笠松','名古屋','園田','姫路','高知','佐賀'];
-  function circuit(q){
-    var explicit=String(q.circuit||q.organization||'').toLowerCase();
-    if(['中央','jra','central'].indexOf(explicit)>=0)return 'JRA';
-    if(['地方','nar','local'].indexOf(explicit)>=0)return 'NAR';
-    var track=String(q.track||'');
-    return jra.indexOf(track)>=0?'JRA':nar.indexOf(track)>=0?'NAR':null;
-  }
-  var same=runs.filter(function(q){return circuit(q)===target});
-  var other=runs.filter(function(q){return circuit(q)&&circuit(q)!==target});
-  var nRuns=same.length,win=0,pair=0,place=0;
-  same.forEach(function(q){var f=narMeasured(q.finish);if(f===1)win++;if(f!==null&&f<=2)pair++;if(f!==null&&f<=3)place++});
-  var shrink=nRuns/(nRuns+8),level=narMeasured(r.opponentLevel),quality=[];
-  if(level!==null&&level>=0&&level<=1)other.forEach(function(q){
-    var l=narMeasured(q.opponentLevel),f=narMeasured(q.finish),sz=narMeasured(q.fieldSize);
-    if(l!==null&&l>=0&&l<=1&&f!==null&&sz>1&&f>=1&&f<=sz)
-      quality.push(((sz-f)/(sz-1))*(.5+.5*l));
-  });
-  return {starts:nRuns,otherCircuitStarts:other.length,
-    winRate:nRuns?win/nRuns:null,top2Rate:nRuns?pair/nRuns:null,
-    top3Rate:nRuns?place/nRuns:null,
-    winEvidence:nRuns?shrink*(win/nRuns-.12):0,
-    top2Evidence:nRuns?shrink*(pair/nRuns-.25):0,
-    top3Evidence:nRuns?shrink*(place/nRuns-.38):0,
-    transferClassSignal:quality.length?(quality.reduce(function(a,b){return a+b},0)/quality.length-.5)*quality.length/(quality.length+8):0,
-    transferClassEvidenceStarts:quality.length,
-    probabilityStatus:'uncalibrated-model-estimate'};
-}
-function narScoreRows(rows,r){
-  var measurements={},all=[],number,rs,first,field,position,valid,fronts,frame;
-  rows.forEach(function(z){
-    var h=z.horse||{},no=Number(h.horseNumber),runs=observedHistory(h,r),start=runs[0];
-    if(!start||!Array.isArray(start.cornerPositions)||!start.cornerPositions.length)return;
-    field=narMeasured(start.fieldSize);first=narMeasured(start.cornerPositions[0]);
-    if(field===null||field<=1||first===null||first<1||first>field)return;
-    fronts=[];
-    runs.forEach(function(run){
-      var corners=run.cornerPositions,fs=narMeasured(run.fieldSize),f;
-      if(!Array.isArray(corners)||!corners.length||fs===null||fs<=1)return;
-      f=narMeasured(corners[0]);if(f!==null&&f>=1&&f<=fs)fronts.push((fs-f)/(fs-1));
-    });
-    if(!fronts.length)return;
-    frame=narMeasured(h.frameNumber);if(frame===null)frame=narMeasured(h.horseNumber);
-    if(frame===null)return;
-    measurements[no]={front:fronts.reduce(function(a,b){return a+b},0)/fronts.length,
-      previousFront:first<=3,frame:frame};
-    all.push(no);
-  });
-  var count=all.length,share=count?all.filter(function(no){return measurements[no].previousFront}).length/count:0;
-  rows.forEach(function(z){
-    var h=z.horse||{},no=Number(h.horseNumber),m=measurements[no],margin=narMarginParts(h,r),position=null;
-    if(count>=2&&m){
-      var outer=all.filter(function(n){
-        return n!==no&&measurements[n].front>m.front&&measurements[n].frame>m.frame
-      }).length;
-      position=.75*m.front*(1-.20*share)+.25/(1+outer);
-    }
-    var available=position!==null&&margin!==null;
-    z.narEvidence={position:position,margin:margin&&margin.score,marginCoverage:margin&&margin.coverage,
-      measuredMargins:margin&&margin.measuredMargins,available:available,
-      sample:observedHistory(h,r).length};
-    z.historicalRates=observedHistoryRateEvidence(h,r);
-    var rate=z.historicalRates,observations=[];
-    // Model candidate: independently measured positioning, margin and career rates.
-    if(position!==null)observations.push(position);
-    if(margin!==null)observations.push(margin.score);
-    if(rate.starts>=2)observations.push((rate.winRate+rate.top2Rate+rate.top3Rate)/3);
-    if(rate.transferClassEvidenceStarts>=2)observations.push(.5+rate.transferClassSignal);
-    available=margin!==null&&observations.length>=2;
-    z.narEvidence.available=available;
-    z.narEvidence.observedAxes=observations.length;
-    z.narScore=available?observations.reduce(function(a,b){return a+b},0)/observations.length:null;
-  });
-}
-function observedMarkSignature(r){
-  var x=analysisRace(r),rows=(x.horses||[]).map(function(h){return {horse:h}});
-  narScoreRows(rows,x);
-  return JSON.stringify({engine:observedModelVersion(r),id:String(r.id||''),date:r.date,
-    runners:rows.map(function(z){return [n(z.horse.horseNumber),z.narScore,
-      z.narEvidence.position,z.narEvidence.margin,z.narEvidence.measuredMargins]}).sort(function(a,b){return a[0]-b[0]}),specialInputs:specialMarkInputSignature(x)});
-}
-function observedSelectedRaceProfile(r,p){
-  var rows=(p&&p.rows||[]).filter(function(z){return z.horse&&!isScratchHorse(z.horse)}),
-      good=rows.filter(function(z){return z.narEvidence&&z.narEvidence.available}),
-      ordered=good.slice().sort(function(a,b){return b.narScore-a.narScore}),
-      gap=ordered.length>1?ordered[0].narScore-ordered[1].narScore:0,
-      eligible=rows.length>=5&&good.length===rows.length&&gap>=.055&&
-        ordered[0].narEvidence.sample>=3;
-  return {selected:eligible,score:ordered.length?Math.round(ordered[0].narScore*100):null,
-    margin:gap,coverage:rows.length?good.length/rows.length:0,
-    failed:eligible?[]:[observedCircuitLabel(r)+'の全頭実測着差・位置取り、または本命の差が不足'],
-    reason:eligible?observedCircuitLabel(r)+'60/40の実測根拠が全頭揃った':'見送り：地方の実測根拠不足',
-    model:observedModelVersion(r)}
-}
-function assignObservedPredictionMarks(rows,r){
-  narScoreRows(rows,r);
-  var valid=rows.filter(function(z){return z.narEvidence.available}),
-      complete=valid.length===rows.length&&rows.length>=2;
-  valid.sort(function(a,b){return b.narScore-a.narScore||n(a.horse.horseNumber)-n(b.horse.horseNumber)});
-  var first=valid[0],second=valid[1],gap=first&&second?first.narScore-second.narScore:0,
-      grade=complete&&rows.length>=5&&gap>=.055&&first.narEvidence.sample>=3?'A':complete?'B':'C',
-      labels=['◎','○','▲','△'];
-  rows.forEach(function(z){
-    var f=z.narEvidence,has=f.available,score=z.narScore,ev=z.horse&&z.horse.integratedEvaluation;
-    z.threeFactorScore=has?score:null;z.threeFactorCoverage=has?2:0;
-    z.threeFactorValues={mineta:f.position,margin:f.margin};
-    z.researchFactors={mineta:f.position,margin:f.margin,historicalRates:z.historicalRates};
-    z.researchModel=observedModelVersion(r);z.researchConsensusScore=score;
-    z.overallScoreExact=has?score*100:null;z.overallScore=has?score*100:null;
-    z.overallRaw=score;z.hasFrozenEvaluation=has;z.modelScore=has?score*100:null;
-    // Overall grade is individual: the race-wide `grade` only measures honmei confidence.
-    var runnerRank=has?valid.indexOf(z)+1:0,runnerPct=has?runnerRank/valid.length:1;
-    z.overallGrade=!has?'C':(runnerPct<=.25&&score>=.65?'A':(runnerPct<=.70&&score>=.45?'B':'C'));
-    z.predRank=999;z.predMark='';
-    z.honmeiGrade='';z.honmeiRole='';z.preOffAxisCandidate=false;
-    z.singleWinSuitable=false;z.p1Probability=null;z.p2Probability=null;z.p3Probability=null;
-    z.attentionReason=has?observedCircuitLabel(r)+'60/40基礎＋勝率・連対率・3着内率・転入補正':observedCircuitLabel(r)+'の実測位置取り・着差不足';
-    if(ev){ev.score=z.overallScore;ev.grade=z.overallGrade;ev.modelVersion=observedModelVersion(r);ev.mark='';}
-    if(z.evaluation){z.evaluation.score=z.overallScore;z.evaluation.grade=z.overallGrade;
-      z.evaluation.modelScore=z.overallScore;z.evaluation.predictionModel=observedModelVersion(r);
-      z.evaluation.mode='みねた位置取り60%＋実測着差40%';}
-  });
-  if(!first){
-    r.honmeiDecisionFrontend={version:observedModelVersion(r),eligible:false,horseNumber:0,reason:'missing-observations'};
-    r.predictionModelVersion=observedModelVersion(r);return;
-  }
-  var independent=assignIndependentSpecialMarks(valid,r);
-  valid.forEach(function(z,i){
-    var special=independent[n(z.horse.horseNumber)]||{};
-    z.predRank=i+1;z.predMark=special.mark||'';
-    z.specialMarkEvidence=special;
-    z.specialMarkReason=z.predMark==='☆'?'展開上昇：実測追い上げ＋前争い':
-      (z.predMark==='注'?'注意材料：'+(special.noteReasons||[]).map(function(key){return {
-        'close-margin':'僅差負け','same-course-distance-podium':'同コース距離好走',
-        'strong-opposition-podium':'強敵相手に好走','earlier-peak':'近走5走内の好走'
-      }[key]||key}).join('・'):'');
-    z.honmeiRole=i===0?'win':'';z.honmeiGrade=i===0?grade:'';
-    z.singleWinSuitable=i===0&&grade==='A';z.singleWinStrength=z.narScore;
-    z.winRank=i+1;z.p1Rank=i+1;z.attentionReason=(i===0?'本命 '+grade+'｜':'')+
-      (z.specialMarkReason||'みねた60%・実測着差40%')+'｜'+Math.round(z.narScore*100)+'/100';
-    var ev=z.horse&&z.horse.integratedEvaluation;
-    if(ev){ev.mark=z.predMark;ev.honmeiRole=z.honmeiRole;ev.honmeiGrade=z.honmeiGrade;
-      ev.honmeiEligible=i===0&&grade==='A';ev.specialMarkEvidence=z.specialMarkEvidence}
-  });
-  // No field-wide probabilities from partial historical evidence.
-  if(complete){
-    var weights=rows.map(function(z){return Math.exp((z.narScore-first.narScore)/.15)}),
-        total=weights.reduce(function(a,b){return a+b},0),p1=weights.map(function(w){return w/total}),
-        p2=weights.map(function(){return 0}),p3=weights.map(function(){return 0}),i,j,k;
-    for(i=0;i<rows.length;i++)for(j=0;j<rows.length;j++)if(i!==j){
-      var denom=total-weights[i],rest=denom-weights[j];if(denom<=0)continue;
-      var secondP=p1[i]*weights[j]/denom;p2[j]+=secondP;
-      if(rest>0)for(k=0;k<rows.length;k++)if(k!==i&&k!==j)p3[k]+=secondP*weights[k]/rest;
-    }
-    rows.forEach(function(z,i){
-      z.p1Probability=p1[i];z.p2Probability=p2[i];z.p3Probability=p3[i];
-      z.winProbability=p1[i];z.podiumRecallScore=p1[i]+p2[i]+p3[i];
-      z.axisProbability=z.podiumRecallScore/3;z.p2RecallScore=p2[i];z.p3RecallScore=p3[i];
-      z.bombScore=Math.round(z.podiumRecallScore*100);z.edgeScore=50;
-      z.p1Rank=1+rows.filter(function(x){return x.p1Probability>z.p1Probability}).length;
-      z.p2Rank=1+rows.filter(function(x){return x.p2Probability>z.p2Probability}).length;
-      z.p3Rank=1+rows.filter(function(x){return x.p3Probability>z.p3Probability}).length;
-    });
-  }
-  // The current prediction has one honmei for winning and podium stability.
-  // Never promote a separately selected axis through a display-only mark.
-  valid.forEach(function(z){
-    z.preOffAxisCandidate=complete&&z===first;
-    z.podiumAxisEligible=z.preOffAxisCandidate&&grade==='A';
-    z.honmeiRole=z===first?'win-axis':'';
-    if(z.horse&&z.horse.integratedEvaluation){
-      z.horse.integratedEvaluation.independentAxisCandidate=false;
-      z.horse.integratedEvaluation.podiumAxisEligible=z.podiumAxisEligible;
-      z.horse.integratedEvaluation.honmeiRole=z.honmeiRole;
-    }
-  });
-  r.honmeiDecisionFrontend={version:observedModelVersion(r),eligible:grade==='A',
-    horseNumber:n(first.horse.horseNumber),axisHorseNumber:n(first.horse.horseNumber),role:'win-axis',confidenceGrade:grade,
-    axisScore:first.narScore,axisGap:gap,reason:complete?'observed-nar-mineta-margin':'partial-observed'};
-  r.predictionModelVersion=observedModelVersion(r);
-}
-function buildObservedBetPlan(r,p){
-  var rows=(p&&p.rows||[]).filter(function(z){return z&&z.horse&&!isScratchHorse(z.horse)});
-  if(rows.length<4)return null;
-  var selection=observedSelectedRaceProfile(r,p),
-      ordered=rows.filter(function(z){return z.narEvidence&&z.narEvidence.available})
-        .sort(function(a,b){
-          var priority={'◎':0,'○':1,'▲':2,'△':3,'☆':4,'注':5};
-          var ma=String(a.predMark||''),mb=String(b.predMark||'');
-          var pa=Object.prototype.hasOwnProperty.call(priority,ma)?priority[ma]:99;
-          var pb=Object.prototype.hasOwnProperty.call(priority,mb)?priority[mb]:99;
-          return pa-pb||n(b.narScore)-n(a.narScore);
-        }),ready=rows.length===ordered.length,
-      strong=selection.selected,items=[];
-  function no(x){return n(x&&x.horse&&x.horse.horseNumber)}
-  function item(level,kind,combos,reason){return {level:level,kind:kind,combos:combos,points:combos.length,
-    combo:betComboText(kind,combos),reason:reason}}
-  if(ready&&ordered.length>=4){
-    items.push(item('本線','馬連',[[no(ordered[0]),no(ordered[1])]],observedCircuitLabel(r)+'60/40の◎○'));
-    items.push(item('保険','ワイド',[[no(ordered[0]),no(ordered[2])]],observedCircuitLabel(r)+'60/40の◎▲'));
-    if(strong){
-      var first=ordered[0],tri=[],weights=rows.map(function(z){return Math.exp((z.narScore-first.narScore)/.15)}),
-          total=weights.reduce(function(a,b){return a+b},0);
-      for(var i=0;i<rows.length;i++)for(var j=0;j<rows.length;j++)if(i!==j)
-        for(var k=0;k<rows.length;k++)if(i!==k&&j!==k){
-          var d1=total-weights[i],d2=d1-weights[j];
-          if(d1>0&&d2>0&&no(rows[i])===no(first))
-            tri.push({combo:[no(rows[i]),no(rows[j]),no(rows[k])],
-              weight:weights[i]/total*weights[j]/d1*weights[k]/d2});
-        }
-      tri.sort(function(a,b){return b.weight-a.weight});
-      items.push(item('3連単チャレンジ','3連単',tri.slice(0,6).map(function(x){return x.combo}),
-        observedCircuitLabel(r)+'60/40基礎＋過去実績・転入補正による◎1着固定・順序上位6点'));
-    }
-  }
-  var trifecta=items.some(function(x){return x.kind==='3連単'});
-  // Mutually exclusive top-three finishing orders under the existing PL weights.
-  // Each ticket's occurrence probability follows its own betting rules.
-  var trifectaProbability=null;
-  if(ready&&rows.length>=3){
-    var raceWeights=rows.map(function(z){return Math.exp((z.narScore-ordered[0].narScore)/.15)}),
-        raceTotal=raceWeights.reduce(function(a,b){return a+b},0),
-        runnerNos=rows.map(no),orders=[];
-    for(var i=0;i<rows.length;i++)for(var j=0;j<rows.length;j++)if(i!==j)
-      for(var k=0;k<rows.length;k++)if(k!==i&&k!==j){
-        var probability=(raceWeights[i]/raceTotal)
-          *(raceWeights[j]/(raceTotal-raceWeights[i]))
-          *(raceWeights[k]/(raceTotal-raceWeights[i]-raceWeights[j]));
-        orders.push({order:[runnerNos[i],runnerNos[j],runnerNos[k]],p:probability});
-      }
-    items.forEach(function(item){
-      item.comboProbabilities=(item.combos||[]).map(function(combo){
-        var event={kind:item.kind,combos:[combo]},total=0;
-        orders.forEach(function(o){if(betItemHit(event,o.order))total+=o.p});
-        return Math.round(total*10000)/100;
-      });
-    });
-    var triOrders={};
-    items.filter(function(item){return item.kind==='3連単'}).forEach(function(item){
-      (item.combos||[]).forEach(function(combo){triOrders[combo.join('-')]=true});
-    });
-    trifectaProbability=Object.keys(triOrders).length?0:null;
-    if(trifectaProbability!==null){
-      orders.forEach(function(o){if(triOrders[o.order.join('-')])trifectaProbability+=o.p});
-      trifectaProbability=Math.round(trifectaProbability*10000)/100;
-    }
-  }
-  var plan={raceId:String(r.id||''),raceDate:String(r.date||''),items:items,
-    engineVersion:observedModelVersion(r),betStrategy:observedModelVersion(r),
-    betQuality:ordered.length?Math.round(ordered[0].narScore*100):0,
-    trifectaOccurrenceProbability:trifectaProbability,
-    decision:ready?'購入候補':'見送り',featuredRace:isFeaturedBetRace(r,p),
-    selectionAudit:selection,honmei:{horseNumber:ordered.length?no(ordered[0]):0,role:'win',
-      grade:ordered.length?ordered[0].honmeiGrade:''},
-    noAxis:!ready,referenceOnly:!strong,trifectaReviewed:true,
-    trifectaDecision:trifecta?'採用':'見送り',
-    trifectaReason:trifecta?'実測全頭＋上位差の条件を通過':'実測全頭または順序根拠不足',
-    insuranceDecision:ready?'採用':'見送り',
-    reason:ready?observedCircuitLabel(r)+'専用60/40基礎＋過去実績・転入補正の発走前実測モデル':observedCircuitLabel(r)+'の全頭実測着差・位置取り不足',
-    expectedValueReason:'モデル点・順位確率は校正済み的中率ではありません。',
-    referenceBudget:{points:items.reduce(function(a,b){return a+b.points},0)},
-    dataReadiness:dataReadinessProfile(r,p),
-    betInputGate:{ready:ready,missing:ready?[]:['地方全頭の実測着差・位置取り不足']},
-    betWarnings:ready?[]:['実測データ不足につき買い目見送り'],
-    p1Model:observedModelVersion(r),p2Model:'plackett-luce-same-nar-score',
-    p3Model:'plackett-luce-same-nar-score',
-    roles:{p1:ordered.slice(0,4).map(function(x){return {no:no(x),p:x.p1Probability}}),
-      p2:ordered.slice().sort(function(a,b){return n(b.p2Probability)-n(a.p2Probability)}).slice(0,5).map(function(x){return {no:no(x),p:x.p2Probability}}),
-      p3:ordered.slice().sort(function(a,b){return n(b.p3Probability)-n(a.p3Probability)}).slice(0,6).map(function(x){return {no:no(x),p:x.p3Probability}})}};
-  saveStoredAiBet(r,plan);return plan
-}
+
+
+
+
+
+
+
+
 
 function assignPredictionMarks(rows,r){return rows||[];}
 
 // v343 — standalone win-only call, independent of ◎ and of market odds.
-function assignSingleWinCandidate(rows,r){
-  return (rows||[]).find(function(z){return z.predMark==='◎'&&z.honmeiGrade==='A'})||null;
-}
+
 
 function raceMode(r){r=r||{};if(['平地','新馬','障害'].indexOf(r.analysisMode)>=0)return r.analysisMode;var title=String(r.title||'');if(r.surface==='障害'||/障害|J[･・.]?G[ⅠⅡⅢ123]|\bJS\b|ジャンプ/i.test(title))return '障害';return /新馬|メイクデビュー/.test(title)?'新馬':'平地'}
 function saveRaceAnalysis(r,p){return}
@@ -1461,24 +699,7 @@ function analysisRace(r){
   });
   return Object.assign({},r,{horses:active,fieldSize:active.length||n(r.fieldSize)})
 }
-function integratedGrades(r,rows){
-  rows.forEach(function(x){
-    var evidence=x.narEvidence||{},available=evidence.available===true,
-        score=available?x.narScore*100:null;
-    x.modelScore=score;x.evidenceScore=null;
-    x.evaluation={score:score,grade:x.overallGrade||'C',modelScore:score,
-      evidenceScore:null,predictionModel:observedModelVersion(r),
-      confidence:available?'実測':'不足',
-      tier:available?'位置取り・着差の実測2指標':'実測データ不足',
-      mode:observedCircuitLabel(r)+'専用：みねた位置取り60%＋実測着差40%',
-      winProbability:available?x.p1Probability:null,
-      p1Probability:available?x.p1Probability:null,
-      p2Probability:available?x.p2Probability:null,
-      p3Probability:available?x.p3Probability:null,
-      p1Rank:x.p1Rank||null,p2Rank:x.p2Rank||null,p3Rank:x.p3Rank||null,
-      marketProbability:x.marketProbability||null};
-  });
-}
+
 
 // v345: immutable *displayed* marks, independent of live odds, body weight
 // refresh and the mutable winner model.  The server pre-race archive is preferred
@@ -1581,73 +802,11 @@ function latestAuthorizedMarkRevision(r){
   return Date.parse(String(model.revisedAt||''))>Date.parse(String(official.revisedAt||''))?model:official
 }
 function authorizedPreOffMarks(r){return null;}
-function applyFrozenMarks(r,p){
-  if(!r||!p||!Array.isArray(p.rows))return p;
-  var latestRevision=latestSavedForecastRevision(r);
-  if(latestRevision)return predictionFromSavedRevision(r,latestRevision);
-  var clock=raceMarkClock(r),server=authorizedPreOffMarks(r);
-  // Current pre-off marks are always calculated from the freshest race input.
-  // Retain the first pre-off server/local receipt for later accuracy audits
-  // and any already-fixed bet, but never let the receipt overwrite live marks.
-  // A verified pre-off receipt is the sole display authority on both sides
-  // of the start. Never replace displayed marks with a different archive at off.
-  if(!clock.started){
-    // Live upcoming marks must never be overwritten by an older morning receipt.
-    // The receipt itself stays immutable for post-off display and historical audits.
-    p.rows.forEach(function(z){z.markFrozen=false;z.computedLiveMark=String(z.predMark||'')});
-    p.markFreeze={source:'live-before-post',originalPreserved:!!server,
-      reason:server?'発走前の最新AI印（朝の保存原本は監査用に維持）':'発走前の暫定AI印（原本未保存）。発走後は未保存印を再生成しません。'};
-    return p;
-  }
-  if(server){
-    var remote={};server.horses.forEach(function(q){remote[n(q.horseNumber)]=q});
-    var order={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
-    p.rows.forEach(function(z){
-      var q=remote[n(z.horse&&z.horse.horseNumber)]||{},scratched=isScratchHorse(z.horse);
-      z.computedLiveMark=String(z.predMark||'');z.predMark=scratched?'':String(q.mark||'');
-      z.predRank=order[z.predMark]||999;z.markFrozen=true;
-      var lockedHonmei=validatedHonmeiMetadata(q);
-      z.honmeiRole=z.predMark==='◎'?lockedHonmei.honmeiRole:(lockedHonmei.honmeiRole==='axis'?'axis':'');
-      z.honmeiGrade=z.predMark==='◎'?lockedHonmei.honmeiGrade:'';
-      z.podiumAxisEligible=q.podiumAxisEligible===true;
-      z.preOffAxisCandidate=q.independentAxisCandidate===true||q.podiumAxisEligible===true;
-      z.singleWinSuitable=!scratched&&(!!q.singleWinSuitable||
-        (n((r.preRaceBet||{}).singleWinHorseNumber,0)>0&&
-         n((r.preRaceBet||{}).singleWinHorseNumber)===n(z.horse&&z.horse.horseNumber)));
-      if(q.lockedEvaluation){
-        z.overallScore=n(q.lockedEvaluation.score,z.overallScore);
-        z.overallScoreExact=n(q.lockedEvaluation.score,z.overallScoreExact);
-        z.overallGrade=String(q.lockedEvaluation.grade||z.overallGrade||'C');
-      }
-    });
-    p.markFreeze={source:server.version==='arvexq-user-model-mark-revision-v1'?'user-model-revision':(server.version==='arvexq-official-mark-revision-v1'?'official-course-revision':(validMorningMarkSnapshot(r)?'morning-fixed':'server-prerace')),
-      fixedAt:server.revisedAt||server.fixedAt||server.sealedAtJst||server.capturedAtJst||'',
-      reason:String(server.reason||'')};
-  }else if(clock.started){
-    var frozen=Array.isArray(r.preRacePrediction&&r.preRacePrediction.horses)?
-      r.preRacePrediction.horses:[];
-    var verified=serverFrozenPrediction(r);
-    if(verified&&frozen.length){
-      var savedByNo={};verified.horses.forEach(function(h){savedByNo[n(h.horseNumber)]=String(h.mark||'')});
-      var savedOrder={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
-      p.rows.forEach(function(z){
-        z.computedLiveMark=String(z.predMark||'');
-        z.predMark=isScratchHorse(z.horse)?'':(savedByNo[n(z.horse&&z.horse.horseNumber)]||'');
-        z.predRank=savedOrder[z.predMark]||999;z.markFrozen=true;
-      });
-      p.markFreeze={source:'server-prerace',fixedAt:String(r.preRacePrediction.fixedAt||'')};
-    }else{
-      // Never publish a newly calculated post-result mark as a pre-race forecast.
-      p.rows.forEach(function(z){z.computedLiveMark=String(z.predMark||'');z.predMark='';z.predRank=999;z.singleWinSuitable=false});
-      p.markFreeze={source:'missing-prerace'};
-    }
-  }else p.markFreeze={source:'provisional'};
-  return p;
-}
+
 // Recompute marks only when the actual inputs to the single observed 60/40
 // model change. Historical audit scores, win odds and old evaluation marks
 // never enter this signature. Only the active pre-off race is recalculated.
-function observedMarkInputSignature(r){return observedMarkSignature(r);}
+
 function latestSavedForecastRevision(r){
   if(!r||!Array.isArray(r.forecastRevisions)||!r.currentForecastRevisionId)return null;
   var list=r.forecastRevisions.filter(function(v){return v&&v.version==='arvexq-forecast-revision-v1'&&
@@ -1661,26 +820,7 @@ function latestSavedForecastRevision(r){
   return expected.length===v.horses.length&&expected.every(function(no){return seen[no]})?v:null;
 }
 function revisionPercent(value){return value==null||!Number.isFinite(Number(value))?'未算出':(100*Number(value)).toFixed(1)+'%'}
-function predictionFromSavedRevision(r,v){
-  var by={};v.horses.forEach(function(h){by[n(h.horseNumber)]=h});
-  var rows=(r.horses||[]).map(function(h){var saved=by[n(h.horseNumber)],prob=saved.probabilities||{},
-      horse=Object.assign({},h),mark=isScratchHorse(h)?'':String(saved.mark||'');
-    if(Array.isArray(saved.recentRaces))horse.recentRaces=saved.recentRaces;
-    return {horse:horse,predMark:mark,predRank:({'◎':1,'○':2,'▲':3,'△':4,'☆':5,'注':6})[mark]||999,
-      honmeiRole:mark==='◎'?'win-axis':'',preOffAxisCandidate:mark==='◎',podiumAxisEligible:false,
-      honmeiGrade:'C',overallGrade:'C',overallScore:null,overallScoreExact:null,threeFactorCoverage:0,
-      winProbability:prob.win,p1Probability:prob.win,top2Probability:prob.top2,podiumRecallScore:prob.top3,
-      p2Probability:prob.top2==null?null:prob.top2-prob.win,
-      p3Probability:prob.top3==null?null:prob.top3-prob.top2,
-      forecastRevision:saved,attentionReason:saved.reason||'',expected:'観測履歴による分析',pastStyle:'観測履歴による分析',
-      researchFactors:{},researchModel:v.modelVersion,coverage:0,markFrozen:false,singleWinSuitable:false};
-  });
-  return {rows:rows,savedForecastRevision:v,engineVersion:v.modelVersion,markEngineVersion:v.modelVersion,
-    currentRevisionId:v.revisionId,postRaceRevision:v.analysisType==='retrospective',
-    markFreeze:{source:'forecast-revision',fixedAt:v.createdAt,reason:v.analysisLabel},
-    scenarios:[],plans:{},plan:{},suit:{},occ:[],pressure:0,arrangement:[],coverage:0,
-    profile:{},researchAudit:{model:v.modelVersion,observedOnly:true,legacyRankersRemoved:true}};
-}
+
 function savedRevisionOriginalHtml(r){
   var original=serverFrozenPrediction(r),bet=verifiedSavedAiBet(r,r.preRaceBet);
   if(!original&&!bet)return '';
@@ -1710,35 +850,9 @@ function savedRevisionHorseDetail(r,x){
       '（'+esc(group.starts)+'走）：勝率 '+revisionPercent(group.win&&group.win.rate)+'　連対率 '+revisionPercent(group.top2&&group.top2.rate)+'　3着内率 '+revisionPercent(group.top3&&group.top3.rate)+'</p>'}).join('')+
     '<h3>直近5走</h3>'+(h.recentRaces||[]).slice(0,5).map(function(run){return '<p>'+esc(run.date||'')+' '+esc(run.track||'')+' '+esc(run.distance||'')+'m '+esc(run.finish||'—')+'着</p>'}).join('')+'</section>';
 }
-function learnedD1Prediction(r){
-  // D1 learned predictions are the active authority; do not run the retired
-  // client-side 60/40 scorer over an already analyzed race.
-  if(!r||String(r.predictionModelVersion||'').indexOf('arvexq-learned-whole-career')!==0)return null;
-  var horses=r.horses||[],seen={},saved=[];
-  for(var i=0;i<horses.length;i++){
-    var h=horses[i]||{},ev=h.integratedEvaluation||{},no=n(h.horseNumber,0),
-        mark=String(ev.mark||''),ranges=ev.modelProbabilities||{},
-        win=ranges.win||[],top2=ranges.top2||[],top3=ranges.top3||[];
-    if(!no||seen[no]||!Array.isArray(win)||!Array.isArray(top2)||!Array.isArray(top3))return null;
-    seen[no]=1;
-    if(mark&&['◎','○','▲','△','☆','注'].indexOf(mark)<0)return null;
-    function midpoint(a){return a.length===2&&Number.isFinite(Number(a[0]))&&Number.isFinite(Number(a[1]))?(Number(a[0])+Number(a[1]))/2:null}
-    saved.push({horseNumber:no,mark:mark,reason:String(ev.markReason||''),
-      probabilities:{win:midpoint(win),top2:midpoint(top2),top3:midpoint(top3)},
-      forecastText:String(ev.forecastText||'')});
-  }
-  if(!saved.length||saved.filter(function(x){return x.mark==='◎'}).length!==1)return null;
-  var revision={version:'arvexq-forecast-revision-v1',analysisType:r.analysisType||'',
-    analysisLabel:r.analysisLabel||'新方式の保存済み分析',
-    probabilityModelStatus:r.probabilityModelStatus||'uncalibrated',
-    forecastText:r.forecastText||'',modelVersion:r.predictionModelVersion,
-    horses:saved};
-  var p=predictionFromSavedRevision(r,revision);
-  p.learnedD1Authority=true;
-  p.markFreeze={source:'learned-d1',reason:'D1保存済み新方式'};
-  return p;
-}
-function predict(r){return {rows:(r.horses||[]).filter(h=>h&&n(h.horseNumber)>0).map(h=>({horse:h,predMark:"",predRank:999,winProbability:null,p1Probability:null,p2Probability:null,p3Probability:null,overallGrade:"",coverage:0})),scenarios:[],plans:{},plan:null,suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:0};}
+
+function predict(r){return window.ARVEXQProductionPrediction.build(r);}
+
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
 function liveTag(r){var d=mins(r.startTime)-nowMins();if(d<0&&d>=-25)return'<span class="live-tag running">進行中</span>';if(d>=0&&d<=10)return'<span class="live-tag now">まもなく</span>';return'<span class="live-tag">次走</span>'}
@@ -2051,7 +1165,7 @@ function markRoleLabel(x){
   if(x.markFrozen&&x.honmeiRole==='win')return '保存印：◎（旧単勝）';
   return x.markFrozen&&x.honmeiRole!=='win-axis'?'保存印：◎':'◎ 本命';
 }
-function visiblePredictionMark(x){return '';}
+function visiblePredictionMark(x){return window.ARVEXQProductionMarks.visible(x);}
 function honmeiA11yText(x){return x&&markRoleLabel(x)?
   markRoleLabel(x)+'・勝ち切りと3着内安定性を合わせた本命（的中保証ではありません）':'';}
 function racecardMarkLegend(r){return '<div class="rc-mark-legend"></div>';}
@@ -2566,7 +1680,7 @@ function paceEvidenceProfile(r,p){
     observedHorses:valid,totalHorses:entries.length,reason:reasons.join('／')||'過去走の初角通過順位を確認',
     source:'過去走初角順位による位置取り推定（実測テン1Fではない）'};
 }
-function buildAiBetPlan(r,p){return {decision:"未設定",items:[]};}
+function buildAiBetPlan(r,p){return window.ARVEXQProductionTickets.build(r,p);}
 function betItemHit(item,order){
   if(!item||!order||!order.length)return false;var t=order.slice(0,3).map(n);
   return (item.combos||[]).some(function(c){var a=(c||[]).map(n);if(item.kind==='単勝')return t[0]===a[0];if(item.kind==='馬単')return t[0]===a[0]&&t[1]===a[1];if(item.kind==='馬連')return a.length===2&&a.slice().sort().join('-')===t.slice(0,2).sort().join('-');if(item.kind==='ワイド')return a.length===2&&t.slice(0,3).indexOf(a[0])>=0&&t.slice(0,3).indexOf(a[1])>=0;if(item.kind==='3連複')return a.length===3&&a.slice().sort().join('-')===t.slice(0,3).sort().join('-');if(item.kind==='3連単')return a.length===3&&a[0]===t[0]&&a[1]===t[1]&&a[2]===t[2];return false})
@@ -2590,9 +1704,9 @@ function copyCurrentBet(){
   else setBetCopyStatus(fallbackCopyText(text)?'買い目をコピーしました':'コピーできませんでした')
 }
 // Dedicated betting display: /betting/bet_view.js
-function aiBetRecommendation(r,p){return '<div class="ai-bet-box"></div>';}
-function aiMarksPanel(r,p){return '<section id="section-aimarks" class="card"><h2>AI印予想</h2><div class="ai-mark-list"></div></section>';}
-function betPanel(r,p){return '<section id="section-bets" class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section>'}
+function aiBetRecommendation(r,p){return window.ARVEXQTicketFrame.contents();}
+function aiMarksPanel(r,p){return window.ARVEXQMarkFrame.render();}
+function betPanel(r,p){return window.ARVEXQTicketFrame.render();}
 function diagnosisPanel(r,p){
   if(p&&p.savedForecastRevision)return savedRevisionDiagnosisPanel(r,p);
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse&&a.horse.horseNumber,999)-n(b.horse&&b.horse.horseNumber,999)});
@@ -2958,7 +2072,7 @@ function computeMorningRaceCandidates(circuit){
   (state.races||[]).filter(function(r){return r&&r.id&&(!circuit||String(r.circuit||'')===String(circuit))}),
   {getDetail:function(r){return instantTrackDetails[String(r.id)]||loadDetailCache(r.id)},
    isFinal:isFinal,isScratch:isScratchHorse,predict:predict,
-   evaluateQuality:strictSelectedRaceProfile,makeTicket:buildAiBetPlan,
+   evaluateQuality:function(){return {selected:false,failed:["予想未設定"]}},makeTicket:buildAiBetPlan,
    lanes:window.ARVEXQMorningTicketLanes,evidence:window.ARVEXQMorningEvidence,
    cut:eliteSelectedRaceCut,warn:function(){console.warn.apply(console,arguments)}})
 }
@@ -3610,9 +2724,7 @@ function officialRaceActions(r){
   return ''
 }
 function smartRaceHead(r){
-  var count=raceHeadCountText(r),clock=raceMarkClock(r),revision=latestOfficialMarkRevision(r),baseline=validMorningMarkSnapshot(r),
-      markState=!clock.started?'印：最新の取得データで再評価（発走前）':(revision?'発走前の公式馬場変更で印修正：'+String(revision.reason||''):baseline?'発走前に保存された印':'');
-  
+  var count=raceHeadCountText(r),markState='';
   return '<section class="smart-race-head smart-race-head-compact smart-race-head-v222">'+
     '<div class="smart-race-title-stack smart-race-full-title"><div class="arv-favorite-title-row"><h1>'+esc(r.title||'レース詳細')+'</h1>'+favoriteStarHtml(r,'arv-detail-favorite-star')+'</div>'+(markState?'<small class="arv-mark-fix-status">'+esc(markState)+'</small>':'')+'</div>'+
     '<div class="smart-race-head-layout">'+
@@ -3717,7 +2829,7 @@ function renderRace(){
     '<main class="smart-main smart-race-page">'+
       smartRaceHead(r)+
       cinematicTabs(r)+
-      '<div class="smart-race-content">'+content+'</div>'+ 
+      '<div class="smart-race-content">'+content+window.ARVEXQPredictionFrame.render()+window.ARVEXQMarkFrame.render()+window.ARVEXQTicketFrame.render()+'</div>'+ 
     '</main>'+ 
     cinematicFooter()+
   '</div>'

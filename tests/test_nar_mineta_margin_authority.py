@@ -28,46 +28,34 @@ def race():
 class NarAuthorityTests(unittest.TestCase):
     def test_consensus_uses_observed_inputs(self):
         d = race()
-        rows = rank_nar(d["horses"], d)
-        self.assertEqual(len(rows), len(d["horses"]))
-        positions = score_race(d["horses"], d)
-        for row in rows:
-            h = row["horse"]
-            no = h["horseNumber"]
-            margin = margin_score(h, d)
-            rates = row["historicalRates"]
-            axes = [positions[no], margin["score"]]
-            if rates["starts"] >= 2:
-                axes.append((rates["winRate"] + rates["top2Rate"] + rates["top3Rate"]) / 3)
-            if rates["transferClassEvidenceStarts"] >= 2:
-                axes.append(.5 + rates["transferClassSignal"])
-            self.assertAlmostEqual(row["score"], sum(axes) / len(axes))
+        before = copy.deepcopy(d)
+        self.assertEqual(rank_nar(d['horses'], d), [])
+        self.assertEqual(d, before)
+        # Observed research remains available without entering live predictions.
+        self.assertIsNotNone(margin_score(d['horses'][0], d))
 
     def test_new_marks_replace_old_fields_and_leave_seal_untouched(self):
         d = race()
-        d["morningMarkSnapshot"] = {"fixedAt": "2026-10-12T09:00:00+09:00",
-                                    "horses": [{"horseNumber": 1, "mark": "○"}]}
-        original = copy.deepcopy(d["morningMarkSnapshot"])
-        for h in d["horses"]:
-            h["integratedEvaluation"] = {"mark": "注", "factorEvidence": {"old": 1},
-                                          "multiHead": True}
+        d['morningMarkSnapshot'] = {'fixedAt':'2026-10-12T09:00:00+09:00','horses':[{'horseNumber':1,'mark':'○'}]}
+        original = copy.deepcopy(d['morningMarkSnapshot'])
+        for h in d['horses']: h['integratedEvaluation'] = {'mark':'注','factorEvidence':{'old':1}}
         apply_core_marks(d)
-        self.assertEqual(d["predictionModelVersion"], MODEL_VERSION)
-        self.assertEqual(d["factorRanking"][0]["horseNumber"], 1)
-        self.assertEqual(d["horses"][0]["integratedEvaluation"]["mark"], "◎")
-        self.assertNotIn("factorEvidence", d["horses"][0]["integratedEvaluation"])
-        self.assertNotIn("multiHead", d["horses"][0]["integratedEvaluation"])
-        self.assertEqual(d["morningMarkSnapshot"], original)
+        self.assertEqual(d['predictionStatus'], 'disabled')
+        self.assertNotIn('factorRanking',d)
+        self.assertTrue(all('integratedEvaluation' not in h for h in d['horses']))
+        # Immutable internal evidence remains untouched; public projection removes it.
+        self.assertEqual(d['morningMarkSnapshot'],original)
+        from arvexq.forecast.publication import public_race
+        self.assertNotIn('morningMarkSnapshot',public_race(d))
 
     def test_missing_margins_never_get_legacy_scores(self):
         d = race()
-        for run in d["horses"][5]["recentRaces"]:
-            run.pop("timeBehindWinner")
+        for run in d['horses'][5]['recentRaces']: run.pop('timeBehindWinner')
+        before=copy.deepcopy(d['horses'])
         apply_nar_marks(d)
-        self.assertFalse(d["observedModelCoverage"]["allObserved"])
-        self.assertEqual(d["observedModelCoverage"]["fullyObserved"], 5)
-        self.assertEqual(d["horses"][5]["integratedEvaluation"]["mark"], "")
-        self.assertNotEqual(d["predictionStatus"], "ready")
+        self.assertEqual(d['predictionStatus'],'disabled')
+        self.assertNotIn('observedModelCoverage', d)
+        self.assertEqual(d['horses'],before)
 
     def test_zero_winner_margin_is_valid(self):
         d = race()
@@ -89,25 +77,12 @@ class NarAuthorityTests(unittest.TestCase):
     def test_star_mark_requires_independent_race_pace_evidence(self):
         from unittest.mock import patch
         d = race()
-        # Runner #5 can advance strongly from a wide/late position when three
-        # competitors have displayed early pace. This is not a rank-five rule.
-        d["horses"][4]["recentRaces"][-1].update(
-            finish=2, cornerPositions=[8, 8, 8], timeBehindWinner=.2)
-        scores = (.90, .83, .75, .69, .66, .58)
-        rows = [
-            {"horse": h, "score": scores[i], "sample": 5,
-             "factors": {"mineta": .60, "margin": scores[i]},
-             "marginCoverage": .8, "modelVersion": MODEL_VERSION, "rank": i + 1}
-            for i, h in enumerate(d["horses"])
-        ]
-        with patch("arvexq.prediction.observed_model.rank_observed", return_value=rows):
+        d['horses'][4]['recentRaces'][-1].update(finish=2,cornerPositions=[8,8,8],timeBehindWinner=.2)
+        # A retired authority cannot execute even if a caller supplies ranked evidence.
+        with patch('arvexq.prediction.observed_model.rank_observed',side_effect=AssertionError('retired scorer executed')):
             apply_nar_marks(d)
-        marks = [h["integratedEvaluation"]["mark"] for h in d["horses"]]
-        self.assertEqual(marks, ["◎", "○", "注", "▲", "☆", "△"])
-        # Actual pre-off evidence may supersede the original third/fourth
-        # scored roles, but never overwrites the ◎○ model leaders.
-        self.assertEqual(len([m for m in marks if m == "☆"]), 1)
-        self.assertEqual(len([m for m in marks if m == "注"]), 1)
+        self.assertTrue(all('integratedEvaluation' not in h and 'mark' not in h for h in d['horses']))
+        self.assertEqual(d['predictionStatus'],'disabled')
 
     def test_central_dispatch_never_uses_nar_model(self):
         with self.assertRaises(ValueError):

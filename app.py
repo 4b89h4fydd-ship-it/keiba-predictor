@@ -141,6 +141,8 @@ CSS = read_asset("styles.css")
 
 
 JS = read_asset("app.js")
+from arvexq.ui.bundle import compose_app_script
+JS = compose_app_script(JS)
 
 MANIFEST = r'''{
   "name":"ARVEXQ",
@@ -1459,149 +1461,15 @@ def _netkeiba_race_id(iso_date:str,track:str,race_no:int)->str:
 
 from arvexq.ingest.recent_result_cell import _parse_recent_cell
 
-_NK_WAKU_RE = re.compile(r"^Waku(\d)$")
-_NK_ODDS_ID_RE = re.compile(r"^odds-1_(\d{1,2})$")
-_NK_SEXAGE_RE = re.compile(r"^(牡|牝|セ|騸)\s*(\d{1,2})")
 
 
-def _nk_row_horse_no(tr, index: int | None = None) -> int:
-    """netkeiba HorseList 行の馬番。
-
-    現行DOMは馬番セルが無く、オッズ span の id (odds-1_01) と行順が馬番を持つ。
-    旧DOMは td.Umaban に馬番があったため両対応にする。
-    """
-    o = tr.find("span", id=_NK_ODDS_ID_RE)
-    if o is not None:
-        m = _NK_ODDS_ID_RE.match(str(o.get("id") or ""))
-        if m and int(m.group(1)) > 0:
-            return int(m.group(1))
-    um = tr.find("td", class_=re.compile(r"^Umaban"))
-    if um is not None:
-        m = re.search(r"\d{1,2}", _clean(um.get_text(" ", strip=True)))
-        if m and int(m.group()) > 0:
-            return int(m.group())
-    if index is not None:
-        return int(index) + 1
-    return 0
+from arvexq.ingest.entry_fields.horse_number import _nk_row_horse_no
 
 
-def _nk_row_frame(tr) -> int:
-    for td in tr.find_all("td"):
-        for cls in (td.get("class") or []):
-            m = _NK_WAKU_RE.match(str(cls))
-            if m:
-                return int(m.group(1))
-    return 0
+from arvexq.ingest.entry_fields.frame_number import _nk_row_frame
 
 
-def _nk_row_horse(tr, index: int | None = None) -> dict | None:
-    """netkeiba HorseList 1行 -> 出走馬 dict。旧DOM/新DOM両対応。"""
-    info = tr.select_one("td.Horse_Info") or tr.select_one("td.HorseInfo")
-    if info is None:
-        return None
-    name_a = (info.select_one("dt.Horse a") or info.select_one("div.Horse02 a")
-              or info.select_one("dt a") or info.select_one(".HorseName a"))
-    name = _clean(name_a.get_text(" ", strip=True)) if name_a else ""
-    if not name or "のデータベース" in name or len(name) > 24:
-        return None
-    no = _nk_row_horse_no(tr, index)
-    if no <= 0:
-        return None
-
-    sex = ""; age = 0
-    barei = _clean(tr.select_one("span.Barei").get_text(" ", strip=True)) if tr.select_one("span.Barei") else ""
-    if not barei:
-        bt = tr.select_one("td.Barei")
-        barei = _clean(bt.get_text(" ", strip=True)) if bt else ""
-    if not barei:
-        dd_age = info.select_one("dd.Age")
-        if dd_age is not None:
-            barei = _clean(dd_age.get_text(" ", strip=True))
-    m = _NK_SEXAGE_RE.match(barei)
-    if m:
-        sex = m.group(1); age = int(m.group(2))
-
-    jockey = ""; carried = 0.0
-    dd_j = info.select_one("dd.Jockey")
-    if dd_j is not None:
-        em = dd_j.find("em")
-        jockey = _clean(em.get_text(" ", strip=True)) if em else ""
-        jtxt = _clean(dd_j.get_text(" ", strip=True))
-        if not jockey:
-            jockey = _clean(re.sub(r"[\d.]+", " ", jtxt))
-        m = re.search(r"(\d{2}(?:\.\d)?)\s*$", jtxt)
-        if m:
-            try: carried = float(m.group(1))
-            except Exception: carried = 0.0
-    if not jockey or not carried:
-        jt = tr.select_one("td.Jockey")
-        if jt is not None:
-            ja = jt.find("a")
-            if ja is not None and not jockey:
-                jockey = _clean(ja.get_text(" ", strip=True))
-            jtxt = _clean(jt.get_text(" ", strip=True))
-            m = re.search(r"(\d{2}(?:\.\d)?)\s*$", jtxt)
-            if m and not carried:
-                try: carried = float(m.group(1))
-                except Exception: carried = 0.0
-
-    trainer = ""
-    tr_el = tr.select_one("td.Trainer")
-    if tr_el is not None:
-        trainer = _clean(tr_el.get_text(" ", strip=True))
-    if not trainer:
-        for sel in ("div.Horse05 a", "div.Horse05"):
-            el = info.select_one(sel)
-            if el is None:
-                continue
-            t = re.sub(r"^(栗東|美浦|地方|外国)\s*[・･]\s*", "", _clean(el.get_text(" ", strip=True)))
-            if t:
-                trainer = t
-                break
-
-    wtxt = ""
-    wt = tr.select_one("td.Weight")
-    if wt is not None:
-        wtxt = _clean(wt.get_text(" ", strip=True))
-    if not wtxt:
-        wt = info.select_one("div.Weight")
-        if wt is not None:
-            wtxt = _clean(wt.get_text(" ", strip=True))
-    bw = None; chg = None
-    m = re.search(r"(\d{3})\s*(?:[（(]\s*([+\-]?\d+)\s*[）)])?", wtxt)
-    if m:
-        try:
-            bw = int(m.group(1))
-            chg = int(m.group(2)) if m.group(2) is not None else None
-        except Exception:
-            bw = None; chg = None
-
-    odds = None; pop = None
-    o = tr.find("span", id=re.compile(r"^odds-1_"))
-    if o is not None:
-        m = re.search(r"\d+(?:\.\d+)?", _clean(o.get_text(" ", strip=True)))
-        if m:
-            try: odds = float(m.group())
-            except Exception: odds = None
-    p = tr.find("span", id=re.compile(r"^ninki-1_"))
-    if p is not None:
-        m = re.search(r"\d+", _clean(p.get_text(" ", strip=True)))
-        if m: pop = int(m.group())
-
-    txt = _clean(tr.get_text(" ", strip=True))
-    status = _scratch_status(txt)
-    return {
-        "horseNumber": no,
-        "frameNumber": _nk_row_frame(tr) or int((no + 1) // 2),
-        "name": name, "sex": sex, "age": age,
-        "carriedWeight": carried, "jockey": jockey, "trainer": trainer,
-        "bodyWeight": bw, "bodyWeightChange": chg,
-        "winOdds": odds, "popularity": pop,
-        "status": status, "scratched": bool(status),
-        "recentRaces": [],
-        "jockeyStats": {}, "trainerStats": {}, "jockeyProfile": {}, "trainerProfile": {},
-        "source": "netkeiba",
-    }
+from arvexq.ingest.entry_fields.netkeiba import parse_row as _nk_row_horse
 
 
 
@@ -3532,107 +3400,7 @@ def _winner_learning_profile(detail:dict)->dict:
     with _WINNER_LEARNING_LOCK:_WINNER_LEARNING_CACHE[key]={"_cachedAt":now,"profile":profile}
     return dict(profile)
 
-def _build_prerace_prediction(detail:dict)->dict|None:
-    if not isinstance(detail,dict) or _snapshot_final(detail):return None
-    state,minutes=_prediction_clock_state(detail)
-    if state not in {"pre","future"}:return None
-    horses=[h for h in (detail.get("horses") or []) if isinstance(h,dict) and int(h.get("horseNumber") or 0)>0 and not h.get("scratched") and not h.get("withdrawn") and not re.search(r"取消|除外|欠場",str(h.get("status") or ""))]
-    if len(horses)<2:return None
-    evals=[h.get("integratedEvaluation") if isinstance(h.get("integratedEvaluation"),dict) else {} for h in horses]
-    # PR #180 unified JRA/NAR marks under observed 60/40. The retired JRA
-    # TRUE RUN/PURE/SECTIONAL factorEvidence is always absent. Trust only
-    # the new ranker's independently observed Mineta/official-margin inputs,
-    # with circuit-specific model identity and complete active-runner proof.
-    from arvexq.prediction.observed_model import model_version
-    expected_model=model_version(detail)
-    coverage=detail.get("observedModelCoverage") or {}
-    if (detail.get("predictionModelVersion")!=expected_model or
-        detail.get("predictionStatus")!="ready" or
-        coverage.get("allObserved") is not True or
-        int(coverage.get("horses") or 0)!=len(horses) or
-        int(coverage.get("fullyObserved") or 0)!=len(horses)):
-        return None
-    scores=[]
-    observed=[]
-    for e in evals:
-        factors=e.get("narModelEvidence") or {}  # current shared 60/40 evidence field
-        try:
-            position=float(factors["mineta"])
-            margin=float(factors["margin"])
-            sample=int(factors["sample"])
-            score=float(e["coreAbilityScore"])/100.
-        except (KeyError, TypeError, ValueError):
-            return None
-        if (e.get("markEngineVersion")!=expected_model or
-            not all(math.isfinite(v) and 0.<=v<=1.
-                    for v in (position,margin,score)) or sample<1):
-            return None
-        observed.append(2)
-        scores.append(score)
-    peak=max(scores)
-    strengths=[math.exp((v-peak)/.15) for v in scores]
-    total=sum(strengths)
-    p1=[v/total for v in strengths]
-    p2=[0.] * len(horses)
-    p3=[0.] * len(horses)
-    for i,w1 in enumerate(strengths):
-        remain=total-w1
-        if remain<=0:continue
-        for j,w2 in enumerate(strengths):
-            if i==j:continue
-            second=p1[i]*w2/remain
-            p2[j]+=second
-            last=remain-w2
-            if last>0:
-                for k,w3 in enumerate(strengths):
-                    if i!=k and j!=k:p3[k]+=second*w3/last
-    cons=list(p1)
-    decision=list(p1)
-    win_idx=max(range(len(decision)),key=lambda i:decision[i])
-    hon_idx=next((i for i,e in enumerate(evals)
-                  if str(e.get("mark") or "")=="◎"),None)
-    if hon_idx is not None and hon_idx!=win_idx:
-        # A divergent source is an integrity failure, not a second prediction path.
-        return None
-    lead=sorted(scores,reverse=True)
-    gap=lead[0]-lead[1] if len(lead)>=2 else 0.
-    strength_conf=max(0.,min(1.,.5*observed[win_idx]/2.+3.*max(0.,gap)))
-    strength_stable=observed[win_idx]==2 and gap>=.04
-    rows=[]
-    completeness=[]
-    for i,(h,e) in enumerate(zip(horses,evals)):
-        try:dc=max(0.0,min(1.0,float(e.get("dataCompleteness") or 0)/100.0))
-        except Exception:dc=0.0
-        completeness.append(dc)
-        rows.append({
-            "horseNumber":int(h.get("horseNumber") or 0),"name":str(h.get("name") or ""),"mark":str(e.get("mark") or ""),
-            "decisionProbability":round(decision[i],8),"p1Probability":round(p1[i],8),"p2Probability":round(p2[i],8),"p3Probability":round(p3[i],8),
-            "winnerConsensusProbability":round(cons[i],8),"pairwiseWinRate":round(float(e.get("pairwiseWinRate") or .5),8),
-            "winEvidenceProbability":round(float(e.get("winEvidenceProbability") or 0),8),"axisConfidence":round(float(e.get("axisConfidence") or 0),8),
-            "winnerDecisionStable":bool(e.get("winnerDecisionStable")),"score":round(float(e.get("score") or 0),3),"grade":str(e.get("grade") or ""),
-            "axes":_audit_axes_from_eval(e),
-        })
-    now=int(time.time());quality=round(sum(completeness)/len(completeness),6) if completeness else 0.0
-    mark_count=sum(1 for x in rows if x.get("mark"))
-    payload={
-        "version":PRERACE_AUDIT_VERSION,"modelVersion":AI_EVALUATION_VERSION,"predictionEngine":PREDICTION_ENGINE_VERSION,
-        "circuitMethod":expected_model,
-        "raceId":str(detail.get("id") or ""),"raceDate":str(detail.get("date") or ""),"circuit":str(detail.get("circuit") or ""),
-        "track":str(detail.get("track") or ""),"raceNumber":int(detail.get("raceNumber") or 0),"startTime":str(detail.get("startTime") or ""),
-        "capturedAtEpoch":now,"capturedAtJst":_now_jst().isoformat(timespec="seconds"),"minutesToPost":minutes,
-        "winnerNo":int(horses[win_idx].get("horseNumber") or 0),"winnerProbability":round(decision[win_idx],8),
-        "honmeiHorseNumber":int(horses[hon_idx].get("horseNumber") or 0) if hon_idx is not None else 0,
-        "winnerConfidence":round(strength_conf,8),
-        "winnerStable":bool(strength_stable),
-        "fieldSize":len(rows),"markCount":mark_count,"dataQuality":quality,"horses":rows,
-        "marketIndependent":True,"oddsStored":False,"status":"pre-race",
-        "frozen":bool(state=="pre" and minutes is not None and minutes<=PRERACE_FREEZE_MINUTES),
-        "freezeWindowMinutes":PRERACE_FREEZE_MINUTES,
-        "learningProfile":{k:v for k,v in (detail.get("winnerLearningProfile") or {}).items() if k in {"version","profileId","active","circuit","races","weights","power","shrink","reason"}},
-        "sameDayMarkProfile":{k:v for k,v in (detail.get("sameDayMarkProfile") or {}).items() if k in {"version","active","completed","markRaces","evidence","coverage","deficit","frontSignal","lateSignal","innerSignal","flowLabel","sourceRaces"}},
-    }
-    payload["revision"]=hashlib.sha1(json.dumps({"m":[(x["horseNumber"],x["mark"],x["decisionProbability"]) for x in rows],"q":quality},ensure_ascii=False,sort_keys=True).encode()).hexdigest()[:16]
-    return payload
+from arvexq.forecast.engine import build_prediction as _build_prerace_prediction
 
 
 def _prediction_audit_from_lock(detail:dict)->dict|None:
@@ -3711,7 +3479,9 @@ def _attach_prerace_audit(detail:dict)->dict:
 def _compact_display_snapshot(detail: dict) -> dict:
     """Serve race facts without generating or exposing predictions or betting picks."""
     if not isinstance(detail,dict):return detail
-    out=dict(detail)
+    from arvexq.forecast.publication import public_race
+    out=public_race(detail)
+    detail=out
     for key in ("aiEvaluation", "factorRanking", "honmeiDecision", "preRacePrediction",
                 "predictionAudit", "frozenPredictionAudit", "winnerLearningProfile",
                 "betRecommendations", "recommendedBets", "tickets", "buyList", "bets",
@@ -4309,8 +4079,6 @@ def _precompute_detail_metrics(detail: dict) -> dict:
     detail=_apply_enrichment(str(detail.get("id") or ""),detail)
     try:detail["trackSpeed"]=_pc_live_track_speed(detail)
     except Exception:detail["trackSpeed"]={"version":"track-speed-v300","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","source":"fallback"}
-    try:detail["winnerLearningProfile"]=_winner_learning_profile(detail)
-    except Exception as exc:detail["winnerLearningProfile"]={"version":WINNER_LEARNING_VERSION,"active":False,"reason":"profile-error","error":str(exc)[:120]}
     for horse in detail.get("horses",[]) or []:
         runs=horse.get("allPastRuns") or horse.get("recentRaces") or []
         if detail.get("analysisMode")=="新馬" and not runs:horse["debutNoHistory"]=True
@@ -6717,7 +6485,7 @@ def enrichment_schema():
 def build_info():
     return {
         "build":"v324","appVersion":"14.24-v325-home-race-boxes",
-        "predictionEngine":PREDICTION_ENGINE_VERSION,
+        "predictionEngine":"arvexq-prediction-removed",
         "navigation":"top-venue-race","recentRuns":5,
         "localFirst":True,"selectedRacePriority":0,"trackPrewarm":3,
         "commercialCollector":True,"duplicateUpdaterDisabled":True,
@@ -6790,7 +6558,7 @@ def pace_preview():
 
 @app.get("/version.json")
 def version_json():
-    return Response('{"build":"v324","shell":"core-data-guard","model":"v317-consensus-rebuild"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
+    return Response('{"build":"v330","shell":"independent-production-boundaries","model":"arvexq-prediction-removed"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
 
 @app.get("/styles-arvexq-v324.css")
 @app.get("/styles-arvexq-v321.css")

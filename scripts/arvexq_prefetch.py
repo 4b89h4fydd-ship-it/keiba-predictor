@@ -179,15 +179,7 @@ def _recover_existing_racecards(date: str) -> dict[str, dict[str, Any]]:
     return recovered
 
 
-def _analysis_ready(detail: dict[str, Any] | None) -> bool:
-    if not isinstance(detail, dict):
-        return False
-    coverage = detail.get("observedModelCoverage") or {}
-    pm = detail.get("preparedMeta") or {}
-    return bool(pm.get("diagnosisReady") is True
-                and coverage.get("allObserved") is True
-                and detail.get("predictionStatus") == "ready"
-                and detail.get("predictionModelVersion") == model_version(detail))
+from arvexq.features.readiness import diagnosis_ready as _analysis_ready
 
 
 def _analysis_current(detail: dict[str, Any] | None) -> bool:

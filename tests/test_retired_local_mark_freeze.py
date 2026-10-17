@@ -20,7 +20,8 @@ class RetiredLocalMarkFreezeTests(unittest.TestCase):
     def test_server_original_retained_for_audit(self):
         self.assertIn("function serverFrozenPrediction(r)", self.source)
         self.assertIn("function authorizedPreOffMarks(r)", self.source)
-        self.assertIn("function applyFrozenMarks(r,p)", self.source)
+        self.assertNotIn("function applyFrozenMarks(r,p)", self.source)
+        self.assertIn("ARVEXQProductionMarks.visible(x)", self.source)
 
 if __name__ == "__main__":
     unittest.main()

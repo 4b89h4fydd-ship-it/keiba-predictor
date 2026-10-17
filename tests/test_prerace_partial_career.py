@@ -33,24 +33,21 @@ def build(d):
 
 class OfficialEvidenceSealTests(unittest.TestCase):
     def test_all_observed_runners_can_seal_without_old_partial_career_path(self):
-        d=race()
-        before=copy.deepcopy(d)
+        d=race();before=copy.deepcopy(d)
         marks=apply_core_marks(copy.deepcopy(d))
-        self.assertEqual(marks["predictionStatus"],"ready")
-        self.assertEqual(marks["predictionModelVersion"],"arvexq-jra-observed-consensus-v1")
-        sealed=prepare_seal(d,now=NOW,assign=apply_core_marks,build=build)
-        self.assertEqual(sealed["status"],"sealed",sealed)
+        self.assertEqual(marks['predictionStatus'],'disabled')
+        sealed=prepare_seal(d,now=NOW,assign=apply_core_marks,build=lambda _:self.fail('unapproved forecast executed'))
+        self.assertEqual(sealed['status'],'incomplete-prediction')
         self.assertEqual(d,before)
-        self.assertEqual(sum(h["mark"]=="◎" for h in sealed["detail"]["preRacePrediction"]["horses"]),1)
 
     def test_one_unverified_horse_blocks_original_before_off(self):
         d=race()
-        for q in d["horses"][-1]["recentRaces"]+d["horses"][-1]["allPastRuns"]:
-            q.pop("marginEvidence",None)
-        sealed=prepare_seal(d,now=NOW,assign=apply_core_marks,build=build)
-        self.assertEqual(sealed["status"],"incomplete-prediction")
-        self.assertEqual(sealed["observedCoverage"]["fullyObserved"],6)
-        self.assertNotIn("preRacePrediction",d)
+        for q in d['horses'][-1]['recentRaces']+d['horses'][-1]['allPastRuns']: q.pop('marginEvidence',None)
+        before=copy.deepcopy(d)
+        sealed=prepare_seal(d,now=NOW,assign=apply_core_marks,build=lambda _:self.fail('unapproved forecast executed'))
+        self.assertEqual(sealed['status'],'incomplete-prediction')
+        self.assertEqual(sealed['predictionStatus'],'disabled')
+        self.assertEqual(d,before)
 
     def test_no_margin_never_calls_old_ranker_to_invent_seal(self):
         d=race()

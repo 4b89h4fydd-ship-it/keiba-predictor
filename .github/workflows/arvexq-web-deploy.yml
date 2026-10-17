@@ -32,6 +32,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Gate production on regression and independent module contracts
+        env:
+          ARVEXQ_DATA_CORE: '0'
+          ARVEXQ_BOOTSTRAP_WARM: '0'
+          RACEDB_AUTO_UPDATE: '0'
+          PYTHONPATH: '.:tests'
+        run: |
+          python -m pip install -q -r requirements.txt pytest
+          python -m pytest tests -q
+          node scripts/arvexq_production_boundaries_smoke.cjs
+          python scripts/arvexq_independence_audit.py
       - name: Build static app
         shell: bash
         run: |

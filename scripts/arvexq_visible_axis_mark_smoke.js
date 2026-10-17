@@ -10,10 +10,10 @@ function span(start,end){
   return src.slice(a,b);
 }
 const isScratchHorse=h=>!!(h&&(h.scratched||h.withdrawn||/取消|除外|欠場/.test(h.status||'')));
-const roleFactory=new Function('isScratchHorse',
+const roleFactory=new Function('window','isScratchHorse',
   span('markRoleLabel','racecardMarkLegend')+
   'return {markRoleLabel,visiblePredictionMark,honmeiA11yText}');
-const {markRoleLabel,visiblePredictionMark,honmeiA11yText}=roleFactory(isScratchHorse);
+const {markRoleLabel,visiblePredictionMark,honmeiA11yText}=roleFactory(require('./test_support/production_ui.cjs').window,isScratchHorse);
 const horse={horseNumber:6,name:'ホウオウバトラー',frameNumber:5,
   sex:'牡',age:3,jockey:'小笠鈴'};
 const x={horse,predMark:'',preOffAxisCandidate:true,markFrozen:false};
@@ -21,8 +21,8 @@ assert.equal(markRoleLabel(x),'');
 assert.equal(visiblePredictionMark(x),'');
 assert.equal(x.predMark,'','original marks must not be mutated by display');
 assert.equal(visiblePredictionMark({...x,preOffAxisCandidate:false}),'');
-assert.equal(visiblePredictionMark({...x,predMark:'△'}),'△',
-  'existing core mark must be preserved');
+assert.equal(visiblePredictionMark({...x,predMark:'△'}),'',
+  'retired mark cannot be restored');
 assert.equal(visiblePredictionMark({...x,horse:{...horse,scratched:true}}),'',
   'scratched runners cannot display fabricated marks');
 assert.equal(visiblePredictionMark({...x,markFrozen:true,preOffAxisCandidate:false,
@@ -49,7 +49,7 @@ const scratch=render({},{...horse,scratched:true},{...x,horse:{...horse,scratche
 assert.doesNotMatch(scratch,/data-ai-mark="◎"/);
 for(const target of [
   "racecardMarkDisplay(visiblePredictionMark(x))",
-  "var h=x.horse,mark=visiblePredictionMark(x)||'—'",
+  "window.ARVEXQMarkFrame.render()",
   "data-ai-mark=\"'+esc(visiblePredictionMark(x))",
 ])assert(src.includes(target),'display authority missing '+target);
 console.log('UNIFIED_VISIBLE_HONMEI_OK no_independent_axis_promotion existing_marks_untouched frozen_immutable');

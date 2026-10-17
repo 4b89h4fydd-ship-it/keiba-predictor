@@ -18,9 +18,10 @@ class PreoffLoadingMarksTest(unittest.TestCase):
         source = APP.read_text(encoding="utf-8")
         active=source.split("function predict(r){",1)[1].split("function nextRace()",1)[0]
         self.assertNotIn("assignPredictionMarks(",active)
-        self.assertIn("learnedD1Prediction(r)",active)
+        self.assertNotIn("learnedD1Prediction(r)",active)
+        self.assertIn("ARVEXQProductionPrediction.build(r)",active)
         self.assertNotIn("arvexq-true-run-pure-sectional-v2", source)
-        self.assertIn("return assignObservedPredictionMarks(rows,r);", source)
+        self.assertIn("function assignPredictionMarks(rows,r){return rows||[];}", source)
 
 if __name__ == "__main__":
     unittest.main()

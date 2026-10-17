@@ -141,12 +141,13 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         self.assertTrue(prefetch._analysis_ready(detail))
         detail["preparedMeta"]["analysisInputHash"] = prefetch.analysis_input_hash(detail)
         self.assertTrue(prefetch._analysis_current(detail))
-        detail["observedModelCoverage"]["allObserved"] = False
+        detail["preparedMeta"]["diagnosisReady"] = False
         self.assertFalse(prefetch._analysis_ready(detail))
         self.assertFalse(prefetch._analysis_current(detail))
-        detail["observedModelCoverage"]["allObserved"] = True
+        detail["preparedMeta"]["diagnosisReady"] = True
         detail["predictionModelVersion"] = "arvexq-retired-nar-scores"
-        self.assertFalse(prefetch._analysis_ready(detail))
+        # An obsolete prediction cannot block observed data diagnostics.
+        self.assertTrue(prefetch._analysis_ready(detail))
 
     def test_network_enrichment_is_bounded_and_preserves_failed_card(self) -> None:
         from threading import Lock

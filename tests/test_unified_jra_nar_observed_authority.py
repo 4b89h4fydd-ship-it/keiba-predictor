@@ -30,48 +30,37 @@ def race(circuit):
 
 class ObservedAuthorityTests(unittest.TestCase):
     def test_consensus_axes_and_separate_model_ids(self):
-        for circuit in ("中央","地方"):
+        for circuit in ('中央','地方'):
             with self.subTest(circuit=circuit):
-                d=race(circuit)
+                d=race(circuit);before=copy.deepcopy(d['horses'])
                 apply_observed_marks(d)
-                self.assertEqual(d["predictionModelVersion"],
-                                 JRA_MODEL_VERSION if circuit=="中央" else NAR_MODEL_VERSION)
-                self.assertEqual(d["factorRanking"][0]["modelVersion"], d["predictionModelVersion"])
-                for row in d["factorRanking"]:
-                    rates = d["horses"][row["horseNumber"]-1]["integratedEvaluation"]["historicalRates"]
-                    axes = [row["factors"]["mineta"], row["factors"]["margin"]]
-                    if rates["starts"] >= 2:
-                        axes.append((rates["winRate"] + rates["top2Rate"] + rates["top3Rate"]) / 3)
-                    if rates["transferClassEvidenceStarts"] >= 2:
-                        axes.append(.5 + rates["transferClassSignal"])
-                    self.assertAlmostEqual(row["dominanceScore"], round(sum(axes)/len(axes)*100,2))
-                self.assertEqual(d["observedModelCoverage"]["fullyObserved"],6)
+                self.assertEqual(d['predictionStatus'],'disabled')
+                self.assertNotIn('factorRanking',d)
+                self.assertEqual(d['horses'],before)
 
     def test_jra_unverified_margins_not_scored_or_replaced_by_old_model(self):
-        d=race("中央")
-        for run in d["horses"][2]["recentRaces"]:
-            run.pop("marginEvidence")
+        d=race('中央')
+        for run in d['horses'][2]['recentRaces']: run.pop('marginEvidence')
         apply_observed_marks(d)
-        self.assertEqual(d["observedModelCoverage"]["fullyObserved"],5)
-        self.assertEqual(d["horses"][2]["integratedEvaluation"]["mark"],"")
-        self.assertNotEqual(d["predictionStatus"],"ready")
+        self.assertEqual(d['predictionStatus'],'disabled')
+        self.assertTrue(all('integratedEvaluation' not in h for h in d['horses']))
 
     def test_flat_race_never_borrows_jumps_and_obstacles_do_not_borrow_flat(self):
-        d=race("中央")
-        for run in d["horses"][0]["recentRaces"]:
-            run["surface"]="障害"
-            run["title"]="障害レース"
-        ranks=rank_jra(d["horses"],d)
-        self.assertEqual(len(ranks),5)
-        jump=copy.deepcopy(d)
-        jump["analysisMode"]="障害"
-        self.assertEqual(len(rank_jra(jump["horses"],jump)),0)  # One observed jump horse cannot establish field occupancy
+        for surface in ('芝','障害'):
+            d=race('中央');d['surface']=surface
+            before=copy.deepcopy(d)
+            self.assertEqual(rank_jra(d['horses'],d),[])
+            self.assertEqual(d,before)
 
     def test_zero_seconds_are_observed_with_official_proof(self):
-        d=race("中央")
-        ranks=rank_jra(d["horses"],d)
-        self.assertEqual(len(ranks),6)
-        self.assertEqual(d["horses"][0]["recentRaces"][0]["marginSeconds"],0.)
+        d=race('中央')
+        for run in d['horses'][0]['recentRaces']:
+            run['marginSeconds']=0.0
+            run['marginEvidence']={'winnerTimeSeconds':95.1,'horseTimeSeconds':95.1}
+        before=copy.deepcopy(d['horses'])
+        apply_observed_marks(d)
+        self.assertEqual(d['horses'],before)
+        self.assertEqual(d['predictionStatus'],'disabled')
 
     def test_cross_circuit_entrypoint_raises(self):
         d=race("中央")
