@@ -410,9 +410,10 @@ from arvexq.ingest.jra_time import _jra_iso_date, _jra_parse_time_seconds
 
 from arvexq.ingest.jra_identifiers import _jra_date_from_cname, _jra_race_no_from_cname
 
+from arvexq.ingest.race_fields.track import extract as jra_race_track
+
 def _jra_track_from_cname(cname:str)->str:
-    m=re.search(r"pw01dde(?:01|10)(\d{2})",cname or "")
-    return JRA_TRACK_CODES.get(m.group(1),"") if m else ""
+    return jra_race_track(cname,JRA_TRACK_CODES)
 
 from arvexq.ingest.past_fields.jra import parse_jra_history_cell
 
@@ -502,6 +503,9 @@ from arvexq.ingest.race_fields.distance import extract as jra_distance
 from arvexq.ingest.race_fields.surface import extract as jra_surface
 from arvexq.ingest.race_fields.prize import extract_first_prize as jra_first_prize
 
+from arvexq.ingest.race_fields.title import extract as jra_race_title
+from arvexq.ingest.race_fields.field_size import extract as jra_race_field_size
+
 def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
     cache_sec=int(os.getenv("JRA_LIVE_ODDS_CACHE_SEC","45")) if date==_today_iso() else 600
@@ -532,16 +536,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     if wm:weather=wm.group(1)[:4]
     cm=re.search(r"(?:芝|ダート)\s*(良|稍重|重|不良)",full)
     if cm:condition=cm.group(1)
-    title=""
-    title_block=JRA_BAD_TITLE_RE
-    for node in soup.find_all(["h2","h3"]):
-        tx=_jra_text(node)
-        if not tx or len(tx)>=80 or title_block.search(tx) or "出馬表" in tx:
-            continue
-        if re.match(r"^\d+レース$",tx):
-            continue
-        title=tx;break
-    if not title:title=f"{race_no}R"
+    title=jra_race_title(soup,race_no,JRA_BAD_TITLE_RE)
     prize1=jra_first_prize(full)
     horses=[]
     withdrawn_entries=[]
@@ -650,7 +645,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
         with ThreadPoolExecutor(max_workers=workers) as pool:
             horses=list(pool.map(supplement,horses))
     rid=f"jra-{date}-{track}-{race_no:02d}"
-    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":len(horses),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"horses":horses,"withdrawnEntries":withdrawn_entries,"source":"JRA公式","jraCname":cname})
+    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":jra_race_field_size(horses),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"horses":horses,"withdrawnEntries":withdrawn_entries,"source":"JRA公式","jraCname":cname})
 
 def _jra_parse_race_summary(cname:str)->dict|None:
     """Fast list-page parser: no horse/profile parsing. Full card loads only when opened."""
