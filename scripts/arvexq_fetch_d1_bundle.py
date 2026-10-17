@@ -9,12 +9,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
+
+# Direct execution as "python scripts/..." puts scripts/, not repo root,
+# on sys.path. The workflow invokes this entrypoint directly.
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from arvexq.ingest.full_snapshot_codec import KEY as FULL_PAYLOAD_KEY, unpack_detail
 
