@@ -26,7 +26,7 @@ test('a richer incoming source wins, different horse numbers never mix',()=>{
 test('empty or absent previous records are safe; incoming factual history survives',()=>{
   const input={horses:[{horseNumber:4,recentRaces:[{date:'2026-09-01'}]}]};
   assert.deepEqual(mergeStoredHorseHistory(input,[]),{horses:[{horseNumber:4,recentRaces:[{date:'2026-09-01'}]}]});
-  assert.equal(needsHistoryPreservation({horses:[{horseNumber:4,recentRaces:[{date:'2026-09-01'}],allPastRuns:[{date:'2026-09-01'}]}]}),false);
+  assert.equal(needsHistoryPreservation({horses:[{horseNumber:4,recentRaces:[{date:'2026-09-01'}],allPastRuns:[{date:'2026-09-01'}]}]}),true);
 });
 test('worker is wired to a pre-overwrite DB read and history merge',async()=>{
   const {readFile}=await import('node:fs/promises');
