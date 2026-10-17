@@ -48,6 +48,8 @@ def audit(paths, target_date=None):
             earlier = {start for start in unique_starts[identity] if start[1] < target_date}
             target_horses[(key, int(item(h, 5) or 0))] = len(earlier)
     zero_history = sum(count == 0 for count in target_horses.values())
+    history_counts = Counter(target_horses.values())
+    low_history = sum(count < 5 for count in target_horses.values())
     entries_by_race = Counter(race_key(h) for h in matched)
     no_horse_races = [key for key in races if not entries_by_race[key]]
     missing_by_track = Counter(key[0] for key in no_horse_races)
@@ -61,6 +63,8 @@ def audit(paths, target_date=None):
         "targetHorsesWithRaceRows": len(target_horses) if target_date else None,
         "targetHorsesWithNoEarlierArchiveRuns": zero_history if target_date else None,
         "targetHorsesWithEarlierArchiveRuns": len(target_horses) - zero_history if target_date else None,
+        "targetHorsesWithFewerThanFiveEarlierRuns": low_history if target_date else None,
+        "targetHistoryObservedRunCountDistribution": dict(sorted(history_counts.items())) if target_date else None,
         "raceRowsWithHorseEntries": len(races) - len(no_horse_races),
         "raceRowsWithoutHorseEntries": len(no_horse_races),
         "raceRowsWithoutHorseEntriesByTrack": dict(sorted(missing_by_track.items())),
@@ -87,8 +91,11 @@ def main():
     parser.add_argument("--output", help="Optional JSON report path")
     parser.add_argument("--target-date", help="Target race date YYYY-MM-DD for prior-run coverage")
     parser.add_argument("--require-prior-history", action="store_true", help="Fail when any target runner lacks an earlier observed archive run; requires --target-date")
+    parser.add_argument("--min-prior-runs", type=int, default=0, help="Minimum observed earlier archive starts per target horse (requires --target-date); does not prove full career")
     args = parser.parse_args()
-    if args.require_prior_history and not args.target_date:
+    if args.min_prior_runs < 0:
+        parser.error("--min-prior-runs must be nonnegative")
+    if (args.require_prior_history or args.min_prior_runs) and not args.target_date:
         parser.error("--require-prior-history requires --target-date")
     report = audit(args.archives, target_date=args.target_date)
     rendered = json.dumps(report, ensure_ascii=False, indent=2)
@@ -97,6 +104,8 @@ def main():
         Path(args.output).write_text(rendered + "\n", encoding="utf-8")
     print(rendered)
     if args.require_prior_history and (not report["targetHorsesWithRaceRows"] or report["targetHorsesWithNoEarlierArchiveRuns"]):
+        raise SystemExit(1)
+    if args.min_prior_runs and (not report["targetHorsesWithRaceRows"] or any(int(count) < args.min_prior_runs and number > 0 for count, number in report["targetHistoryObservedRunCountDistribution"].items())):
         raise SystemExit(1)
 
 
