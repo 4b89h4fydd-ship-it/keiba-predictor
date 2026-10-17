@@ -75,7 +75,7 @@ def test_label_change_after_capture_cannot_modify_prediction():
     lambda r: r["horses"][0]["features"].update({"current::finish": 1}),
     lambda r: r["horses"][0]["features"].update({"history::all::bad": float("nan")}),
     lambda r: r["horses"][0].update(finish=None),
-    lambda r: r["horses"][1].update(finish=1),
+    lambda r: r["horses"][0].update(finish=1),
 ])
 def test_invalid_provenance_field_or_label_fails_closed(mutate):
     race = make_race("2026-08-13")
@@ -89,7 +89,7 @@ def test_training_rejects_mixed_circuits_families_and_insufficient_days():
     with pytest.raises(ValueError, match="five"):
         chronological_experiment(r[:4])
     r[3] = make_race(r[3]["date"], circuit="地方")
-    with pytest.raises(ValueError, match="separately"):
+    with pytest.raises(ValueError, match="separate"):
         chronological_experiment(r)
     r = example()
     r[4] = make_race(r[4]["date"], family="jumps")
