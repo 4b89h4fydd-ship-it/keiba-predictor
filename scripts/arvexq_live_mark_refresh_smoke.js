@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// Run the live app.js prediction path. New measured 60/40 observed evidence must
-// update marks without a page reload, while preoff archives remain immutable.
+// The retired 60/40 engine must never regenerate marks from raw past runs.\n// Only learned D1 predictions or verified historical originals can appear.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
@@ -27,46 +26,25 @@ for(const file of ['arvexq/ui/static/morning/ticket_lane_classifier.js','arvexq/
 vm.runInContext(source,ctx,{filename:'app.js',timeout:20000});
 const {predict}=window.__arvexqMarkTest;
 const horses=Array.from({length:7},(_,i)=>({
- horseNumber:i+1,name:'Horse-'+(i+1),jockey:'Jockey',winOdds:2.8+i*1.5,
- recentRaces:Array.from({length:5},(_,j)=>({
-  date:'2098-12-'+String(20-3*j).padStart(2,'0'),
-  track:'東京',distance:1400,surface:'ダート',fieldSize:12,
-  finish:i===0?1:i===1?7:10,last3fRank:i===0?1:i===1?7:10,
-  cornerPositions:[2,2,2,2],timeSeconds:85.7+i*.4,
-  timeBehindWinner:i===0?0:i===1?1.5:2+i*.3,
-  marginEvidenceSource:'JRA official',
-  marginEvidence:{winnerTimeSeconds:85.7,horseTimeSeconds:85.7+(i===0?0:i===1?1.5:2+i*.3)}
- }))
+ horseNumber:i+1,name:'Horse-'+(i+1),recentRaces:[{date:'2098-12-01',finish:1,fieldSize:12}]
 }));
 const race={id:'jra-2099-01-10-東京-08',date:'2099-01-10',startTime:'23:00',
- circuit:'中央',track:'東京',raceNumber:8,fieldSize:7,surface:'ダート',
- distance:1400,condition:'良',weather:'晴',horses};
+ circuit:'中央',track:'東京',raceNumber:8,fieldSize:7,surface:'ダート',distance:1400,horses};
 function marks(p){return Array.from(p.rows).filter(z=>z.predMark==='◎').map(z=>Number(z.horse.horseNumber))}
-function score(p,no){return Number(p.rows.find(z=>Number(z.horse.horseNumber)===no).threeFactorScore)}
-const first=predict(race);
-assert.deepEqual(marks(first),[1],'initial single ◎');
-assert.equal(first.engineVersion,'arvexq-jra-observed-consensus-v1');
-const noDataChange=predict(race);
-assert.equal(noDataChange,first,'no input change should reuse the cached live prediction');
-race.horses[0].winOdds=91;
-assert.equal(predict(race),first,'odds alone cannot rewrite ability-based ◎');
-race.horses[0].recentRaces.forEach(x=>{x.timeBehindWinner=4;x.marginEvidence.horseTimeSeconds=89.7});
-race.horses[1].recentRaces.forEach(x=>{x.timeBehindWinner=0;x.marginEvidence.horseTimeSeconds=85.7});
-const changed=predict(race);
-assert.notEqual(changed,first,'fresh pre-off observed runs must invalidate old prediction');
-assert(marks(changed).length===1,'consensus model retains one ◎ after observed margin change');
-assert.notEqual(score(changed,2),score(first,2),'observed margin revision changes contender score');
-assert.notEqual(changed.markInputSignature,first.markInputSignature,'cache signature must change');
-race.horses[1].recentRaces.push({date:'2099-01-11',fieldSize:12,finish:12,last3fRank:12});
-assert.equal(predict(race),changed,'future starts cannot affect the pre-off score');
-// Completed races can be rerun as labeled revisions while their original
-// pre-start receipts remain separate and immutable.
-race.raceStatus='発走済';
-const revised=predict(race);
-assert.equal(revised.engineVersion,'arvexq-jra-observed-consensus-v1');
-assert.equal(revised.postRaceRevision,true);
-assert.deepEqual(marks(revised),[]);
-assert.deepEqual(Array.from(revised.retrospectiveMarks.filter(z=>z.mark==='◎').map(z=>z.horseNumber)),marks(changed));
-assert.equal(predict(race),revised,'post-race revision stays stable');
-assert(store.has('arvexq:revised-marks:v1:'+race.id));
-console.log('OBSERVED_6040_MARK_REFRESH_OK (preoff refresh, odds isolation, postoff archive)');
+const missing=predict(race);
+assert.deepEqual(marks(missing),[],'no old engine may calculate a replacement mark');
+assert.equal(missing.legacyEngineDisabled,true);
+race.horses[0].recentRaces[0].finish=12;
+assert.deepEqual(marks(predict(race)),[],'raw result mutations cannot resurrect legacy marks');
+race.predictionModelVersion='arvexq-learned-whole-career-scenarios-v2';
+race.horses.forEach((h,i)=>{h.integratedEvaluation={
+ mark:i===0?'◎':'',
+ modelProbabilities:{win:[.1,.2],top2:[.2,.3],top3:[.3,.4]}
+}});
+const learned=predict(race);
+assert.deepEqual(marks(learned),[1]);
+assert.equal(learned.learnedD1Authority,true);
+race.raceStatus='確定';
+assert.deepEqual(marks(predict(race)),[1],'saved new marks remain visible after result');
+assert.equal(store.size,0,'no post-race marks should be minted into localStorage');
+console.log('LEARNED_D1_ONLY_MARKS_NO_RETIRED_SCORE_PASS');
