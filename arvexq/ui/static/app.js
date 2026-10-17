@@ -1715,7 +1715,43 @@ function savedRevisionHorseDetail(r,x){
       '（'+esc(group.starts)+'走）：勝率 '+revisionPercent(group.win&&group.win.rate)+'　連対率 '+revisionPercent(group.top2&&group.top2.rate)+'　3着内率 '+revisionPercent(group.top3&&group.top3.rate)+'</p>'}).join('')+
     '<h3>直近5走</h3>'+(h.recentRaces||[]).slice(0,5).map(function(run){return '<p>'+esc(run.date||'')+' '+esc(run.track||'')+' '+esc(run.distance||'')+'m '+esc(run.finish||'—')+'着</p>'}).join('')+'</section>';
 }
+function learnedD1Prediction(r){
+  // D1 learned predictions are the active authority; do not run the retired
+  // client-side 60/40 scorer over an already analyzed race.
+  if(!r||String(r.predictionModelVersion||'').indexOf('arvexq-learned-whole-career')!==0)return null;
+  var horses=r.horses||[],seen={},saved=[];
+  for(var i=0;i<horses.length;i++){
+    var h=horses[i]||{},ev=h.integratedEvaluation||{},no=n(h.horseNumber,0),
+        mark=String(ev.mark||''),ranges=ev.modelProbabilities||{},
+        win=ranges.win||[],top2=ranges.top2||[],top3=ranges.top3||[];
+    if(!no||seen[no]||!Array.isArray(win)||!Array.isArray(top2)||!Array.isArray(top3))return null;
+    seen[no]=1;
+    if(mark&&['◎','○','▲','△','☆','注'].indexOf(mark)<0)return null;
+    function midpoint(a){return a.length===2&&Number.isFinite(Number(a[0]))&&Number.isFinite(Number(a[1]))?(Number(a[0])+Number(a[1]))/2:null}
+    saved.push({horseNumber:no,mark:mark,reason:String(ev.markReason||''),
+      probabilities:{win:midpoint(win),top2:midpoint(top2),top3:midpoint(top3)},
+      forecastText:String(ev.forecastText||'')});
+  }
+  if(!saved.length||saved.filter(function(x){return x.mark==='◎'}).length!==1)return null;
+  var revision={version:'arvexq-forecast-revision-v1',analysisType:r.analysisType||'',
+    analysisLabel:r.analysisLabel||'新方式の保存済み分析',
+    probabilityModelStatus:r.probabilityModelStatus||'uncalibrated',
+    forecastText:r.forecastText||'',modelVersion:r.predictionModelVersion,
+    horses:saved};
+  var p=predictionFromSavedRevision(r,revision);
+  p.learnedD1Authority=true;
+  p.markFreeze={source:'learned-d1',reason:'D1保存済み新方式'};
+  return p;
+}
 function predict(r){
+  var learned=learnedD1Prediction(r);
+  if(learned)return learned;
+  if(r&&r.legacyPresentationDisabled){
+    return {rows:(r.horses||[]).map(function(h){return {horse:h,predMark:'',predRank:999,
+      winProbability:null,p1Probability:null,p2Probability:null,p3Probability:null,
+      overallGrade:'C',expected:'新方式未適用',coverage:0}}),scenarios:[],plans:{},
+      plan:null,arrangement:[],coverage:0,markFreeze:{source:'new-model-unavailable'}};
+  }
   var savedRevision=latestSavedForecastRevision(r);
   if(savedRevision){
     var savedPrediction=predictionFromSavedRevision(r,savedRevision);
