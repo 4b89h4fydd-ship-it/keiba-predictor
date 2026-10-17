@@ -198,6 +198,12 @@ class NarOfficialMetadataTests(unittest.TestCase):
                 {"name": "同名検証馬", "birthDate": "2020-01-01"}, race)
             self.assertEqual(len(identified["allPastRuns"]), 1)
             self.assertEqual(identified["allPastRuns"][0]["date"], "2026-10-10")
+            # Records with no DOB must not be assigned to either of two
+            # distinguishable same-name horses when a conflict exists.
+            source.by_name["同名検証馬"].append(({"date": "2026-10-09"}, ""))
+            identified = source.horse_history(
+                {"name": "同名検証馬", "birthDate": "2020-01-01"}, race)
+            self.assertEqual(len(identified["allPastRuns"]), 1)
 
     def test_history_excludes_target_day_and_future_results(self):
         import csv
