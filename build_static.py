@@ -94,6 +94,9 @@ for node in tree.body:
         name = node.target.id
         strings[name] = strings.get(name, "") + node.value.value
 
+from arvexq.ui.bundle import compose_app_script
+strings["JS"] = compose_app_script(strings["JS"])
+
 for required in ("INDEX", "CSS", "JS", "MANIFEST", "SW"):
     if required not in strings:
         raise RuntimeError(f"{required} not found in app.py or extracted UI assets")
@@ -167,8 +170,8 @@ manifest = manifest.replace("arvexq-icon-v175-192.png","arvexq-icon-v362-192.png
 manifest = manifest.replace("arvexq-icon-v175-512.png","arvexq-icon-v362-512.png")
 sw = strings["SW"]
 
-# Prediction/mark logic is owned by arvexq/ui/static/app.js and the server-side
-# observed 60/40 engine. build_static.py must never redefine prediction functions.
+# Production adapters and frames are assembled from independent source modules.
+# The static builder must never install a prediction model.
 
 SCRATCH_OVERLAY_CSS = r'''
 <style id="arvexq-scratch-overlay-css">
@@ -270,10 +273,8 @@ for extra_asset in ("previous_ai_results.js", "arvexq-brush-logo.svg"):
     shutil.copy2(src, DIST / extra_asset)
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
-model_version = strings.get("PREDICTION_ENGINE_VERSION", "")
-if not model_version or "mineta-margin-observed-60-40" not in model_version:
-    raise RuntimeError("Static build must identify the live observed 60/40 prediction model")
-(DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"observed-mineta-margin-authoritative","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
+from arvexq.forecast.engine import VERSION as model_version
+(DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"independent-production-boundaries","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
 redirects=["/venue /index.html 200","/race /index.html 200","/keiba /keiba/index.html 200"]
 for v in compat_app:redirects.append(f"/app-{v}.js /app-{BUILD_VERSION}.js 302")
 for v in compat_arvexq:redirects.append(f"/arvexq-app-{v}.js /arvexq-app-{BUILD_VERSION}.js 302")

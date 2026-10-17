@@ -12,4 +12,4 @@ class LegacyDetailRemoval(unittest.TestCase):
         self.assertIn('function horseDetailPage(r,p)',s)
         self.assertIn('runnerDetailBody(r,p,x)',s)
         self.assertNotIn('score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)',s)
-        self.assertIn("return assignObservedPredictionMarks(rows,r);",s)
+        self.assertIn("function assignPredictionMarks(rows,r){return rows||[];}",s)

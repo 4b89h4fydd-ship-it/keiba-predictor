@@ -21,8 +21,8 @@ class VersionedAssetCacheTest(unittest.TestCase):
         if not manifest.exists():
             self.skipTest("run static build first")
         version = json.loads(manifest.read_text(encoding="utf-8"))
-        self.assertEqual(version["shell"], "observed-mineta-margin-authoritative")
-        self.assertEqual(version["model"], "arvexq-mineta-margin-observed-60-40-v1")
+        self.assertEqual(version["shell"], "independent-production-boundaries")
+        self.assertEqual(version["model"], "arvexq-prediction-removed")
         self.assertNotIn("three-factor", str(version).lower())
 
     def test_immutable_headers_are_only_on_versioned_asset_families(self):

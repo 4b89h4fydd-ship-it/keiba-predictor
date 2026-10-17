@@ -31,11 +31,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
   async function check(page,r){
     const errors=[];const onerror=e=>errors.push(e.stack||String(e));page.on('pageerror',onerror);
     await page.goto(base+'/race?date='+day+'&race_id='+encodeURIComponent(r.id)+'&recovery='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
-    const expectedFrozenMarks=!!(manifest.races[r.id]&&manifest.races[r.id].morningMarks);
-    // A race without a recorded pre-off mark must still show its roster.
-    // Original acquisition failures remain visible in the independent seal audit.
-    try{await page.waitForFunction(({expected})=>{const note=document.querySelector('.rc-mark-freeze-note');return !!(note&&note.textContent.trim()&&(expected?/発走後の再計算印|発走前保存印|保存予想原本|固定済み/.test(note.textContent):true))},{expected:expectedFrozenMarks},{timeout:30000})}catch(e){console.error('RECOVERY_FAILURE '+r.id+' '+errors.join(';')+' '+(await page.locator('body').innerText()).slice(0,2500));throw e}
-    if(!expectedFrozenMarks)console.warn('PREOFF_MARKS_NOT_SEALED '+r.id);
+    // Public roster readiness is independent of any retired pre-off opinions.
     const roster=cards.find(c=>c.id===r.id)||r;
     await page.waitForFunction(count=>document.querySelectorAll('.racecard-row').length===count,roster.horses.length,{timeout:20000});
     assert.equal(await page.locator('.racecard-row').count(),roster.horses.length,'complete official roster '+r.id);
@@ -155,24 +151,17 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     assert.deepEqual(await page.locator('.rc-ai-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark'))),before,'odds refresh must not rewrite saved marks');
     await page.close();
     await Promise.all([worker(),worker(),worker()]);
-    // Exact recovered pre-off tickets must render even with the mutable API down.
-    for(const [id,kind,patterns] of [
-      ['nar-2026-10-10-高知-01','馬単',[/5\s*→\s*8/]],
-      ['nar-2026-10-10-高知-05','馬連',[/1\s*-\s*5/,/3\s*-\s*5/]]
-    ].filter(([id])=>records.some(r=>r.id===id))){
+    // Archived opinions cannot reappear on a fresh device, including API outage.
+    for(const archived of records.filter(r=>r.preRaceBet).slice(0,2)){
       const ticketPage=await context.newPage();
       ticketPage._arvexqIntentionalApiOutage=true;
       await ticketPage.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
-      await check(ticketPage,records.find(r=>r.id===id));
-      assert.equal(await ticketPage.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),1,'stored axis appears in roster before changing panel');
+      await check(ticketPage,archived);
+      assert.equal(await ticketPage.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),0,'no stored axis becomes live');
       await ticketPage.locator('[data-panel="bets"]').click();
-      const box=ticketPage.locator('.ai-bet-box');
-      await box.waitFor({state:'visible',timeout:20000});
-      const text=await box.innerText();assert.ok(text.includes(kind));
-      patterns.forEach(pattern=>assert.match(text,pattern,'actual saved numbered ticket '+id));
-      assert.match(text,/保存/);
+      await ticketPage.waitForSelector('.bet-detail-page-shell');
+      assert.equal((await ticketPage.locator('.ai-bet-box').innerText()).trim(),'','retired numbered tickets stay archival');
       await ticketPage.close();
-      console.log('PRODUCTION_SAVED_NUMBERED_TICKET_API_OUTAGE_PASS '+id+' '+kind);
     }
     const fresh=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
     await fresh.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
@@ -193,17 +182,9 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       }
       console.log('PRODUCTION_VERIFIED_VENUE_HOME',circuit,JSON.stringify(tracks));
     }
-    if(day==='2026-10-10'){
-      // Selected races live under Home -> 厳選レース -> 地方, not the venue list.
-      await home.goto(base+'/?date='+day+'&offline-selected='+Date.now(),{waitUntil:'domcontentloaded'});
-      await home.locator('button[data-home-page="selected"]').click();
-      await home.locator('button[data-pick-circuit="地方"]').click();
-      const selected=home.locator('.arv-direct-picks').filter({hasText:'地方 厳選レース'});
-      for(const id of ['nar-2026-10-10-高知-01','nar-2026-10-10-高知-05'])
-        await selected.locator('[data-race="'+id+'"]').waitFor({state:'visible',timeout:30000});
-      assert.equal(await selected.locator('[data-race]').count(),2,'only original numbered tickets qualify');
-      console.log('PRODUCTION_SELECTED_EXACT_SAVED_TICKETS_FRESH_HOME_API_OUTAGE_PASS');
-    }
+    // No disabled-engine tickets may become actionable through selected pages.
+    await home.locator('button[data-home-page="selected"]').click();
+    assert.equal(await home.locator('.ai-bet-box .bet-item').count(),0);
     await fresh.close();
     console.log('PRODUCTION_FRESH_HOME_API_OUTAGE_ALL_VENUES_PASS');
     console.log('PRODUCTION_API_OUTAGE_MANUAL_ODDS_SAVED_MARKS_PASS '+process.env.ARVEXQ_BROWSER+' date='+day+' checked='+chosen.length);

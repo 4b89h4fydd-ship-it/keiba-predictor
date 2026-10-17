@@ -21,7 +21,7 @@ const ctx={window,document,localStorage,sessionStorage:localStorage,console,
  navigator:window.navigator,location:window.location,setTimeout:()=>0,
  clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
 vm.createContext(ctx);
-for(const file of ['arvexq/ui/static/morning/ticket_lane_classifier.js','arvexq/ui/static/betting/bet_view.js'])
+for(const file of fs.readdirSync('arvexq/ui/static/forecast').filter(x=>x.endsWith('.js')).map(x=>'arvexq/ui/static/forecast/'+x).concat(['arvexq/ui/static/morning/ticket_lane_classifier.js','arvexq/ui/static/betting/bet_view.js']))
   vm.runInContext(fs.readFileSync(file,'utf8'),ctx,{filename:file,timeout:20000});
 vm.runInContext(source,ctx,{filename:'app.js',timeout:20000});
 const {predict}=window.__arvexqMarkTest;
@@ -33,7 +33,7 @@ const race={id:'jra-2099-01-10-東京-08',date:'2099-01-10',startTime:'23:00',
 function marks(p){return Array.from(p.rows).filter(z=>z.predMark==='◎').map(z=>Number(z.horse.horseNumber))}
 const missing=predict(race);
 assert.deepEqual(marks(missing),[],'no old engine may calculate a replacement mark');
-assert.equal(missing.legacyEngineDisabled,true);
+assert.equal(missing.rows[0].winProbability,null);
 race.horses[0].recentRaces[0].finish=12;
 assert.deepEqual(marks(predict(race)),[],'raw result mutations cannot resurrect legacy marks');
 race.predictionModelVersion='arvexq-learned-whole-career-scenarios-v2';
@@ -42,9 +42,9 @@ race.horses.forEach((h,i)=>{h.integratedEvaluation={
  modelProbabilities:{win:[.1,.2],top2:[.2,.3],top3:[.3,.4]}
 }});
 const learned=predict(race);
-assert.deepEqual(marks(learned),[1]);
-assert.equal(learned.learnedD1Authority,true);
+assert.deepEqual(marks(learned),[]);
+assert.equal(learned.rows[0].winProbability,null);
 race.raceStatus='確定';
-assert.deepEqual(marks(predict(race)),[1],'saved new marks remain visible after result');
+assert.deepEqual(marks(predict(race)),[],'unapproved saved candidate remains disabled after result');
 assert.equal(store.size,0,'no post-race marks should be minted into localStorage');
 console.log('LEARNED_D1_ONLY_MARKS_NO_RETIRED_SCORE_PASS');

@@ -9,16 +9,14 @@ class PrePostMarkConsistency(unittest.TestCase):
   # inputs, and are the authority once the race has started. The former text
   # assertion required the retired morning-before-post override instead.
   root=S.parents[3]
-  result=subprocess.run(['node','scripts/arvexq_frozen_marks_smoke.js'],
+  result=subprocess.run(['node','scripts/arvexq_production_boundaries_smoke.cjs'],
                         cwd=root,capture_output=True,text=True,timeout=30)
   self.assertEqual(result.returncode,0,result.stdout+result.stderr)
  def test_both_circuits_use_observed_evidence_consensus(self):
   s=S.read_text(encoding='utf-8')
-  self.assertIn('if(position!==null)observations.push(position);',s)
-  self.assertIn('observations.push((rate.winRate+rate.top2Rate+rate.top3Rate)/3)',s)
-  self.assertIn('observations.push(.5+rate.transferClassSignal)',s)
-  self.assertIn("var ARVEXQ_JRA_MODEL='arvexq-jra-observed-consensus-v1'",s)
-  self.assertIn("var ARVEXQ_NAR_MODEL='arvexq-nar-observed-consensus-v1'",s)
+  self.assertNotIn('function narScoreRows(',s)
+  self.assertNotIn('function assignObservedPredictionMarks(',s)
+  self.assertIn('ARVEXQProductionPrediction.build(r)',s)
   self.assertNotIn('function arvexqFactorValues',s)
   self.assertNotIn('arvexq-true-run-pure-sectional-v2',s)
 if __name__=='__main__':unittest.main()

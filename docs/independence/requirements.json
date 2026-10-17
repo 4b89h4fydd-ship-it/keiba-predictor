@@ -1,0 +1,4596 @@
+{
+  "version": 1,
+  "requirement_count": 200,
+  "base_main": "a45a84a6f7c737c0169e59163570b68f0e0b4451",
+  "base_pr_247": "c81e1fbb4196e9961ba639724a9cde32dc9c2785",
+  "base_cloudflare": "e33ebf45d0f988246ed8d1981dcd8055a4557573",
+  "completed": 0,
+  "items": [
+    {
+      "id": 1,
+      "name": "NAR天候解析",
+      "status": "分離済",
+      "module": "arvexq.ingest.nar_weather",
+      "files": [
+        "arvexq/ingest/nar_weather.py"
+      ],
+      "callers": [
+        "arvexq/ingest/nar_environment_parser.py"
+      ],
+      "dependencies": [],
+      "input": "provider text / DOM / surface mapping",
+      "output": "observed weather / going / scratch map",
+      "storage": null,
+      "tests": [
+        "tests/test_environment_component_split.py"
+      ],
+      "implementation_scope": "PR #247既存実装。main・本番の統合証拠は未確認",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 2,
+      "name": "NAR馬場状態解析",
+      "status": "分離済",
+      "module": "arvexq.ingest.nar_going",
+      "files": [
+        "arvexq/ingest/nar_going.py"
+      ],
+      "callers": [
+        "arvexq/ingest/nar_environment_parser.py"
+      ],
+      "dependencies": [],
+      "input": "provider text / DOM / surface mapping",
+      "output": "observed weather / going / scratch map",
+      "storage": null,
+      "tests": [
+        "tests/test_environment_component_split.py"
+      ],
+      "implementation_scope": "PR #247既存実装。main・本番の統合証拠は未確認",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 3,
+      "name": "NAR出走取消・除外解析",
+      "status": "分離済",
+      "module": "arvexq.ingest.nar_scratches",
+      "files": [
+        "arvexq/ingest/nar_scratches.py"
+      ],
+      "callers": [
+        "arvexq/ingest/nar_environment_parser.py"
+      ],
+      "dependencies": [],
+      "input": "provider text / DOM / surface mapping",
+      "output": "observed weather / going / scratch map",
+      "storage": null,
+      "tests": [
+        "tests/test_environment_component_split.py"
+      ],
+      "implementation_scope": "PR #247既存実装。main・本番の統合証拠は未確認",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 4,
+      "name": "JRA天候解析",
+      "status": "分離済",
+      "module": "arvexq.ingest.jra_weather",
+      "files": [
+        "arvexq/ingest/jra_weather.py"
+      ],
+      "callers": [
+        "arvexq/ingest/jra_environment_parser.py"
+      ],
+      "dependencies": [],
+      "input": "provider text / DOM / surface mapping",
+      "output": "observed weather / going / scratch map",
+      "storage": null,
+      "tests": [
+        "tests/test_environment_component_split.py"
+      ],
+      "implementation_scope": "PR #247既存実装。main・本番の統合証拠は未確認",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 5,
+      "name": "JRA芝馬場状態解析",
+      "status": "分離済",
+      "module": "arvexq.ingest.jra_turf_going",
+      "files": [
+        "arvexq/ingest/jra_turf_going.py"
+      ],
+      "callers": [
+        "arvexq/ingest/jra_environment_parser.py"
+      ],
+      "dependencies": [],
+      "input": "provider text / DOM / surface mapping",
+      "output": "observed weather / going / scratch map",
+      "storage": null,
+      "tests": [
+        "tests/test_environment_component_split.py"
+      ],
+      "implementation_scope": "PR #247既存実装。main・本番の統合証拠は未確認",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 6,
+      "name": "JRAダート馬場状態解析",
+      "status": "分離済",
+      "module": "arvexq.ingest.jra_dirt_going",
+      "files": [
+        "arvexq/ingest/jra_dirt_going.py"
+      ],
+      "callers": [
+        "arvexq/ingest/jra_environment_parser.py"
+      ],
+      "dependencies": [],
+      "input": "provider text / DOM / surface mapping",
+      "output": "observed weather / going / scratch map",
+      "storage": null,
+      "tests": [
+        "tests/test_environment_component_split.py"
+      ],
+      "implementation_scope": "PR #247既存実装。main・本番の統合証拠は未確認",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 7,
+      "name": "JRA障害コース馬場状態判定",
+      "status": "分離済",
+      "module": "arvexq.ingest.jra_obstacle_going",
+      "files": [
+        "arvexq/ingest/jra_obstacle_going.py"
+      ],
+      "callers": [
+        "arvexq/ingest/jra_environment_parser.py"
+      ],
+      "dependencies": [],
+      "input": "provider text / DOM / surface mapping",
+      "output": "observed weather / going / scratch map",
+      "storage": null,
+      "tests": [
+        "tests/test_environment_component_split.py"
+      ],
+      "implementation_scope": "PR #247既存実装。main・本番の統合証拠は未確認",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 8,
+      "name": "開催日取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 9,
+      "name": "開催場取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 10,
+      "name": "開催日程取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 11,
+      "name": "レース番号取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 12,
+      "name": "レース名取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 13,
+      "name": "グレード・クラス取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 14,
+      "name": "発走時刻取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 15,
+      "name": "芝・ダート・障害区分取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 16,
+      "name": "距離取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 17,
+      "name": "コース情報取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 18,
+      "name": "出走頭数取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 19,
+      "name": "賞金情報取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 20,
+      "name": "JRA公式データ解析",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 21,
+      "name": "NAR公式データ解析",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 22,
+      "name": "外部競馬サイトデータ解析",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 23,
+      "name": "レースID照合",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 24,
+      "name": "重複レース統合",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 25,
+      "name": "馬番",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.horse_number",
+      "files": [
+        "arvexq/ingest/entry_fields/horse_number.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 26,
+      "name": "枠番",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.frame_number",
+      "files": [
+        "arvexq/ingest/entry_fields/frame_number.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 27,
+      "name": "馬名",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.name",
+      "files": [
+        "arvexq/ingest/entry_fields/name.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 28,
+      "name": "性別",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.sex",
+      "files": [
+        "arvexq/ingest/entry_fields/sex.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 29,
+      "name": "年齢",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.age",
+      "files": [
+        "arvexq/ingest/entry_fields/age.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 30,
+      "name": "斤量",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.carried_weight",
+      "files": [
+        "arvexq/ingest/entry_fields/carried_weight.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 31,
+      "name": "騎手",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.jockey",
+      "files": [
+        "arvexq/ingest/entry_fields/jockey.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 32,
+      "name": "調教師",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.trainer",
+      "files": [
+        "arvexq/ingest/entry_fields/trainer.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 33,
+      "name": "所属",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 34,
+      "name": "馬体重",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.body_weight",
+      "files": [
+        "arvexq/ingest/entry_fields/body_weight.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 35,
+      "name": "馬体重増減",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.body_weight_change",
+      "files": [
+        "arvexq/ingest/entry_fields/body_weight_change.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 36,
+      "name": "出走取消状態",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 37,
+      "name": "競走除外状態",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 38,
+      "name": "出馬表更新",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 39,
+      "name": "馬名・馬番照合",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 40,
+      "name": "欠損値補完",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 41,
+      "name": "データ取得元照合",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 42,
+      "name": "過去走日付",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 43,
+      "name": "過去走競馬場",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 44,
+      "name": "過去走距離",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 45,
+      "name": "過去走馬場状態",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 46,
+      "name": "過去走クラス",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 47,
+      "name": "過去走着順",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 48,
+      "name": "過去走走破時計",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 49,
+      "name": "過去走着差",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 50,
+      "name": "過去走通過順位",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 51,
+      "name": "過去走上がり情報",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 52,
+      "name": "過去走斤量",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 53,
+      "name": "過去走騎手",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 54,
+      "name": "過去走出走頭数",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 55,
+      "name": "過去走重複排除",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 56,
+      "name": "JRA・NAR転入転出判別",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 57,
+      "name": "全競走履歴取得・補修",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 58,
+      "name": "未来結果混入防止",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 59,
+      "name": "単勝オッズ",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.win_odds",
+      "files": [
+        "arvexq/ingest/entry_fields/win_odds.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 60,
+      "name": "複勝オッズ",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 61,
+      "name": "人気順位",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.popularity",
+      "files": [
+        "arvexq/ingest/entry_fields/popularity.py"
+      ],
+      "callers": [
+        "arvexq/ingest/entry_fields/netkeiba.py",
+        "app.py:_nk_row_horse"
+      ],
+      "dependencies": [
+        "arvexq.ingest.entry_fields.dom"
+      ],
+      "input": "netkeiba BeautifulSoup row",
+      "output": "scalar / provider-compatible missing value",
+      "storage": null,
+      "tests": [
+        "tests/test_entry_field_contracts.py"
+      ],
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 62,
+      "name": "オッズ取得時刻",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 63,
+      "name": "JRAオッズ解析",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 64,
+      "name": "NARオッズ解析",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 65,
+      "name": "外部サイトオッズ解析",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 66,
+      "name": "オッズ差分更新",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 67,
+      "name": "オッズ保存・復元",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 68,
+      "name": "オッズ表示",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 69,
+      "name": "オッズ欠損判定",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 70,
+      "name": "着順取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 71,
+      "name": "着差取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 72,
+      "name": "走破時計取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 73,
+      "name": "確定結果判定",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 74,
+      "name": "速報結果判定",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 75,
+      "name": "コーナー通過順位取得",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 76,
+      "name": "単勝払戻",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 77,
+      "name": "複勝払戻",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 78,
+      "name": "枠連払戻",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 79,
+      "name": "馬連払戻",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 80,
+      "name": "ワイド払戻",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 81,
+      "name": "馬単払戻",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 82,
+      "name": "3連複払戻",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 83,
+      "name": "3連単払戻",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 84,
+      "name": "結果欠損補修",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 85,
+      "name": "払戻欠損補修",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 86,
+      "name": "確定結果上書き防止",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 87,
+      "name": "データ完全性評価",
+      "status": "解析済",
+      "module": "arvexq/features/readiness.py",
+      "files": [
+        "arvexq/features/readiness.py"
+      ],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [
+        "tests/test_diagnosis_readiness.py"
+      ],
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 88,
+      "name": "近走成績評価",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 89,
+      "name": "能力評価",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 90,
+      "name": "クラス適性",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 91,
+      "name": "距離適性",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 92,
+      "name": "競馬場適性",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 93,
+      "name": "コース適性",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 94,
+      "name": "馬場適性",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 95,
+      "name": "季節適性",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 96,
+      "name": "走破時計評価",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 97,
+      "name": "上がり性能評価",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 98,
+      "name": "逃げ率",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 99,
+      "name": "先行率",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 100,
+      "name": "差し率",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 101,
+      "name": "追込率",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 102,
+      "name": "下がり率",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 103,
+      "name": "脚質点",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 104,
+      "name": "位置取り評価",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 105,
+      "name": "展開・ペース分析",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 106,
+      "name": "先行争い分析",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 107,
+      "name": "騎手・調教師情報評価",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 108,
+      "name": "馬体重・斤量影響分析",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 109,
+      "name": "コース別スピード基準",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 110,
+      "name": "全頭診断結果保存・表示",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 111,
+      "name": "予想入力データ",
+      "status": "解析済",
+      "module": "arvexq/forecast/inputs.py",
+      "files": [
+        "arvexq/forecast/inputs.py"
+      ],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [
+        "tests/test_forecast_production_boundaries.py"
+      ],
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 112,
+      "name": "予想ロジック",
+      "status": "解析済",
+      "module": "arvexq/forecast/engine.py",
+      "files": [
+        "arvexq/forecast/engine.py"
+      ],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [
+        "tests/test_forecast_production_boundaries.py"
+      ],
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 113,
+      "name": "勝率・順位確率計算",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 114,
+      "name": "展開シミュレーション",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 115,
+      "name": "予想信頼度判定",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 116,
+      "name": "印生成",
+      "status": "解析済",
+      "module": "arvexq/forecast/marks.py",
+      "files": [
+        "arvexq/forecast/marks.py"
+      ],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [
+        "tests/test_forecast_production_boundaries.py"
+      ],
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 117,
+      "name": "◎【単】判定",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 118,
+      "name": "◎【軸】判定",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 119,
+      "name": "その他の印判定",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 120,
+      "name": "A・B・C評価",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 121,
+      "name": "買い目生成",
+      "status": "解析済",
+      "module": "arvexq/forecast/tickets.py",
+      "files": [
+        "arvexq/forecast/tickets.py"
+      ],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [
+        "tests/test_forecast_production_boundaries.py"
+      ],
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 122,
+      "name": "本線買い目",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 123,
+      "name": "3連単チャレンジ",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 124,
+      "name": "買い目点数・配分",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 125,
+      "name": "発走前の予想・買い目保存",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 126,
+      "name": "予想・印・買い目画面表示",
+      "status": "解析済",
+      "module": "arvexq/forecast/publication.py",
+      "files": [
+        "arvexq/forecast/publication.py"
+      ],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [
+        "tests/test_forecast_production_boundaries.py"
+      ],
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 127,
+      "name": "的中判定・成績検証",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 128,
+      "name": "中央・地方開催区分",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 129,
+      "name": "本日の厳選レース",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 130,
+      "name": "メインレース",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 131,
+      "name": "重賞レース",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 132,
+      "name": "高知ファイナル",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 133,
+      "name": "レース選定条件",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 134,
+      "name": "レース選定結果保存",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 135,
+      "name": "事前選定・発走後区別",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 136,
+      "name": "厳選レース買い目表示",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 137,
+      "name": "前日予想成績",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 138,
+      "name": "当日予想成績",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 139,
+      "name": "D1保存",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 140,
+      "name": "SQLite保存",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 141,
+      "name": "レース一覧キャッシュ",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 142,
+      "name": "レース詳細キャッシュ",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 143,
+      "name": "出馬表キャッシュ",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 144,
+      "name": "過去走キャッシュ",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 145,
+      "name": "オッズキャッシュ",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 146,
+      "name": "結果キャッシュ",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 147,
+      "name": "発走前スナップショット",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 148,
+      "name": "保存データバージョン管理",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 149,
+      "name": "キャッシュ期限・破棄",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 150,
+      "name": "保存失敗時復旧",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 151,
+      "name": "Full Prefetch",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 152,
+      "name": "Realtime Sync",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 153,
+      "name": "Result Repair",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 154,
+      "name": "History Repair",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 155,
+      "name": "オッズ自動更新",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 156,
+      "name": "馬体重自動更新",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 157,
+      "name": "天候・馬場自動更新",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 158,
+      "name": "取消・除外自動更新",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 159,
+      "name": "レース詳細事前生成",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 160,
+      "name": "取得失敗時再試行",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 161,
+      "name": "データ鮮度判定",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 162,
+      "name": "同期状態・エラー管理",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 163,
+      "name": "レース一覧API",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 164,
+      "name": "レース詳細API",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 165,
+      "name": "馬別情報API",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 166,
+      "name": "過去走API",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 167,
+      "name": "オッズ更新API",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 168,
+      "name": "払戻API",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 169,
+      "name": "環境情報API",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 170,
+      "name": "全頭診断API",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 171,
+      "name": "保存状態API",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 172,
+      "name": "ヘルスチェックAPI",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 173,
+      "name": "Cloudflare Worker",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 174,
+      "name": "D1接続",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 175,
+      "name": "APIエラー処理",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 176,
+      "name": "ホーム画面",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 177,
+      "name": "開催場一覧",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 178,
+      "name": "開催場別レース一覧",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 179,
+      "name": "レース詳細",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 180,
+      "name": "出馬表",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 181,
+      "name": "馬別詳細",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 182,
+      "name": "過去走表示",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 183,
+      "name": "脚質マップ",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 184,
+      "name": "展開予想表示",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 185,
+      "name": "予想表示枠",
+      "status": "解析済",
+      "module": "arvexq/ui/static/forecast/prediction_frame.js",
+      "files": [
+        "arvexq/ui/static/forecast/prediction_frame.js"
+      ],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [
+        "scripts/arvexq_production_boundaries_smoke.cjs"
+      ],
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 186,
+      "name": "印表示枠",
+      "status": "解析済",
+      "module": "arvexq/ui/static/forecast/mark_frame.js",
+      "files": [
+        "arvexq/ui/static/forecast/mark_frame.js"
+      ],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [
+        "scripts/arvexq_production_boundaries_smoke.cjs"
+      ],
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 187,
+      "name": "買い目表示枠",
+      "status": "解析済",
+      "module": "arvexq/ui/static/forecast/ticket_frame.js",
+      "files": [
+        "arvexq/ui/static/forecast/ticket_frame.js"
+      ],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [
+        "scripts/arvexq_production_boundaries_smoke.cjs"
+      ],
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 188,
+      "name": "結果・払戻表示",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 189,
+      "name": "リアルタイム表示",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 190,
+      "name": "お気に入り",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 191,
+      "name": "画面遷移・戻る操作",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 192,
+      "name": "手動更新・プル更新",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 193,
+      "name": "PWA・ホーム画面起動",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 194,
+      "name": "オフライン・キャッシュ表示",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 195,
+      "name": "CSS・レイアウト管理",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 196,
+      "name": "Python・JavaScript自動テスト",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 197,
+      "name": "JRA・NARデータ検証とバックテスト",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 198,
+      "name": "GitHub Actions CI・PWAビルド",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 199,
+      "name": "Cloudflareデプロイ・本番動作確認",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    },
+    {
+      "id": 200,
+      "name": "ログ・障害監視",
+      "status": "未着手",
+      "module": null,
+      "files": [],
+      "callers": [],
+      "dependencies": [],
+      "input": null,
+      "output": null,
+      "storage": null,
+      "tests": [],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "evidence": {
+        "commit_sha": null,
+        "unit": null,
+        "integration": null,
+        "ci_url": null,
+        "main_sha": null,
+        "production": null
+      }
+    }
+  ]
+}

@@ -27,28 +27,15 @@ def complete_fixture(circuit):
 
 class UnifiedScheduledPredictionTests(TestCase):
     def test_both_circuits_create_archives_from_complete_6040_observations(self):
-        for circuit, version in (("地方", NAR_MODEL_VERSION), ("中央", JRA_MODEL_VERSION)):
+        for circuit in ('地方','中央'):
             with self.subTest(circuit=circuit):
-                detail = complete_fixture(circuit)
-                original = deepcopy(detail)
-                with patch("app._prediction_clock_state", return_value=("pre", 20)):
-                    result = prepare_seal(detail, now=datetime.now(JST))
-                self.assertEqual(result["status"], "sealed", result)
-                frozen = sealed_lock(result["detail"])
-                self.assertIsNotNone(frozen)
-                self.assertEqual(frozen["circuitMethod"], version)
-                self.assertEqual(frozen["fieldSize"], len(original["horses"]))
-                self.assertGreaterEqual(frozen["markCount"], 3)
-                self.assertEqual(result["detail"]["observedModelCoverage"]["fullyObserved"],
-                                 len(original["horses"]))
-                self.assertEqual(result["detail"]["predictionStatus"], "ready")
-                self.assertNotIn("preRacePrediction", detail)
-                self.assertEqual(original["horses"], detail["horses"])
-                for horse in result["detail"]["horses"]:
-                    e = horse["integratedEvaluation"]
-                    self.assertNotIn("factorEvidence", e)
-                    self.assertIn("narModelEvidence", e)
-                    self.assertEqual(e["markEngineVersion"], version)
+                detail=complete_fixture(circuit);original=deepcopy(detail)
+                with patch('app._prediction_clock_state',return_value=('pre',20)):
+                    result=prepare_seal(detail,now=datetime.now(JST))
+                self.assertEqual(result['status'],'incomplete-prediction',result)
+                self.assertEqual(result['predictionStatus'],'disabled')
+                self.assertEqual(detail,original)
+                self.assertIsNone(sealed_lock(detail))
 
     def test_missing_real_margin_never_becomes_a_frozen_forecast(self):
         for circuit in ("地方", "中央"):

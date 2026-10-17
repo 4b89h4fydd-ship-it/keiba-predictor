@@ -1,6 +1,6 @@
 """JRA/NAR transfers must not mix uncomparable career rate denominators."""
 import unittest
-from arvexq.prediction.observed_model import _history_rates, _run_circuit
+from arvexq.ingest.transfer_history import _history_rates, _run_circuit
 
 
 class TransferRatesTests(unittest.TestCase):
