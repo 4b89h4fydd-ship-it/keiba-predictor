@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {webcrypto} from 'node:crypto';
+import {forecastRevisions} from '../workers/api_forecast_revisions.mjs';
+globalThis.crypto??=webcrypto;
+const fixture=JSON.parse(fs.readFileSync('tests/fixtures/forecast_revision_transport.json'));
+const revision=fixture.detail.forecastRevisions[0],store=new Map();let pointer=null;const writes=[];
+const DB={prepare(sql){let values=[];return{bind(...args){values=args;return this},async first(){
+ if(sql.startsWith('SELECT race_date'))return{race_date:revision.raceDate};
+ if(sql.startsWith('SELECT payload_sha256'))return store.get(values[1])||null;
+ if(sql.includes('JOIN forecast_revision_current'))return pointer?store.get(pointer):null;
+ throw Error('Unexpected query '+sql)},async all(){return{results:[...store.values()]}} ,sql,get values(){return values}}},async batch(statements){
+ for(const statement of statements){const {sql,values}=statement;writes.push(sql);
+  assert(!/^(?:UPDATE|DELETE|INSERT).*\b(?:race_details|race_summaries|odds_current|odds_history|meta)\b/.test(sql));
+  if(sql.startsWith('INSERT INTO forecast_revisions(')&&!store.has(values[1]))store.set(values[1],{payload_json:values[5],payload_sha256:values[6]});
+  if(sql.startsWith('INSERT INTO forecast_revision_current'))pointer=values[1];
+ }return[];}};
+const env={DB,SYNC_TOKEN:'test-only-token'},base='https://api.test';
+const call=(path,body,auth=true)=>forecastRevisions(new Request(base+path,{method:body?'POST':'GET',headers:auth?{'x-sync-token':env.SYNC_TOKEN}:{},body:body?JSON.stringify(body):undefined}),env);
+const raw=JSON.stringify(revision);const hash=async text=>Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))).toString('hex');
+let response=await call('/api/admin/forecast-revisions',{revisionRawJson:raw,payloadSha256:await hash(raw)},false);assert.equal(response.status,401);assert.equal(writes.length,0);
+response=await call('/api/admin/forecast-revisions',{revisionRawJson:raw,payloadSha256:'bad'});assert.equal(response.status,400);assert.equal(writes.length,0);
+response=await call('/api/admin/forecast-revisions',{revisionRawJson:raw,payloadSha256:await hash(raw)});assert.equal(response.status,200);
+response=await call('/api/forecast-revisions/'+revision.raceId);const body=await response.json();assert.deepEqual(body.forecastRevisions[0],revision);assert.equal(body.currentForecastRevisionId,revision.revisionId);
+const changed=JSON.stringify({...revision,forecastText:'mutated immutable record'});
+response=await call('/api/admin/forecast-revisions',{revisionRawJson:changed,payloadSha256:await hash(changed)});assert.equal(response.status,409);
+const bad=structuredClone(revision);bad.horses[0].probabilities={win:.9,top2:.2,top3:.1};const badraw=JSON.stringify(bad);
+response=await call('/api/admin/forecast-revisions',{revisionRawJson:badraw,payloadSha256:await hash(badraw)});assert.equal(response.status,400);
+assert.equal(store.get(pointer).payload_json,raw);
+console.log('FORECAST_REVISION_AUTH_IMMUTABILITY_PROBABILITY_READBACK_PASS');

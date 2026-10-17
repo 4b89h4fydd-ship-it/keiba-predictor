@@ -794,6 +794,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
         try:prize1=int(float(pm.group(1).replace(",",""))*10000)
         except:pass
     horses=[]
+    withdrawn_entries=[]
     target_table=None
     for table in soup.find_all("table"):
         tx=_jra_text(table.find("thead") or table)
@@ -809,7 +810,15 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
             mt=re.fullmatch(r"\s*(\d{1,2})\s*",_jra_text(c))
             if mt and 1<=int(mt.group(1))<=18:
                 no=int(mt.group(1));noidx=ci;break
-        if not no:continue
+        if not no:
+            marker=tr.select_one('td.num')
+            status=_scratch_status(_jra_text(marker))
+            name_tag=tr.select_one('td.horse .name a')
+            if status and name_tag:
+                withdrawn_entries.append({'name':_jra_text(name_tag),'horseNumber':None,
+                    '_jraHorseCname':_jra_attr_cname(name_tag,JRA_HORSE_CNAME_RE),
+                    'status':status,'scratched':True,'sourceHorseNumberMissing':True})
+            continue
         frame_no=0
         fm=re.search(r"枠\s*(\d)",_jra_text(cells[0])+" "+str(cells[0]))
         if fm:frame_no=int(fm.group(1))
@@ -844,9 +853,10 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
         if not jockey and cwm:
             jockey=prot[cwm.end():].strip().split(" ")[0:3]
             jockey=" ".join(jockey).strip()
-        trainer=""
-        tm=re.search(r"([^\s]+(?:\s[^\s]+)?)\((?:美浦|栗東|本会外)\)",infot)
-        if tm:trainer=tm.group(1).strip()
+        trainer_tag=info.select_one('p.trainer a')
+        trainer=_jra_text(trainer_tag)
+        tm=re.search(r"([^\s]+(?:\s[^\s]+)?)\s*\((?:美浦|栗東|本会外)\)",infot)
+        if not trainer and tm:trainer=tm.group(1).strip()
         prize=0
         prm=re.search(r"([\d,.]+)万円",infot)
         if prm:
@@ -890,7 +900,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
         with ThreadPoolExecutor(max_workers=workers) as pool:
             horses=list(pool.map(supplement,horses))
     rid=f"jra-{date}-{track}-{race_no:02d}"
-    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":len(horses),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"horses":horses,"source":"JRA公式","jraCname":cname})
+    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":len(horses),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"horses":horses,"withdrawnEntries":withdrawn_entries,"source":"JRA公式","jraCname":cname})
 
 def _jra_parse_race_summary(cname:str)->dict|None:
     """Fast list-page parser: no horse/profile parsing. Full card loads only when opened."""

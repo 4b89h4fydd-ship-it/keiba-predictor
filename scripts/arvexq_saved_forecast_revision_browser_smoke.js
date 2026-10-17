@@ -1,0 +1,32 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const {chromium}=require(process.env.ARVEXQ_PLAYWRIGHT_MODULE||'playwright');
+const detail=JSON.parse(fs.readFileSync('tests/fixtures/forecast_revision_transport.json')).detail;
+const before=JSON.stringify(detail.preRacePrediction);
+const source=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
+assert(source.includes(boot));
+const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefresh=function(){};scheduleRaceBiasRefresh=function(){};scheduleVenueTrendRefresh=function(){};window.revisionTest={state,openRace};`);
+(async()=>{
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:390,height:844}});
+  const errors=[];page.on('pageerror',error=>errors.push(String(error)));
+  await page.route('**/*',route=>{
+   if(route.request().url().includes('/api/forecast-revisions/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,raceId:detail.id,forecastRevisions:detail.forecastRevisions,currentForecastRevisionId:detail.currentForecastRevisionId})});
+   if(route.request().url().includes('/api/live-odds/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,raceId:detail.id,horses:[]})});
+   if(route.request().url().includes('/api/race/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,detail})});
+   return route.fulfill({status:200,contentType:'text/html',body:'<html><body><div id="app"></div></body></html>'});
+  });
+  await page.goto('https://arvexq.test/');await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/research/live_odds.js','utf8')});await page.addScriptTag({content:code});
+  await page.evaluate(d=>{revisionTest.state.date=d.date;revisionTest.state.circuit=d.circuit;revisionTest.state.races=[d]},detail);
+  await page.evaluate(id=>revisionTest.openRace(id),detail.id);
+  await page.waitForFunction(()=>document.querySelectorAll('.racecard-row').length===6);
+  assert.equal(await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),1);
+  assert.match(await page.locator('.rc-mark-freeze-note').innerText(),/最新保存版/);
+  assert.equal(await page.locator('.diagnosis-merged-row').count(),6);
+  assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRacePrediction)),before);
+  assert.equal(errors.length,0,errors.join(';'));
+  console.log('SAVED_FORECAST_REVISION_MOBILE_BROWSER_PASS');
+ }finally{await browser.close()}
+})().catch(error=>{console.error(error);process.exit(1)});

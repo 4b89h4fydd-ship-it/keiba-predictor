@@ -74,7 +74,9 @@ def _decide(analysis):
 def build_forecast(detail, model=None):
     result = deepcopy(detail)
     start = post_at(detail)
-    retrospective = bool(detail.get('result')) or bool(start and datetime.now(JST) >= start)
+    now = datetime.now(JST)
+    retrospective = (bool(detail.get('result')) or bool(start and now >= start)
+                     or bool(detail.get('date') and detail['date'] < now.date().isoformat()))
     result['analysisType'] = 'retrospective' if retrospective else 'preoff-candidate'
     result['analysisLabel'] = '事後分析' if retrospective else '発走前の検証候補'
     result['predictionModelVersion'] = result['markEngineVersion'] = VERSION

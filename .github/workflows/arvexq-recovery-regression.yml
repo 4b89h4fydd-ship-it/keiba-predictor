@@ -30,6 +30,8 @@ jobs:
           python build_static.py
           python -m http.server 8788 --directory dist >/tmp/arvexq-http.log 2>&1 &
           for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
+      - name: Saved latest forecast revision and immutable original in mobile browser
+        run: node scripts/arvexq_saved_forecast_revision_browser_smoke.js
       - name: Detail outage and full-history recovery
         run: node scripts/arvexq_detail_resilience_smoke.js
       - name: iPhone Chromium and WebKit pull-to-refresh

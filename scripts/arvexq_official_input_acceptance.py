@@ -49,7 +49,7 @@ def summarize_jra(races, target_date, source_rosters=None):
         numbers = [h.get('horseNumber') for h in horses]
         histories = [len(observed_runs(h,race,limit=None)) for h in horses]
         rows.append({'raceId':rid, 'reportedFieldSize':race.get('fieldSize'),
-                     'acquiredEntries':len(horses), 'sourceRosterEntries':(source_rosters or {}).get(rid), 'uniqueHorseNumbers':len(set(numbers)),
+                     'acquiredEntries':len(horses), 'withdrawnSourceEntries':len(race.get('withdrawnEntries') or []), 'sourceRosterEntries':(source_rosters or {}).get(rid), 'uniqueHorseNumbers':len(set(numbers)),
                      'invalidHorseNumbers':sum(type(n) is not int or n<=0 for n in numbers),
                      'observedPriorRuns':sum(histories),
                      'horsesWithPriorRuns':sum(n>0 for n in histories),
@@ -59,16 +59,18 @@ def summarize_jra(races, target_date, source_rosters=None):
                                       for key in ('name','jockey','trainer','carriedWeight')},
                      'lifetimeCompleteProven':False})
     horses = sum(r['acquiredEntries'] for r in rows)
+    registered=horses+sum(r['withdrawnSourceEntries'] for r in rows)
     verified=all(r['sourceRosterEntries'] is not None for r in rows) and bool(rows)
     expected=sum(r['sourceRosterEntries'] or 0 for r in rows) if verified else None
-    return {'targetDate':target_date, 'races':len(rows), 'acquiredEntries':horses,
+    return {'targetDate':target_date, 'races':len(rows), 'acquiredEntries':horses, 'acquiredRegisteredEntries':registered,
+            'withdrawnEntriesWithoutPublishedHorseNumber':registered-horses,
             'officialSourceRosterTotal':expected, 'sourceRosterVerified':verified,
-            'entryCoveragePercent':100*horses/expected if expected else None,
+            'entryCoveragePercent':100*registered/expected if expected else None,
             'invalidRaceIds':invalid,
             'fieldMismatches':[r['raceId'] for r in rows if not r['acquiredEntries']
                                or r['acquiredEntries'] != r['reportedFieldSize']
                                or r['acquiredEntries'] != r['uniqueHorseNumbers'] or r['invalidHorseNumbers']
-                               or (r['sourceRosterEntries'] is not None and r['sourceRosterEntries'] != r['acquiredEntries'])],
+                               or (r['sourceRosterEntries'] is not None and r['sourceRosterEntries'] != r['acquiredEntries']+r['withdrawnSourceEntries'])],
             'observedPriorRuns':sum(r['observedPriorRuns'] for r in rows),
             'horsesWithPriorRuns':sum(r['horsesWithPriorRuns'] for r in rows),
             'horsesWithoutPriorRuns':sum(r['horsesWithoutPriorRuns'] for r in rows),
