@@ -1,22 +1,28 @@
-"""Independent JRA weather and surface-going HTML parser."""
-import re
+"""Compose independent JRA weather, turf, dirt and obstacle-going extractors."""
 from bs4 import BeautifulSoup
-from arvexq.ingest.environment_values import _env_clean_weather, _env_clean_condition
+from arvexq.ingest.jra_weather import parse_jra_weather
+from arvexq.ingest.jra_turf_going import parse_jra_turf_going
+from arvexq.ingest.jra_dirt_going import parse_jra_dirt_going
+from arvexq.ingest.jra_obstacle_going import parse_jra_obstacle_going
 
-def _parse_jra_environment_html(html:str, surface:str="")->dict:
-    if not html:return {}
-    soup=BeautifulSoup(html,"html.parser")
-    full=soup.get_text(' ',strip=True)
-    out={"surfaceConditions":{}}
-    wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
-    if wm:out["weather"]=_env_clean_weather(wm.group(1))
-    for surf,label in (("芝","芝"),("ダート","ダート")):
-        cm=re.search(re.escape(label)+r"\s*[：:]?\s*(不良|稍重|重|良)",full)
-        if cm:out["surfaceConditions"][surf]=_env_clean_condition(cm.group(1))
-    if surface=="障害":
-        c=out["surfaceConditions"].get("芝") or out["surfaceConditions"].get("ダート")
+def _parse_jra_environment_html(html: str, surface: str = "") -> dict:
+    if not html:
+        return {}
+    text = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
+    result = {"surfaceConditions": {}}
+    weather = parse_jra_weather(text)
+    if weather is not None:
+        result["weather"] = weather
+    turf = parse_jra_turf_going(text)
+    dirt = parse_jra_dirt_going(text)
+    if turf is not None:
+        result["surfaceConditions"]["芝"] = turf
+    if dirt is not None:
+        result["surfaceConditions"]["ダート"] = dirt
+    if surface == "障害":
+        going = parse_jra_obstacle_going(result["surfaceConditions"])
     else:
-        c=out["surfaceConditions"].get(surface)
-    if c:out["condition"]=c
-    return out
-
+        going = result["surfaceConditions"].get(surface)
+    if going is not None:
+        result["condition"] = going
+    return result
