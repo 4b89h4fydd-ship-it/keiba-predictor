@@ -10,7 +10,9 @@ class OldWinnerModelRemoved(unittest.TestCase):
     def test_new_d1_authority_and_retired_engine_not_executed(self):
         s=SOURCE.read_text(encoding="utf-8")
         self.assertNotIn("function arvexqFactorValues(z,r)",s)
-        active=s.split("function predict(r){",1)[1].split("\\nfunction nextRace()",1)[0]\n        self.assertNotIn("assignPredictionMarks(",active)\n        self.assertIn("learnedD1Prediction(r)",active)
+        active=s.split("function predict(r){",1)[1].split("function nextRace()",1)[0]
+        self.assertNotIn("assignPredictionMarks(",active)
+        self.assertIn("learnedD1Prediction(r)",active)
         self.assertNotIn("score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)",s)
         self.assertIn("return assignObservedPredictionMarks(rows,r);",s)
 if __name__=="__main__":
