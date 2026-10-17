@@ -1,3 +1,4 @@
+import {needsHistoryPreservation, mergeStoredHorseHistory} from './history-preservation.js';
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -623,13 +624,38 @@ if (path === "/api/day") {
           );
         }
 
+        // Resolve stored factual history once per race in compact batches.
+        // Fail the sync if this read fails: never destructively overwrite verified history.
+        const preserveIds = new Set();
+        for (const row of details) {
+          const raw = row.payload ?? row.detail ?? row;
+          const candidate = typeof raw === "string" ? safeJson(raw) : raw;
+          if (!needsHistoryPreservation(candidate)) continue;
+          const id = String(first(row,"race_id","raceId","id") ||
+            first(candidate,"race_id","raceId","id") || "");
+          if (id) preserveIds.add(id);
+        }
+        const previousHorsesByRace = new Map();
+        const ids = [...preserveIds];
+        for (let start = 0; start < ids.length; start += 25) {
+          const batch = ids.slice(start,start+25);
+          const placeholders = batch.map(() => "?").join(",");
+          const found = await env.DB.prepare(
+            `SELECT race_id,json_extract(payload,'$.horses') AS horses
+              FROM race_details WHERE race_id IN (${placeholders}) AND json_valid(payload)=1`
+          ).bind(...batch).all();
+          for (const saved of found.results || []) {
+            const horses=safeJson(saved.horses);
+            if (Array.isArray(horses)) previousHorsesByRace.set(String(saved.race_id),horses);
+          }
+        }
+
         const detailStatements = [];
 
         for (const row of details) {
-          const payloadObject =
-            row.payload ??
-            row.detail ??
-            row;
+          const rawPayload = row.payload ?? row.detail ?? row;
+          let payloadObject = typeof rawPayload === "string" ? safeJson(rawPayload) : rawPayload;
+          if (!payloadObject || typeof payloadObject !== "object") continue;
 
           const raceId = String(
             first(
@@ -681,10 +707,11 @@ if (path === "/api/day") {
           const analysisReady =
             analysisReadyRaw ? 1 : 0;
 
-          const payloadText =
-            typeof row.payload === "string"
-              ? row.payload
-              : JSON.stringify(payloadObject);
+          const savedHorses = previousHorsesByRace.get(raceId);
+          if (savedHorses) payloadObject = mergeStoredHorseHistory(payloadObject,savedHorses);
+          const payloadText = savedHorses
+            ? JSON.stringify(payloadObject)
+            : (typeof row.payload === "string" ? row.payload : JSON.stringify(payloadObject));
 
           detailStatements.push(
             env.DB.prepare(`
