@@ -1631,7 +1631,15 @@ function applyFrozenMarks(r,p){
   }else if(clock.started){
     var frozen=Array.isArray(r.preRacePrediction&&r.preRacePrediction.horses)?
       r.preRacePrediction.horses:[];
-    if(frozen.length){
+    var verified=serverFrozenPrediction(r);
+    if(verified&&frozen.length){
+      var savedByNo={};verified.horses.forEach(function(h){savedByNo[n(h.horseNumber)]=String(h.mark||'')});
+      var savedOrder={'◎':1,'○':2,'▲':3,'☆+':4,'☆':5,'△':6,'注':7};
+      p.rows.forEach(function(z){
+        z.computedLiveMark=String(z.predMark||'');
+        z.predMark=isScratchHorse(z.horse)?'':(savedByNo[n(z.horse&&z.horse.horseNumber)]||'');
+        z.predRank=savedOrder[z.predMark]||999;z.markFrozen=true;
+      });
       p.markFreeze={source:'server-prerace',fixedAt:String(r.preRacePrediction.fixedAt||'')};
     }else{
       // Never publish a newly calculated post-result mark as a pre-race forecast.
@@ -1679,14 +1687,15 @@ function predictionFromSavedRevision(r,v){
     profile:{},researchAudit:{model:v.modelVersion,observedOnly:true,legacyRankersRemoved:true}};
 }
 function savedRevisionOriginalHtml(r){
-  var original=r.preRacePrediction,bet=r.preRaceBet;
+  var original=serverFrozenPrediction(r),bet=verifiedSavedAiBet(r,r.preRaceBet);
   if(!original&&!bet)return '';
   var names={};(r.horses||[]).forEach(function(h){names[n(h.horseNumber)]=h.name});
-  return '<details class="card forecast-original-history"><summary>発走前の原本を見る</summary>'+
-    '<p class="muted">当時の原本です。現在表示中の再計算版とは別に保管しています。</p>'+
-    (original&&Array.isArray(original.horses)?original.horses.map(function(h){return '<p>'+esc(h.mark||'—')+' '+esc(h.horseNumber)+' '+esc(names[n(h.horseNumber)]||'')+'</p>'}).join(''):'')+
-    (bet&&Array.isArray(bet.items)?bet.items.map(function(item){return '<p>'+esc(item.kind||'')+' '+esc(item.combo||JSON.stringify(item.combos||[]))+'</p>'}).join(''):'')+'</details>';
+  return '<details '+(isFinal(r)?'open ':'')+'class="card forecast-original-history"><summary>保存済みの発走前予想・印・買い目</summary>'+
+    '<p class="muted">発走前に保存された原本です。確定後の結果から再計算した予想ではありません。</p>'+
+    (original?'<h3>印</h3>'+original.horses.map(function(h){return '<p>'+esc(h.mark||'—')+' '+esc(h.horseNumber)+' '+esc(names[n(h.horseNumber)]||'')+'</p>'}).join(''):'')+
+    (bet&&Array.isArray(bet.items)?'<h3>買い目</h3>'+bet.items.map(function(item){return '<p>'+esc(item.kind||'')+' '+esc(item.combo||JSON.stringify(item.combos||[]))+'</p>'}).join(''):'')+'</details>';
 }
+
 function savedRevisionDiagnosisPanel(r,p){
   var v=p.savedForecastRevision;
   return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><p class="muted">'+esc(v.analysisLabel)+'｜'+
@@ -3769,6 +3778,7 @@ function renderRace(){
   var content='';
   try{
     content=detailTabs(r,p)
+    if(isFinal(r))content+=savedRevisionOriginalHtml(r)
   }catch(e){
     predictionError=predictionError||e;
     state.openPanel='entry';
