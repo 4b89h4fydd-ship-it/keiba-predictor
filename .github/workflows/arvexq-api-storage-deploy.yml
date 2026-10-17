@@ -2,13 +2,13 @@ name: ARVEXQ API Private Storage Audit Deploy
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/arvexq-api-storage-deploy.yml']
+    paths: ['workers/api*.mjs', '.github/workflows/arvexq-api-storage-deploy.yml']
   workflow_dispatch:
     inputs:
       expected_source_sha256:
         description: "SHA256 of the current production module to prevent overwriting other changes"
         type: string
-        default: "b2fbcf169aeb535fdafd3e1717a9ccc93d6a4b9f464190c7ad31b30e91925814"
+        default: "d84dde33b51db45517a64caa5f2be290f73e74fe79652b1fd284bbcd2d2f3df5"
       verify_only:
         description: "Verify the deployed API without redeploying"
         type: boolean
@@ -23,7 +23,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
-      EXPECTED_SOURCE_SHA256: ${{ inputs.expected_source_sha256 || 'b2fbcf169aeb535fdafd3e1717a9ccc93d6a4b9f464190c7ad31b30e91925814' }}
+      EXPECTED_SOURCE_SHA256: ${{ inputs.expected_source_sha256 || 'd84dde33b51db45517a64caa5f2be290f73e74fe79652b1fd284bbcd2d2f3df5' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,6 +32,7 @@ jobs:
       - name: Verify private read-only route and preserved original handlers
         run: |
           node scripts/arvexq_api_storage_smoke.mjs
+          node scripts/arvexq_forecast_revision_api_smoke.mjs
           node scripts/arvexq_full_snapshot_smoke.mjs
           node scripts/arvexq_api_chunk_export_smoke.mjs
           python -m unittest tests.test_full_snapshot_codec

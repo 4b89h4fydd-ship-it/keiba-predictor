@@ -103,7 +103,8 @@ def publish(ledger_path,base,token):
             verified+=1
             if verified%50==0:print('PUBLISHED_AND_RELOADED',verified,flush=True)
         except Exception as exc:failures.append({'raceId':race_id,'error':str(exc)})
-    report={'verifiedRevisions':verified,'failures':failures,'allPublished':not failures,'originalSqlWrites':0}
+    expected=db.execute('SELECT COUNT(*) FROM revisions').fetchone()[0]
+    report={'targetRevisions':expected,'verifiedRevisions':verified,'failures':failures,'allPublished':expected>0 and verified==expected and not failures,'originalSqlWrites':0}
     Path(str(ledger_path)+'.publish.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
     return report
 

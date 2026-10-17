@@ -1,5 +1,5 @@
 // Fixed-table authenticated logical backup. No SQL writes or arbitrary queries.
-const TABLES=['race_details','race_summaries','odds_current','odds_history','meta'];
+const TABLES=['race_details','race_summaries','odds_current','odds_history','meta','forecast_revisions','forecast_revision_current'];
 export async function snapshotExport(request,env){
   if(!env.SYNC_TOKEN||request.headers.get('authorization')!=='Bearer '+env.SYNC_TOKEN)
     return Response.json({ok:false,error:'unauthorized'},{status:401});
@@ -10,7 +10,7 @@ export async function snapshotExport(request,env){
     const placeholders=TABLES.map(()=>'?').join(',');
     const schema=await env.DB.prepare(`SELECT type,name,tbl_name,sql FROM sqlite_master WHERE sql IS NOT NULL AND tbl_name IN (${placeholders}) AND type IN ('table','index') ORDER BY type DESC,name`).bind(...TABLES).all();
     const races=await env.DB.prepare('SELECT race_id,race_date,updated_at,length(CAST(payload AS BLOB)) AS bytes FROM race_details ORDER BY race_id').all();
-    return respond({ok:true,version:'arvexq-logical-backup-v1',sql_writes:0,tables:TABLES,schema:schema.results,races:races.results});
+    return respond({ok:true,version:'arvexq-logical-backup-v1',sql_writes:0,tables:TABLES.filter(name=>(schema.results||[]).some(row=>row.type==='table'&&row.name===name)),schema:schema.results,races:races.results});
   }
   if(!TABLES.includes(table))return respond({ok:false,error:'unsupported table'});
   const id=url.searchParams.get('race_id');

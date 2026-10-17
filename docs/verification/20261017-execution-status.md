@@ -57,3 +57,15 @@ pushとPR synchronizeの重複で同一headの本番巡回が並走すること�
 GitHub Actions run 38989790024では既存公式取得経路が成功し、JRA **36レース・471頭・確認過去走1,625件**を新規取得した。履歴あり405頭・なし66頭。生涯完全取得ではなく、初回取得は表示用4～5走が中心である。初回のJRA fieldSizeは同一パーサーの取得頭数に由来するため、それだけで独立した全頭取得率100%を証明したとは扱わない。続けて公式HTMLの馬ID数との独立照合、既存の公式プロフィールadapterの500走要求、表示5走と全確認履歴の分離を同workflowに追加して実行する。
 
 本番Recoveryの歴史ページで「◎複数」を検出。調査により独立軸の固定加重点と、コア印が空欄でも軸ラベルから◎を増設する表示処理が残っていた。新しい現在予想では独立軸の計算・昇格を削除し、勝ち切りと軸の馬番を同一化。画面説明も一頭の本命に統一する。保存済みの旧原本は保持し、旧役割は「保存印」と区別する。ブラウザーのpolicy識別子を追加し、新policyでは◎一頭を強制する。未配備の旧本番の互換性検査を新policy実動作成功と取り違えない。
+
+## Saved forecast replacement follow-up (verified, not an accuracy acceptance)
+
+- Published `9fa5ea207e7067bef03a6a3e3d6dc369667fe9ea` and Cloudflare preflight `baa30f8b0bc71a3dfd17627db4201469b7968aeb`.
+- Official input run 38991646038 passed: JRA 36 races, 471 numbered runners plus one explicitly unnumbered withdrawal, 472/472 registered entries; 4,507 observed prior runs, 405 runners with history and 66 without. Trainer, jockey, weight and name missing counts zero. Lifetime completeness remains unproved.
+- NAR same run: 34 races, 341/341 entries, birth date/jockey/trainer/weight missing zero. Four-month runner archive provides earlier valid history for 316/341. Separate ten-month local audit improves this to 329/341; neither proves lifetime completeness.
+- CI 38991720254 Validation passed. CI 38991720251 browser and production-baseline recovery passed. Exact new saved-revision mobile rendering and outage tests passed in its browser job. Production-baseline passes are not evidence the new code was deployed.
+- Local full suite after additive backup changes: 457 tests and 39 subtests passed; 24 validation workflow steps passed before those small follow-up changes.
+- Complete D1 backup run 38990502928 passed, restored SQLite verified: 2,969 original race details, 2,969 summaries, 6,191 current odds, zero odds history, 74 metadata rows. Original SQL writes zero.
+- Cloudflare preflight run 38991717045 passed; existing API source SHA256 `d84dde33b51db45517a64caa5f2be290f73e74fe79652b1fd284bbcd2d2f3df5` was preserved and D1 binding verified. API source guard updated to this actual verified hash.
+- New saved forecasts use additive D1 tables and latest-display pointers. Pre-off originals remain byte-for-byte in the original tables. Past-date revisions are labelled retrospective and excluded from original forecast hit testing. All eight ticket kinds remain compared, with a ten-point bound.
+- Bulk recalculation is running against the verified backup. Completion counts and production replacement remain pending. New model remains uncalibrated; all-skip betting output is NOT accepted as a successful betting model. Untouched evaluation, calibration, 80% recommended hit rate, live new-race model authority and removal of remaining fallback authority remain open.
