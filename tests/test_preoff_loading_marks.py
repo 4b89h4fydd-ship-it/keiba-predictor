@@ -14,9 +14,11 @@ class PreoffLoadingMarksTest(unittest.TestCase):
         self.assertIn("raceMarkClock(r).started?authorizedPreOffMarks(r):null", body)
         self.assertIn("isScratchHorse(h)?'':String(z.mark||'')", body)
 
-    def test_live_prediction_engine_unchanged(self):
+    def test_retired_live_prediction_engine_is_not_executed(self):
         source = APP.read_text(encoding="utf-8")
-        self.assertIn("assignPredictionMarks(rows,modelRace);", source)
+        active=source.split("function predict(r){",1)[1].split("function nextRace()",1)[0]
+        self.assertNotIn("assignPredictionMarks(",active)
+        self.assertIn("learnedD1Prediction(r)",active)
         self.assertNotIn("arvexq-true-run-pure-sectional-v2", source)
         self.assertIn("return assignObservedPredictionMarks(rows,r);", source)
 

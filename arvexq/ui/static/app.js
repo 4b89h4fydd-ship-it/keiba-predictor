@@ -1744,79 +1744,29 @@ function learnedD1Prediction(r){
   return p;
 }
 function predict(r){
+  // The retired browser-side 60/40 engine has been removed from execution.
+  // Only the persisted learned forecast or a verified historical receipt may
+  // supply marks; never manufacture new predictions after the scheduled off.
   var learned=learnedD1Prediction(r);
   if(learned)return learned;
-  if(r&&r.legacyPresentationDisabled){
-    return {rows:(r.horses||[]).map(function(h){return {horse:h,predMark:'',predRank:999,
-      winProbability:null,p1Probability:null,p2Probability:null,p3Probability:null,
-      overallGrade:'C',expected:'新方式未適用',coverage:0}}),scenarios:[],plans:{},
-      plan:null,arrangement:[],coverage:0,markFreeze:{source:'new-model-unavailable'}};
+  var revision=latestSavedForecastRevision(r);
+  if(revision)return predictionFromSavedRevision(r,revision);
+  var clock=raceMarkClock(r),receipt=clock.started?authorizedPreOffMarks(r):null;
+  var marks={};
+  if(receipt&&Array.isArray(receipt.horses)){
+    receipt.horses.forEach(function(h){marks[n(h.horseNumber,0)]=String(h.mark||'')});
   }
-  var savedRevision=latestSavedForecastRevision(r);
-  if(savedRevision){
-    var savedPrediction=predictionFromSavedRevision(r,savedRevision);
-    Object.defineProperty(r,"_prediction",{value:savedPrediction,configurable:true,writable:true,enumerable:false});
-    return savedPrediction;
-  }
-  var modelVersion=observedModelVersion(r);
-  var started=raceMarkClock(r).started,markSignature=null;
-  if(!started){
-    markSignature=observedMarkInputSignature(r);
-    if(r._prediction&&
-        r._prediction.engineVersion===modelVersion&&
-        r._prediction.markInputSignature===markSignature)
-      return applyFrozenMarks(r,r._prediction);
-    // A stale or older-engine in-memory result is discarded by recomputing
-    // below. Historical pre-off seals and ticket receipts are not edited.
-  }else if(r._prediction&&r._prediction.postRaceRevision===true&&
-            r._prediction.engineVersion===modelVersion)return applyFrozenMarks(r,r._prediction);
-  // Today's completed races are recalculated using the SAME prediction model,
-  // but not the result, finishing order or post-race popularity/odds.
-  // Display this separately as a retrospective revision, not an original seal.
-  var modelInput=started?Object.assign({},r,{
-    result:null,raceStatus:'',
-    horses:(r.horses||[]).map(function(h){return Object.assign({},h,{
-      winOdds:null,popularity:null,bodyWeight:null,bodyWeightChange:null
-    })})
-  }):r;
-  var modelRace=analysisRace(modelInput),profile=predictionProfile(modelRace),rows=buildRows(modelRace),occ=earlyOcc(modelRace),minetaContext=rows.minetaContext||minetaRaceContext(rows,modelRace),
-      tactical=tacticalContext(modelRace,rows),pressure=tactical.pressure,arrangement=tactical.arrangement,
-      sc=scenarioModel(r,rows,pressure,arrangement),suit=suitability(rows,sc,pressure),plans={},i;
-  // Unified TRUE RUN/PURE/SECTIONAL authority for marks, rank and tickets.
-  assignPredictionMarks(rows,modelRace);
-  integratedGrades(r,rows);
-  for(i=0;i<sc.length;i++){
-    var code=sc[i].code,candidates=rows.slice().sort(function(a,b){return scenarioSuit(b,code,pressure)-scenarioSuit(a,code,pressure)});
-    sc[i].horses=candidates.slice(0,3).map(function(x){return x.horse});
-    plans[code]=scenarioPlan(r,rows,[sc[i]],suit,pressure,arrangement)
-  }
-  var top=sc.slice().sort(function(a,b){return b.prob-a.prob})[0],
-      plan=plans[top.code]||scenarioPlan(r,rows,sc,suit,pressure,arrangement),
-      draft={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext};
-  // Finish visualization uses the final observed 60/40-derived relative probabilities.
-  // Second pass: refresh the displayed outcome with the now-final P1/P2/P3 decision roles.
-  var outcome=paceOutcomeModel(r,draft),cov=mean(rows.map(function(x){return x.coverage}));
-  assignSingleWinCandidate(rows,modelRace);
-  var result={rows:rows,occ:occ,scenarios:sc,plan:plan,plans:plans,suit:suit,coverage:cov,pressure:pressure,arrangement:arrangement,profile:profile,minetaContext:minetaContext,outcome:outcome,
-    engineVersion:modelVersion,markEngineVersion:modelVersion,
-    markInputSignature:markSignature,
-    researchAudit:{model:modelVersion,observedOnly:true,legacyRankersRemoved:true,officialJraProofRequired:!isNarRace(r)}};
-  if(started){
-    result.postRaceRevision=true;
-    result.revisionComputedAt=new Date().toISOString();
-    try{localStorage.setItem('arvexq:revised-marks:v1:'+String(r.id),
-      JSON.stringify({raceId:String(r.id),date:String(r.date),version:modelVersion,
-        updatedAt:result.revisionComputedAt,
-        horses:result.rows.map(function(z){return {horseNumber:n(z.horse&&z.horse.horseNumber),
-          mark:String(z.predMark||''),rank:n(z.predRank,0)}})}))}
-    catch(e){}
-    result.retrospectiveMarks=result.rows.map(function(z){return {
-      horseNumber:n(z.horse&&z.horse.horseNumber),mark:String(z.predMark||'')
-    }});
-    applyFrozenMarks(r,result);
-  }else applyFrozenMarks(r,result);
-  Object.defineProperty(r,"_prediction",{value:result,configurable:true,writable:true,enumerable:false});
-  return result
+  var order={'◎':1,'○':2,'▲':3,'△':4,'☆':5,'注':6};
+  return {rows:(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0})
+    .map(function(h){var mark=isScratchHorse(h)?'':(marks[n(h.horseNumber)]||'');
+      return {horse:h,predMark:mark,predRank:order[mark]||999,
+        winProbability:null,p1Probability:null,p2Probability:null,p3Probability:null,
+        overallGrade:'C',expected:'新方式の予想は未保存',coverage:0,
+        markFrozen:!!receipt,singleWinSuitable:false};
+    }),scenarios:[],plans:{},plan:null,suit:{},occ:[],pressure:0,
+    arrangement:[],profile:{},coverage:0,
+    markFreeze:{source:receipt?'verified-prerace-history':'new-model-unavailable'},
+    engineVersion:'learned-d1-only',legacyEngineDisabled:true};
 }
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
@@ -3776,7 +3726,11 @@ function horseDetailPage(r,p){
       +'<button type="button" class="smart-race-close horse-detail-close" data-action="close-race-subpage" aria-label="出走表へ戻る">×</button>'
     +'</header>'
     +'<main class="smart-main smart-race-page horse-detail-page"><section class="card">'
-    +(x?runnerDetailBody(r,p,x):'<div class="empty">馬情報を取得中です。</div>')
+    +(x&&p.legacyEngineDisabled?
+      '<h2>'+esc(h.name||'')+'</h2><p>新方式の予想は未保存です。過去走の事実のみ表示します。</p>'+
+      (h.recentRaces||[]).slice(0,5).map(function(run){return '<div class="recent">'+esc(run.date||'')+
+        ' '+esc(run.track||'')+' '+esc(run.distance||'')+'m '+esc(run.finish||'')+'着</div>'}).join(''):
+      (x?runnerDetailBody(r,p,x):'<div class="empty">馬情報を取得中です。</div>'))
     +'</section></main>'+cinematicFooter()+'</div>'
 }
 function betDetailPage(r,p){

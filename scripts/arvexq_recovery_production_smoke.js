@@ -45,8 +45,15 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     roster.horses.forEach(h=>assert.ok(names.includes(h.name),'runner identity missing '+r.id+' '+h.name));
     await page.waitForFunction(()=>document.querySelectorAll('.diagnosis-merged-row').length===document.querySelectorAll('.racecard-row').length,null,{timeout:20000});
     const diagnosis=page.locator('details.card').filter({has:page.locator('.diagnosis-merged-list')});
-    await diagnosis.locator('summary').click();
-    assert.equal(await diagnosis.locator('.diagnosis-merged-row').count(),roster.horses.length);
+    // The live result refresh can replace this details node while Playwright
+    // waits for a stable click; open via DOM on the currently matched node.
+    await page.waitForFunction(count=>{
+      const d=[...document.querySelectorAll('details.card')]
+        .find(x=>x.querySelector('.diagnosis-merged-list'));
+      if(!d)return false;
+      d.open=true;
+      return d.querySelectorAll('.diagnosis-merged-row').length===count;
+    },roster.horses.length,{timeout:30000});
     // Only factual acquired odds or an explicit missing status can appear.
     let odds=await page.locator('.rc-odds .odd').allTextContents();
     odds.forEach(x=>assert.ok(/^(?:\d+\.\d|未取得|取消)$/.test(x),'invalid odds text '+x));

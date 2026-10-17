@@ -32,6 +32,6 @@ const app=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const postBet=app.slice(app.indexOf('function buildAiBetPlan(r,p){'),app.indexOf('function betItemHit('));
 assert.match(postBet,/if\(stored\)return immutableStoredAiBetView\(r,stored\);/);
 const postMark=app.slice(app.indexOf('function predict(r){'),app.indexOf('function nextRace(){'));
-assert.match(postMark,/result\.retrospectiveMarks=result\.rows\.map/);
-assert.match(postMark,/result\.retrospectiveMarks[\s\S]*?applyFrozenMarks\(r,result\);/);
+assert.doesNotMatch(postMark,/retrospectiveMarks/,'deleted legacy post-race recomputation');
+assert.match(postMark,/learnedD1Prediction\(r\)/,'D1 marks are authoritative');
 console.log('BET_ROLE_GUIDE_AND_RETIRED_BETS_CONTRACT_OK');

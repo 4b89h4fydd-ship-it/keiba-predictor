@@ -7,10 +7,12 @@ class OldWinnerModelRemoved(unittest.TestCase):
         s=SOURCE.read_text(encoding="utf-8")
         for key in ("V207_WINNER_WEIGHTS","v207WinnerScoreHorse","v207UsesWinnerModel","function v207Unit(","function v207Comp("):
             self.assertNotIn(key,s)
-    def test_current_three_factor_authority_preserved(self):
+    def test_new_d1_authority_and_retired_engine_not_executed(self):
         s=SOURCE.read_text(encoding="utf-8")
         self.assertNotIn("function arvexqFactorValues(z,r)",s)
-        self.assertIn("assignPredictionMarks(rows,modelRace);",s)
+        active=s.split("function predict(r){",1)[1].split("function nextRace()",1)[0]
+        self.assertNotIn("assignPredictionMarks(",active)
+        self.assertIn("learnedD1Prediction(r)",active)
         self.assertNotIn("score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)",s)
         self.assertIn("return assignObservedPredictionMarks(rows,r);",s)
 if __name__=="__main__":

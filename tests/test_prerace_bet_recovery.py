@@ -131,7 +131,7 @@ class RetryableOriginalTests(unittest.TestCase):
                                race_id="r", start_at=post))
         self.assertTrue(has_valid_original(base, race_id="r", start_at=post))
         script = open("scripts/arvexq_capture_prerace_bet.js", encoding="utf-8").read()
-        self.assertIn("if(!result)throw Error(", script)
+        self.assertIn("RETIRED_BET_ENGINE_DISABLED", script)
         self.assertNotIn("if(!result){console.log(JSON.stringify", script)
 
 
