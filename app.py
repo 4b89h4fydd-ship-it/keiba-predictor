@@ -4794,20 +4794,7 @@ def _snapshot_final(detail: dict) -> bool:
 def _prepared_get_fresh(race_id: str) -> dict | None:
     detail,updated=PREPARED_STORE.get(race_id)
     if not detail or not updated or not _racedb_snapshot_usable(detail):return None
-    from arvexq.prediction.observed_model import model_version
-    expected_model = model_version(detail)
-    active = [h for h in (detail.get("horses") or [])
-              if isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0
-              and not h.get("scratched") and not h.get("withdrawn")]
-    stale_marks = (
-        detail.get("predictionModelVersion") != expected_model
-        or detail.get("markEngineVersion") != expected_model
-        or any((h.get("integratedEvaluation") or {}).get("markEngineVersion") != expected_model
-               for h in active)
-    )
-    if (detail.get("aiEvaluation") or {}).get("version")!=AI_EVALUATION_VERSION or stale_marks:
-        detail=_precompute_detail_metrics(_strip_excluded(detail))
-    detail=_ensure_race_volatility(detail)
+    # Retired prediction fields must not trigger an analysis refresh.
     detail=_restore_saved_odds(detail)
     try:
         detail["dataCoreHealth"]=_data_core_health(detail);detail["dataCoreVersion"]=ARVEXQ_DATA_CORE_VERSION
