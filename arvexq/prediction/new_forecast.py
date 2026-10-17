@@ -47,10 +47,15 @@ def _decide(analysis):
         ranges[no] = {'win': [min(wins), max(wins)], 'top3': [min(podium), max(podium)], 'top2': [min(top2), max(top2)]}
     win_leader = min(ranges, key=lambda n: (-ranges[n]['win'][0], -ranges[n]['top3'][0], n))
     stability = median(p['top3'][0] for p in ranges.values())
-    # Do not quietly choose a different, lower-win horse as a second axis.
-    if ranges[win_leader]['top3'][0] < stability:
-        return {}, ranges, {'reason': '勝ち切り最有力馬の安定性が比較上位に届かない'}
-    marks, reasons = {win_leader: '◎'}, {win_leader: '各展開の勝ち切り下限が最上位で上位入線の安定性も比較上位'}
+    # One ◎ must be selected whenever modeled scenarios exist. A low top-three
+    # range is a caution, not grounds to silently erase the race's only ◎.
+    # Rank by win lower bound, with top-three lower bound as the tie breaker.
+    # Do not invent a second axis or turn this mark into a production bet.
+    stable = ranges[win_leader]['top3'][0] >= stability
+    marks, reasons = {win_leader: '◎'}, {win_leader: (
+        '各展開の勝ち切り下限が最上位で上位入線の安定性も比較上位' if stable else
+        '各展開の勝ち切り下限が最上位。ただし3着内率の下限が全頭の中央値未満で安定性に懸念'
+    )}
     remaining = set(ranges)-{win_leader}
     if remaining:
         rival = min(remaining, key=lambda n: (-ranges[n]['win'][1], -ranges[n]['win'][0], n))
