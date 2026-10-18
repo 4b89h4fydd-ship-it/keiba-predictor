@@ -2,8 +2,6 @@
 
 No odds => only probabilities, not a misleading profitability claim.
 """
-from arvexq.prediction.recommendation_engine import recommend
-
 
 def generate_tickets(prediction, marks, quoted_odds=None, min_hit_probability=0.8,
                      place_payout_slots=3):
@@ -11,6 +9,7 @@ def generate_tickets(prediction, marks, quoted_odds=None, min_hit_probability=0.
         return []
     if not quoted_odds:
         return []
+    from arvexq.prediction.recommendation_engine import recommend
     result = recommend(prediction["scenarios"], quoted_odds,
                        max_tickets=4, min_hit_probability=min_hit_probability,
                        min_expected_return=1.0,
