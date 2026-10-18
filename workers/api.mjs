@@ -5,10 +5,22 @@ import {storageAudit} from './api_storage_audit.mjs';
 import {snapshotExport} from './api_snapshot_export.mjs';
 import {readCompressedRace,storageEnvironment,compressStoredSnapshot} from './api_full_snapshot.mjs';
 import {enhanceNarGoingResponse} from './nar_going_moisture.mjs';
+import {readV3Facts} from './api_v3_facts.mjs';
 export default {async fetch(request,env,ctx){
   const url=new URL(request.url);
   if(url.pathname.startsWith('/api/forecast-revisions/')||url.pathname.startsWith('/api/admin/forecast-revisions'))return forecastRevisions(request,env);
   if(url.pathname==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
+  // Explicit saved-only v3 view on the SAME canonical race route.
+  // The normal display, compressed legacy delivery and sync paths are untouched.
+  if(request.method==='GET'&&url.pathname.startsWith('/api/race/')&&url.searchParams.get('view')==='v3-facts'){
+    return readV3Facts(request,async id=>{
+      const restored=await readCompressedRace(env,id);
+      if(restored)return restored;
+      const displayUrl=new URL(request.url);
+      displayUrl.searchParams.set('view','display');
+      return original.fetch(new Request(displayUrl,request),storageEnvironment(env,false),ctx);
+    });
+  }
   if(request.method==='GET'&&url.pathname.startsWith('/api/race/')){
       try{const restored=await readCompressedRace(env,decodeURIComponent(url.pathname.slice('/api/race/'.length)));if(restored)return enhanceNarGoingResponse(restored)}
     catch(e){return Response.json({ok:false,error:'saved detail restore unavailable'},{status:503,headers:{'access-control-allow-origin':'*'}})}
