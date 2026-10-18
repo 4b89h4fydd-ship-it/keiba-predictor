@@ -868,7 +868,7 @@
     {
       "id": 28,
       "name": "性別",
-      "status": "CI成功",
+      "status": "main統合済",
       "module": "arvexq.ingest.entry_fields.sex",
       "files": [
         "arvexq/ingest/entry_fields/sex.py"
@@ -887,13 +887,13 @@
         "tests/test_entry_field_contracts.py",
         "tests/test_observed_sex_normalization.py"
       ],
-      "implementation_scope": "netkeibaの既存分離に加え、PR #309で性別欠損の牡補完・循環importを修正中。通常/高速/旧ストアの読み取り変更を含む。2026-10-18時点、本番検証・旧未コミット統合テスト再現は未完了。既保存レコードの誤補完は復元していない。",
+      "implementation_scope": "PR #309 merged to main 6c6fd044; observed-only sex normalization and all three NAR readback paths covered by SQLite integration in CI. Production equivalence and historically misfilled records remain unverified; not marked production verified.",
       "evidence": {
         "commit_sha": "6168ff8750d4ffc130476e1ca8a1562b4c627b47",
         "unit": "15 observed-sex input cases passed in full CI; 836 passed, 3 skipped, 41 subtests passed",
         "integration": "Provider DOM→SQLite, SQLite round-trip, normal/fast NAR detail, and legacy NarStore races_json tests passed in full CI (836 passed)",
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39104235421",
-        "main_sha": null,
+        "main_sha": "6c6fd0446fd49ea8807516164fa0197bebca5c2d",
         "production": null
       },
       "owner": "Codex",
