@@ -1,0 +1,22 @@
+name: ARVEXQ D1 Seal Guard Display Readback
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/arvexq_protect_sync.py
+      - tests/test_d1_seal_guard_display.py
+      - .github/workflows/arvexq-d1-seal-display.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sealed-readback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q pytest
+      - run: python -m pytest -q tests/test_d1_seal_guard_display.py
