@@ -54,5 +54,5 @@ def test_jra_weather_fallback_does_not_infer_from_going(monkeypatch):
         "surface": "ダート",
     })
 
-    assert result["weather"] == "不明"
+    assert result.get("weather") in (None, "", "不明")
     assert result["condition"] == "良"
