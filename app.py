@@ -655,23 +655,15 @@ def _jra_parse_race_summary(cname:str)->dict|None:
     try:html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,cache_sec)
     except Exception:return None
     soup=BeautifulSoup(html,"html.parser"); full=_jra_text(soup)
-    sm=re.search(r"発走時刻\s*[：:]?\s*(\d{1,2})時\s*(\d{2})分",full)
-    start=f"{int(sm.group(1)):02d}:{sm.group(2)}" if sm else ""
-    dm=re.search(r"コース\s*[：:]?\s*([\d,]+)\s*メートル\s*[（(]([^）)]+)[）)]",full)
-    distance=int(dm.group(1).replace(",","")) if dm else 0; desc=dm.group(2) if dm else ""
-    surface="芝" if "芝" in desc else ("ダート" if "ダート" in desc else ("障害" if "障" in desc else ""))
+    start=jra_start_time(full)
+    distance=jra_distance(full)
+    surface=jra_surface(full)
     weather="不明"; condition="不明"
     wm=re.search(r"天候\s*([^\s]+)",full)
     if wm:weather=wm.group(1)[:4]
     cm=re.search(r"(?:芝|ダート)\s*(良|稍重|重|不良)",full)
     if cm:condition=cm.group(1)
-    blocked=JRA_BAD_TITLE_RE
-    title=""
-    for node in soup.find_all(["h2","h3"]):
-        tx=_jra_text(node)
-        if not tx or len(tx)>=80 or blocked.search(tx) or "出馬表" in tx or re.match(r"^\d+レース$",tx):continue
-        title=tx;break
-    if not title:title=f"{race_no}R"
+    title=jra_race_title(soup,race_no,JRA_BAD_TITLE_RE)
     program=_jra_program_lookup(date,track,race_no)
     if program:title=program.get("title") or title;distance=int(program.get("distance") or distance);surface=program.get("surface") or surface;start=program.get("startTime") or start
     rid=f"jra-{date}-{track}-{race_no:02d}"
