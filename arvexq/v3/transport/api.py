@@ -13,6 +13,7 @@ from arvexq.v3.data.observed_fields import ensure_circuit
 from arvexq.v3.data.quality import normalize_circuit, build_data_status
 from arvexq.v3.data.circuit_review import inspect_circuit, DOMAINS
 from arvexq.v3.data.result_split import read_breakdown
+from arvexq.v3.data.odds_split import read_odds_breakdown
 from arvexq.v3.data.quote_split import read_quotes
 
 
@@ -45,6 +46,7 @@ def factual_response(detail: dict[str, Any], *, include_results: bool = False) -
         "entries": read("entries"),
         "history": read("history"),
         "odds": read("odds"),
+        "oddsFields": read_odds_breakdown(detail, circuit),
         "oddsFields": read_quotes(detail, circuit),
         "results": read("results") if include_results else None,
         "resultFields": read_breakdown(detail, circuit) if include_results else None,
