@@ -44,3 +44,17 @@ def test_stale_payloads_do_not_reappear_without_evidence():
     assert "predictionMarks" not in out
     assert "mark" not in out["horses"][0]
     assert "predictionEvidence" not in out
+
+
+def test_compact_snapshot_shows_only_new_preoff_marks():
+    from app import _compact_display_snapshot
+    source = _future_race()
+    live = _compact_display_snapshot(source)
+    assert live["predictionStatus"] == "provisional"
+    assert {h.get("mark") for h in live["horses"]} == {"◎", "○", "▲"}
+    assert all(h.get("markProvisional") is True for h in live["horses"])
+    missing = _future_race()
+    missing["horses"][1]["recentRaces"] = []
+    old = _compact_display_snapshot(missing)
+    assert old["predictionStatus"] == "disabled"
+    assert all("mark" not in h for h in old["horses"])
