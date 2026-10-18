@@ -255,6 +255,16 @@ def _all_original_career_evidence_retained(expected: dict[str, Any],
 
 def _verify_one_published_detail(detail: dict[str, Any], actual: dict[str, Any] | None) -> None:
     rid = str(detail["id"])
+    if isinstance(actual, dict):
+        # The public horses array is only a compact index when the complete
+        # saved original is carried in arvexqFullPayload. Verify that original
+        # before comparing nested archive evidence.
+        try:
+            actual = unpack_full(actual)
+        except (ValueError, KeyError, TypeError, OSError) as exc:
+            raise RuntimeError("D1_FULL_PAYLOAD_POST_VERIFY_INVALID " + rid) from exc
+        if not isinstance(actual, dict) or str(actual.get("id") or "") != rid:
+            raise RuntimeError("D1_RACE_ID_POST_VERIFY_MISMATCH " + rid)
     lock = sealed_lock(detail)
     revised = detail.get("modelMarkRevisions") or []
     feature_archive = detail.get("massFeatureArchive")

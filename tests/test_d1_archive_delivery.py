@@ -17,6 +17,36 @@ def row():
 
 
 class D1ArchiveDeliveryTest(unittest.TestCase):
+    def test_full_snapshot_readback_restores_nested_career_archive(self):
+        from arvexq.ingest.full_snapshot_codec import pack_detail
+        original = row()
+        packed = pack_detail(original)
+        self.assertNotIn("careerArchive", packed["horses"][0])
+        self.assertEqual(
+            verify_published({"details": [pack_detail(original)]}, base="test",
+                             read=lambda _base, _rid: copy.deepcopy(packed),
+                             retry_delays=()), [original["id"]])
+
+    def test_corrupted_full_snapshot_readback_fails_closed(self):
+        from arvexq.ingest.full_snapshot_codec import pack_detail, KEY
+        original = row()
+        packed = pack_detail(original)
+        packed[KEY]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(RuntimeError, "D1_FULL_PAYLOAD_POST_VERIFY_INVALID"):
+            verify_published({"details": [original]}, base="test",
+                             read=lambda _base, _rid: packed, retry_delays=())
+
+    def test_restored_full_snapshot_identity_must_match_request(self):
+        from arvexq.ingest.full_snapshot_codec import pack_detail
+        original = row()
+        wrong = copy.deepcopy(original)
+        wrong["id"] = "other-race"
+        packed = pack_detail(wrong)
+        packed["id"] = original["id"]
+        with self.assertRaisesRegex(RuntimeError, "D1_RACE_ID_POST_VERIFY_MISMATCH"):
+            verify_published({"details": [original]}, base="test",
+                             read=lambda _base, _rid: packed, retry_delays=())
+
     def test_archive_delivery_and_no_seal_requirement(self):
         original=row()
         self.assertEqual(
