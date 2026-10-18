@@ -22,7 +22,10 @@ class VersionedAssetCacheTest(unittest.TestCase):
             self.skipTest("run static build first")
         version = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(version["shell"], "independent-production-boundaries")
-        self.assertEqual(version["model"], "arvexq-prediction-removed")
+        from arvexq.forecast.engine import VERSION
+        self.assertEqual(version["model"], VERSION)
+        self.assertNotEqual(version["model"], "arvexq-prediction-removed")
+        self.assertTrue(version["model"].startswith("arvexq-observed-history-baseline-"))
         self.assertNotIn("three-factor", str(version).lower())
 
     def test_immutable_headers_are_only_on_versioned_asset_families(self):
