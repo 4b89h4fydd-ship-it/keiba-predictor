@@ -5,6 +5,7 @@
 const VERSION = "arvexq-d1-preoff-evidence-v1";
 const MAX_REQUEST_BYTES = 950000;
 const DELAY_SECONDS = 300;
+const MAX_UNCOMPRESSED_BYTES = 12_000_000;
 
 function stable(value) {
   if (Array.isArray(value)) return "[" + value.map(stable).join(",") + "]";
@@ -74,6 +75,38 @@ function checkDocument(snapshot, receipt, now) {
   }
 }
 
+async function decodeEvidence(raw) {
+  const envelope = JSON.parse(raw);
+  if (envelope?.encoding !== "arvexq-preoff-gzip-json-v1") return {body: envelope, compressed: null};
+  if (typeof envelope.payload !== "string" || envelope.payload.length > MAX_REQUEST_BYTES) {
+    throw new Error("compressed payload too large");
+  }
+  const binary = atob(envelope.payload);
+  const input = Uint8Array.from(binary, char => char.charCodeAt(0));
+  if (!input.length || input.length > MAX_REQUEST_BYTES) throw new Error("compressed payload invalid");
+  const decompressed = new Blob([input]).stream().pipeThrough(new DecompressionStream("gzip"));
+  const reader = decompressed.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_UNCOMPRESSED_BYTES) {
+        await reader.cancel();
+        throw new Error("uncompressed payload too large");
+      }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const buffer = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { buffer.set(chunk, offset); offset += chunk.byteLength; }
+  const body = JSON.parse(new TextDecoder("utf-8", {fatal:true}).decode(buffer));
+  return {body, compressed: envelope.payload};
+}
+
 export async function handlePreoffCapture(request, env, { now = () => Math.floor(Date.now() / 1000) } = {}) {
   if (request.method !== "POST") return reply({ok:false,error:"POST required"},405);
   if (!authenticated(request, env)) return reply({ok:false,error:"unauthorized"},401);
@@ -83,7 +116,8 @@ export async function handlePreoffCapture(request, env, { now = () => Math.floor
   try {
     const raw = await request.text();
     if (new TextEncoder().encode(raw).length > MAX_REQUEST_BYTES) return reply({ok:false,error:"payload too large"},413);
-    body = JSON.parse(raw);
+    const decoded = await decodeEvidence(raw);
+    body = decoded.body;
     checkDocument(body.snapshot, body.receipt, now());
     const snap = body.snapshot, rec = body.receipt;
     const {featureHash, ...snapshotWithoutHash} = snap;
@@ -105,6 +139,8 @@ export async function handlePreoffCapture(request, env, { now = () => Math.floor
     if (await sha256(receiptWithoutHash, receiptCoreText) !== receiptHash) {
       throw new Error("receipt hash mismatch");
     }
+    const snapshotStorage = decoded.compressed ? "gzip-envelope:" + decoded.compressed : stable(snap);
+    const receiptStorage = stable(rec);
     const identity = {raceId:rec.raceId,featureHash:rec.featureHash,capturedAtEpoch:rec.capturedAtEpoch};
     const captureId = await sha256(identity);
     // Only insert; conflicting identities or changed bytes never overwrite stored evidence.
@@ -112,14 +148,14 @@ export async function handlePreoffCapture(request, env, { now = () => Math.floor
       "INSERT OR IGNORE INTO forecast_preoff_evidence " +
       "(capture_id,race_id,feature_hash,receipt_hash,snapshot_json,receipt_json,captured_at_epoch,stored_at_epoch,post_at_epoch) " +
       "VALUES (?,?,?,?,?,?,?,?,?)"
-    ).bind(captureId,rec.raceId,featureHash,receiptHash,stable(snap),stable(rec),
+    ).bind(captureId,rec.raceId,featureHash,receiptHash,snapshotStorage,receiptStorage,
            rec.capturedAtEpoch,now(),rec.postAtEpoch).run();
     if (response.meta?.changes === 0) {
       const old = await env.DB.prepare(
         "SELECT feature_hash,receipt_hash,snapshot_json,receipt_json FROM forecast_preoff_evidence WHERE capture_id=?"
       ).bind(captureId).first();
       if (!old || old.feature_hash !== featureHash || old.receipt_hash !== receiptHash ||
-          old.snapshot_json !== stable(snap) || old.receipt_json !== stable(rec)) {
+          old.snapshot_json !== snapshotStorage || old.receipt_json !== receiptStorage) {
         return reply({ok:false,error:"immutable identity collision"},409);
       }
     }
