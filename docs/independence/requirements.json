@@ -623,20 +623,30 @@
     {
       "id": 22,
       "name": "外部競馬サイトデータ解析",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.netkeiba_result",
+      "files": [
+        "arvexq/ingest/netkeiba_result.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_netkeiba_current_result"
+      ],
+      "dependencies": [
+        "BeautifulSoup",
+        "caller-provided text cleaner, time parser, payout parser"
+      ],
+      "input": "Observed netkeiba race-result HTML",
+      "output": "Observed finishers, frame/horse numbers, names, finish/time/corners/odds/popularity/body weight and payouts; returns no result when fewer than three valid runner rows are present",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_netkeiba_result_parser.py"
+      ],
+      "implementation_scope": "netkeiba race-result fact parsing extracted from app.py and wired through the existing fetch path. Other external feed parsers (race-list, entries, odds, past races, NAR preview) remain in app.py or other partial modules; access terms and production verification remain open.",
       "evidence": {
-        "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "commit_sha": "d70a049e941260d1c55d62b9d489ab807f4f731f",
+        "unit": "tests/test_netkeiba_result_parser.py: 2 fixed HTML contracts (ordering/facts, missing/unrecognized/incomplete)",
+        "integration": "Existing app.py fetch wrapper calls the pure HTML parser; covered by PR CI",
         "ci_url": null,
         "main_sha": null,
         "production": null
