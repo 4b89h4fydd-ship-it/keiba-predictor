@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
 import { handlePreoffCapture } from '../preoff-evidence.js';
 
 function stable(v) {
@@ -28,8 +29,8 @@ function fixture() {
 }
 function request(body,{auth=true,method='POST'}={}) {
   return new Request('https://example.com/api/research/preoff-evidence',{method,
-    headers:{...(auth?{authorization:'Bearer '+token}:{}),'content-type':'application/json'},
-    ...(method==='POST'?{body:JSON.stringify({
+    headers:{...(auth?{authorization:'Bearer '+token}:{}),'content-type':'application/json','content-encoding':'gzip'},
+    ...(method==='POST'?{body:gzipSync(JSON.stringify({
       ...body,
       snapshotCoreCanonical:body.snapshotCoreCanonical ?? stable(Object.fromEntries(Object.entries(body.snapshot).filter(([k])=>k!=='featureHash'))),
       receiptCoreCanonical:body.receiptCoreCanonical ?? stable(Object.fromEntries(Object.entries(body.receipt).filter(([k])=>k!=='receiptHash')))
