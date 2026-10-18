@@ -458,8 +458,13 @@ jobs:
               assert checked==1 and removed==0 and healthy.exists()
               broken=root/'broken.sqlite'
               broken.write_bytes(sqlite_health.SQLITE_MAGIC + b'broken' * 128)
-              checked,removed,files=sqlite_health.sanitize(root)
-              assert removed==1 and not broken.exists() and any('broken.sqlite' in x for x in files)
+              original_bytes=broken.read_bytes()
+              try:
+                  sqlite_health.sanitize(root)
+                  raise AssertionError('corrupt cache must fail closed')
+              except RuntimeError as exc:
+                  assert 'broken.sqlite' in str(exc)
+                  assert broken.read_bytes()==original_bytes
           print('pipeline invariants OK')
           PY
 
