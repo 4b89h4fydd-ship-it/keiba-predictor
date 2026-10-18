@@ -34,7 +34,7 @@ function request(body,{auth=true,method='POST'}={}) {
       ...body,
       snapshotCoreCanonical:body.snapshotCoreCanonical ?? stable(Object.fromEntries(Object.entries(body.snapshot).filter(([k])=>k!=='featureHash'))),
       receiptCoreCanonical:body.receiptCoreCanonical ?? stable(Object.fromEntries(Object.entries(body.receipt).filter(([k])=>k!=='receiptHash')))
-    })}:{})});
+    }))}:{})});
 }
 function db() {
   const rows=new Map();
