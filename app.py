@@ -2913,6 +2913,31 @@ def _jra_fetch_environment(row:dict)->dict:
             out=_parse_jra_environment_html(html,surface)
         except Exception as exc:
             print("JRA environment official failed",date,track,race_no,exc)
+    # Historical JRA cards are no longer published after the meeting. Use the
+    # official result page as an observed fallback; never derive weather from
+    # going, surface, or another race.
+    if (out.get("weather") in (None,"","不明") or
+            out.get("condition") in (None,"","不明")) and date:
+        try:
+            result_cnames=_jra_prior_result_cnames(date,track)
+            result_cname=next(
+                (x for x in result_cnames if _jra_any_race_no(x)==race_no), "")
+            if result_cname:
+                observed=_jra_parse_result(
+                    result_cname,
+                    {"date":date,"track":track,"raceNumber":race_no,
+                     "surface":surface},
+                    strict_errors=True,
+                ) or {}
+                if (out.get("weather") in (None,"","不明") and
+                        observed.get("weather") not in (None,"","不明")):
+                    out["weather"]=_env_clean_weather(observed["weather"])
+                if (out.get("condition") in (None,"","不明") and
+                        observed.get("condition") not in (None,"","不明")):
+                    out["condition"]=_env_clean_condition(observed["condition"])
+        except Exception as exc:
+            print("JRA result environment fallback failed",
+                  date,track,race_no,exc)
     # Secondary source only fills a field the official page did not provide.
     if out.get("weather") in (None,"","不明") or out.get("condition") in (None,"","不明"):
         try:
