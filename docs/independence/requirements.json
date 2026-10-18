@@ -1232,16 +1232,24 @@
     {
       "id": 39,
       "name": "馬名・馬番照合",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "分離済",
+      "module": "arvexq.ingest.runner_identity_compare",
+      "files": [
+        "arvexq/ingest/runner_identity_compare.py",
+        "arvexq/quality/fact_audit.py"
+      ],
+      "callers": [
+        "arvexq.quality.fact_audit.audit_day"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
-      "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "input": "day-scoped observed horse name index; race ID, name, number",
+      "output": "immutable observed cross-race duplicate error dict or None",
+      "storage": "none (read-only validation)",
+      "tests": [
+        "tests/test_runner_identity_compare.py",
+        "tests/test_factual_data_audit.py"
+      ],
+      "implementation_scope": "Factual cross-race runner-name identity comparison extracted as pure adapter and reused by read-only production audit. Does not correct missing/invalid runner data or complete the broader name/number reconciliation specification. PR and CI pending.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
