@@ -58,10 +58,15 @@ jobs:
               req=urllib.request.Request(base+suffix,headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']})
               with urllib.request.urlopen(req,timeout=30) as response:return response.read()
           raw=read('');boundary=raw.split(b'\r\n',1)[0]
-          source=raw.split(b'\r\n\r\n',1)[1].rsplit(b'\r\n'+boundary,1)[0]
+          source=None
+          for part in raw.split(boundary):
+              if b'filename="api.mjs"' not in part and b'name="api.mjs"' not in part:
+                  continue
+              source=part.split(b'\r\n\r\n',1)[1].rstrip(b'\r\n-')
+              break
+          assert source is not None,'API_MAIN_MODULE_NOT_FOUND'
           expected=os.environ['EXPECTED_SOURCE_SHA256'];assert re.fullmatch('[a-f0-9]{64}',expected)
-          actual=hashlib.sha256(source).hexdigest()
-          assert actual==expected,f'API_SOURCE_CHANGED_REFUSING_OVERWRITE actual={actual} expected={expected}'
+          assert hashlib.sha256(source).hexdigest()==expected,'API_SOURCE_CHANGED_REFUSING_OVERWRITE'
           settings=json.loads(read('/settings'))['result']
           binding=next(b for b in settings['bindings'] if b['name']=='DB')
           assert binding['type']=='d1' and binding['id']=='c68ca1ac-357a-4c1f-81ce-0b6337716809'
