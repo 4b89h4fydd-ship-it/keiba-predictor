@@ -38,6 +38,8 @@
   }
 
   function build(race){
+    // Present only sealed existing receipts. This does not predict or select bets.
+    if(root.ARVEXQProductionTickets)root.ARVEXQProductionTickets.build(race);
     var marks=authorized(race),rows=((race&&race.horses)||[])
       .filter(function(h){return h&&Number(h.horseNumber)>0})
       .map(function(h){
