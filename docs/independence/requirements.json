@@ -349,16 +349,24 @@
     {
       "id": 13,
       "name": "グレード・クラス取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.race_fields.grade_class",
+      "files": [
+        "arvexq/ingest/race_fields/grade_class.py"
+      ],
+      "callers": [
+        "app.py:_jra_program_summaries",
+        "app.py:_jra_parse_race",
+        "app.py:_jra_parse_race_summary"
+      ],
       "dependencies": [],
       "input": null,
       "output": null,
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_grade_class_independent.py"
+      ],
+      "implementation_scope": "JRA公式文字列に明記されたグレード・クラスを独立解析。未知値は空値。本番全経路の検証前につき全工程完了ではない",
       "evidence": {
         "commit_sha": null,
         "unit": null,

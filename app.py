@@ -320,6 +320,7 @@ def _jra_program_title(info:str)->str:
     return prefix
 
 from arvexq.ingest.race_fields.meeting_schedule import extract as jra_meeting_schedule
+from arvexq.ingest.race_fields.grade_class import extract as jra_grade_class
 
 def _jra_program_summaries(iso_date:str)->list[dict]:
     now=time.time()
@@ -351,8 +352,9 @@ def _jra_program_summaries(iso_date:str)->list[dict]:
             sm=re.search(r"(\d{1,2})時\s*(\d{2})分",c2)
             start=f"{int(sm.group(1)):02d}:{sm.group(2)}" if sm else ""
             title=_jra_program_title(c1) or f"{race_no}R"
+            race_grade,race_class=jra_grade_class(c1)
             nkid=(f"{d.year:04d}{track_code}{meeting_no:02d}{day_no:02d}{race_no:02d}" if track_code and meeting_no and day_no else "")
-            z=normalize_central_race({"id":f"jra-{iso_date}-{track}-{race_no:02d}","date":iso_date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":"不明","weather":"不明","fieldSize":0,"racePrize1":0,"startTime":start,"scheduledStartTime":start,"horses":[],"source":"JRA競馬番組","_summaryOnly":True,"meetingNumber":meeting_no,"meetingDay":day_no,"netkeibaRaceId":nkid})
+            z=normalize_central_race({"id":f"jra-{iso_date}-{track}-{race_no:02d}","date":iso_date,"track":track,"raceNumber":race_no,"title":title,"raceGrade":race_grade,"raceClass":race_class,"distance":distance,"surface":surface,"condition":"不明","weather":"不明","fieldSize":0,"racePrize1":0,"startTime":start,"scheduledStartTime":start,"horses":[],"source":"JRA競馬番組","_summaryOnly":True,"meetingNumber":meeting_no,"meetingDay":day_no,"netkeibaRaceId":nkid})
             if z:out.append(z)
     out.sort(key=lambda x:(str(x.get("track") or ""),int(x.get("raceNumber") or 0)))
     with _jra_program_cache_lock:_jra_program_cache[iso_date]=(now,[dict(x) for x in out])
@@ -529,6 +531,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     cm=re.search(r"(?:芝|ダート)\s*(良|稍重|重|不良)",full)
     if cm:condition=cm.group(1)
     title=jra_race_title(soup,race_no,JRA_BAD_TITLE_RE)
+    race_grade,race_class=jra_grade_class(full)
     prize1=jra_first_prize(full)
     horses=[]
     withdrawn_entries=[]
@@ -637,7 +640,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
         with ThreadPoolExecutor(max_workers=workers) as pool:
             horses=list(pool.map(supplement,horses))
     rid=f"jra-{date}-{track}-{race_no:02d}"
-    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":jra_race_field_size(horses),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"horses":horses,"withdrawnEntries":withdrawn_entries,"source":"JRA公式","jraCname":cname})
+    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"raceGrade":race_grade,"raceClass":race_class,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":jra_race_field_size(horses),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"horses":horses,"withdrawnEntries":withdrawn_entries,"source":"JRA公式","jraCname":cname})
 
 def _jra_parse_race_summary(cname:str)->dict|None:
     """Fast list-page parser: no horse/profile parsing. Full card loads only when opened."""
@@ -656,10 +659,11 @@ def _jra_parse_race_summary(cname:str)->dict|None:
     cm=re.search(r"(?:芝|ダート)\s*(良|稍重|重|不良)",full)
     if cm:condition=cm.group(1)
     title=jra_race_title(soup,race_no,JRA_BAD_TITLE_RE)
+    race_grade,race_class=jra_grade_class(full)
     program=_jra_program_lookup(date,track,race_no)
     if program:title=program.get("title") or title;distance=int(program.get("distance") or distance);surface=program.get("surface") or surface;start=program.get("startTime") or start
     rid=f"jra-{date}-{track}-{race_no:02d}"
-    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":0,"racePrize1":0,"startTime":start,"scheduledStartTime":start,"horses":[],"source":"JRA公式・高速一覧","jraCname":cname,"_summaryOnly":True})
+    return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"raceGrade":race_grade,"raceClass":race_class,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":0,"racePrize1":0,"startTime":start,"scheduledStartTime":start,"horses":[],"source":"JRA公式・高速一覧","jraCname":cname,"_summaryOnly":True})
 
 def fetch_jra_official(iso_date:str, lightweight: bool = False)->list[dict]:
     if lightweight:return _jra_program_summaries(iso_date)
