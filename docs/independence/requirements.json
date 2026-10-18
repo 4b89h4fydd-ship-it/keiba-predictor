@@ -4,12 +4,12 @@
   "base_main": "a45a84a6f7c737c0169e59163570b68f0e0b4451",
   "base_pr_247": "c81e1fbb4196e9961ba639724a9cde32dc9c2785",
   "base_cloudflare": "e33ebf45d0f988246ed8d1981dcd8055a4557573",
-  "completed": 0,
+  "completed": 1,
   "items": [
     {
       "id": 1,
       "name": "NAR天候解析",
-      "status": "main統合済",
+      "status": "本番検証済",
       "module": "arvexq.ingest.nar_weather",
       "files": [
         "arvexq/ingest/nar_weather.py"
@@ -27,14 +27,14 @@
         "tests/test_item_001_nar_weather.py",
         "tests/test_environment_component_split.py"
       ],
-      "implementation_scope": "NAR weather extraction already independently wired; dedicated unit and integration tests passed both PR CI checks and merged to main. Production NAR weather behavior must be verified against current observed source before claiming complete.",
+      "implementation_scope": "NAR weather extraction is independently wired; dedicated unit/integration contracts and the read-only production NAR weather readback passed. No missing weather was inferred and no D1 data was written.",
       "evidence": {
         "commit_sha": "9472129190cecf0bee09018a7ce4742f786cef4e",
         "unit": "Dedicated item 001 observed weather cases and null weather contracts succeeded in PR CI",
         "integration": "NAR HTML parser composition preserved weather, going and cancellation outputs, with dedicated integration test",
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39112991618",
-        "main_sha": "6ef5d951a9eb429cc47f5c87fd3fba3676b1ebdf",
-        "production": null
+        "main_sha": "44035999902fe66dcfc8089e066a0069e3b635bd",
+        "production": "2026-10-17 GET-only readback from https://kraiz-api.4b89h4fydd.workers.dev: NAR expected=34, read=34, valid observed weather=34, missingOrInvalid=[], readErrors=[], ok=true; readback workflow/script integrated by PR #334 (head 1f7046c9892a6b84d9e09f1fdec5a006cd827869), CI checks contracts/check succeeded (run 39114038734 / 39114038739). No writes performed."
       },
       "owner": "Codex",
       "prediction_logic_status": "対象外"
