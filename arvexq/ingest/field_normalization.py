@@ -60,12 +60,8 @@ def _time_seconds(raw: str) -> float:
     return int(s[:-3]) * 60 + int(s[-3:]) / 10.0
 
 def _normalize_sex(value: str) -> str:
-    s = _clean(value)
-    if s in {"セン", "セ", "騸"}:
-        return "セ"
-    if s.startswith("牝"):
-        return "牝"
-    return "牡"
+    from arvexq.ingest.entry_fields.sex import normalize
+    return normalize(value)
 
 def _scratch_status(value: str) -> str:
     s = _clean(value)
