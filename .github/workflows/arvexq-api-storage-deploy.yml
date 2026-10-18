@@ -64,7 +64,7 @@ jobs:
               if separator not in part:
                   continue
               header,body=part.split(separator,1)
-              if b'Content-Type: application/javascript' not in header:
+              if b'filename=' not in header:
                   continue
               modules.append((header,body.rstrip(b'\r\n-')))
           assert modules,'API_JAVASCRIPT_MODULES_NOT_FOUND'
