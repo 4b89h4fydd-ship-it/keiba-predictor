@@ -45,3 +45,20 @@ Inspect original full snapshots (bounded SHA-256 verified samples)
 and reconcile the independent official NAR CSV/JRA evidence with saved
 racecard lists. Address the single existing API's 429 budget before
 attempting production live readback again.
+
+## Additional bounded immutable original validation
+
+The audit can additionally sample **one content-addressed original per
+circuit per archive day**:
+
+```sh
+python scripts/arvexq_v3_archive_audit.py --days 7 --sample-per-circuit 1
+```
+
+Each sampled stored envelope is checked for correct file/digest metadata,
+bounded gzip decompression, SHA-256 of the full restored original, race/date
+identity and roster identity. Only directly stored, race-date-prior records
+are counted; compressed historical sidecars are not counted as checked.
+Sampling does not certify unsampled originals, full historical coverage or
+official completeness. Original prediction receipts remain untouched and
+never published.

@@ -31,7 +31,7 @@ jobs:
       - name: Validate offline archived-source audit
         run: python -m pytest tests/test_v3_archive_audit.py -q
       - name: Audit latest seven saved day files without contacting production
-        run: python scripts/arvexq_v3_archive_audit.py --days 7 --out arvexq-v3-archive-audit.json
+        run: python scripts/arvexq_v3_archive_audit.py --days 7 --sample-per-circuit 1 --out arvexq-v3-archive-audit.json
       - name: Upload inspectable report
         if: always()
         uses: actions/upload-artifact@v4

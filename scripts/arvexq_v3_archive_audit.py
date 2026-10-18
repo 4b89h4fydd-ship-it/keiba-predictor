@@ -17,11 +17,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from arvexq.v3.audit.archive import audit_pair, summarize
+from arvexq.v3.audit.payload import sample_saved_payloads
 
 ARCHIVE = ROOT / "arvexq" / "ui" / "static"
 
 
-def audit_days(*, directory: Path = ARCHIVE, days: int = 7) -> dict:
+def audit_days(*, directory: Path = ARCHIVE, days: int = 7, samples_per_circuit: int = 0) -> dict:
     if days < 1 or days > 31:
         raise ValueError("days must be between 1 and 31")
     existing = sorted((directory / "racecards").glob("????-??-??.json"))
@@ -38,25 +39,28 @@ def audit_days(*, directory: Path = ARCHIVE, days: int = 7) -> dict:
         card = json.loads(card_path.read_text(encoding="utf-8"))
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         reports.append(audit_pair(card, manifest))
-    return summarize(reports)
+    report = summarize(reports)
+    report["savedPayloadSample"] = sample_saved_payloads(directory, reports, samples_per_circuit)
+    return report
 
 
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--days", type=int, default=7)
     p.add_argument("--archive-dir", type=Path, default=ARCHIVE)
+    p.add_argument("--sample-per-circuit", type=int, default=1)
     p.add_argument("--out", type=Path, default=Path("arvexq-v3-archive-audit.json"))
     a = p.parse_args()
     try:
-        result = audit_days(directory=a.archive_dir, days=a.days)
+        result = audit_days(directory=a.archive_dir, days=a.days, samples_per_circuit=a.sample_per_circuit)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print("ARVEXQ_V3_ARCHIVE_AUDIT_FAILED=" + type(exc).__name__ + ": " + str(exc), file=sys.stderr)
         return 1
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    brief = {k: result[k] for k in ("start", "end", "dateCount", "racecards", "manifestEntries", "circuits", "structuralProblems", "proofLimits")}
+    brief = {k: result[k] for k in ("start", "end", "dateCount", "racecards", "manifestEntries", "circuits", "structuralProblems", "proofLimits", "savedPayloadSample")}
     print("ARVEXQ_V3_ARCHIVE_AUDIT_JSON=" + json.dumps(brief, ensure_ascii=False))
-    return 1 if result["structuralProblems"] else 0
+    return 1 if result["structuralProblems"] or result["savedPayloadSample"]["failures"] else 0
 
 
 if __name__ == "__main__":
