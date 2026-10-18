@@ -70,3 +70,18 @@ def test_screen_refuses_misaligned_readiness():
     dto["runnerReadiness"][0]["observedPriorRunCount"] = 123
     with pytest.raises(ValueError, match="readiness"):
         factual_screen(dto)
+
+@pytest.mark.parametrize("circuit", ("jra", "nar"))
+def test_readiness_rejects_cross_horse_market_and_fabricated_completeness(circuit):
+    data = factual_response(saved(circuit))
+    data["oddsFields"]["win"][0]["horseNumber"] = 1
+    with pytest.raises(ValueError, match="readiness"):
+        factual_screen(data)
+    data = factual_response(saved(circuit))
+    data["runnerReadiness"][1]["win"] = "observed"
+    with pytest.raises(ValueError, match="readiness"):
+        factual_screen(data)
+    data = factual_response(saved(circuit))
+    data["runnerReadiness"][0]["canClaimFullyRetrieved"] = True
+    with pytest.raises(ValueError, match="readiness"):
+        factual_screen(data)

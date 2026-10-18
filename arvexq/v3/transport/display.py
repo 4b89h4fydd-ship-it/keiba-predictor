@@ -22,6 +22,15 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
         raise ValueError("incomplete observed response")
     if not isinstance(runner_readiness, list) or not len(entries) == len(history) == len(odds) == len(runner_readiness):
         raise ValueError("runner/history/odds alignment mismatch")
+    price_fields = response.get("oddsFields")
+    if not isinstance(price_fields, dict):
+        raise ValueError("runner readiness oddsFields missing")
+    observed_states = {}
+    for field in ("win", "place", "popularity"):
+        values = price_fields.get(field)
+        if not isinstance(values, list) or len(values) != len(entries):
+            raise ValueError("runner readiness oddsFields alignment mismatch")
+        observed_states[field] = values
     # Preserve source row identity and refuse ambiguous duplicates, not a
     # fabricated index/name merge that could attach another horse's history.
     seen: set[int] = set()
@@ -42,6 +51,22 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
                 readiness.get("horseNumber") != number or
                 readiness.get("observedPriorRunCount") != past.get("observedPriorRunCount")):
             raise ValueError("runner readiness identity/count mismatch")
+        for field in ("win", "place", "popularity"):
+            fact = observed_states[field][len(seen) - 1]
+            if (not isinstance(fact, dict) or fact.get("horseNumber") != number or
+                    fact.get("state") != readiness.get(field)):
+                raise ValueError("runner readiness market identity/state mismatch")
+        expected_history = ("partial-unverified" if past["observedPriorRunCount"] > 0
+                            else "missing")
+        expected_odds = ("observed-unverified" if
+                         readiness.get("win") == readiness.get("place") == "observed"
+                         else "incomplete")
+        if (readiness.get("history") != expected_history or
+                readiness.get("odds") != expected_odds or
+                readiness.get("canClaimFullyRetrieved") is not False or
+                readiness.get("marketFreshnessVerified") is not False or
+                readiness.get("allCareerRunsVerified") is not False):
+            raise ValueError("runner readiness observation state mismatch")
         runs = past.get("pastRuns")
         if not isinstance(runs, list):
             raise ValueError("past run list missing")
