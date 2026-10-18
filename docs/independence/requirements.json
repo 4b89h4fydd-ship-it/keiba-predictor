@@ -263,16 +263,22 @@
     {
       "id": 10,
       "name": "開催日程取得",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.race_fields.meeting_schedule",
+      "files": [
+        "arvexq/ingest/race_fields/meeting_schedule.py"
+      ],
+      "callers": [
+        "app.py:_jra_program_summaries"
+      ],
       "dependencies": [],
       "input": null,
       "output": null,
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_meeting_schedule_independent.py"
+      ],
+      "implementation_scope": "JRA競馬番組の開催回・開催場・開催日次を責務分離。CI・本番全経路の確認前であり完了認定しない",
       "evidence": {
         "commit_sha": null,
         "unit": null,
