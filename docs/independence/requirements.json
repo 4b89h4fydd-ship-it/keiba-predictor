@@ -17,14 +17,17 @@
       "callers": [
         "arvexq/ingest/nar_environment_parser.py"
       ],
-      "dependencies": [],
-      "input": "provider text / DOM / surface mapping",
-      "output": "observed weather / going / scratch map",
+      "dependencies": [
+        "arvexq.ingest.environment_values._env_clean_weather"
+      ],
+      "input": "NAR provider observed plain text from HTML; nullable string",
+      "output": "recognized observed Japanese weather condition or None if not observed",
       "storage": null,
       "tests": [
+        "tests/test_item_001_nar_weather.py",
         "tests/test_environment_component_split.py"
       ],
-      "implementation_scope": "PR #247既存実装。main・本番の統合証拠は未確認",
+      "implementation_scope": "NAR weather independently implemented and wired through nar_environment_parser. Item-specific unit and full composition regression added; CI/main proof and production verification pending. No going/scratch extraction or UI changes.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
