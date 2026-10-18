@@ -12,6 +12,7 @@ from typing import Any
 from arvexq.v3.data.observed_fields import ensure_circuit
 from arvexq.v3.data.quality import normalize_circuit, build_data_status
 from arvexq.v3.data.circuit_review import inspect_circuit, DOMAINS
+from arvexq.v3.data.result_split import read_breakdown
 
 
 def factual_response(detail: dict[str, Any], *, include_results: bool = False) -> dict[str, Any]:
@@ -44,6 +45,7 @@ def factual_response(detail: dict[str, Any], *, include_results: bool = False) -
         "history": read("history"),
         "odds": read("odds"),
         "results": read("results") if include_results else None,
+        "resultFields": read_breakdown(detail, circuit) if include_results else None,
         "resultsIncluded": include_results,
         "coverage": coverage,
         "prediction": None,

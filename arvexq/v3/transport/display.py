@@ -53,6 +53,7 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
         "race": deepcopy(response.get("race")),
         "rows": rows,
         "results": deepcopy(response.get("results")) if response.get("resultsIncluded") else None,
+        "resultFields": deepcopy(response.get("resultFields")) if response.get("resultsIncluded") else None,
         "coverage": deepcopy(response.get("coverage")),
         "predictionStatus": "not-implemented",
         "marks": None,
