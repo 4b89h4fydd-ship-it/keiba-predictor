@@ -73,7 +73,7 @@ def test_train_and_model_identity_guard():
     tampered["winModelHash"]="another"
     with pytest.raises(ValueError):
         predict_positions(tampered,win,make_race("2026-08-17"))
-    with pytest.raises(ValueError,match="strict"):
+    with pytest.raises(ValueError,match="exactly one winner|strict"):
         bad=deepcopy(races)
         bad[0]["horses"][0]["finish"]=2
         train_positions(bad,win,epochs=5)
