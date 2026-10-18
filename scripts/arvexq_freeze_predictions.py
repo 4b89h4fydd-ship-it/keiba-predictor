@@ -109,6 +109,47 @@ def _history_count(detail: dict | None) -> int:
                for h in detail.get("horses") or [] if isinstance(h, dict))
 
 
+def recover_prior_history_before_post(detail: dict, *, now: datetime, run=None) -> dict:
+    """Use the EXISTING registered history sources before off, with a hard timeout.
+
+    Provider enrichment runs in an isolated process and never synthesizes a
+    prediction. The helper validates exact race identity, roster and dated runs.
+    """
+    if not isinstance(detail, dict) or not detail.get("id"):
+        raise ValueError("race detail required")
+    post = post_at(detail)
+    if not post or now.astimezone(JST) >= post:
+        raise ValueError("post-off provider rescue forbidden")
+    if _history_count(detail):
+        return detail
+    if run is None:
+        run = subprocess.run
+    proc = run(
+        [__import__("sys").executable, "scripts/arvexq_preoff_history_rescue.py"],
+        input=json.dumps(detail, ensure_ascii=False), text=True,
+        capture_output=True, timeout=55,
+        env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
+    )
+    if proc.returncode:
+        raise RuntimeError("registered history sources returned no verified runs: " +
+                           (proc.stderr or "")[-250:])
+    recovered = json.loads(proc.stdout)
+    if not isinstance(recovered, dict) or recovered.get("id") != detail["id"]:
+        raise ValueError("provider rescue race identity mismatch")
+    if recovered.get("date") != detail.get("date") or post_at(recovered) != post:
+        raise ValueError("provider rescue day or time mismatch")
+    if not _history_count(recovered):
+        raise ValueError("no real historical observations from registered sources")
+    # The subprocess enforces runner identity and pre-race run dates. The
+    # orchestration boundary independently confirms that the roster is intact.
+    from scripts.arvexq_preoff_history_rescue import active_identity
+    if active_identity(detail) != active_identity(recovered):
+        raise ValueError("provider rescue active field mismatch")
+    if datetime.now(JST) >= post:
+        raise ValueError("provider lookup completed after the scheduled post")
+    return recovered
+
+
 def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dict:
     """Pure testable decision core; does not mutate or publish any race."""
     post = post_at(detail)
@@ -276,6 +317,12 @@ def main() -> int:
             old = fetch_existing_d1_detail(base, rid, now=datetime.now(JST))
             if not old:
                 return {"id": rid, "status": "missing-detail"}
+            if not _history_count(old) and old.get("analysisMode") not in ("新馬", "障害"):
+                try:
+                    old = recover_prior_history_before_post(old, now=datetime.now(JST))
+                except Exception as exc:
+                    return {"id": rid, "status": "missing-historical-evidence",
+                            "reason": f"{type(exc).__name__}: {exc}"[:250]}
             result = prepare_seal(old, now=datetime.now(JST))
             if result["status"] != "sealed":
                 return {"id": rid, **{k: v for k, v in result.items() if k not in ("detail",)}}
