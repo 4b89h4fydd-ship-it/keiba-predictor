@@ -707,6 +707,9 @@ function verifiedOriginalMarks(r){
       receipt=service&&service.validatedReceipt&&service.validatedReceipt(r);
   return receipt?{horses:receipt.marks}:null;
 }
+// Inert placeholder required by the frozen renderRace function signature.
+// This never displays or computes any legacy prediction.
+function savedRevisionOriginalHtml(r){return '';}
 function predict(r){
   // An explicit after-post REFERENCE, never a saved pre-off prediction.
   var archive=(typeof state==='object'&&state)?state.postraceReferenceArchive:null;
@@ -2668,6 +2671,7 @@ function renderRace(){
   var content='';
   try{
     content=detailTabs(r,p)
+    if(isFinal(r))content+=savedRevisionOriginalHtml(r)
   }catch(e){
     predictionError=predictionError||e;
     state.openPanel='entry';
