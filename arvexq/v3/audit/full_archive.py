@@ -20,7 +20,8 @@ from arvexq.v3.data.quality import normalize_circuit
 def verify_saved_week(archive_dir: Path, *, days: int = 7) -> dict[str, Any]:
     if isinstance(days, bool) or not isinstance(days, int) or days < 1 or days > 31:
         raise ValueError("days must be 1..31")
-    sources = sorted((archive_dir / "racecards").glob("????-??-??.json"))
+    sources = sorted(p for p in (archive_dir / "racecards").glob("????-??-??.json")
+                      if (archive_dir / "saved-snapshots" / p.name).is_file())
     if len(sources) < days:
         raise ValueError("not enough saved day archives")
     chosen = sources[-days:]
