@@ -64,3 +64,33 @@ def test_all_race_readback_paths_keep_missing_sex():
     assert '"sex": e["sex"] or ""' in SOURCE
     assert '"sex": e["sex"] or "牡"' not in SOURCE
     assert "sex TEXT NOT NULL DEFAULT ''" in SOURCE
+
+def test_fast_nar_readback_from_real_sqlite(tmp_path, monkeypatch):
+    """Execute the app fast path against SQLite, not just source assertions."""
+    import sqlite3
+    import app
+
+    path = tmp_path / "race.sqlite"
+    with sqlite3.connect(path) as db:
+        db.execute("""CREATE TABLE races (
+            track TEXT, date TEXT, race_no INTEGER, title TEXT, distance INTEGER,
+            condition TEXT, weather TEXT, field_size INTEGER, prize1 INTEGER,
+            start_time TEXT, scheduled_start_time TEXT)""")
+        db.execute("""CREATE TABLE entries (
+            track TEXT, date TEXT, race_no INTEGER, horse_no INTEGER,
+            frame_no INTEGER, name TEXT, sex TEXT NOT NULL DEFAULT '',
+            age INTEGER, carried_weight REAL, jockey TEXT, trainer TEXT,
+            status TEXT, finish INTEGER, corner_positions_json TEXT, time_seconds REAL)""")
+        db.execute("INSERT INTO races VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                   ("園田", "2026-10-18", 1, "確認", 1400, "良", "晴", 2, 100, "10:00", "10:00"))
+        for no, sex in ((1, ""), (2, "牝")):
+            db.execute("""INSERT INTO entries
+                (track,date,race_no,horse_no,frame_no,name,sex,age,carried_weight,
+                 jockey,trainer,status,finish,corner_positions_json,time_seconds)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                ("園田", "2026-10-18", 1, no, no, f"馬{no}", sex, 4, 54.0,
+                 "騎手", "調教師", "", 0, "[]", 0.0))
+    monkeypatch.setattr(app, "DB_PATH", path)
+    result = app._fast_local_race_detail("nar-2026-10-18-園田-01")
+    assert result is not None
+    assert [(h["horseNumber"], h["sex"]) for h in result["horses"]] == [(1, ""), (2, "牝")]
