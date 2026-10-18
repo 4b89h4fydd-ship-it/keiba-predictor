@@ -557,16 +557,22 @@
     {
       "id": 20,
       "name": "JRA公式データ解析",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.jra_official_table",
+      "files": [
+        "arvexq/ingest/jra_official_table.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
       "dependencies": [],
       "input": null,
       "output": null,
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_official_table_independent.py"
+      ],
+      "implementation_scope": "JRA公式出馬表DOMの出走馬テーブル識別を独立化。JRA公式全データ解析の完了ではなく残る項目分離と本番確認は未実施",
       "evidence": {
         "commit_sha": null,
         "unit": null,
