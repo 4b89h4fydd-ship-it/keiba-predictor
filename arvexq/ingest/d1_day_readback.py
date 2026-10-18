@@ -10,6 +10,7 @@ import urllib.parse
 import urllib.request
 
 from arvexq.ingest.full_snapshot_codec import unpack_detail
+from arvexq.v3.audit.http429 import describe_429
 
 MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 
@@ -32,7 +33,8 @@ def get_json(url, *, timeout=20, attempts=2, opener=urllib.request.urlopen,
                 raise ValueError("D1 JSON response must be an object")
             return result
         except urllib.error.HTTPError as exc:
-            if exc.code not in (408, 429, 500, 502, 503, 504) or attempt + 1 == attempts:
+            # Honor server 429 immediately: retrying can deepen throttling.
+            if exc.code == 429 or exc.code not in (408, 500, 502, 503, 504) or attempt + 1 == attempts:
                 raise
         except OSError:
             if attempt + 1 == attempts:
@@ -92,8 +94,13 @@ def read_day(base, day, *, fetch=get_json, workers=3):
                 try:
                     details[race_id], sources[race_id] = future.result()
                 except Exception as exc:
-                    errors[race_id] = {"raceId": race_id,
+                    entry = {"raceId": race_id,
                         "error": type(exc).__name__ + ": " + str(exc)[:240]}
+                    if getattr(exc, "code", None) == 429:
+                        entry["error"] = "api-http-429"
+                        entry["httpStatus"] = 429
+                        entry["rateLimitEvidence"] = describe_429(exc)
+                    errors[race_id] = entry
     return {"date": day, "races": races,
             "details": [details[race_id] for race_id in ids if race_id in details],
             "readbackSources": sources,

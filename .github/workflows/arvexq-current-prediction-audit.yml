@@ -9,6 +9,8 @@ name: ARVEXQ Factual Data Audit
       - arvexq/quality/**
       - scripts/arvexq_fact_data_audit.py
       - tests/test_factual_data_audit.py
+      - tests/test_v3_http429_diagnosis.py
+      - arvexq/v3/audit/http429.py
       - .github/workflows/arvexq-current-prediction-audit.yml
   pull_request:
     branches: [main]

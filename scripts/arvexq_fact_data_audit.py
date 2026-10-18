@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
 
 from arvexq.ingest.d1_day_readback import read_day
 from arvexq.quality.fact_audit import audit_day
+from arvexq.v3.audit.http429 import describe_429
 
 
 def main():
@@ -39,12 +40,19 @@ def main():
                          "validationErrors": [], "allRaceReadsVerified": False})
             continue
         try:
-            days.append(audit_day(read_day(args.api_base, day)))
+            audited = audit_day(read_day(args.api_base, day))
+            # Detail fetch failures were previously caught within read_day.
+            # Stop future days if any nested race detail also reports a 429.
+            if any(e.get("httpStatus") == 429 or e.get("error") == "api-http-429"
+                   for e in audited.get("readErrors") or [] if isinstance(e, dict)):
+                blocked = True
+            days.append(audited)
         except Exception as exc:
             is_429 = getattr(exc, "code", None) == 429
             blocked = bool(is_429)
             days.append({"date": day, "summaryRaces": None,
-                         "readErrors": [{"error": ("api-http-429" if is_429 else
+                         "readErrors": [{"rateLimitEvidence": describe_429(exc) if is_429 else None,
+                                         "error": ("api-http-429" if is_429 else
                                           type(exc).__name__ + ": " + str(exc)[:240]),
                                          "status": ("rate-limited-not-verified" if is_429
                                                     else "read-error-not-verified")}],
