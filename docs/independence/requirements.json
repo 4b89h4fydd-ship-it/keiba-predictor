@@ -578,29 +578,39 @@
         "tests/test_jra_official_runner_row.py",
         "tests/test_jra_withdrawn_roster.py"
       ],
-      "implementation_scope": "JRA公式出馬表DOMの出走馬テーブル識別と馬番抽出を独立化。馬番1〜18と不正・欠損・取消値の専用契約を追加。CI・main統合・本番確認は未実施で、JRA公式全データ解析の完了ではない",
+      "implementation_scope": "JRA公式出馬表DOMの出走馬テーブル識別と馬番抽出を独立化し、専用契約CIを通過してmainへ統合。Web Worker build成功。実URLのHTTP確認とJRA公式全データ解析は未完了",
       "evidence": {
-        "commit_sha": null,
-        "unit": null,
-        "integration": null,
-        "ci_url": null,
-        "main_sha": null,
-        "production": null
+        "commit_sha": "cf94334b78f41558906a191410c9c3365eb8490a",
+        "unit": "tests/test_jra_official_runner_row.py: 5 contracts; ARVEXQ Independent Components passed",
+        "integration": "tests/test_jra_official_table_independent.py and tests/test_jra_withdrawn_roster.py in PR CI; ARVEXQ Validation passed",
+        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39094331698",
+        "main_sha": "24c8e9f50424ebca40fea52b9c2792ace641ea4d",
+        "production": "Cloudflare Workers Builds: kraizweb1 succeeded (build bf9adef9-5341-4457-8796-abece96f09bf); live HTTP/API confirmation unavailable from this environment"
       }
     },
     {
       "id": 21,
       "name": "NAR公式データ解析",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.nar_official_card",
+      "files": [
+        "arvexq/ingest/nar_official_card.py"
+      ],
+      "callers": [
+        "app.py:_parse_nar_official_card_html",
+        "app.py:_nar_official_card_rows_fast"
+      ],
+      "dependencies": [
+        "app.py:_clean",
+        "BeautifulSoup"
+      ],
+      "input": "NAR official card HTML, race detail for observed horse-number/name matching, and caller-provided text normalization",
+      "output": "per-horse observed carriedWeight, bodyWeight, bodyWeightChange, and source; unavailable values remain null or absent",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_nar_official_card.py"
+      ],
+      "implementation_scope": "NAR公式カードHTMLからの斤量・馬体重・増減抽出を責務分離して既存取得経路に接続。公式結果・払戻・月次CSVなどNAR公式全データ解析の独立化と本番検証は未実施",
       "evidence": {
         "commit_sha": null,
         "unit": null,
