@@ -501,6 +501,7 @@ from arvexq.ingest.race_fields.title import extract as jra_race_title
 from arvexq.ingest.race_fields.field_size import extract as jra_race_field_size
 
 from arvexq.ingest.jra_official_table import select_runners_table as select_jra_runners_table
+from arvexq.ingest.jra_official_runner_row import extract as jra_runner_row_number
 
 def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
@@ -543,11 +544,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
         cells=tr.find_all(["th","td"])
         if len(cells)<4:continue
         # horse number among first 3 cells
-        no=0; noidx=-1
-        for ci,c in enumerate(cells[:3]):
-            mt=re.fullmatch(r"\s*(\d{1,2})\s*",_jra_text(c))
-            if mt and 1<=int(mt.group(1))<=18:
-                no=int(mt.group(1));noidx=ci;break
+        no,noidx=jra_runner_row_number(cells,_jra_text)
         if not no:
             marker=tr.select_one('td.num')
             status=_scratch_status(_jra_text(marker))
