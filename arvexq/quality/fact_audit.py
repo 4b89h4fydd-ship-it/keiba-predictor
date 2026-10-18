@@ -28,6 +28,7 @@ def observed(field, value):
 def audit_day(bundle):
     counts, race_gaps, horse_gaps = Counter(), Counter(), Counter()
     errors = []
+    first_race_by_name = {}
     for detail in bundle.get("details") or []:
         counts["races"] += 1
         for field in RACE_FIELDS:
@@ -40,6 +41,15 @@ def audit_day(bundle):
             counts["horses"] += 1
             for field in HORSE_FIELDS:
                 horse_gaps[field] += not observed(field, horse.get(field))
+            # A horse cannot start twice on the same day. Retain the observed
+            # identities for investigation; never synthesize or rewrite entries.
+            name = str(horse.get("name") or "").strip()
+            if name:
+                first_race = first_race_by_name.setdefault(name, detail["id"])
+                if first_race != detail["id"]:
+                    errors.append({"raceId": detail["id"], "otherRaceId": first_race,
+                                   "horseName": name, "horseNumber": horse.get("horseNumber"),
+                                   "error": "same runner name in multiple races on day"})
             number = horse.get("horseNumber")
             if observed("horseNumber", number):
                 numeric = float(number)

@@ -151,3 +151,27 @@ def test_out_of_range_frame_audit_retains_observed_value_and_runner_identity():
         'raceId': RID, 'horseNumber': 12, 'frameNumber': 12,
         'horseName': '観測馬', 'error': 'frame number outside 1..8'}]
     assert bundle == before
+
+
+def test_same_named_runner_across_races_is_flagged_without_mutating_facts():
+    second = RID[:-2] + "02"
+    bundle = {"date": DAY, "races": [{"id": RID}, {"id": second}],
+              "details": [
+                  {"id": RID, "date": DAY, "horses": [
+                      {"name": "重複馬", "horseNumber": 12, "frameNumber": 7}]},
+                  {"id": second, "date": DAY, "horses": [
+                      {"name": "重複馬", "horseNumber": 12, "frameNumber": 7},
+                      {"name": "別馬", "horseNumber": 3, "frameNumber": 2}]}]}
+    before = deepcopy(bundle)
+    result = audit_day(bundle)
+    assert result["validationErrors"] == [
+        {"raceId": second, "otherRaceId": RID, "horseName": "重複馬",
+         "horseNumber": 12, "error": "same runner name in multiple races on day"}]
+    assert bundle == before
+
+
+def test_same_named_runner_single_race_not_reported_as_cross_race():
+    bundle = {"date": DAY, "races": [{"id": RID}],
+              "details": [{"id": RID, "date": DAY, "horses": [
+                  {"name": "重複馬", "horseNumber": 12, "frameNumber": 7}]}]}
+    assert audit_day(bundle)["validationErrors"] == []
