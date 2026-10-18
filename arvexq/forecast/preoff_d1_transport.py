@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from urllib import request
 import json
 import os
+import base64
+import gzip
 
 from arvexq.forecast.preoff_evidence_store import canonical, read_capture
 
@@ -54,7 +56,12 @@ def upload_capture(connection, capture_id, *, endpoint=DEFAULT_ENDPOINT,
     payload = json.dumps(prepare_payload(record), ensure_ascii=False,
                          sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
     if len(payload) > 950000:
-        raise ValueError("D1 evidence exceeds endpoint limit")
+        compressed = gzip.compress(payload, compresslevel=9, mtime=0)
+        wrapped = {"encoding": "arvexq-preoff-gzip-json-v1",
+                   "payload": base64.b64encode(compressed).decode("ascii")}
+        payload = json.dumps(wrapped, separators=(",", ":")).encode("utf-8")
+        if len(payload) > 950000:
+            raise ValueError("lossless D1 evidence still exceeds compressed endpoint limit")
     req = request.Request(endpoint, data=payload, method="POST", headers={
         "Authorization": "Bearer " + secret,
         "Content-Type": "application/json",
