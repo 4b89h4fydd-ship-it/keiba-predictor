@@ -35,6 +35,33 @@ def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
             break
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
+                # The legacy race route may be absent while the same D1
+                # race_details table is still readable from its dedicated
+                # display view. Never treat this as "no previous evidence"
+                # until the existing read-only view has been checked.
+                display_url = (base.rstrip("/") + "/api/race/" +
+                    urllib.parse.quote(rid, safe="") +
+                    "?view=display&sealguard=" + str(time.time_ns()))
+                try:
+                    display_req = urllib.request.Request(
+                        display_url, headers={"accept":"application/json",
+                                              "user-agent":"ARVEXQ-SealGuard/1"}
+                    )
+                    with urllib.request.urlopen(display_req, timeout=25) as display_resp:
+                        display = json.loads(display_resp.read().decode("utf-8"))
+                    if not isinstance(display, dict):
+                        raise RuntimeError("D1 display response must be object")
+                    candidate = display.get("detail")
+                    if isinstance(candidate, dict):
+                        if str(candidate.get("id") or "") != rid:
+                            raise RuntimeError("D1 display returned mismatched race")
+                        return candidate
+                    if display.get("ok") is not False:
+                        raise RuntimeError("D1 display returned no verifiable detail")
+                except urllib.error.HTTPError as display_exc:
+                    if display_exc.code != 404:
+                        raise RuntimeError("D1 seal-guard display lookup failed closed") from display_exc
+                # Both full-detail routes explicitly returned 404.
                 # No D1 race detail is expected at the start of a new day.
                 # Require an independently successful date-scoped day response;
                 # do not convert arbitrary 404s (bad routes/outages) to absence.
