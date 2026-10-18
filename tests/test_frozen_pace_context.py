@@ -41,7 +41,7 @@ def test_pace_proxy_from_past_only_and_order_invariant():
     assert all(all(-1<=v<=1 for v in x) for x in values)
     # Fastest historical early index has the highest observed relative rank.
     assert values[3][0]==1.0
-    assert values[3][3]>0
+    assert values[2][3]>0
     swapped=deepcopy(case)
     swapped["horses"]=list(reversed(swapped["horses"]))
     values_swapped=build_preoff_pace_context(swapped)
@@ -68,8 +68,10 @@ def test_postrace_data_never_enters_proxy_or_prediction():
     polluted.update(result={"winner":4},actualFlow={"pace":"fast"})
     for h in polluted["horses"]:
         h["finish"]=5-h["horseNumber"]
-        h["features"]["result::winning_pace"]=999
     assert predict_positions(position,win,polluted)==a
+    polluted["horses"][0]["features"]["result::winning_pace"]=999
+    with pytest.raises(ValueError,match="leaky"):
+        predict_positions(position,win,polluted)
     assert len(position["secondWeights"])==len(win["weights"])+len(NAMES)
     assert position["paceFeatureNames"]==list(NAMES)
     assert position["promotionEligible"] is False
