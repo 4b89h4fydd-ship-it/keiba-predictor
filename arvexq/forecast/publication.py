@@ -33,6 +33,15 @@ def public_race(detail):
         result['predictionEvidence'] = prediction['evidence']
         result['predictionRunnerCount'] = prediction['runnerCount']
         result['predictionMarks'] = generate_marks(prediction)
+        by_number = {str(m["horseNumber"]): m for m in result["predictionMarks"]}
+        for horse in result.get("horses", []):
+            assigned = by_number.get(str(horse.get("horseNumber")))
+            if assigned:
+                horse["mark"] = assigned["mark"]
+                horse["modelProbabilities"] = {
+                    "win": assigned["winProbability"],
+                    "top3": assigned["top3Probability"],
+                }
         result['recommendedBetsStatus'] = 'not_evaluated_without_verified_odds'
         # Keep joint scenarios internal; avoid publishing large probabilistic blobs.
     result['predictionModelVersion'] = VERSION
