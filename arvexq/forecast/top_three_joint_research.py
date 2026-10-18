@@ -121,12 +121,25 @@ def evaluate_orders(predictions, races):
         ordered_log = -log(max(1e-15, lookup[tuple(winners)]))
         by_first = sorted(probs, key=lambda n: (-probs[n]["firstProbability"], n))
         by_top3 = sorted(probs, key=lambda n: (-probs[n]["topThreeProbability"], n))
+        by_second = sorted(probs, key=lambda n: (-probs[n]["secondProbability"], n))
+        by_third = sorted(probs, key=lambda n: (-probs[n]["thirdProbability"], n))
+        modal_order = max(distribution["orderedTopThree"],
+                          key=lambda x: (x["probability"], -x["first"], -x["second"], -x["third"]))
         outcomes.append({"firstLogLoss": first_log, "exactOrderLogLoss": ordered_log,
+                         "secondLogLoss": -log(max(1e-15, probs[winners[1]]["secondProbability"])),
+                         "thirdLogLoss": -log(max(1e-15, probs[winners[2]]["thirdProbability"])),
+                         "secondHit": int(by_second[0] == winners[1]),
+                         "thirdHit": int(by_third[0] == winners[2]),
                          "firstHit": int(by_first[0] == winners[0]),
                          "topThreeSetHit": int(set(by_top3[:3]) == set(winners)),
-                         "orderedTopThreeHit": int(tuple(by_first[:3]) == tuple(winners))})
+                         "orderedTopThreeHit": int((modal_order["first"], modal_order["second"],
+                                                    modal_order["third"]) == tuple(winners))})
     count = len(outcomes)
     return {"races": count, "top1Rate": sum(x["firstHit"] for x in outcomes) / count,
+            "secondPositionTop1Rate": sum(x["secondHit"] for x in outcomes) / count,
+            "thirdPositionTop1Rate": sum(x["thirdHit"] for x in outcomes) / count,
+            "secondPositionLogLoss": sum(x["secondLogLoss"] for x in outcomes) / count,
+            "thirdPositionLogLoss": sum(x["thirdLogLoss"] for x in outcomes) / count,
             "unorderedTopThreeSetRate": sum(x["topThreeSetHit"] for x in outcomes) / count,
             "orderedTopThreeRate": sum(x["orderedTopThreeHit"] for x in outcomes) / count,
             "firstLogLoss": sum(x["firstLogLoss"] for x in outcomes) / count,
