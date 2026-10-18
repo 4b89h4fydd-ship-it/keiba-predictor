@@ -76,15 +76,10 @@ jobs:
         run: |
           nohup python -c 'import app,uvicorn; app.last3f=None; uvicorn.run(app.app,host="127.0.0.1",port=8000)' > /tmp/arvexq-live.log 2>&1 &
           echo $! > /tmp/arvexq-live.pid
-          for i in $(seq 1 20); do
-            if curl -fsS --max-time 2 http://127.0.0.1:8000/health > /dev/null; then
-              echo "ARVEXQ live runtime ready"
-              exit 0
-            fi
-            sleep 1
-          done
-          tail -n 80 /tmp/arvexq-live.log || true
-          exit 1
+          if ! python scripts/arvexq_wait_runtime.py --pid-file /tmp/arvexq-live.pid --timeout 60; then
+            tail -n 80 /tmp/arvexq-live.log || true
+            exit 1
+          fi
 
       - name: Load prepared day from D1
         run: |

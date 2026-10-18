@@ -4164,20 +4164,31 @@
     {
       "id": 152,
       "name": "Realtime Sync",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.infra.runtime_readiness",
+      "files": [
+        "arvexq/infra/runtime_readiness.py",
+        "scripts/arvexq_wait_runtime.py"
+      ],
+      "callers": [
+        ".github/workflows/arvexq-sync.yml:Start lightweight ARVEXQ runtime"
+      ],
+      "dependencies": [
+        "urllib.request",
+        "os process liveness",
+        "monotonic clock"
+      ],
+      "input": "Local runtime health URL, launched PID, maximum wait and probe interval",
+      "output": "Readiness with probe count, or explicit process-exit/deadline error",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_runtime_readiness.py"
+      ],
+      "implementation_scope": "Realtime sync readiness is separated and wired into its workflow. A production log showed successful server startup exactly after the former 20-second loop expired. New wait is bounded to 60 seconds, stops on process exit, and does not start collectors or send sync data. Other realtime sync responsibilities remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "5 unittest cases passed locally: real local HTTP/CLI integration, ready after 25s, process death, strict deadline, invalid configuration",
+        "integration": "CLI from an external working directory polled a real loopback HTTP server successfully; workflow passes the actual launched PID",
         "ci_url": null,
         "main_sha": null,
         "production": null
