@@ -9,13 +9,13 @@ MANIFEST=json.loads(Path('docs/independence/requirements.json').read_text())
 def test_exact_fixed_inventory_retains_all_200_items():
     result=audit(MANIFEST)
     assert not result['errors'] and result['total']==200
-    assert result['complete']==1 and result['verdict']=='未完了'
+    assert result['complete']==2 and result['verdict']=='未完了'
 
 def test_premature_completion_is_rejected_even_when_file_exists():
-    proposed=deepcopy(MANIFEST);proposed['items'][0]['status']='本番検証済';proposed['completed']=1
+    proposed=deepcopy(MANIFEST);proposed['items'][0]['status']='本番検証済';proposed['completed']=2
     proposed['items'][1]['status']='本番検証済'
     result=audit(proposed)
-    assert result['errors'] and result['complete']==1 and result['verdict']=='未完了'
+    assert result['errors'] and result['complete']==2 and result['verdict']=='未完了'
 
 def test_duplicated_missing_requirement_cannot_be_hidden_in_count():
     proposed=deepcopy(MANIFEST);proposed['items'][99]['id']=1
@@ -29,7 +29,7 @@ def test_waiting_prediction_calculation_never_counts_as_completed():
     item['prediction_logic_status']='予想ロジック仕様待ち'
     result=audit(proposed)
     assert not result['errors']
-    assert result['complete']==1 and result['verdict']=='未完了'
+    assert result['complete']==2 and result['verdict']=='未完了'
 
 def test_waiting_status_cannot_hide_a_codex_responsibility():
     proposed=deepcopy(MANIFEST)
