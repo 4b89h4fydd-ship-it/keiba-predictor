@@ -1290,16 +1290,24 @@
     {
       "id": 41,
       "name": "データ取得元照合",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.source_provenance",
+      "files": [
+        "arvexq/ingest/source_provenance.py",
+        "arvexq/quality/fact_audit.py"
+      ],
+      "callers": [
+        "arvexq.quality.fact_audit.audit_day"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "observed race/runner source fields, immutable original record",
+      "output": "bounded source labels/URLs retained with anomaly facts",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_observed_source_provenance.py",
+        "tests/test_factual_data_audit.py"
+      ],
+      "implementation_scope": "Initial independent read-only observed source metadata capture on corrupt runner validation. Cross-provider source reconciliation/priority resolution not implemented, so requirement 41 is only parsed/analyzed, not separated/completed. No D1 mutation.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
