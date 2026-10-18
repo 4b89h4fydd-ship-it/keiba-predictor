@@ -52,3 +52,15 @@ def test_provider_dom_to_sqlite_without_inferred_male(tmp_path):
             db.execute("INSERT INTO entries(horse_no, sex) VALUES (?, ?)",
                        (horse["horseNumber"], _normalize_sex(horse["sex"])))
         assert db.execute("SELECT sex FROM entries ORDER BY horse_no").fetchall() == [("牝",), ("",)]
+
+def test_all_race_readback_paths_keep_missing_sex():
+    """Guard app's normal/fast and legacy readback paths from male fallbacks."""
+    from pathlib import Path
+    from arvexq.infra.legacy_stores import SOURCE
+
+    app_source = (Path(__file__).resolve().parents[1] / "app.py").read_text()
+    assert app_source.count('"sex":e["sex"] or ""') == 2
+    assert '"sex":e["sex"] or "牡"' not in app_source
+    assert '"sex": e["sex"] or ""' in SOURCE
+    assert '"sex": e["sex"] or "牡"' not in SOURCE
+    assert "sex TEXT NOT NULL DEFAULT ''" in SOURCE
