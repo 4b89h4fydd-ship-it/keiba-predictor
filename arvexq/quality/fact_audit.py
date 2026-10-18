@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 import math
 
+from arvexq.ingest.runner_identity_compare import compare_same_day_runner
 from arvexq.ingest.career_transport import recover_horse
 from arvexq.ingest.full_career import date_key, merge_career
 
@@ -41,15 +42,11 @@ def audit_day(bundle):
             counts["horses"] += 1
             for field in HORSE_FIELDS:
                 horse_gaps[field] += not observed(field, horse.get(field))
-            # A horse cannot start twice on the same day. Retain the observed
-            # identities for investigation; never synthesize or rewrite entries.
-            name = str(horse.get("name") or "").strip()
-            if name:
-                first_race = first_race_by_name.setdefault(name, detail["id"])
-                if first_race != detail["id"]:
-                    errors.append({"raceId": detail["id"], "otherRaceId": first_race,
-                                   "horseName": name, "horseNumber": horse.get("horseNumber"),
-                                   "error": "same runner name in multiple races on day"})
+            collision = compare_same_day_runner(
+                first_race_by_name, race_id=detail["id"],
+                horse_name=horse.get("name"), horse_number=horse.get("horseNumber"))
+            if collision:
+                errors.append(collision)
             number = horse.get("horseNumber")
             if observed("horseNumber", number):
                 numeric = float(number)
