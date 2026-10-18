@@ -1,0 +1,58 @@
+name: ARVEXQ Genuine Sealed B Holdout
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/arvexq_sealed_b_real_holdout.py
+      - tests/test_sealed_b_real_holdout.py
+      - .github/workflows/arvexq-sealed-b-real-holdout.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-real-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ensure model input and label integrity
+        run: |
+          python -m pip install -q pytest
+          PYTHONPATH=. python -m pytest -q tests/test_sealed_b_real_holdout.py
+      - name: Read previous seven D1 race days without making any writes
+        run: |
+          mkdir -p previous-sealed-days
+          for day in 2026-10-07 2026-10-08 2026-10-09 2026-10-10 2026-10-11 2026-10-12 2026-10-13; do
+            python scripts/arvexq_fetch_d1_bundle.py \
+              --api-base https://kraiz-api.4b89h4fydd.workers.dev \
+              --date "$day" --out "previous-sealed-days/$day.json" \
+              --report "previous-sealed-days/$day-report.json" \
+              --workers 5 --retries 3 --timeout 22 --allow-missing-details
+          done
+      - name: Assess chronological 1st and fully ordered podium from real seals
+        run: |
+          PYTHONPATH=. python scripts/arvexq_sealed_b_real_holdout.py \
+            --in-dir previous-sealed-days --out sealed-b-real-holdout.json --epochs 25
+          python - <<'PY'
+          import json
+          report=json.load(open('sealed-b-real-holdout.json'))
+          assert report["productionEligible"] is False
+          assert report["claim80PercentAchieved"] is False
+          assert report["totalInputRaces"]>0, "No actual D1 races retrieved"
+          print("SEALED_B_REAL_HOLDOUT_SUMMARY",
+                "input=",report["totalInputRaces"],
+                "eligible=",report["eligibleSealedRaces"],
+                "circuits=",list(report["byCircuitAndFamily"]))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-sealed-b-real-${{ github.run_id }}
+          path: |
+            sealed-b-real-holdout.json
+            previous-sealed-days/*-report.json
+          if-no-files-found: warn
+          retention-days: 30
