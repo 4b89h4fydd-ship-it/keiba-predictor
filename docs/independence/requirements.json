@@ -558,21 +558,27 @@
       "id": 20,
       "name": "JRA公式データ解析",
       "status": "解析済",
-      "module": "arvexq.ingest.jra_official_table",
+      "module": "arvexq.ingest.jra_official_table + arvexq.ingest.jra_official_runner_row",
       "files": [
-        "arvexq/ingest/jra_official_table.py"
+        "arvexq/ingest/jra_official_table.py",
+        "arvexq/ingest/jra_official_runner_row.py"
       ],
       "callers": [
-        "app.py:_jra_parse_race"
+        "app.py:_jra_parse_race",
+        "tests/test_jra_official_runner_row.py"
       ],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "dependencies": [
+        "app.py:_jra_text"
+      ],
+      "input": "JRA official runner row cells and the caller's cell-text function; horse-number candidate is read only from the first three cells",
+      "output": "(observed integer horse number 1–18, candidate cell index), or legacy missing pair (0, -1)",
       "storage": null,
       "tests": [
-        "tests/test_jra_official_table_independent.py"
+        "tests/test_jra_official_table_independent.py",
+        "tests/test_jra_official_runner_row.py",
+        "tests/test_jra_withdrawn_roster.py"
       ],
-      "implementation_scope": "JRA公式出馬表DOMの出走馬テーブル識別を独立化。JRA公式全データ解析の完了ではなく残る項目分離と本番確認は未実施",
+      "implementation_scope": "JRA公式出馬表DOMの出走馬テーブル識別と馬番抽出を独立化。馬番1〜18と不正・欠損・取消値の専用契約を追加。CI・main統合・本番確認は未実施で、JRA公式全データ解析の完了ではない",
       "evidence": {
         "commit_sha": null,
         "unit": null,
