@@ -48,6 +48,31 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
             "careerCompleteness": "unverified",
         })
     rows.sort(key=lambda row: row["horseNumber"])
+    race = response.get("race") or {}
+    expected = race.get("fieldSize") if isinstance(race, dict) else None
+    roster = ("count-mismatch" if type(expected) is int and expected > 0
+              and expected != len(rows) else "unverified")
+    observed_runs = sum(len(row["recentRaces"]) for row in rows)
+    history_state = "missing" if observed_runs == 0 else "partial-unverified"
+    prices = response.get("oddsFields") or {}
+    win = prices.get("win", []) if isinstance(prices, dict) else []
+    place = prices.get("place", []) if isinstance(prices, dict) else []
+    def valid_count(values):
+        return sum(item.get("state") == "observed" for item in values
+                   if isinstance(item, dict)) if isinstance(values, list) else 0
+    odds_state = ("observed-unverified" if len(rows) and
+                  valid_count(win) == len(rows) and valid_count(place) == len(rows)
+                  else "incomplete")
+    readiness = {
+        "schema": "arvexq-v3-display-readiness-1",
+        "complete": False,
+        "roster": roster,
+        "history": history_state,
+        "odds": odds_state,
+        "message": "保存済み観測データのみ。全項目の取得完了は未確認",
+        "canClaimFullyRetrieved": False,
+        "predictionsEnabled": False,
+    }
     return {
         "schema": "arvexq-v3-factual-screen-1",
         "race": deepcopy(response.get("race")),
@@ -57,6 +82,7 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
         "coverage": deepcopy(response.get("coverage")),
         "oddsFields": deepcopy(response.get("oddsFields")),
         "quoteFields": deepcopy(response.get("quoteFields")),
+        "displayReadiness": readiness,
         "predictionStatus": "not-implemented",
         "marks": None,
         "tickets": None,
