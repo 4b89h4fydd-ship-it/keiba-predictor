@@ -31,3 +31,24 @@ def test_sqlite_preserves_unknown_sex_as_empty(tmp_path):
         assert actual == ["牡", "牝", "セ", "", "", "", ""]
     finally:
         db.close()
+
+def test_provider_dom_to_sqlite_without_inferred_male(tmp_path):
+    """Check observed and missing DOM sex through parsing and persistent storage."""
+    import sqlite3
+    from bs4 import BeautifulSoup
+    from arvexq.ingest.entry_fields.netkeiba import parse_row
+
+    def parse(html):
+        return parse_row(BeautifulSoup(html, "html.parser").find("tr"))
+
+    observed = parse('<tr><td class="Umaban">1</td><td class="Horse_Info"><dt class="Horse"><a>牝馬</a></dt><dd class="Age">牝4</dd></td></tr>')
+    missing = parse('<tr><td class="Umaban">2</td><td class="Horse_Info"><dt class="Horse"><a>不明馬</a></dt></td></tr>')
+    assert observed["sex"] == "牝"
+    assert missing["sex"] == ""
+
+    with sqlite3.connect(tmp_path / "provider.sqlite") as db:
+        db.execute("CREATE TABLE entries(horse_no INTEGER PRIMARY KEY, sex TEXT NOT NULL DEFAULT '')")
+        for horse in (observed, missing):
+            db.execute("INSERT INTO entries(horse_no, sex) VALUES (?, ?)",
+                       (horse["horseNumber"], _normalize_sex(horse["sex"])))
+        assert db.execute("SELECT sex FROM entries ORDER BY horse_no").fetchall() == [("牝",), ("",)]
