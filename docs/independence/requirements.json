@@ -2523,7 +2523,8 @@
       "status": "解析済",
       "module": "arvexq/features/readiness.py",
       "files": [
-        "arvexq/features/readiness.py"
+        "arvexq/features/readiness.py",
+        "arvexq/quality/fact_audit.py"
       ],
       "callers": [],
       "dependencies": [],
@@ -2531,9 +2532,10 @@
       "output": null,
       "storage": null,
       "tests": [
-        "tests/test_diagnosis_readiness.py"
+        "tests/test_diagnosis_readiness.py",
+        "tests/test_factual_data_audit.py"
       ],
-      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要; independent factual audit measures missingness and invalid identities/history without prediction scores",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -4377,20 +4379,31 @@
     {
       "id": 160,
       "name": "取得失敗時再試行",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
-      "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "status": "解析済",
+      "module": "arvexq.ingest.d1_day_readback",
+      "files": [
+        "arvexq/ingest/d1_day_readback.py"
+      ],
+      "callers": [
+        "scripts/arvexq_fact_data_audit.py"
+      ],
+      "dependencies": [
+        "Existing D1 API routes",
+        "arvexq.ingest.full_snapshot_codec",
+        "arvexq.ingest.career_transport",
+        "Python standard library"
+      ],
+      "input": "Day summaries and per-race observed saved detail, restored full originals, field/identity/history facts",
+      "output": "Factual coverage/missingness counts and explicit acquisition/validation errors; prediction calculation status is pending",
+      "storage": "Local JSON report and GitHub Actions artifact; no D1 writes",
+      "tests": [
+        "tests/test_factual_data_audit.py"
+      ],
+      "implementation_scope": "D1 factual GET uses bounded transient-error retries, byte budgets and at most four race readers. This is the read-only audit route; other acquisition retry policies remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "13 focused factual-readback/audit contracts passed; full local Python regression: 747 passed, 3 skipped, 41 subtests passed",
+        "integration": "CLI writes deterministic fact reports and returns nonzero for actual read failures; workflow runs unit contracts before production GET-only audit",
         "ci_url": null,
         "main_sha": null,
         "production": null
@@ -4751,20 +4764,31 @@
     {
       "id": 175,
       "name": "APIエラー処理",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
-      "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "status": "解析済",
+      "module": "arvexq.ingest.d1_day_readback",
+      "files": [
+        "arvexq/ingest/d1_day_readback.py"
+      ],
+      "callers": [
+        "scripts/arvexq_fact_data_audit.py"
+      ],
+      "dependencies": [
+        "Existing D1 API routes",
+        "arvexq.ingest.full_snapshot_codec",
+        "arvexq.ingest.career_transport",
+        "Python standard library"
+      ],
+      "input": "Day summaries and per-race observed saved detail, restored full originals, field/identity/history facts",
+      "output": "Factual coverage/missingness counts and explicit acquisition/validation errors; prediction calculation status is pending",
+      "storage": "Local JSON report and GitHub Actions artifact; no D1 writes",
+      "tests": [
+        "tests/test_factual_data_audit.py"
+      ],
+      "implementation_scope": "Existing D1 day/race/display routes are read without a giant details=1 response. Identity/date/envelope failures are explicit per-race errors and never fabricated empty records. Other server/API error responsibilities remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "13 focused factual-readback/audit contracts passed; full local Python regression: 747 passed, 3 skipped, 41 subtests passed",
+        "integration": "CLI writes deterministic fact reports and returns nonzero for actual read failures; workflow runs unit contracts before production GET-only audit",
         "ci_url": null,
         "main_sha": null,
         "production": null
@@ -5307,20 +5331,32 @@
     {
       "id": 197,
       "name": "JRA・NARデータ検証とバックテスト",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
-      "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "status": "解析済",
+      "module": "arvexq.quality.fact_audit",
+      "files": [
+        "arvexq/quality/fact_audit.py",
+        "scripts/arvexq_fact_data_audit.py"
+      ],
+      "callers": [
+        ".github/workflows/arvexq-current-prediction-audit.yml"
+      ],
+      "dependencies": [
+        "Existing D1 API routes",
+        "arvexq.ingest.full_snapshot_codec",
+        "arvexq.ingest.career_transport",
+        "Python standard library"
+      ],
+      "input": "Day summaries and per-race observed saved detail, restored full originals, field/identity/history facts",
+      "output": "Factual coverage/missingness counts and explicit acquisition/validation errors; prediction calculation status is pending",
+      "storage": "Local JSON report and GitHub Actions artifact; no D1 writes",
+      "tests": [
+        "tests/test_factual_data_audit.py"
+      ],
+      "implementation_scope": "JRA/NAR factual field gaps, bounded identities, archive recovery, duplicate runners and non-prior history dates are audited without prediction calculations. New-method backtesting remains 予想ロジック仕様待ち.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "13 focused factual-readback/audit contracts passed; full local Python regression: 747 passed, 3 skipped, 41 subtests passed",
+        "integration": "CLI writes deterministic fact reports and returns nonzero for actual read failures; workflow runs unit contracts before production GET-only audit",
         "ci_url": null,
         "main_sha": null,
         "production": null
@@ -5380,20 +5416,33 @@
     {
       "id": 200,
       "name": "ログ・障害監視",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
-      "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "status": "解析済",
+      "module": "arvexq.quality.fact_audit",
+      "files": [
+        "arvexq/quality/fact_audit.py",
+        "arvexq/ingest/d1_day_readback.py",
+        "scripts/arvexq_fact_data_audit.py"
+      ],
+      "callers": [
+        ".github/workflows/arvexq-current-prediction-audit.yml"
+      ],
+      "dependencies": [
+        "Existing D1 API routes",
+        "arvexq.ingest.full_snapshot_codec",
+        "arvexq.ingest.career_transport",
+        "Python standard library"
+      ],
+      "input": "Day summaries and per-race observed saved detail, restored full originals, field/identity/history facts",
+      "output": "Factual coverage/missingness counts and explicit acquisition/validation errors; prediction calculation status is pending",
+      "storage": "Local JSON report and GitHub Actions artifact; no D1 writes",
+      "tests": [
+        "tests/test_factual_data_audit.py"
+      ],
+      "implementation_scope": "Operational CI publishes read-only factual data reports and explicit errors. Its former automatic legacy-model replay steps are replaced by factual verification; legacy calculation scripts are unchanged and new-method validation remains pending. Other logging/monitoring paths remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "13 focused factual-readback/audit contracts passed; full local Python regression: 747 passed, 3 skipped, 41 subtests passed",
+        "integration": "CLI writes deterministic fact reports and returns nonzero for actual read failures; workflow runs unit contracts before production GET-only audit",
         "ci_url": null,
         "main_sha": null,
         "production": null

@@ -1,98 +1,70 @@
-name: ARVEXQ Current Prediction Audit
+name: ARVEXQ Factual Data Audit
 
-on:
+"on":
   push:
     branches: [main]
     paths:
-      - 'app.py'
-      - 'arvexq/prediction/**'
-      - 'scripts/arvexq_fix_jra_history_quality.py'
-      - 'scripts/arvexq_current_prediction_audit.py'
-      - 'scripts/arvexq_central_data_quality_audit.py'
-      - '.github/workflows/arvexq-current-prediction-audit.yml'
+      - app.py
+      - arvexq/ingest/**
+      - arvexq/quality/**
+      - scripts/arvexq_fact_data_audit.py
+      - tests/test_factual_data_audit.py
+      - .github/workflows/arvexq-current-prediction-audit.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - arvexq/ingest/d1_day_readback.py
+      - arvexq/quality/**
+      - scripts/arvexq_fact_data_audit.py
+      - tests/test_factual_data_audit.py
+      - .github/workflows/arvexq-current-prediction-audit.yml
   workflow_dispatch:
     inputs:
       days:
-        description: 'Number of completed days to audit'
+        description: Completed days to audit
         required: false
         default: '7'
       end_date:
-        description: 'Last completed date (YYYY-MM-DD)'
+        description: Last date YYYY-MM-DD (blank = yesterday JST)
         required: false
-        default: '2026-10-12'
+        default: ''
 
 permissions:
   contents: read
 
+concurrency:
+  group: arvexq-factual-data-audit-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Run unified prediction audit
+      - name: Install test runner
+        run: python -m pip install -q pytest
+      - name: Verify factual readback and quality contracts
+        run: python -m pytest tests/test_factual_data_audit.py -q
+      - name: Read production factual data
+        if: github.event_name != 'pull_request'
         env:
           PYTHONPATH: '.'
-          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
+          ARVEXQ_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
           ARVEXQ_DAYS: ${{ inputs.days || '7' }}
-          ARVEXQ_END_DATE: ${{ inputs.end_date || '2026-10-12' }}
+          ARVEXQ_END_DATE: ${{ inputs.end_date || '' }}
         run: |
           set -o pipefail
-          python scripts/arvexq_current_prediction_audit.py | tee unified-audit.log
-      - name: Run central/local data quality audit
-        env:
-          PYTHONPATH: '.'
-          ARVEXQ_API_BASE: 'https://kraiz-api.4b89h4fydd.workers.dev'
-          ARVEXQ_DAYS: ${{ inputs.days || '7' }}
-          ARVEXQ_END_DATE: ${{ inputs.end_date || '2026-10-12' }}
-        run: |
-          set -o pipefail
-          python scripts/arvexq_central_data_quality_audit.py | tee data-quality-audit.log
-      - name: Publish concise summary
-        if: always()
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          payload=None
-          p=Path('unified-audit.log')
-          if p.exists():
-              for line in p.read_text(encoding='utf-8').splitlines():
-                  if line.startswith('ARVEXQ_UNIFIED_AUDIT_JSON='):
-                      payload=json.loads(line.split('=',1)[1])
-          if not payload:
-              raise SystemExit(0)
-          def pct(v): return '—' if v is None else f'{v*100:.1f}%'
-          exact=payload['exactLocked']; replay=payload['currentFourPillarReplay']; change=payload['honmeiChanged']
-          lines=[
-              '## ARVEXQ 7-day prediction audit',
-              f"Period: {payload['start']} → {payload['end']}",
-              f"Exact locked races: {payload['exactLockedRaces']} / Current replay races: {payload['replayedRaces']}",
-              '',
-              '| metric | exact locked | current four-pillar replay |',
-              '|---|---:|---:|',
-              f"| ◎1着 | {pct(exact.get('honmeiWinRate'))} | {pct(replay.get('honmeiWinRate'))} |",
-              f"| ◎3着内 | {pct(exact.get('honmeiTop3Rate'))} | {pct(replay.get('honmeiTop3Rate'))} |",
-              f"| 勝ち馬TOP3 | {pct(exact.get('winnerTop3Rate'))} | {pct(replay.get('winnerTop3Rate'))} |",
-              f"| 勝ち馬TOP5 | {pct(exact.get('winnerTop5Rate'))} | {pct(replay.get('winnerTop5Rate'))} |",
-              f"| 勝ち馬◎○▲ | {pct(exact.get('winnerCoreMarkRate'))} | {pct(replay.get('winnerCoreMarkRate'))} |",
-              '',
-              f"◎変更: {change['races']} / 改善: {change['improved']} / 悪化: {change['worsened']} / 同等: {change['equal']}",
-              '',
-              '> exact locked = 発走前固定値。current replay = 結果・払戻・当日履歴を除去した遡及再計算で、完全な当時再現ではありません。',
-          ]
-          Path('audit-summary.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
-          with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f: f.write('\n'.join(lines)+'\n')
-          PY
+          python scripts/arvexq_fact_data_audit.py | tee data-quality-audit.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: arvexq-current-prediction-audit
+          name: arvexq-factual-data-audit
           path: |
-            unified-audit.log
+            fact-data-audit.json
             data-quality-audit.log
-            audit-summary.md
           if-no-files-found: ignore
           retention-days: 14
