@@ -775,7 +775,7 @@ function savedRevisionOriginalHtml(r){
 }
 function predict(r){
   // An explicit after-post REFERENCE, never a saved pre-off prediction.
-  var archive=state.postraceReferenceArchive;
+  var archive=(typeof state==='object'&&state)?state.postraceReferenceArchive:null;
   if(r&&archive&&archive.date===r.date&&
      archive.version==='arvexq-postrace-reference-20261018-v1'&&
      archive.mode==='POSTRACE_REFERENCE_NOT_PREOFF'&&archive.races){
