@@ -1,19 +1,20 @@
 'use strict';
-const fs=require('node:fs'),assert=require('node:assert/strict');
+const fs=require('node:fs'),assert=require('node:assert/strict'),vm=require('node:vm');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const helpers=src.slice(src.indexOf('function latestSavedForecastRevision('),src.indexOf('function predict('));
-const predict=src.slice(src.indexOf('function predict('),src.indexOf('function nextRace('));
-const build=src.slice(src.indexOf('function buildAiBetPlan('),src.indexOf('function betItemHit('));
-const factory=new Function('window','n','isScratchHorse','esc',helpers+predict+build+';return {predict,buildAiBetPlan,latestSavedForecastRevision};');
-const api=factory(require('./test_support/production_ui.cjs').window,(v,d=0)=>Number(v)||d,h=>!!h.scratched,String);
-const r=JSON.parse(fs.readFileSync('tests/fixtures/forecast_revision_transport.json')).detail;
-const before=JSON.stringify(r),revision=api.latestSavedForecastRevision(r);
-const p=api.predict(r),bet=api.buildAiBetPlan(r,p);
+assert(!src.includes('function latestSavedForecastRevision('),'retired model revision validator must be deleted');
+assert(!src.includes('/api/forecast-revisions/'),'retired forecast revision API must not be queried');
+assert(src.includes('function verifiedOriginalMarks('),'only verified pre-off originals can be displayed');
+const context={};context.window=context;vm.createContext(context);
+for(const file of ['prediction','marks','tickets']){
+  const path='arvexq/ui/static/forecast/'+file+'.js';
+  vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
+}
+const race=JSON.parse(fs.readFileSync('tests/fixtures/forecast_revision_transport.json','utf8')).detail;
+const before=JSON.stringify(race);
+const p=context.ARVEXQProductionPrediction.build(race);
+const bet=context.ARVEXQProductionTickets.build(race,p);
 assert(!p.savedForecastRevision);
-assert(p.rows.every(x=>x.predMark===''));
-assert.equal(bet.items.length,0);
-assert.equal(JSON.stringify(r),before,'old archives cannot become active and cannot be mutated');
-const bad=JSON.parse(before);bad.forecastRevisions[0].horses.pop();
-assert.equal(api.latestSavedForecastRevision(bad),null);
-assert(src.includes('!plan||plan.postRaceRevision'),'retrospective plans must be excluded from hit-rate scoring');
-console.log('LATEST_FORECAST_REVISION_MARKS_BETS_AND_ORIGINAL_PRESERVATION_PASS');
+assert(p.rows.every(x=>x.predMark===''),'retired revisions must never produce marks');
+assert.equal(bet.items.length,0,'retired revisions must never produce bet picks');
+assert.equal(JSON.stringify(race),before,'historical audit payload must never be mutated');
+console.log('RETIRED_FORECAST_REVISION_REMOVED_ORIGINAL_PRESERVED');
