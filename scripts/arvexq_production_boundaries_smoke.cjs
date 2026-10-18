@@ -46,4 +46,5 @@ for(const bad of [
   assert(!context.ARVEXQMarkFrame.render().includes('◎'));
 }
 
+require('./arvexq_original_ticket_live_view_smoke.cjs');
 console.log('production prediction, mark, ticket and three frame contracts OK');
