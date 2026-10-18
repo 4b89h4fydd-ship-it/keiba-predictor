@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from urllib import request
 import json
 import os
+import gzip
 
 from arvexq.forecast.preoff_evidence_store import canonical, read_capture
 
@@ -53,11 +54,14 @@ def upload_capture(connection, capture_id, *, endpoint=DEFAULT_ENDPOINT,
         raise ValueError("cannot upload stale or post-off evidence")
     payload = json.dumps(prepare_payload(record), ensure_ascii=False,
                          sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
-    if len(payload) > 950000:
-        raise ValueError("D1 evidence exceeds endpoint limit")
-    req = request.Request(endpoint, data=payload, method="POST", headers={
+    # Compress the complete immutable record. Never truncate runners or features.
+    compressed = gzip.compress(payload, compresslevel=6, mtime=0)
+    if len(compressed) > 950000:
+        raise ValueError("compressed D1 evidence exceeds endpoint limit")
+    req = request.Request(endpoint, data=compressed, method="POST", headers={
         "Authorization": "Bearer " + secret,
         "Content-Type": "application/json",
+        "Content-Encoding": "gzip",
     })
     sender = transport if transport is not None else request.urlopen
     try:
