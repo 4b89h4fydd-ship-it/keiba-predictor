@@ -730,20 +730,30 @@
     {
       "id": 24,
       "name": "重複レース統合",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
-      "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "status": "解析済",
+      "module": "arvexq.ingest.race_summary_merge",
+      "files": [
+        "arvexq/ingest/race_summary_merge.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:central_race_summaries",
+        "app.py:fetch_jra_official"
+      ],
+      "dependencies": [
+        "caller-provided central summary normalizer and JRA identifier decoders"
+      ],
+      "input": "Date-scoped cached/fresh central race summaries and observed JRA card identifiers",
+      "output": "One cached/refreshed summary or preferred observed card per venue/race-number pair",
+      "storage": "Caller-managed CentralStore only; module performs no writes",
+      "tests": [
+        "tests/test_race_summary_merge.py"
+      ],
+      "implementation_scope": "Central cached/fresh summary deduplication and official-card discovery deduplication are separated and connected. Existing source order, cached result retention, missing-value behavior and observed detailed-card preference are preserved. Other provider/store deduplication paths and production verification remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "6 focused merge/discovery contracts and 16 related JRA identity/parser cases passed; full local Python suite: 731 passed, 3 skipped, 41 subtests passed",
+        "integration": "SQLite-backed central summary refresh retains recorded finishers and executes independent merge; official discovery invokes independent selection before runner fetching",
         "ci_url": null,
         "main_sha": null,
         "production": null
