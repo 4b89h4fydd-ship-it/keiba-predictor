@@ -19,7 +19,7 @@ def parse_current_result_html(
     soup=BeautifulSoup(html,"html.parser"); table=None; headers=[]
     for tb in soup.find_all("table"):
         for tr in tb.find_all("tr")[:4]:
-            vals=[re.sub(r"\\s+","",clean(c.get_text(" ",strip=True))) for c in tr.find_all(["th","td"])]
+            vals=[re.sub(r"\s+","",clean(c.get_text(" ",strip=True))) for c in tr.find_all(["th","td"])]
             if any("着順" in v for v in vals) and any("馬番" in v for v in vals) and any("馬名" in v for v in vals):
                 table=tb;headers=vals;break
         if table:break
@@ -36,15 +36,15 @@ def parse_current_result_html(
         if not tds:continue
         vals=[clean(td.get_text(" ",strip=True)) for td in tds]
         def val(i):return vals[i] if 0<=i<len(vals) else ""
-        fm=re.search(r"\\d+",val(i_fin)) if i_fin>=0 else None
+        fm=re.search(r"\d+",val(i_fin)) if i_fin>=0 else None
         fin=int(fm.group()) if fm else 0; no=0; frame=0
-        mn=re.search(r"\\d+",val(i_no)) if i_no>=0 else None
-        mf=re.search(r"\\d+",val(i_frame)) if i_frame>=0 else None
+        mn=re.search(r"\d+",val(i_no)) if i_no>=0 else None
+        mf=re.search(r"\d+",val(i_frame)) if i_frame>=0 else None
         if mn:no=int(mn.group())
         if mf:frame=int(mf.group())
         if not no:
             um=tr.find("td",class_=re.compile(r"Umaban",re.I))
-            mm=re.search(r"\\d+",clean(um.get_text(" ",strip=True))) if um else None
+            mm=re.search(r"\d+",clean(um.get_text(" ",strip=True))) if um else None
             if mm:no=int(mm.group())
         name=val(i_name)
         if not name:
@@ -53,18 +53,18 @@ def parse_current_result_html(
         tm=parse_time_seconds(val(i_time)) if i_time>=0 else 0.0
         corners=[]
         cs=val(i_corner)
-        cm=re.search(r"\\d{1,2}(?:-\\d{1,2})+",cs)
+        cm=re.search(r"\d{1,2}(?:-\d{1,2})+",cs)
         if cm:corners=[int(x) for x in cm.group().split("-")]
         pop=None;odd=None;bw=None;chg=None
-        mp=re.search(r"\\d+",val(i_pop)) if i_pop>=0 else None
+        mp=re.search(r"\d+",val(i_pop)) if i_pop>=0 else None
         if mp:
             try:pop=int(mp.group())
             except Exception:pass
-        mo=re.search(r"\\d+(?:\\.\\d+)?",val(i_odds)) if i_odds>=0 else None
+        mo=re.search(r"\d+(?:\.\d+)?",val(i_odds)) if i_odds>=0 else None
         if mo:
             try:odd=float(mo.group())
             except Exception:pass
-        mb=re.search(r"(\\d{3})(?:\\s*[（(]\\s*([+\\-]?\\d+)\\s*[）)])?",val(i_bw)) if i_bw>=0 else None
+        mb=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",val(i_bw)) if i_bw>=0 else None
         if mb:
             try:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
             except Exception:pass
