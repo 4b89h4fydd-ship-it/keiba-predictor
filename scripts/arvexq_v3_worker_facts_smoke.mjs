@@ -57,7 +57,7 @@ async function optin(raceData,compressed=false) {
   const db=mockDB(raceData,{compressed});
   const req=new Request('https://test.invalid/api/race/'+encodeURIComponent(raceData.id)+'?view=v3-facts');
   const res=await worker.fetch(req,{DB:db},null);
-  assert.equal(res.status,200,'Worker v3 must serve '+raceData.id);
+  assert.equal(res.status,200,'Worker v3 must serve '+raceData.id+'; body='+await res.clone().text());
   const body=await res.json();
   assert.equal(body.race_id,raceData.id);
   assert.equal(body.detail.schema,'arvexq-v3-factual-screen-1');
