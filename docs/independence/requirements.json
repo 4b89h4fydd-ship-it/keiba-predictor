@@ -4,7 +4,7 @@
   "base_main": "a45a84a6f7c737c0169e59163570b68f0e0b4451",
   "base_pr_247": "c81e1fbb4196e9961ba639724a9cde32dc9c2785",
   "base_cloudflare": "e33ebf45d0f988246ed8d1981dcd8055a4557573",
-  "completed": 1,
+  "completed": 2,
   "items": [
     {
       "id": 1,
@@ -42,10 +42,13 @@
     {
       "id": 2,
       "name": "NAR馬場状態解析",
-      "status": "分離済",
+      "status": "本番検証済",
       "module": "arvexq.ingest.nar_going",
       "files": [
-        "arvexq/ingest/nar_going.py"
+        "arvexq/ingest/nar_going.py",
+        "arvexq/ingest/nar_environment_parser.py",
+        "workers/nar_going_moisture.mjs",
+        "scripts/arvexq_nar_going_readback.py"
       ],
       "callers": [
         "arvexq/ingest/nar_environment_parser.py"
@@ -55,16 +58,18 @@
       "output": "observed weather / going / scratch map",
       "storage": null,
       "tests": [
-        "tests/test_environment_component_split.py"
+        "tests/test_item_002_nar_going.py",
+        "tests/test_environment_component_split.py",
+        "tests/test_nar_going_live_readback.py"
       ],
-      "implementation_scope": "PR #247既存実装。main・本番の統合証拠は未確認",
+      "implementation_scope": "NAR標準馬場状態とばんえい馬場水分を別フィールドで保持。推測補完なし。PR #336・PR #343・PR #344",
       "evidence": {
-        "commit_sha": null,
-        "unit": null,
-        "integration": null,
-        "ci_url": null,
-        "main_sha": null,
-        "production": null
+        "commit_sha": "6f8c49590a1021965b9ae3b738ecb91a37d5fa61",
+        "unit": "専用単体・結合契約テスト成功。PR #343 CI contracts https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39122464891",
+        "integration": "NAR標準 going 22件と帯広 moisture 12件を同一読戻しで検証",
+        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39128617445",
+        "main_sha": "13a579bfb21f60315205aee96cec8998b3fd013b",
+        "production": "GET-only readback成功: date=2026-10-17 expected=34 read=34 valid=34 missingOrInvalid=[] readErrors=[]。API https://kraiz-api.4b89h4fydd.workers.dev。デプロイ実行39128537318はGuard/Deploy成功、既存storage auditは別assertionで失敗。"
       },
       "owner": "Codex",
       "prediction_logic_status": "対象外"
