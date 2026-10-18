@@ -47,7 +47,7 @@ def factual_response(detail: dict[str, Any], *, include_results: bool = False) -
         "history": read("history"),
         "odds": read("odds"),
         "oddsFields": read_odds_breakdown(detail, circuit),
-        "oddsFields": read_quotes(detail, circuit),
+        "quoteFields": read_quotes(detail, circuit),
         "results": read("results") if include_results else None,
         "resultFields": read_breakdown(detail, circuit) if include_results else None,
         "resultsIncluded": include_results,
