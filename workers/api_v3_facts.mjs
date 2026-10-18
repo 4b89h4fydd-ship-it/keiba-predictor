@@ -160,7 +160,7 @@ function projection(original,requestedId) {
         },
         history:{
           state:historyCount===0?'missing':'partial-unverified',
-          observedPriorRuns:historyCount,runnersWithPriorRuns,
+          observedPriorRuns:historyCount,runnersWithPriorRuns:runnersWithPrior,
           totalRunners:rows.length,allCareerRunsVerified:false
         },
         odds:{
