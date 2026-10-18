@@ -787,7 +787,7 @@
       "implementation_scope": "Netkeiba horse numbers require a published odds ID or numeric Umaban cell within 1..18. Row-order inference is removed; absent evidence leaves 0 and the row is not assigned to a fabricated horse. Other provider paths remain under separate modules.",
       "evidence": {
         "commit_sha": null,
-        "unit": "87 focused observed-runner, DOM, JRA roster, environment and official-change contracts passed; final DTO handoff test and full suite pending",
+        "unit": "88 focused runner/official-change contracts including immutable fact DTO handoff; full local regression: 780 passed, 3 skipped, 41 subtests passed",
         "integration": "Actual JRA parser retains spaced trainer names while exposing observed affiliation; composed netkeiba cards retain existing fields and withdrawal outputs",
         "ci_url": null,
         "main_sha": null,
@@ -823,7 +823,7 @@
       "implementation_scope": "Published frame labels are bounded to 1..8. Missing frames remain 0; deriving frames from horse numbers is removed. Other provider/storage paths require further verification.",
       "evidence": {
         "commit_sha": null,
-        "unit": "87 focused observed-runner, DOM, JRA roster, environment and official-change contracts passed; final DTO handoff test and full suite pending",
+        "unit": "88 focused runner/official-change contracts including immutable fact DTO handoff; full local regression: 780 passed, 3 skipped, 41 subtests passed",
         "integration": "Actual JRA parser retains spaced trainer names while exposing observed affiliation; composed netkeiba cards retain existing fields and withdrawal outputs",
         "ci_url": null,
         "main_sha": null,
@@ -1057,7 +1057,7 @@
       "implementation_scope": "Affiliation is extracted only from observed trainer metadata in netkeiba/JRA cards; trainer names remain unchanged and missing affiliations remain empty. NAR CSV and other provider/storage paths remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": "87 focused observed-runner, DOM, JRA roster, environment and official-change contracts passed; final DTO handoff test and full suite pending",
+        "unit": "88 focused runner/official-change contracts including immutable fact DTO handoff; full local regression: 780 passed, 3 skipped, 41 subtests passed",
         "integration": "Actual JRA parser retains spaced trainer names while exposing observed affiliation; composed netkeiba cards retain existing fields and withdrawal outputs",
         "ci_url": null,
         "main_sha": null,
@@ -1159,7 +1159,7 @@
       "implementation_scope": "Cancellation/absence labels have an independent parser wired through the existing shared normalizer used by JRA/NAR/entry parsing. Existing label precedence remains intact. Worker-specific status paths and whole-source production checks remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": "87 focused observed-runner, DOM, JRA roster, environment and official-change contracts passed; final DTO handoff test and full suite pending",
+        "unit": "88 focused runner/official-change contracts including immutable fact DTO handoff; full local regression: 780 passed, 3 skipped, 41 subtests passed",
         "integration": "Actual JRA parser retains spaced trainer names while exposing observed affiliation; composed netkeiba cards retain existing fields and withdrawal outputs",
         "ci_url": null,
         "main_sha": null,
@@ -1195,7 +1195,7 @@
       "implementation_scope": "Exclusion labels have an independent parser wired through the shared normalizer; they retain precedence over cancellation labels. Worker-specific status paths and whole-source production checks remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": "87 focused observed-runner, DOM, JRA roster, environment and official-change contracts passed; final DTO handoff test and full suite pending",
+        "unit": "88 focused runner/official-change contracts including immutable fact DTO handoff; full local regression: 780 passed, 3 skipped, 41 subtests passed",
         "integration": "Actual JRA parser retains spaced trainer names while exposing observed affiliation; composed netkeiba cards retain existing fields and withdrawal outputs",
         "ci_url": null,
         "main_sha": null,
@@ -3185,7 +3185,8 @@
       "output": null,
       "storage": null,
       "tests": [
-        "tests/test_forecast_production_boundaries.py"
+        "tests/test_forecast_production_boundaries.py",
+        "tests/test_observed_runner_metadata.py"
       ],
       "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要; observed frameNumber and affiliation are copied through the input DTO without introducing scores or filling absent fields",
       "evidence": {
