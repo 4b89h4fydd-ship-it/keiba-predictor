@@ -77,7 +77,7 @@ function priceFact(raw,field) {
   if (!Number.isFinite(numeric)||numeric<=0) return invalid;
   if (field==='popularity' &&
       !(typeof raw==='number' && Number.isInteger(raw) ||
-        typeof raw==='string' && /^[1-9]\\d*$/.test(raw.trim()))) return invalid;
+        typeof raw==='string' && /^[1-9][0-9]*$/.test(raw.trim()))) return invalid;
   return base;
 }
 function projection(original,requestedId) {
