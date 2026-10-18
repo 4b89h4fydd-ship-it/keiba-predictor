@@ -1,0 +1,40 @@
+name: ARVEXQ v3 Saved-Archive Audit
+
+"on":
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - arvexq/v3/audit/**
+      - scripts/arvexq_v3_archive_audit.py
+      - tests/test_v3_archive_audit.py
+      - arvexq/ui/static/racecards/**
+      - arvexq/ui/static/saved-snapshots/**
+      - .github/workflows/arvexq-v3-archive-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  read-only-archive-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate offline archived-source audit
+        run: python -m unittest discover -s tests -p 'test_v3_archive_audit.py' -v || python -m pytest tests/test_v3_archive_audit.py -q
+      - name: Audit latest seven saved day files without contacting production
+        run: python scripts/arvexq_v3_archive_audit.py --days 7 --out arvexq-v3-archive-audit.json
+      - name: Upload inspectable report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-v3-static-evidence-audit
+          path: arvexq-v3-archive-audit.json
+          if-no-files-found: ignore
+          retention-days: 14

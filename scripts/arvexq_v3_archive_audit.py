@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""Offline-only real archived racecard + snapshot manifest audit.
+
+Only files that already exist under the repository are read. No HTTP calls,
+no D1/SQLite writes, no model, marks or ticket generation.
+"""
+from __future__ import annotations
+
+import argparse
+from datetime import date
+import json
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from arvexq.v3.audit.archive import audit_pair, summarize
+
+ARCHIVE = ROOT / "arvexq" / "ui" / "static"
+
+
+def audit_days(*, directory: Path = ARCHIVE, days: int = 7) -> dict:
+    if days < 1 or days > 31:
+        raise ValueError("days must be between 1 and 31")
+    existing = sorted((directory / "racecards").glob("????-??-??.json"))
+    if len(existing) < days:
+        raise ValueError("insufficient saved daily racecards")
+    reports = []
+    for card_path in existing[-days:]:
+        day = card_path.stem
+        if date.fromisoformat(day).isoformat() != day:
+            raise ValueError("invalid saved day filename")
+        manifest_path = directory / "saved-snapshots" / (day + ".json")
+        if not manifest_path.is_file():
+            raise ValueError(f"missing saved manifest for {day}")
+        card = json.loads(card_path.read_text(encoding="utf-8"))
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        reports.append(audit_pair(card, manifest))
+    return summarize(reports)
+
+
+def main() -> int:
+    p = argparse.ArgumentParser()
+    p.add_argument("--days", type=int, default=7)
+    p.add_argument("--archive-dir", type=Path, default=ARCHIVE)
+    p.add_argument("--out", type=Path, default=Path("arvexq-v3-archive-audit.json"))
+    a = p.parse_args()
+    try:
+        result = audit_days(directory=a.archive_dir, days=a.days)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print("ARVEXQ_V3_ARCHIVE_AUDIT_FAILED=" + type(exc).__name__ + ": " + str(exc), file=sys.stderr)
+        return 1
+    a.out.parent.mkdir(parents=True, exist_ok=True)
+    a.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    brief = {k: result[k] for k in ("start", "end", "dateCount", "racecards", "manifestEntries", "circuits", "structuralProblems", "proofLimits")}
+    print("ARVEXQ_V3_ARCHIVE_AUDIT_JSON=" + json.dumps(brief, ensure_ascii=False))
+    return 1 if result["structuralProblems"] else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
