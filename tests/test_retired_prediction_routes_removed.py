@@ -13,11 +13,11 @@ def test_old_secondary_models_deleted_from_live_ui():
         "function latestUserApprovedModelMarkRevision(",
         "function latestAuthorizedMarkRevision(",
         "function latestSavedForecastRevision(",
-        "function savedRevisionOriginalHtml(",
         "function revisionPercent(",
         "/api/forecast-revisions/",
     ):
         assert retired not in source, retired
+    assert "function savedRevisionOriginalHtml(r){return '';}" in source
     assert "function verifiedOriginalMarks(" in source
     assert "original:verifiedOriginalMarks" in source
     assert "var original=verifiedOriginalMarks(detail);" in source
