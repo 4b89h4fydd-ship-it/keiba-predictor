@@ -700,78 +700,12 @@ function validMorningMarkSnapshot(r){
       fixed=Date.parse(String(snap.fixedAt||''));
   return isFinite(post)&&isFinite(fixed)&&fixed<post?snap:null
 }
-function latestOfficialMarkRevision(r){
-  var initial=validMorningMarkSnapshot(r);
-  if(!initial)return null;
-  var post=Date.parse(String(r.date||'')+'T'+String(r.startTime||r.scheduledStartTime||'').slice(0,5)+':00+09:00'),
-      latest=null;
-  (r.officialMarkRevisions||[]).forEach(function(z){
-    if(!z||z.version!=='arvexq-official-mark-revision-v1'||
-        String(z.raceId||'')!==String(r.id)||String(z.raceDate||'')!==String(r.date)||
-        !Array.isArray(z.horses)||z.horses.length<3)return;
-    var at=Date.parse(String(z.revisedAt||'')),
-        announced=Date.parse(String((z.officialCourseCondition||{}).publishedAt||'')),
-        url=String((z.officialCourseCondition||{}).sourceUrl||'');
-    if(!isFinite(at)||!isFinite(announced)||at>=post||announced>at||!/^https:\/\//.test(url))return;
-    if(!latest||Date.parse(String(latest.revisedAt||''))<at)latest=z
-  });
-  return latest
-}
-function latestUserApprovedModelMarkRevision(r){
-  var initial=validMorningMarkSnapshot(r);
-  if(!initial||String(r.date)!=='2026-10-09')return null;
-  var post=Date.parse(String(r.date||'')+'T'+String(r.startTime||r.scheduledStartTime||'').slice(0,5)+':00+09:00'),
-      approval=Date.parse('2026-10-09T20:10:00+09:00'),fixed=Date.parse(String(initial.fixedAt||'')),
-      expected={};
-  (initial.horses||[]).forEach(function(h){expected[n(h.horseNumber,0)]=true});
-  var count=Object.keys(expected).length,latest=null;
-  (r.modelMarkRevisions||[]).forEach(function(z){
-    if(!z||z.version!=='arvexq-user-model-mark-revision-v1'||
-       z.approvalId!=='user-approved-past-five-from-2026-10-09-20-10-jst'||
-       z.modelVersion!=='arvexq-axis-reliability-v2-past-context'||
-       String(z.raceId||'')!==String(r.id)||String(z.raceDate||'')!==String(r.date)||
-       !Array.isArray(z.horses)||z.horses.length!==count)return;
-    var at=Date.parse(String(z.revisedAt||'')),seen={},valid=true;
-    if(!isFinite(at)||at<approval||at<=fixed||at>=post)return;
-    z.horses.forEach(function(h){
-      var no=n(h&&h.horseNumber,0),mark=String(h&&h.mark||'');
-      if(!no||!expected[no]||seen[no]||['','◎','○','▲','☆+','☆','△','注'].indexOf(mark)<0)valid=false;
-      seen[no]=true
-    });
-    if(!valid)return;
-    if(!latest||Date.parse(String(latest.revisedAt||''))<at)latest=z
-  });
-  return latest
-}
-function latestAuthorizedMarkRevision(r){
-  var official=latestOfficialMarkRevision(r),model=latestUserApprovedModelMarkRevision(r);
-  if(!official)return model;
-  if(!model)return official;
-  return Date.parse(String(model.revisedAt||''))>Date.parse(String(official.revisedAt||''))?model:official
-}
-function authorizedPreOffMarks(r){return null;}
-
-// Recompute marks only when the actual inputs to the single observed 60/40
-// model change. Historical audit scores, win odds and old evaluation marks
-// never enter this signature. Only the active pre-off race is recalculated.
-
-function latestSavedForecastRevision(r){
-  if(!r||!Array.isArray(r.forecastRevisions)||!r.currentForecastRevisionId)return null;
-  var list=r.forecastRevisions.filter(function(v){return v&&v.version==='arvexq-forecast-revision-v1'&&
-    v.revisionId===r.currentForecastRevisionId&&v.raceId===r.id&&v.raceDate===r.date&&Array.isArray(v.horses)});
-  if(list.length!==1)return null;
-  var v=list[0],seen={},valid=v.horses.every(function(h){var no=n(h.horseNumber);
-    if(!no||seen[no]||['','◎','○','▲','△','☆','注'].indexOf(String(h.mark||''))<0)return false;
-    seen[no]=true;return true});
-  if(!valid||v.horses.filter(function(h){return h.mark==='◎'}).length>1)return null;
-  var expected=(r.horses||[]).map(function(h){return n(h.horseNumber)});
-  return expected.length===v.horses.length&&expected.every(function(no){return seen[no]})?v:null;
-}
-function revisionPercent(value){return value==null||!Number.isFinite(Number(value))?'未算出':(100*Number(value)).toFixed(1)+'%'}
-
-function savedRevisionOriginalHtml(r){
-  // Retired forecasts are not a public view. Their source archives remain untouched.
-  return '';
+// The legacy official/user-revision mark selectors and forecast-revision screen
+// were retired. Only the validated immutable pre-off original is authoritative.
+function verifiedOriginalMarks(r){
+  var service=window.ARVEXQProductionTickets,
+      receipt=service&&service.validatedReceipt&&service.validatedReceipt(r);
+  return receipt?{horses:receipt.marks}:null;
 }
 function predict(r){
   // An explicit after-post REFERENCE, never a saved pre-off prediction.
@@ -1127,7 +1061,7 @@ function racecardEntryRow(r,h,x){
 function morningSavedMarkRows(r){
   // A pre-off loading/partial racecard must not display archived marks as live AI output.
   // Verified receipts may be shown after the off only for historical review.
-  var snap=raceMarkClock(r).started?authorizedPreOffMarks(r):null,byNo={};
+  var snap=raceMarkClock(r).started?verifiedOriginalMarks(r):null,byNo={};
   if(snap&&Array.isArray(snap.horses)){
     snap.horses.forEach(function(z){byNo[n(z&&z.horseNumber,0)]=z})
   }
@@ -1255,9 +1189,7 @@ function fetchEdgeRace(id,forceNetwork,retryLimit){
   function attempt(index){
     var url=edgeRaceUrl(id);st.attempts=index+1;
     traceRaceDetail(id,'request',{attempt:index+1,url:url,date:(row||cached||{}).date||state.date,venue:(row||cached||{}).track,raceNo:(row||cached||{}).raceNumber});
-    var revisionsUrl='https://kraiz-api.4b89h4fydd.workers.dev/api/forecast-revisions/'+encodeURIComponent(key)+'?t='+Date.now();
-    return Promise.all([edgeFetchJson(url,9000),edgeFetchJson(revisionsUrl,6000).catch(function(){return null})]).then(function(responses){
-      var body=responses[0],revisionBody=responses[1];
+    return edgeFetchJson(url,9000).then(function(body){
       if(!body||body.ok===false)throw Error('race detail response unavailable');
       var d=body.detail||null;
       if(d&&d.result&&d.result.finishers!=null&&!Array.isArray(d.result.finishers)){
@@ -1273,12 +1205,6 @@ function fetchEdgeRace(id,forceNetwork,retryLimit){
       merged=mergeRaceReflection(normalizeDetailSummary(row,id),merged,null,null);
       if(!d&&!entryDataAvailable(merged))throw Error('racecard unavailable');
       if(!entryDataAvailable(merged)&&!(d&&Array.isArray(d.horses)&&Number(d.fieldSize)===0&&d.fieldSize!=null))throw Error('racecard incomplete');
-      if(revisionBody&&revisionBody.ok&&String(revisionBody.raceId)===key&&revisionBody.currentForecastRevisionId){
-        merged.forecastRevisions=revisionBody.forecastRevisions;
-        merged.currentForecastRevisionId=revisionBody.currentForecastRevisionId;
-        if(!latestSavedForecastRevision(merged))throw Error('invalid saved forecast revision');
-        delete merged._prediction;
-      }
       if(d&&!d._entryOnly){merged._entryOnly=false;delete merged._staticRacecardFallback}
       if(body.analysis_ready)merged.preparedMeta=Object.assign({},merged.preparedMeta||{},{diagnosisReady:true});
       st.error='';updateDetailSections(id,merged,true);
@@ -1678,7 +1604,7 @@ function resultPanel(r){
       '<div class="muted result-status-compact">'+(final?'結果は確定扱いですが着順詳細は未取得です。':(String(r.date||'')<today()||String(r.date||'')===today()&&mins(r.startTime)<=nowMins()?'公式結果の反映待ちです。自動再確認しています。':'発走前・結果未確定'))+'</div><button type="button" data-detail-retry="'+esc(r.id)+'">結果を再確認</button>') +
   researchRecapPanel(r)+'</section>'
 }
-function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+(window.ARVEXQDiagnosisView?window.ARVEXQDiagnosisView.render(r,p,{original:authorizedPreOffMarks,esc:esc,started:function(x){return raceMarkClock(x).started},scratch:isScratchHorse}):'')+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・展開予想から見たい項目を押してください。</div>'}
+function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+(window.ARVEXQDiagnosisView?window.ARVEXQDiagnosisView.render(r,p,{original:verifiedOriginalMarks,esc:esc,started:function(x){return raceMarkClock(x).started},scratch:isScratchHorse}):'')+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・展開予想から見たい項目を押してください。</div>'}
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side"><strong>'+(isFinal(r)?'確定':(isFlash(r)?'速報':timeHtml(r)))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
@@ -1766,14 +1692,12 @@ function smartVenueCards(){
 }
 
 function aiStoredMarks(detail){
-  // Only verifiable pre-off snapshots count. Live horse evaluation is not evidence.
-  var server=authorizedPreOffMarks(detail),saved=[];
-  if(server)saved=server.horses.map(function(x){return {no:n(x.horseNumber),mark:String(x.mark||''),p:n(x.decisionProbability,0),confidence:n(server.winnerConfidence,0)}});
-  else if(local){
-    var off=Date.parse(String(detail.date||'')+'T'+String(detail.scheduledStartTime||detail.startTime||'').slice(0,5)+':00+09:00'),at=Date.parse(String(local.fixedAt||''));
-    if(isFinite(off)&&isFinite(at)&&at<off)saved=local.marks.map(function(x){return {no:n(x.no),mark:String(x.mark||''),p:0,confidence:0}});
-  }
-  return saved.filter(function(x){return x.no>0})
+  // Historical hit metrics may use only genuinely sealed PRE-OFF marks.
+  // Current results, post-race references and retired revisions are excluded.
+  var original=verifiedOriginalMarks(detail);
+  return (original&&original.horses||[]).map(function(h){
+    return {no:n(h.horseNumber),mark:String(h.mark||''),p:0,confidence:0};
+  }).filter(function(h){return h.no>0});
 }
 function aiDailyOne(detail){
   if(!detail||!isFinal(detail))return null;
@@ -2744,7 +2668,6 @@ function renderRace(){
   var content='';
   try{
     content=detailTabs(r,p)
-    if(isFinal(r))content+=savedRevisionOriginalHtml(r)
   }catch(e){
     predictionError=predictionError||e;
     state.openPanel='entry';
