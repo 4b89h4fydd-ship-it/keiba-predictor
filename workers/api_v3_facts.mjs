@@ -61,6 +61,20 @@ function classify(raw) {
       (typeof raw === 'number' && !Number.isFinite(raw))) return {status:'invalid',value:null};
   return {status:'observed',value:structuredClone(raw)};
 }
+function priceFact(raw,field) {
+  const base=classify(raw);
+  if (base.status!=='observed') return base;
+  const invalid={status:'invalid',value:null};
+  if (field==='placeOdds' && typeof raw==='string' && raw.includes('-')) {
+    const split=raw.trim().split('-').map(x=>Number(x.trim()));
+    return split.length===2 && split.every(x=>Number.isFinite(x)&&x>0) && split[0]<=split[1]
+      ? base : invalid;
+  }
+  const numeric=Number(raw);
+  if (!Number.isFinite(numeric)||numeric<=0) return invalid;
+  if (field==='popularity' && !Number.isInteger(numeric)) return invalid;
+  return base;
+}
 function projection(original,requestedId) {
   if (!original || typeof original!=='object' || Array.isArray(original))
     throw Error('invalid saved race');
@@ -92,7 +106,7 @@ function projection(original,requestedId) {
       recentRaces:runs.slice(0,5),observedPriorRunCount:runs.length,
       careerCompleteness:'unverified'});
     for (const [out,key] of [[win,'winOdds'],[place,'placeOdds'],[popularity,'popularity']]) {
-      const q=classify(horse[key]);
+      const q=priceFact(horse[key],key);
       out.push({horseNumber:number,state:q.status,value:q.value});
     }
     // Timestamp is accepted only from the explicit horse quote field, never

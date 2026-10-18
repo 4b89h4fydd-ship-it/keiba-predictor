@@ -14,7 +14,7 @@ function race(circuit='jra') {
         allPastRuns:[{date:'2026-10-01',finish:3,mark:'◎',preRaceBet:{hidden:1}}],
         recentRaces:[{date:'2026-10-18',finish:1},{date:'2026-10-20',finish:1}],
         mark:'◎',preRaceBet:{buy:'secret'},modelProbabilities:[0.8]},
-      {horseNumber:1,name:'保存一',placeOdds:'1.2-1.5',
+      {horseNumber:1,name:'保存一',placeOdds:'1.2-1.5',popularity:0,
         recentRaces:[{date:'2026-10-03',finish:2}]}
     ],
     result:{finishers:[{horseNumber:2,finish:1}],payouts:[{kind:'単勝',payout:120}]},
@@ -72,6 +72,8 @@ async function optin(raceData,compressed=false) {
   assert.equal(body.detail.coverage.careerCompleteness,'unverified');
   assert.equal(body.detail.quoteFields.quoteFreshness,'unknown');
   assert.equal(body.detail.oddsFields.win[1].value,3.4);
+  assert.equal(body.detail.oddsFields.popularity[0].state,'invalid');
+  assert.equal(body.detail.oddsFields.popularity[0].value,null);
   assert.equal(res.headers.get('cache-control'),'no-store');
   const clean=JSON.stringify(body);
   for(const forbidden of ['modelProbabilities','preRaceBet','preRacePrediction','predictionMarks','"mark"','"payouts"'])
