@@ -33,6 +33,8 @@ jobs:
         run: python -m pytest -q tests/test_independent_race_identity.py
       - name: NAR official confirmed result factual classification
         run: python -m pytest -q tests/test_independent_official_result_status.py
+      - name: NAR official card fact parser contracts
+        run: python -m pytest -q tests/test_nar_official_card.py tests/test_environment_component_split.py
       - name: Observed odds missingness and market delta independence
         run: python -m pytest -q tests/test_independent_odds_facts.py
       - name: JST-aware observed odds acquisition clock
