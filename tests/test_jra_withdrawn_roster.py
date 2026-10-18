@@ -12,6 +12,7 @@ class JraWithdrawnRosterTests(TestCase):
             race=app._jra_parse_race('pw01dde0105202604010120261017/A0',supplement_profiles=False)
         self.assertEqual(len(race['horses']),1)
         self.assertEqual(race['horses'][0]['trainer'],'調教師 名')
+        self.assertEqual(race['horses'][0]['affiliation'],'美浦')
         self.assertEqual(race['withdrawnEntries'][0]['name'],'取消馬')
         self.assertIsNone(race['withdrawnEntries'][0]['horseNumber'])
         self.assertTrue(race['withdrawnEntries'][0]['sourceHorseNumberMissing'])

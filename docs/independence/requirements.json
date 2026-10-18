@@ -770,23 +770,25 @@
         "arvexq/ingest/entry_fields/horse_number.py"
       ],
       "callers": [
-        "arvexq/ingest/entry_fields/netkeiba.py",
-        "app.py:_nk_row_horse"
+        "arvexq.ingest.entry_fields.netkeiba.parse_row"
       ],
       "dependencies": [
-        "arvexq.ingest.entry_fields.dom"
+        "Shared DOM access and Python standard library"
       ],
-      "input": "netkeiba BeautifulSoup row",
-      "output": "scalar / provider-compatible missing value",
-      "storage": null,
+      "input": "Published runner DOM fields or observed provider status text",
+      "output": "Observed bounded identity/affiliation/status; missing values remain unknown",
+      "storage": "Caller-managed existing runner payload storage",
       "tests": [
-        "tests/test_entry_field_contracts.py"
+        "tests/test_observed_runner_metadata.py",
+        "tests/test_entry_field_contracts.py",
+        "tests/test_jra_withdrawn_roster.py",
+        "tests/test_environment_component_split.py"
       ],
-      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "implementation_scope": "Netkeiba horse numbers require a published odds ID or numeric Umaban cell within 1..18. Row-order inference is removed; absent evidence leaves 0 and the row is not assigned to a fabricated horse. Other provider paths remain under separate modules.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "88 focused runner/official-change contracts including immutable fact DTO handoff; full local regression: 780 passed, 3 skipped, 41 subtests passed",
+        "integration": "Actual JRA parser retains spaced trainer names while exposing observed affiliation; composed netkeiba cards retain existing fields and withdrawal outputs",
         "ci_url": null,
         "main_sha": null,
         "production": null
@@ -800,26 +802,29 @@
       "status": "解析済",
       "module": "arvexq.ingest.entry_fields.frame_number",
       "files": [
-        "arvexq/ingest/entry_fields/frame_number.py"
+        "arvexq/ingest/entry_fields/frame_number.py",
+        "arvexq/ingest/entry_fields/netkeiba.py"
       ],
       "callers": [
-        "arvexq/ingest/entry_fields/netkeiba.py",
-        "app.py:_nk_row_horse"
+        "arvexq.ingest.entry_fields.netkeiba.parse_row"
       ],
       "dependencies": [
-        "arvexq.ingest.entry_fields.dom"
+        "Shared DOM access and Python standard library"
       ],
-      "input": "netkeiba BeautifulSoup row",
-      "output": "scalar / provider-compatible missing value",
-      "storage": null,
+      "input": "Published runner DOM fields or observed provider status text",
+      "output": "Observed bounded identity/affiliation/status; missing values remain unknown",
+      "storage": "Caller-managed existing runner payload storage",
       "tests": [
-        "tests/test_entry_field_contracts.py"
+        "tests/test_observed_runner_metadata.py",
+        "tests/test_entry_field_contracts.py",
+        "tests/test_jra_withdrawn_roster.py",
+        "tests/test_environment_component_split.py"
       ],
-      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "implementation_scope": "Published frame labels are bounded to 1..8. Missing frames remain 0; deriving frames from horse numbers is removed. Other provider/storage paths require further verification.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "88 focused runner/official-change contracts including immutable fact DTO handoff; full local regression: 780 passed, 3 skipped, 41 subtests passed",
+        "integration": "Actual JRA parser retains spaced trainer names while exposing observed affiliation; composed netkeiba cards retain existing fields and withdrawal outputs",
         "ci_url": null,
         "main_sha": null,
         "production": null
@@ -1028,20 +1033,32 @@
     {
       "id": 33,
       "name": "所属",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
-      "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "status": "解析済",
+      "module": "arvexq.ingest.entry_fields.affiliation",
+      "files": [
+        "arvexq/ingest/entry_fields/affiliation.py"
+      ],
+      "callers": [
+        "arvexq.ingest.entry_fields.netkeiba.parse_row",
+        "app.py:_jra_parse_race"
+      ],
+      "dependencies": [
+        "Shared DOM access and Python standard library"
+      ],
+      "input": "Published runner DOM fields or observed provider status text",
+      "output": "Observed bounded identity/affiliation/status; missing values remain unknown",
+      "storage": "Caller-managed existing runner payload storage",
+      "tests": [
+        "tests/test_observed_runner_metadata.py",
+        "tests/test_entry_field_contracts.py",
+        "tests/test_jra_withdrawn_roster.py",
+        "tests/test_environment_component_split.py"
+      ],
+      "implementation_scope": "Affiliation is extracted only from observed trainer metadata in netkeiba/JRA cards; trainer names remain unchanged and missing affiliations remain empty. NAR CSV and other provider/storage paths remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "88 focused runner/official-change contracts including immutable fact DTO handoff; full local regression: 780 passed, 3 skipped, 41 subtests passed",
+        "integration": "Actual JRA parser retains spaced trainer names while exposing observed affiliation; composed netkeiba cards retain existing fields and withdrawal outputs",
         "ci_url": null,
         "main_sha": null,
         "production": null
@@ -1118,20 +1135,32 @@
     {
       "id": 36,
       "name": "出走取消状態",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
-      "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "status": "解析済",
+      "module": "arvexq.ingest.runner_cancellation",
+      "files": [
+        "arvexq/ingest/runner_cancellation.py",
+        "arvexq/ingest/field_normalization.py"
+      ],
+      "callers": [
+        "arvexq.ingest.field_normalization._scratch_status"
+      ],
+      "dependencies": [
+        "Shared DOM access and Python standard library"
+      ],
+      "input": "Published runner DOM fields or observed provider status text",
+      "output": "Observed bounded identity/affiliation/status; missing values remain unknown",
+      "storage": "Caller-managed existing runner payload storage",
+      "tests": [
+        "tests/test_observed_runner_metadata.py",
+        "tests/test_entry_field_contracts.py",
+        "tests/test_jra_withdrawn_roster.py",
+        "tests/test_environment_component_split.py"
+      ],
+      "implementation_scope": "Cancellation/absence labels have an independent parser wired through the existing shared normalizer used by JRA/NAR/entry parsing. Existing label precedence remains intact. Worker-specific status paths and whole-source production checks remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "88 focused runner/official-change contracts including immutable fact DTO handoff; full local regression: 780 passed, 3 skipped, 41 subtests passed",
+        "integration": "Actual JRA parser retains spaced trainer names while exposing observed affiliation; composed netkeiba cards retain existing fields and withdrawal outputs",
         "ci_url": null,
         "main_sha": null,
         "production": null
@@ -1142,20 +1171,32 @@
     {
       "id": 37,
       "name": "競走除外状態",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
-      "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "status": "解析済",
+      "module": "arvexq.ingest.runner_exclusion",
+      "files": [
+        "arvexq/ingest/runner_exclusion.py",
+        "arvexq/ingest/field_normalization.py"
+      ],
+      "callers": [
+        "arvexq.ingest.field_normalization._scratch_status"
+      ],
+      "dependencies": [
+        "Shared DOM access and Python standard library"
+      ],
+      "input": "Published runner DOM fields or observed provider status text",
+      "output": "Observed bounded identity/affiliation/status; missing values remain unknown",
+      "storage": "Caller-managed existing runner payload storage",
+      "tests": [
+        "tests/test_observed_runner_metadata.py",
+        "tests/test_entry_field_contracts.py",
+        "tests/test_jra_withdrawn_roster.py",
+        "tests/test_environment_component_split.py"
+      ],
+      "implementation_scope": "Exclusion labels have an independent parser wired through the shared normalizer; they retain precedence over cancellation labels. Worker-specific status paths and whole-source production checks remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": null,
-        "integration": null,
+        "unit": "88 focused runner/official-change contracts including immutable fact DTO handoff; full local regression: 780 passed, 3 skipped, 41 subtests passed",
+        "integration": "Actual JRA parser retains spaced trainer names while exposing observed affiliation; composed netkeiba cards retain existing fields and withdrawal outputs",
         "ci_url": null,
         "main_sha": null,
         "production": null
@@ -3144,9 +3185,10 @@
       "output": null,
       "storage": null,
       "tests": [
-        "tests/test_forecast_production_boundaries.py"
+        "tests/test_forecast_production_boundaries.py",
+        "tests/test_observed_runner_metadata.py"
       ],
-      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要",
+      "implementation_scope": "今回実装・単体検証。全呼び出し元／CI／本番の証拠は別途必要; observed frameNumber and affiliation are copied through the input DTO without introducing scores or filling absent fields",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -4196,12 +4238,12 @@
       ],
       "implementation_scope": "Realtime sync readiness is separated and wired into its workflow. A production log showed successful server startup exactly after the former 20-second loop expired. New wait is bounded to 60 seconds, stops on process exit, and does not start collectors or send sync data. Other realtime sync responsibilities remain incomplete.",
       "evidence": {
-        "commit_sha": null,
+        "commit_sha": "bec84f253f1221f8fada12da9e7af0d919690a7a",
         "unit": "5 unittest cases passed locally: real local HTTP/CLI integration, ready after 25s, process death, strict deadline, invalid configuration",
         "integration": "CLI from an external working directory polled a real loopback HTTP server successfully; workflow passes the actual launched PID",
-        "ci_url": null,
-        "main_sha": null,
-        "production": null
+        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/pull/300/checks",
+        "main_sha": "bec84f253f1221f8fada12da9e7af0d919690a7a",
+        "production": "Realtime Sync job 117587711228 passed runtime readiness, live refresh, D1 publication/readback and affected-runner scratch verification: https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39097788149/job/117587711228"
       },
       "owner": "Codex",
       "prediction_logic_status": "対象外"
@@ -4454,7 +4496,7 @@
         "integration": "PR #296 contracts and validation passed; corrupted envelopes and restored identity changes fail closed",
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/pull/296/checks",
         "main_sha": "a4a4a541afe2db4c5ec4f6fe3ea7647e03d50a6a",
-        "production": "Read-only Cloudflare validation recovered 16 career runs for nar-2026-10-15-名古屋-01 horse 2 from arvexqFullPayload; SHA256 49e5ce8a809eacd0decb7250dedcb32269cb95efa0e73a08b28c13f0444e90a8. https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39097150567/job/117585855834 . Historical failed-job rerun remained blocked; no manual replay occurred."
+        "production": "Read-only Cloudflare validation recovered 16 career runs for nar-2026-10-15-名古屋-01 horse 2 from arvexqFullPayload; SHA256 49e5ce8a809eacd0decb7250dedcb32269cb95efa0e73a08b28c13f0444e90a8. https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39097150567/job/117585855834 . Historical failed-job rerun remained blocked; no manual replay occurred. Subsequent normal Realtime Sync job 117587711228 also passed D1 publication and verification with the corrected full-original comparator."
       },
       "owner": "Codex",
       "prediction_logic_status": "対象外"
