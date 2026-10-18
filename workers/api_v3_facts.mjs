@@ -201,7 +201,7 @@ export async function readV3Facts(request,getExistingResponse) {
   if (request.method!=='GET') return json({ok:false,error:'method not allowed'},405);
   const url=new URL(request.url);
   let id;
-  try {id=decodeURIComponent(url.pathname.slice('/api/race/'.length))}
+  try {id=url.pathname.slice('/api/race/'.length)}
   catch{return json({ok:false,error:'invalid race ID'},400)}
   if (!/^(jra|nar)-\d{4}-\d{2}-\d{2}-.+-\d{2}$/.test(id))
     return json({ok:false,error:'invalid canonical race ID'},422);
