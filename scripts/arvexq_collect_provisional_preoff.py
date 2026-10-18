@@ -83,8 +83,11 @@ def provisional_capture(detail, *, now):
         raise ValueError("timezone-aware capture time required")
     if not isinstance(detail, dict) or not detail.get("id"):
         raise ValueError("race identity missing")
-    if any(key in detail for key in ("result", "results", "payouts")):
-        raise ValueError("post-race fields must be absent")
+    # API may send empty result placeholders before post. Non-empty outcome
+    # fields are always rejected, never reinterpreted as pre-off evidence.
+    if any(detail.get(key) not in (None, {}, [], "") for key in
+           ("result", "results", "payouts")):
+        raise ValueError("non-empty post-race fields prohibited")
     post = _post_at(detail)
     if not now < post:
         raise ValueError("post time already passed")
@@ -98,7 +101,7 @@ def provisional_capture(detail, *, now):
                   "modelProbabilities","betRecommendations","preRacePrediction",
                   "aiEvaluation","factorRanking","abilityRanking"):
             horse.pop(k, None)
-    for k in ("preRacePrediction","preRaceBet","aiEvaluation","factorRanking",
+    for k in ("result", "results", "payouts", "preRacePrediction","preRaceBet","aiEvaluation","factorRanking",
               "abilityRanking","honmeiDecision","massFeatureSnapshot",
               "massFeatureArchive"):
         filtered.pop(k, None)
@@ -147,11 +150,23 @@ def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
     due.sort(key=lambda x: (x.get("startTime") or "", str(x["id"])))
     due = due[:max_races]
     artifacts, failures = [], []
+    # A read-only day-detail response is the existing API's built-in fallback
+    # for a race endpoint returning 404. It is not a new ingestion provider.
+    fallback = None
     for row in due:
         rid = str(row["id"])
         try:
-            body = fetcher(root + "/api/race/" + quote(rid, safe=""))
-            detail = body.get("detail")
+            try:
+                body = fetcher(root + "/api/race/" + quote(rid, safe=""))
+                detail = body.get("detail")
+            except Exception as exc:
+                if getattr(exc, "code", None) != 404:
+                    raise
+                if fallback is None:
+                    fallback = fetcher(root + "/api/day?date=" + day + "&details=1")
+                details = fallback.get("details") or []
+                detail = next((x for x in details if isinstance(x, dict)
+                               and str(x.get("id")) == rid), None)
             if not isinstance(detail, dict) or str(detail.get("id")) != rid:
                 raise ValueError("race detail identity mismatch")
             if str(detail.get("date")) != str(row.get("date")):

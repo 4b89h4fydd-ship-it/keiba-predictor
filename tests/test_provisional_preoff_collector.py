@@ -95,3 +95,34 @@ def test_mismatched_post_or_missing_current_detail_is_skipped():
     assert result["captured"] == 0
     assert len(result["failures"]) == 1
     assert "scheduled post changed" in result["failures"][0]["reason"]
+
+def test_empty_results_placeholder_can_be_removed_before_snapshot():
+    row = detail()
+    row["result"], row["results"], row["payouts"] = {}, [], None
+    record = provisional_capture(row, now=NOW)
+    assert record["snapshot"]["horseCount"] == 4
+    assert "result" not in record["snapshot"]
+    row["result"] = {"status": "確定"}
+    with pytest.raises(ValueError, match="non-empty post-race"):
+        provisional_capture(row, now=NOW)
+
+
+def test_fallback_uses_existing_day_detail_route_on_404():
+    from urllib.error import HTTPError
+    row = detail()
+    overview = {"ok": True, "races": [
+        {k: row[k] for k in ("id", "date", "startTime")}
+    ]}
+    calls = []
+    def fetch(url):
+        calls.append(url)
+        if "details=0" in url:
+            return overview
+        if "/api/race/" in url:
+            raise HTTPError(url, 404, "not found", {}, None)
+        return {"ok": True, "details": [row]}
+    result = collect(now=NOW, fetch=fetch)
+    assert result["captured"] == 1
+    assert result["failures"] == []
+    assert len(calls) == 3
+    assert "details=1" in calls[-1]
