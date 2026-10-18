@@ -36,7 +36,7 @@ def _day(value):
 
 def _archived_detail(path: Path, entry):
     wrapped = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(wrapped, dict) or wrapped.get("version") != "arvexq-full-payload-v1":
+    if not isinstance(wrapped, dict) or wrapped.get("version") not in ("arvexq-full-payload-v1", "arvexq-saved-snapshot-v1"):
         raise ValueError("Unknown snapshot envelope")
     raw = gzip.decompress(base64.b64decode(wrapped["gzipBase64"], validate=True))
     if (hashlib.sha256(raw).hexdigest() != wrapped.get("sha256")
@@ -122,7 +122,9 @@ def produce(static_root: Path, out_dir: Path, date_str=DAY):
     target = out_dir / (DAY + ".json")
     target.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print("POSTRACE_REFERENCE", DAY, "races", len(records), "references", ready,
-          "insufficient", len(records) - ready)
+          "insufficient", len(records) - ready,
+          "statuses", {k:sum(r["status"] == k for r in records.values())
+                       for k in sorted({r["status"] for r in records.values()})})
     return payload
 
 
