@@ -89,3 +89,44 @@ def test_missing_final_runner_fails_against_immutable_original_roster(tmp_path):
         races, audit = build_verified_races(connection, [incomplete])
         assert not races
         assert audit["invalid_or_inconsistent_snapshot_or_result"] == 1
+
+
+def test_verified_chronological_holdout_reports_all_three_positions(tmp_path):
+    """Synthetic races exercise the pipe, never constitute accuracy evidence."""
+    from datetime import date
+    from arvexq.forecast.race_softmax_research import _split
+    with open_store(tmp_path / "position-holdout.sqlite") as connection:
+        results = []
+        for day_offset in range(12):
+            day = (date(2026, 8, 1) + timedelta(days=day_offset)).isoformat()
+            snapshot, receipt = sample(day)
+            append_capture(connection, snapshot, receipt, clock=receipt["capturedAtEpoch"] + 1)
+            results.append(final(receipt))
+        report = evaluate_verified_circuits(
+            connection, results, min_races=10, min_holdout=2, epochs=2)
+    part = report["byCircuitAndFamily"]["中央/flat"]
+    assert part["eligible"] is True
+    assert part["productionEligible"] is False
+    assert part["positionTest"]["races"] == part["split"]["test"]
+    assert part["positionValidation"]["races"] == part["split"]["validation"]
+    for group in ("positionValidation", "positionTest"):
+        metrics = part[group]
+        for name in ("top1Rate", "secondPositionTop1Rate",
+                     "thirdPositionTop1Rate", "unorderedTopThreeSetRate",
+                     "orderedTopThreeRate"):
+            assert 0 <= metrics[name] <= 1
+        for name in ("firstLogLoss", "secondPositionLogLoss",
+                     "thirdPositionLogLoss", "exactOrderLogLoss"):
+            assert metrics[name] >= 0
+        assert metrics["promotionEligible"] is False
+    assert part["positionMethod"].startswith("conditional-order")
+    assert report["claim80PercentAchieved"] is False
+
+
+def test_insufficient_verified_holdout_never_reports_position_rates(tmp_path):
+    with open_store(tmp_path / "insufficient-position.sqlite") as connection:
+        snapshot, receipt = sample("2026-08-01")
+        append_capture(connection, snapshot, receipt, clock=receipt["capturedAtEpoch"] + 1)
+        part = evaluate_verified_circuits(connection, [final(receipt)])["byCircuitAndFamily"]["中央/flat"]
+    assert part["eligible"] is False
+    assert "positionTest" not in part
