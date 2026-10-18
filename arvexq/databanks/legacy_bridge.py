@@ -7,7 +7,6 @@ from .jra import build_jra_source
 from .nar import build_nar_source
 from .netkeiba import build_netkeiba_source
 from .registry import registry
-from .authorized_feeds import register_authorized_history_feeds
 from .netkeiba_career import SOURCE as NETKEIBA_CAREER_SOURCE, fetch_verified_career
 from .registry import DataSource, SourceCapabilities
 
@@ -389,11 +388,4 @@ def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:
         import logging
         logging.getLogger(__name__).warning("NAR official CSV unavailable: %s", exc)
 
-    # Unlimited opt-in licensed providers complement official/NAR stores. Bad
-    # configuration must not take the existing official feeds offline.
-    try:
-        register_authorized_history_feeds(registry)
-    except (ValueError, TypeError) as exc:
-        import logging
-        logging.getLogger(__name__).warning("authorized feed configuration rejected: %s", exc)
     return registry.capability_map()
