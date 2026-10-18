@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
 import { handlePreoffCapture } from '../preoff-evidence.js';
 
 function stable(v) {
@@ -89,4 +90,33 @@ test('Python float token 55.0 hashes exactly, not JavaScript 55',async()=>{
   let r=await run(b,d);
   assert.equal(r.status,201);
   assert.equal(d.rows.size,1);
+});
+
+test('large lossless compressed envelope survives validation and duplicate replay',async()=>{
+  const d=db(), b=fixture();
+  for (const row of b.snapshot.rows) {
+    for (let i=0;i<16000;i++) row.features['history::all::w5::feature_'+i]=i*.5;
+  }
+  b.snapshot.featureHash=hash(Object.fromEntries(Object.entries(b.snapshot).filter(([k])=>k!=='featureHash')));
+  b.receipt.featureHash=b.snapshot.featureHash;
+  b.receipt.receiptHash=hash(Object.fromEntries(Object.entries(b.receipt).filter(([k])=>k!=='receiptHash')));
+  const full={...b,
+    snapshotCoreCanonical:stable(Object.fromEntries(Object.entries(b.snapshot).filter(([k])=>k!=='featureHash'))),
+    receiptCoreCanonical:stable(Object.fromEntries(Object.entries(b.receipt).filter(([k])=>k!=='receiptHash')))
+  };
+  const raw=JSON.stringify(full);
+  assert.ok(Buffer.byteLength(raw)>950000);
+  const compressed=gzipSync(Buffer.from(raw),{mtime:0}).toString('base64');
+  const makeRequest=()=>new Request('https://example.com/api/research/preoff-evidence',{
+    method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json'},
+    body:JSON.stringify({encoding:'arvexq-preoff-gzip-json-v1',payload:compressed})
+  });
+  let response=await handlePreoffCapture(makeRequest(),env(d),{now:()=>clock});
+  assert.equal(response.status,201,await response.text());
+  response=await handlePreoffCapture(makeRequest(),env(d),{now:()=>clock});
+  assert.equal(response.status,200);
+  assert.equal(d.rows.size,1);
+  const stored=[...d.rows.values()][0][4];
+  assert.ok(stored.startsWith('gzip-envelope:'));
+  assert.equal(JSON.parse((await import('node:zlib')).gunzipSync(Buffer.from(stored.slice('gzip-envelope:'.length),'base64')).toString()).snapshot.rows.length,3);
 });
