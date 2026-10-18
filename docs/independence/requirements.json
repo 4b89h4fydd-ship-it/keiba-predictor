@@ -4187,8 +4187,8 @@
       "implementation_scope": "Realtime sync readiness is separated and wired into its workflow. A production log showed successful server startup exactly after the former 20-second loop expired. New wait is bounded to 60 seconds, stops on process exit, and does not start collectors or send sync data. Other realtime sync responsibilities remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": "4 unittest contracts passed locally: ready after 25s, process death, strict deadline, invalid configuration",
-        "integration": "CLI --help runs directly; workflow invokes the helper after writing its actual launched PID",
+        "unit": "5 unittest cases passed locally: real local HTTP/CLI integration, ready after 25s, process death, strict deadline, invalid configuration",
+        "integration": "CLI from an external working directory polled a real loopback HTTP server successfully; workflow passes the actual launched PID",
         "ci_url": null,
         "main_sha": null,
         "production": null
