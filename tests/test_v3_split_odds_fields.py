@@ -56,7 +56,7 @@ def test_independent_odds_readers_keep_observed_values_only(circuit):
     assert view["marketDateAndPreOffVerified"] is False
     assert view["source"]["independentlyConfirmed"] is False
     assert view["predictionsCalculated"] is False
-    assert "preRaceBet" not in str(view) and "mark" not in str(view)
+    assert "preRaceBet" not in str(view) and "\'mark\':" not in str(view)
     assert source == original
 
 
