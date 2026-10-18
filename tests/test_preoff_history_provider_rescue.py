@@ -9,11 +9,11 @@ from scripts.arvexq_preoff_history_rescue import accept_observed_rescue
 from scripts.arvexq_freeze_predictions import recover_prior_history_before_post
 
 JST = timezone(timedelta(hours=9))
-NOW = datetime(2026, 10, 18, 15, 0, tzinfo=JST)
+NOW = datetime(2026, 11, 18, 15, 0, tzinfo=JST)
 
 
 def sample():
-    return {"id":"jra-2026-10-18-京都-11", "date":"2026-10-18",
+    return {"id":"jra-2026-10-18-京都-11", "date":"2026-11-18",
             "startTime":"15:40", "horses":[
                 {"horseNumber":no,"name":"horse"+str(no),"recentRaces":[]}
                 for no in (1,2,3,4)]}
@@ -31,8 +31,8 @@ def test_accepts_only_genuinely_prior_dated_provider_runs():
     original=sample()
     candidate=enriched()
     candidate["horses"][0]["allPastRuns"].extend([
-        {"date":"2026-10-18","finish":1},
-        {"date":"2026-10-19","finish":1},
+        {"date":"2026-11-18","finish":1},
+        {"date":"2026-11-19","finish":1},
         {"finish":1}])
     accepted=accept_observed_rescue(original,candidate,now=NOW)
     assert original==sample()
@@ -48,7 +48,7 @@ def test_roster_change_or_postoff_rejected():
         accept_observed_rescue(sample(),candidate,now=NOW)
     with pytest.raises(ValueError,match="post-off"):
         accept_observed_rescue(sample(),enriched(),
-                               now=datetime(2026,10,18,15,41,tzinfo=JST))
+                               now=datetime(2026,11,18,15,41,tzinfo=JST))
 
 
 def test_no_observed_history_never_becomes_fake_success():
@@ -87,6 +87,6 @@ def test_never_invokes_provider_after_start():
     calls=[]
     with pytest.raises(ValueError,match="post-off"):
         recover_prior_history_before_post(
-            sample(),now=datetime(2026,10,18,15,41,tzinfo=JST),
+            sample(),now=datetime(2026,11,18,15,41,tzinfo=JST),
             run=lambda *a,**k:calls.append(True))
     assert not calls
