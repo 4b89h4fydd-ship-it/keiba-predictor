@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 STATES = ('未着手','解析済','分離済','単体テスト成功','結合テスト成功','CI成功','main統合済','本番検証済')
+WAITING_FOR_PREDICTION = '予想ロジック仕様待ち'
 ROOT = Path(__file__).resolve().parents[1]
 
 def audit(manifest):
@@ -16,6 +17,18 @@ def audit(manifest):
     for item in items:
         prefix=str(item.get('id'))+': '
         state=item.get('status')
+        if manifest.get('version', 1) >= 2:
+            owner = item.get('owner')
+            if owner not in ('Codex', '別チャット', '共同'):
+                errors.append(prefix+'explicit responsibility owner is required')
+            dependency = item.get('prediction_logic_status')
+            expected = '対象外' if owner == 'Codex' else WAITING_FOR_PREDICTION
+            if dependency != expected:
+                errors.append(prefix+'prediction boundary does not match owner')
+        if state == WAITING_FOR_PREDICTION:
+            if item.get('owner') not in ('別チャット', '共同'):
+                errors.append(prefix+'prediction waiting state requires a prediction owner')
+            continue
         if state not in STATES:
             errors.append(prefix+'unknown status');continue
         stage=STATES.index(state)
