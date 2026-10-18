@@ -110,7 +110,11 @@ def provisional_capture(detail, *, now):
     if (snapshot.get("horseCount") != len(numbers)
             or {r.get("horseNumber") for r in snapshot.get("rows", [])} != set(numbers)):
         raise ValueError("frozen field mismatch")
+    history_count = sum(bool(h.get("recentRaces") or h.get("allPastRuns"))
+                        for h in active)
     record = {
+        "horsesWithPastRuns": history_count,
+        "historyComplete": history_count == len(active),
         "version": VERSION, "eligibility": "provisional-not-officially-attested",
         "source": "existing-cloudflare-race-api", "independentOfficialRoster": False,
         "raceId": snapshot["raceId"], "featureHash": snapshot["featureHash"],
@@ -160,12 +164,8 @@ def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
             errors = []
             # The legacy endpoint may be absent for a race for which the D1
             # display endpoint still has the full stored history.
-            for route in ("/api/race/", "/api/race/"):
-                path = root + route + quote(rid, safe="")
-                if detail is not None:
-                    break
-                if errors:
-                    path += "?view=display"
+            for suffix in ("", "?view=display"):
+                path = root + "/api/race/" + quote(rid, safe="") + suffix
                 try:
                     body = fetcher(path)
                 except Exception as exc:
@@ -193,16 +193,6 @@ def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
             if _post_at(detail) != _post_at(row):
                 raise ValueError("race scheduled post changed across endpoints")
             record = provisional_capture(detail, now=clock)
-            # History coverage is an independently inspectable audit field,
-            # not a condition for inventing missing past performances.
-            active = record["activeHorseNumbers"]
-            observed = {h.get("horseNumber"): h for h in (detail.get("horses") or [])
-                        if isinstance(h, dict)}
-            history_count = sum(bool((observed.get(n) or {}).get("recentRaces")
-                                     or (observed.get(n) or {}).get("allPastRuns"))
-                                for n in active)
-            record["horsesWithPastRuns"] = history_count
-            record["historyComplete"] = history_count == len(active)
             artifacts.append(record)
         except (ValueError, KeyError, TypeError, TimeoutError, OSError) as exc:
             failures.append({"raceId": rid, "errorType": type(exc).__name__,
