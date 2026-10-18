@@ -95,7 +95,7 @@ SOURCE = (
     '                frame_no INTEGER NOT NULL DEFAULT 0,\n'
     '                horse_no INTEGER NOT NULL,\n'
     '                name TEXT NOT NULL,\n'
-    "                sex TEXT NOT NULL DEFAULT '牡',\n"
+    "                sex TEXT NOT NULL DEFAULT '',\n"
     '                age INTEGER NOT NULL DEFAULT 0,\n'
     '                carried_weight REAL NOT NULL DEFAULT 0,\n'
     "                jockey TEXT NOT NULL DEFAULT '',\n"
@@ -347,7 +347,7 @@ SOURCE = (
     '                        "frameNumber": int(e["frame_no"] or 0),\n'
     '                        "name": e["name"],\n'
     '                        "age": int(e["age"] or 0),\n'
-    '                        "sex": e["sex"] or "牡",\n'
+    '                        "sex": e["sex"] or "",\n'
     '                        "carriedWeight": float(e["carried_weight"] or 0),\n'
     '                        "jockey": e["jockey"] or "",\n'
     '                        "trainer": e["trainer"] or "",\n'

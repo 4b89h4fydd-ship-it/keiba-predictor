@@ -1766,7 +1766,7 @@ def nar_race_detail(race_id: str) -> dict | None:
         for e in entries:
             horses.append({
                 "id":_stable_id(iso_date,track,race_no,e["horse_no"],e["name"]),"horseNumber":int(e["horse_no"]),
-                "frameNumber":int(e["frame_no"] or 0),"name":e["name"],"age":int(e["age"] or 0),"sex":e["sex"] or "牡",
+                "frameNumber":int(e["frame_no"] or 0),"name":e["name"],"age":int(e["age"] or 0),"sex":e["sex"] or "",
                 "carriedWeight":float(e["carried_weight"] or 0),"jockey":e["jockey"] or "","trainer":e["trainer"] or "",
                 "status":str(e["status"] or "") if "status" in e.keys() else "",
                 "scratched":bool(_scratch_status(str(e["status"] or ""))) if "status" in e.keys() else False,
@@ -4218,7 +4218,7 @@ def _fast_local_race_detail(race_id:str)->dict|None:
         for e in entries:
             horses.append({"id":_stable_id(iso_date,track,race_no,e["horse_no"],e["name"]),
                 "horseNumber":int(e["horse_no"]),"frameNumber":int(e["frame_no"] or 0),"name":e["name"],
-                "age":int(e["age"] or 0),"sex":e["sex"] or "牡","carriedWeight":float(e["carried_weight"] or 0),
+                "age":int(e["age"] or 0),"sex":e["sex"] or "","carriedWeight":float(e["carried_weight"] or 0),
                 "jockey":e["jockey"] or "","trainer":e["trainer"] or "",
                 "status":str(e["status"] or "") if "status" in e.keys() else "",
                 "scratched":bool(_scratch_status(str(e["status"] or ""))) if "status" in e.keys() else False,
