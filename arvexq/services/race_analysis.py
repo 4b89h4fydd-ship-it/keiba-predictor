@@ -13,6 +13,7 @@ from arvexq.prediction.ability import apply_ability_ranking
 from arvexq.prediction.confidence import build_win_confidence_evidence
 from arvexq.race_card import build_race_card
 from arvexq.race_conditions import build_race_conditions
+from arvexq.v3.data.quality import build_data_status
 
 
 def normalize_race_detail(detail: dict[str, Any]) -> dict[str, Any]:
@@ -43,4 +44,6 @@ def prepare_race_detail(detail: dict[str, Any]) -> dict[str, Any]:
     detail["horseDetailView"] = build_horse_details(detail)
     detail["diagnosisView"] = build_diagnosis(detail)
     detail["pacePredictionView"] = build_pace_prediction(detail)
+    # Independent, factual-only v3 readiness summary. No new fetch or scoring.
+    detail["v3DataStatus"] = build_data_status(detail)
     return detail
