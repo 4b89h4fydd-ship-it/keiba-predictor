@@ -265,6 +265,26 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
         return {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
 
 
+def encode_sealed_d1_sync_detail(detail: dict, *, max_row_bytes: int = 1_800_000) -> dict:
+    """Match Full Prefetch's lossless D1 row transport.
+
+    The sealer reads a restored complete career, but MUST NOT upsert a large
+    uncompressed record into the D1 race_details row. Repack the full original
+    losslessly, preserve its history/locked forecast, and reject oversized rows.
+    """
+    from arvexq.ingest.full_snapshot_codec import KEY, pack_detail, unpack_detail
+    if not isinstance(detail, dict) or not detail.get("id"):
+        raise ValueError("race identity required for pre-race sync")
+    packed = pack_detail(detail)
+    if unpack_detail(packed) != detail or KEY not in packed:
+        raise ValueError("lossless seal transport verification failed")
+    row_size = len(json.dumps(packed, ensure_ascii=False, separators=(",", ":"),
+                              allow_nan=False).encode("utf-8"))
+    if row_size > max_row_bytes:
+        raise ValueError(f"full sealed race row exceeds safe D1 budget: {row_size}")
+    return packed
+
+
 def capture_original_bet(detail: dict[str, Any], now: datetime) -> dict[str, Any]:
     """Execute the actual client betting core before the off, never on results."""
     post = post_at(detail)
@@ -362,7 +382,7 @@ def main() -> int:
             if datetime.now(JST) >= post_at(detail):
                 return {"id": rid, "status": "started-no-new-lock"}
             payload = {
-                "summaries": [], "details": [detail],
+                "summaries": [], "details": [encode_sealed_d1_sync_detail(detail)],
                 "meta": {"source": "github-actions-prerace-seal-v1",
                          "sync_date": day, "sealed_forecast": True},
             }
