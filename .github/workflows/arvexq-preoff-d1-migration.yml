@@ -1,0 +1,66 @@
+name: ARVEXQ Pre-Off Evidence D1 Migration
+
+on:
+  push:
+    branches: [cloudflare]
+    paths:
+      - migrations/0001_forecast_preoff_evidence.sql
+      - .github/workflows/arvexq-preoff-d1-migration.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-production-d1-preoff-evidence-schema
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install Wrangler
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify migration only creates independent schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -qi 'CREATE TABLE IF NOT EXISTS forecast_preoff_evidence' migrations/0001_forecast_preoff_evidence.sql
+          grep -qi 'prevent_forecast_evidence_update' migrations/0001_forecast_preoff_evidence.sql
+          grep -qi 'prevent_forecast_evidence_delete' migrations/0001_forecast_preoff_evidence.sql
+          if grep -Ei '(DROP[[:space:]]|ALTER[[:space:]]|TRUNCATE[[:space:]]|DELETE[[:space:]]+FROM[[:space:]]+race_|UPDATE[[:space:]]+race_|INSERT[[:space:]]+INTO[[:space:]]+race_|CREATE[[:space:]]+TABLE[[:space:]]+race_)' migrations/0001_forecast_preoff_evidence.sql; then
+            echo "Unsafe mutation token in research-only D1 migration"
+            exit 1
+          fi
+      - name: Confirm Cloudflare authorization is provisioned
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN}" && test -n "${CLOUDFLARE_ACCOUNT_ID}"
+      - name: Apply additive migration to existing production D1
+        run: npx wrangler d1 execute kraiz-prod --remote --file=migrations/0001_forecast_preoff_evidence.sql
+      - name: Verify evidence table and immutable triggers
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute kraiz-prod --remote --command="SELECT capture_id,race_id,feature_hash,receipt_hash,snapshot_json,receipt_json,captured_at_epoch,stored_at_epoch,post_at_epoch FROM forecast_preoff_evidence LIMIT 0"
+          npx wrangler d1 execute kraiz-prod --remote --command="SELECT name FROM sqlite_master WHERE type='trigger' AND name IN ('prevent_forecast_evidence_update','prevent_forecast_evidence_delete') ORDER BY name" --json > /tmp/evidence-triggers.json
+          node --input-type=module - <<'JS'
+          import fs from 'node:fs';
+          const raw = JSON.parse(fs.readFileSync('/tmp/evidence-triggers.json','utf8'));
+          const entries = Array.isArray(raw) ? raw : [raw];
+          const names = new Set(entries.flatMap(x => x.results || x.result?.results || [])
+            .map(row => row.name));
+          if (!names.has('prevent_forecast_evidence_update') || !names.has('prevent_forecast_evidence_delete')) {
+            throw new Error('Append-only triggers missing; refusing to treat migration as complete');
+          }
+          console.log('Independent D1 evidence table and both append-only triggers verified');
+          JS
