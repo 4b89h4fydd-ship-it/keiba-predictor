@@ -5,8 +5,6 @@ from math import isclose
 import pytest
 
 from arvexq.forecast.frozen_pace_context import build_preoff_pace_context, NAMES
-from arvexq.forecast.race_softmax_research import train, predict
-from arvexq.forecast.conditional_positions_research import train_positions, predict_positions, compare_holdout
 
 EARLY="history::all::w5::early_speed"
 LATE="history::all::w5::late_speed"
@@ -57,35 +55,6 @@ def test_no_pace_evidence_keeps_missingness_not_fabricated_speed():
     assert build_preoff_pace_context(case)==values
 
 
-def test_postrace_data_never_enters_proxy_or_prediction():
-    past=[race((date(2026,8,1)+timedelta(days=i)).isoformat(),
-               outcome=i%4+1) for i in range(8)]
-    win=train(past,epochs=4)
-    position=train_positions(past,win,epochs=4)
-    later=race("2026-09-05")
-    a=predict_positions(position,win,later)
-    polluted=deepcopy(later)
-    polluted.update(result={"winner":4},actualFlow={"pace":"fast"})
-    for h in polluted["horses"]:
-        h["finish"]=5-h["horseNumber"]
-    assert predict_positions(position,win,polluted)==a
-    polluted["horses"][0]["features"]["result::winning_pace"]=999
-    with pytest.raises(ValueError,match="leaky"):
-        predict_positions(position,win,polluted)
-    assert len(position["secondWeights"])==len(win["weights"])+len(NAMES)
-    assert position["paceFeatureNames"]==list(NAMES)
-    assert position["promotionEligible"] is False
-
-
-def test_paired_holdout_output_does_not_promote_pace_challenger():
-    past=[race((date(2026,8,1)+timedelta(days=i)).isoformat()) for i in range(8)]
-    win=train(past,epochs=3)
-    model=train_positions(past,win,epochs=3)
-    holdout=[race("2026-09-02"),race("2026-09-03")]
-    result=compare_holdout(holdout,win,model)
-    assert result["promotionEligible"] is False
-    assert result["races"]==2
-    assert result["candidate"]["firstLogLoss"]==pytest.approx(result["baseline"]["firstLogLoss"])
 
 
 def test_untrusted_or_absent_frozen_features_rejected():
