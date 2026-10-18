@@ -107,7 +107,7 @@ def _summarize(points):
     return result
 
 
-def compare_files(paths,*,epochs=35,min_train=50,min_validation=20,min_test=20):
+def compare_files(paths,*,epochs=35,min_train=40,min_validation=20,min_test=20):
     records=[]
     exclusions=defaultdict(int)
     seen=set()
@@ -136,6 +136,7 @@ def compare_files(paths,*,epochs=35,min_train=50,min_validation=20,min_test=20):
         validation=[d for d in races if d["date"] in days[a:b]]
         test=[d for d in races if d["date"] in days[b:]]
         rep={"sourceRaces":len(races),"days":len(days),
+             "researchSampleMinimumOnly":True,
              "split":{"train":len(train),"validation":len(validation),"test":len(test)},
              "productionEligible":False}
         if (len(days)<5 or len(train)<min_train or len(validation)<min_validation
