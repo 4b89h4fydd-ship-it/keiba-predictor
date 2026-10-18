@@ -681,7 +681,10 @@ jobs:
           git config user.name "ARVEXQ Snapshot Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "data: preserve verified original snapshots $TARGET_DATE before D1 sync"
-          git pull --rebase origin main
+          # Only snapshot files are committed. Collection and D1 audit files
+          # must remain available locally to subsequent workflow steps.
+          # A normal rebase refuses those unrelated modified working files.
+          git -c rebase.autoStash=true pull --rebase origin main
           git push origin HEAD:main
           gh workflow run arvexq-web-deploy.yml --ref main
 
