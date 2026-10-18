@@ -2,9 +2,9 @@
 (function(root){
   'use strict';
   function visible(row){
-    if(!row||row.serverPreoffMark!==true)return '';
+    if(!row||row.serverPreoffMark!==true&&row.originalPreoffMark!==true)return '';
     var mark=String(row.predMark||'');
-    return ['◎','○','▲','△','☆'].indexOf(mark)>=0?mark:'';
+    return ['◎','○','▲','△','☆','☆+','注'].indexOf(mark)>=0?mark:'';
   }
   root.ARVEXQProductionMarks=Object.freeze({visible:visible});
 })(typeof window!=='undefined'?window:globalThis);
