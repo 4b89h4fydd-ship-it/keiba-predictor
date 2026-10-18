@@ -42,6 +42,8 @@ def test_version_two_requires_a_boundary_for_every_item():
     for item in proposed['items']:
         item['owner']='Codex'
         item['prediction_logic_status']='対象外'
+        if item['status']=='予想ロジック仕様待ち':
+            item['status']='未着手'
     assert not audit(proposed)['errors']
     proposed['items'][199].pop('owner')
     assert audit(proposed)['errors']
