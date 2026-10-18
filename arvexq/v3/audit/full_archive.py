@@ -1,0 +1,97 @@
+"""Exhaustive *saved-repository* blob + career sidecar validation.
+
+Does not query an API, compare official entry lists, or generate predictions.
+All 423 recorded race files are independently read and hash checked.
+"""
+from __future__ import annotations
+
+from collections import Counter
+from datetime import date
+import json
+from pathlib import Path
+from typing import Any
+
+from arvexq.v3.audit.archive import audit_pair
+from arvexq.v3.audit.snapshot_digest import verify_one
+from arvexq.v3.data.quality import normalize_circuit
+
+
+def verify_saved_week(archive_dir: Path, *, days: int = 7) -> dict[str, Any]:
+    if isinstance(days, bool) or not isinstance(days, int) or days < 1 or days > 31:
+        raise ValueError("days must be 1..31")
+    sources = sorted((archive_dir / "racecards").glob("????-??-??.json"))
+    if len(sources) < days:
+        raise ValueError("not enough saved day archives")
+    chosen = sources[-days:]
+    counts = {c: Counter() for c in ("jra", "nar")}
+    errors: list[dict[str, Any]] = []
+    sampled: list[dict[str, Any]] = []
+    checked = 0
+    structurally_consistent = 0
+    for card_path in chosen:
+        day = card_path.stem
+        if date.fromisoformat(day).isoformat() != day:
+            raise ValueError("invalid archive day")
+        man_path = archive_dir / "saved-snapshots" / (day + ".json")
+        card = json.loads(card_path.read_text(encoding="utf-8"))
+        manifest = json.loads(man_path.read_text(encoding="utf-8"))
+        structural = audit_pair(card, manifest)
+        if structural["problems"]:
+            errors.extend({"date": day, **x} for x in structural["problems"])
+        else:
+            structurally_consistent += 1
+        for race in card["races"]:
+            rid = race["id"]
+            circuit = normalize_circuit(race.get("circuit"))
+            if circuit not in counts:
+                errors.append({"date": day, "raceId": rid, "code": "unknown-circuit"})
+                continue
+            counts[circuit]["expected"] += 1
+            checked += 1
+            try:
+                result = verify_one(archive_dir / "saved-snapshots", rid,
+                                    manifest["races"].get(rid), day=day,
+                                    circuit=circuit, card_horses=race["horses"],
+                                    verify_history=True)
+            except (ValueError, OSError, KeyError, TypeError, MemoryError) as exc:
+                counts[circuit]["failed"] += 1
+                errors.append({"date": day, "raceId": rid,
+                               "code": type(exc).__name__,
+                               "reason": str(exc)[:150]})
+                continue
+            counts[circuit]["verified"] += 1
+            counts[circuit]["runners"] += result["runnerRows"]
+            h = result["historyAudit"]
+            counts[circuit]["sidecarsVerified"] += h["careerSidecarsVerified"]
+            counts[circuit]["priorRunsObserved"] += h["observedPriorRunRows"]
+            counts[circuit]["runnersWithPriorRuns"] += h["runnersWithObservedPriorRuns"]
+            counts[circuit]["nonPriorRows"] += h["sameOrFutureDirectRows"]
+            counts[circuit]["invalidHistoryDates"] += h["invalidDirectDateRows"]
+            if h["sameOrFutureDirectRows"] or h["invalidDirectDateRows"]:
+                errors.append({"date": day, "raceId": rid,
+                               "code": "bad-direct-history-date",
+                               "sameOrFuture": h["sameOrFutureDirectRows"],
+                               "invalid": h["invalidDirectDateRows"]})
+            # Bounded list of verified proof samples, not unbounded copied horses.
+            if len(sampled) < 10:
+                sampled.append({"raceId": rid, "sha256": result["sha256"],
+                                "historyRows": h["observedPriorRunRows"]})
+    counts_out = {c: dict(counts[c]) for c in ("jra", "nar")}
+    verified = sum(r.get("verified", 0) for r in counts_out.values())
+    return {
+        "schema": "arvexq-v3-full-saved-archive-audit-1",
+        "dateRange": [chosen[0].stem, chosen[-1].stem],
+        "dateCount": days,
+        "expectedRacecards": checked,
+        "hashVerifiedRacecards": verified,
+        "allIndexedSavedOriginalsVerified": verified == checked and not errors,
+        "structurallyConsistentDays": structurally_consistent,
+        "circuits": counts_out,
+        "errors": errors,
+        "sampleDigests": sampled,
+        "verifiedScope": "repository saved original gzip envelopes + embedded archived careers",
+        "officialPublishedRacesVerified": False,
+        "completeLifetimeHistoryVerified": False,
+        "liveD1ReadbackVerified": False,
+        "predictionStatus": "not-implemented",
+    }

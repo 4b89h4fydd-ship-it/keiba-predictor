@@ -63,7 +63,7 @@ def _restore(blob: dict[str, Any], expected: dict[str, Any]) -> dict[str, Any]:
 
 
 def verify_one(directory: Path, race_id: str, expected: dict[str, Any],
-               *, day: str, circuit: str, card_horses: list[dict[str, Any]]) -> dict[str, Any]:
+               *, day: str, circuit: str, card_horses: list[dict[str, Any]], verify_history: bool = False) -> dict[str, Any]:
     """Exactly one deterministic local blob. Return verification metadata only."""
     if not isinstance(expected, dict):
         raise ValueError("manifest-record-not-object")
@@ -108,8 +108,40 @@ def verify_one(directory: Path, race_id: str, expected: dict[str, Any],
 
     if identities(horses) != identities(card_horses):
         raise ValueError("snapshot-runner-identity-mismatch")
-    return {"raceId": race_id, "circuit": circuit, "status": "verified",
-            "sha256": sha, "restoredBytes": expected["bytes"], "runnerRows": len(horses)}
+    report = {"raceId": race_id, "circuit": circuit, "status": "verified",
+              "sha256": sha, "restoredBytes": expected["bytes"], "runnerRows": len(horses)}
+    if verify_history:
+        # Existing archive recovery is hash/size bounded. It NEVER proves that
+        # the recorded starts cover an entire racing career.
+        from arvexq.ingest.career_transport import recover_horse
+        from arvexq.ingest.full_career import merge_career, date_key
+        with_prior = 0
+        prior_rows = 0
+        archive_count = 0
+        future_rows = 0
+        invalid_dates = 0
+        for h in horses:
+            archive_count += isinstance(h.get("careerArchive"), dict)
+            recovered = recover_horse(h, day)
+            runs = merge_career(recovered.get("allPastRuns"), recovered.get("recentRaces"), day)
+            prior_rows += len(runs)
+            with_prior += bool(runs)
+            for key in ("allPastRuns", "recentRaces"):
+                for row in h.get(key) or []:
+                    if not isinstance(row, dict):
+                        continue
+                    at = date_key(row.get("date") or row.get("raceDate") or row.get("日付"))
+                    invalid_dates += not bool(at)
+                    future_rows += bool(at and at >= day)
+        report["historyAudit"] = {
+            "careerSidecarsVerified": archive_count,
+            "runnersWithObservedPriorRuns": with_prior,
+            "observedPriorRunRows": prior_rows,
+            "sameOrFutureDirectRows": future_rows,
+            "invalidDirectDateRows": invalid_dates,
+            "lifetimeCompleteness": "unverified"
+        }
+    return report
 
 
 def select_samples(card: dict[str, Any], manifest: dict[str, Any],

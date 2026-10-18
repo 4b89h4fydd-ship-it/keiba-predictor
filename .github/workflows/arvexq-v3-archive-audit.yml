@@ -9,6 +9,8 @@ name: ARVEXQ v3 Saved-Archive Audit
       - scripts/arvexq_v3_archive_audit.py
       - tests/test_v3_archive_audit.py
       - tests/test_v3_snapshot_digest.py
+      - tests/test_v3_full_archive_integrity.py
+      - scripts/arvexq_v3_full_archive_audit.py
       - scripts/arvexq_v3_blob_digest_audit.py
       - scripts/arvexq_fact_data_audit.py
       - arvexq/ui/static/racecards/**
@@ -39,6 +41,9 @@ jobs:
         run: |
           python -m pytest tests/test_v3_snapshot_digest.py -q
           python scripts/arvexq_v3_blob_digest_audit.py --days 7 --per-circuit 2 --out arvexq-v3-blob-audit.json
+      - name: Verify every indexed saved original and embedded career archive
+        run: |
+          python scripts/arvexq_v3_full_archive_audit.py --days 7 --out arvexq-v3-full-archive-audit.json
       - name: Upload inspectable report
         if: always()
         uses: actions/upload-artifact@v4
@@ -47,5 +52,6 @@ jobs:
           path: |
             arvexq-v3-archive-audit.json
             arvexq-v3-blob-audit.json
+            arvexq-v3-full-archive-audit.json
           if-no-files-found: ignore
           retention-days: 14
