@@ -500,6 +500,8 @@ from arvexq.ingest.race_fields.prize import extract_first_prize as jra_first_pri
 from arvexq.ingest.race_fields.title import extract as jra_race_title
 from arvexq.ingest.race_fields.field_size import extract as jra_race_field_size
 
+from arvexq.ingest.jra_official_table import select_runners_table as select_jra_runners_table
+
 def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
     cache_sec=int(os.getenv("JRA_LIVE_ODDS_CACHE_SEC","45")) if date==_today_iso() else 600
@@ -535,11 +537,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     prize1=jra_first_prize(full)
     horses=[]
     withdrawn_entries=[]
-    target_table=None
-    for table in soup.find_all("table"):
-        tx=_jra_text(table.find("thead") or table)
-        if "馬番" in tx and "前走" in tx:
-            target_table=table;break
+    target_table=select_jra_runners_table(soup)
     if not target_table:return None
     for tr in target_table.find_all("tr"):
         cells=tr.find_all(["th","td"])
