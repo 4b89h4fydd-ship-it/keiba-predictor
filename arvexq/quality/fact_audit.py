@@ -4,6 +4,7 @@ from collections import Counter
 import math
 
 from arvexq.ingest.runner_identity_compare import compare_same_day_runner
+from arvexq.ingest.race_identity import observed_detail_identity_error
 from arvexq.ingest.career_transport import recover_horse
 from arvexq.ingest.full_career import date_key, merge_career
 
@@ -31,6 +32,9 @@ def audit_day(bundle):
     errors = []
     first_race_by_name = {}
     for detail in bundle.get("details") or []:
+        mismatch = observed_detail_identity_error(detail)
+        if mismatch:
+            errors.append(mismatch)
         counts["races"] += 1
         for field in RACE_FIELDS:
             race_gaps[field] += not observed(field, detail.get(field))
