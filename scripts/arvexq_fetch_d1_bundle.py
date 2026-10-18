@@ -95,15 +95,22 @@ def main() -> int:
     errors: dict[str, str] = {}
 
     def fetch_one(rid: str) -> tuple[str, dict[str, Any] | None, str]:
-        url = f"{base}/api/race/{urllib.parse.quote(rid, safe='')}?t={int(time.time() * 1000)}"
-        try:
-            value = get_json(url, args.timeout, args.retries)
-            detail = detail_from_response(value, rid)
-            if detail is None:
-                return rid, None, "race endpoint returned no matching detail"
-            return rid, detail, ""
-        except Exception as exc:
-            return rid, None, f"{type(exc).__name__}: {exc}"
+        # Two READ views of the same existing D1 race_details table. The
+        # original route can return 404 for a record available as the stored
+        # display payload. Never accept a different race's response.
+        url = f"{base}/api/race/{urllib.parse.quote(rid, safe='')}"
+        failures = []
+        for suffix in ("?t=", "?view=display&t="):
+            candidate = url + suffix + str(int(time.time() * 1000))
+            try:
+                value = get_json(candidate, args.timeout, args.retries)
+                detail = detail_from_response(value, rid)
+                if detail is not None:
+                    return rid, detail, ""
+                failures.append("race endpoint returned no matching detail")
+            except Exception as exc:
+                failures.append(f"{type(exc).__name__}: {exc}")
+        return rid, None, " | ".join(failures)[:450]
 
     with ThreadPoolExecutor(max_workers=max(1, min(args.workers, len(ids)))) as pool:
         futures = {pool.submit(fetch_one, rid): rid for rid in ids}
