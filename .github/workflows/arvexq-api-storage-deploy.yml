@@ -60,7 +60,8 @@ jobs:
           raw=read('');boundary=raw.split(b'\r\n',1)[0]
           source=raw.split(b'\r\n\r\n',1)[1].rsplit(b'\r\n'+boundary,1)[0]
           expected=os.environ['EXPECTED_SOURCE_SHA256'];assert re.fullmatch('[a-f0-9]{64}',expected)
-          assert hashlib.sha256(source).hexdigest()==expected,'API_SOURCE_CHANGED_REFUSING_OVERWRITE'
+          actual=hashlib.sha256(source).hexdigest()
+          assert actual==expected,f'API_SOURCE_CHANGED_REFUSING_OVERWRITE actual={actual} expected={expected}'
           settings=json.loads(read('/settings'))['result']
           binding=next(b for b in settings['bindings'] if b['name']=='DB')
           assert binding['type']=='d1' and binding['id']=='c68ca1ac-357a-4c1f-81ce-0b6337716809'
