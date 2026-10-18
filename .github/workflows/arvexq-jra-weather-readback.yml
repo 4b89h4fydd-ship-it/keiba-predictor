@@ -1,0 +1,25 @@
+name: ARVEXQ Item 004 JRA Weather Production Readback
+
+"on":
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_jra_weather_readback.py'
+      - 'tests/test_jra_weather_live_readback.py'
+      - '.github/workflows/arvexq-jra-weather-readback.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt pytest
+      - name: Verify contracts
+        run: PYTHONPATH=. python -m pytest tests/test_environment_component_split.py tests/test_jra_environment_parser.py tests/test_jra_weather_live_readback.py -q
+      - name: Verify real JRA weather via GET-only API
+        run: PYTHONPATH=. python scripts/arvexq_jra_weather_readback.py
