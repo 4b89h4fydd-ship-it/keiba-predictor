@@ -22,6 +22,13 @@ def main():
     condensed={k:result[k] for k in ("dateRange","expectedRacecards","hashVerifiedRacecards",
                  "allIndexedSavedOriginalsVerified","circuits")}
     condensed["errorCount"]=len(result["errors"])
+    triage = result["runnerEvidenceTriage"]
+    condensed["runnerEvidenceTriage"] = {
+        "zeroObservedPriorRuns": triage["zeroObservedPriorRuns"],
+        "byCircuitCategory": triage["byCircuitCategory"],
+        "missingCardCarriedWeight": triage["missingCardCarriedWeight"],
+        "missingWeightByState": triage["missingWeightByState"],
+    }
     print("ARVEXQ_V3_FULL_ARCHIVE_AUDIT_JSON="+json.dumps(condensed,ensure_ascii=False))
     return 0 if result["allIndexedSavedOriginalsVerified"] else 1
 

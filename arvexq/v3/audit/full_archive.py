@@ -13,6 +13,7 @@ from typing import Any
 
 from arvexq.v3.audit.archive import audit_pair
 from arvexq.v3.audit.snapshot_digest import verify_one
+from arvexq.v3.audit.runner_gaps import summarize_evidence
 from arvexq.v3.data.quality import normalize_circuit
 
 
@@ -28,6 +29,8 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7) -> dict[str, Any]:
     sampled: list[dict[str, Any]] = []
     checked = 0
     structurally_consistent = 0
+    no_prior_cases = []
+    weight_cases = []
     for card_path in chosen:
         day = card_path.stem
         if date.fromisoformat(day).isoformat() != day:
@@ -62,6 +65,8 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7) -> dict[str, Any]:
             counts[circuit]["verified"] += 1
             counts[circuit]["runners"] += result["runnerRows"]
             h = result["historyAudit"]
+            no_prior_cases.extend(h["noObservedPriorCases"])
+            weight_cases.extend(h["missingCardWeightCases"])
             counts[circuit]["sidecarsVerified"] += h["careerSidecarsVerified"]
             counts[circuit]["priorRunsObserved"] += h["observedPriorRunRows"]
             counts[circuit]["runnersWithPriorRuns"] += h["runnersWithObservedPriorRuns"]
@@ -89,6 +94,7 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7) -> dict[str, Any]:
         "circuits": counts_out,
         "errors": errors,
         "sampleDigests": sampled,
+        "runnerEvidenceTriage": summarize_evidence(no_prior_cases, weight_cases),
         "verifiedScope": "repository saved original gzip envelopes + embedded archived careers",
         "officialPublishedRacesVerified": False,
         "completeLifetimeHistoryVerified": False,

@@ -115,17 +115,26 @@ def verify_one(directory: Path, race_id: str, expected: dict[str, Any],
         # the recorded starts cover an entire racing career.
         from arvexq.ingest.career_transport import recover_horse
         from arvexq.ingest.full_career import merge_career, date_key
+        from arvexq.v3.audit.runner_gaps import classify_absent_prior, compare_saved_weight
         with_prior = 0
         prior_rows = 0
         archive_count = 0
         future_rows = 0
         invalid_dates = 0
+        no_prior_cases = []
+        weight_issues = []
+        card_by_number = {h["horseNumber"]: h for h in card_horses}
         for h in horses:
             archive_count += isinstance(h.get("careerArchive"), dict)
             recovered = recover_horse(h, day)
             runs = merge_career(recovered.get("allPastRuns"), recovered.get("recentRaces"), day)
             prior_rows += len(runs)
             with_prior += bool(runs)
+            if not runs:
+                no_prior_cases.append(classify_absent_prior(recovered, restored))
+            weight_issue = compare_saved_weight(card_by_number[h["horseNumber"]], h, restored)
+            if weight_issue is not None:
+                weight_issues.append(weight_issue)
             for key in ("allPastRuns", "recentRaces"):
                 for row in h.get(key) or []:
                     if not isinstance(row, dict):
@@ -139,7 +148,9 @@ def verify_one(directory: Path, race_id: str, expected: dict[str, Any],
             "observedPriorRunRows": prior_rows,
             "sameOrFutureDirectRows": future_rows,
             "invalidDirectDateRows": invalid_dates,
-            "lifetimeCompleteness": "unverified"
+            "lifetimeCompleteness": "unverified",
+            "noObservedPriorCases": no_prior_cases,
+            "missingCardWeightCases": weight_issues,
         }
     return report
 
