@@ -87,3 +87,22 @@ def test_unknown_archive_schema_rejected():
     c["version"] = "nonexistent"
     with pytest.raises(ValueError, match="schema"):
         audit_pair(c, m)
+
+
+def test_unpaired_newest_racecard_does_not_displace_verified_saved_week(tmp_path):
+    from scripts.arvexq_v3_archive_audit import audit_days
+    root = Path(__file__).resolve().parents[1] / "arvexq" / "ui" / "static"
+    (tmp_path / "racecards").mkdir()
+    (tmp_path / "saved-snapshots").mkdir()
+    for day in ("2026-10-17", "2026-10-18"):
+        (tmp_path / "racecards" / (day + ".json")).write_bytes(
+            (root / "racecards" / (day + ".json")).read_bytes())
+        (tmp_path / "saved-snapshots" / (day + ".json")).write_bytes(
+            (root / "saved-snapshots" / (day + ".json")).read_bytes())
+    (tmp_path / "racecards" / "2026-10-19.json").write_text("{}")
+    report = audit_days(directory=tmp_path, days=2)
+    assert report["start"] == "2026-10-17"
+    assert report["end"] == "2026-10-18"
+    assert report["dateCount"] == 2
+    with pytest.raises(ValueError, match="insufficient"):
+        audit_days(directory=tmp_path, days=3)
