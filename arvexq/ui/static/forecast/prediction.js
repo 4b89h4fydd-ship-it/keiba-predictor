@@ -92,9 +92,16 @@
   function build(race){
     // No model or bets are inferred in-browser, before or after the race.
     if(root.ARVEXQProductionTickets)root.ARVEXQProductionTickets.build(race);
-    var live=authorized(race),stored=live?null:originalMarks(race),
-        reference=(live||stored)?null:referenceMarks(race),
-        marks=live||stored||reference,rows=((race&&race.horses)||[])
+    // The requested 2026-10-18 display has ONE source: the newly issued,
+    // explicitly after-post reference. Previous forecast panels must not
+    // reappear underneath, nor become a substitute for missing evidence.
+    var oldDate=!!(race&&race.date==='2026-10-18');
+    var ended=oldDate&&Date.now()>=Date.parse('2026-10-18T'+
+      String(race.scheduledStartTime||race.startTime||'').slice(0,5)+':00+09:00');
+    var live=ended?null:authorized(race),
+        stored=ended?null:(live?null:originalMarks(race)),
+        reference=ended?referenceMarks(race):null,
+        marks=ended?reference:(live||stored),rows=((race&&race.horses)||[])
       .filter(function(h){return h&&Number(h.horseNumber)>0})
       .map(function(h){
         var id=String(Number(h.horseNumber)),mark=marks&&marks[id]||'';
@@ -102,14 +109,15 @@
           predRank:999,winProbability:null,p1Probability:null,p2Probability:null,
           p3Probability:null,overallGrade:'',coverage:0};
       });
-    last={active:!!marks,source:live?'live-preoff':(stored?'saved-preoff':(reference?'postrace-reference':'')),marks:marks?rows.filter(function(r){return !!r.predMark}).map(function(r){
+    last={active:!!marks,source:reference?'postrace-reference':(live?'live-preoff':(stored?'saved-preoff':'')),
+      unavailable:ended&&(!reference),marks:marks?rows.filter(function(r){return !!r.predMark}).map(function(r){
       return {horseNumber:Number(r.horse.horseNumber),name:String(r.horse.name||''),mark:r.predMark};
     }):[]};
     return {rows:rows,legacyEngineDisabled:true,scenarios:[],plans:{},plan:null,
       suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:0};
   }
   function current(){
-    return {active:last.active,source:last.source||'',marks:last.marks.map(function(x){return Object.assign({},x)})};
+    return {active:last.active,source:last.source||'',unavailable:!!last.unavailable,marks:last.marks.map(function(x){return Object.assign({},x)})};
   }
   root.ARVEXQProductionPrediction=Object.freeze({build:build,current:current});
 })(typeof window!=='undefined'?window:globalThis);
