@@ -56,6 +56,7 @@ def audit_day(bundle):
                 numeric = float(frame)
                 if not numeric.is_integer() or not 1 <= numeric <= 8:
                     errors.append({"raceId": detail["id"], "horseNumber": number,
+                                   "frameNumber": frame, "horseName": horse.get("name"),
                                    "error": "frame number outside 1..8"})
             try:
                 restored = recover_horse(horse, detail["date"])
