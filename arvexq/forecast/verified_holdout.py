@@ -13,7 +13,8 @@ import sqlite3
 
 from .preoff_evidence_store import read_capture
 from .frozen_research_input import from_frozen_snapshot
-from .race_softmax_research import chronological_experiment
+from .race_softmax_research import chronological_experiment, _split, predict
+from .top_three_joint_research import evaluate_orders
 
 CONFIRMED = {"確定", "confirmed"}
 MIN_RACES = 100
@@ -115,8 +116,22 @@ def evaluate_verified_circuits(connection, final_results, *, min_races=MIN_RACES
                             "testRaces": output["split"]["test"],
                             "reason": "insufficient unseen holdout sample"}
             continue
+        # The original experiment already locks its train/validation/test
+        # chronological split. Reuse precisely that split and its train-only
+        # model without looking at test labels during fitting.
+        _, validation_races, test_races = _split(cases)
+        if len(test_races) != output["split"]["test"] or len(validation_races) != output["split"]["validation"]:
+            raise ValueError("chronological split drift")
+        order_validation = evaluate_orders(
+            [predict(output["model"], race) for race in validation_races],
+            validation_races)
+        order_test = evaluate_orders(
+            [predict(output["model"], race) for race in test_races],
+            test_races)
         reports[key] = {
-            "eligible": True, "races": len(cases), "dates": len(dates),
+            "positionValidation": order_validation,
+            "positionTest": order_test,
+            "positionMethod": "conditional-order-win-softmax-baseline-not-fitted-second-third",
             "split": output["split"], "validation": output["validation"],
             "test": output["test"], "modelVersion": output["version"],
             "modelHash": output["model"]["modelHash"],
