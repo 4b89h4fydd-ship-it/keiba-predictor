@@ -8,6 +8,9 @@ name: ARVEXQ v3 Saved-Archive Audit
       - arvexq/v3/audit/**
       - scripts/arvexq_v3_archive_audit.py
       - tests/test_v3_archive_audit.py
+      - tests/test_v3_snapshot_digest.py
+      - scripts/arvexq_v3_blob_digest_audit.py
+      - scripts/arvexq_fact_data_audit.py
       - arvexq/ui/static/racecards/**
       - arvexq/ui/static/saved-snapshots/**
       - .github/workflows/arvexq-v3-archive-audit.yml
@@ -32,11 +35,17 @@ jobs:
         run: python -m pytest tests/test_v3_archive_audit.py -q
       - name: Audit latest seven saved day files without contacting production
         run: python scripts/arvexq_v3_archive_audit.py --days 7 --sample-per-circuit 1 --out arvexq-v3-archive-audit.json
+      - name: Restore bounded real snapshots and verify SHA-256/horse identity offline
+        run: |
+          python -m pytest tests/test_v3_snapshot_digest.py -q
+          python scripts/arvexq_v3_blob_digest_audit.py --days 7 --per-circuit 2 --out arvexq-v3-blob-audit.json
       - name: Upload inspectable report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: arvexq-v3-static-evidence-audit
-          path: arvexq-v3-archive-audit.json
+          path: |
+            arvexq-v3-archive-audit.json
+            arvexq-v3-blob-audit.json
           if-no-files-found: ignore
           retention-days: 14
