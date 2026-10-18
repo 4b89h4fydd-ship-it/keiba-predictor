@@ -5,6 +5,7 @@ import math
 
 from arvexq.ingest.runner_identity_compare import compare_same_day_runner
 from arvexq.ingest.race_identity import observed_detail_identity_error
+from arvexq.ingest.source_provenance import observed_provenance
 from arvexq.ingest.career_transport import recover_horse
 from arvexq.ingest.full_career import date_key, merge_career
 
@@ -50,6 +51,7 @@ def audit_day(bundle):
                 first_race_by_name, race_id=detail["id"],
                 horse_name=horse.get("name"), horse_number=horse.get("horseNumber"))
             if collision:
+                collision.update(observed_provenance(detail, horse))
                 errors.append(collision)
             number = horse.get("horseNumber")
             if observed("horseNumber", number):
@@ -66,9 +68,11 @@ def audit_day(bundle):
             if observed("frameNumber", frame):
                 numeric = float(frame)
                 if not numeric.is_integer() or not 1 <= numeric <= 8:
-                    errors.append({"raceId": detail["id"], "horseNumber": number,
-                                   "frameNumber": frame, "horseName": horse.get("name"),
-                                   "error": "frame number outside 1..8"})
+                    error = {"raceId": detail["id"], "horseNumber": number,
+                             "frameNumber": frame, "horseName": horse.get("name"),
+                             "error": "frame number outside 1..8"}
+                    error.update(observed_provenance(detail, horse))
+                    errors.append(error)
             try:
                 restored = recover_horse(horse, detail["date"])
                 raw = (horse.get("allPastRuns") or []) + (horse.get("recentRaces") or [])
