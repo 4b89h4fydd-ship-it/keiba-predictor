@@ -1,0 +1,22 @@
+name: ARVEXQ Realtime Startup Gate
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/arvexq-sync.yml
+      - .github/workflows/arvexq-realtime-startup-test.yml
+      - tests/test_realtime_sync_startup_contract.py
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  startup-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q pytest
+      - run: python -m pytest -q tests/test_realtime_sync_startup_contract.py
