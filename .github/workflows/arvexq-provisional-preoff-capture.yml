@@ -1,0 +1,44 @@
+name: ARVEXQ Provisional Pre-Off Research Capture
+
+"on":
+  workflow_dispatch:
+  schedule:
+    # JST 07:00-23:59; best-effort GitHub schedule, no completion guarantee.
+    - cron: "*/10 22-23 * * *"
+    - cron: "*/10 0-14 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-provisional-preoff-research
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run independent pre-off collector contract tests
+        run: |
+          python -m pip install -q pytest beautifulsoup4
+          PYTHONPATH=. python -m pytest -q tests/test_provisional_preoff_collector.py
+      - name: Capture today's near-post evidence (existing read-only API)
+        run: |
+          PYTHONPATH=. python scripts/arvexq_collect_provisional_preoff.py --out-dir preoff-research-capture --ahead-minutes 35 --max-races 12
+      - name: Preserve compressed provisional evidence and audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-provisional-preoff-${{ github.run_id }}
+          path: preoff-research-capture/*.json.gz
+          retention-days: 30
+          if-no-files-found: warn
