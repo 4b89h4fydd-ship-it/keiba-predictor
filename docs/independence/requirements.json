@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "requirement_count": 200,
   "base_main": "a45a84a6f7c737c0169e59163570b68f0e0b4451",
   "base_pr_247": "c81e1fbb4196e9961ba639724a9cde32dc9c2785",
@@ -32,7 +32,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 2,
@@ -60,7 +62,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 3,
@@ -88,7 +92,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 4,
@@ -116,7 +122,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 5,
@@ -144,7 +152,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 6,
@@ -172,7 +182,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 7,
@@ -200,7 +212,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 8,
@@ -229,7 +243,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 9,
@@ -258,7 +274,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 10,
@@ -286,7 +304,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 11,
@@ -315,7 +335,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 12,
@@ -344,7 +366,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 13,
@@ -374,7 +398,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 14,
@@ -403,7 +429,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 15,
@@ -434,7 +462,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 16,
@@ -465,7 +495,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 17,
@@ -494,7 +526,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 18,
@@ -523,7 +557,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 19,
@@ -552,7 +588,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 20,
@@ -586,7 +624,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39094331698",
         "main_sha": "24c8e9f50424ebca40fea52b9c2792ace641ea4d",
         "production": "Cloudflare Workers Builds: kraizweb1 succeeded (build bf9adef9-5341-4457-8796-abece96f09bf); live HTTP/API confirmation unavailable from this environment"
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 21,
@@ -618,7 +658,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39094783099",
         "main_sha": "6a41e4b5265804d7e39bceaaf2f3e8339782a33d",
         "production": "Cloudflare Workers Build succeeded for main SHA; live HTTP/API field-level verification unavailable. All-source NAR parsing remains incomplete."
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 22,
@@ -650,7 +692,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39095574840",
         "main_sha": "5ef6bfc5e2b791a3946c4d7b4a15065403385854",
         "production": "Cloudflare build and live result-data verification pending."
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 23,
@@ -679,7 +723,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 24,
@@ -701,7 +747,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 25,
@@ -732,7 +780,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 26,
@@ -763,7 +813,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 27,
@@ -794,7 +846,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 28,
@@ -825,7 +879,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 29,
@@ -856,7 +912,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 30,
@@ -887,7 +945,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 31,
@@ -918,7 +978,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 32,
@@ -949,7 +1011,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 33,
@@ -971,7 +1035,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 34,
@@ -1002,7 +1068,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 35,
@@ -1033,7 +1101,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 36,
@@ -1055,7 +1125,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 37,
@@ -1077,7 +1149,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 38,
@@ -1099,7 +1173,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 39,
@@ -1121,7 +1197,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 40,
@@ -1143,7 +1221,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 41,
@@ -1165,7 +1245,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 42,
@@ -1195,7 +1277,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 43,
@@ -1225,7 +1309,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 44,
@@ -1255,7 +1341,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 45,
@@ -1285,7 +1373,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 46,
@@ -1315,7 +1405,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 47,
@@ -1345,7 +1437,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 48,
@@ -1375,7 +1469,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 49,
@@ -1405,7 +1501,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 50,
@@ -1435,7 +1533,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 51,
@@ -1465,7 +1565,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 52,
@@ -1495,7 +1597,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 53,
@@ -1525,7 +1629,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 54,
@@ -1555,7 +1661,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39044541860",
         "main_sha": "4253ab0153de61eab066a452378853b4bc8a97aa",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 55,
@@ -1584,7 +1692,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39043647022",
         "main_sha": "dd1f650b473848927ebf12dc9b58cb5bfdc14d9c",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 56,
@@ -1613,7 +1723,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 57,
@@ -1635,7 +1747,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 58,
@@ -1664,7 +1778,9 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39043647022",
         "main_sha": "dd1f650b473848927ebf12dc9b58cb5bfdc14d9c",
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 59,
@@ -1695,7 +1811,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 60,
@@ -1724,7 +1842,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 61,
@@ -1755,7 +1875,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 62,
@@ -1784,7 +1906,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 63,
@@ -1806,7 +1930,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 64,
@@ -1828,7 +1954,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 65,
@@ -1850,7 +1978,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 66,
@@ -1879,7 +2009,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 67,
@@ -1901,7 +2033,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 68,
@@ -1923,7 +2057,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 69,
@@ -1952,7 +2088,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 70,
@@ -1974,7 +2112,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 71,
@@ -1996,7 +2136,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 72,
@@ -2018,7 +2160,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 73,
@@ -2047,7 +2191,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 74,
@@ -2069,7 +2215,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 75,
@@ -2091,7 +2239,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 76,
@@ -2113,7 +2263,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 77,
@@ -2135,7 +2287,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 78,
@@ -2157,7 +2311,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 79,
@@ -2179,7 +2335,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 80,
@@ -2201,7 +2359,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 81,
@@ -2223,7 +2383,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 82,
@@ -2245,7 +2407,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 83,
@@ -2267,7 +2431,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 84,
@@ -2289,7 +2455,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 85,
@@ -2311,7 +2479,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 86,
@@ -2333,7 +2503,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 87,
@@ -2359,12 +2531,14 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 88,
       "name": "近走成績評価",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2381,12 +2555,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 89,
       "name": "能力評価",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2403,12 +2581,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 90,
       "name": "クラス適性",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2425,12 +2607,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 91,
       "name": "距離適性",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2447,12 +2633,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 92,
       "name": "競馬場適性",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2469,12 +2659,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 93,
       "name": "コース適性",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2491,12 +2685,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 94,
       "name": "馬場適性",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2513,12 +2711,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 95,
       "name": "季節適性",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2535,12 +2737,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 96,
       "name": "走破時計評価",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2557,12 +2763,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 97,
       "name": "上がり性能評価",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2579,7 +2789,11 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 98,
@@ -2601,7 +2815,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 99,
@@ -2623,7 +2839,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 100,
@@ -2645,7 +2863,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 101,
@@ -2667,7 +2887,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 102,
@@ -2689,12 +2911,14 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 103,
       "name": "脚質点",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2711,12 +2935,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 104,
       "name": "位置取り評価",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2733,12 +2961,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 105,
       "name": "展開・ペース分析",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2755,12 +2987,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 106,
       "name": "先行争い分析",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2777,12 +3013,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 107,
       "name": "騎手・調教師情報評価",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2799,12 +3039,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 108,
       "name": "馬体重・斤量影響分析",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2821,7 +3065,11 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 109,
@@ -2843,7 +3091,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 110,
@@ -2865,7 +3115,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "全頭診断の入出力契約・保存・表示互換はCodex。評価式は別担当。"
     },
     {
       "id": 111,
@@ -2891,12 +3144,15 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "観測事実の入力契約・品質検証はCodex。新方式固有の特徴量定義は別担当。"
     },
     {
       "id": 112,
       "name": "予想ロジック",
-      "status": "解析済",
+      "status": "予想ロジック仕様待ち",
       "module": "arvexq/forecast/engine.py",
       "files": [
         "arvexq/forecast/engine.py"
@@ -2917,12 +3173,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "解析済",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 113,
       "name": "勝率・順位確率計算",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2939,12 +3199,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 114,
       "name": "展開シミュレーション",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2961,12 +3225,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 115,
       "name": "予想信頼度判定",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -2983,12 +3251,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 116,
       "name": "印生成",
-      "status": "解析済",
+      "status": "予想ロジック仕様待ち",
       "module": "arvexq/forecast/marks.py",
       "files": [
         "arvexq/forecast/marks.py"
@@ -3009,12 +3281,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "解析済",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 117,
       "name": "◎【単】判定",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -3031,12 +3307,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 118,
       "name": "◎【軸】判定",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -3053,12 +3333,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 119,
       "name": "その他の印判定",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -3075,12 +3359,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 120,
       "name": "A・B・C評価",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -3097,12 +3385,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 121,
       "name": "買い目生成",
-      "status": "解析済",
+      "status": "予想ロジック仕様待ち",
       "module": "arvexq/forecast/tickets.py",
       "files": [
         "arvexq/forecast/tickets.py"
@@ -3123,12 +3415,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "解析済",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 122,
       "name": "本線買い目",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -3145,12 +3441,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 123,
       "name": "3連単チャレンジ",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -3167,12 +3467,16 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 124,
       "name": "買い目点数・配分",
-      "status": "未着手",
+      "status": "予想ロジック仕様待ち",
       "module": null,
       "files": [],
       "callers": [],
@@ -3189,7 +3493,11 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "別チャット",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "codex_infrastructure_status": "未着手",
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
     },
     {
       "id": 125,
@@ -3211,7 +3519,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "発走前の保存・更新保護・復元はCodex。保存する予想と買い目の計算は別担当。"
     },
     {
       "id": 126,
@@ -3237,7 +3548,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "既存の表示枠・API契約・欠損表示はCodex。予想・印・買い目の内容は別担当。"
     },
     {
       "id": 127,
@@ -3259,7 +3573,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "公式結果と受領済み買い目の照合基盤はCodex。新方式の成績解釈・評価条件は別担当。"
     },
     {
       "id": 128,
@@ -3281,7 +3598,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 129,
@@ -3303,7 +3622,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "開催事実・候補データ・選定結果の保存はCodex。予想に基づく厳選基準は別担当。"
     },
     {
       "id": 130,
@@ -3325,7 +3647,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 131,
@@ -3347,7 +3671,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 132,
@@ -3369,7 +3695,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 133,
@@ -3391,7 +3719,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "観測事実の選定入力契約と検証はCodex。新方式の選定条件は別担当。"
     },
     {
       "id": 134,
@@ -3413,7 +3744,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "受領済み選定結果の保存・復元はCodex。選定計算は別担当。"
     },
     {
       "id": 135,
@@ -3435,7 +3769,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "取得時刻・発走時刻・事前保存証拠の管理はCodex。予想生成は別担当。"
     },
     {
       "id": 136,
@@ -3457,7 +3794,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "既存表示と受領済み買い目の契約はCodex。買い目生成は別担当。"
     },
     {
       "id": 137,
@@ -3479,7 +3819,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "前日の公式結果・受領済み買い目・集計保存はCodex。新方式の評価指標は別担当。"
     },
     {
       "id": 138,
@@ -3501,7 +3844,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "当日の公式結果・受領済み買い目・集計保存はCodex。新方式の評価指標は別担当。"
     },
     {
       "id": 139,
@@ -3523,7 +3869,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 140,
@@ -3545,7 +3893,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 141,
@@ -3567,7 +3917,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 142,
@@ -3589,7 +3941,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 143,
@@ -3611,7 +3965,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 144,
@@ -3633,7 +3989,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 145,
@@ -3655,7 +4013,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 146,
@@ -3677,7 +4037,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 147,
@@ -3699,7 +4061,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 148,
@@ -3721,7 +4085,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 149,
@@ -3743,7 +4109,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 150,
@@ -3765,7 +4133,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 151,
@@ -3787,7 +4157,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 152,
@@ -3809,7 +4181,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 153,
@@ -3831,7 +4205,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 154,
@@ -3853,7 +4229,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 155,
@@ -3875,7 +4253,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 156,
@@ -3897,7 +4277,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 157,
@@ -3919,7 +4301,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 158,
@@ -3941,7 +4325,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 159,
@@ -3963,7 +4349,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 160,
@@ -3985,7 +4373,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 161,
@@ -4007,29 +4397,46 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 162,
       "name": "同期状態・エラー管理",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "scripts.arvexq_protect_sync",
+      "files": [
+        "scripts/arvexq_protect_sync.py",
+        "arvexq/ingest/full_snapshot_codec.py"
+      ],
+      "callers": [
+        "scripts/arvexq_protect_sync.py:verify_published",
+        "GitHub Actions sync/prefetch/history/result workflows"
+      ],
+      "dependencies": [
+        "arvexq.ingest.full_snapshot_codec"
+      ],
+      "input": "Expected race detail and D1 GET read-back, including arvexqFullPayload envelopes",
+      "output": "Verified race IDs, or bounded-retry failure with explicit invalid-envelope, identity or archive mismatch errors",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_d1_archive_delivery.py",
+        "tests/test_full_snapshot_codec.py",
+        "tests/test_arvexq_history_sync_guard.py",
+        "tests/test_d1_bundle_full_snapshot_hydration.py"
+      ],
+      "implementation_scope": "Compressed read-back originals are restored and hash-checked before nested archive comparison. Missing archive diagnosis was corrected by read-only production recovery; all other synchronization/error paths remain to be separated and production verified.",
       "evidence": {
-        "commit_sha": null,
-        "unit": null,
-        "integration": null,
-        "ci_url": null,
-        "main_sha": null,
-        "production": null
-      }
+        "commit_sha": "a4a4a541afe2db4c5ec4f6fe3ea7647e03d50a6a",
+        "unit": "24 focused unittest cases passed locally; new regressions first reproduced the compact-index false mismatch",
+        "integration": "PR #296 contracts and validation passed; corrupted envelopes and restored identity changes fail closed",
+        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/pull/296/checks",
+        "main_sha": "a4a4a541afe2db4c5ec4f6fe3ea7647e03d50a6a",
+        "production": "Read-only Cloudflare validation recovered 16 career runs for nar-2026-10-15-名古屋-01 horse 2 from arvexqFullPayload; SHA256 49e5ce8a809eacd0decb7250dedcb32269cb95efa0e73a08b28c13f0444e90a8. https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39097150567/job/117585855834 . Historical failed-job rerun remained blocked; no manual replay occurred."
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 163,
@@ -4051,7 +4458,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 164,
@@ -4073,7 +4482,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 165,
@@ -4095,7 +4506,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 166,
@@ -4117,7 +4530,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 167,
@@ -4139,7 +4554,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 168,
@@ -4161,7 +4578,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 169,
@@ -4183,7 +4602,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 170,
@@ -4205,7 +4626,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "全頭診断APIの契約・保存・エラー処理はCodex。診断評価式は別担当。"
     },
     {
       "id": 171,
@@ -4227,7 +4651,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 172,
@@ -4249,7 +4675,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 173,
@@ -4271,7 +4699,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 174,
@@ -4293,7 +4723,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 175,
@@ -4315,7 +4747,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 176,
@@ -4337,7 +4771,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 177,
@@ -4359,7 +4795,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 178,
@@ -4381,7 +4819,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 179,
@@ -4403,7 +4843,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 180,
@@ -4425,7 +4867,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 181,
@@ -4447,7 +4891,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 182,
@@ -4479,7 +4925,10 @@
         "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39043647022",
         "main_sha": "dd1f650b473848927ebf12dc9b58cb5bfdc14d9c",
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "観測済み履歴と診断結果の既存表示互換はCodex。診断計算は別担当。"
     },
     {
       "id": 183,
@@ -4501,7 +4950,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "既存脚質マップの表示契約と観測データ接続はCodex。新方式の脚質判定は別担当。"
     },
     {
       "id": 184,
@@ -4523,7 +4975,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "既存展開表示の契約と受領データ接続はCodex。展開予想計算は別担当。"
     },
     {
       "id": 185,
@@ -4549,7 +5004,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "予想表示枠と入力契約はCodex。予想計算は別担当。"
     },
     {
       "id": 186,
@@ -4575,7 +5033,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "印表示枠と入力契約はCodex。印の判定は別担当。"
     },
     {
       "id": 187,
@@ -4601,7 +5062,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "買い目表示枠と入力契約はCodex。買い目構築は別担当。"
     },
     {
       "id": 188,
@@ -4623,7 +5087,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 189,
@@ -4645,7 +5111,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 190,
@@ -4667,7 +5135,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 191,
@@ -4689,7 +5159,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 192,
@@ -4711,7 +5183,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 193,
@@ -4733,7 +5207,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 194,
@@ -4755,7 +5231,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 195,
@@ -4777,7 +5255,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 196,
@@ -4799,7 +5279,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 197,
@@ -4821,7 +5303,10 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "共同",
+      "prediction_logic_status": "予想ロジック仕様待ち",
+      "scope_boundary": "JRA・NAR事実データ検証、時系列制約、再現可能な検証基盤はCodex。新予想方式の評価仕様は別担当。"
     },
     {
       "id": 198,
@@ -4843,7 +5328,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 199,
@@ -4865,7 +5352,9 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     },
     {
       "id": 200,
@@ -4887,7 +5376,15 @@
         "ci_url": null,
         "main_sha": null,
         "production": null
-      }
+      },
+      "owner": "Codex",
+      "prediction_logic_status": "対象外"
     }
-  ]
+  ],
+  "responsibility_policy": {
+    "prediction_calculation_owner": "別チャット",
+    "infrastructure_owner": "Codex",
+    "waiting_status": "予想ロジック仕様待ち",
+    "waiting_counts_as_complete": false
+  }
 }
