@@ -4444,7 +4444,7 @@
       "implementation_scope": "D1 factual GET uses bounded transient-error retries, byte budgets and at most four race readers. This is the read-only audit route; other acquisition retry policies remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": "13 focused factual-readback/audit contracts passed; full local Python regression: 747 passed, 3 skipped, 41 subtests passed",
+        "unit": "13 focused readback/audit contracts passed; merged-main full local regression: 796 passed, 3 skipped, 41 subtests passed",
         "integration": "CLI writes deterministic fact reports and returns nonzero for actual read failures; workflow runs unit contracts before production GET-only audit",
         "ci_url": null,
         "main_sha": null,
@@ -4829,7 +4829,7 @@
       "implementation_scope": "Existing D1 day/race/display routes are read without a giant details=1 response. Identity/date/envelope failures are explicit per-race errors and never fabricated empty records. Other server/API error responsibilities remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": "13 focused factual-readback/audit contracts passed; full local Python regression: 747 passed, 3 skipped, 41 subtests passed",
+        "unit": "13 focused readback/audit contracts passed; merged-main full local regression: 796 passed, 3 skipped, 41 subtests passed",
         "integration": "CLI writes deterministic fact reports and returns nonzero for actual read failures; workflow runs unit contracts before production GET-only audit",
         "ci_url": null,
         "main_sha": null,
@@ -5397,7 +5397,7 @@
       "implementation_scope": "JRA/NAR factual field gaps, bounded identities, archive recovery, duplicate runners and non-prior history dates are audited without prediction calculations. New-method backtesting remains 予想ロジック仕様待ち.",
       "evidence": {
         "commit_sha": null,
-        "unit": "13 focused factual-readback/audit contracts passed; full local Python regression: 747 passed, 3 skipped, 41 subtests passed",
+        "unit": "13 focused readback/audit contracts passed; merged-main full local regression: 796 passed, 3 skipped, 41 subtests passed",
         "integration": "CLI writes deterministic fact reports and returns nonzero for actual read failures; workflow runs unit contracts before production GET-only audit",
         "ci_url": null,
         "main_sha": null,
@@ -5483,7 +5483,7 @@
       "implementation_scope": "Operational CI publishes read-only factual data reports and explicit errors. Its former automatic legacy-model replay steps are replaced by factual verification; legacy calculation scripts are unchanged and new-method validation remains pending. Other logging/monitoring paths remain incomplete.",
       "evidence": {
         "commit_sha": null,
-        "unit": "13 focused factual-readback/audit contracts passed; full local Python regression: 747 passed, 3 skipped, 41 subtests passed",
+        "unit": "13 focused readback/audit contracts passed; merged-main full local regression: 796 passed, 3 skipped, 41 subtests passed",
         "integration": "CLI writes deterministic fact reports and returns nonzero for actual read failures; workflow runs unit contracts before production GET-only audit",
         "ci_url": null,
         "main_sha": null,
