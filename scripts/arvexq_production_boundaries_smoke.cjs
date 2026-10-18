@@ -46,5 +46,40 @@ for(const bad of [
   assert(!context.ARVEXQMarkFrame.render().includes('◎'));
 }
 
+// A retrospective display is not a pre-off prediction, a betting ticket, or a hit.
+const late={
+  id:'nar-2026-10-18-test-11',date:'2026-10-18',startTime:'19:50',
+  horses:[{horseNumber:1,name:'A'},{horseNumber:2,name:'B'},{horseNumber:3,name:'C'}],
+  result:{status:'確定',finishers:[{horseNumber:3,finish:1}]},
+  postRaceReference:{
+    raceId:'nar-2026-10-18-test-11',status:'reference',
+    retrospective:true,modelVersion:'arvexq-observed-history-baseline-v1',
+    runnerNumbers:[1,2,3],
+    marks:[{horseNumber:1,mark:'◎'},{horseNumber:2,mark:'○'},{horseNumber:3,mark:'▲'}]
+  }
+};
+const untouched=JSON.stringify(late);
+const retro=context.ARVEXQProductionPrediction.build(late);
+assert.equal(context.ARVEXQProductionPrediction.current().source,'postrace-reference');
+assert.deepEqual(Array.from(retro.rows,x=>x.predMark),['◎','○','▲']);
+assert.equal(retro.rows[0].serverPreoffMark,false);
+assert.equal(retro.rows[0].originalPreoffMark,false);
+assert.equal(retro.rows[0].referencePostoffMark,true);
+assert.equal(context.ARVEXQProductionMarks.visible(retro.rows[0]),'◎');
+assert(context.ARVEXQMarkFrame.render().includes('事後参考再計算'));
+assert(context.ARVEXQPredictionFrame.render().includes('発走前保存予想ではありません'));
+assert.equal(context.ARVEXQProductionTickets.build(late,retro).items.length,0);
+assert.equal(JSON.stringify(late),untouched);
+for(const invalid of [
+  {...late,id:'nar-2026-10-18-wrong'},
+  {...late,date:'2026-10-17'},
+  {...late,postRaceReference:{...late.postRaceReference,modelVersion:'wrong'}},
+  {...late,postRaceReference:{...late.postRaceReference,runnerNumbers:[1,2,4]}},
+  {...late,postRaceReference:{...late.postRaceReference,marks:[{horseNumber:3,mark:'◎'}]}}
+]){
+  const result=context.ARVEXQProductionPrediction.build(invalid);
+  assert(result.rows.every(x=>!x.predMark));
+}
+
 require('./arvexq_original_ticket_live_view_smoke.cjs');
 console.log('production prediction, mark, ticket and three frame contracts OK');

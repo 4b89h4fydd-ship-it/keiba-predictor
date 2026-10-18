@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   function visible(row){
-    if(!row||row.serverPreoffMark!==true&&row.originalPreoffMark!==true)return '';
+    if(!row||row.serverPreoffMark!==true&&row.originalPreoffMark!==true&&row.referencePostoffMark!==true)return '';
     var mark=String(row.predMark||'');
     return ['◎','○','▲','△','☆','☆+','注'].indexOf(mark)>=0?mark:'';
   }

@@ -397,3 +397,7 @@ if (STATIC / "saved-snapshots").is_dir():
 
 from scripts.arvexq_build_odds_sources import build_sources
 build_sources(STATIC, DIST)
+
+# Labeled post-race reference is a separate static view, never a pre-off archive.
+from scripts.arvexq_postrace_reference_20261018 import produce as produce_postrace_reference
+produce_postrace_reference(STATIC, DIST / 'postrace-reference')

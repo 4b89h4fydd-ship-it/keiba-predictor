@@ -773,7 +773,17 @@ function savedRevisionOriginalHtml(r){
   // Retired forecasts are not a public view. Their source archives remain untouched.
   return '';
 }
-function predict(r){return window.ARVEXQProductionPrediction.build(r);}
+function predict(r){
+  // An explicit after-post REFERENCE, never a saved pre-off prediction.
+  var archive=(typeof state==='object'&&state)?state.postraceReferenceArchive:null;
+  if(r&&archive&&archive.date===r.date&&
+     archive.version==='arvexq-postrace-reference-20261018-v1'&&
+     archive.mode==='POSTRACE_REFERENCE_NOT_PREOFF'&&archive.races){
+    var found=archive.races[String(r.id)];
+    if(found&&found.raceId===r.id)r.postRaceReference=found;
+  }
+  return window.ARVEXQProductionPrediction.build(r);
+}
 
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
 function liveRaces(){if(state.date!==today())return[];var now=nowMins(),a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime&&mins(r.startTime)>=now-25});a.sort(function(x,y){return mins(x.startTime)-mins(y.startTime)});return a.slice(0,4)}
@@ -3596,6 +3606,18 @@ function load(force){
   }
   if(state.morningArchive&&state.morningArchive.date!==d)state.morningArchive=null;
   requestMorningArchive();
+  if(d==='2026-10-18'){
+    fetch('/postrace-reference/2026-10-18.json?day=2026-10-18',{cache:'no-store'})
+      .then(function(response){return response.ok?response.json():null})
+      .then(function(payload){
+        if(seq!==state.requestSeq||state.date!==d)return;
+        if(!payload||payload.version!=='arvexq-postrace-reference-20261018-v1'||
+           payload.date!==d||payload.mode!=='POSTRACE_REFERENCE_NOT_PREOFF'||
+           payload.canCountAsHit!==false||!payload.races)return;
+        state.postraceReferenceArchive=payload;
+        render();
+      }).catch(function(){/* no fabrication if the reference archive is unavailable */});
+  }else state.postraceReferenceArchive=null;
     setTimeout(scheduleDailyAiStats,900);
   function startDetails(){if(detailsStarted)return;detailsStarted=true;setTimeout(function(){requestDetails(0)},80)}
   // If summaries were already painted from cache, allow selection preload after first paint.
