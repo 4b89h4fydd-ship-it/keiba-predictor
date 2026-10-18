@@ -2,7 +2,7 @@
 from copy import deepcopy
 
 RACE_FIELDS = ('id', 'date', 'track', 'raceNumber', 'startTime', 'circuit', 'surface', 'distance', 'condition', 'weather')
-HORSE_FIELDS = ('horseNumber', 'name', 'sex', 'age', 'jockey', 'trainer', 'carriedWeight', 'bodyWeight', 'bodyWeightChange', 'status', 'scratched', 'withdrawn', 'recentRaces', 'allPastRuns')
+HORSE_FIELDS = ('horseNumber', 'frameNumber', 'name', 'sex', 'age', 'jockey', 'trainer', 'affiliation', 'carriedWeight', 'bodyWeight', 'bodyWeightChange', 'status', 'scratched', 'withdrawn', 'recentRaces', 'allPastRuns')
 
 def prediction_input(detail):
     """Mapping -> copied fact DTO; old scores/marks/results are never inputs."""

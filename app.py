@@ -59,6 +59,7 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
+from arvexq.ingest.entry_fields.affiliation import from_text as observed_affiliation
 
 app = FastAPI(title="ARVEXQ", version="14.26-v330-racecard-stable")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
@@ -590,6 +591,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
             jockey=" ".join(jockey).strip()
         trainer_tag=info.select_one('p.trainer a')
         trainer=_jra_text(trainer_tag)
+        affiliation=observed_affiliation(_jra_text(info.select_one('p.trainer')))
         tm=re.search(r"([^\s]+(?:\s[^\s]+)?)\s*\((?:美浦|栗東|本会外)\)",infot)
         if not trainer and tm:trainer=tm.group(1).strip()
         prize=0
@@ -619,7 +621,7 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
             try: body_weight=int(re.search(r"(\d{3})\s*kg",infot).group(1))
             except: pass
         scratch_status=_scratch_status(_jra_text(tr))
-        horses.append({"horseNumber":no,"frameNumber":frame_no,"name":name,"age":age,"sex":sex,"carriedWeight":cw,"jockey":jockey,"trainer":trainer,"prizeMoneyAtRace":prize,"recentRaces":past,"winOdds":win_odds or None,"popularity":popularity or None,"bodyWeight":body_weight or None,"bodyWeightChange":body_change,"oddsSource":"JRA公式" if win_odds else "","status":scratch_status,"scratched":bool(scratch_status),"_jraHorseCname":horse_cname,"_jraCareerComplete":career_complete,"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{}})
+        horses.append({"horseNumber":no,"frameNumber":frame_no,"name":name,"age":age,"sex":sex,"carriedWeight":cw,"jockey":jockey,"trainer":trainer,"affiliation":affiliation,"prizeMoneyAtRace":prize,"recentRaces":past,"winOdds":win_odds or None,"popularity":popularity or None,"bodyWeight":body_weight or None,"bodyWeightChange":body_change,"oddsSource":"JRA公式" if win_odds else "","status":scratch_status,"scratched":bool(scratch_status),"_jraHorseCname":horse_cname,"_jraCareerComplete":career_complete,"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{}})
     if not horses:return None
     program=_jra_program_lookup(date,track,race_no)
     if program:title=program.get("title") or title;distance=int(program.get("distance") or distance);surface=program.get("surface") or surface;start=program.get("startTime") or start

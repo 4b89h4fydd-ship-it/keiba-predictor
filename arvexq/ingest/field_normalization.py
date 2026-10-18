@@ -1,6 +1,8 @@
 """Pure field normalization for JRA/NAR ingestion; no UI or predictions."""
 from __future__ import annotations
 import re
+from arvexq.ingest.runner_cancellation import extract as cancellation_status
+from arvexq.ingest.runner_exclusion import extract as exclusion_status
 
 def _clean(value: str | None) -> str:
     return (value or "").strip().replace("\u3000", " ")
@@ -69,13 +71,7 @@ def _scratch_status(value: str) -> str:
     s = _clean(value)
     if not s:
         return ""
-    if "競走除外" in s or "除外" in s:
-        return "除外"
-    if "出走取消" in s or "取消" in s:
-        return "出走取消"
-    if "欠場" in s:
-        return "欠場"
-    return ""
+    return exclusion_status(s) or cancellation_status(s)
 
 def _normalize_weather(value: str) -> str:
     s = _clean(value)
