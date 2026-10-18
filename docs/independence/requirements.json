@@ -722,7 +722,7 @@
         "commit_sha": "126f9ecd34f7c9740702e58f181df28b3e75d8d5",
         "unit": "Dedicated contract tests passed on PR head (full CI success)",
         "integration": "Read-only factual audit integrated and passed PR CI",
-        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39108500000",
+        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39108485694",
         "main_sha": "0f7ab129fab53f42956254eec6604965fb6e9e4d",
         "production": null
       },
