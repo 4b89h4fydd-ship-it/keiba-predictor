@@ -118,7 +118,8 @@ for(const c of ['jra','nar']) {
     date:'2026-10-'+String(i+1).padStart(2,'0'),finish:3
   }));
   heavy.horses[0].recentRaces=[{date:'2026-10-08',track:'test'},
-    {date:'2026-10-18',finish:2}];
+    {date:'2026-10-17',finish:2},
+    {date:'2026-10-18',finish:1}];
   const measured=factualProjection(heavy,heavy.id);
   assert.equal(measured.rows.find(x=>x.horseNumber===2).observedPriorRunCount,9);
   assert.equal(measured.rows.find(x=>x.horseNumber===2).recentRaces.length,5);
