@@ -502,6 +502,11 @@ from arvexq.ingest.race_fields.field_size import extract as jra_race_field_size
 
 from arvexq.ingest.jra_official_table import select_runners_table as select_jra_runners_table
 from arvexq.ingest.jra_official_runner_row import extract as jra_runner_row_number
+from arvexq.ingest.race_summary_merge import (
+    index_summaries as _index_race_summaries,
+    merge_refreshed_summaries as _merge_race_summaries,
+    choose_card_identifiers as _choose_race_cards,
+)
 
 def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
@@ -717,13 +722,7 @@ def fetch_jra_official(iso_date:str, lightweight: bool = False)->list[dict]:
             discovered.append(c)
 
     # prefer detailed 01 variant and deduplicate by venue/race number
-    chosen={}
-    for c in discovered:
-        key=(_jra_track_from_cname(c),_jra_race_no_from_cname(c))
-        if not key[0] or not key[1]:
-            continue
-        if key not in chosen or c.startswith("pw01dde01"):
-            chosen[key]=c
+    chosen=_choose_race_cards(discovered,_jra_track_from_cname,_jra_race_no_from_cname)
 
     def one(c):
         try:
@@ -1469,7 +1468,7 @@ def central_race_summaries(iso_date: str, allow_network: bool = False, force: bo
                 db.append(q)
         finally:conn.close()
     valid=[x for x in db if not JRA_BAD_TITLE_RE.search(str(x.get("title") or "")) and int(x.get("distance") or 0)>0]
-    merged={(str(r.get("track") or ""),int(r.get("raceNumber") or 0)):dict(r) for r in valid}
+    merged=_index_race_summaries(valid)
     tracks={k[0] for k in merged if k[0]}
     # A normal JRA day has multiple venues. If the cache is clearly complete, return instantly.
     complete=len(merged)>=20 and len(tracks)>=2
@@ -1490,18 +1489,7 @@ def central_race_summaries(iso_date: str, allow_network: bool = False, force: bo
                 if hit:nk=_netkeiba_race_summaries(iso_date)
             except Exception:pass
         fresh=list(program or [])+list(nk or [])
-        for r in fresh:
-            key=(str(r.get("track") or ""),int(r.get("raceNumber") or 0))
-            if not key[0] or not key[1]:continue
-            old=merged.get(key,{})
-            z=dict(old)
-            # Keep rich cached horses/result, but replace stale schedule fields with fresh schedule data.
-            for k,v in r.items():
-                if k in {"horses","result"}:continue
-                if v not in (None,"",0,[]):z[k]=v
-            if old.get("result"):z["result"]=old.get("result")
-            if old.get("horses"):z["horses"]=[]
-            merged[key]=normalize_central_race(z) or z
+        merged=_merge_race_summaries(merged,fresh,normalize_central_race)
         if fresh:
             try:
                 st=CentralStore();st.upsert(list(merged.values()));st.conn.close()
