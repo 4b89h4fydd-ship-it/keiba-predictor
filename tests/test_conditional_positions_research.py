@@ -9,7 +9,19 @@ from arvexq.forecast.race_softmax_research import train,predict
 from arvexq.forecast.conditional_positions_research import (
     train_positions,predict_positions,compare_holdout)
 from arvexq.forecast.top_three_joint_research import joint_top_three
-from tests.test_race_softmax_research import make_race
+from datetime import datetime,timezone
+
+def make_race(day, winner=2):
+    jst=timezone(timedelta(hours=9))
+    post=int(datetime.fromisoformat(day+"T12:00:00").replace(tzinfo=jst).timestamp())
+    return {"raceId":"中央-flat-"+day,"date":day,"circuit":"中央","family":"flat",
+            "capturedAtEpoch":post-3600,"postAtEpoch":post,
+            "snapshotHash":"sha256:0123456789abcdef0123456789abcdef",
+            "declaredHorseNumbers":[1,2,3,4],
+            "horses":[{"horseNumber":n,"finish":1 if n==winner else (n+1 if n<winner else n),
+                       "features":{"history::all::w5::finish_quality::mean":.7 if n==winner else .1,
+                                   "static::age":3+n}} for n in range(1,5)]}
+
 
 
 def training():
