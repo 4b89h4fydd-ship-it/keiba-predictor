@@ -94,3 +94,25 @@ def test_fast_nar_readback_from_real_sqlite(tmp_path, monkeypatch):
     result = app._fast_local_race_detail("nar-2026-10-18-園田-01")
     assert result is not None
     assert [(h["horseNumber"], h["sex"]) for h in result["horses"]] == [(1, ""), (2, "牝")]
+
+    class ReadOnlyNarStore:
+        def __init__(self):
+            self.conn = sqlite3.connect(path)
+            self.conn.row_factory = sqlite3.Row
+
+        def stats(self, *args):
+            return {}
+
+        def role_profile(self, *args):
+            return {}
+
+        def prize_before(self, *args):
+            return 0
+
+        def recent_races(self, *args):
+            return []
+
+    monkeypatch.setattr(app, "NarStore", ReadOnlyNarStore)
+    normal = app.nar_race_detail("nar-2026-10-18-園田-01")
+    assert normal is not None
+    assert [(h["horseNumber"], h["sex"]) for h in normal["horses"]] == [(1, ""), (2, "牝")]
