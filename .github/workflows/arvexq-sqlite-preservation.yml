@@ -1,0 +1,22 @@
+name: ARVEXQ SQLite Cache Preservation
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/arvexq_sqlite_health.py
+      - tests/test_sqlite_cache_preservation.py
+      - .github/workflows/arvexq-sqlite-preservation.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q pytest
+      - run: PYTHONPATH=. python -m pytest -q tests/test_sqlite_cache_preservation.py

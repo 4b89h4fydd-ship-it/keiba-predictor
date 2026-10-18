@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Sanitize restored ARVEXQ SQLite caches before runtime start.
+"""Verify restored ARVEXQ SQLite caches without discarding evidence.
 
-GitHub Actions caches can preserve a SQLite file after an interrupted writer or
-with stale WAL/SHM sidecars.  D1 is the serving source of truth, so a malformed
-local SQLite cache must never be allowed to slow or break prefetch/live/result
-jobs.  This helper removes transient sidecars, runs PRAGMA quick_check on every
-SQLite database under KEIBA_DATA_DIR, and deletes only databases that fail the
-check so app.py can recreate them cleanly. It is dependency-free so it can run
-immediately after cache restore.
+A WAL can contain COMMITTED transactions not yet checkpointed into the main
+database. Never delete SQLite databases, WALs or journals as a health action.
+Any corruption, lock contention or read-only condition fails closed while
+preserving the original bytes for diagnosis.
 """
 from __future__ import annotations
 
@@ -68,14 +65,10 @@ def sanitize(root: Path) -> tuple[int, int, list[str]]:
     if not os.access(root, os.W_OK):
         raise PermissionError(f"SQLite cache directory is not writable: {root}")
 
-    # WAL/SHM/journal files are process-local. Never reuse them on a new runner.
-    for pattern in ("*-wal", "*-shm", "*-journal"):
-        for sidecar in root.rglob(pattern):
-            if sidecar.is_file():
-                _unlink(sidecar)
-
+    # A SQLite -wal sidecar can contain the most recent committed race facts.
+    # SQLite itself owns checkpointing; removing sidecars is data loss.
     checked = 0
-    removed: list[str] = []
+    blocked: list[str] = []
     for path in sorted(p for p in root.rglob("*") if p.is_file()):
         if not _looks_sqlite(path):
             continue
@@ -84,14 +77,13 @@ def sanitize(root: Path) -> tuple[int, int, list[str]]:
         if ok:
             print("SQLITE_CACHE_OK", path)
             continue
-        print("SQLITE_CACHE_BAD_OR_NOT_WRITABLE", path, reason)
-        for sidecar in _sidecars(path):
-            _unlink(sidecar)
-        _unlink(path)
-        removed.append(str(path))
-
-    print(f"SQLITE_CACHE_AUDIT checked={checked} removed={len(removed)}")
-    return checked, len(removed), removed
+        print("SQLITE_CACHE_UNAVAILABLE_PRESERVED", path, reason)
+        blocked.append(f"{path}: {reason}")
+    print(f"SQLITE_CACHE_AUDIT checked={checked} removed=0 blocked={len(blocked)}")
+    if blocked:
+        raise RuntimeError("SQLite cache cannot be safely used; original files preserved: "
+                           + "; ".join(blocked[:5]))
+    return checked, 0, []
 
 
 def main() -> int:
