@@ -1,0 +1,22 @@
+name: ARVEXQ Packed Pre-Race D1 Regression
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/arvexq_freeze_predictions.py
+      - tests/test_preoff_full_d1_payload.py
+      - .github/workflows/arvexq-preoff-full-d1-test.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compressed-race-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q pytest
+      - run: PYTHONPATH=. python -m pytest -q tests/test_preoff_full_d1_payload.py tests/test_preoff_d1_display_history.py tests/test_preoff_history_provider_rescue.py
