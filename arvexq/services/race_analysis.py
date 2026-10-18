@@ -15,6 +15,7 @@ from arvexq.race_card import build_race_card
 from arvexq.race_conditions import build_race_conditions
 from arvexq.v3.data.quality import build_data_status
 from arvexq.v3.data.circuit_review import inspect_circuit
+from arvexq.v3.transport.boundary import read_boundary
 
 
 def normalize_race_detail(detail: dict[str, Any]) -> dict[str, Any]:
@@ -48,4 +49,5 @@ def prepare_race_detail(detail: dict[str, Any]) -> dict[str, Any]:
     # Independent, factual-only v3 readiness summary. No new fetch or scoring.
     detail["v3DataStatus"] = build_data_status(detail)
     detail["v3CircuitCoverage"] = inspect_circuit(detail)
+    detail["v3ReadBoundary"] = read_boundary(detail)
     return detail
