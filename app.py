@@ -319,6 +319,8 @@ def _jra_program_title(info:str)->str:
         if named:return named
     return prefix
 
+from arvexq.ingest.race_fields.meeting_schedule import extract as jra_meeting_schedule
+
 def _jra_program_summaries(iso_date:str)->list[dict]:
     now=time.time()
     with _jra_program_cache_lock:
@@ -333,17 +335,7 @@ def _jra_program_summaries(iso_date:str)->list[dict]:
     for table in soup.find_all("table"):
         head=_jra_text(table.find("thead") or table.find("tr") or table)
         if "レース番号" not in head or "発走時刻" not in head:continue
-        track="";meeting_no=0;day_no=0
-        prev=table.find_previous(string=JRA_MEETING_DAY_RE)
-        if prev:
-            mt=JRA_MEETING_DAY_RE.search(str(prev))
-            if mt:meeting_no=int(mt.group(1));track=mt.group(2);day_no=int(mt.group(3))
-        if not track:
-            node=table.find_previous(["h2","h3","h4","h5","strong","p","div"]);guard=0
-            while node is not None and guard<30:
-                mt=JRA_MEETING_DAY_RE.search(_jra_text(node))
-                if mt:meeting_no=int(mt.group(1));track=mt.group(2);day_no=int(mt.group(3));break
-                node=node.find_previous(["h2","h3","h4","h5","strong","p","div"]);guard+=1
+        meeting_no,track,day_no=jra_meeting_schedule(table,JRA_MEETING_DAY_RE,_jra_text)
         if not track:continue
         track_code=JRA_TRACK_CODE_BY_NAME.get(track,"")
         for tr in table.find_all("tr"):
