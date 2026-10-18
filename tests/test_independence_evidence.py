@@ -19,3 +19,29 @@ def test_premature_completion_is_rejected_even_when_file_exists():
 def test_duplicated_missing_requirement_cannot_be_hidden_in_count():
     proposed=deepcopy(MANIFEST);proposed['items'][99]['id']=1
     assert audit(proposed)['errors']
+
+def test_waiting_prediction_calculation_never_counts_as_completed():
+    proposed=deepcopy(MANIFEST)
+    item=proposed['items'][111]
+    item['status']='予想ロジック仕様待ち'
+    item['owner']='別チャット'
+    item['prediction_logic_status']='予想ロジック仕様待ち'
+    result=audit(proposed)
+    assert not result['errors']
+    assert result['complete']==0 and result['verdict']=='未完了'
+
+def test_waiting_status_cannot_hide_a_codex_responsibility():
+    proposed=deepcopy(MANIFEST)
+    proposed['items'][0]['status']='予想ロジック仕様待ち'
+    proposed['items'][0]['owner']='Codex'
+    assert audit(proposed)['errors']
+
+def test_version_two_requires_a_boundary_for_every_item():
+    proposed=deepcopy(MANIFEST)
+    proposed['version']=2
+    for item in proposed['items']:
+        item['owner']='Codex'
+        item['prediction_logic_status']='対象外'
+    assert not audit(proposed)['errors']
+    proposed['items'][199].pop('owner')
+    assert audit(proposed)['errors']
