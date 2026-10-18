@@ -609,16 +609,23 @@
     {
       "id": 23,
       "name": "レースID照合",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.race_identity",
+      "files": [
+        "arvexq/ingest/race_identity.py",
+        "arvexq/ingest/nar_csv.py"
+      ],
+      "callers": [
+        "arvexq.ingest.nar_csv"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "JRA/NAR date, track and race number",
+      "output": "canonical race ID and strict equality",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_independent_race_identity.py"
+      ],
+      "implementation_scope": "Pure comparator exposed through official NAR CSV ingestion; remaining consumers and Cloudflare verification pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
