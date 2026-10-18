@@ -280,10 +280,13 @@ class ServerSealTests(unittest.TestCase):
                 report = json.loads(Path(dest).read_text(encoding="utf-8"))
         self.assertEqual(stored["posts"], 1)
         self.assertEqual(report["sealed"], [current["id"]])
-        before = deepcopy(stored["detail"]["preRacePrediction"])
-        modified = deepcopy(stored["detail"])
+        from arvexq.ingest.full_snapshot_codec import KEY, unpack_detail
+        self.assertIn(KEY, stored["detail"])
+        original = unpack_detail(stored["detail"])
+        before = deepcopy(original["preRacePrediction"])
+        modified = deepcopy(original)
         modified["horses"][1]["integratedEvaluation"]["mark"] = "△"
-        result = restore_seal(stored["detail"], modified)
+        result = restore_seal(original, modified)
         self.assertEqual(result["preRacePrediction"], before)
 
     def test_scratch_excluded_from_core_rank_without_deleting_racecard(self):
