@@ -18,7 +18,7 @@ const deps={buildAiBetPlan:()=>({...base,engineVersion:'arvexq-old-v345'}),
 esc:String,n:Number,isFinal:()=>false,raceMarkClock:()=>({started:false}),
 aiBetExplanationHtml:()=>'',betComboText:()=>''};
 const html=root.ARVEXQBetView.render({}, {}, deps);
-assert(html.includes('AI買い目'));
+assert(html.includes('おすすめ買い目'));
 assert(!html.includes('発走前保存済み買い目（旧方式）'));
 assert(!html.includes('旧方式の買い目は現在の予想に表示しません'));
 console.log('RETIRED_BET_TICKETS_HIDDEN_FROM_LIVE_UI_OK');

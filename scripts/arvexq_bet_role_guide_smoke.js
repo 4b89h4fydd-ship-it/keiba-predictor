@@ -19,6 +19,18 @@ assert.doesNotMatch(html,/<i>【(?:単|軸)】<\/i>/);
 assert.match(html,/<i>☆<\/i>/);
 assert.doesNotMatch(html,/☆\+/);
 assert.match(html,/目標の的中率80%以上.*保証するものではありません/);
+// Display-only unification must preserve every selected ticket and its points.
+const allKinds={...plan,decision:'推奨',items:[
+ {level:'本線',kind:'ワイド',points:1,combo:'1 - 2',combos:[[1,2]]},
+ {level:'3連単チャレンジ',kind:'3連単',points:1,combo:'1 - 2 - 3',combos:[[1,2,3]]},
+ {level:'保険',kind:'馬連',points:1,combo:'1 - 3',combos:[[1,3]]}
+]};
+const unified=renderer({}, {}, {...deps,buildAiBetPlan:()=>allKinds});
+assert.equal((unified.match(/class="arv-three-section"/g)||[]).length,1);
+assert.match(unified,/<h3>おすすめ買い目<\/h3>/);
+for(const combo of ['1 - 2','1 - 2 - 3','1 - 3'])assert.ok(unified.includes(combo),combo);
+assert.doesNotMatch(unified,/<h3>(?:本線|3連単チャレンジ|保険)/);
+assert.equal(allKinds.items.length,3,'source plan must be unchanged');
 const historic={...plan,fixedAt:'2026-10-08T10:20:00+09:00',
  engineVersion:'arvexq-bets-old-v317',
  items:[{level:'本線',kind:'馬連',points:1,combo:'2 - 6',combos:[[2,6]]}]};

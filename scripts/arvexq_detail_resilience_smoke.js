@@ -68,7 +68,7 @@ const instrumented = source.replace(boot, `
  // Entry, pace and bet are separate tabs; the bet opens a dedicated subpage.
  await t.page.locator('[data-panel="bets"]').click();
  await t.page.waitForSelector('.bet-detail-page-shell');
- assert.equal(await t.page.locator('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent(),'買い目');
+ assert.equal(await t.page.locator('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent(),'おすすめ買い目');
  await t.page.locator('[data-action="close-race-subpage"]').first().click();
  await t.page.waitForSelector('.race-nav-v230-top .race-nav-v230-btn');
  await t.page.locator('.rc-horse-main[data-horse-open="2"]').click();

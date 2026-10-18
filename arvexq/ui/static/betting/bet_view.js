@@ -12,11 +12,11 @@ function ticketCombos(z,esc,betComboText){
 function render(r,p,deps){
  const {buildAiBetPlan,esc,n,isFinal,raceMarkClock,aiBetExplanationHtml,betComboText}=deps;
   var plan=buildAiBetPlan(r,p);
-  if(!plan)return '<div class="ai-bet-box"><div class="ai-bet-title">AI買い目</div><p class="muted">'+((isFinal(r)||raceMarkClock(r).started)?'発走前買い目未保存（発走後の後付け予想は作成しません）':'発走前予想を取得中。未保存の買い目は暫定判定です。')+'</p></div>';
+  if(!plan)return '<div class="ai-bet-box"><div class="ai-bet-title">おすすめ買い目</div><p class="muted">'+((isFinal(r)||raceMarkClock(r).started)?'発走前買い目未保存（発走後の後付け予想は作成しません）':'発走前予想を取得中。未保存の買い目は暫定判定です。')+'</p></div>';
   var dataUnavailable=plan.decision==='データ不足'||plan.decision==='未取得'||
       plan.dataStatus==='engine-unavailable'||plan.dataStatus==='insufficient-preoff-evidence';
   function renderGroup(level,label,reason){
-    var items=(plan.items||[]).filter(function(z){return z.level===level});
+    var items=(plan.items||[]).filter(function(z){return !level||z.level===level});
     var body=items.map(function(z){
       return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(z.kind)+'</b><span class="arv-three-count">'+esc(z.points)+'点</span></div>'
         +(z.comboProbabilities&&z.comboProbabilities.length===(z.combos||[]).length
@@ -34,7 +34,7 @@ function render(r,p,deps){
        ('◎ '+hon.horseNumber+'番｜勝ち切る能力と3着内の安定性を兼ね備えた最有力馬（券種は全種類から比較）'):'高信頼の軸なし・買い目は券種別に判断',
       explanation=aiBetExplanationHtml(plan);
   return '<div class="ai-bet-box arv-three-bet">'
-    +'<div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">AI買い目</div>'
+    +'<div class="ai-bet-head ai-bet-head-v224"><div class="ai-bet-title">おすすめ買い目</div>'
     +'<div class="ai-bet-meta"><span class="arv-bet-quality"><small>3連単買い目の推定発生確率</small><b>'+esc(plan.trifectaOccurrenceProbability==null?'未算出':plan.trifectaOccurrenceProbability)+'<em>'+ (plan.trifectaOccurrenceProbability==null?'':'%') +'</em></b></span>'
     +'<span class="arv-bet-status">'+esc(status)+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div>'
     +'<p class="arv-three-provisional">'+esc(axisLabel)+'</p>'
@@ -42,9 +42,7 @@ function render(r,p,deps){
     +(plan.noAxis&&!dataUnavailable?'<p class="arv-three-provisional">'+esc(savedV346?'保存時点の軸なし判定を維持。':'◎信頼度Cまたは◎不在：軸を固定せずワイド・馬連・3連複を比較。馬単・3連単は見送ります。')+'</p>':'')
     +(plan.referenceOnly?'<p class="arv-three-provisional">通常レースの参考買い目。朝固定の厳選レースではありません。</p>':'')
     +((plan.betWarnings||[]).length?'<div class="arv-three-check"><b>購入前に確認</b><p>条件未確認：'+esc(plan.betWarnings.join('／'))+'</p><small>オッズ・期待値を確認してから購入判断してください。</small></div>':'')
-    +renderGroup('本線','本線｜的中重視',plan.reason)
-    +renderGroup('3連単チャレンジ','3連単チャレンジ｜高配当重視',plan.trifectaReason)
-    +renderGroup('保険','保険｜本線補完',plan.insuranceReason)
+    +renderGroup(null,'おすすめ買い目',plan.reason)
     +'<div class="arv-three-budget"><strong>合計 '+esc(total.points==null?(plan.items||[]).reduce(function(a,z){return a+n(z.points)},0):total.points)+'点</strong>'
     +(total.totalYen!=null?'<span>100円/点換算 '+esc(total.totalYen)+'円</span>':'')+'</div>'
     +'<p class="arv-three-budget-hint">購入額は投票時に指定</p>'
