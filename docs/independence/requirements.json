@@ -699,7 +699,7 @@
     {
       "id": 23,
       "name": "レースID照合",
-      "status": "分離済",
+      "status": "main統合済",
       "module": "arvexq.ingest.race_identity",
       "files": [
         "arvexq/ingest/race_identity.py",
@@ -719,11 +719,11 @@
       ],
       "implementation_scope": "Pure identity converter plus observed detail envelope check now linked to read-only production fact audit; no inferred race identity, no D1 overwrite. Wider provider cross-source identity reconciliation remains incomplete.",
       "evidence": {
-        "commit_sha": null,
-        "unit": null,
-        "integration": null,
-        "ci_url": null,
-        "main_sha": null,
+        "commit_sha": "126f9ecd34f7c9740702e58f181df28b3e75d8d5",
+        "unit": "Dedicated contract tests passed on PR head (full CI success)",
+        "integration": "Read-only factual audit integrated and passed PR CI",
+        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39108485694",
+        "main_sha": "0f7ab129fab53f42956254eec6604965fb6e9e4d",
         "production": null
       },
       "owner": "Codex",
@@ -1234,7 +1234,7 @@
     {
       "id": 39,
       "name": "馬名・馬番照合",
-      "status": "分離済",
+      "status": "main統合済",
       "module": "arvexq.ingest.runner_identity_compare",
       "files": [
         "arvexq/ingest/runner_identity_compare.py",
@@ -1251,13 +1251,13 @@
         "tests/test_runner_identity_compare.py",
         "tests/test_factual_data_audit.py"
       ],
-      "implementation_scope": "Factual cross-race runner-name identity comparison extracted as pure adapter and reused by read-only production audit. Does not correct missing/invalid runner data or complete the broader name/number reconciliation specification. PR and CI pending.",
+      "implementation_scope": "Factual cross-race runner-name identity comparison extracted as pure adapter and reused by read-only production audit. Does not correct missing/invalid runner data or complete the broader name/number reconciliation specification. Merged to main; wider identity reconciliation and production verification remain unfinished.",
       "evidence": {
-        "commit_sha": null,
-        "unit": null,
-        "integration": null,
-        "ci_url": null,
-        "main_sha": null,
+        "commit_sha": "a6dcbcc977f21e35a54cd510965ff932af34f017",
+        "unit": "Dedicated contract tests passed on PR head (full CI success)",
+        "integration": "Read-only factual audit integrated and passed PR CI",
+        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39108045279",
+        "main_sha": "523d9f28f9786be36d53f59b39b73007c6e0063d",
         "production": null
       },
       "owner": "Codex",
