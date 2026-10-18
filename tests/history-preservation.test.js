@@ -51,5 +51,5 @@ test('worker is wired to a pre-overwrite DB read and history merge',async()=>{
   const source=await readFile(new URL('../worker.js',import.meta.url),'utf8');
   assert.match(source,/previousHorsesByRace/);
   assert.match(source,/mergeStoredHorseHistory\(payloadObject,savedHorses\)/);
-  assert.match(source,/SELECT race_id,json_extract\(payload,'\\$\\.horses'\)/);
+  assert.match(source,/SELECT race_id,json_extract\(payload,'\$\.horses'\)/);
 });
