@@ -13,6 +13,7 @@ RETIRED_KEYS = frozenset(('aiEvaluation', 'integratedEvaluation', 'factorRanking
     'winnerLearningProfile', 'betRecommendations', 'recommendedBets', 'tickets', 'buyList', 'bets',
     'markMethod', 'markEngineVersion', 'predictionModelVersion', 'mark', 'predMark', '印',
     'honmeiRole', 'modelProbabilities', 'forecastRevisions', 'currentForecastRevisionId',
+    'predictionMarks', 'predictionEvidence', 'predictionRunnerCount', 'recommendedBetsStatus',
     'morningMarkSnapshot', 'officialMarkRevisions', 'modelMarkRevisions', 'savedForecastRevision',
     '_savedPreoffOriginal', 'legacyPredictionAudit', 'preRaceAudit', 'observedModelCoverage'))
 
