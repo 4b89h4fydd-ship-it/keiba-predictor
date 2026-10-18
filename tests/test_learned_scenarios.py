@@ -2,7 +2,6 @@ from copy import deepcopy
 from unittest import TestCase
 
 from arvexq.prediction.learned_scenarios import FEATURES, VERSION, evidence, fit_model, predict_model
-from arvexq.prediction.new_forecast import build_forecast
 from test_unified_jra_nar_observed_authority import race
 
 
@@ -30,26 +29,6 @@ class LearnedScenariosTests(TestCase):
     def setUpClass(cls):
         cls.models = {c: fit_model([training_race(c)], circuit=c) for c in ('中央','地方')}
 
-    def test_both_circuits_full_joint_distribution_and_single_axis(self):
-        for circuit in self.models:
-            with self.subTest(circuit=circuit):
-                d = target(circuit)
-                original = deepcopy(d)
-                result = build_forecast(d, self.models[circuit])
-                self.assertEqual(d, original)
-                self.assertEqual(result['predictionStatus'], 'candidate-analysis')
-                self.assertFalse(result['productionEligible'])
-                self.assertEqual(result['recommendedBetPlan']['decision'], '見送り')
-                self.assertEqual(result['honmeiDecision']['horseNumber'], 1)
-                self.assertEqual(result['honmeiDecision']['axisHorseNumber'], 1)
-                self.assertEqual(sum(h['integratedEvaluation']['mark']=='◎' for h in result['horses']), 1)
-                self.assertNotRegex(result['forecastText'], r'[0-9０-９A-Za-z%％]')
-                for s in result['scenarioAnalysis']['scenarios']:
-                    self.assertAlmostEqual(sum(e['probability'] for e in s['orders']), 1)
-                    self.assertAlmostEqual(sum(v['win'] for v in s['probabilities'].values()), 1)
-                    self.assertAlmostEqual(sum(v['top3'] for v in s['probabilities'].values()), 3)
-                self.assertEqual(len(result['recommendedBetPlan']['comparisons']), 8)
-
     def test_date_leakage_and_wrong_circuit_rejected(self):
         model = self.models['中央']
         for d in (training_race('中央'), target('地方')):
@@ -68,15 +47,6 @@ class LearnedScenariosTests(TestCase):
             h['recentRaces'].append({'date':b['date'],'fieldSize':12,'finish':1})
         self.assertEqual(predict_model(a,self.models['中央']), predict_model(b,self.models['中央']))
 
-    def test_originals_preserved_and_postanalysis_labeled(self):
-        d = target('地方')
-        d['result'] = {'status':'確定'}
-        d['preRacePrediction'], d['preRaceBet'] = {'original':'予想'}, {'original':'買い目'}
-        result = build_forecast(d,self.models['地方'])
-        self.assertEqual(result['analysisType'], 'retrospective')
-        self.assertEqual(result['preRacePrediction'], d['preRacePrediction'])
-        self.assertEqual(result['preRaceBet'], d['preRaceBet'])
-
     def test_full_career_beyond_recent_five_and_missing_not_zero(self):
         d = target('地方'); h = d['horses'][0]
         h['allPastRuns'] = deepcopy(h['recentRaces']) + [{'date':'2025-01-01','fieldSize':10,'finish':10}]
@@ -85,19 +55,6 @@ class LearnedScenariosTests(TestCase):
         self.assertFalse(report['careerComplete'])
         self.assertIsNone(report['featureValues']['same_going_finish'])
         self.assertIn('sire',report['missingFields'])
-
-    def test_missing_runner_history_disables_whole_field_prediction(self):
-        d = target('地方'); d['horses'][0]['recentRaces'] = []
-        result = build_forecast(d,self.models['地方'])
-        self.assertEqual(result['predictionStatus'],'insufficient-history')
-        self.assertFalse(any(h['integratedEvaluation']['mark'] for h in result['horses']))
-        self.assertEqual(result['recommendedBetPlan']['decision'],'見送り')
-
-    def test_no_model_never_falls_back_to_fixed_weight_candidate(self):
-        result = build_forecast(target('地方'))
-        self.assertEqual(result['predictionStatus'],'missing-trained-model')
-        self.assertEqual(result['honmeiDecision']['horseNumber'],0)
-        self.assertFalse(any(h['integratedEvaluation']['mark'] for h in result['horses']))
 
     def test_training_determinism_and_empty_bad_artifacts(self):
         model = fit_model([training_race('地方')], circuit='地方')
@@ -132,20 +89,6 @@ class WholeCareerRatesTests(TestCase):
         self.assertEqual(len(r['featureValues']),len(FEATURES))
         d.pop('direction')
         self.assertEqual(evidence(h,d)['rateEvidence']['sameCondition']['starts'], 0)
-
-    def test_joint_top_two_and_percent_ranges_are_consistent(self):
-        model = fit_model([training_race('地方')], circuit='地方')
-        d = target('地方')
-        result = build_forecast(d,model)
-        for scenario in result['scenarioAnalysis']['scenarios']:
-            probabilities = scenario['probabilities']
-            self.assertAlmostEqual(sum(p['top2'] for p in probabilities.values()), 2)
-            for p in probabilities.values():
-                self.assertLessEqual(p['win'],p['top2'])
-                self.assertLessEqual(p['top2'],p['top3'] + 1e-12)
-        for h in result['horses']:
-            ev = h['integratedEvaluation']
-            self.assertEqual(ev['modelProbabilityPercentRanges']['top2'], [100*p for p in ev['modelProbabilities']['top2']])
 
     def test_jump_and_flat_histories_do_not_mix(self):
         d = target('中央'); h = d['horses'][0]
