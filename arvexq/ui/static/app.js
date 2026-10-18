@@ -1456,7 +1456,7 @@ function currentBetEnginePlan(plan){
   // erase previously frozen tickets or recalculate them using final results.
   return plan&&Array.isArray(plan.items)&&(plan.items.length||plan.decision==='見送り')?plan:null
 }
-function frozenAiBetForRace(r){return null;}
+function frozenAiBetForRace(r){var p=window.ARVEXQProductionTickets.build(r);return p&&p.fixedAt?p:null;}
 function attachBetOutcomeAudit(plan,r,p){
   if(!plan||!p||plan.fixedAt)return plan;
   var o=p.outcome||paceOutcomeModel(r,p);if(!o)return plan;
@@ -1625,9 +1625,9 @@ function copyCurrentBet(){
   else setBetCopyStatus(fallbackCopyText(text)?'買い目をコピーしました':'コピーできませんでした')
 }
 // Dedicated betting display: /betting/bet_view.js
-function aiBetRecommendation(r,p){return window.ARVEXQTicketFrame.contents();}
+function aiBetRecommendation(r,p){return window.ARVEXQTicketFrame.contents(r,p);}
 function aiMarksPanel(r,p){return window.ARVEXQMarkFrame.render();}
-function betPanel(r,p){return window.ARVEXQTicketFrame.render();}
+function betPanel(r,p){return window.ARVEXQTicketFrame.render(r,p);}
 function diagnosisPanel(r,p){
   var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse&&a.horse.horseNumber,999)-n(b.horse&&b.horse.horseNumber,999)});
   var details='<div class="diagnosis-merged-list">'+rows.map(function(x,i){
