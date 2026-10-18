@@ -53,6 +53,60 @@ def detail_from(body: dict, rid: str) -> dict | None:
     return None
 
 
+
+def fetch_existing_d1_detail(base: str, rid: str, *, now: datetime, reader=request_json) -> dict | None:
+    """Read existing D1 views, never infer/construct historical starts.
+
+    The primary race response may be a slim legacy representation while
+    ?view=display exposes the already-stored rich race_details payload.
+    Only use the richer view for the same active race and before post.
+    """
+    url = base.rstrip("/") + "/api/race/" + urllib.parse.quote(rid, safe="")
+    primary = None
+    primary_error = None
+    try:
+        primary = detail_from(reader(url + "?t=" + str(time.time_ns())), rid)
+    except Exception as exc:
+        primary_error = exc
+    if primary is not None and (sealed_lock(primary) or _history_count(primary) > 0):
+        return primary
+    try:
+        display = detail_from(reader(url + "?view=display&t=" + str(time.time_ns())), rid)
+    except Exception:
+        if primary_error is not None:
+            raise primary_error
+        return primary
+    if display is None:
+        return primary
+    post = post_at(display)
+    if post is None or now.astimezone(JST) >= post:
+        return primary
+    if primary is not None:
+        if str(primary.get("date") or "") != str(display.get("date") or ""):
+            raise ValueError("D1 detail display date mismatch")
+        def active_numbers(detail):
+            return {int(h["horseNumber"]) for h in detail.get("horses") or []
+                    if isinstance(h, dict) and type(h.get("horseNumber")) is int
+                    and not h.get("scratched") and not h.get("withdrawn")
+                    and not any(s in str(h.get("status") or "") for s in ("取消", "除外", "欠場"))}
+        a, b = active_numbers(primary), active_numbers(display)
+        if a and a != b:
+            raise ValueError("D1 detail display active field mismatch")
+    # Existing sealed originals are always the source of truth.
+    if sealed_lock(display):
+        return display
+    if _history_count(display) > _history_count(primary):
+        return display
+    return primary if primary is not None else display
+
+
+def _history_count(detail: dict | None) -> int:
+    if not isinstance(detail, dict):
+        return 0
+    return sum(len(h.get("allPastRuns") or h.get("recentRaces") or [])
+               for h in detail.get("horses") or [] if isinstance(h, dict))
+
+
 def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dict:
     """Pure testable decision core; does not mutate or publish any race."""
     post = post_at(detail)
@@ -217,8 +271,7 @@ def main() -> int:
         rid = str(row["id"])
         url = base + "/api/race/" + urllib.parse.quote(rid, safe="")
         try:
-            body = request_json(url + "?t=" + str(int(time.time() * 1000)))
-            old = detail_from(body, rid)
+            old = fetch_existing_d1_detail(base, rid, now=datetime.now(JST))
             if not old:
                 return {"id": rid, "status": "missing-detail"}
             result = prepare_seal(old, now=datetime.now(JST))
