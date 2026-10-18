@@ -14,9 +14,10 @@ from hashlib import sha256
 import json
 
 from .race_softmax_research import _validate_race, _vector, _softmax, predict
-from .top_three_joint_research import VERSION as BASE_VERSION, joint_top_three
+from .top_three_joint_research import joint_top_three
+from .frozen_pace_context import NAMES as PACE_NAMES, VERSION as PACE_VERSION, build_preoff_pace_context
 
-VERSION = "arvexq-conditional-positions-research-v1"
+VERSION = "arvexq-conditional-positions-research-v2-pace-context"
 
 
 def _hash(value):
@@ -25,14 +26,16 @@ def _hash(value):
 
 
 def _vectors(race, win_model):
+    context = build_preoff_pace_context(race)
     return [_vector(h, win_model) +
-            [float(key not in h["features"]) for key in win_model["features"]]
-            for h in race["horses"]]
+            [float(key not in h["features"]) for key in win_model["features"]] +
+            context[i]
+            for i, h in enumerate(race["horses"])]
 
 
 def _stage_fit(races, win_model, stage, *, epochs, learning_rate, ridge):
     """Train categorical conditional likelihood for next finisher (stage 2/3)."""
-    width = len(win_model["weights"])
+    width = len(win_model["weights"]) + len(PACE_NAMES)
     weights = [0.] * width
     for _ in range(epochs):
         gradient = [ridge * w for w in weights]
@@ -88,6 +91,7 @@ def train_positions(train_races, win_model, *, epochs=150, learning_rate=.05,
              "winModelHash":win_model["modelHash"],"trainedThrough":win_model["trainedThrough"],
              "trainedRaceIds":sorted(seen),"circuit":win_model["circuit"],
              "family":win_model["family"],"features":list(win_model["features"]),
+             "paceContextVersion":PACE_VERSION,"paceFeatureNames":list(PACE_NAMES),
              "secondWeights":second,"thirdWeights":third,
              "trainRaceCount":len(train_races),"trainingInputHash":_hash(train_races),
              "optimizer":{"epochs":epochs,"learningRate":learning_rate,"ridge":ridge},
@@ -103,7 +107,9 @@ def predict_positions(position_model, win_model, race):
         raise ValueError("position model integrity mismatch")
     if position_model.get("version") != VERSION or position_model.get("winModelHash") != win_model.get("modelHash"):
         raise ValueError("model mismatch")
-    if position_model.get("features") != win_model.get("features"):
+    if (position_model.get("features") != win_model.get("features")
+            or position_model.get("paceContextVersion") != PACE_VERSION
+            or position_model.get("paceFeatureNames") != list(PACE_NAMES)):
         raise ValueError("feature mismatch")
     if (position_model.get("circuit") != win_model.get("circuit")
             or position_model.get("family") != win_model.get("family")):
@@ -112,7 +118,6 @@ def predict_positions(position_model, win_model, race):
             or race.get("raceId") in position_model["trainedRaceIds"]):
         raise ValueError("lookahead prediction forbidden")
     win = predict(win_model, race)
-    base = joint_top_three(win)
     numbers = [row["horseNumber"] for row in win["rows"]]
     first = [row["winProbability"] for row in win["rows"]]
     xs = _vectors(race, win_model)
@@ -149,7 +154,7 @@ def predict_positions(position_model, win_model, race):
         raise ValueError("non-normalized position marginals")
     return {"version":VERSION,"raceId":race["raceId"],
             "status":"research-only-position-uncalibrated",
-            "method":"train-only-conditional-second-and-third",
+            "method":"train-only-conditional-second-and-third-with-frozen-pace-proxy",
             "firstModelHash":win_model["modelHash"],
             "positionModelHash":position_model["modelHash"],
             "marginals":[{"horseNumber":no,"firstProbability":v[0],
