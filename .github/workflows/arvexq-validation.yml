@@ -256,7 +256,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_persisted_pipeline_stages.py' -v
           python -m unittest discover -s tests -p 'test_prefetch_racecard_delivery.py' -v
           python -m unittest discover -s tests -p 'test_early_pace_enrichment.py' -v
-          python -m unittest discover -s tests -p 'test_authorized_history_feeds.py' -v
+          python -m unittest discover -s tests -p 'test_single_history_route.py' -v
           python -m unittest discover -s tests -p 'test_nar_official_csv.py' -v
           python -m unittest discover -s tests -p 'test_nar_threadsafe_adapters.py' -v
           python -m unittest discover -s tests -p 'test_nar_career_coverage.py' -v

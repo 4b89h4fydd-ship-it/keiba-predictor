@@ -5,13 +5,41 @@ import copy
 from typing import Any
 
 from arvexq.databanks.registry import DataBankRegistry, registry
-from arvexq.databanks.authorized_feeds import _validated_early_timing
 from arvexq.ingest.orchestrator import FetchResult, fetch_domain
 from arvexq.ingest.full_career import merge_career, audit_career, date_key
 
 # Identity-verified career sources provide both observed runs and race-date
 # start-count evidence. Track count-source outages separately for audit parity.
 START_COUNT_SOURCES = frozenset({"netkeiba_verified_career"})
+
+
+def _validated_early_timing(data: Any) -> dict[str, Any] | None:
+    """Accept observed horse-specific timing only, not inferred race leader splits."""
+    if not isinstance(data, dict):
+        return None
+    kind = str(data.get("sourceKind") or "")
+    reference = str(data.get("sourceRef") or "").strip()
+    if kind not in {"individual_sensor", "video_estimate"} or not reference:
+        return None
+    clean: dict[str, Any] = {"sourceKind": kind, "sourceRef": reference[:400]}
+    intervals = {
+        "first200mSeconds": (7.0, 25.0),
+        "gateReactionSeconds": (0.05, 3.0),
+        "acceleration0to100Mps2": (0.1, 10.0),
+    }
+    for key, (minimum, maximum) in intervals.items():
+        val = data.get(key)
+        if val is None or val == "":
+            continue
+        try:
+            value = float(val)
+        except (TypeError, ValueError):
+            continue
+        if minimum <= value <= maximum:
+            clean[key] = value
+    if not any(key in clean for key in intervals):
+        return None
+    return clean
 
 
 def _present(value: Any) -> bool:

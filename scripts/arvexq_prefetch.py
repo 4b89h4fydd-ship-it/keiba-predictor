@@ -31,7 +31,6 @@ from arvexq.prediction.observed_model import model_version
 from arvexq.prediction.race_intelligence import attach_evidence
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 from arvexq.ingest.full_career import merge_career
-from arvexq.databanks.authorized_feeds import register_authorized_history_feeds
 from arvexq.databanks.nar_official_csv import register_nar_official_archive
 from arvexq.databanks.registry import registry as source_registry
 
@@ -607,14 +606,6 @@ def main() -> int:
         # Analysis does not register data providers or discover racecards.
         return prepare(args.bundle, args.payload, args.report,
                        args.workers, args.analysis_workers, phase="analyze")
-    # The heavy prefetch lane always registers configured licensed feeds, even
-    # when a legacy app startup path skipped optional source registration.
-    try:
-        connected = register_authorized_history_feeds(source_registry)
-        if connected:
-            print("AUTHORIZED_HISTORY_FEEDS_ACTIVE", len(connected), sorted(connected))
-    except ValueError as exc:
-        print("AUTHORIZED_HISTORY_FEEDS_CONFIG_WARN", str(exc))
     try:
         official = register_nar_official_archive(source_registry)
         if official:
