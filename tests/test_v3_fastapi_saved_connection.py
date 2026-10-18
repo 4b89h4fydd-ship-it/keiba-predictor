@@ -86,3 +86,31 @@ def test_existing_route_v3_missing_is_404_not_async_rebuild(monkeypatch):
     monkeypatch.setattr(app,"_schedule_fast_card_refresh",lambda *a,**k:pytest.fail("no scheduling"))
     response=app.race_detail("jra-2026-10-18-京都-01",view="v3-facts")
     assert response.status_code==404
+
+
+@pytest.mark.parametrize("circuit", ["jra", "nar"])
+def test_saved_screen_readiness_conservative_and_aligned(circuit):
+    source = saved(circuit)
+    result = saved_fact_screen(source["id"], lambda _: source)
+    state = result["displayReadiness"]
+    assert state["schema"] == "arvexq-v3-display-readiness-1"
+    assert state["complete"] is False
+    assert state["canClaimFullyRetrieved"] is False
+    assert state["predictionsEnabled"] is False
+    assert state["roster"] == "unverified"
+    assert state["history"] == "partial-unverified"
+    assert state["odds"] == "incomplete"
+    assert result["marks"] is None and result["tickets"] is None
+
+
+@pytest.mark.parametrize("circuit", ["jra", "nar"])
+def test_saved_screen_roster_mismatch_and_absent_history(circuit):
+    source = saved(circuit)
+    source["fieldSize"] = 3
+    for horse in source["horses"]:
+        horse["allPastRuns"] = []
+        horse["recentRaces"] = []
+    state = saved_fact_screen(source["id"], lambda _: source)["displayReadiness"]
+    assert state["roster"] == "count-mismatch"
+    assert state["history"] == "missing"
+    assert state["complete"] is False
