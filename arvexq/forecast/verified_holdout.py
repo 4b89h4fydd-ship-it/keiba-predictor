@@ -129,6 +129,7 @@ def evaluate_verified_circuits(connection, final_results, *, min_races=MIN_RACES
             [predict(output["model"], race) for race in test_races],
             test_races)
         reports[key] = {
+            "eligible": True, "races": len(cases), "dates": len(dates),
             "positionValidation": order_validation,
             "positionTest": order_test,
             "positionMethod": "conditional-order-win-softmax-baseline-not-fitted-second-third",
