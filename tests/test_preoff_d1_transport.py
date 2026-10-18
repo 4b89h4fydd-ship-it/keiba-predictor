@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from io import BytesIO
 import json
+import gzip
 
 import pytest
 
@@ -57,7 +58,8 @@ def test_python_json_canonical_payload_and_transport_round_trip(monkeypatch, tmp
     def transport(req, timeout):
         assert timeout == 12
         assert req.get_header("Authorization") == "Bearer " + TOKEN
-        payload = json.loads(req.data.decode())
+        assert req.get_header('Content-encoding') == 'gzip'
+        payload = json.loads(gzip.decompress(req.data).decode())
         observed.update(payload)
         assert "55.0" in payload["snapshotCoreCanonical"]
         assert "result::" not in payload["snapshotCoreCanonical"]
