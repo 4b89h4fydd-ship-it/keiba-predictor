@@ -319,7 +319,7 @@ jobs:
           positions=[prefetch_workflow.find(label) for label in order]
           if -1 in positions or positions!=sorted(positions):
               raise SystemExit('prediction must never precede persisted verified facts')
-          sqlite_required=['PRAGMA quick_check','SQLITE_CACHE_BAD','*-wal','*-shm']
+          sqlite_required=['PRAGMA quick_check','SQLITE_CACHE_UNAVAILABLE_PRESERVED','removed=0', 'SQLite cache cannot be safely used']
           missing=[x for x in sqlite_required if x not in sqlite_health]
           if missing:raise SystemExit('sqlite health guard missing: '+repr(missing))
           print('architecture and operations guard OK')
