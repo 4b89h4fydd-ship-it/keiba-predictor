@@ -36,7 +36,7 @@ jobs:
           grep -qi 'CREATE TABLE IF NOT EXISTS forecast_preoff_evidence' migrations/0001_forecast_preoff_evidence.sql
           grep -qi 'prevent_forecast_evidence_update' migrations/0001_forecast_preoff_evidence.sql
           grep -qi 'prevent_forecast_evidence_delete' migrations/0001_forecast_preoff_evidence.sql
-          if grep -Ei '(DROP|ALTER|DELETE FROM|UPDATE |TRUNCATE|INSERT INTO race_|CREATE TABLE race_)' migrations/0001_forecast_preoff_evidence.sql; then
+          if grep -Ei '(DROP[[:space:]]|ALTER[[:space:]]|TRUNCATE[[:space:]]|DELETE[[:space:]]+FROM[[:space:]]+race_|UPDATE[[:space:]]+race_|INSERT[[:space:]]+INTO[[:space:]]+race_|CREATE[[:space:]]+TABLE[[:space:]]+race_)' migrations/0001_forecast_preoff_evidence.sql; then
             echo "Unsafe mutation token in research-only D1 migration"
             exit 1
           fi
