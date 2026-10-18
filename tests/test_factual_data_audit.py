@@ -139,3 +139,15 @@ def test_cli_writes_read_failures_and_returns_failure(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, 'read_day', unavailable)
     assert cli.main() == 1
     assert json.loads(report.read_text())['errors'] == 1
+
+
+def test_out_of_range_frame_audit_retains_observed_value_and_runner_identity():
+    bundle = {'date': DAY, 'races': [{'id': RID}], 'details': [
+        {'id': RID, 'date': DAY, 'horses': [
+            {'horseNumber': 12, 'frameNumber': 12, 'name': '観測馬'}]}]}
+    before = deepcopy(bundle)
+    result = audit_day(bundle)
+    assert result['validationErrors'] == [{
+        'raceId': RID, 'horseNumber': 12, 'frameNumber': 12,
+        'horseName': '観測馬', 'error': 'frame number outside 1..8'}]
+    assert bundle == before
