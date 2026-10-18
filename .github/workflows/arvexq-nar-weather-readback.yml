@@ -1,0 +1,23 @@
+name: ARVEXQ Item 001 NAR Weather Production Readback
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_nar_weather_readback.py'
+      - 'tests/test_nar_weather_live_readback.py'
+      - '.github/workflows/arvexq-nar-weather-readback.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify contracts
+        run: PYTHONPATH=. python -m pytest tests/test_item_001_nar_weather.py tests/test_nar_weather_live_readback.py -q
+      - name: Verify real NAR race weather via GET-only API
+        run: PYTHONPATH=. python scripts/arvexq_nar_weather_readback.py
