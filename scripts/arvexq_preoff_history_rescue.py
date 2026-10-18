@@ -78,8 +78,9 @@ def main():
     from arvexq.databanks.authorized_feeds import register_authorized_history_feeds
     from arvexq.databanks.nar_official_csv import register_nar_official_archive
     from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
-    register_authorized_history_feeds()
-    register_nar_official_archive()
+    from arvexq.databanks.registry import registry
+    register_authorized_history_feeds(registry)
+    register_nar_official_archive(registry)
     candidate = enrich_race_missing_sync(original, history_limit=100,
                                           max_parallel_horses=4)
     accepted = accept_observed_rescue(original, candidate, now=datetime.now(JST))
