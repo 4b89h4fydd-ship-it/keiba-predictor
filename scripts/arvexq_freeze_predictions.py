@@ -54,13 +54,15 @@ def detail_from(body: dict, rid: str) -> dict | None:
 
 
 
-def fetch_existing_d1_detail(base: str, rid: str, *, now: datetime, reader=request_json) -> dict | None:
+def fetch_existing_d1_detail(base: str, rid: str, *, now: datetime, reader=None) -> dict | None:
     """Read existing D1 views, never infer/construct historical starts.
 
     The primary race response may be a slim legacy representation while
     ?view=display exposes the already-stored rich race_details payload.
     Only use the richer view for the same active race and before post.
     """
+    if reader is None:
+        reader = request_json
     url = base.rstrip("/") + "/api/race/" + urllib.parse.quote(rid, safe="")
     primary = None
     primary_error = None
