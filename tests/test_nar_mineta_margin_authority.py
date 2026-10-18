@@ -2,7 +2,6 @@ import copy
 import unittest
 from arvexq.prediction.final_marks import apply_core_marks
 from arvexq.prediction.observed_model import MODEL_VERSION, apply_nar_marks, rank_nar
-from arvexq.research.mineta_field_proxy import score_race
 from arvexq.research.margin_abcde_candidate import score as margin_score
 
 
