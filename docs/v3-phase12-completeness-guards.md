@@ -1,0 +1,1 @@
+# Phase 12: Factual completeness guard\n\nD1 factual view now reports roster, history and odds completeness independently. An observed count does not prove official roster integrity, all-career coverage, or live market freshness. Field-size discrepancies are flagged as count-mismatch. No additional collectors, prediction code, D1 writes, UI or deployment changes.\n

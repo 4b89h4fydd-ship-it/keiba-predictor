@@ -150,7 +150,27 @@ function projection(original,requestedId) {
       circuit,runnerRows:rows.length,observedPriorRuns:historyCount,
       runnersWithPriorRuns:runnersWithPrior,missingBasicRunnerCells:missingCells,
       careerCompleteness:'unverified',officialRosterVerified:false,
-      liveD1FreshnessVerified:false,resultState:'withheld-until-postrace'
+      liveD1FreshnessVerified:false,resultState:'withheld-until-postrace',
+      completeness:{
+        roster:{
+          state:Number.isInteger(original.fieldSize)&&original.fieldSize>0&&
+            original.fieldSize!==rows.length?'count-mismatch':'unverified',
+          expected: Number.isInteger(original.fieldSize)&&original.fieldSize>0?original.fieldSize:null,
+          observed:rows.length,officialVerified:false
+        },
+        history:{
+          state:historyCount===0?'missing':'partial-unverified',
+          observedPriorRuns:historyCount,runnersWithPriorRuns,
+          totalRunners:rows.length,allCareerRunsVerified:false
+        },
+        odds:{
+          state:count(win,'observed')===rows.length&&
+            count(place,'observed')===rows.length?'observed-unverified':'incomplete',
+          winObserved:count(win,'observed'),placeObserved:count(place,'observed'),
+          winInvalid:count(win,'invalid'),placeInvalid:count(place,'invalid'),
+          expectedRunners:rows.length,marketFreshnessVerified:false
+        }
+      }
     },
     oddsFields,quoteFields,
     predictionStatus:'not-implemented',marks:null,tickets:null
