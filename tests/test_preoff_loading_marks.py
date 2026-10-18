@@ -11,7 +11,7 @@ class PreoffLoadingMarksTest(unittest.TestCase):
         match = re.search(r"function morningSavedMarkRows\(r\)\{(.*?)\n\}", source, re.S)
         self.assertIsNotNone(match)
         body = match.group(1)
-        self.assertIn("raceMarkClock(r).started?authorizedPreOffMarks(r):null", body)
+        self.assertIn("raceMarkClock(r).started?verifiedOriginalMarks(r):null", body)
         self.assertIn("isScratchHorse(h)?'':String(z.mark||'')", body)
 
     def test_retired_live_prediction_engine_is_not_executed(self):
