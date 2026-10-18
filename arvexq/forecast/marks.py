@@ -1,10 +1,9 @@
 """Approved baseline marks produced only from a real pre-off prediction."""
-from arvexq.prediction.recommendation_engine import rank_marks
-
 
 def generate_marks(prediction):
     if not isinstance(prediction, dict) or not prediction.get("scenarios"):
         return []
+    from arvexq.prediction.recommendation_engine import rank_marks
     ranked = rank_marks(prediction["scenarios"], max_lows=3)
     marks = ranked["marks"]
     return [{"horseNumber": int(h), "mark": marks[h],
