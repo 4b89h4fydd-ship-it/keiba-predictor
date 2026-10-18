@@ -10,8 +10,8 @@ export function needsHistoryPreservation(detail) {
 
 function runDate(run) {
   const value = String(run?.date ?? run?.raceDate ?? run?.日付 ?? '').trim();
-  if (/^\\d{8}$/.test(value)) return value.slice(0,4)+'-'+value.slice(4,6)+'-'+value.slice(6,8);
-  const m = value.match(/^(\\d{4})[./-](\\d{1,2})[./-](\\d{1,2})/);
+  if (/^\d{8}$/.test(value)) return value.slice(0,4)+'-'+value.slice(4,6)+'-'+value.slice(6,8);
+  const m = value.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})/);
   return m ? m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0') : '';
 }
 
