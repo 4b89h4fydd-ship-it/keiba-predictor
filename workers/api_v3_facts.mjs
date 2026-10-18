@@ -24,7 +24,8 @@ function circuitOf(value) {
 }
 function dateKey(raw) {
   if (typeof raw !== 'string') return null;
-  let day = raw.trim();
+  let day = raw.trim().replaceAll('/', '-').replaceAll('.', '-');
+  if (day.length > 10 && !/^\d{8}$/.test(day)) day = day.slice(0, 10);
   if (/^\d{8}$/.test(day)) day = day.slice(0,4)+'-'+day.slice(4,6)+'-'+day.slice(6);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
   const iso = new Date(day+'T00:00:00.000Z');
@@ -35,7 +36,7 @@ function observed(value) {
     !(typeof value==='string' && ['', '-', '--','不明'].includes(value.trim()));
 }
 function pastRows(horse,targetDate) {
-  const rows = [], seen = new Set();
+  const byDate = new Map();
   for (const collection of ['allPastRuns','recentRaces']) {
     if (!Array.isArray(horse[collection])) continue;
     for (const row of horse[collection]) {
@@ -44,16 +45,18 @@ function pastRows(horse,targetDate) {
       if (!date || date >= targetDate) continue;
       const sample = pick(row,PAST);
       sample.date = date;
-      const identity = JSON.stringify([date,sample.track ?? null,
-        sample.distance ?? null,sample.finish ?? sample.rank ?? null,
-        sample.timeSeconds ?? sample.time ?? null,sample.raceId ?? null]);
-      if (seen.has(identity)) continue;
-      seen.add(identity);
-      rows.push(sample);
+      // At most one prior start per calendar date, matching Python's saved
+      // career merge. Only copied, observed fields may fill a duplicate.
+      const existing = byDate.get(date);
+      if (existing) {
+        for (const key of PAST)
+          if ((existing[key]===undefined || existing[key]===null ||
+               existing[key]==='' || Array.isArray(existing[key]) && !existing[key].length) &&
+              observed(sample[key])) existing[key]=structuredClone(sample[key]);
+      } else byDate.set(date,sample);
     }
   }
-  rows.sort((a,b)=>b.date.localeCompare(a.date));
-  return rows;
+  return [...byDate.values()].sort((a,b)=>b.date.localeCompare(a.date));
 }
 function classify(raw) {
   if (!observed(raw)) return {status:'missing',value:null};
@@ -109,6 +112,15 @@ function projection(original,requestedId) {
       const q=priceFact(horse[key],key);
       out.push({horseNumber:number,state:q.status,value:q.value});
     }
+    const w=win.at(-1).state, p=place.at(-1).state, rank=popularity.at(-1).state;
+    rows.at(-1).readiness={
+      schema:'arvexq-v3-runner-readiness-1',horseNumber:number,
+      history:runs.length?'partial-unverified':'missing',
+      observedPriorRunCount:runs.length,allCareerRunsVerified:false,
+      odds:w==='observed'&&p==='observed'?'observed-unverified':'incomplete',
+      win:w,place:p,popularity:rank,marketFreshnessVerified:false,
+      canClaimFullyRetrieved:false
+    };
     // Timestamp is accepted only from the explicit horse quote field, never
     // the race start time, worker clock or live odds_current overlay.
     const quoteAt=horse.oddsUpdatedAt ?? horse.oddsTimestamp;

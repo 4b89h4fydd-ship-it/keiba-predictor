@@ -65,6 +65,14 @@ async function optin(raceData,compressed=false) {
   assert.equal(body.detail.schema,'arvexq-v3-factual-screen-1');
   assert.deepEqual(body.detail.rows.map(r=>r.horseNumber),[1,2]);
   assert.equal(body.detail.rows[1].observedPriorRunCount,1);
+  assert.equal(body.detail.rows[1].readiness.history,'partial-unverified');
+  assert.equal(body.detail.rows[1].readiness.win,'observed');
+  assert.equal(body.detail.rows[1].readiness.place,'missing');
+  assert.equal(body.detail.rows[1].readiness.odds,'incomplete');
+  assert.equal(body.detail.rows[0].readiness.history,'partial-unverified');
+  assert.equal(body.detail.rows[0].readiness.win,'missing');
+  assert.equal(body.detail.rows[0].readiness.popularity,'invalid');
+  assert.equal(body.detail.rows[0].readiness.canClaimFullyRetrieved,false);
   assert.equal(body.detail.rows[1].recentRaces[0].date,'2026-10-01');
   assert.equal(body.detail.results,null);
   assert.equal(body.detail.resultFields,null);
@@ -105,6 +113,17 @@ for(const c of ['jra','nar']) {
   const duplicate=structuredClone(sample);
   duplicate.horses[1].horseNumber=2;
   assert.throws(()=>factualProjection(duplicate,duplicate.id),/ambiguous/);
+  const heavy=race(c);
+  heavy.horses[0].allPastRuns=Array.from({length:8},(_,i)=>({
+    date:'2026-10-'+String(i+1).padStart(2,'0'),finish:3
+  }));
+  heavy.horses[0].recentRaces=[{date:'2026-10-08',track:'test'},
+    {date:'2026-10-18',finish:2}];
+  const measured=factualProjection(heavy,heavy.id);
+  assert.equal(measured.rows.find(x=>x.horseNumber===2).observedPriorRunCount,9);
+  assert.equal(measured.rows.find(x=>x.horseNumber===2).recentRaces.length,5);
+  assert.equal(measured.rows.find(x=>x.horseNumber===2).readiness.observedPriorRunCount,9);
+  assert.equal(measured.coverage.observedPriorRuns,10);
 }
 const original=race();
 const db=mockDB(original,{missing:true});

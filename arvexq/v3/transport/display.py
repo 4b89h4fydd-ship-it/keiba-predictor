@@ -17,15 +17,16 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
     entries = response.get("entries")
     history = response.get("history")
     odds = response.get("odds")
+    runner_readiness = response.get("runnerReadiness")
     if not isinstance(entries, list) or not isinstance(history, list) or not isinstance(odds, list):
         raise ValueError("incomplete observed response")
-    if not len(entries) == len(history) == len(odds):
+    if not isinstance(runner_readiness, list) or not len(entries) == len(history) == len(odds) == len(runner_readiness):
         raise ValueError("runner/history/odds alignment mismatch")
     # Preserve source row identity and refuse ambiguous duplicates, not a
     # fabricated index/name merge that could attach another horse's history.
     seen: set[int] = set()
     rows: list[dict[str, Any]] = []
-    for h, past, price in zip(entries, history, odds):
+    for h, past, price, readiness in zip(entries, history, odds, runner_readiness):
         number = h.get("horseNumber")
         if isinstance(number, bool):
             raise ValueError("invalid runner number")
@@ -36,6 +37,11 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
         if actual <= 0 or actual in seen or number != past.get("horseNumber") or number != price.get("horseNumber"):
             raise ValueError("runner identity collision/misalignment")
         seen.add(actual)
+        if (not isinstance(readiness, dict) or
+                readiness.get("schema") != "arvexq-v3-runner-readiness-1" or
+                readiness.get("horseNumber") != number or
+                readiness.get("observedPriorRunCount") != past.get("observedPriorRunCount")):
+            raise ValueError("runner readiness identity/count mismatch")
         runs = past.get("pastRuns")
         if not isinstance(runs, list):
             raise ValueError("past run list missing")
@@ -46,22 +52,17 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
             "recentRaces": deepcopy(runs[:recent_limit]),
             "observedPriorRunCount": past["observedPriorRunCount"],
             "careerCompleteness": "unverified",
+            "readiness": deepcopy(readiness),
         })
     rows.sort(key=lambda row: row["horseNumber"])
     race = response.get("race") or {}
     expected = race.get("fieldSize") if isinstance(race, dict) else None
     roster = ("count-mismatch" if type(expected) is int and expected > 0
               and expected != len(rows) else "unverified")
-    observed_runs = sum(len(row["recentRaces"]) for row in rows)
+    observed_runs = sum(row["observedPriorRunCount"] for row in rows)
     history_state = "missing" if observed_runs == 0 else "partial-unverified"
-    prices = response.get("oddsFields") or {}
-    win = prices.get("win", []) if isinstance(prices, dict) else []
-    place = prices.get("place", []) if isinstance(prices, dict) else []
-    def valid_count(values):
-        return sum(item.get("state") == "observed" for item in values
-                   if isinstance(item, dict)) if isinstance(values, list) else 0
-    odds_state = ("observed-unverified" if len(rows) and
-                  valid_count(win) == len(rows) and valid_count(place) == len(rows)
+    odds_state = ("observed-unverified" if rows and
+                  all(row["readiness"]["odds"] == "observed-unverified" for row in rows)
                   else "incomplete")
     readiness = {
         "schema": "arvexq-v3-display-readiness-1",
