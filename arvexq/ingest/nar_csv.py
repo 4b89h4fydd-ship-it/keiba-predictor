@@ -6,6 +6,7 @@ import io
 import zipfile
 from arvexq.ingest.field_normalization import _clean
 from arvexq.ingest.pure_parsers import decode_csv_bytes
+from arvexq.ingest.race_identity import canonical_race_id, same_race
 
 # Official CSV fixed-column indexes, based on NAR's published data specification.
 RACE_IDX = {
