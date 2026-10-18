@@ -273,7 +273,7 @@ for extra_asset in ("previous_ai_results.js", "arvexq-brush-logo.svg"):
     shutil.copy2(src, DIST / extra_asset)
 
 (DIST / "build-version.txt").write_text(BUILD_VERSION + "\n", encoding="utf-8")
-model_version = "disabled-unapproved-assistant-forecast"
+from arvexq.forecast.engine import VERSION as model_version
 (DIST / "version.json").write_text(json.dumps({"build":BUILD_VERSION,"shell":"independent-production-boundaries","model":model_version},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
 redirects=["/venue /index.html 200","/race /index.html 200","/keiba /keiba/index.html 200"]
 for v in compat_app:redirects.append(f"/app-{v}.js /app-{BUILD_VERSION}.js 302")
