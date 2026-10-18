@@ -8,6 +8,7 @@ assert(!s.includes("record={version:'v345'"),'retired local mark seal must not b
 assert(!s.includes('localStorage.setItem(markFreezeKey(r)'), 'retired local mark seal must not be written');
 assert(!s.includes('function serverFrozenPrediction('),'retired frozen-prediction publishing is prohibited');
 assert(!s.includes('function assignPredictionMarks('),'retired mark generation is prohibited');
-assert(s.includes('function authorizedPreOffMarks('),'audit receipts must remain available without being republished');
+assert(!s.includes('function authorizedPreOffMarks('),'retired mark selector must be deleted');
+assert(s.includes('function verifiedOriginalMarks('),'verified pre-off originals remain available for audit');
 assert(s.includes('ARVEXQProductionMarks.visible(x)'),'live marks must come from the independent disabled mark interface');
 console.log('RETIRED_LOCAL_MARK_FREEZE_EXCLUDED_OK');
