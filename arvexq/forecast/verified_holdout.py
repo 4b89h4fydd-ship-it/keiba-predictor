@@ -15,6 +15,7 @@ from .preoff_evidence_store import read_capture
 from .frozen_research_input import from_frozen_snapshot
 from .race_softmax_research import chronological_experiment, _split, predict
 from .top_three_joint_research import evaluate_orders
+from .conditional_positions_research import train_positions, compare_holdout
 
 CONFIRMED = {"確定", "confirmed"}
 MIN_RACES = 100
@@ -128,7 +129,22 @@ def evaluate_verified_circuits(connection, final_results, *, min_races=MIN_RACES
         order_test = evaluate_orders(
             [predict(output["model"], race) for race in test_races],
             test_races)
+        # Same training partition, frozen win features and strict holdout.
+        # Stage 2/3 training never consumes validation/test finishing labels.
+        train_races, _, _ = _split(cases)
+        conditional = train_positions(
+            train_races, output["model"], **{
+                key: value for key, value in train_settings.items()
+                if key in ("epochs", "learning_rate", "ridge")
+            })
+        conditional_validation = compare_holdout(
+            validation_races, output["model"], conditional)
+        conditional_test = compare_holdout(
+            test_races, output["model"], conditional)
         reports[key] = {
+            "conditionalPositionValidation": conditional_validation,
+            "conditionalPositionTest": conditional_test,
+            "conditionalModelHash": conditional["modelHash"],
             "eligible": True, "races": len(cases), "dates": len(dates),
             "positionValidation": order_validation,
             "positionTest": order_test,
