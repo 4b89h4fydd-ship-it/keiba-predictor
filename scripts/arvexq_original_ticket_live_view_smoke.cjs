@@ -52,4 +52,46 @@ for(const malformed of [
  assert.equal(item.items.length,0);
  assert.doesNotMatch(context.ARVEXQTicketFrame.render(malformed),/3 - 2 - 1/);
 }
+
+ // Historical 2026-10-18 races must show ONLY their actual pre-off originals.
+ // Exercise the same adapter for 92 distinct race IDs, not only selected UI cards.
+const originalDay='2026-10-18';
+for(let k=0;k<92;k++){
+  const id=(k%2?'nar':'jra')+'-2026-10-18-venue'+k+'-race'+k;
+  const fixed={...receipt,raceId:id,raceDate:originalDay,fixedAt:'2026-10-18T07:10:00+09:00'};
+  const originalRace={...race,id,date:originalDay,startTime:'12:00',circuit:k%2?'地方':'中央',
+    morningTicketEvidence:fixed};
+  assert.equal(context.ARVEXQMorningEvidence.verify(originalRace,fixed),true);
+  const preserved=context.ARVEXQProductionPrediction.build(originalRace);
+  assert.equal(context.ARVEXQProductionPrediction.current().source,'saved-preoff');
+  assert.deepEqual(Array.from(preserved.rows,x=>x.predMark),['◎','○','▲','△','☆']);
+  assert.equal(context.ARVEXQProductionMarks.visible(preserved.rows[0]),'◎');
+  assert.equal(preserved.rows[0].winProbability,null);
+  assert.match(context.ARVEXQMarkFrame.render(),/発走前の保存原本/);
+  assert.match(context.ARVEXQPredictionFrame.render(),/発走前に保存された予想印/);
+  const bet=context.ARVEXQProductionTickets.current();
+  assert.equal(bet.items.length,2);
+  assert.equal(JSON.stringify(bet.items[1].combos),JSON.stringify(triples));
+}
+// The same verified archive is allowed in existing nested daily summaries.
+const nestedEvidence={...receipt,raceId:'test-nested-2026-10-18',raceDate:originalDay,
+ fixedAt:'2026-10-18T07:10:00+09:00'};
+const nestedRace={...race,id:nestedEvidence.raceId,date:originalDay,startTime:'12:00',
+ morningTicketEvidence:null,
+ volatility:{morningPicks:{ticketEvidence:nestedEvidence}}};
+assert.equal(context.ARVEXQProductionPrediction.build(nestedRace).rows[0].predMark,'◎');
+assert.equal(context.ARVEXQProductionTickets.build(nestedRace).items.length,2);
+// No saved original, wrong roster or a receipt sealed after the post: no historical marks.
+for(const bad of [
+ {...nestedRace,volatility:{}},
+ {...nestedRace,horses:nestedRace.horses.slice(1)},
+ {...nestedRace,volatility:{morningPicks:{ticketEvidence:{
+    ...nestedEvidence,fixedAt:'2026-10-18T12:10:00+09:00'}}}},
+ {...nestedRace,id:'another-race'},
+]){
+ const row=context.ARVEXQProductionPrediction.build(bad).rows[0];
+ assert.equal(row.predMark,'');
+ assert.equal(context.ARVEXQProductionTickets.build(bad).items.length,0);
+}
+
 console.log('VERIFIED_ORIGINAL_TICKETS_RENDERED_UNCHANGED_AND_INVALIDS_REJECTED');
