@@ -1,0 +1,25 @@
+name: ARVEXQ Item 002 NAR Going Production Readback
+
+"on":
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_nar_going_readback.py'
+      - 'tests/test_nar_going_live_readback.py'
+      - '.github/workflows/arvexq-nar-going-readback.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify contracts
+        run: PYTHONPATH=. python -m pytest tests/test_item_002_nar_going.py tests/test_nar_going_live_readback.py -q
+      - name: Verify real NAR going via GET-only API
+        run: PYTHONPATH=. python scripts/arvexq_nar_going_readback.py
