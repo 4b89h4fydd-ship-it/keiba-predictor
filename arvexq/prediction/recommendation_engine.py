@@ -45,7 +45,7 @@ def _validate_scenarios(scenarios):
     return cleaned
 
 
-def rank_marks(scenarios, max_lows=3, max_longshots=1):
+def rank_marks(scenarios, max_lows=3):
     """Return simple marks; odds are intentionally excluded from ◎○▲ ranking."""
     rows = _validate_scenarios(scenarios)
     win, podium = defaultdict(float), defaultdict(float)
@@ -53,13 +53,12 @@ def rank_marks(scenarios, max_lows=3, max_longshots=1):
         win[order[0]] += p
         for h in order[:3]:
             podium[h] += p
-    ranked = sorted(win, key=lambda h: (-win[h], -podium[h], h))
     # Include zero-win horses present in the field.
-    ranked = sorted(podium, key=lambda h: (-win[h], -podium[h], h))
+    ranked = sorted(rows[0][0], key=lambda h: (-win[h], -podium[h], h))
     marks = {}
     for symbol, horse in zip(MARKS[:3], ranked):
         marks[horse] = symbol
-    remainder = sorted((h for h in podium if h not in marks),
+    remainder = sorted((h for h in rows[0][0] if h not in marks),
                        key=lambda h: (-podium[h], h))
     for h in remainder[:max_lows]:
         marks[h] = "△"
@@ -98,6 +97,7 @@ def evaluate_tickets(scenarios, quoted_odds, place_payout_slots=3):
         raise ValueError("Invalid place payout slots")
     field = set(rows[0][0])
     results = []
+    seen = set()
     for (kind, horses), odds in quoted_odds.items():
         horses = tuple(str(h) for h in horses)
         if kind not in SUPPORTED or not horses or len(set(horses)) != len(horses):
@@ -108,6 +108,11 @@ def evaluate_tickets(scenarios, quoted_odds, place_payout_slots=3):
                            "quinella": 2, "exacta": 2, "trio": 3, "trifecta": 3}[kind]
         if len(horses) != expected_length:
             raise ValueError("Wrong ticket size")
+        if kind in ("wide", "quinella", "trio"):
+            horses = tuple(sorted(horses))
+        if (kind, horses) in seen:
+            raise ValueError("Duplicate unordered ticket")
+        seen.add((kind, horses))
         odds = float(odds)
         if not isfinite(odds) or odds <= 0:
             raise ValueError("Odds must be positive and finite")
@@ -127,6 +132,10 @@ def recommend(scenarios, quoted_odds, max_tickets=6, min_expected_return=1.0,
     """
     if not 1 <= max_tickets <= 12:
         raise ValueError("max_tickets outside safe range")
+    if not 0 <= min_hit_probability <= 1 or not isfinite(min_hit_probability):
+        raise ValueError("Invalid probability target")
+    if not isfinite(min_expected_return) or min_expected_return < 0:
+        raise ValueError("Invalid expected-return target")
     rows = _validate_scenarios(scenarios)
     ranked = [t for t in evaluate_tickets(rows, quoted_odds, place_payout_slots)
               if t.expected_return >= min_expected_return]
