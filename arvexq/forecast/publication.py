@@ -4,7 +4,9 @@ Stored evidence is never mutated. This projection applies at delivery boundaries
 including nested additive API views and saved revision payloads.
 """
 from copy import deepcopy
-from .engine import VERSION
+from .engine import VERSION, build_prediction
+from .inputs import prediction_input
+from .marks import generate_marks
 
 RETIRED_KEYS = frozenset(('aiEvaluation', 'integratedEvaluation', 'factorRanking', 'honmeiDecision',
     'preRacePrediction', 'preRaceBet', 'predictionAudit', 'frozenPredictionAudit',
@@ -23,6 +25,15 @@ def public_race(detail):
         return deepcopy(value)
     if not isinstance(detail, dict): return detail
     result = project(detail)
-    result['predictionStatus'] = 'disabled'
+    prediction = build_prediction(prediction_input(result))
+    if prediction is None:
+        result['predictionStatus'] = 'disabled'
+    else:
+        result['predictionStatus'] = 'provisional'
+        result['predictionEvidence'] = prediction['evidence']
+        result['predictionRunnerCount'] = prediction['runnerCount']
+        result['predictionMarks'] = generate_marks(prediction)
+        result['recommendedBetsStatus'] = 'not_evaluated_without_verified_odds'
+        # Keep joint scenarios internal; avoid publishing large probabilistic blobs.
     result['predictionModelVersion'] = VERSION
     return result
