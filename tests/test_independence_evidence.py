@@ -14,8 +14,9 @@ def test_exact_fixed_inventory_retains_all_200_items():
 def test_premature_completion_is_rejected_even_when_file_exists():
     proposed=deepcopy(MANIFEST);proposed['items'][0]['status']='本番検証済';proposed['completed']=2
     proposed['items'][1]['status']='本番検証済'
+    proposed['items'][1]['evidence']=None
     result=audit(proposed)
-    assert result['errors'] and result['complete']==2 and result['verdict']=='未完了'
+    assert result['errors'] and result['complete']==1 and result['verdict']=='未完了'
 
 def test_duplicated_missing_requirement_cannot_be_hidden_in_count():
     proposed=deepcopy(MANIFEST);proposed['items'][99]['id']=1
