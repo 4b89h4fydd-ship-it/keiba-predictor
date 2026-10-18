@@ -23,7 +23,8 @@ class RetiredLocalMarkFreezeTests(unittest.TestCase):
         self.assertNotIn("function serverFrozenPrediction(r)", self.source)
         self.assertNotIn("function savedRevisionDiagnosisPanel(r,p)", self.source)
         self.assertNotIn("function savedRevisionHorseDetail(r,x)", self.source)
-        self.assertIn("function authorizedPreOffMarks(r)", self.source)
+        self.assertNotIn("function authorizedPreOffMarks(r)", self.source)
+        self.assertIn("function verifiedOriginalMarks(r)", self.source)
         self.assertNotIn("function applyFrozenMarks(r,p)", self.source)
         self.assertIn("ARVEXQProductionMarks.visible(x)", self.source)
 
