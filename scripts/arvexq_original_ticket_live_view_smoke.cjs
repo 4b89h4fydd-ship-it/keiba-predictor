@@ -53,7 +53,7 @@ for(const malformed of [
  assert.doesNotMatch(context.ARVEXQTicketFrame.render(malformed),/3 - 2 - 1/);
 }
 
- // Superseded 2026-10-18 public forecast marks must not be shown again.
+ // Only timestamp-verified genuine frozen originals can be displayed; invented marks are rejected.
  // Exercise the same adapter for 92 distinct race IDs, not only selected UI cards.
 const originalDay='2026-10-18';
 for(let k=0;k<92;k++){
@@ -63,13 +63,13 @@ for(let k=0;k<92;k++){
     morningTicketEvidence:fixed};
   assert.equal(context.ARVEXQMorningEvidence.verify(originalRace,fixed),true);
   const preserved=context.ARVEXQProductionPrediction.build(originalRace);
-  assert.equal(context.ARVEXQProductionPrediction.current().source,'');
-  assert(Array.from(preserved.rows,x=>x.predMark).every(x=>x===''));
-  assert.equal(context.ARVEXQProductionPrediction.current().unavailable,true);
-  assert.equal(context.ARVEXQProductionMarks.visible(preserved.rows[0]),'');
+  assert.equal(context.ARVEXQProductionPrediction.current().source,'saved-preoff');
+  assert.deepEqual(Array.from(preserved.rows,x=>x.predMark),['◎','○','▲','△','☆']);
+  assert.equal(context.ARVEXQProductionPrediction.current().unavailable,false);
+  assert.equal(context.ARVEXQProductionMarks.visible(preserved.rows[0]),'◎');
   assert.equal(preserved.rows[0].winProbability,null);
-  assert.match(context.ARVEXQMarkFrame.render(),/データ不足/);
-  assert.match(context.ARVEXQPredictionFrame.render(),/以前の予想を代わりに表示しません/);
+  assert.match(context.ARVEXQMarkFrame.render(),/発走前の保存原本/);
+  assert.match(context.ARVEXQPredictionFrame.render(),/発走前保存の原本/);
   const bet=context.ARVEXQProductionTickets.current();
   assert.equal(bet.items.length,2);
   assert.equal(JSON.stringify(bet.items[1].combos),JSON.stringify(triples));
@@ -80,7 +80,7 @@ const nestedEvidence={...receipt,raceId:'test-nested-2026-10-18',raceDate:origin
 const nestedRace={...race,id:nestedEvidence.raceId,date:originalDay,startTime:'12:00',
  morningTicketEvidence:null,
  volatility:{morningPicks:{ticketEvidence:nestedEvidence}}};
-assert.equal(context.ARVEXQProductionPrediction.build(nestedRace).rows[0].predMark,'');
+assert.equal(context.ARVEXQProductionPrediction.build(nestedRace).rows[0].predMark,'◎');
 assert.equal(context.ARVEXQProductionTickets.build(nestedRace).items.length,2);
 // No saved original, wrong roster or a receipt sealed after the post: no historical marks.
 for(const bad of [
