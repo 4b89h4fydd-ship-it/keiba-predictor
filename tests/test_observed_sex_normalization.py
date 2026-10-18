@@ -116,3 +116,27 @@ def test_fast_nar_readback_from_real_sqlite(tmp_path, monkeypatch):
     normal = app.nar_race_detail("nar-2026-10-18-園田-01")
     assert normal is not None
     assert [(h["horseNumber"], h["sex"]) for h in normal["horses"]] == [(1, ""), (2, "牝")]
+
+def test_legacy_store_races_json_reads_missing_sex(tmp_path, monkeypatch):
+    """Exercise original installed NarStore readback on a real isolated SQLite file."""
+    import app
+
+    store = app.NarStore(path=tmp_path / "nar-store.sqlite")
+    try:
+        store.conn.execute("""INSERT INTO races(track,date,race_no,title,distance,weather,condition,field_size)
+                              VALUES (?,?,?,?,?,?,?,?)""",
+                           ("園田", "2026-10-18", 1, "観測確認", 1400, "晴", "良", 2))
+        for no, sex in ((1, ""), (2, "牝")):
+            store.conn.execute("""INSERT INTO entries(track,date,race_no,horse_no,frame_no,name,sex)
+                                  VALUES (?,?,?,?,?,?,?)""",
+                               ("園田", "2026-10-18", 1, no, no, f"馬{no}", sex))
+        store.conn.commit()
+        monkeypatch.setattr(store, "stats", lambda *args: {})
+        monkeypatch.setattr(store, "role_profile", lambda *args: {})
+        monkeypatch.setattr(store, "prize_before", lambda *args: 0)
+        monkeypatch.setattr(store, "recent_races", lambda *args: [])
+        races = store.races_json("2026-10-18")
+        assert len(races) == 1
+        assert [(h["horseNumber"], h["sex"]) for h in races[0]["horses"]] == [(1, ""), (2, "牝")]
+    finally:
+        store.conn.close()
