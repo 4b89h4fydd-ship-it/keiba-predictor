@@ -82,30 +82,4 @@ jobs:
 
       - name: Verify production career archive read-back
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        run: |
-          node --input-type=module - <<'JS'
-          import assert from 'node:assert/strict';
-          import {createHash} from 'node:crypto';
-          import {gunzipSync} from 'node:zlib';
-          const raceId='nar-2026-10-15-名古屋-01';
-          const url='https://kraiz-api.4b89h4fydd.workers.dev/api/race/'+encodeURIComponent(raceId)+'?archive-check='+Date.now();
-          const response=await fetch(url,{signal:AbortSignal.timeout(15000),headers:{'Cache-Control':'no-cache'}});
-          const responseText=await response.text();
-          assert.equal(response.status,200,responseText);
-          const body=JSON.parse(responseText);
-          assert.equal(body.ok,true);
-          const detail=body.detail;
-          assert.equal(detail?.id,raceId);
-          const horse=detail.horses?.find(h=>Number(h.horseNumber)===2);
-          assert.ok(horse,'target horse missing from saved race detail');
-          const archive=horse.careerArchive;
-          assert.ok(archive && typeof archive.payload==='string','career archive missing');
-          assert.equal(archive.priorRaceDate,detail.date);
-          const raw=gunzipSync(Buffer.from(archive.payload,'base64'));
-          assert.equal(createHash('sha256').update(raw).digest('hex'),archive.sha256);
-          const runs=JSON.parse(raw.toString('utf8'));
-          assert.ok(Array.isArray(runs));
-          assert.equal(runs.length,Number(archive.storedRunCount));
-          assert.equal(Number(archive.bytes),raw.length);
-          console.log('PRODUCTION_CAREER_ARCHIVE_OK',raceId,'horse=2','runs='+runs.length);
-          JS
+        run: node scripts/verify-career-readback.mjs 'nar-2026-10-15-名古屋-01' 2
