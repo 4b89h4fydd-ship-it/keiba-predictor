@@ -1,6 +1,8 @@
 from datetime import datetime, timezone, timedelta
 from io import BytesIO
 import json
+import base64
+import gzip
 
 import pytest
 
@@ -105,5 +107,33 @@ def test_rejects_acknowledgement_mismatch(monkeypatch, tmp_path):
                            transport=lambda req, timeout: FakeResponse({
                                "ok": True, "captureId": "other", "researchOnly": True
                            }))
+    finally:
+        conn.close()
+
+def test_full_size_real_feature_matrix_uses_lossless_gzip(monkeypatch, tmp_path):
+    conn, cid, rec = fixture(tmp_path)
+    # Existing mass snapshot is large even for a four-runner test race.
+    monkeypatch.setenv("ARVEXQ_ENABLE_PREOFF_D1_CAPTURE", "1")
+    from arvexq.forecast.preoff_evidence_store import read_capture
+    from arvexq.forecast.preoff_d1_transport import prepare_payload
+    original = prepare_payload(read_capture(conn, cid))
+    seen = {}
+    def transport(req, timeout):
+        obj = json.loads(req.data)
+        seen.update(obj)
+        if obj.get("encoding") == "arvexq-preoff-gzip-json-v1":
+            decoded = gzip.decompress(base64.b64decode(obj["payload"]))
+            assert json.loads(decoded) == original
+            assert len(decoded) > 950000
+        else:
+            assert obj == original
+        return FakeResponse({"ok": True, "captureId": cid, "researchOnly": True})
+    try:
+        result = upload_capture(conn, cid, token=TOKEN,
+                                clock=rec["capturedAtEpoch"] + 8, transport=transport)
+        assert result["remoteAccepted"] is True
+        if len(json.dumps(original, ensure_ascii=False, sort_keys=True,
+                          separators=(",", ":")).encode()) > 950000:
+            assert seen["encoding"] == "arvexq-preoff-gzip-json-v1"
     finally:
         conn.close()
