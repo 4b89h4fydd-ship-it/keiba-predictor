@@ -22,7 +22,8 @@ def audit_days(directory: Path = ARCHIVE, *, days: int = 7, per_circuit: int = 2
         raise ValueError("days must be 1..31")
     if isinstance(per_circuit, bool) or not 1 <= per_circuit <= 6:
         raise ValueError("per_circuit must be 1..6")
-    existing = sorted((directory / "racecards").glob("????-??-??.json"))
+    existing = sorted(p for p in (directory / "racecards").glob("????-??-??.json")
+                      if (directory / "saved-snapshots" / p.name).is_file())
     if len(existing) < days:
         raise ValueError("insufficient saved racecard days")
     reports = []
