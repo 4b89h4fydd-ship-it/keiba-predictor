@@ -54,6 +54,8 @@ function mockDB(data,{compressed=false,missing=false}={}) {
   };
 }
 async function optin(raceData,compressed=false) {
+  const direct=factualProjection(raceData,raceData.id);
+  assert.equal(direct.coverage.completeness.history.runnersWithPriorRuns,2);
   const db=mockDB(raceData,{compressed});
   const req=new Request('https://test.invalid/api/race/'+encodeURIComponent(raceData.id)+'?view=v3-facts');
   const res=await worker.fetch(req,{DB:db},null);
