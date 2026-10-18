@@ -644,12 +644,12 @@
       ],
       "implementation_scope": "netkeiba race-result fact parsing extracted from app.py and wired through the existing fetch path. Other external feed parsers (race-list, entries, odds, past races, NAR preview) remain in app.py or other partial modules; access terms and production verification remain open.",
       "evidence": {
-        "commit_sha": "d70a049e941260d1c55d62b9d489ab807f4f731f",
-        "unit": "tests/test_netkeiba_result_parser.py: 2 fixed HTML contracts (ordering/facts, missing/unrecognized/incomplete)",
-        "integration": "Existing app.py fetch wrapper calls the pure HTML parser; covered by PR CI",
-        "ci_url": null,
-        "main_sha": null,
-        "production": null
+        "commit_sha": "5ef6bfc5e2b791a3946c4d7b4a15065403385854",
+        "unit": "tests/test_netkeiba_result_parser.py: 2 fixed HTML contracts; contracts CI passed",
+        "integration": "Full validation CI passed on PR #288; existing app.py fetch wrapper exercises parser call contract",
+        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39095574840",
+        "main_sha": "5ef6bfc5e2b791a3946c4d7b4a15065403385854",
+        "production": "Cloudflare build and live result-data verification pending."
       }
     },
     {
