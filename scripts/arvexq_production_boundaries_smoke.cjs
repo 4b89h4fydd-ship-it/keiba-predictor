@@ -81,5 +81,24 @@ for(const invalid of [
   assert(result.rows.every(x=>!x.predMark));
 }
 
+// Replacement policy: 10/18 only ONE prediction display is allowed.
+// Previously cached provisional marks must never override the new reference.
+const superseded={...late,
+  predictionStatus:'provisional',
+  predictionModelVersion:'arvexq-observed-history-baseline-v1',
+  predictionRunnerCount:3,
+  predictionMarks:[{horseNumber:1,mark:'▲'},{horseNumber:2,mark:'○'},{horseNumber:3,mark:'◎'}]
+};
+const replacement=context.ARVEXQProductionPrediction.build(superseded);
+assert.equal(context.ARVEXQProductionPrediction.current().source,'postrace-reference');
+assert.deepEqual(Array.from(replacement.rows,x=>x.predMark),['◎','○','▲']);
+const unavailable=context.ARVEXQProductionPrediction.build({
+  ...superseded,postRaceReference:null
+});
+assert(unavailable.rows.every(x=>!x.predMark),'old marks leaked back into 10/18');
+assert.equal(context.ARVEXQProductionPrediction.current().unavailable,true);
+assert(context.ARVEXQMarkFrame.render().includes('データ不足'));
+assert(context.ARVEXQPredictionFrame.render().includes('以前の予想を代わりに表示しません'));
+
 require('./arvexq_original_ticket_live_view_smoke.cjs');
 console.log('production prediction, mark, ticket and three frame contracts OK');
