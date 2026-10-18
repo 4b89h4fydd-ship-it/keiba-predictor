@@ -774,14 +774,7 @@ function savedRevisionOriginalHtml(r){
   return '';
 }
 function predict(r){
-  // An explicit after-post REFERENCE, never a saved pre-off prediction.
-  var archive=(typeof state==='object'&&state)?state.postraceReferenceArchive:null;
-  if(r&&archive&&archive.date===r.date&&
-     archive.version==='arvexq-postrace-reference-20261018-v1'&&
-     archive.mode==='POSTRACE_REFERENCE_NOT_PREOFF'&&archive.races){
-    var found=archive.races[String(r.id)];
-    if(found&&found.raceId===r.id)r.postRaceReference=found;
-  }
+  // No assistant-created historical/reference forecast is allowed to be shown.
   return window.ARVEXQProductionPrediction.build(r);
 }
 
@@ -3606,18 +3599,7 @@ function load(force){
   }
   if(state.morningArchive&&state.morningArchive.date!==d)state.morningArchive=null;
   requestMorningArchive();
-  if(d==='2026-10-18'){
-    fetch('/postrace-reference/2026-10-18.json?day=2026-10-18',{cache:'no-store'})
-      .then(function(response){return response.ok?response.json():null})
-      .then(function(payload){
-        if(seq!==state.requestSeq||state.date!==d)return;
-        if(!payload||payload.version!=='arvexq-postrace-reference-20261018-v1'||
-           payload.date!==d||payload.mode!=='POSTRACE_REFERENCE_NOT_PREOFF'||
-           payload.canCountAsHit!==false||!payload.races)return;
-        state.postraceReferenceArchive=payload;
-        render();
-      }).catch(function(){/* no fabrication if the reference archive is unavailable */});
-  }else state.postraceReferenceArchive=null;
+  // No retrospective forecast fetching: user withdrew the generated model.
     setTimeout(scheduleDailyAiStats,900);
   function startDetails(){if(detailsStarted)return;detailsStarted=true;setTimeout(function(){requestDetails(0)},80)}
   // If summaries were already painted from cache, allow selection preload after first paint.
