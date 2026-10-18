@@ -71,9 +71,9 @@ async function optin(raceData,compressed=false) {
   assert.equal(body.detail.predictionStatus,'not-implemented');
   assert.equal(body.detail.coverage.careerCompleteness,'unverified');
   assert.equal(body.detail.quoteFields.quoteFreshness,'unknown');
-  assert.equal(body.detail.oddsFields.win[1].value,3.4);
-  assert.equal(body.detail.oddsFields.popularity[0].state,'invalid');
-  assert.equal(body.detail.oddsFields.popularity[0].value,null);
+  assert.equal(body.detail.oddsFields.win.find(x=>x.horseNumber===2)?.value,3.4);
+  assert.equal(body.detail.oddsFields.popularity.find(x=>x.horseNumber===1)?.state,'invalid');
+  assert.equal(body.detail.oddsFields.popularity.find(x=>x.horseNumber===1)?.value,null);
   assert.equal(res.headers.get('cache-control'),'no-store');
   const clean=JSON.stringify(body);
   for(const forbidden of ['modelProbabilities','preRaceBet','preRacePrediction','predictionMarks','"mark"','"payouts"'])
