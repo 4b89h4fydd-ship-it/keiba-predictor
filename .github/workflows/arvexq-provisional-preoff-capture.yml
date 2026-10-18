@@ -2,6 +2,12 @@ name: ARVEXQ Provisional Pre-Off Research Capture
 
 "on":
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/arvexq_collect_provisional_preoff.py
+      - tests/test_provisional_preoff_collector.py
+      - .github/workflows/arvexq-provisional-preoff-capture.yml
   schedule:
     # JST 07:00-23:59; best-effort GitHub schedule, no completion guarantee.
     - cron: "*/10 22-23 * * *"
