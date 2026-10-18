@@ -10,7 +10,7 @@ RETIRED_KEYS = frozenset(('aiEvaluation', 'integratedEvaluation', 'factorRanking
     'markMethod', 'markEngineVersion', 'predictionModelVersion', 'mark', 'predMark', '印',
     'honmeiRole', 'modelProbabilities', 'forecastRevisions', 'currentForecastRevisionId',
     'predictionMarks', 'predictionEvidence', 'predictionRunnerCount', 'recommendedBetsStatus',
-    'morningMarkSnapshot', 'officialMarkRevisions', 'modelMarkRevisions', 'savedForecastRevision',
+    'postRaceReference', 'postraceReferenceArchive', 'morningMarkSnapshot', 'officialMarkRevisions', 'modelMarkRevisions', 'savedForecastRevision',
     '_savedPreoffOriginal', 'legacyPredictionAudit', 'preRaceAudit', 'observedModelCoverage'))
 
 def public_race(detail):
