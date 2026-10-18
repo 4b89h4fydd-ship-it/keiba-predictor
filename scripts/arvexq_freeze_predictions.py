@@ -47,9 +47,23 @@ def request_json(url: str, *, payload: dict | None = None, token: str = "", retr
 
 
 def detail_from(body: dict, rid: str) -> dict | None:
+    """Decode the persisted full snapshot BEFORE testing the history or seal.
+
+    Full Prefetch packs careers, marks and immutable pre-race evidence inside
+    arvexqFullPayload; the top-level horse list is intentionally a thin index.
+    Failing to unpack it makes a real history appear completely missing.
+    Never trust a corrupt or cross-race envelope.
+    """
+    from arvexq.ingest.full_snapshot_codec import KEY, unpack_detail
     for item in (body.get("detail"), body.get("race"), body):
-        if isinstance(item, dict) and str(item.get("id") or "") == rid:
-            return item
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("id") or "") != rid:
+            continue
+        result = unpack_detail(item) if KEY in item else item
+        if not isinstance(result, dict) or str(result.get("id") or "") != rid:
+            raise ValueError("restored D1 race identity mismatch")
+        return result
     return None
 
 
