@@ -9,7 +9,7 @@
     {
       "id": 1,
       "name": "NAR天候解析",
-      "status": "分離済",
+      "status": "main統合済",
       "module": "arvexq.ingest.nar_weather",
       "files": [
         "arvexq/ingest/nar_weather.py"
@@ -27,13 +27,13 @@
         "tests/test_item_001_nar_weather.py",
         "tests/test_environment_component_split.py"
       ],
-      "implementation_scope": "NAR weather independently implemented and wired through nar_environment_parser. Item-specific unit and full composition regression added; CI/main proof and production verification pending. No going/scratch extraction or UI changes.",
+      "implementation_scope": "NAR weather extraction already independently wired; dedicated unit and integration tests passed both PR CI checks and merged to main. Production NAR weather behavior must be verified against current observed source before claiming complete.",
       "evidence": {
-        "commit_sha": null,
-        "unit": null,
-        "integration": null,
-        "ci_url": null,
-        "main_sha": null,
+        "commit_sha": "9472129190cecf0bee09018a7ce4742f786cef4e",
+        "unit": "Dedicated item 001 observed weather cases and null weather contracts succeeded in PR CI",
+        "integration": "NAR HTML parser composition preserved weather, going and cancellation outputs, with dedicated integration test",
+        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39112991618",
+        "main_sha": "6ef5d951a9eb429cc47f5c87fd3fba3676b1ebdf",
         "production": null
       },
       "owner": "Codex",
