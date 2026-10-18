@@ -176,6 +176,7 @@ def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
                 candidate = body.get("detail")
                 if isinstance(candidate, dict) and str(candidate.get("id")) == rid:
                     detail = candidate
+                    break
                 else:
                     errors.append("missing-or-wrong-identity")
             if detail is None:
