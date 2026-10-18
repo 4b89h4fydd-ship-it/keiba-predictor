@@ -868,7 +868,7 @@
     {
       "id": 28,
       "name": "性別",
-      "status": "解析済",
+      "status": "修正中・本番未検証",
       "module": "arvexq.ingest.entry_fields.sex",
       "files": [
         "arvexq/ingest/entry_fields/sex.py"
@@ -884,14 +884,15 @@
       "output": "scalar / provider-compatible missing value",
       "storage": null,
       "tests": [
-        "tests/test_entry_field_contracts.py"
+        "tests/test_entry_field_contracts.py",
+        "tests/test_observed_sex_normalization.py"
       ],
-      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "implementation_scope": "netkeibaの既存分離に加え、PR #309で性別欠損の牡補完・循環importを修正中。通常/高速/旧ストアの読み取り変更を含む。2026-10-18時点、本番検証・旧未コミット統合テスト再現は未完了。既保存レコードの誤補完は復元していない。",
       "evidence": {
-        "commit_sha": null,
-        "unit": null,
-        "integration": null,
-        "ci_url": null,
+        "commit_sha": "f95d941fb631e36603b6e34cfa939343f08bb826",
+        "unit": "15 input contracts added; latest test run pending",
+        "integration": "SQLite round-trip test added; app/legacy end-to-end pending",
+        "ci_url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/pull/309",
         "main_sha": null,
         "production": null
       },
