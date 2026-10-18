@@ -81,8 +81,25 @@ export async function handlePreoffCapture(request, env, { now = () => Math.floor
   if (size > MAX_REQUEST_BYTES) return reply({ok:false,error:"payload too large"},413);
   let body;
   try {
-    const raw = await request.text();
-    if (new TextEncoder().encode(raw).length > MAX_REQUEST_BYTES) return reply({ok:false,error:"payload too large"},413);
+    const encoding = request.headers.get('content-encoding');
+    if (encoding !== 'gzip') throw new Error('gzip encoding required');
+    if (typeof DecompressionStream !== 'function') throw new Error('gzip decompression unavailable');
+    const stream = request.body.pipeThrough(new DecompressionStream('gzip'));
+    const reader = stream.getReader();
+    const chunks = [];
+    let total = 0;
+    while (true) {
+      const {value, done} = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > 6000000) { await reader.cancel(); return reply({ok:false,error:'expanded payload too large'},413); }
+      chunks.push(value);
+    }
+    const expanded = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) { expanded.set(chunk, offset); offset += chunk.byteLength; }
+    const raw = new TextDecoder('utf-8', {fatal:true}).decode(expanded);
+
     body = JSON.parse(raw);
     checkDocument(body.snapshot, body.receipt, now());
     const snap = body.snapshot, rec = body.receipt;
