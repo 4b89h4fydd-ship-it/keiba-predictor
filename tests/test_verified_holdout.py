@@ -63,7 +63,6 @@ def test_invalid_and_missing_results_never_count_as_backtest_success(tmp_path):
 
 @pytest.mark.parametrize("mutate",[
     lambda r: r.update(status="速報"),
-    lambda r: r["finishers"].pop(),
     lambda r: r["finishers"][1].update(finish=1),
     lambda r: r["finishers"][1].update(horseNumber=1),
     lambda r: r.update(confirmedAtEpoch=None),
@@ -80,3 +79,13 @@ def test_duplicates_in_independent_result_file_are_fatal():
     _,r=sample("2026-08-04")
     with pytest.raises(ValueError, match="duplicate"):
         _validated_results([final(r),final(r)])
+
+def test_missing_final_runner_fails_against_immutable_original_roster(tmp_path):
+    with open_store(tmp_path / "full-field.sqlite") as connection:
+        snap, receipt = sample("2026-08-05")
+        append_capture(connection, snap, receipt, clock=receipt["capturedAtEpoch"])
+        incomplete = final(receipt)
+        incomplete["finishers"].pop()
+        races, audit = build_verified_races(connection, [incomplete])
+        assert not races
+        assert audit["invalid_or_inconsistent_snapshot_or_result"] == 1
