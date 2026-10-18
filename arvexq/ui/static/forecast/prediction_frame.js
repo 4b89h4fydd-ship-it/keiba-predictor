@@ -3,7 +3,8 @@
   'use strict';
   function render(){
     var live=root.ARVEXQProductionPrediction&&root.ARVEXQProductionPrediction.current();
-    var note=live&&live.active?'<p class="muted">発走前の暫定予想です。確率は未校正で、的中率・回収率の目標達成を保証するものではありません。</p>':'';
+    var note=live&&live.source==='saved-preoff'?'<p class="muted">発走前に保存された予想印です。結果を使った後付け予想ではありません。</p>':
+      (live&&live.active?'<p class="muted">発走前の暫定予想です。確率は未校正で、的中率・回収率の目標達成を保証するものではありません。</p>':'');
     return '<section id="section-prediction" class="card"><h2>AI予想</h2><div class="ai-prediction-list">'+note+'</div></section>';
   }
   root.ARVEXQPredictionFrame=Object.freeze({render:render});
