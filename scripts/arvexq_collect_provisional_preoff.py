@@ -110,7 +110,11 @@ def provisional_capture(detail, *, now):
     if (snapshot.get("horseCount") != len(numbers)
             or {r.get("horseNumber") for r in snapshot.get("rows", [])} != set(numbers)):
         raise ValueError("frozen field mismatch")
+    history_count = sum(bool(h.get("recentRaces") or h.get("allPastRuns"))
+                        for h in active)
     record = {
+        "horsesWithPastRuns": history_count,
+        "historyComplete": history_count == len(active),
         "version": VERSION, "eligibility": "provisional-not-officially-attested",
         "source": "existing-cloudflare-race-api", "independentOfficialRoster": False,
         "raceId": snapshot["raceId"], "featureHash": snapshot["featureHash"],
@@ -150,25 +154,41 @@ def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
     due.sort(key=lambda x: (x.get("startTime") or "", str(x["id"])))
     due = due[:max_races]
     artifacts, failures = [], []
-    # A read-only day-detail response is the existing API's built-in fallback
-    # for a race endpoint returning 404. It is not a new ingestion provider.
+    # Only existing Cloudflare API routes; never a second provider or a
+    # fabricated race ID. Compact /api/racecard is NOT sufficient history.
     fallback = None
     for row in due:
         rid = str(row["id"])
         try:
-            try:
-                body = fetcher(root + "/api/race/" + quote(rid, safe=""))
-                detail = body.get("detail")
-            except Exception as exc:
-                if getattr(exc, "code", None) != 404:
+            detail = None
+            errors = []
+            # The legacy endpoint may be absent for a race for which the D1
+            # display endpoint still has the full stored history.
+            for suffix in ("", "?view=display"):
+                path = root + "/api/race/" + quote(rid, safe="") + suffix
+                try:
+                    body = fetcher(path)
+                except Exception as exc:
+                    if getattr(exc, "code", None) == 404:
+                        errors.append("not-found")
+                        continue
                     raise
+                candidate = body.get("detail")
+                if isinstance(candidate, dict) and str(candidate.get("id")) == rid:
+                    detail = candidate
+                    break
+                else:
+                    errors.append("missing-or-wrong-identity")
+            if detail is None:
+                # A same-source day response is the final full-history
+                # fallback. Never reuse a different race's payload.
                 if fallback is None:
                     fallback = fetcher(root + "/api/day?date=" + day + "&details=1")
                 details = fallback.get("details") or []
                 detail = next((x for x in details if isinstance(x, dict)
                                and str(x.get("id")) == rid), None)
             if not isinstance(detail, dict) or str(detail.get("id")) != rid:
-                raise ValueError("race detail identity mismatch")
+                raise ValueError("no matching full race detail in existing API")
             if str(detail.get("date")) != str(row.get("date")):
                 raise ValueError("race dates disagree")
             if _post_at(detail) != _post_at(row):

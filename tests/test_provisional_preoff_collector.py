@@ -124,5 +124,56 @@ def test_fallback_uses_existing_day_detail_route_on_404():
     result = collect(now=NOW, fetch=fetch)
     assert result["captured"] == 1
     assert result["failures"] == []
-    assert len(calls) == 3
+    assert len(calls) == 4
+    assert "?view=display" in calls[2]
     assert "details=1" in calls[-1]
+
+def test_existing_display_route_recovers_full_detail_without_day_fallback():
+    from urllib.error import HTTPError
+    from hashlib import sha256
+    row = detail()
+    overview = {"ok":True, "races":[{k: row[k] for k in ("id","date","startTime")}]}
+    calls = []
+    def fetch(url):
+        calls.append(url)
+        if "details=0" in url:
+            return overview
+        if url.endswith("?view=display"):
+            return {"ok":True, "detail":row}
+        if "/api/race/" in url:
+            raise HTTPError(url, 404, "no legacy payload", {}, None)
+        raise AssertionError("must not request the day fallback")
+    report = collect(now=NOW, fetch=fetch)
+    assert report["captured"] == 1
+    rec = report["records"][0]
+    assert rec["historyComplete"] is True
+    assert rec["horsesWithPastRuns"] == 4
+    core = {k:v for k,v in rec.items() if k != "recordHash"}
+    expected = sha256(json.dumps(core, ensure_ascii=False, sort_keys=True,
+                        separators=(",",":"), allow_nan=False).encode()).hexdigest()
+    assert rec["recordHash"] == expected
+    assert len(calls) == 3
+
+
+def test_wrong_identity_on_display_does_not_pollute_other_race():
+    row = detail()
+    overview = {"ok":True, "races":[{k:row[k] for k in ("id","date","startTime")}]}
+    wrong = dict(row, id="nar-2026-10-18-園田-02")
+    def fetch(url):
+        if "details=0" in url:
+            return overview
+        if "details=1" in url:
+            return {"ok":True, "details":[wrong]}
+        return {"ok":True, "detail":wrong}
+    report = collect(now=NOW, fetch=fetch)
+    assert report["captured"] == 0
+    assert report["failures"][0]["reason"] == "no matching full race detail in existing API"
+
+
+def test_no_past_runs_marked_incomplete_not_fabricated():
+    row = detail()
+    for horse in row["horses"]:
+        horse.pop("recentRaces", None)
+    rec = provisional_capture(row, now=NOW)
+    assert rec["horsesWithPastRuns"] == 0
+    assert rec["historyComplete"] is False
