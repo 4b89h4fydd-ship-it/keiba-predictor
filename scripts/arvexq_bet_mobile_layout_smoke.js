@@ -89,7 +89,7 @@ async function test(type,label){
           titleText:document.querySelector('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent};
       });
       const e=2;
-      assert.equal(result.titleText,'買い目');
+      assert.equal(result.titleText,'おすすめ買い目');
       assert.ok(result.title.width>=95,label+' '+width+' clipped title '+JSON.stringify(result));
       assert.ok(result.title.x>=result.left.right-e,label+' '+width+' title overlaps back');
       assert.ok(result.title.right<=result.right.x+e,label+' '+width+' title overlaps close');
