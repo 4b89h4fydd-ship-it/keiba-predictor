@@ -1,41 +1,9 @@
 /* Present server-produced pre-off provisional marks; NEVER derive predictions here. */
 (function(root){
   'use strict';
-  var VERSION='arvexq-observed-history-baseline-v1';
-  var MARKS={'◎':1,'○':1,'▲':1,'△':1,'☆':1};
-  var last={active:false,marks:[]};
-
-  function authorized(race){
-    if(!race||race.predictionStatus!=='provisional'||
-       race.predictionModelVersion!==VERSION||
-       !Array.isArray(race.predictionMarks)||!Array.isArray(race.horses)||
-       (race.result&&race.result.status==='確定'))return null;
-    var date=String(race.date||''),time=String(race.startTime||'').slice(0,5);
-    if(!/^20\d\d-\d\d-\d\d$/.test(date)||!/^\d\d:\d\d$/.test(time))return null;
-    var off=Date.parse(date+'T'+time+':00+09:00');
-    if(!Number.isFinite(off)||Date.now()>=off)return null;
-    var starters=race.horses.filter(function(h){
-      return h&&!h.scratched&&!h.withdrawn&&!/^(?:取消|除外|競走除外)$/.test(String(h.status||''))&&
-        Number.isInteger(Number(h.horseNumber))&&Number(h.horseNumber)>0;
-    });
-    if(starters.length<3||Number(race.predictionRunnerCount)!==starters.length)return null;
-    var allowed={};
-    for(var i=0;i<starters.length;i++){
-      var no=String(Number(starters[i].horseNumber));
-      if(allowed[no])return null;
-      allowed[no]=1;
-    }
-    var marks={},count={'◎':0,'○':0,'▲':0};
-    for(var j=0;j<race.predictionMarks.length;j++){
-      var row=race.predictionMarks[j]||{},id=String(Number(row.horseNumber));
-      var mark=String(row.mark||'');
-      if(!allowed[id]||marks[id]||!MARKS[mark])return null;
-      marks[id]=mark;
-      if(Object.prototype.hasOwnProperty.call(count,mark))count[mark]++;
-    }
-    if(count['◎']!==1||count['○']!==1||count['▲']!==1)return null;
-    return marks;
-  }
+  // Only an immutable user-owned pre-off receipt can supply forecast marks.
+  // All assistant-introduced probabilistic/provisional and post-off models are retired.
+  var last={active:false,source:'',marks:[]};
 
   function originalMarks(race){
     var tickets=root.ARVEXQProductionTickets;
@@ -63,56 +31,21 @@
     return marks;
   }
 
-  function referenceMarks(race){
-    var ref=race&&race.postRaceReference;
-    if(!race||race.date!=='2026-10-18'||!ref||
-       ref.status!=='reference'||ref.retrospective!==true||
-       ref.raceId!==race.id||ref.modelVersion!==VERSION||
-       !Array.isArray(ref.marks)||!Array.isArray(ref.runnerNumbers)||
-       !Array.isArray(race.horses))return null;
-    var post=Date.parse(race.date+'T'+String(race.scheduledStartTime||race.startTime||'').slice(0,5)+':00+09:00');
-    if(!Number.isFinite(post)||Date.now()<post)return null;
-    var expected=ref.runnerNumbers.map(Number).sort(function(a,b){return a-b});
-    var observed=race.horses.map(function(h){return Number(h&&h.horseNumber)}).sort(function(a,b){return a-b});
-    if(expected.length<3||expected.length!==observed.length||
-       expected.some(function(n,i){return !Number.isInteger(n)||n<=0||n!==observed[i]||(i>0&&expected[i-1]===n)}))return null;
-    var available={},marks={},count={'◎':0,'○':0,'▲':0};
-    expected.forEach(function(n){available[String(n)]=true});
-    for(var i=0;i<ref.marks.length;i++){
-      var entry=ref.marks[i]||{},number=Number(entry.horseNumber),key=String(number),mark=String(entry.mark||'');
-      if(!Number.isInteger(number)||!available[key]||
-         Object.prototype.hasOwnProperty.call(marks,key)||!MARKS[mark])return null;
-      marks[key]=mark;
-      if(Object.prototype.hasOwnProperty.call(count,mark))count[mark]++;
-    }
-    if(count['◎']!==1||count['○']!==1||count['▲']!==1)return null;
-    return marks;
-  }
-
   function build(race){
-    // No model or bets are inferred in-browser, before or after the race.
     if(root.ARVEXQProductionTickets)root.ARVEXQProductionTickets.build(race);
-    // The requested 2026-10-18 display has ONE source: the newly issued,
-    // explicitly after-post reference. Previous forecast panels must not
-    // reappear underneath, nor become a substitute for missing evidence.
-    var oldDate=!!(race&&race.date==='2026-10-18');
-    var ended=oldDate&&Date.now()>=Date.parse('2026-10-18T'+
-      String(race.scheduledStartTime||race.startTime||'').slice(0,5)+':00+09:00');
-    var live=ended?null:authorized(race),
-        stored=ended?null:(live?null:originalMarks(race)),
-        reference=ended?referenceMarks(race):null,
-        marks=ended?reference:(live||stored),rows=((race&&race.horses)||[])
+    var marks=originalMarks(race),rows=((race&&race.horses)||[])
       .filter(function(h){return h&&Number(h.horseNumber)>0})
       .map(function(h){
         var id=String(Number(h.horseNumber)),mark=marks&&marks[id]||'';
-        return {horse:h,predMark:mark,serverPreoffMark:!!mark&&!!live,originalPreoffMark:!!mark&&!!stored,referencePostoffMark:!!mark&&!!reference,
+        return {horse:h,predMark:mark,serverPreoffMark:false,
+          originalPreoffMark:!!mark&&!!marks,referencePostoffMark:false,
           predRank:999,winProbability:null,p1Probability:null,p2Probability:null,
           p3Probability:null,overallGrade:'',coverage:0};
       });
-    last={active:!!marks,source:reference?'postrace-reference':(live?'live-preoff':(stored?'saved-preoff':'')),
-      unavailable:ended&&(!reference),marks:marks?rows.filter(function(r){return !!r.predMark}).map(function(r){
-      return {horseNumber:Number(r.horse.horseNumber),name:String(r.horse.name||''),mark:r.predMark};
-    }):[]};
+    last={active:!!marks,source:marks?'saved-preoff':'',unavailable:!marks,
+      marks:marks?rows.filter(function(r){return !!r.predMark}).map(function(r){
+        return {horseNumber:Number(r.horse.horseNumber),name:String(r.horse.name||''),mark:r.predMark};
+      }):[]};
     return {rows:rows,legacyEngineDisabled:true,scenarios:[],plans:{},plan:null,
       suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:0};
   }
