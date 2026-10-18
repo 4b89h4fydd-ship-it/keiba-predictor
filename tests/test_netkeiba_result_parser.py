@@ -8,8 +8,8 @@ def clean(value):
 
 
 def parse_time(value):
-    if value == "1:34.5":
-        return 94.5
+    if value == "1:34.3":
+        return 94.3
     return 0.0
 
 
@@ -26,7 +26,7 @@ def test_result_rows_preserve_observed_runner_facts_and_sort_by_finish():
     assert result["status"] == "確定"
     assert result["source"] == "netkeiba結果"
     assert [row["horseNumber"] for row in result["finishers"]] == [1, 3, 5]
-    assert result["finishers"][0]["timeSeconds"] == 0.0
+    assert result["finishers"][0]["timeSeconds"] == 94.3
     assert result["finishers"][0]["bodyWeightChange"] == -4
     assert result["finishers"][1]["cornerPositions"] == [3, 3, 2]
 
