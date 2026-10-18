@@ -5653,7 +5653,21 @@ def central_refresh_status(date: str = Query(...)):
     return st
 
 @app.get("/api/v1/race/{race_id}")
-def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), prepared: int = Query(1)):
+def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), prepared: int = Query(1), view: str = Query("")):
+    # v3 factual opt-in on the existing route; no additional provider/refresh.
+    if view == "v3-facts":
+        from arvexq.v3.transport.fastapi_readonly import saved_fact_screen
+        try:
+            projection = saved_fact_screen(
+                race_id, lambda requested_id:
+                _prepared_get_fresh(requested_id) or _racedb_get_fast(requested_id)
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        if projection is None:
+            return JSONResponse(status_code=404, content={
+                "status": "not-in-existing-cache", "raceId": race_id})
+        return projection
     cached=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
     if cached:
         if race_id.startswith("nar-") and str(cached.get("date") or "")==_today_iso():
