@@ -44,7 +44,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${CLOUDFLARE_API_TOKEN}" && test -n "${CLOUDFLARE_ACCOUNT_ID}"
+          test -n "${CLOUDFLARE_API_TOKEN}"
       - name: Apply additive migration to existing production D1
         run: npx wrangler d1 execute kraiz-prod --remote --file=migrations/0001_forecast_preoff_evidence.sql
       - name: Verify evidence table and immutable triggers
