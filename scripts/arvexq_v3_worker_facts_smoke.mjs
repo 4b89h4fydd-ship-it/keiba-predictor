@@ -76,6 +76,11 @@ async function optin(raceData,compressed=false) {
   assert.equal(body.detail.coverage.completeness.history.allCareerRunsVerified,false);
   assert.equal(body.detail.coverage.completeness.odds.state,'incomplete');
   assert.equal(body.detail.coverage.completeness.odds.marketFreshnessVerified,false);
+  assert.equal(body.detail.displayReadiness.complete,false);
+  assert.equal(body.detail.displayReadiness.canClaimFullyRetrieved,false);
+  assert.equal(body.detail.displayReadiness.roster,'unverified');
+  assert.equal(body.detail.displayReadiness.history,'partial-unverified');
+  assert.equal(body.detail.displayReadiness.odds,'incomplete');
   assert.equal(body.detail.quoteFields.quoteFreshness,'unknown');
   assert.equal(body.detail.oddsFields.win.find(x=>x.horseNumber===2)?.value,3.4);
   assert.equal(body.detail.oddsFields.popularity.find(x=>x.horseNumber===1)?.state,'invalid');

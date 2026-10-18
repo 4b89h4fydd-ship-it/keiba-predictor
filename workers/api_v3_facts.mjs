@@ -173,6 +173,18 @@ function projection(original,requestedId) {
       }
     },
     oddsFields,quoteFields,
+    displayReadiness:{
+      schema:'arvexq-v3-display-readiness-1',
+      complete:false,
+      roster: Number.isInteger(original.fieldSize)&&original.fieldSize>0&&
+        original.fieldSize!==rows.length?'count-mismatch':'unverified',
+      history:historyCount===0?'missing':'partial-unverified',
+      odds:count(win,'observed')===rows.length&&count(place,'observed')===rows.length
+        ?'observed-unverified':'incomplete',
+      message:'保存済み観測データのみ。全項目の取得完了は未確認',
+      canClaimFullyRetrieved:false,
+      predictionsEnabled:false
+    },
     predictionStatus:'not-implemented',marks:null,tickets:null
   };
 }
