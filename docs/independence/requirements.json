@@ -351,9 +351,10 @@
       "output": "source-observed independent race field",
       "storage": null,
       "tests": [
-        "tests/test_jra_race_fields_independent.py"
+        "tests/test_jra_race_fields_independent.py",
+        "tests/test_independent_jra_card_fields.py"
       ],
-      "implementation_scope": "JRA official ingestion path connected; NAR and other source paths and production unverified",
+      "implementation_scope": "JRA main card path integrated; other source coverage and production proof pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -382,9 +383,10 @@
       "output": "source-observed independent race field",
       "storage": null,
       "tests": [
-        "tests/test_jra_race_fields_independent.py"
+        "tests/test_jra_race_fields_independent.py",
+        "tests/test_independent_jra_card_fields.py"
       ],
-      "implementation_scope": "JRA official ingestion path connected; NAR and other source paths and production unverified",
+      "implementation_scope": "JRA main card path integrated; other source coverage and production proof pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -413,9 +415,10 @@
       "output": "source-observed independent race field",
       "storage": null,
       "tests": [
-        "tests/test_jra_race_fields_independent.py"
+        "tests/test_jra_race_fields_independent.py",
+        "tests/test_independent_jra_card_fields.py"
       ],
-      "implementation_scope": "JRA official ingestion path connected; NAR and other source paths and production unverified",
+      "implementation_scope": "JRA main card path integrated; other source coverage and production proof pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -442,9 +445,10 @@
       "output": "source-observed independent race field",
       "storage": null,
       "tests": [
-        "tests/test_jra_race_fields_independent.py"
+        "tests/test_jra_race_fields_independent.py",
+        "tests/test_independent_jra_card_fields.py"
       ],
-      "implementation_scope": "JRA official ingestion path connected; NAR and other source paths and production unverified",
+      "implementation_scope": "JRA main card path integrated; other source coverage and production proof pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -493,9 +497,10 @@
       "output": "source-observed independent race field",
       "storage": null,
       "tests": [
-        "tests/test_jra_race_fields_independent.py"
+        "tests/test_jra_race_fields_independent.py",
+        "tests/test_independent_jra_card_fields.py"
       ],
-      "implementation_scope": "JRA official ingestion path connected; NAR and other source paths and production unverified",
+      "implementation_scope": "JRA main card path integrated; other source coverage and production proof pending",
       "evidence": {
         "commit_sha": null,
         "unit": null,
