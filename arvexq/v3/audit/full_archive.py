@@ -119,7 +119,7 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
         "unpairedSavedDays": [{"date": d, "filePresence": "racecard-only" if d in card_days else "manifest-only"} for d in unpaired],
         "expectedRacecards": checked,
         "hashVerifiedRacecards": verified,
-        "allIndexedSavedOriginalsVerified": verified == checked and not errors,
+        "allIndexedSavedOriginalsVerified": checked > 0 and verified == checked and not errors,
         "structurallyConsistentDays": structurally_consistent,
         "circuits": counts_out,
         "errors": errors,
