@@ -1,6 +1,8 @@
 """Stage 32: unpaired days must not disappear from saved-week evidence."""
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1] / "arvexq" / "ui" / "static"
+
 from arvexq.v3.audit.full_archive import verify_saved_week
 
 
@@ -10,8 +12,8 @@ def test_unpaired_manifest_day_within_window_is_an_integrity_failure(tmp_path):
     cards.mkdir()
     snapshots.mkdir()
     for day in ("2026-10-12", "2026-10-14"):
-        (cards / f"{day}.json").write_text('{"races":[]}', encoding="utf-8")
-        (snapshots / f"{day}.json").write_text('{"races":{}}', encoding="utf-8")
+        (cards / f"{day}.json").write_bytes((ROOT / "racecards" / f"{day}.json").read_bytes())
+        (snapshots / f"{day}.json").write_bytes((ROOT / "saved-snapshots" / f"{day}.json").read_bytes())
     (snapshots / "2026-10-13.json").write_text('{"races":{}}', encoding="utf-8")
     report = verify_saved_week(tmp_path, days=2)
     assert report["dateRange"] == ["2026-10-12", "2026-10-14"]
@@ -29,8 +31,8 @@ def test_unpaired_racecard_day_is_reported_without_claiming_official_gap(tmp_pat
     cards.mkdir()
     snapshots.mkdir()
     for day in ("2026-10-12", "2026-10-14"):
-        (cards / f"{day}.json").write_text('{"races":[]}', encoding="utf-8")
-        (snapshots / f"{day}.json").write_text('{"races":{}}', encoding="utf-8")
+        (cards / f"{day}.json").write_bytes((ROOT / "racecards" / f"{day}.json").read_bytes())
+        (snapshots / f"{day}.json").write_bytes((ROOT / "saved-snapshots" / f"{day}.json").read_bytes())
     (cards / "2026-10-13.json").write_text('{"races":[]}', encoding="utf-8")
     report = verify_saved_week(tmp_path, days=2)
     assert report["unpairedSavedDays"] == [
