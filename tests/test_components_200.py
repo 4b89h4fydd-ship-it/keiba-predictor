@@ -17,8 +17,8 @@ def test_all_200_boxes_match_fixed_inventory_and_have_no_unallocated_source():
     report=audit()
     assert report['boxes']==200 and report['errors']==[]
     assert report['appDefinitionsMoved']==228
-    assert report['parserModulesMoved']==96
-    assert report['uiFragmentsMoved']==108
+    assert report['parserModulesMoved']==97
+    assert report['uiFragmentsMoved']==115
     assert report['definitionParity']
     assert report['productionCertifiedByThisAudit'] is False
 

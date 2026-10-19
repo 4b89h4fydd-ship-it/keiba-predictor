@@ -6,11 +6,20 @@
     ".github/workflows/arvexq-api-storage-deploy.yml",
     ".github/workflows/arvexq-web-deploy.yml"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Original deployment workflows remain authoritative in .github/workflows; production deployment is forbidden without approval",
+    "Contract validates workflow presence and safety invariants only; does not certify production execution"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": ".github/workflows/arvexq-api-storage-deploy.yml",
+      "canonical": "arvexq/components/item_199/deploy_contract.py",
+      "module": "arvexq.components.item_199.deploy_contract"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-shared-context",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

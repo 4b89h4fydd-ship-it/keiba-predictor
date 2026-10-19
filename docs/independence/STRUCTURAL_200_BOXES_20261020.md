@@ -7,7 +7,7 @@
 - 全200件に `arvexq/components/item_NNN/` と名前・区分・所有ソース・共有依存を記した `component.json` を作成。未割当の箱はない。
 - `app.py` の228関数/クラスの実体を52箱へ移動。定義位置で `install_component` を呼び、元のグローバル変数・ロック・保存先・デコレータを保って既存経路へ接続する。すでに `infra/legacy_stores.py` 等でも使われている互換実行方式の延長。これは共有実行状態の完全解消を意味しない。
 - 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計96モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
-- UI組立の96処理断片を箱へ移動。残る331断片を共有UIとして明示。追加の独立スクリプト7件も責務箱から同一バイトで組み立てる。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
+- UI組立の103処理断片を箱へ移動。残る324断片を共有UIとして明示。追加の独立スクリプト7件も責務箱から同一バイトで組み立てる。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
 - 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り11箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
 - 仕様待ち29箱は空。既存の16個の旧予想補助定義は隔離したままで、新しい箱から委譲・実行しない。v3中央/地方の12予想モジュールは引き続き `None` を返す。
 - 保存済み観測データは複製・改変せず、元の保存場所を読む。D1/SQLiteスキーマ・取得URL・キャッシュ条件・UI・本番環境を変更しない。
@@ -68,6 +68,10 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 ### 脚質率5項目の保存済み観測値境界
 
 #098〜#102は既存の`styleRates`/`runningStyleRates` にすでに格納された数値を読み取る純関数を作成。欠損は `None` を返す。これは各馬の過去走から脚質率を計算する実装ではなく、既存予想にも接続していない。**脚質率算出の完全独立化は未完了**。既存の印・買い目を変更しない。
+
+### 最終配置: #138 当日成績 / #199 Cloudflare配備検証境界
+
+#138に既存当日成績のUI処理7断片を元のblobのまま移し、公開UIの順序・内容を保持する。#199は既存2件のCloudflareデプロイワークフローを**読取専用**で検査する境界を所有する。Workflow自体は従来のGitHub Actions配置を維持し、デプロイは実行していない。**200箱の構造上の配置済みと、完全独立/本番検証済みは異なる**。脚質率の過去走からの計算や保存処理の完全切断も未完了。
 
 ## 全項目の配置
 
@@ -212,7 +216,7 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 | 135 | 事前選定・発走後区別 | [item_135](../../arvexq/components/item_135/component.json) | migrated-shared-context |
 | 136 | 厳選レース買い目表示 | [item_136](../../arvexq/components/item_136/component.json) | migrated-ui-fragment |
 | 137 | 前日予想成績 | [item_137](../../arvexq/components/item_137/component.json) | migrated-ui-fragment |
-| 138 | 当日予想成績 | [item_138](../../arvexq/components/item_138/component.json) | mapped-existing-source |
+| 138 | 当日予想成績 | [item_138](../../arvexq/components/item_138/component.json) | migrated-ui-fragment |
 | 139 | D1保存 | [item_139](../../arvexq/components/item_139/component.json) | migrated-shared-context |
 | 140 | SQLite保存 | [item_140](../../arvexq/components/item_140/component.json) | migrated-shared-context |
 | 141 | レース一覧キャッシュ | [item_141](../../arvexq/components/item_141/component.json) | migrated-shared-context |
@@ -273,7 +277,7 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 | 196 | Python・JavaScript自動テスト | [item_196](../../arvexq/components/item_196/component.json) | migrated-shared-context |
 | 197 | JRA・NARデータ検証とバックテスト | [item_197](../../arvexq/components/item_197/component.json) | migrated-shared-context |
 | 198 | GitHub Actions CI・PWAビルド | [item_198](../../arvexq/components/item_198/component.json) | migrated-shared-context |
-| 199 | Cloudflareデプロイ・本番動作確認 | [item_199](../../arvexq/components/item_199/component.json) | mapped-existing-source |
+| 199 | Cloudflareデプロイ・本番動作確認 | [item_199](../../arvexq/components/item_199/component.json) | migrated-shared-context |
 | 200 | ログ・障害監視 | [item_200](../../arvexq/components/item_200/component.json) | migrated-shared-context |
 
 ## 残る完全独立化

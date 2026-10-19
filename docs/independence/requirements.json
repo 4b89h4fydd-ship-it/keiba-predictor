@@ -4292,7 +4292,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "当日の公式結果・受領済み買い目・集計保存はCodex。新方式の評価指標は別担当。",
       "component_box": "arvexq/components/item_138",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 139,
@@ -5966,7 +5966,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_199",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 200,

@@ -5,11 +5,21 @@
   "existing_sources": [
     "arvexq/ui/static/previous_ai_results.js"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Existing app.js globals, JS assembly sequence and old stats data path unchanged; no new scores calculated"
+  ],
   "owned_definitions": [],
   "owned_modules": [],
-  "assets": [],
-  "state": "mapped-existing-source",
+  "assets": [
+    "arvexq/components/item_138/ui/0259_resetDailyAiStats.js",
+    "arvexq/components/item_138/ui/0260_scheduleDailyAiStats.js",
+    "arvexq/components/item_138/ui/0291_smartDailyAiStats.js",
+    "arvexq/components/item_138/ui/0307_aiStatsMetrics.js",
+    "arvexq/components/item_138/ui/0308_aiStatsRaceRow.js",
+    "arvexq/components/item_138/ui/0264_aiStatsDayTitle.js",
+    "arvexq/components/item_138/ui/0309_smartDailyAiStatsPage.js"
+  ],
+  "state": "migrated-ui-fragment",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [
