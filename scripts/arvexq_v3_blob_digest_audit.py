@@ -17,13 +17,16 @@ from arvexq.v3.audit.snapshot_digest import audit_saved_blobs
 ARCHIVE = ROOT / "arvexq" / "ui" / "static"
 
 
-def audit_days(directory: Path = ARCHIVE, *, days: int = 7, per_circuit: int = 2) -> dict:
+def audit_days(directory: Path = ARCHIVE, *, days: int = 7, per_circuit: int = 2, end_date: str | None = None) -> dict:
     if isinstance(days, bool) or not 1 <= days <= 31:
         raise ValueError("days must be 1..31")
     if isinstance(per_circuit, bool) or not 1 <= per_circuit <= 6:
         raise ValueError("per_circuit must be 1..6")
     existing = sorted(p for p in (directory / "racecards").glob("????-??-??.json")
                       if (directory / "saved-snapshots" / p.name).is_file())
+    if end_date is not None:
+        cutoff = date.fromisoformat(end_date).isoformat()
+        existing = [p for p in existing if p.stem <= cutoff]
     if len(existing) < days:
         raise ValueError("insufficient saved racecard days")
     reports = []
