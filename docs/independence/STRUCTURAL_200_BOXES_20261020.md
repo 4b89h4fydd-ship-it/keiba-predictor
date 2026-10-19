@@ -6,9 +6,9 @@
 
 - 全200件に `arvexq/components/item_NNN/` と名前・区分・所有ソース・共有依存を記した `component.json` を作成。未割当の箱はない。
 - `app.py` の228関数/クラスの実体を52箱へ移動。定義位置で `install_component` を呼び、元のグローバル変数・ロック・保存先・デコレータを保って既存経路へ接続する。すでに `infra/legacy_stores.py` 等でも使われている互換実行方式の延長。これは共有実行状態の完全解消を意味しない。
-- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計62モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
+- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計64モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
 - UIの75処理断片を箱へ移動。残る352断片は共有UIとして明示。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
-- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り56箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
+- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り54箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
 - 仕様待ち29箱は空。既存の16個の旧予想補助定義は隔離したままで、新しい箱から委譲・実行しない。v3中央/地方の12予想モジュールは引き続き `None` を返す。
 - 保存済み観測データは複製・改変せず、元の保存場所を読む。D1/SQLiteスキーマ・取得URL・キャッシュ条件・UI・本番環境を変更しない。
 
@@ -19,7 +19,11 @@
 
 ## 2026-10-20 追加の構造移動（GitHub上の旧実装から再実施）
 
-以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は56。構造検証と本番認定を混同しない。
+以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は54。構造検証と本番認定を混同しない。
+
+### キャッシュポリシー分離の限定範囲
+
+#146 `factual_cache_key` は箱へ移動し、#161 `freshness` も別の箱に分離した。既存の `arvexq.v3.transport.cache` は互換的に両関数を公開し続ける。#146 は保存/読込/削除のストア実体を所有しておらず、共通 `race_detail_key` と現行保存経路に依存するため、**結果キャッシュの完全独立化を認定しない**。両関数は保存済みデータの変更、TTLの既定値追加、キャッシュ破棄を実施しない。
 
 ## 全項目の配置
 
@@ -172,7 +176,7 @@
 | 143 | 出馬表キャッシュ | [item_143](../../arvexq/components/item_143/component.json) | mapped-existing-source |
 | 144 | 過去走キャッシュ | [item_144](../../arvexq/components/item_144/component.json) | mapped-existing-source |
 | 145 | オッズキャッシュ | [item_145](../../arvexq/components/item_145/component.json) | mapped-existing-source |
-| 146 | 結果キャッシュ | [item_146](../../arvexq/components/item_146/component.json) | mapped-existing-source |
+| 146 | 結果キャッシュ | [item_146](../../arvexq/components/item_146/component.json) | migrated-module |
 | 147 | 発走前スナップショット | [item_147](../../arvexq/components/item_147/component.json) | mapped-existing-source |
 | 148 | 保存データバージョン管理 | [item_148](../../arvexq/components/item_148/component.json) | mapped-existing-source |
 | 149 | キャッシュ期限・破棄 | [item_149](../../arvexq/components/item_149/component.json) | migrated-shared-context |
@@ -187,7 +191,7 @@
 | 158 | 取消・除外自動更新 | [item_158](../../arvexq/components/item_158/component.json) | mapped-existing-source |
 | 159 | レース詳細事前生成 | [item_159](../../arvexq/components/item_159/component.json) | migrated-shared-context |
 | 160 | 取得失敗時再試行 | [item_160](../../arvexq/components/item_160/component.json) | mapped-existing-source |
-| 161 | データ鮮度判定 | [item_161](../../arvexq/components/item_161/component.json) | mapped-existing-source |
+| 161 | データ鮮度判定 | [item_161](../../arvexq/components/item_161/component.json) | migrated-module |
 | 162 | 同期状態・エラー管理 | [item_162](../../arvexq/components/item_162/component.json) | migrated-shared-context |
 | 163 | レース一覧API | [item_163](../../arvexq/components/item_163/component.json) | migrated-shared-context |
 | 164 | レース詳細API | [item_164](../../arvexq/components/item_164/component.json) | migrated-shared-context |

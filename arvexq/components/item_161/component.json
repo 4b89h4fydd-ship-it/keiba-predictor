@@ -7,9 +7,15 @@
   ],
   "shared_dependencies": [],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/v3/transport/cache.py",
+      "canonical": "arvexq/components/item_161/freshness.py",
+      "module": "arvexq.components.item_161.freshness"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [
