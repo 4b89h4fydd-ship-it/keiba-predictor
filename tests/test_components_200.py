@@ -17,7 +17,7 @@ def test_all_200_boxes_match_fixed_inventory_and_have_no_unallocated_source():
     report=audit()
     assert report['boxes']==200 and report['errors']==[]
     assert report['appDefinitionsMoved']==228
-    assert report['parserModulesMoved']==97
+    assert report['parserModulesMoved']==98
     assert report['uiFragmentsMoved']==116
     assert report['definitionParity']
     assert report['productionCertifiedByThisAudit'] is False
@@ -77,3 +77,13 @@ def test_all_existing_http_routes_keep_methods_names_and_signatures():
     now=[{'path':r.path,'methods':sorted(r.methods or []),'name':r.name,
           'signature':str(inspect.signature(r.endpoint))} for r in app.app.routes]
     assert now==before
+
+
+def test_structural_audit_detects_foreign_or_missing_owned_assets():
+    from arvexq.components.item_196 import audit as audit_module
+    specs=all_components()
+    specs[57]['assets']=['arvexq/components/item_001/nar_weather.py', 'arvexq/components/item_058/ui/does_not_exist.js']
+    with patch.object(audit_module, 'all_components', return_value=specs):
+        errors=audit_module.audit()['errors']
+    assert any('owned asset belongs outside' in error for error in errors)
+    assert any('missing owned asset' in error for error in errors)

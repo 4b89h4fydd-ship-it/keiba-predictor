@@ -63,3 +63,15 @@ def test_observed_field_count_ignores_corrupt_and_duplicate_source_rows():
     ]
     assert entrants(rows) == 2
     assert entrants(None) == 0
+
+
+def test_jra_date_and_race_number_component_ownership_preserves_legacy_imports():
+    from arvexq.components.catalog import describe
+    from arvexq.components.item_008.jra_date import _jra_date_from_cname as owned_date
+    from arvexq.components.item_011.race_number import _jra_race_no_from_cname as owned_number
+    assert _jra_date_from_cname is owned_date
+    assert _jra_race_no_from_cname is owned_number
+    assert describe(8)['circuits'] == ['JRA']
+    assert describe(11)['circuits'] == ['JRA']
+    assert owned_date(CNAME) == '2026-10-18'
+    assert owned_number(CNAME) == 11

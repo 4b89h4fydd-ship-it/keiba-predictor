@@ -19,12 +19,24 @@ def audit():
     for spec, item in zip(specs, inventory):
         num = spec['id']
         box = ROOT / 'arvexq/components' / f'item_{num:03d}'
+        if spec.get('state') != item.get('structural_migration'):
+            errors.append(f'{num}: component/ledger structural state mismatch')
         if (num, spec['name']) != (item['id'], item['name']):errors.append(f'{num}: inventory mismatch')
         if not (box / '__init__.py').is_file():errors.append(f'{num}: missing importable box')
         for source in spec['existing_sources']:
             if not (ROOT / source).exists():errors.append(f'{num}: missing source {source}')
         for row in spec['owned_modules']:
-            if not (ROOT / row['canonical']).is_file():errors.append(f'{num}: missing migrated module')
+            canonical = ROOT / row['canonical']
+            if not canonical.is_file():
+                errors.append(f'{num}: missing migrated module {row["canonical"]}')
+            if box.resolve() not in canonical.resolve().parents:
+                errors.append(f'{num}: migrated module belongs outside its responsibility box')
+        for asset in spec['assets']:
+            canonical = ROOT / asset
+            if not canonical.is_file():
+                errors.append(f'{num}: missing owned asset {asset}')
+            if box.resolve() not in canonical.resolve().parents:
+                errors.append(f'{num}: owned asset belongs outside its responsibility box')
         for owned_script in spec.get('owned_scripts', []):
             if not (ROOT / owned_script).is_file():
                 errors.append(f'{num}: missing migrated workflow script {owned_script}')
