@@ -53,3 +53,10 @@ python -m pytest -q tests/test_independence_evidence.py
 python -m pytest -q tests/test_environment_component_split.py tests/test_independent_jra_race_identity.py tests/test_jra_race_fields_independent.py
 ```
 Review the actual GitHub Actions checks for the HEAD commit and resume with items 004–020. Append dated evidence to this checkpoint rather than replacing original observations. The main branch and all production surfaces remain out of scope.
+
+## Batch 004–020 checkpoint (sub-batch 004–007)
+- Scope audited in code: `jra_environment_parser.py` composing `jra_weather.py`, `jra_turf_going.py`, `jra_dirt_going.py`, and `jra_obstacle_going.py`.
+- Added four read-only regression cases to `tests/test_environment_component_split.py`: missing NAR-only 馬場状態 is not repurposed as JRA going, turf/dirt selected condition does not cross-assign, missing obstacle conditions remain missing, and obstacle projection does not mutate supplied field observations.
+- These are focused unit/integration-level contracts only. No independent complete acquisition/storage/cache/API/UI/production gates yet. Items 004–007 remain **部分完了**, recorded source statuses `分離済` unchanged.
+- Items 008–020 remain `解析済` with future extraction/caller audits outstanding.
+- CI must be inspected on the new HEAD before calling these tests passed. No provider changes, prediction implementation, deploy or main merge.
