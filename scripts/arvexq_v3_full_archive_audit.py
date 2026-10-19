@@ -69,7 +69,10 @@ def summarize_for_ci(result):
                       and scan_dates[0] <= scan_dates[1]
                       and dates_valid and scan_dates[0] == parsed[0]
                       and scan_dates[1] >= parsed[-1]
+                      and type(result.get("integrityScanCalendarDays")) is int
+                      and result["integrityScanCalendarDays"] == (scan_dates[1] - scan_dates[0]).days + 1
                       and type(unpaired) is list
+                      and len({row.get("date") for row in unpaired if type(row) is dict}) == len(unpaired)
                       and all(type(row) is dict
                               and row.get("filePresence") in ("racecard-only", "manifest-only")
                               and type(row.get("date")) is str
