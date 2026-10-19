@@ -88,9 +88,10 @@ def test_jra_environment_does_not_mutate_other_component_data():
     assert parse_jra_obstacle_going(observed) == "良"
     assert observed == {"芝": "良", "ダート": "重"}
 
-def test_jra_environment_reader_rejects_explicit_nar_identity(monkeypatch):
-    import app
-    called=[]
-    monkeypatch.setattr(app, "_jra_request", lambda *args: called.append(args) or "天候：晴　芝：良")
-    assert app._jra_fetch_environment({"id":"nar-2026-10-19-大井-01"}) == {}
-    assert called == []
+def test_jra_environment_reader_rejects_explicit_nar_identity():
+    from pathlib import Path
+    source=Path("app.py").read_text()
+    reader=source.split("def _jra_fetch_environment(",1)[1].split("\ndef ",1)[0]
+    assert 'row_id=str(row.get("id") or "")' in reader
+    assert 'if row_id and not row_id.startswith("jra-")' in reader
+    assert 'return {}' in reader

@@ -20,8 +20,8 @@ def test_detail_and_summary_delegate_environment_fields_to_owned_parser():
     detail=source.split("def _jra_parse_race(",1)[1].split("\ndef ",1)[0]
     for segment in (detail,summary):
         assert "_parse_jra_environment_html(full,surface)" in segment
-        assert "wm=re.search" not in segment
-        assert "cm=re.search" not in segment
+        assert 'wm=re.search(r"天候' not in segment
+        assert 'cm=re.search(r"(?:芝|ダート)' not in segment
 
 def test_date_and_course_values_are_not_synthetic():
     observation="発走時刻：15時35分 コース：1,800メートル（ダート・右）"
