@@ -806,7 +806,6 @@ def _winner_learning_profile(detail:dict)->dict:
     with _WINNER_LEARNING_LOCK:_WINNER_LEARNING_CACHE[key]={"_cachedAt":now,"profile":profile}
     return dict(profile)
 
-from arvexq.forecast.engine import build_prediction as _build_prerace_prediction
 
 
 install_component(127, "_prediction_audit_from_lock", globals())
