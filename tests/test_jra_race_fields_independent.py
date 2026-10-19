@@ -36,3 +36,9 @@ def test_jra_official_parser_uses_all_independent_extractors():
     for phrase in ("jra_start_time(full)","jra_course(full)","jra_distance(full)",
                    "jra_surface(full)","jra_first_prize(full)"):
         assert phrase in segment
+
+
+def test_first_prize_does_not_confuse_eleventh_with_first_place():
+    assert prize("11着 300") == 0
+    assert prize("11着 300 1着 5,000") == 50000000
+    assert prize("1着 未発表") == 0
