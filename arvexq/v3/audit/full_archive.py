@@ -105,7 +105,11 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
             if len(sampled) < 10:
                 sampled.append({"raceId": rid, "sha256": result["sha256"],
                                 "historyRows": h["observedPriorRunRows"]})
-    counts_out = {c: dict(counts[c]) for c in ("jra", "nar")}
+    counts_out = {c: {"expected": counts[c]["expected"],
+                      "verified": counts[c]["verified"],
+                      "failed": counts[c]["failed"],
+                      **dict(counts[c])}
+                  for c in ("jra", "nar")}
     verified = sum(r.get("verified", 0) for r in counts_out.values())
     failed = sum(r.get("failed", 0) for r in counts_out.values())
     if verified + failed != checked:
