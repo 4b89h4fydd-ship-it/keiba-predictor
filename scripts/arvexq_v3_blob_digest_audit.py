@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from arvexq.v3.audit.snapshot_digest import audit_saved_blobs
+from arvexq.v3.audit.calendar_window import calendar_window
 
 ARCHIVE = ROOT / "arvexq" / "ui" / "static"
 
@@ -48,6 +49,7 @@ def audit_days(directory: Path = ARCHIVE, *, days: int = 7, per_circuit: int = 2
         }
     return {
         "schema": "arvexq-v3-snapshot-sha256-week-sample-audit-1",
+        "calendarWindow": calendar_window([p.stem for p in existing[-days:]]),
         "start": reports[0]["date"], "end": reports[-1]["date"],
         "circuits": circuit,
         "samples": reports,
