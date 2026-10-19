@@ -25,8 +25,11 @@ def _classification(field: str, value: Any) -> str:
     if isinstance(value, bool):
         return "invalid"
     if field == "quote_time":
+        # Numeric NaN/Infinity are not a saved timestamp. Align with the
+        # independent runner-readiness status, without asserting freshness.
         return "observed-unverified-timestamp" if (
             isinstance(value, (str, int, float)) and value not in ("", 0)
+            and not (isinstance(value, float) and not isfinite(value))
         ) else "invalid"
     if field == "place_odds" and isinstance(value, str) and "-" in value:
         # Provider-supplied range is retained as raw text, NOT reinterpreted

@@ -155,3 +155,19 @@ def test_quote_time_independent_rows_refuse_misalignment(circuit):
         mutate(wrong)
         with pytest.raises(ValueError, match=expected):
             factual_screen(wrong)
+
+
+@pytest.mark.parametrize("circuit", ("jra", "nar"))
+@pytest.mark.parametrize("bad_time", [float("nan"), float("inf"), float("-inf")])
+def test_nonfinite_saved_quote_timestamp_is_invalid(circuit, bad_time):
+    detail = saved(circuit)
+    detail["horses"][0]["oddsUpdatedAt"] = bad_time
+    response = factual_response(detail)
+    quote = response["quoteFields"]["fields"]["quote_time"]["rows"][0]
+    assert quote["status"] == "invalid"
+    assert quote["value"] is None
+    assert response["runnerReadiness"][0]["quoteTimeState"] == "invalid"
+    screen = factual_screen(response)
+    assert screen["rows"][1]["readiness"]["quoteTimeState"] == "invalid"
+    assert screen["observationSummary"]["quoteTime"]["invalid"] == 1
+    assert screen["displayReadiness"]["canClaimFullyRetrieved"] is False
