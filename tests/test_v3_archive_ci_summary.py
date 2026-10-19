@@ -388,3 +388,30 @@ def test_ci_rejects_malformed_circuit_collections_without_exceptions():
         assert summary["circuitKeysValid"] is False
         assert summary["verificationCountsReconciled"] is False
         assert audit_exit_code(base, summary) == 1
+
+
+def test_ci_rejects_mixed_type_circuit_keys_without_sort_crash():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-12"],
+        "dateCount": 1,
+        "verifiedSavedDates": ["2026-10-12"],
+        "pairedDateRangeMatchesSelection": True,
+        "integrityScanRange": ["2026-10-12", "2026-10-12"],
+        "integrityScanCalendarDays": 1,
+        "expectedRacecards": 1,
+        "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": True,
+        "errors": [],
+        "unpairedSavedDays": [],
+        "runnerEvidenceTriage": {"zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+                                 "missingCardCarriedWeight": 0, "missingWeightByState": {}},
+    }
+    for circuits in ({1: {"expected": 1, "verified": 1, "failed": 0},
+                      "nar": {"expected": 0, "verified": 0, "failed": 0}},
+                     {"jra": {"expected": 1, "verified": 1, "failed": 0},
+                      "nar": {"expected": 0, "verified": 0, "failed": 0},
+                      None: {}}):
+        summary = summarize_for_ci({**base, "circuits": circuits})
+        assert summary["circuitKeysValid"] is False
+        assert summary["verificationCountsReconciled"] is False
+        assert audit_exit_code(base, summary) == 1
