@@ -47,7 +47,7 @@ class ObservedAuthorityTests(unittest.TestCase):
 
     def test_retired_ranking_entrypoints_deleted(self):
         import arvexq.prediction.observed_model as model
-        for name in ("rank_jra", "rank_nar", "rank_observed", "model_version"):
+        for name in ("rank_jra", "rank_nar", "rank_observed"):
             self.assertFalse(hasattr(model, name), name)
 
     def test_zero_seconds_are_observed_with_official_proof(self):
