@@ -1,6 +1,7 @@
 """Read-only per-runner saved history and odds evidence, never prediction."""
 from __future__ import annotations
 from typing import Any
+from math import isfinite
 from arvexq.v3.data.observed_fields import ensure_circuit, history
 from arvexq.v3.data.odds_facts import missing_status
 
@@ -28,7 +29,7 @@ def read_runner_readiness(detail: dict[str, Any], circuit: str) -> list[dict[str
                                  isinstance(value, str) and value.strip() in
                                  ("", "-", "--", "不明") else
                                  "invalid" if isinstance(value, bool) or
-                                 isinstance(value, float) and not __import__("math").isfinite(value)
+                                 isinstance(value, float) and not isfinite(value)
                                  else "observed")
         result.append({
             "basicFields": basic_fields,
