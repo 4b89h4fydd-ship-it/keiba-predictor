@@ -11,6 +11,7 @@ name: ARVEXQ v3 Saved-Archive Audit
       - tests/test_v3_snapshot_digest.py
       - tests/test_v3_full_archive_integrity.py
       - tests/test_v3_unpaired_saved_days.py
+      - tests/test_v3_archive_ci_summary.py
       - tests/test_v3_runner_evidence_triage.py
       - arvexq/v3/audit/runner_gaps.py
       - scripts/arvexq_v3_full_archive_audit.py
@@ -46,7 +47,7 @@ jobs:
           python scripts/arvexq_v3_blob_digest_audit.py --days 7 --per-circuit 2 --out arvexq-v3-blob-audit.json
       - name: Verify every indexed saved original and embedded career archive
         run: |
-          python -m pytest tests/test_v3_runner_evidence_triage.py tests/test_v3_unpaired_saved_days.py -q
+          python -m pytest tests/test_v3_runner_evidence_triage.py tests/test_v3_unpaired_saved_days.py tests/test_v3_archive_ci_summary.py -q
           python scripts/arvexq_v3_full_archive_audit.py --days 7 --out arvexq-v3-full-archive-audit.json
       - name: Upload inspectable report
         if: always()
