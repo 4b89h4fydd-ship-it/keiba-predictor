@@ -25,6 +25,7 @@ def test_ci_summary_aggregates_error_codes_and_unpaired_days():
     }
     summary = summarize_for_ci(result)
     assert summary["verificationByCircuit"] == {"jra": {"expected": 0, "verified": 1, "failed": 0}, "nar": {"expected": 0, "verified": 0, "failed": 0}}
+    assert summary["circuitCountReconciliation"] == {"jra": False, "nar": True}
     assert summary["verificationCountsReconciled"] is False
     assert summary["errorCount"] == 3
     assert summary["errorCodes"] == {
@@ -58,6 +59,7 @@ def test_ci_summary_reconciles_valid_circuit_totals():
         },
     }
     summary = summarize_for_ci(result)
+    assert summary["circuitCountReconciliation"] == {"jra": True, "nar": True}
     assert summary["verificationCountsReconciled"] is True
     assert summary["verificationByCircuit"]["jra"]["failed"] == 1
     assert summary["verificationByCircuit"]["nar"]["verified"] == 1
