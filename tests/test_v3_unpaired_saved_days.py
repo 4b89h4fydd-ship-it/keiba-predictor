@@ -18,6 +18,8 @@ def test_unpaired_manifest_day_within_window_is_an_integrity_failure(tmp_path):
     (snapshots / "2026-10-13.json").write_text('{"races":{}}', encoding="utf-8")
     report = verify_saved_week(tmp_path, days=2)
     assert report["dateRange"] == ["2026-10-12", "2026-10-14"]
+    assert report["verifiedSavedDates"] == ["2026-10-12", "2026-10-14"]
+    assert report["pairedDateRangeMatchesSelection"] is True
     assert report["unpairedSavedDays"] == [
         {"date": "2026-10-13", "filePresence": "manifest-only"}
     ]
