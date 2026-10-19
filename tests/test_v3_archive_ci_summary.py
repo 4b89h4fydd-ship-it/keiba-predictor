@@ -217,6 +217,7 @@ def test_ci_rejects_missing_or_empty_error_codes():
 def test_ci_exit_rejects_errors_even_if_success_flag_is_true():
     result = {"allIndexedSavedOriginalsVerified": True}
     flags = {"verificationCountsReconciled": True,
+             "verificationSuccessReconciled": True,
              "savedDateSelectionReconciled": True,
              "integrityScanRangeReconciled": True,
              "requestedEndDateReconciled": True,
