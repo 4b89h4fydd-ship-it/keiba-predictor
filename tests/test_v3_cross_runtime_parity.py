@@ -153,3 +153,33 @@ def test_saved_quote_time_parity(circuit, city, timestamp, expected):
     assert py["quoteFields"]["fields"]["quote_time"] == js["quoteFields"]["fields"]["quote_time"]
     assert py["rows"][0]["readiness"]["quoteTimeState"] == expected
     assert py["observationSummary"] == js["observationSummary"]
+
+
+@pytest.mark.parametrize("circuit,city", [("jra", "京都"), ("nar", "高知")])
+@pytest.mark.parametrize("primary,secondary,expected,source", [
+    ("2026-02-30T12:00:00+09:00", None, "invalid", "oddsUpdatedAt"),
+    ("2026-13-01T12:00:00+09:00", None, "invalid", "oddsUpdatedAt"),
+    ("2026-10-19T12:00:00Z", None, "observed-unverified-timestamp", "oddsUpdatedAt"),
+    ("", "2026-10-18T12:00:00+09:00", "observed-unverified-timestamp", "oddsTimestamp"),
+    (None, "2026-10-18T12:00:00+09:00", "observed-unverified-timestamp", "oddsTimestamp"),
+    ("not-a-timestamp", "2026-10-18T12:00:00+09:00", "invalid", "oddsUpdatedAt"),
+    (" - ", "2026-10-18T12:00:00+09:00", "missing", "oddsUpdatedAt"),
+])
+def test_timestamp_calendar_and_source_priority_parity(circuit, city, primary, secondary,
+                                                       expected, source):
+    horse = {"horseNumber": 1, "oddsUpdatedAt": primary,
+             "oddsTimestamp": secondary}
+    data = {"id": f"{circuit}-2026-10-19-{city}-03",
+            "date": "2026-10-19", "circuit": circuit, "horses": [horse]}
+    py = factual_screen(factual_response(data))
+    js = json.loads(subprocess.run(
+        ["node", "--input-type=module", "-e", NODE],
+        input=json.dumps(data, ensure_ascii=False), text=True,
+        capture_output=True, cwd=ROOT, check=True,
+    ).stdout)
+    assert py["quoteFields"]["fields"]["quote_time"] == js["quoteFields"]["fields"]["quote_time"]
+    assert py["rows"] == js["rows"]
+    row = py["quoteFields"]["fields"]["quote_time"]["rows"][0]
+    assert row["status"] == expected
+    assert row["sourceKey"] == source
+    assert py["observationSummary"] == js["observationSummary"]
