@@ -2,6 +2,7 @@
 """Read-only exhaustive integrity scan of existing saved evidence, no HTTP."""
 from __future__ import annotations
 import argparse
+from collections import Counter
 import json
 from pathlib import Path
 import sys
@@ -22,6 +23,10 @@ def main():
     condensed={k:result[k] for k in ("dateRange","expectedRacecards","hashVerifiedRacecards",
                  "allIndexedSavedOriginalsVerified","circuits")}
     condensed["errorCount"]=len(result["errors"])
+    condensed["errorCodes"]=dict(sorted(Counter(
+        error.get("code", "unknown") for error in result["errors"]).items()))
+    condensed["integrityScanRange"]=result["integrityScanRange"]
+    condensed["unpairedSavedDays"]=result["unpairedSavedDays"]
     triage = result["runnerEvidenceTriage"]
     condensed["runnerEvidenceTriage"] = {
         "zeroObservedPriorRuns": triage["zeroObservedPriorRuns"],
