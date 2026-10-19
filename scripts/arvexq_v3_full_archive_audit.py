@@ -47,9 +47,14 @@ def summarize_for_ci(result):
         and sum(v["expected"] for v in condensed["verificationByCircuit"].values()) == result["expectedRacecards"]
         and sum(v["verified"] for v in condensed["verificationByCircuit"].values()) == result["hashVerifiedRacecards"]
     )
-    condensed["errorCodes"]=dict(sorted(Counter(
-        error.get("code", "unknown") if type(error) is dict else "malformed-error-record"
-        for error in error_rows).items()))
+    # Normalize malformed codes before counting; mixed types cannot be sorted.
+    error_codes = [
+        error["code"] if (type(error) is dict and
+                          type(error.get("code")) is str and error["code"])
+        else "malformed-error-record"
+        for error in error_rows
+    ]
+    condensed["errorCodes"] = dict(sorted(Counter(error_codes).items()))
     condensed["errorSummaryReconciled"] = (
         type(errors) is list
         and all(type(error) is dict and type(error.get("code")) is str
