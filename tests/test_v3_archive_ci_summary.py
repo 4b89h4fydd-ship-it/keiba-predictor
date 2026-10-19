@@ -72,7 +72,8 @@ def test_ci_summary_reconciles_valid_circuit_totals():
 def test_ci_exit_rejects_inconsistent_counts_even_if_report_claims_verified():
     result = {"allIndexedSavedOriginalsVerified": True}
     assert audit_exit_code(result, {"verificationCountsReconciled": False}) == 1
-    assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True}) == 0
+    assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "errorSummaryReconciled": True}) == 0
+    assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True}) == 1
     assert audit_exit_code(
         {"allIndexedSavedOriginalsVerified": False},
         {"verificationCountsReconciled": True},
