@@ -107,6 +107,9 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
                                 "historyRows": h["observedPriorRunRows"]})
     counts_out = {c: dict(counts[c]) for c in ("jra", "nar")}
     verified = sum(r.get("verified", 0) for r in counts_out.values())
+    if checked == 0:
+        errors.append({"code": "empty-saved-race-selection",
+                       "reason": "no saved race originals were eligible for verification"})
     return {
         "schema": "arvexq-v3-full-saved-archive-audit-1",
         "calendarWindow": calendar_window([p.stem for p in chosen], archive_dir=archive_dir),
