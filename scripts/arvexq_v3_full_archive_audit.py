@@ -31,7 +31,7 @@ def summarize_for_ci(result):
         condensed["circuitKeysValid"]
         and all(isinstance(v, int) and not isinstance(v, bool) and v >= 0
                 for row in condensed["verificationByCircuit"].values() for v in row.values())
-        and         sum(v["expected"] for v in condensed["verificationByCircuit"].values()) == result["expectedRacecards"]
+        and sum(v["expected"] for v in condensed["verificationByCircuit"].values()) == result["expectedRacecards"]
         and sum(v["verified"] for v in condensed["verificationByCircuit"].values()) == result["hashVerifiedRacecards"]
         and all(condensed["circuitCountReconciliation"].values())
     )
