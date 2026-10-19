@@ -225,3 +225,30 @@ def test_ci_exit_rejects_errors_even_if_success_flag_is_true():
                                    "errorCodes": {"invalid-snapshot": 1}}) == 1
     assert audit_exit_code(result, {**flags, "errorCodes": {"invalid-snapshot": 1}}) == 1
     assert audit_exit_code(result, {**flags, "errorCount": None}) == 1
+
+
+def test_cli_passes_explicit_end_date_to_archive_verifier(monkeypatch, tmp_path):
+    import sys
+    import scripts.arvexq_v3_full_archive_audit as cli
+
+    received = {}
+    def fake_verify(archive_dir, *, days, end_date):
+        received.update(archive_dir=archive_dir, days=days, end_date=end_date)
+        return {"allIndexedSavedOriginalsVerified": False}
+
+    monkeypatch.setattr(cli, "verify_saved_week", fake_verify)
+    monkeypatch.setattr(cli, "summarize_for_ci", lambda result: {
+        "verificationCountsReconciled": False,
+        "savedDateSelectionReconciled": False,
+        "integrityScanRangeReconciled": False,
+        "errorSummaryReconciled": False,
+        "errorCount": 1,
+        "errorCodes": {"missing-original": 1},
+    })
+    output = tmp_path / "audit.json"
+    monkeypatch.setattr(sys, "argv", ["audit", "--days", "3", "--end-date",
+                                      "2026-10-14", "--archive-dir", str(tmp_path),
+                                      "--out", str(output)])
+    assert cli.main() == 1
+    assert received == {"archive_dir": tmp_path, "days": 3, "end_date": "2026-10-14"}
+    assert output.is_file()
