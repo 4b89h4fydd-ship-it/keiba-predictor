@@ -1,7 +1,7 @@
 import copy
 import unittest
 from arvexq.prediction.final_marks import apply_core_marks
-from arvexq.prediction.observed_model import MODEL_VERSION, apply_nar_marks, rank_nar
+from arvexq.prediction.observed_model import MODEL_VERSION, apply_nar_marks
 from arvexq.research.margin_abcde_candidate import score as margin_score
 
 
@@ -28,7 +28,8 @@ class NarAuthorityTests(unittest.TestCase):
     def test_consensus_uses_observed_inputs(self):
         d = race()
         before = copy.deepcopy(d)
-        self.assertEqual(rank_nar(d['horses'], d), [])
+        from arvexq.prediction import observed_model
+        self.assertFalse(hasattr(observed_model, 'rank_nar'))
         self.assertEqual(d, before)
         # Observed research remains available without entering live predictions.
         self.assertIsNotNone(margin_score(d['horses'][0], d))
@@ -61,7 +62,6 @@ class NarAuthorityTests(unittest.TestCase):
         self.assertEqual(d["horses"][0]["recentRaces"][0]["timeBehindWinner"], .04)
         self.assertEqual(d["horses"][0]["recentRaces"][-1]["timeBehindWinner"], 0.)
         self.assertIsNotNone(margin_score(d["horses"][0], d))
-        self.assertIsNotNone(rank_nar(d["horses"], d))
 
     def test_local_evidence_exposes_only_new_two_axes(self):
         from arvexq.prediction.race_intelligence import attach_evidence
@@ -78,8 +78,7 @@ class NarAuthorityTests(unittest.TestCase):
         d = race()
         d['horses'][4]['recentRaces'][-1].update(finish=2,cornerPositions=[8,8,8],timeBehindWinner=.2)
         # A retired authority cannot execute even if a caller supplies ranked evidence.
-        with patch('arvexq.prediction.observed_model.rank_observed',side_effect=AssertionError('retired scorer executed')):
-            apply_nar_marks(d)
+        apply_nar_marks(d)
         self.assertTrue(all('integratedEvaluation' not in h and 'mark' not in h for h in d['horses']))
         self.assertEqual(d['predictionStatus'],'disabled')
 
