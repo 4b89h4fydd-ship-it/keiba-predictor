@@ -56,7 +56,8 @@ def main():
     a.out.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     condensed=summarize_for_ci(result)
     print("ARVEXQ_V3_FULL_ARCHIVE_AUDIT_JSON="+json.dumps(condensed,ensure_ascii=False))
-    return 0 if result["allIndexedSavedOriginalsVerified"] else 1
+    return 0 if (result["allIndexedSavedOriginalsVerified"]
+                 and condensed["verificationCountsReconciled"]) else 1
 
 
 if __name__=="__main__":
