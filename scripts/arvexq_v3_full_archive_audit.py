@@ -59,7 +59,27 @@ def summarize_for_ci(result):
         dates_valid = False
     condensed["savedDateSelectionReconciled"] = dates_valid
     condensed["verifiedSavedDates"] = dates
-    condensed["integrityScanRange"]=result["integrityScanRange"]
+    scan_range = result.get("integrityScanRange")
+    unpaired = result.get("unpairedSavedDays")
+    try:
+        scan_dates = [date.fromisoformat(d) for d in scan_range]
+        scan_valid = (type(scan_range) is list and len(scan_range) == 2
+                      and all(type(d) is str and p.isoformat() == d
+                              for d, p in zip(scan_range, scan_dates))
+                      and scan_dates[0] <= scan_dates[1]
+                      and dates_valid and scan_dates[0] == parsed[0]
+                      and scan_dates[1] >= parsed[-1]
+                      and type(unpaired) is list
+                      and all(type(row) is dict
+                              and row.get("filePresence") in ("racecard-only", "manifest-only")
+                              and type(row.get("date")) is str
+                              and scan_dates[0] <= date.fromisoformat(row["date"]) <= scan_dates[1]
+                              and date.fromisoformat(row["date"]).isoformat() == row["date"]
+                              for row in unpaired))
+    except (TypeError, ValueError, IndexError, KeyError):
+        scan_valid = False
+    condensed["integrityScanRangeReconciled"] = scan_valid
+    condensed["integrityScanRange"]=scan_range
     condensed["unpairedSavedDays"]=result["unpairedSavedDays"]
     triage = result["runnerEvidenceTriage"]
     condensed["runnerEvidenceTriage"] = {
@@ -74,7 +94,8 @@ def summarize_for_ci(result):
 def audit_exit_code(result, condensed):
     return 0 if (result["allIndexedSavedOriginalsVerified"]
                  and condensed["verificationCountsReconciled"]
-                 and condensed["savedDateSelectionReconciled"]) else 1
+                 and condensed["savedDateSelectionReconciled"]
+                 and condensed["integrityScanRangeReconciled"]) else 1
 
 
 def main():
