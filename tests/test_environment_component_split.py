@@ -56,3 +56,34 @@ def test_jra_parser_preserves_existing_output_contract():
     assert _parse_jra_environment_html(html,"障害")["condition"] == "良"
     assert _parse_jra_environment_html("ダート：重","障害")["condition"] == "重"
     assert _parse_jra_environment_html("") == {}
+
+
+def test_jra_missing_observations_remain_missing_without_nar_fallback():
+    # NAR's bare 馬場状態 is not a JRA turf/dirt observation.
+    html = "<div>馬場状態：重　馬場：1.0</div>"
+    for surface in ("芝", "ダート", "障害"):
+        actual = _parse_jra_environment_html(html, surface)
+        assert actual == {"surfaceConditions": {}}
+        assert "weather" not in actual and "condition" not in actual
+
+
+def test_jra_environment_surface_selection_does_not_cross_assign():
+    turf_only = "<div>天候：曇　芝：稍重</div>"
+    dirt_only = "<div>天候：雨　ダート：不良</div>"
+    turf = _parse_jra_environment_html(turf_only, "ダート")
+    dirt = _parse_jra_environment_html(dirt_only, "芝")
+    assert turf == {"surfaceConditions": {"芝": "稍重"}, "weather": "曇"}
+    assert dirt == {"surfaceConditions": {"ダート": "不良"}, "weather": "雨"}
+
+
+def test_jra_obstacle_without_observed_surface_is_not_fabricated():
+    assert parse_jra_obstacle_going({}) is None
+    assert _parse_jra_environment_html("<div>天候：晴</div>", "障害") == {
+        "surfaceConditions": {}, "weather": "晴"
+    }
+
+
+def test_jra_environment_does_not_mutate_other_component_data():
+    observed = {"芝": "良", "ダート": "重"}
+    assert parse_jra_obstacle_going(observed) == "良"
+    assert observed == {"芝": "良", "ダート": "重"}
