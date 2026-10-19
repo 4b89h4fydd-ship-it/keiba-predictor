@@ -54,6 +54,12 @@ def summarize_for_ci(result):
         else "malformed-error-record"
         for error in error_rows
     ]
+    condensed["savedArchiveScopeConsistent"] = (
+        result.get("officialPublishedRacesVerified") is False
+        and result.get("completeLifetimeHistoryVerified") is False
+        and result.get("liveD1ReadbackVerified") is False
+        and result.get("predictionStatus") == "not-implemented"
+    )
     condensed["verificationFlagConsistent"] = (
         type(result.get("allIndexedSavedOriginalsVerified")) is bool
         and (not result["allIndexedSavedOriginalsVerified"] or
@@ -169,6 +175,7 @@ def audit_exit_code(result, condensed):
                  and condensed.get("verificationCountsReconciled") is True
                  and condensed.get("verificationSuccessReconciled") is True
                  and condensed.get("verificationFlagConsistent") is True
+                 and condensed.get("savedArchiveScopeConsistent") is True
                  and condensed.get("savedDateSelectionReconciled") is True
                  and condensed.get("requestedEndDateReconciled") is True
                  and condensed.get("integrityScanRangeReconciled") is True
