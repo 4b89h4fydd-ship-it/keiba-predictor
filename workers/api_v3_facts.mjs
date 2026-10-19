@@ -80,6 +80,34 @@ function priceFact(raw,field) {
         typeof raw==='string' && /^[1-9][0-9]*$/.test(raw.trim()))) return invalid;
   return base;
 }
+
+function observationSummary(rows) {
+  const states=['observed','missing','invalid'];
+  const zero=()=>Object.fromEntries(states.map(s=>[s,0]));
+  const basicFields=Object.fromEntries(
+    ['name','jockey','trainer','carriedWeight'].map(k=>[k,zero()]));
+  const pastFields=Object.fromEntries(
+    ['track','distance','finish','last3f'].map(k=>[k,zero()]));
+  const quoteTime={'missing':0,'invalid':0,'observed-unverified-timestamp':0};
+  let observedPriorRuns=0;
+  for (const row of rows) {
+    const ready=row.readiness;
+    for (const key of Object.keys(basicFields))
+      basicFields[key][ready.basicFields[key]]++;
+    for (const run of ready.pastFieldStates) {
+      observedPriorRuns++;
+      for (const key of Object.keys(pastFields))
+        pastFields[key][run.fields[key]]++;
+    }
+    quoteTime[ready.quoteTimeState]++;
+  }
+  return {
+    schema:'arvexq-v3-observation-summary-1',runnerRows:rows.length,
+    observedPriorRuns,basicFields,pastFields,quoteTime,
+    fullCareerVerified:false,marketFreshnessVerified:false
+  };
+}
+
 function projection(original,requestedId) {
   if (!original || typeof original!=='object' || Array.isArray(original))
     throw Error('invalid saved race');
@@ -221,6 +249,7 @@ function projection(original,requestedId) {
       }
     },
     oddsFields,quoteFields,
+    observationSummary:observationSummary(rows),
     displayReadiness:{
       schema:'arvexq-v3-display-readiness-1',
       complete:false,

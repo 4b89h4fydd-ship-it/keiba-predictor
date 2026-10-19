@@ -59,6 +59,7 @@ def test_saved_runner_and_display_readiness_parity(circuit, city):
     assert py["rows"][0]["readiness"]["basicFieldReasons"]["jockey"] == "absent"
     assert py["rows"][0]["readiness"]["basicFieldReasons"]["name"] == "saved-value"
     assert py["displayReadiness"] == js["displayReadiness"]
+    assert py["observationSummary"] == js["observationSummary"]
     assert all(py["oddsFields"][key] == js["oddsFields"][key]
                for key in ("win", "place", "popularity"))
     assert py["coverage"]["counts"]["observedPriorRuns"] == js["coverage"]["observedPriorRuns"]
@@ -115,6 +116,8 @@ def test_past_cells_and_quote_time_parity(circuit, city):
         capture_output=True, cwd=ROOT, check=True,
     ).stdout)
     assert py["rows"] == js["rows"]
+    assert py["observationSummary"] == js["observationSummary"]
+    assert py["observationSummary"]["observedPriorRuns"] == 1
     readiness = py["rows"][0]["readiness"]
     assert readiness["quoteTimeState"] == "observed-unverified-timestamp"
     assert readiness["marketFreshnessVerified"] is False

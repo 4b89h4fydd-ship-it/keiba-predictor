@@ -10,6 +10,36 @@ from math import isfinite
 from typing import Any
 
 
+def _observation_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    basic_keys = ("name", "jockey", "trainer", "carriedWeight")
+    past_keys = ("track", "distance", "finish", "last3f")
+    states = ("observed", "missing", "invalid")
+    basic = {key: {state: 0 for state in states} for key in basic_keys}
+    past = {key: {state: 0 for state in states} for key in past_keys}
+    quote = {state: 0 for state in
+             ("missing", "invalid", "observed-unverified-timestamp")}
+    total = 0
+    for row in rows:
+        ready = row["readiness"]
+        for key in basic_keys:
+            basic[key][ready["basicFields"][key]] += 1
+        for run in ready["pastFieldStates"]:
+            total += 1
+            for key in past_keys:
+                past[key][run["fields"][key]] += 1
+        quote[ready["quoteTimeState"]] += 1
+    return {
+        "schema": "arvexq-v3-observation-summary-1",
+        "runnerRows": len(rows),
+        "observedPriorRuns": total,
+        "basicFields": basic,
+        "pastFields": past,
+        "quoteTime": quote,
+        "fullCareerVerified": False,
+        "marketFreshnessVerified": False,
+    }
+
+
 def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[str, Any]:
     if not isinstance(response, dict) or response.get("schema") != "arvexq-v3-factual-api-1":
         raise ValueError("v3 factual API response required")
@@ -158,6 +188,7 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
         "oddsFields": deepcopy(response.get("oddsFields")),
         "quoteFields": deepcopy(response.get("quoteFields")),
         "displayReadiness": readiness,
+        "observationSummary": _observation_summary(rows),
         "predictionStatus": "not-implemented",
         "marks": None,
         "tickets": None,
