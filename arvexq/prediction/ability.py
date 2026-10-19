@@ -11,8 +11,8 @@ def horse_evidence(h: dict[str, Any], race: dict[str, Any]) -> dict[str, Any]:
 
 
 def rank_ability(horses: Iterable[dict[str, Any]], race: dict[str, Any]) -> list[dict[str, Any]]:
+    """Retired ranker must never construct a substitute score or order."""
     return []
-
 
 def apply_ability_ranking(detail: dict[str, Any]) -> dict[str, Any]:
     detail.pop("abilityRanking", None)
