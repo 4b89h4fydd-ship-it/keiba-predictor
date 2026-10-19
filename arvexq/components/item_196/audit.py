@@ -25,6 +25,9 @@ def audit():
             if not (ROOT / source).exists():errors.append(f'{num}: missing source {source}')
         for row in spec['owned_modules']:
             if not (ROOT / row['canonical']).is_file():errors.append(f'{num}: missing migrated module')
+        for owned_script in spec.get('owned_scripts', []):
+            if not (ROOT / owned_script).is_file():
+                errors.append(f'{num}: missing migrated workflow script {owned_script}')
         for name in spec['owned_definitions']:
             if name in owned:errors.append(f'{num}: duplicate definition {name}')
             owned[name]=num

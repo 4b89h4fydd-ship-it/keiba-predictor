@@ -5,16 +5,24 @@
   "existing_sources": [
     ".github/workflows/arvexq-snapshot-recovery.yml"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "GitHub Actions manually dispatched recovery workflow",
+    "existing SQLite cache and stored snapshot publisher",
+    "main-bound restore push remains present but is not invoked by this migration"
+  ],
   "owned_definitions": [],
   "owned_modules": [],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-shared-context",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [
     "JRA",
     "NAR"
   ],
-  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "owned_scripts": [
+    "arvexq/components/item_150/scripts/export_verified_originals.sh",
+    "arvexq/components/item_150/scripts/commit_verified_originals.sh"
+  ]
 }
