@@ -29,8 +29,21 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
     if len(sources) < days:
         raise ValueError("not enough saved day archives")
     chosen = sources[-days:]
+    # Do not silently exclude single-sided saved days inside the selected interval.
+    selected_start, selected_end = chosen[0].stem, chosen[-1].stem
+    card_days = {p.stem for p in (archive_dir / "racecards").glob("????-??-??.json")}
+    manifest_days = {p.stem for p in (archive_dir / "saved-snapshots").glob("????-??-??.json")}
+    if end_date is not None:
+        card_days = {d for d in card_days if d <= cutoff}
+        manifest_days = {d for d in manifest_days if d <= cutoff}
+    unpaired = sorted(d for d in card_days ^ manifest_days
+                      if selected_start <= d <= selected_end)
     counts = {c: Counter() for c in ("jra", "nar")}
-    errors: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = [
+        {"date": d, "code": "unpaired-saved-day",
+         "filePresence": "racecard-only" if d in card_days else "manifest-only"}
+        for d in unpaired
+    ]
     sampled: list[dict[str, Any]] = []
     checked = 0
     structurally_consistent = 0
@@ -93,6 +106,7 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
         "calendarWindow": calendar_window([p.stem for p in chosen], archive_dir=archive_dir),
         "dateRange": [chosen[0].stem, chosen[-1].stem],
         "dateCount": days,
+        "unpairedSavedDays": [{"date": d, "filePresence": "racecard-only" if d in card_days else "manifest-only"} for d in unpaired],
         "expectedRacecards": checked,
         "hashVerifiedRacecards": verified,
         "allIndexedSavedOriginalsVerified": verified == checked and not errors,
