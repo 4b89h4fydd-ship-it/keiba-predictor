@@ -73,6 +73,10 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 
 #138に既存当日成績のUI処理7断片を元のblobのまま移し、公開UIの順序・内容を保持する。#199は既存2件のCloudflareデプロイワークフローを**読取専用**で検査する境界を所有する。Workflow自体は従来のGitHub Actions配置を維持し、デプロイは実行していない。**200箱の構造上の配置済みと、完全独立/本番検証済みは異なる**。脚質率の過去走からの計算や保存処理の完全切断も未完了。
 
+### D1所有境界の実体移動（#174）
+
+既存の`rewriteDetailSQL`と`storageEnvironment`の実装を#139から#174へ実体移動。既存呼び出し名はre-exportで維持し、SQL書換規則・DB構造・取得経路を一文字も変更しない。実D1との疎通と本番接続の認定は別途必要。
+
 ## 全項目の配置
 
 状態: `migrated-module`=既存Pythonモジュール実体移動、`migrated-shared-context`=実体移動/既存共有状態で接続、`migrated-ui-fragment`=画面ソース実体移動、`mapped-existing-source`=既存ファイルとの対応を確定、`reserved`=仕様待ちの空箱。

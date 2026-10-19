@@ -6,7 +6,8 @@
     "workers/api_full_snapshot.mjs"
   ],
   "shared_dependencies": [
-    "Existing Worker entry routes, relative imports, binding names, and deployment configuration preserved; requires CI verification"
+    "Existing Worker entry routes, relative imports, binding names, and deployment configuration preserved; requires CI verification",
+    "Existing DB binding, race_details schema and Worker entry route remain shared"
   ],
   "owned_definitions": [],
   "owned_modules": [],
