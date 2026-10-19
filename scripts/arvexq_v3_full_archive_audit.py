@@ -54,6 +54,12 @@ def summarize_for_ci(result):
         else "malformed-error-record"
         for error in error_rows
     ]
+    condensed["verificationSuccessReconciled"] = (
+        condensed["verificationCountsReconciled"]
+        and result["expectedRacecards"] > 0
+        and result["hashVerifiedRacecards"] == result["expectedRacecards"]
+        and all(row["failed"] == 0 for row in condensed["verificationByCircuit"].values())
+    )
     condensed["errorCodes"] = dict(sorted(Counter(error_codes).items()))
     condensed["errorSummaryReconciled"] = (
         type(errors) is list
@@ -153,6 +159,7 @@ def audit_exit_code(result, condensed):
                  and condensed.get("errorCount") == 0
                  and condensed.get("errorCodes") == {}
                  and condensed.get("verificationCountsReconciled") is True
+                 and condensed.get("verificationSuccessReconciled") is True
                  and condensed.get("savedDateSelectionReconciled") is True
                  and condensed.get("requestedEndDateReconciled") is True
                  and condensed.get("integrityScanRangeReconciled") is True
