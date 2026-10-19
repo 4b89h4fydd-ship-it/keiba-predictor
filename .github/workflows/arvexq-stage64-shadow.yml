@@ -1,0 +1,99 @@
+name: ARVEXQ Stage64 Shadow Research
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - arvexq/research/stage63/**
+      - arvexq/research/stage64/**
+      - tests/test_stage64*.py
+      - scripts/arvexq_stage64*.py
+      - docs/research/stage64-results/*candidate_plan.json
+      - .github/workflows/arvexq-stage64-shadow.yml
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [preregister, freeze]
+        default: preregister
+      circuit:
+        type: choice
+        options: [jra, nar]
+        default: jra
+      plan_artifact:
+        type: string
+        default: ""
+      source_artifact:
+        type: string
+        default: ""
+      source_member:
+        type: string
+        default: persisted-facts.json
+permissions:
+  contents: read
+  actions: read
+jobs:
+  shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run isolated shadow tests
+        run: |
+          python -m unittest discover -s tests -p 'test_stage63*.py' -v
+          python -m unittest discover -s tests -p 'test_stage64*.py' -v
+      - name: Prepare exact preregistration bundles
+        if: github.event_name == 'pull_request' || inputs.action == 'preregister'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from arvexq.research.stage64.protocol import check_plan
+          for owner in ("jra","nar"):
+              source=Path("docs/research/stage64-results")/(owner+"_candidate_plan.json")
+              bundle=json.loads(source.read_text())
+              check_plan(bundle["plan"])
+              destination=Path("shadow-plans")/owner
+              destination.mkdir(parents=True)
+              (destination/"bundle.json").write_bytes(source.read_bytes())
+          PY
+      - name: Preregister JRA shadow plan
+        if: github.event_name == 'pull_request' || inputs.action == 'preregister'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-stage64-plan-jra
+          path: shadow-plans/jra/bundle.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Preregister NAR shadow plan
+        if: github.event_name == 'pull_request' || inputs.action == 'preregister'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-stage64-plan-nar
+          path: shadow-plans/nar/bundle.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Freeze from existing saved-data artifact only
+        if: github.event_name == 'workflow_dispatch' && inputs.action == 'freeze'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_ARTIFACT: ${{ inputs.source_artifact }}
+          SOURCE_MEMBER: ${{ inputs.source_member }}
+          PLAN_ARTIFACT: ${{ inputs.plan_artifact }}
+          SHADOW_CIRCUIT: ${{ inputs.circuit }}
+        run: |
+          mkdir shadow-forecast
+          python scripts/arvexq_stage64_capture_artifact.py \
+            --source-artifact "$SOURCE_ARTIFACT" --source-member "$SOURCE_MEMBER" \
+            --plan-artifact "$PLAN_ARTIFACT" --circuit "$SHADOW_CIRCUIT" \
+            --output shadow-forecast/bundle.json
+      - name: Archive frozen shadow cohort
+        if: github.event_name == 'workflow_dispatch' && inputs.action == 'freeze'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-stage64-frozen-${{ inputs.circuit }}
+          path: shadow-forecast/bundle.json
+          if-no-files-found: error
+          retention-days: 90
