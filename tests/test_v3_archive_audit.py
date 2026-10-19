@@ -23,7 +23,7 @@ def fixture():
 
 
 def test_actual_last_seven_days_are_reproducible_offline():
-    result = audit_days(days=7)
+    result = audit_days(days=7, end_date="2026-10-18")
     assert result["start"] == "2026-10-12"
     assert result["end"] == "2026-10-18"
     assert result["racecards"] == 423
@@ -40,7 +40,7 @@ def test_actual_last_seven_days_are_reproducible_offline():
 
 
 def test_missing_banei_weights_are_observed_not_fabricated():
-    result = audit_days(days=7)
+    result = audit_days(days=7, end_date="2026-10-18")
     rows = [row for day in result["dates"] for row in day["missingExamples"]]
     assert len(rows) == 29
     assert all(row["field"] == "carriedWeight" and "帯広ば" in row["raceId"] for row in rows)
