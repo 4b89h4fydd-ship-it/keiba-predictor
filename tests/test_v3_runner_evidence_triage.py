@@ -67,7 +67,7 @@ def test_saved_source_weight_gap_reasons_do_not_fabricate():
 
 def test_saved_week_accounts_for_all_295_unknown_prior_histories_without_fabrication():
     root = Path(__file__).resolve().parents[1] / "arvexq" / "ui" / "static"
-    report = verify_saved_week(root, days=7)
+    report = verify_saved_week(root, days=7, end_date="2026-10-18")
     triage = report["runnerEvidenceTriage"]
     assert triage["zeroObservedPriorRuns"] == 295
     assert triage["missingCardCarriedWeight"] == 29
