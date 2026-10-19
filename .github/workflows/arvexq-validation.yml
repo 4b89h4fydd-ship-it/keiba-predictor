@@ -338,6 +338,7 @@ jobs:
           import scripts.arvexq_live_sync as live
           import scripts.arvexq_result_repair as repair
           import scripts.arvexq_prefetch as prefetch
+          from arvexq.prediction.observed_model import MODEL_VERSION
           import scripts.arvexq_history_repair as history
           import scripts.arvexq_sqlite_health as sqlite_health
 
@@ -407,7 +408,7 @@ jobs:
           jra_base=copy.deepcopy(base)
           jra_base['circuit']='中央'
           jra_base['id']='jra-2026-10-04-東京-01'
-          jra_base['predictionModelVersion']=prefetch.model_version(jra_base)
+          jra_base['predictionModelVersion']=MODEL_VERSION
           jra_base['preparedMeta']['analysisInputHash']=analysis_input_hash(jra_base)
           assert prefetch._analysis_current(jra_base)
           changed=copy.deepcopy(jra_base);changed['horses'][0]['bodyWeight']=488
