@@ -117,5 +117,6 @@ def test_empty_paired_archive_is_not_reported_as_verified(tmp_path):
     report = verify_saved_week(tmp_path, days=1)
     assert report["expectedRacecards"] == 0
     assert report["hashVerifiedRacecards"] == 0
+    assert any(e["code"] == "empty-saved-race-selection" for e in report["errors"])
     assert report["allIndexedSavedOriginalsVerified"] is False
     assert report["officialPublishedRacesVerified"] is False
