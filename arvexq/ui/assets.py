@@ -14,6 +14,8 @@ _COMPONENT_SCRIPT_OWNERS = {
     "forecast/prediction_frame.js": 185,
     "forecast/mark_frame.js": 186,
     "forecast/ticket_frame.js": 187,
+    "morning/saved_ticket_receipt.js": 134,
+    "previous_ai_results.js": 137,
 }
 
 

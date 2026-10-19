@@ -4184,7 +4184,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "受領済み選定結果の保存・復元はCodex。選定計算は別担当。",
       "component_box": "arvexq/components/item_134",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 135,
@@ -4265,7 +4265,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "前日の公式結果・受領済み買い目・集計保存はCodex。新方式の評価指標は別担当。",
       "component_box": "arvexq/components/item_137",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 138,
