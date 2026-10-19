@@ -9,9 +9,15 @@
     "arvexq.ingest.race_fields.course"
   ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/race_fields/surface.py",
+      "canonical": "arvexq/components/item_015/surface.py",
+      "module": "arvexq.components.item_015.surface"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

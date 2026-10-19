@@ -8,9 +8,15 @@
   ],
   "shared_dependencies": [],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/runner_identity_compare.py",
+      "canonical": "arvexq/components/item_039/runner_identity_compare.py",
+      "module": "arvexq.components.item_039.runner_identity_compare"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

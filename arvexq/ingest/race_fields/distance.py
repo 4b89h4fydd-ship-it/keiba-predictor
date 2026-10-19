@@ -1,4 +1,5 @@
-"""#16 Official distance independent of surface/going."""
-from .course import extract as extract_course
-def extract(text):
-    return extract_course(text)[1]
+"""Compatibility import; implementation is owned by responsibility 016."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_016.distance")
+_sys.modules[__name__] = _implementation

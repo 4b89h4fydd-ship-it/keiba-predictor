@@ -6,9 +6,9 @@
 
 - 全200件に `arvexq/components/item_NNN/` と名前・区分・所有ソース・共有依存を記した `component.json` を作成。未割当の箱はない。
 - `app.py` の228関数/クラスの実体を52箱へ移動。定義位置で `install_component` を呼び、元のグローバル変数・ロック・保存先・デコレータを保って既存経路へ接続する。すでに `infra/legacy_stores.py` 等でも使われている互換実行方式の延長。これは共有実行状態の完全解消を意味しない。
-- 独立していた38解析モジュールの実体を箱へ移動。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
+- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計62モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
 - UIの75処理断片を箱へ移動。残る352断片は共有UIとして明示。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
-- 別ファイル/Worker/ワークフローにすでにある処理は、79箱に対応元と共有依存を登録した。これらは配置の特定までであり、個々の責務ごとの実体移動・完全独立化は未完了。
+- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り56箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
 - 仕様待ち29箱は空。既存の16個の旧予想補助定義は隔離したままで、新しい箱から委譲・実行しない。v3中央/地方の12予想モジュールは引き続き `None` を返す。
 - 保存済み観測データは複製・改変せず、元の保存場所を読む。D1/SQLiteスキーマ・取得URL・キャッシュ条件・UI・本番環境を変更しない。
 
@@ -16,6 +16,10 @@
 
 `python scripts/arvexq_components_audit.py` で全200ID/項目名、配置元の実在、所有関数の重複、未割当、予想空箱の汚染、244定義すべてのAST一致、UIの完全一致を検証する。構造上の割当を本番認定に読み替えない。
 `tests/test_components_200.py` は全箱の無副作用インポート、所有権拒否、不正ID拒否、コピーされた台帳の不変性、予想空箱、API127経路のメソッド・名前・シグネチャ一致も検証する。既存のソース契約テストは実体を組み立てた `composed_app_source()` を参照するよう更新し、検証対象の関数本体を省略しない。
+
+## 2026-10-20 追加の構造移動（GitHub上の旧実装から再実施）
+
+以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は56。構造検証と本番認定を混同しない。
 
 ## 全項目の配置
 
@@ -34,19 +38,19 @@
 | 009 | 開催場取得 | [item_009](../../arvexq/components/item_009/component.json) | migrated-shared-context |
 | 010 | 開催日程取得 | [item_010](../../arvexq/components/item_010/component.json) | migrated-shared-context |
 | 011 | レース番号取得 | [item_011](../../arvexq/components/item_011/component.json) | mapped-existing-source |
-| 012 | レース名取得 | [item_012](../../arvexq/components/item_012/component.json) | mapped-existing-source |
-| 013 | グレード・クラス取得 | [item_013](../../arvexq/components/item_013/component.json) | mapped-existing-source |
-| 014 | 発走時刻取得 | [item_014](../../arvexq/components/item_014/component.json) | mapped-existing-source |
-| 015 | 芝・ダート・障害区分取得 | [item_015](../../arvexq/components/item_015/component.json) | mapped-existing-source |
-| 016 | 距離取得 | [item_016](../../arvexq/components/item_016/component.json) | mapped-existing-source |
-| 017 | コース情報取得 | [item_017](../../arvexq/components/item_017/component.json) | mapped-existing-source |
-| 018 | 出走頭数取得 | [item_018](../../arvexq/components/item_018/component.json) | mapped-existing-source |
-| 019 | 賞金情報取得 | [item_019](../../arvexq/components/item_019/component.json) | mapped-existing-source |
+| 012 | レース名取得 | [item_012](../../arvexq/components/item_012/component.json) | migrated-module |
+| 013 | グレード・クラス取得 | [item_013](../../arvexq/components/item_013/component.json) | migrated-module |
+| 014 | 発走時刻取得 | [item_014](../../arvexq/components/item_014/component.json) | migrated-module |
+| 015 | 芝・ダート・障害区分取得 | [item_015](../../arvexq/components/item_015/component.json) | migrated-module |
+| 016 | 距離取得 | [item_016](../../arvexq/components/item_016/component.json) | migrated-module |
+| 017 | コース情報取得 | [item_017](../../arvexq/components/item_017/component.json) | migrated-module |
+| 018 | 出走頭数取得 | [item_018](../../arvexq/components/item_018/component.json) | migrated-module |
+| 019 | 賞金情報取得 | [item_019](../../arvexq/components/item_019/component.json) | migrated-module |
 | 020 | JRA公式データ解析 | [item_020](../../arvexq/components/item_020/component.json) | migrated-shared-context |
 | 021 | NAR公式データ解析 | [item_021](../../arvexq/components/item_021/component.json) | migrated-shared-context |
 | 022 | 外部競馬サイトデータ解析 | [item_022](../../arvexq/components/item_022/component.json) | migrated-shared-context |
-| 023 | レースID照合 | [item_023](../../arvexq/components/item_023/component.json) | mapped-existing-source |
-| 024 | 重複レース統合 | [item_024](../../arvexq/components/item_024/component.json) | mapped-existing-source |
+| 023 | レースID照合 | [item_023](../../arvexq/components/item_023/component.json) | migrated-module |
+| 024 | 重複レース統合 | [item_024](../../arvexq/components/item_024/component.json) | migrated-module |
 | 025 | 馬番 | [item_025](../../arvexq/components/item_025/component.json) | migrated-shared-context |
 | 026 | 枠番 | [item_026](../../arvexq/components/item_026/component.json) | migrated-module |
 | 027 | 馬名 | [item_027](../../arvexq/components/item_027/component.json) | migrated-module |
@@ -58,12 +62,12 @@
 | 033 | 所属 | [item_033](../../arvexq/components/item_033/component.json) | migrated-module |
 | 034 | 馬体重 | [item_034](../../arvexq/components/item_034/component.json) | migrated-module |
 | 035 | 馬体重増減 | [item_035](../../arvexq/components/item_035/component.json) | migrated-module |
-| 036 | 出走取消状態 | [item_036](../../arvexq/components/item_036/component.json) | mapped-existing-source |
-| 037 | 競走除外状態 | [item_037](../../arvexq/components/item_037/component.json) | mapped-existing-source |
+| 036 | 出走取消状態 | [item_036](../../arvexq/components/item_036/component.json) | migrated-module |
+| 037 | 競走除外状態 | [item_037](../../arvexq/components/item_037/component.json) | migrated-module |
 | 038 | 出馬表更新 | [item_038](../../arvexq/components/item_038/component.json) | migrated-shared-context |
-| 039 | 馬名・馬番照合 | [item_039](../../arvexq/components/item_039/component.json) | mapped-existing-source |
+| 039 | 馬名・馬番照合 | [item_039](../../arvexq/components/item_039/component.json) | migrated-module |
 | 040 | 欠損値補完 | [item_040](../../arvexq/components/item_040/component.json) | migrated-shared-context |
-| 041 | データ取得元照合 | [item_041](../../arvexq/components/item_041/component.json) | mapped-existing-source |
+| 041 | データ取得元照合 | [item_041](../../arvexq/components/item_041/component.json) | migrated-module |
 | 042 | 過去走日付 | [item_042](../../arvexq/components/item_042/component.json) | migrated-shared-context |
 | 043 | 過去走競馬場 | [item_043](../../arvexq/components/item_043/component.json) | migrated-module |
 | 044 | 過去走距離 | [item_044](../../arvexq/components/item_044/component.json) | migrated-module |
@@ -78,24 +82,24 @@
 | 053 | 過去走騎手 | [item_053](../../arvexq/components/item_053/component.json) | migrated-module |
 | 054 | 過去走出走頭数 | [item_054](../../arvexq/components/item_054/component.json) | migrated-module |
 | 055 | 過去走重複排除 | [item_055](../../arvexq/components/item_055/component.json) | migrated-shared-context |
-| 056 | JRA・NAR転入転出判別 | [item_056](../../arvexq/components/item_056/component.json) | mapped-existing-source |
+| 056 | JRA・NAR転入転出判別 | [item_056](../../arvexq/components/item_056/component.json) | migrated-module |
 | 057 | 全競走履歴取得・補修 | [item_057](../../arvexq/components/item_057/component.json) | migrated-shared-context |
 | 058 | 未来結果混入防止 | [item_058](../../arvexq/components/item_058/component.json) | mapped-existing-source |
-| 059 | 単勝オッズ | [item_059](../../arvexq/components/item_059/component.json) | mapped-existing-source |
-| 060 | 複勝オッズ | [item_060](../../arvexq/components/item_060/component.json) | mapped-existing-source |
-| 061 | 人気順位 | [item_061](../../arvexq/components/item_061/component.json) | mapped-existing-source |
-| 062 | オッズ取得時刻 | [item_062](../../arvexq/components/item_062/component.json) | mapped-existing-source |
+| 059 | 単勝オッズ | [item_059](../../arvexq/components/item_059/component.json) | migrated-module |
+| 060 | 複勝オッズ | [item_060](../../arvexq/components/item_060/component.json) | migrated-module |
+| 061 | 人気順位 | [item_061](../../arvexq/components/item_061/component.json) | migrated-module |
+| 062 | オッズ取得時刻 | [item_062](../../arvexq/components/item_062/component.json) | migrated-module |
 | 063 | JRAオッズ解析 | [item_063](../../arvexq/components/item_063/component.json) | mapped-existing-source |
 | 064 | NARオッズ解析 | [item_064](../../arvexq/components/item_064/component.json) | migrated-shared-context |
 | 065 | 外部サイトオッズ解析 | [item_065](../../arvexq/components/item_065/component.json) | migrated-shared-context |
 | 066 | オッズ差分更新 | [item_066](../../arvexq/components/item_066/component.json) | migrated-shared-context |
 | 067 | オッズ保存・復元 | [item_067](../../arvexq/components/item_067/component.json) | migrated-shared-context |
 | 068 | オッズ表示 | [item_068](../../arvexq/components/item_068/component.json) | mapped-existing-source |
-| 069 | オッズ欠損判定 | [item_069](../../arvexq/components/item_069/component.json) | mapped-existing-source |
+| 069 | オッズ欠損判定 | [item_069](../../arvexq/components/item_069/component.json) | migrated-module |
 | 070 | 着順取得 | [item_070](../../arvexq/components/item_070/component.json) | mapped-existing-source |
 | 071 | 着差取得 | [item_071](../../arvexq/components/item_071/component.json) | mapped-existing-source |
 | 072 | 走破時計取得 | [item_072](../../arvexq/components/item_072/component.json) | mapped-existing-source |
-| 073 | 確定結果判定 | [item_073](../../arvexq/components/item_073/component.json) | mapped-existing-source |
+| 073 | 確定結果判定 | [item_073](../../arvexq/components/item_073/component.json) | migrated-module |
 | 074 | 速報結果判定 | [item_074](../../arvexq/components/item_074/component.json) | mapped-existing-source |
 | 075 | コーナー通過順位取得 | [item_075](../../arvexq/components/item_075/component.json) | mapped-existing-source |
 | 076 | 単勝払戻 | [item_076](../../arvexq/components/item_076/component.json) | migrated-module |
@@ -133,7 +137,7 @@
 | 108 | 馬体重・斤量影響分析 | [item_108](../../arvexq/components/item_108/component.json) | reserved |
 | 109 | コース別スピード基準 | [item_109](../../arvexq/components/item_109/component.json) | mapped-existing-source |
 | 110 | 全頭診断結果保存・表示 | [item_110](../../arvexq/components/item_110/component.json) | migrated-shared-context |
-| 111 | 予想入力データ | [item_111](../../arvexq/components/item_111/component.json) | mapped-existing-source |
+| 111 | 予想入力データ | [item_111](../../arvexq/components/item_111/component.json) | migrated-module |
 | 112 | 予想ロジック | [item_112](../../arvexq/components/item_112/component.json) | reserved |
 | 113 | 勝率・順位確率計算 | [item_113](../../arvexq/components/item_113/component.json) | reserved |
 | 114 | 展開シミュレーション | [item_114](../../arvexq/components/item_114/component.json) | reserved |
@@ -148,7 +152,7 @@
 | 123 | 3連単チャレンジ | [item_123](../../arvexq/components/item_123/component.json) | reserved |
 | 124 | 買い目点数・配分 | [item_124](../../arvexq/components/item_124/component.json) | reserved |
 | 125 | 発走前の予想・買い目保存 | [item_125](../../arvexq/components/item_125/component.json) | mapped-existing-source |
-| 126 | 予想・印・買い目画面表示 | [item_126](../../arvexq/components/item_126/component.json) | mapped-existing-source |
+| 126 | 予想・印・買い目画面表示 | [item_126](../../arvexq/components/item_126/component.json) | migrated-module |
 | 127 | 的中判定・成績検証 | [item_127](../../arvexq/components/item_127/component.json) | migrated-shared-context |
 | 128 | 中央・地方開催区分 | [item_128](../../arvexq/components/item_128/component.json) | mapped-existing-source |
 | 129 | 本日の厳選レース | [item_129](../../arvexq/components/item_129/component.json) | migrated-shared-context |

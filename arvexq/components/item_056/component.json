@@ -6,11 +6,24 @@
     "arvexq/ingest/circuit_transfer.py",
     "arvexq/ingest/transfer_history.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "arvexq.ingest.circuit_transfer"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/circuit_transfer.py",
+      "canonical": "arvexq/components/item_056/circuit_transfer.py",
+      "module": "arvexq.components.item_056.circuit_transfer"
+    },
+    {
+      "previous": "arvexq/ingest/transfer_history.py",
+      "canonical": "arvexq/components/item_056/transfer_history.py",
+      "module": "arvexq.components.item_056.transfer_history"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

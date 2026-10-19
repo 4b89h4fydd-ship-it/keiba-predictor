@@ -8,9 +8,15 @@
   ],
   "shared_dependencies": [],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/race_identity.py",
+      "canonical": "arvexq/components/item_023/race_identity.py",
+      "module": "arvexq.components.item_023.race_identity"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "circuits": [
     "JRA",
     "NAR"

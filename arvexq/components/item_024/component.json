@@ -9,9 +9,15 @@
     "caller-provided central summary normalizer and JRA identifier decoders"
   ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/race_summary_merge.py",
+      "canonical": "arvexq/components/item_024/race_summary_merge.py",
+      "module": "arvexq.components.item_024.race_summary_merge"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "circuits": [
     "JRA",
     "NAR"

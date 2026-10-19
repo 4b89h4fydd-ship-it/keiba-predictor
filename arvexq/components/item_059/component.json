@@ -9,9 +9,15 @@
     "arvexq.ingest.entry_fields.dom"
   ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/entry_fields/win_odds.py",
+      "canonical": "arvexq/components/item_059/win_odds.py",
+      "module": "arvexq.components.item_059.win_odds"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

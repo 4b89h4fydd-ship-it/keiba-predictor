@@ -7,9 +7,15 @@
   ],
   "shared_dependencies": [],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/result_status/confirmed.py",
+      "canonical": "arvexq/components/item_073/confirmed.py",
+      "module": "arvexq.components.item_073.confirmed"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

@@ -8,9 +8,15 @@
   ],
   "shared_dependencies": [],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/source_provenance.py",
+      "canonical": "arvexq/components/item_041/source_provenance.py",
+      "module": "arvexq.components.item_041.source_provenance"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

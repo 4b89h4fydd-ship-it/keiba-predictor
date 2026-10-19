@@ -404,7 +404,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_012",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 13,
@@ -438,7 +438,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_013",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 14,
@@ -471,7 +471,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_014",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 15,
@@ -506,7 +506,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_015",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 16,
@@ -541,7 +541,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_016",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 17,
@@ -574,7 +574,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_017",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 18,
@@ -607,7 +607,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_018",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 19,
@@ -640,7 +640,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_019",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 20,
@@ -791,7 +791,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_023",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 24,
@@ -827,7 +827,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_024",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 25,
@@ -1259,7 +1259,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_036",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 37,
@@ -1297,7 +1297,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_037",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 38,
@@ -1357,7 +1357,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_039",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 40,
@@ -1417,7 +1417,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_041",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 42,
@@ -1925,7 +1925,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_056",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 57,
@@ -2019,7 +2019,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_059",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 60,
@@ -2052,7 +2052,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_060",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 61,
@@ -2087,7 +2087,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_061",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 62,
@@ -2120,7 +2120,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_062",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 63,
@@ -2322,7 +2322,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_069",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 70,
@@ -2433,7 +2433,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_073",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 74,
@@ -3538,7 +3538,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "観測事実の入力契約・品質検証はCodex。新方式固有の特徴量定義は別担当。",
       "component_box": "arvexq/components/item_111",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 112,
@@ -3972,7 +3972,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "既存の表示枠・API契約・欠損表示はCodex。予想・印・買い目の内容は別担当。",
       "component_box": "arvexq/components/item_126",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-module"
     },
     {
       "id": 127,

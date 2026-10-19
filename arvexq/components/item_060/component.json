@@ -7,9 +7,15 @@
   ],
   "shared_dependencies": [],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/place_odds.py",
+      "canonical": "arvexq/components/item_060/place_odds.py",
+      "module": "arvexq.components.item_060.place_odds"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [
