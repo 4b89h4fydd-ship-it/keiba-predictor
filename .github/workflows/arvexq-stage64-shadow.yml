@@ -17,7 +17,7 @@ name: ARVEXQ Stage64 Shadow Research
     inputs:
       action:
         type: choice
-        options: [preregister, freeze]
+        options: [preregister, freeze, score]
         default: preregister
       circuit:
         type: choice
@@ -32,6 +32,12 @@ name: ARVEXQ Stage64 Shadow Research
       source_member:
         type: string
         default: persisted-facts.json
+      forecast_artifact:
+        type: string
+        default: ""
+      result_artifact:
+        type: string
+        default: ""
 permissions:
   contents: read
   actions: read
@@ -93,6 +99,29 @@ jobs:
             --source-artifact "$SOURCE_ARTIFACT" --source-member "$SOURCE_MEMBER" \
             --plan-artifact "$PLAN_ARTIFACT" --circuit "$SHADOW_CIRCUIT" \
             --output shadow-forecast/bundle.json
+      - name: Score witnessed forecast from saved confirmed D1 result artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.action == 'score'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PLAN_ARTIFACT: ${{ inputs.plan_artifact }}
+          FORECAST_ARTIFACT: ${{ inputs.forecast_artifact }}
+          RESULT_ARTIFACT: ${{ inputs.result_artifact }}
+        run: |
+          mkdir -p shadow-score
+          python scripts/arvexq_stage64_score_saved.py \
+            --plan-artifact "$PLAN_ARTIFACT" \
+            --forecast-artifact "$FORECAST_ARTIFACT" \
+            --result-artifact "$RESULT_ARTIFACT" \
+            --output shadow-score/result.json \
+            --audit shadow-score/audit.json
+      - name: Preserve independent pre-off scoring evidence
+        if: github.event_name == 'workflow_dispatch' && inputs.action == 'score' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-stage64-score-${{ github.run_id }}
+          path: shadow-score/
+          if-no-files-found: warn
+          retention-days: 90
       - name: Archive frozen shadow cohort
         if: github.event_name == 'workflow_dispatch' && inputs.action == 'freeze'
         uses: actions/upload-artifact@v4
