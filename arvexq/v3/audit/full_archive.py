@@ -123,6 +123,8 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
         "calendarWindow": calendar_window([p.stem for p in chosen], archive_dir=archive_dir),
         "dateRange": [chosen[0].stem, chosen[-1].stem],
         "dateCount": days,
+        "verifiedSavedDates": [p.stem for p in chosen],
+        "pairedDateRangeMatchesSelection": (chosen[0].stem == selected_start and chosen[-1].stem == selected_end),
         # The pair-verification range and one-sided-file scan range may differ.
         # Keep both explicit so the evidence does not misstate coverage.
         "integrityScanRange": [selected_start, observed_end],
