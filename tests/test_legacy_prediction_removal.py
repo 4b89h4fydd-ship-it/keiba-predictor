@@ -25,3 +25,10 @@ def test_legacy_forecast_generation_no_longer_called():
     # An immutable historical pre-off original remains useful for auditing.
     assert "def _prediction_audit_from_lock" in source
     assert "def _attach_prerace_audit" in source
+
+
+def test_retired_marks_and_ticket_generators_deleted():
+    assert not (ROOT / "arvexq/forecast/tickets.py").exists()
+    marks = (ROOT / "arvexq/forecast/marks.py").read_text(encoding="utf-8")
+    assert "def generate_marks(" not in marks
+    assert "def clear_marks(" in marks  # factual cleaning remains available
