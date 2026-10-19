@@ -132,9 +132,12 @@ def score(client, *, plan_id, forecast_id, result_id, output, audit):
     saved, source_anchor = read_witness(client, result_id, before=datetime.now(timezone.utc),
                                         source_member="persisted-facts.json")
     source_run = client.run(source_anchor["runId"])
-    if (source_run.get("name") != "ARVEXQ Full Prefetch" or
-            source_run.get("head_branch") != "main"):
-        raise ValueError("result source must be existing main Full Prefetch")
+    # Post-race readback is sourced from the existing D1 route, not
+    # predictions or a newly introduced collector. Require our own workflow
+    # and never accept a foreign/forked result artifact.
+    if (source_run.get("name") != "ARVEXQ Stage64 Shadow Research"
+            or source_run.get("head_repository_id") not in (None, 1386943133)):
+        raise ValueError("result source must be the designated read-only Stage64 workflow")
     last_off = max(post_at(r["snapshot"]["input"]) for r in batch["receipts"])
     if instant(source_anchor["serverObservedBy"]) <= last_off:
         raise ValueError("result artifact workflow completed before last post")

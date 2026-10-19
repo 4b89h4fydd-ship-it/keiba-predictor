@@ -17,7 +17,7 @@ name: ARVEXQ Stage64 Shadow Research
     inputs:
       action:
         type: choice
-        options: [preregister, freeze, score]
+        options: [preregister, freeze, capture-results, score]
         default: preregister
       circuit:
         type: choice
@@ -36,6 +36,10 @@ name: ARVEXQ Stage64 Shadow Research
         type: string
         default: ""
       result_artifact:
+        type: string
+        default: ""
+      result_date:
+        description: Completed JST racing day YYYY-MM-DD; read existing D1 only
         type: string
         default: ""
 permissions:
@@ -99,6 +103,37 @@ jobs:
             --source-artifact "$SOURCE_ARTIFACT" --source-member "$SOURCE_MEMBER" \
             --plan-artifact "$PLAN_ARTIFACT" --circuit "$SHADOW_CIRCUIT" \
             --output shadow-forecast/bundle.json
+      - name: Read settled facts from the original D1 endpoint only
+        if: github.event_name == 'workflow_dispatch' && inputs.action == 'capture-results'
+        env:
+          RESULT_DATE: ${{ inputs.result_date }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import datetime, os, re
+          day=os.environ["RESULT_DATE"]
+          if not re.fullmatch(r"\d{4}-\d{2}-\d{2}",day):
+              raise SystemExit("explicit result_date required YYYY-MM-DD")
+          date=datetime.date.fromisoformat(day)
+          today=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date()
+          if date>=today:
+              raise SystemExit("Only completed previous racing days can be read")
+          PY
+          mkdir -p shadow-results
+          python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base https://kraiz-api.4b89h4fydd.workers.dev \
+            --date "$RESULT_DATE" \
+            --out shadow-results/persisted-facts.json \
+            --report shadow-results/readback-audit.json \
+            --workers 3 --retries 3
+      - name: Archive witnessed post-race D1 readback without modifying stored facts
+        if: github.event_name == 'workflow_dispatch' && inputs.action == 'capture-results'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-stage64-confirmed-d1-${{ inputs.result_date }}
+          path: shadow-results/
+          if-no-files-found: error
+          retention-days: 90
       - name: Score witnessed forecast from saved confirmed D1 result artifact
         if: github.event_name == 'workflow_dispatch' && inputs.action == 'score'
         env:
