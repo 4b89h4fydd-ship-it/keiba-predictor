@@ -54,6 +54,8 @@ def test_saved_runner_and_display_readiness_parity(circuit, city):
     assert py["schema"] == js["schema"]
     assert py["race"] == js["race"]
     assert py["rows"] == js["rows"]
+    assert py["rows"][0]["readiness"]["basicFields"]["name"] == "observed"
+    assert py["rows"][0]["readiness"]["basicFields"]["jockey"] == "missing"
     assert py["displayReadiness"] == js["displayReadiness"]
     assert all(py["oddsFields"][key] == js["oddsFields"][key]
                for key in ("win", "place", "popularity"))

@@ -115,7 +115,15 @@ function projection(original,requestedId) {
       out.push({horseNumber:number,state:q.status,value:q.value});
     }
     const w=win.at(-1).state, p=place.at(-1).state, rank=popularity.at(-1).state;
+    const basicFields={};
+    for (const key of ['name','jockey','trainer','carriedWeight']) {
+      const raw=horse[key];
+      basicFields[key]=!observed(raw)?'missing':
+        typeof raw==='boolean'||typeof raw==='number'&&!Number.isFinite(raw)
+          ?'invalid':'observed';
+    }
     rows.at(-1).readiness={
+      basicFields,
       schema:'arvexq-v3-runner-readiness-1',horseNumber:number,
       history:runs.length?'partial-unverified':'missing',
       observedPriorRunCount:runs.length,allCareerRunsVerified:false,
