@@ -9,6 +9,10 @@ name: ARVEXQ Stage64 Shadow Research
       - scripts/arvexq_stage64*.py
       - docs/research/stage64-results/*candidate_plan.json
       - .github/workflows/arvexq-stage64-shadow.yml
+  # The scheduled trigger remains inactive while PR #367 is draft.
+  workflow_run:
+    workflows: [ARVEXQ Full Prefetch]
+    types: [completed]
   workflow_dispatch:
     inputs:
       action:
@@ -96,4 +100,46 @@ jobs:
           name: arvexq-stage64-frozen-${{ inputs.circuit }}
           path: shadow-forecast/bundle.json
           if-no-files-found: error
+          retention-days: 90
+
+  auto-freeze:
+    # Workflow-run triggers execute from default branch only after authorized merge.
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        circuit: [jra, nar]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test independent and fail-closed cohort selection
+        run: python -m unittest discover -s tests -p 'test_stage64_auto_capture.py' -v
+      - name: Freeze verified existing facts before post (never retrieve races)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          CIRCUIT: ${{ matrix.circuit }}
+        run: |
+          mkdir -p shadow-auto
+          python scripts/arvexq_stage64_auto_capture.py \
+            --source-run "$SOURCE_RUN_ID" --circuit "$CIRCUIT" \
+            --output shadow-auto/bundle.json --audit shadow-auto/audit.json
+      - name: Archive prospective forecast for later external witness
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-stage64-forecast-${{ matrix.circuit }}
+          path: shadow-auto/bundle.json
+          if-no-files-found: ignore
+          retention-days: 90
+      - name: Preserve exclusion and coverage audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-stage64-cohort-audit-${{ matrix.circuit }}
+          path: shadow-auto/audit.json
+          if-no-files-found: warn
           retention-days: 90
