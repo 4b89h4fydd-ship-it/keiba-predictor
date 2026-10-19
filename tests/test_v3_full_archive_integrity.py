@@ -11,7 +11,7 @@ ROOT=Path(__file__).resolve().parents[1]/"arvexq"/"ui"/"static"
 
 
 def test_full_saved_week_integrity_preserves_unknown_official_completeness():
-    report=verify_saved_week(ROOT,days=7)
+    report=verify_saved_week(ROOT,days=7,end_date="2026-10-18")
     assert report["expectedRacecards"]==423
     assert report["circuits"]["jra"]["expected"]==96
     assert report["circuits"]["nar"]["expected"]==327
