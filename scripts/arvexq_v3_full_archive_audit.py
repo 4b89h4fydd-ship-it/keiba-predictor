@@ -65,6 +65,8 @@ def summarize_for_ci(result):
     date_range = result.get("dateRange")
     count = result.get("dateCount")
     try:
+        if type(dates) is not list or any(type(d) is not str for d in dates):
+            raise ValueError("saved dates must be a list of strings")
         parsed = [date.fromisoformat(d) for d in dates]
         dates_valid = (type(count) is int and count > 0
                        and type(dates) is list and len(dates) == count
@@ -92,6 +94,8 @@ def summarize_for_ci(result):
     scan_range = result.get("integrityScanRange")
     unpaired = result.get("unpairedSavedDays")
     try:
+        if type(scan_range) is not list or any(type(d) is not str for d in scan_range):
+            raise ValueError("scan dates must be a list of strings")
         scan_dates = [date.fromisoformat(d) for d in scan_range]
         scan_valid = (type(scan_range) is list and len(scan_range) == 2
                       and all(type(d) is str and p.isoformat() == d
