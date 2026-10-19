@@ -76,3 +76,5 @@ Review the actual GitHub Actions checks for the HEAD commit and resume with item
 All six PR workflows completed successfully for `597270d74e7f3bb7f4c1cc6e31b4c3241d7c3582`:
 
 `ARVEXQ Environment Modules` **39273981088**, `ARVEXQ Factual Data Audit` **39273981134**, `ARVEXQ Stage64 Shadow Research` **39273981137**, `ARVEXQ Independent Components` **39273981253**, `ARVEXQ v3 Saved-Archive Audit` **39273981249**, and `ARVEXQ Validation` **39273981299**. This establishes CI success for the changed contracts only; it does not satisfy persistence/cache/API/UI/production gates or promote 004–007.
+
+Local dependency-isolated rerun of the 008–020 field, v3 transport, circuit-separation, FastAPI saved-read, and ledger tests: **81 passed**. No ledger status was promoted; production readback remains unverified.
