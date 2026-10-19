@@ -36,8 +36,12 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
     if end_date is not None:
         card_days = {d for d in card_days if d <= cutoff}
         manifest_days = {d for d in manifest_days if d <= cutoff}
+    # Extend through the latest observed saved date, so a one-sided trailing
+    # archive cannot disappear merely because it has no matching pair.
+    observed_days = card_days | manifest_days
+    observed_end = max(observed_days) if observed_days else selected_end
     unpaired = sorted(d for d in card_days ^ manifest_days
-                      if selected_start <= d <= selected_end)
+                      if selected_start <= d <= observed_end)
     counts = {c: Counter() for c in ("jra", "nar")}
     errors: list[dict[str, Any]] = [
         {"date": d, "code": "unpaired-saved-day",
