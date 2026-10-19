@@ -7,8 +7,8 @@
 - 全200件に `arvexq/components/item_NNN/` と名前・区分・所有ソース・共有依存を記した `component.json` を作成。未割当の箱はない。
 - `app.py` の228関数/クラスの実体を52箱へ移動。定義位置で `install_component` を呼び、元のグローバル変数・ロック・保存先・デコレータを保って既存経路へ接続する。すでに `infra/legacy_stores.py` 等でも使われている互換実行方式の延長。これは共有実行状態の完全解消を意味しない。
 - 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計79モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
-- UIの75処理断片を箱へ移動。残る352断片は共有UIとして明示。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
-- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り36箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
+- UI組立の96処理断片を箱へ移動。残る331断片を共有UIとして明示。追加の独立スクリプト5件も責務箱から同一バイトで組み立てる。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
+- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り26箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
 - 仕様待ち29箱は空。既存の16個の旧予想補助定義は隔離したままで、新しい箱から委譲・実行しない。v3中央/地方の12予想モジュールは引き続き `None` を返す。
 - 保存済み観測データは複製・改変せず、元の保存場所を読む。D1/SQLiteスキーマ・取得URL・キャッシュ条件・UI・本番環境を変更しない。
 
@@ -19,7 +19,7 @@
 
 ## 2026-10-20 追加の構造移動（GitHub上の旧実装から再実施）
 
-以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は36。構造検証と本番認定を混同しない。
+以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は26。構造検証と本番認定を混同しない。
 
 ### キャッシュポリシー分離の限定範囲
 
@@ -36,6 +36,10 @@
 ### 結果・払戻を責務別に分岐（10箱を追加接続）
 
 #070〜#072の着順/着差/時計、および#077〜#083の券種別払戻は、従来の `result_facts.py` の汎用抽出本体から責務箱の読み取り実装に切り出した。#075の通過順位、#076の単勝払戻も同じ呼出境界に接続した。既存のJRA/NAR別読み取りモジュールは公開関数経由で同じキー/値と欠損扱いを返す。対象は**保存済み結果の読み取り投影**のみであり、#076の共通払戻HTMLパーサ、保存・修復・確定判定・本番UIなどの完全分離を主張しない。予想・買い目生成は実施しない。
+
+### app.js 既存21断片の所有先移動
+
+オッズ表示(#068)、発走前保存(#125)、メインレース(#130)、重賞(#131)、高知ファイナル(#132)、レース選定(#133)、厳選レース買い目表示(#136)、固定スナップショット表示(#147)、開催場別レース一覧(#178)、出馬表(#180)へ**既存共有UIの21断片を元のGit blobのまま**移動。UI組立台帳 `ui-assembly.json` の順序とSHA256は保持し、配列の `path` と `owner` のみ更新した。旧共有UIの所有済み断片ファイルは削除し、同じblob SHAを各責務箱に配置する。生成 `app.js` のバイト列は変わらない設計。各断片のグローバル依存、旧アルゴリズム由来の共有状態、ビルド・ライブ検証は残存するので**独立化・本番検証済みとは扱わない**。予想ロジックを新しく生成・有効化していない。
 
 ## 全項目の配置
 
@@ -110,7 +114,7 @@
 | 065 | 外部サイトオッズ解析 | [item_065](../../arvexq/components/item_065/component.json) | migrated-shared-context |
 | 066 | オッズ差分更新 | [item_066](../../arvexq/components/item_066/component.json) | migrated-shared-context |
 | 067 | オッズ保存・復元 | [item_067](../../arvexq/components/item_067/component.json) | migrated-shared-context |
-| 068 | オッズ表示 | [item_068](../../arvexq/components/item_068/component.json) | mapped-existing-source |
+| 068 | オッズ表示 | [item_068](../../arvexq/components/item_068/component.json) | migrated-ui-fragment |
 | 069 | オッズ欠損判定 | [item_069](../../arvexq/components/item_069/component.json) | migrated-module |
 | 070 | 着順取得 | [item_070](../../arvexq/components/item_070/component.json) | migrated-shared-context |
 | 071 | 着差取得 | [item_071](../../arvexq/components/item_071/component.json) | migrated-shared-context |
@@ -167,18 +171,18 @@
 | 122 | 本線買い目 | [item_122](../../arvexq/components/item_122/component.json) | reserved |
 | 123 | 3連単チャレンジ | [item_123](../../arvexq/components/item_123/component.json) | reserved |
 | 124 | 買い目点数・配分 | [item_124](../../arvexq/components/item_124/component.json) | reserved |
-| 125 | 発走前の予想・買い目保存 | [item_125](../../arvexq/components/item_125/component.json) | mapped-existing-source |
+| 125 | 発走前の予想・買い目保存 | [item_125](../../arvexq/components/item_125/component.json) | migrated-ui-fragment |
 | 126 | 予想・印・買い目画面表示 | [item_126](../../arvexq/components/item_126/component.json) | migrated-module |
 | 127 | 的中判定・成績検証 | [item_127](../../arvexq/components/item_127/component.json) | migrated-shared-context |
 | 128 | 中央・地方開催区分 | [item_128](../../arvexq/components/item_128/component.json) | mapped-existing-source |
 | 129 | 本日の厳選レース | [item_129](../../arvexq/components/item_129/component.json) | migrated-shared-context |
-| 130 | メインレース | [item_130](../../arvexq/components/item_130/component.json) | mapped-existing-source |
-| 131 | 重賞レース | [item_131](../../arvexq/components/item_131/component.json) | mapped-existing-source |
-| 132 | 高知ファイナル | [item_132](../../arvexq/components/item_132/component.json) | mapped-existing-source |
-| 133 | レース選定条件 | [item_133](../../arvexq/components/item_133/component.json) | mapped-existing-source |
+| 130 | メインレース | [item_130](../../arvexq/components/item_130/component.json) | migrated-ui-fragment |
+| 131 | 重賞レース | [item_131](../../arvexq/components/item_131/component.json) | migrated-ui-fragment |
+| 132 | 高知ファイナル | [item_132](../../arvexq/components/item_132/component.json) | migrated-ui-fragment |
+| 133 | レース選定条件 | [item_133](../../arvexq/components/item_133/component.json) | migrated-ui-fragment |
 | 134 | レース選定結果保存 | [item_134](../../arvexq/components/item_134/component.json) | mapped-existing-source |
 | 135 | 事前選定・発走後区別 | [item_135](../../arvexq/components/item_135/component.json) | migrated-shared-context |
-| 136 | 厳選レース買い目表示 | [item_136](../../arvexq/components/item_136/component.json) | mapped-existing-source |
+| 136 | 厳選レース買い目表示 | [item_136](../../arvexq/components/item_136/component.json) | migrated-ui-fragment |
 | 137 | 前日予想成績 | [item_137](../../arvexq/components/item_137/component.json) | mapped-existing-source |
 | 138 | 当日予想成績 | [item_138](../../arvexq/components/item_138/component.json) | mapped-existing-source |
 | 139 | D1保存 | [item_139](../../arvexq/components/item_139/component.json) | mapped-existing-source |
@@ -189,7 +193,7 @@
 | 144 | 過去走キャッシュ | [item_144](../../arvexq/components/item_144/component.json) | mapped-existing-source |
 | 145 | オッズキャッシュ | [item_145](../../arvexq/components/item_145/component.json) | mapped-existing-source |
 | 146 | 結果キャッシュ | [item_146](../../arvexq/components/item_146/component.json) | migrated-module |
-| 147 | 発走前スナップショット | [item_147](../../arvexq/components/item_147/component.json) | mapped-existing-source |
+| 147 | 発走前スナップショット | [item_147](../../arvexq/components/item_147/component.json) | migrated-ui-fragment |
 | 148 | 保存データバージョン管理 | [item_148](../../arvexq/components/item_148/component.json) | mapped-existing-source |
 | 149 | キャッシュ期限・破棄 | [item_149](../../arvexq/components/item_149/component.json) | migrated-shared-context |
 | 150 | 保存失敗時復旧 | [item_150](../../arvexq/components/item_150/component.json) | mapped-existing-source |
@@ -220,9 +224,9 @@
 | 175 | APIエラー処理 | [item_175](../../arvexq/components/item_175/component.json) | mapped-existing-source |
 | 176 | ホーム画面 | [item_176](../../arvexq/components/item_176/component.json) | migrated-shared-context |
 | 177 | 開催場一覧 | [item_177](../../arvexq/components/item_177/component.json) | migrated-ui-fragment |
-| 178 | 開催場別レース一覧 | [item_178](../../arvexq/components/item_178/component.json) | mapped-existing-source |
+| 178 | 開催場別レース一覧 | [item_178](../../arvexq/components/item_178/component.json) | migrated-ui-fragment |
 | 179 | レース詳細 | [item_179](../../arvexq/components/item_179/component.json) | migrated-shared-context |
-| 180 | 出馬表 | [item_180](../../arvexq/components/item_180/component.json) | mapped-existing-source |
+| 180 | 出馬表 | [item_180](../../arvexq/components/item_180/component.json) | migrated-ui-fragment |
 | 181 | 馬別詳細 | [item_181](../../arvexq/components/item_181/component.json) | migrated-ui-fragment |
 | 182 | 過去走表示 | [item_182](../../arvexq/components/item_182/component.json) | migrated-ui-fragment |
 | 183 | 脚質マップ | [item_183](../../arvexq/components/item_183/component.json) | migrated-ui-fragment |

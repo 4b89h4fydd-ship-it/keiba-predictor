@@ -5,11 +5,16 @@
   "existing_sources": [
     "arvexq/prediction/prerace_archive.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "existing app.js global state and order-dependent shared UI; same-byte source migration only"
+  ],
   "owned_definitions": [],
   "owned_modules": [],
-  "assets": [],
-  "state": "mapped-existing-source",
+  "assets": [
+    "arvexq/components/item_147/ui/0213_immutableStoredAiBetView.js",
+    "arvexq/components/item_147/ui/0214_verifiedSavedAiBet.js"
+  ],
+  "state": "migrated-ui-fragment",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

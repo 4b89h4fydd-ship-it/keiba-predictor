@@ -2289,7 +2289,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_068",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 69,
@@ -3941,7 +3941,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "発走前の保存・更新保護・復元はCodex。保存する予想と買い目の計算は別担当。",
       "component_box": "arvexq/components/item_125",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 126,
@@ -4078,7 +4078,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_130",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 131,
@@ -4104,7 +4104,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_131",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 132,
@@ -4130,7 +4130,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_132",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 133,
@@ -4157,7 +4157,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "観測事実の選定入力契約と検証はCodex。新方式の選定条件は別担当。",
       "component_box": "arvexq/components/item_133",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 134,
@@ -4238,7 +4238,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "既存表示と受領済み買い目の契約はCodex。買い目生成は別担当。",
       "component_box": "arvexq/components/item_136",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 137,
@@ -4526,7 +4526,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_147",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 148,
@@ -5379,7 +5379,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_178",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 179,
@@ -5431,7 +5431,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_180",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 181,

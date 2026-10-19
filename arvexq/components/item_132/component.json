@@ -5,11 +5,15 @@
   "existing_sources": [
     "arvexq/ui/static/morning/special_selection.js"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "existing app.js global state and order-dependent shared UI; same-byte source migration only"
+  ],
   "owned_definitions": [],
   "owned_modules": [],
-  "assets": [],
-  "state": "mapped-existing-source",
+  "assets": [
+    "arvexq/components/item_132/ui/0272_kochiFinalRace.js"
+  ],
+  "state": "migrated-ui-fragment",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [
