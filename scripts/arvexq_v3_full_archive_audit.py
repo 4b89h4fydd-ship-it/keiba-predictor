@@ -25,7 +25,8 @@ def summarize_for_ci(result):
         circuit: {"expected": counts.get("expected"),
                   "verified": counts.get("verified"),
                   "failed": counts.get("failed")}
-        for circuit, counts in sorted(circuit_rows.items()) if type(counts) is dict
+        for circuit, counts in circuit_rows.items()
+        if type(circuit) is str and type(counts) is dict
     }
     def valid_count(value):
         return type(value) is int and value >= 0
