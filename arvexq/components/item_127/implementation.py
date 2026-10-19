@@ -56,20 +56,6 @@ def _prediction_audit_from_lock(detail:dict)->dict|None:
 
 def _attach_prerace_audit(detail:dict)->dict:
     if not isinstance(detail,dict):return detail
-    state,_=_prediction_clock_state(detail)
-    current=detail.get("preRacePrediction") if isinstance(detail.get("preRacePrediction"),dict) else None
-    if state in {"pre","future"} and not _snapshot_final(detail):
-        # Once the final pre-race window has been captured, never rewrite it.
-        # This keeps the audit/training label immutable even if later refreshes arrive.
-        if not (current and current.get("frozen")):
-            fresh=_build_prerace_prediction(detail)
-            if fresh:
-                old_q=float((current or {}).get("dataQuality") or 0)
-                new_q=float(fresh.get("dataQuality") or 0)
-                entering_freeze=bool(fresh.get("frozen"))
-                # In the freeze window, prefer the latest snapshot unless it is badly sparser.
-                if not current or (entering_freeze and new_q+.08>=old_q) or (not entering_freeze and new_q+.02>=old_q):
-                    detail["preRacePrediction"]=fresh
     if _snapshot_final(detail) and isinstance(detail.get("preRacePrediction"),dict):
         audit=_prediction_audit_from_lock(detail)
         if audit:detail["predictionAudit"]=audit
