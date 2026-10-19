@@ -101,3 +101,17 @@ def test_explicit_end_date_excludes_later_unpaired_files(tmp_path):
 def test_end_date_requires_canonical_calendar_date(tmp_path, bad_end_date):
     with pytest.raises(ValueError):
         verify_saved_week(tmp_path, days=1, end_date=bad_end_date)
+
+
+def test_empty_paired_archive_is_not_reported_as_verified(tmp_path):
+    cards = tmp_path / "racecards"
+    snapshots = tmp_path / "saved-snapshots"
+    cards.mkdir()
+    snapshots.mkdir()
+    (cards / "2026-10-12.json").write_text('{"races":[]}', encoding="utf-8")
+    (snapshots / "2026-10-12.json").write_text('{"races":{}}', encoding="utf-8")
+    report = verify_saved_week(tmp_path, days=1)
+    assert report["expectedRacecards"] == 0
+    assert report["hashVerifiedRacecards"] == 0
+    assert report["allIndexedSavedOriginalsVerified"] is False
+    assert report["officialPublishedRacesVerified"] is False
