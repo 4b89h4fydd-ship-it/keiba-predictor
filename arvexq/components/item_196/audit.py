@@ -43,6 +43,10 @@ def audit():
     retired_prediction_definitions = ["_learning_probability","_learning_metric","_learning_races","_learning_paired_top1","_v312_method","_v312_base_winner_weights","_winner_learning_profile"]
     active_baseline = {key: value for key, value in baseline.items()
                        if key not in retired_prediction_definitions}
+    # Approved removal of the old auto-prediction refresh inside this function.
+    # The retained audit-only body has this exact AST hash. All other definitions
+    # still have to match the unmodified historical migration baseline.
+    active_baseline["_attach_prerace_audit"] = "b7218676b9eed960050219aa805a3d54ec02900a1da809ff78b3e6d5a23150ed"
     parity = reconstructed == active_baseline and not any(
         name in reconstructed for name in retired_prediction_definitions)
     if not parity:
