@@ -611,8 +611,6 @@ from arvexq.ingest.horse_measurements import (_safe_body_weight_value, _safe_car
 
 PRERACE_AUDIT_VERSION = "arvexq-prerace-audit-v317-consensus-rebuild"
 PRERACE_FREEZE_MINUTES = max(1, min(20, int(os.getenv("PRERACE_FREEZE_MINUTES", "10"))))
-_WINNER_LEARNING_CACHE = {}
-_WINNER_LEARNING_LOCK = threading.Lock()
 
 
 install_component(135, "_prediction_clock_state", globals())
