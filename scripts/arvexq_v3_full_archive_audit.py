@@ -3,6 +3,7 @@
 from __future__ import annotations
 import argparse
 from collections import Counter
+from datetime import date
 import json
 from pathlib import Path
 import sys
@@ -41,6 +42,23 @@ def summarize_for_ci(result):
     )
     condensed["errorCodes"]=dict(sorted(Counter(
         error.get("code", "unknown") for error in result["errors"]).items()))
+    dates = result.get("verifiedSavedDates")
+    date_range = result.get("dateRange")
+    count = result.get("dateCount")
+    try:
+        parsed = [date.fromisoformat(d) for d in dates]
+        dates_valid = (type(count) is int and count > 0
+                       and type(dates) is list and len(dates) == count
+                       and all(type(d) is str and p.isoformat() == d
+                               for d, p in zip(dates, parsed))
+                       and parsed == sorted(set(parsed))
+                       and type(date_range) is list and len(date_range) == 2
+                       and date_range == [dates[0], dates[-1]]
+                       and result.get("pairedDateRangeMatchesSelection") is True)
+    except (TypeError, ValueError, IndexError):
+        dates_valid = False
+    condensed["savedDateSelectionReconciled"] = dates_valid
+    condensed["verifiedSavedDates"] = dates
     condensed["integrityScanRange"]=result["integrityScanRange"]
     condensed["unpairedSavedDays"]=result["unpairedSavedDays"]
     triage = result["runnerEvidenceTriage"]
@@ -55,7 +73,8 @@ def summarize_for_ci(result):
 
 def audit_exit_code(result, condensed):
     return 0 if (result["allIndexedSavedOriginalsVerified"]
-                 and condensed["verificationCountsReconciled"]) else 1
+                 and condensed["verificationCountsReconciled"]
+                 and condensed["savedDateSelectionReconciled"]) else 1
 
 
 def main():
