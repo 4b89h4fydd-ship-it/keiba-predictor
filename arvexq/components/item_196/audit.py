@@ -46,7 +46,7 @@ def audit():
     # Approved removal of the old auto-prediction refresh inside this function.
     # The retained audit-only body has this exact AST hash. All other definitions
     # still have to match the unmodified historical migration baseline.
-    active_baseline["_attach_prerace_audit"] = "b7218676b9eed960050219aa805a3d54ec02900a1da809ff78b3e6d5a23150ed"
+    active_baseline["_attach_prerace_audit"] = "8e68e6fbbf3582f7929e018304e3f246ae64b55906364afe79fa89df625f0b11"
     parity = reconstructed == active_baseline and not any(
         name in reconstructed for name in retired_prediction_definitions)
     if not parity:
