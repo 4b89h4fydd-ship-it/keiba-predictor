@@ -24,6 +24,10 @@ def test_unpaired_manifest_day_within_window_is_an_integrity_failure(tmp_path):
     assert {"date": "2026-10-13", "code": "unpaired-saved-day",
             "filePresence": "manifest-only"} in report["errors"]
     assert report["allIndexedSavedOriginalsVerified"] is False
+    assert report["expectedRacecards"] == sum(
+        row.get("verified", 0) + row.get("failed", 0)
+        for row in report["circuits"].values())
+    assert not any(e["code"] == "race-verification-count-mismatch" for e in report["errors"])
 
 
 def test_unpaired_racecard_day_is_reported_without_claiming_official_gap(tmp_path):
