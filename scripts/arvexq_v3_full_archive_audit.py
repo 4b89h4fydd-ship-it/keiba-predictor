@@ -86,6 +86,8 @@ def summarize_for_ci(result):
                       and scan_dates[0] <= scan_dates[1]
                       and dates_valid and scan_dates[0] == parsed[0]
                       and scan_dates[1] >= parsed[-1]
+                      and (requested_end is None or
+                           scan_dates[1] <= date.fromisoformat(requested_end))
                       and type(result.get("integrityScanCalendarDays")) is int
                       and result["integrityScanCalendarDays"] == (scan_dates[1] - scan_dates[0]).days + 1
                       and type(unpaired) is list
