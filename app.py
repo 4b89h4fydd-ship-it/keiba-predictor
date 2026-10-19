@@ -503,6 +503,7 @@ from arvexq.ingest.race_fields.field_size import extract as jra_race_field_size
 
 from arvexq.ingest.jra_official_table import select_runners_table as select_jra_runners_table
 from arvexq.ingest.jra_official_runner_row import extract as jra_runner_row_number
+from arvexq.ingest.jra_environment_parser import _parse_jra_environment_html
 from arvexq.ingest.race_summary_merge import (
     index_summaries as _index_race_summaries,
     merge_refreshed_summaries as _merge_race_summaries,
@@ -534,11 +535,9 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     course_desc,_=jra_course(full)
     distance=jra_distance(full)
     surface=jra_surface(full)
-    weather="不明"; condition="不明"
-    wm=re.search(r"天候\s*([^\s]+)",full)
-    if wm:weather=wm.group(1)[:4]
-    cm=re.search(r"(?:芝|ダート)\s*(良|稍重|重|不良)",full)
-    if cm:condition=cm.group(1)
+    environment=_parse_jra_environment_html(full,surface)
+    weather=environment.get("weather") or "不明"
+    condition=environment.get("condition") or "不明"
     title=jra_race_title(soup,race_no,JRA_BAD_TITLE_RE)
     race_grade,race_class=jra_grade_class(full)
     prize1=jra_first_prize(full)
@@ -655,11 +654,9 @@ def _jra_parse_race_summary(cname:str)->dict|None:
     start=jra_start_time(full)
     distance=jra_distance(full)
     surface=jra_surface(full)
-    weather="不明"; condition="不明"
-    wm=re.search(r"天候\s*([^\s]+)",full)
-    if wm:weather=wm.group(1)[:4]
-    cm=re.search(r"(?:芝|ダート)\s*(良|稍重|重|不良)",full)
-    if cm:condition=cm.group(1)
+    environment=_parse_jra_environment_html(full,surface)
+    weather=environment.get("weather") or "不明"
+    condition=environment.get("condition") or "不明"
     title=jra_race_title(soup,race_no,JRA_BAD_TITLE_RE)
     race_grade,race_class=jra_grade_class(full)
     program=_jra_program_lookup(date,track,race_no)
@@ -2898,6 +2895,11 @@ def _nar_fetch_environment(track:str, iso_date:str, race_no:int)->dict:
     return out
 
 def _jra_fetch_environment(row:dict)->dict:
+    # This reader owns only central/JRA rows.  A missing identity is tolerated
+    # for legacy in-process callers, but an explicit NAR row must fail closed.
+    row_id=str(row.get("id") or "")
+    if row_id and not row_id.startswith("jra-"):
+        return {}
     date=str(row.get("date") or "")
     track=str(row.get("track") or "")
     race_no=int(row.get("raceNumber") or 0)

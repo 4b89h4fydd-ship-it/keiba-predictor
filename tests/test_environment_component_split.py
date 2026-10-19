@@ -87,3 +87,10 @@ def test_jra_environment_does_not_mutate_other_component_data():
     observed = {"芝": "良", "ダート": "重"}
     assert parse_jra_obstacle_going(observed) == "良"
     assert observed == {"芝": "良", "ダート": "重"}
+
+def test_jra_environment_reader_rejects_explicit_nar_identity(monkeypatch):
+    import app
+    called=[]
+    monkeypatch.setattr(app, "_jra_request", lambda *args: called.append(args) or "天候：晴　芝：良")
+    assert app._jra_fetch_environment({"id":"nar-2026-10-19-大井-01"}) == {}
+    assert called == []
