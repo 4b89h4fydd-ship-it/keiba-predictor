@@ -468,3 +468,30 @@ def test_ci_rejects_non_string_selected_and_scan_dates_without_exceptions():
         assert (report["savedDateSelectionReconciled"] is False
                 or report["integrityScanRangeReconciled"] is False)
         assert audit_exit_code(base, report) == 1
+
+
+def test_ci_rejects_mixed_type_unpaired_records_without_sort_crash():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-12"],
+        "dateCount": 1, "verifiedSavedDates": ["2026-10-12"],
+        "pairedDateRangeMatchesSelection": True,
+        "integrityScanRange": ["2026-10-12", "2026-10-13"],
+        "integrityScanCalendarDays": 2,
+        "expectedRacecards": 1, "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": True,
+        "circuits": {"jra": {"expected": 1, "verified": 1, "failed": 0},
+                     "nar": {"expected": 0, "verified": 0, "failed": 0}},
+        "errors": [], "unpairedSavedDays": [],
+        "runnerEvidenceTriage": {"zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+                                 "missingCardCarriedWeight": 0, "missingWeightByState": {}},
+    }
+    for bad in (
+        {"date": 20261013, "filePresence": "manifest-only"},
+        {"date": "2026-10-13", "filePresence": None},
+        {"date": ["2026-10-13"], "filePresence": "manifest-only"},
+        None,
+    ):
+        report = summarize_for_ci({**base, "unpairedSavedDays": [bad]})
+        assert report["integrityScanRangeReconciled"] is False
+        assert report["unpairedErrorsReconciled"] is False
+        assert audit_exit_code(base, report) == 1
