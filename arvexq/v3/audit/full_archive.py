@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from arvexq.v3.audit.archive import audit_pair
+from arvexq.v3.audit.calendar_window import calendar_window
 from arvexq.v3.audit.snapshot_digest import verify_one
 from arvexq.v3.audit.runner_gaps import summarize_evidence
 from arvexq.v3.data.quality import normalize_circuit
@@ -89,6 +90,7 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
     verified = sum(r.get("verified", 0) for r in counts_out.values())
     return {
         "schema": "arvexq-v3-full-saved-archive-audit-1",
+        "calendarWindow": calendar_window([p.stem for p in chosen]),
         "dateRange": [chosen[0].stem, chosen[-1].stem],
         "dateCount": days,
         "expectedRacecards": checked,
