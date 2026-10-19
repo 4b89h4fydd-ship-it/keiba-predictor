@@ -3181,7 +3181,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_098",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 99,
@@ -3207,7 +3207,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_099",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 100,
@@ -3233,7 +3233,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_100",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 101,
@@ -3259,7 +3259,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_101",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 102,
@@ -3285,7 +3285,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_102",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 103,

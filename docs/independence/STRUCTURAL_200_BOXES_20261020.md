@@ -6,7 +6,7 @@
 
 - 全200件に `arvexq/components/item_NNN/` と名前・区分・所有ソース・共有依存を記した `component.json` を作成。未割当の箱はない。
 - `app.py` の228関数/クラスの実体を52箱へ移動。定義位置で `install_component` を呼び、元のグローバル変数・ロック・保存先・デコレータを保って既存経路へ接続する。すでに `infra/legacy_stores.py` 等でも使われている互換実行方式の延長。これは共有実行状態の完全解消を意味しない。
-- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計91モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
+- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計96モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
 - UI組立の96処理断片を箱へ移動。残る331断片を共有UIとして明示。追加の独立スクリプト7件も責務箱から同一バイトで組み立てる。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
 - 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り11箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
 - 仕様待ち29箱は空。既存の16個の旧予想補助定義は隔離したままで、新しい箱から委譲・実行しない。v3中央/地方の12予想モジュールは引き続き `None` を返す。
@@ -64,6 +64,10 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 ### 既存Worker/D1/オッズ4箱の実体移動
 
 #139の全量スナップショット管理、#145の既存オッズ実取得、#173のAPI/Web Worker入口を責務箱へ移し、元のWorkerパスはES Module互換re-exportを保持。#174はD1環境バインディングの既存関数を#139から再公開。既存HTTP APIとWorker設定は変えず、予想生成も実施しない。Workerのバンドル/デプロイCIが未確認で、共有依存が残るため完全独立と認定しない。
+
+### 脚質率5項目の保存済み観測値境界
+
+#098〜#102は既存の`styleRates`/`runningStyleRates` にすでに格納された数値を読み取る純関数を作成。欠損は `None` を返す。これは各馬の過去走から脚質率を計算する実装ではなく、既存予想にも接続していない。**脚質率算出の完全独立化は未完了**。既存の印・買い目を変更しない。
 
 ## 全項目の配置
 
@@ -168,11 +172,11 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 | 095 | 季節適性 | [item_095](../../arvexq/components/item_095/component.json) | reserved |
 | 096 | 走破時計評価 | [item_096](../../arvexq/components/item_096/component.json) | reserved |
 | 097 | 上がり性能評価 | [item_097](../../arvexq/components/item_097/component.json) | reserved |
-| 098 | 逃げ率 | [item_098](../../arvexq/components/item_098/component.json) | mapped-existing-source |
-| 099 | 先行率 | [item_099](../../arvexq/components/item_099/component.json) | mapped-existing-source |
-| 100 | 差し率 | [item_100](../../arvexq/components/item_100/component.json) | mapped-existing-source |
-| 101 | 追込率 | [item_101](../../arvexq/components/item_101/component.json) | mapped-existing-source |
-| 102 | 下がり率 | [item_102](../../arvexq/components/item_102/component.json) | mapped-existing-source |
+| 098 | 逃げ率 | [item_098](../../arvexq/components/item_098/component.json) | migrated-shared-context |
+| 099 | 先行率 | [item_099](../../arvexq/components/item_099/component.json) | migrated-shared-context |
+| 100 | 差し率 | [item_100](../../arvexq/components/item_100/component.json) | migrated-shared-context |
+| 101 | 追込率 | [item_101](../../arvexq/components/item_101/component.json) | migrated-shared-context |
+| 102 | 下がり率 | [item_102](../../arvexq/components/item_102/component.json) | migrated-shared-context |
 | 103 | 脚質点 | [item_103](../../arvexq/components/item_103/component.json) | reserved |
 | 104 | 位置取り評価 | [item_104](../../arvexq/components/item_104/component.json) | reserved |
 | 105 | 展開・ペース分析 | [item_105](../../arvexq/components/item_105/component.json) | reserved |
