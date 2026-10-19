@@ -1,4 +1,8 @@
 /* Cache ownership only; preserve exact TTLs, keys, fallback and no-store behavior. */
+export function cacheKeys(url){
+  return [new Request(url.origin+url.pathname),
+          new Request(url.origin+url.pathname+'?last-acquired=1')];
+}
 export async function cacheLookup(cache,key,force){
   const cached=await cache.match(key);
   return cached&&!force?cached:null;

@@ -1,6 +1,6 @@
 import {sourceOdds} from '../../../workers/live_odds.mjs';
 import {savedOdds} from '../../../workers/saved_odds.mjs';
-import {cacheLookup,cacheSave,retainedLookup} from '../item_145/odds_cache.mjs';
+import {cacheKeys,cacheLookup,cacheSave,retainedLookup} from '../item_145/odds_cache.mjs';
 export default {
   async fetch(request,env,ctx){
     const url=new URL(request.url);
@@ -19,9 +19,9 @@ export default {
       const manifest=await asset.json();source=manifest.races&&manifest.races[id];date=match[1];
       if(manifest.version!=='arvexq-odds-sources-v1'||manifest.date!==match[1]||!source||source.id!==id||source.date!==match[1])
         return Response.json({ok:false,error:'verified source absent'},{status:404});
-      const key=new Request(url.origin+url.pathname),cache=caches.default;
+      const [key,retained]=cacheKeys(url),cache=caches.default;
       const cached=await cacheLookup(cache,key,url.searchParams.has('force'));if(cached)return cached;
-      retainedKey=new Request(url.origin+url.pathname+'?last-acquired=1');
+      retainedKey=retained;
       const result=await sourceOdds(source);
       const response=Response.json(result,{headers:{'Cache-Control':'public, max-age=15'}});
       cacheSave(cache,key,retainedKey,response,ctx);return response;
