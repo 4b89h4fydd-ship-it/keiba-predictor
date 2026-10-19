@@ -364,3 +364,27 @@ def test_ci_handles_malformed_error_collections_without_exceptions():
         summary = summarize_for_ci({**base, "errors": malformed})
         assert summary["errorSummaryReconciled"] is False
         assert audit_exit_code(base, summary) == 1
+
+
+def test_ci_rejects_malformed_circuit_collections_without_exceptions():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-12"],
+        "dateCount": 1,
+        "verifiedSavedDates": ["2026-10-12"],
+        "pairedDateRangeMatchesSelection": True,
+        "integrityScanRange": ["2026-10-12", "2026-10-12"],
+        "integrityScanCalendarDays": 1,
+        "expectedRacecards": 1,
+        "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": True,
+        "errors": [],
+        "unpairedSavedDays": [],
+        "runnerEvidenceTriage": {"zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+                                 "missingCardCarriedWeight": 0, "missingWeightByState": {}},
+    }
+    for malformed in (None, [], "bad", {"jra": None, "nar": {}},
+                      {"jra": [], "nar": {"expected": 0, "verified": 0, "failed": 0}}):
+        summary = summarize_for_ci({**base, "circuits": malformed})
+        assert summary["circuitKeysValid"] is False
+        assert summary["verificationCountsReconciled"] is False
+        assert audit_exit_code(base, summary) == 1
