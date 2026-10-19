@@ -22,7 +22,7 @@ class VersionedAssetCacheTest(unittest.TestCase):
             self.skipTest("run static build first")
         version = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(version["shell"], "independent-production-boundaries")
-        from arvexq.forecast.engine import VERSION
+        from arvexq.prediction.observed_model import MODEL_VERSION as VERSION
         self.assertEqual(version["model"], VERSION)
         self.assertNotEqual(version["model"], "arvexq-prediction-removed")
         self.assertEqual(version["model"], "arvexq-retired-assistant-rank-baseline")
