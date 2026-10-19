@@ -67,6 +67,9 @@ def test_saved_runner_and_display_readiness_parity(circuit, city):
     assert py["marks"] is js["marks"] is None
     assert py["tickets"] is js["tickets"] is None
     assert py["predictionStatus"] == js["predictionStatus"] == "not-implemented"
+    assert py["rows"][1]["readiness"]["quoteTimeState"] == "missing"
+    assert py["rows"][1]["readiness"]["pastFieldStates"][0]["fields"]["track"] == "observed"
+    assert py["rows"][1]["readiness"]["pastFieldStates"][0]["fields"]["finish"] == "missing"
     assert py["rows"][1]["observedPriorRunCount"] == 9
     assert len(py["rows"][1]["recentRaces"]) == 5
 
@@ -94,3 +97,28 @@ def test_basic_field_missing_reasons_parity_and_no_provenance_invention(circuit,
     response["runnerReadiness"][0]["basicFieldReasons"]["jockey"] = "saved-value"
     with pytest.raises(ValueError, match="basic field evidence"):
         factual_screen(response)
+
+
+@pytest.mark.parametrize("circuit,city", [("jra", "京都"), ("nar", "高知")])
+def test_past_cells_and_quote_time_parity(circuit, city):
+    data = {
+        "id": f"{circuit}-2026-10-19-{city}-03",
+        "date": "2026-10-19", "circuit": circuit,
+        "horses": [{"horseNumber": 3, "oddsUpdatedAt": "2026-10-19T12:00:00+09:00",
+                    "allPastRuns": [{"date": "2026-10-10", "track": city,
+                                     "distance": None, "finish": False, "last3f": 38.2}]}],
+    }
+    py = factual_screen(factual_response(data))
+    js = json.loads(subprocess.run(
+        ["node", "--input-type=module", "-e", NODE],
+        input=json.dumps(data, ensure_ascii=False), text=True,
+        capture_output=True, cwd=ROOT, check=True,
+    ).stdout)
+    assert py["rows"] == js["rows"]
+    readiness = py["rows"][0]["readiness"]
+    assert readiness["quoteTimeState"] == "observed-unverified-timestamp"
+    assert readiness["marketFreshnessVerified"] is False
+    assert readiness["pastFieldStates"] == [
+        {"date": "2026-10-10", "fields": {
+            "track": "observed", "distance": "missing",
+            "finish": "invalid", "last3f": "observed"}}]

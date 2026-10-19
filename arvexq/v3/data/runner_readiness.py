@@ -40,7 +40,34 @@ def read_runner_readiness(detail: dict[str, Any], circuit: str) -> list[dict[str
                             value.strip() in ("", "-", "--", "不明") else
                             "invalid-type-or-number" if basic_fields[key] == "invalid"
                             else "saved-value")
+        # Inspect only saved past runs. A missing cell says nothing about
+        # whether an official full-career record exists elsewhere.
+        prior_fields = []
+        for run in past["pastRuns"]:
+            states = {}
+            for key in ("track", "distance", "finish", "last3f"):
+                value = run.get(key)
+                states[key] = ("missing" if value is None or
+                               isinstance(value, str) and value.strip() in
+                               ("", "-", "--", "不明") else
+                               "invalid" if isinstance(value, bool) or
+                               isinstance(value, float) and not isfinite(value)
+                               else "observed")
+            prior_fields.append({"date": run["date"], "fields": states})
+        quote_at = next((horse[key] for key in ("oddsUpdatedAt", "oddsTimestamp")
+                         if key in horse and horse[key] is not None and
+                         horse[key] != ""), None)
+        quote_time_state = ("missing" if quote_at is None or
+                            isinstance(quote_at, str) and quote_at.strip() in
+                            ("", "-", "--", "不明") else
+                            "invalid" if isinstance(quote_at, bool) or
+                            not isinstance(quote_at, (str, int, float)) or
+                            quote_at == 0 or isinstance(quote_at, float)
+                            and not isfinite(quote_at) else
+                            "observed-unverified-timestamp")
         result.append({
+            "pastFieldStates": prior_fields,
+            "quoteTimeState": quote_time_state,
             "basicFields": basic_fields,
             "basicFieldReasons": reasons,
             "schema": "arvexq-v3-runner-readiness-1",

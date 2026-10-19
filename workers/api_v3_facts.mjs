@@ -130,8 +130,26 @@ function projection(original,requestedId) {
         typeof raw==='string'&&['','-','--','不明'].includes(raw.trim())?'placeholder':
         basicFields[key]==='invalid'?'invalid-type-or-number':'saved-value';
     }
+    const pastFieldStates=runs.map(run=>{
+      const fields={};
+      for (const key of ['track','distance','finish','last3f']) {
+        const value=run[key];
+        fields[key]=!observed(value)?'missing':
+          typeof value==='boolean'||typeof value==='number'&&!Number.isFinite(value)
+            ?'invalid':'observed';
+      }
+      return {date:run.date,fields};
+    });
+    const qt=horse.oddsUpdatedAt!==undefined&&horse.oddsUpdatedAt!==null&&
+      horse.oddsUpdatedAt!==''?horse.oddsUpdatedAt:
+      horse.oddsTimestamp!==undefined&&horse.oddsTimestamp!==null&&
+      horse.oddsTimestamp!==''?horse.oddsTimestamp:null;
+    const quoteTimeState=!observed(qt)?'missing':
+      typeof qt==='boolean'||!['string','number'].includes(typeof qt)||
+      qt===0||typeof qt==='number'&&!Number.isFinite(qt)?'invalid':
+      'observed-unverified-timestamp';
     rows.at(-1).readiness={
-      basicFields,basicFieldReasons,
+      basicFields,basicFieldReasons,pastFieldStates,quoteTimeState,
       schema:'arvexq-v3-runner-readiness-1',horseNumber:number,
       history:runs.length?'partial-unverified':'missing',
       observedPriorRunCount:runs.length,allCareerRunsVerified:false,
