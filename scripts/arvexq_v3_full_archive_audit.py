@@ -16,6 +16,18 @@ def summarize_for_ci(result):
     condensed={k:result[k] for k in ("dateRange","expectedRacecards","hashVerifiedRacecards",
                  "allIndexedSavedOriginalsVerified","circuits")}
     condensed["errorCount"]=len(result["errors"])
+    condensed["verificationByCircuit"] = {
+        circuit: {"expected": counts.get("expected", 0),
+                  "verified": counts.get("verified", 0),
+                  "failed": counts.get("failed", 0)}
+        for circuit, counts in sorted(result["circuits"].items())
+    }
+    condensed["verificationCountsReconciled"] = (
+        sum(v["expected"] for v in condensed["verificationByCircuit"].values()) == result["expectedRacecards"]
+        and sum(v["verified"] for v in condensed["verificationByCircuit"].values()) == result["hashVerifiedRacecards"]
+        and all(v["expected"] == v["verified"] + v["failed"]
+                for v in condensed["verificationByCircuit"].values())
+    )
     condensed["errorCodes"]=dict(sorted(Counter(
         error.get("code", "unknown") for error in result["errors"]).items()))
     condensed["integrityScanRange"]=result["integrityScanRange"]
