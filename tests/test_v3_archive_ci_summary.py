@@ -439,3 +439,32 @@ def test_ci_rejects_malformed_error_code_types_without_sort_crash():
         assert summary["errorCodes"] == {"known-error": 1, "malformed-error-record": 1}
         assert summary["errorSummaryReconciled"] is False
         assert audit_exit_code(base, summary) == 1
+
+
+def test_ci_rejects_non_string_selected_and_scan_dates_without_exceptions():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-12"],
+        "dateCount": 1,
+        "verifiedSavedDates": ["2026-10-12"],
+        "pairedDateRangeMatchesSelection": True,
+        "integrityScanRange": ["2026-10-12", "2026-10-12"],
+        "integrityScanCalendarDays": 1,
+        "expectedRacecards": 1, "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": True,
+        "circuits": {"jra": {"expected": 1, "verified": 1, "failed": 0},
+                     "nar": {"expected": 0, "verified": 0, "failed": 0}},
+        "errors": [], "unpairedSavedDays": [],
+        "runnerEvidenceTriage": {"zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+                                 "missingCardCarriedWeight": 0, "missingWeightByState": {}},
+    }
+    for updates in (
+        {"verifiedSavedDates": [20261012]},
+        {"verifiedSavedDates": [None]},
+        {"verifiedSavedDates": "2026-10-12"},
+        {"integrityScanRange": [20261012, "2026-10-12"]},
+        {"integrityScanRange": {"start": "2026-10-12"}},
+    ):
+        report = summarize_for_ci({**base, **updates})
+        assert (report["savedDateSelectionReconciled"] is False
+                or report["integrityScanRangeReconciled"] is False)
+        assert audit_exit_code(base, report) == 1
