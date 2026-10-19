@@ -18,6 +18,20 @@ class SavedResults(unittest.TestCase):
         self.assertEqual(confirmed_label(sample())["payouts"],
                          [{"order":[3,8,2],"amount":12500}])
 
+    def test_explicit_numeric_strings_from_saved_official_results(self):
+        race=sample()
+        race["result"]["finishers"][0]["finish"]="2"
+        race["result"]["finishers"][1]["horseNumber"]="3"
+        race["result"]["payouts"][0]["payout"]="12,500"
+        self.assertEqual(confirmed_label(race)["orders"],[[3,8,2]])
+        self.assertEqual(confirmed_label(race)["payouts"],
+                         [{"order":[3,8,2],"amount":12500}])
+
+    def test_non_numeric_payout_is_unknown_not_zero(self):
+        race=sample()
+        race["result"]["payouts"][0]["payout"]="払戻不明"
+        self.assertIsNone(confirmed_label(race)["payouts"])
+
     def test_missing_payout_never_zero(self):
         race=sample();race["result"]["payouts"]=[]
         self.assertIsNone(confirmed_label(race)["payouts"])

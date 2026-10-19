@@ -136,10 +136,13 @@ MIGRATED = [
 @pytest.mark.parametrize(("item_id", "old_module", "basename"), MIGRATED)
 def test_previous_import_is_identical_to_owned_module(item_id, old_module, basename):
     owned_name = f"arvexq.components.item_{item_id:03d}.{basename}"
-    previous = importlib.import_module(old_module)
+    # The migration catalog stores source filenames, not Python import names.
+    # Normalize both separators and .py before importing the compatibility shim.
+    legacy_module = old_module.removesuffix(".py").replace("/", ".")
+    previous = importlib.import_module(legacy_module)
     canonical = importlib.import_module(owned_name)
     assert previous is canonical
-    assert sys.modules[old_module] is canonical
+    assert sys.modules[legacy_module] is canonical
     assert canonical.__name__ == owned_name
 
 

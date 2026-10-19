@@ -46,8 +46,10 @@ def payout_from_saved(result, order):
             raise ValueError("invalid payoff combination")
         if parts == order:
             amount = row.get("payout", row.get("amount"))
+            if isinstance(amount, str) and re.fullmatch(r"[1-9]\d*(?:,\d{3})*", amount.strip()):
+                amount = int(amount.strip().replace(",", ""))
             if type(amount) is not int or amount <= 0:
-                # Do not turn unknown or zero payout into a fabricated return.
+                # Missing/invalid payout never becomes fabricated zero return.
                 return None
             selected.append(amount)
     if len(selected) != 1:
@@ -70,6 +72,12 @@ def confirmed_label(detail):
             raise ValueError("invalid finisher")
         position = row.get("finish", row.get("finishPosition"))
         number = row.get("horseNumber")
+        # D1 stored official result fields may use decimal strings; accept only
+        # exact positive integers, never fuzzy ranks or post-race inference.
+        if isinstance(position, str) and re.fullmatch(r"[1-9]\d*", position.strip()):
+            position = int(position.strip())
+        if isinstance(number, str) and re.fullmatch(r"[1-9]\d*", number.strip()):
+            number = int(number.strip())
         if type(position) is not int or type(number) is not int:
             if position in (None, "", "-", "取消", "除外"):
                 continue
