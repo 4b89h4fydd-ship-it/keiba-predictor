@@ -72,7 +72,7 @@ def test_ci_summary_reconciles_valid_circuit_totals():
 def test_ci_exit_rejects_inconsistent_counts_even_if_report_claims_verified():
     result = {"allIndexedSavedOriginalsVerified": True}
     assert audit_exit_code(result, {"verificationCountsReconciled": False}) == 1
-    assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "requestedEndDateReconciled": True, "unpairedErrorsReconciled": True, "errorSummaryReconciled": True, "errorCount": 0, "errorCodes": {}}) == 0
+    assert audit_exit_code(result, {"verificationCountsReconciled": True, "verificationSuccessReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "requestedEndDateReconciled": True, "unpairedErrorsReconciled": True, "errorSummaryReconciled": True, "errorCount": 0, "errorCodes": {}}) == 0
     assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True}) == 1
     assert audit_exit_code(
         {"allIndexedSavedOriginalsVerified": False},
@@ -495,3 +495,36 @@ def test_ci_rejects_mixed_type_unpaired_records_without_sort_crash():
         assert report["integrityScanRangeReconciled"] is False
         assert report["unpairedErrorsReconciled"] is False
         assert audit_exit_code(base, report) == 1
+
+
+def test_ci_verification_success_requires_nonempty_all_verified_and_no_failures():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-12"],
+        "dateCount": 1,
+        "verifiedSavedDates": ["2026-10-12"],
+        "pairedDateRangeMatchesSelection": True,
+        "integrityScanRange": ["2026-10-12", "2026-10-12"],
+        "integrityScanCalendarDays": 1,
+        "expectedRacecards": 2, "hashVerifiedRacecards": 2,
+        "allIndexedSavedOriginalsVerified": True,
+        "circuits": {"jra": {"expected": 2, "verified": 2, "failed": 0},
+                     "nar": {"expected": 0, "verified": 0, "failed": 0}},
+        "errors": [], "unpairedSavedDays": [],
+        "runnerEvidenceTriage": {"zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+                                 "missingCardCarriedWeight": 0, "missingWeightByState": {}},
+    }
+    good = summarize_for_ci(base)
+    assert good["verificationSuccessReconciled"] is True
+    assert audit_exit_code(base, good) == 0
+    for updates in (
+        {"expectedRacecards": 0, "hashVerifiedRacecards": 0,
+         "circuits": {"jra": {"expected": 0, "verified": 0, "failed": 0},
+                      "nar": {"expected": 0, "verified": 0, "failed": 0}}},
+        {"hashVerifiedRacecards": 1,
+         "circuits": {"jra": {"expected": 2, "verified": 1, "failed": 1},
+                      "nar": {"expected": 0, "verified": 0, "failed": 0}}},
+    ):
+        broken = {**base, **updates}
+        summary = summarize_for_ci(broken)
+        assert summary["verificationSuccessReconciled"] is False
+        assert audit_exit_code(broken, summary) == 1
