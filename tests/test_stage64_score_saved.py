@@ -67,6 +67,21 @@ class SavedResults(unittest.TestCase):
         self.assertFalse(audit["allConfirmed"])
         self.assertEqual(audit["pendingRaces"][0]["reason"],"missing-saved-detail")
 
+    def test_foreign_result_day_is_not_selected(self):
+        race=sample()
+        other=sample();other["id"]="nar-2026-10-24-高知-01";other["date"]="2026-10-24"
+        batch={"cohort":[race["id"]]}
+        labels,audit=assemble_results(batch,{"details":[other]})
+        self.assertFalse(labels)
+        self.assertEqual(audit["pendingRaces"][0]["reason"],"missing-saved-detail")
+
+    def test_non_final_result_is_retained_as_pending_not_discarded(self):
+        race=sample("未確定")
+        labels,audit=assemble_results({"cohort":[race["id"]]},{"details":[race]})
+        self.assertEqual(labels,[])
+        self.assertEqual(audit["frozenRaces"],1)
+        self.assertFalse(audit["allConfirmed"])
+
     def test_bad_payout_combination_never_parsed_as_order(self):
         race=sample();race["result"]["payouts"][0]["combination"]="bad"
         with self.assertRaises(ValueError):

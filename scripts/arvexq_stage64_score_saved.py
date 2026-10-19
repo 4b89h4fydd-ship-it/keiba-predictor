@@ -136,8 +136,18 @@ def score(client, *, plan_id, forecast_id, result_id, output, audit):
     # predictions or a newly introduced collector. Require our own workflow
     # and never accept a foreign/forked result artifact.
     if (source_run.get("name") != "ARVEXQ Stage64 Shadow Research"
+            or source_run.get("event") != "workflow_dispatch"
             or source_run.get("head_repository_id") not in (None, 1386943133)):
-        raise ValueError("result source must be the designated read-only Stage64 workflow")
+        raise ValueError("result source must be a dispatched read-only Stage64 workflow")
+    # Authenticated GitHub artifact digest alone does not identify its PURPOSE.
+    # Require the exact post-race capture artifact name and reject test/forecast
+    # bundles smuggled in as a result source.
+    result_metadata = client.metadata(result_id)
+    expected_name = "arvexq-stage64-confirmed-d1-" + batch["receipts"][0]["snapshot"]["input"]["date"]
+    if (not result_metadata.get("name") == expected_name or
+            any(receipt["snapshot"]["input"]["date"] != batch["receipts"][0]["snapshot"]["input"]["date"]
+                for receipt in batch["receipts"])):
+        raise ValueError("result artifact name or race date differs from frozen cohort")
     last_off = max(post_at(r["snapshot"]["input"]) for r in batch["receipts"])
     if instant(source_anchor["serverObservedBy"]) <= last_off:
         raise ValueError("result artifact workflow completed before last post")
