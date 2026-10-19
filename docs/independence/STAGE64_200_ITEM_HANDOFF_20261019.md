@@ -60,3 +60,13 @@ Review the actual GitHub Actions checks for the HEAD commit and resume with item
 - These are focused unit/integration-level contracts only. No independent complete acquisition/storage/cache/API/UI/production gates yet. Items 004–007 remain **部分完了**, recorded source statuses `分離済` unchanged.
 - Items 008–020 remain `解析済` with future extraction/caller audits outstanding.
 - CI must be inspected on the new HEAD before calling these tests passed. No provider changes, prediction implementation, deploy or main merge.
+
+## 2026-10-19 continuation: 004–007 connection-path repair
+
+- Audited the two remaining JRA race-card callers: `_jra_parse_race` and `_jra_parse_race_summary`.
+- Removed their duplicate weather/going regular expressions and routed both through `arvexq.ingest.jra_environment_parser._parse_jra_environment_html`, preserving the existing `weather`/`condition` output keys and unknown-value behavior.
+- Added a fail-closed ownership guard in `_jra_fetch_environment`: an explicitly identified `nar-...` row is not sent to the JRA reader and performs no request.
+- Added source-contract and cross-circuit regression tests in `tests/test_jra_summary_independent_fields.py` and `tests/test_environment_component_split.py`.
+- Code/test commit: `8c2b94b56fb93f69093db7a8ec567e19143bfb3a`.
+- Local `compileall` and `arvexq_independence_audit.py` passed. Local pytest/app-import execution remains unverified because this workspace lacks `pytest` and `bs4`; CI on the pushed commit is required before recording test success.
+- Items 004–007 remain **部分完了** / source status `分離済`; this repair does not promote any ledger item.
