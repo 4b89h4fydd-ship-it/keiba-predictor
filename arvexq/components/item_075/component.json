@@ -5,11 +5,19 @@
   "existing_sources": [
     "arvexq/ingest/corner_order.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "arvexq.ingest.field_normalization._clean"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/corner_order.py",
+      "canonical": "arvexq/components/item_075/corner_order.py",
+      "module": "arvexq.components.item_075.corner_order"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [
