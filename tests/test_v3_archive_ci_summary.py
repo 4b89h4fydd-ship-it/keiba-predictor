@@ -73,3 +73,28 @@ def test_ci_exit_rejects_inconsistent_counts_even_if_report_claims_verified():
         {"allIndexedSavedOriginalsVerified": False},
         {"verificationCountsReconciled": True},
     ) == 1
+
+
+def test_ci_summary_rejects_missing_circuit_and_invalid_counts():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-12"],
+        "integrityScanRange": ["2026-10-12", "2026-10-12"],
+        "expectedRacecards": 1,
+        "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": True,
+        "errors": [], "unpairedSavedDays": [],
+        "runnerEvidenceTriage": {
+            "zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+            "missingCardCarriedWeight": 0, "missingWeightByState": {},
+        },
+    }
+    for circuits in (
+        {"jra": {"expected": 1, "verified": 1, "failed": 0}},
+        {"jra": {"expected": True, "verified": 1, "failed": 0},
+         "nar": {"expected": 0, "verified": 0, "failed": 0}},
+        {"jra": {"expected": 1, "verified": 1, "failed": 0},
+         "nar": {"expected": -1, "verified": -1, "failed": 0}},
+    ):
+        summary = summarize_for_ci({**base, "circuits": circuits})
+        assert summary["verificationCountsReconciled"] is False
+        assert audit_exit_code(base, summary) == 1
