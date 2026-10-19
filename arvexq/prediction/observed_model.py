@@ -16,7 +16,3 @@ def apply_nar_marks(detail):
     if isinstance(detail, dict) and detail.get('circuit') not in ('地方', 'NAR', 'nar', 'local'):
         raise ValueError('NAR adapter requires NAR race')
     return apply_observed_marks(detail)
-
-
-def model_version(race):
-    return MODEL_VERSION
