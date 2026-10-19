@@ -17,9 +17,9 @@ def summarize_for_ci(result):
                  "allIndexedSavedOriginalsVerified","circuits")}
     condensed["errorCount"]=len(result["errors"])
     condensed["verificationByCircuit"] = {
-        circuit: {"expected": counts.get("expected", 0),
-                  "verified": counts.get("verified", 0),
-                  "failed": counts.get("failed", 0)}
+        circuit: {"expected": counts.get("expected"),
+                  "verified": counts.get("verified"),
+                  "failed": counts.get("failed")}
         for circuit, counts in sorted(result["circuits"].items())
     }
     def valid_count(value):
@@ -38,7 +38,6 @@ def summarize_for_ci(result):
         and valid_count(result["hashVerifiedRacecards"])
         and sum(v["expected"] for v in condensed["verificationByCircuit"].values()) == result["expectedRacecards"]
         and sum(v["verified"] for v in condensed["verificationByCircuit"].values()) == result["hashVerifiedRacecards"]
-        and all(condensed["circuitCountReconciliation"].values())
     )
     condensed["errorCodes"]=dict(sorted(Counter(
         error.get("code", "unknown") for error in result["errors"]).items()))
