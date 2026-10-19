@@ -72,7 +72,7 @@ def test_ci_summary_reconciles_valid_circuit_totals():
 def test_ci_exit_rejects_inconsistent_counts_even_if_report_claims_verified():
     result = {"allIndexedSavedOriginalsVerified": True}
     assert audit_exit_code(result, {"verificationCountsReconciled": False}) == 1
-    assert audit_exit_code(result, {"verificationCountsReconciled": True, "verificationSuccessReconciled": True, "verificationFlagConsistent": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "requestedEndDateReconciled": True, "unpairedErrorsReconciled": True, "errorSummaryReconciled": True, "errorCount": 0, "errorCodes": {}}) == 0
+    assert audit_exit_code(result, {"verificationCountsReconciled": True, "verificationSuccessReconciled": True, "verificationFlagConsistent": True, "savedArchiveScopeConsistent": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "requestedEndDateReconciled": True, "unpairedErrorsReconciled": True, "errorSummaryReconciled": True, "errorCount": 0, "errorCodes": {}}) == 0
     assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True}) == 1
     assert audit_exit_code(
         {"allIndexedSavedOriginalsVerified": False},
@@ -219,6 +219,7 @@ def test_ci_exit_rejects_errors_even_if_success_flag_is_true():
     flags = {"verificationCountsReconciled": True,
              "verificationSuccessReconciled": True,
              "verificationFlagConsistent": True,
+             "savedArchiveScopeConsistent": True,
              "savedDateSelectionReconciled": True,
              "integrityScanRangeReconciled": True,
              "requestedEndDateReconciled": True,
@@ -555,4 +556,37 @@ def test_ci_rejects_fabricated_success_flag_when_errors_or_counts_disagree():
     ):
         summary = summarize_for_ci({**base, **overrides})
         assert summary["verificationFlagConsistent"] is False
+        assert audit_exit_code(base, summary) == 1
+
+
+def test_ci_rejects_overstated_saved_archive_scope():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-12"],
+        "dateCount": 1, "verifiedSavedDates": ["2026-10-12"],
+        "pairedDateRangeMatchesSelection": True,
+        "integrityScanRange": ["2026-10-12", "2026-10-12"],
+        "integrityScanCalendarDays": 1,
+        "expectedRacecards": 1, "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": True,
+        "circuits": {"jra": {"expected": 1, "verified": 1, "failed": 0},
+                     "nar": {"expected": 0, "verified": 0, "failed": 0}},
+        "errors": [], "unpairedSavedDays": [],
+        "officialPublishedRacesVerified": False,
+        "completeLifetimeHistoryVerified": False,
+        "liveD1ReadbackVerified": False,
+        "predictionStatus": "not-implemented",
+        "runnerEvidenceTriage": {"zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+                                 "missingCardCarriedWeight": 0, "missingWeightByState": {}},
+    }
+    good = summarize_for_ci(base)
+    assert good["savedArchiveScopeConsistent"] is True
+    assert audit_exit_code(base, good) == 0
+    for field, value in (
+        ("officialPublishedRacesVerified", True),
+        ("completeLifetimeHistoryVerified", True),
+        ("liveD1ReadbackVerified", True),
+        ("predictionStatus", "implemented"),
+    ):
+        summary = summarize_for_ci({**base, field: value})
+        assert summary["savedArchiveScopeConsistent"] is False
         assert audit_exit_code(base, summary) == 1
