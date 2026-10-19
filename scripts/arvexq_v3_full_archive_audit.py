@@ -122,10 +122,13 @@ def summarize_for_ci(result):
         (e.get("date"), e.get("filePresence"))
         for e in error_rows
         if type(e) is dict and e.get("code") == "unpaired-saved-day"
+        and type(e.get("date")) is str and type(e.get("filePresence")) is str
     )
     unpaired_report_days = sorted(
         (row.get("date"), row.get("filePresence"))
-        for row in unpaired if type(row) is dict
+        for row in unpaired
+        if type(row) is dict and type(row.get("date")) is str
+        and type(row.get("filePresence")) is str
     ) if type(unpaired) is list else []
     condensed["unpairedErrorsReconciled"] = (
         type(unpaired) is list
