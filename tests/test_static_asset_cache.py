@@ -14,7 +14,7 @@ class VersionedAssetCacheTest(unittest.TestCase):
             self.assertTrue(urls, prefix)
             self.assertTrue(all("?v=__ARVEXQ_" in u for u in urls), (prefix,urls))
 
-    def test_version_manifest_names_current_live_model_not_retired_factor_scorer(self):
+    def test_version_manifest_declares_no_active_prediction_model(self):
         import json
         dist = ROOT / "dist"
         manifest = dist / "version.json"
@@ -22,10 +22,7 @@ class VersionedAssetCacheTest(unittest.TestCase):
             self.skipTest("run static build first")
         version = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(version["shell"], "independent-production-boundaries")
-        from arvexq.prediction.observed_model import MODEL_VERSION as VERSION
-        self.assertEqual(version["model"], VERSION)
-        self.assertNotEqual(version["model"], "arvexq-prediction-removed")
-        self.assertEqual(version["model"], "arvexq-retired-assistant-rank-baseline")
+        self.assertIsNone(version["model"])
         self.assertNotIn("three-factor", str(version).lower())
 
     def test_immutable_headers_are_only_on_versioned_asset_families(self):
