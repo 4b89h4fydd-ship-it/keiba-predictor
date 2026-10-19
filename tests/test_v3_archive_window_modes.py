@@ -47,3 +47,36 @@ def test_reference_cutoff_is_fixed_not_rolling(reader):
 def test_cutoff_without_paired_archives_fails_closed(reader):
     with pytest.raises(ValueError, match="insufficient|not enough"):
         reader()
+
+
+def test_calendar_window_reports_missing_day_without_certifying_race_coverage():
+    from arvexq.v3.audit.calendar_window import calendar_window
+    window = calendar_window(["2026-10-12", "2026-10-14", "2026-10-15"])
+    assert window["selectedSavedDays"] == 3
+    assert window["calendarSpanDays"] == 4
+    assert window["missingCalendarDays"] == ["2026-10-13"]
+    assert window["consecutiveCalendarDays"] is False
+    assert window["officialRaceDayCoverageVerified"] is False
+    good = calendar_window(["2026-10-12", "2026-10-13"])
+    assert good["consecutiveCalendarDays"] is True
+    assert good["officialRaceDayCoverageVerified"] is False
+    for bad in (["2026-10-14", "2026-10-12"],
+                ["2026-10-12", "2026-10-12"], ["2026-02-30"]):
+        with pytest.raises(ValueError):
+            calendar_window(bad)
+
+
+@pytest.mark.parametrize("reader", [
+    lambda: audit_cards(days=2, end_date="2026-10-18"),
+    lambda: audit_digests(days=2, per_circuit=1, end_date="2026-10-18"),
+    lambda: verify_saved_week(ROOT, days=2, end_date="2026-10-18"),
+])
+def test_archive_report_exposes_calendar_evidence_not_official_completeness(reader):
+    report = reader()
+    window = report["calendarWindow"]
+    assert window["selectedDates"] == ["2026-10-17", "2026-10-18"]
+    assert window["selectedSavedDays"] == 2
+    assert window["calendarSpanDays"] == 2
+    assert window["missingCalendarDays"] == []
+    assert window["consecutiveCalendarDays"] is True
+    assert window["officialRaceDayCoverageVerified"] is False
