@@ -22,15 +22,20 @@ def summarize_for_ci(result):
                   "failed": counts.get("failed", 0)}
         for circuit, counts in sorted(result["circuits"].items())
     }
+    def valid_count(value):
+        return type(value) is int and value >= 0
+
     condensed["circuitCountReconciliation"] = {
-        circuit: counts["expected"] == counts["verified"] + counts["failed"]
+        circuit: (all(valid_count(value) for value in counts.values())
+                  and counts["expected"] == counts["verified"] + counts["failed"])
         for circuit, counts in condensed["verificationByCircuit"].items()
     }
     condensed["circuitKeysValid"] = set(condensed["verificationByCircuit"]) == {"jra", "nar"}
     condensed["verificationCountsReconciled"] = (
         condensed["circuitKeysValid"]
-        and all(isinstance(v, int) and not isinstance(v, bool) and v >= 0
-                for row in condensed["verificationByCircuit"].values() for v in row.values())
+        and all(condensed["circuitCountReconciliation"].values())
+        and valid_count(result["expectedRacecards"])
+        and valid_count(result["hashVerifiedRacecards"])
         and sum(v["expected"] for v in condensed["verificationByCircuit"].values()) == result["expectedRacecards"]
         and sum(v["verified"] for v in condensed["verificationByCircuit"].values()) == result["hashVerifiedRacecards"]
         and all(condensed["circuitCountReconciliation"].values())
