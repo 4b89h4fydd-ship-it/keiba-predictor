@@ -102,10 +102,10 @@ def summarize_for_ci(result):
 
 def audit_exit_code(result, condensed):
     return 0 if (result["allIndexedSavedOriginalsVerified"]
-                 and condensed["verificationCountsReconciled"]
-                 and condensed["savedDateSelectionReconciled"]
-                 and condensed["integrityScanRangeReconciled"]
-                 and condensed["errorSummaryReconciled"]) else 1
+                 and condensed.get("verificationCountsReconciled") is True
+                 and condensed.get("savedDateSelectionReconciled") is True
+                 and condensed.get("integrityScanRangeReconciled") is True
+                 and condensed.get("errorSummaryReconciled") is True) else 1
 
 
 def main():
