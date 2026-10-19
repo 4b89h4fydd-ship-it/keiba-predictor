@@ -26,8 +26,12 @@ def summarize_for_ci(result):
         circuit: counts["expected"] == counts["verified"] + counts["failed"]
         for circuit, counts in condensed["verificationByCircuit"].items()
     }
+    condensed["circuitKeysValid"] = set(condensed["verificationByCircuit"]) == {"jra", "nar"}
     condensed["verificationCountsReconciled"] = (
-        sum(v["expected"] for v in condensed["verificationByCircuit"].values()) == result["expectedRacecards"]
+        condensed["circuitKeysValid"]
+        and all(isinstance(v, int) and not isinstance(v, bool) and v >= 0
+                for row in condensed["verificationByCircuit"].values() for v in row.values())
+        and         sum(v["expected"] for v in condensed["verificationByCircuit"].values()) == result["expectedRacecards"]
         and sum(v["verified"] for v in condensed["verificationByCircuit"].values()) == result["hashVerifiedRacecards"]
         and all(condensed["circuitCountReconciliation"].values())
     )
