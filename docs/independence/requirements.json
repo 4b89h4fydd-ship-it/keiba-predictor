@@ -4318,7 +4318,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_139",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 140,
@@ -4474,7 +4474,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_145",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 146,
@@ -5238,7 +5238,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_173",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 174,
@@ -5264,7 +5264,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_174",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 175,

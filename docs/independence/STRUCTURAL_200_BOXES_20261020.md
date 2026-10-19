@@ -61,6 +61,10 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 
 既存のGitHub Actions手動復旧ワークフローにあった「既存原本の検証付き書き出し」と「検証原本のみをコミットする」二つのコマンド列を `item_150/scripts/` に実体移動し、元のWorkflowから同じ順序・環境変数で実行するよう接続。旧Workflowの `workflow_dispatch` とキャッシュ取得・出力パス・主ブランチpushの挙動は変えない。**今回の作業でワークフローは起動せず、main push・復旧・本番更新は行わない。** GitHub Actionsと保護対象の保存データは依然として共有依存するため、完全独立ではない。
 
+### 既存Worker/D1/オッズ4箱の実体移動
+
+#139の全量スナップショット管理、#145の既存オッズ実取得、#173のAPI/Web Worker入口を責務箱へ移し、元のWorkerパスはES Module互換re-exportを保持。#174はD1環境バインディングの既存関数を#139から再公開。既存HTTP APIとWorker設定は変えず、予想生成も実施しない。Workerのバンドル/デプロイCIが未確認で、共有依存が残るため完全独立と認定しない。
+
 ## 全項目の配置
 
 状態: `migrated-module`=既存Pythonモジュール実体移動、`migrated-shared-context`=実体移動/既存共有状態で接続、`migrated-ui-fragment`=画面ソース実体移動、`mapped-existing-source`=既存ファイルとの対応を確定、`reserved`=仕様待ちの空箱。
@@ -205,13 +209,13 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 | 136 | 厳選レース買い目表示 | [item_136](../../arvexq/components/item_136/component.json) | migrated-ui-fragment |
 | 137 | 前日予想成績 | [item_137](../../arvexq/components/item_137/component.json) | migrated-ui-fragment |
 | 138 | 当日予想成績 | [item_138](../../arvexq/components/item_138/component.json) | mapped-existing-source |
-| 139 | D1保存 | [item_139](../../arvexq/components/item_139/component.json) | mapped-existing-source |
+| 139 | D1保存 | [item_139](../../arvexq/components/item_139/component.json) | migrated-shared-context |
 | 140 | SQLite保存 | [item_140](../../arvexq/components/item_140/component.json) | migrated-shared-context |
 | 141 | レース一覧キャッシュ | [item_141](../../arvexq/components/item_141/component.json) | migrated-shared-context |
 | 142 | レース詳細キャッシュ | [item_142](../../arvexq/components/item_142/component.json) | migrated-shared-context |
 | 143 | 出馬表キャッシュ | [item_143](../../arvexq/components/item_143/component.json) | migrated-shared-context |
 | 144 | 過去走キャッシュ | [item_144](../../arvexq/components/item_144/component.json) | migrated-shared-context |
-| 145 | オッズキャッシュ | [item_145](../../arvexq/components/item_145/component.json) | mapped-existing-source |
+| 145 | オッズキャッシュ | [item_145](../../arvexq/components/item_145/component.json) | migrated-shared-context |
 | 146 | 結果キャッシュ | [item_146](../../arvexq/components/item_146/component.json) | migrated-module |
 | 147 | 発走前スナップショット | [item_147](../../arvexq/components/item_147/component.json) | migrated-ui-fragment |
 | 148 | 保存データバージョン管理 | [item_148](../../arvexq/components/item_148/component.json) | migrated-shared-context |
@@ -239,8 +243,8 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 | 170 | 全頭診断API | [item_170](../../arvexq/components/item_170/component.json) | migrated-shared-context |
 | 171 | 保存状態API | [item_171](../../arvexq/components/item_171/component.json) | migrated-shared-context |
 | 172 | ヘルスチェックAPI | [item_172](../../arvexq/components/item_172/component.json) | migrated-shared-context |
-| 173 | Cloudflare Worker | [item_173](../../arvexq/components/item_173/component.json) | mapped-existing-source |
-| 174 | D1接続 | [item_174](../../arvexq/components/item_174/component.json) | mapped-existing-source |
+| 173 | Cloudflare Worker | [item_173](../../arvexq/components/item_173/component.json) | migrated-shared-context |
+| 174 | D1接続 | [item_174](../../arvexq/components/item_174/component.json) | migrated-shared-context |
 | 175 | APIエラー処理 | [item_175](../../arvexq/components/item_175/component.json) | migrated-shared-context |
 | 176 | ホーム画面 | [item_176](../../arvexq/components/item_176/component.json) | migrated-shared-context |
 | 177 | 開催場一覧 | [item_177](../../arvexq/components/item_177/component.json) | migrated-ui-fragment |

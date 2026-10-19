@@ -5,11 +5,15 @@
   "existing_sources": [
     "workers/live_odds.mjs"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Existing Worker entry routes, relative imports, binding names, and deployment configuration preserved; requires CI verification"
+  ],
   "owned_definitions": [],
   "owned_modules": [],
-  "assets": [],
-  "state": "mapped-existing-source",
+  "assets": [
+    "arvexq/components/item_145/live_odds.mjs"
+  ],
+  "state": "migrated-shared-context",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [
