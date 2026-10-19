@@ -1,6 +1,14 @@
 """Stage 39: ensure CI summary describes failures without claiming official coverage."""
 from scripts.arvexq_v3_full_archive_audit import summarize_for_ci, audit_exit_code
 
+# All successful archive-audit fixtures declare the same intentionally limited scope.
+SAVED_SCOPE_ONLY = {
+    "officialPublishedRacesVerified": False,
+    "completeLifetimeHistoryVerified": False,
+    "liveD1ReadbackVerified": False,
+    "predictionStatus": "not-implemented",
+}
+
 
 def test_ci_summary_aggregates_error_codes_and_unpaired_days():
     result = {
@@ -82,6 +90,7 @@ def test_ci_exit_rejects_inconsistent_counts_even_if_report_claims_verified():
 
 def test_ci_summary_rejects_missing_circuit_and_invalid_counts():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "integrityScanRange": ["2026-10-12", "2026-10-12"],
         "integrityScanCalendarDays": 1,
@@ -116,6 +125,7 @@ def test_ci_summary_rejects_missing_circuit_and_invalid_counts():
 
 def test_ci_saved_date_selection_rejects_duplicates_and_mismatched_range():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-14"],
         "dateCount": 2,
         "verifiedSavedDates": ["2026-10-12", "2026-10-14"],
@@ -152,6 +162,7 @@ def test_ci_saved_date_selection_rejects_duplicates_and_mismatched_range():
 
 def test_ci_rejects_invalid_integrity_scan_bounds_and_unpaired_dates():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-14"],
         "dateCount": 2,
         "verifiedSavedDates": ["2026-10-12", "2026-10-14"],
@@ -190,6 +201,7 @@ def test_ci_rejects_invalid_integrity_scan_bounds_and_unpaired_dates():
 
 def test_ci_rejects_missing_or_empty_error_codes():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1,
         "verifiedSavedDates": ["2026-10-12"],
@@ -262,6 +274,7 @@ def test_cli_passes_explicit_end_date_to_archive_verifier(monkeypatch, tmp_path)
 
 def test_ci_rejects_requested_cutoff_before_selected_saved_dates():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-14"],
         "dateCount": 2,
         "verifiedSavedDates": ["2026-10-12", "2026-10-14"],
@@ -286,6 +299,7 @@ def test_ci_rejects_requested_cutoff_before_selected_saved_dates():
 
 def test_ci_rejects_integrity_scan_past_requested_cutoff():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-14"],
         "dateCount": 2,
         "verifiedSavedDates": ["2026-10-12", "2026-10-14"],
@@ -316,6 +330,7 @@ def test_ci_rejects_integrity_scan_past_requested_cutoff():
 
 def test_ci_requires_unpaired_dates_to_match_integrity_errors():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1,
         "verifiedSavedDates": ["2026-10-12"],
@@ -348,6 +363,7 @@ def test_ci_requires_unpaired_dates_to_match_integrity_errors():
 
 def test_ci_handles_malformed_error_collections_without_exceptions():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1,
         "verifiedSavedDates": ["2026-10-12"],
@@ -371,6 +387,7 @@ def test_ci_handles_malformed_error_collections_without_exceptions():
 
 def test_ci_rejects_malformed_circuit_collections_without_exceptions():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1,
         "verifiedSavedDates": ["2026-10-12"],
@@ -395,6 +412,7 @@ def test_ci_rejects_malformed_circuit_collections_without_exceptions():
 
 def test_ci_rejects_mixed_type_circuit_keys_without_sort_crash():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1,
         "verifiedSavedDates": ["2026-10-12"],
@@ -422,6 +440,7 @@ def test_ci_rejects_mixed_type_circuit_keys_without_sort_crash():
 
 def test_ci_rejects_malformed_error_code_types_without_sort_crash():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1, "verifiedSavedDates": ["2026-10-12"],
         "pairedDateRangeMatchesSelection": True,
@@ -446,6 +465,7 @@ def test_ci_rejects_malformed_error_code_types_without_sort_crash():
 
 def test_ci_rejects_non_string_selected_and_scan_dates_without_exceptions():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1,
         "verifiedSavedDates": ["2026-10-12"],
@@ -475,6 +495,7 @@ def test_ci_rejects_non_string_selected_and_scan_dates_without_exceptions():
 
 def test_ci_rejects_mixed_type_unpaired_records_without_sort_crash():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1, "verifiedSavedDates": ["2026-10-12"],
         "pairedDateRangeMatchesSelection": True,
@@ -502,6 +523,7 @@ def test_ci_rejects_mixed_type_unpaired_records_without_sort_crash():
 
 def test_ci_verification_success_requires_nonempty_all_verified_and_no_failures():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1,
         "verifiedSavedDates": ["2026-10-12"],
@@ -535,6 +557,7 @@ def test_ci_verification_success_requires_nonempty_all_verified_and_no_failures(
 
 def test_ci_rejects_fabricated_success_flag_when_errors_or_counts_disagree():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1, "verifiedSavedDates": ["2026-10-12"],
         "pairedDateRangeMatchesSelection": True,
@@ -561,6 +584,7 @@ def test_ci_rejects_fabricated_success_flag_when_errors_or_counts_disagree():
 
 def test_ci_rejects_overstated_saved_archive_scope():
     base = {
+        **SAVED_SCOPE_ONLY,
         "dateRange": ["2026-10-12", "2026-10-12"],
         "dateCount": 1, "verifiedSavedDates": ["2026-10-12"],
         "pairedDateRangeMatchesSelection": True,
