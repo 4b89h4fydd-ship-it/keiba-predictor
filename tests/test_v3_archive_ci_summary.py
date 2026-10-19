@@ -94,6 +94,10 @@ def test_ci_summary_rejects_missing_circuit_and_invalid_counts():
          "nar": {"expected": 0, "verified": 0, "failed": 0}},
         {"jra": {"expected": 1, "verified": 1, "failed": 0},
          "nar": {"expected": -1, "verified": -1, "failed": 0}},
+        {"jra": {"expected": "1", "verified": 1, "failed": 0},
+         "nar": {"expected": 0, "verified": 0, "failed": 0}},
+        {"jra": {"expected": 1, "verified": None, "failed": 0},
+         "nar": {"expected": 0, "verified": 0, "failed": 0}},
     ):
         summary = summarize_for_ci({**base, "circuits": circuits})
         assert summary["verificationCountsReconciled"] is False
