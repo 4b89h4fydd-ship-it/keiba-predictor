@@ -6,9 +6,9 @@
 
 - 全200件に `arvexq/components/item_NNN/` と名前・区分・所有ソース・共有依存を記した `component.json` を作成。未割当の箱はない。
 - `app.py` の228関数/クラスの実体を52箱へ移動。定義位置で `install_component` を呼び、元のグローバル変数・ロック・保存先・デコレータを保って既存経路へ接続する。すでに `infra/legacy_stores.py` 等でも使われている互換実行方式の延長。これは共有実行状態の完全解消を意味しない。
-- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計83モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
+- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計86モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
 - UI組立の96処理断片を箱へ移動。残る331断片を共有UIとして明示。追加の独立スクリプト5件も責務箱から同一バイトで組み立てる。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
-- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り22箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
+- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り19箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
 - 仕様待ち29箱は空。既存の16個の旧予想補助定義は隔離したままで、新しい箱から委譲・実行しない。v3中央/地方の12予想モジュールは引き続き `None` を返す。
 - 保存済み観測データは複製・改変せず、元の保存場所を読む。D1/SQLiteスキーマ・取得URL・キャッシュ条件・UI・本番環境を変更しない。
 
@@ -19,7 +19,7 @@
 
 ## 2026-10-20 追加の構造移動（GitHub上の旧実装から再実施）
 
-以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は22。構造検証と本番認定を混同しない。
+以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は19。構造検証と本番認定を混同しない。
 
 ### キャッシュポリシー分離の限定範囲
 
@@ -44,6 +44,10 @@
 ### 追加の既存Python実体移動（#063/#084/#109/#128）
 
 JRA既存オッズパーサとコース速度参照テーブルは完全一致の互換インポートで責務箱へ移した。結果行マージ処理は共通のオッズマージ関数から切り出したが、詳細オブジェクトの同一インメモリ状態を更新する仕様は維持した。中央地方区分の静的正規化辞書と純関数を責務箱に移した。既存予想ロジック、印、買い目、保存先、取得経路は変更しない。
+
+### 追加の既存分離（#074/#175/#196）
+
+速報・暫定ラベル条件、HTTP再試行／既存表示フォールバックのステータス判定、200箱監査の実体を箱に移動し、従来の公開関数とCLIを保持。共有された確定処理、D1通信、既存CIランナーは未独立。オッズ・取得URL・予想ロジック・本番環境の変更はない。
 
 ## 全項目の配置
 
@@ -124,7 +128,7 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 | 071 | 着差取得 | [item_071](../../arvexq/components/item_071/component.json) | migrated-shared-context |
 | 072 | 走破時計取得 | [item_072](../../arvexq/components/item_072/component.json) | migrated-shared-context |
 | 073 | 確定結果判定 | [item_073](../../arvexq/components/item_073/component.json) | migrated-module |
-| 074 | 速報結果判定 | [item_074](../../arvexq/components/item_074/component.json) | mapped-existing-source |
+| 074 | 速報結果判定 | [item_074](../../arvexq/components/item_074/component.json) | migrated-shared-context |
 | 075 | コーナー通過順位取得 | [item_075](../../arvexq/components/item_075/component.json) | migrated-module |
 | 076 | 単勝払戻 | [item_076](../../arvexq/components/item_076/component.json) | migrated-module |
 | 077 | 複勝払戻 | [item_077](../../arvexq/components/item_077/component.json) | migrated-shared-context |
@@ -225,7 +229,7 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 | 172 | ヘルスチェックAPI | [item_172](../../arvexq/components/item_172/component.json) | migrated-shared-context |
 | 173 | Cloudflare Worker | [item_173](../../arvexq/components/item_173/component.json) | mapped-existing-source |
 | 174 | D1接続 | [item_174](../../arvexq/components/item_174/component.json) | mapped-existing-source |
-| 175 | APIエラー処理 | [item_175](../../arvexq/components/item_175/component.json) | mapped-existing-source |
+| 175 | APIエラー処理 | [item_175](../../arvexq/components/item_175/component.json) | migrated-shared-context |
 | 176 | ホーム画面 | [item_176](../../arvexq/components/item_176/component.json) | migrated-shared-context |
 | 177 | 開催場一覧 | [item_177](../../arvexq/components/item_177/component.json) | migrated-ui-fragment |
 | 178 | 開催場別レース一覧 | [item_178](../../arvexq/components/item_178/component.json) | migrated-ui-fragment |
@@ -246,7 +250,7 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 | 193 | PWA・ホーム画面起動 | [item_193](../../arvexq/components/item_193/component.json) | migrated-shared-context |
 | 194 | オフライン・キャッシュ表示 | [item_194](../../arvexq/components/item_194/component.json) | migrated-ui-fragment |
 | 195 | CSS・レイアウト管理 | [item_195](../../arvexq/components/item_195/component.json) | migrated-shared-context |
-| 196 | Python・JavaScript自動テスト | [item_196](../../arvexq/components/item_196/component.json) | mapped-existing-source |
+| 196 | Python・JavaScript自動テスト | [item_196](../../arvexq/components/item_196/component.json) | migrated-shared-context |
 | 197 | JRA・NARデータ検証とバックテスト | [item_197](../../arvexq/components/item_197/component.json) | migrated-shared-context |
 | 198 | GitHub Actions CI・PWAビルド | [item_198](../../arvexq/components/item_198/component.json) | migrated-shared-context |
 | 199 | Cloudflareデプロイ・本番動作確認 | [item_199](../../arvexq/components/item_199/component.json) | mapped-existing-source |

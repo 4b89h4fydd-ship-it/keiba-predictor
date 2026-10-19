@@ -5,6 +5,7 @@ import json
 import time
 import urllib.error
 import urllib.request
+from arvexq.components.item_175.http_policy import retryable_readback_status
 
 MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 
@@ -27,7 +28,7 @@ def get_json(url, *, timeout=20, attempts=2, opener=urllib.request.urlopen,
             return result
         except urllib.error.HTTPError as exc:
             # Honor server 429 immediately: retrying can deepen throttling.
-            if exc.code == 429 or exc.code not in (408, 500, 502, 503, 504) or attempt + 1 == attempts:
+            if exc.code == 429 or not retryable_readback_status(exc.code) or attempt + 1 == attempts:
                 raise
         except OSError:
             if attempt + 1 == attempts:

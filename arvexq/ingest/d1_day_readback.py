@@ -11,6 +11,7 @@ import urllib.request
 
 from arvexq.ingest.full_snapshot_codec import unpack_detail
 from arvexq.v3.audit.http429 import describe_429
+from arvexq.components.item_175.http_policy import display_fallback_status
 
 MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 
@@ -54,7 +55,7 @@ def read_day(base, day, *, fetch=get_json, workers=3):
         try:
             body = fetch(url)
         except urllib.error.HTTPError as exc:
-            if exc.code not in (404, 503):
+            if not display_fallback_status(exc.code):
                 raise
             body, source = fetch(url + "?view=display"), "display"
         return restore_race_response(body, race_id, day), source
