@@ -6,9 +6,9 @@
 
 - 全200件に `arvexq/components/item_NNN/` と名前・区分・所有ソース・共有依存を記した `component.json` を作成。未割当の箱はない。
 - `app.py` の228関数/クラスの実体を52箱へ移動。定義位置で `install_component` を呼び、元のグローバル変数・ロック・保存先・デコレータを保って既存経路へ接続する。すでに `infra/legacy_stores.py` 等でも使われている互換実行方式の延長。これは共有実行状態の完全解消を意味しない。
-- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計79モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
+- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計83モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
 - UI組立の96処理断片を箱へ移動。残る331断片を共有UIとして明示。追加の独立スクリプト5件も責務箱から同一バイトで組み立てる。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
-- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り26箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
+- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り22箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
 - 仕様待ち29箱は空。既存の16個の旧予想補助定義は隔離したままで、新しい箱から委譲・実行しない。v3中央/地方の12予想モジュールは引き続き `None` を返す。
 - 保存済み観測データは複製・改変せず、元の保存場所を読む。D1/SQLiteスキーマ・取得URL・キャッシュ条件・UI・本番環境を変更しない。
 
@@ -19,7 +19,7 @@
 
 ## 2026-10-20 追加の構造移動（GitHub上の旧実装から再実施）
 
-以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は26。構造検証と本番認定を混同しない。
+以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は22。構造検証と本番認定を混同しない。
 
 ### キャッシュポリシー分離の限定範囲
 
@@ -40,6 +40,10 @@
 ### app.js 既存21断片の所有先移動
 
 オッズ表示(#068)、発走前保存(#125)、メインレース(#130)、重賞(#131)、高知ファイナル(#132)、レース選定(#133)、厳選レース買い目表示(#136)、固定スナップショット表示(#147)、開催場別レース一覧(#178)、出馬表(#180)へ**既存共有UIの21断片を元のGit blobのまま**移動。UI組立台帳 `ui-assembly.json` の順序とSHA256は保持し、配列の `path` と `owner` のみ更新した。旧共有UIの所有済み断片ファイルは削除し、同じblob SHAを各責務箱に配置する。生成 `app.js` のバイト列は変わらない設計。各断片のグローバル依存、旧アルゴリズム由来の共有状態、ビルド・ライブ検証は残存するので**独立化・本番検証済みとは扱わない**。予想ロジックを新しく生成・有効化していない。
+
+### 追加の既存Python実体移動（#063/#084/#109/#128）
+
+JRA既存オッズパーサとコース速度参照テーブルは完全一致の互換インポートで責務箱へ移した。結果行マージ処理は共通のオッズマージ関数から切り出したが、詳細オブジェクトの同一インメモリ状態を更新する仕様は維持した。中央地方区分の静的正規化辞書と純関数を責務箱に移した。既存予想ロジック、印、買い目、保存先、取得経路は変更しない。
 
 ## 全項目の配置
 
@@ -109,7 +113,7 @@
 | 060 | 複勝オッズ | [item_060](../../arvexq/components/item_060/component.json) | migrated-module |
 | 061 | 人気順位 | [item_061](../../arvexq/components/item_061/component.json) | migrated-module |
 | 062 | オッズ取得時刻 | [item_062](../../arvexq/components/item_062/component.json) | migrated-module |
-| 063 | JRAオッズ解析 | [item_063](../../arvexq/components/item_063/component.json) | mapped-existing-source |
+| 063 | JRAオッズ解析 | [item_063](../../arvexq/components/item_063/component.json) | migrated-module |
 | 064 | NARオッズ解析 | [item_064](../../arvexq/components/item_064/component.json) | migrated-shared-context |
 | 065 | 外部サイトオッズ解析 | [item_065](../../arvexq/components/item_065/component.json) | migrated-shared-context |
 | 066 | オッズ差分更新 | [item_066](../../arvexq/components/item_066/component.json) | migrated-shared-context |
@@ -130,7 +134,7 @@
 | 081 | 馬単払戻 | [item_081](../../arvexq/components/item_081/component.json) | migrated-shared-context |
 | 082 | 3連複払戻 | [item_082](../../arvexq/components/item_082/component.json) | migrated-shared-context |
 | 083 | 3連単払戻 | [item_083](../../arvexq/components/item_083/component.json) | migrated-shared-context |
-| 084 | 結果欠損補修 | [item_084](../../arvexq/components/item_084/component.json) | mapped-existing-source |
+| 084 | 結果欠損補修 | [item_084](../../arvexq/components/item_084/component.json) | migrated-shared-context |
 | 085 | 払戻欠損補修 | [item_085](../../arvexq/components/item_085/component.json) | migrated-shared-context |
 | 086 | 確定結果上書き防止 | [item_086](../../arvexq/components/item_086/component.json) | migrated-shared-context |
 | 087 | データ完全性評価 | [item_087](../../arvexq/components/item_087/component.json) | migrated-shared-context |
@@ -155,7 +159,7 @@
 | 106 | 先行争い分析 | [item_106](../../arvexq/components/item_106/component.json) | reserved |
 | 107 | 騎手・調教師情報評価 | [item_107](../../arvexq/components/item_107/component.json) | reserved |
 | 108 | 馬体重・斤量影響分析 | [item_108](../../arvexq/components/item_108/component.json) | reserved |
-| 109 | コース別スピード基準 | [item_109](../../arvexq/components/item_109/component.json) | mapped-existing-source |
+| 109 | コース別スピード基準 | [item_109](../../arvexq/components/item_109/component.json) | migrated-module |
 | 110 | 全頭診断結果保存・表示 | [item_110](../../arvexq/components/item_110/component.json) | migrated-shared-context |
 | 111 | 予想入力データ | [item_111](../../arvexq/components/item_111/component.json) | migrated-module |
 | 112 | 予想ロジック | [item_112](../../arvexq/components/item_112/component.json) | reserved |
@@ -174,7 +178,7 @@
 | 125 | 発走前の予想・買い目保存 | [item_125](../../arvexq/components/item_125/component.json) | migrated-ui-fragment |
 | 126 | 予想・印・買い目画面表示 | [item_126](../../arvexq/components/item_126/component.json) | migrated-module |
 | 127 | 的中判定・成績検証 | [item_127](../../arvexq/components/item_127/component.json) | migrated-shared-context |
-| 128 | 中央・地方開催区分 | [item_128](../../arvexq/components/item_128/component.json) | mapped-existing-source |
+| 128 | 中央・地方開催区分 | [item_128](../../arvexq/components/item_128/component.json) | migrated-module |
 | 129 | 本日の厳選レース | [item_129](../../arvexq/components/item_129/component.json) | migrated-shared-context |
 | 130 | メインレース | [item_130](../../arvexq/components/item_130/component.json) | migrated-ui-fragment |
 | 131 | 重賞レース | [item_131](../../arvexq/components/item_131/component.json) | migrated-ui-fragment |

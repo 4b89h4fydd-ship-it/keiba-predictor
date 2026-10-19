@@ -14,10 +14,7 @@ from arvexq.ingest.full_career import date_key, merge_career
 
 RACE_FIELDS = ("id", "date", "track", "startTime", "surface", "distance")
 HORSE_FIELDS = ("horseNumber", "name", "jockey", "trainer", "carriedWeight")
-CIRCUITS = {
-    "jra": "jra", "中央": "jra", "central": "jra",
-    "nar": "nar", "地方": "nar", "local": "nar",
-}
+from arvexq.components.item_128.circuit import CIRCUITS, normalize_circuit
 
 
 def _present(value: Any) -> bool:
@@ -38,10 +35,6 @@ def _number(value: Any) -> int | None:
         return n if str(value).strip() == str(n) and n > 0 else None
     except (TypeError, ValueError, OverflowError):
         return None
-
-
-def normalize_circuit(value: Any) -> str | None:
-    return CIRCUITS.get(str(value or "").strip().lower())
 
 
 def build_data_status(detail: dict[str, Any] | None) -> dict[str, Any]:

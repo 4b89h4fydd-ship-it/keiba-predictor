@@ -5,11 +5,19 @@
   "existing_sources": [
     "arvexq/ingest/odds_results_merge.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "arvexq.ingest.odds_results_merge retains _merge_central_odds"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/odds_results_merge.py",
+      "canonical": "arvexq/components/item_084/result_merge.py",
+      "module": "arvexq.components.item_084.result_merge"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-shared-context",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

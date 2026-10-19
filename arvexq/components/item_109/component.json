@@ -5,11 +5,19 @@
   "existing_sources": [
     "arvexq/prediction/course_speed_baselines.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Existing import name aliases canonical object; no new calculation or source"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/prediction/course_speed_baselines.py",
+      "canonical": "arvexq/components/item_109/course_speed_baselines.py",
+      "module": "arvexq.components.item_109.course_speed_baselines"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

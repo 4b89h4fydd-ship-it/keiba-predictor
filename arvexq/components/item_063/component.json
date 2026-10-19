@@ -5,11 +5,19 @@
   "existing_sources": [
     "arvexq/ingest/netkeiba_odds_parser.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Existing import name aliases canonical object; no new calculation or source"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/netkeiba_odds_parser.py",
+      "canonical": "arvexq/components/item_063/netkeiba_odds_parser.py",
+      "module": "arvexq.components.item_063.netkeiba_odds_parser"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [
