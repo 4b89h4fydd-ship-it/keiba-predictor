@@ -1,0 +1,35 @@
+"""Stage 39: ensure CI summary describes failures without claiming official coverage."""
+from scripts.arvexq_v3_full_archive_audit import summarize_for_ci
+
+
+def test_ci_summary_aggregates_error_codes_and_unpaired_days():
+    result = {
+        "dateRange": ["2026-10-12", "2026-10-14"],
+        "integrityScanRange": ["2026-10-12", "2026-10-15"],
+        "expectedRacecards": 2,
+        "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": False,
+        "circuits": {"jra": {"verified": 1}, "nar": {"verified": 0}},
+        "errors": [
+            {"code": "unpaired-saved-day"},
+            {"code": "unpaired-saved-day"},
+            {"code": "empty-saved-race-selection"},
+        ],
+        "unpairedSavedDays": [{"date": "2026-10-15", "filePresence": "manifest-only"}],
+        "runnerEvidenceTriage": {
+            "zeroObservedPriorRuns": 0,
+            "byCircuitCategory": {},
+            "missingCardCarriedWeight": 0,
+            "missingWeightByState": {},
+        },
+    }
+    summary = summarize_for_ci(result)
+    assert summary["errorCount"] == 3
+    assert summary["errorCodes"] == {
+        "empty-saved-race-selection": 1,
+        "unpaired-saved-day": 2,
+    }
+    assert summary["integrityScanRange"] == ["2026-10-12", "2026-10-15"]
+    assert summary["unpairedSavedDays"] == [{"date": "2026-10-15", "filePresence": "manifest-only"}]
+    assert summary["allIndexedSavedOriginalsVerified"] is False
+    assert "officialPublishedRacesVerified" not in summary
