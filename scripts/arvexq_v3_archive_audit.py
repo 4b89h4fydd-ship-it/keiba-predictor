@@ -22,11 +22,14 @@ from arvexq.v3.audit.payload import sample_saved_payloads
 ARCHIVE = ROOT / "arvexq" / "ui" / "static"
 
 
-def audit_days(*, directory: Path = ARCHIVE, days: int = 7, samples_per_circuit: int = 0) -> dict:
+def audit_days(*, directory: Path = ARCHIVE, days: int = 7, samples_per_circuit: int = 0, end_date: str | None = None) -> dict:
     if days < 1 or days > 31:
         raise ValueError("days must be between 1 and 31")
     existing = sorted(p for p in (directory / "racecards").glob("????-??-??.json")
                       if (directory / "saved-snapshots" / p.name).is_file())
+    if end_date is not None:
+        cutoff = date.fromisoformat(end_date).isoformat()
+        existing = [p for p in existing if p.stem <= cutoff]
     if len(existing) < days:
         raise ValueError("insufficient saved daily racecards")
     reports = []
