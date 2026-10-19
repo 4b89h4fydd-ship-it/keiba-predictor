@@ -29,6 +29,7 @@ def test_ci_summary_aggregates_error_codes_and_unpaired_days():
     assert summary["verificationByCircuit"] == {"jra": {"expected": 0, "verified": 1, "failed": 0}, "nar": {"expected": 0, "verified": 0, "failed": 0}}
     assert summary["circuitCountReconciliation"] == {"jra": False, "nar": True}
     assert summary["verificationCountsReconciled"] is False
+    assert summary["errorSummaryReconciled"] is True
     assert summary["errorCount"] == 3
     assert summary["errorCodes"] == {
         "empty-saved-race-selection": 1,
@@ -183,3 +184,29 @@ def test_ci_rejects_invalid_integrity_scan_bounds_and_unpaired_dates():
         summary = summarize_for_ci(broken)
         assert summary["integrityScanRangeReconciled"] is False
         assert audit_exit_code(broken, summary) == 1
+
+
+def test_ci_rejects_missing_or_empty_error_codes():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-12"],
+        "dateCount": 1,
+        "verifiedSavedDates": ["2026-10-12"],
+        "pairedDateRangeMatchesSelection": True,
+        "integrityScanRange": ["2026-10-12", "2026-10-12"],
+        "integrityScanCalendarDays": 1,
+        "expectedRacecards": 1,
+        "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": True,
+        "circuits": {"jra": {"expected": 1, "verified": 1, "failed": 0},
+                     "nar": {"expected": 0, "verified": 0, "failed": 0}},
+        "unpairedSavedDays": [],
+        "runnerEvidenceTriage": {"zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+                                 "missingCardCarriedWeight": 0, "missingWeightByState": {}},
+    }
+    good = summarize_for_ci({**base, "errors": []})
+    assert good["errorSummaryReconciled"] is True
+    assert audit_exit_code(base, good) == 0
+    for bad_errors in ([{}], [{"code": ""}], [{"code": None}]):
+        summary = summarize_for_ci({**base, "errors": bad_errors})
+        assert summary["errorSummaryReconciled"] is False
+        assert audit_exit_code(base, summary) == 1
