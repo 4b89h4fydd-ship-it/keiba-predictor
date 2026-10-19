@@ -100,6 +100,21 @@ def summarize_for_ci(result):
                               for row in unpaired))
     except (TypeError, ValueError, IndexError, KeyError):
         scan_valid = False
+    # Every one-sided day in the scan must have a corresponding integrity error.
+    unpaired_error_days = sorted(
+        (e.get("date"), e.get("filePresence"))
+        for e in result["errors"]
+        if type(e) is dict and e.get("code") == "unpaired-saved-day"
+    )
+    unpaired_report_days = sorted(
+        (row.get("date"), row.get("filePresence"))
+        for row in unpaired if type(row) is dict
+    ) if type(unpaired) is list else []
+    condensed["unpairedErrorsReconciled"] = (
+        type(unpaired) is list
+        and len(unpaired_report_days) == len(unpaired)
+        and unpaired_error_days == unpaired_report_days
+    )
     condensed["integrityScanRangeReconciled"] = scan_valid
     condensed["integrityScanRange"]=scan_range
     condensed["unpairedSavedDays"]=result["unpairedSavedDays"]
@@ -121,6 +136,7 @@ def audit_exit_code(result, condensed):
                  and condensed.get("savedDateSelectionReconciled") is True
                  and condensed.get("requestedEndDateReconciled") is True
                  and condensed.get("integrityScanRangeReconciled") is True
+                 and condensed.get("unpairedErrorsReconciled") is True
                  and condensed.get("errorSummaryReconciled") is True) else 1
 
 
