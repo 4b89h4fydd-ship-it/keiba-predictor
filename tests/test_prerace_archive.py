@@ -94,7 +94,7 @@ class ServerSealTests(unittest.TestCase):
             horse["recentRaces"] = []
         original = deepcopy(d)
         result = prepare_seal(d, now=self.now)
-        self.assertEqual(result, {"status": "incomplete-prediction", "predictionStatus": "disabled"})
+        self.assertEqual(result, {"status": "missing-historical-evidence"})
         self.assertEqual(d, original)
         self.assertNotIn("preRacePrediction", d)
 
