@@ -16,7 +16,9 @@ def summarize_for_ci(result):
     """Small, deterministic, read-only audit evidence for Actions logs."""
     condensed={k:result[k] for k in ("dateRange","expectedRacecards","hashVerifiedRacecards",
                  "allIndexedSavedOriginalsVerified","circuits")}
-    condensed["errorCount"]=len(result["errors"])
+    errors = result.get("errors")
+    error_rows = errors if type(errors) is list else []
+    condensed["errorCount"] = len(error_rows)
     condensed["verificationByCircuit"] = {
         circuit: {"expected": counts.get("expected"),
                   "verified": counts.get("verified"),
@@ -41,11 +43,12 @@ def summarize_for_ci(result):
         and sum(v["verified"] for v in condensed["verificationByCircuit"].values()) == result["hashVerifiedRacecards"]
     )
     condensed["errorCodes"]=dict(sorted(Counter(
-        error.get("code", "unknown") for error in result["errors"]).items()))
+        error.get("code", "unknown") if type(error) is dict else "malformed-error-record"
+        for error in error_rows).items()))
     condensed["errorSummaryReconciled"] = (
-        type(result["errors"]) is list
+        type(errors) is list
         and all(type(error) is dict and type(error.get("code")) is str
-                and bool(error["code"]) for error in result["errors"])
+                and bool(error["code"]) for error in error_rows)
         and sum(condensed["errorCodes"].values()) == condensed["errorCount"]
     )
     dates = result.get("verifiedSavedDates")
@@ -103,7 +106,7 @@ def summarize_for_ci(result):
     # Every one-sided day in the scan must have a corresponding integrity error.
     unpaired_error_days = sorted(
         (e.get("date"), e.get("filePresence"))
-        for e in result["errors"]
+        for e in error_rows
         if type(e) is dict and e.get("code") == "unpaired-saved-day"
     )
     unpaired_report_days = sorted(
