@@ -1,0 +1,21 @@
+{
+  "id": 196,
+  "name": "Python・JavaScript自動テスト",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "tests",
+    "scripts/arvexq_production_boundaries_smoke.cjs"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "state": "mapped-existing-source",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

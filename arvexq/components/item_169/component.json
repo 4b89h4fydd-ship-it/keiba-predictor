@@ -1,0 +1,22 @@
+{
+  "id": 169,
+  "name": "環境情報API",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "workers/api.mjs"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "environment_pack"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

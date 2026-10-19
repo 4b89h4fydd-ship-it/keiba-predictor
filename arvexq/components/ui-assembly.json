@@ -1,0 +1,2569 @@
+{
+  "generated": "arvexq/ui/static/app.js",
+  "sha256": "8e14eac5a150919a9cde68b67fdb967323addb8f6fde0b0ec5a34c1482a52168",
+  "parts": [
+    {
+      "path": "arvexq/components/shared_ui/0000_preamble.js",
+      "owner": null,
+      "symbol": "preamble",
+      "sha256": "c7021cf2a066ff1ab2436c0b5a6483f061e0ce065357f60192f9dfe451e8c0b3"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0001_courseProfile.js",
+      "owner": null,
+      "symbol": "courseProfile",
+      "sha256": "254262b06be451435da76fd71662ef4f944eff070f32e8bf991c48192560cb82"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0002_firstTurnDistance.js",
+      "owner": null,
+      "symbol": "firstTurnDistance",
+      "sha256": "a4ccbcdede2c419259039bfb4b0c012ff5044b3bd07090f1959844e40c58b04f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0003_coursePathD.js",
+      "owner": null,
+      "symbol": "coursePathD",
+      "sha256": "a48233d455a707d4693b6edd495203551a4419692487c1db235f33290172658b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0004_normFrac.js",
+      "owner": null,
+      "symbol": "normFrac",
+      "sha256": "1ebcd6e30da54a11a5b10b092f13eb56b8481aa51cd852a117e0cca3d3261cdf"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0005_courseStageFrac.js",
+      "owner": null,
+      "symbol": "courseStageFrac",
+      "sha256": "821324e1d2626338212b9de5c5d7657710d79e49c02a6175cc00aa76a3e57a53"
+    },
+    {
+      "path": "arvexq/components/item_190/ui/0006_readFavoriteRaces.js",
+      "owner": 190,
+      "symbol": "readFavoriteRaces",
+      "sha256": "443dac0237444e7d5cc129cb06a088ebcac58f56a12b615866bb24b82d2898c3"
+    },
+    {
+      "path": "arvexq/components/item_190/ui/0007_isFavoriteRace.js",
+      "owner": 190,
+      "symbol": "isFavoriteRace",
+      "sha256": "6ebd1e45496335fb93ae4138edce90556c4f30636ef39243a2c2a7119c572e96"
+    },
+    {
+      "path": "arvexq/components/item_190/ui/0008_favoriteStarHtml.js",
+      "owner": 190,
+      "symbol": "favoriteStarHtml",
+      "sha256": "51a9b1e2e6b37bab509ffaf1094b92cfe909d71bd2b8d10be72de00eaeb3df20"
+    },
+    {
+      "path": "arvexq/components/item_190/ui/0009_toggleFavoriteRace.js",
+      "owner": 190,
+      "symbol": "toggleFavoriteRace",
+      "sha256": "5b60a2760c6b12fb18ab39dfbcf41d135d5446102f3f29fe0c3e59c80dc684fc"
+    },
+    {
+      "path": "arvexq/components/item_190/ui/0010_favoriteHomeSection.js",
+      "owner": 190,
+      "symbol": "favoriteHomeSection",
+      "sha256": "fcf445a67b5967d58e990e0786a140510abbb610b8312ae0da214bc86380aea5"
+    },
+    {
+      "path": "arvexq/components/item_194/ui/0011_cacheKey.js",
+      "owner": 194,
+      "symbol": "cacheKey",
+      "sha256": "57290ecf79c914c26126d3183caf6a9a2e3ed4548b8591ead8d6e82f9e1887dd"
+    },
+    {
+      "path": "arvexq/components/item_194/ui/0012_loadRaceCache.js",
+      "owner": 194,
+      "symbol": "loadRaceCache",
+      "sha256": "b96e1d5712ab6126d9248d4f26379f253c8bdf2faac4197522d4f2728cfe46fd"
+    },
+    {
+      "path": "arvexq/components/item_194/ui/0013_saveRaceCache.js",
+      "owner": 194,
+      "symbol": "saveRaceCache",
+      "sha256": "ad08c5efc340000b4f442afc5ccd92771e2e9184521008f632e9101c42deb364"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0014_fullBundleKey.js",
+      "owner": null,
+      "symbol": "fullBundleKey",
+      "sha256": "8cdacd15464617a50dd4f7b7c3280f7aa6b776287064893e36b827e75c488dcb"
+    },
+    {
+      "path": "arvexq/components/item_194/ui/0015_saveFullBundle.js",
+      "owner": 194,
+      "symbol": "saveFullBundle",
+      "sha256": "68e6faa66b501d871c77a371143b97a57b15dfbb1844368a01abbf3f1d32ca5a"
+    },
+    {
+      "path": "arvexq/components/item_194/ui/0016_loadFullBundle.js",
+      "owner": 194,
+      "symbol": "loadFullBundle",
+      "sha256": "cd1fd836bfc8c05abb8d4fe4d8c3ea7bbac8d57d4825f018ac30dbe9edf0cf53"
+    },
+    {
+      "path": "arvexq/components/item_194/ui/0017_detailCacheKey.js",
+      "owner": 194,
+      "symbol": "detailCacheKey",
+      "sha256": "9f51b8c954bc3fdd5ebb5c9c1c273f097197ac62214c17ab77cf2c55c74baf31"
+    },
+    {
+      "path": "arvexq/components/item_194/ui/0018_loadDetailCache.js",
+      "owner": 194,
+      "symbol": "loadDetailCache",
+      "sha256": "870d741c9bacf98e9f3ffc36dc931a24ce55df4195499256545abdebd6a113b9"
+    },
+    {
+      "path": "arvexq/components/item_194/ui/0019_saveDetailCache.js",
+      "owner": 194,
+      "symbol": "saveDetailCache",
+      "sha256": "d7e67a6e7d9e607536bfe20ab46611cd309304bbc8e86e02d91e42e06f27083f"
+    },
+    {
+      "path": "arvexq/components/item_194/ui/0020_evictRetiredRaceCaches.js",
+      "owner": 194,
+      "symbol": "evictRetiredRaceCaches",
+      "sha256": "0499ec344c1aea0c529096bedac16c74d07df6aebb78f7ec0e3ce4d593a4442a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0021_installPwaCache.js",
+      "owner": null,
+      "symbol": "installPwaCache",
+      "sha256": "fff962244094d2717af991cf9cf86bf233b95b423e5092389e14847e2f3dff7e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0022_today.js",
+      "owner": null,
+      "symbol": "today",
+      "sha256": "9c4a23553bfa88bf1a6e56242929df003e8dc601228f4115c98a061657d47ffb"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0023_previousDateKey.js",
+      "owner": null,
+      "symbol": "previousDateKey",
+      "sha256": "86c4675ea829787bc7b95835108d289e1f3f0d4a6d0ed39a1ce07b938ef92d7f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0024_esc.js",
+      "owner": null,
+      "symbol": "esc",
+      "sha256": "71ac00bbb44e4ae3bd2e360c310ea416f9b1b01340b28774c3ffb400709ce0b0"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0025_n.js",
+      "owner": null,
+      "symbol": "n",
+      "sha256": "e5c1e6e08b27e7c0e8771e204589fde91d65042ffae39af5805eff958e239186"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0026_clamp.js",
+      "owner": null,
+      "symbol": "clamp",
+      "sha256": "1352459b02233e9d5007708aee5cf10073f32b27694324252d23155fbd814034"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0027_pct.js",
+      "owner": null,
+      "symbol": "pct",
+      "sha256": "c0312156e2265c5cbfe520f598fdf175f597a9d04efdb3797768e6b887c40ffd"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0028_mean.js",
+      "owner": null,
+      "symbol": "mean",
+      "sha256": "4dc880dacb7924760526d0486630f1b9e5f2387b60e1d31ea501e83627a7bb35"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0029_placeRate.js",
+      "owner": null,
+      "symbol": "placeRate",
+      "sha256": "316d337410440979973204cae4328c271cf6def3437a7aee12dbaa63d2c7542a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0030_season.js",
+      "owner": null,
+      "symbol": "season",
+      "sha256": "a08cebdd339da7636aa343bcce4b51df8296425078ce96b1bbbb03a9326a12d2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0031_fmtMoney.js",
+      "owner": null,
+      "symbol": "fmtMoney",
+      "sha256": "69bf898ba905dadb240f14834b65eb8e3080e9b03d09dd5457a11a94f2af3bc4"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0032_fmtTime.js",
+      "owner": null,
+      "symbol": "fmtTime",
+      "sha256": "c23688a009c5405a3d97afa548a0262c312c65d8addf40cd6e250ad44088b2a3"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0033_derivedFrame.js",
+      "owner": null,
+      "symbol": "derivedFrame",
+      "sha256": "d25dd92b5ae5c05abdc64a50293219a1c1f8afb4e4e256c66262f71b1e4299ca"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0034_raceHasBrokenFrames.js",
+      "owner": null,
+      "symbol": "raceHasBrokenFrames",
+      "sha256": "d5874ec3773157062747020e7d84b9a78b3c0925be29568e23ba41e94a1a9fd7"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0035_frame.js",
+      "owner": null,
+      "symbol": "frame",
+      "sha256": "6dcc57efd74216b888f08884ea1d1abf6ec90b5f8ab6350fa77440aaf6127752"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0036_badge.js",
+      "owner": null,
+      "symbol": "badge",
+      "sha256": "40f632232d626aa03f9981550b090484e04a9ead95ab3bc59297624c7d5e5c79"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0037_winOddsText.js",
+      "owner": null,
+      "symbol": "winOddsText",
+      "sha256": "4847e1e8447bcd8d55ee27f33280ce452fb5a0681548862e8d4a1de53b9f9389"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0038_marketPopularity.js",
+      "owner": null,
+      "symbol": "marketPopularity",
+      "sha256": "cf8f5efda11b4d1d4fba0de2dca3f3b77973dc930e268499c790ab9d1c6d9f45"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0039_popularityText.js",
+      "owner": null,
+      "symbol": "popularityText",
+      "sha256": "3591e7622bea0c4b91218578196b3ba173be05326cf365d584cfdab289507168"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0040_smartVal.js",
+      "owner": null,
+      "symbol": "smartVal",
+      "sha256": "4bc3eb6931bf09fe944773f49873923cc0ba17449153fc98f64e26499cac37cc"
+    },
+    {
+      "path": "arvexq/components/item_181/ui/0041_sourceCollectionSection.js",
+      "owner": 181,
+      "symbol": "sourceCollectionSection",
+      "sha256": "ce4c8ddca35720f00e97af953eef138ec0bfdefa8d42b6fe3c9c00de28dad91b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0042_raceSourceStrip.js",
+      "owner": null,
+      "symbol": "raceSourceStrip",
+      "sha256": "759f10dd06616b4d902a090b5245c4aaff066a2faab4c2183dc97003200c83eb"
+    },
+    {
+      "path": "arvexq/components/item_181/ui/0043_horseByNo.js",
+      "owner": 181,
+      "symbol": "horseByNo",
+      "sha256": "d47cce53e85a609168b6ea81cd1ffc5dde0a7d294e00c67caffc361032da844b"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0044_resultStatus.js",
+      "owner": 188,
+      "symbol": "resultStatus",
+      "sha256": "b429bb4da30a2f2456cdc8163235c695bcc092da13a872307ae85b4c31ea3980"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0045_isFinal.js",
+      "owner": 188,
+      "symbol": "isFinal",
+      "sha256": "eaad3877facea96f310dcac8b5e906a89b8d904efd06e723c796e6187b3ebc93"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0046_isFlash.js",
+      "owner": 188,
+      "symbol": "isFlash",
+      "sha256": "65a6266da8e473bc95a350c02d2d2c6722e9d0c91c078d5a14bd364dd9b76084"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0047_hasAnyResultData.js",
+      "owner": 188,
+      "symbol": "hasAnyResultData",
+      "sha256": "4958de2205a3e433b91bff9b6fd8f8c4befb37bb646d4ddeeb921b24f0dde319"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0048_hasResultData.js",
+      "owner": 188,
+      "symbol": "hasResultData",
+      "sha256": "ce2630f28d1d8961bd0af36d690e152bc8b81b3802610ce7e5c3d394cfe5acd0"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0049_mins.js",
+      "owner": null,
+      "symbol": "mins",
+      "sha256": "28811dab318d2d10b8d43c297e07cb50ea20316758ed9185d938005adc82f0f2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0050_nowMins.js",
+      "owner": null,
+      "symbol": "nowMins",
+      "sha256": "74b22d7349d88c4369bb2018109f7021178895991ad8be6dbd2daf8c5c8784e3"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0051_timeHtml.js",
+      "owner": null,
+      "symbol": "timeHtml",
+      "sha256": "ff13f224ef9859f41d977663da3e22f16f8bb4d7378eb8f36b7103381f5cbd9b"
+    },
+    {
+      "path": "arvexq/components/item_176/ui/0052_header.js",
+      "owner": 176,
+      "symbol": "header",
+      "sha256": "2c00ba8644fb9694164deb8be3ddba1cf269973e81a37ae0abe45bcb0a1163a4"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0053_recencyWeights.js",
+      "owner": null,
+      "symbol": "recencyWeights",
+      "sha256": "69e22832c2bf154018cc752085086692535f9f577234d2b508b065110d305a45"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0054_weightedRate.js",
+      "owner": null,
+      "symbol": "weightedRate",
+      "sha256": "2f1618f567e74e3ef2afff7c12d6ad4a2b6cb4cf1ca7b8dd2e3b17586c99f8e4"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0055_raceField.js",
+      "owner": null,
+      "symbol": "raceField",
+      "sha256": "83ab507c5feafebdd6efc0afad8429c4da1b8b2327aa0c1c2ea374f81899db33"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0056_firstCornerNorm.js",
+      "owner": null,
+      "symbol": "firstCornerNorm",
+      "sha256": "c2233355a5e00eae522e14c8937888d93ed4864b14652842d89e0f7c327deafc"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0057_lastCornerNorm.js",
+      "owner": null,
+      "symbol": "lastCornerNorm",
+      "sha256": "9dde908f9612a7d956b56c10eb852b26f7125acf319368604b1b82b504bab570"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0058_historicalWindow.js",
+      "owner": null,
+      "symbol": "historicalWindow",
+      "sha256": "1ec2f75a2b774136d3cc37d50b2a9ad37e3927e1bb61a839a94805bfa4f55ced"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0059_validFirstCorner.js",
+      "owner": null,
+      "symbol": "validFirstCorner",
+      "sha256": "2192770337a9634b112b4aeebb5aa7b0bea73600ad577398e12e6abf18f65995"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0060_styleRates.js",
+      "owner": null,
+      "symbol": "styleRates",
+      "sha256": "949c44b7d53580356fbe3150d3290ceb3315b15f1a2e1cb9c34fd49faaa96447"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0061_horseEarlyTimingProfile.js",
+      "owner": null,
+      "symbol": "horseEarlyTimingProfile",
+      "sha256": "08f8c38f88d0ed7ae9d419dfe4695126d58a4623495c87169e9ece1e132d58bd"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0062_tenScore.js",
+      "owner": null,
+      "symbol": "tenScore",
+      "sha256": "5bd293ea11df664be9c8faa6ee1edf5b2025621f608e7b049d7216936f0401c0"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0063_firstThreeType.js",
+      "owner": null,
+      "symbol": "firstThreeType",
+      "sha256": "36990358badf7dad3e6aac0c679e135690b9a4d96478dbb8084ee416376ff12a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0064_fadeRate.js",
+      "owner": null,
+      "symbol": "fadeRate",
+      "sha256": "ae299c117617cf861cf8938701f7bf2e1560ba1ed3daec3063d1805749fc92dd"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0065_moveRate.js",
+      "owner": null,
+      "symbol": "moveRate",
+      "sha256": "7f068f666ca6f8bf507743e16cd9a2618d34b4788f97f24d602d864f81184208"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0066_holdRate.js",
+      "owner": null,
+      "symbol": "holdRate",
+      "sha256": "a33d9d73ebae826ec73cb95ec3762253a46710b89ec884fe1acdc7036c16d4b9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0067_yieldFlex.js",
+      "owner": null,
+      "symbol": "yieldFlex",
+      "sha256": "00ce7b3150a9fbfb83e4af9de416da900207896f1e46ca16ad99a5083bc2c9ca"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0068_breakReliability.js",
+      "owner": null,
+      "symbol": "breakReliability",
+      "sha256": "41ea7195942d7c0321bf6fb45b2f6f1fde7b8e730533033362566d3cc4f1751d"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0069_lateGainScore.js",
+      "owner": null,
+      "symbol": "lateGainScore",
+      "sha256": "e43923607b1ab0a2265a98c4834ef98f742a49093d58838d98f57d15ae261916"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0070_positionConsistency.js",
+      "owner": null,
+      "symbol": "positionConsistency",
+      "sha256": "ade251ae30124ddc1065f754b7423840a57169c8c2b3381cb5c0b831ab059165"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0071_positionTrend.js",
+      "owner": null,
+      "symbol": "positionTrend",
+      "sha256": "b33e0db5d6288dda19614b782a8029f2d71bcf91f6c6b41115714870f02b455a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0072_finishingEvidence.js",
+      "owner": null,
+      "symbol": "finishingEvidence",
+      "sha256": "110cc83c09231b6d5ff267e8a506ad202867c35632c8ce5da5f18e310e3ad68b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0073_earlyCollapseSeverity.js",
+      "owner": null,
+      "symbol": "earlyCollapseSeverity",
+      "sha256": "7641a69f8a93150126fbf9f4999d5215f1529dc7a2d5dd4ccf1d8aa70cf4c7c5"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0074_raceLiveBias.js",
+      "owner": null,
+      "symbol": "raceLiveBias",
+      "sha256": "537ab7a693e98b8776d9be5d683d676feebff65e95a78656fb7c3e00677bfb35"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0075_sameDayTrendSignatureV313.js",
+      "owner": null,
+      "symbol": "sameDayTrendSignatureV313",
+      "sha256": "2909483b3ab8736d3d27dab2c4f2776a181b439cad359da0a482598a229c5839"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0076_stylePoint.js",
+      "owner": null,
+      "symbol": "stylePoint",
+      "sha256": "d6ceec551337e3f131b3c8f8846fb7510bd47d6d07ccf9f3692fd178d2bfc8de"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0077_styleName.js",
+      "owner": null,
+      "symbol": "styleName",
+      "sha256": "dae8613d264891d73425d38fdb820a0ec1cdc96716d61b0622cb2316ebbfaf03"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0078_earlyOcc.js",
+      "owner": null,
+      "symbol": "earlyOcc",
+      "sha256": "70917df6bf8c55ac5405d1bb561e5353e80f587453897d050156e2beb9389ca9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0079_paceHistoryRuns.js",
+      "owner": null,
+      "symbol": "paceHistoryRuns",
+      "sha256": "7636bb9522e1562bd37773383f03fff40f8ac743d5c0dc8363d93641bdec2d2b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0080_minetaPastProfile.js",
+      "owner": null,
+      "symbol": "minetaPastProfile",
+      "sha256": "a561b2c796c10802eba42720686b728adfa5ceda8086fb0e93abb1c5219e87e6"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0081_minetaRaceContext.js",
+      "owner": null,
+      "symbol": "minetaRaceContext",
+      "sha256": "acfcdd493783f8859c1083a58b05d2a365255963a6c3a9210880c2fb2de7713b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0082_minetaAssignRoles.js",
+      "owner": null,
+      "symbol": "minetaAssignRoles",
+      "sha256": "3f61d462f58f81be47e31a6b9df7dda18adb5dfd9ad5ca9bb59fee71abde0fe2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0083_minetaStructureText.js",
+      "owner": null,
+      "symbol": "minetaStructureText",
+      "sha256": "7323e02d8cbbecd3107973fb1144501b44b311968880dd3d93db875335f7999c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0084_recentDistance.js",
+      "owner": null,
+      "symbol": "recentDistance",
+      "sha256": "05f03b66b68257d6d14886ab1d70f51cd89bc90be262bbe3be5b56c46950d940"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0085_recentFirst.js",
+      "owner": null,
+      "symbol": "recentFirst",
+      "sha256": "48de72bc5c25df7168a7f349955836b391eea9ab69bbfeb43c5359ac30c51d26"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0086_targetSeason.js",
+      "owner": null,
+      "symbol": "targetSeason",
+      "sha256": "767bdaab07c41f7c186920897df2b75cda7282eb878ff244b81ace7672806829"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0087_sameCondition.js",
+      "owner": null,
+      "symbol": "sameCondition",
+      "sha256": "137e28354aebbbb3cbb03bd6dbbe2e51f84e6e507f235b9f579fec868f4bebdf"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0088_contextualRuns.js",
+      "owner": null,
+      "symbol": "contextualRuns",
+      "sha256": "b31b2220752798ae8b59e8a9e7b5f219d4eb3c647200ef7f97b9373170994b11"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0089_runFinishQuality.js",
+      "owner": null,
+      "symbol": "runFinishQuality",
+      "sha256": "0ad4fe34b9f99345423895dcfe86bc965251b3782c9f67a02c5d4c0bef2c36bf"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0090_runTimeIndex.js",
+      "owner": null,
+      "symbol": "runTimeIndex",
+      "sha256": "9bc8fd56156f4300d99e6fc29baebb80bf3cc8abc162c6c0192c12b9af1b04ab"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0091_recentFinishScore.js",
+      "owner": null,
+      "symbol": "recentFinishScore",
+      "sha256": "5c080d0b7221557b3227d1033bac904cdfadd02ac349667ac4945e2e1210eb03"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0092_speedRaw.js",
+      "owner": null,
+      "symbol": "speedRaw",
+      "sha256": "6c804c36966a68828ad09b6efc473427d673901f5a81cbc4166b43f38d0d8e17"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0093_normalize.js",
+      "owner": null,
+      "symbol": "normalize",
+      "sha256": "e278574b53ba4e26e704ebb4b2774f4b071129f59e975c0b058685e4ff59caff"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0094_listQuality.js",
+      "owner": null,
+      "symbol": "listQuality",
+      "sha256": "d2d81e739d4454f7c8a768646459f5f3904779f91c5aa1638c4d794cb92f2c12"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0095_roleProfileScore.js",
+      "owner": null,
+      "symbol": "roleProfileScore",
+      "sha256": "1d5c37034194a0248e73a69f4ef7983c553e9038e69526d27128b22db09eafc8"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0096_genericRoleScore.js",
+      "owner": null,
+      "symbol": "genericRoleScore",
+      "sha256": "f98e26d209190532c10b84466e3bf85dbb99996880483857245c75b2a72fa943"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0097_courseTraits.js",
+      "owner": null,
+      "symbol": "courseTraits",
+      "sha256": "db174eada1ded01439beee45316628445c2452922f5725899a380aa666ec70eb"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0098_ageSexScore.js",
+      "owner": null,
+      "symbol": "ageSexScore",
+      "sha256": "bac8e2095b7cacb067de00d4777ac54722d2941ba016f02d11763c581a945e6f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0099_saneCarriedWeightValue.js",
+      "owner": null,
+      "symbol": "saneCarriedWeightValue",
+      "sha256": "dcd094500f3a52266bef2987522037374c633fad88c174d2b9665514cdd193ce"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0100_carriedWeightText.js",
+      "owner": null,
+      "symbol": "carriedWeightText",
+      "sha256": "05a09b427fd000fd63663ee7d188923dd1a22bdb15615d6fd11349e858332984"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0101_weightScore.js",
+      "owner": null,
+      "symbol": "weightScore",
+      "sha256": "de19fc84d9e1e86d5a75d8e3b4548fbf3ba5cda9aed0058d6e8059963bd080c8"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0102_currentBodyWeight.js",
+      "owner": null,
+      "symbol": "currentBodyWeight",
+      "sha256": "b90d8d4b54ec443d17e4aec2304cf91940a16c95213d2b6ea4f01933f376725b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0103_currentBodyWeightChange.js",
+      "owner": null,
+      "symbol": "currentBodyWeightChange",
+      "sha256": "4519096bf2e33327c2cc15d4132e26b38cd626e0820cb7898ddff2e57dae8379"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0104_bodyWeightConditionScore.js",
+      "owner": null,
+      "symbol": "bodyWeightConditionScore",
+      "sha256": "205ddf8c7c8db5e3335f74453b7eff108bbd32d64c7a28ed1a7140077efd7e92"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0105_conditionFit.js",
+      "owner": null,
+      "symbol": "conditionFit",
+      "sha256": "364d879efe66bdbc3ac45cf9d5a7b6eb1723c337d3c98ed536868d2354359c65"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0106_confidenceBlend.js",
+      "owner": null,
+      "symbol": "confidenceBlend",
+      "sha256": "73ff9ea9a558b642f2e41f6c4fcc675634f4f36bc2ee87460dd47eab8817bda9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0107_buildRows.js",
+      "owner": null,
+      "symbol": "buildRows",
+      "sha256": "c6ecc8d0253370e32aff8d821be10574d48dacfd645628418746ecad70377ea7"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0108_rowByNo.js",
+      "owner": null,
+      "symbol": "rowByNo",
+      "sha256": "6abe43e2f1d484b0714f694e0a981af57d7aaddd9cad2ab5b1d506194aba69ad"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0109_pressureInfo.js",
+      "owner": null,
+      "symbol": "pressureInfo",
+      "sha256": "0342b82c4a6238310d9b6363924d4034976d33c0f2ba0351714cb1b1494f79e2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0110_frontArrangement.js",
+      "owner": null,
+      "symbol": "frontArrangement",
+      "sha256": "4646b78b1ae9b56d1fd889299ea216793e02b087a68d4f936201ba5d1586b997"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0111_tacticalContext.js",
+      "owner": null,
+      "symbol": "tacticalContext",
+      "sha256": "067f7d7b93510645b631c31e30d75a288d5c3e36e9bd376191d8c7b3fb2552c7"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0112_scenarioSuit.js",
+      "owner": null,
+      "symbol": "scenarioSuit",
+      "sha256": "acb758c5ed5ad0ed9c17563d66a537d6720f490ce7ad895f263b0470ebd15ca2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0113_suitability.js",
+      "owner": null,
+      "symbol": "suitability",
+      "sha256": "8f86c96b3d752e20525197e48206d64720a4e069d14e88689e07494466793487"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0114_gradeClass.js",
+      "owner": null,
+      "symbol": "gradeClass",
+      "sha256": "0530ae62cadce2e9b2c3ee3fb1d3042ba854654558e381573e8b76535a312b03"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0115_isObservedCircuit.js",
+      "owner": null,
+      "symbol": "isObservedCircuit",
+      "sha256": "371d2b743b32bca2c01685899e1f53e506a8f1778ac15d1a13a972d4edd96a18"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0116_observedHistory.js",
+      "owner": null,
+      "symbol": "observedHistory",
+      "sha256": "e248efa8f15ceae5b59289c6c2f7c896b2738c3a513ee540556517371446a217"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0117_isNarRace.js",
+      "owner": null,
+      "symbol": "isNarRace",
+      "sha256": "e5f70969e388790b3a6f0c7c1cdf6b2912b7927224a11849a2dc7516052d4e32"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0118_raceMode.js",
+      "owner": null,
+      "symbol": "raceMode",
+      "sha256": "c1e0538fc77ee0fa898e5ec60d8cb31279d90edf9d4edce3029038882e8a099c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0119_saveRaceAnalysis.js",
+      "owner": null,
+      "symbol": "saveRaceAnalysis",
+      "sha256": "b441c78921eead533343049c51466928ee8be5d3d0bc37d08a838cc63bef7f39"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0120_isScratchHorse.js",
+      "owner": null,
+      "symbol": "isScratchHorse",
+      "sha256": "4d849d910381f591765d0e075b9877c6b91d9a9a2ca4f5a0c91e5cb56e7c0cbd"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0121_analysisRace.js",
+      "owner": null,
+      "symbol": "analysisRace",
+      "sha256": "0ccb42321f78f819c73d5b7143e3e5821e48cdfc30ad4282f70f75275ef062db"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0122_raceMarkClock.js",
+      "owner": null,
+      "symbol": "raceMarkClock",
+      "sha256": "508203e165cc33ce23b994144bbe6129fdc9722905c6cd7bb386a2f84bfee517"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0123_validMorningMarkSnapshot.js",
+      "owner": null,
+      "symbol": "validMorningMarkSnapshot",
+      "sha256": "3c97532d371cbb3d0ae6446031b6671bb86a4231436d749e36f1c49d6658b0a5"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0124_latestOfficialMarkRevision.js",
+      "owner": null,
+      "symbol": "latestOfficialMarkRevision",
+      "sha256": "f8648ce9611047d8e0f3750a4d74d5e677dda76b37f6487d87b5f5e94f2c61ab"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0125_latestUserApprovedModelMarkRevision.js",
+      "owner": null,
+      "symbol": "latestUserApprovedModelMarkRevision",
+      "sha256": "105ac424cb1148f4b1ad0d1b0f30d97bb8e834f43cad2ef00811880398d1dc18"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0126_latestAuthorizedMarkRevision.js",
+      "owner": null,
+      "symbol": "latestAuthorizedMarkRevision",
+      "sha256": "0459eb9087f8ace24e6784b026324d07eb78e77524584963b3444ead2ee2c5de"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0127_authorizedPreOffMarks.js",
+      "owner": null,
+      "symbol": "authorizedPreOffMarks",
+      "sha256": "efcba5d2a9c5aee88c064e7963394fae5fffb60d6626a1b19d245014d56603f5"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0128_latestSavedForecastRevision.js",
+      "owner": null,
+      "symbol": "latestSavedForecastRevision",
+      "sha256": "f28cc4afe7d9725966563c521a09a31b5508b8cd950d77693e9429e0b3fee977"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0129_revisionPercent.js",
+      "owner": null,
+      "symbol": "revisionPercent",
+      "sha256": "f6ad777b087a9539e90a43118b934e251763998447c95d6e0c4a30944de7d562"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0130_savedRevisionOriginalHtml.js",
+      "owner": null,
+      "symbol": "savedRevisionOriginalHtml",
+      "sha256": "ceb200e530f4470660eb745b19da94cb4530a0d0e747c63e6ad030638a1aa6cf"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0131_predict.js",
+      "owner": null,
+      "symbol": "predict",
+      "sha256": "8573324204f462757be7e25b294352fc07783be22f26e2b787840c01c6f15aec"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0132_nextRace.js",
+      "owner": null,
+      "symbol": "nextRace",
+      "sha256": "ef7b2063d8b27487b05775824374a6857ca89975674965dfacd141f8f47e2a83"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0133_liveRaces.js",
+      "owner": null,
+      "symbol": "liveRaces",
+      "sha256": "7ac25364599f0313b04e06849eaa631c70072578028315d5340dd46f09cf8a1b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0134_liveTag.js",
+      "owner": null,
+      "symbol": "liveTag",
+      "sha256": "99d232fc5334aff298c13761fa9ad4e4d790bccd740ff0010ed28cd438c2089b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0135_homeVenueMark.js",
+      "owner": null,
+      "symbol": "homeVenueMark",
+      "sha256": "45375b399bcafc2cd61ca894916d7a4a76bb8d7d07535d02a1ec4465d650f7a1"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0136_horseBodyWeightText.js",
+      "owner": null,
+      "symbol": "horseBodyWeightText",
+      "sha256": "416fc4650aab4244881598274db225c06cdc8b4212991139be0bb62aa7c3fb90"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0137_referenceBodyWeight.js",
+      "owner": null,
+      "symbol": "referenceBodyWeight",
+      "sha256": "db9e3632cfaf0fcd796a86127a2a10816891d363e6cf66741b6d954665a46b96"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0138_horseCheckKey.js",
+      "owner": null,
+      "symbol": "horseCheckKey",
+      "sha256": "41f08e75e818d77ab738e5e2b9b440f8d1acbe587e1a00d2127495bb91e6f8bc"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0139_horseCheckMap.js",
+      "owner": null,
+      "symbol": "horseCheckMap",
+      "sha256": "cf8468fb5619026148f29c04ac36ebdc38879d7c7f44fed2a32102aece233eba"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0140_isHorseChecked.js",
+      "owner": null,
+      "symbol": "isHorseChecked",
+      "sha256": "7a8b0c2fedd94b7605b528028c763dd00db80fcf5ebee506a4769631c075dbcc"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0141_setHorseChecked.js",
+      "owner": null,
+      "symbol": "setHorseChecked",
+      "sha256": "a0d2e0f85132859977aba37bbb5042b97cd91279399556a1628914364c463cd2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0142_toggleHorseChecked.js",
+      "owner": null,
+      "symbol": "toggleHorseChecked",
+      "sha256": "f0fed34dfc44d93d0503d68c38d898b19dd3af11b2e5411a9d34b5f395d21185"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0143_horseCheckGlyph.js",
+      "owner": null,
+      "symbol": "horseCheckGlyph",
+      "sha256": "d352b0228f9099116f5856ca2aea64485dcc72f6b6bb67eafa487104b9127a67"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0144_sortedHorseRows.js",
+      "owner": null,
+      "symbol": "sortedHorseRows",
+      "sha256": "9c7c9149857a1b5e842a791d431d05aaf4d6e975b7848dd259194f657c167795"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0145_openHorseModal.js",
+      "owner": null,
+      "symbol": "openHorseModal",
+      "sha256": "8689580c9e9dbba761093afa559679054ccc4848a6e216bfa8f1c15d7741f026"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0146_closeHorseModal.js",
+      "owner": null,
+      "symbol": "closeHorseModal",
+      "sha256": "3bac590871df64bef7a8f69a9feef30b505dd56bf081c06e8a5bc7621e3e7a82"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0147_moveHorseModal.js",
+      "owner": null,
+      "symbol": "moveHorseModal",
+      "sha256": "683e63e00c0c57e561b0f2f139cc2901c6958d9efdafb4a69b757e1b3f6f69be"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0148_horseDisplayName.js",
+      "owner": null,
+      "symbol": "horseDisplayName",
+      "sha256": "54369f246becb2cdd086122874bf237b96a96f6d62cfeacf8438980d9007e3cb"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0149_researchHorsePanel.js",
+      "owner": null,
+      "symbol": "researchHorsePanel",
+      "sha256": "16a043e3a3d2059eeb84973e1442f6993c9660f39ae0a52a01465b8e974e6ab4"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0150_researchRecapPanel.js",
+      "owner": null,
+      "symbol": "researchRecapPanel",
+      "sha256": "6e12f018670cf4a2cc6af9d4bb34418dabaffb5e5c08ddf1731200c4e1fd67d8"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0151_careerCoverageLabel.js",
+      "owner": null,
+      "symbol": "careerCoverageLabel",
+      "sha256": "44200c4c6c89720c9e623a0388ea626cc473dd7ce37960c0bdd77fd62862225f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0152_careerCoverageLine.js",
+      "owner": null,
+      "symbol": "careerCoverageLine",
+      "sha256": "afa7ce396fcf7bb62d36c592fbad90d9e85b16c10cfe09abdf96eded3f68bf5a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0153_runnerDetailBody.js",
+      "owner": null,
+      "symbol": "runnerDetailBody",
+      "sha256": "6fc302861df80051252c068fc3839289dd1ce863016c7acfc32eabf0d47b74af"
+    },
+    {
+      "path": "arvexq/components/item_181/ui/0154_horseModal.js",
+      "owner": 181,
+      "symbol": "horseModal",
+      "sha256": "bbccfd0b449e1a555385257e2fa5856b8c6ccd6d7afbc5d32c8a95684a71cae6"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0155_miniPacePreview.js",
+      "owner": null,
+      "symbol": "miniPacePreview",
+      "sha256": "996d7dbb322043e8adf72af9c3231405eb02fdb81c8c30f78b005798a0cc4f01"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0156_raceNumbers.js",
+      "owner": null,
+      "symbol": "raceNumbers",
+      "sha256": "9f4c501695882de1e4393a1c1283a28c006181b9f31eb4a1e3047a70bf96968c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0157_evaluationText.js",
+      "owner": null,
+      "symbol": "evaluationText",
+      "sha256": "25cdaf5b129ecb24111addba43a5cf140f15ac1afe3941f1ef82abdcad0394b8"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0158_oddsText.js",
+      "owner": null,
+      "symbol": "oddsText",
+      "sha256": "833f1fe3bad9d6bb82dbe1c223ecbe6f85818bb6a8e575ed9f016a7e5e20f554"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0159_oddsClass.js",
+      "owner": null,
+      "symbol": "oddsClass",
+      "sha256": "99ad57ecdc0e79b4aa0f7a4cd38731b2a6289b313b5094dde23f14eb2fd7c310"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0160_edgeRaceUrl.js",
+      "owner": null,
+      "symbol": "edgeRaceUrl",
+      "sha256": "4b69f0cf1f30d9374326b45a7228a3251d7d936deef05c21573f4d2ddf095a42"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0161_reflectUseful.js",
+      "owner": null,
+      "symbol": "reflectUseful",
+      "sha256": "c75e1ae811ba254c397d61fe67cee0b0a5ce26b906c52cb326bd776dfd7348b7"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0162_edgeOddsRow.js",
+      "owner": null,
+      "symbol": "edgeOddsRow",
+      "sha256": "2ffafede71940f457ffecf8029f741776cf4b502f6aa10172ab2ebe1a2e2de8b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0163_mergeHorseReflection.js",
+      "owner": null,
+      "symbol": "mergeHorseReflection",
+      "sha256": "6d00bedc60e1c7f19fcf67f1925b389e6f56e6d9ce7fa8e4af45cdecf2754e1b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0164_mergePublishedResult.js",
+      "owner": null,
+      "symbol": "mergePublishedResult",
+      "sha256": "9f5d00649b01855c44d17466039bad79aa97f987f6507255629c73675f88a93a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0165_mergeRaceReflection.js",
+      "owner": null,
+      "symbol": "mergeRaceReflection",
+      "sha256": "a42d1eab128bac33758d80794d538ef9c176f0d9c26fc81cee5475958303cf6f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0166_raceDisplayCoreReady.js",
+      "owner": null,
+      "symbol": "raceDisplayCoreReady",
+      "sha256": "9f48733696cd5288d87ee52975dcef2a1ad6df6cf1a1d663b0b316c330a5fe7c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0167_edgeFetchJson.js",
+      "owner": null,
+      "symbol": "edgeFetchJson",
+      "sha256": "fab91c25b1215d6d4721564d9350a76a136e859fc2e7d77f569f7ce27da55231"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0168_detailState.js",
+      "owner": null,
+      "symbol": "detailState",
+      "sha256": "265614538fcd6558350a0d8e50a4ab8ffdab11cd82ded4324822c5ac233a60ab"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0169_traceRaceDetail.js",
+      "owner": null,
+      "symbol": "traceRaceDetail",
+      "sha256": "a809fdce3e4b430a8fe9524a3d0542103767cd2eaa67cdebb2fea8eed7ef10ed"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0170_normalizeDetailSummary.js",
+      "owner": null,
+      "symbol": "normalizeDetailSummary",
+      "sha256": "eef30f8c170eb0d996b023da002f8d1ff2f07940b9ca6af1b53fd7ce338618bb"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0171_updateDetailSections.js",
+      "owner": null,
+      "symbol": "updateDetailSections",
+      "sha256": "7bc45bd5ff33f4750735b18506335108eadebbdbfc001d94d7d8d19be295c538"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0172_entryDataAvailable.js",
+      "owner": null,
+      "symbol": "entryDataAvailable",
+      "sha256": "ae7312629e66c5b85791003b9031330d05349e301e2cae74676ecd3e612e33c0"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0173_raceHeadCountText.js",
+      "owner": null,
+      "symbol": "raceHeadCountText",
+      "sha256": "5b4313c55d09b766ac36b2c0fc91e16eab16d6df87f50fcad2951aeb03fe8ab9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0174_raceDetailNotice.js",
+      "owner": null,
+      "symbol": "raceDetailNotice",
+      "sha256": "0d185e3ed4107a55927821d6d1152e665da8af95f40a4b645b72cc8487437551"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0175_pendingDetailPanel.js",
+      "owner": null,
+      "symbol": "pendingDetailPanel",
+      "sha256": "30f5fcb134f183e12828b27e68369dd36904a1a7a623870a13f6a3000e7c56cb"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0176_racecardOddsHtml.js",
+      "owner": null,
+      "symbol": "racecardOddsHtml",
+      "sha256": "83549ad0367f923ba123a34232d2a1102db23b410097894fcb2293e2d7816911"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0177_racecardMarkDisplay.js",
+      "owner": null,
+      "symbol": "racecardMarkDisplay",
+      "sha256": "57f067be822a5034dba346b7bf044539ba81da291ea840d7968a52c3fdfa503c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0178_validatedHonmeiMetadata.js",
+      "owner": null,
+      "symbol": "validatedHonmeiMetadata",
+      "sha256": "8828f931318a88bed3d11ce7fa8a7e4889aeb5c81ee1b434d820abb1452bc4a3"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0179_honmeiBadgeText.js",
+      "owner": null,
+      "symbol": "honmeiBadgeText",
+      "sha256": "122f939bad48526fae509e5adb11aaeea0b914156dcaa11b73d0be5beb88528c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0180_markRoleLabel.js",
+      "owner": null,
+      "symbol": "markRoleLabel",
+      "sha256": "36e38bfa16f5a6689b73f3cf19c868771d0b9de73f7841bd6ae7eeef81becbe9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0181_visiblePredictionMark.js",
+      "owner": null,
+      "symbol": "visiblePredictionMark",
+      "sha256": "b2128888fd5b5fcecf13adb8bb38a749666dd4861264c3b3a80641d561ee774f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0182_honmeiA11yText.js",
+      "owner": null,
+      "symbol": "honmeiA11yText",
+      "sha256": "d6a105cd8875ead28ac60403b4e0803215bd32b77d4bd284a4ec3aee2955e353"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0183_racecardMarkLegend.js",
+      "owner": null,
+      "symbol": "racecardMarkLegend",
+      "sha256": "116c1138a3706e66bd3d3cf3057b2428099825499d9e690e8f963d382f1fdfbe"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0184_racecardEntryRow.js",
+      "owner": null,
+      "symbol": "racecardEntryRow",
+      "sha256": "49cb69e44028b6795bf8a4d77842ecb855a0b61dec15073b98dfaea1ef15f286"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0185_morningSavedMarkRows.js",
+      "owner": null,
+      "symbol": "morningSavedMarkRows",
+      "sha256": "febde3d16b724c3b625b9ce38802ba4928a0f28974d2e2c4e56d2c352044f8b3"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0186_minimalRacecardPanel.js",
+      "owner": null,
+      "symbol": "minimalRacecardPanel",
+      "sha256": "4aefb9d7eca5d63ab8f588001ffe3ccf3ccc55fc00ad4046f856313c7c04c229"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0187_safeEntryPanel.js",
+      "owner": null,
+      "symbol": "safeEntryPanel",
+      "sha256": "d4804e1385a552620f6b592381169e9382e26311728d3f414e3a3c00ecdcb9b1"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0188_renderPredictionPending.js",
+      "owner": null,
+      "symbol": "renderPredictionPending",
+      "sha256": "69ebb3cf3db4f373ca4802970d71e6e6cab3c4dd3984a2356c537bb446afb693"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0189_renderPartialRace.js",
+      "owner": null,
+      "symbol": "renderPartialRace",
+      "sha256": "521fe2e36ef8ff58f044dd56fe0492692eca0f8011f40645701add5f1fc45df1"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0190_hydrateStaticRacecardFirst.js",
+      "owner": null,
+      "symbol": "hydrateStaticRacecardFirst",
+      "sha256": "2ffb92fe03a380168e0f00120915a907e88db0187cdad236983b14a1d18ec0f5"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0191_fetchRacecardOnly.js",
+      "owner": null,
+      "symbol": "fetchRacecardOnly",
+      "sha256": "12bb28e04a984b1890440bae487f3658a15d6db0efcc2df53075e4bd8fde0c35"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0192_fetchSelectedRaceOdds.js",
+      "owner": null,
+      "symbol": "fetchSelectedRaceOdds",
+      "sha256": "9c81fbf1601b75d535444346c33ec94d7e9447ba69f1003bd6a2d67408e414a9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0193_fetchEdgeRace.js",
+      "owner": null,
+      "symbol": "fetchEdgeRace",
+      "sha256": "dfb237c1b8f85a71201b5f770681f65534086e653f19cffae7afa8ab9a1cab80"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0194_warmTrackSnapshots.js",
+      "owner": null,
+      "symbol": "warmTrackSnapshots",
+      "sha256": "61571a74b69eaf707527a60e6a9128dfe2e86b45fbd43571b2d73f365d30e54b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0195_prewarmVisibleTrackSnapshots.js",
+      "owner": null,
+      "symbol": "prewarmVisibleTrackSnapshots",
+      "sha256": "2498097a74ea757c5a3cc1257a9971b661650ea286e64b284398c28a9a0272e7"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0196_warmTrackLocal.js",
+      "owner": null,
+      "symbol": "warmTrackLocal",
+      "sha256": "6ea610f01f9937a43fcc7f3d819032572d39a9602a8c4bbb0affe4ab568bc377"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0197_prewarmSelectedTrack.js",
+      "owner": null,
+      "symbol": "prewarmSelectedTrack",
+      "sha256": "a4140a6c2c95d5d17045a3939e34433e64fcfd053cdada5f20f038c1d09d1d27"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0198_openFirstRace.js",
+      "owner": null,
+      "symbol": "openFirstRace",
+      "sha256": "c2a5a8c49009bda5f2f9bae891b7ed213c2cc15572152d066e58d7674108f4af"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0199_archivedCacheComplete.js",
+      "owner": null,
+      "symbol": "archivedCacheComplete",
+      "sha256": "913ecbb19f36ea84c7897eb2d491c32b1aa56e60b0b422d371325ec45cac1344"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0200_oddsRefreshCadence.js",
+      "owner": null,
+      "symbol": "oddsRefreshCadence",
+      "sha256": "81d005e01eb8cc7e422b2b5e1c4a6596eba388cf1eda1839cb886cd30654702f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0201_raceHasOdds.js",
+      "owner": null,
+      "symbol": "raceHasOdds",
+      "sha256": "d8cffc0f1780d90ded820287abf52bd75ca36b2c27c3925c6a65a9e931016e98"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0202_raceOddsComplete.js",
+      "owner": null,
+      "symbol": "raceOddsComplete",
+      "sha256": "e5025158a7b2f55417f19da10619a483f4f4cfd13f5a04b9165088f93811f074"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0203_raceBodyWeightComplete.js",
+      "owner": null,
+      "symbol": "raceBodyWeightComplete",
+      "sha256": "111df82b764fa9188279fed5abd8b1b5ff9dced0aabc45c568034751a9c958ad"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0204_markRelevantInputSignature.js",
+      "owner": null,
+      "symbol": "markRelevantInputSignature",
+      "sha256": "9fb11d58427500b41fd78c3e4206e9a0744ed6d7a50ca3675e8f67a21d74377f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0205_refreshOddsOnly.js",
+      "owner": null,
+      "symbol": "refreshOddsOnly",
+      "sha256": "5ccbc845fdc25d8b7ad08f52908507d2e36a110cf63bbc31685fcc471a416245"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0206_ensureAutoOdds.js",
+      "owner": null,
+      "symbol": "ensureAutoOdds",
+      "sha256": "6f298382e62ca59c0d76d5ed2935bec6dad72dab87c1e2f912031481237af59b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0207_overallScoreText.js",
+      "owner": null,
+      "symbol": "overallScoreText",
+      "sha256": "0e078871ec63d5d2e5957f68a82e67412aabcb16f0195e4b2c9b3d6259973b8d"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0208_aiBetStoreKey.js",
+      "owner": null,
+      "symbol": "aiBetStoreKey",
+      "sha256": "7b2294cd14d3f91193c8417b8e0862bf5bd9092974c401a25e8fc9b78af911b7"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0209_loadStoredAiBet.js",
+      "owner": null,
+      "symbol": "loadStoredAiBet",
+      "sha256": "bcec0e40e78072ea2fb4aa6050237b6c4f04a2454446444798e71d1defbb8692"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0210_saveStoredAiBet.js",
+      "owner": null,
+      "symbol": "saveStoredAiBet",
+      "sha256": "a71a96ba6e5d5526228cf14ea5440d0d3c71e782f2fb0a6f1100b05c1f432069"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0211_betComboText.js",
+      "owner": null,
+      "symbol": "betComboText",
+      "sha256": "21a1ed64d5863a44624cacf49a92012d9d455d79c6422de27af36bba9152d75f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0212_isFeaturedBetRace.js",
+      "owner": null,
+      "symbol": "isFeaturedBetRace",
+      "sha256": "82357746635ad336dfc352cb79bebf674c5cf084fa1af49841f246133544737e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0213_immutableStoredAiBetView.js",
+      "owner": null,
+      "symbol": "immutableStoredAiBetView",
+      "sha256": "169403211deaf6e3c52193c0fd1d9fea835863f0c7faeb3f21866730f84610e2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0214_verifiedSavedAiBet.js",
+      "owner": null,
+      "symbol": "verifiedSavedAiBet",
+      "sha256": "16cc58c700e61b505a5b38b9c43e592ea21dceee415c66faea1e9e3e38bfe441"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0215_currentBetEnginePlan.js",
+      "owner": null,
+      "symbol": "currentBetEnginePlan",
+      "sha256": "5b08b1d5f5332dbaafea3c49dae388ec49900e66856fab84dda77e4507849102"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0216_frozenAiBetForRace.js",
+      "owner": null,
+      "symbol": "frozenAiBetForRace",
+      "sha256": "9387115346bfdaff9e628df9ed9d9f2643fc7087a33eec0960150378e627a40c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0217_attachBetOutcomeAudit.js",
+      "owner": null,
+      "symbol": "attachBetOutcomeAudit",
+      "sha256": "ff644cd2ab0091f5f145726bb9ee695cef67ad2ce578361673dcce35ecc57391"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0218_captureExactaBetEvidence.js",
+      "owner": null,
+      "symbol": "captureExactaBetEvidence",
+      "sha256": "5700f1bdd1bcaa45580aa98280cd6f478c7c38939650cfeddbbc6bbb7d9f5d26"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0219_alignBetPlanToMarks.js",
+      "owner": null,
+      "symbol": "alignBetPlanToMarks",
+      "sha256": "961f6dfcb5f88a71ddddec551770a369db0e868ed6ffb91b22f73f30021bd0af"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0220_attachAiBetExplanation.js",
+      "owner": null,
+      "symbol": "attachAiBetExplanation",
+      "sha256": "3496dffe8828bf052316067bd94833376591cfc11e709289d7cf821d0d67b907"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0221_aiBetExplanationHtml.js",
+      "owner": null,
+      "symbol": "aiBetExplanationHtml",
+      "sha256": "8fec81eb47ffeb19f470af873ad00a513f454f4b4ba35b72240b614e226b4a62"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0222_paceEvidenceProfile.js",
+      "owner": null,
+      "symbol": "paceEvidenceProfile",
+      "sha256": "fbca1d694d8db1732b485479499a333138d6885e6822f373d05469ae2972fec9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0223_buildAiBetPlan.js",
+      "owner": null,
+      "symbol": "buildAiBetPlan",
+      "sha256": "7ec3d9cac2b0ca11be04a086179a41ab7751cf73484ea37b8fdde875f3b9a715"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0224_betItemHit.js",
+      "owner": null,
+      "symbol": "betItemHit",
+      "sha256": "3b9320a3c9e9f8c133702261fb8fa8efd0e9efd99cf2111ef1959d675aac7ee6"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0225_aiBetPlanHit.js",
+      "owner": null,
+      "symbol": "aiBetPlanHit",
+      "sha256": "65742934a6e380d9db020d024aaca611b23d21b97a98767b908ce44a0e6bc647"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0226_betTransferText.js",
+      "owner": null,
+      "symbol": "betTransferText",
+      "sha256": "68b40686f04902e1598456179b7bcd2b1bbcb5da0f7c39b92a9f0f7ac1adf15e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0227_setBetCopyStatus.js",
+      "owner": null,
+      "symbol": "setBetCopyStatus",
+      "sha256": "60fbd051f38ba9fecf443aaccb99597182ce132666ac41520b94893e7e8d3f88"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0228_fallbackCopyText.js",
+      "owner": null,
+      "symbol": "fallbackCopyText",
+      "sha256": "4ce77007c990d1fa99160c2928c3658aa51e09e9d81165b7257b038a9f77be07"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0229_copyCurrentBet.js",
+      "owner": null,
+      "symbol": "copyCurrentBet",
+      "sha256": "ebedb8ad016d85c18b5407c3f5a48819b251a8189a001f5881eb0d96cb61e738"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0230_aiBetRecommendation.js",
+      "owner": null,
+      "symbol": "aiBetRecommendation",
+      "sha256": "68ae3873214bff6897d8f218c1d54a99910cb6d6d787e648466eb920d70f2e95"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0231_aiMarksPanel.js",
+      "owner": null,
+      "symbol": "aiMarksPanel",
+      "sha256": "d2df34d2dee9862530ac04301453ead86f389c35820e5bcd9dfee38fc50ba4c2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0232_betPanel.js",
+      "owner": null,
+      "symbol": "betPanel",
+      "sha256": "1e9e9c2e34468def6811232b2e720381d7c6fc32b1dcd397514c51257090d090"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0233_diagnosisPanel.js",
+      "owner": null,
+      "symbol": "diagnosisPanel",
+      "sha256": "0c54d792843b2b51a73da308d87746c7655525ba9b6dc891908739af24836bbb"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0234_historyPanel.js",
+      "owner": null,
+      "symbol": "historyPanel",
+      "sha256": "abf6bcdfd9088060068ed7a6e43a48548cb147e3efd2c14e3bff6a3c20e47218"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0235_pacePanel.js",
+      "owner": null,
+      "symbol": "pacePanel",
+      "sha256": "21903b0e6b4c19d6bbd9d1f115f565cc63df9a36bfba38477db086cb10d1bc8f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0236_openHorseDetailPage.js",
+      "owner": null,
+      "symbol": "openHorseDetailPage",
+      "sha256": "d14d20c37fb8b8408e5c9df0e654d8345e4c90a70ff41248595db8bd802145d2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0237_moveDetailHorse.js",
+      "owner": null,
+      "symbol": "moveDetailHorse",
+      "sha256": "6816d0240aba9b7a9beec9c076486ed993e43b88cfcfd75fea3025b96c61542a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0238_resultPanel.js",
+      "owner": null,
+      "symbol": "resultPanel",
+      "sha256": "835ea4f77377bbd9f52ecd27d984535c2c868ecafd5a87c764f6b7f68a01d2ae"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0239_detailTabs.js",
+      "owner": null,
+      "symbol": "detailTabs",
+      "sha256": "2cb70a9dd782c8811dcf68acb465e1f62129ef0f83e4886e8ea3c7f6b301658f"
+    },
+    {
+      "path": "arvexq/components/item_177/ui/0240_renderPicker.js",
+      "owner": 177,
+      "symbol": "renderPicker",
+      "sha256": "bec193eed25ada3571d4aaa38cc4849a7a2c560fd5cfaf574874cf963e49b9a0"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0241_cinematicContext.js",
+      "owner": null,
+      "symbol": "cinematicContext",
+      "sha256": "70ce1c36c4e98eb3e1fab425f9850f8b3079c30a297b556135727128950c6ade"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0242_cinematicHero.js",
+      "owner": null,
+      "symbol": "cinematicHero",
+      "sha256": "5a29d2f04db01f351d5cd53874315286f810a4524542c43c5ebbb41a0f6f2465"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0243_cinematicControls.js",
+      "owner": null,
+      "symbol": "cinematicControls",
+      "sha256": "72e167e77e441af9919acb108c2a2b6a49c0c51562f52859e1512825b0518719"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0244_dateStrip.js",
+      "owner": null,
+      "symbol": "dateStrip",
+      "sha256": "ca2e8f92eb792950f5d6893c20b139514b9c07104c986ef050d625d499dc3339"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0245_cinematicVenues.js",
+      "owner": null,
+      "symbol": "cinematicVenues",
+      "sha256": "0025e88b468a868fe43dab28ef9c2d841b4057cd4efb12c50bd02734a0e0a60d"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0246_cinematicNumbers.js",
+      "owner": null,
+      "symbol": "cinematicNumbers",
+      "sha256": "75ac9ab72c60ad0160a3a58723ba6d78232103e7afed4a2faf4935b1ccc10026"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0247_cinematicGrade.js",
+      "owner": null,
+      "symbol": "cinematicGrade",
+      "sha256": "02eab0cda82ba95dddd50b62bbea28be51a7f92a26a3e8d07038e7e5012c029a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0248_cinematicTabs.js",
+      "owner": null,
+      "symbol": "cinematicTabs",
+      "sha256": "e4b39ccd0abbe03e50637c4fb7137dfd0aa2c08f9fa20f9f5643e313fe8091a6"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0249_cinematicFeature.js",
+      "owner": null,
+      "symbol": "cinematicFeature",
+      "sha256": "1b837a3e27f223f1fd7a5d0c23538be3c8b7fedc265559a9f9a53b12c3bf8f11"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0250_otherRaces.js",
+      "owner": null,
+      "symbol": "otherRaces",
+      "sha256": "27f1c73c266cb94c8c3d4bfc7e70382cb455e1df065e73fdb8c870d15edfc0cf"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0251_cinematicFooter.js",
+      "owner": null,
+      "symbol": "cinematicFooter",
+      "sha256": "973f76c81af8d894c68614a5ca8fb1c97de8db7991e1b7f5b161dc6d2d7ace81"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0252_smartTopBar.js",
+      "owner": null,
+      "symbol": "smartTopBar",
+      "sha256": "747eacfdad23df67fabb2692d81ce9562a607c0a4cdc8c7ea457315ceda53451"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0253_smartRaceTopBar.js",
+      "owner": null,
+      "symbol": "smartRaceTopBar",
+      "sha256": "51e71d02eacaa99d00f396008567bdf2377468340d9874ce734beec4b0c156a1"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0254_smartPageControls.js",
+      "owner": null,
+      "symbol": "smartPageControls",
+      "sha256": "792676a40f44911bc607d63da24f348f5c12dd4dcce588f22d0cdcd0788b1304"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0255_smartVenueGroup.js",
+      "owner": null,
+      "symbol": "smartVenueGroup",
+      "sha256": "b7e10e6e77d3aeda50348659da7ab3f1aabb522fdf581069961f3840183a131b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0256_smartVenueCards.js",
+      "owner": null,
+      "symbol": "smartVenueCards",
+      "sha256": "717fe45b1256f4fd9ed6098765414279fcd9b1676eb1a809b62466f5cfa5959d"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0257_aiStoredMarks.js",
+      "owner": null,
+      "symbol": "aiStoredMarks",
+      "sha256": "7e1859118e839a72978982fb78767e86bf784cc29012d1fa977a8b788659030a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0258_aiDailyOne.js",
+      "owner": null,
+      "symbol": "aiDailyOne",
+      "sha256": "a3df7a4b58ddf923c7964737bb9f1c02eee1fae090b86a14e5caecece01f655c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0259_resetDailyAiStats.js",
+      "owner": null,
+      "symbol": "resetDailyAiStats",
+      "sha256": "a843d35eb3adf788c47e0dc5f20728f784a56ab654bf3afdb054b56418277d00"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0260_scheduleDailyAiStats.js",
+      "owner": null,
+      "symbol": "scheduleDailyAiStats",
+      "sha256": "9aa19c2223f5ff18be4f84e8dec8749d8413eaa4bd05394d60349dd75d7d7e25"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0261_resetPreviousAiStats.js",
+      "owner": null,
+      "symbol": "resetPreviousAiStats",
+      "sha256": "18f15089c160e376615de0c8e3d136939cd70b00c954f31558ced2c07860bf06"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0262_schedulePreviousAiStats.js",
+      "owner": null,
+      "symbol": "schedulePreviousAiStats",
+      "sha256": "07c869e71a28a4a702151400d8f03ec9360c66a16e7e6bd11cc2f0658e1b554b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0263_smartPreviousAiStats.js",
+      "owner": null,
+      "symbol": "smartPreviousAiStats",
+      "sha256": "d525d6e4399717938c6a0633633bbfe30da1a28491c39b6546784c2a22905892"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0264_aiStatsDayTitle.js",
+      "owner": null,
+      "symbol": "aiStatsDayTitle",
+      "sha256": "7318d8c6fc628c24c6f1d8d13bb38a0cde08bffa2d13a9aa4ed8e57e5d37627c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0265_selectedRaceLoadStatus.js",
+      "owner": null,
+      "symbol": "selectedRaceLoadStatus",
+      "sha256": "a8be2cdbcc019c076962bb384222bd9cc99162161436d11d0dfc0299f61cea9e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0266_raceIsGraded.js",
+      "owner": null,
+      "symbol": "raceIsGraded",
+      "sha256": "efcf9870b3b7a7bea961fb48459721f0e4f948cb4ddf542ad07e9230a5aa1a4c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0267_mandatoryTrifectaRace.js",
+      "owner": null,
+      "symbol": "mandatoryTrifectaRace",
+      "sha256": "662011b70b8d30bc41c5b6102c4784fbd15fbe1d6a8d9f7c86fcc51ca0659a45"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0268_markMandatoryTrifectaReview.js",
+      "owner": null,
+      "symbol": "markMandatoryTrifectaReview",
+      "sha256": "dca638eb7e3ec23803e92dbfdfe902b2cedbb9ba44941de4343593d7d1ad8a04"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0269_explicitSelectedRace.js",
+      "owner": null,
+      "symbol": "explicitSelectedRace",
+      "sha256": "912910c694e22190328cc3625842363c04427cab55e2be91cb4cb4807abcdd20"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0270_mainRaceForTrack.js",
+      "owner": null,
+      "symbol": "mainRaceForTrack",
+      "sha256": "e5537af3f47d48ed4622d2703ec1ba5f7e3b46d7f0b032a5198995ef93a33291"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0271_isMainForecastRace.js",
+      "owner": null,
+      "symbol": "isMainForecastRace",
+      "sha256": "12ecc0ba734618b31552dd140d2366e03bed49ea7c148238c5900bc2e68aac7e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0272_kochiFinalRace.js",
+      "owner": null,
+      "symbol": "kochiFinalRace",
+      "sha256": "b8e8821525ea37a13c9869d3aa4f56ed1aad1017f1f39fbfd132b2b49e8378b9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0273_raceChronologicalCompare.js",
+      "owner": null,
+      "symbol": "raceChronologicalCompare",
+      "sha256": "20796a204b7cc7e25f46785344686ad02feb2d0d61292b710a5443ebd30e3e02"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0274_eliteSelectedRaceCut.js",
+      "owner": null,
+      "symbol": "eliteSelectedRaceCut",
+      "sha256": "452ca63a17de3e682c0606bec0caec4c5909b38f7bfe4665e6e4262e7e04679b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0275_computeMorningRaceCandidates.js",
+      "owner": null,
+      "symbol": "computeMorningRaceCandidates",
+      "sha256": "c2485b14c666f666d8067750770866ba1052367c50c5f33b9a28355e569baa3a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0276_morningPickOf.js",
+      "owner": null,
+      "symbol": "morningPickOf",
+      "sha256": "11e2e66904f6c88a479c59674d04d6e8ba11afe0b5bfc7a5890249c37674ff74"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0277_morningPickReady.js",
+      "owner": null,
+      "symbol": "morningPickReady",
+      "sha256": "a5d45fec4a9f61c70f806d3fe27cea7df74d6ab29551f841237fd910909adbc7"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0278_morningPublicStatus.js",
+      "owner": null,
+      "symbol": "morningPublicStatus",
+      "sha256": "c9ea9e36efa5e45ef632d0a318d5f7e738bf81624fdd00ea4a4f87072f99c660"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0279_selectedRaceCandidates.js",
+      "owner": null,
+      "symbol": "selectedRaceCandidates",
+      "sha256": "c20cafb9e9495bef64ae925993425335216f12589d7435db80e29e0bcec5b8f0"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0280_expectedValueRaceProfile.js",
+      "owner": null,
+      "symbol": "expectedValueRaceProfile",
+      "sha256": "06e24e2550fe182742617c4a2722c6f5cc62fd86c5355b7a8896bda8c8d3257b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0281_fixedPickLoadStatus.js",
+      "owner": null,
+      "symbol": "fixedPickLoadStatus",
+      "sha256": "cfd1b8fa10c4dad832bf5ecd2d156322add91a9a958c463f5039da84fe8fcc95"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0282_fixedPickEmpty.js",
+      "owner": null,
+      "symbol": "fixedPickEmpty",
+      "sha256": "f63d1a88c77ee177ccbda2ab03916277f8f878ed0a5ec5a4be94c05e4078a7d9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0283_fixedSelectedBox.js",
+      "owner": null,
+      "symbol": "fixedSelectedBox",
+      "sha256": "5e5678c9d7f81feb877e4a9f6c4a00f5122012a4af471dba5c732ec2b10e288a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0284_selectedRaceBetPreview.js",
+      "owner": null,
+      "symbol": "selectedRaceBetPreview",
+      "sha256": "8f16bb799db2265ed1376c9c583e55ac885012f2c10b2fbb28a1971bea371dcd"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0285_smartSelectedRaces.js",
+      "owner": null,
+      "symbol": "smartSelectedRaces",
+      "sha256": "2bee12b8110fdd99dc67dcc2f8b9c58e5a8eb50263684eeddd8a365f677b6ced"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0286_computeMorningSpecialRaceCandidates.js",
+      "owner": null,
+      "symbol": "computeMorningSpecialRaceCandidates",
+      "sha256": "7c2d9468599bf3ae37b5afda3765a57a9e36c2e4fd33384eefd895e81befd0c5"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0287_specialForecastRaceCandidates.js",
+      "owner": null,
+      "symbol": "specialForecastRaceCandidates",
+      "sha256": "c42f3c20ec53b196659d1252ac2461d3a497d6930ebf210bb27d79b162f9eeb3"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0288_specialForecastRaceTag.js",
+      "owner": null,
+      "symbol": "specialForecastRaceTag",
+      "sha256": "b4811c34500ecb0cfcc5439a79b165197ec2ec7318906c35c0679d40c79c7cd9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0289_prebuildSpecialForecastPlans.js",
+      "owner": null,
+      "symbol": "prebuildSpecialForecastPlans",
+      "sha256": "c54535fa229a146a57d20ba588a4695db664d85f60218f269e0056e5b7056d7e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0290_smartSpecialForecastRaces.js",
+      "owner": null,
+      "symbol": "smartSpecialForecastRaces",
+      "sha256": "01688df13ac8f9edc074876d6e8a37c78627b82fd481471cbdc390259e10815c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0291_smartDailyAiStats.js",
+      "owner": null,
+      "symbol": "smartDailyAiStats",
+      "sha256": "ce3c00ddd945da1de92b3f25bb88f6247d358ffcc0fec684753df41c981903c7"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0292_smartRaceDayHeading.js",
+      "owner": null,
+      "symbol": "smartRaceDayHeading",
+      "sha256": "4cb24bf62151afd476e4f032408067150160fa3691cb476187fcb7ab8764ed54"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0293_smartLiveVenueRace.js",
+      "owner": null,
+      "symbol": "smartLiveVenueRace",
+      "sha256": "ba63fbfcb593ff49a1b5e42eb44034443eb202f31b8d29e60bcb444e3898770f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0294_smartLiveCircuitGroup.js",
+      "owner": null,
+      "symbol": "smartLiveCircuitGroup",
+      "sha256": "bdfb761692989cbc0380ff84762d0b663f52fe685d717aae36ab26cbfe42e764"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0295_smartLiveRaceSection.js",
+      "owner": null,
+      "symbol": "smartLiveRaceSection",
+      "sha256": "b25c00384b45e3f73127e35f66e79938aeea3128aeda9331df0f4df284d01e09"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0296_liveVenueExternal.js",
+      "owner": null,
+      "symbol": "liveVenueExternal",
+      "sha256": "4b901383bf3cf2f549404f07903f0e9671a227ef72059aecdab2ac04d95b4c2f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0297_liveVenueOptions.js",
+      "owner": null,
+      "symbol": "liveVenueOptions",
+      "sha256": "41b8b3d7997059b87c013d72254abfb87a3cd359a053642ae0d242e94c5a0c67"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0298_smartLiveLauncher.js",
+      "owner": null,
+      "symbol": "smartLiveLauncher",
+      "sha256": "5c87c92613053f354d5048c70262014c8889422037742a4e6d1667a4b8e6d093"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0299_liveCenterModal.js",
+      "owner": null,
+      "symbol": "liveCenterModal",
+      "sha256": "33cd48e7b3cbf1ceffa068089d6c3d0b449029f8eddbc443e14bb8d7064f31f0"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0300_syncLiveCenterOverlay.js",
+      "owner": null,
+      "symbol": "syncLiveCenterOverlay",
+      "sha256": "0a25344df22e1a1472bbac64166238b06add1f603dc0d2122cf57067eff64804"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0301_shouldShowTodayReturn.js",
+      "owner": null,
+      "symbol": "shouldShowTodayReturn",
+      "sha256": "638f53831c12d7c049085bc4630818eda1f479420db162bec66015fd0a8fdd1f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0302_smartTodayReturn.js",
+      "owner": null,
+      "symbol": "smartTodayReturn",
+      "sha256": "c3ad4778649ecb771e7d179bbb17a9b5be64de7250ad56158a68fd1e9903e948"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0303_returnToToday.js",
+      "owner": null,
+      "symbol": "returnToToday",
+      "sha256": "dae8dd09342045bc8782fc9f9bb0230292b03dd88f4e3c36e470ff9b95f0c26b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0304_smartHomeHero.js",
+      "owner": null,
+      "symbol": "smartHomeHero",
+      "sha256": "d3f41e0a1704667118dc001aad118eaa2b65a3248202326cb5e372c4d49a0272"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0305_aiStatsMarkText.js",
+      "owner": null,
+      "symbol": "aiStatsMarkText",
+      "sha256": "25fc8553884ee202420f7714e068a9bd3faf1b8286b5423b040da8cc040cf475"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0306_aiStatsCell.js",
+      "owner": null,
+      "symbol": "aiStatsCell",
+      "sha256": "343feffd15d8bf7049d65861d8d85d16426e58c2370ba16300450802c2a8afb5"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0307_aiStatsMetrics.js",
+      "owner": null,
+      "symbol": "aiStatsMetrics",
+      "sha256": "fe6d228e7634d3b24719b802214224b1981df0e4afef063e2d797ad2a4e4ae32"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0308_aiStatsRaceRow.js",
+      "owner": null,
+      "symbol": "aiStatsRaceRow",
+      "sha256": "fd61cabb23df73fbe6b13eade01382b08dc1700cea1e91d5f3067e21559bbcb5"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0309_smartDailyAiStatsPage.js",
+      "owner": null,
+      "symbol": "smartDailyAiStatsPage",
+      "sha256": "b422ec3f7edc8a7d89182decd7faa5661d93a8fa07427e5ba9911cae2db19a50"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0310_homePickCounts.js",
+      "owner": null,
+      "symbol": "homePickCounts",
+      "sha256": "cf987d3fdf6a413d6eac6d866ad27bae74c9b73e7a48239e6dc5b14ef97911fa"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0311_homeCircuitChooser.js",
+      "owner": null,
+      "symbol": "homeCircuitChooser",
+      "sha256": "e55c4197a417c78d2e53330c265a7b51458c6d0dcbc2d3c3bedfeb7865a57bd1"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0312_selectedCircuitPage.js",
+      "owner": null,
+      "symbol": "selectedCircuitPage",
+      "sha256": "91639a3697d2dfdfc1801c271f6522a4b0ba9a5abd0406adf06f0f8cfe997d31"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0313_specialCircuitPage.js",
+      "owner": null,
+      "symbol": "specialCircuitPage",
+      "sha256": "205f370ee2670c3bf84e7ad23eb2bdc045a729ee254c40059f7d616560f9b4f4"
+    },
+    {
+      "path": "arvexq/components/item_176/ui/0314_renderHomeSectionPage.js",
+      "owner": 176,
+      "symbol": "renderHomeSectionPage",
+      "sha256": "769dd2a6bb678f6dd153aa0fc5dde3cc403c9b9bdc140b07eb5c9a28499d79c1"
+    },
+    {
+      "path": "arvexq/components/item_176/ui/0315_renderHome.js",
+      "owner": 176,
+      "symbol": "renderHome",
+      "sha256": "da96d1cabbb62c32aedb87dd912a6197874ad903015ab9faeb7ae4c136c62a20"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0316_volatilityBadge.js",
+      "owner": null,
+      "symbol": "volatilityBadge",
+      "sha256": "ad6423196c3c0aa64743386094fa550bf7394d5ca1861db06828f9fb8e5e4ae3"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0317_persistRaceSummaryCache.js",
+      "owner": null,
+      "symbol": "persistRaceSummaryCache",
+      "sha256": "792206754b46fb945e31510e922615fc8228a10438fa82440fb8d00dd9bbfc96"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0318_mergeCachedVolatilityForTrack.js",
+      "owner": null,
+      "symbol": "mergeCachedVolatilityForTrack",
+      "sha256": "57f8778af2fbb2b13c970814bd3cb17bfb78173b55eb2de5ee46081360dfff9f"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0319_mergeVolatilityPack.js",
+      "owner": null,
+      "symbol": "mergeVolatilityPack",
+      "sha256": "cc903ecb7b35366321059888773d2904e9d418b003ff9d008cde932d5a780736"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0320_validEnvironmentValue.js",
+      "owner": null,
+      "symbol": "validEnvironmentValue",
+      "sha256": "c48e1f7c648ebd56c0dcf5437dae69847c131bd173f56933613f4c46fbd820ca"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0321_applySummaryEnvironment.js",
+      "owner": null,
+      "symbol": "applySummaryEnvironment",
+      "sha256": "7bed824dbd87f431e76403234dec3c2b1cb6323c18d086e93744de8072f098ac"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0322_mergeEnvironmentPack.js",
+      "owner": null,
+      "symbol": "mergeEnvironmentPack",
+      "sha256": "51ec900358109f450e2aee8afca890b853df723acaf5d31741d9efb897c6c4ae"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0323_refreshEnvironmentLocal.js",
+      "owner": null,
+      "symbol": "refreshEnvironmentLocal",
+      "sha256": "70cdc287677c7c0e6b0724526d66aa5dec45958153403b51626d0cb1a8d211a2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0324_mergeTrackPack.js",
+      "owner": null,
+      "symbol": "mergeTrackPack",
+      "sha256": "01523fcfb5a854d6e443a5a56e8698710ac49c9b3766897afb76535ed15558a2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0325_venueRows.js",
+      "owner": null,
+      "symbol": "venueRows",
+      "sha256": "0dd9cc7731dd0b3136c3318a7bfbfd431ed28732a7909b269e75aa00b3cc5b42"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0326_venueHeaderInfo.js",
+      "owner": null,
+      "symbol": "venueHeaderInfo",
+      "sha256": "ba9c99af334828878ab8c238be517a623bb94bdaa7e73bb49d0f437d71413fef"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0327_resultDetailForTrend.js",
+      "owner": null,
+      "symbol": "resultDetailForTrend",
+      "sha256": "28f6fad6820fc4e5352281b96d11a692d151e93654ada4373f6edae0b4d81f8b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0328_trendResultReady.js",
+      "owner": null,
+      "symbol": "trendResultReady",
+      "sha256": "2fd01d725a4a6c3a6b1486dfdd89ae1a7d8e31446e631d2671864d43f920c38c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0329_mergeVenueTrendDetail.js",
+      "owner": null,
+      "symbol": "mergeVenueTrendDetail",
+      "sha256": "49c4e122d7ce40a21d5f2c905ae3ca75fd34aede05bd9eee242cdc996f1ec077"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0330_refreshVenueTrendData.js",
+      "owner": null,
+      "symbol": "refreshVenueTrendData",
+      "sha256": "9cf15f4e192d8cb7f9fea7a189a26bef9e46cd56f226ce12dd40e1473cbc07d9"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0331_scheduleVenueTrendRefresh.js",
+      "owner": null,
+      "symbol": "scheduleVenueTrendRefresh",
+      "sha256": "8d1af22e2534ade031da0bac5b9ab928aeb715f881fea457125d28962758db16"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0332_venueTodayTrend.js",
+      "owner": null,
+      "symbol": "venueTodayTrend",
+      "sha256": "07e280832f9fb8b9bc2afbcc39fa729ab69634be4e4332637d02f00bf9acc19a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0333_venueTrendCard.js",
+      "owner": null,
+      "symbol": "venueTrendCard",
+      "sha256": "df6e74823e15d05fc5b3346d79a76c53336cf10467a4e7dba4004bb92d9cde8e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0334_venueRaceRows.js",
+      "owner": null,
+      "symbol": "venueRaceRows",
+      "sha256": "001430be3179c8573569072a1d67b55d46f5388471bb8097db9ef5b04c1bb75c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0335_venueTopBar.js",
+      "owner": null,
+      "symbol": "venueTopBar",
+      "sha256": "47ab95e93cca11d45f84a9a4f81044a540fac5769007b9c54c3fba5ba819e50e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0336_renderVenue.js",
+      "owner": null,
+      "symbol": "renderVenue",
+      "sha256": "b667fba2c2edff9b113ed36c88cdce3cc2a20149111b46d05b3cc9c90511b8e6"
+    },
+    {
+      "path": "arvexq/components/item_179/ui/0337_smartInlineResult.js",
+      "owner": 179,
+      "symbol": "smartInlineResult",
+      "sha256": "b8f6e732281ac5f1f661cf845f1a3432900843a61804bdd4f6cd79f67335eb1b"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0338_officialRaceLinks.js",
+      "owner": null,
+      "symbol": "officialRaceLinks",
+      "sha256": "c68a5ed0a56915df15bc28110e42e3dcf1094eb5a3c4317b692535637f1cf19c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0339_officialRaceActions.js",
+      "owner": null,
+      "symbol": "officialRaceActions",
+      "sha256": "08c1fcb646de33bb3dc9aa90da05543f5a2b0bfb45ccf7f2c13f5eeec6571b4e"
+    },
+    {
+      "path": "arvexq/components/item_179/ui/0340_smartRaceHead.js",
+      "owner": 179,
+      "symbol": "smartRaceHead",
+      "sha256": "1663898fba9936ad388d31f53a4a20c5062d18bf563c2d2075c2385c6983112a"
+    },
+    {
+      "path": "arvexq/components/item_179/ui/0341_renderRaceLoading.js",
+      "owner": 179,
+      "symbol": "renderRaceLoading",
+      "sha256": "ad6c7f6b01b3cc49fe445fd05dbe6bdac1ea41593fc6e426609642cd1da18f71"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0342_mergeResultHorseFields.js",
+      "owner": null,
+      "symbol": "mergeResultHorseFields",
+      "sha256": "6f8e93553f99458f821c54d29a3b198876c1759f33efd20666566d6a5b70c3fb"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0343_raceSubpageTopBar.js",
+      "owner": null,
+      "symbol": "raceSubpageTopBar",
+      "sha256": "b0012f45afcc7aa69c24a5e3adce957bbdc6120f214ff8d82b5d2b6438a57c34"
+    },
+    {
+      "path": "arvexq/components/item_181/ui/0344_horseDetailPage.js",
+      "owner": 181,
+      "symbol": "horseDetailPage",
+      "sha256": "0a83ad19e41d711fad8e3ecd6bff17e8de6c6d2805c985f65f0caab94b4cbf55"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0345_betDetailPage.js",
+      "owner": null,
+      "symbol": "betDetailPage",
+      "sha256": "ccc2c75f841e69b7f1466d4a18f4bbff4be8efcd0bd0e5e742bfaaa0b7ed8fc7"
+    },
+    {
+      "path": "arvexq/components/item_179/ui/0346_renderRace.js",
+      "owner": 179,
+      "symbol": "renderRace",
+      "sha256": "82d387b9d136b59931ef8a1d3fc9cadfcb6ad2c3b01819cac9efdc9d4c7596ac"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0347_resultFinish.js",
+      "owner": 188,
+      "symbol": "resultFinish",
+      "sha256": "7acbb2d35716770b86709712361c392ce11c0fa796726bcde920afd0fffef927"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0348_actualCornerLeaders.js",
+      "owner": 188,
+      "symbol": "actualCornerLeaders",
+      "sha256": "19516b3439665ad11e3e70940b7dcd29c52ff1adbb78d0965d6b95f3ac3262ca"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0349_actualCornerCount.js",
+      "owner": 188,
+      "symbol": "actualCornerCount",
+      "sha256": "7a5a54d9c7533eb92a7a744783ff058ed719fc3c9ee268f3f12b7ed57cb4f8f1"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0350_actualCornerLabel.js",
+      "owner": 188,
+      "symbol": "actualCornerLabel",
+      "sha256": "7fb2dfe1ae8b9c959f589424217b9daaf1f8322a359c42a10abab90f27b7126f"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0351_actualOrderAt.js",
+      "owner": 188,
+      "symbol": "actualOrderAt",
+      "sha256": "eb41c984ca8f2c55338c265f811ad696662c32d72b44d8f270a56f3f1fb519f5"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0352_renderResultLink.js",
+      "owner": 188,
+      "symbol": "renderResultLink",
+      "sha256": "56f7a310456cc2270b9c343c1f27917494ebd153e4fb150ac58a3201a44439ff"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0353_renderPayouts.js",
+      "owner": 188,
+      "symbol": "renderPayouts",
+      "sha256": "68d3407739f00d1e9c5a945a4c2c0587fe80c74e32044ceb95be30a3271f6fe7"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0354_resultRowHtml.js",
+      "owner": 188,
+      "symbol": "resultRowHtml",
+      "sha256": "42966c8eca98c38db0716905308c3d6f2817f78d5b0f2b54d9d17b6125ad24f7"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0355_renderResult.js",
+      "owner": 188,
+      "symbol": "renderResult",
+      "sha256": "d3713d701d38cfdb6e4e7eafeccdf28e4b2e6f9e3475d5709dcc4a2f0756ef4a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0356_gradeRank.js",
+      "owner": null,
+      "symbol": "gradeRank",
+      "sha256": "841945c8de2630d3dbb3131461429ea95e77fba0f1a13ebc0484683fd3c7a9f0"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0357_actualNumberArrowList.js",
+      "owner": null,
+      "symbol": "actualNumberArrowList",
+      "sha256": "abe6f8a2fa6dec1a3423997c080a7b105873f620ab3bf92551e5ff86ccca0405"
+    },
+    {
+      "path": "arvexq/components/item_188/ui/0358_renderActualFlow.js",
+      "owner": 188,
+      "symbol": "renderActualFlow",
+      "sha256": "9dcbfbd9721432f658996b02693ed0d2f6c05b17ef1262cf05c630bf0ff16b2c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0359_roleDetail.js",
+      "owner": null,
+      "symbol": "roleDetail",
+      "sha256": "7b24e770e81b940f35f355416d6a0b6cdf2d76c65e771d910ee14f176cda14a6"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0360_styleDisplayPcts.js",
+      "owner": null,
+      "symbol": "styleDisplayPcts",
+      "sha256": "264b66539f820e262688619b7a5fb6c34a418346accc353efc6ac984f2002092"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0361_styleCell.js",
+      "owner": null,
+      "symbol": "styleCell",
+      "sha256": "25eb5b68b83bb651b5d2c52aeb667f405acb78fe46251c2120381989d1124e3d"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0362_positionBucket.js",
+      "owner": null,
+      "symbol": "positionBucket",
+      "sha256": "305104b1b8364dc3a890d365e605d1896cdd16adaa7a32e09e69877ded7335ca"
+    },
+    {
+      "path": "arvexq/components/item_183/ui/0363_stylePositionMap.js",
+      "owner": 183,
+      "symbol": "stylePositionMap",
+      "sha256": "ce61d19da6cf998b81c7542445b70c7e414ae3426367fcf6ff464c378f94c8d6"
+    },
+    {
+      "path": "arvexq/components/item_183/ui/0364_runnerStyleSection.js",
+      "owner": 183,
+      "symbol": "runnerStyleSection",
+      "sha256": "b3aed76b065fbe328307a374b17d98d660b7b1e5c9047dc9c4e86ecf7ca28735"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0365_rowName.js",
+      "owner": null,
+      "symbol": "rowName",
+      "sha256": "dce8a937fee4a3cc770d0d94208b029c7a8288baee966930237b6e6dce3b61a2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0366_paceStageRows.js",
+      "owner": null,
+      "symbol": "paceStageRows",
+      "sha256": "139ae0d0d6d4765d8f9cbb65cd11f071f61baf44859df65b0753895e461f1ff4"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0367_paceNos.js",
+      "owner": null,
+      "symbol": "paceNos",
+      "sha256": "11b365202f899666035098f2aca1e0f834cd57d6b9f94995234242fbd3405e3a"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0368_paceNosText.js",
+      "owner": null,
+      "symbol": "paceNosText",
+      "sha256": "6f8e29ddaec1b21f015eb15ac317b0ea0dc62cdd1fafc05a96d374ada639ce90"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0369_paceStageNarrative.js",
+      "owner": null,
+      "symbol": "paceStageNarrative",
+      "sha256": "386b540698205e7c6221829d3b7f935ba0721e40c5ac269cdd855bd504d968e6"
+    },
+    {
+      "path": "arvexq/components/item_184/ui/0370_paceStructureSection.js",
+      "owner": 184,
+      "symbol": "paceStructureSection",
+      "sha256": "3f7218d50f759797ecc2569d599ac91ada2c926bf5e23a2b986632bd9ed14dfe"
+    },
+    {
+      "path": "arvexq/components/item_184/ui/0371_paceNarrativeCards.js",
+      "owner": 184,
+      "symbol": "paceNarrativeCards",
+      "sha256": "e47f9334174a8201783650059ce6209781553e3b57c9cc1dcbc2df1fe1665613"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0372_paceStageConfig.js",
+      "owner": null,
+      "symbol": "paceStageConfig",
+      "sha256": "0315f33dc985510468ca189492e26db8ee45a57d0b78b70091b78f7496e125df"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0373_paceStageMenu.js",
+      "owner": null,
+      "symbol": "paceStageMenu",
+      "sha256": "7bbd3ffb6df1d2af2f541a435475424ca142b8ab7626cdaf98a4204687a9463c"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0374_openPaceStagePage.js",
+      "owner": null,
+      "symbol": "openPaceStagePage",
+      "sha256": "0317a84b2dd45f2a4697557123b41940e83c6fc3ad72e8713d1eee3406c28ef1"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0375_paceStageTopBar.js",
+      "owner": null,
+      "symbol": "paceStageTopBar",
+      "sha256": "f9d94f82410cbc744ac91494bf8630df94f2cfed95ba88c0c68c6c336a5d01e7"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0376_paceStageJumpNav.js",
+      "owner": null,
+      "symbol": "paceStageJumpNav",
+      "sha256": "74828a6fc211a691f0a358e9907532f947911272686173c8aa17430066951af6"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0377_paceStagePack.js",
+      "owner": null,
+      "symbol": "paceStagePack",
+      "sha256": "d59eccafb1721b26699f91631d00006717b5f825e06c1d3993361a2ac457cfbb"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0378_paceFormationDiagram.js",
+      "owner": null,
+      "symbol": "paceFormationDiagram",
+      "sha256": "938167580c26a6d1e2a0d4947e15fc5206d1a67d3007703c87fa095df5f2eacd"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0379_paceStageEvidence.js",
+      "owner": null,
+      "symbol": "paceStageEvidence",
+      "sha256": "bdfc4ecd48e54f2d7627e1941d39ffe8147b5919f7c054d3bcd5b077caf4247a"
+    },
+    {
+      "path": "arvexq/components/item_184/ui/0380_paceStagePage.js",
+      "owner": 184,
+      "symbol": "paceStagePage",
+      "sha256": "af635c823bc5b2738086c5f44bb028d7f96160091b6148f762388a209cd54b1d"
+    },
+    {
+      "path": "arvexq/components/item_184/ui/0381_paceStagePendingPage.js",
+      "owner": 184,
+      "symbol": "paceStagePendingPage",
+      "sha256": "6f5ccb33cc9f26b326cdf125f9dabfabfddb613dd6bf3c80ce7b8564a42932cb"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0382_activeScenarioPlan.js",
+      "owner": null,
+      "symbol": "activeScenarioPlan",
+      "sha256": "09ac943795712027594a46b6294805ba3865135240802dc66af02510125e5e02"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0383_visiblePaceStages.js",
+      "owner": null,
+      "symbol": "visiblePaceStages",
+      "sha256": "1f1417213c540c4a1ed480bea0d0bcf0d7690f77665c7658022b0ee140d038f7"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0384_scenarioProbabilitySection.js",
+      "owner": null,
+      "symbol": "scenarioProbabilitySection",
+      "sha256": "c17875504a0267b579b896e4f8a5367f30f919ad0226de0d6ddb080066d03378"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0385_paceOutcomeModel.js",
+      "owner": null,
+      "symbol": "paceOutcomeModel",
+      "sha256": "a621651f481aa056356d97fa0b2b0475b7c4b51fd75e786f71ab67d7eb34eb15"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0386_paceOutcomeNums.js",
+      "owner": null,
+      "symbol": "paceOutcomeNums",
+      "sha256": "39d290643b36de4b6e3119295744d2ebf5d328c63a6392ec946dc8cd120c898e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0387_paceOutcomeSection.js",
+      "owner": null,
+      "symbol": "paceOutcomeSection",
+      "sha256": "7d0dfa71dc5866fcdc60053c9fc0f86359b3dad885b33376d19e4d388999fbf6"
+    },
+    {
+      "path": "arvexq/components/item_184/ui/0388_paceBoard.js",
+      "owner": 184,
+      "symbol": "paceBoard",
+      "sha256": "fef52a2478a598a55bc025cc57bae39f7d294d81765c89db55a90fcd67a46128"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0389_historySearchSection.js",
+      "owner": null,
+      "symbol": "historySearchSection",
+      "sha256": "9ee019486aef6920a244e90ace328e2af7854ecfb317efab42e30fad4278e5a8"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0390_scheduleHistoryPoll.js",
+      "owner": null,
+      "symbol": "scheduleHistoryPoll",
+      "sha256": "3705867bdefa724afc43149038b9fa049e85a0dc5580474cb873aaaabef4eab5"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0391_prefetchNextHistory.js",
+      "owner": null,
+      "symbol": "prefetchNextHistory",
+      "sha256": "da6b1dfb186309e532ccbfbb5c37a123857ecbd47b288cae4c2210efda014567"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0392_waitForRaceReady.js",
+      "owner": null,
+      "symbol": "waitForRaceReady",
+      "sha256": "c55abb60fb8ceb42bd672462c0a0a4e6abd075174b9c1853bb24c8ad73533af0"
+    },
+    {
+      "path": "arvexq/components/item_189/ui/0393_scheduleRaceBiasRefresh.js",
+      "owner": 189,
+      "symbol": "scheduleRaceBiasRefresh",
+      "sha256": "e93267d391822b61cd67ed1ec5cab127f623ecaa86b5b4e500997471bbad4475"
+    },
+    {
+      "path": "arvexq/components/item_189/ui/0394_refreshRaceBiasData.js",
+      "owner": 189,
+      "symbol": "refreshRaceBiasData",
+      "sha256": "984f073dc00485e5e3dd5ecd4163894c95fd2f56d0c4c1289497948f9d26f56e"
+    },
+    {
+      "path": "arvexq/components/item_189/ui/0395_scheduleResultRefresh.js",
+      "owner": 189,
+      "symbol": "scheduleResultRefresh",
+      "sha256": "4f107da6211db5dc6250cab5f62e21f51b49ea93fb083ea911bb70e35fddad1c"
+    },
+    {
+      "path": "arvexq/components/item_189/ui/0396_refreshPayoutsOnly.js",
+      "owner": 189,
+      "symbol": "refreshPayoutsOnly",
+      "sha256": "7ed2a9a9327f14a76417adb48e9bf2541145f1287fca110aa412c0476d084c50"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0397_idleTask.js",
+      "owner": null,
+      "symbol": "idleTask",
+      "sha256": "99402077928982e1e3601112a23c01196be295f07d5a458f7730af3c513f9619"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0398_diagnosisCurrent.js",
+      "owner": null,
+      "symbol": "diagnosisCurrent",
+      "sha256": "32c85f7b22ffa52f74558b6fbc458717fc6d206c9db1685d70b0e68f617e17d8"
+    },
+    {
+      "path": "arvexq/components/item_191/ui/0399_openRace.js",
+      "owner": 191,
+      "symbol": "openRace",
+      "sha256": "b58574a2e516030840a05f40e81fcd2e1d862fac2a61e71b38901f4c295fbd60"
+    },
+    {
+      "path": "arvexq/components/item_191/ui/0400_openPastRace.js",
+      "owner": 191,
+      "symbol": "openPastRace",
+      "sha256": "aaf249953c1e6ec0402d96e26f8518d961d386385fac994b8480e791ecc3230f"
+    },
+    {
+      "path": "arvexq/components/item_192/ui/0401_installPullRefresh.js",
+      "owner": 192,
+      "symbol": "installPullRefresh",
+      "sha256": "d6cabf167447d1840f3e80ec9f52a0c45012ffd245f23d065446c2e469f772ce"
+    },
+    {
+      "path": "arvexq/components/item_192/ui/0402_reloadCurrent.js",
+      "owner": 192,
+      "symbol": "reloadCurrent",
+      "sha256": "318f5cfc2926d49c302a16f94f45d424302f98dfdba8f40cd82b50f320c21567"
+    },
+    {
+      "path": "arvexq/components/item_189/ui/0403_mergeOddsPayload.js",
+      "owner": 189,
+      "symbol": "mergeOddsPayload",
+      "sha256": "792bc1052dc143aed0e5774d06d4d933c924a012e9562b2b0ec76e98c48436ca"
+    },
+    {
+      "path": "arvexq/components/item_192/ui/0404_refreshRaceAfterCollect.js",
+      "owner": 192,
+      "symbol": "refreshRaceAfterCollect",
+      "sha256": "1405aeef0b66cd20eb7a2c760321ac723e3d7732c42a0278f031bec815b3dcee"
+    },
+    {
+      "path": "arvexq/components/item_192/ui/0405_collectRaceInfo.js",
+      "owner": 192,
+      "symbol": "collectRaceInfo",
+      "sha256": "f6f4eeb22d8f17ce8cc937de3a5dd990eb32b4b8cef2400d8408b244c118152e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0406_stopTimer.js",
+      "owner": null,
+      "symbol": "stopTimer",
+      "sha256": "e21723a39d069ec1825b6d54692f2f644a7ab89a9125d5a8490443244e1ad18c"
+    },
+    {
+      "path": "arvexq/components/item_184/ui/0407_drawPaceStage.js",
+      "owner": 184,
+      "symbol": "drawPaceStage",
+      "sha256": "510c52622a02dce4837b21e713ae50393fd685f9ac6c41bace0355fde4bb8871"
+    },
+    {
+      "path": "arvexq/components/item_176/ui/0408_render.js",
+      "owner": 176,
+      "symbol": "render",
+      "sha256": "a925f1ed277b342c126dcae69d4f5153120ecbe51108b26718c878255e764730"
+    },
+    {
+      "path": "arvexq/components/item_191/ui/0409_canGoBack.js",
+      "owner": 191,
+      "symbol": "canGoBack",
+      "sha256": "2c5e268874a4863066f4fc85233080508508646f81422214a08fc432eec59656"
+    },
+    {
+      "path": "arvexq/components/item_191/ui/0410_goBack.js",
+      "owner": 191,
+      "symbol": "goBack",
+      "sha256": "b15ff4b4ae6db45e733e2bd0ecefc783de1b0338f4cc2e6d3b4c0aea76a9647a"
+    },
+    {
+      "path": "arvexq/components/item_191/ui/0411_locationState.js",
+      "owner": 191,
+      "symbol": "locationState",
+      "sha256": "bb25a258eee01c4a9163d7b2aee9c493ec5737fdff5ddc8d5a8617e95c58d1f8"
+    },
+    {
+      "path": "arvexq/components/item_191/ui/0412_syncLocation.js",
+      "owner": 191,
+      "symbol": "syncLocation",
+      "sha256": "f8ac3ced7784c86b9e01aed908ae92abaa96b13b9fd3503df951c0e6bbba3536"
+    },
+    {
+      "path": "arvexq/components/item_191/ui/0413_normalizeInitialAppLaunch.js",
+      "owner": 191,
+      "symbol": "normalizeInitialAppLaunch",
+      "sha256": "b2d6d9209fbc42f2909e67846793b7a0cd5837bbdee438477598b0959521e3fd"
+    },
+    {
+      "path": "arvexq/components/item_191/ui/0414_restoreLocation.js",
+      "owner": 191,
+      "symbol": "restoreLocation",
+      "sha256": "f0162bb5f261475d6990dd9791e8a2d9afffac65d45825edb694c80c8698b94c"
+    },
+    {
+      "path": "arvexq/components/item_191/ui/0415_installNavigation.js",
+      "owner": 191,
+      "symbol": "installNavigation",
+      "sha256": "745785e77840020cd43cf2b99daeb3b34e11e3e2c48d42a1d8885d76f4a67119"
+    },
+    {
+      "path": "arvexq/components/item_191/ui/0416_installEdgeBack.js",
+      "owner": 191,
+      "symbol": "installEdgeBack",
+      "sha256": "8e6b3f70598fd0ca3ed9611add42308cd18d51a5a18186e8ee05fa2104a255c2"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0417_refreshDiagnosisNow.js",
+      "owner": null,
+      "symbol": "refreshDiagnosisNow",
+      "sha256": "7b38547d14c1ac51c62955eb680d29bf6ca21bd7d50b273a472aca5f2e7d1d1e"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0418_pollDiagnosisRefresh.js",
+      "owner": null,
+      "symbol": "pollDiagnosisRefresh",
+      "sha256": "f5a3f0869dd1985712ba9879f8d4a4f350a7ace5abb63865a7043d0523ebfa4d"
+    },
+    {
+      "path": "arvexq/components/item_176/ui/0419_bind.js",
+      "owner": 176,
+      "symbol": "bind",
+      "sha256": "c3e790cf4383155b5c5a188f8aa4a41436352bdf54e153db1172f7ed88affe39"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0420_initPaceBoard.js",
+      "owner": null,
+      "symbol": "initPaceBoard",
+      "sha256": "e6c006eeb2c6a4b20015ed9322cf383872d4f9e309d8d9d1f97e6e057825500e"
+    },
+    {
+      "path": "arvexq/components/item_194/ui/0421_hydrateInstantFromDevice.js",
+      "owner": 194,
+      "symbol": "hydrateInstantFromDevice",
+      "sha256": "f406a3dc81312f2ceeb40cddd73895bdab50abb658765757c365eb88ac412459"
+    },
+    {
+      "path": "arvexq/components/shared_ui/0422_applyMorningArchive.js",
+      "owner": null,
+      "symbol": "applyMorningArchive",
+      "sha256": "13bab0bbeafab094d2d74e78362ab95d4a5093c7076208f0a35859a016a26b9d"
+    },
+    {
+      "path": "arvexq/components/item_176/ui/0423_mergeBootstrap.js",
+      "owner": 176,
+      "symbol": "mergeBootstrap",
+      "sha256": "82b3a7adaef4f996fbcc3700a63988e1af3a4f24cff53e827970a87c821bd512"
+    },
+    {
+      "path": "arvexq/components/item_176/ui/0424_load.js",
+      "owner": 176,
+      "symbol": "load",
+      "sha256": "d830032799b61b0859e5a40ec1a93322aef6cdd5443a44459c57d03a7ecbc181"
+    },
+    {
+      "path": "arvexq/components/item_192/ui/0425_fastReflectNow.js",
+      "owner": 192,
+      "symbol": "fastReflectNow",
+      "sha256": "3325e239c1bd3600054c0bf3eacc7a1b195eabd67603d9a2d6683ca3c4d05d48"
+    },
+    {
+      "path": "arvexq/components/item_189/ui/0426_refreshHomeOfficialStatuses.js",
+      "owner": 189,
+      "symbol": "refreshHomeOfficialStatuses",
+      "sha256": "cc818e089fd31fc116d97263bef437f87006ec93fd22e3278798c69fd8679fe4"
+    }
+  ],
+  "shared_note": "Unassigned legacy UI helpers remain shared; no old prediction code is installed in reserved forecast boxes."
+}

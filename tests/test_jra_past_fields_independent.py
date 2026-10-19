@@ -1,4 +1,5 @@
 """Independent JRA historical field contracts and the real production composition."""
+from arvexq.components.runtime import composed_app_source
 from pathlib import Path
 from bs4 import BeautifulSoup
 from arvexq.ingest.past_fields.date import extract_date
@@ -84,4 +85,4 @@ def test_actual_jra_cell_calls_independent_parsers():
     assert row["jockey"]=="山田" and row["last3FSeconds"]==36.2
     assert row["raceId"]=="jra-result-test"
     assert parse_jra_history_cell(cell,"2026-10-01",["東京","大井"]) is None
-    assert "parse_jra_history_cell(cell,cutoff,tracks,race_id=rid)" in Path("app.py").read_text()
+    assert "parse_jra_history_cell(cell,cutoff,tracks,race_id=rid)" in composed_app_source()

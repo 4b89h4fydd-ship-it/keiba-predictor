@@ -1,0 +1,19 @@
+{
+  "id": 121,
+  "name": "買い目生成",
+  "prediction_reserved": true,
+  "existing_sources": [
+    "arvexq/forecast/tickets.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "state": "reserved",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "execution": "reserved; no delegated legacy algorithm"
+}

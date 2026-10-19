@@ -1,0 +1,26 @@
+{
+  "id": 28,
+  "name": "性別",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/entry_fields/sex.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.ingest.entry_fields.dom"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/entry_fields/sex.py",
+      "canonical": "arvexq/components/item_028/sex.py",
+      "module": "arvexq.components.item_028.sex"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

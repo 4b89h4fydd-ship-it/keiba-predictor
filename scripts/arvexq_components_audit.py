@@ -1,0 +1,54 @@
+"""Verify all 200 boxes, actual ownership and unchanged migration semantics."""
+from __future__ import annotations
+import ast
+import hashlib
+import json
+import sys
+from collections import Counter
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from arvexq.components.catalog import all_components, assemble_ui
+from arvexq.components.runtime import composed_app_source
+
+
+def audit():
+    specs = all_components()
+    inventory = json.loads((ROOT / 'docs/independence/requirements.json').read_text())['items']
+    errors = []
+    owned = {}
+    for spec, item in zip(specs, inventory):
+        num = spec['id']
+        box = ROOT / 'arvexq/components' / f'item_{num:03d}'
+        if (num, spec['name']) != (item['id'], item['name']):errors.append(f'{num}: inventory mismatch')
+        if not (box / '__init__.py').is_file():errors.append(f'{num}: missing importable box')
+        for source in spec['existing_sources']:
+            if not (ROOT / source).exists():errors.append(f'{num}: missing source {source}')
+        for row in spec['owned_modules']:
+            if not (ROOT / row['canonical']).is_file():errors.append(f'{num}: missing migrated module')
+        for name in spec['owned_definitions']:
+            if name in owned:errors.append(f'{num}: duplicate definition {name}')
+            owned[name]=num
+        if spec['prediction_reserved'] and (spec['owned_definitions'] or spec['owned_modules'] or spec['assets']):
+            errors.append(f'{num}: reserved forecast box contains delegated implementation')
+        if spec['state']=='allocated':errors.append(f'{num}: existing source allocation unresolved')
+    baseline=json.loads((ROOT / 'arvexq/components/migration-baseline.json').read_text())['definitions']
+    reconstructed={n.name:hashlib.sha256(ast.dump(n,include_attributes=False).encode()).hexdigest()
+                   for n in ast.parse(composed_app_source()).body
+                   if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef,ast.ClassDef))}
+    if reconstructed!=baseline:errors.append('app definition signatures/bodies/decorators differ from migration baseline')
+    try:
+        if assemble_ui()!=(ROOT/'arvexq/ui/static/app.js').read_text(encoding='utf-8'):
+            errors.append('generated UI differs from canonical component assembly')
+    except (ValueError,OSError) as exc:errors.append(str(exc))
+    return {'boxes':len(specs),'states':dict(Counter(s['state'] for s in specs)),
+            'appDefinitionsMoved':len(owned),'parserModulesMoved':sum(len(s['owned_modules']) for s in specs),
+            'uiFragmentsMoved':sum(len(s['assets']) for s in specs),
+            'definitionParity':reconstructed==baseline,'errors':errors,
+            'productionCertifiedByThisAudit':False}
+
+
+if __name__=='__main__':
+    report=audit();print(json.dumps(report,ensure_ascii=False,indent=2));raise SystemExit(bool(report['errors']))

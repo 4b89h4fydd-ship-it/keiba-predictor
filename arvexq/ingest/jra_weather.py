@@ -1,7 +1,5 @@
-"""JRA weather extraction, independent of track surface."""
-import re
-from arvexq.ingest.environment_values import _env_clean_weather
-
-def parse_jra_weather(text: str) -> str | None:
-    match = re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)", text or "")
-    return _env_clean_weather(match.group(1)) if match else None
+"""Compatibility import; implementation is owned by responsibility 004."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_004.jra_weather")
+_sys.modules[__name__] = _implementation

@@ -1,0 +1,37 @@
+{
+  "id": 152,
+  "name": "Realtime Sync",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/infra/runtime_readiness.py",
+    "scripts/arvexq_wait_runtime.py",
+    ".github/workflows/arvexq-sync.yml"
+  ],
+  "shared_dependencies": [
+    "urllib.request",
+    "os process liveness",
+    "monotonic clock"
+  ],
+  "owned_definitions": [
+    "_schedule_live_refresh",
+    "_schedule_central_refresh",
+    "_commercial_collect_once",
+    "_commercial_collector_loop",
+    "_start_commercial_collector",
+    "_data_core_cycle",
+    "_data_core_loop",
+    "_start_data_core_collector",
+    "_racedb_live_cycle",
+    "_start_racedb_daemon"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

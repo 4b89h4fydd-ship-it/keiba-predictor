@@ -1,0 +1,25 @@
+{
+  "id": 47,
+  "name": "過去走着順",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/past_fields/finish.py",
+    "arvexq/ingest/past_fields/jra.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/past_fields/finish.py",
+      "canonical": "arvexq/components/item_047/finish.py",
+      "module": "arvexq.components.item_047.finish"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

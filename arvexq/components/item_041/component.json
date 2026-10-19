@@ -1,0 +1,21 @@
+{
+  "id": 41,
+  "name": "データ取得元照合",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/source_provenance.py",
+    "arvexq/quality/fact_audit.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "state": "mapped-existing-source",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,35 @@
+{
+  "id": 57,
+  "name": "全競走履歴取得・補修",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/career_transport.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_jra_profile_runs",
+    "_jra_run_core_complete",
+    "_jra_history_complete",
+    "_nar_attach_recent_batch",
+    "_central_find_horse",
+    "_central_run_from_race",
+    "_central_resolve_race_id",
+    "_central_recent_from_store",
+    "_merge_central_recent",
+    "_central_month_dates",
+    "_fetch_central_days_parallel",
+    "_schedule_full_history_harvest",
+    "_netkeiba_past_rows_fast",
+    "_merge_fast_history"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

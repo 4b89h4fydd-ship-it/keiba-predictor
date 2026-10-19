@@ -26,7 +26,7 @@ jobs:
       - name: Independent factual readback and data quality contracts
         run: python -m pytest tests/test_factual_data_audit.py -q
       - name: Individual fields, production boundaries, observation readiness and evidence ledger
-        run: python -m pytest -q tests/test_entry_field_contracts.py tests/test_forecast_production_boundaries.py tests/test_diagnosis_readiness.py tests/test_independence_evidence.py tests/test_environment_component_split.py
+        run: python -m pytest -q tests/test_entry_field_contracts.py tests/test_forecast_production_boundaries.py tests/test_diagnosis_readiness.py tests/test_independence_evidence.py tests/test_components_200.py tests/test_environment_component_split.py
       - name: JRA date, venue, race number, title and runner count identity
         run: python -m pytest -q tests/test_independent_jra_race_identity.py
       - name: JRA schedule, surface, course, distance and purse field contracts
@@ -40,7 +40,7 @@ jobs:
       - name: NAR official confirmed result factual classification
         run: python -m pytest -q tests/test_independent_official_result_status.py
       - name: External netkeiba result parser contracts
-        run: python -m pytest -q tests/test_netkeiba_result_parser.py
+        run: python -m pytest -q tests/test_netkeiba_result_parser.py tests/test_provider_parser_boundaries.py
       - name: NAR official card fact parser contracts
         run: python -m pytest -q tests/test_nar_official_card.py tests/test_environment_component_split.py
       - name: Observed runner identity, affiliation and withdrawal facts
@@ -64,7 +64,9 @@ jobs:
       - name: Independent historical deduplication, temporal isolation and display
         run: node scripts/arvexq_history_independence_smoke.cjs
       - name: Validate honest progress without treating incomplete inventory as complete
-        run: python scripts/arvexq_independence_audit.py
+        run: |
+          python scripts/arvexq_independence_audit.py
+          python scripts/arvexq_components_audit.py
       - name: Static PWA includes independent modules
         run: |
           python build_static.py

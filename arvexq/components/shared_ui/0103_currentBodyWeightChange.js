@@ -1,0 +1,1 @@
+function currentBodyWeightChange(h){if(!h)return null;var v=h.bodyWeightChange;if(v==null||v==='')v=h.weightChange;if(v==null||v==='')v=h.weightDiff;if(v==null||v==='')return null;var x=n(v,999);return Math.abs(x)<=99?x:null}

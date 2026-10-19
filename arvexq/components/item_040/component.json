@@ -1,0 +1,24 @@
+{
+  "id": 40,
+  "name": "欠損値補完",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/field_normalization.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_merge_enrichment",
+    "_start_enrichment",
+    "_apply_enrichment"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

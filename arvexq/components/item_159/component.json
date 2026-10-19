@@ -1,0 +1,28 @@
+{
+  "id": 159,
+  "name": "レース詳細事前生成",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/services/race_analysis.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_prepare_race_snapshot",
+    "_ensure_detail_background_jobs",
+    "_schedule_detail_background_jobs",
+    "_ensure_fast_card_workers",
+    "_queue_fast_card",
+    "_fast_card_worker",
+    "prepare_race"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

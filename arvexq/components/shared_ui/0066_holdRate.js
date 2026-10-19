@@ -1,0 +1,1 @@
+function holdRate(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),e=0,g=0,i,p,a,b,ww;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];a=n(p[0]);b=n(p[p.length-1]);if(!a||a>4)continue;ww=w[i];e+=ww;if((b&&b<=4)||(n(rs[i].finish)>0&&n(rs[i].finish)<=4))g+=ww}return e?g/e:.5}

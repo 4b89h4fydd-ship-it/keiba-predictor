@@ -1,0 +1,23 @@
+{
+  "id": 182,
+  "name": "過去走表示",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/history/view.js"
+  ],
+  "shared_dependencies": [
+    "ARVEXQPastRunDeduplicate.merge",
+    "ARVEXQPastRunTemporal.beforeRace"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "state": "mapped-existing-source",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

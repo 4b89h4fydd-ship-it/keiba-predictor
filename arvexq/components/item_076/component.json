@@ -1,0 +1,27 @@
+{
+  "id": 76,
+  "name": "単勝払戻",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/payouts.py"
+  ],
+  "shared_dependencies": [
+    "BeautifulSoup",
+    "Python standard library"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/payouts.py",
+      "canonical": "arvexq/components/item_076/payouts.py",
+      "module": "arvexq.components.item_076.payouts"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

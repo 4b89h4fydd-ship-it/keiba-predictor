@@ -1,4 +1,5 @@
 """Component contracts: 3 NAR and 4 JRA weather/going/scratch responsibilities."""
+from arvexq.components.runtime import composed_app_source
 from bs4 import BeautifulSoup
 from arvexq.ingest.nar_weather import parse_nar_weather
 from arvexq.ingest.nar_going import parse_nar_going
@@ -90,7 +91,7 @@ def test_jra_environment_does_not_mutate_other_component_data():
 
 def test_jra_environment_reader_rejects_explicit_nar_identity():
     from pathlib import Path
-    source=Path("app.py").read_text()
+    source=composed_app_source()
     reader=source.split("def _jra_fetch_environment(",1)[1].split("\ndef ",1)[0]
     assert 'row_id=str(row.get("id") or "")' in reader
     assert 'if row_id and not row_id.startswith("jra-")' in reader

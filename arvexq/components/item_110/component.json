@@ -1,0 +1,26 @@
+{
+  "id": 110,
+  "name": "全頭診断結果保存・表示",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/services/race_analysis.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_precompute_detail_metrics",
+    "_fast_local_race_detail",
+    "_build_fast_diagnosis_snapshot",
+    "_store_fast_snapshot",
+    "racedb_save_analysis"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

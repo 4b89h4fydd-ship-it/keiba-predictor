@@ -1,4 +1,5 @@
 """Independent observed-sex contract tests (no app boot)."""
+from arvexq.components.runtime import composed_app_source
 import pytest
 
 from arvexq.ingest.entry_fields.sex import normalize
@@ -58,7 +59,7 @@ def test_all_race_readback_paths_keep_missing_sex():
     from pathlib import Path
     from arvexq.infra.legacy_stores import SOURCE
 
-    app_source = (Path(__file__).resolve().parents[1] / "app.py").read_text()
+    app_source = composed_app_source()
     assert app_source.count('"sex":e["sex"] or ""') == 2
     assert '"sex":e["sex"] or "牡"' not in app_source
     assert '"sex": e["sex"] or ""' in SOURCE

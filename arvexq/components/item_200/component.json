@@ -1,0 +1,35 @@
+{
+  "id": 200,
+  "name": "ログ・障害監視",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/quality/fact_audit.py",
+    "arvexq/ingest/d1_day_readback.py",
+    "scripts/arvexq_fact_data_audit.py"
+  ],
+  "shared_dependencies": [
+    "Existing D1 API routes",
+    "arvexq.ingest.full_snapshot_codec",
+    "arvexq.ingest.career_transport",
+    "Python standard library"
+  ],
+  "owned_definitions": [
+    "_arvexq_timing",
+    "_now_jst",
+    "_today_iso",
+    "_data_core_health_hash",
+    "_data_core_record_run",
+    "build_info",
+    "version_json"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,1022 @@
+[
+  {
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
+    "name": "openapi",
+    "path": "/openapi.json",
+    "signature": "(req: starlette.requests.Request) -> starlette.responses.JSONResponse"
+  },
+  {
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
+    "name": "swagger_ui_html",
+    "path": "/docs",
+    "signature": "(req: starlette.requests.Request) -> starlette.responses.HTMLResponse"
+  },
+  {
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
+    "name": "swagger_ui_redirect",
+    "path": "/docs/oauth2-redirect",
+    "signature": "(req: starlette.requests.Request) -> starlette.responses.HTMLResponse"
+  },
+  {
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
+    "name": "redoc_html",
+    "path": "/redoc",
+    "signature": "(req: starlette.requests.Request) -> starlette.responses.HTMLResponse"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "storage_status",
+    "path": "/api/v1/storage-status",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "health",
+    "path": "/health",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "POST"
+    ],
+    "name": "history_backfill_one",
+    "path": "/api/v1/history-backfill-one",
+    "signature": "(months_ago: int = Query(1))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "history_status",
+    "path": "/api/v1/history-status",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "central_status",
+    "path": "/api/v1/central-status",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "POST"
+    ],
+    "name": "central_ingest",
+    "path": "/api/v1/central-ingest",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "central_schema",
+    "path": "/api/v1/central-schema",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "runtime_status",
+    "path": "/api/v1/runtime-status",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "collector_status",
+    "path": "/api/v1/collector-status",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "data_core_status",
+    "path": "/api/v1/data-core/status",
+    "signature": "(date: str = Query(), circuit: str = Query())"
+  },
+  {
+    "methods": [
+      "POST"
+    ],
+    "name": "data_core_refresh",
+    "path": "/api/v1/data-core/refresh/{race_id}",
+    "signature": "(race_id: str, force: int = Query(1))"
+  },
+  {
+    "methods": [
+      "POST"
+    ],
+    "name": "data_core_refresh_day",
+    "path": "/api/v1/data-core/refresh-day",
+    "signature": "(date: str = Query(), circuit: str = Query())"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "volatility_pack",
+    "path": "/api/v1/volatility-pack",
+    "signature": "(date: str = Query(PydanticUndefined), circuit: str = Query(PydanticUndefined), track: str = Query(PydanticUndefined))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "races",
+    "path": "/api/v1/races",
+    "signature": "(date: str = Query(PydanticUndefined), circuit: str = Query(), force: int = Query(0), bundle: int = Query(0))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "environment_pack",
+    "path": "/api/v1/environment-pack",
+    "signature": "(date: str = Query(PydanticUndefined), circuit: str = Query(PydanticUndefined), track: str = Query(PydanticUndefined))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "track_pack",
+    "path": "/api/v1/track-pack",
+    "signature": "(date: str = Query(PydanticUndefined), circuit: str = Query(PydanticUndefined), track: str = Query(PydanticUndefined), fill: int = Query(1))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "site_bootstrap",
+    "path": "/api/v1/site-bootstrap",
+    "signature": "(date: str = Query(PydanticUndefined), force: int = Query(0), wait: int = Query(0))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "site_bootstrap_status",
+    "path": "/api/v1/site-bootstrap-status",
+    "signature": "(date: str = Query(PydanticUndefined))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "past_pack",
+    "path": "/api/v1/past-pack/{race_id}",
+    "signature": "(race_id: str)"
+  },
+  {
+    "methods": [
+      "POST"
+    ],
+    "name": "prepare_race",
+    "path": "/api/v1/prepare-race/{race_id}",
+    "signature": "(race_id: str)"
+  },
+  {
+    "methods": [
+      "POST"
+    ],
+    "name": "prewarm_track",
+    "path": "/api/v1/prewarm-track",
+    "signature": "(date: str = Query(PydanticUndefined), circuit: str = Query(PydanticUndefined), track: str = Query(PydanticUndefined), race_no: int = Query(1))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "local_refresh_status",
+    "path": "/api/v1/local-refresh-status",
+    "signature": "(date: str = Query(PydanticUndefined))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "central_refresh_status",
+    "path": "/api/v1/central-refresh-status",
+    "signature": "(date: str = Query(PydanticUndefined))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "race_detail",
+    "path": "/api/v1/race/{race_id}",
+    "signature": "(race_id: str, refresh: int = Query(0), history: int = Query(1), prepared: int = Query(1), view: str = Query())"
+  },
+  {
+    "methods": [
+      "POST"
+    ],
+    "name": "diagnosis_refresh",
+    "path": "/api/v1/race/{race_id}/diagnosis-refresh",
+    "signature": "(race_id: str)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "snapshot_version",
+    "path": "/api/v1/race/{race_id}/version",
+    "signature": "(race_id: str)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "horse_snapshot",
+    "path": "/api/v1/race/{race_id}/horse/{horse_no}",
+    "signature": "(race_id: str, horse_no: int)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "prewarm_status",
+    "path": "/api/v1/prewarm-status",
+    "signature": "(date: str = Query(), circuit: str = Query())"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "collect_race_info",
+    "path": "/api/v1/race/{race_id}/collect",
+    "signature": "(race_id: str, force: int = Query(1), horse_no: int | None = Query(None))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "payout_refresh",
+    "path": "/api/v1/payouts/{race_id}",
+    "signature": "(race_id: str)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "odds_refresh",
+    "path": "/api/v1/odds-refresh/{race_id}",
+    "signature": "(race_id: str, force: int = Query(0))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "odds_auto_status",
+    "path": "/api/v1/odds-auto-status",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "POST"
+    ],
+    "name": "racedb_save_analysis",
+    "path": "/api/v1/racedb/analysis/{race_id}",
+    "signature": "(race_id: str, request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "racedb_get_analysis",
+    "path": "/api/v1/racedb/analysis/{race_id}",
+    "signature": "(race_id: str)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "model_audit",
+    "path": "/api/v1/model-audit",
+    "signature": "(date: str = Query(), days: int = Query(30))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "model_learning",
+    "path": "/api/v1/model-learning",
+    "signature": "(date: str = Query(), circuit: str = Query(地方))"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "racedb_status",
+    "path": "/api/v1/racedb-status",
+    "signature": "(date: str = '', circuit: str = '')"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "racedb_race",
+    "path": "/api/v1/racedb-race/{race_id}",
+    "signature": "(race_id: str)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "enrichment_status",
+    "path": "/api/v1/enrichment-status/{race_id}",
+    "signature": "(race_id: str)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "enrichment_schema",
+    "path": "/api/v1/enrichment-schema",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "build_info",
+    "path": "/build",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "home",
+    "path": "/race",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "home",
+    "path": "/venue",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "home",
+    "path": "/",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "arvexq_icon",
+    "path": "/arvexq-icon-v175-{size}.png",
+    "signature": "(size: int)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "arvexq_touch_icon",
+    "path": "/arvexq-touch-v175.png",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "cinematic_detail_photo",
+    "path": "/arvexq-racing-detail.webp",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "cinematic_hero",
+    "path": "/arvexq-racing-hero.webp",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "arvexq_logo",
+    "path": "/arvexq-logo.webp",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "hero_horse",
+    "path": "/hero-horse.webp",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "pace_preview",
+    "path": "/pace-preview.webp",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "version_json",
+    "path": "/version.json",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-v86.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v88.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v91.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v130.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v303.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v305.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v306.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v307.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v308.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v312.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v313.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v314.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v315.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v316.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v317.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v318.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v319.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v320.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v321.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "styles",
+    "path": "/styles-arvexq-v324.css",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v86-fix1.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v87.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v88.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v91.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v130.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v131.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v132.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v133.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v303.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v303.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v305.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v305.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v306.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v306.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v307.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v307.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v308.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v308.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v312.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v312.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v313.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v313.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v314.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v314.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v315.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v315.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v316.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v316.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v317.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v317.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v318.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v318.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v319.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v319.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v320.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v320.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v321.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v321.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/arvexq-app-v324.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "appjs",
+    "path": "/app-v324.js",
+    "signature": "(request: starlette.requests.Request)"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "manifest",
+    "path": "/manifest-arvexq-v88.webmanifest",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "manifest",
+    "path": "/manifest-arvexq-v130.webmanifest",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "manifest",
+    "path": "/manifest-arvexq-v173.webmanifest",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "manifest",
+    "path": "/manifest-arvexq-v175.webmanifest",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "manifest",
+    "path": "/manifest-v86.webmanifest",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "service_worker",
+    "path": "/sw.js",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "service_worker",
+    "path": "/sw-v318-reset.js",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "service_worker",
+    "path": "/sw-v319-reset.js",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "service_worker",
+    "path": "/sw-v320-reset.js",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "service_worker",
+    "path": "/sw-v321-reset.js",
+    "signature": "()"
+  },
+  {
+    "methods": [
+      "GET"
+    ],
+    "name": "service_worker",
+    "path": "/sw-v324-reset.js",
+    "signature": "()"
+  }
+]

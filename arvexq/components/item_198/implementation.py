@@ -1,0 +1,50 @@
+"""Owned definitions, installed in the original app context by components.runtime.
+
+The migration bridge preserves existing global state, decorators and monkeypatch
+contracts. These definitions are not independently initialized modules yet.
+"""
+
+@app.get("/app-v324.js")
+@app.get("/arvexq-app-v324.js")
+@app.get("/app-v321.js")
+@app.get("/arvexq-app-v321.js")
+@app.get("/app-v320.js")
+@app.get("/arvexq-app-v320.js")
+@app.get("/app-v319.js")
+@app.get("/arvexq-app-v319.js")
+@app.get("/app-v318.js")
+@app.get("/arvexq-app-v318.js")
+@app.get("/app-v317.js")
+@app.get("/arvexq-app-v317.js")
+@app.get("/app-v316.js")
+@app.get("/arvexq-app-v316.js")
+@app.get("/app-v315.js")
+@app.get("/arvexq-app-v315.js")
+@app.get("/app-v314.js")
+@app.get("/arvexq-app-v314.js")
+@app.get("/app-v313.js")
+@app.get("/arvexq-app-v313.js")
+@app.get("/app-v312.js")
+@app.get("/arvexq-app-v312.js")
+@app.get("/app-v308.js")
+@app.get("/arvexq-app-v308.js")
+@app.get("/app-v307.js")
+@app.get("/arvexq-app-v307.js")
+@app.get("/app-v306.js")
+@app.get("/arvexq-app-v306.js")
+@app.get("/app-v305.js")
+@app.get("/arvexq-app-v305.js")
+@app.get("/app-v303.js")
+@app.get("/arvexq-app-v303.js")
+@app.get("/app-v133.js")
+@app.get("/app-v132.js")
+@app.get("/app-v131.js")
+@app.get("/app-v130.js")
+@app.get("/app-v91.js")
+@app.get("/app-v88.js")
+@app.get("/app-v87.js")
+@app.get("/app-v86-fix1.js")
+def appjs(request: Request):
+    current=request.url.path in {"/app-v324.js","/arvexq-app-v324.js"}
+    cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
+    return Response(JS, media_type="application/javascript", headers={"Cache-Control":cache})

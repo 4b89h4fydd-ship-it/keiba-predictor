@@ -1,0 +1,22 @@
+{
+  "id": 9,
+  "name": "開催場取得",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/race_fields/track.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_jra_track_from_cname"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

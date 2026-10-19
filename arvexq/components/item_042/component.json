@@ -1,0 +1,32 @@
+{
+  "id": 42,
+  "name": "過去走日付",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/past_fields/date.py",
+    "arvexq/ingest/past_fields/jra.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_jra_parse_past_cell"
+  ],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/past_fields/date.py",
+      "canonical": "arvexq/components/item_042/date.py",
+      "module": "arvexq.components.item_042.date"
+    },
+    {
+      "previous": "arvexq/ingest/past_fields/jra.py",
+      "canonical": "arvexq/components/item_042/jra.py",
+      "module": "arvexq.components.item_042.jra"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,36 @@
+{
+  "id": 22,
+  "name": "外部競馬サイトデータ解析",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/netkeiba_result.py"
+  ],
+  "shared_dependencies": [
+    "BeautifulSoup",
+    "caller-provided text cleaner, time parser, payout parser"
+  ],
+  "owned_definitions": [
+    "fetch_central_feed",
+    "_netkeiba_get",
+    "_netkeiba_race_summaries",
+    "_netkeiba_program_race_id",
+    "_netkeiba_race_id",
+    "_netkeiba_detail_rows",
+    "_nar_netkeiba_race_id",
+    "_nar_netkeiba_preview_rows",
+    "_netkeiba_current_result",
+    "_netkeiba_race_meta",
+    "_smart_normalize_row",
+    "_extract_smartrc_embedded",
+    "_fetch_smartrc",
+    "_fetch_extra_sources"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,6 +1,5 @@
-"""48: Observed historical finishing time in seconds."""
-import re
-
-def extract_time_seconds(text):
-    m=re.search(r"(?<!\d)(\d{1,2}):(\d{2}\.\d)(?!\d)",text or "")
-    return int(m.group(1))*60+float(m.group(2)) if m else 0.0
+"""Compatibility import; implementation is owned by responsibility 048."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_048.clock")
+_sys.modules[__name__] = _implementation

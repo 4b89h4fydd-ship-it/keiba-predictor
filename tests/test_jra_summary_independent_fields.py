@@ -1,3 +1,4 @@
+from arvexq.components.runtime import composed_app_source
 from pathlib import Path
 from arvexq.ingest.race_fields.start_time import extract as start
 from arvexq.ingest.race_fields.distance import extract as distance
@@ -7,7 +8,7 @@ from bs4 import BeautifulSoup
 import re
 
 def test_summary_uses_same_independent_extractors_as_detail():
-    source=Path("app.py").read_text()
+    source=composed_app_source()
     summary=source.split("def _jra_parse_race_summary(",1)[1].split("\ndef ",1)[0]
     detail=source.split("def _jra_parse_race(",1)[1].split("\ndef ",1)[0]
     for expression in ("jra_start_time(full)","jra_distance(full)","jra_surface(full)","jra_race_title(soup,race_no,JRA_BAD_TITLE_RE)"):
@@ -15,7 +16,7 @@ def test_summary_uses_same_independent_extractors_as_detail():
         assert expression in detail
 
 def test_detail_and_summary_delegate_environment_fields_to_owned_parser():
-    source=Path("app.py").read_text()
+    source=composed_app_source()
     summary=source.split("def _jra_parse_race_summary(",1)[1].split("\ndef ",1)[0]
     detail=source.split("def _jra_parse_race(",1)[1].split("\ndef ",1)[0]
     for segment in (detail,summary):

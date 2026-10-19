@@ -1,0 +1,25 @@
+{
+  "id": 46,
+  "name": "過去走クラス",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/past_fields/grade.py",
+    "arvexq/ingest/past_fields/jra.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/past_fields/grade.py",
+      "canonical": "arvexq/components/item_046/grade.py",
+      "module": "arvexq.components.item_046.grade"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

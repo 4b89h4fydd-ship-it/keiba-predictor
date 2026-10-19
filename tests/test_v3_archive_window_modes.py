@@ -83,10 +83,10 @@ def test_archive_report_exposes_calendar_evidence_not_official_completeness(read
 
 
 def test_real_saved_archive_pairs_report_gap_without_inventing_missing_day(tmp_path):
-    """Exercise the archive audit on actual unchanged Oct 17/19 paired files."""
+    """Exercise the archive audit on actual unchanged Oct 16/18 paired files."""
     (tmp_path / "racecards").mkdir()
     (tmp_path / "saved-snapshots").mkdir()
-    for day in ("2026-10-17", "2026-10-19"):
+    for day in ("2026-10-16", "2026-10-18"):
         for folder in ("racecards", "saved-snapshots"):
             name = day + ".json"
             source = ROOT / folder / name
@@ -95,14 +95,14 @@ def test_real_saved_archive_pairs_report_gap_without_inventing_missing_day(tmp_p
     original = {
         (folder, day): (ROOT / folder / (day + ".json")).read_bytes()
         for folder in ("racecards", "saved-snapshots")
-        for day in ("2026-10-17", "2026-10-19")
+        for day in ("2026-10-16", "2026-10-18")
     }
     report = audit_cards(directory=tmp_path, days=2, samples_per_circuit=0)
     window = report["calendarWindow"]
-    assert window["selectedDates"] == ["2026-10-17", "2026-10-19"]
+    assert window["selectedDates"] == ["2026-10-16", "2026-10-18"]
     assert window["selectedSavedDays"] == 2
     assert window["calendarSpanDays"] == 3
-    assert window["missingCalendarDays"] == ["2026-10-18"]
+    assert window["missingCalendarDays"] == ["2026-10-17"]
     assert window["consecutiveCalendarDays"] is False
     assert window["officialRaceDayCoverageVerified"] is False
     assert report["dateCount"] == 2
@@ -110,23 +110,23 @@ def test_real_saved_archive_pairs_report_gap_without_inventing_missing_day(tmp_p
     for (folder, day), content in original.items():
         assert (ROOT / folder / (day + ".json")).read_bytes() == content
     # The cutoff filters selected saved observations, not the missing day.
-    report = audit_cards(directory=tmp_path, days=1, end_date="2026-10-18")
-    assert report["calendarWindow"]["selectedDates"] == ["2026-10-17"]
+    report = audit_cards(directory=tmp_path, days=1, end_date="2026-10-17")
+    assert report["calendarWindow"]["selectedDates"] == ["2026-10-16"]
     with pytest.raises(ValueError, match="insufficient"):
-        audit_cards(directory=tmp_path, days=2, end_date="2026-10-18")
+        audit_cards(directory=tmp_path, days=2, end_date="2026-10-17")
 
 
 def test_unpaired_newest_day_does_not_erase_existing_gap_evidence(tmp_path):
     (tmp_path / "racecards").mkdir()
     (tmp_path / "saved-snapshots").mkdir()
-    for day in ("2026-10-17", "2026-10-19"):
+    for day in ("2026-10-16", "2026-10-18"):
         for folder in ("racecards", "saved-snapshots"):
             name = day + ".json"
             (tmp_path / folder / name).write_bytes((ROOT / folder / name).read_bytes())
     (tmp_path / "racecards" / "2026-10-20.json").write_text("{}")
     report = audit_cards(directory=tmp_path, days=2)
-    assert report["calendarWindow"]["missingCalendarDays"] == ["2026-10-18"]
-    assert report["calendarWindow"]["selectedDates"][-1] == "2026-10-19"
+    assert report["calendarWindow"]["missingCalendarDays"] == ["2026-10-17"]
+    assert report["calendarWindow"]["selectedDates"][-1] == "2026-10-18"
 
 
 def test_calendar_gaps_are_not_asserted_as_cancelled_or_unsaved_races():
@@ -167,14 +167,14 @@ def test_missing_selected_day_records_filesystem_evidence_without_claiming_racin
 def test_actual_audit_distinguishes_unpaired_gap_file_from_absent_date(tmp_path):
     for folder in ("racecards", "saved-snapshots"):
         (tmp_path / folder).mkdir()
-    for day in ("2026-10-17", "2026-10-19"):
+    for day in ("2026-10-16", "2026-10-18"):
         for folder in ("racecards", "saved-snapshots"):
             name = day + ".json"
             (tmp_path / folder / name).write_bytes((ROOT / folder / name).read_bytes())
     missing = audit_cards(directory=tmp_path, days=2)
     assert missing["calendarWindow"]["missingDayEvidence"][0]["filePresence"] == "neither-present"
-    (tmp_path / "racecards" / "2026-10-18.json").write_text("{}")
+    (tmp_path / "racecards" / "2026-10-17.json").write_text("{}")
     incomplete = audit_cards(directory=tmp_path, days=2)
     assert incomplete["calendarWindow"]["missingDayEvidence"][0]["filePresence"] == "racecard-only"
-    assert incomplete["calendarWindow"]["selectedDates"] == ["2026-10-17", "2026-10-19"]
+    assert incomplete["calendarWindow"]["selectedDates"] == ["2026-10-16", "2026-10-18"]
     assert incomplete["calendarWindow"]["officialRaceDayCoverageVerified"] is False

@@ -1,0 +1,21 @@
+{
+  "id": 82,
+  "name": "3連複払戻",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/payouts.py"
+  ],
+  "shared_dependencies": [
+    "BeautifulSoup",
+    "Python standard library"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "state": "mapped-existing-source",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

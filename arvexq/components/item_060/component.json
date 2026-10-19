@@ -1,0 +1,20 @@
+{
+  "id": 60,
+  "name": "複勝オッズ",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/place_odds.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "state": "mapped-existing-source",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

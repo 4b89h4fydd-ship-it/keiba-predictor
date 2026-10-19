@@ -1,0 +1,1 @@
+function collectRaceInfo(no){reloadCurrent()}

@@ -1,0 +1,31 @@
+{
+  "id": 2,
+  "name": "NAR馬場状態解析",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/nar_going.py",
+    "arvexq/ingest/nar_environment_parser.py",
+    "workers/nar_going_moisture.mjs",
+    "scripts/arvexq_nar_going_readback.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/nar_going.py",
+      "canonical": "arvexq/components/item_002/nar_going.py",
+      "module": "arvexq.components.item_002.nar_going"
+    },
+    {
+      "previous": "arvexq/ingest/nar_environment_parser.py",
+      "canonical": "arvexq/components/item_002/nar_environment_parser.py",
+      "module": "arvexq.components.item_002.nar_environment_parser"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

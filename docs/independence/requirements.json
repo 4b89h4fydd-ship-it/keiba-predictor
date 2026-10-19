@@ -37,7 +37,9 @@
         "production": "2026-10-17 GET-only readback from https://kraiz-api.4b89h4fydd.workers.dev: NAR expected=34, read=34, valid observed weather=34, missingOrInvalid=[], readErrors=[], ok=true; readback workflow/script integrated by PR #334 (head 1f7046c9892a6b84d9e09f1fdec5a006cd827869), CI checks contracts/check succeeded (run 39114038734 / 39114038739). No writes performed."
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_001",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 2,
@@ -72,7 +74,9 @@
         "production": "GET-only readback成功: date=2026-10-17 expected=34 read=34 valid=34 missingOrInvalid=[] readErrors=[]。API https://kraiz-api.4b89h4fydd.workers.dev。デプロイ実行39128537318はGuard/Deploy成功、既存storage auditは別assertionで失敗。"
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_002",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 3,
@@ -106,7 +110,9 @@
         "production": "GET-only readback成功: date=2026-10-17 expected=34 read=34 valid=34 invalid=[] readErrors=[]。API https://kraiz-api.4b89h4fydd.workers.dev"
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_003",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 4,
@@ -136,7 +142,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_004",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 5,
@@ -166,7 +174,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_005",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 6,
@@ -196,7 +206,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_006",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 7,
@@ -226,7 +238,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_007",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 8,
@@ -257,7 +271,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_008",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 9,
@@ -288,7 +304,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_009",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 10,
@@ -318,7 +336,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_010",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 11,
@@ -349,7 +369,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_011",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 12,
@@ -380,7 +402,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_012",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 13,
@@ -412,7 +436,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_013",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 14,
@@ -443,7 +469,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_014",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 15,
@@ -476,7 +504,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_015",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 16,
@@ -509,7 +539,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_016",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 17,
@@ -540,7 +572,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_017",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 18,
@@ -571,7 +605,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_018",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 19,
@@ -602,20 +638,24 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_019",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 20,
       "name": "JRA公式データ解析",
       "status": "解析済",
-      "module": "arvexq.ingest.jra_official_table + arvexq.ingest.jra_official_runner_row",
+      "module": "arvexq.ingest.jra_official_table + arvexq.ingest.jra_official_runner_row + arvexq.ingest.jra_result",
       "files": [
         "arvexq/ingest/jra_official_table.py",
-        "arvexq/ingest/jra_official_runner_row.py"
+        "arvexq/ingest/jra_official_runner_row.py",
+        "arvexq/ingest/jra_result.py"
       ],
       "callers": [
         "app.py:_jra_parse_race",
-        "tests/test_jra_official_runner_row.py"
+        "tests/test_jra_official_runner_row.py",
+        "app.py:_jra_parse_result"
       ],
       "dependencies": [
         "app.py:_jra_text"
@@ -626,9 +666,10 @@
       "tests": [
         "tests/test_jra_official_table_independent.py",
         "tests/test_jra_official_runner_row.py",
-        "tests/test_jra_withdrawn_roster.py"
+        "tests/test_jra_withdrawn_roster.py",
+        "tests/test_provider_parser_boundaries.py"
       ],
-      "implementation_scope": "JRA公式出馬表DOMの出走馬テーブル識別と馬番抽出を独立化し、専用契約CIを通過してmainへ統合。Web Worker build成功。実URLのHTTP確認とJRA公式全データ解析は未完了",
+      "implementation_scope": "JRA公式出馬表DOMの出走馬テーブル識別と馬番抽出を独立化し、専用契約CIを通過してmainへ統合。Web Worker build成功。実URLのHTTP確認とJRA公式全データ解析は未完了; 2026-10-20: observed HTML parsing moved out of app.py and wired to unchanged existing acquisition. Provider DOM contracts covered offline; production, cache/storage/API/UI and full per-field independence are not certified.",
       "evidence": {
         "commit_sha": "cf94334b78f41558906a191410c9c3365eb8490a",
         "unit": "tests/test_jra_official_runner_row.py: 5 contracts; ARVEXQ Independent Components passed",
@@ -638,19 +679,23 @@
         "production": "Cloudflare Workers Builds: kraizweb1 succeeded (build bf9adef9-5341-4457-8796-abece96f09bf); live HTTP/API confirmation unavailable from this environment"
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_020",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 21,
       "name": "NAR公式データ解析",
       "status": "解析済",
-      "module": "arvexq.ingest.nar_official_card",
+      "module": "arvexq.ingest.nar_official_card + arvexq.ingest.nar_result",
       "files": [
-        "arvexq/ingest/nar_official_card.py"
+        "arvexq/ingest/nar_official_card.py",
+        "arvexq/ingest/nar_result.py"
       ],
       "callers": [
         "app.py:_parse_nar_official_card_html",
-        "app.py:_nar_official_card_rows_fast"
+        "app.py:_nar_official_card_rows_fast",
+        "app.py:_nar_official_result_fast"
       ],
       "dependencies": [
         "app.py:_clean",
@@ -660,9 +705,10 @@
       "output": "per-horse observed carriedWeight, bodyWeight, bodyWeightChange, and source; unavailable values remain null or absent",
       "storage": null,
       "tests": [
-        "tests/test_nar_official_card.py"
+        "tests/test_nar_official_card.py",
+        "tests/test_provider_parser_boundaries.py"
       ],
-      "implementation_scope": "NAR公式カードHTMLからの斤量・馬体重・増減抽出を責務分離して既存取得経路に接続。公式結果・払戻・月次CSVなどNAR公式全データ解析の独立化と本番検証は未実施",
+      "implementation_scope": "NAR公式カードHTMLからの斤量・馬体重・増減抽出を責務分離して既存取得経路に接続。公式結果・払戻・月次CSVなどNAR公式全データ解析の独立化と本番検証は未実施; 2026-10-20: observed HTML parsing moved out of app.py and wired to unchanged existing acquisition. Provider DOM contracts covered offline; production, cache/storage/API/UI and full per-field independence are not certified.",
       "evidence": {
         "commit_sha": "6a41e4b5265804d7e39bceaaf2f3e8339782a33d",
         "unit": "tests/test_nar_official_card.py: 4 parser contracts; contracts CI passed",
@@ -672,7 +718,9 @@
         "production": "Cloudflare Workers Build succeeded for main SHA; live HTTP/API field-level verification unavailable. All-source NAR parsing remains incomplete."
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_021",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 22,
@@ -706,7 +754,9 @@
         "production": "Cloudflare build and live result-data verification pending."
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_022",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 23,
@@ -739,7 +789,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_023",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 24,
@@ -773,7 +825,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_024",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 25,
@@ -808,7 +862,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_025",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 26,
@@ -844,7 +900,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_026",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 27,
@@ -877,7 +935,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_027",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 28,
@@ -911,7 +971,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_028",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 29,
@@ -944,7 +1006,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_029",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 30,
@@ -977,7 +1041,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_030",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 31,
@@ -1010,7 +1076,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_031",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 32,
@@ -1043,7 +1111,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_032",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 33,
@@ -1079,7 +1149,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_033",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 34,
@@ -1112,7 +1184,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_034",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 35,
@@ -1145,7 +1219,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_035",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 36,
@@ -1181,7 +1257,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_036",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 37,
@@ -1217,7 +1295,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_037",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 38,
@@ -1241,7 +1321,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_038",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 39,
@@ -1273,7 +1355,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_039",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 40,
@@ -1297,7 +1381,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_040",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 41,
@@ -1329,7 +1415,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_041",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 42,
@@ -1361,7 +1449,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_042",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 43,
@@ -1393,7 +1483,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_043",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 44,
@@ -1425,7 +1517,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_044",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 45,
@@ -1457,7 +1551,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_045",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 46,
@@ -1489,7 +1585,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_046",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 47,
@@ -1521,7 +1619,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_047",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 48,
@@ -1553,7 +1653,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_048",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 49,
@@ -1585,7 +1687,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_049",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 50,
@@ -1617,7 +1721,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_050",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 51,
@@ -1649,7 +1755,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_051",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 52,
@@ -1681,7 +1789,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_052",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 53,
@@ -1713,7 +1823,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_053",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 54,
@@ -1745,7 +1857,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_054",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 55,
@@ -1776,7 +1890,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_055",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 56,
@@ -1807,7 +1923,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_056",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 57,
@@ -1831,7 +1949,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_057",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 58,
@@ -1862,7 +1982,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_058",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 59,
@@ -1895,7 +2017,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_059",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 60,
@@ -1926,7 +2050,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_060",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 61,
@@ -1959,7 +2085,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_061",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 62,
@@ -1990,7 +2118,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_062",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 63,
@@ -2014,21 +2144,29 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_063",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 64,
       "name": "NARオッズ解析",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.nar_odds",
+      "files": [
+        "arvexq/ingest/nar_odds.py"
+      ],
+      "callers": [
+        "app.py:_parse_nar_live_odds_html"
+      ],
       "dependencies": [],
       "input": null,
       "output": null,
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_provider_parser_boundaries.py"
+      ],
+      "implementation_scope": "全取得元・全ランタイムの確認が必要; 2026-10-20: observed HTML parsing moved out of app.py and wired to unchanged existing acquisition. Provider DOM contracts covered offline; production, cache/storage/API/UI and full per-field independence are not certified.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -2038,7 +2176,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_064",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 65,
@@ -2062,7 +2202,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_065",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 66,
@@ -2093,7 +2235,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_066",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 67,
@@ -2117,7 +2261,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_067",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 68,
@@ -2141,7 +2287,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_068",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 69,
@@ -2172,7 +2320,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_069",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 70,
@@ -2196,7 +2346,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_070",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 71,
@@ -2220,7 +2372,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_071",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 72,
@@ -2244,7 +2398,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_072",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 73,
@@ -2275,7 +2431,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_073",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 74,
@@ -2299,7 +2457,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_074",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 75,
@@ -2323,21 +2483,32 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_075",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 76,
       "name": "単勝払戻",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.payouts",
+      "files": [
+        "arvexq/ingest/payouts.py"
+      ],
+      "callers": [
+        "app.py:_parse_payouts"
+      ],
+      "dependencies": [
+        "BeautifulSoup",
+        "Python standard library"
+      ],
+      "input": "Observed provider payout table DOM",
+      "output": "Observed type, combination and yen amount; no forecast-derived payouts",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_provider_parser_boundaries.py"
+      ],
+      "implementation_scope": "2026-10-20: acquisition-independent shared payout DOM parser covers eight published kinds and aliases. Each kind still shares the table decoder; per-kind standalone independence and production persistence/cache/API/UI gates remain incomplete.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -2347,21 +2518,32 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_076",
+      "structural_migration": "migrated-module"
     },
     {
       "id": 77,
       "name": "複勝払戻",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.payouts",
+      "files": [
+        "arvexq/ingest/payouts.py"
+      ],
+      "callers": [
+        "app.py:_parse_payouts"
+      ],
+      "dependencies": [
+        "BeautifulSoup",
+        "Python standard library"
+      ],
+      "input": "Observed provider payout table DOM",
+      "output": "Observed type, combination and yen amount; no forecast-derived payouts",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_provider_parser_boundaries.py"
+      ],
+      "implementation_scope": "2026-10-20: acquisition-independent shared payout DOM parser covers eight published kinds and aliases. Each kind still shares the table decoder; per-kind standalone independence and production persistence/cache/API/UI gates remain incomplete.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -2371,21 +2553,32 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_077",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 78,
       "name": "枠連払戻",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.payouts",
+      "files": [
+        "arvexq/ingest/payouts.py"
+      ],
+      "callers": [
+        "app.py:_parse_payouts"
+      ],
+      "dependencies": [
+        "BeautifulSoup",
+        "Python standard library"
+      ],
+      "input": "Observed provider payout table DOM",
+      "output": "Observed type, combination and yen amount; no forecast-derived payouts",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_provider_parser_boundaries.py"
+      ],
+      "implementation_scope": "2026-10-20: acquisition-independent shared payout DOM parser covers eight published kinds and aliases. Each kind still shares the table decoder; per-kind standalone independence and production persistence/cache/API/UI gates remain incomplete.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -2395,21 +2588,32 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_078",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 79,
       "name": "馬連払戻",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.payouts",
+      "files": [
+        "arvexq/ingest/payouts.py"
+      ],
+      "callers": [
+        "app.py:_parse_payouts"
+      ],
+      "dependencies": [
+        "BeautifulSoup",
+        "Python standard library"
+      ],
+      "input": "Observed provider payout table DOM",
+      "output": "Observed type, combination and yen amount; no forecast-derived payouts",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_provider_parser_boundaries.py"
+      ],
+      "implementation_scope": "2026-10-20: acquisition-independent shared payout DOM parser covers eight published kinds and aliases. Each kind still shares the table decoder; per-kind standalone independence and production persistence/cache/API/UI gates remain incomplete.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -2419,21 +2623,32 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_079",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 80,
       "name": "ワイド払戻",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.payouts",
+      "files": [
+        "arvexq/ingest/payouts.py"
+      ],
+      "callers": [
+        "app.py:_parse_payouts"
+      ],
+      "dependencies": [
+        "BeautifulSoup",
+        "Python standard library"
+      ],
+      "input": "Observed provider payout table DOM",
+      "output": "Observed type, combination and yen amount; no forecast-derived payouts",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_provider_parser_boundaries.py"
+      ],
+      "implementation_scope": "2026-10-20: acquisition-independent shared payout DOM parser covers eight published kinds and aliases. Each kind still shares the table decoder; per-kind standalone independence and production persistence/cache/API/UI gates remain incomplete.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -2443,21 +2658,32 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_080",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 81,
       "name": "馬単払戻",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.payouts",
+      "files": [
+        "arvexq/ingest/payouts.py"
+      ],
+      "callers": [
+        "app.py:_parse_payouts"
+      ],
+      "dependencies": [
+        "BeautifulSoup",
+        "Python standard library"
+      ],
+      "input": "Observed provider payout table DOM",
+      "output": "Observed type, combination and yen amount; no forecast-derived payouts",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_provider_parser_boundaries.py"
+      ],
+      "implementation_scope": "2026-10-20: acquisition-independent shared payout DOM parser covers eight published kinds and aliases. Each kind still shares the table decoder; per-kind standalone independence and production persistence/cache/API/UI gates remain incomplete.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -2467,21 +2693,32 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_081",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 82,
       "name": "3連複払戻",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.payouts",
+      "files": [
+        "arvexq/ingest/payouts.py"
+      ],
+      "callers": [
+        "app.py:_parse_payouts"
+      ],
+      "dependencies": [
+        "BeautifulSoup",
+        "Python standard library"
+      ],
+      "input": "Observed provider payout table DOM",
+      "output": "Observed type, combination and yen amount; no forecast-derived payouts",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_provider_parser_boundaries.py"
+      ],
+      "implementation_scope": "2026-10-20: acquisition-independent shared payout DOM parser covers eight published kinds and aliases. Each kind still shares the table decoder; per-kind standalone independence and production persistence/cache/API/UI gates remain incomplete.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -2491,21 +2728,32 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_082",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 83,
       "name": "3連単払戻",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "解析済",
+      "module": "arvexq.ingest.payouts",
+      "files": [
+        "arvexq/ingest/payouts.py"
+      ],
+      "callers": [
+        "app.py:_parse_payouts"
+      ],
+      "dependencies": [
+        "BeautifulSoup",
+        "Python standard library"
+      ],
+      "input": "Observed provider payout table DOM",
+      "output": "Observed type, combination and yen amount; no forecast-derived payouts",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_provider_parser_boundaries.py"
+      ],
+      "implementation_scope": "2026-10-20: acquisition-independent shared payout DOM parser covers eight published kinds and aliases. Each kind still shares the table decoder; per-kind standalone independence and production persistence/cache/API/UI gates remain incomplete.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -2515,7 +2763,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_083",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 84,
@@ -2539,7 +2789,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_084",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 85,
@@ -2563,7 +2815,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_085",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 86,
@@ -2587,7 +2841,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_086",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 87,
@@ -2617,7 +2873,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_087",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 88,
@@ -2643,7 +2901,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_088",
+      "structural_migration": "reserved"
     },
     {
       "id": 89,
@@ -2669,7 +2929,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_089",
+      "structural_migration": "reserved"
     },
     {
       "id": 90,
@@ -2695,7 +2957,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_090",
+      "structural_migration": "reserved"
     },
     {
       "id": 91,
@@ -2721,7 +2985,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_091",
+      "structural_migration": "reserved"
     },
     {
       "id": 92,
@@ -2747,7 +3013,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_092",
+      "structural_migration": "reserved"
     },
     {
       "id": 93,
@@ -2773,7 +3041,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_093",
+      "structural_migration": "reserved"
     },
     {
       "id": 94,
@@ -2799,7 +3069,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_094",
+      "structural_migration": "reserved"
     },
     {
       "id": 95,
@@ -2825,7 +3097,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_095",
+      "structural_migration": "reserved"
     },
     {
       "id": 96,
@@ -2851,7 +3125,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_096",
+      "structural_migration": "reserved"
     },
     {
       "id": 97,
@@ -2877,7 +3153,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_097",
+      "structural_migration": "reserved"
     },
     {
       "id": 98,
@@ -2901,7 +3179,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_098",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 99,
@@ -2925,7 +3205,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_099",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 100,
@@ -2949,7 +3231,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_100",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 101,
@@ -2973,7 +3257,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_101",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 102,
@@ -2997,7 +3283,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_102",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 103,
@@ -3023,7 +3311,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_103",
+      "structural_migration": "reserved"
     },
     {
       "id": 104,
@@ -3049,7 +3339,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_104",
+      "structural_migration": "reserved"
     },
     {
       "id": 105,
@@ -3075,7 +3367,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_105",
+      "structural_migration": "reserved"
     },
     {
       "id": 106,
@@ -3101,7 +3395,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_106",
+      "structural_migration": "reserved"
     },
     {
       "id": 107,
@@ -3127,7 +3423,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_107",
+      "structural_migration": "reserved"
     },
     {
       "id": 108,
@@ -3153,7 +3451,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_108",
+      "structural_migration": "reserved"
     },
     {
       "id": 109,
@@ -3177,7 +3477,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_109",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 110,
@@ -3202,7 +3504,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "全頭診断の入出力契約・保存・表示互換はCodex。評価式は別担当。"
+      "scope_boundary": "全頭診断の入出力契約・保存・表示互換はCodex。評価式は別担当。",
+      "component_box": "arvexq/components/item_110",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 111,
@@ -3232,7 +3536,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "観測事実の入力契約・品質検証はCodex。新方式固有の特徴量定義は別担当。"
+      "scope_boundary": "観測事実の入力契約・品質検証はCodex。新方式固有の特徴量定義は別担当。",
+      "component_box": "arvexq/components/item_111",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 112,
@@ -3262,7 +3568,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "解析済",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_112",
+      "structural_migration": "reserved"
     },
     {
       "id": 113,
@@ -3288,7 +3596,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_113",
+      "structural_migration": "reserved"
     },
     {
       "id": 114,
@@ -3314,7 +3624,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_114",
+      "structural_migration": "reserved"
     },
     {
       "id": 115,
@@ -3340,7 +3652,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_115",
+      "structural_migration": "reserved"
     },
     {
       "id": 116,
@@ -3370,7 +3684,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "解析済",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_116",
+      "structural_migration": "reserved"
     },
     {
       "id": 117,
@@ -3396,7 +3712,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_117",
+      "structural_migration": "reserved"
     },
     {
       "id": 118,
@@ -3422,7 +3740,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_118",
+      "structural_migration": "reserved"
     },
     {
       "id": 119,
@@ -3448,7 +3768,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_119",
+      "structural_migration": "reserved"
     },
     {
       "id": 120,
@@ -3474,7 +3796,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_120",
+      "structural_migration": "reserved"
     },
     {
       "id": 121,
@@ -3504,7 +3828,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "解析済",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_121",
+      "structural_migration": "reserved"
     },
     {
       "id": 122,
@@ -3530,7 +3856,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_122",
+      "structural_migration": "reserved"
     },
     {
       "id": 123,
@@ -3556,7 +3884,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_123",
+      "structural_migration": "reserved"
     },
     {
       "id": 124,
@@ -3582,7 +3912,9 @@
       "owner": "別チャット",
       "prediction_logic_status": "予想ロジック仕様待ち",
       "codex_infrastructure_status": "未着手",
-      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。"
+      "scope_boundary": "新方式の計算・評価式は別担当。Codexは観測事実の受渡し・保存・テスト基盤を継続する。",
+      "component_box": "arvexq/components/item_124",
+      "structural_migration": "reserved"
     },
     {
       "id": 125,
@@ -3607,7 +3939,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "発走前の保存・更新保護・復元はCodex。保存する予想と買い目の計算は別担当。"
+      "scope_boundary": "発走前の保存・更新保護・復元はCodex。保存する予想と買い目の計算は別担当。",
+      "component_box": "arvexq/components/item_125",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 126,
@@ -3636,7 +3970,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "既存の表示枠・API契約・欠損表示はCodex。予想・印・買い目の内容は別担当。"
+      "scope_boundary": "既存の表示枠・API契約・欠損表示はCodex。予想・印・買い目の内容は別担当。",
+      "component_box": "arvexq/components/item_126",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 127,
@@ -3661,7 +3997,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "公式結果と受領済み買い目の照合基盤はCodex。新方式の成績解釈・評価条件は別担当。"
+      "scope_boundary": "公式結果と受領済み買い目の照合基盤はCodex。新方式の成績解釈・評価条件は別担当。",
+      "component_box": "arvexq/components/item_127",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 128,
@@ -3685,7 +4023,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_128",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 129,
@@ -3710,7 +4050,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "開催事実・候補データ・選定結果の保存はCodex。予想に基づく厳選基準は別担当。"
+      "scope_boundary": "開催事実・候補データ・選定結果の保存はCodex。予想に基づく厳選基準は別担当。",
+      "component_box": "arvexq/components/item_129",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 130,
@@ -3734,7 +4076,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_130",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 131,
@@ -3758,7 +4102,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_131",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 132,
@@ -3782,7 +4128,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_132",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 133,
@@ -3807,7 +4155,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "観測事実の選定入力契約と検証はCodex。新方式の選定条件は別担当。"
+      "scope_boundary": "観測事実の選定入力契約と検証はCodex。新方式の選定条件は別担当。",
+      "component_box": "arvexq/components/item_133",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 134,
@@ -3832,7 +4182,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "受領済み選定結果の保存・復元はCodex。選定計算は別担当。"
+      "scope_boundary": "受領済み選定結果の保存・復元はCodex。選定計算は別担当。",
+      "component_box": "arvexq/components/item_134",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 135,
@@ -3857,7 +4209,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "取得時刻・発走時刻・事前保存証拠の管理はCodex。予想生成は別担当。"
+      "scope_boundary": "取得時刻・発走時刻・事前保存証拠の管理はCodex。予想生成は別担当。",
+      "component_box": "arvexq/components/item_135",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 136,
@@ -3882,7 +4236,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "既存表示と受領済み買い目の契約はCodex。買い目生成は別担当。"
+      "scope_boundary": "既存表示と受領済み買い目の契約はCodex。買い目生成は別担当。",
+      "component_box": "arvexq/components/item_136",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 137,
@@ -3907,7 +4263,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "前日の公式結果・受領済み買い目・集計保存はCodex。新方式の評価指標は別担当。"
+      "scope_boundary": "前日の公式結果・受領済み買い目・集計保存はCodex。新方式の評価指標は別担当。",
+      "component_box": "arvexq/components/item_137",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 138,
@@ -3932,7 +4290,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "当日の公式結果・受領済み買い目・集計保存はCodex。新方式の評価指標は別担当。"
+      "scope_boundary": "当日の公式結果・受領済み買い目・集計保存はCodex。新方式の評価指標は別担当。",
+      "component_box": "arvexq/components/item_138",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 139,
@@ -3956,7 +4316,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_139",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 140,
@@ -3980,7 +4342,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_140",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 141,
@@ -4004,7 +4368,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_141",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 142,
@@ -4028,7 +4394,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_142",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 143,
@@ -4052,7 +4420,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_143",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 144,
@@ -4076,7 +4446,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_144",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 145,
@@ -4100,7 +4472,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_145",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 146,
@@ -4124,7 +4498,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_146",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 147,
@@ -4148,7 +4524,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_147",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 148,
@@ -4172,7 +4550,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_148",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 149,
@@ -4196,7 +4576,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_149",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 150,
@@ -4220,7 +4602,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_150",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 151,
@@ -4244,7 +4628,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_151",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 152,
@@ -4279,7 +4665,9 @@
         "production": "Realtime Sync job 117587711228 passed runtime readiness, live refresh, D1 publication/readback and affected-runner scratch verification: https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39097788149/job/117587711228"
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_152",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 153,
@@ -4303,7 +4691,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_153",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 154,
@@ -4327,7 +4717,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_154",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 155,
@@ -4351,7 +4743,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_155",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 156,
@@ -4375,7 +4769,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_156",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 157,
@@ -4399,7 +4795,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_157",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 158,
@@ -4423,7 +4821,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_158",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 159,
@@ -4447,7 +4847,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_159",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 160,
@@ -4482,7 +4884,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_160",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 161,
@@ -4506,7 +4910,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_161",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 162,
@@ -4543,7 +4949,9 @@
         "production": "Read-only Cloudflare validation recovered 16 career runs for nar-2026-10-15-名古屋-01 horse 2 from arvexqFullPayload; SHA256 49e5ce8a809eacd0decb7250dedcb32269cb95efa0e73a08b28c13f0444e90a8. https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39097150567/job/117585855834 . Historical failed-job rerun remained blocked; no manual replay occurred. Subsequent normal Realtime Sync job 117587711228 also passed D1 publication and verification with the corrected full-original comparator."
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_162",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 163,
@@ -4567,7 +4975,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_163",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 164,
@@ -4591,7 +5001,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_164",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 165,
@@ -4615,7 +5027,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_165",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 166,
@@ -4639,7 +5053,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_166",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 167,
@@ -4663,7 +5079,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_167",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 168,
@@ -4687,7 +5105,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_168",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 169,
@@ -4711,7 +5131,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_169",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 170,
@@ -4736,7 +5158,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "全頭診断APIの契約・保存・エラー処理はCodex。診断評価式は別担当。"
+      "scope_boundary": "全頭診断APIの契約・保存・エラー処理はCodex。診断評価式は別担当。",
+      "component_box": "arvexq/components/item_170",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 171,
@@ -4760,7 +5184,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_171",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 172,
@@ -4784,7 +5210,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_172",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 173,
@@ -4808,7 +5236,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_173",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 174,
@@ -4832,7 +5262,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_174",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 175,
@@ -4867,7 +5299,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_175",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 176,
@@ -4891,7 +5325,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_176",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 177,
@@ -4915,7 +5351,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_177",
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 178,
@@ -4939,7 +5377,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_178",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 179,
@@ -4963,7 +5403,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_179",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 180,
@@ -4987,7 +5429,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_180",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 181,
@@ -5011,7 +5455,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_181",
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 182,
@@ -5046,7 +5492,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "観測済み履歴と診断結果の既存表示互換はCodex。診断計算は別担当。"
+      "scope_boundary": "観測済み履歴と診断結果の既存表示互換はCodex。診断計算は別担当。",
+      "component_box": "arvexq/components/item_182",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 183,
@@ -5071,7 +5519,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "既存脚質マップの表示契約と観測データ接続はCodex。新方式の脚質判定は別担当。"
+      "scope_boundary": "既存脚質マップの表示契約と観測データ接続はCodex。新方式の脚質判定は別担当。",
+      "component_box": "arvexq/components/item_183",
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 184,
@@ -5096,7 +5546,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "既存展開表示の契約と受領データ接続はCodex。展開予想計算は別担当。"
+      "scope_boundary": "既存展開表示の契約と受領データ接続はCodex。展開予想計算は別担当。",
+      "component_box": "arvexq/components/item_184",
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 185,
@@ -5125,7 +5577,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "予想表示枠と入力契約はCodex。予想計算は別担当。"
+      "scope_boundary": "予想表示枠と入力契約はCodex。予想計算は別担当。",
+      "component_box": "arvexq/components/item_185",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 186,
@@ -5154,7 +5608,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "印表示枠と入力契約はCodex。印の判定は別担当。"
+      "scope_boundary": "印表示枠と入力契約はCodex。印の判定は別担当。",
+      "component_box": "arvexq/components/item_186",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 187,
@@ -5183,7 +5639,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "買い目表示枠と入力契約はCodex。買い目構築は別担当。"
+      "scope_boundary": "買い目表示枠と入力契約はCodex。買い目構築は別担当。",
+      "component_box": "arvexq/components/item_187",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 188,
@@ -5207,7 +5665,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_188",
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 189,
@@ -5231,7 +5691,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_189",
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 190,
@@ -5255,7 +5717,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_190",
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 191,
@@ -5279,7 +5743,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_191",
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 192,
@@ -5303,7 +5769,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_192",
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 193,
@@ -5327,7 +5795,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_193",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 194,
@@ -5351,7 +5821,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_194",
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 195,
@@ -5375,7 +5847,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_195",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 196,
@@ -5399,7 +5873,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_196",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 197,
@@ -5436,7 +5912,9 @@
       },
       "owner": "共同",
       "prediction_logic_status": "予想ロジック仕様待ち",
-      "scope_boundary": "JRA・NAR事実データ検証、時系列制約、再現可能な検証基盤はCodex。新予想方式の評価仕様は別担当。"
+      "scope_boundary": "JRA・NAR事実データ検証、時系列制約、再現可能な検証基盤はCodex。新予想方式の評価仕様は別担当。",
+      "component_box": "arvexq/components/item_197",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 198,
@@ -5460,7 +5938,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_198",
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 199,
@@ -5484,7 +5964,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_199",
+      "structural_migration": "mapped-existing-source"
     },
     {
       "id": 200,
@@ -5521,7 +6003,9 @@
         "production": null
       },
       "owner": "Codex",
-      "prediction_logic_status": "対象外"
+      "prediction_logic_status": "対象外",
+      "component_box": "arvexq/components/item_200",
+      "structural_migration": "migrated-shared-context"
     }
   ],
   "responsibility_policy": {

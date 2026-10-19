@@ -1,0 +1,25 @@
+{
+  "id": 48,
+  "name": "過去走走破時計",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/past_fields/clock.py",
+    "arvexq/ingest/past_fields/jra.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/past_fields/clock.py",
+      "canonical": "arvexq/components/item_048/clock.py",
+      "module": "arvexq.components.item_048.clock"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,23 @@
+{
+  "id": 10,
+  "name": "開催日程取得",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/race_fields/meeting_schedule.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_jra_program_summaries",
+    "_jra_program_lookup"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,25 @@
+{
+  "id": 3,
+  "name": "NAR出走取消・除外解析",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/nar_scratches.py",
+    "arvexq/ingest/nar_environment_parser.py",
+    "scripts/arvexq_nar_scratches_readback.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/nar_scratches.py",
+      "canonical": "arvexq/components/item_003/nar_scratches.py",
+      "module": "arvexq.components.item_003.nar_scratches"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

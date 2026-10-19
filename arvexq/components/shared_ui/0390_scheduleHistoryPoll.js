@@ -1,0 +1,1 @@
+function scheduleHistoryPoll(id){return}

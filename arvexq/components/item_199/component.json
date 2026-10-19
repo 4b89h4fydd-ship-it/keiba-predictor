@@ -1,0 +1,21 @@
+{
+  "id": 199,
+  "name": "Cloudflareデプロイ・本番動作確認",
+  "prediction_reserved": false,
+  "existing_sources": [
+    ".github/workflows/arvexq-api-storage-deploy.yml",
+    ".github/workflows/arvexq-web-deploy.yml"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "state": "mapped-existing-source",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

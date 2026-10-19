@@ -1,0 +1,20 @@
+{
+  "id": 145,
+  "name": "オッズキャッシュ",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "workers/live_odds.mjs"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "state": "mapped-existing-source",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

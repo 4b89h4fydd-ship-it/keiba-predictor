@@ -1,0 +1,21 @@
+{
+  "id": 37,
+  "name": "競走除外状態",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/runner_exclusion.py",
+    "arvexq/ingest/field_normalization.py"
+  ],
+  "shared_dependencies": [
+    "Shared DOM access and Python standard library"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "state": "mapped-existing-source",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}
