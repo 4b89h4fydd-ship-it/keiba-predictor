@@ -45,6 +45,11 @@ def summarize_for_ci(result):
     return condensed
 
 
+def audit_exit_code(result, condensed):
+    return 0 if (result["allIndexedSavedOriginalsVerified"]
+                 and condensed["verificationCountsReconciled"]) else 1
+
+
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--days", type=int, default=7)
@@ -56,8 +61,7 @@ def main():
     a.out.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     condensed=summarize_for_ci(result)
     print("ARVEXQ_V3_FULL_ARCHIVE_AUDIT_JSON="+json.dumps(condensed,ensure_ascii=False))
-    return 0 if (result["allIndexedSavedOriginalsVerified"]
-                 and condensed["verificationCountsReconciled"]) else 1
+    return audit_exit_code(result, condensed)
 
 
 if __name__=="__main__":
