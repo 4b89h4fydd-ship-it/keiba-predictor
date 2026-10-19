@@ -54,7 +54,7 @@ def audit():
         extra = sorted(set(reconstructed) - set(active_baseline))
         changed = sorted(key for key in active_baseline.keys() & reconstructed.keys()
                          if active_baseline[key] != reconstructed[key])
-        errors.append(f'app definition parity failed: missing={missing}, extra={extra}, changed={changed}')
+        errors.append(f'app definition parity failed: missing={missing}, extra={extra}, changed={changed}, actual_hashes={[(k,reconstructed[k]) for k in changed]}')
 
     try:
         if assemble_ui()!=(ROOT/'arvexq/ui/static/app.js').read_text(encoding='utf-8'):
