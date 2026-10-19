@@ -43,8 +43,11 @@ def audit():
         for name in spec['owned_definitions']:
             if name in owned:errors.append(f'{num}: duplicate definition {name}')
             owned[name]=num
-        if spec['prediction_reserved'] and (spec['owned_definitions'] or spec['owned_modules'] or spec['assets']):
+        owned_material = bool(spec['owned_definitions'] or spec['owned_modules'] or spec['assets'] or spec.get('owned_scripts'))
+        if spec['prediction_reserved'] and owned_material:
             errors.append(f'{num}: reserved forecast box contains delegated implementation')
+        if not spec['prediction_reserved'] and not owned_material:
+            errors.append(f'{num}: active component has no owned implementation')
         if spec['state']=='allocated':errors.append(f'{num}: existing source allocation unresolved')
     baseline=json.loads((ROOT / 'arvexq/components/migration-baseline.json').read_text())['definitions']
     reconstructed={n.name:hashlib.sha256(ast.dump(n,include_attributes=False).encode()).hexdigest()

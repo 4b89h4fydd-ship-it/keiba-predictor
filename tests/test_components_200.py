@@ -51,6 +51,7 @@ def test_reserved_prediction_boxes_do_not_delegate_old_models():
     assert len(reserved)==29
     for s in reserved:
         assert s['owned_definitions']==s['owned_modules']==s['assets']==[]
+        assert s.get('owned_scripts', [])==[]
     for circuit in ('jra','nar'):
         for name in ('ability','running_style','pace','probability','marks','tickets'):
             module=importlib.import_module(f'arvexq.v3.prediction.{circuit}.{name}')
@@ -94,3 +95,15 @@ def test_jra_field_parser_boxes_are_not_mislabeled_as_nar():
     # NAR observations remain in their separate providers and boxes.
     for item_id in range(8, 21):
         assert describe(item_id)['circuits'] == ['JRA']
+
+
+def test_nonreserved_component_cannot_pass_with_only_a_source_reference():
+    from arvexq.components.item_196 import audit as audit_module
+    specs=all_components()
+    # A source path by itself must never count as implementation ownership.
+    specs[7]['owned_definitions']=[]
+    specs[7]['owned_modules']=[]
+    specs[7]['assets']=[]
+    with patch.object(audit_module, 'all_components', return_value=specs):
+        errors=audit_module.audit()['errors']
+    assert any('active component has no owned implementation' in error for error in errors)
