@@ -171,3 +171,20 @@ def test_nonfinite_saved_quote_timestamp_is_invalid(circuit, bad_time):
     assert screen["rows"][1]["readiness"]["quoteTimeState"] == "invalid"
     assert screen["observationSummary"]["quoteTime"]["invalid"] == 1
     assert screen["displayReadiness"]["canClaimFullyRetrieved"] is False
+
+
+@pytest.mark.parametrize("circuit", ("jra", "nar"))
+@pytest.mark.parametrize("raw,expected", [
+    ("not-a-time", "invalid"),
+    ("2026-10-19T11:00:00", "invalid"),
+    ("2026-10-19T11:00:00+09:00", "observed-unverified-timestamp"),
+    ("2026-10-19T02:00:00Z", "observed-unverified-timestamp"),
+    (-1, "invalid"),
+])
+def test_saved_quote_timestamp_syntax_without_freshness_claim(circuit, raw, expected):
+    detail = saved(circuit)
+    detail["horses"][0]["oddsUpdatedAt"] = raw
+    response = factual_response(detail)
+    assert response["quoteFields"]["fields"]["quote_time"]["rows"][0]["status"] == expected
+    assert response["runnerReadiness"][0]["quoteTimeState"] == expected
+    assert factual_screen(response)["rows"][1]["readiness"]["quoteTimeState"] == expected

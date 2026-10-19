@@ -4,6 +4,7 @@ from typing import Any
 from math import isfinite
 from arvexq.v3.data.observed_fields import ensure_circuit, history
 from arvexq.v3.data.odds_facts import missing_status
+from arvexq.v3.data.quote_facts import classify_quote_time
 
 def read_runner_readiness(detail: dict[str, Any], circuit: str) -> list[dict[str, Any]]:
     ensure_circuit(detail, circuit)
@@ -57,14 +58,7 @@ def read_runner_readiness(detail: dict[str, Any], circuit: str) -> list[dict[str
         quote_at = next((horse[key] for key in ("oddsUpdatedAt", "oddsTimestamp")
                          if key in horse and horse[key] is not None and
                          horse[key] != ""), None)
-        quote_time_state = ("missing" if quote_at is None or
-                            isinstance(quote_at, str) and quote_at.strip() in
-                            ("", "-", "--", "不明") else
-                            "invalid" if isinstance(quote_at, bool) or
-                            not isinstance(quote_at, (str, int, float)) or
-                            quote_at == 0 or isinstance(quote_at, float)
-                            and not isfinite(quote_at) else
-                            "observed-unverified-timestamp")
+        quote_time_state = classify_quote_time(quote_at)
         result.append({
             "pastFieldStates": prior_fields,
             "quoteTimeState": quote_time_state,

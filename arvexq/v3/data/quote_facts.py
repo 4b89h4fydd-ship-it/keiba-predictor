@@ -19,18 +19,31 @@ QUOTE_FIELDS = {
 TIME_KEYS = ("oddsUpdatedAt", "oddsTimestamp")
 
 
+def classify_quote_time(value: Any) -> str:
+    """Validate a saved quote timestamp's syntax, never its freshness."""
+    if value is None or isinstance(value, str) and value.strip() in ("", "-", "--", "不明"):
+        return "missing"
+    if isinstance(value, bool):
+        return "invalid"
+    if isinstance(value, (int, float)):
+        return "observed-unverified-timestamp" if isfinite(value) and value > 0 else "invalid"
+    if not isinstance(value, str):
+        return "invalid"
+    try:
+        from datetime import datetime
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+        return "observed-unverified-timestamp" if parsed.tzinfo is not None else "invalid"
+    except ValueError:
+        return "invalid"
+
+
 def _classification(field: str, value: Any) -> str:
     if value is None or isinstance(value, str) and value.strip() in ("", "-", "--", "不明"):
         return "missing"
     if isinstance(value, bool):
         return "invalid"
     if field == "quote_time":
-        # Numeric NaN/Infinity are not a saved timestamp. Align with the
-        # independent runner-readiness status, without asserting freshness.
-        return "observed-unverified-timestamp" if (
-            isinstance(value, (str, int, float)) and value not in ("", 0)
-            and not (isinstance(value, float) and not isfinite(value))
-        ) else "invalid"
+        return classify_quote_time(value)
     if field == "place_odds" and isinstance(value, str) and "-" in value:
         # Provider-supplied range is retained as raw text, NOT reinterpreted
         # as a probability or fabricated decimal. Future schema verification.
