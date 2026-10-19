@@ -111,3 +111,30 @@ def test_screen_rejects_tampered_prior_field_evidence(circuit):
     wrong["runnerReadiness"][0]["quoteTimeState"] = "verified-fresh"
     with pytest.raises(ValueError, match="quote time"):
         factual_screen(wrong)
+
+
+@pytest.mark.parametrize("circuit", ("jra", "nar"))
+def test_screen_rejects_inflated_coverage_and_market_counts(circuit):
+    original = factual_response(saved(circuit))
+    original_screen = factual_screen(original)
+    summary = original_screen["observationSummary"]
+    assert summary["runnerRows"] == 2
+    assert summary["observedPriorRuns"] == 9
+    assert sum(summary["quoteTime"].values()) == 2
+    assert all(sum(row.values()) == 2 for row in summary["basicFields"].values())
+    assert all(sum(row.values()) == 9 for row in summary["pastFields"].values())
+    for key in ("runnerRows", "observedPriorRuns", "runnersWithPriorRuns",
+                "oddsHorseRows"):
+        wrong = deepcopy(original)
+        wrong["coverage"]["counts"][key] += 1
+        with pytest.raises(ValueError, match="coverage total"):
+            factual_screen(wrong)
+    for field in ("win", "place", "popularity"):
+        wrong = deepcopy(original)
+        wrong["oddsFields"]["counts"][field]["observed"] += 1
+        with pytest.raises(ValueError, match="market total"):
+            factual_screen(wrong)
+    wrong = deepcopy(original)
+    wrong["coverage"]["counts"]["runnerRows"] = True
+    with pytest.raises(ValueError, match="coverage total"):
+        factual_screen(wrong)

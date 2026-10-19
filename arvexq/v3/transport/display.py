@@ -158,6 +158,33 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
             "careerCompleteness": "unverified",
             "readiness": deepcopy(readiness),
         })
+    # Validate independent coverage totals against the original per-runner
+    # evidence rather than accepting potentially inflated coverage metadata.
+    coverage = response.get("coverage")
+    counts = coverage.get("counts") if isinstance(coverage, dict) else None
+    if not isinstance(counts, dict):
+        raise ValueError("runner observation coverage counts missing")
+    expected_counts = {
+        "runnerRows": len(rows),
+        "observedPriorRuns": sum(row["observedPriorRunCount"] for row in rows),
+        "runnersWithPriorRuns": sum(row["observedPriorRunCount"] > 0 for row in rows),
+        "oddsHorseRows": sum(
+            any(key in price and price[key] is not None
+                for key in ("winOdds", "placeOdds", "popularity"))
+            for price in odds),
+    }
+    for key, value in expected_counts.items():
+        if type(counts.get(key)) is not int or counts[key] != value:
+            raise ValueError("runner observation coverage total mismatch")
+    market_counts = price_fields.get("counts")
+    if not isinstance(market_counts, dict):
+        raise ValueError("runner observation market counts missing")
+    for field, facts in observed_states.items():
+        actual = {state: sum(fact["state"] == state for fact in facts)
+                  for state in ("observed", "missing", "invalid")}
+        recorded = market_counts.get(field)
+        if not isinstance(recorded, dict) or recorded != actual:
+            raise ValueError("runner observation market total mismatch")
     rows.sort(key=lambda row: row["horseNumber"])
     race = response.get("race") or {}
     expected = race.get("fieldSize") if isinstance(race, dict) else None
