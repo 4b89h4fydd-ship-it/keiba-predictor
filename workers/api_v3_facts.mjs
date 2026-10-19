@@ -114,7 +114,7 @@ function quoteTimestampState(value) {
     return Number.isFinite(value)&&value>0?'observed-unverified-timestamp':'invalid';
   if (typeof value!=='string') return 'invalid';
   const normalized=value.trim();
-  if (!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d+)?)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(normalized))
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(normalized))
     return 'invalid';
   return Number.isNaN(Date.parse(normalized))?'invalid':'observed-unverified-timestamp';
 }
