@@ -108,6 +108,16 @@ function observationSummary(rows) {
   };
 }
 
+function quoteTimestampState(value) {
+  if (!observed(value)) return 'missing';
+  if (typeof value==='number')
+    return Number.isFinite(value)&&value>0?'observed-unverified-timestamp':'invalid';
+  if (typeof value!=='string') return 'invalid';
+  const normalized=value.trim();
+  if (!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d+)?)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(normalized))
+    return 'invalid';
+  return Number.isNaN(Date.parse(normalized))?'invalid':'observed-unverified-timestamp';
+}
 function projection(original,requestedId) {
   if (!original || typeof original!=='object' || Array.isArray(original))
     throw Error('invalid saved race');
@@ -172,10 +182,7 @@ function projection(original,requestedId) {
       horse.oddsUpdatedAt!==''?horse.oddsUpdatedAt:
       horse.oddsTimestamp!==undefined&&horse.oddsTimestamp!==null&&
       horse.oddsTimestamp!==''?horse.oddsTimestamp:null;
-    const quoteTimeState=!observed(qt)?'missing':
-      typeof qt==='boolean'||!['string','number'].includes(typeof qt)||
-      qt===0||typeof qt==='number'&&!Number.isFinite(qt)?'invalid':
-      'observed-unverified-timestamp';
+    const quoteTimeState=quoteTimestampState(qt);
     rows.at(-1).readiness={
       basicFields,basicFieldReasons,pastFieldStates,quoteTimeState,
       schema:'arvexq-v3-runner-readiness-1',horseNumber:number,
@@ -187,11 +194,12 @@ function projection(original,requestedId) {
     };
     // Timestamp is accepted only from the explicit horse quote field, never
     // the race start time, worker clock or live odds_current overlay.
-    const quoteAt=horse.oddsUpdatedAt ?? horse.oddsTimestamp;
-    const t=classify(quoteAt);
-    quoteTime.push({horseNumber:number,status:t.status,value:t.value,
-      sourceKey:observed(horse.oddsUpdatedAt)?'oddsUpdatedAt':
-        observed(horse.oddsTimestamp)?'oddsTimestamp':null});
+    const timeKey=['oddsUpdatedAt','oddsTimestamp'].find(key=>
+      Object.hasOwn(horse,key)&&horse[key]!==null&&horse[key]!=='')??null;
+    const quoteAt=timeKey===null?null:horse[timeKey];
+    quoteTime.push({horseNumber:number,status:quoteTimeState,
+      value:quoteTimeState==='observed-unverified-timestamp'?structuredClone(quoteAt):null,
+      sourceKey:timeKey});
   }
   rows.sort((a,b)=>a.horseNumber-b.horseNumber);
   const count=(values,state)=>values.filter(x=>x.state===state).length;
@@ -209,8 +217,10 @@ function projection(original,requestedId) {
   const quoteFields={
     schema:'arvexq-v3-observed-quote-fields-1',circuit,
     fields:{
-      quote_time:{rows:quoteTime,observed:quoteTime.filter(x=>x.status==='observed').length,
-        missing:quoteTime.filter(x=>x.status==='missing').length},
+      quote_time:{rows:quoteTime,
+        observed:quoteTime.filter(x=>x.status.startsWith('observed')).length,
+        missing:quoteTime.filter(x=>x.status==='missing').length,
+        invalid:quoteTime.filter(x=>x.status==='invalid').length},
     },
     quoteFreshness:'unknown',quoteTimeIndependentVerified:false,
     notModelProbabilities:true
