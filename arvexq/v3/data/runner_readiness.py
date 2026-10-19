@@ -31,8 +31,18 @@ def read_runner_readiness(detail: dict[str, Any], circuit: str) -> list[dict[str
                                  "invalid" if isinstance(value, bool) or
                                  isinstance(value, float) and not isfinite(value)
                                  else "observed")
+        reasons = {}
+        for key in basic_fields:
+            value = horse.get(key)
+            reasons[key] = ("absent" if key not in horse else
+                            "null" if value is None else
+                            "placeholder" if isinstance(value, str) and
+                            value.strip() in ("", "-", "--", "不明") else
+                            "invalid-type-or-number" if basic_fields[key] == "invalid"
+                            else "saved-value")
         result.append({
             "basicFields": basic_fields,
+            "basicFieldReasons": reasons,
             "schema": "arvexq-v3-runner-readiness-1",
             "horseNumber": past["horseNumber"],
             "history": "partial-unverified" if count > 0 else "missing",

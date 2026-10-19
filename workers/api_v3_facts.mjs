@@ -122,8 +122,16 @@ function projection(original,requestedId) {
         typeof raw==='boolean'||typeof raw==='number'&&!Number.isFinite(raw)
           ?'invalid':'observed';
     }
+    const basicFieldReasons={};
+    for (const key of Object.keys(basicFields)) {
+      const raw=horse[key];
+      basicFieldReasons[key]=!Object.hasOwn(horse,key)?'absent':
+        raw===null?'null':
+        typeof raw==='string'&&['','-','--','不明'].includes(raw.trim())?'placeholder':
+        basicFields[key]==='invalid'?'invalid-type-or-number':'saved-value';
+    }
     rows.at(-1).readiness={
-      basicFields,
+      basicFields,basicFieldReasons,
       schema:'arvexq-v3-runner-readiness-1',horseNumber:number,
       history:runs.length?'partial-unverified':'missing',
       observedPriorRunCount:runs.length,allCareerRunsVerified:false,

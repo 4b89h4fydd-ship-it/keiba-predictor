@@ -6,6 +6,7 @@ forecast, marks or tickets and prevents retroactive original exposure.
 from __future__ import annotations
 
 from copy import deepcopy
+from math import isfinite
 from typing import Any
 
 
@@ -56,6 +57,27 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
             if (not isinstance(fact, dict) or fact.get("horseNumber") != number or
                     fact.get("state") != readiness.get(field)):
                 raise ValueError("runner readiness market identity/state mismatch")
+        # Every published basic-field status must match its saved, allowlisted
+        # runner row. Neither source nor official verification is inferred.
+        basic = readiness.get("basicFields")
+        reasons = readiness.get("basicFieldReasons")
+        keys = ("name", "jockey", "trainer", "carriedWeight")
+        if not isinstance(basic, dict) or not isinstance(reasons, dict) or (
+                set(basic) != set(keys) or set(reasons) != set(keys)):
+            raise ValueError("runner readiness basic field contract mismatch")
+        for key in keys:
+            value = h.get(key)
+            reason = ("absent" if key not in h else "null" if value is None
+                      else "placeholder" if isinstance(value, str) and
+                      value.strip() in ("", "-", "--", "不明")
+                      else "invalid-type-or-number" if isinstance(value, bool) or
+                      isinstance(value, float) and not isfinite(value)
+                      else "saved-value")
+            state = ("missing" if reason in ("absent", "null", "placeholder")
+                     else "invalid" if reason == "invalid-type-or-number"
+                     else "observed")
+            if basic[key] != state or reasons[key] != reason:
+                raise ValueError("runner readiness basic field evidence mismatch")
         expected_history = ("partial-unverified" if past["observedPriorRunCount"] > 0
                             else "missing")
         expected_odds = ("observed-unverified" if
