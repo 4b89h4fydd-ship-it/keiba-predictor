@@ -5,11 +5,19 @@
   "existing_sources": [
     "arvexq/ingest/full_snapshot_codec.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Existing full snapshot codec owns compression and hash-verified restore; no schema migration"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/full_snapshot_codec.py",
+      "canonical": "arvexq/components/item_148/version.py",
+      "module": "arvexq.components.item_148.version"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-shared-context",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

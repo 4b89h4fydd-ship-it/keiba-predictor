@@ -5,11 +5,19 @@
   "existing_sources": [
     "arvexq/v3/transport/cache.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Shared result/odds cache also calls race_detail_key; storage lifecycle not isolated"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/storage/cache_keys.py",
+      "canonical": "arvexq/components/item_143/race_detail_key.py",
+      "module": "arvexq.components.item_143.race_detail_key"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-shared-context",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

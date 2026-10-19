@@ -5,11 +5,19 @@
   "existing_sources": [
     "arvexq/ingest/official_changes.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Original NAR changes acquisition routes, URL list and refresh scheduling unchanged"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/official_changes.py",
+      "canonical": "arvexq/components/item_158/official_changes.py",
+      "module": "arvexq.components.item_158.official_changes"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

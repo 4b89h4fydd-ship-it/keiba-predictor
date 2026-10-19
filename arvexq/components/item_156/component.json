@@ -5,11 +5,19 @@
   "existing_sources": [
     "arvexq/ingest/nar_official_card.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Parser owns NAR racecard weight evidence, automatic scheduling remains shared"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/nar_official_card.py",
+      "canonical": "arvexq/components/item_156/nar_official_card.py",
+      "module": "arvexq.components.item_156.nar_official_card"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-module",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

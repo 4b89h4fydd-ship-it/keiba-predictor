@@ -5,11 +5,19 @@
   "existing_sources": [
     "arvexq/storage/cache_keys.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Shared cache storage and history persistence remain in original locations"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/storage/cache_keys.py",
+      "canonical": "arvexq/components/item_144/horse_history_key.py",
+      "module": "arvexq.components.item_144.horse_history_key"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-shared-context",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

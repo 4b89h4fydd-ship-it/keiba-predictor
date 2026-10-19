@@ -6,9 +6,9 @@
 
 - 全200件に `arvexq/components/item_NNN/` と名前・区分・所有ソース・共有依存を記した `component.json` を作成。未割当の箱はない。
 - `app.py` の228関数/クラスの実体を52箱へ移動。定義位置で `install_component` を呼び、元のグローバル変数・ロック・保存先・デコレータを保って既存経路へ接続する。すでに `infra/legacy_stores.py` 等でも使われている互換実行方式の延長。これは共有実行状態の完全解消を意味しない。
-- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計86モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
+- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計91モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
 - UI組立の96処理断片を箱へ移動。残る331断片を共有UIとして明示。追加の独立スクリプト7件も責務箱から同一バイトで組み立てる。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
-- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り17箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
+- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り12箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
 - 仕様待ち29箱は空。既存の16個の旧予想補助定義は隔離したままで、新しい箱から委譲・実行しない。v3中央/地方の12予想モジュールは引き続き `None` を返す。
 - 保存済み観測データは複製・改変せず、元の保存場所を読む。D1/SQLiteスキーマ・取得URL・キャッシュ条件・UI・本番環境を変更しない。
 
@@ -19,7 +19,7 @@
 
 ## 2026-10-20 追加の構造移動（GitHub上の旧実装から再実施）
 
-以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は17。構造検証と本番認定を混同しない。
+以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は12。構造検証と本番認定を混同しない。
 
 ### キャッシュポリシー分離の限定範囲
 
@@ -52,6 +52,10 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 ### #134・#137の既存読込UI資産を責務箱へ移動
 
 既存の `morning/saved_ticket_receipt.js` と `previous_ai_results.js` はそれぞれ#134/#137へ同一バイトで配置。既存のURL/保存先はそのまま維持し、資産の読込補助関数 `read_asset` が元ファイルとの完全一致を検証して所有先から読み取る。ただし直接配信する旧静的URLおよび#138の当日成績は共有のままであり、完全独立や実際の本番動作確認を示さない。発走前買い目の新規作成・再計算は行わない。
+
+### 追加5箱：キャッシュキー・版管理・NAR取得処理
+
+#143/#144 は既存のレース詳細キーと履歴キーの純関数本体、#148 は既存スナップショットの版番号と復元許容条件を責務箱へ分離。これらはストア全体の独立化やスキーマ変更ではなく、元のキー生成結果と圧縮復元を保持する。#156 NAR公式出馬表の観測値パーサ、#158 NAR公式当日変更情報の既存読込処理を互換エイリアス付きで移動。旧URL/再試行/更新条件を追加・変更せず、保存済みデータを編集しない。完全独立化・本番検証は未完了。
 
 ## 全項目の配置
 
@@ -201,12 +205,12 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 | 140 | SQLite保存 | [item_140](../../arvexq/components/item_140/component.json) | migrated-shared-context |
 | 141 | レース一覧キャッシュ | [item_141](../../arvexq/components/item_141/component.json) | migrated-shared-context |
 | 142 | レース詳細キャッシュ | [item_142](../../arvexq/components/item_142/component.json) | migrated-shared-context |
-| 143 | 出馬表キャッシュ | [item_143](../../arvexq/components/item_143/component.json) | mapped-existing-source |
-| 144 | 過去走キャッシュ | [item_144](../../arvexq/components/item_144/component.json) | mapped-existing-source |
+| 143 | 出馬表キャッシュ | [item_143](../../arvexq/components/item_143/component.json) | migrated-shared-context |
+| 144 | 過去走キャッシュ | [item_144](../../arvexq/components/item_144/component.json) | migrated-shared-context |
 | 145 | オッズキャッシュ | [item_145](../../arvexq/components/item_145/component.json) | mapped-existing-source |
 | 146 | 結果キャッシュ | [item_146](../../arvexq/components/item_146/component.json) | migrated-module |
 | 147 | 発走前スナップショット | [item_147](../../arvexq/components/item_147/component.json) | migrated-ui-fragment |
-| 148 | 保存データバージョン管理 | [item_148](../../arvexq/components/item_148/component.json) | mapped-existing-source |
+| 148 | 保存データバージョン管理 | [item_148](../../arvexq/components/item_148/component.json) | migrated-shared-context |
 | 149 | キャッシュ期限・破棄 | [item_149](../../arvexq/components/item_149/component.json) | migrated-shared-context |
 | 150 | 保存失敗時復旧 | [item_150](../../arvexq/components/item_150/component.json) | mapped-existing-source |
 | 151 | Full Prefetch | [item_151](../../arvexq/components/item_151/component.json) | migrated-shared-context |
@@ -214,9 +218,9 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 | 153 | Result Repair | [item_153](../../arvexq/components/item_153/component.json) | migrated-shared-context |
 | 154 | History Repair | [item_154](../../arvexq/components/item_154/component.json) | migrated-shared-context |
 | 155 | オッズ自動更新 | [item_155](../../arvexq/components/item_155/component.json) | migrated-shared-context |
-| 156 | 馬体重自動更新 | [item_156](../../arvexq/components/item_156/component.json) | mapped-existing-source |
+| 156 | 馬体重自動更新 | [item_156](../../arvexq/components/item_156/component.json) | migrated-module |
 | 157 | 天候・馬場自動更新 | [item_157](../../arvexq/components/item_157/component.json) | migrated-shared-context |
-| 158 | 取消・除外自動更新 | [item_158](../../arvexq/components/item_158/component.json) | mapped-existing-source |
+| 158 | 取消・除外自動更新 | [item_158](../../arvexq/components/item_158/component.json) | migrated-module |
 | 159 | レース詳細事前生成 | [item_159](../../arvexq/components/item_159/component.json) | migrated-shared-context |
 | 160 | 取得失敗時再試行 | [item_160](../../arvexq/components/item_160/component.json) | migrated-shared-context |
 | 161 | データ鮮度判定 | [item_161](../../arvexq/components/item_161/component.json) | migrated-module |
