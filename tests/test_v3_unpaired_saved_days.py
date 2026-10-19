@@ -98,6 +98,7 @@ def test_explicit_end_date_excludes_later_unpaired_files(tmp_path):
     report = verify_saved_week(tmp_path, days=2, end_date="2026-10-14")
     assert report["unpairedSavedDays"] == []
     assert report["integrityScanRange"] == ["2026-10-12", "2026-10-14"]
+    assert report["requestedEndDate"] == "2026-10-14"
     assert not any(error["code"] == "unpaired-saved-day" for error in report["errors"])
     # Fixture omits gzip originals; do not claim full archive integrity.
     assert report["allIndexedSavedOriginalsVerified"] is False
@@ -147,3 +148,5 @@ def test_explicit_end_date_keeps_latest_paired_selection_before_cutoff(tmp_path)
     assert earlier["dateRange"] == ["2026-10-12", "2026-10-14"]
     assert earlier["integrityScanRange"] == ["2026-10-12", "2026-10-14"]
     assert latest["verifiedSavedDates"] == ["2026-10-14", "2026-10-15"]
+    assert earlier["requestedEndDate"] == "2026-10-14"
+    assert latest["requestedEndDate"] is None
