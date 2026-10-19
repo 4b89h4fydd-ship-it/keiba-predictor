@@ -125,3 +125,31 @@ def test_past_cells_and_quote_time_parity(circuit, city):
         {"date": "2026-10-10", "fields": {
             "track": "observed", "distance": "missing",
             "finish": "invalid", "last3f": "observed"}}]
+
+
+@pytest.mark.parametrize("circuit,city", [("jra", "京都"), ("nar", "高知")])
+@pytest.mark.parametrize("timestamp,expected", [
+    ("2026-10-19T12:00:00+09:00", "observed-unverified-timestamp"),
+    (None, "missing"),
+    (" - ", "missing"),
+    (False, "invalid"),
+    (0, "invalid"),
+    ("not-a-timestamp", "invalid"),
+    ("2026-10-19T12:00:00", "invalid"),
+])
+def test_saved_quote_time_parity(circuit, city, timestamp, expected):
+    horse = {"horseNumber": 1}
+    if timestamp is not None:
+        horse["oddsUpdatedAt"] = timestamp
+    data = {"id": f"{circuit}-2026-10-19-{city}-03",
+            "date": "2026-10-19", "circuit": circuit, "horses": [horse]}
+    py = factual_screen(factual_response(data))
+    js = json.loads(subprocess.run(
+        ["node", "--input-type=module", "-e", NODE],
+        input=json.dumps(data, ensure_ascii=False),
+        text=True, capture_output=True, cwd=ROOT, check=True,
+    ).stdout)
+    assert py["rows"] == js["rows"]
+    assert py["quoteFields"]["fields"]["quote_time"] == js["quoteFields"]["fields"]["quote_time"]
+    assert py["rows"][0]["readiness"]["quoteTimeState"] == expected
+    assert py["observationSummary"] == js["observationSummary"]
