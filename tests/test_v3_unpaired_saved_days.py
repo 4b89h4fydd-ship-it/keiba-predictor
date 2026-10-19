@@ -108,8 +108,12 @@ def test_empty_paired_archive_is_not_reported_as_verified(tmp_path):
     snapshots = tmp_path / "saved-snapshots"
     cards.mkdir()
     snapshots.mkdir()
-    (cards / "2026-10-12.json").write_text('{"races":[]}', encoding="utf-8")
-    (snapshots / "2026-10-12.json").write_text('{"races":{}}', encoding="utf-8")
+    (cards / "2026-10-12.json").write_text(
+        '{"version":"arvexq-static-entry-v1","date":"2026-10-12","raceCount":0,"races":[]}',
+        encoding="utf-8")
+    (snapshots / "2026-10-12.json").write_text(
+        '{"version":"arvexq-saved-snapshots-v1","date":"2026-10-12","races":{}}',
+        encoding="utf-8")
     report = verify_saved_week(tmp_path, days=1)
     assert report["expectedRacecards"] == 0
     assert report["hashVerifiedRacecards"] == 0
