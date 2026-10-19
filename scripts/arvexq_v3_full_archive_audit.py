@@ -19,11 +19,13 @@ def summarize_for_ci(result):
     errors = result.get("errors")
     error_rows = errors if type(errors) is list else []
     condensed["errorCount"] = len(error_rows)
+    circuits = result.get("circuits")
+    circuit_rows = circuits if type(circuits) is dict else {}
     condensed["verificationByCircuit"] = {
         circuit: {"expected": counts.get("expected"),
                   "verified": counts.get("verified"),
                   "failed": counts.get("failed")}
-        for circuit, counts in sorted(result["circuits"].items())
+        for circuit, counts in sorted(circuit_rows.items()) if type(counts) is dict
     }
     def valid_count(value):
         return type(value) is int and value >= 0
@@ -33,7 +35,9 @@ def summarize_for_ci(result):
                   and counts["expected"] == counts["verified"] + counts["failed"])
         for circuit, counts in condensed["verificationByCircuit"].items()
     }
-    condensed["circuitKeysValid"] = set(condensed["verificationByCircuit"]) == {"jra", "nar"}
+    condensed["circuitKeysValid"] = (type(circuits) is dict
+                                     and set(circuits) == {"jra", "nar"}
+                                     and len(condensed["verificationByCircuit"]) == 2)
     condensed["verificationCountsReconciled"] = (
         condensed["circuitKeysValid"]
         and all(condensed["circuitCountReconciliation"].values())
