@@ -21,8 +21,7 @@
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [
-    "JRA",
-    "NAR"
+    "JRA"
   ],
   "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
 }

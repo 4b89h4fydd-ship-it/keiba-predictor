@@ -87,3 +87,10 @@ def test_structural_audit_detects_foreign_or_missing_owned_assets():
         errors=audit_module.audit()['errors']
     assert any('owned asset belongs outside' in error for error in errors)
     assert any('missing owned asset' in error for error in errors)
+
+
+def test_jra_field_parser_boxes_are_not_mislabeled_as_nar():
+    # IDs 008–020 currently own only existing JRA calendar/card callers.
+    # NAR observations remain in their separate providers and boxes.
+    for item_id in range(8, 21):
+        assert describe(item_id)['circuits'] == ['JRA']
