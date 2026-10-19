@@ -85,3 +85,29 @@ def test_readiness_rejects_cross_horse_market_and_fabricated_completeness(circui
     data["runnerReadiness"][0]["canClaimFullyRetrieved"] = True
     with pytest.raises(ValueError, match="readiness"):
         factual_screen(data)
+
+
+@pytest.mark.parametrize("circuit", ("jra", "nar"))
+def test_screen_rejects_tampered_prior_field_evidence(circuit):
+    original = factual_response(saved(circuit))
+    wrong = deepcopy(original)
+    wrong["runnerReadiness"][0]["pastFieldStates"][0]["fields"]["finish"] = "missing"
+    with pytest.raises(ValueError, match="past field state"):
+        factual_screen(wrong)
+    wrong = deepcopy(original)
+    wrong["runnerReadiness"][0]["pastFieldStates"][0]["date"] = "2026-01-01"
+    with pytest.raises(ValueError, match="past field identity"):
+        factual_screen(wrong)
+    wrong = deepcopy(original)
+    wrong["runnerReadiness"][0]["pastFieldStates"].pop()
+    with pytest.raises(ValueError, match="past field alignment"):
+        factual_screen(wrong)
+    wrong = deepcopy(original)
+    wrong["history"][0]["observedPriorRunCount"] += 1
+    wrong["runnerReadiness"][0]["observedPriorRunCount"] += 1
+    with pytest.raises(ValueError, match="historical run count"):
+        factual_screen(wrong)
+    wrong = deepcopy(original)
+    wrong["runnerReadiness"][0]["quoteTimeState"] = "verified-fresh"
+    with pytest.raises(ValueError, match="quote time"):
+        factual_screen(wrong)

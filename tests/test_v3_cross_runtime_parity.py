@@ -69,7 +69,7 @@ def test_saved_runner_and_display_readiness_parity(circuit, city):
     assert py["predictionStatus"] == js["predictionStatus"] == "not-implemented"
     assert py["rows"][1]["readiness"]["quoteTimeState"] == "missing"
     assert py["rows"][1]["readiness"]["pastFieldStates"][0]["fields"]["track"] == "observed"
-    assert py["rows"][1]["readiness"]["pastFieldStates"][0]["fields"]["finish"] == "missing"
+    assert py["rows"][1]["readiness"]["pastFieldStates"][0]["fields"]["finish"] == "observed"
     assert py["rows"][1]["observedPriorRunCount"] == 9
     assert len(py["rows"][1]["recentRaces"]) == 5
 

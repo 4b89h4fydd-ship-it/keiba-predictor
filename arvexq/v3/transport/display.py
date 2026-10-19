@@ -92,6 +92,33 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
         runs = past.get("pastRuns")
         if not isinstance(runs, list):
             raise ValueError("past run list missing")
+        observed_run_count = past.get("observedPriorRunCount")
+        if type(observed_run_count) is not int or observed_run_count != len(runs):
+            raise ValueError("runner readiness historical run count mismatch")
+        states = readiness.get("pastFieldStates")
+        if not isinstance(states, list) or len(states) != len(runs):
+            raise ValueError("runner readiness past field alignment mismatch")
+        for run, item in zip(runs, states):
+            if not isinstance(run, dict) or not isinstance(item, dict) or item.get("date") != run.get("date"):
+                raise ValueError("runner readiness past field identity mismatch")
+            cell_states = item.get("fields")
+            keys = ("track", "distance", "finish", "last3f")
+            if not isinstance(cell_states, dict) or set(cell_states) != set(keys):
+                raise ValueError("runner readiness past field contract mismatch")
+            for key in keys:
+                value = run.get(key)
+                actual_state = ("missing" if value is None or isinstance(value, str) and
+                                value.strip() in ("", "-", "--", "不明") else
+                                "invalid" if isinstance(value, bool) or isinstance(value, float)
+                                and not isfinite(value) else "observed")
+                if cell_states[key] != actual_state:
+                    raise ValueError("runner readiness past field state mismatch")
+        # Saved odds timestamps are not exposed in the allowlisted runner
+        # row. The independent quoteFields contract is responsible for
+        # timestamp provenance; this view only validates a constrained state.
+        if readiness.get("quoteTimeState") not in (
+                "missing", "invalid", "observed-unverified-timestamp"):
+            raise ValueError("runner readiness quote time state mismatch")
         rows.append({
             "horseNumber": actual,
             "horse": deepcopy(h),
