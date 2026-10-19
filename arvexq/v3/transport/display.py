@@ -62,6 +62,18 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
         if not isinstance(values, list) or len(values) != len(entries):
             raise ValueError("runner readiness oddsFields alignment mismatch")
         observed_states[field] = values
+    quote_fields = response.get("quoteFields")
+    time = quote_fields.get("fields", {}).get("quote_time") if isinstance(quote_fields, dict) else None
+    if not isinstance(time, dict) or not isinstance(time.get("rows"), list) or len(time["rows"]) != len(entries):
+        raise ValueError("runner quote time observation alignment mismatch")
+    for state in ("observed", "missing", "invalid"):
+        actual = sum(
+            (row.get("status", "").startswith("observed") if state == "observed"
+             else row.get("status") == state)
+            for row in time["rows"] if isinstance(row, dict)
+        )
+        if type(time.get(state)) is not int or time[state] != actual:
+            raise ValueError("runner quote time observation count mismatch")
     # Preserve source row identity and refuse ambiguous duplicates, not a
     # fabricated index/name merge that could attach another horse's history.
     seen: set[int] = set()
@@ -87,6 +99,11 @@ def factual_screen(response: dict[str, Any], *, recent_limit: int = 5) -> dict[s
             if (not isinstance(fact, dict) or fact.get("horseNumber") != number or
                     fact.get("state") != readiness.get(field)):
                 raise ValueError("runner readiness market identity/state mismatch")
+        quote_row = time["rows"][len(seen) - 1]
+        if not isinstance(quote_row, dict) or quote_row.get("horseNumber") != number:
+            raise ValueError("runner quote time identity mismatch")
+        if quote_row.get("status") != readiness.get("quoteTimeState"):
+            raise ValueError("runner quote time state mismatch")
         # Every published basic-field status must match its saved, allowlisted
         # runner row. Neither source nor official verification is inferred.
         basic = readiness.get("basicFields")

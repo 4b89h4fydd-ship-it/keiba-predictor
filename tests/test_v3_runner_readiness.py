@@ -138,3 +138,20 @@ def test_screen_rejects_inflated_coverage_and_market_counts(circuit):
     wrong["coverage"]["counts"]["runnerRows"] = True
     with pytest.raises(ValueError, match="coverage total"):
         factual_screen(wrong)
+
+
+@pytest.mark.parametrize("circuit", ("jra", "nar"))
+def test_quote_time_independent_rows_refuse_misalignment(circuit):
+    original = factual_response(saved(circuit))
+    for mutate, expected in (
+        (lambda x: x["quoteFields"]["fields"]["quote_time"]["rows"][0].update(
+            {"horseNumber": 999}), "quote time identity"),
+        (lambda x: x["runnerReadiness"][0].update(
+            {"quoteTimeState": "observed-unverified-timestamp"}), "quote time state"),
+        (lambda x: x["quoteFields"]["fields"]["quote_time"].update(
+            {"missing": 999}), "quote time observation count"),
+    ):
+        wrong = deepcopy(original)
+        mutate(wrong)
+        with pytest.raises(ValueError, match=expected):
+            factual_screen(wrong)
