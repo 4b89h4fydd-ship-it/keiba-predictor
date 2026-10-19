@@ -107,6 +107,10 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
                                 "historyRows": h["observedPriorRunRows"]})
     counts_out = {c: dict(counts[c]) for c in ("jra", "nar")}
     verified = sum(r.get("verified", 0) for r in counts_out.values())
+    failed = sum(r.get("failed", 0) for r in counts_out.values())
+    if verified + failed != checked:
+        errors.append({"code": "race-verification-count-mismatch",
+                       "expected": checked, "verified": verified, "failed": failed})
     if checked == 0:
         errors.append({"code": "empty-saved-race-selection",
                        "reason": "no saved race originals were eligible for verification"})
