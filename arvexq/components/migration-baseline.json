@@ -110,13 +110,6 @@
     "_environment_loop": "68ccf402b990788c234e804a1ac2c2db4cbb5367c2f0f44eb68795d04cb6b328",
     "_start_environment_collector": "0795c7f3cd0ffa11c96cefa30e1a96d145a05bd809af12e8ab4f341a94a7af65",
     "_prediction_clock_state": "fe6f9e6b3dbac754ab3d4c27dbd58827b356e37edbf6ded210a86c2558ce007a",
-    "_learning_probability": "682310b66e265a2b79af7015eb90f3d3d181ea0f34706a95e5101ca141e0f0c9",
-    "_learning_metric": "c88f857a911ec256d3863377c64e3daa0b2e61537eae1c5e0fa97539ff4df102",
-    "_learning_races": "a503efdf8b455ea4a5d4498bc4149445d4aca0b2e764b69f8cbdb5a2b0b1003f",
-    "_learning_paired_top1": "3dc6d326a8ec55962daa5045fe8ae86609e4505520ad02e721bee116ad30a488",
-    "_v312_method": "a7d7dfdf7d9ed731903cb9a6259f0951c2329af7fa40dbf5cc73885b8e32f9ed",
-    "_v312_base_winner_weights": "b83ad78e4a733f79335a9acb9c7adf5409db70dc555a1650f77a083220581f11",
-    "_winner_learning_profile": "9f609dc6ee004e04b8794076cd10e690ff5a2ffbedc2d37d5427ac7a7d1169ad",
     "_prediction_audit_from_lock": "d06ddd8eaddb6c458a0a5082f8fc46f4fcea95b8e9afb709873fdf5835dc4665",
     "_attach_prerace_audit": "c45ff842353c727beb6a0ca94f5053d9093b5c132b2a3ddaf754c327851b5877",
     "_compact_display_snapshot": "93d61d12527acacabd88ddc155972213e4d07a23abdff9b7e9f93e37e532476e",
@@ -246,5 +239,5 @@
     "manifest": "5776073ea12f171654ea229bd48fbaf1a8308ad2b87237e717dd170f67960a50",
     "service_worker": "2c58f9497abc9e14345586cc3cd51dd90e3cfdb0dbc7494531d3e9d729e1d8ef"
   },
-  "note": "Includes the previously paused parser extraction now resumed in this change."
+  "note": "Includes the previously paused parser extraction now resumed in this change.; 2026-10-20: seven rejected legacy winner-training definitions removed from app and baseline after owner-requested deletion."
 }
