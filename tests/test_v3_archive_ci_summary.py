@@ -6,6 +6,7 @@ def test_ci_summary_aggregates_error_codes_and_unpaired_days():
     result = {
         "dateRange": ["2026-10-12", "2026-10-14"],
         "integrityScanRange": ["2026-10-12", "2026-10-15"],
+        "integrityScanCalendarDays": 4,
         "expectedRacecards": 2,
         "hashVerifiedRacecards": 1,
         "allIndexedSavedOriginalsVerified": False,
@@ -43,6 +44,7 @@ def test_ci_summary_reconciles_valid_circuit_totals():
     result = {
         "dateRange": ["2026-10-12", "2026-10-12"],
         "integrityScanRange": ["2026-10-12", "2026-10-12"],
+        "integrityScanCalendarDays": 1,
         "expectedRacecards": 3,
         "hashVerifiedRacecards": 2,
         "allIndexedSavedOriginalsVerified": False,
@@ -80,6 +82,7 @@ def test_ci_summary_rejects_missing_circuit_and_invalid_counts():
     base = {
         "dateRange": ["2026-10-12", "2026-10-12"],
         "integrityScanRange": ["2026-10-12", "2026-10-12"],
+        "integrityScanCalendarDays": 1,
         "expectedRacecards": 1,
         "hashVerifiedRacecards": 1,
         "allIndexedSavedOriginalsVerified": True,
@@ -116,6 +119,7 @@ def test_ci_saved_date_selection_rejects_duplicates_and_mismatched_range():
         "verifiedSavedDates": ["2026-10-12", "2026-10-14"],
         "pairedDateRangeMatchesSelection": True,
         "integrityScanRange": ["2026-10-12", "2026-10-14"],
+        "integrityScanCalendarDays": 3,
         "expectedRacecards": 1,
         "hashVerifiedRacecards": 1,
         "allIndexedSavedOriginalsVerified": True,
@@ -150,6 +154,7 @@ def test_ci_rejects_invalid_integrity_scan_bounds_and_unpaired_dates():
         "verifiedSavedDates": ["2026-10-12", "2026-10-14"],
         "pairedDateRangeMatchesSelection": True,
         "integrityScanRange": ["2026-10-12", "2026-10-15"],
+        "integrityScanCalendarDays": 4,
         "expectedRacecards": 1,
         "hashVerifiedRacecards": 1,
         "allIndexedSavedOriginalsVerified": True,
@@ -170,6 +175,9 @@ def test_ci_rejects_invalid_integrity_scan_bounds_and_unpaired_dates():
         {"integrityScanRange": ["bad", "2026-10-15"]},
         {"unpairedSavedDays": [{"date": "2026-10-16", "filePresence": "manifest-only"}]},
         {"unpairedSavedDays": [{"date": "2026-10-15", "filePresence": "both-present"}]},
+        {"integrityScanCalendarDays": 3},
+        {"unpairedSavedDays": [{"date": "2026-10-15", "filePresence": "manifest-only"},
+                               {"date": "2026-10-15", "filePresence": "manifest-only"}]},
     ):
         broken = {**base, **overrides}
         summary = summarize_for_ci(broken)
