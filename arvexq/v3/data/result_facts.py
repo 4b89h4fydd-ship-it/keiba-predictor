@@ -5,6 +5,7 @@ views of the ONE existing saved race result; not new acquisition routes.
 """
 from __future__ import annotations
 
+from importlib import import_module
 from copy import deepcopy
 from typing import Any
 
@@ -27,6 +28,9 @@ PAYOUT_KINDS = {
     "trifecta": ("3連単", "３連単", "三連単"),
 }
 PAYOUT_FIELDS = ("kind", "combination", "combo", "payout", "amount", "popularity")
+_FINISH_OWNER = {"finish":70,"margin":71,"clock":72,"corners":75}
+_PAYOUT_OWNER = {"win":76,"place":77,"frame_quinella":78,"quinella":79,"wide":80,"exacta":81,"trio":82,"trifecta":83}
+
 
 
 def _observed(value: Any) -> bool:
@@ -44,53 +48,16 @@ def _result(detail: dict[str, Any], circuit: str) -> dict | None:
 
 
 def finish_field(detail: dict[str, Any], circuit: str, field: str) -> list[dict]:
-    """Only original, nonblank values for one finisher field.
-
-    Missing rank/clock/margin is *not* guessed from array ordering.
-    A source may use both 'finish' and 'rank'; preserve what it supplied.
-    """
+    """Dispatch an observed finisher projection to its responsibility owner."""
     if field not in FINISH_FIELDS:
         raise ValueError("unrecognized finish field")
-    result = _result(detail, circuit)
-    rows = result.get("finishers") if result else None
-    if not isinstance(rows, list):
-        return []
-    fields = FINISH_FIELDS[field]
-    output = []
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        selected = {key: deepcopy(row[key]) for key in fields
-                    if key in row and _observed(row[key])}
-        if not selected:
-            continue
-        item = {"horseNumber": deepcopy(row.get("horseNumber"))}
-        item.update(selected)
-        output.append(item)
-    return output
-
+    return import_module("arvexq.components.item_" + f"{_FINISH_OWNER[field]:03d}" + ".result_projection").read(detail, circuit)
 
 def payout_field(detail: dict[str, Any], circuit: str, kind: str) -> list[dict]:
-    """Match an explicit existing payout *kind*, not its bet probability."""
+    """Dispatch an observed payout projection to its responsibility owner."""
     if kind not in PAYOUT_KINDS:
         raise ValueError("unrecognized payout kind")
-    result = _result(detail, circuit)
-    rows = result.get("payouts") if result else None
-    if not isinstance(rows, list):
-        return []
-    names = PAYOUT_KINDS[kind]
-    output = []
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        if row.get("kind") not in names:
-            continue
-        # Preserve observed kind/combination/payout without interpreting a
-        # blank amount as a loss or making up a missing payout.
-        output.append({key: deepcopy(row[key]) for key in PAYOUT_FIELDS
-                       if key in row and _observed(row[key])})
-    return output
-
+    return import_module("arvexq.components.item_" + f"{_PAYOUT_OWNER[kind]:03d}" + ".payout_projection").read(detail, circuit)
 
 def unmapped_payout_count(detail: dict[str, Any], circuit: str) -> int:
     """Separate unsupported kind labels from genuine no-payout evidence."""

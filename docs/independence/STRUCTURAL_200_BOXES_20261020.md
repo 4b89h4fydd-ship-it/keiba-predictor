@@ -6,9 +6,9 @@
 
 - 全200件に `arvexq/components/item_NNN/` と名前・区分・所有ソース・共有依存を記した `component.json` を作成。未割当の箱はない。
 - `app.py` の228関数/クラスの実体を52箱へ移動。定義位置で `install_component` を呼び、元のグローバル変数・ロック・保存先・デコレータを保って既存経路へ接続する。すでに `infra/legacy_stores.py` 等でも使われている互換実行方式の延長。これは共有実行状態の完全解消を意味しない。
-- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計67モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
+- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計79モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
 - UIの75処理断片を箱へ移動。残る352断片は共有UIとして明示。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
-- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り46箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
+- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り36箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
 - 仕様待ち29箱は空。既存の16個の旧予想補助定義は隔離したままで、新しい箱から委譲・実行しない。v3中央/地方の12予想モジュールは引き続き `None` を返す。
 - 保存済み観測データは複製・改変せず、元の保存場所を読む。D1/SQLiteスキーマ・取得URL・キャッシュ条件・UI・本番環境を変更しない。
 
@@ -19,7 +19,7 @@
 
 ## 2026-10-20 追加の構造移動（GitHub上の旧実装から再実施）
 
-以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は46。構造検証と本番認定を混同しない。
+以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は36。構造検証と本番認定を混同しない。
 
 ### キャッシュポリシー分離の限定範囲
 
@@ -32,6 +32,10 @@
 ### 追加: レース番号・読込HTTP再試行・個別UI5資産
 
 #011 の既存JRAレース番号関数、#160 の既存 `get_json` 実体を責務箱へ移動。両方とも共通ファイルを保つため移動済み共有依存であり完全独立ではない。#058/#182/#185/#186/#187 は既存UIスクリプトと同一の本体を責務箱に置き、`read_asset` が同一バイト検証後に責務箱の版を組み立てに使用する。旧静的ファイルは既存の配信先を壊さない互換スナップショットとして保存し、表示内容は変更しない。実データの改変、新取得経路、予想ロジック有効化はしない。
+
+### 結果・払戻を責務別に分岐（10箱を追加接続）
+
+#070〜#072の着順/着差/時計、および#077〜#083の券種別払戻は、従来の `result_facts.py` の汎用抽出本体から責務箱の読み取り実装に切り出した。#075の通過順位、#076の単勝払戻も同じ呼出境界に接続した。既存のJRA/NAR別読み取りモジュールは公開関数経由で同じキー/値と欠損扱いを返す。対象は**保存済み結果の読み取り投影**のみであり、#076の共通払戻HTMLパーサ、保存・修復・確定判定・本番UIなどの完全分離を主張しない。予想・買い目生成は実施しない。
 
 ## 全項目の配置
 
@@ -108,20 +112,20 @@
 | 067 | オッズ保存・復元 | [item_067](../../arvexq/components/item_067/component.json) | migrated-shared-context |
 | 068 | オッズ表示 | [item_068](../../arvexq/components/item_068/component.json) | mapped-existing-source |
 | 069 | オッズ欠損判定 | [item_069](../../arvexq/components/item_069/component.json) | migrated-module |
-| 070 | 着順取得 | [item_070](../../arvexq/components/item_070/component.json) | mapped-existing-source |
-| 071 | 着差取得 | [item_071](../../arvexq/components/item_071/component.json) | mapped-existing-source |
-| 072 | 走破時計取得 | [item_072](../../arvexq/components/item_072/component.json) | mapped-existing-source |
+| 070 | 着順取得 | [item_070](../../arvexq/components/item_070/component.json) | migrated-shared-context |
+| 071 | 着差取得 | [item_071](../../arvexq/components/item_071/component.json) | migrated-shared-context |
+| 072 | 走破時計取得 | [item_072](../../arvexq/components/item_072/component.json) | migrated-shared-context |
 | 073 | 確定結果判定 | [item_073](../../arvexq/components/item_073/component.json) | migrated-module |
 | 074 | 速報結果判定 | [item_074](../../arvexq/components/item_074/component.json) | mapped-existing-source |
 | 075 | コーナー通過順位取得 | [item_075](../../arvexq/components/item_075/component.json) | migrated-module |
 | 076 | 単勝払戻 | [item_076](../../arvexq/components/item_076/component.json) | migrated-module |
-| 077 | 複勝払戻 | [item_077](../../arvexq/components/item_077/component.json) | mapped-existing-source |
-| 078 | 枠連払戻 | [item_078](../../arvexq/components/item_078/component.json) | mapped-existing-source |
-| 079 | 馬連払戻 | [item_079](../../arvexq/components/item_079/component.json) | mapped-existing-source |
-| 080 | ワイド払戻 | [item_080](../../arvexq/components/item_080/component.json) | mapped-existing-source |
-| 081 | 馬単払戻 | [item_081](../../arvexq/components/item_081/component.json) | mapped-existing-source |
-| 082 | 3連複払戻 | [item_082](../../arvexq/components/item_082/component.json) | mapped-existing-source |
-| 083 | 3連単払戻 | [item_083](../../arvexq/components/item_083/component.json) | mapped-existing-source |
+| 077 | 複勝払戻 | [item_077](../../arvexq/components/item_077/component.json) | migrated-shared-context |
+| 078 | 枠連払戻 | [item_078](../../arvexq/components/item_078/component.json) | migrated-shared-context |
+| 079 | 馬連払戻 | [item_079](../../arvexq/components/item_079/component.json) | migrated-shared-context |
+| 080 | ワイド払戻 | [item_080](../../arvexq/components/item_080/component.json) | migrated-shared-context |
+| 081 | 馬単払戻 | [item_081](../../arvexq/components/item_081/component.json) | migrated-shared-context |
+| 082 | 3連複払戻 | [item_082](../../arvexq/components/item_082/component.json) | migrated-shared-context |
+| 083 | 3連単払戻 | [item_083](../../arvexq/components/item_083/component.json) | migrated-shared-context |
 | 084 | 結果欠損補修 | [item_084](../../arvexq/components/item_084/component.json) | mapped-existing-source |
 | 085 | 払戻欠損補修 | [item_085](../../arvexq/components/item_085/component.json) | migrated-shared-context |
 | 086 | 確定結果上書き防止 | [item_086](../../arvexq/components/item_086/component.json) | migrated-shared-context |
