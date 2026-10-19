@@ -72,7 +72,7 @@ def test_ci_summary_reconciles_valid_circuit_totals():
 def test_ci_exit_rejects_inconsistent_counts_even_if_report_claims_verified():
     result = {"allIndexedSavedOriginalsVerified": True}
     assert audit_exit_code(result, {"verificationCountsReconciled": False}) == 1
-    assert audit_exit_code(result, {"verificationCountsReconciled": True, "verificationSuccessReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "requestedEndDateReconciled": True, "unpairedErrorsReconciled": True, "errorSummaryReconciled": True, "errorCount": 0, "errorCodes": {}}) == 0
+    assert audit_exit_code(result, {"verificationCountsReconciled": True, "verificationSuccessReconciled": True, "verificationFlagConsistent": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "requestedEndDateReconciled": True, "unpairedErrorsReconciled": True, "errorSummaryReconciled": True, "errorCount": 0, "errorCodes": {}}) == 0
     assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True}) == 1
     assert audit_exit_code(
         {"allIndexedSavedOriginalsVerified": False},
@@ -218,6 +218,7 @@ def test_ci_exit_rejects_errors_even_if_success_flag_is_true():
     result = {"allIndexedSavedOriginalsVerified": True}
     flags = {"verificationCountsReconciled": True,
              "verificationSuccessReconciled": True,
+             "verificationFlagConsistent": True,
              "savedDateSelectionReconciled": True,
              "integrityScanRangeReconciled": True,
              "requestedEndDateReconciled": True,
@@ -529,3 +530,29 @@ def test_ci_verification_success_requires_nonempty_all_verified_and_no_failures(
         summary = summarize_for_ci(broken)
         assert summary["verificationSuccessReconciled"] is False
         assert audit_exit_code(broken, summary) == 1
+
+
+def test_ci_rejects_fabricated_success_flag_when_errors_or_counts_disagree():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-12"],
+        "dateCount": 1, "verifiedSavedDates": ["2026-10-12"],
+        "pairedDateRangeMatchesSelection": True,
+        "integrityScanRange": ["2026-10-12", "2026-10-12"],
+        "integrityScanCalendarDays": 1,
+        "expectedRacecards": 1, "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": True,
+        "circuits": {"jra": {"expected": 1, "verified": 1, "failed": 0},
+                     "nar": {"expected": 0, "verified": 0, "failed": 0}},
+        "errors": [], "unpairedSavedDays": [],
+        "runnerEvidenceTriage": {"zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+                                 "missingCardCarriedWeight": 0, "missingWeightByState": {}},
+    }
+    assert summarize_for_ci(base)["verificationFlagConsistent"] is True
+    for overrides in (
+        {"errors": [{"code": "verification-failed"}]},
+        {"hashVerifiedRacecards": 0},
+        {"allIndexedSavedOriginalsVerified": "true"},
+    ):
+        summary = summarize_for_ci({**base, **overrides})
+        assert summary["verificationFlagConsistent"] is False
+        assert audit_exit_code(base, summary) == 1
