@@ -352,7 +352,7 @@ jobs:
                        {'horseNumber':2,'name':'テスト馬2','jockey':'騎手B','carriedWeight':55.0,'recentRaces':[{'finish':2}]},
                        {'horseNumber':3,'name':'テスト馬3','jockey':'騎手C','carriedWeight':56.0,'recentRaces':[{'finish':3}]}],
             'preparedMeta':{'diagnosisReady':True,'careerReady':True},'preRacePrediction':{'mark':'◎','score':88},'predictionAudit':{'locked':True},
-            'predictionModelVersion':prefetch.model_version({'circuit':'地方'}),
+            'predictionModelVersion':'arvexq-retired-assistant-rank-baseline',
             'predictionStatus':'ready', 'observedModelCoverage':{'allObserved':True},
           }
           base['preparedMeta']['analysisInputHash']=analysis_input_hash(base)
