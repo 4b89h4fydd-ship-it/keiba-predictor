@@ -130,3 +130,20 @@ def test_empty_paired_archive_is_not_reported_as_verified(tmp_path):
     assert any(e["code"] == "empty-saved-race-selection" for e in report["errors"])
     assert report["allIndexedSavedOriginalsVerified"] is False
     assert report["officialPublishedRacesVerified"] is False
+
+
+def test_explicit_end_date_keeps_latest_paired_selection_before_cutoff(tmp_path):
+    cards = tmp_path / "racecards"
+    snapshots = tmp_path / "saved-snapshots"
+    cards.mkdir()
+    snapshots.mkdir()
+    for day in ("2026-10-12", "2026-10-14", "2026-10-15"):
+        (cards / f"{day}.json").write_bytes((ROOT / "racecards" / f"{day}.json").read_bytes())
+        (snapshots / f"{day}.json").write_bytes(
+            (ROOT / "saved-snapshots" / f"{day}.json").read_bytes())
+    earlier = verify_saved_week(tmp_path, days=2, end_date="2026-10-14")
+    latest = verify_saved_week(tmp_path, days=2)
+    assert earlier["verifiedSavedDates"] == ["2026-10-12", "2026-10-14"]
+    assert earlier["dateRange"] == ["2026-10-12", "2026-10-14"]
+    assert earlier["integrityScanRange"] == ["2026-10-12", "2026-10-14"]
+    assert latest["verifiedSavedDates"] == ["2026-10-14", "2026-10-15"]
