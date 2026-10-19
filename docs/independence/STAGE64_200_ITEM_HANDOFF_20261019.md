@@ -1,0 +1,55 @@
+# ARVEXQ 200-item separation: stage-64 handoff / evidence checkpoint (2026-10-19)
+
+## Source of truth
+- Fixed inventory: `docs/independence/requirements.json` (version 2, IDs 1..200).
+- Branch: `feature/arvexq-v3-data-boundary-empty-prediction-20261019`; PR #367 stays DRAFT.
+- Pre-audit head: `a4f64300b5fd5fe46e97aa6118a749c9cdaf83cd`.
+- The archive/research stage-64 implementation is NOT a claim that the 200 production responsibilities are all separated.
+
+## Snapshot (from the actual inventory)
+| Source status | Items | Reporting classification |
+| --- | ---: | --- |
+| 本番検証済 | 3 | Ledger-certified only; requires renewed ten-gate review |
+| main統合済 | 3 | Partial |
+| 分離済 | 8 | Partial |
+| 解析済 | 61 | Partial |
+| 未着手 | 96 | Not started |
+| 予想ロジック仕様待ち | 29 | Not started / approval-blocked |
+| **Total** | **200** | **3 ledger-certified, 72 partial, 125 not started or waiting** |
+
+All 200 inventory IDs and referenced implementation/test paths were located in the stage-64 branch tree at the checkpoint. **Path existence is not test success.** The existing `arvexq_independence_audit.py` validates evidence receipt presence and previous production status; it does not independently prove the ten per-item gates.
+
+## Required ten gates per responsibility
+1. Acquisition: existing source, owner and source boundaries established.
+2. Normalization: verified valid/null/invalid behavior without fabricated values.
+3. Persistence: schema/owner/readback confirmed without deleting or rewriting historic records.
+4. Cache: circuit-specific identities, freshness and invalidation verified.
+5. API: factual DTO, circuit isolation and leakage protection verified.
+6. UI: existing view contract and missing-state rendering verified without design changes.
+7. Circuit separation: JRA/NAR positive and opposite-circuit refusal tests.
+8. Dependencies: caller graph and any shared code owner explicitly recorded.
+9. Missing/abnormal data: non-fabrication, duplicate, invalid and temporal edge-case tests.
+10. Tests/results: precise test identifier, passing commit and CI URL; production readback when relevant.
+
+Per-item outcome must be one of 完了, 部分完了, 未着手, 要修正, 確認不能. Only promote to 完了 after applicable ten-gate evidence and required production readback; no batch CI pass is a shortcut.
+
+## Next batch: IDs 004–020 (17 JRA race/environment items)
+- Confirm actual call sites and source-specific ownership for IDs 004–020 before changing any extractor.
+- Map each of the ten gates to file/test/CI evidence; label missing gates explicitly.
+- Add focused read-only mismatch, missingness, JRA/NAR cross-circuit and regression tests where the existing implementation does not establish independence.
+- Preserve existing provider registry, persisted originals, storage, UI, deployed Worker and all 12 empty v3 prediction components.
+- Do not deploy or merge. In particular, do not dispatch the production deployment command proposed by the historical item-002 progress note.
+
+## Existing blockers / research boundary
+- Historical item-002 progress note is older than the manifest's more recent GET-only readback record. Do not roll back its ledger status solely because the old note is stale; verify evidence dates before changing status.
+- Live JRA/NAR full population readback, all historical source routes, cache and UI interactions are not certified by existence of v3 reader modules.
+- Stage64 historical 527-race replay is not independent prospective evaluation; no 80%-90% hit-rate or sustained 100% return has been demonstrated.
+- Prediction logic, marks and recommended tickets remain approval-gated and must not be connected to production.
+
+## Reproduction / handoff
+```bash
+python scripts/arvexq_independence_audit.py
+python -m pytest -q tests/test_independence_evidence.py
+python -m pytest -q tests/test_environment_component_split.py tests/test_independent_jra_race_identity.py tests/test_jra_race_fields_independent.py
+```
+Review the actual GitHub Actions checks for the HEAD commit and resume with items 004–020. Append dated evidence to this checkpoint rather than replacing original observations. The main branch and all production surfaces remain out of scope.
