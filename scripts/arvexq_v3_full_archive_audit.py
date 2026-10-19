@@ -114,9 +114,11 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument("--days", type=int, default=7)
     p.add_argument("--archive-dir", type=Path, default=ROOT/"arvexq"/"ui"/"static")
+    p.add_argument("--end-date", type=str, default=None,
+                   help="Inclusive YYYY-MM-DD cutoff for reproducible historical audits")
     p.add_argument("--out", type=Path, default=Path("arvexq-v3-full-archive-audit.json"))
     a=p.parse_args()
-    result=verify_saved_week(a.archive_dir, days=a.days)
+    result=verify_saved_week(a.archive_dir, days=a.days, end_date=a.end_date)
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     condensed=summarize_for_ci(result)
