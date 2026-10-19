@@ -25,6 +25,8 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
                       if (archive_dir / "saved-snapshots" / p.name).is_file())
     if end_date is not None:
         cutoff = date.fromisoformat(end_date).isoformat()
+        if end_date != cutoff:
+            raise ValueError("end_date must be canonical YYYY-MM-DD")
         sources = [p for p in sources if p.stem <= cutoff]
     if len(sources) < days:
         raise ValueError("not enough saved day archives")
