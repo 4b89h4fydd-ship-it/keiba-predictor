@@ -33,7 +33,7 @@ def test_tampering_manifest_digest_is_rejected():
 
 
 def test_manifest_sample_counts_remain_bounded_and_nonforecast():
-    report = audit_days(days=7, samples_per_circuit=1)
+    report = audit_days(days=7, samples_per_circuit=1, end_date="2026-10-18")
     sample = report["savedPayloadSample"]
     assert sample["verifiedPayloads"] == sample["sampledPayloads"]
     assert sample["sampledPayloads"] == 10
