@@ -49,7 +49,7 @@ def audit_days(directory: Path = ARCHIVE, *, days: int = 7, per_circuit: int = 2
         }
     return {
         "schema": "arvexq-v3-snapshot-sha256-week-sample-audit-1",
-        "calendarWindow": calendar_window([p.stem for p in existing[-days:]]),
+        "calendarWindow": calendar_window([p.stem for p in existing[-days:]], archive_dir=directory),
         "start": reports[0]["date"], "end": reports[-1]["date"],
         "circuits": circuit,
         "samples": reports,

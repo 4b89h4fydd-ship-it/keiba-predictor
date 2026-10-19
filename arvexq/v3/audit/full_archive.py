@@ -90,7 +90,7 @@ def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None 
     verified = sum(r.get("verified", 0) for r in counts_out.values())
     return {
         "schema": "arvexq-v3-full-saved-archive-audit-1",
-        "calendarWindow": calendar_window([p.stem for p in chosen]),
+        "calendarWindow": calendar_window([p.stem for p in chosen], archive_dir=archive_dir),
         "dateRange": [chosen[0].stem, chosen[-1].stem],
         "dateCount": days,
         "expectedRacecards": checked,

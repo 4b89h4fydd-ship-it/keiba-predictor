@@ -144,3 +144,37 @@ def test_calendar_gaps_are_not_asserted_as_cancelled_or_unsaved_races():
     assert leap["missingDayEvidence"][0]["officialRaceSchedule"] == "unverified"
     contiguous = calendar_window(["2026-10-18", "2026-10-19"])
     assert contiguous["missingDayEvidence"] == []
+
+
+@pytest.mark.parametrize("kind", [
+    "neither-present", "racecard-only", "manifest-only", "both-present"
+])
+def test_missing_selected_day_records_filesystem_evidence_without_claiming_racing(tmp_path, kind):
+    from arvexq.v3.audit.calendar_window import calendar_window
+    (tmp_path / "racecards").mkdir()
+    (tmp_path / "saved-snapshots").mkdir()
+    if kind in ("racecard-only", "both-present"):
+        (tmp_path / "racecards" / "2026-10-18.json").write_text("{}")
+    if kind in ("manifest-only", "both-present"):
+        (tmp_path / "saved-snapshots" / "2026-10-18.json").write_text("{}")
+    row = calendar_window(["2026-10-17", "2026-10-19"],
+                          archive_dir=tmp_path)["missingDayEvidence"][0]
+    assert row["filePresence"] == kind
+    assert row["savedPair"] == "not-selected"
+    assert row["officialRaceSchedule"] == "unverified"
+
+
+def test_actual_audit_distinguishes_unpaired_gap_file_from_absent_date(tmp_path):
+    for folder in ("racecards", "saved-snapshots"):
+        (tmp_path / folder).mkdir()
+    for day in ("2026-10-17", "2026-10-19"):
+        for folder in ("racecards", "saved-snapshots"):
+            name = day + ".json"
+            (tmp_path / folder / name).write_bytes((ROOT / folder / name).read_bytes())
+    missing = audit_cards(directory=tmp_path, days=2)
+    assert missing["calendarWindow"]["missingDayEvidence"][0]["filePresence"] == "neither-present"
+    (tmp_path / "racecards" / "2026-10-18.json").write_text("{}")
+    incomplete = audit_cards(directory=tmp_path, days=2)
+    assert incomplete["calendarWindow"]["missingDayEvidence"][0]["filePresence"] == "racecard-only"
+    assert incomplete["calendarWindow"]["selectedDates"] == ["2026-10-17", "2026-10-19"]
+    assert incomplete["calendarWindow"]["officialRaceDayCoverageVerified"] is False

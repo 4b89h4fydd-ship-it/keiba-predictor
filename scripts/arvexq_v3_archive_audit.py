@@ -45,7 +45,7 @@ def audit_days(*, directory: Path = ARCHIVE, days: int = 7, samples_per_circuit:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         reports.append(audit_pair(card, manifest))
     report = summarize(reports)
-    report["calendarWindow"] = calendar_window([p.stem for p in existing[-days:]])
+    report["calendarWindow"] = calendar_window([p.stem for p in existing[-days:]], archive_dir=directory)
     report["savedPayloadSample"] = sample_saved_payloads(directory, reports, samples_per_circuit)
     return report
 
