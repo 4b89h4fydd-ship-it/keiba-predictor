@@ -127,3 +127,20 @@ def test_unpaired_newest_day_does_not_erase_existing_gap_evidence(tmp_path):
     report = audit_cards(directory=tmp_path, days=2)
     assert report["calendarWindow"]["missingCalendarDays"] == ["2026-10-18"]
     assert report["calendarWindow"]["selectedDates"][-1] == "2026-10-19"
+
+
+def test_calendar_gaps_are_not_asserted_as_cancelled_or_unsaved_races():
+    from arvexq.v3.audit.calendar_window import calendar_window
+    report = calendar_window(["2026-02-27", "2026-03-02"])
+    assert report["missingCalendarDays"] == ["2026-02-28", "2026-03-01"]
+    assert [d["date"] for d in report["missingDayEvidence"]] == report["missingCalendarDays"]
+    assert all(d["officialRaceSchedule"] == "unverified"
+               and d["savedPair"] == "not-selected"
+               and "unknown" in d["reason"]
+               for d in report["missingDayEvidence"])
+    assert report["officialRaceDayCoverageVerified"] is False
+    leap = calendar_window(["2028-02-28", "2028-03-01"])
+    assert leap["missingCalendarDays"] == ["2028-02-29"]
+    assert leap["missingDayEvidence"][0]["officialRaceSchedule"] == "unverified"
+    contiguous = calendar_window(["2026-10-18", "2026-10-19"])
+    assert contiguous["missingDayEvidence"] == []

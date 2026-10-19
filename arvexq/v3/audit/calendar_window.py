@@ -20,6 +20,12 @@ def calendar_window(days: list[str]) -> dict:
         "selectedSavedDays": len(days),
         "calendarSpanDays": span,
         "missingCalendarDays": missing,
+        "missingDayEvidence": [
+            {"date": day, "savedPair": "not-selected",
+             "officialRaceSchedule": "unverified",
+             "reason": "no-selected-saved-pair; racing-or-no-racing-unknown"}
+            for day in missing
+        ],
         "consecutiveCalendarDays": not missing,
         "officialRaceDayCoverageVerified": False,
     }
