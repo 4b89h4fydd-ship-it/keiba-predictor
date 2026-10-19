@@ -116,6 +116,12 @@ function quoteTimestampState(value) {
   const normalized=value.trim();
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(normalized))
     return 'invalid';
+  // Date.parse can normalize impossible dates (e.g. February 30);
+  // reject those before calling a saved timestamp an observation.
+  const day=normalized.slice(0,10);
+  const calendar=new Date(day+'T00:00:00.000Z');
+  if (Number.isNaN(calendar.valueOf()) || calendar.toISOString().slice(0,10)!==day)
+    return 'invalid';
   return Number.isNaN(Date.parse(normalized))?'invalid':'observed-unverified-timestamp';
 }
 function projection(original,requestedId) {
