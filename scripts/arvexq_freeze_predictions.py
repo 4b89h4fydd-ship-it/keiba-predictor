@@ -178,7 +178,18 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
         # original opinions, and capture a ticket only while still pre-off.
         return {"status": "sealed", "detail": copy.deepcopy(detail),
                 "revision": existing.get("sealRevision")}
-    # The rejected 60/40 generator was deleted. Preserve sealed originals only.
+    if not isinstance(detail.get("horses"), list):
+        return {"status": "missing-roster"}
+    active = [h for h in detail["horses"] if isinstance(h, dict)
+              and int(h.get("horseNumber") or 0) > 0 and not h.get("scratched")
+              and not h.get("withdrawn") and not any(s in str(h.get("status") or "")
+              for s in ("取消", "除外", "欠場"))]
+    if len(active) < 3 or any(not str(h.get("name") or "").strip() for h in active):
+        return {"status": "incomplete-roster"}
+    if not any((h.get("recentRaces") or h.get("allPastRuns"))
+               for h in active) and detail.get("analysisMode") not in ("新馬", "障害"):
+        return {"status": "missing-historical-evidence"}
+    # Factual integrity guards remain; no rejected ranking or sealing generation.
     return {"status": "incomplete-prediction", "predictionStatus": "disabled"}
 
 
