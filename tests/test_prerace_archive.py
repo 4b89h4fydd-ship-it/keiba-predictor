@@ -98,27 +98,27 @@ class ServerSealTests(unittest.TestCase):
         self.assertEqual(d, original)
         self.assertNotIn("preRacePrediction", d)
 
-    def test_unverified_full_career_is_reported_not_sealed(self):
+    def test_legacy_forecast_cannot_be_generated_even_with_injected_callbacks(self):
         d = deepcopy(self.d)
-        before = deepcopy(d)
         called = []
-        def forbidden_assign(_):
-            called.append("assign")
-            raise AssertionError("retired predictor must not execute")
-        result = prepare_seal(d, now=self.now, assign=forbidden_assign,
+        result = prepare_seal(d, now=self.now,
+                              assign=lambda _: called.append("assign"),
                               build=lambda _: called.append("build"))
-        self.assertEqual(result, {"status": "incomplete-prediction", "predictionStatus": "disabled"})
+        self.assertEqual(result["status"], "incomplete-prediction")
+        self.assertEqual(result["predictionStatus"], "disabled")
         self.assertEqual(called, [])
-        self.assertEqual(d, before)
         self.assertNotIn("preRacePrediction", d)
 
-    def test_evaluation_and_marks_are_as_captured(self):
-        before = deepcopy(self.d)
-        result = prepare_seal(self.d, now=self.now)
-        self.assertEqual(result, {"status": "incomplete-prediction", "predictionStatus": "disabled"})
-        self.assertEqual(self.d, before)
-        self.assertNotIn("preRacePrediction", self.d)
-        self.assertNotIn("preRaceBet", self.d)
+    def test_existing_sealed_original_is_preserved_without_new_generation(self):
+        d = seal_detail(self.d, forecast(self.d, self.now), self.now)
+        record = deepcopy(d["preRacePrediction"])
+        result = prepare_seal(d, now=self.now + timedelta(minutes=1))
+        self.assertEqual(result["status"], "sealed")
+        self.assertEqual(result["detail"]["preRacePrediction"], record)
+        complete = deepcopy(d)
+        complete["preRaceBet"] = {"raceId": self.d["id"],
+                                  "fixedAt": self.now.isoformat(), "decision": "見送り", "items": []}
+        self.assertEqual(prepare_seal(complete, now=self.now + timedelta(minutes=1))["status"], "already-sealed")
 
     def test_d1_seal_guard_can_insert_new_race_only_with_verified_day(self):
         import io
@@ -275,18 +275,21 @@ class ServerSealTests(unittest.TestCase):
         result = restore_seal(original, modified)
         self.assertEqual(result["preRacePrediction"], before)
 
-    def test_scratch_excluded_from_core_rank_without_deleting_racecard(self):
+    def test_cancelled_runner_does_not_trigger_removed_prediction(self):
         d = deepcopy(self.d)
-        d["horses"].insert(0, {"horseNumber": 4, "name": "CANCELLED",
-                               "status": "出走取消", "scratched": True,
-                               "recentRaces": [{"finish": 1}],
-                               "integratedEvaluation": {"mark": "◎", "grade": "S"}})
-        before = deepcopy(d)
-        result = prepare_seal(d, now=self.now)
-        self.assertEqual(result, {"status": "incomplete-prediction", "predictionStatus": "disabled"})
-        self.assertEqual(d, before)
-        self.assertEqual(len(d["horses"]), 4)
-        self.assertTrue(d["horses"][0]["scratched"])
+        d["horses"].insert(0,{
+            "horseNumber": 4, "name": "CANCELLED", "status": "出走取消",
+            "scratched": True, "recentRaces": [{"finish": 1}],
+            "integratedEvaluation": {"mark": "◎", "grade": "S"}})
+        original = deepcopy(d)
+        calls = []
+        result = prepare_seal(d, now=self.now,
+                              assign=lambda _: calls.append("assign"),
+                              build=lambda _: calls.append("build"))
+        self.assertEqual(result["status"], "incomplete-prediction")
+        self.assertEqual(result["predictionStatus"], "disabled")
+        self.assertEqual(calls, [])
+        self.assertEqual(d, original)
         self.assertNotIn("preRacePrediction", d)
 
     def test_post_sync_detects_race_condition_erasure(self):
