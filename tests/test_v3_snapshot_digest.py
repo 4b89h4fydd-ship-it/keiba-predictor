@@ -86,7 +86,7 @@ def test_sample_selection_and_circuit_isolation(tmp_path):
 
 
 def test_actual_seven_day_digest_samples_are_bounded_offline():
-    result = audit_days(days=7, per_circuit=2)
+    result = audit_days(days=7, per_circuit=2, end_date="2026-10-18")
     assert result["start"] == "2026-10-12"
     assert result["end"] == "2026-10-18"
     assert result["circuits"]["jra"]["checked"] == 6
