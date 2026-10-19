@@ -50,7 +50,7 @@ def run(source, output):
     report["inputRaceCount"]=len(inputs)
     report["retrospectiveForecastDigest"]=digest(batch)
     report["limits"]=["All dates were already part of earlier research; not untouched holdout.",
-                      "Five JRA jumps races are unsupported and remain in the full-cohort denominator.",
+                      "Five JRA jumps and 36 NAR banei races are unsupported and remain in full-cohort denominators.",
                       "No horse-ID cross-race joins; missing history is not filled by horse name.",
                       "Full-calendar completeness and source observation times are not independently certified."]
     rows=report.pop("rows")
