@@ -278,3 +278,33 @@ def test_ci_rejects_requested_cutoff_before_selected_saved_dates():
         report = summarize_for_ci({**base, "requestedEndDate": bad})
         assert report["requestedEndDateReconciled"] is False
         assert audit_exit_code(base, report) == 1
+
+
+def test_ci_rejects_integrity_scan_past_requested_cutoff():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-14"],
+        "dateCount": 2,
+        "verifiedSavedDates": ["2026-10-12", "2026-10-14"],
+        "pairedDateRangeMatchesSelection": True,
+        "requestedEndDate": "2026-10-14",
+        "integrityScanRange": ["2026-10-12", "2026-10-14"],
+        "integrityScanCalendarDays": 3,
+        "expectedRacecards": 1,
+        "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": True,
+        "circuits": {"jra": {"expected": 1, "verified": 1, "failed": 0},
+                     "nar": {"expected": 0, "verified": 0, "failed": 0}},
+        "errors": [],
+        "unpairedSavedDays": [],
+        "runnerEvidenceTriage": {"zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+                                 "missingCardCarriedWeight": 0, "missingWeightByState": {}},
+    }
+    good = summarize_for_ci(base)
+    assert good["integrityScanRangeReconciled"] is True
+    assert audit_exit_code(base, good) == 0
+    beyond = {**base, "integrityScanRange": ["2026-10-12", "2026-10-15"],
+              "integrityScanCalendarDays": 4}
+    bad = summarize_for_ci(beyond)
+    assert bad["requestedEndDateReconciled"] is True
+    assert bad["integrityScanRangeReconciled"] is False
+    assert audit_exit_code(beyond, bad) == 1
