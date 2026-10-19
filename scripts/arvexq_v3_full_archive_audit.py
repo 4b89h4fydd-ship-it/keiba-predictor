@@ -63,6 +63,17 @@ def summarize_for_ci(result):
                        and result.get("pairedDateRangeMatchesSelection") is True)
     except (TypeError, ValueError, IndexError):
         dates_valid = False
+    requested_end = result.get("requestedEndDate")
+    try:
+        cutoff_valid = (requested_end is None or
+                        (type(requested_end) is str
+                         and date.fromisoformat(requested_end).isoformat() == requested_end
+                         and dates_valid
+                         and parsed[-1] <= date.fromisoformat(requested_end)))
+    except (ValueError, TypeError):
+        cutoff_valid = False
+    condensed["requestedEndDateReconciled"] = cutoff_valid
+    condensed["requestedEndDate"] = requested_end
     condensed["savedDateSelectionReconciled"] = dates_valid
     condensed["verifiedSavedDates"] = dates
     scan_range = result.get("integrityScanRange")
@@ -106,6 +117,7 @@ def audit_exit_code(result, condensed):
                  and condensed.get("errorCodes") == {}
                  and condensed.get("verificationCountsReconciled") is True
                  and condensed.get("savedDateSelectionReconciled") is True
+                 and condensed.get("requestedEndDateReconciled") is True
                  and condensed.get("integrityScanRangeReconciled") is True
                  and condensed.get("errorSummaryReconciled") is True) else 1
 
