@@ -1,5 +1,5 @@
 """Stage 39: ensure CI summary describes failures without claiming official coverage."""
-from scripts.arvexq_v3_full_archive_audit import summarize_for_ci
+from scripts.arvexq_v3_full_archive_audit import summarize_for_ci, audit_exit_code
 
 
 def test_ci_summary_aggregates_error_codes_and_unpaired_days():
@@ -63,3 +63,13 @@ def test_ci_summary_reconciles_valid_circuit_totals():
     assert summary["verificationCountsReconciled"] is True
     assert summary["verificationByCircuit"]["jra"]["failed"] == 1
     assert summary["verificationByCircuit"]["nar"]["verified"] == 1
+
+
+def test_ci_exit_rejects_inconsistent_counts_even_if_report_claims_verified():
+    result = {"allIndexedSavedOriginalsVerified": True}
+    assert audit_exit_code(result, {"verificationCountsReconciled": False}) == 1
+    assert audit_exit_code(result, {"verificationCountsReconciled": True}) == 0
+    assert audit_exit_code(
+        {"allIndexedSavedOriginalsVerified": False},
+        {"verificationCountsReconciled": True},
+    ) == 1
