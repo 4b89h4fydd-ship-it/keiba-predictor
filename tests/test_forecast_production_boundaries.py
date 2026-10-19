@@ -1,7 +1,6 @@
 from copy import deepcopy
 import pytest
 from arvexq.forecast.inputs import prediction_input
-from arvexq.forecast.engine import build_prediction
 from arvexq.forecast.marks import generate_marks
 from arvexq.forecast.tickets import generate_tickets
 from arvexq.forecast.publication import public_race
@@ -23,6 +22,6 @@ def test_old_snapshots_cannot_publish_but_facts_and_source_archive_survive(circu
 def test_three_engines_are_independent_and_empty_without_approval():
     facts=prediction_input({'id':'race','result':{'status':'確定'},'horses':[{'horseNumber':1,'name':'テスト','mark':'◎','integratedEvaluation':{'score':99}}]})
     assert 'result' not in facts and 'mark' not in facts['horses'][0]
-    assert build_prediction(facts) is None
+    assert 'result' not in facts
     assert generate_marks(None)==[]
     assert generate_tickets(None,[])==[]

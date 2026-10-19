@@ -1,5 +1,5 @@
 """Deprecated import adapters. Production has no prediction model installed."""
-from arvexq.forecast.engine import VERSION, build_prediction
+VERSION = 'arvexq-retired-assistant-rank-baseline'
 from arvexq.forecast.marks import clear_marks
 
 NAR_MODEL_VERSION = JRA_MODEL_VERSION = MODEL_VERSION = VERSION
