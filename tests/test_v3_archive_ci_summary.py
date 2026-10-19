@@ -72,7 +72,7 @@ def test_ci_summary_reconciles_valid_circuit_totals():
 def test_ci_exit_rejects_inconsistent_counts_even_if_report_claims_verified():
     result = {"allIndexedSavedOriginalsVerified": True}
     assert audit_exit_code(result, {"verificationCountsReconciled": False}) == 1
-    assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "errorSummaryReconciled": True}) == 0
+    assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "errorSummaryReconciled": True, "errorCount": 0, "errorCodes": {}}) == 0
     assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True}) == 1
     assert audit_exit_code(
         {"allIndexedSavedOriginalsVerified": False},
@@ -211,3 +211,17 @@ def test_ci_rejects_missing_or_empty_error_codes():
         summary = summarize_for_ci({**base, "errors": bad_errors})
         assert summary["errorSummaryReconciled"] is False
         assert audit_exit_code(base, summary) == 1
+
+
+def test_ci_exit_rejects_errors_even_if_success_flag_is_true():
+    result = {"allIndexedSavedOriginalsVerified": True}
+    flags = {"verificationCountsReconciled": True,
+             "savedDateSelectionReconciled": True,
+             "integrityScanRangeReconciled": True,
+             "errorSummaryReconciled": True,
+             "errorCount": 0, "errorCodes": {}}
+    assert audit_exit_code(result, flags) == 0
+    assert audit_exit_code(result, {**flags, "errorCount": 1,
+                                   "errorCodes": {"invalid-snapshot": 1}}) == 1
+    assert audit_exit_code(result, {**flags, "errorCodes": {"invalid-snapshot": 1}}) == 1
+    assert audit_exit_code(result, {**flags, "errorCount": None}) == 1
