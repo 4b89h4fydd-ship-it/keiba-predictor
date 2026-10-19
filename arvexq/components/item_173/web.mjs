@@ -1,5 +1,6 @@
 import {sourceOdds} from '../../../workers/live_odds.mjs';
 import {savedOdds} from '../../../workers/saved_odds.mjs';
+import {cacheLookup,cacheSave,retainedLookup} from '../item_145/odds_cache.mjs';
 export default {
   async fetch(request,env,ctx){
     const url=new URL(request.url);
@@ -19,16 +20,15 @@ export default {
       if(manifest.version!=='arvexq-odds-sources-v1'||manifest.date!==match[1]||!source||source.id!==id||source.date!==match[1])
         return Response.json({ok:false,error:'verified source absent'},{status:404});
       const key=new Request(url.origin+url.pathname),cache=caches.default;
-      const cached=await cache.match(key);if(cached&&!url.searchParams.has('force'))return cached;
+      const cached=await cacheLookup(cache,key,url.searchParams.has('force'));if(cached)return cached;
       retainedKey=new Request(url.origin+url.pathname+'?last-acquired=1');
       const result=await sourceOdds(source);
       const response=Response.json(result,{headers:{'Cache-Control':'public, max-age=15'}});
-      const retained=response.clone();retained.headers.set('Cache-Control','public, max-age=604800');
-      ctx.waitUntil(Promise.all([cache.put(key,response.clone()),cache.put(retainedKey,retained)]));return response;
+      cacheSave(cache,key,retainedKey,response,ctx);return response;
     }catch(_error){
       if(source){
         try{
-          const retained=retainedKey&&await caches.default.match(retainedKey);
+          const retained=await retainedLookup(caches.default,retainedKey);
           const body=retained?{...(await retained.json()),oddsStatus:'saved',refreshFailed:true}:await savedOdds(env,url.origin,date,source);
           if(body)return Response.json(body,{headers:{'Cache-Control':'no-store'}});
         }catch{}

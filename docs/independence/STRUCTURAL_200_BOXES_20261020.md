@@ -77,6 +77,10 @@ JRA既存オッズパーサとコース速度参照テーブルは完全一致�
 
 既存の`rewriteDetailSQL`と`storageEnvironment`の実装を#139から#174へ実体移動。既存呼び出し名はre-exportで維持し、SQL書換規則・DB構造・取得経路を一文字も変更しない。実D1との疎通と本番接続の認定は別途必要。
 
+### #145 オッズキャッシュ実体の切出し
+
+公開Worker内の既存キャッシュ参照・15秒レスポンスおよび7日保持バックアップの書込・取得関数を#145専用モジュールに切り出し。`caches.default`と`ctx.waitUntil`は既存Runtimeを利用する。キャッシュキー、TTL、強制更新、失敗時の保存済み値参照は不変。新規予想機能や新規取得先は増やさない。
+
 ## 全項目の配置
 
 状態: `migrated-module`=既存Pythonモジュール実体移動、`migrated-shared-context`=実体移動/既存共有状態で接続、`migrated-ui-fragment`=画面ソース実体移動、`mapped-existing-source`=既存ファイルとの対応を確定、`reserved`=仕様待ちの空箱。
