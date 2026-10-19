@@ -42,6 +42,12 @@ def summarize_for_ci(result):
     )
     condensed["errorCodes"]=dict(sorted(Counter(
         error.get("code", "unknown") for error in result["errors"]).items()))
+    condensed["errorSummaryReconciled"] = (
+        type(result["errors"]) is list
+        and all(type(error) is dict and type(error.get("code")) is str
+                and bool(error["code"]) for error in result["errors"])
+        and sum(condensed["errorCodes"].values()) == condensed["errorCount"]
+    )
     dates = result.get("verifiedSavedDates")
     date_range = result.get("dateRange")
     count = result.get("dateCount")
@@ -98,7 +104,8 @@ def audit_exit_code(result, condensed):
     return 0 if (result["allIndexedSavedOriginalsVerified"]
                  and condensed["verificationCountsReconciled"]
                  and condensed["savedDateSelectionReconciled"]
-                 and condensed["integrityScanRangeReconciled"]) else 1
+                 and condensed["integrityScanRangeReconciled"]
+                 and condensed["errorSummaryReconciled"]) else 1
 
 
 def main():
