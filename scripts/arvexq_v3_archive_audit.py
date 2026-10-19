@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from arvexq.v3.audit.archive import audit_pair, summarize
+from arvexq.v3.audit.calendar_window import calendar_window
 from arvexq.v3.audit.payload import sample_saved_payloads
 
 ARCHIVE = ROOT / "arvexq" / "ui" / "static"
@@ -44,6 +45,7 @@ def audit_days(*, directory: Path = ARCHIVE, days: int = 7, samples_per_circuit:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         reports.append(audit_pair(card, manifest))
     report = summarize(reports)
+    report["calendarWindow"] = calendar_window([p.stem for p in existing[-days:]])
     report["savedPayloadSample"] = sample_saved_payloads(directory, reports, samples_per_circuit)
     return report
 
