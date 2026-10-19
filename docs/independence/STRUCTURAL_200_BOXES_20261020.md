@@ -6,9 +6,9 @@
 
 - 全200件に `arvexq/components/item_NNN/` と名前・区分・所有ソース・共有依存を記した `component.json` を作成。未割当の箱はない。
 - `app.py` の228関数/クラスの実体を52箱へ移動。定義位置で `install_component` を呼び、元のグローバル変数・ロック・保存先・デコレータを保って既存経路へ接続する。すでに `infra/legacy_stores.py` 等でも使われている互換実行方式の延長。これは共有実行状態の完全解消を意味しない。
-- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計65モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
+- 既存の38解析モジュールに加え、専任ソース24モジュールを箱へ移動（計67モジュール）。従来のインポート先は同一実装オブジェクトを返す互換窓口として保持。相対インポートは元の依存先を絶対指定する。
 - UIの75処理断片を箱へ移動。残る352断片は共有UIとして明示。`ui-assembly.json` の順序で全断片を組み立て、生成済み `app.js` とバイト単位で一致する場合だけ使用する。移動元に存在した末尾空白や空行もUI断片には維持する。デザインを変更しない。
-- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り53箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
+- 対応元のみを登録していた79箱のうち23箱で専任Pythonモジュールの実体を移動し、旧インポート経路と同一実装を指す互換窓口を保持した。残り46箱は対応元の登録段階。移動済みの箱にも呼び出し元や共通処理への依存が残り、完全独立化や本番検証の完了とは扱わない。
 - 仕様待ち29箱は空。既存の16個の旧予想補助定義は隔離したままで、新しい箱から委譲・実行しない。v3中央/地方の12予想モジュールは引き続き `None` を返す。
 - 保存済み観測データは複製・改変せず、元の保存場所を読む。D1/SQLiteスキーマ・取得URL・キャッシュ条件・UI・本番環境を変更しない。
 
@@ -19,7 +19,7 @@
 
 ## 2026-10-20 追加の構造移動（GitHub上の旧実装から再実施）
 
-以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は53。構造検証と本番認定を混同しない。
+以前の作業環境に残った未コミット変更は取得できないため、GitHub上の開発ブランチを元に23箱・24既存Pythonモジュールを移動した。公開モジュール名は sys.modules により新しい箱内の実体へ接続し、従来のインポート文を変更しない。相対インポートは元の絶対パスに明示して同じ依存先を参照する。保存データ・取得先・表示・予想ロジック・本番環境は触れない。対応元のみの箱は46。構造検証と本番認定を混同しない。
 
 ### キャッシュポリシー分離の限定範囲
 
@@ -28,6 +28,10 @@
 ### #075 コーナー通過順位の追加分離
 
 旧 `arvexq.ingest.corner_order` の実体を #075 の箱に移動し、旧モジュール名は同じ実装オブジェクトへ接続する。既存の文字列正規化ヘルパーへの共有依存を台帳に残し、完全独立とは認定しない。
+
+### 追加: レース番号・読込HTTP再試行・個別UI5資産
+
+#011 の既存JRAレース番号関数、#160 の既存 `get_json` 実体を責務箱へ移動。両方とも共通ファイルを保つため移動済み共有依存であり完全独立ではない。#058/#182/#185/#186/#187 は既存UIスクリプトと同一の本体を責務箱に置き、`read_asset` が同一バイト検証後に責務箱の版を組み立てに使用する。旧静的ファイルは既存の配信先を壊さない互換スナップショットとして保存し、表示内容は変更しない。実データの改変、新取得経路、予想ロジック有効化はしない。
 
 ## 全項目の配置
 
@@ -45,7 +49,7 @@
 | 008 | 開催日取得 | [item_008](../../arvexq/components/item_008/component.json) | migrated-shared-context |
 | 009 | 開催場取得 | [item_009](../../arvexq/components/item_009/component.json) | migrated-shared-context |
 | 010 | 開催日程取得 | [item_010](../../arvexq/components/item_010/component.json) | migrated-shared-context |
-| 011 | レース番号取得 | [item_011](../../arvexq/components/item_011/component.json) | mapped-existing-source |
+| 011 | レース番号取得 | [item_011](../../arvexq/components/item_011/component.json) | migrated-shared-context |
 | 012 | レース名取得 | [item_012](../../arvexq/components/item_012/component.json) | migrated-module |
 | 013 | グレード・クラス取得 | [item_013](../../arvexq/components/item_013/component.json) | migrated-module |
 | 014 | 発走時刻取得 | [item_014](../../arvexq/components/item_014/component.json) | migrated-module |
@@ -92,7 +96,7 @@
 | 055 | 過去走重複排除 | [item_055](../../arvexq/components/item_055/component.json) | migrated-shared-context |
 | 056 | JRA・NAR転入転出判別 | [item_056](../../arvexq/components/item_056/component.json) | migrated-module |
 | 057 | 全競走履歴取得・補修 | [item_057](../../arvexq/components/item_057/component.json) | migrated-shared-context |
-| 058 | 未来結果混入防止 | [item_058](../../arvexq/components/item_058/component.json) | mapped-existing-source |
+| 058 | 未来結果混入防止 | [item_058](../../arvexq/components/item_058/component.json) | migrated-ui-fragment |
 | 059 | 単勝オッズ | [item_059](../../arvexq/components/item_059/component.json) | migrated-module |
 | 060 | 複勝オッズ | [item_060](../../arvexq/components/item_060/component.json) | migrated-module |
 | 061 | 人気順位 | [item_061](../../arvexq/components/item_061/component.json) | migrated-module |
@@ -194,7 +198,7 @@
 | 157 | 天候・馬場自動更新 | [item_157](../../arvexq/components/item_157/component.json) | migrated-shared-context |
 | 158 | 取消・除外自動更新 | [item_158](../../arvexq/components/item_158/component.json) | mapped-existing-source |
 | 159 | レース詳細事前生成 | [item_159](../../arvexq/components/item_159/component.json) | migrated-shared-context |
-| 160 | 取得失敗時再試行 | [item_160](../../arvexq/components/item_160/component.json) | mapped-existing-source |
+| 160 | 取得失敗時再試行 | [item_160](../../arvexq/components/item_160/component.json) | migrated-shared-context |
 | 161 | データ鮮度判定 | [item_161](../../arvexq/components/item_161/component.json) | migrated-module |
 | 162 | 同期状態・エラー管理 | [item_162](../../arvexq/components/item_162/component.json) | migrated-shared-context |
 | 163 | レース一覧API | [item_163](../../arvexq/components/item_163/component.json) | migrated-shared-context |
@@ -216,12 +220,12 @@
 | 179 | レース詳細 | [item_179](../../arvexq/components/item_179/component.json) | migrated-shared-context |
 | 180 | 出馬表 | [item_180](../../arvexq/components/item_180/component.json) | mapped-existing-source |
 | 181 | 馬別詳細 | [item_181](../../arvexq/components/item_181/component.json) | migrated-ui-fragment |
-| 182 | 過去走表示 | [item_182](../../arvexq/components/item_182/component.json) | mapped-existing-source |
+| 182 | 過去走表示 | [item_182](../../arvexq/components/item_182/component.json) | migrated-ui-fragment |
 | 183 | 脚質マップ | [item_183](../../arvexq/components/item_183/component.json) | migrated-ui-fragment |
 | 184 | 展開予想表示 | [item_184](../../arvexq/components/item_184/component.json) | migrated-ui-fragment |
-| 185 | 予想表示枠 | [item_185](../../arvexq/components/item_185/component.json) | mapped-existing-source |
-| 186 | 印表示枠 | [item_186](../../arvexq/components/item_186/component.json) | mapped-existing-source |
-| 187 | 買い目表示枠 | [item_187](../../arvexq/components/item_187/component.json) | mapped-existing-source |
+| 185 | 予想表示枠 | [item_185](../../arvexq/components/item_185/component.json) | migrated-ui-fragment |
+| 186 | 印表示枠 | [item_186](../../arvexq/components/item_186/component.json) | migrated-ui-fragment |
+| 187 | 買い目表示枠 | [item_187](../../arvexq/components/item_187/component.json) | migrated-ui-fragment |
 | 188 | 結果・払戻表示 | [item_188](../../arvexq/components/item_188/component.json) | migrated-ui-fragment |
 | 189 | リアルタイム表示 | [item_189](../../arvexq/components/item_189/component.json) | migrated-ui-fragment |
 | 190 | お気に入り | [item_190](../../arvexq/components/item_190/component.json) | migrated-ui-fragment |

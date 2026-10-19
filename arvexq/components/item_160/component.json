@@ -9,12 +9,19 @@
     "Existing D1 API routes",
     "arvexq.ingest.full_snapshot_codec",
     "arvexq.ingest.career_transport",
-    "Python standard library"
+    "Python standard library",
+    "arvexq.ingest.d1_day_readback read_day; existing D1 API and HTTP status policy"
   ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/d1_day_readback.py",
+      "canonical": "arvexq/components/item_160/readback_retry.py",
+      "module": "arvexq.components.item_160.readback_retry"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-shared-context",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

@@ -5,11 +5,15 @@
   "existing_sources": [
     "arvexq/ui/static/forecast/ticket_frame.js"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "arvexq.ui.assets.read_asset; legacy static asset kept byte-identical"
+  ],
   "owned_definitions": [],
   "owned_modules": [],
-  "assets": [],
-  "state": "mapped-existing-source",
+  "assets": [
+    "arvexq/components/item_187/ui/ticket_frame.js"
+  ],
+  "state": "migrated-ui-fragment",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

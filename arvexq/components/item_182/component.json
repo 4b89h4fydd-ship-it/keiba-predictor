@@ -7,12 +7,15 @@
   ],
   "shared_dependencies": [
     "ARVEXQPastRunDeduplicate.merge",
-    "ARVEXQPastRunTemporal.beforeRace"
+    "ARVEXQPastRunTemporal.beforeRace",
+    "arvexq.ui.assets.read_asset; legacy static asset kept byte-identical"
   ],
   "owned_definitions": [],
   "owned_modules": [],
-  "assets": [],
-  "state": "mapped-existing-source",
+  "assets": [
+    "arvexq/components/item_182/ui/view.js"
+  ],
+  "state": "migrated-ui-fragment",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

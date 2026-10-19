@@ -5,11 +5,19 @@
   "existing_sources": [
     "arvexq/ingest/jra_identifiers.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "arvexq.ingest.jra_identifiers still owns date parsing"
+  ],
   "owned_definitions": [],
-  "owned_modules": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/jra_identifiers.py",
+      "canonical": "arvexq/components/item_011/race_number.py",
+      "module": "arvexq.components.item_011.race_number"
+    }
+  ],
   "assets": [],
-  "state": "mapped-existing-source",
+  "state": "migrated-shared-context",
   "unlocated_sources": [],
   "shared_context": null,
   "circuits": [

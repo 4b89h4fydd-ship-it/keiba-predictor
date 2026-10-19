@@ -371,7 +371,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_011",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 12,
@@ -1984,7 +1984,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_058",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 59,
@@ -4886,7 +4886,7 @@
       "owner": "Codex",
       "prediction_logic_status": "対象外",
       "component_box": "arvexq/components/item_160",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-shared-context"
     },
     {
       "id": 161,
@@ -5494,7 +5494,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "観測済み履歴と診断結果の既存表示互換はCodex。診断計算は別担当。",
       "component_box": "arvexq/components/item_182",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 183,
@@ -5579,7 +5579,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "予想表示枠と入力契約はCodex。予想計算は別担当。",
       "component_box": "arvexq/components/item_185",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 186,
@@ -5610,7 +5610,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "印表示枠と入力契約はCodex。印の判定は別担当。",
       "component_box": "arvexq/components/item_186",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 187,
@@ -5641,7 +5641,7 @@
       "prediction_logic_status": "予想ロジック仕様待ち",
       "scope_boundary": "買い目表示枠と入力契約はCodex。買い目構築は別担当。",
       "component_box": "arvexq/components/item_187",
-      "structural_migration": "mapped-existing-source"
+      "structural_migration": "migrated-ui-fragment"
     },
     {
       "id": 188,
