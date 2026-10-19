@@ -56,6 +56,9 @@ def test_trailing_unpaired_manifest_cannot_disappear_after_last_pair(tmp_path):
         {"date": "2026-10-15", "filePresence": "manifest-only"}
     ]
     assert report["allIndexedSavedOriginalsVerified"] is False
+    assert report["dateRange"] == ["2026-10-12", "2026-10-14"]
+    assert report["integrityScanRange"] == ["2026-10-12", "2026-10-15"]
+    assert report["integrityScanCalendarDays"] == 4
 
 
 def test_trailing_unpaired_racecard_cannot_disappear_after_last_pair(tmp_path):
@@ -73,3 +76,4 @@ def test_trailing_unpaired_racecard_cannot_disappear_after_last_pair(tmp_path):
     ]
     assert report["officialPublishedRacesVerified"] is False
     assert report["allIndexedSavedOriginalsVerified"] is False
+    assert report["integrityScanRange"] == ["2026-10-12", "2026-10-15"]
