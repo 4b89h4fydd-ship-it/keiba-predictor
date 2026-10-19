@@ -17,11 +17,14 @@ from arvexq.v3.audit.runner_gaps import summarize_evidence
 from arvexq.v3.data.quality import normalize_circuit
 
 
-def verify_saved_week(archive_dir: Path, *, days: int = 7) -> dict[str, Any]:
+def verify_saved_week(archive_dir: Path, *, days: int = 7, end_date: str | None = None) -> dict[str, Any]:
     if isinstance(days, bool) or not isinstance(days, int) or days < 1 or days > 31:
         raise ValueError("days must be 1..31")
     sources = sorted(p for p in (archive_dir / "racecards").glob("????-??-??.json")
                       if (archive_dir / "saved-snapshots" / p.name).is_file())
+    if end_date is not None:
+        cutoff = date.fromisoformat(end_date).isoformat()
+        sources = [p for p in sources if p.stem <= cutoff]
     if len(sources) < days:
         raise ValueError("not enough saved day archives")
     chosen = sources[-days:]
