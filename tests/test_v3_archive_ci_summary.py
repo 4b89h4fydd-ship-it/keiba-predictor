@@ -9,7 +9,8 @@ def test_ci_summary_aggregates_error_codes_and_unpaired_days():
         "expectedRacecards": 2,
         "hashVerifiedRacecards": 1,
         "allIndexedSavedOriginalsVerified": False,
-        "circuits": {"jra": {"verified": 1}, "nar": {"verified": 0}},
+        "circuits": {"jra": {"expected": 0, "verified": 1, "failed": 0},
+                     "nar": {"expected": 0, "verified": 0, "failed": 0}},
         "errors": [
             {"code": "unpaired-saved-day"},
             {"code": "unpaired-saved-day"},
