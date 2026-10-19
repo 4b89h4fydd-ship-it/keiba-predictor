@@ -41,11 +41,11 @@ def attach_evidence(detail: dict[str, Any]) -> dict[str, Any]:
         except Exception as exc:  # evidence decoration must never block delivery
             horse["careerCoverage"] = {"version": "arvexq-career-coverage-ui-v1", "state": "acquisition-unverified",
                                        "acquisition": "unverified", "reason": f"coverage-error:{type(exc).__name__}"}
-        from arvexq.prediction.observed_model import model_version
+        from arvexq.prediction.observed_model import MODEL_VERSION
         evidence = (horse.get("integratedEvaluation") or {}).get("narModelEvidence") or {}
         horse["researchEvidence"] = {
             "factors": {
-                "version": model_version(detail),
+                "version": MODEL_VERSION,
                 "items": [
                     {"key": "mineta", "weight": .60, "value": evidence.get("mineta"),
                      "available": evidence.get("mineta") is not None},
