@@ -2,9 +2,7 @@
   "id": 121,
   "name": "買い目生成",
   "prediction_reserved": true,
-  "existing_sources": [
-    "arvexq/forecast/tickets.py"
-  ],
+  "existing_sources": [],
   "shared_dependencies": [],
   "owned_definitions": [],
   "owned_modules": [],
