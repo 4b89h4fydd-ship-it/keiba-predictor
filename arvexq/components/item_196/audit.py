@@ -38,7 +38,20 @@ def audit():
     reconstructed={n.name:hashlib.sha256(ast.dump(n,include_attributes=False).encode()).hexdigest()
                    for n in ast.parse(composed_app_source()).body
                    if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef,ast.ClassDef))}
-    if reconstructed!=baseline:errors.append('app definition signatures/bodies/decorators differ from migration baseline')
+    # User-requested removal of the old prediction algorithm: preserve historical
+    # baseline evidence on disk, but never require or restore deleted definitions.
+    retired_prediction_definitions = ["_learning_probability","_learning_metric","_learning_races","_learning_paired_top1","_v312_method","_v312_base_winner_weights","_winner_learning_profile"]
+    active_baseline = {key: value for key, value in baseline.items()
+                       if key not in retired_prediction_definitions}
+    parity = reconstructed == active_baseline and not any(
+        name in reconstructed for name in retired_prediction_definitions)
+    if not parity:
+        missing = sorted(set(active_baseline) - set(reconstructed))
+        extra = sorted(set(reconstructed) - set(active_baseline))
+        changed = sorted(key for key in active_baseline.keys() & reconstructed.keys()
+                         if active_baseline[key] != reconstructed[key])
+        errors.append(f'app definition parity failed: missing={missing}, extra={extra}, changed={changed}')
+
     try:
         if assemble_ui()!=(ROOT/'arvexq/ui/static/app.js').read_text(encoding='utf-8'):
             errors.append('generated UI differs from canonical component assembly')
@@ -46,5 +59,5 @@ def audit():
     return {'boxes':len(specs),'states':dict(Counter(s['state'] for s in specs)),
             'appDefinitionsMoved':len(owned),'parserModulesMoved':sum(len(s['owned_modules']) for s in specs),
             'uiFragmentsMoved':sum(len(s['assets']) for s in specs),
-            'definitionParity':reconstructed==baseline,'errors':errors,
+            'definitionParity':parity,'errors':errors,
             'productionCertifiedByThisAudit':False}

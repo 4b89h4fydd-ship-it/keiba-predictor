@@ -3,7 +3,9 @@
   "name": "予想ロジック",
   "prediction_reserved": true,
   "existing_sources": [],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "Retired engine deleted by user instruction; never reconstruct or delegate legacy algorithm"
+  ],
   "owned_definitions": [],
   "owned_modules": [],
   "assets": [],
