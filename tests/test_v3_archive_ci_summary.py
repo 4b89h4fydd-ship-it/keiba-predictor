@@ -72,7 +72,7 @@ def test_ci_summary_reconciles_valid_circuit_totals():
 def test_ci_exit_rejects_inconsistent_counts_even_if_report_claims_verified():
     result = {"allIndexedSavedOriginalsVerified": True}
     assert audit_exit_code(result, {"verificationCountsReconciled": False}) == 1
-    assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "requestedEndDateReconciled": True, "errorSummaryReconciled": True, "errorCount": 0, "errorCodes": {}}) == 0
+    assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True, "requestedEndDateReconciled": True, "unpairedErrorsReconciled": True, "errorSummaryReconciled": True, "errorCount": 0, "errorCodes": {}}) == 0
     assert audit_exit_code(result, {"verificationCountsReconciled": True, "savedDateSelectionReconciled": True, "integrityScanRangeReconciled": True}) == 1
     assert audit_exit_code(
         {"allIndexedSavedOriginalsVerified": False},
@@ -220,6 +220,7 @@ def test_ci_exit_rejects_errors_even_if_success_flag_is_true():
              "savedDateSelectionReconciled": True,
              "integrityScanRangeReconciled": True,
              "requestedEndDateReconciled": True,
+             "unpairedErrorsReconciled": True,
              "errorSummaryReconciled": True,
              "errorCount": 0, "errorCodes": {}}
     assert audit_exit_code(result, flags) == 0
@@ -308,3 +309,35 @@ def test_ci_rejects_integrity_scan_past_requested_cutoff():
     assert bad["requestedEndDateReconciled"] is True
     assert bad["integrityScanRangeReconciled"] is False
     assert audit_exit_code(beyond, bad) == 1
+
+
+def test_ci_requires_unpaired_dates_to_match_integrity_errors():
+    base = {
+        "dateRange": ["2026-10-12", "2026-10-12"],
+        "dateCount": 1,
+        "verifiedSavedDates": ["2026-10-12"],
+        "pairedDateRangeMatchesSelection": True,
+        "integrityScanRange": ["2026-10-12", "2026-10-13"],
+        "integrityScanCalendarDays": 2,
+        "expectedRacecards": 1,
+        "hashVerifiedRacecards": 1,
+        "allIndexedSavedOriginalsVerified": True,
+        "circuits": {"jra": {"expected": 1, "verified": 1, "failed": 0},
+                     "nar": {"expected": 0, "verified": 0, "failed": 0}},
+        "errors": [{"date": "2026-10-13", "code": "unpaired-saved-day",
+                    "filePresence": "manifest-only"}],
+        "unpairedSavedDays": [{"date": "2026-10-13", "filePresence": "manifest-only"}],
+        "runnerEvidenceTriage": {"zeroObservedPriorRuns": 0, "byCircuitCategory": {},
+                                 "missingCardCarriedWeight": 0, "missingWeightByState": {}},
+    }
+    assert summarize_for_ci(base)["unpairedErrorsReconciled"] is True
+    for changed in (
+        {"errors": []},
+        {"errors": [{"date": "2026-10-13", "code": "unpaired-saved-day",
+                     "filePresence": "racecard-only"}]},
+        {"errors": base["errors"] + base["errors"]},
+        {"unpairedSavedDays": []},
+    ):
+        report = summarize_for_ci({**base, **changed})
+        assert report["unpairedErrorsReconciled"] is False
+        assert audit_exit_code(base, report) == 1
