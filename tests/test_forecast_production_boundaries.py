@@ -1,8 +1,7 @@
 from copy import deepcopy
 import pytest
+from pathlib import Path
 from arvexq.forecast.inputs import prediction_input
-from arvexq.forecast.marks import generate_marks
-from arvexq.forecast.tickets import generate_tickets
 from arvexq.forecast.publication import public_race
 
 @pytest.mark.parametrize('circuit',['中央','地方'])
@@ -23,5 +22,6 @@ def test_three_engines_are_independent_and_empty_without_approval():
     facts=prediction_input({'id':'race','result':{'status':'確定'},'horses':[{'horseNumber':1,'name':'テスト','mark':'◎','integratedEvaluation':{'score':99}}]})
     assert 'result' not in facts and 'mark' not in facts['horses'][0]
     assert 'result' not in facts
-    assert generate_marks(None)==[]
-    assert generate_tickets(None,[])==[]
+    root=Path(__file__).resolve().parents[1]
+    assert not (root/'arvexq/forecast/tickets.py').exists()
+    assert 'def generate_marks(' not in (root/'arvexq/forecast/marks.py').read_text(encoding='utf-8')
