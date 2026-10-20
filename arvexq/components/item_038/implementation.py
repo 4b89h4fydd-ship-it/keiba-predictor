@@ -7,6 +7,10 @@ contracts. These definitions are not independently initialized modules yet.
 def _data_core_refresh_race(race_id:str,force:bool=False)->dict:
     rid=str(race_id or "")
     if not rid:return {"raceId":rid,"ok":False,"error":"empty race id"}
+    # Fail closed before acquiring the shared refresh lock or touching stores.
+    # Previously any ID without the JRA prefix could reach NAR refresh paths.
+    if not rid.startswith(("jra-","nar-")):
+        return {"raceId":rid,"ok":False,"error":"unsupported race id circuit"}
     with _data_core_lock:
         if rid in _data_core_running:
             d=_data_core_snapshot(rid);return {"raceId":rid,"ok":True,"running":True,"health":_data_core_health(d)}
