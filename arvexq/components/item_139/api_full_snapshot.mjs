@@ -10,9 +10,10 @@ export async function restoreBytes(envelope){
   return new Uint8Array(raw);
 }
 export async function readCompressedRace(env,id){
-  const exists=await env.DB.prepare(`SELECT CASE WHEN json_valid(payload) THEN json_extract(payload,'$.arvexqFullPayload.version') ELSE NULL END AS codec FROM race_details WHERE race_id=?`).bind(id).first();
-  if(!exists||exists.codec!==VERSION)return null;
-  const record=await env.DB.prepare('SELECT payload,analysis_ready,updated_at FROM race_details WHERE race_id=?').bind(id).first();
+  // Select the compressed record once. Uncompressed legacy records continue
+  // through the existing canonical fallback without copying their payload.
+  const record=await env.DB.prepare(`SELECT payload,analysis_ready,updated_at FROM race_details WHERE race_id=? AND json_valid(payload) AND json_extract(payload,'$.arvexqFullPayload.version')=?`).bind(id,VERSION).first();
+  if(!record)return null;
   const envelope=JSON.parse(record.payload),raw=await restoreBytes(envelope);
   const summary=await env.DB.prepare('SELECT * FROM race_summaries WHERE race_id=?').bind(id).first();
   const odds=await env.DB.prepare('SELECT horse_no,win_odds,popularity,body_weight,body_weight_change,horse_status,updated_at FROM odds_current WHERE race_id=? ORDER BY horse_no').bind(id).all();
