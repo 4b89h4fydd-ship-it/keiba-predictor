@@ -1,0 +1,70 @@
+{
+  "id": 182,
+  "name": "過去走表示",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/history.py::<module>",
+    "arvexq/ui/static/history/view.js::<module>",
+    "arvexq/history.py::_pick",
+    "arvexq/history.py::normalize_run",
+    "arvexq/history.py::_collect_runs",
+    "arvexq/history.py::recent_runs",
+    "arvexq/history.py::all_runs",
+    "arvexq/history.py::has_history",
+    "arvexq/ui/static/history/view.js::@anonymous:2:1",
+    "arvexq/ui/static/history/view.js::@anonymous:2:1.visible",
+    "arvexq/ui/static/history/view.js::@anonymous:2:1.recentRows",
+    "arvexq/ui/static/history/view.js::@anonymous:2:1.recentRows.@anonymous:9:26",
+    "arvexq/ui/static/history/view.js::@anonymous:2:1.recentRows.@anonymous:10:37"
+  ],
+  "owned_refs": [
+    "arvexq/ui/static/history/view.js::<module>",
+    "arvexq/ui/static/history/view.js::@anonymous:2:1",
+    "arvexq/ui/static/history/view.js::@anonymous:2:1.visible",
+    "arvexq/ui/static/history/view.js::@anonymous:2:1.recentRows",
+    "arvexq/ui/static/history/view.js::@anonymous:2:1.recentRows.@anonymous:9:26",
+    "arvexq/ui/static/history/view.js::@anonymous:2:1.recentRows.@anonymous:10:37"
+  ],
+  "shared_refs": [
+    "arvexq/history.py::<module>",
+    "arvexq/history.py::_pick",
+    "arvexq/history.py::normalize_run",
+    "arvexq/history.py::_collect_runs",
+    "arvexq/history.py::recent_runs",
+    "arvexq/history.py::all_runs",
+    "arvexq/history.py::has_history"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "arvexq/career_missing.py",
+    "arvexq/horse_detail.py",
+    "arvexq/prediction/past_performance.py",
+    "arvexq/ui/static/app.js",
+    "scripts/arvexq_history_independence_smoke.cjs",
+    "scripts/arvexq_sectional_fix_measurement.py",
+    "tests/test_career_integration.py",
+    "tests/test_observed_metrics_normalization.py",
+    "tests/test_past_performance.py",
+    "tests/test_upstream_sectional_casing.py"
+  ],
+  "callee_files": [
+    "arvexq/ui/static/history/deduplicate.js",
+    "arvexq/ui/static/history/temporal.js"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/history.py",
+    "arvexq/ui/static/history/view.js"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/history.py",
+    "arvexq/ui/static/history/view.js"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

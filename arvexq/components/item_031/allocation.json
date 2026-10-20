@@ -1,0 +1,62 @@
+{
+  "id": 31,
+  "name": "騎手",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/entry_fields/dom.py::<module>",
+    "arvexq/ingest/entry_fields/jockey.py::<module>",
+    "arvexq/ingest/entry_fields/dom.py::text",
+    "arvexq/ingest/entry_fields/dom.py::horse_info",
+    "arvexq/ingest/entry_fields/dom.py::age_text",
+    "arvexq/ingest/entry_fields/dom.py::weight_text",
+    "arvexq/ingest/entry_fields/jockey.py::extract"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/entry_fields/jockey.py::<module>",
+    "arvexq/ingest/entry_fields/jockey.py::extract"
+  ],
+  "shared_refs": [
+    "arvexq/ingest/entry_fields/dom.py::<module>",
+    "arvexq/ingest/entry_fields/dom.py::text",
+    "arvexq/ingest/entry_fields/dom.py::horse_info",
+    "arvexq/ingest/entry_fields/dom.py::age_text",
+    "arvexq/ingest/entry_fields/dom.py::weight_text"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "arvexq/ingest/entry_fields/affiliation.py",
+    "arvexq/ingest/entry_fields/age.py",
+    "arvexq/ingest/entry_fields/body_weight.py",
+    "arvexq/ingest/entry_fields/body_weight_change.py",
+    "arvexq/ingest/entry_fields/carried_weight.py",
+    "arvexq/ingest/entry_fields/jockey.py",
+    "arvexq/ingest/entry_fields/name.py",
+    "arvexq/ingest/entry_fields/netkeiba.py",
+    "arvexq/ingest/entry_fields/popularity.py",
+    "arvexq/ingest/entry_fields/sex.py",
+    "arvexq/ingest/entry_fields/status.py",
+    "arvexq/ingest/entry_fields/trainer.py",
+    "arvexq/ingest/entry_fields/win_odds.py",
+    "tests/test_entry_field_contracts.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/entry_fields/dom.py",
+    "arvexq/ingest/field_normalization.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/ingest/entry_fields/dom.py",
+    "arvexq/ingest/entry_fields/jockey.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/entry_fields/dom.py",
+    "arvexq/ingest/entry_fields/jockey.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

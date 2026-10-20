@@ -1,0 +1,76 @@
+{
+  "id": 30,
+  "name": "斤量",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/entry_fields/carried_weight.py::<module>",
+    "arvexq/ingest/entry_fields/dom.py::<module>",
+    "arvexq/ingest/horse_measurements.py::<module>",
+    "arvexq/ingest/entry_fields/carried_weight.py::extract",
+    "arvexq/ingest/entry_fields/carried_weight.py::_safe_carried_weight_value",
+    "arvexq/ingest/entry_fields/dom.py::text",
+    "arvexq/ingest/entry_fields/dom.py::horse_info",
+    "arvexq/ingest/entry_fields/dom.py::age_text",
+    "arvexq/ingest/entry_fields/dom.py::weight_text",
+    "arvexq/ingest/horse_measurements.py::_sanitize_horse_measurements"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/entry_fields/carried_weight.py::<module>",
+    "arvexq/ingest/entry_fields/carried_weight.py::extract",
+    "arvexq/ingest/entry_fields/carried_weight.py::_safe_carried_weight_value"
+  ],
+  "shared_refs": [
+    "arvexq/ingest/entry_fields/dom.py::<module>",
+    "arvexq/ingest/horse_measurements.py::<module>",
+    "arvexq/ingest/entry_fields/dom.py::text",
+    "arvexq/ingest/entry_fields/dom.py::horse_info",
+    "arvexq/ingest/entry_fields/dom.py::age_text",
+    "arvexq/ingest/entry_fields/dom.py::weight_text",
+    "arvexq/ingest/horse_measurements.py::_sanitize_horse_measurements"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "arvexq/ingest/entry_fields/affiliation.py",
+    "arvexq/ingest/entry_fields/age.py",
+    "arvexq/ingest/entry_fields/body_weight.py",
+    "arvexq/ingest/entry_fields/body_weight_change.py",
+    "arvexq/ingest/entry_fields/carried_weight.py",
+    "arvexq/ingest/entry_fields/jockey.py",
+    "arvexq/ingest/entry_fields/name.py",
+    "arvexq/ingest/entry_fields/netkeiba.py",
+    "arvexq/ingest/entry_fields/popularity.py",
+    "arvexq/ingest/entry_fields/sex.py",
+    "arvexq/ingest/entry_fields/status.py",
+    "arvexq/ingest/entry_fields/trainer.py",
+    "arvexq/ingest/entry_fields/win_odds.py",
+    "arvexq/ingest/horse_measurements.py",
+    "tests/test_entry_field_contracts.py",
+    "tests/test_horse_measurements.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/entry_fields/body_weight.py",
+    "arvexq/ingest/entry_fields/body_weight_change.py",
+    "arvexq/ingest/entry_fields/carried_weight.py",
+    "arvexq/ingest/entry_fields/dom.py",
+    "arvexq/ingest/field_normalization.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/ingest/entry_fields/carried_weight.py",
+    "arvexq/ingest/entry_fields/dom.py",
+    "arvexq/ingest/horse_measurements.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/entry_fields/carried_weight.py",
+    "arvexq/ingest/entry_fields/dom.py",
+    "arvexq/ingest/horse_measurements.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

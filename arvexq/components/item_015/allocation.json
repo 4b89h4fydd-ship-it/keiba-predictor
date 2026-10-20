@@ -1,0 +1,37 @@
+{
+  "id": 15,
+  "name": "芝・ダート・障害区分取得",
+  "circuits": [
+    "JRA"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/race_fields/surface.py::<module>",
+    "arvexq/ingest/race_fields/surface.py::extract"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/race_fields/surface.py::<module>",
+    "arvexq/ingest/race_fields/surface.py::extract"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "tests/test_jra_race_fields_independent.py",
+    "tests/test_jra_race_fields_parity_matrix.py",
+    "tests/test_jra_summary_independent_fields.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/race_fields/course.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/ingest/race_fields/surface.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/race_fields/surface.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

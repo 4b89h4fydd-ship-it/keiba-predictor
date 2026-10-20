@@ -1,0 +1,62 @@
+{
+  "id": 121,
+  "name": "買い目生成",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/forecast/tickets.py::<module>",
+    "arvexq/ui/static/forecast/tickets.js::<module>",
+    "arvexq/forecast/tickets.py::generate_tickets",
+    "arvexq/ui/static/forecast/tickets.js::@anonymous:2:1",
+    "arvexq/ui/static/forecast/tickets.js::@anonymous:2:1.matchesRoster",
+    "arvexq/ui/static/forecast/tickets.js::@anonymous:2:1.validatedReceipt",
+    "arvexq/ui/static/forecast/tickets.js::@anonymous:2:1.build",
+    "arvexq/ui/static/forecast/tickets.js::@anonymous:2:1.current"
+  ],
+  "owned_refs": [
+    "arvexq/forecast/tickets.py::<module>",
+    "arvexq/ui/static/forecast/tickets.js::<module>",
+    "arvexq/forecast/tickets.py::generate_tickets",
+    "arvexq/ui/static/forecast/tickets.js::@anonymous:2:1",
+    "arvexq/ui/static/forecast/tickets.js::@anonymous:2:1.matchesRoster",
+    "arvexq/ui/static/forecast/tickets.js::@anonymous:2:1.validatedReceipt",
+    "arvexq/ui/static/forecast/tickets.js::@anonymous:2:1.build",
+    "arvexq/ui/static/forecast/tickets.js::@anonymous:2:1.current"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [
+    {
+      "item": 121,
+      "path": "arvexq/prediction/recommendation_engine.py",
+      "git_blob_sha": "bb7e22e37cf6bbd3696033bc1ee4617e5e834b6a",
+      "search_term": "evaluate_tickets",
+      "lines": [
+        89,
+        140
+      ],
+      "status": "研究/候補の参照のみ。実装割り振り件数から除外。PR #366/#374で撤去対象に含まれ得るため復活・コピー禁止"
+    }
+  ],
+  "missing_old_references": [],
+  "caller_files": [
+    "arvexq/ui/static/app.js",
+    "arvexq/ui/static/forecast/prediction.js",
+    "scripts/test_support/production_ui.cjs",
+    "tests/test_approved_baseline_activation.py",
+    "tests/test_forecast_production_boundaries.py"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "arvexq/ui/static/forecast/tickets.js"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/forecast/tickets.py",
+    "arvexq/ui/static/forecast/tickets.js"
+  ],
+  "legacy_prediction_reserved": true,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

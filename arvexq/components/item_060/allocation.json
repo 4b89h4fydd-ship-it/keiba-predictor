@@ -1,0 +1,36 @@
+{
+  "id": 60,
+  "name": "複勝オッズ",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/place_odds.py::<module>",
+    "arvexq/ingest/place_odds.py::place_odds",
+    "arvexq/ingest/place_odds.py::place_odds_pair"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/place_odds.py::<module>",
+    "arvexq/ingest/place_odds.py::place_odds",
+    "arvexq/ingest/place_odds.py::place_odds_pair"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "tests/test_independent_place_odds.py"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "arvexq/ingest/place_odds.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/place_odds.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

@@ -1,0 +1,56 @@
+{
+  "id": 145,
+  "name": "オッズキャッシュ",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "workers/live_odds.mjs::<module>",
+    "workers/live_odds.mjs::text",
+    "workers/live_odds.mjs::cleanName",
+    "workers/live_odds.mjs::narRows",
+    "workers/live_odds.mjs::narRows.@anonymous:6:48",
+    "workers/live_odds.mjs::narRows.@anonymous:8:82",
+    "workers/live_odds.mjs::narRows.@anonymous:19:27",
+    "workers/live_odds.mjs::narRows.@anonymous:19:49",
+    "workers/live_odds.mjs::narRows.@anonymous:20:38",
+    "workers/live_odds.mjs::centralRows",
+    "workers/live_odds.mjs::centralRows.@anonymous:26:40",
+    "workers/live_odds.mjs::sourceOdds",
+    "workers/live_odds.mjs::sourceOdds.@anonymous:56:22"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "workers/live_odds.mjs::<module>",
+    "workers/live_odds.mjs::text",
+    "workers/live_odds.mjs::cleanName",
+    "workers/live_odds.mjs::narRows",
+    "workers/live_odds.mjs::narRows.@anonymous:6:48",
+    "workers/live_odds.mjs::narRows.@anonymous:8:82",
+    "workers/live_odds.mjs::narRows.@anonymous:19:27",
+    "workers/live_odds.mjs::narRows.@anonymous:19:49",
+    "workers/live_odds.mjs::narRows.@anonymous:20:38",
+    "workers/live_odds.mjs::centralRows",
+    "workers/live_odds.mjs::centralRows.@anonymous:26:40",
+    "workers/live_odds.mjs::sourceOdds",
+    "workers/live_odds.mjs::sourceOdds.@anonymous:56:22"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "scripts/arvexq_official_odds_smoke.mjs",
+    "workers/web.mjs"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "workers/live_odds.mjs"
+  ],
+  "static_workflow_dependency_files": [
+    "workers/live_odds.mjs"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

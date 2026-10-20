@@ -1,0 +1,32 @@
+{
+  "id": 117,
+  "name": "◎【単】判定",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "unassigned-empty",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [],
+  "owned_refs": [],
+  "shared_refs": [],
+  "research_only_refs": [
+    {
+      "item": 117,
+      "path": "arvexq/prediction/new_forecast.py",
+      "git_blob_sha": "9e4616bd489ac3258edf67bd973125110702db36",
+      "search_term": "honmeiRole",
+      "lines": [
+        122
+      ],
+      "status": "研究/候補の参照のみ。実装割り振り件数から除外。PR #366/#374で撤去対象に含まれ得るため復活・コピー禁止"
+    }
+  ],
+  "missing_old_references": [],
+  "caller_files": [],
+  "callee_files": [],
+  "static_app_dependency_files": [],
+  "static_workflow_dependency_files": [],
+  "legacy_prediction_reserved": true,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

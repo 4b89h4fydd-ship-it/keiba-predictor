@@ -1,0 +1,30 @@
+{
+  "id": 150,
+  "name": "保存失敗時復旧",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    ".github/workflows/arvexq-snapshot-recovery.yml::<module>"
+  ],
+  "owned_refs": [
+    ".github/workflows/arvexq-snapshot-recovery.yml::<module>"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [],
+  "callee_files": [
+    "build_static.py",
+    "scripts/arvexq_publish_saved_snapshots.py"
+  ],
+  "static_app_dependency_files": [],
+  "static_workflow_dependency_files": [
+    ".github/workflows/arvexq-snapshot-recovery.yml"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}
