@@ -73,7 +73,7 @@ def audit():
     # ported into Stage3-owned boxes. Historical baseline evidence is retained.
     # These pins validate only source identity, NOT integration or production success.
     active_baseline["_nar_attach_recent_batch"] = "c492095a3ffd0e73d2c6cca02e8677a728042882348a1755a2e685c70b2ab1f4"
-    active_baseline["_nar_official_result_fast"] = "0f58b9d7fd558a5e1f14d3ef30ba39a72a771c4a279930ecfb23f8689eed7907"
+    active_baseline["_nar_official_result_fast"] = "913736b04f7c5239c473c470bcef07b22adc61a3326dd615ca360ff266a8b7ac"
     active_baseline["_netkeiba_current_result"] = "abb7c93de8d662dd255f4f71b1ed51955e3e19ae0e48ee3167485cf81d6149bb"
     active_baseline["nar_race_detail"] = "0c2566162fcccd68351b852a7acd153ece3eab55b517650da9c9c8499c2e1c73"
     active_baseline["_apply_enrichment"] = "ae00019965c0da27673cd4e92aa3355825185eb8ee168c63839bbc9c6c4e726d"
