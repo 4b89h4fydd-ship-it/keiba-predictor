@@ -30,12 +30,10 @@ jobs:
           PYTHONPATH=. python scripts/arvexq_jra_margin_audit.py --input before.json --output audit-before.json
           python scripts/arvexq_history_repair.py --bundle before.json --payload repaired.json --report repair-report.json --workers 1 --central-margins-only
           PYTHONPATH=. python scripts/arvexq_jra_margin_audit.py --input repaired.json --output audit-collected.json --require-positive
-          PYTHONPATH=. python scripts/arvexq_jra_mineta_observed_comparison.py comparison.json --bundle repaired.json --date 2026-10-12
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: jra-margin-probe-summary
           path: |
             audit-*.json
-            comparison.json
           if-no-files-found: warn

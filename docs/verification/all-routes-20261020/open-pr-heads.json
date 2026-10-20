@@ -1,0 +1,243 @@
+{
+  "scope": "open PR heads inspected before isolated route-audit update; no other PR modified",
+  "pullRequests": [
+    {
+      "number": 375,
+      "head": "fix/existing-route-restoration-20261020",
+      "sha": "8b72d7b94f3380022d098ef0d8b1966f480182ab",
+      "base": "integration/arvexq-stage366-removal-compat-20261020",
+      "baseSha": "e3485d7d0a738116cb55493475a8c72d7a54b0c8"
+    },
+    {
+      "number": 374,
+      "head": "integration/arvexq-stage366-removal-compat-20261020",
+      "sha": "e3485d7d0a738116cb55493475a8c72d7a54b0c8",
+      "base": "main",
+      "baseSha": "9096e47b7c5ddcc6fe9310149ac2df1132078cf9"
+    },
+    {
+      "number": 373,
+      "head": "integration/arvexq-stages-1-5-compat-20261020",
+      "sha": "bd78b3f10b493ec12a44753f0a17d0ce424f934b",
+      "base": "main",
+      "baseSha": "9096e47b7c5ddcc6fe9310149ac2df1132078cf9"
+    },
+    {
+      "number": 372,
+      "head": "research/stage5-original-ticket-metrics-20261020",
+      "sha": "93beda21f6a3f4b5d28ce581941129b73ac71173",
+      "base": "main",
+      "baseSha": "9096e47b7c5ddcc6fe9310149ac2df1132078cf9"
+    },
+    {
+      "number": 370,
+      "head": "research/stage4-win-accuracy-audit-20261020",
+      "sha": "54128f6b91c9a48ed6687c1e9d7d6bc0743445ce",
+      "base": "feature/arvexq-v3-data-boundary-empty-prediction-20261019",
+      "baseSha": "b0f7ad5b3977335f7f37b1500d34ffa8885fa1b6"
+    },
+    {
+      "number": 369,
+      "head": "fix/arvexq-stage2-data-display-readback-20261020",
+      "sha": "213136ca74386418695ac0730936d790a35f1941",
+      "base": "main",
+      "baseSha": "9096e47b7c5ddcc6fe9310149ac2df1132078cf9"
+    },
+    {
+      "number": 368,
+      "head": "fix/career-identity-debut-20261020",
+      "sha": "509624fcabe504f17efc5cc508bb03557b78aa47",
+      "base": "main",
+      "baseSha": "9096e47b7c5ddcc6fe9310149ac2df1132078cf9"
+    },
+    {
+      "number": 367,
+      "head": "feature/arvexq-v3-data-boundary-empty-prediction-20261019",
+      "sha": "47e9e020ee4c9cf3d16a2c0271751a44cfa7da07",
+      "base": "main",
+      "baseSha": "8f0751faabe4ce47872313dbfcae0dd1be1e7041"
+    },
+    {
+      "number": 366,
+      "head": "fix/arvexq-delete-alternate-forecast-candidate-20261019",
+      "sha": "95827ecd5d05731bed61e94592f1d1d2e36ee3d4",
+      "base": "main",
+      "baseSha": "8f0751faabe4ce47872313dbfcae0dd1be1e7041"
+    },
+    {
+      "number": 333,
+      "head": "feat/forecast-heldout-evaluation-20261018",
+      "sha": "2619c74aea166f70deebc93e8999419c476a295c",
+      "base": "main",
+      "baseSha": "fbe54a2408c35e79fc8b33f40bcc6e2d2b8abee9"
+    },
+    {
+      "number": 332,
+      "head": "feat/forecast-real-race-scoring-20261018",
+      "sha": "3c0c9281ce52fe1a8e02e1af1294980bc62ff860",
+      "base": "main",
+      "baseSha": "fbe54a2408c35e79fc8b33f40bcc6e2d2b8abee9"
+    },
+    {
+      "number": 331,
+      "head": "feat/forecast-joint-probability-validation-20261018",
+      "sha": "03cdb502da7744cfac463bb7ed3ff2da8b1933cd",
+      "base": "main",
+      "baseSha": "fbe54a2408c35e79fc8b33f40bcc6e2d2b8abee9"
+    },
+    {
+      "number": 330,
+      "head": "feat/new-forecast-tickets-contract-20261018",
+      "sha": "f31d26e498c0f93e31df6f649b1086b65cfe0b39",
+      "base": "main",
+      "baseSha": "fbe54a2408c35e79fc8b33f40bcc6e2d2b8abee9"
+    },
+    {
+      "number": 329,
+      "head": "feat/new-forecast-marks-contract-20261018",
+      "sha": "c50457b54fe513248e2ca2623eb7d3bc376b8a7c",
+      "base": "main",
+      "baseSha": "fbe54a2408c35e79fc8b33f40bcc6e2d2b8abee9"
+    },
+    {
+      "number": 325,
+      "head": "research/arvexq-b-expanded-21-day-holdout-20261018",
+      "sha": "f4f081a93e339823295b6a9758b698241f1cdd90",
+      "base": "main",
+      "baseSha": "f3ede5195e1ba5072ea859fcb9b47b9ddb5312ce"
+    },
+    {
+      "number": 271,
+      "head": "refactor/jra-race-card-fields-20261018",
+      "sha": "9220b3ab3722af98b3dfbe2a3b807f458ea9f2e3",
+      "base": "main",
+      "baseSha": "e022baddd0ab37369565d6e73f163768545a00bb"
+    },
+    {
+      "number": 213,
+      "head": "fix/20261016-unified-observed-audit",
+      "sha": "5ca0cefcb6e7aef093cdaf0651ba77a826bbe329",
+      "base": "main",
+      "baseSha": "b54bcab46d79b8057aa9eee228a4484f8e4479a0"
+    },
+    {
+      "number": 200,
+      "head": "research/course-margin-form-six-20261016",
+      "sha": "5a0b991a409ccccec7c3be6743b36ad506cbdb7b",
+      "base": "main",
+      "baseSha": "472fe669577e9db67b45c1124aa27dcac2be7101"
+    },
+    {
+      "number": 199,
+      "head": "audit/frozen-trifecta-20261016",
+      "sha": "dc57e6cac3fa041f8736c1f3cb6b52b1579c9ba6",
+      "base": "main",
+      "baseSha": "472fe669577e9db67b45c1124aa27dcac2be7101"
+    },
+    {
+      "number": 194,
+      "head": "research/current-6040-historical-backtest-20261015",
+      "sha": "8c0443696cf438e158eb0e384d24a13785917cde",
+      "base": "main",
+      "baseSha": "fce68c0a70e59e1abcf623558b33bcb73aa45803"
+    },
+    {
+      "number": 193,
+      "head": "codex/contextual-role-five-issues",
+      "sha": "eddf40dde7ed79421bc4769abcb37f01102a5ec9",
+      "base": "main",
+      "baseSha": "fce68c0a70e59e1abcf623558b33bcb73aa45803"
+    },
+    {
+      "number": 155,
+      "head": "fix/nar-official-margin-fallback-20261015",
+      "sha": "c35a693039bd29a50e2744ac61f4892fa654002f",
+      "base": "main",
+      "baseSha": "ef1df69ab4bc58ff3b564777eeea0cf81bd25dd9"
+    },
+    {
+      "number": 129,
+      "head": "research/jra-nar-separated-comparison-20261014",
+      "sha": "a30977e345765b0a9a2be56e58b356a9391da80c",
+      "base": "main",
+      "baseSha": "becd9ef0ef2f8af291dca4ac4bf1ea6c5b4bab5d"
+    },
+    {
+      "number": 128,
+      "head": "fix/nar-monthly-response-diagnostics-20261014",
+      "sha": "a4525bd8977be614d1720b4b1d504da5040a4f51",
+      "base": "main",
+      "baseSha": "becd9ef0ef2f8af291dca4ac4bf1ea6c5b4bab5d"
+    },
+    {
+      "number": 122,
+      "head": "fix/career-evidence-gate-consistency-20261014",
+      "sha": "a8df732964b3d748c0eb3a3d59117ff7cc093acb",
+      "base": "main",
+      "baseSha": "1c2fa4d1c6d5c7ea920579b039a2cf8db5cda4ee"
+    },
+    {
+      "number": 121,
+      "head": "fix/prerace-bet-evidence-error-20261014",
+      "sha": "93f23610aa6f2b29cc6d1c640066160feb3b11ab",
+      "base": "main",
+      "baseSha": "1c2fa4d1c6d5c7ea920579b039a2cf8db5cda4ee"
+    },
+    {
+      "number": 119,
+      "head": "fix/remove-duplicated-finish-ability-20261014",
+      "sha": "40559f023d4e2143471ca2e3e994d6f544f4a2d8",
+      "base": "main",
+      "baseSha": "b4864b6d263c9682ce97d137ea311ff77ec4eae2"
+    },
+    {
+      "number": 118,
+      "head": "audit/temporal-leakage-guard-20261014",
+      "sha": "ed752e6c84b0ef85c10bff44968f24cfd83ccb7f",
+      "base": "main",
+      "baseSha": "d0f36cbff15703f163ad824612bf8e2cf9283852"
+    },
+    {
+      "number": 112,
+      "head": "codex/arvexq-two-axis-staged-model",
+      "sha": "86b73bd02d5775379834364df5d094e6e4bbb218",
+      "base": "main",
+      "baseSha": "c167d1257b54b3254d69992401fe51f408b0ecb2"
+    },
+    {
+      "number": 84,
+      "head": "feature/21-factor-prerace-engine-20261013",
+      "sha": "b5a7b6f127062513bdb1a0cb2b4db5badc44583a",
+      "base": "main",
+      "baseSha": "bd1ada35aac3ac88c9aad2e73196225d6df55a77"
+    },
+    {
+      "number": 16,
+      "head": "refactor/arvexq-storage-stage5",
+      "sha": "5a6de9398ccee9060f83afb0c67892ba4df3b675",
+      "base": "refactor/arvexq-acquisition-stage4",
+      "baseSha": "19b76d3c3bed8f1f36adf9590de39e80d4116f96"
+    },
+    {
+      "number": 14,
+      "head": "refactor/arvexq-acquisition-stage4",
+      "sha": "19b76d3c3bed8f1f36adf9590de39e80d4116f96",
+      "base": "refactor/arvexq-domain-separation",
+      "baseSha": "95f259597d8663c280b41593bcd3a624630f7f35"
+    },
+    {
+      "number": 13,
+      "head": "refactor/arvexq-domain-separation",
+      "sha": "95f259597d8663c280b41593bcd3a624630f7f35",
+      "base": "main",
+      "baseSha": "c025fea65f95aa0641b1c674ef703e4644b9b3a3"
+    },
+    {
+      "number": 12,
+      "head": "audit/readonly-career-odds",
+      "sha": "9c808b0d27d62787a864cf82f4c85184051501b1",
+      "base": "main",
+      "baseSha": "a14b37667449efc9525845e7baccb231de8f55c9"
+    }
+  ]
+}
