@@ -271,5 +271,67 @@ class RealtimeResultRetentionTests(unittest.TestCase):
         self.assertEqual(merged["result"], confirmed["result"])
 
 
+class LiveD1BaseReadbackTests(unittest.TestCase):
+    """The existing live fallback must seed verified full data, not a thin shell."""
+
+    def test_packed_d1_race_rehydrates_all_facts_and_frozen_originals(self):
+        import json
+        from arvexq.ingest.full_snapshot_codec import pack_detail
+        from scripts import arvexq_live_sync as live
+        for rid, circuit, track in (
+            ("nar-2026-10-20-盛岡-01", "地方", "盛岡"),
+            ("jra-2026-10-18-東京-08", "中央", "東京"),
+        ):
+            with self.subTest(circuit=circuit):
+                day = "2026-10-20" if circuit == "地方" else "2026-10-18"
+                full = {"id": rid, "date": day, "circuit": circuit,
+                        "track": track, "raceNumber": 1 if circuit == "地方" else 8,
+                        "horses": [{"horseNumber": 1, "name": "検証馬",
+                                    "allPastRuns": [{"date": "2026-09-01", "finish": 2}]}],
+                        "preRaceBet": {"frozen": True, "tickets": [[1, 2, 3]]},
+                        "result": {"status": "確定",
+                                   "finishers": [{"finish": 1, "horseNumber": 1}]}}
+                response = json.dumps({"ok": True, "detail": pack_detail(full)},
+                                      ensure_ascii=False).encode("utf-8")
+                with patch.object(live.urllib.request, "urlopen",
+                                  return_value=io.BytesIO(response)) as opened:
+                    actual = live.fetch_d1_detail(rid, day)
+                self.assertEqual(actual, full)
+                url = opened.call_args.args[0].full_url
+                self.assertIn("/api/race/", url)
+                self.assertNotIn("view=display", url)
+
+    def test_unmatched_race_wrong_day_and_bad_digest_fail_closed(self):
+        import copy
+        import json
+        from arvexq.ingest.full_snapshot_codec import pack_detail
+        from scripts import arvexq_live_sync as live
+        rid = "nar-2026-10-20-盛岡-01"
+        right = {"id": rid, "date": "2026-10-20",
+                 "horses": [{"horseNumber": 1, "name": "検証馬"}]}
+        mismatched = copy.deepcopy(right)
+        mismatched["id"] = "nar-2026-10-20-盛岡-02"
+        wrong_day = copy.deepcopy(right)
+        wrong_day["date"] = "2026-10-19"
+        damaged = pack_detail(right)
+        damaged["arvexqFullPayload"]["sha256"] = "0" * 64
+        cases = (
+            {"ok": False, "detail": right},
+            {"ok": True, "detail": mismatched},
+            {"ok": True, "detail": wrong_day},
+            {"ok": True, "detail": damaged},
+        )
+        for data in cases:
+            with self.subTest(data=data.get("detail", {}).get("id")):
+                response = json.dumps(data, ensure_ascii=False).encode("utf-8")
+                with patch.object(live.urllib.request, "urlopen",
+                                  return_value=io.BytesIO(response)), \\
+                     patch("builtins.print") as recorded:
+                    actual = live.fetch_d1_detail(rid, "2026-10-20")
+                self.assertIsNone(actual)
+                self.assertTrue(any("D1_BASE_FETCH_ERROR" in str(call)
+                                    for call in recorded.call_args_list))
+
+
 if __name__ == "__main__":
     unittest.main()
