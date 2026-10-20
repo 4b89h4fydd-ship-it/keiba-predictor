@@ -123,6 +123,26 @@ class NarFullCareerBatchTests(unittest.TestCase):
         self.assertNotIn("2026-09-10",dates,"different birth year must not enter career")
         self.assertIn("2026-08-10",dates,"compatible observed history must survive")
 
+    def test_same_birth_year_is_retained_across_calendar_years(self):
+        import app
+        detail = self.fixture()
+        detail["horses"][0].update({"age": 3, "sex": "牡"})
+        conn = sqlite3.connect(self.path)
+        try:
+            conn.execute("INSERT INTO races VALUES (?,?,?,?,?,?,?,?,?)",
+                         ("大井", "2025-09-10", 1, "C1", 1200, "晴", "良", 12, 100))
+            conn.execute("""INSERT INTO entries
+                (name,date,track,race_no,age,sex,finish,time_seconds,corner_positions_json,
+                 carried_weight,jockey,trainer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                ("全履歴馬", "2025-09-10", "大井", 1, 2, "牡", 2, 73.2, "[]", 55.0, "J", "T"))
+            conn.commit()
+        finally:
+            conn.close()
+        with patch.object(app, "DB_PATH", self.path):
+            actual = app._nar_attach_recent_batch(detail, 5)
+        dates = {row["date"] for row in actual["horses"][0]["allPastRuns"]}
+        self.assertIn("2025-09-10", dates)
+
     def test_same_day_sources_deduplicate_without_losing_official_fields(self):
         import app
         d=self.fixture()
