@@ -358,3 +358,10 @@ Workerの通常オッズ・最終保存オッズの2つのキー生成を既存 
 ### 2026-10-20 P0-1監査SQLの結合条件精密化
 
 読取り監査 `audit_nar_store_history` で、既存 `NarStore.recent_races` の `entries JOIN races` を厳密に計上するよう `LEFT JOIN` で監査対象を抽出する。実際の検索に入らない `entries` の孤立行を `excluded-by-legacy-race-join` として分離。新フィールド `dbNameDateRowsBeforeJoin` は馬名・日付での全行、`dbRowsBeforeLegacyFinishFilter` は親レースに結合できる行、`legacyPositiveRows` は結合可能かつ `finish>0` の行を表す。無効着順と本人不一致は別理由。合成SQLiteの孤立行を追加した回帰テストで旧`recent_races`の検索件数と監査陽性件数の一致、監査前後の保存行数不変を検証する。本番SQLiteや公式原本の実混入件数についての証明には使わない。
+
+
+### 2026-10-20 P0-2 第64段階・過去走欠損と保存済み原本の別経路照合（オフライン）
+
+同日研究記録 `docs/research/stage64-results/official_gap_recheck.json` の **NAR 11R・34頭** と、同リポジトリの `arvexq/ui/static/racecards/2026-10-16.json` および `arvexq/ui/static/saved-snapshots/2026-10-16.json` から参照される11個の圧縮保存原本を照合した。保存原本は既存の `snapshot_digest._restore` によるSHA-256・サイズ検証付きで復元し、馬番・馬名が34頭すべてで一致。保存原本の `recentRaces` / `allPastRuns` の直接観測件数は **33頭が(0,0)、川崎3R・2番アークブレイブが(3,3)** であり、公式供給アーカイブの調査結果「34頭で有効な過去走なし」と同じ概念ではない。後者1頭には保存済み履歴があるが、取得元、個体照合、全生涯網羅性は当該直接保存数から確定しない。
+
+`tests/test_v3_snapshot_digest.py` に上記の静的原本照合を回帰検証として追加し、原本を編集せず検証可能にした。**現時点の本番D1は読んでいない**。取得元応答、統合前後、D1/API/UIの時系列照合がないため、33頭の初回欠損箇所・無出走判定・表示欠損判定は未確定。公式アーカイブ取得先、原本、保存先、200項目、予想29空箱に変更なし。

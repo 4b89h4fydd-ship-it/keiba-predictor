@@ -96,3 +96,61 @@ def test_actual_seven_day_digest_samples_are_bounded_offline():
     assert result["allSampledVerified"] is True
     assert result["fullArchiveVerified"] is False
     assert result["liveApi429Resolved"] is False
+
+
+def test_actual_stage64_nar_gap_archive_vs_saved_snapshot():
+    """Only compare immutable repository evidence; this is NOT a live D1 read."""
+    from collections import Counter
+    from pathlib import Path
+
+    base = Path(__file__).resolve().parents[1]
+    day = "2026-10-16"
+    folder = base / "arvexq/ui/static/saved-snapshots"
+    manifest = json.loads((folder / (day + ".json")).read_text(encoding="utf-8"))
+    cards = json.loads(
+        (base / "arvexq/ui/static/racecards" / (day + ".json")).read_text(
+            encoding="utf-8"))
+    archive = json.loads(
+        (base / "docs/research/stage64-results/official_gap_recheck.json")
+        .read_text(encoding="utf-8"))
+    observations = archive["observations"]
+    by_race = {race["id"]: race for race in cards["races"]}
+    target_ids = {row["raceId"] for row in observations}
+    assert len(target_ids) == archive["targetRaces"] == 11
+    assert len(observations) == archive["targetHorses"] == 34
+    assert all(rid.startswith("nar-") for rid in target_ids)
+
+    restored = {}
+    for rid in target_ids:
+        entry = manifest["races"][rid]
+        envelope = json.loads(
+            (folder / entry["file"]).read_text(encoding="utf-8"))
+        # The existing bounded decoder checks SHA-256 and decompressed length.
+        saved = _restore(envelope, entry)
+        assert saved["id"] == rid
+        assert saved["date"] == day and saved["circuit"] == "地方"
+        restored[rid] = saved
+
+    direct_count = Counter()
+    observed_saved = []
+    for row in observations:
+        rid, no, name = row["raceId"], row["horseNumber"], row["name"]
+        stored_horses = {h["horseNumber"]: h
+                         for h in restored[rid]["horses"]}
+        official_card_horses = {h["horseNumber"]: h
+                                for h in by_race[rid]["horses"]}
+        assert no in stored_horses and no in official_card_horses
+        assert stored_horses[no]["name"] == name
+        assert official_card_horses[no]["name"] == name
+        horse = stored_horses[no]
+        saved_recent = horse.get("recentRaces") or []
+        saved_all = horse.get("allPastRuns") or []
+        direct_count[(len(saved_recent), len(saved_all))] += 1
+        if saved_recent or saved_all:
+            observed_saved.append((rid, no, name, len(saved_recent), len(saved_all)))
+    # The Stage64 official-source gap is NOT equivalent to an absent
+    # saved history: one race retained three prior runs by another path.
+    assert direct_count == {(0, 0): 33, (3, 3): 1}
+    assert observed_saved == [
+        ("nar-2026-10-16-川崎-03", 2, "アークブレイブ", 3, 3)
+    ]
