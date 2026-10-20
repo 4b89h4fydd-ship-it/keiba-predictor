@@ -64,12 +64,15 @@ jobs:
           mkdir -p shadow-saved
           python scripts/arvexq_stage64_saved_connection.py \
             --date 2026-10-17 --output shadow-saved/stage64-saved-2026-10-17.json
+          python scripts/arvexq_stage64_saved_connection.py \
+            --date 2026-10-11 --compare-coverage docs/research/stage64-results/coverage.json \
+            --output shadow-saved/stage64-archived-overlap-2026-10-11.json
       - name: Archive historical trial separately from frozen forecasts
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: arvexq-stage64-retrospective-saved-trial
-          path: shadow-saved/stage64-saved-2026-10-17.json
+          path: shadow-saved/*.json
           if-no-files-found: error
           retention-days: 30
       - name: Prepare exact preregistration bundles

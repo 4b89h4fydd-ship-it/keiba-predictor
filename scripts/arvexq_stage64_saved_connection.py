@@ -25,6 +25,82 @@ from arvexq.v3.audit.snapshot_digest import _restore, verify_one
 SAVED = ROOT / "arvexq" / "ui" / "static"
 
 
+def compare_archived_coverage(report: dict, archived: list) -> dict:
+    """Compare all three saved-data arms to prior baseline STATUS evidence.
+
+    Archived coverage contains only baseline stages/blockers, not predictions,
+    the original 527R input, or source snapshots' hashes. A status match is
+    never claimed as full numerical/forecast equivalence.
+    """
+    if not isinstance(archived, list):
+        raise ValueError("archived coverage must be a list")
+    indexed = {}
+    for item in archived:
+        if not isinstance(item, dict) or not isinstance(item.get("raceId"), str):
+            raise ValueError("invalid archived coverage row")
+        rid = item["raceId"]
+        if rid in indexed:
+            raise ValueError("duplicate archived race identity")
+        indexed[rid] = item
+    summary = {owner: {"overlappingRaces": 0, "statusMatchedRaces": 0,
+                       "blockersMatchedRaces": 0, "fullyMatchedRaces": 0,
+                       "disagreedRaces": 0, "notInArchivedResearch": 0}
+               for owner in ("jra", "nar")}
+    differences = []
+    for row in report["raceRows"]:
+        rid, owner = row["raceId"], row["circuit"]
+        source = indexed.get(rid)
+        if source is None:
+            summary[owner]["notInArchivedResearch"] += 1
+            continue
+        if source.get("circuit") != owner or source.get("date") != row["date"]:
+            raise ValueError("archived coverage circuit/date identity conflict")
+        expected_stages = source.get("stageStatus")
+        expected_blockers = source.get("blockers")
+        if not isinstance(expected_stages, dict) or not isinstance(expected_blockers, list):
+            raise ValueError("archived stage or blocker evidence invalid")
+        arm_differences = {}
+        status_match_all, blocker_match_all = True, True
+        for arm in ARMS:
+            p = row["predictions"][arm]
+            observed_status = {k: v["status"] for k, v in p["stages"].items()}
+            status_match = observed_status == expected_stages
+            # Multiset comparison retains per-run duplicate blocker observations.
+            normalized = lambda xs: sorted(json.dumps(x, ensure_ascii=False,
+                                                       sort_keys=True) for x in xs)
+            blocker_match = normalized(p["blockers"]) == normalized(expected_blockers)
+            status_match_all &= status_match
+            blocker_match_all &= blocker_match
+            if not status_match or not blocker_match:
+                arm_differences[arm] = {
+                    "stageStatusMatches": status_match,
+                    "blockersMatch": blocker_match,
+                    "observedStatuses": observed_status if not status_match else None,
+                    "archivedStatuses": expected_stages if not status_match else None,
+                    "observedBlockers": p["blockers"] if not blocker_match else None,
+                    "archivedBlockers": expected_blockers if not blocker_match else None,
+                }
+        totals = summary[owner]
+        totals["overlappingRaces"] += 1
+        totals["statusMatchedRaces"] += int(status_match_all)
+        totals["blockersMatchedRaces"] += int(blocker_match_all)
+        totals["fullyMatchedRaces"] += int(status_match_all and blocker_match_all)
+        totals["disagreedRaces"] += int(not (status_match_all and blocker_match_all))
+        if arm_differences:
+            differences.append({"raceId": rid, "circuit": owner,
+                                "armDifferences": arm_differences})
+    return {
+        "schema": "arvexq-stage64-archived-coverage-comparison-1",
+        "reference": "existing-stage64-527R-baseline-coverage-not-original-input",
+        "byCircuit": summary, "differences": differences,
+        "sameRaceIdCoverageCompared": True,
+        "sameInputByteEqualityVerified": False,
+        "probabilityOrTicketNumericalEqualityVerified": False,
+        "independentlyVerifiedPreoff": False,
+        "productionEligible": False,
+    }
+
+
 def run_saved_day(day: str, *, root: Path = SAVED) -> dict:
     """Read all sealed race IDs for an existing past day, JRA and NAR separately."""
     day = date.fromisoformat(day).isoformat()
@@ -88,6 +164,18 @@ def run_saved_day(day: str, *, root: Path = SAVED) -> dict:
                 "blockers": p["blockers"],
                 "sixStageCalculated": executable, "productionEligible": False,
             }
+        # Diagnostic-only outcome of the existing fixed evidence gate.
+        # No blocked race is dropped, no missing history is imputed.
+        if len({v["sixStageCalculated"] for v in predictions.values()}) != 1:
+            raise ValueError("ability variants diverged on six-stage eligibility")
+        if not predictions[ARMS[0]]["sixStageCalculated"]:
+            reasons = {b["reason"] for b in predictions[ARMS[0]]["blockers"]}
+            if "unsupported-discipline" in reasons:
+                metrics[owner]["blockedUnsupportedDisciplineRaces"] += 1
+            elif "no-valid-finish-history" in reasons or "no-valid-corner-history" in reasons:
+                metrics[owner]["blockedInsufficientHistoryRaces"] += 1
+            else:
+                metrics[owner]["blockedOtherRaces"] += 1
         metrics[owner]["races"] += 1
         reports.append({"raceId": rid, "date": day, "circuit": owner,
                         "savedSourceSha256": entry["sha256"], "rosterVerified": True,
@@ -112,8 +200,13 @@ def main() -> int:
     parser.add_argument("--date", required=True, help="Past saved YYYY-MM-DD")
     parser.add_argument("--archive-dir", type=Path, default=SAVED)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--compare-coverage", type=Path,
+                        help="Existing Stage64 coverage.json, read-only; same-race status comparison")
     a = parser.parse_args()
     report = run_saved_day(a.date, root=a.archive_dir)
+    if a.compare_coverage is not None:
+        archived = json.loads(a.compare_coverage.read_text(encoding="utf-8"))
+        report["archivedCoverageComparison"] = compare_archived_coverage(report, archived)
     # Write once ONLY to a new research artifact; never edit saved originals.
     write_once(a.output, report)
     print("STAGE64_SAVED_TRIAL=" + json.dumps({
@@ -121,6 +214,7 @@ def main() -> int:
         "productionEligible": report["productionEligible"],
         "independentlyVerifiedPreoff": report["independentlyVerifiedPreoff"],
         "historical527Comparison": report["historical527Comparison"],
+        "archivedCoverageByCircuit": report.get("archivedCoverageComparison", {}).get("byCircuit"),
     }, ensure_ascii=False))
     return 0
 

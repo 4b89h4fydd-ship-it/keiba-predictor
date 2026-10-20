@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 from arvexq.research.stage64.pipeline import STAGES, predict
 from arvexq.research.stage64.protocol import ARMS, clean_input, code_hash
-from scripts.arvexq_stage64_saved_connection import SAVED, run_saved_day
+from scripts.arvexq_stage64_saved_connection import (SAVED, run_saved_day,
+                                                     compare_archived_coverage)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -106,6 +107,56 @@ class Stage64SavedConnectionTests(unittest.TestCase):
             run_saved_day("2999-01-01")
         with self.assertRaisesRegex(ValueError, "retrospective"):
             run_saved_day("2026-10-20")
+
+    def test_same_race_archive_baseline_coverage_reconciliation(self):
+        # 2026-10-11 has 80 identical race IDs in the original 527R report.
+        # Compare readiness AND per-horse blockers for every ability arm;
+        # no unverified numeric probability-equivalence claim is made.
+        day = run_saved_day("2026-10-11")
+        archived = json.loads((ROOT / "docs/research/stage64-results/coverage.json")
+                              .read_text(encoding="utf-8"))
+        joined = compare_archived_coverage(day, archived)
+        self.assertEqual(day["byCircuit"]["jra"]["races"], 24)
+        self.assertEqual(day["byCircuit"]["nar"]["races"], 56)
+        self.assertEqual(sum(v["overlappingRaces"]
+                             for v in joined["byCircuit"].values()), 80)
+        self.assertEqual(sum(v["notInArchivedResearch"]
+                             for v in joined["byCircuit"].values()), 0)
+        for owner in ("jra", "nar"):
+            counted = joined["byCircuit"][owner]
+            self.assertEqual(counted["fullyMatchedRaces"] + counted["disagreedRaces"],
+                             counted["overlappingRaces"])
+            self.assertLessEqual(counted["fullyMatchedRaces"],
+                                 counted["statusMatchedRaces"])
+            self.assertLessEqual(counted["fullyMatchedRaces"],
+                                 counted["blockersMatchedRaces"])
+        self.assertEqual(sum(v["disagreedRaces"]
+                             for v in joined["byCircuit"].values()),
+                         len(joined["differences"]))
+        self.assertFalse(joined["sameInputByteEqualityVerified"])
+        self.assertFalse(joined["probabilityOrTicketNumericalEqualityVerified"])
+        self.assertFalse(joined["productionEligible"])
+
+    def test_archived_coverage_identity_and_duplicates_fail_closed(self):
+        day = {"raceRows": [{"raceId": "jra-2026-10-11-京都-01",
+                            "date": "2026-10-11", "circuit": "jra",
+                            "predictions": {}}]}
+        archived = [{"raceId": "jra-2026-10-11-京都-01",
+                     "date": "2026-10-11", "circuit": "nar",
+                     "stageStatus": {}, "blockers": []}]
+        with self.assertRaisesRegex(ValueError, "circuit/date"):
+            compare_archived_coverage(day, archived)
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            compare_archived_coverage(day, archived + archived)
+
+    def test_readonly_saved_history_diagnostic_categories(self):
+        for owner, expected in (("jra", (1, 6)), ("nar", (12, 6))):
+            diag = self.report["byCircuit"][owner]
+            self.assertEqual(diag["blockedUnsupportedDisciplineRaces"], expected[0])
+            self.assertEqual(diag["blockedInsufficientHistoryRaces"], expected[1])
+            self.assertEqual(diag.get("blockedOtherRaces", 0), 0)
+            self.assertEqual(diag["races"],
+                             diag["sixStageCalculated"] // 3 + sum(expected))
 
     def test_pipeline_and_protocol_source_not_modified_by_connector(self):
         self.assertTrue(code_hash())
