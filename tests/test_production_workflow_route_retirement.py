@@ -55,7 +55,12 @@ def test_obihiro_excluded_at_existing_public_race_and_track_entries():
     assert 'if track in ("帯広", "帯広ば"):' in race
     assert "r.track NOT IN ('帯広','帯広ば')" in race
     assert "track NOT IN ('帯広','帯広ば')" in preserved
+    assert "const activeSummaries = summaries.filter(activeRace);" in preserved
+    assert "const activeDetails = details.filter(activeRace);" in preserved
+    assert "const activeCurrent = oddsCurrent.filter(activeRace);" in preserved
+    assert "const activeHistory = oddsHistory.filter(activeRace);" in preserved
     assert "race venue excluded" in worker
+    assert "url.pathname.startsWith('/api/odds/')" in worker
     assert 'str(r.get("track") or "") in ("帯広", "帯広ば")' in bootstrap
     assert "race venue excluded" in refresh
     assert 'str(r.get("track") or "") not in ("帯広", "帯広ば")' in refresh
