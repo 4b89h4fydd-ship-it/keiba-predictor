@@ -12,7 +12,10 @@ def _precompute_detail_metrics(detail: dict) -> dict:
     except Exception:detail["trackSpeed"]={"version":"track-speed-v300","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","source":"fallback"}
     for horse in detail.get("horses",[]) or []:
         runs=horse.get("allPastRuns") or horse.get("recentRaces") or []
-        if _verified_debut_no_history(horse,detail):
+        from arvexq.career_missing import build_career_analysis
+        verified_no_starts = (detail.get("analysisMode") == "新馬" and
+            build_career_analysis(horse,detail).get("career_state") == "complete-no-starts")
+        if verified_no_starts:
             horse["debutNoHistory"]=True
         else:
             horse.pop("debutNoHistory",None)

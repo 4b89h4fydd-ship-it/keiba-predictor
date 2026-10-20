@@ -130,7 +130,10 @@ def _apply_enrichment(race_id:str,detail:dict)->dict:
     mode="障害" if (surface=="障害" or "障害" in title or re.search(r"(?:J[･・.]?G[ⅠⅡⅢ123]|\\bJS\\b|ジャンプ)",title,re.I)) else ("新馬" if re.search(r"(?:新馬|メイクデビュー)",title) else "平地")
     detail["analysisMode"]=mode
     for h in detail.get("horses",[]) or []:
-        if _verified_debut_no_history(h,detail):
+        from arvexq.career_missing import build_career_analysis
+        verified_no_starts = (detail.get("analysisMode") == "新馬" and
+            build_career_analysis(h,detail).get("career_state") == "complete-no-starts")
+        if verified_no_starts:
             h["debutNoHistory"]=True
         else:
             h.pop("debutNoHistory",None)
