@@ -54,11 +54,13 @@ def _data_core_day_status(date:str,circuit:str="")->dict:
 
 @app.post("/api/v1/data-core/refresh/{race_id}")
 def data_core_refresh(race_id:str,force:int=Query(1)):
+    if race_id.startswith("nar-") and any(f"-{name}-" in race_id for name in ("帯広", "帯広ば")):
+        raise HTTPException(status_code=404,detail="race venue excluded")
     return _data_core_refresh_race(race_id,bool(force))
 
 @app.post("/api/v1/data-core/refresh-day")
 def data_core_refresh_day(date:str=Query(""),circuit:str=Query("")):
-    ds=date or _today_iso();rows=[r for r in _data_core_day_rows(ds) if not circuit or str(r.get("circuit") or "")==str(circuit)]
+    ds=date or _today_iso();rows=[r for r in _data_core_day_rows(ds) if (not circuit or str(r.get("circuit") or "")==str(circuit)) and str(r.get("track") or "") not in ("帯広", "帯広ば")]
     # Queue the full day without keeping the request open; the status endpoint exposes progress.
     def worker():
         ordered=sorted(rows,key=lambda r:_race_minutes_server(r))
@@ -140,7 +142,7 @@ def prewarm_track(date: str = Query(...), circuit: str = Query(...), track: str 
     try:rows=(nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False))
     except Exception:rows=[]
     all_targets=sorted(
-        [r for r in rows if str(r.get("track") or "")==str(track) and r.get("id")],
+        [r for r in rows if str(r.get("track") or "")==str(track) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば")],
         key=lambda r:abs(int(r.get("raceNumber") or 0)-int(race_no))
     )
     near=all_targets[:3];rest=all_targets[3:]

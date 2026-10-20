@@ -62,6 +62,10 @@ def _bootstrap_rows_local(date:str)->list[dict]:
     for r in rows:
         rid=str(r.get("id") or "")
         if not rid or rid in seen:continue
+        # Keep Banei/Obihiro out of current-day user-facing bundles.
+        if str(r.get("track") or "") in ("帯広", "帯広ば") or (
+            rid.startswith("nar-") and any(f"-{name}-" in rid for name in ("帯広", "帯広ば"))
+        ):continue
         seen.add(rid);out.append(r)
     out.sort(key=lambda r:(str(r.get("circuit") or ""),str(r.get("track") or ""),int(r.get("raceNumber") or 0)))
     return out

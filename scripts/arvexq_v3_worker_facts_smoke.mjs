@@ -42,7 +42,7 @@ function mockDB(data,{compressed=false,missing=false}={}) {
           async first(){
             if(missing)return null;
             if(sql.includes("AS codec"))return {codec:compressed?'arvexq-full-payload-v1':null};
-            if(sql.includes('SELECT payload,analysis_ready,updated_at'))return {payload,analysis_ready:0,updated_at:1};
+            if(sql.includes('SELECT payload,analysis_ready,updated_at'))return compressed?{payload,analysis_ready:0,updated_at:1}:null;
             if(sql.includes('json_remove(payload'))return {payload,analysis_ready:0,updated_at:1};
             if(sql.includes('FROM race_summaries'))return {race_id:data.id};
             throw Error('unexpected D1 query: '+sql.slice(0,140));

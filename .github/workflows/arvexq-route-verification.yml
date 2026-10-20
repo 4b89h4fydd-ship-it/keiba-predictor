@@ -1,7 +1,7 @@
 name: ARVEXQ Route Verification (read-only)
 "on":
   push:
-    branches: [fix/existing-route-restoration-20261020]
+    branches: [fix/existing-route-restoration-20261020, fix/arvexq-exclude-obihiro-20261020]
   workflow_dispatch:
 permissions:
   contents: read
@@ -135,6 +135,9 @@ jobs:
           if-no-files-found: warn
   production-browser:
     needs: readback
+    # Run the independent read-only browser checks even if old production D1
+    # intermittently returns 1102; do not alter or suppress readback failures.
+    if: ${{ always() && needs.readback.result != 'cancelled' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:

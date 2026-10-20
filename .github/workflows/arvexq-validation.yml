@@ -11,10 +11,11 @@ name: ARVEXQ Validation
       - arvexq/**
       - scripts/**
       - tests/**
+      - docs/independence/requirements.json
       - .github/workflows/arvexq-*.yml
       - requirements.txt
   push:
-    branches: [main, feature/forecast-reset-20261016]
+    branches: [main, feature/forecast-reset-20261016, fix/arvexq-exclude-obihiro-20261020]
     paths:
       - app.py
       - build_static.py
@@ -22,6 +23,7 @@ name: ARVEXQ Validation
       - arvexq/**
       - scripts/**
       - tests/**
+      - docs/independence/requirements.json
       - .github/workflows/arvexq-*.yml
       - requirements.txt
 

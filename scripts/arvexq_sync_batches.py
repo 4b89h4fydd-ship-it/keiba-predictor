@@ -48,8 +48,8 @@ def main() -> int:
     args = p.parse_args()
 
     payload = load_json(Path(args.input))
-    summaries = [x for x in (payload.get("summaries") or []) if isinstance(x, dict)]
-    source_details = [x for x in (payload.get("details") or []) if isinstance(x, dict) and race_id(x)]
+    summaries = [x for x in (payload.get("summaries") or []) if isinstance(x, dict) and str(x.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in race_id(x) for name in ("帯広", "帯広ば"))]
+    source_details = [x for x in (payload.get("details") or []) if isinstance(x, dict) and race_id(x) and str(x.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in race_id(x) for name in ("帯広", "帯広ば"))]
     # Live deltas can contain old D1 snapshots whose feature hash was
     # already inconsistent before this run. Preserve bytes, mark them
     # unverified, and disallow subsequent training instead of fabricating.
@@ -98,7 +98,7 @@ def main() -> int:
             row_risks.append((race_id(detail), row_size))
             print("D1_DETAIL_ROW_SIZE_RISK", "race="+race_id(detail),
                   "bytes="+str(row_size), "limit_if_one_row=2000000")
-    odds = [x for x in (payload.get("odds_current") or []) if isinstance(x, dict)]
+    odds = [x for x in (payload.get("odds_current") or []) if isinstance(x, dict) and str(x.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in str(x.get("race_id") or race_id(x)) for name in ("帯広", "帯広ば"))]
     meta = dict(payload.get("meta") or {})
 
     out_dir = Path(args.out_dir)

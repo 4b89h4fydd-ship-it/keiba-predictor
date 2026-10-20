@@ -139,7 +139,6 @@ def _card_usable(detail: dict[str, Any] | None) -> bool:
         return False
     if any(not str(h.get("name") or "").strip() for h in active):
         return False
-    banei = "帯広" in str(detail.get("id") or "") or str(detail.get("track") or "").startswith("帯広")
     core = 0
     for horse in active:
         jockey = str(horse.get("jockey") or "").strip()
@@ -147,7 +146,7 @@ def _card_usable(detail: dict[str, Any] | None) -> bool:
             weight = float(horse.get("carriedWeight") or horse.get("weight") or 0)
         except Exception:
             weight = 0.0
-        if jockey and (banei or weight > 0):
+        if jockey and weight > 0:
             core += 1
     expected = detail.get("fieldSize") or detail.get("runnerCount") or 0
     try:
@@ -341,8 +340,8 @@ def prepare(
     if phase != "collect":
         raise ValueError("unknown prefetch stage")
     bundle = _read(bundle_path)
-    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
-    initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id")]
+    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば") and "-帯広-" not in str(r.get("id")) and "-帯広ば-" not in str(r.get("id"))]
+    initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id") and str(d.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in str(d.get("id")) for name in ("帯広", "帯広ば"))]
     by_id: dict[str, dict[str, Any]] = {str(d["id"]): d for d in initial}
     # Replay only validated existing outputs of this SAME canonical prefetch,
     # so a failed upstream HTTP fetch cannot erase a known published roster.
@@ -491,9 +490,9 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
     """
     from arvexq.pipeline.persisted_inputs import verify_persisted_facts, may_create_prerace_prediction
     day = _read(bundle_path)
-    rows = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id")]
+    rows = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば") and "-帯広-" not in str(r.get("id")) and "-帯広ば-" not in str(r.get("id"))]
     details = {str(d["id"]): d for d in (day.get("details") or [])
-               if isinstance(d, dict) and d.get("id")}
+               if isinstance(d, dict) and d.get("id") and str(d.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in str(d.get("id")) for name in ("帯広", "帯広ば"))}
     saved = {"races": rows, "details": list(details.values())}
     integrity = verify_persisted_facts(
         {"summaries": rows, "details": list(details.values())}, saved

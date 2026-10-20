@@ -1,6 +1,5 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import {enhanceNarGoingResponse} from './nar_going_moisture.mjs';
 
 // worker.js
 function json(data, status = 200) {
@@ -124,7 +123,7 @@ var worker_default = {
             race_status,
             updated_at
           FROM race_summaries
-          WHERE race_date = ?
+          WHERE race_date = ? AND track NOT IN ('帯広','帯広ば')
           ORDER BY circuit, track, race_no
         `).bind(date).all();
         return json({
@@ -145,7 +144,7 @@ var worker_default = {
         const summaryResult = await env.DB.prepare(`
     SELECT *
     FROM race_summaries
-    WHERE race_date = ?
+    WHERE race_date = ? AND track NOT IN ('帯広','帯広ば')
     ORDER BY circuit, track, race_no
   `).bind(date).all();
         const races = (summaryResult.results || []).map(
@@ -192,7 +191,7 @@ var worker_default = {
       analysis_ready,
       updated_at
     FROM race_details
-    WHERE race_date = ?
+    WHERE race_date = ? AND track NOT IN ('帯広','帯広ば')
     ORDER BY race_id
   `).bind(date).all();
         const detailRows = detailResult.results || [];
@@ -328,10 +327,23 @@ var worker_default = {
         const details = Array.isArray(body.details) ? body.details : Array.isArray(body.raceDetails) ? body.raceDetails : [];
         const oddsCurrent = Array.isArray(body.odds_current) ? body.odds_current : Array.isArray(body.oddsCurrent) ? body.oddsCurrent : [];
         const oddsHistory = Array.isArray(body.odds_history) ? body.odds_history : Array.isArray(body.oddsHistory) ? body.oddsHistory : [];
+        // Reject retired Banei records at the existing authenticated sync entry,
+        // including alternate race_id / raceId / id payload conventions.
+        const activeRace = row => {
+          const id = String(first(row, "race_id", "raceId", "id") || "");
+          const track = String(first(row, "track", "venue") || "");
+          return track !== "帯広" && track !== "帯広ば"
+            && !/^(?:nar-)?\d{4}-\d{2}-\d{2}-(?:帯広|帯広ば)-\d{2}$/.test(id)
+            && !id.includes("-帯広-") && !id.includes("-帯広ば-");
+        };
+        const activeSummaries = summaries.filter(activeRace);
+        const activeDetails = details.filter(activeRace);
+        const activeCurrent = oddsCurrent.filter(activeRace);
+        const activeHistory = oddsHistory.filter(activeRace);
         const meta = body.meta && typeof body.meta === "object" ? body.meta : {};
         const syncedAt = nowSec();
         const summaryStatements = [];
-        for (const row of summaries) {
+        for (const row of activeSummaries) {
           const raceId = String(
             first(
               row,
@@ -479,7 +491,7 @@ var worker_default = {
           );
         }
         const detailStatements = [];
-        for (const row of details) {
+        for (const row of activeDetails) {
           const payloadObject = row.payload ?? row.detail ?? row;
           const raceId = String(
             first(
@@ -559,7 +571,7 @@ var worker_default = {
           );
         }
         const currentStatements = [];
-        for (const row of oddsCurrent) {
+        for (const row of activeCurrent) {
           const raceId = String(
             first(
               row,
@@ -664,7 +676,7 @@ var worker_default = {
           );
         }
         const historyStatements = [];
-        for (const row of oddsHistory) {
+        for (const row of activeHistory) {
           const raceId = String(
             first(
               row,
@@ -1116,9 +1128,6 @@ var worker_entry_default = {
       return withCors(await readRaceDisplay(env, raceId), request);
     }
     let response = await worker_default.fetch(request, env, ctx);
-    if (request.method === "GET" && (url.pathname.startsWith("/api/race/") || url.pathname === "/api/day")) {
-      response = await enhanceNarGoingResponse(response);
-    }
     if (request.method === "GET") {
       if (url.pathname.startsWith("/api/race/")) {
         response = await enhanceRaceResponse(response);

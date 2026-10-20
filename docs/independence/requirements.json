@@ -49,7 +49,6 @@
       "files": [
         "arvexq/ingest/nar_going.py",
         "arvexq/ingest/nar_environment_parser.py",
-        "workers/nar_going_moisture.mjs",
         "scripts/arvexq_nar_going_readback.py"
       ],
       "callers": [
