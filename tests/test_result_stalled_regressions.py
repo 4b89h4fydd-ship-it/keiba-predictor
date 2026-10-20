@@ -178,5 +178,44 @@ class ResultIdentityRoutingTests(unittest.TestCase):
         self.assertEqual(urls, ["https://race.netkeiba.com/race/result.html?race_id=202605040808"])
 
 
+
+class OfficialNarResultFailureReasonTests(unittest.TestCase):
+    """Track source/parser misses without fabricating a result or switching routes."""
+
+    def test_source_has_no_published_result_marker(self):
+        import app
+        detail = {"id": "nar-2026-10-20-盛岡-01", "date": "2026-10-20",
+                  "track": "盛岡", "raceNumber": 1, "horses": []}
+        calls = []
+        def no_result(_request, timeout=None):
+            calls.append("existing NAR endpoint")
+            return io.BytesIO("<html><body>現在未公開</body></html>".encode("cp932"))
+        with patch.object(app.urllib.request, "urlopen", side_effect=no_result), \
+             patch("builtins.print") as printed:
+            result = app._nar_official_result_fast(detail)
+        self.assertIsNone(result)
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(any("result_marker_missing" in str(c)
+                            for c in printed.call_args_list))
+        self.assertTrue(any("NAR_RESULT_UNRESOLVED" in str(c)
+                            for c in printed.call_args_list))
+
+    def test_unrecognized_official_table_is_not_saved_as_confirmed_result(self):
+        import app
+        detail = {"id": "nar-2026-10-20-盛岡-02", "date": "2026-10-20",
+                  "track": "盛岡", "raceNumber": 2, "horses": []}
+        html = ("<html><body>競走成績<table>"
+                "<tr><th>着順</th><th>馬番</th><th>馬名</th></tr>"
+                "<tr><td>1</td><td>1</td><td>検証馬</td></tr>"
+                "</table></body></html>").encode("cp932")
+        with patch.object(app.urllib.request, "urlopen",
+                          side_effect=lambda *_a, **_k: io.BytesIO(html)), \
+             patch("builtins.print") as printed:
+            result = app._nar_official_result_fast(detail)
+        self.assertIsNone(result)
+        self.assertTrue(any("result_table_unrecognized" in str(c)
+                            for c in printed.call_args_list))
+
+
 if __name__ == "__main__":
     unittest.main()
