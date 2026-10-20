@@ -1,3 +1,6 @@
+import base64
+import gzip
+import hashlib
 """Stage5 only: read-only original bets; no prediction or acquisition change."""
 from copy import deepcopy
 from datetime import datetime, timezone, timedelta
@@ -111,7 +114,6 @@ class Stage5OriginalMetricsTests(TestCase):
 
     def test_existing_archived_originals_offline_reproduce_three_central_races(self):
         """Read actual immutable blobs, verified with the existing SHA check."""
-        from arvexq.v3.audit.snapshot_digest import _restore
         root = Path(__file__).resolve().parents[1] / 'arvexq/ui/static/saved-snapshots'
         records = []
         for day in ('2026-10-10', '2026-10-17'):
@@ -120,7 +122,15 @@ class Stage5OriginalMetricsTests(TestCase):
                 if not item.get('bet'):
                     continue
                 blob = json.loads((root / item['file']).read_text(encoding='utf-8'))
-                race_data = _restore(blob, item)
+                self.assertEqual(blob['version'], 'arvexq-saved-snapshot-v1')
+                self.assertEqual(blob['sha256'], item['sha256'])
+                compressed = base64.b64decode(blob['gzipBase64'], validate=True)
+                self.assertLessEqual(len(compressed), 8 * 1024 * 1024)
+                original_bytes = gzip.decompress(compressed)
+                self.assertLessEqual(len(original_bytes), 16 * 1024 * 1024)
+                self.assertEqual(len(original_bytes), item['bytes'])
+                self.assertEqual(hashlib.sha256(original_bytes).hexdigest(), item['sha256'])
+                race_data = json.loads(original_bytes.decode('utf-8'))
                 self.assertEqual(race_data['id'], race_id)
                 self.assertEqual(race_data['date'], day)
                 records.append(race_data)
