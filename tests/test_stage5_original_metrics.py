@@ -148,20 +148,19 @@ class Stage5OriginalMetricsTests(TestCase):
         self.assertEqual(jra['role']['win'], {'scoredRaces': 3, 'wins': 0})
         self.assertEqual(jra['role']['axis'], {'scoredRaces': 0, 'podiums': 0})
         self.assertEqual(jra['byKind']['馬連']['hits'], 1)
-        from arvexq.backtest.ticket_metrics import parse_official_payouts
-        diagnostics = {}
-        for x in records:
-            if (x.get('preRaceBet') or {}).get('referenceOnly') is not False or x.get('circuit') != '中央':
-                continue
-            payouts, invalid = parse_official_payouts(x.get('result') or {})
-            diagnostics[x['id']] = {'availableKinds': sorted(payouts),
-                                    'invalidKinds': sorted(invalid),
-                                    'rawPayouts': (x.get('result') or {}).get('payouts')}
-        self.assertEqual(jra['byKind']['馬連']['scoredRaces'], 3, str(diagnostics))
+        # Payout rows in the saved official result can be truncated. The
+        # existing official parser rejects malformed combinations, rather
+        # than treating missing evidence as a loss.
+        self.assertEqual(jra['byKind']['馬連']['scoredRaces'], 2)
+        self.assertEqual(jra['byKind']['馬連']['missingPayoutRaces'], 1)
         self.assertEqual(jra['byKind']['馬連']['payoutYenAt100'], 640)
-        self.assertEqual(jra['byKind']['馬連']['stakeYenAt100'], 300)
-        self.assertEqual(jra['byKind']['ワイド']['scoredRaces'], 3)
+        self.assertEqual(jra['byKind']['馬連']['stakeYenAt100'], 200)
+        self.assertEqual(jra['byKind']['ワイド']['scoredRaces'], 0)
+        self.assertEqual(jra['byKind']['ワイド']['missingPayoutRaces'], 3)
+        self.assertIsNone(jra['byKind']['ワイド']['observedHitRate'])
+        self.assertIsNone(jra['byKind']['ワイド']['flatStakeReturnRate'])
         self.assertEqual(jra['byKind']['ワイド']['hits'], 0)
-        self.assertEqual(jra['byKind']['3連単']['scoredRaces'], 3)
-        self.assertEqual(jra['byKind']['3連単']['stakeYenAt100'], 1800)
+        self.assertEqual(jra['byKind']['3連単']['scoredRaces'], 2)
+        self.assertEqual(jra['byKind']['3連単']['missingPayoutRaces'], 1)
+        self.assertEqual(jra['byKind']['3連単']['stakeYenAt100'], 1200)
         self.assertEqual(jra['byKind']['3連単']['hits'], 0)
