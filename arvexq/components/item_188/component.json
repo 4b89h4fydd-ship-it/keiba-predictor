@@ -1,0 +1,36 @@
+{
+  "id": 188,
+  "name": "結果・払戻表示",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/app.js"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_188/ui/0044_resultStatus.js",
+    "arvexq/components/item_188/ui/0045_isFinal.js",
+    "arvexq/components/item_188/ui/0046_isFlash.js",
+    "arvexq/components/item_188/ui/0047_hasAnyResultData.js",
+    "arvexq/components/item_188/ui/0048_hasResultData.js",
+    "arvexq/components/item_188/ui/0347_resultFinish.js",
+    "arvexq/components/item_188/ui/0348_actualCornerLeaders.js",
+    "arvexq/components/item_188/ui/0349_actualCornerCount.js",
+    "arvexq/components/item_188/ui/0350_actualCornerLabel.js",
+    "arvexq/components/item_188/ui/0351_actualOrderAt.js",
+    "arvexq/components/item_188/ui/0352_renderResultLink.js",
+    "arvexq/components/item_188/ui/0353_renderPayouts.js",
+    "arvexq/components/item_188/ui/0354_resultRowHtml.js",
+    "arvexq/components/item_188/ui/0355_renderResult.js",
+    "arvexq/components/item_188/ui/0358_renderActualFlow.js"
+  ],
+  "state": "migrated-ui-fragment",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,24 @@
+{
+  "id": 198,
+  "name": "GitHub Actions CI・PWAビルド",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "build_static.py",
+    ".github/workflows/arvexq-validation.yml",
+    ".github/workflows/arvexq-independent-components.yml"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "appjs"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,29 @@
+{
+  "id": 78,
+  "name": "枠連払戻",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/payouts.py"
+  ],
+  "shared_dependencies": [
+    "BeautifulSoup",
+    "Python standard library",
+    "arvexq.v3.data.result_facts._result/_observed",
+    "arvexq.components.item_076.payouts shared provider parser"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/v3/data/result_facts.py",
+      "canonical": "arvexq/components/item_078/payout_projection.py",
+      "module": "arvexq.components.item_078.payout_projection"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

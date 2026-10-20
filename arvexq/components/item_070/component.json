@@ -1,0 +1,28 @@
+{
+  "id": 70,
+  "name": "着順取得",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/v3/data/result_facts.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.v3.data.result_facts._result/_observed"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/v3/data/result_facts.py",
+      "canonical": "arvexq/components/item_070/result_projection.py",
+      "module": "arvexq.components.item_070.result_projection"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,27 @@
+{
+  "id": 179,
+  "name": "レース詳細",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/app.js"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_compact_display_snapshot"
+  ],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_179/ui/0337_smartInlineResult.js",
+    "arvexq/components/item_179/ui/0340_smartRaceHead.js",
+    "arvexq/components/item_179/ui/0341_renderRaceLoading.js",
+    "arvexq/components/item_179/ui/0346_renderRace.js"
+  ],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

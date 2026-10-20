@@ -1,0 +1,28 @@
+{
+  "id": 158,
+  "name": "取消・除外自動更新",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/official_changes.py"
+  ],
+  "shared_dependencies": [
+    "Original NAR changes acquisition routes, URL list and refresh scheduling unchanged"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/official_changes.py",
+      "canonical": "arvexq/components/item_158/official_changes.py",
+      "module": "arvexq.components.item_158.official_changes"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

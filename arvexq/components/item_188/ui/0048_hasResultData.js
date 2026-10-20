@@ -1,0 +1,1 @@
+function hasResultData(r){var fs=((r&&r.result||{}).finishers||[]).filter(function(x){var pos=n(x&&x.finish,0);return pos>=1&&pos<=3});return fs.length>=3&&fs.some(function(x){return n(x.finish,0)===1})}

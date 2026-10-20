@@ -1,0 +1,1 @@
+function cinematicHero(){return '<header class="cinema-hero"><img class="cinema-hero-image" src="/arvexq-horse-hero-v361.webp" alt="" fetchpriority="high"><div class="cinema-tools"><time>'+esc(state.date.replace(/-/g,'.'))+'</time><button data-action="reload" aria-label="更新" title="更新">↻</button></div></header>'}

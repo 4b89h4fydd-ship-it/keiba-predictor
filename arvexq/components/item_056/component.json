@@ -1,0 +1,34 @@
+{
+  "id": 56,
+  "name": "JRA・NAR転入転出判別",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/circuit_transfer.py",
+    "arvexq/ingest/transfer_history.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.ingest.circuit_transfer"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/circuit_transfer.py",
+      "canonical": "arvexq/components/item_056/circuit_transfer.py",
+      "module": "arvexq.components.item_056.circuit_transfer"
+    },
+    {
+      "previous": "arvexq/ingest/transfer_history.py",
+      "canonical": "arvexq/components/item_056/transfer_history.py",
+      "module": "arvexq.components.item_056.transfer_history"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

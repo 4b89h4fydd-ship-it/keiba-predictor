@@ -1,0 +1,26 @@
+{
+  "id": 33,
+  "name": "所属",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/entry_fields/affiliation.py"
+  ],
+  "shared_dependencies": [
+    "Shared DOM access and Python standard library"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/entry_fields/affiliation.py",
+      "canonical": "arvexq/components/item_033/affiliation.py",
+      "module": "arvexq.components.item_033.affiliation"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

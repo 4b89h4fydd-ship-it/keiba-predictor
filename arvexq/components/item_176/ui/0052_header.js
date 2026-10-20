@@ -1,0 +1,1 @@
+function header(title,back,sub){return '<header class="header"><div class="header-row">'+(back?'<button data-action="back">‹</button>':'')+'<div class="header-title"><h1>'+esc(title)+'</h1>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</div><span class="build-badge" aria-label="ARVEXQ">ARVEXQ</span><button data-action="reload">↻</button></div></header>'}

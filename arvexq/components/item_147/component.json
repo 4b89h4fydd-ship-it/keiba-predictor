@@ -1,0 +1,25 @@
+{
+  "id": 147,
+  "name": "発走前スナップショット",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/prediction/prerace_archive.py"
+  ],
+  "shared_dependencies": [
+    "existing app.js global state and order-dependent shared UI; same-byte source migration only"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_147/ui/0213_immutableStoredAiBetView.js",
+    "arvexq/components/item_147/ui/0214_verifiedSavedAiBet.js"
+  ],
+  "state": "migrated-ui-fragment",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

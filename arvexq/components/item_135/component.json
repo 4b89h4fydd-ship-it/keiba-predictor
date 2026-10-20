@@ -1,0 +1,22 @@
+{
+  "id": 135,
+  "name": "事前選定・発走後区別",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_prediction_clock_state"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

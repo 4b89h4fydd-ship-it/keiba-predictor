@@ -1,0 +1,2 @@
+function positionTrend(h,r){var rs=historicalWindow(h,r),vals=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);vals.push(clamp(1-(n(p[0])-1)/Math.max(3,fs-1),0,1))}if(vals.length<3)return 0;var cut=Math.min(2,vals.length-1),recent=mean(vals.slice(0,cut)),older=mean(vals.slice(cut));return clamp(recent-older,-.45,.45)}
+// Prior-race 4C-to-finish outcomes, independent of initial running-style classification.

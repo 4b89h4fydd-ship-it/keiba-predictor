@@ -1,0 +1,26 @@
+{
+  "id": 111,
+  "name": "予想入力データ",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/forecast/inputs.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/forecast/inputs.py",
+      "canonical": "arvexq/components/item_111/inputs.py",
+      "module": "arvexq.components.item_111.inputs"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

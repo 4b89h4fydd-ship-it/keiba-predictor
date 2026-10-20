@@ -1,0 +1,28 @@
+{
+  "id": 128,
+  "name": "中央・地方開催区分",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/race_identity.py"
+  ],
+  "shared_dependencies": [
+    "Existing observed label map; quality assessment still shared"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/v3/data/quality.py",
+      "canonical": "arvexq/components/item_128/circuit.py",
+      "module": "arvexq.components.item_128.circuit"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,30 @@
+{
+  "id": 138,
+  "name": "当日予想成績",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/previous_ai_results.js"
+  ],
+  "shared_dependencies": [
+    "Existing app.js globals, JS assembly sequence and old stats data path unchanged; no new scores calculated"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_138/ui/0259_resetDailyAiStats.js",
+    "arvexq/components/item_138/ui/0260_scheduleDailyAiStats.js",
+    "arvexq/components/item_138/ui/0291_smartDailyAiStats.js",
+    "arvexq/components/item_138/ui/0307_aiStatsMetrics.js",
+    "arvexq/components/item_138/ui/0308_aiStatsRaceRow.js",
+    "arvexq/components/item_138/ui/0264_aiStatsDayTitle.js",
+    "arvexq/components/item_138/ui/0309_smartDailyAiStatsPage.js"
+  ],
+  "state": "migrated-ui-fragment",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

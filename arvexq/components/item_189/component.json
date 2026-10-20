@@ -1,0 +1,27 @@
+{
+  "id": 189,
+  "name": "リアルタイム表示",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/research/live_odds.js"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_189/ui/0393_scheduleRaceBiasRefresh.js",
+    "arvexq/components/item_189/ui/0394_refreshRaceBiasData.js",
+    "arvexq/components/item_189/ui/0395_scheduleResultRefresh.js",
+    "arvexq/components/item_189/ui/0396_refreshPayoutsOnly.js",
+    "arvexq/components/item_189/ui/0403_mergeOddsPayload.js",
+    "arvexq/components/item_189/ui/0426_refreshHomeOfficialStatuses.js"
+  ],
+  "state": "migrated-ui-fragment",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}
