@@ -125,9 +125,84 @@ jobs:
               "lostSavedObservations":sum(x["lostSourceRuns"] for x in horses),
               "sourceArchiveErrors":sum(bool(x["originalArchiveError"]) for x in horses),
               "d1ArchiveErrors":sum(bool(x["d1ArchiveError"]) for x in horses)}
+          zero=[x for x in horses if x["originalPastRuns"]==0]
+          for item in zero:
+              source=_runners(originals[item["raceId"]]).get(item["horseNumber"],{})
+              audit=source.get("_careerHistoryAudit") or {}
+              stats=source.get("careerStartEvidence") or source.get("careerStats") or {}
+              src_meta=(originals[item["raceId"]].get("preparedMeta") or {}).get("supplementalSearch") or {}
+              item["sourceHistoryEvidence"]={
+                  "age":source.get("age"),"sex":source.get("sex"),
+                  "auditStatus":audit.get("status"),"auditComplete":audit.get("complete"),
+                  "reportedStarts":audit.get("reportedStarts"),
+                  "fetchAttempted":audit.get("fetchAttempted"),
+                  "evidenceAttempted":audit.get("evidenceAttempted"),
+                  "providersAttempted":audit.get("providersAttempted"),
+                  "failedProviders":audit.get("failedProviders"),
+                  "failedEvidenceProviders":audit.get("failedEvidenceProviders"),
+                  "sourceTotal":stats.get("starts"),
+                  "sourceKind":stats.get("source"),
+                  "supplementalFailures":len(src_meta.get("failures") or [])
+              }
+              item["otherArchiveEvidence"]=[]
+          targets={}
+          for item in zero:
+              targets.setdefault(str(item["name"]),[]).append(item)
+          
+          def compatible(a,b):
+              for key in ("birthDate","birthday","sex","age"):
+                  x,y=a.get(key),b.get(key)
+                  if x not in (None,"",0) and y not in (None,"",0) and str(x)!=str(y):
+                      return False
+              return True
+          
+          other_files=sorted(root.glob("2026-10-*.json"))
+          other_archives_read=0
+          for index_file in other_files:
+              if index_file.name==day+".json":continue
+              idx=json.loads(index_file.read_text(encoding="utf-8"))
+              for other_rid,ref in (idx.get("races") or {}).items():
+                  other_sha=str(ref.get("sha256") or "")
+                  if not re.fullmatch(r"[a-f0-9]{64}",other_sha) or ref.get("file")!=other_sha+".json":
+                      continue
+                  p=root/ref["file"]
+                  if not p.is_file():continue
+                  e=json.loads(p.read_text(encoding="utf-8"))
+                  raw=gzip.decompress(base64.b64decode(e["gzipBase64"],validate=True))
+                  if e.get("sha256")!=other_sha or len(raw)!=e.get("bytes") or hashlib.sha256(raw).hexdigest()!=other_sha:
+                      continue
+                  candidate=json.loads(raw)
+                  other_archives_read+=1
+                  for horse in candidate.get("horses") or []:
+                      if not isinstance(horse,dict):continue
+                      for target in targets.get(str(horse.get("name") or ""),[]):
+                          expected=_runners(originals[target["raceId"]]).get(target["horseNumber"],{})
+                          if not compatible(expected,horse):continue
+                          try: rows=_career_rows(horse,str(candidate.get("date") or ""))
+                          except (ValueError,TypeError,KeyError):continue
+                          earlier=sorted({str(row.get("date") or "") for row in rows if str(row.get("date") or "")<day})
+                          if earlier:
+                              target["otherArchiveEvidence"].append({
+                                  "raceId":other_rid,"archiveDate":candidate.get("date"),"priorRuns":len(earlier),
+                                  "priorDates":earlier[-5:],"identityCheck":"exact-name-age-sex-birthdate-when-present"})
+          for item in zero:
+              item["otherArchiveEvidence"]=sorted(item["otherArchiveEvidence"],key=lambda x:-x["priorRuns"])[:3]
+          summary["otherArchivedSnapshotsChecked"]=other_archives_read
+          summary["zeroHistoryHorsesWithOtherArchivedPriorRuns"]=sum(bool(x["otherArchiveEvidence"]) for x in zero)
+          summary["unflaggedZeroHorsesWithOtherArchivedPriorRuns"]=sum(
+              bool(x["otherArchiveEvidence"]) and not x["originalDebutFlag"] for x in zero)
+          summary["zeroHistoryWithReportedStartsAboveZero"]=sum(
+              (x["sourceHistoryEvidence"].get("reportedStarts") or 0)>0 for x in zero)
+          summary["unverifiedDebutFlags"]=sum(
+              x["originalDebutFlag"] and not (
+                 x["sourceHistoryEvidence"].get("auditComplete") is True and
+                 x["sourceHistoryEvidence"].get("reportedStarts")==0)
+              for x in zero)
           output={"summary":summary,"horses":horses}
           Path("career-d1-snapshot-2026-10-16.json").write_text(json.dumps(output,ensure_ascii=False,indent=2),encoding="utf-8")
           print("ARVEXQ_NAR_ORIGINAL_TO_D1_READONLY_AUDIT",json.dumps(summary,ensure_ascii=False),flush=True)
+          for x in zero:
+              print("ARVEXQ_ZERO_HISTORY_SOURCE",json.dumps(x,ensure_ascii=False),flush=True)
           for x in horses:
               if x["lostSourceRuns"] or not x["identityMatched"] or x["originalArchiveError"] or x["d1ArchiveError"]:
                   print("ARVEXQ_HISTORY_DISCREPANCY",json.dumps(x,ensure_ascii=False),flush=True)
