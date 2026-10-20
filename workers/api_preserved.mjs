@@ -123,7 +123,7 @@ var worker_default = {
             race_status,
             updated_at
           FROM race_summaries
-          WHERE race_date = ?
+          WHERE race_date = ? AND track NOT IN ('帯広','帯広ば')
           ORDER BY circuit, track, race_no
         `).bind(date).all();
         return json({
@@ -144,7 +144,7 @@ var worker_default = {
         const summaryResult = await env.DB.prepare(`
     SELECT *
     FROM race_summaries
-    WHERE race_date = ?
+    WHERE race_date = ? AND track NOT IN ('帯広','帯広ば')
     ORDER BY circuit, track, race_no
   `).bind(date).all();
         const races = (summaryResult.results || []).map(
@@ -191,7 +191,7 @@ var worker_default = {
       analysis_ready,
       updated_at
     FROM race_details
-    WHERE race_date = ?
+    WHERE race_date = ? AND track NOT IN ('帯広','帯広ば')
     ORDER BY race_id
   `).bind(date).all();
         const detailRows = detailResult.results || [];
