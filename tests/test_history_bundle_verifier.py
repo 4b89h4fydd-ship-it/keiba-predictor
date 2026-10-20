@@ -28,6 +28,41 @@ class HistoryVerificationTests(unittest.TestCase):
         self.assertTrue(verify_history(report,{'details':[bad,cancelled]})['ok'])
         self.assertFalse(verify_history({'races':2},{'details':[bad,cancelled]})['ok'])
 
+    def test_cold_start_56_expected_only_44_published_reports_missing_ids(self):
+        labels={f"nar-2026-01-18-test-{n:02d}":f"test {n}R" for n in range(1,57)}
+        retained=list(labels)[:44]
+        day={'races':[{'id':rid} for rid in retained],
+             'details':[detail(rid,[1,2,3]) for rid in retained]}
+        result=verify_history({'races':56,'labels':labels},day)
+        self.assertFalse(result['ok'])
+        self.assertEqual(result['details'],44)
+        self.assertEqual(result['missingRaceIds'],sorted(list(labels)[44:]))
+        self.assertEqual(result['missingSummaryRaceIds'],sorted(list(labels)[44:]))
+
+    def test_equal_count_but_wrong_race_ids_never_passes(self):
+        report={'races':2,'labels':{'race-A':'A','race-B':'B'}}
+        day={'races':[{'id':'race-A'},{'id':'race-C'}],
+             'details':[detail('race-A',[1,2,3]),detail('race-C',[1,2,3])]}
+        verdict=verify_history(report,day)
+        self.assertFalse(verdict['ok'])
+        self.assertEqual(verdict['missingRaceIds'],['race-B'])
+        self.assertEqual(verdict['unexpectedRaceIds'],['race-C'])
+
+    def test_initial_publication_sends_all_originals_without_modification(self):
+        from scripts.arvexq_history_repair import select_publication_ids
+        ids=['nar-01','nar-02','nar-03']
+        old={rid:{'id':rid,'preRacePrediction':{'original':'frozen'}}
+             for rid in ids}
+        before=copy.deepcopy(old)
+        self.assertEqual(select_publication_ids(ids,old,{'nar-01'},False),
+                         ['nar-01'])
+        self.assertEqual(select_publication_ids(ids,old,{'nar-01'},True),
+                         ids)
+        self.assertEqual(old,before)
+        with self.assertRaisesRegex(ValueError,'cold-start source details missing'):
+            select_publication_ids(ids,{'nar-01':old['nar-01']},
+                                   {'nar-01'},True)
+
     def test_missing_whole_race_fails_and_input_is_immutable(self):
         day={'details':[detail('race',[1,2,3])]};before=copy.deepcopy(day)
         self.assertFalse(verify_history({'races':2},day)['ok'])

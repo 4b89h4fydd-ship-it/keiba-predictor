@@ -110,7 +110,19 @@ def merge_history(old: dict[str, Any] | None, new: dict[str, Any] | None) -> dic
     return out
 
 
-def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, central_margins_only: bool = False) -> int:
+def select_publication_ids(ids: list[str], by_id: dict[str, dict],
+                           changed_ids: set[str], initial_publication: bool = False) -> list[str]:
+    """Publish all existing source originals only when D1 day was confirmed empty."""
+    publish = list(ids) if initial_publication else [rid for rid in ids if rid in changed_ids]
+    if initial_publication:
+        missing = [rid for rid in publish if not isinstance(by_id.get(rid), dict)
+                   or str(by_id[rid].get("id") or "") != rid]
+        if missing:
+            raise ValueError("cold-start source details missing: " + ",".join(missing[:12]))
+    return publish
+
+
+def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, central_margins_only: bool = False, initial_publication: bool = False) -> int:
     bundle = read_json(bundle_path)
     rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
     details = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id")]
@@ -266,6 +278,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, 
         elif not payout_ok:
             missing_payout.append(rid)
 
+    publication_ids = select_publication_ids(ids, by_id, changed_ids, initial_publication)
+    publication_set = set(publication_ids)
     summaries = []
     for row in rows:
         z = copy.deepcopy(row)
@@ -277,14 +291,11 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, 
             z["raceStatus"] = "確定"
         elif result.get("finishers"):
             z["raceStatus"] = "速報"
-        if str(z.get("id") or "") in changed_ids:
+        if str(z.get("id") or "") in publication_set:
             summaries.append(z)
 
-    # Send only records materially changed in this repair. D1 /api/sync is a
-    # replace-upsert, so each changed detail remains complete; never send a
-    # partial fragment or overwrite 47 unchanged archived racecards.
-    payload_details = [by_id[rid] for rid in ids if rid in changed_ids
-                       and isinstance(by_id.get(rid), dict) and by_id[rid].get("id")]
+    # A populated D1 day still receives strictly the changed subset.
+    payload_details = [by_id[rid] for rid in publication_ids]
     payload = {
         "summaries": summaries,
         "details": payload_details,
@@ -296,6 +307,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, 
             "detail_count": len(payload_details),
             "repaired_count": len(changed_ids),
             "repaired_race_ids": [rid for rid in ids if rid in changed_ids],
+            "publication_count": len(publication_ids),
+            "initial_publication": bool(initial_publication),
             "result_only_repair_count": result_only_repairs,
             "card_repair_count": card_repairs,
             "missing_card_count": len(missing_card),
@@ -313,6 +326,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, 
         "date": payload["meta"]["sync_date"],
         "races": len(ids),
         "changed_race_ids": [rid for rid in ids if rid in changed_ids],
+        "published_race_ids": publication_ids,
+        "initial_publication": bool(initial_publication),
         "unchanged_count": len(ids) - len(changed_ids),
         "result_only_repairs": result_only_repairs,
         "card_repairs": card_repairs,
@@ -347,9 +362,12 @@ def main() -> int:
     p.add_argument("--payload", default="history-payload.json")
     p.add_argument("--report", default="history-report.json")
     p.add_argument("--central-margins-only", action="store_true")
+    p.add_argument("--initial-publication", action="store_true",
+                   help="Only after the original D1 day is explicitly observed empty")
     p.add_argument("--workers", type=int, default=4)
     args = p.parse_args()
-    return repair(args.bundle, args.payload, args.report, args.workers, args.central_margins_only)
+    return repair(args.bundle, args.payload, args.report, args.workers,
+                  args.central_margins_only, args.initial_publication)
 
 
 if __name__ == "__main__":
