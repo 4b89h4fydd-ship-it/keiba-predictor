@@ -1,6 +1,5 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import {enhanceNarGoingResponse} from './nar_going_moisture.mjs';
 
 // worker.js
 function json(data, status = 200) {
@@ -1129,9 +1128,6 @@ var worker_entry_default = {
       return withCors(await readRaceDisplay(env, raceId), request);
     }
     let response = await worker_default.fetch(request, env, ctx);
-    if (request.method === "GET" && (url.pathname.startsWith("/api/race/") || url.pathname === "/api/day")) {
-      response = await enhanceNarGoingResponse(response);
-    }
     if (request.method === "GET") {
       if (url.pathname.startsWith("/api/race/")) {
         response = await enhanceRaceResponse(response);
