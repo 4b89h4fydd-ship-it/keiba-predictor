@@ -99,6 +99,13 @@ Workerの通常オッズ・最終保存オッズの2つのキー生成を既存 
 
 `tests/test_factual_data_audit.py` に中央と地方の同名馬（入力順両方向）、同じ中央区分の別レース衝突継続、未知区分の非推定、入力不変性を確認する4ケースを追加。取得元・同名馬の実体ID本人認証基準・過去走の本人選別・保存/キャッシュ・D1/API/UI・予想方式は未変更。既存 #039 の歴史的 `main統合済` は**生産検証済みの意味ではなく**、今回の改修で進捗や独立性を昇格しない。テスト/CI、本番読戻しは個別に証拠が必要。
 
+
+### #038 出馬表更新 — Data Core不明レース区分の遮断（第3段階・限定修正）
+
+既存の `app.py` が `install_component(38, "_data_core_refresh_race", globals())` で取り込む更新入口を検査した。呼出元は既存 `#151` の `/api/v1/data-core/refresh/{race_id}` と日単位更新、`#152` の定期収集。従来、`jra-` 以外のレースIDは環境・履歴の地方経路に到達しうる。既存 `jra-` / `nar-` 接頭辞以外を共有ロック取得・スナップショット読込・取得処理開始より前に拒否する。空IDの既存エラーおよび正規の中央・地方への分岐・取得URL・再試行・保存・キャッシュ・予想条件は不変。レースIDの**全面的妥当性・競走馬本人照合**まで保証するものではない。
+
+`tests/test_item_038_data_core_circuit_guard.py` は不明4パターンの非接続、既存JRA/NARそれぞれの継続接続、既存HTTPハンドラ、空ID互換性を検査。実際のD1、外部取得元、本番UI読戻しは未検証。構造上は引き続き `migrated-shared-context`、歴史的進捗台帳 `requirements.json` の `未着手` は昇格しない。29の予想仕様待ち項目は変更しない。
+
 ## 全項目の配置
 
 状態: `migrated-module`=既存Pythonモジュール実体移動、`migrated-shared-context`=実体移動/既存共有状態で接続、`migrated-ui-fragment`=画面ソース実体移動、`mapped-existing-source`=既存ファイルとの対応を確定、`reserved`=仕様待ちの空箱。
