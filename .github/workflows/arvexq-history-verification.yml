@@ -236,6 +236,24 @@ jobs:
                  x["sourceHistoryEvidence"].get("auditComplete") is True and
                  x["sourceHistoryEvidence"].get("reportedStarts")==0)
               for x in zero)
+          # Split archived zero-history observations by their recorded age
+          # and verified debut evidence. Do not infer a career from age alone.
+          def source_age(item):
+              value=str(item["sourceHistoryEvidence"].get("age") or "")
+              m=re.search(r"\\d+",value)
+              return int(m.group()) if m else 0
+          summary["zeroHistoryUnflaggedAge3Plus"]=sum(
+              not item["originalDebutFlag"] and source_age(item)>=3 for item in zero)
+          summary["zeroHistoryAge2UnverifiedDebut"]=sum(
+              item["originalDebutFlag"] and source_age(item)==2
+              and not (item["sourceHistoryEvidence"].get("auditComplete") is True and
+                       item["sourceHistoryEvidence"].get("reportedStarts")==0)
+              for item in zero)
+          summary["zeroHistoryAttemptedButNoReportedStartsOrProviderErrors"]=sum(
+              ev.get("fetchAttempted") is True
+              and ev.get("reportedStarts") is None
+              and not ev.get("failedProviders") and not ev.get("failedEvidenceProviders")
+              for ev in (item["sourceHistoryEvidence"] for item in zero))
           central["summary"]={"races":sum(x["races"] for x in central["days"].values()),
               "horses":len(central["horses"]),
               "withHistory":sum(x["withHistory"] for x in central["days"].values()),
