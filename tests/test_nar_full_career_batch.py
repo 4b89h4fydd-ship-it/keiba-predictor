@@ -30,6 +30,7 @@ class NarFullCareerBatchTests(unittest.TestCase):
             conn.executescript("""
                 CREATE TABLE entries (
                     name TEXT, date TEXT, track TEXT, race_no INTEGER,
+                    age INTEGER NOT NULL DEFAULT 0, sex TEXT NOT NULL DEFAULT '',
                     finish INTEGER, time_seconds REAL,
                     corner_positions_json TEXT, carried_weight REAL,
                     jockey TEXT, trainer TEXT
@@ -44,13 +45,13 @@ class NarFullCareerBatchTests(unittest.TestCase):
                 iso=f"2026-{month:02d}-10"
                 conn.execute("INSERT INTO races VALUES (?,?,?,?,?,?,?,?,?)",
                              ("大井", iso, 1, "C1", 1200, "晴", "良", 12, 100))
-                conn.execute("INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?)",
+                conn.execute("INSERT INTO entries(name,date,track,race_no,finish,time_seconds,corner_positions_json,carried_weight,jockey,trainer) VALUES (?,?,?,?,?,?,?,?,?,?)",
                              ("全履歴馬", iso, "大井", 1, 2, 73.2, "[2,3,3,2]", 55.0, "J", "T"))
             # The race itself and future rows must never leak into the pre-off model.
             for iso in ("2026-10-11", "2026-10-12"):
                 conn.execute("INSERT INTO races VALUES (?,?,?,?,?,?,?,?,?)",
                              ("大井", iso, 1, "C1", 1200, "晴", "良", 12, 100))
-                conn.execute("INSERT INTO entries VALUES (?,?,?,?,?,?,?,?,?,?)",
+                conn.execute("INSERT INTO entries(name,date,track,race_no,finish,time_seconds,corner_positions_json,carried_weight,jockey,trainer) VALUES (?,?,?,?,?,?,?,?,?,?)",
                              ("全履歴馬", iso, "大井", 1, 1, 70.0, "[]", 55.0, "J", "T"))
             conn.commit()
         finally:
@@ -98,6 +99,29 @@ class NarFullCareerBatchTests(unittest.TestCase):
         readiness=assess_career_readiness(detail)
         self.assertFalse(readiness["ready"])
         self.assertEqual(readiness["blockedHorses"][0]["observedRuns"], 15)
+
+    def test_same_name_other_birth_year_is_not_imported(self):
+        import app
+        detail=self.fixture()
+        detail["horses"][0]["age"]=4  # 2023 birth year in 2026
+        detail["horses"][0]["sex"]="牡"
+        conn=sqlite3.connect(self.path)
+        try:
+            conn.execute("INSERT INTO races VALUES (?,?,?,?,?,?,?,?,?)",
+                         ("大井","2026-09-10",1,"C1",1200,"晴","良",12,100))
+            conn.execute("""INSERT INTO entries
+                (name,date,track,race_no,age,sex,finish,time_seconds,corner_positions_json,
+                 carried_weight,jockey,trainer)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                ("全履歴馬","2026-09-10","大井",1,2,"牡",2,73.2,"[]",55.0,"J","T"))
+            conn.commit()
+        finally:
+            conn.close()
+        with patch.object(app,"DB_PATH",self.path):
+            got=app._nar_attach_recent_batch(detail,5)
+        dates={r["date"] for r in got["horses"][0]["allPastRuns"]}
+        self.assertNotIn("2026-09-10",dates,"different birth year must not enter career")
+        self.assertIn("2026-08-10",dates,"compatible observed history must survive")
 
     def test_same_day_sources_deduplicate_without_losing_official_fields(self):
         import app
