@@ -2831,6 +2831,13 @@ def _start_enrichment(race_id:str,detail:dict,force:bool=False,horse_no:int|None
         with _detail_cache_lock:_detail_cache.pop(race_id,None)
     threading.Thread(target=worker,daemon=True).start();return _enrichment_status(race_id)
 
+def _verified_debut_no_history(horse:dict,detail:dict)->bool:
+    if detail.get("analysisMode")!="新馬":
+        return False
+    from arvexq.career_missing import build_career_analysis
+    return build_career_analysis(horse,detail).get("career_state")=="complete-no-starts"
+
+
 def _apply_enrichment(race_id:str,detail:dict)->dict:
     with _enrich_data_lock:data=_enrich_data.get(race_id)
     if data:_merge_enrichment(detail,data)
@@ -2838,9 +2845,11 @@ def _apply_enrichment(race_id:str,detail:dict)->dict:
     title=str(detail.get("title") or "");surface=str(detail.get("surface") or "")
     mode="障害" if (surface=="障害" or "障害" in title or re.search(r"(?:J[･・.]?G[ⅠⅡⅢ123]|\\bJS\\b|ジャンプ)",title,re.I)) else ("新馬" if re.search(r"(?:新馬|メイクデビュー)",title) else "平地")
     detail["analysisMode"]=mode
-    if mode=="新馬":
-        for h in detail.get("horses",[]) or []:
-            if not (h.get("recentRaces") or []):h["debutNoHistory"]=True
+    for h in detail.get("horses",[]) or []:
+        if _verified_debut_no_history(h,detail):
+            h["debutNoHistory"]=True
+        else:
+            h.pop("debutNoHistory",None)
     return detail
 
 
@@ -4010,7 +4019,10 @@ def _precompute_detail_metrics(detail: dict) -> dict:
     except Exception:detail["trackSpeed"]={"version":"track-speed-v300","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","source":"fallback"}
     for horse in detail.get("horses",[]) or []:
         runs=horse.get("allPastRuns") or horse.get("recentRaces") or []
-        if detail.get("analysisMode")=="新馬" and not runs:horse["debutNoHistory"]=True
+        if _verified_debut_no_history(horse,detail):
+            horse["debutNoHistory"]=True
+        else:
+            horse.pop("debutNoHistory",None)
         horse["collectionState"]={"status":"complete" if runs or horse.get("debutNoHistory") else "basic" if horse.get("name") else "missing", "history":"not_applicable" if horse.get("debutNoHistory") and not runs else "available" if runs else "missing", "pastRunCount":len(runs)}
         metric_horse=dict(horse,recentRaces=[r for r in runs if _is_jump_run(r)]) if detail.get("analysisMode")=="障害" else dict(horse,recentRaces=runs)
         try:

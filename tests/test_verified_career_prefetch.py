@@ -111,6 +111,15 @@ class VerifiedCareerTests(unittest.TestCase):
         get=site(listing(),16,search=search,pages={HID:(listing(),16),second:(listing(),16)})
         self.assertEqual(nk.fetch_verified_career(get,{"name":NAME},RACE,200),{})
 
+    def test_ambiguous_name_with_one_unreadable_candidate_is_not_accepted(self):
+        other="2022100002"
+        search=("<table>"+ "".join(
+            f'<tr><td><a href="https://db.netkeiba.com/horse/{hid}/">{NAME}</a></td></tr>'
+            for hid in (HID,other))+"</table>")
+        get=site(listing(),16,search=search,
+                 pages={HID:(listing(),16),other:("<p>unreadable</p>",0)})
+        self.assertEqual(nk.fetch_verified_career(get,{"name":NAME},RACE,200),{})
+
     def test_no_measurements_are_fabricated(self):
         raw=listing(3,sparse=True)
         # Dated totals remain evidence, but rows without distances must not
