@@ -128,5 +128,55 @@ class OfficialNarResultParserTests(unittest.TestCase):
         self.assertEqual([x["last3FSeconds"] for x in actual["finishers"]], [37.4, 37.4, 37.4])
 
 
+
+class ResultIdentityRoutingTests(unittest.TestCase):
+    """The existing result fallback must not use a JRA identifier for NAR."""
+
+    def test_nar_uses_existing_nar_race_identity_and_existing_result_url(self):
+        import app
+        detail = {"id": "nar-2026-10-20-盛岡-01", "date": "2026-10-20",
+                  "circuit": "地方", "track": "盛岡", "raceNumber": 1}
+        html = OfficialNarResultParserTests._html(False).decode("cp932")
+        urls = []
+        def supplied_html(url, *args):
+            urls.append(url)
+            return html
+        with patch.object(app, "_netkeiba_get", side_effect=supplied_html), \
+             patch.object(app, "_netkeiba_race_id",
+                          side_effect=AssertionError("JRA identifier used for NAR")):
+            result = app._netkeiba_current_result(detail)
+        self.assertEqual(urls, [
+            "https://race.netkeiba.com/race/result.html?race_id=202635102001"])
+        self.assertIsNotNone(result)
+        self.assertEqual([r["horseNumber"] for r in result["finishers"]], [1, 2, 3])
+
+    def test_explicit_saved_nar_identifier_is_preserved(self):
+        import app
+        detail = {"id": "nar-2026-10-20-盛岡-01",
+                  "netkeibaRaceId": "202635102001",
+                  "date": "2026-10-20", "circuit": "地方",
+                  "track": "盛岡", "raceNumber": 1}
+        with patch.object(app, "_nar_netkeiba_race_id",
+                          side_effect=AssertionError("must use saved ID")), \
+             patch.object(app, "_netkeiba_get", return_value=""):
+            self.assertIsNone(app._netkeiba_current_result(detail))
+
+    def test_jra_still_uses_the_original_jra_resolver(self):
+        import app
+        detail = {"id": "jra-2026-10-18-東京-08", "date": "2026-10-18",
+                  "circuit": "中央", "track": "東京", "raceNumber": 8}
+        urls = []
+        def grab(url, *args):
+            urls.append(url)
+            return ""
+        with patch.object(app, "_netkeiba_race_id", return_value="202605040808") as jra, \
+             patch.object(app, "_nar_netkeiba_race_id",
+                          side_effect=AssertionError("NAR resolver used for JRA")), \
+             patch.object(app, "_netkeiba_get", side_effect=grab):
+            self.assertIsNone(app._netkeiba_current_result(detail))
+        jra.assert_called_once_with("2026-10-18", "東京", 8)
+        self.assertEqual(urls, ["https://race.netkeiba.com/race/result.html?race_id=202605040808"])
+
+
 if __name__ == "__main__":
     unittest.main()
