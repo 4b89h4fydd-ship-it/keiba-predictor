@@ -1,0 +1,24 @@
+{
+  "id": 50,
+  "name": "過去走通過順位",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/past_fields/corners.py",
+    "arvexq/ingest/past_fields/jra.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/past_fields/corners.py",
+      "canonical": "arvexq/components/item_050/corners.py",
+      "module": "arvexq.components.item_050.corners"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

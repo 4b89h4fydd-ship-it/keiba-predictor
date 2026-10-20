@@ -1,0 +1,25 @@
+{
+  "id": 137,
+  "name": "前日予想成績",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/previous_ai_results.js"
+  ],
+  "shared_dependencies": [
+    "legacy static URL still exposes identical script; read_asset enforces canonical byte parity",
+    "Saved original data and read-only UI behavior unchanged"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_137/ui/previous_ai_results.js"
+  ],
+  "state": "migrated-ui-fragment",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

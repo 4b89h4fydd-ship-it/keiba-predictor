@@ -1,0 +1,24 @@
+{
+  "id": 185,
+  "name": "予想表示枠",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/forecast/prediction_frame.js"
+  ],
+  "shared_dependencies": [
+    "arvexq.ui.assets.read_asset; legacy static asset kept byte-identical"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_185/ui/prediction_frame.js"
+  ],
+  "state": "migrated-ui-fragment",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

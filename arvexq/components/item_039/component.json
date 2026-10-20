@@ -1,0 +1,27 @@
+{
+  "id": 39,
+  "name": "馬名・馬番照合",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/runner_identity_compare.py",
+    "arvexq/quality/fact_audit.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/runner_identity_compare.py",
+      "canonical": "arvexq/components/item_039/runner_identity_compare.py",
+      "module": "arvexq.components.item_039.runner_identity_compare"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

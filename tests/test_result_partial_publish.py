@@ -55,6 +55,41 @@ class ResultProgressPublishTests(unittest.TestCase):
         self.assertEqual(report["repaired"],[rid])
         self.assertEqual(report["published"],[rid])
         self.assertEqual(payload["meta"]["result_repaired_count"],1)
+        receipt=report["payout_observations"][0]
+        self.assertEqual(receipt["observedKinds"],["quinella"])
+        self.assertTrue(receipt["legacyPayoutOk"])
+        self.assertFalse(receipt["completePayoutCoverageVerified"])
+        self.assertFalse(receipt["offeredKindsVerified"])
+        self.assertEqual(receipt["observedPayoutRows"],1)
+
+
+    def test_unrecognized_and_malformed_payout_rows_are_reported_not_assumed_complete(self):
+        original={"id":"nar-2020-01-01-大井-01",
+                  "result":{"status":"確定",
+                            "finishers":[{"finish":1},{"finish":2},{"finish":3}],
+                            "payouts":[{"kind":"3連単","payout":5000},
+                                       {"type":"未識別券種","amount":100},
+                                       {"amount":300},None]}}
+        before=json.dumps(original,ensure_ascii=False,sort_keys=True)
+        receipt=repair_mod._payout_observation_receipt(original)
+        self.assertEqual(receipt["observedKinds"],["trifecta"])
+        self.assertEqual(receipt["unrecognizedKinds"],["<missing-label>","未識別券種"])
+        self.assertEqual(receipt["malformedRows"],1)
+        self.assertEqual(receipt["observedPayoutRows"],4)
+        self.assertTrue(receipt["confirmedPodium"])
+        self.assertTrue(receipt["legacyPayoutOk"])
+        self.assertFalse(receipt["offeredKindsVerified"])
+        self.assertFalse(receipt["completePayoutCoverageVerified"])
+        self.assertEqual(json.dumps(original,ensure_ascii=False,sort_keys=True),before)
+
+    def test_terminal_race_is_not_mistaken_for_complete_ticket_offering(self):
+        receipt=repair_mod._payout_observation_receipt(
+            {"result":{"status":"不成立","payouts":[]}})
+        self.assertTrue(receipt["terminalNoPayout"])
+        self.assertEqual(receipt["observedKinds"],[])
+        self.assertTrue(receipt["legacyPayoutOk"])
+        self.assertFalse(receipt["completePayoutCoverageVerified"])
+
 
 
 if __name__=="__main__":

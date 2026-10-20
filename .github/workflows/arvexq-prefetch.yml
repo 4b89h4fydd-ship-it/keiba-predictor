@@ -339,6 +339,17 @@ jobs:
             --report persisted-evidence-check.json
           echo "D1_STORED_EVIDENCE_VERIFIED"
 
+      # Existing D1-verified pre-prediction inputs, archived read-only.
+      - name: Archive factual D1 readback for isolated Stage64 shadow
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-stage64-source-facts-${{ github.run_id }}
+          path: |
+            persisted-facts.json
+            persisted-evidence-check.json
+          if-no-files-found: error
+          retention-days: 60
+
       - name: Analyze only persisted D1 data and prepare original marks and bets
         run: |
           RACES=$(jq '.races // [] | length' persisted-facts.json)

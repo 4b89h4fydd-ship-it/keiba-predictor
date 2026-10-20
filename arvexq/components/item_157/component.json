@@ -1,0 +1,33 @@
+{
+  "id": 157,
+  "name": "天候・馬場自動更新",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/jra_environment_parser.py",
+    "arvexq/ingest/nar_environment_parser.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_environment_http_get",
+    "_nar_fetch_environment",
+    "_jra_fetch_environment",
+    "_upcoming_rows",
+    "_patch_nar_environment",
+    "_patch_central_environment",
+    "_refresh_track_environment",
+    "_schedule_track_environment",
+    "_environment_cycle",
+    "_environment_loop",
+    "_start_environment_collector"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

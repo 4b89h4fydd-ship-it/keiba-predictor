@@ -1,0 +1,33 @@
+{
+  "id": 175,
+  "name": "APIエラー処理",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/d1_day_readback.py"
+  ],
+  "shared_dependencies": [
+    "Existing D1 API routes",
+    "arvexq.ingest.full_snapshot_codec",
+    "arvexq.ingest.career_transport",
+    "Python standard library",
+    "arvexq.components.item_160.readback_retry still owns HTTP attempts",
+    "D1 readback transport remains shared"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/d1_day_readback.py",
+      "canonical": "arvexq/components/item_175/http_policy.py",
+      "module": "arvexq.components.item_175.http_policy"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

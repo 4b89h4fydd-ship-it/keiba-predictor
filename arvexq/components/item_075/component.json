@@ -1,0 +1,34 @@
+{
+  "id": 75,
+  "name": "コーナー通過順位取得",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/corner_order.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.ingest.field_normalization._clean",
+    "arvexq.v3.data.result_facts._result/_observed"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/corner_order.py",
+      "canonical": "arvexq/components/item_075/corner_order.py",
+      "module": "arvexq.components.item_075.corner_order"
+    },
+    {
+      "previous": "arvexq/v3/data/result_facts.py",
+      "canonical": "arvexq/components/item_075/result_projection.py",
+      "module": "arvexq.components.item_075.result_projection"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

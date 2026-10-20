@@ -1,0 +1,28 @@
+{
+  "id": 74,
+  "name": "速報結果判定",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/result_status/confirmed.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.components.item_073.confirmed official finality still shared"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/result_status/confirmed.py",
+      "canonical": "arvexq/components/item_074/provisional.py",
+      "module": "arvexq.components.item_074.provisional"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

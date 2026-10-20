@@ -1,7 +1,5 @@
-"""NAR weather extraction. Does not parse going or scratches."""
-import re
-from arvexq.ingest.environment_values import _env_clean_weather
-
-def parse_nar_weather(text: str) -> str | None:
-    match = re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)", text or "")
-    return _env_clean_weather(match.group(1)) if match else None
+"""Compatibility import; implementation is owned by responsibility 001."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_001.nar_weather")
+_sys.modules[__name__] = _implementation

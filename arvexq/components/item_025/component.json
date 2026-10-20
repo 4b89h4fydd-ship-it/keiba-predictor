@@ -1,0 +1,28 @@
+{
+  "id": 25,
+  "name": "馬番",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/entry_fields/horse_number.py"
+  ],
+  "shared_dependencies": [
+    "Shared DOM access and Python standard library"
+  ],
+  "owned_definitions": [
+    "_netkeiba_card_rows_fast"
+  ],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/entry_fields/horse_number.py",
+      "canonical": "arvexq/components/item_025/horse_number.py",
+      "module": "arvexq.components.item_025.horse_number"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,7 +1,5 @@
-"""Extract and normalize only popularity from a provider row. Missing values remain absent."""
-import re
-from .dom import text
-
-def extract(row):
-    match = re.search(r"\d+", text(row.find("span", id=re.compile(r"^ninki-1_"))))
-    return int(match.group()) if match else None
+"""Compatibility import; implementation is owned by responsibility 061."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_061.popularity")
+_sys.modules[__name__] = _implementation

@@ -1,3 +1,4 @@
+from arvexq.components.runtime import composed_app_source
 from pathlib import Path
 from arvexq.ingest.race_fields.start_time import extract as start
 from arvexq.ingest.race_fields.distance import extract as distance
@@ -7,12 +8,21 @@ from bs4 import BeautifulSoup
 import re
 
 def test_summary_uses_same_independent_extractors_as_detail():
-    source=Path("app.py").read_text()
+    source=composed_app_source()
     summary=source.split("def _jra_parse_race_summary(",1)[1].split("\ndef ",1)[0]
     detail=source.split("def _jra_parse_race(",1)[1].split("\ndef ",1)[0]
     for expression in ("jra_start_time(full)","jra_distance(full)","jra_surface(full)","jra_race_title(soup,race_no,JRA_BAD_TITLE_RE)"):
         assert expression in summary
         assert expression in detail
+
+def test_detail_and_summary_delegate_environment_fields_to_owned_parser():
+    source=composed_app_source()
+    summary=source.split("def _jra_parse_race_summary(",1)[1].split("\ndef ",1)[0]
+    detail=source.split("def _jra_parse_race(",1)[1].split("\ndef ",1)[0]
+    for segment in (detail,summary):
+        assert "_parse_jra_environment_html(full,surface)" in segment
+        assert 'wm=re.search(r"天候' not in segment
+        assert 'cm=re.search(r"(?:芝|ダート)' not in segment
 
 def test_date_and_course_values_are_not_synthetic():
     observation="発走時刻：15時35分 コース：1,800メートル（ダート・右）"

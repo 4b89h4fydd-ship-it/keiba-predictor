@@ -1,3 +1,4 @@
+from arvexq.components.runtime import composed_app_source
 from pathlib import Path
 import re
 from bs4 import BeautifulSoup
@@ -31,10 +32,56 @@ def test_actual_field_count_excludes_unknown_numbers():
     assert entrants([])==0
 
 def test_live_parser_delegates_to_source_fact_modules():
-    source=Path("app.py").read_text()
+    source=composed_app_source()
     assert "return jra_race_track(cname,JRA_TRACK_CODES)" in source
     part=source.split("def _jra_parse_race(",1)[1].split("\ndef ",1)[0]
     assert "title=jra_race_title(soup,race_no,JRA_BAD_TITLE_RE)" in part
     assert '"fieldSize":jra_race_field_size(horses)' in part
     assert "date=_jra_date_from_cname(cname)" in part
     assert "race_no=_jra_race_no_from_cname(cname)" in part
+
+
+def test_jra_date_rejects_impossible_calendar_values():
+    assert _jra_date_from_cname(CNAME.replace("20261018", "20260230")) == ""
+    assert _jra_date_from_cname(CNAME.replace("20261018", "20261318")) == ""
+    assert _jra_date_from_cname(CNAME.replace("20261018", "20240229")) == "2024-02-29"
+
+
+def test_jra_race_number_rejects_out_of_range_source_ids():
+    assert _jra_race_no_from_cname(CNAME.replace("1120261018", "0020261018")) == 0
+    assert _jra_race_no_from_cname(CNAME.replace("1120261018", "1320261018")) == 0
+    assert _jra_race_no_from_cname(CNAME.replace("1120261018", "1220261018")) == 12
+
+
+def test_observed_field_count_ignores_corrupt_and_duplicate_source_rows():
+    rows = [
+        {"horseNumber": 1}, {"horseNumber": "01"}, {"horseNumber": 2.0},
+        {"horseNumber": "取消"}, {"horseNumber": None}, {"horseNumber": True},
+        {"horseNumber": 1.5}, {"horseNumber": 0}, {"horseNumber": 19},
+        {"horseNumber": float("nan")}, {"horseNumber": float("inf")},
+        {"horseNumber": "2.0"}, None,
+    ]
+    assert entrants(rows) == 2
+    assert entrants(None) == 0
+
+
+def test_jra_date_and_race_number_component_ownership_preserves_legacy_imports():
+    from arvexq.components.catalog import describe
+    from arvexq.components.item_008.jra_date import _jra_date_from_cname as owned_date
+    from arvexq.components.item_011.race_number import _jra_race_no_from_cname as owned_number
+    assert _jra_date_from_cname is owned_date
+    assert _jra_race_no_from_cname is owned_number
+    assert describe(8)['circuits'] == ['JRA']
+    assert describe(11)['circuits'] == ['JRA']
+    assert owned_date(CNAME) == '2026-10-18'
+    assert owned_number(CNAME) == 11
+
+
+def test_jra_venue_parser_compatibility_import_is_owning_component():
+    import importlib
+    original=importlib.import_module("arvexq.ingest.race_fields.track")
+    owned=importlib.import_module("arvexq.components.item_009.track")
+    assert original is owned
+    assert original.extract(CNAME, {"05":"東京"})=="東京"
+    assert original.extract(CNAME, {"04":"京都"})==""
+    assert original.extract("invalid", {"05":"東京"})==""

@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
 
 from arvexq.ingest.d1_day_readback import read_day
 from arvexq.quality.fact_audit import audit_day
+from arvexq.v3.audit.http429 import describe_429
 
 
 def main():
@@ -23,22 +24,46 @@ def main():
     parser.add_argument("--days", type=int, default=int(os.getenv("ARVEXQ_DAYS", "7")))
     parser.add_argument("--end-date", default=os.getenv("ARVEXQ_END_DATE", ""))
     parser.add_argument("--report", default="fact-data-audit.json")
+    parser.add_argument("--verify-display", action="store_true",
+                        help="Compare persisted API facts with the PWA display API (read-only)")
     args = parser.parse_args()
     if args.days < 1:
         parser.error("days must be positive")
     end = (datetime.strptime(args.end_date, "%Y-%m-%d").date() if args.end_date else
            datetime.now(ZoneInfo("Asia/Tokyo")).date() - timedelta(days=1))
     days = []
+    blocked = False
     for offset in range(args.days - 1, -1, -1):
         day = (end - timedelta(days=offset)).isoformat()
-        try:
-            days.append(audit_day(read_day(args.api_base, day)))
-        except Exception as exc:
+        if blocked:
             days.append({"date": day, "summaryRaces": None,
-                         "readErrors": [{"error": type(exc).__name__ + ": " + str(exc)[:240]}],
+                         "readErrors": [{"error": "skipped-after-api-http-429",
+                                         "status": "rate-limited-not-verified"}],
                          "validationErrors": [], "allRaceReadsVerified": False})
-    errors = sum(len(day["readErrors"]) + len(day["validationErrors"]) for day in days)
-    report = {"version": "arvexq-factual-data-audit-v1",
+            continue
+        try:
+            bundle = (read_day(args.api_base, day, verify_display=True) if args.verify_display
+                      else read_day(args.api_base, day))
+            audited = audit_day(bundle)
+            # Detail fetch failures were previously caught within read_day.
+            # Stop future days if any nested race detail also reports a 429.
+            if any(e.get("httpStatus") == 429 or e.get("error") == "api-http-429"
+                   for e in audited.get("readErrors") or [] if isinstance(e, dict)):
+                blocked = True
+            days.append(audited)
+        except Exception as exc:
+            is_429 = getattr(exc, "code", None) == 429
+            blocked = bool(is_429)
+            days.append({"date": day, "summaryRaces": None,
+                         "readErrors": [{"rateLimitEvidence": describe_429(exc) if is_429 else None,
+                                         "error": ("api-http-429" if is_429 else
+                                          type(exc).__name__ + ": " + str(exc)[:240]),
+                                         "status": ("rate-limited-not-verified" if is_429
+                                                    else "read-error-not-verified")}],
+                         "validationErrors": [], "allRaceReadsVerified": False})
+    errors = sum(len(day["readErrors"]) + len(day["validationErrors"]) +
+                 len(day.get("displayParityErrors") or []) for day in days)
+    report = {"version": "arvexq-factual-data-audit-v2",
               "retrievedAt": datetime.now(timezone.utc).isoformat(),
               "start": days[0]["date"], "end": days[-1]["date"],
               "predictionLogicStatus": "予想ロジック仕様待ち", "errors": errors, "days": days}
@@ -46,12 +71,12 @@ def main():
     print("ARVEXQ_FACT_DATA_AUDIT_JSON=" + json.dumps(report, ensure_ascii=False))
     if os.getenv("GITHUB_STEP_SUMMARY"):
         lines = ["## ARVEXQ factual data audit", "", "Prediction calculation: 予想ロジック仕様待ち", "",
-                 "| Date | Summaries | Read details | Horses | Read/validation errors |",
+                 "| Date | Summaries | Read details | Horses | Read/validation/display errors |",
                  "|---|---:|---:|---:|---:|"]
         for day in days:
             observed = day.get("observed") or {}
             lines.append(f"| {day['date']} | {day['summaryRaces']} | {observed.get('races', 0)} | "
-                         f"{observed.get('horses', 0)} | {len(day['readErrors'])+len(day['validationErrors'])} |")
+                         f"{observed.get('horses', 0)} | {len(day['readErrors'])+len(day['validationErrors'])+len(day.get('displayParityErrors') or [])} |")
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as output:
             output.write("\n".join(lines) + "\n")
     return 1 if errors else 0

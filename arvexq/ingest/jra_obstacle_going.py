@@ -1,6 +1,5 @@
-"""JRA obstacle-going selection, isolated from turf/dirt HTML parsing."""
-from collections.abc import Mapping
-
-def parse_jra_obstacle_going(surface_conditions: Mapping[str, str]) -> str | None:
-    # Preserve the established JRA obstacle rule: turf first, then dirt.
-    return surface_conditions.get("芝") or surface_conditions.get("ダート") or None
+"""Compatibility import; implementation is owned by responsibility 007."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_007.jra_obstacle_going")
+_sys.modules[__name__] = _implementation

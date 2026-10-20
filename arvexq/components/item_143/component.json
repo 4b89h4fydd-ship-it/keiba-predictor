@@ -1,0 +1,28 @@
+{
+  "id": 143,
+  "name": "出馬表キャッシュ",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/v3/transport/cache.py"
+  ],
+  "shared_dependencies": [
+    "Shared result/odds cache also calls race_detail_key; storage lifecycle not isolated"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/storage/cache_keys.py",
+      "canonical": "arvexq/components/item_143/race_detail_key.py",
+      "module": "arvexq.components.item_143.race_detail_key"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

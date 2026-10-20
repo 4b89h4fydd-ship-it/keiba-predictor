@@ -1,0 +1,24 @@
+{
+  "id": 171,
+  "name": "保存状態API",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "workers/api_storage_audit.mjs"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "storage_status",
+    "snapshot_version",
+    "racedb_status"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

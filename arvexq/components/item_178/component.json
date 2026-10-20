@@ -1,0 +1,25 @@
+{
+  "id": 178,
+  "name": "開催場別レース一覧",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/app.js"
+  ],
+  "shared_dependencies": [
+    "existing app.js global state and order-dependent shared UI; same-byte source migration only"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_178/ui/0334_venueRaceRows.js",
+    "arvexq/components/item_178/ui/0336_renderVenue.js"
+  ],
+  "state": "migrated-ui-fragment",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

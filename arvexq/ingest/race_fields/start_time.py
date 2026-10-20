@@ -1,7 +1,5 @@
-"""#14 JRA official announced scheduled post time."""
-import re
-def extract(text):
-    m=re.search(r"発走時刻[：:]\s*(\d{1,2})時(\d{2})分",text or "")
-    if not m:return ""
-    h=int(m.group(1));minute=int(m.group(2))
-    return f"{h:02d}:{minute:02d}" if h<=23 and minute<=59 else ""
+"""Compatibility import; implementation is owned by responsibility 014."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_014.start_time")
+_sys.modules[__name__] = _implementation

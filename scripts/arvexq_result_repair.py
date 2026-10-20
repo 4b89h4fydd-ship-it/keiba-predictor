@@ -24,6 +24,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import app
+from arvexq.v3.data.result_facts import PAYOUT_KINDS
 from arvexq.results import (
     JST,
     TERMINAL_NO_PAYOUT,
@@ -57,6 +58,40 @@ def _write_json(path: str, value: Any) -> None:
         json.dumps(value, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+
+
+def _payout_observation_receipt(detail: dict[str, Any] | None) -> dict[str, Any]:
+    """Read-only per-kind receipt, not evidence that all offered bets were collected."""
+    result = (detail or {}).get("result") if isinstance(detail, dict) else None
+    result = result if isinstance(result, dict) else {}
+    rows = result.get("payouts") if isinstance(result.get("payouts"), list) else []
+    aliases = {label: key for key, labels in PAYOUT_KINDS.items() for label in labels}
+    kinds: set[str] = set()
+    unknown: set[str] = set()
+    malformed = 0
+    for row in rows:
+        if not isinstance(row, dict):
+            malformed += 1
+            continue
+        label = str(row.get("kind") or row.get("type") or "").strip()
+        matched = aliases.get(label)
+        if matched:
+            kinds.add(matched)
+        else:
+            unknown.add(label or "<missing-label>")
+    result_ok, payout_ok, status = result_state(detail)
+    return {
+        "resultStatus": status,
+        "confirmedPodium": result_ok,
+        "terminalNoPayout": status in TERMINAL_NO_PAYOUT,
+        "observedPayoutRows": len(rows),
+        "observedKinds": sorted(kinds),
+        "unrecognizedKinds": sorted(unknown),
+        "malformedRows": malformed,
+        "legacyPayoutOk": payout_ok,
+        "offeredKindsVerified": False,
+        "completePayoutCoverageVerified": False,
+    }
 
 
 def _seed_base(rid: str, detail: dict[str, Any] | None) -> None:
@@ -162,6 +197,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
 
     unresolved = []
     payout_missing = []
+    payout_observations = []
     for rid in started_ids:
         detail = by_id.get(rid)
         result_ok, payout_ok, status = result_state(detail)
@@ -175,6 +211,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             "status": status,
             "error": errors.get(rid, ""),
         }
+        payout_observations.append({"race_id": rid, "circuit": item["circuit"],
+                                    **_payout_observation_receipt(detail)})
         if not result_ok:
             item["error"] = item["error"] or "result still incomplete"
             unresolved.append(item)
@@ -211,6 +249,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "published": sorted(published | repaired),
         "result_missing": unresolved,
         "payout_missing": payout_missing,
+        "payout_observations": payout_observations,
         "detail_write_count": len(detail_payload),
     }
     _write_json(payload_path, payload)

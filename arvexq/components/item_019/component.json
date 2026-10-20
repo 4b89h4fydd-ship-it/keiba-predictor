@@ -1,0 +1,25 @@
+{
+  "id": 19,
+  "name": "賞金情報取得",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/race_fields/prize.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/race_fields/prize.py",
+      "canonical": "arvexq/components/item_019/prize.py",
+      "module": "arvexq.components.item_019.prize"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

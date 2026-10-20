@@ -1,0 +1,25 @@
+{
+  "id": 13,
+  "name": "グレード・クラス取得",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/race_fields/grade_class.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/race_fields/grade_class.py",
+      "canonical": "arvexq/components/item_013/grade_class.py",
+      "module": "arvexq.components.item_013.grade_class"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

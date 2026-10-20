@@ -1,8 +1,5 @@
-"""43: Historical venue. Track names are supplied by the provider adapter."""
-import re
-
-def extract_track(text, tracks):
-    for track in tracks:
-        if re.search(r"(?:日|\s)"+re.escape(track)+r"(?:\s|$)",text or ""):
-            return track
-    return ""
+"""Compatibility import; implementation is owned by responsibility 043."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_043.track")
+_sys.modules[__name__] = _implementation

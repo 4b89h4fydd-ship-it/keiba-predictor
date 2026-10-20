@@ -1,0 +1,30 @@
+{
+  "id": 176,
+  "name": "ホーム画面",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/index.html"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "home"
+  ],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_176/ui/0052_header.js",
+    "arvexq/components/item_176/ui/0314_renderHomeSectionPage.js",
+    "arvexq/components/item_176/ui/0315_renderHome.js",
+    "arvexq/components/item_176/ui/0408_render.js",
+    "arvexq/components/item_176/ui/0419_bind.js",
+    "arvexq/components/item_176/ui/0423_mergeBootstrap.js",
+    "arvexq/components/item_176/ui/0424_load.js"
+  ],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

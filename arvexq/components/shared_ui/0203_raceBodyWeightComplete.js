@@ -1,0 +1,1 @@
+function raceBodyWeightComplete(r){var hs=(r&&r.horses||[]).filter(function(h){return !isScratchHorse(h)&&n(h.horseNumber)>0}),got=hs.filter(function(h){return currentBodyWeight(h)>250}).length;return !!hs.length&&got===hs.length}

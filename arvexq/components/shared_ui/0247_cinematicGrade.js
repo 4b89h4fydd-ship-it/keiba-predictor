@@ -1,0 +1,1 @@
+function cinematicGrade(r){var g=r.grade||r.gradeLabel||'',match=String(r.title||'').match(/(?:J[・･.]?)?G[ⅠⅡⅢ123]/i);if(!g&&match)g=match[0];return g?'<span class="cinema-grade">'+esc(g)+'</span>':''}

@@ -1,0 +1,37 @@
+{
+  "id": 162,
+  "name": "同期状態・エラー管理",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "scripts/arvexq_protect_sync.py",
+    "arvexq/ingest/full_snapshot_codec.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.ingest.full_snapshot_codec"
+  ],
+  "owned_definitions": [
+    "central_status",
+    "central_schema",
+    "collector_status",
+    "_central_refresh_status",
+    "_enrichment_status",
+    "data_core_status",
+    "site_bootstrap_status",
+    "local_refresh_status",
+    "central_refresh_status",
+    "prewarm_status",
+    "odds_auto_status",
+    "enrichment_status",
+    "enrichment_schema"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,24 @@
+{
+  "id": 45,
+  "name": "過去走馬場状態",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/past_fields/going.py",
+    "arvexq/ingest/past_fields/jra.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/past_fields/going.py",
+      "canonical": "arvexq/components/item_045/going.py",
+      "module": "arvexq.components.item_045.going"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

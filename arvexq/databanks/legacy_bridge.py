@@ -151,6 +151,102 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
     return fetch
 
 
+
+def audit_nar_store_history(conn: Any, horse: dict[str, Any], cutoff: str,
+                            official_archive: Any = None) -> dict[str, Any]:
+    """Read-only comparison of name-only NAR SQLite and existing official CSV."""
+    from collections import Counter
+    from arvexq.databanks.nar_official_csv import date as official_date, normalize
+
+    name = str(horse.get("name") or "").strip()
+    end = official_date(cutoff)
+    birth = official_date(horse.get("birthDate") or horse.get("birthday"))
+    reasons: Counter[str] = Counter()
+    receipt: dict[str, Any] = {
+        "name": name, "cutoff": end, "targetBirthDate": birth or None,
+        "officialArchiveSupplied": official_archive is not None,
+        "legacyPositiveRows": 0, "dbRowsBeforeLegacyFinishFilter": 0,
+        "dbNameDateRowsBeforeJoin": 0, "excludedByLegacyRaceJoin": 0,
+        "officialBirthCompatiblePositiveRows": 0,
+        "conflictingBirthPositiveRows": 0,
+        "unverifiedPositiveRows": 0, "excludedByLegacyFinishFilter": 0,
+        "reasonCounts": {}, "observations": [],
+        "identityConfirmedByStableHorseId": False,
+    }
+    if not name or not end:
+        receipt["reasonCounts"] = {"missing-name-or-invalid-cutoff": 1}
+        return receipt
+
+    # Production recent_races uses an INNER JOIN and e.finish>0.
+    # A LEFT JOIN exposes orphaned saved entries without counting them as
+    # a production candidate; this diagnostic runs SELECT only.
+    cursor = conn.execute(
+        """SELECT e.date,e.track,e.race_no,e.horse_no,e.name,e.age,e.sex,
+                  e.finish,e.status, r.track AS joined_track
+           FROM entries e
+           LEFT JOIN races r
+             ON r.track=e.track AND r.date=e.date AND r.race_no=e.race_no
+           WHERE e.name=? AND e.date<?
+           ORDER BY e.date DESC,e.race_no DESC""",
+        (name, end),
+    )
+    columns = [column[0] for column in cursor.description]
+    rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    receipt["dbNameDateRowsBeforeJoin"] = len(rows)
+    receipt["dbRowsBeforeLegacyFinishFilter"] = sum(
+        row["joined_track"] is not None for row in rows)
+    official_index: dict[tuple[str, str, int, int], set[str]] = {}
+    if official_archive is not None:
+        for observed, official_birth in official_archive.by_name.get(normalize(name), []):
+            key = (str(observed.get("date") or ""),
+                   str(observed.get("track") or ""),
+                   int(observed.get("raceNumber") or 0),
+                   int(observed.get("horseNumber") or 0))
+            official_index.setdefault(key, set()).add(
+                official_date(official_birth) or "")
+
+    for row in rows:
+        key = (str(row["date"] or ""), str(row["track"] or ""),
+               int(row["race_no"] or 0), int(row["horse_no"] or 0))
+        finish = int(row["finish"] or 0)
+        if row["joined_track"] is None:
+            reason = "excluded-by-legacy-race-join"
+            receipt["excludedByLegacyRaceJoin"] += 1
+        elif finish <= 0:
+            reason = "excluded-by-legacy-finish-filter"
+            receipt["excludedByLegacyFinishFilter"] += 1
+        else:
+            receipt["legacyPositiveRows"] += 1
+            matches = official_index.get(key)
+            if official_archive is None:
+                reason = "unverified-no-official-archive"
+            elif not matches:
+                reason = "unverified-official-row-not-in-supplied-archive"
+            elif not birth or "" in matches:
+                reason = "unverified-birth-date-unavailable"
+            elif matches == {birth}:
+                reason = "official-birth-date-compatible"
+                receipt["officialBirthCompatiblePositiveRows"] += 1
+            elif birth not in matches:
+                reason = "conflicting-official-birth-date"
+                receipt["conflictingBirthPositiveRows"] += 1
+            else:
+                reason = "unverified-conflicting-official-rows"
+            if reason.startswith("unverified"):
+                receipt["unverifiedPositiveRows"] += 1
+        reasons[reason] += 1
+        receipt["observations"].append({
+            "date": key[0], "track": key[1],
+            "raceNumber": key[2], "horseNumber": key[3],
+            "storedAge": row["age"], "storedSex": row["sex"],
+            "storedFinish": finish, "storedStatus": row["status"],
+            "joinedToRace": row["joined_track"] is not None,
+            "reason": reason,
+        })
+    receipt["reasonCounts"] = dict(sorted(reasons.items()))
+    return receipt
+
+
 def _nar_store_adapters(namespace: dict[str, Any]):
     store_cls = namespace.get("NarStore")
     if not callable(store_cls):
@@ -174,7 +270,13 @@ def _nar_store_adapters(namespace: dict[str, Any]):
         if not name or not date:
             return {}
         db = store()
-        runs = db.recent_races(name, date, int(limit or 5))
+        # Pass the target horse's observed identity into the existing NAR
+        # SQLite filter. Name-only queries can mix same-name horses.
+        import re
+        age_value = re.search(r"\d+", str(horse.get("age") or ""))
+        expected_age = int(age_value.group()) if age_value else 0
+        expected_sex = str(horse.get("sex") or "").strip()
+        runs = db.recent_races(name, date, int(limit or 5), expected_age, expected_sex)
         return {
             "recentRaces": runs[:5],
             "allPastRuns": runs if int(limit or 5) > 5 else [],

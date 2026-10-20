@@ -27,10 +27,10 @@ if str(ROOT) not in sys.path:
 import app
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
 from arvexq.prediction.career_readiness import assess_career_readiness, attach_career_readiness
-from arvexq.prediction.observed_model import model_version
 from arvexq.prediction.race_intelligence import attach_evidence
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 from arvexq.ingest.full_career import merge_career
+from arvexq.ingest.horse_identity import _horse_key
 from arvexq.databanks.nar_official_csv import register_nar_official_archive
 from arvexq.databanks.registry import registry as source_registry
 
@@ -74,6 +74,15 @@ def _merge_horses(base: Any, fresh: Any, cutoff: str = "") -> list[dict[str, Any
         if no <= 0:
             continue
         row = by_no.get(no)
+        if row is not None and _horse_key(row.get("name")) and _horse_key(raw.get("name")) and (
+            _horse_key(row.get("name")) != _horse_key(raw.get("name"))
+        ):
+            # A horse number is race-scoped, not an enduring horse ID.
+            # Never inherit another runner's past starts or career archive.
+            replacement = {"horseNumber": no}
+            out[out.index(row)] = replacement
+            row = replacement
+            by_no[no] = row
         if row is None:
             row = {"horseNumber": no}
             out.append(row)

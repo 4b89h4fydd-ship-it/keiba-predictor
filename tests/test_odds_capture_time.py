@@ -1,3 +1,4 @@
+from arvexq.components.runtime import composed_app_source
 from datetime import datetime,timezone,timedelta
 import pytest
 from pathlib import Path
@@ -9,6 +10,6 @@ def test_observed_time_is_jst_not_server_timezone():
     with pytest.raises(ValueError): odds_observed_at(datetime(2026,10,18,9,30))
 
 def test_nar_odds_recording_calls_standalone_clock():
-    app=Path("app.py").read_text()
+    app=composed_app_source()
     fn=app.split("def _attach_nar_live_odds(",1)[1].split("\ndef ",1)[0]
     assert 'detail["oddsUpdatedAt"]=odds_observed_at()' in fn

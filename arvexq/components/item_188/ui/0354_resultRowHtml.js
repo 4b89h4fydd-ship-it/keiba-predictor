@@ -1,0 +1,1 @@
+function resultRowHtml(r,x){var h=horseByNo(r,x.horseNumber)||x;return'<div class="result-row"><span>'+esc(x.finishLabel||(x.finish?x.finish+'着':'—'))+'</span>'+badge(h)+'<span class="result-name">'+esc(x.name||h.name||"")+'</span><span>'+fmtTime(x.timeSeconds)+'</span></div>'}

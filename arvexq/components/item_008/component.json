@@ -1,0 +1,30 @@
+{
+  "id": 8,
+  "name": "開催日取得",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/jra_identifiers.py"
+  ],
+  "shared_dependencies": [
+    "app.py:_clean (central race normalization compatibility)",
+    "app.py:_int (central race normalization compatibility)"
+  ],
+  "owned_definitions": [
+    "normalize_central_race"
+  ],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/jra_identifiers.py",
+      "canonical": "arvexq/components/item_008/jra_date.py",
+      "module": "arvexq.components.item_008.jra_date"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

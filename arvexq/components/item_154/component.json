@@ -1,0 +1,36 @@
+{
+  "id": 154,
+  "name": "History Repair",
+  "prediction_reserved": false,
+  "existing_sources": [
+    ".github/workflows/arvexq-history-sync.yml"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "iter_months_back",
+    "sync_recent_history",
+    "_history_worker",
+    "ensure_history_async",
+    "_startup_history_backfill",
+    "history_backfill_one",
+    "history_status",
+    "_nar_month_needs_fetch",
+    "_download_nar_month_only",
+    "_sync_nar_month_wave",
+    "_months_from_race_date",
+    "_history_counts",
+    "_start_race_history_search",
+    "_race_history_status",
+    "_start_central_history_search"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

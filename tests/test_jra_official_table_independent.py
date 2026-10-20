@@ -1,4 +1,5 @@
 """Official JRA card table selector contracts."""
+from arvexq.components.runtime import composed_app_source
 from pathlib import Path
 from bs4 import BeautifulSoup
 from arvexq.ingest.jra_official_table import select_runners_table
@@ -13,6 +14,6 @@ def test_missing_runner_table_is_none():
     assert select_runners_table(soup) is None
 
 def test_detail_parser_uses_selector():
-    source=Path("app.py").read_text()
+    source=composed_app_source()
     detail=source.split("def _jra_parse_race(",1)[1].split("def _jra_parse_race_summary(",1)[0]
     assert "target_table=select_jra_runners_table(soup)" in detail

@@ -1,0 +1,1 @@
+function openHorseModal(no){state.modalScroll=window.scrollY;if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}state.horseModalNo=n(no)||null;render();document.body.style.overflow='hidden'}

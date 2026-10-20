@@ -9,6 +9,6 @@ def test_confirmed_requires_unambiguous_official_status():
     assert not official_confirmed("出走表")
 
 def test_nar_result_uses_independent_confirmation():
-    source=Path("app.py").read_text()
+    source=__import__("inspect").getsource(__import__("arvexq.ingest.nar_result", fromlist=["parse_result_html"]))
     assert "explicit_final=official_confirmed(full)" in source
     assert "from arvexq.ingest.result_status.confirmed import official_confirmed" in source
