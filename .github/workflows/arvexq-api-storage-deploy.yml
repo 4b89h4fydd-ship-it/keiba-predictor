@@ -56,7 +56,11 @@ jobs:
           base='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/kraiz-api'
           def read(suffix):
               req=urllib.request.Request(base+suffix,headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']})
-              with urllib.request.urlopen(req,timeout=30) as response:return response.read()
+              with urllib.request.urlopen(req,timeout=30) as response:
+                  content=response.read()
+                  if not suffix:
+                      print('API_SOURCE_TRANSPORT',json.dumps({'content_type':response.headers.get('content-type',''),'bytes':len(content),'prefix_hex':content[:12].hex()}))
+                  return content
           raw=read('');boundary=raw.split(b'\r\n',1)[0]
           modules=[]
           for part in raw.split(boundary):
