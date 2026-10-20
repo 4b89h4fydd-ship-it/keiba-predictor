@@ -123,3 +123,18 @@
 
 `tests/test_stage64_saved_connection.py::Stage64SavedConnectionTests::test_stage4_leave_one_day_out_accuracy_concentration_is_retrospective_only` で同じ入力527R、各日採点件数、中央の日除外後の符号、地方10月12日除外後の297R・82対83を固定検査する。**同一日の後追い結果を別の開催日の事前予想として扱うものではない**。追加テストの実CI結果が確認できるまでは合格扱いしない。
 
+## 第4段階・共通台帳 #371 開始後の発走前検証準備監査（2026-10-20 JST）
+
+変更前にIssue #371、最新main `9096e47b7c5ddcc6fe9310149ac2df1132078cf9`、開発PR #367（開始時 `1d8ba15c`、書込直前 `ef257fbda2b30f62345f94edafbaa79b36a57394`）、削除PR #366、第1段階 #368、第2段階 #369、第4段階 #370とその他Open PR全30件を確認。第5段階は専用の現行PRが未確定で、#367にStage5研究メモが存在する。#370のベースを勝手に変更しない。第1/第2段階PRとこの第4段階の2変更ファイルの直接重複はないが、#370の`tests/test_stage64_saved_connection.py`は親#367に起源を持つため、親変更後のテスト契約・CIは常に再確認する。第3段階と第1/2段階の`app.py`等の競合は第4段階では修復・上書きしない。
+
+### 既存の将来予測証拠と実行ゲート
+
+- 既存固定計画：中央・地方を**別計画**として2026-10-21〜2026-11-19、各区分100採点R以上・10開催日以上。既存3能力方式と研究6系統は変更しない。コホート開始前に確定しており、事後最適化しない。
+- 既存`docs/research/stage64-results/preregistration_readback.json`のJRA artifact **12192643073**（SHA-256 `c3c23a823df5cd71b5b23fc28ec6cecb01ee8b7f7d132372375a9be46710ddb3`）とNAR artifact **12192483600**（`fc60fb0da5466a18857b3d17a623c5537d45ed8644ba44ad7603694299ca1bd4`）を照合。GitHub実run **39266625982**は2026-10-19 14:11:17 UTC完了・成功、両artifactは今回のGitHub一覧読戻しでも`expired=false`・ダイジェスト一致。**計画の事前登録が確認できたことと、将来レースの予測を発走前に固定できたことは別**。
+- `scripts/arvexq_stage64_auto_capture.py`は新経路を作らず既存mainの成功済み`ARVEXQ Full Prefetch` artifactだけを受け取り、**発走30分より前**の対象レースを選定し、JRA/NAR別の固定計画を照合して研究用出力を一度だけ書き出す。ただし出力時の状態は`awaiting-upload-witness`であり、GitHub側の完了時刻を含む予測artifactの第三者読戻しが終わらなければ独立した発走前予測と扱えない。
+- 既存`.github/workflows/arvexq-stage64-shadow.yml`は`workflow_dispatch`の`freeze`・`capture-results`・`score`を用意しているが、接続済みGitHubツールからこの手動workflowを発火する書込みアクションは提供されていない。**代替経路を無断追加せず**、今回は実行しない。必要な実際の入力artifact ID、完全な対象コホート、予測保存artifactと発走前完了証拠は未確立。
+- 旧研究`summary.json`の`independentlyVerifiedPreoff=false`、事前登録台帳の`futureForecastRaces=0`/`independentScoredRaces=0`を維持。研究計画のコードハッシュ照合は元台帳に記録されているが、今回新たな未来レース予測を生成・採点・本番適用した証拠は**0件**。
+- 第1段階の本人照合・過去走欠損（2026-10-16地方33頭の保存時点直接履歴0など）と、第2段階の現行D1→API→UI・結果の不足が、第4段階の入力/結果正当性に影響する。ただし両段階のコードには触らない。元527R研究入力ZIP未取得・9R履歴診断差も未解消。
+
+**今回の検証種別**：GitHubのPR/変更対象照合、実run結果と登録artifact一覧の読戻し、既存Stage64プロトコル・CLI・workflowと台帳の静的照合。研究文書への追記のみ。単体テスト新規実行なし、#370 exact HEADのCI実行記録なし、本番動作・独立発走前的中検証なし。状態は**調査済み／第4段階未完了**。main統合・デプロイ・本番D1書込み・予想数式・出馬表取得・印・おすすめ買い目の変更なし。
+
