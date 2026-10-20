@@ -86,6 +86,7 @@ jobs:
         run: |
           python -m unittest tests.test_full_snapshot_codec
           node scripts/arvexq_full_snapshot_smoke.mjs
+          node scripts/arvexq_worker_resource_guard_smoke.mjs
           node --check workers/api_v3_facts.mjs
           node scripts/arvexq_v3_worker_facts_smoke.mjs
           node scripts/arvexq_api_chunk_export_smoke.mjs

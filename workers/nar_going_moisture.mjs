@@ -30,14 +30,28 @@ export async function overlayNarGoingMoisture(detail, fetchImpl = fetch) {
   }
 }
 
-export async function enhanceNarGoingResponse(response, fetchImpl = fetch) {
+export async function enhanceNarGoingResponse(response, fetchImpl = fetch, raceId = null) {
+  // The overlay belongs only to Banei. A known non-Banei race must not
+  // clone/parse/stringify its full career archive on every factual read.
+  if (raceId != null) {
+    const id = parseRaceId(raceId);
+    if (!id || !BANEI.has(id.track)) return response;
+  }
   if (!response.ok) return response;
   let body;
   try { body = await response.clone().json(); } catch { return response; }
   if (!body || typeof body !== 'object') return response;
-  if (body.detail) body.detail = await overlayNarGoingMoisture(body.detail, fetchImpl);
-  if (Array.isArray(body.details)) {
-    body.details = await Promise.all(body.details.map((d) => overlayNarGoingMoisture(d, fetchImpl)));
+  let changed = false;
+  if (body.detail) {
+    const previous = body.detail;
+    body.detail = await overlayNarGoingMoisture(previous, fetchImpl);
+    changed ||= body.detail !== previous;
   }
+  if (Array.isArray(body.details)) {
+    const previous = body.details;
+    body.details = await Promise.all(previous.map((d) => overlayNarGoingMoisture(d, fetchImpl)));
+    changed ||= body.details.some((d, i) => d !== previous[i]);
+  }
+  if (!changed) return response;
   return new Response(JSON.stringify(body), {status: response.status, headers: response.headers});
 }

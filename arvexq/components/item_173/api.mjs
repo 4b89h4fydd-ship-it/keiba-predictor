@@ -25,7 +25,7 @@ export default {async fetch(request,env,ctx){
     });
   }
   if(request.method==='GET'&&url.pathname.startsWith('/api/race/')){
-      try{const restored=await readCompressedRace(env,decodeURIComponent(url.pathname.slice('/api/race/'.length)));if(restored)return enhanceNarGoingResponse(restored)}
+      try{const id=decodeURIComponent(url.pathname.slice('/api/race/'.length));const restored=await readCompressedRace(env,id);if(restored)return enhanceNarGoingResponse(restored,fetch,id)}
     catch(e){return Response.json({ok:false,error:'saved detail restore unavailable'},{status:503,headers:{'access-control-allow-origin':'*'}})}
   }
   if(new URL(request.url).pathname==='/api/admin/snapshot-export')return snapshotExport(request,env);
