@@ -17,7 +17,7 @@ def canonical_race_id(circuit, race_date, track, race_number):
     venue=str(track or "").strip()
     if not venue or not re.fullmatch(r"[\w一-龥々ヶー・]+",venue):return None
     try:n=int(race_number)
-    except (TypeError,ValueError):return None
+    except (TypeError,ValueError,OverflowError):return None
     if str(race_number).strip() not in (str(n),f"{n:02d}"):return None
     if not 1<=n<=12:return None
     return f"{c}-{parsed.isoformat()}-{venue}-{n:02d}"
