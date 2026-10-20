@@ -27,7 +27,7 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
   (oddsRows||[]).forEach(function(z){var q=edgeOddsRow(z),no=n(q.horseNumber,0);if(no){liveBy[no]=q;if(order.indexOf(no)<0)order.push(no)}});
   if(order.length){
     order.sort(function(a,b){return a-b});
-    out.horses=order.map(function(no){return mergeHorseReflection(oldBy[no],newBy[no],liveBy[no])})
+    out.horses=order.map(function(no){return mergeHorseReflection(oldBy[no],newBy[no],liveBy[no],out.date||base.date||incoming.date||summary.date)})
   }else if(Array.isArray(incoming.horses)&&incoming.fieldSize!=null&&Number(incoming.fieldSize)===0){out.horses=[]}
   if((oddsRows||[]).length){
     out.oddsUpdatedAt=String((oddsRows||[]).reduce(function(mx,z){return Math.max(mx,n(z&&((z.updatedAt!=null)?z.updatedAt:z.updated_at),0))},0)||out.oddsUpdatedAt||'');

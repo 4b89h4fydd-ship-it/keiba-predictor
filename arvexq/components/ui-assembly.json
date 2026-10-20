@@ -1,6 +1,6 @@
 {
   "generated": "arvexq/ui/static/app.js",
-  "sha256": "8e14eac5a150919a9cde68b67fdb967323addb8f6fde0b0ec5a34c1482a52168",
+  "sha256": "3936be6f930429265cddeb6c12511efe76253c5ea620957fcee994d4fb1c1918",
   "parts": [
     {
       "path": "arvexq/components/shared_ui/0000_preamble.js",
@@ -984,7 +984,7 @@
       "path": "arvexq/components/shared_ui/0163_mergeHorseReflection.js",
       "owner": null,
       "symbol": "mergeHorseReflection",
-      "sha256": "6d00bedc60e1c7f19fcf67f1925b389e6f56e6d9ce7fa8e4af45cdecf2754e1b"
+      "sha256": "ccb727591a7f3d3818c33dd63631cd6e1af7f5817125bd9c4d0f9f1c5176c945"
     },
     {
       "path": "arvexq/components/shared_ui/0164_mergePublishedResult.js",
@@ -996,7 +996,7 @@
       "path": "arvexq/components/shared_ui/0165_mergeRaceReflection.js",
       "owner": null,
       "symbol": "mergeRaceReflection",
-      "sha256": "a42d1eab128bac33758d80794d538ef9c176f0d9c26fc81cee5475958303cf6f"
+      "sha256": "c59c657ba6ccfa3ce170e18dc7090158671606a0f2d09e9fe6444d5a865a4fb8"
     },
     {
       "path": "arvexq/components/shared_ui/0166_raceDisplayCoreReady.js",
