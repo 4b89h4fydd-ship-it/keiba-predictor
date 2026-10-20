@@ -67,8 +67,13 @@ jobs:
               if b'filename=' not in header:
                   continue
               modules.append((header,body.rstrip(b'\r\n-')))
-          assert modules,'API_JAVASCRIPT_MODULES_NOT_FOUND'
-          source=b'\n'.join(body for header,body in sorted(modules,key=lambda item:item[0]))
+          if modules:
+              source=b'\n'.join(body for header,body in sorted(modules,key=lambda item:item[0]))
+          else:
+              # Cloudflare can return a single-module JS body rather than multipart.
+              # Keep the exact SHA guard below; never accept an API error as source.
+              assert len(raw)>1000 and (b'export default' in raw or b'addEventListener(' in raw), 'API_JAVASCRIPT_MODULES_NOT_FOUND'
+              source=raw
           expected=os.environ['EXPECTED_SOURCE_SHA256'];assert re.fullmatch('[a-f0-9]{64}',expected)
           actual=hashlib.sha256(source).hexdigest()
           assert actual==expected,f'API_SOURCE_CHANGED_REFUSING_OVERWRITE actual={actual} expected={expected}'
