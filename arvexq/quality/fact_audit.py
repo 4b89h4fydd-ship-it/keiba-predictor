@@ -4,6 +4,7 @@ from collections import Counter
 import math
 
 from arvexq.ingest.runner_identity_compare import compare_same_day_runner
+from arvexq.ingest.circuit_transfer import race_circuit
 from arvexq.ingest.race_identity import observed_detail_identity_error
 from arvexq.ingest.source_provenance import observed_provenance
 from arvexq.ingest.career_transport import recover_horse
@@ -31,7 +32,7 @@ def observed(field, value):
 def audit_day(bundle):
     counts, race_gaps, horse_gaps = Counter(), Counter(), Counter()
     errors = []
-    first_race_by_name = {}
+    first_race_by_circuit = {}
     for detail in bundle.get("details") or []:
         mismatch = observed_detail_identity_error(detail)
         if mismatch:
@@ -39,6 +40,9 @@ def audit_day(bundle):
         counts["races"] += 1
         for field in RACE_FIELDS:
             race_gaps[field] += not observed(field, detail.get(field))
+        # Names are only collision evidence within the same observed circuit.
+        # Unknown circuits stay separate; never assume they are JRA or NAR.
+        first_race_by_name = first_race_by_circuit.setdefault(race_circuit(detail), {})
         seen = set()
         for horse in detail.get("horses") or []:
             if not isinstance(horse, dict):
