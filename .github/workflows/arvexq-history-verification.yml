@@ -38,7 +38,104 @@ jobs:
           assert verdict['ok'],verdict
           print('D1_DEADHEAT_READONLY_VERIFIED',json.dumps(verdict))
           PY
+      - name: Compare saved NAR original careers with D1 full details, read-only
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import base64, gzip, hashlib, json, re, urllib.parse
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+          from pathlib import Path
+          from arvexq.pipeline.persisted_inputs import _career_rows, _runners, _history_observations_retained
+          from scripts.arvexq_fetch_d1_bundle import get_json, detail_from_response
+          
+          day="2026-10-16"
+          root=Path("arvexq/ui/static/saved-snapshots")
+          manifest=json.loads((root/(day+".json")).read_text(encoding="utf-8"))
+          if manifest.get("version")!="arvexq-saved-snapshots-v1" or manifest.get("date")!=day:
+              raise ValueError("saved snapshot manifest mismatch")
+          originals={}
+          for rid,ref in sorted(manifest["races"].items()):
+              sha=str(ref.get("sha256") or "")
+              if not re.fullmatch(r"[0-9a-f]{64}",sha) or ref.get("file")!=sha+".json":
+                  raise ValueError("saved snapshot reference invalid "+rid)
+              envelope=json.loads((root/ref["file"]).read_text(encoding="utf-8"))
+              if envelope.get("sha256")!=sha or envelope.get("version")!="arvexq-saved-snapshot-v1":
+                  raise ValueError("saved snapshot envelope invalid "+rid)
+              raw=gzip.decompress(base64.b64decode(envelope["gzipBase64"],validate=True))
+              if len(raw)!=ref.get("bytes") or hashlib.sha256(raw).hexdigest()!=sha:
+                  raise ValueError("saved snapshot hash/length invalid "+rid)
+              detail=json.loads(raw)
+              if detail.get("id")!=rid or detail.get("date")!=day or not isinstance(detail.get("horses"),list):
+                  raise ValueError("saved snapshot race identity invalid "+rid)
+              originals[rid]=detail
+          
+          base="https://kraiz-api.4b89h4fydd.workers.dev"
+          day_response=get_json(base+"/api/day?date="+day+"&details=0",timeout=30,retries=3)
+          day_ids={str(v.get("id")) for v in day_response.get("races",[]) if isinstance(v,dict)}
+          def fetch(rid):
+              url=base+"/api/race/"+urllib.parse.quote(rid,safe="")+"?audit=readonly"
+              try:
+                  response=get_json(url,timeout=35,retries=3)
+                  if response.get("ok") is False:raise RuntimeError("API returned not-ok")
+                  detail=detail_from_response(response,rid)
+                  if not detail or detail.get("date")!=day:raise ValueError("D1 detail missing or wrong date")
+                  return rid,detail,""
+              except Exception as exc:
+                  return rid,None,type(exc).__name__  # never expose URLs or response bodies
+          
+          d1={}
+          errors={}
+          with ThreadPoolExecutor(max_workers=3) as ex:
+              for future in as_completed({ex.submit(fetch,rid):rid for rid in originals}):
+                  rid,detail,error=future.result()
+                  if detail is None:errors[rid]=error
+                  else:d1[rid]=detail
+          
+          horses=[]
+          for rid,original in originals.items():
+              before=_runners(original)
+              after=_runners(d1[rid]) if rid in d1 else {}
+              for no,h in before.items():
+                  matched=after.get(no)
+                  identity_valid=bool(matched and re.sub(r"\s+","",str(matched.get("name") or ""))==re.sub(r"\s+","",str(h.get("name") or "")))
+                  before_error=after_error=""
+                  try: before_runs=_career_rows(h,day)
+                  except Exception as exc: before_runs=[];before_error=type(exc).__name__
+                  try: after_runs=_career_rows(matched,day) if identity_valid else []
+                  except Exception as exc: after_runs=[];after_error=type(exc).__name__
+                  lost=bool(before_runs and identity_valid and
+                            (len(before_runs)>len(after_runs) or not _history_observations_retained(before_runs,after_runs)))
+                  horses.append({"raceId":rid,"horseNumber":no,"name":h.get("name"),
+                      "originalPastRuns":len(before_runs),"d1PastRuns":len(after_runs) if identity_valid else None,
+                      "originalDebutFlag":bool(h.get("debutNoHistory")),
+                      "d1DebutFlag":bool(matched.get("debutNoHistory")) if identity_valid else None,
+                      "identityMatched":identity_valid,"d1Available":rid in d1,
+                      "originalArchiveError":before_error,"d1ArchiveError":after_error,
+                      "lostSourceRuns":lost})
+          summary={"version":"arvexq-existing-saved-snapshot-d1-readonly-audit-v1",
+              "date":day,"writes":0,"archivedRaces":len(originals),
+              "d1DaySummaryRaces":len(day_ids),"archivedRacesMissingD1DaySummary":sorted(set(originals)-day_ids),
+              "d1DetailsRead":len(d1),"d1DetailReadErrors":errors,"archivedHorses":len(horses),
+              "originalHorsesWithHistory":sum(x["originalPastRuns"]>0 for x in horses),
+              "originalHorsesWithoutHistory":sum(x["originalPastRuns"]==0 for x in horses),
+              "d1HorsesWithHistory":sum((x["d1PastRuns"] or 0)>0 for x in horses),
+              "d1HorsesWithoutHistory":sum(x["d1PastRuns"]==0 for x in horses if x["d1PastRuns"] is not None),
+              "originalDebutFlags":sum(x["originalDebutFlag"] for x in horses),
+              "d1DebutFlags":sum(x["d1DebutFlag"] is True for x in horses),
+              "identityMismatch":sum(not x["identityMatched"] for x in horses if x["d1Available"]),
+              "lostSavedObservations":sum(x["lostSourceRuns"] for x in horses),
+              "sourceArchiveErrors":sum(bool(x["originalArchiveError"]) for x in horses),
+              "d1ArchiveErrors":sum(bool(x["d1ArchiveError"]) for x in horses)}
+          output={"summary":summary,"horses":horses}
+          Path("career-d1-snapshot-2026-10-16.json").write_text(json.dumps(output,ensure_ascii=False,indent=2),encoding="utf-8")
+          print("ARVEXQ_NAR_ORIGINAL_TO_D1_READONLY_AUDIT",json.dumps(summary,ensure_ascii=False),flush=True)
+          for x in horses:
+              if x["lostSourceRuns"] or not x["identityMatched"] or x["originalArchiveError"] or x["d1ArchiveError"]:
+                  print("ARVEXQ_HISTORY_DISCREPANCY",json.dumps(x,ensure_ascii=False),flush=True)
+          PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: d1-deadheat-verification
-          path: deadheat-verdict.json
+          path: |
+            deadheat-verdict.json
+            career-d1-snapshot-2026-10-16.json
