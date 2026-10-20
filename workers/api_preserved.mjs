@@ -327,10 +327,23 @@ var worker_default = {
         const details = Array.isArray(body.details) ? body.details : Array.isArray(body.raceDetails) ? body.raceDetails : [];
         const oddsCurrent = Array.isArray(body.odds_current) ? body.odds_current : Array.isArray(body.oddsCurrent) ? body.oddsCurrent : [];
         const oddsHistory = Array.isArray(body.odds_history) ? body.odds_history : Array.isArray(body.oddsHistory) ? body.oddsHistory : [];
+        // Reject retired Banei records at the existing authenticated sync entry,
+        // including alternate race_id / raceId / id payload conventions.
+        const activeRace = row => {
+          const id = String(first(row, "race_id", "raceId", "id") || "");
+          const track = String(first(row, "track", "venue") || "");
+          return track !== "帯広" && track !== "帯広ば"
+            && !/^(?:nar-)?\d{4}-\d{2}-\d{2}-(?:帯広|帯広ば)-\d{2}$/.test(id)
+            && !id.includes("-帯広-") && !id.includes("-帯広ば-");
+        };
+        const activeSummaries = summaries.filter(activeRace);
+        const activeDetails = details.filter(activeRace);
+        const activeCurrent = oddsCurrent.filter(activeRace);
+        const activeHistory = oddsHistory.filter(activeRace);
         const meta = body.meta && typeof body.meta === "object" ? body.meta : {};
         const syncedAt = nowSec();
         const summaryStatements = [];
-        for (const row of summaries) {
+        for (const row of activeSummaries) {
           const raceId = String(
             first(
               row,
@@ -478,7 +491,7 @@ var worker_default = {
           );
         }
         const detailStatements = [];
-        for (const row of details) {
+        for (const row of activeDetails) {
           const payloadObject = row.payload ?? row.detail ?? row;
           const raceId = String(
             first(
@@ -558,7 +571,7 @@ var worker_default = {
           );
         }
         const currentStatements = [];
-        for (const row of oddsCurrent) {
+        for (const row of activeCurrent) {
           const raceId = String(
             first(
               row,
@@ -663,7 +676,7 @@ var worker_default = {
           );
         }
         const historyStatements = [];
-        for (const row of oddsHistory) {
+        for (const row of activeHistory) {
           const raceId = String(
             first(
               row,
