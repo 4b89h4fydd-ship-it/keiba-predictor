@@ -11,6 +11,7 @@ name: ARVEXQ Validation
       - arvexq/**
       - scripts/**
       - tests/**
+      - docs/independence/requirements.json
       - .github/workflows/arvexq-*.yml
       - requirements.txt
   push:
@@ -22,6 +23,7 @@ name: ARVEXQ Validation
       - arvexq/**
       - scripts/**
       - tests/**
+      - docs/independence/requirements.json
       - .github/workflows/arvexq-*.yml
       - requirements.txt
 
