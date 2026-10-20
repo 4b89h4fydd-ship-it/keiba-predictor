@@ -90,3 +90,28 @@ def test_never_invokes_provider_after_start():
             sample(),now=datetime(2026,11,18,15,41,tzinfo=JST),
             run=lambda *a,**k:calls.append(True))
     assert not calls
+
+
+def test_rescue_main_reuses_application_sources_without_optional_feeds(monkeypatch):
+    import io
+    import sys
+    import types
+    import arvexq.databanks.legacy_bridge as bridge
+    import arvexq.ingest.fallback_enrichment as enrichment
+    import scripts.arvexq_preoff_history_rescue as rescue
+    application = types.ModuleType('app')
+    application.existing_provider = object()
+    calls = []
+    monkeypatch.setitem(sys.modules, 'app', application)
+    monkeypatch.setenv('ARVEXQ_AUTHORIZED_HISTORY_FEEDS_JSON', '[{"name":"shadow"}]')
+    monkeypatch.setattr(bridge, 'register_legacy_sources', lambda namespace: calls.append(namespace))
+    monkeypatch.setattr(enrichment, 'enrich_race_missing_sync', lambda detail, **kwargs: enriched())
+    monkeypatch.setattr(rescue, 'datetime', SimpleNamespace(now=lambda tz: NOW))
+    monkeypatch.setattr(sys, 'stdin', io.StringIO(json.dumps(sample())))
+    output = io.StringIO()
+    monkeypatch.setattr(sys, 'stdout', output)
+    rescue.main()
+    assert calls == [vars(application)]
+    restored = json.loads(output.getvalue())
+    assert restored['id'] == sample()['id']
+    assert len(restored['horses'][0]['allPastRuns']) == 2

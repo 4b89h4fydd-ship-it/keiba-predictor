@@ -1,0 +1,157 @@
+name: ARVEXQ Route Verification (read-only)
+"on":
+  push:
+    branches: [fix/existing-route-restoration-20261020]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: arvexq-route-verification-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ARVEXQ_DATA_CORE: '0'
+      ARVEXQ_BOOTSTRAP_WARM: '0'
+      RACEDB_AUTO_UPDATE: '0'
+      PYTHONPATH: .:tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: python -m pip install -r requirements.txt pytest==9.1.1 httpx PyYAML
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Full existing Python suite
+        run: python -m pytest tests -q
+      - name: Prepare current assets for existing Node tests
+        run: python build_static.py
+      - name: Existing Node validation entrypoints
+        run: |
+          python - <<'PY'
+          import re,subprocess,yaml
+          from pathlib import Path
+          config=yaml.safe_load(Path('.github/workflows/arvexq-validation.yml').read_text())
+          commands=[]
+          for job in config['jobs'].values():
+              for step in job['steps']:
+                  for line in str(step.get('run','')).splitlines():
+                      if re.fullmatch(r'node (?:scripts|tests)/[\w/.-]+\.(?:js|mjs|cjs)',line.strip()):
+                          commands.append(line.strip().split())
+          assert commands
+          for command in commands:
+              subprocess.run(command,check=True,timeout=60)
+          print('NODE_VALIDATION_EXECUTED',len(commands))
+          PY
+      - name: Exact candidate assembly
+        run: |
+          python scripts/arvexq_components_audit.py
+          python scripts/arvexq_all_route_audit.py --out route-audit.json
+          python build_static.py
+          python -m http.server 8788 --directory dist > /tmp/arvexq-route-http.log 2>&1 &
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8788/version.json && break; sleep 1; done
+      - name: Real mobile browser candidate checks
+        env:
+          ARVEXQ_BASE_URL: http://127.0.0.1:8788
+        run: |
+          node scripts/arvexq_saved_forecast_revision_browser_smoke.js
+          node scripts/arvexq_detail_resilience_smoke.js
+          node scripts/arvexq_bet_mobile_layout_smoke.js
+          node scripts/arvexq_pull_to_refresh_smoke.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: route-candidate-${{ github.sha }}
+          path: |
+            route-audit.json
+            playwright-report/
+          if-no-files-found: warn
+  readback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -r requirements.txt
+      - name: Read complete existing D1 race details (GET only)
+        run: |
+          mkdir -p readback
+          for day in 2026-10-18 2026-10-20; do
+            python scripts/arvexq_fetch_d1_bundle.py \
+              --api-base https://kraiz-api.4b89h4fydd.workers.dev \
+              --date "$day" --out "readback/$day.json" \
+              --report "readback/$day-readback.json" --workers 3
+          done
+      - name: Existing D1 versus display verification (GET only)
+        run: |
+          python scripts/arvexq_fact_data_audit.py --days 3 --end-date 2026-10-20 \
+            --verify-display --report readback/factual-display-audit.json
+      - name: Diagnose failed existing read URLs without changing data
+        if: failure()
+        run: |
+          python - <<'PY'
+          import json,urllib.request,urllib.error,urllib.parse
+          from pathlib import Path
+          report=Path('readback/factual-display-audit.json')
+          if not report.exists():raise SystemExit(0)
+          value=json.loads(report.read_text());ids=[]
+          for day in value.get('days',[]):
+              for error in (day.get('readErrors',[])+day.get('displayParityErrors',[])):
+                  rid=error.get('raceId')
+                  if rid and rid not in ids:ids.append(rid)
+          rows=[]
+          for rid in ids[:4]:
+              for suffix in ('','?view=display'):
+                  url='https://kraiz-api.4b89h4fydd.workers.dev/api/race/'+urllib.parse.quote(rid,safe='')+suffix
+                  row={'raceId':rid,'view':suffix or 'full'}
+                  try:
+                      request=urllib.request.Request(url,headers={'accept':'application/json','user-agent':'ARVEXQ-FactReadback/1'})
+                      with urllib.request.urlopen(request,timeout=20) as response:
+                          body=response.read()
+                          row.update(status=response.status,bytes=len(body),headers={k:v for k,v in response.headers.items() if k.lower() in ('content-length','content-type','retry-after','cf-ray')})
+                          try:
+                              parsed=json.loads(body.decode())
+                              row.update(jsonValid=True,keys=list(parsed)[:12])
+                          except (ValueError,UnicodeError) as exc:row.update(jsonValid=False,error=str(exc))
+                  except urllib.error.HTTPError as exc:
+                      row.update(status=exc.code,body=exc.read(500).decode(errors='replace'),headers={k:v for k,v in exc.headers.items() if k.lower() in ('content-length','content-type','retry-after','cf-ray')})
+                  except Exception as exc:row['error']=repr(exc)
+                  rows.append(row)
+          Path('readback/transport-probe.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2))
+          print('EXISTING_ROUTE_TRANSPORT_PROBE='+json.dumps(rows,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: route-readback-${{ github.sha }}
+          path: readback/
+          if-no-files-found: warn
+  production-browser:
+    needs: readback
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+        day: ['2026-10-16', '2026-10-18']
+    env:
+      ARVEXQ_BASE_URL: https://kraizweb1.4b89h4fydd.workers.dev
+      ARVEXQ_BROWSER: ${{ matrix.browser }}
+      ARVEXQ_AUDIT_DATE: ${{ matrix.day }}
+      ARVEXQ_READ_ONLY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Existing production roster, receipts, odds and outage checks
+        run: node scripts/arvexq_recovery_production_smoke.js

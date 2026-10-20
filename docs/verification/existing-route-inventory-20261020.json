@@ -1,0 +1,1076 @@
+{
+  "base": "e3485d7d0a738116cb55493475a8c72d7a54b0c8",
+  "scope": "Tracked application, components, workers, scripts and workflow source; static inventory, not dynamic network proof",
+  "sourceFileCount": 1403,
+  "fastapiRoutes": [
+    {
+      "file": "arvexq/components/item_110/implementation.py",
+      "line": 192,
+      "method": "POST",
+      "path": "/api/v1/racedb/analysis/{race_id}",
+      "handler": "racedb_save_analysis"
+    },
+    {
+      "file": "arvexq/components/item_141/implementation.py",
+      "line": 383,
+      "method": "GET",
+      "path": "/api/v1/site-bootstrap",
+      "handler": "site_bootstrap"
+    },
+    {
+      "file": "arvexq/components/item_151/implementation.py",
+      "line": 8,
+      "method": "POST",
+      "path": "/api/v1/central-ingest",
+      "handler": "central_ingest"
+    },
+    {
+      "file": "arvexq/components/item_151/implementation.py",
+      "line": 56,
+      "method": "POST",
+      "path": "/api/v1/data-core/refresh/{race_id}",
+      "handler": "data_core_refresh"
+    },
+    {
+      "file": "arvexq/components/item_151/implementation.py",
+      "line": 60,
+      "method": "POST",
+      "path": "/api/v1/data-core/refresh-day",
+      "handler": "data_core_refresh_day"
+    },
+    {
+      "file": "arvexq/components/item_151/implementation.py",
+      "line": 138,
+      "method": "POST",
+      "path": "/api/v1/prewarm-track",
+      "handler": "prewarm_track"
+    },
+    {
+      "file": "arvexq/components/item_154/implementation.py",
+      "line": 59,
+      "method": "POST",
+      "path": "/api/v1/history-backfill-one",
+      "handler": "history_backfill_one"
+    },
+    {
+      "file": "arvexq/components/item_154/implementation.py",
+      "line": 72,
+      "method": "GET",
+      "path": "/api/v1/history-status",
+      "handler": "history_status"
+    },
+    {
+      "file": "arvexq/components/item_159/implementation.py",
+      "line": 106,
+      "method": "POST",
+      "path": "/api/v1/prepare-race/{race_id}",
+      "handler": "prepare_race"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/api/v1/central-status",
+      "handler": "central_status"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 24,
+      "method": "GET",
+      "path": "/api/v1/central-schema",
+      "handler": "central_schema"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 35,
+      "method": "GET",
+      "path": "/api/v1/collector-status",
+      "handler": "collector_status"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 48,
+      "method": "GET",
+      "path": "/api/v1/data-core/status",
+      "handler": "data_core_status"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 54,
+      "method": "GET",
+      "path": "/api/v1/site-bootstrap-status",
+      "handler": "site_bootstrap_status"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 62,
+      "method": "GET",
+      "path": "/api/v1/local-refresh-status",
+      "handler": "local_refresh_status"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 74,
+      "method": "GET",
+      "path": "/api/v1/central-refresh-status",
+      "handler": "central_refresh_status"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 81,
+      "method": "GET",
+      "path": "/api/v1/prewarm-status",
+      "handler": "prewarm_status"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 89,
+      "method": "GET",
+      "path": "/api/v1/odds-auto-status",
+      "handler": "odds_auto_status"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 93,
+      "method": "GET",
+      "path": "/api/v1/enrichment-status/{race_id}",
+      "handler": "enrichment_status"
+    },
+    {
+      "file": "arvexq/components/item_162/implementation.py",
+      "line": 97,
+      "method": "GET",
+      "path": "/api/v1/enrichment-schema",
+      "handler": "enrichment_schema"
+    },
+    {
+      "file": "arvexq/components/item_163/implementation.py",
+      "line": 110,
+      "method": "GET",
+      "path": "/api/v1/races",
+      "handler": "races"
+    },
+    {
+      "file": "arvexq/components/item_163/implementation.py",
+      "line": 155,
+      "method": "GET",
+      "path": "/api/v1/track-pack",
+      "handler": "track_pack"
+    },
+    {
+      "file": "arvexq/components/item_164/implementation.py",
+      "line": 162,
+      "method": "GET",
+      "path": "/api/v1/race/{race_id}",
+      "handler": "race_detail"
+    },
+    {
+      "file": "arvexq/components/item_164/implementation.py",
+      "line": 194,
+      "method": "GET",
+      "path": "/api/v1/racedb-race/{race_id}",
+      "handler": "racedb_race"
+    },
+    {
+      "file": "arvexq/components/item_165/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/api/v1/race/{race_id}/horse/{horse_no}",
+      "handler": "horse_snapshot"
+    },
+    {
+      "file": "arvexq/components/item_166/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/api/v1/past-pack/{race_id}",
+      "handler": "past_pack"
+    },
+    {
+      "file": "arvexq/components/item_167/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/api/v1/race/{race_id}/collect",
+      "handler": "collect_race_info"
+    },
+    {
+      "file": "arvexq/components/item_167/implementation.py",
+      "line": 86,
+      "method": "GET",
+      "path": "/api/v1/odds-refresh/{race_id}",
+      "handler": "odds_refresh"
+    },
+    {
+      "file": "arvexq/components/item_168/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/api/v1/payouts/{race_id}",
+      "handler": "payout_refresh"
+    },
+    {
+      "file": "arvexq/components/item_169/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/api/v1/environment-pack",
+      "handler": "environment_pack"
+    },
+    {
+      "file": "arvexq/components/item_170/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/api/v1/volatility-pack",
+      "handler": "volatility_pack"
+    },
+    {
+      "file": "arvexq/components/item_170/implementation.py",
+      "line": 49,
+      "method": "POST",
+      "path": "/api/v1/race/{race_id}/diagnosis-refresh",
+      "handler": "diagnosis_refresh"
+    },
+    {
+      "file": "arvexq/components/item_170/implementation.py",
+      "line": 72,
+      "method": "GET",
+      "path": "/api/v1/racedb/analysis/{race_id}",
+      "handler": "racedb_get_analysis"
+    },
+    {
+      "file": "arvexq/components/item_171/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/api/v1/storage-status",
+      "handler": "storage_status"
+    },
+    {
+      "file": "arvexq/components/item_171/implementation.py",
+      "line": 19,
+      "method": "GET",
+      "path": "/api/v1/race/{race_id}/version",
+      "handler": "snapshot_version"
+    },
+    {
+      "file": "arvexq/components/item_171/implementation.py",
+      "line": 28,
+      "method": "GET",
+      "path": "/api/v1/racedb-status",
+      "handler": "racedb_status"
+    },
+    {
+      "file": "arvexq/components/item_172/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/health",
+      "handler": "health"
+    },
+    {
+      "file": "arvexq/components/item_172/implementation.py",
+      "line": 26,
+      "method": "GET",
+      "path": "/api/v1/runtime-status",
+      "handler": "runtime_status"
+    },
+    {
+      "file": "arvexq/components/item_176/implementation.py",
+      "line": 10,
+      "method": "GET",
+      "path": "/",
+      "handler": "home"
+    },
+    {
+      "file": "arvexq/components/item_176/implementation.py",
+      "line": 10,
+      "method": "GET",
+      "path": "/venue",
+      "handler": "home"
+    },
+    {
+      "file": "arvexq/components/item_176/implementation.py",
+      "line": 10,
+      "method": "GET",
+      "path": "/race",
+      "handler": "home"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/arvexq-icon-v175-{size}.png",
+      "handler": "arvexq_icon"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 13,
+      "method": "GET",
+      "path": "/arvexq-touch-v175.png",
+      "handler": "arvexq_touch_icon"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 21,
+      "method": "GET",
+      "path": "/manifest-v86.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 21,
+      "method": "GET",
+      "path": "/manifest-arvexq-v175.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 21,
+      "method": "GET",
+      "path": "/manifest-arvexq-v173.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 21,
+      "method": "GET",
+      "path": "/manifest-arvexq-v130.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 21,
+      "method": "GET",
+      "path": "/manifest-arvexq-v88.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 30,
+      "method": "GET",
+      "path": "/sw-v324-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 30,
+      "method": "GET",
+      "path": "/sw-v321-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 30,
+      "method": "GET",
+      "path": "/sw-v320-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 30,
+      "method": "GET",
+      "path": "/sw-v319-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 30,
+      "method": "GET",
+      "path": "/sw-v318-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "file": "arvexq/components/item_193/implementation.py",
+      "line": 30,
+      "method": "GET",
+      "path": "/sw.js",
+      "handler": "service_worker"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/arvexq-racing-detail.webp",
+      "handler": "cinematic_detail_photo"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 12,
+      "method": "GET",
+      "path": "/arvexq-racing-hero.webp",
+      "handler": "cinematic_hero"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 16,
+      "method": "GET",
+      "path": "/arvexq-logo.webp",
+      "handler": "arvexq_logo"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 20,
+      "method": "GET",
+      "path": "/hero-horse.webp",
+      "handler": "hero_horse"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 24,
+      "method": "GET",
+      "path": "/pace-preview.webp",
+      "handler": "pace_preview"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v324.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v321.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v320.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v319.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v318.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v317.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v316.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v315.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v314.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v313.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v312.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v308.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v307.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v306.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v305.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v303.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v130.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v91.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-arvexq-v88.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_195/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/styles-v86.css",
+      "handler": "styles"
+    },
+    {
+      "file": "arvexq/components/item_197/implementation.py",
+      "line": 8,
+      "method": "GET",
+      "path": "/api/v1/model-audit",
+      "handler": "model_audit"
+    },
+    {
+      "file": "arvexq/components/item_197/implementation.py",
+      "line": 53,
+      "method": "GET",
+      "path": "/api/v1/model-learning",
+      "handler": "model_learning"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v324.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v324.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v321.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v321.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v320.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v320.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v319.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v319.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v318.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v318.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v317.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v317.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v316.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v316.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v315.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v315.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v314.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v314.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v313.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v313.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v312.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v312.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v308.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v308.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v307.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v307.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v306.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v306.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v305.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v305.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v303.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/arvexq-app-v303.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v133.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v132.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v131.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v130.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v91.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v88.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v87.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_198/implementation.py",
+      "line": 47,
+      "method": "GET",
+      "path": "/app-v86-fix1.js",
+      "handler": "appjs"
+    },
+    {
+      "file": "arvexq/components/item_200/implementation.py",
+      "line": 36,
+      "method": "GET",
+      "path": "/build",
+      "handler": "build_info"
+    },
+    {
+      "file": "arvexq/components/item_200/implementation.py",
+      "line": 49,
+      "method": "GET",
+      "path": "/version.json",
+      "handler": "version_json"
+    }
+  ],
+  "reviewReferences": [
+    {
+      "file": "app.py",
+      "line": 26,
+      "text": "from arvexq.databanks.legacy_bridge import register_legacy_sources"
+    },
+    {
+      "file": "app.py",
+      "line": 1139,
+      "text": "register_legacy_sources(globals())"
+    },
+    {
+      "file": "arvexq/components/item_173/api.mjs",
+      "line": 12,
+      "text": "if(url.pathname.startsWith('/api/forecast-revisions/')||url.pathname.startsWith('/api/admin/forecast-revisions')){"
+    },
+    {
+      "file": "arvexq/components/item_185/ui/prediction_frame.js",
+      "line": 5,
+      "text": "var live=root.ARVEXQProductionPrediction&&root.ARVEXQProductionPrediction.current();"
+    },
+    {
+      "file": "arvexq/components/item_186/ui/mark_frame.js",
+      "line": 9,
+      "text": "var live=root.ARVEXQProductionPrediction&&root.ARVEXQProductionPrediction.current();"
+    },
+    {
+      "file": "arvexq/components/shared_ui/0131_predict.js",
+      "line": 3,
+      "text": "return window.ARVEXQProductionPrediction.build(r);"
+    },
+    {
+      "file": "arvexq/databanks/legacy_bridge.py",
+      "line": 409,
+      "text": "def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:"
+    },
+    {
+      "file": "arvexq/ingest/fallback_enrichment.py",
+      "line": 511,
+      "text": "def enrich_race_missing_sync("
+    },
+    {
+      "file": "arvexq/ui/static/app.js",
+      "line": 778,
+      "text": "return window.ARVEXQProductionPrediction.build(r);"
+    },
+    {
+      "file": "arvexq/ui/static/forecast/mark_frame.js",
+      "line": 9,
+      "text": "var live=root.ARVEXQProductionPrediction&&root.ARVEXQProductionPrediction.current();"
+    },
+    {
+      "file": "arvexq/ui/static/forecast/prediction.js",
+      "line": 55,
+      "text": "root.ARVEXQProductionPrediction=Object.freeze({build:build,current:current});"
+    },
+    {
+      "file": "arvexq/ui/static/forecast/prediction_frame.js",
+      "line": 5,
+      "text": "var live=root.ARVEXQProductionPrediction&&root.ARVEXQProductionPrediction.current();"
+    },
+    {
+      "file": "scripts/arvexq_bet_role_guide_smoke.js",
+      "line": 48,
+      "text": "assert.match(postMark,/ARVEXQProductionPrediction.build\\(r\\)/,'only disabled production interface is active');"
+    },
+    {
+      "file": "scripts/arvexq_forecast_revision_api_smoke.mjs",
+      "line": 7,
+      "text": "for(const path of ['/api/forecast-revisions/test','/api/admin/forecast-revisions','/api/admin/forecast-revisions/migrate']){"
+    },
+    {
+      "file": "scripts/arvexq_learned_scenario_evaluation.py",
+      "line": 15,
+      "text": "from arvexq.prediction.new_forecast import build_forecast"
+    },
+    {
+      "file": "scripts/arvexq_original_ticket_live_view_smoke.cjs",
+      "line": 65,
+      "text": "const preserved=context.ARVEXQProductionPrediction.build(originalRace);"
+    },
+    {
+      "file": "scripts/arvexq_original_ticket_live_view_smoke.cjs",
+      "line": 66,
+      "text": "assert.equal(context.ARVEXQProductionPrediction.current().source,'saved-preoff');"
+    },
+    {
+      "file": "scripts/arvexq_original_ticket_live_view_smoke.cjs",
+      "line": 68,
+      "text": "assert.equal(context.ARVEXQProductionPrediction.current().unavailable,false);"
+    },
+    {
+      "file": "scripts/arvexq_original_ticket_live_view_smoke.cjs",
+      "line": 83,
+      "text": "assert.equal(context.ARVEXQProductionPrediction.build(nestedRace).rows[0].predMark,'◎');"
+    },
+    {
+      "file": "scripts/arvexq_original_ticket_live_view_smoke.cjs",
+      "line": 93,
+      "text": "const row=context.ARVEXQProductionPrediction.build(bad).rows[0];"
+    },
+    {
+      "file": "scripts/arvexq_prefetch.py",
+      "line": 31,
+      "text": "from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync"
+    },
+    {
+      "file": "scripts/arvexq_prefetch.py",
+      "line": 234,
+      "text": "return enrich_race_missing_sync("
+    },
+    {
+      "file": "scripts/arvexq_preoff_history_rescue.py",
+      "line": 79,
+      "text": "from arvexq.databanks.legacy_bridge import register_legacy_sources"
+    },
+    {
+      "file": "scripts/arvexq_preoff_history_rescue.py",
+      "line": 80,
+      "text": "from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync"
+    },
+    {
+      "file": "scripts/arvexq_preoff_history_rescue.py",
+      "line": 83,
+      "text": "register_legacy_sources(vars(app))"
+    },
+    {
+      "file": "scripts/arvexq_preoff_history_rescue.py",
+      "line": 84,
+      "text": "candidate = enrich_race_missing_sync(original, history_limit=100,"
+    },
+    {
+      "file": "scripts/arvexq_production_boundaries_smoke.cjs",
+      "line": 20,
+      "text": "const prediction=context.ARVEXQProductionPrediction.build(input);"
+    },
+    {
+      "file": "scripts/arvexq_production_boundaries_smoke.cjs",
+      "line": 26,
+      "text": "const current=context.ARVEXQProductionPrediction.current();"
+    },
+    {
+      "file": "scripts/arvexq_saved_forecast_revision_browser_smoke.js",
+      "line": 17,
+      "text": "if(route.request().url().includes('/api/forecast-revisions/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,raceId:detail.id,forecastRevisions:detail.forecastRevisions,currentForecastRevisionId:detail.currentForecastRevisionId})});"
+    },
+    {
+      "file": "scripts/test_support/production_ui.cjs",
+      "line": 8,
+      "text": "const before=JSON.stringify(race),prediction=window.ARVEXQProductionPrediction.build(race);"
+    },
+    {
+      "file": ".github/workflows/arvexq-prefetch.yml",
+      "line": 801,
+      "text": "missing_new_forecast=[]"
+    },
+    {
+      "file": ".github/workflows/arvexq-prefetch.yml",
+      "line": 813,
+      "text": "missing_new_forecast.append((rid,'model-version-not-persisted'))"
+    },
+    {
+      "file": ".github/workflows/arvexq-prefetch.yml",
+      "line": 819,
+      "text": "missing_new_forecast.append((rid,'new-marks-not-persisted'))"
+    },
+    {
+      "file": ".github/workflows/arvexq-prefetch.yml",
+      "line": 822,
+      "text": "missing_new_forecast.append((rid,'retired-forecast-still-active'))"
+    },
+    {
+      "file": ".github/workflows/arvexq-prefetch.yml",
+      "line": 881,
+      "text": "if missing_new_forecast:"
+    },
+    {
+      "file": ".github/workflows/arvexq-prefetch.yml",
+      "line": 882,
+      "text": "print('D1_NEW_FORECAST_NOT_PERSISTED',missing_new_forecast[:25])"
+    },
+    {
+      "file": ".github/workflows/arvexq-prefetch.yml",
+      "line": 883,
+      "text": "raise SystemExit('D1 replacement forecast not published: '+str(len(missing_new_forecast))+' mismatches')"
+    },
+    {
+      "file": ".github/workflows/arvexq-revision-backup.yml",
+      "line": 38,
+      "text": "name: verified-d1-before-forecast-revisions-${{ github.run_id }}"
+    },
+    {
+      "file": ".github/workflows/arvexq-revision-production-preflight.yml",
+      "line": 59,
+      "text": "name: cloudflare-before-forecast-revisions"
+    },
+    {
+      "file": ".github/workflows/arvexq-validation.yml",
+      "line": 375,
+      "text": "from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync"
+    },
+    {
+      "file": ".github/workflows/arvexq-validation.yml",
+      "line": 386,
+      "text": "enriched=enrich_race_missing_sync(copy.deepcopy(base),bank_registry=reg,history_limit=5,max_parallel_horses=2)"
+    }
+  ],
+  "liveProductionVerified": false
+}

@@ -1,0 +1,40 @@
+{
+  "main": {
+    "sourceFiles": 657,
+    "registeredRoutes": 127,
+    "components": 0,
+    "workflows": 58,
+    "pythonDefinitions": 2247,
+    "pythonMissingInternalImports": 9,
+    "missingWorkflowSourceFiles": 1,
+    "missingJsRelativeImports": 0,
+    "frontendTransportSites": 24,
+    "workerRouteLines": 41,
+    "syntaxErrors": 0,
+    "productionVerified": false,
+    "everyDynamicBranchVerified": false
+  },
+  "proposal": {
+    "sourceFiles": 1643,
+    "registeredRoutes": 127,
+    "components": 200,
+    "workflows": 58,
+    "pythonDefinitions": 2884,
+    "pythonMissingInternalImports": 9,
+    "missingWorkflowSourceFiles": 0,
+    "missingJsRelativeImports": 0,
+    "frontendTransportSites": 48,
+    "workerRouteLines": 35,
+    "syntaxErrors": 0,
+    "productionVerified": false,
+    "everyDynamicBranchVerified": false
+  },
+  "evidenceSha256": "61b4fd352ca3ab52dfd74ae9e14fcb6689aa3f0119542fc79c27157e3b424721",
+  "evidenceBytes": 475250,
+  "pythonTests": 1352,
+  "nodeTests": 47,
+  "ASGIDispatch": 123,
+  "actualStaticGET": 88,
+  "workflowSyntaxChecks": 319,
+  "allProductionPathsVerified": false
+}

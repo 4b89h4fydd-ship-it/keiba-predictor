@@ -1,6 +1,6 @@
 {
   "generated": "arvexq/ui/static/app.js",
-  "sha256": "3936be6f930429265cddeb6c12511efe76253c5ea620957fcee994d4fb1c1918",
+  "sha256": "d23cbbbc91cc0841d04947eb7dfd3b417eabe754dcfb528e20bbdd44f03e3eef",
   "parts": [
     {
       "path": "arvexq/components/shared_ui/0000_preamble.js",
@@ -1164,7 +1164,7 @@
       "path": "arvexq/components/shared_ui/0193_fetchEdgeRace.js",
       "owner": null,
       "symbol": "fetchEdgeRace",
-      "sha256": "dfb237c1b8f85a71201b5f770681f65534086e653f19cffae7afa8ab9a1cab80"
+      "sha256": "862f05c577e79cb8ad7035b47404fec00e1622a2e495a32e393affbc2910dcf9"
     },
     {
       "path": "arvexq/components/shared_ui/0194_warmTrackSnapshots.js",

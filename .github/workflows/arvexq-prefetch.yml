@@ -420,28 +420,6 @@ jobs:
             --output .arvexq-data/research-models.json \
             --report research-training-model-report.json
 
-      - name: Capture optional preoff research candidates (not production picks)
-        timeout-minutes: 5
-        continue-on-error: true
-        if: success()
-        shell: bash
-        run: |
-          set -euo pipefail
-          MODEL_PATH=".arvexq-data/research-models.json"
-          if [ ! -s "$MODEL_PATH" ]; then
-            echo "RESEARCH_CAPTURE_SKIPPED: earlier trained circuit models unavailable"
-            exit 0
-          fi
-          if [ ! -s prefetch-payload.json ]; then
-            echo "RESEARCH_CAPTURE_SKIPPED: no prepared race payload"
-            exit 0
-          fi
-          python scripts/arvexq_capture_batch_research.py \
-            --bundle prefetch-payload.json \
-            --models "$MODEL_PATH" \
-            --receipt-dir research-preoff-receipts \
-            --report research-preoff-capture-report.json
-
       - name: Report research capture operational evidence
         timeout-minutes: 1
         continue-on-error: true
@@ -602,20 +580,6 @@ jobs:
             fi
           )
           git worktree remove /tmp/arvexq-calibration-publish
-
-      - name: Replace legacy active forecasts in D1 publication payload
-        run: |
-          MODEL_PATH=".arvexq-data/research-models.json"
-          if [ ! -s "$MODEL_PATH" ]; then
-            echo '{}' > "$MODEL_PATH"
-          fi
-          PYTHONPATH=. python scripts/arvexq_apply_learned_overlay.py \
-            --bundle prefetch-payload.json \
-            --models "$MODEL_PATH" \
-            --out prefetch-learned.json \
-            --report learned-overlay-report.json
-          mv prefetch-learned.json prefetch-payload.json
-          echo "LEGACY_ACTIVE_FORECASTS_DISABLED"
 
       - name: Freeze morning selected and special predictions for all races
         run: |
@@ -798,28 +762,11 @@ jobs:
           missing_summary_ids=sorted(expected_ids-actual_ids)
           missing_cards=[(rid,'missing D1 summary') for rid in missing_summary_ids]
           missing_analysis=[]
-          missing_new_forecast=[]
           for rid,old in expected.items():
               d=returned.get(rid)
               if not d:
                   missing_cards.append((rid,'missing D1 record'))
                   continue
-              # A successful D1 API response alone does not prove the
-              # replacement model/marks were published. Validate the
-              # actual D1 readback against the exact prepared race.
-              new_version=str(old.get('predictionModelVersion') or '')
-              if new_version.startswith('arvexq-learned-whole-career'):
-                  if str(d.get('predictionModelVersion') or '')!=new_version:
-                      missing_new_forecast.append((rid,'model-version-not-persisted'))
-                  expected_marks={int(h.get('horseNumber') or 0):str((h.get('integratedEvaluation') or {}).get('mark') or '')
-                                  for h in old.get('horses') or [] if isinstance(h,dict)}
-                  saved_marks={int(h.get('horseNumber') or 0):str((h.get('integratedEvaluation') or {}).get('mark') or '')
-                               for h in d.get('horses') or [] if isinstance(h,dict)}
-                  if expected_marks!=saved_marks:
-                      missing_new_forecast.append((rid,'new-marks-not-persisted'))
-              elif old.get('legacyPresentationDisabled'):
-                  if d.get('predictionStatus')!='new-model-unavailable':
-                      missing_new_forecast.append((rid,'retired-forecast-still-active'))
               horses=[h for h in (d.get('horses') or []) if isinstance(h,dict)]
               good=[h for h in horses if str(h.get('name') or '').strip() and int(h.get('horseNumber') or 0)>0]
               prepared_horses=[h for h in (old.get('horses') or []) if isinstance(h,dict) and int(h.get('horseNumber') or 0)>0]
@@ -878,9 +825,6 @@ jobs:
           print('D1_PREFETCH_DETAIL_VERIFY expected=',len(expected),'received=',len(returned),'missing_cards=',len(missing_cards),'missing_analysis=',len(missing_analysis))
           if missing_analysis:
               print('::warning::D1 analysis unavailable for '+str(len(missing_analysis))+' races: '+str(missing_analysis[:20]))
-          if missing_new_forecast:
-              print('D1_NEW_FORECAST_NOT_PERSISTED',missing_new_forecast[:25])
-              raise SystemExit('D1 replacement forecast not published: '+str(len(missing_new_forecast))+' mismatches')
           if missing_cards:
               print('D1_MISSING_CARDS',missing_cards[:25])
               raise SystemExit('D1 racecard delivery incomplete: '+str(len(missing_cards))+' races')
