@@ -54,7 +54,7 @@ def _data_core_day_status(date:str,circuit:str="")->dict:
 
 @app.post("/api/v1/data-core/refresh/{race_id}")
 def data_core_refresh(race_id:str,force:int=Query(1)):
-    return _data_core_refresh_race(race_id,bool(force))
+    if race_id.startswith("nar-") and any(f"-{name}-" in race_id for name in ("帯広", "帯広ば")):\n        raise HTTPException(status_code=404,detail="race venue excluded")\n    return _data_core_refresh_race(race_id,bool(force))
 
 @app.post("/api/v1/data-core/refresh-day")
 def data_core_refresh_day(date:str=Query(""),circuit:str=Query("")):
@@ -140,7 +140,7 @@ def prewarm_track(date: str = Query(...), circuit: str = Query(...), track: str 
     try:rows=(nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False))
     except Exception:rows=[]
     all_targets=sorted(
-        [r for r in rows if str(r.get("track") or "")==str(track) and r.get("id")],
+        [r for r in rows if str(r.get("track") or "")==str(track) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば")],
         key=lambda r:abs(int(r.get("raceNumber") or 0)-int(race_no))
     )
     near=all_targets[:3];rest=all_targets[3:]
