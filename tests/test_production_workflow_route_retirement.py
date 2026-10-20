@@ -42,3 +42,20 @@ def test_retired_model_audit_runner_is_archived_verbatim():
     # different ranker or deleted as if they were race data.
     for name in ('arvexq_foundation_priority_audit.py','arvexq_signal_dedup_audit.py','arvexq_signal_dedup_multiday_audit.py'):
         assert (ROOT/'scripts'/name).is_file()
+
+
+
+def test_obihiro_excluded_at_existing_public_race_and_track_entries():
+    """Retired Banei races must not enter normal lists or detail read paths."""
+    race=(ROOT/'arvexq/components/item_163/implementation.py').read_text()
+    worker=(ROOT/'arvexq/components/item_173/api.mjs').read_text()
+    preserved=(ROOT/'workers/api_preserved.mjs').read_text()
+    bootstrap=(ROOT/'arvexq/components/item_141/implementation.py').read_text()
+    refresh=(ROOT/'arvexq/components/item_151/implementation.py').read_text()
+    assert 'if track in ("帯広", "帯広ば"):' in race
+    assert "r.track NOT IN ('帯広','帯広ば')" in race
+    assert "track NOT IN ('帯広','帯広ば')" in preserved
+    assert "race venue excluded" in worker
+    assert 'str(r.get("track") or "") in ("帯広", "帯広ば")' in bootstrap
+    assert "race venue excluded" in refresh
+    assert 'str(r.get("track") or "") not in ("帯広", "帯広ば")' in refresh
