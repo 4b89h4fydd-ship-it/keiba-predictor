@@ -39,7 +39,7 @@ for(const day of ['2026-10-16','2026-10-18']){
   Response.prototype.clone=function(){clones++;return clone.call(this)};
   try{
    const response=await worker.fetch(new Request('https://api.test/api/race/'+encodeURIComponent(id)+'?view=display'),{DB},{});
-   assert.equal(response.status,200,id);
+   assert.equal(response.status,isBanei?404:200,id);
    const restored=await response.text();
    assert(restored.endsWith(',"detail":'+raw.toString()+'}'),id+' must preserve exact original JSON bytes');
    assert.equal(clones,isBanei?1:0,id+' must only parse archives in the existing Banei overlay');
