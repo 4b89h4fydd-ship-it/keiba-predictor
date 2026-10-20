@@ -6,6 +6,7 @@ window.ARVEXQ_HONMEI_POLICY="unified-win-axis-v1";
 var CENTRAL=["札幌","函館","福島","新潟","東京","中山","中京","京都","阪神","小倉"];
 var LOCAL=["門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"];
 var COURSE={
+"帯広":{lap:200,straight:200,dir:1,shape:"straight",turn:"直線",firstTurn:999},
 "門別":{lap:1600,straight:330,dir:-1,shape:"wide",turn:"右",firstTurn:350},
 "盛岡":{lap:1600,straight:300,dir:1,shape:"wide",turn:"左",firstTurn:300},
 "水沢":{lap:1200,straight:245,dir:-1,shape:"compact",turn:"右",firstTurn:250},
