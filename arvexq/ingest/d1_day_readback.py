@@ -9,7 +9,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from arvexq.ingest.full_snapshot_codec import unpack_detail
+from arvexq.ingest.full_snapshot_codec import KEY as PACKED_DETAIL_KEY, unpack_detail
 from arvexq.ingest.career_transport import recover_horse
 from arvexq.ingest.full_career import merge_career
 
@@ -124,14 +124,20 @@ def read_day(base, day, *, fetch=get_json, workers=3, verify_display=False):
             else:
                 try:
                     display_body = fetch(url + "?view=display")
-                    display_detail = restore_race_response(display_body, race_id, day)
-                    differences = _display_parity(detail, display_detail, day,
-                                                  updated, display_body.get("detail_updated_at"))
-                    if differences:
-                        mismatches.append({"raceId": race_id, "reason": "display_fact_mismatch",
-                                           "fields": differences,
-                                           "fullUpdatedAt": updated,
-                                           "displayUpdatedAt": display_body.get("detail_updated_at")})
+                    raw_display = display_body.get("detail")
+                    if isinstance(raw_display, dict) and PACKED_DETAIL_KEY in raw_display:
+                        # The PWA consumes body.detail directly; it does not
+                        # unpack Python's internal compressed archive format.
+                        mismatches.append({"raceId": race_id, "reason": "display_packed_payload_unrenderable"})
+                    else:
+                        display_detail = restore_race_response(display_body, race_id, day)
+                        differences = _display_parity(detail, display_detail, day,
+                                                      updated, display_body.get("detail_updated_at"))
+                        if differences:
+                            mismatches.append({"raceId": race_id, "reason": "display_fact_mismatch",
+                                               "fields": differences,
+                                               "fullUpdatedAt": updated,
+                                               "displayUpdatedAt": display_body.get("detail_updated_at")})
                 except Exception as exc:
                     mismatches.append({"raceId": race_id, "reason": "display_read_failed",
                                        "error": type(exc).__name__ + ": " + str(exc)[:240]})
