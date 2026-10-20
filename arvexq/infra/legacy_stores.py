@@ -281,7 +281,7 @@ SOURCE = (
     '\n'
     '    def recent_races(self, horse_name: str, cutoff: str, limit: int = 5, expected_age: int = 0, expected_sex: str = "") -> list[dict]:\n'
     '        age = int(expected_age or 0)\n'
-    '        birth_year = int(cutoff[:4]) - age + 1 if age>0 and str(cutoff[:4]).isdigit() else 0\n'
+    '        birth_year = int(cutoff[:4]) - age if age>0 and str(cutoff[:4]).isdigit() else 0\n'
     '        sex = str(expected_sex or "").strip()\n'
     "        from arvexq.ingest.nar_official_metadata import migrate_race_metadata\n"
     "        migrate_race_metadata(self.conn)\n"
