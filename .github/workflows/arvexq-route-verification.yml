@@ -100,6 +100,7 @@ jobs:
           path: readback/
           if-no-files-found: warn
   production-browser:
+    needs: readback
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
