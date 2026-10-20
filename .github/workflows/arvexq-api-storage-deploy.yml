@@ -68,9 +68,14 @@ jobs:
               if separator not in part:
                   continue
               header,body=part.split(separator,1)
-              if b'filename=' not in header:
+              # Cloudflare multipart modules may use `name="module.js"`
+              # without any `filename=` attribute. Exclude metadata JSON.
+              lower=header.lower()
+              if not (b'filename=' in lower or b'javascript' in lower or b'.js' in lower):
                   continue
               modules.append((header,body.rstrip(b'\r\n-')))
+          if not modules and raw.startswith(b'--'):
+              print('API_SOURCE_PART_HEADERS',[part.split(b'\r\n\r\n',1)[0][:220].decode('latin1','replace') for part in raw.split(boundary) if b'\r\n\r\n' in part][:12])
           if modules:
               source=b'\n'.join(body for header,body in sorted(modules,key=lambda item:item[0]))
           else:
