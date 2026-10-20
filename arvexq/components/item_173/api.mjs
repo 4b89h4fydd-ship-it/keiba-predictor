@@ -3,7 +3,6 @@ import original from '../../../workers/api_preserved.mjs';
 import {storageAudit} from '../../../workers/api_storage_audit.mjs';
 import {snapshotExport} from '../../../workers/api_snapshot_export.mjs';
 import {readCompressedRace,storageEnvironment,compressStoredSnapshot} from '../../../workers/api_full_snapshot.mjs';
-import {enhanceNarGoingResponse} from '../../../workers/nar_going_moisture.mjs';
 import {readV3Facts} from '../../../workers/api_v3_facts.mjs';
 export default {async fetch(request,env,ctx){
   const url=new URL(request.url);
@@ -37,7 +36,7 @@ export default {async fetch(request,env,ctx){
     });
   }
   if(request.method==='GET'&&url.pathname.startsWith('/api/race/')){
-      try{const id=decodeURIComponent(url.pathname.slice('/api/race/'.length));const restored=await readCompressedRace(env,id);if(restored)return enhanceNarGoingResponse(restored,fetch,id)}
+      try{const id=decodeURIComponent(url.pathname.slice('/api/race/'.length));const restored=await readCompressedRace(env,id);if(restored)return restored}
     catch(e){return Response.json({ok:false,error:'saved detail restore unavailable'},{status:503,headers:{'access-control-allow-origin':'*'}})}
   }
   if(url.pathname==='/api/admin/snapshot-export')return snapshotExport(request,env);
