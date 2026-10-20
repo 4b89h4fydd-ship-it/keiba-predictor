@@ -136,6 +136,10 @@ def test_actual_stage64_nar_gap_archive_vs_saved_snapshot():
     saved_debut_flags_without_runs = 0
     missing_saved_with_fetch_attempts = 0
     missing_saved_status = Counter()
+    missing_saved_provider_sets = Counter()
+    missing_saved_failed_provider_sets = Counter()
+    missing_saved_reported_starts = Counter()
+    missing_saved_cutoff = Counter()
     for row in observations:
         rid, no, name = row["raceId"], row["horseNumber"], row["name"]
         stored_horses = {h["horseNumber"]: h
@@ -166,6 +170,14 @@ def test_actual_stage64_nar_gap_archive_vs_saved_snapshot():
             if isinstance(audit, dict):
                 missing_saved_status[str(audit.get("status"))] += 1
                 missing_saved_with_fetch_attempts += audit.get("fetchAttempted") is True
+                # This is a receipt of attempted fetches, NOT evidence that
+                # a provider returned or accepted a horse's actual prior run.
+                missing_saved_provider_sets[tuple(audit.get("providersAttempted") or [])] += 1
+                missing_saved_failed_provider_sets[
+                    (tuple(audit.get("failedProviders") or []),
+                     tuple(audit.get("failedEvidenceProviders") or []))] += 1
+                missing_saved_reported_starts[str(audit.get("reportedStarts"))] += 1
+                missing_saved_cutoff[str(audit.get("requestedAtRaceDate"))] += 1
         else:
             observed_saved.append((rid, no, name, len(saved_recent), len(saved_all)))
     # The Stage64 official-source gap is NOT equivalent to an absent
@@ -178,7 +190,15 @@ def test_actual_stage64_nar_gap_archive_vs_saved_snapshot():
     # it must never be promoted to official confirmed debut evidence.
     assert saved_debut_flags_without_runs == 18
     assert missing_saved_status == {"missing": 33}
-    assert 0 <= missing_saved_with_fetch_attempts <= 33
+    # The saved audit proves 33 attempted requests, but not 33 successful
+    # verified histories or 33 first-time runners. Preserve the distinction.
+    assert missing_saved_with_fetch_attempts == 33
+    assert missing_saved_provider_sets == {
+        ("nar_official", "nar_official_past_results", "netkeiba_verified_career"): 33
+    }
+    assert missing_saved_failed_provider_sets == {((), ()): 33}
+    assert missing_saved_reported_starts == {"None": 33}
+    assert missing_saved_cutoff == {"2026-10-16": 33}
 
 
 def test_debut_no_history_flag_does_not_certify_a_debut():
