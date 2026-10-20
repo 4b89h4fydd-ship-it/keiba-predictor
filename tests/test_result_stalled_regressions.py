@@ -325,9 +325,9 @@ class LiveD1BaseReadbackTests(unittest.TestCase):
             with self.subTest(data=data.get("detail", {}).get("id")):
                 response = json.dumps(data, ensure_ascii=False).encode("utf-8")
                 with patch.object(live.urllib.request, "urlopen",
-                                  return_value=io.BytesIO(response)), \\
-                     patch("builtins.print") as recorded:
-                    actual = live.fetch_d1_detail(rid, "2026-10-20")
+                                  return_value=io.BytesIO(response)):
+                    with patch("builtins.print") as recorded:
+                        actual = live.fetch_d1_detail(rid, "2026-10-20")
                 self.assertIsNone(actual)
                 self.assertTrue(any("D1_BASE_FETCH_ERROR" in str(call)
                                     for call in recorded.call_args_list))
