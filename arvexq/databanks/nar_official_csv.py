@@ -211,22 +211,38 @@ class NarOfficialArchive:
         dob = date(horse.get("birthDate") or horse.get("birthday"))
         if not cutoff:
             return {}
+        # Japanese racing ages increase on January 1: a 2026 three-year-old
+        # must have been born in 2023, including when the source ran in 2025.
+        age_match = re.search(r"\d+", str(horse.get("age") or ""))
+        age = int(age_match.group()) if age_match else 0
+        expected_birth_year = int(cutoff[:4]) - age if age > 0 else None
+        if dob and expected_birth_year is not None and int(dob[:4]) != expected_birth_year:
+            # Conflicting target identity fields cannot authorize any same-name join.
+            return {}
         records = [(run, birth) for run, birth in self.by_name.get(normalize(horse.get("name")), [])
                    if run["date"] < cutoff]
         known_birthdates = {birth for _, birth in records if birth}
-        if not dob and len(known_birthdates) > 1:
-            # Same-name horses with different recorded births cannot be
-            # identified reliably without the target horse birth date.
-            return {}
+        if dob:
+            valid_birthdates = {dob}
+        elif expected_birth_year is not None:
+            valid_birthdates = {birth for birth in known_birthdates
+                                if int(birth[:4]) == expected_birth_year}
+            if (known_birthdates and not valid_birthdates) or len(valid_birthdates) > 1:
+                # Distinct same-name horses of the same racing age still need
+                # the exact DOB; never arbitrarily select either one.
+                return {}
+        else:
+            valid_birthdates = known_birthdates
+            if len(valid_birthdates) > 1:
+                # Without a birth date or racing age, the candidate is ambiguous.
+                return {}
+        conflicting_namesake = any(birth not in valid_birthdates for birth in known_birthdates)
         matched = [run.copy() for run, birth in records
-                   if run["date"] < cutoff and not (dob and birth and dob != birth)]
-        # A target with known DOB must not absorb undated-birth records when
-        # the archive also contains a distinct same-name horse.
-        if dob and any(birth and birth != dob for _, birth in records):
-            matched = [run.copy() for run, birth in records
-                       if run["date"] < cutoff and birth == dob]
-        # A caller may request five rows for the UI, but the analytical career
-        # evidence must not silently shrink to five starts.
+                   if (not birth or birth in valid_birthdates)
+                   and (birth or not conflicting_namesake)]
+        # Missing-DOB archive rows cannot be assigned when a known conflicting
+        # namesake exists. Otherwise preserve older historical observations.
+        # The UI may request five rows, but full observed history is retained.
         return {"recentRaces": matched[:5], "allPastRuns": matched} if matched else {}
 
 

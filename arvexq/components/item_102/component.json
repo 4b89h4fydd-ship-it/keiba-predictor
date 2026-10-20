@@ -1,0 +1,28 @@
+{
+  "id": 102,
+  "name": "下がり率",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/prediction/pure_diagnostics.py"
+  ],
+  "shared_dependencies": [
+    "Only read existing styleRates/runningStyleRates; rate calculation and forecast integration not implemented"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/pace_prediction.py",
+      "canonical": "arvexq/components/item_102/observed_rate.py",
+      "module": "arvexq.components.item_102.observed_rate"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

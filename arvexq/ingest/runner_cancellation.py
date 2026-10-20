@@ -1,9 +1,5 @@
-"""Observed cancellation/absence labels only; no inference from missing data."""
-
-
-def extract(value: str | None) -> str:
-    if value and "取消" in value:
-        return "出走取消"
-    if value and "欠場" in value:
-        return "欠場"
-    return ""
+"""Compatibility import; implementation is owned by responsibility 036."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_036.runner_cancellation")
+_sys.modules[__name__] = _implementation

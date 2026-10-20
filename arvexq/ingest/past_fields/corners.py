@@ -1,9 +1,5 @@
-"""50: Ordered actual corner positions from individual list items."""
-import re
-
-def extract_corners(cell):
-    positions=[]
-    for li in cell.find_all("li"):
-        text=li.get_text(" ",strip=True)
-        if re.fullmatch(r"\d{1,2}",text):positions.append(int(text))
-    return positions
+"""Compatibility import; implementation is owned by responsibility 050."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_050.corners")
+_sys.modules[__name__] = _implementation

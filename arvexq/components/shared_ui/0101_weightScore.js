@@ -1,0 +1,1 @@
+function weightScore(h){var rs=(h.recentRaces||[]).slice(0,3),vals=[],i;for(i=0;i<rs.length;i++){var w=saneCarriedWeightValue(rs[i].carriedWeight,rs[i].bodyWeight);if(w)vals.push(w)}var cur=saneCarriedWeightValue(h&&h.carriedWeight,currentBodyWeight(h));if(!vals.length||!cur)return.5;var avg=mean(vals),diff=cur-avg;return clamp(.55-diff*.035,.28,.72)}

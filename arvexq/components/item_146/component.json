@@ -1,0 +1,30 @@
+{
+  "id": 146,
+  "name": "結果キャッシュ",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/v3/transport/cache.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.storage.cache_keys",
+    "arvexq.v3.data.quality",
+    "existing shared cache storage and policy"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/v3/transport/cache.py",
+      "canonical": "arvexq/components/item_146/cache_key.py",
+      "module": "arvexq.components.item_146.cache_key"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

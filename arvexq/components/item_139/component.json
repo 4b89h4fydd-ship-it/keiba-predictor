@@ -1,0 +1,24 @@
+{
+  "id": 139,
+  "name": "D1保存",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "workers/api_full_snapshot.mjs"
+  ],
+  "shared_dependencies": [
+    "Existing Worker entry routes, relative imports, binding names, and deployment configuration preserved; requires CI verification"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_139/api_full_snapshot.mjs"
+  ],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

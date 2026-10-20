@@ -5,6 +5,7 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - 'arvexq/components/**'
       - 'arvexq/ingest/nar_environment_parser.py'
       - 'arvexq/ingest/nar_weather.py'
       - 'arvexq/ingest/nar_going.py'

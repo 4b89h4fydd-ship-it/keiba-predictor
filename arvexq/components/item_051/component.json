@@ -1,0 +1,24 @@
+{
+  "id": 51,
+  "name": "過去走上がり情報",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/past_fields/last3f.py",
+    "arvexq/ingest/past_fields/jra.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/past_fields/last3f.py",
+      "canonical": "arvexq/components/item_051/last3f.py",
+      "module": "arvexq.components.item_051.last3f"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

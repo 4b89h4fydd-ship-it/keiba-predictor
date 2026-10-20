@@ -45,7 +45,17 @@ def audit(manifest):
         if stage==7 and all(evidence.get(k) for k in required+('commit_sha',)):
             complete+=1
     if manifest.get('completed')!=complete:errors.append('declared completed count differs from verified evidence')
-    return {'total':len(items),'complete':complete,'remaining':200-complete,'errors':errors,
+    # Counts are descriptive only: no module or CI success promotes an item.
+    state_counts = {status: sum(item.get('status') == status for item in items)
+                    for status in STATES + (WAITING_FOR_PREDICTION,)}
+    # Simplified reporting buckets must always reconcile to the fixed manifest.
+    partial = sum(state_counts[s] for s in STATES[1:7])
+    not_started = state_counts['未着手'] + state_counts[WAITING_FOR_PREDICTION]
+    verification_needed = len(items) - complete - partial - not_started
+    return {'total':len(items),'complete':complete,'remaining':200-complete,
+            'partial':partial,'not_started_or_waiting':not_started,
+            'unclassified':verification_needed,'state_counts':state_counts,
+            'errors':errors,
             'verdict':'完了' if complete==200 and not errors else '未完了'}
 
 def main():

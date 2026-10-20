@@ -1,7 +1,4 @@
-"""Retired assistant-generated marks. Pre-off user originals are read elsewhere."""
-
-def generate_marks(prediction):
-    return []
+"""Sanitize historical mark fields without generating new model marks."""
 
 def clear_marks(detail):
     if not isinstance(detail, dict):

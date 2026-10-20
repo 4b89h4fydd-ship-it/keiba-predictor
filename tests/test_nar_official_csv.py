@@ -143,5 +143,88 @@ class OfficialArchiveObservedFields(unittest.TestCase):
             self.assertEqual(len(result['allPastRuns']), 1)
             self.assertEqual(result['allPastRuns'][0]['date'], '2026-09-30')
 
+
+    def test_legacy_nar_sqlite_name_query_against_birth_verified_official_rows(self):
+        import app
+        from arvexq.databanks.legacy_bridge import audit_nar_store_history
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/"saved.sqlite"
+            store=app.NarStore(path)
+            try:
+                starts=[
+                    ("20260901", "20180310", 1, 2),
+                    ("20260910", "20200101", 1, 3),
+                    ("20260915", "20180310", 1, 0),
+                ]
+                archive=Path(directory)/"original.zip"
+                with zipfile.ZipFile(archive,"w") as zipped:
+                    zipped.writestr("racelist.csv",encode([race(day) for day,*_ in starts]))
+                    official=[]
+                    for day,birth,no,finish in starts:
+                        row=horse("同名馬",no,birth,day)
+                        row[31]=str(finish)
+                        official.append(row)
+                    zipped.writestr("horselist.csv",encode(official))
+                index=NarOfficialArchive([archive])
+                for day,birth,no,finish in starts:
+                    day_iso=f"{day[:4]}-{day[4:6]}-{day[6:]}"
+                    store.conn.execute(
+                        "INSERT INTO races(track,date,race_no) VALUES (?,?,?)",
+                        ("大井",day_iso,4))
+                    store.conn.execute(
+                        "INSERT INTO entries(track,date,race_no,horse_no,name,age,sex,finish)"
+                        " VALUES (?,?,?,?,?,?,?,?)",
+                        ("大井",day_iso,4,no,"同名馬",8 if birth=="20180310" else 6,"牡",finish))
+                store.conn.execute("INSERT INTO races(track,date,race_no) VALUES (?,?,?)",
+                                   ("大井","2026-09-20",4))
+                store.conn.execute(
+                    "INSERT INTO entries(track,date,race_no,horse_no,name,age,sex,finish)"
+                    " VALUES (?,?,?,?,?,?,?,?)",
+                    ("大井","2026-09-20",4,1,"同名馬",8,"牡",2))
+                store.conn.commit()
+                # A stored entry without its parent race must not be counted
+                # as retrievable: production recent_races requires INNER JOIN.
+                store.conn.execute(
+                    "INSERT INTO entries(track,date,race_no,horse_no,name,age,sex,finish)"
+                    " VALUES (?,?,?,?,?,?,?,?)",
+                    ("大井","2026-09-22",5,2,"同名馬",8,"牡",1))
+                store.conn.commit()
+                before=tuple(store.conn.execute(
+                    "SELECT COUNT(*),SUM(finish) FROM entries").fetchone())
+                old=store.recent_races("同名馬","2026-10-01",20)
+                self.assertEqual(len(old),3,
+                                 "production SQL includes the different-birth namesake")
+                report=audit_nar_store_history(
+                    store.conn,{"name":"同名馬","birthDate":"2018-03-10"},
+                    "2026-10-01",index)
+                self.assertEqual(report["dbNameDateRowsBeforeJoin"],5)
+                self.assertEqual(report["dbRowsBeforeLegacyFinishFilter"],4)
+                self.assertEqual(report["excludedByLegacyRaceJoin"],1)
+                self.assertEqual(report["legacyPositiveRows"],3)
+                self.assertEqual(report["officialBirthCompatiblePositiveRows"],1)
+                self.assertEqual(report["conflictingBirthPositiveRows"],1)
+                self.assertEqual(report["unverifiedPositiveRows"],1)
+                self.assertEqual(report["excludedByLegacyFinishFilter"],1)
+                self.assertEqual(report["reasonCounts"],{
+                    "excluded-by-legacy-race-join":1,
+                    "conflicting-official-birth-date":1,
+                    "excluded-by-legacy-finish-filter":1,
+                    "official-birth-date-compatible":1,
+                    "unverified-official-row-not-in-supplied-archive":1,
+                })
+                self.assertFalse(report["identityConfirmedByStableHorseId"])
+                orphan=[row for row in report["observations"]
+                        if row["reason"]=="excluded-by-legacy-race-join"]
+                self.assertEqual(len(orphan),1)
+                self.assertFalse(orphan[0]["joinedToRace"])
+                no_archive=audit_nar_store_history(
+                    store.conn,{"name":"同名馬"},"2026-10-01")
+                self.assertEqual(no_archive["unverifiedPositiveRows"],3)
+                self.assertEqual(tuple(store.conn.execute(
+                    "SELECT COUNT(*),SUM(finish) FROM entries").fetchone()),before)
+            finally:
+                store.conn.close()
+
+
 if __name__ == '__main__':
     unittest.main()

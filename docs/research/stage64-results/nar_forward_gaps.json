@@ -1,0 +1,389 @@
+[
+  {
+    "raceId": "nar-2026-10-16-名古屋-03",
+    "blockers": [
+      {
+        "horseNumber": 8,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 8,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  },
+  {
+    "raceId": "nar-2026-10-16-名古屋-05",
+    "blockers": [
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  },
+  {
+    "raceId": "nar-2026-10-16-園田-06",
+    "blockers": [
+      {
+        "horseNumber": 1,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 1,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 2,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 2,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 4,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 4,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  },
+  {
+    "raceId": "nar-2026-10-16-園田-07",
+    "blockers": [
+      {
+        "horseNumber": 4,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 4,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  },
+  {
+    "raceId": "nar-2026-10-16-川崎-02",
+    "blockers": [
+      {
+        "horseNumber": 1,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 1,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 2,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 2,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 3,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 3,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 4,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 4,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  },
+  {
+    "raceId": "nar-2026-10-16-川崎-03",
+    "blockers": [
+      {
+        "horseNumber": 2,
+        "reason": "incompatible-history-discipline",
+        "date": "2025-11-10"
+      },
+      {
+        "horseNumber": 2,
+        "reason": "incompatible-history-discipline",
+        "date": "2025-10-27"
+      },
+      {
+        "horseNumber": 2,
+        "reason": "incompatible-history-discipline",
+        "date": "2025-10-13"
+      },
+      {
+        "horseNumber": 1,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 1,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 2,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 3
+      },
+      {
+        "horseNumber": 2,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 3,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 3,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 4,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 4,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 7,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 7,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  },
+  {
+    "raceId": "nar-2026-10-16-川崎-04",
+    "blockers": [
+      {
+        "horseNumber": 1,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 1,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 2,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 2,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 3,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 3,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 4,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 4,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  },
+  {
+    "raceId": "nar-2026-10-16-川崎-05",
+    "blockers": [
+      {
+        "horseNumber": 1,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 1,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 6,
+        "reason": "no-valid-corner-history"
+      },
+      {
+        "horseNumber": 9,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 9,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  },
+  {
+    "raceId": "nar-2026-10-16-川崎-08",
+    "blockers": [
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  },
+  {
+    "raceId": "nar-2026-10-16-川崎-09",
+    "blockers": [
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 5,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  },
+  {
+    "raceId": "nar-2026-10-16-川崎-11",
+    "blockers": [
+      {
+        "horseNumber": 3,
+        "reason": "no-valid-finish-history",
+        "rawRuns": 0
+      },
+      {
+        "horseNumber": 3,
+        "reason": "no-valid-corner-history"
+      }
+    ],
+    "repairStatus": "no-verified-horse-ID-link; existing source investigation required"
+  }
+]

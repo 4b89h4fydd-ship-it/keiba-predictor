@@ -1,0 +1,31 @@
+{
+  "id": 194,
+  "name": "オフライン・キャッシュ表示",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/app.js"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_194/ui/0011_cacheKey.js",
+    "arvexq/components/item_194/ui/0012_loadRaceCache.js",
+    "arvexq/components/item_194/ui/0013_saveRaceCache.js",
+    "arvexq/components/item_194/ui/0015_saveFullBundle.js",
+    "arvexq/components/item_194/ui/0016_loadFullBundle.js",
+    "arvexq/components/item_194/ui/0017_detailCacheKey.js",
+    "arvexq/components/item_194/ui/0018_loadDetailCache.js",
+    "arvexq/components/item_194/ui/0019_saveDetailCache.js",
+    "arvexq/components/item_194/ui/0020_evictRetiredRaceCaches.js",
+    "arvexq/components/item_194/ui/0421_hydrateInstantFromDevice.js"
+  ],
+  "state": "migrated-ui-fragment",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

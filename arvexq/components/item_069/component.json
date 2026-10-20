@@ -1,0 +1,26 @@
+{
+  "id": 69,
+  "name": "オッズ欠損判定",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/odds_fields/missing.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/odds_fields/missing.py",
+      "canonical": "arvexq/components/item_069/missing.py",
+      "module": "arvexq.components.item_069.missing"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

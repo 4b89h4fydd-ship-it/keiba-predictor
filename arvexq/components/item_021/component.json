@@ -1,0 +1,31 @@
+{
+  "id": 21,
+  "name": "NAR公式データ解析",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/nar_official_card.py",
+    "arvexq/ingest/nar_result.py"
+  ],
+  "shared_dependencies": [
+    "app.py:_clean",
+    "BeautifulSoup"
+  ],
+  "owned_definitions": [
+    "_parse_nar_official_card_html",
+    "_nar_official_card_rows_fast",
+    "_nar_official_result_fast"
+  ],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/nar_result.py",
+      "canonical": "arvexq/components/item_021/nar_result.py",
+      "module": "arvexq.components.item_021.nar_result"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "circuits": [
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,28 @@
+{
+  "id": 144,
+  "name": "過去走キャッシュ",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/storage/cache_keys.py"
+  ],
+  "shared_dependencies": [
+    "Shared cache storage and history persistence remain in original locations"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/storage/cache_keys.py",
+      "canonical": "arvexq/components/item_144/horse_history_key.py",
+      "module": "arvexq.components.item_144.horse_history_key"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

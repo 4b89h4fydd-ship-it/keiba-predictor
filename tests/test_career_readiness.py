@@ -16,8 +16,23 @@ class CareerReadinessTests(unittest.TestCase):
         race=self.race([horse(1,[]),horse(2,[])])
         race["title"]="2歳新馬"
         result=assess_career_readiness(race)
+        self.assertFalse(result["ready"])
+        self.assertEqual(result["debutClassNoStarts"],0)
+        self.assertEqual(len(result["blockedHorses"]),2)
+    def test_verified_debut_class_zero_starts(self):
+        race=self.race([horse(1,[],0),horse(2,[],0)])
+        race["title"]="2歳新馬"
+        result=assess_career_readiness(race)
         self.assertTrue(result["ready"])
         self.assertEqual(result["debutClassNoStarts"],2)
+    def test_debut_flag_must_be_bound_to_verified_zero_starts(self):
+        import app
+        race=self.race([horse(1,[]),horse(2,[],0)])
+        race["title"]="2歳新馬"
+        race["horses"][0]["debutNoHistory"]=True  # stale prior assertion
+        actual=app._apply_enrichment(race["id"],race)
+        self.assertNotIn("debutNoHistory",actual["horses"][0])
+        self.assertTrue(actual["horses"][1]["debutNoHistory"])
     def test_debut_class_never_waives_observed_prior_starts(self):
         race=self.race([horse(1,["2026-09-10"]),horse(2,[])])
         race["title"]="2歳新馬"

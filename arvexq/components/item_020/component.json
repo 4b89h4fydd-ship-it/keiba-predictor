@@ -1,0 +1,40 @@
+{
+  "id": 20,
+  "name": "JRA公式データ解析",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/jra_official_table.py",
+    "arvexq/ingest/jra_official_runner_row.py",
+    "arvexq/ingest/jra_result.py"
+  ],
+  "shared_dependencies": [
+    "app.py:_jra_text"
+  ],
+  "owned_definitions": [
+    "_jra_request",
+    "_jra_norm_cname",
+    "_jra_attr_cname",
+    "_jra_program_title",
+    "_jra_find_cname",
+    "_jra_text",
+    "_jra_parse_race",
+    "_jra_parse_race_summary",
+    "fetch_jra_official",
+    "_jra_any_track",
+    "_jra_any_race_no",
+    "_jra_parse_result"
+  ],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/jra_result.py",
+      "canonical": "arvexq/components/item_020/jra_result.py",
+      "module": "arvexq.components.item_020.jra_result"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "circuits": [
+    "JRA"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

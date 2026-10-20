@@ -189,80 +189,8 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
     if not any((h.get("recentRaces") or h.get("allPastRuns"))
                for h in active) and detail.get("analysisMode") not in ("新馬", "障害"):
         return {"status": "missing-historical-evidence"}
-    if assign is None:
-        from arvexq.prediction.final_marks import apply_core_marks
-        assign = apply_core_marks
-    if build is None:
-        import app
-        build = app._build_prerace_prediction
-    try:
-        # Rank ONLY active starters. Ranking a complete roster first silently
-        # lets a cancelled runner consume ◎/○ and distort every other mark.
-        # Keep the full original roster for the racecard and result collectors.
-        working = copy.deepcopy(detail)
-        starters = copy.deepcopy(active)
-        core_input = copy.deepcopy(working)
-        core_input["horses"] = starters
-        ranked = assign(core_input)
-        if not isinstance(ranked, dict):
-            return {"status": "incomplete-prediction"}
-        # The current 60/40 model must have complete measured active runners.
-        # A retrospective old model must never fill missing margin/corner rows.
-        if ranked.get("predictionStatus") != "ready":
-            return {"status": "incomplete-prediction",
-                    "observedCoverage": ranked.get("observedModelCoverage") or {},
-                    "predictionStatus": ranked.get("predictionStatus") or "unavailable"}
-        ranked_horses = {
-            int(h.get("horseNumber") or 0): h
-            for h in (ranked.get("horses") or [])
-            if isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0
-        }
-        for horse in (working.get("horses") or []):
-            no = int(horse.get("horseNumber") or 0)
-            if no in ranked_horses:
-                evaluated = ranked_horses[no].get("integratedEvaluation")
-                if not isinstance(evaluated, dict):
-                    return {"status": "no-evaluation"}
-                horse["integratedEvaluation"] = copy.deepcopy(evaluated)
-            elif no > 0:
-                old = dict(horse.get("integratedEvaluation") or {})
-                old["mark"] = ""
-                horse["integratedEvaluation"] = old
-        # The new 60/40 forecast builder verifies both exact model identity
-        # and complete measured-runner coverage. These are properties of the
-        # freshly ranked active field, not of the old unranked D1 racecard.
-        for key in ("honmeiDecision", "factorRanking", "markEngineVersion",
-                    "predictionModelVersion", "predictionStatus",
-                    "observedModelCoverage", "winConfidenceEvidence"):
-            if key in ranked:
-                working[key] = copy.deepcopy(ranked[key])
-        lock = build(working)
-        if isinstance(lock, dict):
-            # Preserve the morning's original marks. Only an authenticated
-            # official-condition change may supply a later pre-off revision.
-            from arvexq.prediction.official_course_revision import latest_pre_off_marks
-            marked = latest_pre_off_marks(detail)
-            if marked:
-                marked_by_no = {int(z["horseNumber"]): str(z.get("mark") or "")
-                                for z in marked["horses"] if isinstance(z, dict)}
-                for entry in lock.get("horses") or []:
-                    no = int(entry.get("horseNumber") or 0)
-                    if no in marked_by_no:
-                        entry["mark"] = marked_by_no[no]
-                lock["markSource"] = marked.get("version")
-                lock["markFixedAt"] = marked.get("revisedAt") or marked.get("fixedAt")
-                if marked.get("reason"):
-                    lock["markRevisionReason"] = marked["reason"]
-        if not isinstance(lock, dict) or int(lock.get("markCount") or 0) < 3:
-            return {"status": "incomplete-prediction"}
-        if sum(1 for h in active if str(h.get("name") or "").strip()) != len(active):
-            return {"status": "incomplete-roster"}
-        if not any(h.get("integratedEvaluation") for h in working.get("horses") or []):
-            return {"status": "no-evaluation"}
-        sealed = seal_detail(working, lock, now)
-        return {"status": "sealed", "detail": sealed, "revision": sealed["preRacePrediction"]["sealRevision"]}
-    except Exception as exc:
-        return {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
+    # Factual integrity guards remain; no rejected ranking or sealing generation.
+    return {"status": "incomplete-prediction", "predictionStatus": "disabled"}
 
 
 def encode_sealed_d1_sync_detail(detail: dict, *, max_row_bytes: int = 1_800_000) -> dict:

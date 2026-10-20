@@ -102,6 +102,45 @@ def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
     raise RuntimeError("D1 returned a mismatched race")
 
 
+# Historical revision receipts are stored data, not executable forecast models.
+# Preserve the *existing* append-only and digest rules from the removed candidate
+# module so existing D1 originals are not lost during sync. Never generate bets.
+from copy import deepcopy
+from hashlib import sha256
+
+VERSION = 'arvexq-forecast-revision-v1'
+
+def digest(value):
+    return sha256(json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode()).hexdigest()
+
+def latest_revision(detail):
+    revisions=detail.get('forecastRevisions') or []
+    current=detail.get('currentForecastRevisionId')
+    matches=[r for r in revisions if isinstance(r,dict) and r.get('revisionId')==current
+             and r.get('version')==VERSION and r.get('raceId')==detail.get('id')
+             and r.get('raceDate')==detail.get('date')]
+    if len(matches)!=1:
+        return None
+    revision=matches[0]
+    expected=digest({k:v for k,v in revision.items() if k not in ('revisionId','createdAt')})
+    return revision if expected==current else None
+
+def preserve_revisions(previous, incoming):
+    """Retain immutable history across live refreshes and reject divergent chains."""
+    out=deepcopy(incoming)
+    old=previous.get('forecastRevisions') or []
+    proposed=out.get('forecastRevisions') or []
+    if proposed[:len(old)]!=old:
+        if proposed:
+            raise ValueError('forecast revision history prefix changed')
+        out['forecastRevisions']=deepcopy(old)
+        if previous.get('currentForecastRevisionId'):
+            out['currentForecastRevisionId']=previous['currentForecastRevisionId']
+    if out.get('currentForecastRevisionId') and latest_revision(out) is None:
+        raise ValueError('current forecast revision pointer is invalid')
+    return out
+
+
 def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict[str, Any]:
     if FULL_PAYLOAD_KEY in incoming:
         # Archive protection must edit the real original, then recompress it.
@@ -112,7 +151,6 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     out = copy.deepcopy(incoming)
     if not isinstance(old, dict):
         return out
-    from arvexq.prediction.forecast_revisions import preserve_revisions
     out = preserve_revisions(old, out)
     # The full morning prediction is a permanent, first-published record.
     # It must survive a later live odds refresh, prefetch or result repair.

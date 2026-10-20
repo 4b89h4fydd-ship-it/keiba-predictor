@@ -1,0 +1,19 @@
+{
+  "id": 85,
+  "name": "払戻欠損補修",
+  "prediction_reserved": false,
+  "existing_sources": [],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_fetch_nar_payouts_only",
+    "_attach_nar_payouts"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

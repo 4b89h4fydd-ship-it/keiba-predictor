@@ -2,7 +2,7 @@
 import copy
 import unittest
 from arvexq.prediction.observed_model import (
-    apply_observed_marks, rank_jra, rank_nar,
+    apply_observed_marks,
     JRA_MODEL_VERSION, NAR_MODEL_VERSION,
 )
 
@@ -45,12 +45,10 @@ class ObservedAuthorityTests(unittest.TestCase):
         self.assertEqual(d['predictionStatus'],'disabled')
         self.assertTrue(all('integratedEvaluation' not in h for h in d['horses']))
 
-    def test_flat_race_never_borrows_jumps_and_obstacles_do_not_borrow_flat(self):
-        for surface in ('芝','障害'):
-            d=race('中央');d['surface']=surface
-            before=copy.deepcopy(d)
-            self.assertEqual(rank_jra(d['horses'],d),[])
-            self.assertEqual(d,before)
+    def test_retired_ranking_entrypoints_deleted(self):
+        import arvexq.prediction.observed_model as model
+        for name in ("rank_jra", "rank_nar", "rank_observed"):
+            self.assertFalse(hasattr(model, name), name)
 
     def test_zero_seconds_are_observed_with_official_proof(self):
         d=race('中央')
@@ -62,11 +60,6 @@ class ObservedAuthorityTests(unittest.TestCase):
         self.assertEqual(d['horses'],before)
         self.assertEqual(d['predictionStatus'],'disabled')
 
-    def test_cross_circuit_entrypoint_raises(self):
-        d=race("中央")
-        with self.assertRaises(ValueError):rank_nar(d["horses"],d)
-        d=race("地方")
-        with self.assertRaises(ValueError):rank_jra(d["horses"],d)
 
 
 if __name__=="__main__":

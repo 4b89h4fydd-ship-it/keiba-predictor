@@ -1,0 +1,24 @@
+{
+  "id": 131,
+  "name": "重賞レース",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/morning/special_selection.js"
+  ],
+  "shared_dependencies": [
+    "existing app.js global state and order-dependent shared UI; same-byte source migration only"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_131/ui/0266_raceIsGraded.js"
+  ],
+  "state": "migrated-ui-fragment",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

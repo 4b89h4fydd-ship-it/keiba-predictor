@@ -1,0 +1,27 @@
+{
+  "id": 16,
+  "name": "距離取得",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/race_fields/distance.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.ingest.race_fields.course"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/race_fields/distance.py",
+      "canonical": "arvexq/components/item_016/distance.py",
+      "module": "arvexq.components.item_016.distance"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

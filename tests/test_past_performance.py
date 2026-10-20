@@ -82,34 +82,31 @@ class PastFiveContextTests(unittest.TestCase):
         self.assertIsNone(context["top3Rate"])
         self.assertEqual(context["status"], "missing-dated-past-runs")
 
-    def test_candidate_full_career_does_not_mutate_preoff_original(self):
+    def test_existing_whole_career_observation_keeps_sealed_original_unchanged(self):
+        # The removed independent candidate is not an approved prediction
+        # system. Preserve the same original/whole-career invariant using
+        # the existing observational parser instead of reactivating it.
         from copy import deepcopy
-        from arvexq.prediction.new_forecast import build_forecast
-        from arvexq.prediction.learned_scenarios import fit_model
-        horses = [
-            {"horseNumber": i, "name": "候補馬", "recentRaces": [
-                run("2026-09-27", i),
-                run("2026-09-17", min(10, i + 1)),
-                run("2026-09-07", min(10, i + 2)),
-            ]} for i in range(1, 5)
-        ]
-        race = {**RACE, "id": "nar-candidate-test", "circuit": "地方", "horses": horses,
-                "preRacePrediction": {"original": "sealed"},
-                "preRaceBet": {"original": "ticket"}}
-        original = deepcopy(race)
-        training = deepcopy(race)
-        training.update({"date": "2026-10-08", "id": "nar-training-test",
-                         "result": {"status": "確定", "finishers": [
-                             {"horseNumber": i, "finish": i} for i in range(1, 5)]}})
-        model = fit_model([training], circuit="地方")
-        candidate = build_forecast(race, model)
-        self.assertEqual(race, original)
-        self.assertEqual(candidate["preRacePrediction"], original["preRacePrediction"])
-        self.assertEqual(candidate["preRaceBet"], original["preRaceBet"])
-        self.assertEqual(candidate["predictionStatus"], "candidate-analysis")
-        self.assertEqual(sum(h["integratedEvaluation"]["mark"] == "◎"
-                             for h in candidate["horses"]), 1)
-        self.assertNotIn("%", candidate["forecastText"])
+        older = [run("2026-09-27", 2), run("2026-09-17", 3),
+                 run("2026-09-07", 4), run("2026-08-27", 1),
+                 run("2026-08-17", 2), run("2026-08-07", 5)]
+        horse = {"horseNumber": 1, "name": "実績観測馬",
+                 "recentRaces": older[:5], "allPastRuns": older}
+        detail = {**RACE, "date": "2026-10-09",
+                  "id": "nar-archive-only", "circuit": "地方",
+                  "horses": [horse],
+                  "preRacePrediction": {"original": "sealed"},
+                  "preRaceBet": {"original": "ticket"}}
+        before = deepcopy(detail)
+        full = observed_runs(horse, detail, limit=None)
+        recent = observed_runs(horse, detail)
+        evidence = analyze_past_performance(horse, detail)
+        self.assertEqual(len(full), 6)
+        self.assertEqual(len(recent), 5)
+        self.assertEqual(evidence["datedRuns"], 5)
+        self.assertEqual(detail, before)
+        self.assertEqual(detail["preRacePrediction"], before["preRacePrediction"])
+        self.assertEqual(detail["preRaceBet"], before["preRaceBet"])
 
     def test_date_at_or_after_off_never_used(self):
         h = {"recentRaces": [run("2026-10-09", 1), run("2026-10-10", 1)]}

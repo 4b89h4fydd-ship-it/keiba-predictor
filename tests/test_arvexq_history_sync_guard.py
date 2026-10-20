@@ -43,6 +43,10 @@ class SqliteHistorySyncTests(unittest.TestCase):
         self.assertIn('KEIBA_DATA_DIR="$RUNNER_TEMP/arvexq-history-bootstrap"', wf)
         self.assertIn("from scripts.arvexq_sqlite_runtime_guard import install", wf)
         self.assertIn("'--workers', '1'", wf)
+        self.assertIn("--allow-empty-day", wf)
+        self.assertIn("HISTORY_INITIAL_PUBLICATION=1", wf)
+        self.assertIn("--initial-publication", wf)
+        self.assertIn('test "$PUBLISHED" -eq "$RACES"', wf)
         self.assertIn("scripts/arvexq_fetch_d1_bundle.py", wf)
         self.assertIn("scripts/arvexq_sync_batches.py", wf)
         self.assertIn("scripts/arvexq_protect_sync.py", wf)
@@ -160,6 +164,73 @@ class SqliteHistorySyncTests(unittest.TestCase):
             self.assertEqual(sorted(x["id"] for body in bodies for x in body.get("summaries", [])),
                              ["race1", "race2", "race3"])
             self.assertTrue(all(body["meta"]["sync_date"] == "2026-10-08" for body in bodies))
+
+
+
+class HistoricalForecastRevisionReceiptTests(unittest.TestCase):
+    """Archived old receipts must remain immutable without the removed model."""
+
+    @staticmethod
+    def _old_detail():
+        from hashlib import sha256
+        revision = {
+            "version": "arvexq-forecast-revision-v1",
+            "raceId": "nar-2026-10-19-大井-01",
+            "raceDate": "2026-10-19",
+            "predictionStatus": "archived",
+        }
+        digest = sha256(json.dumps(revision, sort_keys=True,
+                                   ensure_ascii=False, separators=(",", ":"),
+                                   allow_nan=False).encode()).hexdigest()
+        revision["revisionId"] = digest
+        revision["createdAt"] = "2026-10-19T04:00:00+00:00"
+        return {"id": revision["raceId"], "date": revision["raceDate"],
+                "preRacePrediction": {"original": "sealed"},
+                "preRaceBet": {"original": "bet"},
+                "forecastRevisions": [revision],
+                "currentForecastRevisionId": digest}
+
+    def test_live_sync_preserves_existing_revision_receipts_and_preoff_original(self):
+        from copy import deepcopy
+        from scripts.arvexq_protect_sync import protect_detail
+        old = self._old_detail()
+        original = deepcopy(old)
+        result = protect_detail(old, {"id": old["id"], "date": old["date"],
+                                      "preRacePrediction": old["preRacePrediction"],
+                                      "preRaceBet": old["preRaceBet"]})
+        self.assertEqual(old, original)
+        self.assertEqual(result["forecastRevisions"], original["forecastRevisions"])
+        self.assertEqual(result["currentForecastRevisionId"],
+                         original["currentForecastRevisionId"])
+        self.assertEqual(result["preRacePrediction"], original["preRacePrediction"])
+        self.assertEqual(result["preRaceBet"], original["preRaceBet"])
+
+    def test_invalid_or_replaced_archive_chain_is_refused_not_silently_erased(self):
+        from scripts.arvexq_protect_sync import protect_detail
+        old = self._old_detail()
+        with self.assertRaisesRegex(ValueError, "prefix changed"):
+            protect_detail(old, {"id": old["id"],
+                                 "forecastRevisions": [{"revisionId": "tampered"}]})
+        with self.assertRaisesRegex(ValueError, "pointer is invalid"):
+            protect_detail({}, {"forecastRevisions": [],
+                                "currentForecastRevisionId": "not-in-chain"})
+
+
+    def test_initial_publication_sends_all_originals_without_modification(self):
+        from scripts.arvexq_history_repair import select_publication_ids
+        import copy
+        ids=['nar-01','nar-02','nar-03']
+        old={rid:{'id':rid,'preRacePrediction':{'original':'frozen'}}
+             for rid in ids}
+        before=copy.deepcopy(old)
+        self.assertEqual(select_publication_ids(ids,old,{'nar-01'},False),
+                         ['nar-01'])
+        self.assertEqual(select_publication_ids(ids,old,{'nar-01'},True),
+                         ids)
+        self.assertEqual(old,before)
+        with self.assertRaisesRegex(ValueError,'cold-start source details missing'):
+            select_publication_ids(ids,{'nar-01':old['nar-01']},
+                                   {'nar-01'},True)
 
 
 if __name__ == "__main__":

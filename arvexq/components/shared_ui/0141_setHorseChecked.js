@@ -1,0 +1,1 @@
+function setHorseChecked(r,no,val){if(!r||!n(no,0))return;var m=horseCheckMap(r),k=String(n(no,0));if(val)m[k]=1;else delete m[k];try{localStorage.setItem(horseCheckKey(r),JSON.stringify(m))}catch(e){}}

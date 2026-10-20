@@ -1,0 +1,29 @@
+{
+  "id": 196,
+  "name": "Python・JavaScript自動テスト",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "tests",
+    "scripts/arvexq_production_boundaries_smoke.cjs"
+  ],
+  "shared_dependencies": [
+    "Tests and JavaScript runners remain shared; CI execution not yet verified"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "scripts/arvexq_components_audit.py",
+      "canonical": "arvexq/components/item_196/audit.py",
+      "module": "arvexq.components.item_196.audit"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

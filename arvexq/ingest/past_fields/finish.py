@@ -1,6 +1,5 @@
-"""47: Observed finishing position; 0 means unavailable."""
-import re
-
-def extract_finish(text):
-    m=re.search(r"(?<!\d)(\d{1,2})\s*着(?!\d)",text or "")
-    return int(m.group(1)) if m else 0
+"""Compatibility import; implementation is owned by responsibility 047."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_047.finish")
+_sys.modules[__name__] = _implementation

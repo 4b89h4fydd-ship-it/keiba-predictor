@@ -1,0 +1,23 @@
+{
+  "id": 127,
+  "name": "的中判定・成績検証",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/backtest/ticket_metrics.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_prediction_audit_from_lock",
+    "_attach_prerace_audit"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

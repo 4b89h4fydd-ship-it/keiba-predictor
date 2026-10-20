@@ -1,0 +1,25 @@
+{
+  "id": 129,
+  "name": "本日の厳選レース",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/morning/special_selection.js"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_ensure_race_volatility",
+    "_local_volatility_map",
+    "_attach_local_volatility_to_summaries",
+    "_compute_local_volatility_for_race"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

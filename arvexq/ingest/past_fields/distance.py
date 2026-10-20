@@ -1,10 +1,5 @@
-"""44: Historical trip in metres."""
-import re
-
-def extract_distance(text):
-    m=re.search(r"(\d{3,4})(芝|ダ|障)",text or "")
-    return int(m.group(1)) if m else 0
-
-def extract_surface(text):
-    m=re.search(r"(\d{3,4})(芝|ダ|障)",text or "")
-    return m.group(2) if m else ""
+"""Compatibility import; implementation is owned by responsibility 044."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_044.distance")
+_sys.modules[__name__] = _implementation

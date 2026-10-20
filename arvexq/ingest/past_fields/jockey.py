@@ -1,6 +1,5 @@
-"""53: Accept only a directly labeled historical jockey; unknown stays unknown."""
-import re
-
-def extract_jockey(text):
-    m=re.search(r"(?:騎手|鞍上)\s*[：:]\s*([^\s　、,()]+)",text or "")
-    return m.group(1) if m else None
+"""Compatibility import; implementation is owned by responsibility 053."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_053.jockey")
+_sys.modules[__name__] = _implementation

@@ -1,4 +1,5 @@
 """Race discovery and summary refresh contracts preserve factual cached data."""
+from arvexq.components.runtime import composed_app_source
 import ast
 from copy import deepcopy
 import json
@@ -83,7 +84,7 @@ def test_actual_summary_caller_uses_merge_and_retains_saved_result(tmp_path):
                  "_merge_race_summaries": merge, "CentralStore": Store,
                  "_jra_program_summaries": lambda _: [{**cached, "title": "fresh", "startTime": "13:00"}],
                  "_netkeiba_race_summaries": lambda _: [{**cached, "startTime": "13:05", "distance": 0}]}
-    source = ast.parse(Path("app.py").read_text())
+    source = ast.parse(composed_app_source())
     functions = [node for node in source.body if isinstance(node, ast.FunctionDef)
                  and node.name in ("central_race_summaries", "normalize_central_race")]
     exec(compile(ast.Module(body=functions, type_ignores=[]), "app.py", "exec"), namespace)
@@ -110,7 +111,7 @@ def test_actual_official_discovery_deduplicates_before_runner_fetch():
                  "_choose_race_cards": choose,
                  "_jra_parse_race": lambda value, **_kwargs: {
                      "id": value, "track": track(value), "raceNumber": number(value)}}
-    source = ast.parse(Path("app.py").read_text())
+    source = ast.parse(composed_app_source())
     function = next(node for node in source.body
                     if isinstance(node, ast.FunctionDef) and node.name == "fetch_jra_official")
     exec(compile(ast.Module(body=[function], type_ignores=[]), "app.py", "exec"), namespace)

@@ -1,6 +1,5 @@
-"""45: Historical ground going, never inferred from the target race."""
-
-def extract_going(text):
-    for going in ("不良","稍重","重","良"):
-        if going in (text or ""): return going
-    return "不明"
+"""Compatibility import; implementation is owned by responsibility 045."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_045.going")
+_sys.modules[__name__] = _implementation

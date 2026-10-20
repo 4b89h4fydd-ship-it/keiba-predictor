@@ -1,0 +1,25 @@
+{
+  "id": 181,
+  "name": "馬別詳細",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ui/static/research/diagnosis_view.js"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_181/ui/0041_sourceCollectionSection.js",
+    "arvexq/components/item_181/ui/0043_horseByNo.js",
+    "arvexq/components/item_181/ui/0154_horseModal.js",
+    "arvexq/components/item_181/ui/0344_horseDetailPage.js"
+  ],
+  "state": "migrated-ui-fragment",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -127,8 +127,9 @@ jobs:
             --date "$HISTORY_DATE" \
             --out history-bundle.json \
             --report history-hydration.json \
-            --workers 4 --allow-missing-details; then
-            echo "D1 history hydration unavailable; checking collector fallback"
+            --workers 4 --allow-missing-details --allow-empty-day; then
+            echo "::error::D1 history read unavailable; cannot certify initial publication"
+            exit 1
           fi
           RACES=$(jq '.races // [] | length' history-bundle.json 2>/dev/null || echo 0)
           echo "D1 history races=$RACES"
@@ -153,6 +154,8 @@ jobs:
               echo "HISTORY_DISCOVERY_POLL attempt=$attempt races=$FALLBACK"
             done
             if [ "$FALLBACK" -gt 0 ]; then
+              test "$(jq -r '.empty_day // false' history-hydration.json)" = true
+              echo "HISTORY_INITIAL_PUBLICATION=1" >> "$GITHUB_ENV"
               mv history-bootstrap.json history-bundle.json
             fi
             RACES=$(jq '.races // [] | length' history-bundle.json 2>/dev/null || echo 0)
@@ -190,6 +193,8 @@ jobs:
               '--report', 'history-report.json',
               '--workers', '1',
           ]
+          if __import__('os').environ.get('HISTORY_INITIAL_PUBLICATION') == '1':
+              sys.argv.append('--initial-publication')
           runpy.run_path('scripts/arvexq_history_repair.py', run_name='__main__')
           PY
           then
@@ -204,12 +209,19 @@ jobs:
         run: |
           RACES=$(jq '.meta.race_count // 0' history-payload.json)
           REPAIRED=$(jq '.meta.repaired_count // 0' history-payload.json)
-          if [ "$RACES" -le 0 ] || [ "$REPAIRED" -le 0 ]; then
+          PUBLISHED=$(jq '.meta.publication_count // .meta.repaired_count // 0' history-payload.json)
+          if [ "$RACES" -le 0 ] || [ "$PUBLISHED" -le 0 ]; then
             echo "HISTORY_NO_CHANGES date=$HISTORY_DATE races=$RACES changed=$REPAIRED; preserving D1 as-is."
             exit 0
           fi
-          test "$(jq '.details | length' history-payload.json)" -eq "$REPAIRED"
-          echo "HISTORY_CHANGED_ONLY $REPAIRED/$RACES"
+          test "$(jq '.details | length' history-payload.json)" -eq "$PUBLISHED"
+          if [ "$HISTORY_INITIAL_PUBLICATION" = 1 ]; then
+            test "$PUBLISHED" -eq "$RACES"
+            echo "HISTORY_INITIAL_PUBLICATION published=$PUBLISHED changed=$REPAIRED source=$RACES"
+          else
+            test "$PUBLISHED" -eq "$REPAIRED"
+            echo "HISTORY_CHANGED_ONLY $REPAIRED/$RACES"
+          fi
           # Never POST an entire historical day to D1 (HTTP 503/body limit).
           # Split to one detail per request and protect immutable pre-off seals.
           python scripts/arvexq_sync_batches.py \
