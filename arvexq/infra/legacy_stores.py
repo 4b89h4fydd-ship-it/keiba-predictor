@@ -294,7 +294,7 @@ SOURCE = (
     '            FROM entries e\n'
     '            JOIN races r ON r.track=e.track AND r.date=e.date AND r.race_no=e.race_no\n'
     '            WHERE e.name=? AND e.date<? AND e.finish>0\n'
-    '              AND (?=0 OR e.age<=0 OR (CAST(substr(e.date,1,4) AS INTEGER)-e.age+1)=?)\n'
+    '              AND (?=0 OR e.age<=0 OR (CAST(substr(e.date,1,4) AS INTEGER)-e.age)=?)\n'
     "              AND (?='' OR e.sex='' OR e.sex=?)\n"
     '            ORDER BY e.date DESC, e.race_no DESC\n'
     '            LIMIT ?\n'
