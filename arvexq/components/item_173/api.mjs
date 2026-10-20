@@ -10,9 +10,10 @@ export default {async fetch(request,env,ctx){
   // Obihiro/Banei is no longer an ARVEXQ race target. Reject the existing
   // canonical detail entry before D1 decompression or the legacy fetch.
   // Keep archived D1 originals and backup/export paths untouched.
-  if(request.method==='GET'&&url.pathname.startsWith('/api/race/')){
+  if(request.method==='GET'&&(url.pathname.startsWith('/api/race/')||url.pathname.startsWith('/api/odds/'))){
     let raceId='';
-    try{raceId=decodeURIComponent(url.pathname.slice('/api/race/'.length));}
+    const prefix=url.pathname.startsWith('/api/race/')?'/api/race/':'/api/odds/';
+    try{raceId=decodeURIComponent(url.pathname.slice(prefix.length));}
     catch{return Response.json({ok:false,error:'invalid race id'},{status:400});}
     if(/^nar-\d{4}-\d{2}-\d{2}-(?:帯広|帯広ば)-\d{2}$/.test(raceId)){
       return Response.json({ok:false,error:'race venue excluded'},{status:404,headers:{'cache-control':'no-store','access-control-allow-origin':'*'}});
