@@ -76,6 +76,8 @@ def audit():
     active_baseline["_nar_official_result_fast"] = "0f58b9d7fd558a5e1f14d3ef30ba39a72a771c4a279930ecfb23f8689eed7907"
     active_baseline["_netkeiba_current_result"] = "abb7c93de8d662dd255f4f71b1ed51955e3e19ae0e48ee3167485cf81d6149bb"
     active_baseline["nar_race_detail"] = "0c2566162fcccd68351b852a7acd153ece3eab55b517650da9c9c8499c2e1c73"
+    active_baseline["_apply_enrichment"] = "ae00019965c0da27673cd4e92aa3355825185eb8ee168c63839bbc9c6c4e726d"
+    active_baseline["_precompute_detail_metrics"] = "92c155147365710f28aaf73e444f646f7e60d44f3b0b0fbb155a71175f1b0ac6"
     parity = reconstructed == active_baseline and not any(
         name in reconstructed for name in retired_prediction_definitions)
     if not parity:

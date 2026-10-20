@@ -80,6 +80,12 @@ def _nar_official_result_fast(detail:dict)->dict|None:
         if not html:
             source_reasons.append("empty_html")
             continue
+        # Classify the existing official page before handing it to the unchanged
+        # Stage3 parser; a missing published-result marker is not a result.
+        full = _clean(BeautifulSoup(html, "html.parser").get_text(" ", strip=True))
+        if "競走成績" not in full and "着順" not in full:
+            source_reasons.append("result_marker_missing")
+            continue
         out = _parse_nar_result_html(
             html, known=known, clean=_clean, parse_payouts=_parse_payouts,
             clean_weather=_env_clean_weather, clean_condition=_env_clean_condition)
