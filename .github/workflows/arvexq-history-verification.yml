@@ -240,7 +240,7 @@ jobs:
           # and verified debut evidence. Do not infer a career from age alone.
           def source_age(item):
               value=str(item["sourceHistoryEvidence"].get("age") or "")
-              m=re.search(r"\\d+",value)
+              m=re.search(r"\d+",value)
               return int(m.group()) if m else 0
           summary["zeroHistoryUnflaggedAge3Plus"]=sum(
               not item["originalDebutFlag"] and source_age(item)>=3 for item in zero)
