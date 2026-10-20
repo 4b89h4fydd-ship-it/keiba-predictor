@@ -75,3 +75,13 @@ def test_jra_date_and_race_number_component_ownership_preserves_legacy_imports()
     assert describe(11)['circuits'] == ['JRA']
     assert owned_date(CNAME) == '2026-10-18'
     assert owned_number(CNAME) == 11
+
+
+def test_jra_venue_parser_compatibility_import_is_owning_component():
+    import importlib
+    original=importlib.import_module("arvexq.ingest.race_fields.track")
+    owned=importlib.import_module("arvexq.components.item_009.track")
+    assert original is owned
+    assert original.extract(CNAME, {"05":"東京"})=="東京"
+    assert original.extract(CNAME, {"04":"京都"})==""
+    assert original.extract("invalid", {"05":"東京"})==""
