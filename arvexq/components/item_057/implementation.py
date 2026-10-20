@@ -286,13 +286,16 @@ def _schedule_full_history_harvest(detail: dict) -> None:
     # Historical/final cards also need pre-race career data for backtests.
     # Source functions receive the race-date cutoff, so later races are excluded.
     if not detail.get("date"):return
+    # Never route an unknown circuit into the JRA collector by default.
+    circuit=str(detail.get("circuit") or "")
+    if circuit not in ("中央","地方"):return
     race_id=str(detail.get("id") or "");horses=[h for h in (detail.get("horses") or []) if isinstance(h,dict) and h.get("name")]
     if not race_id or not horses:return
     with _full_history_lock:
         if race_id in _full_history_running:return
         _full_history_running.add(race_id)
     def worker():
-        ttl=max(1800,int(os.getenv("RACEDB_FULL_HISTORY_TTL_SEC","21600")));cutoff=str(detail.get("date") or _today_iso());circuit=str(detail.get("circuit") or "")
+        ttl=max(1800,int(os.getenv("RACEDB_FULL_HISTORY_TTL_SEC","21600")));cutoff=str(detail.get("date") or _today_iso())
         try:
             if circuit=="地方":
                 store=NarStore()
