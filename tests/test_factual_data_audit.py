@@ -175,3 +175,101 @@ def test_same_named_runner_single_race_not_reported_as_cross_race():
               "details": [{"id": RID, "date": DAY, "horses": [
                   {"name": "重複馬", "horseNumber": 12, "frameNumber": 7}]}]}
     assert audit_day(bundle)["validationErrors"] == []
+
+
+def test_audit_checks_actual_pwa_display_and_preserves_update_timestamps():
+    row = {'id': RID, 'date': DAY, 'circuit': '地方',
+           'track': '名古屋', 'raceNumber': 1,
+           'horses': [{'horseNumber': 2, 'name': '観測馬',
+                       'allPastRuns': [{'date': '2026-09-01', 'finish': 2}]}]}
+    calls = []
+    def fetch(url):
+        calls.append(url)
+        if '/api/day?' in url:
+            return {'ok': True, 'date': DAY,
+                    'races': [{'id': RID, 'updatedAtEpoch': 1790000000}]}
+        return {'ok': True, 'detail': deepcopy(row), 'detail_updated_at': 1790000100}
+    result = audit_day(read_day('https://unit.test', DAY, fetch=fetch,
+                                verify_display=True))
+    assert len(calls) == 3 and 'view=display' in calls[-1]
+    assert result['displayParityErrors'] == []
+    assert result['updateEvidence'] == [{
+        'raceId': RID, 'summaryUpdatedAtEpoch': 1790000000,
+        'detailUpdatedAtEpoch': 1790000100,
+        'detailReadable': True, 'readbackSource': 'full'}]
+
+
+def test_display_historical_loss_is_reported_without_changing_stored_facts():
+    original = {'id': RID, 'date': DAY, 'horses': [
+        {'horseNumber': 2, 'name': '観測馬',
+         'allPastRuns': [{'date': '2026-09-01', 'finish': 2}]}]}
+    def fetch(url):
+        if '/api/day?' in url:
+            return {'ok': True, 'date': DAY, 'races': [{'id': RID}]}
+        if 'view=display' in url:
+            return {'ok': True, 'detail': {'id': RID, 'date': DAY,
+                    'horses': [{'horseNumber': 2, 'name': '観測馬'}]},
+                    'detail_updated_at': 1790000100}
+        return {'ok': True, 'detail': deepcopy(original),
+                'detail_updated_at': 1790000100}
+    bundle = read_day('https://unit.test', DAY, fetch=fetch, verify_display=True)
+    assert bundle['details'] == [original]
+    assert bundle['displayParityErrors'][0]['reason'] == 'display_fact_mismatch'
+    assert 'horses_or_prior_runs' in bundle['displayParityErrors'][0]['fields']
+
+
+def test_failed_display_endpoint_is_visible_even_when_full_read_succeeds():
+    def fetch(url):
+        if '/api/day?' in url:
+            return {'ok': True, 'date': DAY, 'races': [{'id': RID}]}
+        if 'view=display' in url:
+            raise urllib.error.HTTPError(url, 503, 'temporarily unavailable', {}, None)
+        return {'ok': True, 'detail': {'id': RID, 'date': DAY, 'horses': []}}
+    bundle = read_day('https://unit.test', DAY, fetch=fetch, verify_display=True)
+    assert len(bundle['details']) == 1
+    assert bundle['readErrors'] == []
+    assert bundle['displayParityErrors'][0]['reason'] == 'display_read_failed'
+
+
+def test_legacy_full_route_fallback_is_not_mistaken_for_parity_success():
+    def fetch(url):
+        if '/api/day?' in url:
+            return {'ok': True, 'date': DAY, 'races': [{'id': RID}]}
+        if 'view=display' in url:
+            return {'ok': True, 'detail': {'id': RID, 'date': DAY, 'horses': []}}
+        raise urllib.error.HTTPError(url, 404, 'not found', {}, None)
+    bundle = read_day('https://unit.test', DAY, fetch=fetch, verify_display=True)
+    assert bundle['readbackSources'][RID] == 'display'
+    assert bundle['displayParityErrors'] == [
+        {'raceId': RID, 'reason': 'full_route_unavailable'}]
+
+
+def test_missing_prior_runs_are_not_guessed_to_be_verified_debuts():
+    bundle = {'date': DAY, 'races': [{'id': RID}], 'details': [
+        {'id': RID, 'date': DAY, 'horses': [
+            {'horseNumber': 1, 'name': '未検証馬'},
+            {'horseNumber': 2, 'name': '確認済馬',
+             'debutNoHistory': True,
+             'careerCoverage': {'state': 'complete-no-starts'}}]}]}
+    result = audit_day(bundle)
+    assert [(r['horseNumber'], r['reason']) for r in result['missingHistoryReasons']] == [
+        (1, 'acquisition-unverified'), (2, 'verified-no-prior-start')]
+
+
+def test_cli_reports_display_mismatch_as_a_failing_audit(monkeypatch, tmp_path):
+    from scripts import arvexq_fact_data_audit as cli
+    report = tmp_path / 'display-audit.json'
+    monkeypatch.setattr('sys.argv', ['audit', '--days', '1', '--end-date', DAY,
+                                    '--verify-display', '--report', str(report)])
+    calls = []
+    def read_mock(*_args, **kwargs):
+        calls.append(kwargs)
+        return {'date': DAY, 'races': [{'id': RID}],
+                'details': [{'id': RID, 'date': DAY, 'horses': []}],
+                'displayParityErrors': [{'raceId': RID, 'reason': 'display_read_failed'}]}
+    monkeypatch.setattr(cli, 'read_day', read_mock)
+    assert cli.main() == 1
+    assert calls == [{'verify_display': True}]
+    saved = json.loads(report.read_text())
+    assert saved['errors'] == 1
+    assert saved['days'][0]['displayParityErrors'][0]['reason'] == 'display_read_failed'
