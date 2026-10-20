@@ -1,7 +1,7 @@
 name: ARVEXQ Route Verification (read-only)
 "on":
   push:
-    branches: [fix/existing-route-restoration-20261020]
+    branches: [fix/existing-route-restoration-20261020, fix/arvexq-exclude-obihiro-20261020]
   workflow_dispatch:
 permissions:
   contents: read
