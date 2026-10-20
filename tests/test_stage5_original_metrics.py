@@ -148,7 +148,16 @@ class Stage5OriginalMetricsTests(TestCase):
         self.assertEqual(jra['role']['win'], {'scoredRaces': 3, 'wins': 0})
         self.assertEqual(jra['role']['axis'], {'scoredRaces': 0, 'podiums': 0})
         self.assertEqual(jra['byKind']['馬連']['hits'], 1)
-        self.assertEqual(jra['byKind']['馬連']['scoredRaces'], 3)
+        from arvexq.backtest.ticket_metrics import parse_official_payouts
+        diagnostics = {}
+        for x in records:
+            if (x.get('preRaceBet') or {}).get('referenceOnly') is not False or x.get('circuit') != '中央':
+                continue
+            payouts, invalid = parse_official_payouts(x.get('result') or {})
+            diagnostics[x['id']] = {'availableKinds': sorted(payouts),
+                                    'invalidKinds': sorted(invalid),
+                                    'rawPayouts': (x.get('result') or {}).get('payouts')}
+        self.assertEqual(jra['byKind']['馬連']['scoredRaces'], 3, str(diagnostics))
         self.assertEqual(jra['byKind']['馬連']['payoutYenAt100'], 640)
         self.assertEqual(jra['byKind']['馬連']['stakeYenAt100'], 300)
         self.assertEqual(jra['byKind']['ワイド']['scoredRaces'], 3)
