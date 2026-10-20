@@ -18,7 +18,7 @@ def nar_race_summaries(iso_date: str) -> list[dict]:
                    SUM(CASE WHEN e.finish=3 THEN 1 ELSE 0 END) AS f3
             FROM races r
             LEFT JOIN entries e ON e.track=r.track AND e.date=r.date AND e.race_no=r.race_no
-            WHERE r.date=?
+            WHERE r.date=? AND r.track NOT IN ('帯広','帯広ば')
             GROUP BY r.track,r.date,r.race_no
             ORDER BY r.track,r.race_no
             """,
@@ -28,7 +28,7 @@ def nar_race_summaries(iso_date: str) -> list[dict]:
         # Never publish synthetic [{"finish":1}] placeholders as results.
         entry_rows=conn.execute(
             """SELECT track,race_no,horse_no,frame_no,name,finish,time_seconds,corner_positions_json
-               FROM entries WHERE date=? AND finish>0 ORDER BY track,race_no,finish,horse_no""",
+               FROM entries WHERE date=? AND finish>0 AND track NOT IN ('帯広','帯広ば') ORDER BY track,race_no,finish,horse_no""",
             (iso_date,),
         ).fetchall()
         real_finishers={}
@@ -154,6 +154,8 @@ def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0
 @app.get("/api/v1/track-pack")
 def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...), fill: int = Query(1)):
     """Return venue snapshots from local DB only; fill local-only gaps for instant taps."""
+    if track in ("帯広", "帯広ば"):
+        raise HTTPException(status_code=404, detail="race venue excluded")
     out=[]
     seen=set()
 
