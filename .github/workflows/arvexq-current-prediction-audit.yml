@@ -66,7 +66,7 @@ jobs:
           ARVEXQ_END_DATE: ${{ inputs.end_date || '' }}
         run: |
           set -o pipefail
-          python scripts/arvexq_fact_data_audit.py | tee data-quality-audit.log
+          python scripts/arvexq_fact_data_audit.py --verify-display | tee data-quality-audit.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:

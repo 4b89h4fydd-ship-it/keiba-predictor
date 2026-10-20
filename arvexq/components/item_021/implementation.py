@@ -63,6 +63,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
     ]
     known={_clean(h.get("name")):int(h.get("horseNumber") or 0) for h in detail.get("horses",[]) or [] if h.get("name")}
     last_err=""
+    source_reasons=[]
     for url in urls:
         try:
             req=urllib.request.Request(url,headers={
@@ -73,13 +74,20 @@ def _nar_official_result_fast(detail:dict)->dict|None:
             with urllib.request.urlopen(req,timeout=float(os.getenv("NAR_RESULT_TIMEOUT_SEC","4.0"))) as res:
                 html=_jra_decode(res.read())
         except Exception as exc:
-            last_err=str(exc);continue
-        if not html:continue
+            last_err=str(exc)
+            source_reasons.append("fetch_error:"+type(exc).__name__)
+            continue
+        if not html:
+            source_reasons.append("empty_html")
+            continue
         out = _parse_nar_result_html(
             html, known=known, clean=_clean, parse_payouts=_parse_payouts,
             clean_weather=_env_clean_weather, clean_condition=_env_clean_condition)
-        if out is None:continue
+        if out is None:
+            source_reasons.append("result_table_unrecognized_or_incomplete")
+            continue
         out["sourceUrl"]=url
         return out
-    if last_err:print("NAR official result unavailable",detail.get("id"),last_err)
+    print("NAR_RESULT_UNRESOLVED",detail.get("id"),"reasons="+",".join(source_reasons or ["not_parsed"]),
+          "last_fetch_error="+last_err[:100] if last_err else "")
     return None
