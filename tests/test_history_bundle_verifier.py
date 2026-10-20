@@ -48,21 +48,6 @@ class HistoryVerificationTests(unittest.TestCase):
         self.assertEqual(verdict['missingRaceIds'],['race-B'])
         self.assertEqual(verdict['unexpectedRaceIds'],['race-C'])
 
-    def test_initial_publication_sends_all_originals_without_modification(self):
-        from scripts.arvexq_history_repair import select_publication_ids
-        ids=['nar-01','nar-02','nar-03']
-        old={rid:{'id':rid,'preRacePrediction':{'original':'frozen'}}
-             for rid in ids}
-        before=copy.deepcopy(old)
-        self.assertEqual(select_publication_ids(ids,old,{'nar-01'},False),
-                         ['nar-01'])
-        self.assertEqual(select_publication_ids(ids,old,{'nar-01'},True),
-                         ids)
-        self.assertEqual(old,before)
-        with self.assertRaisesRegex(ValueError,'cold-start source details missing'):
-            select_publication_ids(ids,{'nar-01':old['nar-01']},
-                                   {'nar-01'},True)
-
     def test_missing_whole_race_fails_and_input_is_immutable(self):
         day={'details':[detail('race',[1,2,3])]};before=copy.deepcopy(day)
         self.assertFalse(verify_history({'races':2},day)['ok'])

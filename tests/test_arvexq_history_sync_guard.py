@@ -216,5 +216,22 @@ class HistoricalForecastRevisionReceiptTests(unittest.TestCase):
                                 "currentForecastRevisionId": "not-in-chain"})
 
 
+    def test_initial_publication_sends_all_originals_without_modification(self):
+        from scripts.arvexq_history_repair import select_publication_ids
+        import copy
+        ids=['nar-01','nar-02','nar-03']
+        old={rid:{'id':rid,'preRacePrediction':{'original':'frozen'}}
+             for rid in ids}
+        before=copy.deepcopy(old)
+        self.assertEqual(select_publication_ids(ids,old,{'nar-01'},False),
+                         ['nar-01'])
+        self.assertEqual(select_publication_ids(ids,old,{'nar-01'},True),
+                         ids)
+        self.assertEqual(old,before)
+        with self.assertRaisesRegex(ValueError,'cold-start source details missing'):
+            select_publication_ids(ids,{'nar-01':old['nar-01']},
+                                   {'nar-01'},True)
+
+
 if __name__ == "__main__":
     unittest.main()
