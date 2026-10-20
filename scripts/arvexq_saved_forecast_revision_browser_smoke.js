@@ -12,7 +12,8 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  try{
   const page=await browser.newPage({viewport:{width:390,height:844}});
-  const errors=[];page.on('pageerror',error=>errors.push(String(error)));
+  const errors=[],revisionRequests=[];page.on('pageerror',error=>errors.push(String(error)));
+  page.on('request',request=>{if(request.url().includes('/api/forecast-revisions/'))revisionRequests.push(request.url())});
   await page.route('**/*',route=>{
    if(route.request().url().includes('/api/forecast-revisions/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,raceId:detail.id,forecastRevisions:detail.forecastRevisions,currentForecastRevisionId:detail.currentForecastRevisionId})});
    if(route.request().url().includes('/api/live-odds/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,raceId:detail.id,horses:[]})});
@@ -34,6 +35,7 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
   assert.equal(await page.locator('.diagnosis-merged-row').count(),6);
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRacePrediction)),before);
   assert.equal(errors.length,0,errors.join(';'));
+  assert.equal(revisionRequests.length,0,'race open must never request the retired candidate transport');
   console.log('SAVED_FORECAST_REVISION_MOBILE_BROWSER_PASS');
  }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exit(1)});
