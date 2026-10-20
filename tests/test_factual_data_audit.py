@@ -175,3 +175,53 @@ def test_same_named_runner_single_race_not_reported_as_cross_race():
               "details": [{"id": RID, "date": DAY, "horses": [
                   {"name": "重複馬", "horseNumber": 12, "frameNumber": 7}]}]}
     assert audit_day(bundle)["validationErrors"] == []
+
+
+@pytest.mark.parametrize("reverse_order", [False, True])
+def test_same_name_in_jra_and_nar_is_not_a_collision(reverse_order):
+    # A shared spelling is not proof of lifetime identity across circuits.
+    jra = {"id": f"jra-{DAY}-東京-01", "date": DAY,
+           "circuit": "中央", "track": "東京", "raceNumber": 1,
+           "horses": [{"name": "同名馬", "horseNumber": 1}]}
+    nar = {"id": f"nar-{DAY}-大井-01", "date": DAY,
+           "circuit": "地方", "track": "大井", "raceNumber": 1,
+           "horses": [{"name": "同名馬", "horseNumber": 1}]}
+    details = [nar, jra] if reverse_order else [jra, nar]
+    bundle = {"date": DAY, "races": [{"id": d["id"]} for d in details],
+              "details": details, "readErrors": []}
+    unchanged = deepcopy(bundle)
+    result = audit_day(bundle)
+    assert result["validationErrors"] == []
+    assert result["observed"]["horses"] == 2
+    assert bundle == unchanged
+
+
+def test_same_name_in_two_jra_races_remains_a_collision():
+    first = {"id": f"jra-{DAY}-東京-01", "date": DAY,
+             "circuit": "中央", "track": "東京", "raceNumber": 1,
+             "horses": [{"name": "同名馬", "horseNumber": 1}]}
+    second = {"id": f"jra-{DAY}-東京-02", "date": DAY,
+              "circuit": "中央", "track": "東京", "raceNumber": 2,
+              "horses": [{"name": "同名馬", "horseNumber": 7}]}
+    bundle = {"date": DAY, "races": [{"id": first["id"]}, {"id": second["id"]}],
+              "details": [first, second], "readErrors": []}
+    before = deepcopy(bundle)
+    assert audit_day(bundle)["validationErrors"] == [{
+        "raceId": second["id"], "otherRaceId": first["id"],
+        "horseName": "同名馬", "horseNumber": 7,
+        "error": "same runner name in multiple races on day",
+    }]
+    assert bundle == before
+
+
+def test_unknown_circuit_is_not_assigned_to_jra_or_nar_by_name():
+    known = {"id": f"jra-{DAY}-東京-01", "date": DAY,
+             "circuit": "中央", "track": "東京", "raceNumber": 1,
+             "horses": [{"name": "同名馬", "horseNumber": 2}]}
+    unknown = {"id": "unverified-race", "date": DAY, "track": "未知場",
+               "horses": [{"name": "同名馬", "horseNumber": 2}]}
+    bundle = {"date": DAY, "races": [{"id": known["id"]}, {"id": unknown["id"]}],
+              "details": [known, unknown], "readErrors": []}
+    original = deepcopy(bundle)
+    assert audit_day(bundle)["validationErrors"] == []
+    assert bundle == original
