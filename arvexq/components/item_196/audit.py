@@ -78,6 +78,15 @@ def audit():
     active_baseline["nar_race_detail"] = "0c2566162fcccd68351b852a7acd153ece3eab55b517650da9c9c8499c2e1c73"
     active_baseline["_apply_enrichment"] = "ae00019965c0da27673cd4e92aa3355825185eb8ee168c63839bbc9c6c4e726d"
     active_baseline["_precompute_detail_metrics"] = "92c155147365710f28aaf73e444f646f7e60d44f3b0b0fbb155a71175f1b0ac6"
+    # PR #376: reviewed Obihiro-exclusion changes to seven existing owners.
+    # Pin exact CI-observed AST digests; do not edit historical migration baseline.
+    active_baseline["_bootstrap_rows_local"] = "680d3f643a5815392006dcc6d65cad18ad67a5fbaaf1e41310b7f6300d23c4a8"
+    active_baseline["data_core_refresh"] = "9e9af6bffedec2bdf89dd763efc03a2b99d60c637d406f3a9b11dce0041500d8"
+    active_baseline["data_core_refresh_day"] = "93eebd46cccb2a587bb0011207693907d8986d4b7e030dd84fec7ccabd9e099d"
+    active_baseline["nar_race_summaries"] = "937f0e01dc6d27ef77db2c87f87b7dac69a567cffc1c80672abdc585765b5957"
+    active_baseline["prewarm_track"] = "04de4fc9a58f3965d8e5c8e3f8be9bd013ad20835db78259fac5b1428f91ddf8"
+    active_baseline["races"] = "9f7041ce8d831f0150dca2d65cf9e83d37c88097df33283c1562deb1b012544c"
+    active_baseline["track_pack"] = "257bb1631de6304a03d4bd109c0c485a28b5cc0f7081b2de7b71c9d42f17d2db"
     parity = reconstructed == active_baseline and not any(
         name in reconstructed for name in retired_prediction_definitions)
     if not parity:
