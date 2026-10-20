@@ -56,7 +56,7 @@ def nar_race_summaries(iso_date: str) -> list[dict]:
                 "startTimeChanged":bool((r["scheduled_start_time"] or "") and (r["start_time"] or "") and r["scheduled_start_time"]!=r["start_time"]),
                 "horses":[],"result":{"status":"確定","finishers":real_finishers.get((str(r["track"]),int(r["race_no"])),[])} if finalized else None,"source":"NAR公式"
             })
-        return out
+        return [row for row in out if str(row.get("track") or "") not in ("帯広", "帯広ば")]
     finally:
         conn.close()
 
@@ -113,7 +113,7 @@ def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0
     with _race_list_cache_lock:
         hit=_race_list_cache.get(ck)
         if hit and not force and ((hit[1] and date<_today_iso()) or now-hit[0]<15):
-            cached_rows=_attach_local_volatility_to_summaries(hit[1] or [])
+            cached_rows=_attach_local_volatility_to_summaries([x for x in (hit[1] or []) if str(x.get("track") or "") not in ("帯広", "帯広ば")])
             if circuit:
                 return {"races":cached_rows,"prepared":_local_starter_bundle(cached_rows)} if bundle else cached_rows
             has_central=any(str(x.get("circuit") or "")=="中央" for x in cached_rows)
@@ -136,7 +136,7 @@ def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0
             print(f"Central summary read failed: {exc}");crows=[]
         rows.extend(crows)
         if force or not crows:_schedule_central_refresh(date,force=bool(force))
-    rows=[x for x in rows if str(x.get("track") or "")!="帯広"]
+    rows=[x for x in rows if str(x.get("track") or "") not in ("帯広", "帯広ば")]
     rows=_attach_local_volatility_to_summaries(rows)
     if date==_today_iso():
         for circuit_name in ("中央","地方"):
