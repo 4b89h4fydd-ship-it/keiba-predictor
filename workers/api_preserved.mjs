@@ -334,7 +334,7 @@ var worker_default = {
           const id = String(first(row, "race_id", "raceId", "id") || "");
           const track = String(first(row, "track", "venue") || "");
           return track !== "帯広" && track !== "帯広ば"
-            && !/^(?:nar-)?\\d{4}-\\d{2}-\\d{2}-(?:帯広|帯広ば)-\\d{2}$/.test(id)
+            && !/^(?:nar-)?\d{4}-\d{2}-\d{2}-(?:帯広|帯広ば)-\d{2}$/.test(id)
             && !id.includes("-帯広-") && !id.includes("-帯広ば-");
         };
         const activeSummaries = summaries.filter(activeRace);
