@@ -217,5 +217,59 @@ class OfficialNarResultFailureReasonTests(unittest.TestCase):
                             for c in printed.call_args_list))
 
 
+class RealtimeResultRetentionTests(unittest.TestCase):
+    def test_live_merge_does_not_shrink_confirmed_placings_or_payouts(self):
+        import copy
+        from scripts.arvexq_live_sync import merge_live
+        saved_result = {
+            "status": "確定",
+            "finishers": [{"horseNumber": 1, "finish": 1},
+                          {"horseNumber": 2, "finish": 2},
+                          {"horseNumber": 3, "finish": 3}],
+            "payouts": [{"type": "単勝", "amount": 200},
+                        {"type": "馬連", "amount": 1100}],
+        }
+        for circuit, race_id in (
+            ("地方", "nar-2026-10-20-盛岡-03"),
+            ("中央", "jra-2026-10-18-東京-08"),
+        ):
+            with self.subTest(circuit=circuit):
+                original = {"id": race_id, "circuit": circuit,
+                            "date": "2026-10-20" if circuit == "地方" else "2026-10-18",
+                            "horses": [{"horseNumber": 1, "name": "馬A"}],
+                            "result": copy.deepcopy(saved_result),
+                            "preRacePrediction": {"frozen": True}}
+                saved = copy.deepcopy(original)
+                sparse_final = {
+                    "id": race_id, "circuit": circuit,
+                    "result": {
+                        "status": "確定",
+                        "finishers": [{"horseNumber": 1, "finish": 1}],
+                        "payouts": [{"type": "単勝", "amount": 200}],
+                    },
+                }
+                merged = merge_live(original, sparse_final, {})
+                self.assertEqual(merged["result"], saved_result)
+                self.assertEqual(merged["horses"], saved["horses"])
+                self.assertEqual(merged["preRacePrediction"], saved["preRacePrediction"])
+                self.assertEqual(original, saved)
+
+    def test_live_merge_accepts_richer_confirmed_result(self):
+        from scripts.arvexq_live_sync import merge_live
+        initial = {"id": "nar-2026-10-20-盛岡-03", "result": {
+            "status": "速報",
+            "finishers": [{"horseNumber": 1, "finish": 1}],
+        }}
+        confirmed = {"result": {
+            "status": "確定",
+            "finishers": [{"horseNumber": 1, "finish": 1},
+                          {"horseNumber": 2, "finish": 2},
+                          {"horseNumber": 3, "finish": 3}],
+            "payouts": [{"type": "単勝", "amount": 180}],
+        }}
+        merged = merge_live(initial, confirmed, {})
+        self.assertEqual(merged["result"], confirmed["result"])
+
+
 if __name__ == "__main__":
     unittest.main()
