@@ -29,6 +29,7 @@ if str(ROOT) not in sys.path:
 
 import app
 from arvexq.pipeline.fingerprints import analysis_input_hash
+from arvexq.results.state import merge_result as _merge_non_destructive_result
 from arvexq.ingest.official_changes import collect_nar_changes
 from arvexq.ingest.official_course_feeds import fetch_course_events
 from arvexq.prediction.official_course_revision import pre_off_change, official_event
@@ -160,19 +161,8 @@ def apply_official_scratch_changes(
 
 
 def _merge_result(old: Any, new: Any) -> dict[str, Any]:
-    old_r = copy.deepcopy(old) if isinstance(old, dict) else {}
-    new_r = new if isinstance(new, dict) else {}
-    if not new_r:
-        return old_r
-    old_final = str(old_r.get("status") or "") == "確定" and bool(old_r.get("finishers"))
-    new_final = str(new_r.get("status") or "") == "確定" and bool(new_r.get("finishers"))
-    if old_final and not new_final:
-        return old_r
-    out = old_r
-    for key, value in new_r.items():
-        if value not in (None, "", [], {}):
-            out[key] = copy.deepcopy(value)
-    return out
+    """Use the existing result-repair merge: live ticks cannot shrink results."""
+    return _merge_non_destructive_result(old, new)
 
 
 def merge_live(
