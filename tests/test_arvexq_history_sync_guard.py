@@ -162,5 +162,55 @@ class SqliteHistorySyncTests(unittest.TestCase):
             self.assertTrue(all(body["meta"]["sync_date"] == "2026-10-08" for body in bodies))
 
 
+
+class HistoricalForecastRevisionReceiptTests(unittest.TestCase):
+    """Archived old receipts must remain immutable without the removed model."""
+
+    @staticmethod
+    def _old_detail():
+        from hashlib import sha256
+        revision = {
+            "version": "arvexq-forecast-revision-v1",
+            "raceId": "nar-2026-10-19-大井-01",
+            "raceDate": "2026-10-19",
+            "predictionStatus": "archived",
+        }
+        digest = sha256(json.dumps(revision, sort_keys=True,
+                                   ensure_ascii=False, separators=(",", ":"),
+                                   allow_nan=False).encode()).hexdigest()
+        revision["revisionId"] = digest
+        revision["createdAt"] = "2026-10-19T04:00:00+00:00"
+        return {"id": revision["raceId"], "date": revision["raceDate"],
+                "preRacePrediction": {"original": "sealed"},
+                "preRaceBet": {"original": "bet"},
+                "forecastRevisions": [revision],
+                "currentForecastRevisionId": digest}
+
+    def test_live_sync_preserves_existing_revision_receipts_and_preoff_original(self):
+        from copy import deepcopy
+        from scripts.arvexq_protect_sync import protect_detail
+        old = self._old_detail()
+        original = deepcopy(old)
+        result = protect_detail(old, {"id": old["id"], "date": old["date"],
+                                      "preRacePrediction": old["preRacePrediction"],
+                                      "preRaceBet": old["preRaceBet"]})
+        self.assertEqual(old, original)
+        self.assertEqual(result["forecastRevisions"], original["forecastRevisions"])
+        self.assertEqual(result["currentForecastRevisionId"],
+                         original["currentForecastRevisionId"])
+        self.assertEqual(result["preRacePrediction"], original["preRacePrediction"])
+        self.assertEqual(result["preRaceBet"], original["preRaceBet"])
+
+    def test_invalid_or_replaced_archive_chain_is_refused_not_silently_erased(self):
+        from scripts.arvexq_protect_sync import protect_detail
+        old = self._old_detail()
+        with self.assertRaisesRegex(ValueError, "prefix changed"):
+            protect_detail(old, {"id": old["id"],
+                                 "forecastRevisions": [{"revisionId": "tampered"}]})
+        with self.assertRaisesRegex(ValueError, "pointer is invalid"):
+            protect_detail({}, {"forecastRevisions": [],
+                                "currentForecastRevisionId": "not-in-chain"})
+
+
 if __name__ == "__main__":
     unittest.main()
