@@ -139,7 +139,6 @@ def _card_usable(detail: dict[str, Any] | None) -> bool:
         return False
     if any(not str(h.get("name") or "").strip() for h in active):
         return False
-    banei = "帯広" in str(detail.get("id") or "") or str(detail.get("track") or "").startswith("帯広")
     core = 0
     for horse in active:
         jockey = str(horse.get("jockey") or "").strip()
@@ -147,7 +146,7 @@ def _card_usable(detail: dict[str, Any] | None) -> bool:
             weight = float(horse.get("carriedWeight") or horse.get("weight") or 0)
         except Exception:
             weight = 0.0
-        if jockey and (banei or weight > 0):
+        if jockey and weight > 0:
             core += 1
     expected = detail.get("fieldSize") or detail.get("runnerCount") or 0
     try:
