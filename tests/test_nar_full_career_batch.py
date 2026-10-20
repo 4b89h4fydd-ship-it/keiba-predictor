@@ -123,6 +123,23 @@ class NarFullCareerBatchTests(unittest.TestCase):
         self.assertNotIn("2026-09-10",dates,"different birth year must not enter career")
         self.assertIn("2026-08-10",dates,"compatible observed history must survive")
 
+    def test_nar_store_recent_races_sql_matches_calendar_birth_year(self):
+        import app
+        store=app.NarStore(Path(self.temp.name) / "identity.sqlite")
+        try:
+            for day,age in (("2025-08-10",2),("2026-09-10",2)):
+                store.conn.execute(
+                    "INSERT INTO races(track,date,race_no,title,distance,weather,condition,field_size,prize1) VALUES (?,?,?,?,?,?,?,?,?)",
+                    ("大井",day,1,"C1",1200,"晴","良",12,100))
+                store.conn.execute(
+                    "INSERT INTO entries(track,date,race_no,frame_no,horse_no,name,sex,age,finish,time_seconds) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    ("大井",day,1,1,1,"全履歴馬","牡",age,2,73.2))
+            store.conn.commit()
+            runs=store.recent_races("全履歴馬","2026-10-16",5,3,"牡")
+            self.assertEqual([row["date"] for row in runs],["2025-08-10"])
+        finally:
+            store.conn.close()
+
     def test_same_birth_year_is_retained_across_calendar_years(self):
         import app
         detail = self.fixture()
