@@ -40,8 +40,8 @@ export default {async fetch(request,env,ctx){
       try{const id=decodeURIComponent(url.pathname.slice('/api/race/'.length));const restored=await readCompressedRace(env,id);if(restored)return enhanceNarGoingResponse(restored,fetch,id)}
     catch(e){return Response.json({ok:false,error:'saved detail restore unavailable'},{status:503,headers:{'access-control-allow-origin':'*'}})}
   }
-  if(new URL(request.url).pathname==='/api/admin/snapshot-export')return snapshotExport(request,env);
-  if(new URL(request.url).pathname==='/api/admin/storage-audit'){
+  if(url.pathname==='/api/admin/snapshot-export')return snapshotExport(request,env);
+  if(url.pathname==='/api/admin/storage-audit'){
     if(request.method!=='GET')return Response.json({ok:false,error:'method not allowed'},{status:405});
     return storageAudit(request,env);
   }
