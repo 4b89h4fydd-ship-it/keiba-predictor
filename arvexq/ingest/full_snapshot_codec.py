@@ -9,7 +9,7 @@ import gzip
 import hashlib
 import json
 
-VERSION='arvexq-full-payload-v1'
+from arvexq.components.item_148.version import VERSION, valid_envelope
 KEY='arvexqFullPayload'
 KEEP={'preRacePrediction','preRaceBet','preRaceBetPlan','morningTicketEvidence',
       'morningPicks','environmentMeta','volatility','preparedMeta','result',
@@ -32,7 +32,7 @@ def pack_raw(raw):
 
 def unpack_raw(value):
     ref=value[KEY]
-    if ref.get('version')!=VERSION or not 0<int(ref.get('bytes',0))<=100000000:
+    if not valid_envelope(ref):
         raise ValueError('invalid full snapshot envelope')
     data=gzip.decompress(base64.b64decode(ref['gzipBase64'],validate=True))
     if len(data)!=ref['bytes'] or hashlib.sha256(data).hexdigest()!=ref['sha256']:

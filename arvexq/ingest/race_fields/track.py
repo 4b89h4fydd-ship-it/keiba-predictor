@@ -1,5 +1,5 @@
-"""#9 JRA official venue from provider code; never infer unknown codes."""
-import re
-def extract(cname,codes):
-    m=re.search(r"pw01dde(?:01|10)(\d{2})",cname or "")
-    return codes.get(m.group(1),"") if m else ""
+"""Compatibility import; implementation is owned by responsibility 009."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_009.track")
+_sys.modules[__name__] = _implementation

@@ -1,0 +1,28 @@
+{
+  "id": 109,
+  "name": "コース別スピード基準",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/prediction/course_speed_baselines.py"
+  ],
+  "shared_dependencies": [
+    "Existing import name aliases canonical object; no new calculation or source"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/prediction/course_speed_baselines.py",
+      "canonical": "arvexq/components/item_109/course_speed_baselines.py",
+      "module": "arvexq.components.item_109.course_speed_baselines"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

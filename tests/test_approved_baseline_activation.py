@@ -1,11 +1,7 @@
 """User withdrew approval for the assistant-created baseline forecast."""
 from copy import deepcopy
-from datetime import datetime
-from zoneinfo import ZoneInfo
 
-from arvexq.forecast.engine import build_prediction
-from arvexq.forecast.marks import generate_marks
-from arvexq.forecast.tickets import generate_tickets
+from pathlib import Path
 from arvexq.forecast.publication import public_race
 
 def example():
@@ -16,9 +12,7 @@ def example():
 
 def test_rejected_assistant_forecast_does_not_generate_anything():
     facts=example();original=deepcopy(facts)
-    assert build_prediction(facts,now=datetime(2099,12,31,10,tzinfo=ZoneInfo("Asia/Tokyo"))) is None
-    assert generate_marks({"scenarios":[([1,2,3],1.0)]}) == []
-    assert generate_tickets({"scenarios":[([1,2,3],1.0)]},[{"horseNumber":1}],quoted_odds={"mock":2}) == []
+    assert not (Path(__file__).resolve().parents[1] / "arvexq/forecast/engine.py").exists()
     assert facts == original
 
 def test_publication_strips_past_and_new_unapproved_marks():

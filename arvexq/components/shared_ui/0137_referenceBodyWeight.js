@@ -1,0 +1,1 @@
+function referenceBodyWeight(h){if(!h)return 0;var w=n(h.referenceBodyWeight,0);if(w>250&&w<800)return w;var rs=h.recentRaces||[];for(var i=0;i<rs.length;i++){w=n(rs[i]&&rs[i].bodyWeight,0);if(w>250&&w<800)return w}return 0}

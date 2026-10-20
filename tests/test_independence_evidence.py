@@ -49,3 +49,18 @@ def test_version_two_requires_a_boundary_for_every_item():
     assert not audit(proposed)['errors']
     proposed['items'][199].pop('owner')
     assert audit(proposed)['errors']
+
+
+def test_status_counts_reconcile_without_promoting_partial_work():
+    report = audit(MANIFEST)
+    counts = report['state_counts']
+    assert counts['本番検証済'] == 3
+    assert counts['分離済'] == 8
+    assert counts['解析済'] == 70
+    assert counts['main統合済'] == 3
+    assert counts['未着手'] == 87
+    assert counts['予想ロジック仕様待ち'] == 29
+    assert report['partial'] == 81
+    assert report['not_started_or_waiting'] == 116
+    assert report['unclassified'] == 0
+    assert report['complete'] + report['partial'] + report['not_started_or_waiting'] == 200

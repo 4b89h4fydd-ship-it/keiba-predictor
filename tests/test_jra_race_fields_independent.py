@@ -1,4 +1,5 @@
 """JRA official factual race-card fields, no reliance on betting UI."""
+from arvexq.components.runtime import composed_app_source
 from pathlib import Path
 from arvexq.ingest.race_fields.start_time import extract as post
 from arvexq.ingest.race_fields.course import extract as course
@@ -31,8 +32,14 @@ def test_first_prize():
     assert prize("賞金未発表")==0
 
 def test_jra_official_parser_uses_all_independent_extractors():
-    src=Path("app.py").read_text()
+    src=composed_app_source()
     segment=src.split("def _jra_parse_race(",1)[1].split("\ndef ",1)[0]
     for phrase in ("jra_start_time(full)","jra_course(full)","jra_distance(full)",
                    "jra_surface(full)","jra_first_prize(full)"):
         assert phrase in segment
+
+
+def test_first_prize_does_not_confuse_eleventh_with_first_place():
+    assert prize("11着 300") == 0
+    assert prize("11着 300 1着 5,000") == 50000000
+    assert prize("1着 未発表") == 0

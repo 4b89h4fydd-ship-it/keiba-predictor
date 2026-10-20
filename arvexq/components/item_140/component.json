@@ -1,0 +1,26 @@
+{
+  "id": 140,
+  "name": "SQLite保存",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/infra/race_stores.py",
+    "arvexq/infra/legacy_stores.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_default_data_root",
+    "RaceRow",
+    "EntryRow",
+    "_new_conn"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,32 @@
+{
+  "id": 10,
+  "name": "開催日程取得",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/race_fields/meeting_schedule.py"
+  ],
+  "shared_dependencies": [
+    "app.py:_jra_program_cache / _jra_program_cache_lock (shared JRA schedule cache)",
+    "app.py:_jra_request and _today_iso (existing HTTP source and freshness policy)",
+    "app.py:normalize_central_race and _jra_text (existing output and DOM parsing)"
+  ],
+  "owned_definitions": [
+    "_jra_program_summaries",
+    "_jra_program_lookup"
+  ],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/race_fields/meeting_schedule.py",
+      "canonical": "arvexq/components/item_010/meeting_schedule.py",
+      "module": "arvexq.components.item_010.meeting_schedule"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,27 @@
+{
+  "id": 64,
+  "name": "NARオッズ解析",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/nar_odds.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_parse_nar_live_odds_html",
+    "_nar_live_odds",
+    "_attach_nar_live_odds"
+  ],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/nar_odds.py",
+      "canonical": "arvexq/components/item_064/nar_odds.py",
+      "module": "arvexq.components.item_064.nar_odds"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "circuits": [
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

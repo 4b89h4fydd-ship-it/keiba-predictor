@@ -1,0 +1,212 @@
+"""Actual immutable 2026-10-17 saved JRA/NAR races through unchanged Stage64."""
+import json
+from pathlib import Path
+import unittest
+from unittest.mock import patch
+
+from arvexq.research.stage64.pipeline import STAGES, predict
+from arvexq.research.stage64.protocol import ARMS, clean_input, code_hash
+from scripts.arvexq_stage64_saved_connection import (SAVED, run_saved_day,
+                                                     compare_archived_coverage)
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class Stage64SavedConnectionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.report = run_saved_day("2026-10-17")
+        cls.reference = json.loads((ROOT / "docs/research/stage64-results/summary.json")
+                                   .read_text(encoding="utf-8"))
+
+    def test_all_original_races_and_three_ability_methods_in_both_circuits(self):
+        report = self.report
+        self.assertEqual(set(report["byCircuit"]), {"jra", "nar"})
+        self.assertEqual([report["byCircuit"][c]["races"] for c in ("jra", "nar")],
+                         [36, 34])
+        self.assertEqual(len(report["raceRows"]), 70)
+        self.assertEqual(tuple(report["abilityMethods"]), ARMS)
+        self.assertEqual(tuple(report["stages"]), STAGES)
+        self.assertEqual(sum(v["armsExecuted"] for v in report["byCircuit"].values()), 210)
+        self.assertFalse(report["productionEligible"])
+        self.assertFalse(report["independentlyVerifiedPreoff"])
+        self.assertFalse(report["productionChanged"])
+        self.assertIsNone(report["productMarks"])
+        self.assertIsNone(report["recommendedBets"])
+
+    def test_real_six_stages_and_separate_jra_nar_scenario_counts(self):
+        for owner in ("jra", "nar"):
+            cohort = [row for row in self.report["raceRows"] if row["circuit"] == owner]
+            self.assertTrue(cohort)
+            scored = 0
+            for row in cohort:
+                self.assertTrue(row["rosterVerified"])
+                self.assertTrue(row["savedSourceSha256"])
+                self.assertEqual(set(row["predictions"]), set(ARMS))
+                for arm, p in row["predictions"].items():
+                    self.assertEqual(p["abilityMethod"], arm)
+                    self.assertEqual(tuple(p["stages"]), STAGES)
+                    self.assertFalse(p["productionEligible"])
+                    if p["sixStageCalculated"]:
+                        scored += 1
+                        six = p["stages"]
+                        self.assertEqual(len(six["pace"]["value"]), 1 if owner == "jra" else 4)
+                        self.assertAlmostEqual(sum(six["probability"]["value"]["win"].values()), 1.)
+                        self.assertAlmostEqual(sum(six["probability"]["value"]["top3"].values()), 3.)
+                        self.assertIsNone(six["marks"]["value"]["productMarks"])
+                        self.assertIsNone(six["tickets"]["value"]["recommendedBets"])
+                        self.assertLessEqual(
+                            len(six["tickets"]["value"]["hypotheticalTrifectaTop10"]), 10)
+                    else:
+                        self.assertFalse(p["stages"]["tickets"]["value"])
+            self.assertGreater(scored, 0, owner + " should compute real saved six-stage races")
+            self.assertEqual(scored, self.report["byCircuit"][owner]["sixStageCalculated"])
+            self.assertEqual(scored + self.report["byCircuit"][owner]["unscoredArms"],
+                             len(cohort) * 3)
+
+    def test_no_comparability_claim_with_prior_527_race_study(self):
+        self.assertIn("different-saved-cohort", self.report["historical527Comparison"])
+        self.assertFalse(self.reference["productionEligible"])
+        self.assertFalse(self.reference["independentlyVerifiedPreoff"])
+        self.assertEqual(set(self.reference["byCircuit"]), {"jra", "nar"})
+        for circuit, historical_count in (("jra", 108), ("nar", 419)):
+            self.assertEqual(set(self.reference["byCircuit"][circuit]), set(ARMS))
+            for arm in ARMS:
+                self.assertEqual(
+                    self.reference["byCircuit"][circuit][arm]["cohortRaces"],
+                    historical_count)
+
+    def test_outcomes_odds_and_product_bets_cannot_change_stage64(self):
+        sample = {"id": "nar-2026-10-17-高知-01", "date": "2026-10-17",
+                  "circuit": "地方", "fieldSize": 3,
+                  "horses": [{"horseNumber": n, "recentRaces": [
+                      {"date": "2026-10-10", "finish": n, "fieldSize": 6,
+                       "cornerPositions": [n]}]} for n in (1, 2, 3)]}
+        baseline = clean_input(sample)
+        expected = {arm: predict(baseline, expected_circuit="nar", ability_method=arm)
+                    for arm in ARMS}
+        sample.update(result={"status": "確定", "finishers": [{"finish": 1}]},
+                      payouts=[{"kind": "3連単", "amount": 99999}],
+                      preRaceBet={"items": [{"kind": "おすすめ買い目"}]},
+                      morningMarkSnapshot={"horses": [{"mark": "◎"}]})
+        for horse in sample["horses"]:
+            horse["winOdds"] = 1.1
+        # Original prospective guard still rejects result-bearing input.
+        with self.assertRaisesRegex(ValueError, "target outcome present"):
+            clean_input(sample)
+        projected = {k: v for k, v in sample.items()
+                     if k not in ("result", "results", "payouts")}
+        self.assertEqual(clean_input(projected), baseline)
+        for arm in ARMS:
+            self.assertEqual(predict(clean_input(projected),
+                                     expected_circuit="nar", ability_method=arm),
+                             expected[arm])
+
+    def test_future_date_or_mismatched_horses_fail_closed(self):
+        with self.assertRaisesRegex(ValueError, "retrospective"):
+            run_saved_day("2999-01-01")
+        with self.assertRaisesRegex(ValueError, "retrospective"):
+            run_saved_day("2026-10-20")
+
+    def test_same_race_archive_baseline_coverage_reconciliation(self):
+        # 2026-10-11 has 80 identical race IDs in the original 527R report.
+        # Compare readiness AND per-horse blockers for every ability arm;
+        # no unverified numeric probability-equivalence claim is made.
+        day = run_saved_day("2026-10-11")
+        archived = json.loads((ROOT / "docs/research/stage64-results/coverage.json")
+                              .read_text(encoding="utf-8"))
+        joined = compare_archived_coverage(day, archived)
+        self.assertEqual(day["byCircuit"]["jra"]["races"], 24)
+        self.assertEqual(day["byCircuit"]["nar"]["races"], 56)
+        self.assertEqual(sum(v["overlappingRaces"]
+                             for v in joined["byCircuit"].values()), 80)
+        self.assertEqual(sum(v["notInArchivedResearch"]
+                             for v in joined["byCircuit"].values()), 0)
+        for owner in ("jra", "nar"):
+            counted = joined["byCircuit"][owner]
+            self.assertEqual(counted["fullyMatchedRaces"] + counted["disagreedRaces"],
+                             counted["overlappingRaces"])
+            self.assertLessEqual(counted["fullyMatchedRaces"],
+                                 counted["statusMatchedRaces"])
+            self.assertLessEqual(counted["fullyMatchedRaces"],
+                                 counted["blockersMatchedRaces"])
+        self.assertEqual(sum(v["disagreedRaces"]
+                             for v in joined["byCircuit"].values()),
+                         len(joined["differences"]))
+        self.assertFalse(joined["sameInputByteEqualityVerified"])
+        self.assertFalse(joined["probabilityOrTicketNumericalEqualityVerified"])
+        self.assertFalse(joined["productionEligible"])
+
+    def test_nar_only_actual_saved_day_preserves_circuit_isolation(self):
+        # 2026-10-13 has 58 NAR races and no JRA race. The trial may not
+        # fabricate JRA observations merely to fill a per-day cohort.
+        report = run_saved_day("2026-10-13")
+        self.assertEqual(report["byCircuit"]["jra"].get("races", 0), 0)
+        self.assertEqual(report["byCircuit"]["nar"]["races"], 58)
+        self.assertEqual(len(report["raceRows"]), 58)
+        self.assertTrue(all(row["circuit"] == "nar" for row in report["raceRows"]))
+        self.assertEqual(report["byCircuit"]["nar"]["armsExecuted"], 174)
+        archived = json.loads((ROOT / "docs/research/stage64-results/coverage.json")
+                              .read_text(encoding="utf-8"))
+        comparison = compare_archived_coverage(report, archived)
+        self.assertEqual(comparison["byCircuit"]["nar"]["overlappingRaces"], 58)
+        self.assertEqual(comparison["byCircuit"]["jra"]["overlappingRaces"], 0)
+        self.assertFalse(comparison["productionEligible"])
+
+    def test_archived_coverage_identity_and_duplicates_fail_closed(self):
+        day = {"raceRows": [{"raceId": "jra-2026-10-11-京都-01",
+                            "date": "2026-10-11", "circuit": "jra",
+                            "predictions": {}}]}
+        archived = [{"raceId": "jra-2026-10-11-京都-01",
+                     "date": "2026-10-11", "circuit": "nar",
+                     "stageStatus": {}, "blockers": []}]
+        with self.assertRaisesRegex(ValueError, "circuit/date"):
+            compare_archived_coverage(day, archived)
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            compare_archived_coverage(day, archived + archived)
+
+    def test_readonly_saved_history_diagnostic_categories(self):
+        for owner, expected in (("jra", (1, 6)), ("nar", (12, 6))):
+            diag = self.report["byCircuit"][owner]
+            self.assertEqual(diag["blockedUnsupportedDisciplineRaces"], expected[0])
+            self.assertEqual(diag["blockedInsufficientHistoryRaces"], expected[1])
+            self.assertEqual(diag.get("blockedOtherRaces", 0), 0)
+            self.assertEqual(diag["races"],
+                             diag["sixStageCalculated"] // 3 + sum(expected))
+
+    def test_same_status_with_changed_runner_blocker_is_not_called_full_match(self):
+        rid = "nar-2026-10-12-佐賀-11"
+        status = {stage: "research-only" for stage in STAGES}
+        now = [{"horseNumber": 11, "date": "2026-04-26",
+                "reason": "incompatible-history-discipline"},
+               {"horseNumber": 11, "date": "2026-06-28",
+                "reason": "incompatible-history-discipline"}]
+        old = [now[0]]
+        row = {"raceId": rid, "circuit": "nar", "date": "2026-10-12",
+               "predictions": {arm: {
+                   "stages": {stage: {"status": value}
+                              for stage, value in status.items()},
+                   "blockers": now} for arm in ARMS}}
+        report = {"raceRows": [row]}
+        archived = [{"raceId": rid, "circuit": "nar",
+                     "date": "2026-10-12", "stageStatus": status,
+                     "blockers": old}]
+        compare = compare_archived_coverage(report, archived)
+        nar = compare["byCircuit"]["nar"]
+        self.assertEqual(nar["overlappingRaces"], 1)
+        self.assertEqual(nar["statusMatchedRaces"], 1)
+        self.assertEqual(nar["blockersMatchedRaces"], 0)
+        self.assertEqual(nar["fullyMatchedRaces"], 0)
+        self.assertEqual(nar["disagreedRaces"], 1)
+        self.assertEqual(len(compare["differences"]), 1)
+        self.assertEqual(set(compare["differences"][0]["armDifferences"]), set(ARMS))
+        self.assertFalse(compare["probabilityOrTicketNumericalEqualityVerified"])
+
+    def test_pipeline_and_protocol_source_not_modified_by_connector(self):
+        self.assertTrue(code_hash())
+        ui = (SAVED / "app.js").read_text(encoding="utf-8")
+        self.assertNotIn("arvexq_stage64_saved_connection", ui)
+
+
+if __name__ == "__main__":
+    unittest.main()

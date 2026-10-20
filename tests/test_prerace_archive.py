@@ -90,49 +90,35 @@ class ServerSealTests(unittest.TestCase):
 
     def test_no_mark_if_missing_evidence(self):
         d = deepcopy(self.d)
-        for h in d["horses"]:
-            h["recentRaces"] = []
-        result = prepare_seal(d, now=self.now, assign=lambda x:x,
-                              build=lambda x:forecast(x,self.now))
-        self.assertEqual(result["status"], "missing-historical-evidence")
-
-    def test_unverified_full_career_is_reported_not_sealed(self):
-        d = deepcopy(self.d)
-        def missing_career(card):
-            card["predictionStatus"] = "waiting-for-full-career"
-            card["careerReadiness"] = {
-                "activeHorses": 3, "completeHorses": 2,
-                "blockedHorses": [{"horseNumber": 1,
-                                   "reason": "reported-starts-unknown"}]}
-            return card
-        result = prepare_seal(d, now=self.now, assign=missing_career,
-                              build=lambda _: self.fail("no lock from unverified careers"))
-        self.assertEqual(result["status"], "incomplete-prediction")
-        self.assertEqual(result["predictionStatus"], "waiting-for-full-career")
-        self.assertEqual(result["observedCoverage"], {})
+        for horse in d["horses"]:
+            horse["recentRaces"] = []
+        original = deepcopy(d)
+        result = prepare_seal(d, now=self.now)
+        self.assertEqual(result, {"status": "missing-historical-evidence"})
+        self.assertEqual(d, original)
         self.assertNotIn("preRacePrediction", d)
 
-    def test_evaluation_and_marks_are_as_captured(self):
-        def already_verified(x):
-            # This test exercises archival fidelity, not model evidence. The
-            # separate JRA/NAR authority test proves observed inputs.
-            x["predictionStatus"]="ready"
-            return x
-        result = prepare_seal(self.d, now=self.now, assign=already_verified,
-                              build=lambda x:forecast(x,self.now))
-        self.assertEqual(result["status"], "sealed", result)
-        record = result["detail"]["preRacePrediction"]
-        self.assertEqual(record["horses"][1]["lockedEvaluation"]["score"], 80)
-        self.assertEqual(record["freezePolicy"], SEALED_VERSION)
-        # A prior sealed snapshot without a ticket is preserved and queued
-        # for ticket capture while the race is still in the pre-off window.
-        result2 = prepare_seal(result["detail"], now=self.now + timedelta(minutes=1))
-        self.assertEqual(result2["status"], "sealed")
-        self.assertEqual(result2["detail"]["preRacePrediction"], record)
-        complete = deepcopy(result["detail"])
+    def test_legacy_forecast_cannot_be_generated_even_with_injected_callbacks(self):
+        d = deepcopy(self.d)
+        called = []
+        result = prepare_seal(d, now=self.now,
+                              assign=lambda _: called.append("assign"),
+                              build=lambda _: called.append("build"))
+        self.assertEqual(result["status"], "incomplete-prediction")
+        self.assertEqual(result["predictionStatus"], "disabled")
+        self.assertEqual(called, [])
+        self.assertNotIn("preRacePrediction", d)
+
+    def test_existing_sealed_original_is_preserved_without_new_generation(self):
+        d = seal_detail(self.d, forecast(self.d, self.now), self.now)
+        record = deepcopy(d["preRacePrediction"])
+        result = prepare_seal(d, now=self.now + timedelta(minutes=1))
+        self.assertEqual(result["status"], "sealed")
+        self.assertEqual(result["detail"]["preRacePrediction"], record)
+        complete = deepcopy(d)
         complete["preRaceBet"] = {"raceId": self.d["id"],
                                   "fixedAt": self.now.isoformat(), "decision": "見送り", "items": []}
-        self.assertEqual(prepare_seal(complete,now=self.now+timedelta(minutes=1))["status"],"already-sealed")
+        self.assertEqual(prepare_seal(complete, now=self.now + timedelta(minutes=1))["status"], "already-sealed")
 
     def test_d1_seal_guard_can_insert_new_race_only_with_verified_day(self):
         import io
@@ -289,32 +275,22 @@ class ServerSealTests(unittest.TestCase):
         result = restore_seal(original, modified)
         self.assertEqual(result["preRacePrediction"], before)
 
-    def test_scratch_excluded_from_core_rank_without_deleting_racecard(self):
-        from scripts.arvexq_freeze_predictions import prepare_seal
+    def test_cancelled_runner_does_not_trigger_removed_prediction(self):
         d = deepcopy(self.d)
         d["horses"].insert(0,{
             "horseNumber": 4, "name": "CANCELLED", "status": "出走取消",
             "scratched": True, "recentRaces": [{"finish": 1}],
             "integratedEvaluation": {"mark": "◎", "grade": "S"}})
-        seen = []
-        def assign_core(data):
-            seen.extend(h["horseNumber"] for h in data["horses"])
-            for h, mark in zip(data["horses"],("◎", "○", "▲")):
-                h["integratedEvaluation"]["mark"] = mark
-            data["predictionStatus"] = "ready"
-            return data
-        def build_active(wd):
-            active = deepcopy(wd)
-            active["horses"] = [h for h in wd["horses"] if not h.get("scratched")]
-            return forecast(active,self.now)
-        result = prepare_seal(d, now=self.now, assign=assign_core,
-                              build=build_active)
-        self.assertEqual(result["status"], "sealed", result)
-        self.assertEqual(seen, [1,2,3])
-        self.assertEqual(len(result["detail"]["horses"]),4)
-        locked = result["detail"]["preRacePrediction"]["horses"]
-        self.assertNotIn(4,[r["horseNumber"] for r in locked])
-        self.assertEqual(result["detail"]["horses"][0]["integratedEvaluation"]["mark"],"")
+        original = deepcopy(d)
+        calls = []
+        result = prepare_seal(d, now=self.now,
+                              assign=lambda _: calls.append("assign"),
+                              build=lambda _: calls.append("build"))
+        self.assertEqual(result["status"], "incomplete-prediction")
+        self.assertEqual(result["predictionStatus"], "disabled")
+        self.assertEqual(calls, [])
+        self.assertEqual(d, original)
+        self.assertNotIn("preRacePrediction", d)
 
     def test_post_sync_detects_race_condition_erasure(self):
         from scripts.arvexq_protect_sync import verify_published

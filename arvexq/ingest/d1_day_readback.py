@@ -10,35 +10,12 @@ import urllib.parse
 import urllib.request
 
 from arvexq.ingest.full_snapshot_codec import unpack_detail
+from arvexq.v3.audit.http429 import describe_429
+from arvexq.components.item_175.http_policy import display_fallback_status
 
 MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 
-
-def get_json(url, *, timeout=20, attempts=2, opener=urllib.request.urlopen,
-             sleeper=time.sleep):
-    """Bounded GET retries; invalid JSON and schema are not successful reads."""
-    if timeout <= 0 or attempts < 1:
-        raise ValueError("positive HTTP timeout and attempt count required")
-    for attempt in range(attempts):
-        try:
-            request = urllib.request.Request(url, headers={
-                "accept": "application/json", "user-agent": "ARVEXQ-FactReadback/1"})
-            with opener(request, timeout=timeout) as response:
-                raw = response.read(MAX_RESPONSE_BYTES + 1)
-            if len(raw) > MAX_RESPONSE_BYTES:
-                raise ValueError("D1 JSON response exceeds read budget")
-            result = json.loads(raw.decode("utf-8"))
-            if not isinstance(result, dict):
-                raise ValueError("D1 JSON response must be an object")
-            return result
-        except urllib.error.HTTPError as exc:
-            if exc.code not in (408, 429, 500, 502, 503, 504) or attempt + 1 == attempts:
-                raise
-        except OSError:
-            if attempt + 1 == attempts:
-                raise
-        sleeper(min(2, 0.5 * (attempt + 1)))
-
+from arvexq.components.item_160.readback_retry import get_json
 
 def restore_race_response(body, race_id, day):
     if not isinstance(body, dict) or body.get("ok") is False:
@@ -78,7 +55,7 @@ def read_day(base, day, *, fetch=get_json, workers=3):
         try:
             body = fetch(url)
         except urllib.error.HTTPError as exc:
-            if exc.code not in (404, 503):
+            if not display_fallback_status(exc.code):
                 raise
             body, source = fetch(url + "?view=display"), "display"
         return restore_race_response(body, race_id, day), source
@@ -92,8 +69,13 @@ def read_day(base, day, *, fetch=get_json, workers=3):
                 try:
                     details[race_id], sources[race_id] = future.result()
                 except Exception as exc:
-                    errors[race_id] = {"raceId": race_id,
+                    entry = {"raceId": race_id,
                         "error": type(exc).__name__ + ": " + str(exc)[:240]}
+                    if getattr(exc, "code", None) == 429:
+                        entry["error"] = "api-http-429"
+                        entry["httpStatus"] = 429
+                        entry["rateLimitEvidence"] = describe_429(exc)
+                    errors[race_id] = entry
     return {"date": day, "races": races,
             "details": [details[race_id] for race_id in ids if race_id in details],
             "readbackSources": sources,

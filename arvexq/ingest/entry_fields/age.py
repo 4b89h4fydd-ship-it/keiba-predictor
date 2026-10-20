@@ -1,7 +1,5 @@
-"""Extract and normalize only age from a provider row. Missing values remain absent."""
-import re
-from .dom import age_text
-
-def extract(row):
-    match = re.match(r"^(?:牡|牝|セ|騸)\s*(\d{1,2})", age_text(row))
-    return int(match.group(1)) if match else 0
+"""Compatibility import; implementation is owned by responsibility 029."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_029.age")
+_sys.modules[__name__] = _implementation

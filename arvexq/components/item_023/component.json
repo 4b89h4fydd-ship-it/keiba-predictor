@@ -1,0 +1,25 @@
+{
+  "id": 23,
+  "name": "レースID照合",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/race_identity.py",
+    "arvexq/quality/fact_audit.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/race_identity.py",
+      "canonical": "arvexq/components/item_023/race_identity.py",
+      "module": "arvexq.components.item_023.race_identity"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

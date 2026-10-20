@@ -1,0 +1,1 @@
+function breakReliability(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),v=[],ws=[],i,p,fs;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!n(p[0]))continue;fs=raceField(rs[i]);v.push(clamp(1-(n(p[0])-1)/Math.max(3,fs-1),0,1));ws.push(w[i])}return weightedRate(v,ws,.5)}

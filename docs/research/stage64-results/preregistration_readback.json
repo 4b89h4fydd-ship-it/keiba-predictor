@@ -1,0 +1,29 @@
+{
+  "source": "Authenticated GitHub connector metadata and artifact byte readback",
+  "plans": [
+    {
+      "circuit": "jra",
+      "codeHashMatches": true,
+      "preregistrationWitnessVerified": true,
+      "artifactId": 12192643073,
+      "artifactDigest": "sha256:c3c23a823df5cd71b5b23fc28ec6cecb01ee8b7f7d132372375a9be46710ddb3",
+      "runId": 39266625982,
+      "headSha": "0035c9830d59c26f6f8878cc44d62f6f0cd78207",
+      "serverObservedBy": "2026-10-19T14:11:17+00:00",
+      "url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39266625982"
+    },
+    {
+      "circuit": "nar",
+      "codeHashMatches": true,
+      "preregistrationWitnessVerified": true,
+      "artifactId": 12192483600,
+      "artifactDigest": "sha256:fc60fb0da5466a18857b3d17a623c5537d45ed8644ba44ad7603694299ca1bd4",
+      "runId": 39266625982,
+      "headSha": "0035c9830d59c26f6f8878cc44d62f6f0cd78207",
+      "serverObservedBy": "2026-10-19T14:11:17+00:00",
+      "url": "https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39266625982"
+    }
+  ],
+  "futureForecastRaces": 0,
+  "independentScoredRaces": 0
+}

@@ -1,6 +1,5 @@
-"""#73 Strict confirmed race result from explicit official declaration."""
-import re
-
-def official_confirmed(text):
-    s=str(text or "")
-    return bool(re.search(r"確定",s)) and not bool(re.search(r"速報|暫定",s))
+"""Compatibility import; implementation is owned by responsibility 073."""
+import importlib as _importlib
+import sys as _sys
+_implementation = _importlib.import_module("arvexq.components.item_073.confirmed")
+_sys.modules[__name__] = _implementation

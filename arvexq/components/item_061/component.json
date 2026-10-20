@@ -1,0 +1,28 @@
+{
+  "id": 61,
+  "name": "人気順位",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/entry_fields/popularity.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.ingest.entry_fields.dom"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/entry_fields/popularity.py",
+      "canonical": "arvexq/components/item_061/popularity.py",
+      "module": "arvexq.components.item_061.popularity"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

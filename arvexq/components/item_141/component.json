@@ -1,0 +1,36 @@
+{
+  "id": 141,
+  "name": "レース一覧キャッシュ",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/storage/cache_keys.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "DayBundleStore",
+    "_bootstrap_rows_local",
+    "_bootstrap_sources_running",
+    "_bootstrap_display_ready",
+    "_bootstrap_analysis_ready",
+    "_bootstrap_detail_ready",
+    "_bootstrap_detail_local",
+    "_assemble_day_bundle",
+    "_refresh_day_bundle",
+    "_schedule_day_bundle_refresh",
+    "_site_bootstrap_payload",
+    "_force_day_live_snapshot",
+    "site_bootstrap",
+    "_site_bootstrap_warm_loop",
+    "_start_site_bootstrap_warmer"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

@@ -1,0 +1,23 @@
+{
+  "id": 7,
+  "name": "JRA障害コース馬場状態判定",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/jra_obstacle_going.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/jra_obstacle_going.py",
+      "canonical": "arvexq/components/item_007/jra_obstacle_going.py",
+      "module": "arvexq.components.item_007.jra_obstacle_going"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

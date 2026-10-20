@@ -1,0 +1,62 @@
+name: ARVEXQ v3 Saved-Archive Audit
+
+"on":
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - arvexq/v3/audit/**
+      - scripts/arvexq_v3_archive_audit.py
+      - tests/test_v3_archive_audit.py
+      - tests/test_v3_snapshot_digest.py
+      - tests/test_v3_full_archive_integrity.py
+      - tests/test_v3_unpaired_saved_days.py
+      - tests/test_v3_archive_ci_summary.py
+      - tests/test_v3_runner_evidence_triage.py
+      - arvexq/v3/audit/runner_gaps.py
+      - scripts/arvexq_v3_full_archive_audit.py
+      - scripts/arvexq_v3_blob_digest_audit.py
+      - scripts/arvexq_fact_data_audit.py
+      - arvexq/ui/static/racecards/**
+      - arvexq/ui/static/saved-snapshots/**
+      - .github/workflows/arvexq-v3-archive-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  read-only-archive-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test runner
+        run: python -m pip install -q pytest==9.1.1
+      - name: Validate offline archived-source audit
+        run: python -m pytest tests/test_v3_archive_audit.py -q
+      - name: Audit latest seven saved day files without contacting production
+        run: python scripts/arvexq_v3_archive_audit.py --days 7 --sample-per-circuit 1 --out arvexq-v3-archive-audit.json
+      - name: Restore bounded real snapshots and verify SHA-256/horse identity offline
+        run: |
+          python -m pytest tests/test_v3_snapshot_digest.py -q
+          python scripts/arvexq_v3_blob_digest_audit.py --days 7 --per-circuit 2 --out arvexq-v3-blob-audit.json
+      - name: Verify every indexed saved original and embedded career archive
+        run: |
+          python -m pytest tests/test_v3_runner_evidence_triage.py tests/test_v3_unpaired_saved_days.py tests/test_v3_archive_ci_summary.py -q
+          python scripts/arvexq_v3_full_archive_audit.py --days 7 --out arvexq-v3-full-archive-audit.json
+      - name: Upload inspectable report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-v3-static-evidence-audit
+          path: |
+            arvexq-v3-archive-audit.json
+            arvexq-v3-blob-audit.json
+            arvexq-v3-full-archive-audit.json
+          if-no-files-found: ignore
+          retention-days: 14

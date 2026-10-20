@@ -1,0 +1,26 @@
+{
+  "id": 30,
+  "name": "斤量",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "arvexq/ingest/entry_fields/carried_weight.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.ingest.entry_fields.dom"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [
+    {
+      "previous": "arvexq/ingest/entry_fields/carried_weight.py",
+      "canonical": "arvexq/components/item_030/carried_weight.py",
+      "module": "arvexq.components.item_030.carried_weight"
+    }
+  ],
+  "assets": [],
+  "state": "migrated-module",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

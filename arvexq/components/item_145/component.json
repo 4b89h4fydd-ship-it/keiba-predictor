@@ -1,0 +1,26 @@
+{
+  "id": 145,
+  "name": "オッズキャッシュ",
+  "prediction_reserved": false,
+  "existing_sources": [
+    "workers/live_odds.mjs"
+  ],
+  "shared_dependencies": [
+    "Existing Worker entry routes, relative imports, binding names, and deployment configuration preserved; requires CI verification",
+    "Worker caches.default and ctx.waitUntil are shared operational runtime services"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [
+    "arvexq/components/item_145/live_odds.mjs",
+    "arvexq/components/item_145/odds_cache.mjs"
+  ],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": null,
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

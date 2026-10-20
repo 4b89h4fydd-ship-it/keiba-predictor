@@ -1,0 +1,29 @@
+{
+  "id": 153,
+  "name": "Result Repair",
+  "prediction_reserved": false,
+  "existing_sources": [
+    ".github/workflows/arvexq-result-repair.yml"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [
+    "_jra_result_cname_from_card",
+    "_jra_prior_result_cnames",
+    "_jra_resolve_prior_results",
+    "_race_should_have_result",
+    "_data_core_result_due",
+    "_result_has_podium",
+    "_refresh_result_fast",
+    "_nar_result_should_be_available"
+  ],
+  "owned_modules": [],
+  "assets": [],
+  "state": "migrated-shared-context",
+  "unlocated_sources": [],
+  "shared_context": "existing-app-globals",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
+}

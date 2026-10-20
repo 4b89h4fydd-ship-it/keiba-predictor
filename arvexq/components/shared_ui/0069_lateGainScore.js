@@ -1,0 +1,1 @@
+function lateGainScore(h,r){var rs=historicalWindow(h,r),w=recencyWeights(rs.length),v=[],ws=[],i,p,a,b,fin,fs,g;for(i=0;i<rs.length;i++){p=rs[i].cornerPositions||[];if(!p.length)continue;a=n(p[p.length-1]);fin=n(rs[i].finish);fs=raceField(rs[i]);if(!a||!fin)continue;g=(a-fin)/Math.max(3,fs-1);v.push(clamp(.5+g*1.8,0,1));ws.push(w[i])}return weightedRate(v,ws,.5)}
