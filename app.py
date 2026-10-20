@@ -1831,7 +1831,7 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
         except Exception:cp=[]
         # The source's race-date age is a birth-year proxy, not a unique ID.
         # Use it and observed sex to reject obvious same-name collisions.
-        src_birth=int(str(row["date"])[:4])-int(row["age"] or 0)+1 if int(row["age"] or 0)>0 else None
+        src_birth=int(str(row["date"])[:4])-int(row["age"] or 0) if int(row["age"] or 0)>0 else None
         arr.append(({
             "date":row["date"],"track":row["track"],"raceNumber":int(row["race_no"] or 0),
             "raceId":f"nar-{row['date']}-{row['track']}-{int(row['race_no'] or 0):02d}",
@@ -1863,7 +1863,7 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
             age=int(h.get("age") or 0)
         except (TypeError,ValueError):
             age=0
-        target_birth=int(cutoff[:4])-age+1 if age>0 and cutoff[:4].isdigit() else None
+        target_birth=int(cutoff[:4])-age if age>0 and cutoff[:4].isdigit() else None
         target_sex=str(h.get("sex") or "").strip()
         known_births={birth for _,birth,_ in candidate_runs if birth}
         # If the runner lacks an age, mixed birth years cannot be resolved.
