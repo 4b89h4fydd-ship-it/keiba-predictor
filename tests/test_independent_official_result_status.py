@@ -1,3 +1,4 @@
+from stage4_source_support import implementation_source
 from pathlib import Path
 from arvexq.ingest.result_status.confirmed import official_confirmed
 
@@ -9,6 +10,7 @@ def test_confirmed_requires_unambiguous_official_status():
     assert not official_confirmed("出走表")
 
 def test_nar_result_uses_independent_confirmation():
-    source=Path("app.py").read_text()
+    source=implementation_source()
     assert "explicit_final=official_confirmed(full)" in source
-    assert "from arvexq.ingest.result_status.confirmed import official_confirmed" in source
+    from arvexq.components.item_073.confirmed import official_confirmed as connected
+    assert connected is official_confirmed

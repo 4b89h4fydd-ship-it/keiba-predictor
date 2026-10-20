@@ -1,4 +1,5 @@
 """Independent meeting calendar context from JRA official headings."""
+from stage4_source_support import implementation_source
 import re
 from pathlib import Path
 from bs4 import BeautifulSoup
@@ -15,6 +16,6 @@ def test_missing_calendar_context_is_unknown():
     assert extract(soup.table,MEETING)==(0,"",0)
 
 def test_official_calendar_uses_extractor():
-    source=Path("app.py").read_text()
+    source=implementation_source()
     segment=source.split("def _jra_program_summaries(",1)[1].split("\ndef ",1)[0]
     assert "jra_meeting_schedule(table,JRA_MEETING_DAY_RE,_jra_text)" in segment

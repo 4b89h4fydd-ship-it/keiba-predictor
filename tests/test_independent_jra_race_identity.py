@@ -1,3 +1,4 @@
+from stage4_source_support import implementation_source
 from pathlib import Path
 import re
 from bs4 import BeautifulSoup
@@ -31,7 +32,7 @@ def test_actual_field_count_excludes_unknown_numbers():
     assert entrants([])==0
 
 def test_live_parser_delegates_to_source_fact_modules():
-    source=Path("app.py").read_text()
+    source=implementation_source()
     assert "return jra_race_track(cname,JRA_TRACK_CODES)" in source
     part=source.split("def _jra_parse_race(",1)[1].split("\ndef ",1)[0]
     assert "title=jra_race_title(soup,race_no,JRA_BAD_TITLE_RE)" in part
