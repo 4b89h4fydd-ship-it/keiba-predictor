@@ -174,6 +174,34 @@ class Stage64SavedConnectionTests(unittest.TestCase):
             self.assertEqual(diag["races"],
                              diag["sixStageCalculated"] // 3 + sum(expected))
 
+    def test_same_status_with_changed_runner_blocker_is_not_called_full_match(self):
+        rid = "nar-2026-10-12-佐賀-11"
+        status = {stage: "research-only" for stage in STAGES}
+        now = [{"horseNumber": 11, "date": "2026-04-26",
+                "reason": "incompatible-history-discipline"},
+               {"horseNumber": 11, "date": "2026-06-28",
+                "reason": "incompatible-history-discipline"}]
+        old = [now[0]]
+        row = {"raceId": rid, "circuit": "nar", "date": "2026-10-12",
+               "predictions": {arm: {
+                   "stages": {stage: {"status": value}
+                              for stage, value in status.items()},
+                   "blockers": now} for arm in ARMS}}
+        report = {"raceRows": [row]}
+        archived = [{"raceId": rid, "circuit": "nar",
+                     "date": "2026-10-12", "stageStatus": status,
+                     "blockers": old}]
+        compare = compare_archived_coverage(report, archived)
+        nar = compare["byCircuit"]["nar"]
+        self.assertEqual(nar["overlappingRaces"], 1)
+        self.assertEqual(nar["statusMatchedRaces"], 1)
+        self.assertEqual(nar["blockersMatchedRaces"], 0)
+        self.assertEqual(nar["fullyMatchedRaces"], 0)
+        self.assertEqual(nar["disagreedRaces"], 1)
+        self.assertEqual(len(compare["differences"]), 1)
+        self.assertEqual(set(compare["differences"][0]["armDifferences"]), set(ARMS))
+        self.assertFalse(compare["probabilityOrTicketNumericalEqualityVerified"])
+
     def test_pipeline_and_protocol_source_not_modified_by_connector(self):
         self.assertTrue(code_hash())
         ui = (SAVED / "app.js").read_text(encoding="utf-8")
