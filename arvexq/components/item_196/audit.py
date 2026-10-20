@@ -62,6 +62,10 @@ def audit():
     # The retained audit-only body has this exact AST hash. All other definitions
     # still have to match the unmodified historical migration baseline.
     active_baseline["_attach_prerace_audit"] = "8e68e6fbbf3582f7929e018304e3f246ae64b55906364afe79fa89df625f0b11"
+    # Reviewed #057 unknown-circuit fail-closed scheduler change. Keep the
+    # historical migration-baseline.json unmodified; pin ONLY this exact new
+    # AST so any unrelated change is still rejected by the 200-box audit.
+    active_baseline["_schedule_full_history_harvest"] = "cc628fd584de1a8add4ea8f0bc5512ec76be2089cb07668a381a0af1291de6d1"
     parity = reconstructed == active_baseline and not any(
         name in reconstructed for name in retired_prediction_definitions)
     if not parity:
