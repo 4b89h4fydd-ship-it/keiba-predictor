@@ -66,6 +66,9 @@ def audit():
     # historical migration-baseline.json unmodified; pin ONLY this exact new
     # AST so any unrelated change is still rejected by the 200-box audit.
     active_baseline["_schedule_full_history_harvest"] = "cc628fd584de1a8add4ea8f0bc5512ec76be2089cb07668a381a0af1291de6d1"
+    # Reviewed #038 data-core unknown-circuit refusal; retain historical
+    # migration-baseline.json and pin only this exact revised function AST.
+    active_baseline["_data_core_refresh_race"] = "6604b2d7f06fe4a6b2c6105898c4a9a03745e2a6193c6f1ed0ee7242fb2665b7"
     parity = reconstructed == active_baseline and not any(
         name in reconstructed for name in retired_prediction_definitions)
     if not parity:
