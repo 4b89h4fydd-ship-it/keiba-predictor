@@ -151,6 +151,92 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
     return fetch
 
 
+
+def audit_nar_store_history(conn: Any, horse: dict[str, Any], cutoff: str,
+                            official_archive: Any = None) -> dict[str, Any]:
+    """Read-only comparison of name-only NAR SQLite and existing official CSV."""
+    from collections import Counter
+    from arvexq.databanks.nar_official_csv import date as official_date, normalize
+
+    name = str(horse.get("name") or "").strip()
+    end = official_date(cutoff)
+    birth = official_date(horse.get("birthDate") or horse.get("birthday"))
+    reasons: Counter[str] = Counter()
+    receipt: dict[str, Any] = {
+        "name": name, "cutoff": end, "targetBirthDate": birth or None,
+        "officialArchiveSupplied": official_archive is not None,
+        "legacyPositiveRows": 0, "dbRowsBeforeLegacyFinishFilter": 0,
+        "officialBirthCompatiblePositiveRows": 0,
+        "conflictingBirthPositiveRows": 0,
+        "unverifiedPositiveRows": 0, "excludedByLegacyFinishFilter": 0,
+        "reasonCounts": {}, "observations": [],
+        "identityConfirmedByStableHorseId": False,
+    }
+    if not name or not end:
+        receipt["reasonCounts"] = {"missing-name-or-invalid-cutoff": 1}
+        return receipt
+
+    # Keep the exact name and prior-date conditions of the production query;
+    # lift finish>0 only for evidence accounting, not for production results.
+    cursor = conn.execute(
+        """SELECT e.date,e.track,e.race_no,e.horse_no,e.name,e.age,e.sex,
+                  e.finish,e.status
+           FROM entries e
+           WHERE e.name=? AND e.date<?
+           ORDER BY e.date DESC,e.race_no DESC""",
+        (name, end),
+    )
+    columns = [column[0] for column in cursor.description]
+    rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    receipt["dbRowsBeforeLegacyFinishFilter"] = len(rows)
+    official_index: dict[tuple[str, str, int, int], set[str]] = {}
+    if official_archive is not None:
+        for observed, official_birth in official_archive.by_name.get(normalize(name), []):
+            key = (str(observed.get("date") or ""),
+                   str(observed.get("track") or ""),
+                   int(observed.get("raceNumber") or 0),
+                   int(observed.get("horseNumber") or 0))
+            official_index.setdefault(key, set()).add(
+                official_date(official_birth) or "")
+
+    for row in rows:
+        key = (str(row["date"] or ""), str(row["track"] or ""),
+               int(row["race_no"] or 0), int(row["horse_no"] or 0))
+        finish = int(row["finish"] or 0)
+        if finish <= 0:
+            reason = "excluded-by-legacy-finish-filter"
+            receipt["excludedByLegacyFinishFilter"] += 1
+        else:
+            receipt["legacyPositiveRows"] += 1
+            matches = official_index.get(key)
+            if official_archive is None:
+                reason = "unverified-no-official-archive"
+            elif not matches:
+                reason = "unverified-official-row-not-in-supplied-archive"
+            elif not birth or "" in matches:
+                reason = "unverified-birth-date-unavailable"
+            elif matches == {birth}:
+                reason = "official-birth-date-compatible"
+                receipt["officialBirthCompatiblePositiveRows"] += 1
+            elif birth not in matches:
+                reason = "conflicting-official-birth-date"
+                receipt["conflictingBirthPositiveRows"] += 1
+            else:
+                reason = "unverified-conflicting-official-rows"
+            if reason.startswith("unverified"):
+                receipt["unverifiedPositiveRows"] += 1
+        reasons[reason] += 1
+        receipt["observations"].append({
+            "date": key[0], "track": key[1],
+            "raceNumber": key[2], "horseNumber": key[3],
+            "storedAge": row["age"], "storedSex": row["sex"],
+            "storedFinish": finish, "storedStatus": row["status"],
+            "reason": reason,
+        })
+    receipt["reasonCounts"] = dict(sorted(reasons.items()))
+    return receipt
+
+
 def _nar_store_adapters(namespace: dict[str, Any]):
     store_cls = namespace.get("NarStore")
     if not callable(store_cls):

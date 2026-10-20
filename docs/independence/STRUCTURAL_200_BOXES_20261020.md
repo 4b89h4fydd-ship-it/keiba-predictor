@@ -346,3 +346,10 @@ Workerの通常オッズ・最終保存オッズの2つのキー生成を既存 
 既存の `result_state` は `bool(payouts)` を修復完了の運用判定に使用しているが、1件以上の払戻は発売された全券種の完全取得を証明しない。既存の再取得条件・回数・保存ペイロード・速報配信は変更せず、`scripts/arvexq_result_repair.py` の既存監査レポートに `payout_observations` を追記。券種は既存 `PAYOUT_KINDS` を参照し、行数、認識できる券種、未識別ラベル、不正行、競走不成立状態、運用上の旧判定を分けて表示する。
 
 `offeredKindsVerified=false`、`completePayoutCoverageVerified=false` を明示する。発売券種の公式一覧は今回の入力にないため、全8券種を発売済と仮定せず、未掲載券種を必ず欠損と判定しない。既存レポート以外の取得・DB・UI・予想経路は変更しない。本番D1読戻しや全券種完備の確認は実施していない。
+
+
+### 2026-10-20 P0-1 NAR同名馬・既存SQLite対公式CSVの読取専用再現
+
+`legacy_bridge.audit_nar_store_history(conn,horse,cutoff,official_archive)` は既存接続のSELECTのみで、旧 `NarStore.recent_races` と同じ厳密馬名・対象日前条件を使い、`finish>0` 前後の行数を比較。既存 `NarOfficialArchive.by_name` を使ってレース日・競馬場・R番号・当該レース馬番と公式生年月日を照合し、理由内訳を `official-birth-date-compatible` / `conflicting-official-birth-date` / `unverified-*` / `excluded-by-legacy-finish-filter` として出力する。恒久馬IDの照合完了ではなく、未収録アーカイブは欠落確定としない。
+
+合成公式ZIPと旧SQLiteスキーマによる回帰テストで旧検索が同名・別生年月日馬の陽性着順レコードを返すリスクを再現し、除外理由・アーカイブ未収録の扱い・読取前後の保存行数不変を検証する。実混在件数は元SQLiteと元公式ZIP双方が必要なため未算出。既存の `NarStore.recent_races` / `_nar_store_adapters` の出力・取得経路・DBスキーマ・保存先・UI・予想は不変。個体識別の本番仕様は未承認のため変更しない。
