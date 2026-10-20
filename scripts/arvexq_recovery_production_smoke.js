@@ -19,6 +19,10 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
 (async()=>{
   const browser=await type.launch({headless:true,...(process.env.CHROMIUM_PATH&&type===chromium?{executablePath:process.env.CHROMIUM_PATH}:{})});
   const context=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
+  if(process.env.ARVEXQ_READ_ONLY==='1')await context.route('**/*',route=>{
+    const method=route.request().method();
+    return ['GET','HEAD','OPTIONS'].includes(method)?route.continue():route.abort();
+  });
   let cursor=0;
   async function oddsPublished(id){
     try{const res=await fetch(base+'/api/live-odds/'+encodeURIComponent(id),{signal:AbortSignal.timeout(20000)});
@@ -164,6 +168,10 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       await ticketPage.close();
     }
     const fresh=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
+    if(process.env.ARVEXQ_READ_ONLY==='1')await fresh.route('**/*',route=>{
+      const method=route.request().method();
+      return ['GET','HEAD','OPTIONS'].includes(method)?route.continue():route.abort();
+    });
     await fresh.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
     const home=await fresh.newPage();
     await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
