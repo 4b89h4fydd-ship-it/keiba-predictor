@@ -93,6 +93,40 @@ jobs:
         run: |
           python scripts/arvexq_fact_data_audit.py --days 3 --end-date 2026-10-20 \
             --verify-display --report readback/factual-display-audit.json
+      - name: Diagnose failed existing read URLs without changing data
+        if: failure()
+        run: |
+          python - <<'PY'
+          import json,urllib.request,urllib.error,urllib.parse
+          from pathlib import Path
+          report=Path('readback/factual-display-audit.json')
+          if not report.exists():raise SystemExit(0)
+          value=json.loads(report.read_text());ids=[]
+          for day in value.get('days',[]):
+              for error in (day.get('readErrors',[])+day.get('displayParityErrors',[])):
+                  rid=error.get('raceId')
+                  if rid and rid not in ids:ids.append(rid)
+          rows=[]
+          for rid in ids[:4]:
+              for suffix in ('','?view=display'):
+                  url='https://kraiz-api.4b89h4fydd.workers.dev/api/race/'+urllib.parse.quote(rid,safe='')+suffix
+                  row={'raceId':rid,'view':suffix or 'full'}
+                  try:
+                      request=urllib.request.Request(url,headers={'accept':'application/json','user-agent':'ARVEXQ-FactReadback/1'})
+                      with urllib.request.urlopen(request,timeout=20) as response:
+                          body=response.read()
+                          row.update(status=response.status,bytes=len(body),headers={k:v for k,v in response.headers.items() if k.lower() in ('content-length','content-type','retry-after','cf-ray')})
+                          try:
+                              parsed=json.loads(body.decode())
+                              row.update(jsonValid=True,keys=list(parsed)[:12])
+                          except (ValueError,UnicodeError) as exc:row.update(jsonValid=False,error=str(exc))
+                  except urllib.error.HTTPError as exc:
+                      row.update(status=exc.code,body=exc.read(500).decode(errors='replace'),headers={k:v for k,v in exc.headers.items() if k.lower() in ('content-length','content-type','retry-after','cf-ray')})
+                  except Exception as exc:row['error']=repr(exc)
+                  rows.append(row)
+          Path('readback/transport-probe.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2))
+          print('EXISTING_ROUTE_TRANSPORT_PROBE='+json.dumps(rows,ensure_ascii=False))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:

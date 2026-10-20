@@ -45,3 +45,19 @@ def test_oversized_body_is_not_retried_or_accepted(monkeypatch):
     with pytest.raises(ValueError,match='exceeds read budget'):
         reader.get_json(URL,opener=opener_for([b'123456789'],calls),sleeper=lambda _:None)
     assert calls==[URL]
+
+
+def test_short_reads_before_eof_preserve_large_race_without_extra_request():
+    source={'ok':True,'detail':{'id':'nar-2026-10-20-浦和-02',
+                              'allPastRuns':[{'name':'原本','payload':'x'*1300} for _ in range(200)]}}
+    raw=json.dumps(source,ensure_ascii=False).encode()
+    class ShortResponse(io.BytesIO):
+        def read(self,size=-1):
+            return super().read(min(size,131072))
+    calls=[]
+    def open_(request,timeout):
+        calls.append(request.full_url)
+        return ShortResponse(raw)
+    result=reader.get_json(URL,opener=open_,sleeper=lambda _:None)
+    assert result==source
+    assert calls==[URL]

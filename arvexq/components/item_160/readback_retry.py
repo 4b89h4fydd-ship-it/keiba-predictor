@@ -20,7 +20,18 @@ def get_json(url, *, timeout=20, attempts=2, opener=urllib.request.urlopen,
             request = urllib.request.Request(url, headers={
                 "accept": "application/json", "user-agent": "ARVEXQ-FactReadback/1"})
             with opener(request, timeout=timeout) as response:
-                raw = response.read(MAX_RESPONSE_BYTES + 1)
+                chunks = []
+                total = 0
+                # read(n) may return a short chunk before EOF. A single read
+                # can truncate chunked edge responses; consume the SAME
+                # response to EOF within the same existing byte cap.
+                while total <= MAX_RESPONSE_BYTES:
+                    chunk = response.read(min(65536, MAX_RESPONSE_BYTES + 1 - total))
+                    if not chunk:
+                        break
+                    chunks.append(chunk)
+                    total += len(chunk)
+                raw = b''.join(chunks)
             if len(raw) > MAX_RESPONSE_BYTES:
                 raise ValueError("D1 JSON response exceeds read budget")
             result = json.loads(raw.decode("utf-8"))
