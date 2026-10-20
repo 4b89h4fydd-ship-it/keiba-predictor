@@ -202,6 +202,156 @@ class Stage64SavedConnectionTests(unittest.TestCase):
         self.assertEqual(set(compare["differences"][0]["armDifferences"]), set(ARMS))
         self.assertFalse(compare["probabilityOrTicketNumericalEqualityVerified"])
 
+    def test_stage4_archived_misses_join_existing_saved_card_context_without_leakage(self):
+        # Contextual failure audit only. The archived 527R forecast inputs differ
+        # from today's saved static originals; no arm selection or accuracy promotion.
+        import csv
+        with (ROOT / "docs/research/stage64-results/race_metrics.csv").open(
+                encoding="utf-8-sig", newline="") as stream:
+            metrics = list(csv.DictReader(stream))
+        self.assertEqual(len(metrics), 527 * 3)
+        by_id = {}
+        for row in metrics:
+            arms = by_id.setdefault(row["raceId"], {})
+            self.assertNotIn(row["arm"], arms)
+            arms[row["arm"]] = row
+        self.assertEqual(len(by_id), 527)
+        self.assertTrue(all(set(arms) == set(ARMS) for arms in by_id.values()))
+
+        cards = {}
+        for day in range(10, 16):
+            date = "2026-10-%02d" % day
+            data = json.loads((SAVED / "racecards" / (date + ".json"))
+                              .read_text(encoding="utf-8"))
+            self.assertEqual(data["date"], date)
+            for card in data["races"]:
+                self.assertNotIn(card["id"], cards)
+                cards[card["id"]] = card
+        self.assertEqual(len(cards), 364)
+        overlaps = set(cards) & set(by_id)
+        self.assertEqual(len(overlaps), 362)
+        self.assertEqual(set(cards) - overlaps,
+                         {"jra-2026-10-10-京都-07", "jra-2026-10-10-京都-10"})
+
+        scored = {"jra": [], "nar": []}
+        for rid in sorted(overlaps):
+            baseline, recent = by_id[rid]["baseline"], by_id[rid]["recent5"]
+            self.assertEqual(baseline["circuit"], recent["circuit"])
+            self.assertEqual(baseline["date"], cards[rid]["date"])
+            self.assertEqual(recent["date"], cards[rid]["date"])
+            self.assertEqual(baseline["scored"], recent["scored"])
+            if baseline["scored"] == "True":
+                scored[baseline["circuit"]].append((
+                    rid, baseline["winnerTop1"] == "True",
+                    recent["winnerTop1"] == "True",
+                    cards[rid]["distance"]))
+
+        self.assertEqual([len(scored[owner]) for owner in ("jra", "nar")], [51, 230])
+        jra_losses = {rid for rid, b, r, _ in scored["jra"] if b and not r}
+        jra_gains = {rid for rid, b, r, _ in scored["jra"] if r and not b}
+        self.assertFalse(jra_gains)
+        self.assertEqual(jra_losses, {
+            "jra-2026-10-10-京都-12",
+            "jra-2026-10-12-東京-07",
+            "jra-2026-10-12-東京-10",
+        })
+        nar_gains = [rid for rid, b, r, _ in scored["nar"] if r and not b]
+        nar_losses = [rid for rid, b, r, _ in scored["nar"] if b and not r]
+        self.assertEqual((len(nar_gains), len(nar_losses)), (13, 8))
+        nar_1400 = [(b, r) for _, b, r, distance in scored["nar"]
+                    if distance == 1400]
+        self.assertEqual((len(nar_1400), sum(b for b, r in nar_1400),
+                          sum(r for b, r in nar_1400)), (83, 23, 29))
+        self.assertEqual((sum(not b and r for b, r in nar_1400),
+                          sum(b and not r for b, r in nar_1400)), (7, 1))
+        # The lack of the 2026-09-27 original saved card must remain explicit.
+        self.assertNotIn("jra-2026-09-27-阪神-11", cards)
+        self.assertFalse(self.reference["independentlyVerifiedPreoff"])
+        self.assertFalse(self.reference["productionEligible"])
+
+    def test_stage4_leave_one_day_out_accuracy_concentration_is_retrospective_only(self):
+        # Fixed Stage64 archived outcomes: diagnose date concentration, NEVER
+        # choose a production method or treat reused outcomes as forward proof.
+        import csv
+        from collections import defaultdict
+        path = ROOT / "docs/research/stage64-results/race_metrics.csv"
+        with path.open(encoding="utf-8-sig", newline="") as stream:
+            source = list(csv.DictReader(stream))
+        self.assertEqual(len(source), 1581)
+        keyed = {}
+        for row in source:
+            key = (row["raceId"], row["arm"])
+            self.assertNotIn(key, keyed)
+            keyed[key] = row
+        self.assertEqual(len(keyed), 1581)
+
+        days = {"jra": defaultdict(lambda: {"total": 0, "eligible": 0,
+                                             "baseline": 0, "recent5": 0}),
+                "nar": defaultdict(lambda: {"total": 0, "eligible": 0,
+                                             "baseline": 0, "recent5": 0})}
+        for (rid, arm), base in keyed.items():
+            if arm != "baseline":
+                continue
+            recent = keyed[(rid, "recent5")]
+            shrunk = keyed[(rid, "recent5_shrunk")]
+            owner = base["circuit"]
+            self.assertIn(owner, days)
+            self.assertTrue(rid.startswith(owner + "-"))
+            self.assertEqual({v["date"] for v in (base, recent, shrunk)},
+                             {base["date"]})
+            self.assertEqual({v["scored"] for v in (base, recent, shrunk)},
+                             {base["scored"]})
+            record = days[owner][base["date"]]
+            record["total"] += 1
+            if base["scored"] != "True":
+                continue
+            record["eligible"] += 1
+            for label, row in (("baseline", base), ("recent5", recent)):
+                record[label] += row["winnerTop1"] == "True"
+
+        totals = {}
+        for owner in ("jra", "nar"):
+            owner_totals = {k: sum(day[k] for day in days[owner].values())
+                            for k in ("total", "eligible", "baseline", "recent5")}
+            totals[owner] = owner_totals
+            self.assertEqual(owner_totals["total"],
+                             self.reference["byCircuit"][owner]["baseline"]["cohortRaces"])
+            self.assertEqual(owner_totals["eligible"],
+                             self.reference["byCircuit"][owner]["baseline"]["scoredRaces"])
+            self.assertEqual(owner_totals["baseline"],
+                             self.reference["byCircuit"][owner]["baseline"]["winnerTop1Hits"])
+            self.assertEqual(owner_totals["recent5"],
+                             self.reference["byCircuit"][owner]["recent5"]["winnerTop1Hits"])
+
+        self.assertEqual(totals["jra"],
+                         {"total": 108, "eligible": 87, "baseline": 20, "recent5": 16})
+        self.assertEqual(totals["nar"],
+                         {"total": 419, "eligible": 332, "baseline": 91, "recent5": 97})
+        self.assertEqual((len(days["jra"]), len(days["nar"])), (5, 9))
+        self.assertEqual(days["nar"]["2026-10-12"],
+                         {"total": 47, "eligible": 35, "baseline": 9, "recent5": 14})
+
+        # No one-day deletion rescues JRA recent5; NAR's +6R advantage
+        # shrinks to +1R when the Oct 12 gain of +5R is omitted.
+        for day in days["jra"].values():
+            others_baseline = totals["jra"]["baseline"] - day["baseline"]
+            others_recent = totals["jra"]["recent5"] - day["recent5"]
+            self.assertLess(others_recent, others_baseline)
+        nar_deltas = set()
+        for day in days["nar"].values():
+            others_base = totals["nar"]["baseline"] - day["baseline"]
+            others_recent = totals["nar"]["recent5"] - day["recent5"]
+            nar_deltas.add(others_recent - others_base)
+        self.assertEqual(nar_deltas, {1, 4, 5, 7, 8})
+        dec12 = days["nar"]["2026-10-12"]
+        remaining = totals["nar"]["eligible"] - dec12["eligible"]
+        self.assertEqual((remaining,
+                          totals["nar"]["baseline"] - dec12["baseline"],
+                          totals["nar"]["recent5"] - dec12["recent5"]),
+                         (297, 82, 83))
+        self.assertFalse(self.reference["independentlyVerifiedPreoff"])
+        self.assertFalse(self.reference["productionEligible"])
+
     def test_pipeline_and_protocol_source_not_modified_by_connector(self):
         self.assertTrue(code_hash())
         ui = (SAVED / "app.js").read_text(encoding="utf-8")
