@@ -181,8 +181,10 @@ def run_saved_day(day: str, *, root: Path = SAVED) -> dict:
                         "savedSourceSha256": entry["sha256"], "rosterVerified": True,
                         "researchOnly": True, "productionEligible": False,
                         "predictions": predictions})
-    if not all(metrics[owner]["races"] for owner in ("jra", "nar")):
-        raise ValueError("saved cohort must contain separate JRA/NAR races")
+    # A saved calendar day may have NAR only or JRA only. Keep separate
+    # circuit counts; never invent a counterpart or transfer its settings.
+    if not any(metrics[owner]["races"] for owner in ("jra", "nar")):
+        raise ValueError("no saved races in either research circuit")
     return {
         "schema": "arvexq-stage64-saved-trial-1",
         "date": day, "source": "existing-static-saved-snapshots-only",

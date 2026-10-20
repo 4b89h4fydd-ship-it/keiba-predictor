@@ -137,6 +137,22 @@ class Stage64SavedConnectionTests(unittest.TestCase):
         self.assertFalse(joined["probabilityOrTicketNumericalEqualityVerified"])
         self.assertFalse(joined["productionEligible"])
 
+    def test_nar_only_actual_saved_day_preserves_circuit_isolation(self):
+        # 2026-10-13 has 58 NAR races and no JRA race. The trial may not
+        # fabricate JRA observations merely to fill a per-day cohort.
+        report = run_saved_day("2026-10-13")
+        self.assertEqual(report["byCircuit"]["jra"].get("races", 0), 0)
+        self.assertEqual(report["byCircuit"]["nar"]["races"], 58)
+        self.assertEqual(len(report["raceRows"]), 58)
+        self.assertTrue(all(row["circuit"] == "nar" for row in report["raceRows"]))
+        self.assertEqual(report["byCircuit"]["nar"]["armsExecuted"], 174)
+        archived = json.loads((ROOT / "docs/research/stage64-results/coverage.json")
+                              .read_text(encoding="utf-8"))
+        comparison = compare_archived_coverage(report, archived)
+        self.assertEqual(comparison["byCircuit"]["nar"]["overlappingRaces"], 58)
+        self.assertEqual(comparison["byCircuit"]["jra"]["overlappingRaces"], 0)
+        self.assertFalse(comparison["productionEligible"])
+
     def test_archived_coverage_identity_and_duplicates_fail_closed(self):
         day = {"raceRows": [{"raceId": "jra-2026-10-11-京都-01",
                             "date": "2026-10-11", "circuit": "jra",

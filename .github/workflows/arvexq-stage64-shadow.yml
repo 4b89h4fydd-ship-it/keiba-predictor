@@ -64,9 +64,11 @@ jobs:
           mkdir -p shadow-saved
           python scripts/arvexq_stage64_saved_connection.py \
             --date 2026-10-17 --output shadow-saved/stage64-saved-2026-10-17.json
-          python scripts/arvexq_stage64_saved_connection.py \
-            --date 2026-10-11 --compare-coverage docs/research/stage64-results/coverage.json \
-            --output shadow-saved/stage64-archived-overlap-2026-10-11.json
+          for date in 2026-10-10 2026-10-11 2026-10-12 2026-10-13 2026-10-14 2026-10-15; do
+            python scripts/arvexq_stage64_saved_connection.py \
+              --date "$date" --compare-coverage docs/research/stage64-results/coverage.json \
+              --output "shadow-saved/stage64-archived-overlap-$date.json"
+          done
       - name: Archive historical trial separately from frozen forecasts
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
