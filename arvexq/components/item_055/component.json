@@ -5,7 +5,10 @@
   "existing_sources": [
     "arvexq/ui/static/history/deduplicate.js"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "app.py:_jra_run_key / _jra_run_value_present (existing JRA dedupe key and missing-value policy)",
+    "Legacy composition shares JRA history lists; provider and persistence ownership not independent"
+  ],
   "owned_definitions": [
     "_jra_merge_run_fields",
     "_jra_merge_runs"
@@ -16,8 +19,7 @@
   "unlocated_sources": [],
   "shared_context": "existing-app-globals",
   "circuits": [
-    "JRA",
-    "NAR"
+    "JRA"
   ],
   "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
 }

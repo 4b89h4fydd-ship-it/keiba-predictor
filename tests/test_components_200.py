@@ -107,3 +107,14 @@ def test_nonreserved_component_cannot_pass_with_only_a_source_reference():
     with patch.object(audit_module, 'all_components', return_value=specs):
         errors=audit_module.audit()['errors']
     assert any('active component has no owned implementation' in error for error in errors)
+
+
+def test_jra_past_field_parser_boxes_are_not_mislabeled_as_nar():
+    # The owner is the JRA source parser, regardless of historical venue.
+    for item_id in range(42, 56):
+        assert describe(item_id)['circuits'] == ['JRA']
+    history=describe(57)
+    assert history['circuits']==['JRA','NAR']
+    assert history['shared_context']=='existing-app-globals'
+    assert history['shared_dependencies']
+    assert history['state']=='migrated-shared-context'

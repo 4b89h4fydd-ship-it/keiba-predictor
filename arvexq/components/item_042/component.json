@@ -6,7 +6,10 @@
     "arvexq/ingest/past_fields/date.py",
     "arvexq/ingest/past_fields/jra.py"
   ],
-  "shared_dependencies": [],
+  "shared_dependencies": [
+    "JRA history cell parser composes existing separately owned JRA past-field extractors",
+    "app.py:_jra_attr_cname / JRA_RESULT_CNAME_RE (legacy app composition and source identity)"
+  ],
   "owned_definitions": [
     "_jra_parse_past_cell"
   ],
@@ -25,8 +28,7 @@
   "assets": [],
   "state": "migrated-shared-context",
   "circuits": [
-    "JRA",
-    "NAR"
+    "JRA"
   ],
   "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation."
 }

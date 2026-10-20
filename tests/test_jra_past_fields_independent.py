@@ -86,3 +86,17 @@ def test_actual_jra_cell_calls_independent_parsers():
     assert row["raceId"]=="jra-result-test"
     assert parse_jra_history_cell(cell,"2026-10-01",["東京","大井"]) is None
     assert "parse_jra_history_cell(cell,cutoff,tracks,race_id=rid)" in composed_app_source()
+
+
+def test_jra_past_date_rejects_impossible_calendar_values_without_fabricating_runs():
+    from arvexq.components.item_042.date import extract_date as owned_date
+    assert extract_date is owned_date
+    for value in ("2026年2月29日", "2026年2月30日", "2026年13月1日",
+                  "2026年0月10日", "2026年11月31日"):
+        assert extract_date(value) is None
+        cell=BeautifulSoup("<td>"+value+" 東京 1着 12頭</td>","html.parser")
+        assert parse_jra_history_cell(cell,"2026-12-01",["東京"]) is None
+    assert extract_date("2024年2月29日")=="2024-02-29"
+    valid=BeautifulSoup("<td>2024年2月29日 東京 1着 12頭</td>","html.parser")
+    assert parse_jra_history_cell(valid,"2024-03-01",["東京"])["date"]=="2024-02-29"
+    assert parse_jra_history_cell(valid,"2024-02-29",["東京"]) is None
