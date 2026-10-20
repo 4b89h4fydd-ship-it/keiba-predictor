@@ -1,0 +1,21 @@
+{
+  "id": 158,
+  "name": "取消・除外自動更新",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/ingest/official_changes.py"
+  ],
+  "shared_dependencies": [
+    "Original NAR changes acquisition routes, URL list and refresh scheduling unchanged"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

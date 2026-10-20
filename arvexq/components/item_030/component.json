@@ -1,0 +1,21 @@
+{
+  "id": 30,
+  "name": "斤量",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/ingest/entry_fields/carried_weight.py"
+  ],
+  "shared_dependencies": [
+    "arvexq.ingest.entry_fields.dom"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

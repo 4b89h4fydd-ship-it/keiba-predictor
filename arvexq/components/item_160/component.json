@@ -1,0 +1,25 @@
+{
+  "id": 160,
+  "name": "取得失敗時再試行",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/ingest/d1_day_readback.py"
+  ],
+  "shared_dependencies": [
+    "Existing D1 API routes",
+    "arvexq.ingest.full_snapshot_codec",
+    "arvexq.ingest.career_transport",
+    "Python standard library",
+    "arvexq.ingest.d1_day_readback read_day; existing D1 API and HTTP status policy"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

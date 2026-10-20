@@ -1,0 +1,22 @@
+{
+  "id": 174,
+  "name": "D1接続",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "workers/api_full_snapshot.mjs"
+  ],
+  "shared_dependencies": [
+    "Existing Worker entry routes, relative imports, binding names, and deployment configuration preserved; requires CI verification",
+    "Existing DB binding, race_details schema and Worker entry route remain shared"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}
