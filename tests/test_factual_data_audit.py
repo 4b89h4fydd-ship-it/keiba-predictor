@@ -273,3 +273,19 @@ def test_cli_reports_display_mismatch_as_a_failing_audit(monkeypatch, tmp_path):
     saved = json.loads(report.read_text())
     assert saved['errors'] == 1
     assert saved['days'][0]['displayParityErrors'][0]['reason'] == 'display_read_failed'
+
+
+def test_display_does_not_hide_packed_unrenderable_snapshot():
+    original = {'id': RID, 'date': DAY, 'horses': [
+        {'horseNumber': 3, 'name': '観測馬',
+         'recentRaces': [{'date': '2026-09-01', 'finish': 1}]}]}
+    packed = pack_detail(original)
+    def fetch(url):
+        if '/api/day?' in url:
+            return {'ok': True, 'date': DAY, 'races': [{'id': RID}]}
+        return {'ok': True, 'detail': deepcopy(packed)}
+    bundle = read_day('https://unit.test', DAY, fetch=fetch, verify_display=True)
+    # The Python audit can decode it; the current browser consumes body.detail raw.
+    assert bundle['details'] == [original]
+    assert bundle['displayParityErrors'] == [
+        {'raceId': RID, 'reason': 'display_packed_payload_unrenderable'}]
