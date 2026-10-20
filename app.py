@@ -2285,8 +2285,21 @@ from arvexq.ingest.netkeiba_result import parse_current_result_html as _parse_ne
 
 
 def _netkeiba_current_result(detail:dict)->dict|None:
-    rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
-    if not rid:return None
+    # The same existing result endpoint also serves the established NAR fallback.
+    # Resolve race identity through the correct circuit; JRA's program resolver
+    # never discovers NAR races and silently skipped missing NAR result rows.
+    rid=str(detail.get("netkeibaRaceId") or "")
+    if not rid:
+        date=str(detail.get("date") or "")
+        track=str(detail.get("track") or "")
+        race_no=int(detail.get("raceNumber") or 0)
+        if str(detail.get("id") or "").startswith("nar-") or str(detail.get("circuit") or "") in ("NAR","地方"):
+            rid=_nar_netkeiba_race_id(date,track,race_no)
+        else:
+            rid=_netkeiba_race_id(date,track,race_no)
+    if not rid:
+        print("NETKEIBA_RESULT_ID_UNAVAILABLE",detail.get("id"),detail.get("track"),detail.get("raceNumber"))
+        return None
     try:html=_netkeiba_get(f"https://race.netkeiba.com/race/result.html?race_id={rid}",float(os.getenv("NETKEIBA_RESULT_TIMEOUT_SEC","3.0")),20)
     except Exception as exc:
         print("netkeiba result failed",rid,exc);return None
