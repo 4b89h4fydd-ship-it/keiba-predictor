@@ -878,8 +878,8 @@ function edgeOddsRow(z){
 function mergeHorseReflection(oldH,newH,liveH,cutoff){
   oldH=oldH||{};newH=newH||{};liveH=liveH||{};
   // Race-scoped numbers cannot establish a horse's identity across snapshots.
-  var oldName=String(oldH.name||oldH.horseName||'').replace(/[\\s\\u3000]+/g,''),
-      newName=String(newH.name||newH.horseName||'').replace(/[\\s\\u3000]+/g,'');
+  var oldName=String(oldH.name||oldH.horseName||'').replace(/[\s\u3000]+/g,''),
+      newName=String(newH.name||newH.horseName||'').replace(/[\s\u3000]+/g,'');
   if(oldName&&newName&&oldName!==newName)oldH={};
   var out=Object.assign({},oldH),richArrays=['recentRaces','allPastRuns'],k;
   Object.keys(newH).forEach(function(key){
