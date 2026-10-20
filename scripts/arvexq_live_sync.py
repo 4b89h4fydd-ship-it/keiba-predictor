@@ -503,7 +503,7 @@ def main() -> int:
     args = p.parse_args()
 
     bundle = read_json(args.bundle, {})
-    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
+    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in str(r.get("id")) for name in ("帯広", "帯広ば"))]
     if not rows:
         raise SystemExit("live sync: no races in bundle")
     bundled_by_id = {
