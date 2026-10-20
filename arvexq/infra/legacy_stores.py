@@ -279,7 +279,10 @@ SOURCE = (
     '        ).fetchone()\n'
     '        return int(row["prize"] or 0)\n'
     '\n'
-    '    def recent_races(self, horse_name: str, cutoff: str, limit: int = 5) -> list[dict]:\n'
+    '    def recent_races(self, horse_name: str, cutoff: str, limit: int = 5, expected_age: int = 0, expected_sex: str = "") -> list[dict]:\n'
+    '        age = int(expected_age or 0)\n'
+    '        birth_year = int(cutoff[:4]) - age + 1 if age>0 and str(cutoff[:4]).isdigit() else 0\n'
+    '        sex = str(expected_sex or "").strip()\n'
     "        from arvexq.ingest.nar_official_metadata import migrate_race_metadata\n"
     "        migrate_race_metadata(self.conn)\n"
     '        rows = self.conn.execute(\n'
@@ -291,10 +294,12 @@ SOURCE = (
     '            FROM entries e\n'
     '            JOIN races r ON r.track=e.track AND r.date=e.date AND r.race_no=e.race_no\n'
     '            WHERE e.name=? AND e.date<? AND e.finish>0\n'
+    '              AND (?=0 OR e.age<=0 OR (CAST(substr(e.date,1,4) AS INTEGER)-e.age+1)=?)\n'
+    "              AND (?='' OR e.sex='' OR e.sex=?)\n"
     '            ORDER BY e.date DESC, e.race_no DESC\n'
     '            LIMIT ?\n'
     '            """,\n'
-    '            (horse_name, cutoff, limit),\n'
+    '            (horse_name, cutoff, birth_year, birth_year, sex, sex, limit),\n'
     '        ).fetchall()\n'
     '        return [\n'
     '            {\n'
