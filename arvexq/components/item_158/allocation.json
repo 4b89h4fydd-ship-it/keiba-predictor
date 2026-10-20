@@ -1,0 +1,42 @@
+{
+  "id": 158,
+  "name": "取消・除外自動更新",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/official_changes.py::<module>",
+    "arvexq/ingest/official_changes.py::_clean",
+    "arvexq/ingest/official_changes.py::_type",
+    "arvexq/ingest/official_changes.py::parse_nar_changes",
+    "arvexq/ingest/official_changes.py::_decode",
+    "arvexq/ingest/official_changes.py::fetch_track_changes",
+    "arvexq/ingest/official_changes.py::collect_nar_changes"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "arvexq/ingest/official_changes.py::<module>",
+    "arvexq/ingest/official_changes.py::_clean",
+    "arvexq/ingest/official_changes.py::_type",
+    "arvexq/ingest/official_changes.py::parse_nar_changes",
+    "arvexq/ingest/official_changes.py::_decode",
+    "arvexq/ingest/official_changes.py::fetch_track_changes",
+    "arvexq/ingest/official_changes.py::collect_nar_changes"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "scripts/arvexq_live_sync.py",
+    "tests/test_official_changes.py"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/official_changes.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

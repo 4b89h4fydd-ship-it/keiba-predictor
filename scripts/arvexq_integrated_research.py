@@ -18,7 +18,7 @@ import statistics
 import time
 from pathlib import Path
 
-from arvexq.prediction.prerace_archive import post_at, sealed_lock
+from arvexq.components.item_147.prerace_archive import post_at, sealed_lock
 
 VERSION = "arvexq-integrated-research-v1"
 

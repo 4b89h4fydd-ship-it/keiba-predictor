@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvexq.race_card import horse_number, sorted_horses
+from arvexq.components.item_180.race_card import horse_number, sorted_horses
 
 
 def _float(value: Any) -> float | None:

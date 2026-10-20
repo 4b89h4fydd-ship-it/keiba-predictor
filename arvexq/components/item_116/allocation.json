@@ -1,0 +1,83 @@
+{
+  "id": 116,
+  "name": "印生成",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "compatibility-only",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/forecast/marks.py::<module>",
+    "arvexq/prediction/final_marks.py::<module>",
+    "arvexq/prediction/observed_model.py::<module>",
+    "arvexq/forecast/marks.py::generate_marks",
+    "arvexq/forecast/marks.py::clear_marks",
+    "arvexq/prediction/final_marks.py::apply_core_marks",
+    "arvexq/prediction/observed_model.py::model_version",
+    "arvexq/prediction/observed_model.py::rank_observed",
+    "arvexq/prediction/observed_model.py::rank_nar",
+    "arvexq/prediction/observed_model.py::rank_jra",
+    "arvexq/prediction/observed_model.py::apply_observed_marks",
+    "arvexq/prediction/observed_model.py::apply_nar_marks"
+  ],
+  "owned_refs": [
+    "arvexq/forecast/marks.py::<module>",
+    "arvexq/prediction/final_marks.py::<module>",
+    "arvexq/forecast/marks.py::generate_marks",
+    "arvexq/forecast/marks.py::clear_marks",
+    "arvexq/prediction/final_marks.py::apply_core_marks"
+  ],
+  "shared_refs": [
+    "arvexq/prediction/observed_model.py::<module>",
+    "arvexq/prediction/observed_model.py::model_version",
+    "arvexq/prediction/observed_model.py::rank_observed",
+    "arvexq/prediction/observed_model.py::rank_nar",
+    "arvexq/prediction/observed_model.py::rank_jra",
+    "arvexq/prediction/observed_model.py::apply_observed_marks",
+    "arvexq/prediction/observed_model.py::apply_nar_marks"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    ".github/workflows/arvexq-validation.yml",
+    "arvexq/domain/legacy_evaluation.py",
+    "arvexq/prediction/ability.py",
+    "arvexq/prediction/final_marks.py",
+    "arvexq/prediction/observed_model.py",
+    "arvexq/prediction/race_intelligence.py",
+    "scripts/arvexq_central_data_quality_audit.py",
+    "scripts/arvexq_current_prediction_audit.py",
+    "scripts/arvexq_freeze_predictions.py",
+    "scripts/arvexq_history_dedupe_challenger.py",
+    "scripts/arvexq_prefetch.py",
+    "scripts/arvexq_selectability_audit.py",
+    "scripts/check_race_selectability_snapshot.py",
+    "tests/test_approved_baseline_activation.py",
+    "tests/test_forecast_production_boundaries.py",
+    "tests/test_nar_mineta_margin_authority.py",
+    "tests/test_optional_star_marks.py",
+    "tests/test_prefetch_racecard_delivery.py",
+    "tests/test_prerace_partial_career.py",
+    "tests/test_unified_honmei_reset.py",
+    "tests/test_unified_jra_nar_observed_authority.py",
+    "tests/test_unified_prerace_prediction.py"
+  ],
+  "callee_files": [
+    "arvexq/forecast/engine.py",
+    "arvexq/forecast/marks.py",
+    "arvexq/prediction/observed_model.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/forecast/marks.py",
+    "arvexq/prediction/final_marks.py",
+    "arvexq/prediction/observed_model.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/forecast/marks.py",
+    "arvexq/prediction/final_marks.py",
+    "arvexq/prediction/observed_model.py"
+  ],
+  "legacy_prediction_reserved": true,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

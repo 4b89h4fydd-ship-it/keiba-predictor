@@ -12,7 +12,7 @@ from arvexq.prediction.bias_provenance import provenance
 
 def career_coverage(horse: dict[str, Any], detail: dict[str, Any]) -> dict[str, Any]:
     """Compact, read-only acquisition/completeness state shared with the UI."""
-    from arvexq.career_missing import build_career_analysis
+    from arvexq.components.item_057.career_missing import build_career_analysis
     a = build_career_analysis(horse, detail)
     ev = a.get("acquisition_evidence") or {}
     return {

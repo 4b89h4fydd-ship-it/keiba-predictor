@@ -1,0 +1,40 @@
+{
+  "main_sha": "4ccadcbdfc8bf83601edf7d056c191c98390ca90",
+  "stage1_sha": "4c7bcd821fc5490d123a29c95dca17bb542de621",
+  "pr374_sha": "e3485d7d0a738116cb55493475a8c72d7a54b0c8",
+  "scope": "既存コードの静的な参照割り振りのみ。アプリをimport/実行せず、テスト・本番検証・接続は行わない。",
+  "assigned_items_including_compatibility": 195,
+  "total_items": 200,
+  "assigned_existing_code_items": 193,
+  "compatibility_only_items": [
+    112,
+    116
+  ],
+  "unassigned_empty_items": [
+    114,
+    117,
+    118,
+    119,
+    120
+  ],
+  "inventoried_source_files": 668,
+  "inventoried_definition_units": 5280,
+  "resolved_static_calls": 8034,
+  "unresolved_or_external_calls": 30538,
+  "shared_units": 570,
+  "cross_owner_dependencies": 3753,
+  "unassigned_source_files": 78,
+  "unassigned_definition_units": 1112,
+  "open_prs": 35,
+  "parse_errors": [],
+  "static_app_entrypoints": [
+    "app.py",
+    "workers/api.mjs",
+    "workers/web.mjs",
+    "arvexq/ui/static/index.html"
+  ],
+  "static_app_dependency_files": 185,
+  "static_workflow_dependency_files": 459,
+  "exact_duplicate_source_groups": 53,
+  "same_ast_groups": 0
+}

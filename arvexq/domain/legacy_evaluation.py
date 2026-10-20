@@ -229,6 +229,55 @@ SOURCE = (
     '    }\n'
 )
 
+# Stage 3: retain the original definitions and append one-call forwarding.
+_ARVEXQ_ORIGINAL_SOURCE = SOURCE
+SOURCE += (
+    '\n'
+    'from functools import wraps as _arvexq_route_wraps\n'
+    'from arvexq.components.item_096.routes import _v215_speed_ratio as _arvexq_box_096__v215_speed_ratio\n'
+    'from arvexq.components.item_096.routes import _pc_live_track_speed as _arvexq_box_096__pc_live_track_speed\n'
+    'from arvexq.components.item_110.routes import _strip_excluded as _arvexq_box_110__strip_excluded\n'
+    'from arvexq.components.item_107.routes import _attach_evaluation_context as _arvexq_box_107__attach_evaluation_context\n'
+    'from arvexq.components.item_110.routes import _attach_stored_career as _arvexq_box_110__attach_stored_career\n'
+    'from arvexq.components.item_110.routes import _vol_clamp as _arvexq_box_110__vol_clamp\n'
+    'from arvexq.components.item_106.routes import _race_volatility as _arvexq_box_106__race_volatility\n'
+    '\n'
+    '_arvexq_original__v215_speed_ratio = _v215_speed_ratio\n'
+    '@_arvexq_route_wraps(_arvexq_original__v215_speed_ratio)\n'
+    'def _v215_speed_ratio(*args, **kwargs):\n'
+    '    return _arvexq_box_096__v215_speed_ratio(_arvexq_original__v215_speed_ratio, *args, **kwargs)\n'
+    '\n'
+    '_arvexq_original__pc_live_track_speed = _pc_live_track_speed\n'
+    '@_arvexq_route_wraps(_arvexq_original__pc_live_track_speed)\n'
+    'def _pc_live_track_speed(*args, **kwargs):\n'
+    '    return _arvexq_box_096__pc_live_track_speed(_arvexq_original__pc_live_track_speed, *args, **kwargs)\n'
+    '\n'
+    '_arvexq_original__strip_excluded = _strip_excluded\n'
+    '@_arvexq_route_wraps(_arvexq_original__strip_excluded)\n'
+    'def _strip_excluded(*args, **kwargs):\n'
+    '    return _arvexq_box_110__strip_excluded(_arvexq_original__strip_excluded, *args, **kwargs)\n'
+    '\n'
+    '_arvexq_original__attach_evaluation_context = _attach_evaluation_context\n'
+    '@_arvexq_route_wraps(_arvexq_original__attach_evaluation_context)\n'
+    'def _attach_evaluation_context(*args, **kwargs):\n'
+    '    return _arvexq_box_107__attach_evaluation_context(_arvexq_original__attach_evaluation_context, *args, **kwargs)\n'
+    '\n'
+    '_arvexq_original__attach_stored_career = _attach_stored_career\n'
+    '@_arvexq_route_wraps(_arvexq_original__attach_stored_career)\n'
+    'def _attach_stored_career(*args, **kwargs):\n'
+    '    return _arvexq_box_110__attach_stored_career(_arvexq_original__attach_stored_career, *args, **kwargs)\n'
+    '\n'
+    '_arvexq_original__vol_clamp = _vol_clamp\n'
+    '@_arvexq_route_wraps(_arvexq_original__vol_clamp)\n'
+    'def _vol_clamp(*args, **kwargs):\n'
+    '    return _arvexq_box_110__vol_clamp(_arvexq_original__vol_clamp, *args, **kwargs)\n'
+    '\n'
+    '_arvexq_original__race_volatility = _race_volatility\n'
+    '@_arvexq_route_wraps(_arvexq_original__race_volatility)\n'
+    'def _race_volatility(*args, **kwargs):\n'
+    '    return _arvexq_box_106__race_volatility(_arvexq_original__race_volatility, *args, **kwargs)\n'
+)
+
 def install_evaluation_core(namespace: dict) -> None:
     code = compile(SOURCE, '<arvexq:evaluation_core>', 'exec')
     exec(code, namespace, namespace)

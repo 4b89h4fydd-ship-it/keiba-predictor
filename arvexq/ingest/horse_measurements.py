@@ -1,10 +1,10 @@
 """Independent horse-body and carried-weight validation for race ingestion."""
-from arvexq.ingest.entry_fields.body_weight_change import normalize as normalize_body_weight_change
+from arvexq.components.item_035.body_weight_change import normalize as normalize_body_weight_change
 
-from arvexq.ingest.entry_fields.body_weight import _safe_body_weight_value
+from arvexq.components.item_034.body_weight import _safe_body_weight_value
 
 
-from arvexq.ingest.entry_fields.carried_weight import _safe_carried_weight_value
+from arvexq.components.item_030.carried_weight import _safe_carried_weight_value
 
 
 def _sanitize_horse_measurements(h:dict)->dict:

@@ -1,0 +1,78 @@
+{
+  "id": 122,
+  "name": "本線買い目",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::<module>",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.num",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.clamp",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.rankedRole",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.hitCalibration",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.classify",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.classify.@anonymous:25:37",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.classify.@anonymous:26:40",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds.@anonymous:38:44",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds.@anonymous:38:44.@anonymous:41:18",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds.@anonymous:38:44.@anonymous:41:18.@anonymous:42:14",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds.@anonymous:43:51",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.requireMorningTickets",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.requireMorningTickets.@anonymous:47:64",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.hasMorningPlace",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.qualifyPlaceBet",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.selectionDisplayStatus",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.selectionDisplayStatus.supports",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.selectionDisplayStatus.supports.@anonymous:73:44",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.selectionDisplayStatus.supports.@anonymous:74:34",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.selectionDisplayStatus.@anonymous:78:17"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::<module>",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.num",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.clamp",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.rankedRole",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.hitCalibration",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.classify",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.classify.@anonymous:25:37",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.classify.@anonymous:26:40",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds.@anonymous:38:44",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds.@anonymous:38:44.@anonymous:41:18",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds.@anonymous:38:44.@anonymous:41:18.@anonymous:42:14",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds.@anonymous:43:51",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.requireMorningTickets",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.requireMorningTickets.@anonymous:47:64",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.hasMorningPlace",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.qualifyPlaceBet",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.selectionDisplayStatus",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.selectionDisplayStatus.supports",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.selectionDisplayStatus.supports.@anonymous:73:44",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.selectionDisplayStatus.supports.@anonymous:74:34",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.selectionDisplayStatus.@anonymous:78:17"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    ".github/workflows/arvexq-validation.yml",
+    "arvexq/ui/static/app.js",
+    "arvexq/ui/static/index.html"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "arvexq/ui/static/morning/ticket_lane_classifier.js"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ui/static/morning/ticket_lane_classifier.js"
+  ],
+  "legacy_prediction_reserved": true,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。",
+  "qualification": "保存済み本線/3連単区分・点数の検証/表示処理の割り振り。新たな買い目生成ロジックが存在するとの主張ではない。"
+}

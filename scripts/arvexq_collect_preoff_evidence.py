@@ -11,8 +11,8 @@ import argparse
 import json
 from pathlib import Path
 
-from arvexq.forecast.preoff_capture import capture_preoff_features
-from arvexq.forecast.preoff_evidence_store import open_store, append_capture
+from arvexq.components.item_125.preoff_capture import capture_preoff_features
+from arvexq.components.item_125.preoff_evidence_store import open_store, append_capture
 
 
 def main(argv=None):

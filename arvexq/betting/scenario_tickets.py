@@ -9,7 +9,7 @@ from __future__ import annotations
 from itertools import combinations, permutations
 from math import isfinite
 from typing import Any
-from arvexq.core.runner_status import is_inactive_runner
+from arvexq.components.item_036.runner_status import is_inactive_runner
 
 VERSION = 'arvexq-scenario-tickets-v1'
 KINDS = ('単勝', '複勝', '枠連', '馬連', '馬単', 'ワイド', '3連複', '3連単')

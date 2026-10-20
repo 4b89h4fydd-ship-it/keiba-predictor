@@ -1,0 +1,468 @@
+{
+  "id": 36,
+  "name": "出走取消状態",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_int",
+        "local_name": "_int"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_float",
+        "local_name": "_float"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_carried_weight",
+        "local_name": "_carried_weight"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_iso_date",
+        "local_name": "_iso_date"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_start_time",
+        "local_name": "_start_time"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_time_seconds",
+        "local_name": "_time_seconds"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_normalize_sex",
+        "local_name": "_normalize_sex"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_scratch_status",
+        "local_name": "_scratch_status"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_normalize_weather",
+        "local_name": "_normalize_weather"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 201,
+        "imported": "_normalize_condition",
+        "local_name": "_normalize_condition"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/betting/scenario_tickets.py",
+        "line": 12,
+        "imported": "is_inactive_runner",
+        "local_name": "is_inactive_runner"
+      },
+      "original_source": "arvexq/core/runner_status.py",
+      "box_target": "arvexq/components/item_036/runner_status.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/features/horse_features.py",
+        "line": 5,
+        "imported": "is_inactive_runner",
+        "local_name": "is_inactive_runner"
+      },
+      "original_source": "arvexq/core/runner_status.py",
+      "box_target": "arvexq/components/item_036/runner_status.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/corner_order.py",
+        "line": 4,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/entry_fields/dom.py",
+        "line": 2,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/entry_fields/frame_number.py",
+        "line": 3,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/entry_fields/horse_number.py",
+        "line": 3,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/entry_fields/jockey.py",
+        "line": 4,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/entry_fields/status.py",
+        "line": 3,
+        "imported": "_scratch_status",
+        "local_name": "_scratch_status"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/environment_values.py",
+        "line": 4,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/field_normalization.py",
+        "line": 4,
+        "imported": "extract",
+        "local_name": "cancellation_status"
+      },
+      "original_source": "arvexq/ingest/runner_cancellation.py",
+      "box_target": "arvexq/components/item_036/runner_cancellation.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/horse_identity.py",
+        "line": 3,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/nar_csv.py",
+        "line": 7,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/nar_scratches.py",
+        "line": 3,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/nar_scratches.py",
+        "line": 3,
+        "imported": "_scratch_status",
+        "local_name": "_scratch_status"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36,
+        37,
+        40
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/recent_result_cell.py",
+        "line": 3,
+        "imported": "_clean",
+        "local_name": "_clean"
+      },
+      "original_source": "arvexq/ingest/field_normalization.py",
+      "box_target": "arvexq/components/item_040/field_normalization.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        36
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/normalize/race.py",
+        "line": 6,
+        "imported": "normalize_runner_status",
+        "local_name": "normalize_runner_status"
+      },
+      "original_source": "arvexq/core/runner_status.py",
+      "box_target": "arvexq/components/item_036/runner_status.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

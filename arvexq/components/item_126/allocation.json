@@ -1,0 +1,77 @@
+{
+  "id": 126,
+  "name": "予想・印・買い目画面表示",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/forecast/publication.py::<module>",
+    "arvexq/ui/static/forecast/marks.js::<module>",
+    "arvexq/ui/static/forecast/prediction.js::<module>",
+    "arvexq/forecast/publication.py::public_race",
+    "arvexq/forecast/publication.py::public_race.project",
+    "arvexq/ui/static/forecast/marks.js::@anonymous:2:1",
+    "arvexq/ui/static/forecast/marks.js::@anonymous:2:1.visible",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.originalMarks",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.originalMarks.@anonymous:13:42",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.build",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.build.@anonymous:37:14",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.build.@anonymous:38:11",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.build.@anonymous:46:30",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.build.@anonymous:46:68",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.current",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.current.@anonymous:53:106"
+  ],
+  "owned_refs": [
+    "arvexq/forecast/publication.py::<module>",
+    "arvexq/ui/static/forecast/marks.js::<module>",
+    "arvexq/ui/static/forecast/prediction.js::<module>",
+    "arvexq/forecast/publication.py::public_race",
+    "arvexq/forecast/publication.py::public_race.project",
+    "arvexq/ui/static/forecast/marks.js::@anonymous:2:1",
+    "arvexq/ui/static/forecast/marks.js::@anonymous:2:1.visible",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.originalMarks",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.originalMarks.@anonymous:13:42",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.build",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.build.@anonymous:37:14",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.build.@anonymous:38:11",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.build.@anonymous:46:30",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.build.@anonymous:46:68",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.current",
+    "arvexq/ui/static/forecast/prediction.js::@anonymous:2:1.current.@anonymous:53:106"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "arvexq/ui/static/app.js",
+    "arvexq/ui/static/forecast/mark_frame.js",
+    "arvexq/ui/static/forecast/prediction_frame.js",
+    "scripts/test_support/production_ui.cjs",
+    "tests/test_approved_baseline_activation.py",
+    "tests/test_forecast_production_boundaries.py",
+    "tests/test_live_provisional_projection.py",
+    "tests/test_nar_mineta_margin_authority.py"
+  ],
+  "callee_files": [
+    "arvexq/ui/static/forecast/tickets.js"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/forecast/publication.py",
+    "arvexq/ui/static/forecast/marks.js",
+    "arvexq/ui/static/forecast/prediction.js"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/forecast/publication.py",
+    "arvexq/ui/static/forecast/marks.js",
+    "arvexq/ui/static/forecast/prediction.js"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

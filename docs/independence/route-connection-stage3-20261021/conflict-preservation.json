@@ -1,0 +1,7 @@
+{
+  "blocked_app_function_changes": [],
+  "blocked_original_module_changes": [],
+  "protected_app_functions": 41,
+  "protected_original_modules": 76,
+  "note": "他PRの対象関数/元モジュールを上書きしていないことの静的差分照合。過去の構造案との統合競合は未解決。"
+}

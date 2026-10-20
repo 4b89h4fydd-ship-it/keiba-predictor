@@ -1,0 +1,21 @@
+{
+  "id": 55,
+  "name": "過去走重複排除",
+  "circuits": [
+    "JRA"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/ui/static/history/deduplicate.js"
+  ],
+  "shared_dependencies": [
+    "app.py:_jra_run_key / _jra_run_value_present (existing JRA dedupe key and missing-value policy)",
+    "Legacy composition shares JRA history lists; provider and persistence ownership not independent"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

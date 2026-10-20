@@ -1,0 +1,26 @@
+{
+  "id": 57,
+  "name": "全競走履歴取得・補修",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/ingest/career_transport.py"
+  ],
+  "shared_dependencies": [
+    "app.py:shared context installed via components.runtime.install_component (14 JRA/NAR history definitions)",
+    "app.py:RACEDB / PREPARED_STORE / DB_PATH / CENTRAL_DB_PATH / _new_conn (existing stores and prepared cache)",
+    "app.py:_jra_request / _netkeiba_get / NarStore / fetch_central_feed (existing fetchers)",
+    "app.py:_jra_merge_runs / _merge_central_recent (shared deduplication and cutoffs)",
+    "app.py:_full_history_lock / _full_history_running / threading (shared background scheduling state)",
+    "Existing scheduler dispatches circuit == 地方 to NarStore, otherwise to JRA; unknown-circuit refusal not verified"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

@@ -1,0 +1,44 @@
+{
+  "id": 175,
+  "name": "APIエラー処理",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/d1_day_readback.py::<module>",
+    "arvexq/ingest/d1_day_readback.py::get_json",
+    "arvexq/ingest/d1_day_readback.py::restore_race_response",
+    "arvexq/ingest/d1_day_readback.py::read_day",
+    "arvexq/ingest/d1_day_readback.py::read_day.one"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "arvexq/ingest/d1_day_readback.py::<module>",
+    "arvexq/ingest/d1_day_readback.py::get_json",
+    "arvexq/ingest/d1_day_readback.py::restore_race_response",
+    "arvexq/ingest/d1_day_readback.py::read_day",
+    "arvexq/ingest/d1_day_readback.py::read_day.one"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "scripts/arvexq_fact_data_audit.py",
+    "scripts/arvexq_jra_weather_readback.py",
+    "scripts/arvexq_nar_going_readback.py",
+    "scripts/arvexq_nar_scratches_readback.py",
+    "scripts/arvexq_nar_weather_readback.py",
+    "tests/test_factual_data_audit.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/full_snapshot_codec.py"
+  ],
+  "static_app_dependency_files": [],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/d1_day_readback.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

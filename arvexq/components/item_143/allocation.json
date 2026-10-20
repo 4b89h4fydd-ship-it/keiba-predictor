@@ -1,0 +1,39 @@
+{
+  "id": 143,
+  "name": "出馬表キャッシュ",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/storage/cache_keys.py::<module>",
+    "arvexq/storage/cache_keys.py::stable_hash",
+    "arvexq/storage/cache_keys.py::race_detail_key",
+    "arvexq/storage/cache_keys.py::horse_history_key",
+    "arvexq/storage/cache_keys.py::prediction_key"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "arvexq/storage/cache_keys.py::<module>",
+    "arvexq/storage/cache_keys.py::stable_hash",
+    "arvexq/storage/cache_keys.py::race_detail_key",
+    "arvexq/storage/cache_keys.py::horse_history_key",
+    "arvexq/storage/cache_keys.py::prediction_key"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [
+    {
+      "item": 143,
+      "reference": "arvexq/v3/transport/cache.py",
+      "reason": "最新mainに対象コードファイルなし"
+    }
+  ],
+  "caller_files": [],
+  "callee_files": [],
+  "static_app_dependency_files": [],
+  "static_workflow_dependency_files": [],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

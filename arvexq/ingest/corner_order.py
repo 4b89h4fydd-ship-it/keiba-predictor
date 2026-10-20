@@ -1,7 +1,7 @@
 """NAR corner passage-order parsing, independent of application and forecasts."""
 from __future__ import annotations
 import re
-from arvexq.ingest.field_normalization import _clean
+from arvexq.components.item_040.field_normalization import _clean
 
 def _top_level_tokens(text: str) -> list[str]:
     text = _clean(text)

@@ -1,0 +1,56 @@
+{
+  "id": 6,
+  "name": "JRAダート馬場状態解析",
+  "circuits": [
+    "JRA"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/environment_values.py::<module>",
+    "arvexq/ingest/jra_dirt_going.py::<module>",
+    "arvexq/ingest/environment_values.py::_env_clean_weather",
+    "arvexq/ingest/environment_values.py::_env_clean_condition",
+    "arvexq/ingest/environment_values.py::_safe_float",
+    "arvexq/ingest/environment_values.py::_safe_int",
+    "arvexq/ingest/jra_dirt_going.py::parse_jra_dirt_going"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/jra_dirt_going.py::<module>",
+    "arvexq/ingest/jra_dirt_going.py::parse_jra_dirt_going"
+  ],
+  "shared_refs": [
+    "arvexq/ingest/environment_values.py::<module>",
+    "arvexq/ingest/environment_values.py::_env_clean_weather",
+    "arvexq/ingest/environment_values.py::_env_clean_condition",
+    "arvexq/ingest/environment_values.py::_safe_float",
+    "arvexq/ingest/environment_values.py::_safe_int"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "arvexq/ingest/jra_dirt_going.py",
+    "arvexq/ingest/jra_environment_parser.py",
+    "arvexq/ingest/jra_turf_going.py",
+    "arvexq/ingest/jra_weather.py",
+    "arvexq/ingest/nar_going.py",
+    "arvexq/ingest/nar_weather.py",
+    "tests/test_enrichment_parsing.py",
+    "tests/test_environment_component_split.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/environment_values.py",
+    "arvexq/ingest/field_normalization.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/ingest/environment_values.py",
+    "arvexq/ingest/jra_dirt_going.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/environment_values.py",
+    "arvexq/ingest/jra_dirt_going.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

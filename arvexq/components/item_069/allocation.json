@@ -1,0 +1,37 @@
+{
+  "id": 69,
+  "name": "オッズ欠損判定",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/odds_fields/missing.py::<module>",
+    "arvexq/ingest/odds_fields/missing.py::valid_win_odds",
+    "arvexq/ingest/odds_fields/missing.py::odds_missing"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/odds_fields/missing.py::<module>",
+    "arvexq/ingest/odds_fields/missing.py::valid_win_odds",
+    "arvexq/ingest/odds_fields/missing.py::odds_missing"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "arvexq/ingest/odds_fields/delta.py",
+    "tests/test_independent_odds_facts.py"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "arvexq/ingest/odds_fields/missing.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/odds_fields/missing.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

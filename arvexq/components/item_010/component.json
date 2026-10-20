@@ -1,0 +1,22 @@
+{
+  "id": 10,
+  "name": "開催日程取得",
+  "circuits": [
+    "JRA"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/ingest/race_fields/meeting_schedule.py"
+  ],
+  "shared_dependencies": [
+    "app.py:_jra_program_cache / _jra_program_cache_lock (shared JRA schedule cache)",
+    "app.py:_jra_request and _today_iso (existing HTTP source and freshness policy)",
+    "app.py:normalize_central_race and _jra_text (existing output and DOM parsing)"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

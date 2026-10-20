@@ -1,0 +1,19 @@
+{
+  "scope": "コード上の契約・原本差分のみ。実行検証ではない。",
+  "app_route_decorators_before": 130,
+  "app_route_decorators_after": 130,
+  "same_existing_route_decorators": true,
+  "original_signature_ast_differences": [],
+  "unchanged_original_files": {
+    "arvexq/forecast/engine.py": true,
+    "arvexq/forecast/marks.py": true,
+    "arvexq/forecast/tickets.py": true,
+    "arvexq/prediction/observed_model.py": true,
+    "workers/api_preserved.mjs": true,
+    "arvexq/ui/static/index.html": true,
+    "arvexq/ui/static/styles.css": true
+  },
+  "new_prediction_model_installed": false,
+  "new_data_fetch_url_added": false,
+  "test_or_production_execution": false
+}

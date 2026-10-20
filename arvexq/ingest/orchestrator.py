@@ -5,7 +5,7 @@ import inspect
 from dataclasses import dataclass
 from typing import Any
 
-from arvexq.databanks.registry import DataBankRegistry, registry
+from arvexq.components.item_041.registry import DataBankRegistry, registry
 
 
 @dataclass(slots=True)

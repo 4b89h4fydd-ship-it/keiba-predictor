@@ -1,0 +1,340 @@
+{
+  "id": 20,
+  "name": "JRA公式データ解析",
+  "circuits": [
+    "JRA"
+  ],
+  "state": "partial-connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        20
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 2,
+        "imported": "decode_csv_bytes",
+        "local_name": "decode_csv_bytes"
+      },
+      "original_source": "arvexq/ingest/pure_parsers.py",
+      "box_target": "arvexq/components/item_020/pure_parsers.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 2,
+        "imported": "_jra_decode",
+        "local_name": "_jra_decode"
+      },
+      "original_source": "arvexq/ingest/pure_parsers.py",
+      "box_target": "arvexq/components/item_020/pure_parsers.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 2,
+        "imported": "_decode_site",
+        "local_name": "_decode_site"
+      },
+      "original_source": "arvexq/ingest/pure_parsers.py",
+      "box_target": "arvexq/components/item_020/pure_parsers.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 2,
+        "imported": "_json_horse_rows",
+        "local_name": "_json_horse_rows"
+      },
+      "original_source": "arvexq/ingest/pure_parsers.py",
+      "box_target": "arvexq/components/item_020/pure_parsers.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 2,
+        "imported": "_pick",
+        "local_name": "_pick"
+      },
+      "original_source": "arvexq/ingest/pure_parsers.py",
+      "box_target": "arvexq/components/item_020/pure_parsers.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 2,
+        "imported": "_jra_run_key",
+        "local_name": "_jra_run_key"
+      },
+      "original_source": "arvexq/ingest/pure_parsers.py",
+      "box_target": "arvexq/components/item_020/pure_parsers.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 2,
+        "imported": "_jra_run_value_present",
+        "local_name": "_jra_run_value_present"
+      },
+      "original_source": "arvexq/ingest/pure_parsers.py",
+      "box_target": "arvexq/components/item_020/pure_parsers.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/nar_csv.py",
+        "line": 8,
+        "imported": "decode_csv_bytes",
+        "local_name": "decode_csv_bytes"
+      },
+      "original_source": "arvexq/ingest/pure_parsers.py",
+      "box_target": "arvexq/components/item_020/pure_parsers.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_request",
+        "line": 254
+      },
+      "original_source": "app.py::_jra_request",
+      "box_target": "arvexq/components/item_020/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        20
+      ],
+      "original_private_name": "_arvexq_original__jra_request"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_norm_cname",
+        "line": 273
+      },
+      "original_source": "app.py::_jra_norm_cname",
+      "box_target": "arvexq/components/item_020/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        20
+      ],
+      "original_private_name": "_arvexq_original__jra_norm_cname"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_attr_cname",
+        "line": 276
+      },
+      "original_source": "app.py::_jra_attr_cname",
+      "box_target": "arvexq/components/item_020/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        20
+      ],
+      "original_private_name": "_arvexq_original__jra_attr_cname"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_program_title",
+        "line": 287
+      },
+      "original_source": "app.py::_jra_program_title",
+      "box_target": "arvexq/components/item_020/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        20
+      ],
+      "original_private_name": "_arvexq_original__jra_program_title"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_find_cname",
+        "line": 341
+      },
+      "original_source": "app.py::_jra_find_cname",
+      "box_target": "arvexq/components/item_020/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        20
+      ],
+      "original_private_name": "_arvexq_original__jra_find_cname"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_text",
+        "line": 373
+      },
+      "original_source": "app.py::_jra_text",
+      "box_target": "arvexq/components/item_020/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        20
+      ],
+      "original_private_name": "_arvexq_original__jra_text"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_parse_race",
+        "line": 481
+      },
+      "original_source": "app.py::_jra_parse_race",
+      "box_target": "arvexq/components/item_020/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        20
+      ],
+      "original_private_name": "_arvexq_original__jra_parse_race"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "fetch_jra_official",
+        "line": 639
+      },
+      "original_source": "app.py::fetch_jra_official",
+      "box_target": "arvexq/components/item_020/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        20
+      ],
+      "original_private_name": "_arvexq_original_fetch_jra_official"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_any_track",
+        "line": 2275
+      },
+      "original_source": "app.py::_jra_any_track",
+      "box_target": "arvexq/components/item_020/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        20
+      ],
+      "original_private_name": "_arvexq_original__jra_any_track"
+    },
+    {
+      "items": [
+        20
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_any_race_no",
+        "line": 2279
+      },
+      "original_source": "app.py::_jra_any_race_no",
+      "box_target": "arvexq/components/item_020/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        20
+      ],
+      "original_private_name": "_arvexq_original__jra_any_race_no"
+    }
+  ],
+  "deferred": [
+    {
+      "items": [
+        20
+      ],
+      "source": "app.py::_jra_parse_race_summary",
+      "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+      "prs": [
+        271
+      ]
+    },
+    {
+      "items": [
+        20,
+        70,
+        71,
+        72
+      ],
+      "source": "app.py::_jra_parse_result",
+      "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+      "prs": [
+        271
+      ]
+    }
+  ],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

@@ -1,34 +1,218 @@
-from arvexq.services import prepare_race_detail
-from arvexq.ingest.pure_parsers import (
-    decode_csv_bytes,
-    _jra_decode,
-    _decode_site,
-    _json_horse_rows,
-    _pick,
-    _jra_run_key,
-    _jra_run_value_present,
-)
-from arvexq.prediction.pure_diagnostics import (
-    _central_detail_coverage,
-    _diagnosis_history_quality,
-    _audit_axes_from_eval,
-    _learning_date_split,
-    _pc_time_index,
-    _prob_vector,
-    _history_is_enough,
-    _pc_season,
-    _reference_weight_from_horse,
-)
-from arvexq.infra.pure_snapshots import (
-    _bundle_quality,
-    _racedb_snapshot_usable,
-    _merge_official_result,
-)
+from functools import wraps as _arvexq_route_wraps
+from arvexq.components.item_008.routes import normalize_central_race as _arvexq_box_008_normalize_central_race
+from arvexq.components.item_009.routes import _jra_track_from_cname as _arvexq_box_009__jra_track_from_cname
+from arvexq.components.item_010.routes import _jra_program_lookup as _arvexq_box_010__jra_program_lookup
+from arvexq.components.item_010.routes import _jra_program_summaries as _arvexq_box_010__jra_program_summaries
+from arvexq.components.item_020.routes import _jra_any_race_no as _arvexq_box_020__jra_any_race_no
+from arvexq.components.item_020.routes import _jra_any_track as _arvexq_box_020__jra_any_track
+from arvexq.components.item_020.routes import _jra_attr_cname as _arvexq_box_020__jra_attr_cname
+from arvexq.components.item_020.routes import _jra_find_cname as _arvexq_box_020__jra_find_cname
+from arvexq.components.item_020.routes import _jra_norm_cname as _arvexq_box_020__jra_norm_cname
+from arvexq.components.item_020.routes import _jra_parse_race as _arvexq_box_020__jra_parse_race
+from arvexq.components.item_020.routes import _jra_program_title as _arvexq_box_020__jra_program_title
+from arvexq.components.item_020.routes import _jra_request as _arvexq_box_020__jra_request
+from arvexq.components.item_020.routes import _jra_text as _arvexq_box_020__jra_text
+from arvexq.components.item_020.routes import fetch_jra_official as _arvexq_box_020_fetch_jra_official
+from arvexq.components.item_021.routes import _nar_official_card_rows_fast as _arvexq_box_021__nar_official_card_rows_fast
+from arvexq.components.item_021.routes import _parse_nar_official_card_html as _arvexq_box_021__parse_nar_official_card_html
+from arvexq.components.item_022.routes import _nar_netkeiba_preview_rows as _arvexq_box_022__nar_netkeiba_preview_rows
+from arvexq.components.item_022.routes import _nar_netkeiba_race_id as _arvexq_box_022__nar_netkeiba_race_id
+from arvexq.components.item_022.routes import _netkeiba_detail_rows as _arvexq_box_022__netkeiba_detail_rows
+from arvexq.components.item_022.routes import _netkeiba_get as _arvexq_box_022__netkeiba_get
+from arvexq.components.item_022.routes import _netkeiba_program_race_id as _arvexq_box_022__netkeiba_program_race_id
+from arvexq.components.item_022.routes import _netkeiba_race_id as _arvexq_box_022__netkeiba_race_id
+from arvexq.components.item_022.routes import _netkeiba_race_summaries as _arvexq_box_022__netkeiba_race_summaries
+from arvexq.components.item_022.routes import fetch_central_feed as _arvexq_box_022_fetch_central_feed
+from arvexq.components.item_025.routes import _netkeiba_card_rows_fast as _arvexq_box_025__netkeiba_card_rows_fast
+from arvexq.components.item_038.routes import _data_core_refresh_race as _arvexq_box_038__data_core_refresh_race
+from arvexq.components.item_038.routes import _hydrate_fast_card_now as _arvexq_box_038__hydrate_fast_card_now
+from arvexq.components.item_038.routes import _merge_card_rows_preserve as _arvexq_box_038__merge_card_rows_preserve
+from arvexq.components.item_038.routes import _merge_current_card_fields as _arvexq_box_038__merge_current_card_fields
+from arvexq.components.item_038.routes import _schedule_fast_card_refresh as _arvexq_box_038__schedule_fast_card_refresh
+from arvexq.components.item_038.routes import _schedule_racedb_snapshot_refresh as _arvexq_box_038__schedule_racedb_snapshot_refresh
+from arvexq.components.item_042.routes import _jra_parse_past_cell as _arvexq_box_042__jra_parse_past_cell
+from arvexq.components.item_055.routes import _jra_merge_run_fields as _arvexq_box_055__jra_merge_run_fields
+from arvexq.components.item_055.routes import _jra_merge_runs as _arvexq_box_055__jra_merge_runs
+from arvexq.components.item_057.routes import _central_find_horse as _arvexq_box_057__central_find_horse
+from arvexq.components.item_057.routes import _central_month_dates as _arvexq_box_057__central_month_dates
+from arvexq.components.item_057.routes import _central_recent_from_store as _arvexq_box_057__central_recent_from_store
+from arvexq.components.item_057.routes import _central_resolve_race_id as _arvexq_box_057__central_resolve_race_id
+from arvexq.components.item_057.routes import _central_run_from_race as _arvexq_box_057__central_run_from_race
+from arvexq.components.item_057.routes import _fetch_central_days_parallel as _arvexq_box_057__fetch_central_days_parallel
+from arvexq.components.item_057.routes import _jra_history_complete as _arvexq_box_057__jra_history_complete
+from arvexq.components.item_057.routes import _jra_profile_runs as _arvexq_box_057__jra_profile_runs
+from arvexq.components.item_057.routes import _jra_run_core_complete as _arvexq_box_057__jra_run_core_complete
+from arvexq.components.item_057.routes import _merge_central_recent as _arvexq_box_057__merge_central_recent
+from arvexq.components.item_057.routes import _merge_fast_history as _arvexq_box_057__merge_fast_history
+from arvexq.components.item_057.routes import _netkeiba_past_rows_fast as _arvexq_box_057__netkeiba_past_rows_fast
+from arvexq.components.item_057.routes import _schedule_full_history_harvest as _arvexq_box_057__schedule_full_history_harvest
+from arvexq.components.item_064.routes import _attach_nar_live_odds as _arvexq_box_064__attach_nar_live_odds
+from arvexq.components.item_064.routes import _nar_live_odds as _arvexq_box_064__nar_live_odds
+from arvexq.components.item_064.routes import _parse_nar_live_odds_html as _arvexq_box_064__parse_nar_live_odds_html
+from arvexq.components.item_065.routes import _netkeiba_live_win_odds as _arvexq_box_065__netkeiba_live_win_odds
+from arvexq.components.item_066.routes import _merge_live_market_rows as _arvexq_box_066__merge_live_market_rows
+from arvexq.components.item_067.routes import _restore_saved_odds as _arvexq_box_067__restore_saved_odds
+from arvexq.components.item_076.routes import _parse_payouts as _arvexq_box_076__parse_payouts
+from arvexq.components.item_085.routes import _attach_nar_payouts as _arvexq_box_085__attach_nar_payouts
+from arvexq.components.item_085.routes import _fetch_nar_payouts_only as _arvexq_box_085__fetch_nar_payouts_only
+from arvexq.components.item_086.routes import _snapshot_final as _arvexq_box_086__snapshot_final
+from arvexq.components.item_087.routes import _data_core_active_horses as _arvexq_box_087__data_core_active_horses
+from arvexq.components.item_087.routes import _data_core_health as _arvexq_box_087__data_core_health
+from arvexq.components.item_087.routes import _data_core_store_health as _arvexq_box_087__data_core_store_health
+from arvexq.components.item_088.routes import _pc_clamp as _arvexq_box_088__pc_clamp
+from arvexq.components.item_088.routes import _pc_finish_quality as _arvexq_box_088__pc_finish_quality
+from arvexq.components.item_088.routes import _pc_list_quality as _arvexq_box_088__pc_list_quality
+from arvexq.components.item_088.routes import _pc_race_field as _arvexq_box_088__pc_race_field
+from arvexq.components.item_090.routes import _pc_fit_metrics as _arvexq_box_090__pc_fit_metrics
+from arvexq.components.item_097.routes import _pc_sectional_score as _arvexq_box_097__pc_sectional_score
+from arvexq.components.item_098.routes import _pc_style_metrics as _arvexq_box_098__pc_style_metrics
+from arvexq.components.item_110.routes import _build_fast_diagnosis_snapshot as _arvexq_box_110__build_fast_diagnosis_snapshot
+from arvexq.components.item_110.routes import _evaluation_number as _arvexq_box_110__evaluation_number
+from arvexq.components.item_110.routes import _fast_local_race_detail as _arvexq_box_110__fast_local_race_detail
+from arvexq.components.item_110.routes import _store_fast_snapshot as _arvexq_box_110__store_fast_snapshot
+from arvexq.components.item_110.routes import racedb_save_analysis as _arvexq_box_110_racedb_save_analysis
+from arvexq.components.item_128.routes import _is_jump_run as _arvexq_box_128__is_jump_run
+from arvexq.components.item_129.routes import _attach_local_volatility_to_summaries as _arvexq_box_129__attach_local_volatility_to_summaries
+from arvexq.components.item_129.routes import _compute_local_volatility_for_race as _arvexq_box_129__compute_local_volatility_for_race
+from arvexq.components.item_129.routes import _ensure_race_volatility as _arvexq_box_129__ensure_race_volatility
+from arvexq.components.item_129.routes import _local_volatility_map as _arvexq_box_129__local_volatility_map
+from arvexq.components.item_140.routes import _default_data_root as _arvexq_box_140__default_data_root
+from arvexq.components.item_140.routes import _new_conn as _arvexq_box_140__new_conn
+from arvexq.components.item_141.routes import _assemble_day_bundle as _arvexq_box_141__assemble_day_bundle
+from arvexq.components.item_141.routes import _bootstrap_analysis_ready as _arvexq_box_141__bootstrap_analysis_ready
+from arvexq.components.item_141.routes import _bootstrap_detail_local as _arvexq_box_141__bootstrap_detail_local
+from arvexq.components.item_141.routes import _bootstrap_detail_ready as _arvexq_box_141__bootstrap_detail_ready
+from arvexq.components.item_141.routes import _bootstrap_display_ready as _arvexq_box_141__bootstrap_display_ready
+from arvexq.components.item_141.routes import _bootstrap_rows_local as _arvexq_box_141__bootstrap_rows_local
+from arvexq.components.item_141.routes import _bootstrap_sources_running as _arvexq_box_141__bootstrap_sources_running
+from arvexq.components.item_141.routes import _force_day_live_snapshot as _arvexq_box_141__force_day_live_snapshot
+from arvexq.components.item_141.routes import _refresh_day_bundle as _arvexq_box_141__refresh_day_bundle
+from arvexq.components.item_141.routes import _schedule_day_bundle_refresh as _arvexq_box_141__schedule_day_bundle_refresh
+from arvexq.components.item_141.routes import _site_bootstrap_payload as _arvexq_box_141__site_bootstrap_payload
+from arvexq.components.item_141.routes import _site_bootstrap_warm_loop as _arvexq_box_141__site_bootstrap_warm_loop
+from arvexq.components.item_141.routes import _start_site_bootstrap_warmer as _arvexq_box_141__start_site_bootstrap_warmer
+from arvexq.components.item_141.routes import site_bootstrap as _arvexq_box_141_site_bootstrap
+from arvexq.components.item_142.routes import _data_core_snapshot as _arvexq_box_142__data_core_snapshot
+from arvexq.components.item_142.routes import _prepared_get_fresh as _arvexq_box_142__prepared_get_fresh
+from arvexq.components.item_142.routes import _racedb_get_fast as _arvexq_box_142__racedb_get_fast
+from arvexq.components.item_149.routes import _prepared_ttl as _arvexq_box_149__prepared_ttl
+from arvexq.components.item_151.routes import _data_core_day_rows as _arvexq_box_151__data_core_day_rows
+from arvexq.components.item_151.routes import _data_core_day_status as _arvexq_box_151__data_core_day_status
+from arvexq.components.item_151.routes import _local_starter_bundle as _arvexq_box_151__local_starter_bundle
+from arvexq.components.item_151.routes import _prewarm_sort_key as _arvexq_box_151__prewarm_sort_key
+from arvexq.components.item_151.routes import _schedule_prewarm as _arvexq_box_151__schedule_prewarm
+from arvexq.components.item_151.routes import central_ingest as _arvexq_box_151_central_ingest
+from arvexq.components.item_151.routes import data_core_refresh as _arvexq_box_151_data_core_refresh
+from arvexq.components.item_151.routes import data_core_refresh_day as _arvexq_box_151_data_core_refresh_day
+from arvexq.components.item_151.routes import prewarm_track as _arvexq_box_151_prewarm_track
+from arvexq.components.item_152.routes import _commercial_collect_once as _arvexq_box_152__commercial_collect_once
+from arvexq.components.item_152.routes import _commercial_collector_loop as _arvexq_box_152__commercial_collector_loop
+from arvexq.components.item_152.routes import _data_core_cycle as _arvexq_box_152__data_core_cycle
+from arvexq.components.item_152.routes import _data_core_loop as _arvexq_box_152__data_core_loop
+from arvexq.components.item_152.routes import _racedb_live_cycle as _arvexq_box_152__racedb_live_cycle
+from arvexq.components.item_152.routes import _schedule_central_refresh as _arvexq_box_152__schedule_central_refresh
+from arvexq.components.item_152.routes import _schedule_live_refresh as _arvexq_box_152__schedule_live_refresh
+from arvexq.components.item_152.routes import _start_commercial_collector as _arvexq_box_152__start_commercial_collector
+from arvexq.components.item_152.routes import _start_data_core_collector as _arvexq_box_152__start_data_core_collector
+from arvexq.components.item_152.routes import _start_racedb_daemon as _arvexq_box_152__start_racedb_daemon
+from arvexq.components.item_153.routes import _data_core_result_due as _arvexq_box_153__data_core_result_due
+from arvexq.components.item_153.routes import _jra_prior_result_cnames as _arvexq_box_153__jra_prior_result_cnames
+from arvexq.components.item_153.routes import _jra_resolve_prior_results as _arvexq_box_153__jra_resolve_prior_results
+from arvexq.components.item_153.routes import _jra_result_cname_from_card as _arvexq_box_153__jra_result_cname_from_card
+from arvexq.components.item_153.routes import _nar_result_should_be_available as _arvexq_box_153__nar_result_should_be_available
+from arvexq.components.item_153.routes import _refresh_result_fast as _arvexq_box_153__refresh_result_fast
+from arvexq.components.item_153.routes import _result_has_podium as _arvexq_box_153__result_has_podium
+from arvexq.components.item_154.routes import _history_counts as _arvexq_box_154__history_counts
+from arvexq.components.item_154.routes import _history_worker as _arvexq_box_154__history_worker
+from arvexq.components.item_154.routes import _months_from_race_date as _arvexq_box_154__months_from_race_date
+from arvexq.components.item_154.routes import _nar_month_needs_fetch as _arvexq_box_154__nar_month_needs_fetch
+from arvexq.components.item_154.routes import _race_history_status as _arvexq_box_154__race_history_status
+from arvexq.components.item_154.routes import _start_central_history_search as _arvexq_box_154__start_central_history_search
+from arvexq.components.item_154.routes import _start_race_history_search as _arvexq_box_154__start_race_history_search
+from arvexq.components.item_154.routes import _startup_history_backfill as _arvexq_box_154__startup_history_backfill
+from arvexq.components.item_154.routes import _sync_nar_month_wave as _arvexq_box_154__sync_nar_month_wave
+from arvexq.components.item_154.routes import ensure_history_async as _arvexq_box_154_ensure_history_async
+from arvexq.components.item_154.routes import history_backfill_one as _arvexq_box_154_history_backfill_one
+from arvexq.components.item_154.routes import history_status as _arvexq_box_154_history_status
+from arvexq.components.item_154.routes import iter_months_back as _arvexq_box_154_iter_months_back
+from arvexq.components.item_154.routes import sync_recent_history as _arvexq_box_154_sync_recent_history
+from arvexq.components.item_155.routes import _auto_odds_cycle as _arvexq_box_155__auto_odds_cycle
+from arvexq.components.item_155.routes import _auto_odds_loop as _arvexq_box_155__auto_odds_loop
+from arvexq.components.item_155.routes import _auto_odds_targets as _arvexq_box_155__auto_odds_targets
+from arvexq.components.item_155.routes import _start_auto_odds_collector as _arvexq_box_155__start_auto_odds_collector
+from arvexq.components.item_159.routes import _ensure_detail_background_jobs as _arvexq_box_159__ensure_detail_background_jobs
+from arvexq.components.item_159.routes import _ensure_fast_card_workers as _arvexq_box_159__ensure_fast_card_workers
+from arvexq.components.item_159.routes import _fast_card_worker as _arvexq_box_159__fast_card_worker
+from arvexq.components.item_159.routes import _prepare_race_snapshot as _arvexq_box_159__prepare_race_snapshot
+from arvexq.components.item_159.routes import _queue_fast_card as _arvexq_box_159__queue_fast_card
+from arvexq.components.item_159.routes import _schedule_detail_background_jobs as _arvexq_box_159__schedule_detail_background_jobs
+from arvexq.components.item_159.routes import prepare_race as _arvexq_box_159_prepare_race
+from arvexq.components.item_162.routes import _central_refresh_status as _arvexq_box_162__central_refresh_status
+from arvexq.components.item_162.routes import central_refresh_status as _arvexq_box_162_central_refresh_status
+from arvexq.components.item_162.routes import central_schema as _arvexq_box_162_central_schema
+from arvexq.components.item_162.routes import central_status as _arvexq_box_162_central_status
+from arvexq.components.item_162.routes import collector_status as _arvexq_box_162_collector_status
+from arvexq.components.item_162.routes import data_core_status as _arvexq_box_162_data_core_status
+from arvexq.components.item_162.routes import enrichment_schema as _arvexq_box_162_enrichment_schema
+from arvexq.components.item_162.routes import enrichment_status as _arvexq_box_162_enrichment_status
+from arvexq.components.item_162.routes import local_refresh_status as _arvexq_box_162_local_refresh_status
+from arvexq.components.item_162.routes import odds_auto_status as _arvexq_box_162_odds_auto_status
+from arvexq.components.item_162.routes import prewarm_status as _arvexq_box_162_prewarm_status
+from arvexq.components.item_162.routes import site_bootstrap_status as _arvexq_box_162_site_bootstrap_status
+from arvexq.components.item_163.routes import central_race_summaries as _arvexq_box_163_central_race_summaries
+from arvexq.components.item_163.routes import nar_race_summaries as _arvexq_box_163_nar_race_summaries
+from arvexq.components.item_163.routes import races as _arvexq_box_163_races
+from arvexq.components.item_163.routes import track_pack as _arvexq_box_163_track_pack
+from arvexq.components.item_164.routes import race_detail as _arvexq_box_164_race_detail
+from arvexq.components.item_164.routes import racedb_race as _arvexq_box_164_racedb_race
+from arvexq.components.item_165.routes import horse_snapshot as _arvexq_box_165_horse_snapshot
+from arvexq.components.item_166.routes import past_pack as _arvexq_box_166_past_pack
+from arvexq.components.item_167.routes import collect_race_info as _arvexq_box_167_collect_race_info
+from arvexq.components.item_167.routes import odds_refresh as _arvexq_box_167_odds_refresh
+from arvexq.components.item_168.routes import payout_refresh as _arvexq_box_168_payout_refresh
+from arvexq.components.item_169.routes import environment_pack as _arvexq_box_169_environment_pack
+from arvexq.components.item_170.routes import diagnosis_refresh as _arvexq_box_170_diagnosis_refresh
+from arvexq.components.item_170.routes import racedb_get_analysis as _arvexq_box_170_racedb_get_analysis
+from arvexq.components.item_170.routes import volatility_pack as _arvexq_box_170_volatility_pack
+from arvexq.components.item_171.routes import racedb_status as _arvexq_box_171_racedb_status
+from arvexq.components.item_171.routes import snapshot_version as _arvexq_box_171_snapshot_version
+from arvexq.components.item_171.routes import storage_status as _arvexq_box_171_storage_status
+from arvexq.components.item_172.routes import health as _arvexq_box_172_health
+from arvexq.components.item_172.routes import runtime_status as _arvexq_box_172_runtime_status
+from arvexq.components.item_176.routes import home as _arvexq_box_176_home
+from arvexq.components.item_193.routes import arvexq_icon as _arvexq_box_193_arvexq_icon
+from arvexq.components.item_193.routes import arvexq_touch_icon as _arvexq_box_193_arvexq_touch_icon
+from arvexq.components.item_193.routes import manifest as _arvexq_box_193_manifest
+from arvexq.components.item_193.routes import service_worker as _arvexq_box_193_service_worker
+from arvexq.components.item_195.routes import arvexq_logo as _arvexq_box_195_arvexq_logo
+from arvexq.components.item_195.routes import cinematic_detail_photo as _arvexq_box_195_cinematic_detail_photo
+from arvexq.components.item_195.routes import cinematic_hero as _arvexq_box_195_cinematic_hero
+from arvexq.components.item_195.routes import hero_horse as _arvexq_box_195_hero_horse
+from arvexq.components.item_195.routes import pace_preview as _arvexq_box_195_pace_preview
+from arvexq.components.item_195.routes import styles as _arvexq_box_195_styles
+from arvexq.components.item_197.routes import model_audit as _arvexq_box_197_model_audit
+from arvexq.components.item_197.routes import model_learning as _arvexq_box_197_model_learning
+from arvexq.components.item_198.routes import appjs as _arvexq_box_198_appjs
+from arvexq.components.item_200.routes import _arvexq_timing as _arvexq_box_200__arvexq_timing
+from arvexq.components.item_200.routes import _data_core_health_hash as _arvexq_box_200__data_core_health_hash
+from arvexq.components.item_200.routes import _data_core_record_run as _arvexq_box_200__data_core_record_run
+from arvexq.components.item_200.routes import _now_jst as _arvexq_box_200__now_jst
+from arvexq.components.item_200.routes import _today_iso as _arvexq_box_200__today_iso
+from arvexq.components.item_200.routes import build_info as _arvexq_box_200_build_info
+from arvexq.components.item_200.routes import version_json as _arvexq_box_200_version_json
+from arvexq.components.item_110.services_package import prepare_race_detail
+from arvexq.components.item_020.pure_parsers import decode_csv_bytes, _jra_decode, _decode_site, _json_horse_rows, _pick, _jra_run_key, _jra_run_value_present
+from arvexq.components.item_087.pure_diagnostics import _central_detail_coverage, _diagnosis_history_quality, _audit_axes_from_eval, _learning_date_split, _history_is_enough
+from arvexq.components.item_096.pure_diagnostics import _pc_time_index
+from arvexq.components.item_113.pure_diagnostics import _prob_vector
+from arvexq.components.item_095.pure_diagnostics import _pc_season
+from arvexq.components.item_108.pure_diagnostics import _reference_weight_from_horse
+from arvexq.components.item_086.pure_snapshots import _bundle_quality, _racedb_snapshot_usable, _merge_official_result
 from arvexq.databanks.legacy_bridge import register_legacy_sources
-from arvexq.ingest.nar_career_coverage import pre_race_reported_starts, official_history_complete, nar_history_wave_slots
-from arvexq.ingest.jra_career_merge import merge_full_profile_history
+from arvexq.components.item_057.nar_career_coverage import pre_race_reported_starts, official_history_complete, nar_history_wave_slots
+from arvexq.components.item_057.jra_career_merge import merge_full_profile_history
 from arvexq.prediction.career_readiness import assess_career_readiness
-from arvexq.ui.assets import read_asset, read_binary_asset
+from arvexq.components.item_195.assets import read_asset, read_binary_asset
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ARVEXQ Python source
@@ -59,7 +243,7 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
-from arvexq.ingest.entry_fields.affiliation import from_text as observed_affiliation
+from arvexq.components.item_033.affiliation import from_text as observed_affiliation
 
 app = FastAPI(title="ARVEXQ", version="14.26-v330-racecard-stable")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
@@ -69,20 +253,23 @@ ARVEXQ_DATA_CORE_VERSION = "arvexq-data-core-v300-final"
 AI_EVALUATION_VERSION = "evidence-v317-consensus-rebuild"
 VOLATILITY_ENGINE_VERSION = "arvexq-volatility-v1"
 
-from arvexq.prediction.course_speed_baselines import (
-    V215_SPEED_BASE_EXACT, V215_SPEED_BASE_TRACK_DISTANCE,
-    V215_SPEED_BASE_DISTANCE_GOING, V215_SPEED_GLOBAL,
-)
+from arvexq.components.item_109.course_speed_baselines import V215_SPEED_BASE_EXACT, V215_SPEED_BASE_TRACK_DISTANCE, V215_SPEED_BASE_DISTANCE_GOING, V215_SPEED_GLOBAL
 
 
 
-@app.middleware("http")
-async def _arvexq_timing(request: Request, call_next):
+async def _arvexq_original__arvexq_timing(request: Request, call_next):
     started=time.perf_counter()
     response=await call_next(request)
     try:response.headers["X-ARVEXQ-ms"]=f"{(time.perf_counter()-started)*1000:.1f}"
     except Exception:pass
     return response
+
+_arvexq_original__arvexq_timing.__name__ = '_arvexq_timing'
+_arvexq_original__arvexq_timing.__qualname__ = '_arvexq_timing'
+@app.middleware("http")
+@_arvexq_route_wraps(_arvexq_original__arvexq_timing)
+async def _arvexq_timing(*args, **kwargs):
+    return await _arvexq_box_200__arvexq_timing(_arvexq_original__arvexq_timing, *args, **kwargs)
 
 INDEX = read_asset("index.html")
 
@@ -142,7 +329,7 @@ CSS = read_asset("styles.css")
 
 
 JS = read_asset("app.js")
-from arvexq.ui.bundle import compose_app_script
+from arvexq.components.item_198.bundle import compose_app_script
 JS = compose_app_script(JS)
 
 MANIFEST = r'''{
@@ -179,7 +366,7 @@ NAR_MONTHLY_RACE_URL = (
     "?type=monthly&k_year={year}&k_month={month}"
 )
 
-def _default_data_root() -> Path:
+def _arvexq_original__default_data_root() -> Path:
     env=os.getenv("KEIBA_DATA_DIR","").strip()
     if env:return Path(env)
     for cand in (Path("/var/data/keiba_data"),Path("/data/keiba_data")):
@@ -189,6 +376,12 @@ def _default_data_root() -> Path:
         except Exception:pass
     return Path("/tmp/keiba_data")
 
+_arvexq_original__default_data_root.__name__ = '_default_data_root'
+_arvexq_original__default_data_root.__qualname__ = '_default_data_root'
+@_arvexq_route_wraps(_arvexq_original__default_data_root)
+def _default_data_root(*args, **kwargs):
+    return _arvexq_box_140__default_data_root(_arvexq_original__default_data_root, *args, **kwargs)
+
 DATA_ROOT = _default_data_root()
 ARCHIVE_DIR = DATA_ROOT / "nar" / "archives"
 DB_PATH = DATA_ROOT / "nar" / "nar.sqlite3"
@@ -196,14 +389,11 @@ PREPARED_DB_PATH = DATA_ROOT / "prepared" / "prepared.sqlite3"
 RACEDB_PATH = Path(os.getenv("RACEDB_PATH", str(DATA_ROOT / "racedb" / "racedb.sqlite3")))
 DAY_BUNDLE_DB_PATH = Path(os.getenv("DAY_BUNDLE_DB_PATH", str(DATA_ROOT / "bundle" / "day_bundle.sqlite3")))
 
-from arvexq.ingest.nar_csv import RACE_IDX, HORSE_IDX, _stable_id, read_csv_from_zip, strip_header
+from arvexq.components.item_021.nar_csv import RACE_IDX, HORSE_IDX, _stable_id, read_csv_from_zip, strip_header
 
-from arvexq.ingest.field_normalization import (
-    _clean, _int, _float, _carried_weight, _iso_date, _start_time, _time_seconds,
-    _normalize_sex, _scratch_status, _normalize_weather, _normalize_condition,
-)
+from arvexq.components.item_040.field_normalization import _clean, _int, _float, _carried_weight, _iso_date, _start_time, _time_seconds, _normalize_sex, _scratch_status, _normalize_weather, _normalize_condition
 
-from arvexq.ingest.corner_order import _top_level_tokens, parse_corner_order
+from arvexq.components.item_075.corner_order import _top_level_tokens, parse_corner_order
 
 
 @dataclass
@@ -244,7 +434,7 @@ _arvexq_installer(globals())
 del _arvexq_installer
 
 
-def normalize_central_race(raw: dict) -> dict | None:
+def _arvexq_original_normalize_central_race(raw: dict) -> dict | None:
     if not isinstance(raw, dict):
         return None
     date = _clean(str(raw.get("date") or ""))
@@ -269,6 +459,12 @@ def normalize_central_race(raw: dict) -> dict | None:
     out["startTimeChanged"] = bool(out.get("scheduledStartTime") and out.get("startTime") and out.get("scheduledStartTime") != out.get("startTime"))
     return out
 
+_arvexq_original_normalize_central_race.__name__ = 'normalize_central_race'
+_arvexq_original_normalize_central_race.__qualname__ = 'normalize_central_race'
+@_arvexq_route_wraps(_arvexq_original_normalize_central_race)
+def normalize_central_race(*args, **kwargs):
+    return _arvexq_box_008_normalize_central_race(_arvexq_original_normalize_central_race, *args, **kwargs)
+
 
 JRA_TRACK_CODES = {"01":"札幌","02":"函館","03":"福島","04":"新潟","05":"東京","06":"中山","07":"中京","08":"京都","09":"阪神","10":"小倉"}
 JRA_TRACK_CODE_BY_NAME = {v:k for k,v in JRA_TRACK_CODES.items()}
@@ -279,7 +475,7 @@ JRA_RESULT_CNAME_RE = re.compile(r"pw01sde(?:01|10)\d{20}(?:/|%2F)[0-9A-Fa-f]{2}
 _jra_cache_lock = threading.Lock()
 _jra_text_cache: dict[str, tuple[float,str]] = {}
 
-def _jra_request(url: str, cname: str | None = None, cache_sec: int = 1800) -> str:
+def _arvexq_original__jra_request(url: str, cname: str | None = None, cache_sec: int = 1800) -> str:
     key=url+"|"+(cname or "")
     now=time.time()
     with _jra_cache_lock:
@@ -298,21 +494,39 @@ def _jra_request(url: str, cname: str | None = None, cache_sec: int = 1800) -> s
         _jra_text_cache[key]=(now,text)
     return text
 
-def _jra_norm_cname(value:str)->str:
+_arvexq_original__jra_request.__name__ = '_jra_request'
+_arvexq_original__jra_request.__qualname__ = '_jra_request'
+@_arvexq_route_wraps(_arvexq_original__jra_request)
+def _jra_request(*args, **kwargs):
+    return _arvexq_box_020__jra_request(_arvexq_original__jra_request, *args, **kwargs)
+
+def _arvexq_original__jra_norm_cname(value:str)->str:
     return re.sub(r"%2F","/",str(value or ""),flags=re.I)
 
-def _jra_attr_cname(tag, pattern) -> str:
+_arvexq_original__jra_norm_cname.__name__ = '_jra_norm_cname'
+_arvexq_original__jra_norm_cname.__qualname__ = '_jra_norm_cname'
+@_arvexq_route_wraps(_arvexq_original__jra_norm_cname)
+def _jra_norm_cname(*args, **kwargs):
+    return _arvexq_box_020__jra_norm_cname(_arvexq_original__jra_norm_cname, *args, **kwargs)
+
+def _arvexq_original__jra_attr_cname(tag, pattern) -> str:
     if not tag: return ""
     blob=" ".join(str(v) for v in tag.attrs.values())+" "+str(tag)
     m=pattern.search(blob)
     return _jra_norm_cname(m.group(0)) if m else ""
+
+_arvexq_original__jra_attr_cname.__name__ = '_jra_attr_cname'
+_arvexq_original__jra_attr_cname.__qualname__ = '_jra_attr_cname'
+@_arvexq_route_wraps(_arvexq_original__jra_attr_cname)
+def _jra_attr_cname(*args, **kwargs):
+    return _arvexq_box_020__jra_attr_cname(_arvexq_original__jra_attr_cname, *args, **kwargs)
 
 JRA_BAD_TITLE_RE = re.compile(r"検索ウィンドウ|緊急情報|重要なお知らせ|お知らせ|関連メニュー|今週の開催|JRAからのお知らせ|インフォメーション|ピックアップ|発売レース|各種サービス|スペシャルコンテンツ|競馬メニュー|開催日程")
 JRA_PROGRAM_TRACK_RE = re.compile(r"\d+回(札幌|函館|福島|新潟|東京|中山|中京|京都|阪神|小倉)\d+日")
 _jra_program_cache_lock=threading.Lock(); _jra_program_cache={}
 _jra_cname_lookup_lock=threading.Lock(); _jra_cname_lookup={}
 
-def _jra_program_title(info:str)->str:
+def _arvexq_original__jra_program_title(info:str)->str:
     s=re.sub(r"\s+"," ",str(info or "")).strip(); dm=re.search(r"[\d,]{4,5}\s*[（(]",s); prefix=(s[:dm.start()] if dm else s).strip()
     cm=re.search(r"\s+(?:障害)?(?:2歳|3歳|4歳)(?:以上)?",prefix)
     if cm and cm.start()>0:
@@ -320,10 +534,16 @@ def _jra_program_title(info:str)->str:
         if named:return named
     return prefix
 
-from arvexq.ingest.race_fields.meeting_schedule import extract as jra_meeting_schedule
-from arvexq.ingest.race_fields.grade_class import extract as jra_grade_class
+_arvexq_original__jra_program_title.__name__ = '_jra_program_title'
+_arvexq_original__jra_program_title.__qualname__ = '_jra_program_title'
+@_arvexq_route_wraps(_arvexq_original__jra_program_title)
+def _jra_program_title(*args, **kwargs):
+    return _arvexq_box_020__jra_program_title(_arvexq_original__jra_program_title, *args, **kwargs)
 
-def _jra_program_summaries(iso_date:str)->list[dict]:
+from arvexq.components.item_010.meeting_schedule import extract as jra_meeting_schedule
+from arvexq.components.item_013.grade_class import extract as jra_grade_class
+
+def _arvexq_original__jra_program_summaries(iso_date:str)->list[dict]:
     now=time.time()
     with _jra_program_cache_lock:
         hit=_jra_program_cache.get(iso_date)
@@ -361,12 +581,24 @@ def _jra_program_summaries(iso_date:str)->list[dict]:
     with _jra_program_cache_lock:_jra_program_cache[iso_date]=(now,[dict(x) for x in out])
     return out
 
-def _jra_program_lookup(iso_date:str,track:str,race_no:int):
+_arvexq_original__jra_program_summaries.__name__ = '_jra_program_summaries'
+_arvexq_original__jra_program_summaries.__qualname__ = '_jra_program_summaries'
+@_arvexq_route_wraps(_arvexq_original__jra_program_summaries)
+def _jra_program_summaries(*args, **kwargs):
+    return _arvexq_box_010__jra_program_summaries(_arvexq_original__jra_program_summaries, *args, **kwargs)
+
+def _arvexq_original__jra_program_lookup(iso_date:str,track:str,race_no:int):
     for r in _jra_program_summaries(iso_date):
         if str(r.get("track"))==str(track) and int(r.get("raceNumber") or 0)==int(race_no):return dict(r)
     return None
 
-def _jra_find_cname(iso_date:str,track:str,race_no:int)->str:
+_arvexq_original__jra_program_lookup.__name__ = '_jra_program_lookup'
+_arvexq_original__jra_program_lookup.__qualname__ = '_jra_program_lookup'
+@_arvexq_route_wraps(_arvexq_original__jra_program_lookup)
+def _jra_program_lookup(*args, **kwargs):
+    return _arvexq_box_010__jra_program_lookup(_arvexq_original__jra_program_lookup, *args, **kwargs)
+
+def _arvexq_original__jra_find_cname(iso_date:str,track:str,race_no:int)->str:
     key=(iso_date,track,int(race_no))
     with _jra_cname_lookup_lock:
         if key in _jra_cname_lookup:return _jra_cname_lookup[key]
@@ -398,21 +630,40 @@ def _jra_find_cname(iso_date:str,track:str,race_no:int)->str:
             return c
     return ""
 
-def _jra_text(tag) -> str:
+_arvexq_original__jra_find_cname.__name__ = '_jra_find_cname'
+_arvexq_original__jra_find_cname.__qualname__ = '_jra_find_cname'
+@_arvexq_route_wraps(_arvexq_original__jra_find_cname)
+def _jra_find_cname(*args, **kwargs):
+    return _arvexq_box_020__jra_find_cname(_arvexq_original__jra_find_cname, *args, **kwargs)
+
+def _arvexq_original__jra_text(tag) -> str:
     return re.sub(r"\s+"," ",tag.get_text(" ",strip=True) if tag else "").strip()
 
-from arvexq.ingest.jra_time import _jra_iso_date, _jra_parse_time_seconds
+_arvexq_original__jra_text.__name__ = '_jra_text'
+_arvexq_original__jra_text.__qualname__ = '_jra_text'
+@_arvexq_route_wraps(_arvexq_original__jra_text)
+def _jra_text(*args, **kwargs):
+    return _arvexq_box_020__jra_text(_arvexq_original__jra_text, *args, **kwargs)
 
-from arvexq.ingest.jra_identifiers import _jra_date_from_cname, _jra_race_no_from_cname
+from arvexq.components.item_014.jra_time import _jra_iso_date, _jra_parse_time_seconds
 
-from arvexq.ingest.race_fields.track import extract as jra_race_track
+from arvexq.components.item_008.jra_identifiers import _jra_date_from_cname
+from arvexq.components.item_011.jra_identifiers import _jra_race_no_from_cname
 
-def _jra_track_from_cname(cname:str)->str:
+from arvexq.components.item_009.track import extract as jra_race_track
+
+def _arvexq_original__jra_track_from_cname(cname:str)->str:
     return jra_race_track(cname,JRA_TRACK_CODES)
 
-from arvexq.ingest.past_fields.jra import parse_jra_history_cell
+_arvexq_original__jra_track_from_cname.__name__ = '_jra_track_from_cname'
+_arvexq_original__jra_track_from_cname.__qualname__ = '_jra_track_from_cname'
+@_arvexq_route_wraps(_arvexq_original__jra_track_from_cname)
+def _jra_track_from_cname(*args, **kwargs):
+    return _arvexq_box_009__jra_track_from_cname(_arvexq_original__jra_track_from_cname, *args, **kwargs)
 
-def _jra_parse_past_cell(cell, cutoff:str) -> dict | None:
+from arvexq.components.item_042.jra import parse_jra_history_cell
+
+def _arvexq_original__jra_parse_past_cell(cell, cutoff:str) -> dict | None:
     # Provider-specific identity stays here; each observed field is parsed in
     # its independently testable extractor and composed without forecasts.
     result_cname=_jra_attr_cname(cell,JRA_RESULT_CNAME_RE)
@@ -420,7 +671,13 @@ def _jra_parse_past_cell(cell, cutoff:str) -> dict | None:
     tracks=list(JRA_TRACK_CODES.values())+["門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"]
     return parse_jra_history_cell(cell,cutoff,tracks,race_id=rid)
 
-def _jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
+_arvexq_original__jra_parse_past_cell.__name__ = '_jra_parse_past_cell'
+_arvexq_original__jra_parse_past_cell.__qualname__ = '_jra_parse_past_cell'
+@_arvexq_route_wraps(_arvexq_original__jra_parse_past_cell)
+def _jra_parse_past_cell(*args, **kwargs):
+    return _arvexq_box_042__jra_parse_past_cell(_arvexq_original__jra_parse_past_cell, *args, **kwargs)
+
+def _arvexq_original__jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
     if not cname:return []
     try: html=_jra_request("https://www.jra.go.jp/JRADB/accessU.html",cname,86400)
     except Exception:return []
@@ -454,7 +711,13 @@ def _jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
             if len(out)>=limit:return out
     return out
 
-def _jra_merge_run_fields(base:dict,incoming:dict)->dict:
+_arvexq_original__jra_profile_runs.__name__ = '_jra_profile_runs'
+_arvexq_original__jra_profile_runs.__qualname__ = '_jra_profile_runs'
+@_arvexq_route_wraps(_arvexq_original__jra_profile_runs)
+def _jra_profile_runs(*args, **kwargs):
+    return _arvexq_box_057__jra_profile_runs(_arvexq_original__jra_profile_runs, *args, **kwargs)
+
+def _arvexq_original__jra_merge_run_fields(base:dict,incoming:dict)->dict:
     """Merge duplicate starts field-by-field instead of discarding richer data."""
     out=dict(base or {})
     for key,value in (incoming or {}).items():
@@ -466,21 +729,39 @@ def _jra_merge_run_fields(base:dict,incoming:dict)->dict:
     if sources:out["source"]=" + ".join(sources)
     return out
 
+_arvexq_original__jra_merge_run_fields.__name__ = '_jra_merge_run_fields'
+_arvexq_original__jra_merge_run_fields.__qualname__ = '_jra_merge_run_fields'
+@_arvexq_route_wraps(_arvexq_original__jra_merge_run_fields)
+def _jra_merge_run_fields(*args, **kwargs):
+    return _arvexq_box_055__jra_merge_run_fields(_arvexq_original__jra_merge_run_fields, *args, **kwargs)
 
-def _jra_run_core_complete(r:dict)->bool:
+
+def _arvexq_original__jra_run_core_complete(r:dict)->bool:
     try:finish=int(r.get("finish") or 0);field=int(r.get("fieldSize") or 0);distance=int(r.get("distance") or 0)
     except (TypeError,ValueError):return False
     return bool(str(r.get("date") or "") and str(r.get("track") or "") and finish>0 and field>1 and distance>0)
 
+_arvexq_original__jra_run_core_complete.__name__ = '_jra_run_core_complete'
+_arvexq_original__jra_run_core_complete.__qualname__ = '_jra_run_core_complete'
+@_arvexq_route_wraps(_arvexq_original__jra_run_core_complete)
+def _jra_run_core_complete(*args, **kwargs):
+    return _arvexq_box_057__jra_run_core_complete(_arvexq_original__jra_run_core_complete, *args, **kwargs)
 
-def _jra_history_complete(runs:list[dict],career_complete:bool=False)->bool:
+
+def _arvexq_original__jra_history_complete(runs:list[dict],career_complete:bool=False)->bool:
     rows=[r for r in (runs or []) if isinstance(r,dict)]
     target=min(5,len(rows)) if career_complete else 5
     if target==0:return bool(career_complete)
     return len(rows)>=target and sum(1 for r in rows[:target] if _jra_run_core_complete(r))>=target
 
+_arvexq_original__jra_history_complete.__name__ = '_jra_history_complete'
+_arvexq_original__jra_history_complete.__qualname__ = '_jra_history_complete'
+@_arvexq_route_wraps(_arvexq_original__jra_history_complete)
+def _jra_history_complete(*args, **kwargs):
+    return _arvexq_box_057__jra_history_complete(_arvexq_original__jra_history_complete, *args, **kwargs)
 
-def _jra_merge_runs(a:list[dict],b:list[dict],limit:int=5)->list[dict]:
+
+def _arvexq_original__jra_merge_runs(a:list[dict],b:list[dict],limit:int=5)->list[dict]:
     merged={};order=[]
     for r in list(a or [])+list(b or []):
         if not isinstance(r,dict):continue
@@ -492,24 +773,26 @@ def _jra_merge_runs(a:list[dict],b:list[dict],limit:int=5)->list[dict]:
     allr.sort(key=lambda r:str(r.get("date") or ""),reverse=True)
     return allr[:limit]
 
-from arvexq.ingest.race_fields.start_time import extract as jra_start_time
-from arvexq.ingest.race_fields.course import extract as jra_course
-from arvexq.ingest.race_fields.distance import extract as jra_distance
-from arvexq.ingest.race_fields.surface import extract as jra_surface
-from arvexq.ingest.race_fields.prize import extract_first_prize as jra_first_prize
+_arvexq_original__jra_merge_runs.__name__ = '_jra_merge_runs'
+_arvexq_original__jra_merge_runs.__qualname__ = '_jra_merge_runs'
+@_arvexq_route_wraps(_arvexq_original__jra_merge_runs)
+def _jra_merge_runs(*args, **kwargs):
+    return _arvexq_box_055__jra_merge_runs(_arvexq_original__jra_merge_runs, *args, **kwargs)
 
-from arvexq.ingest.race_fields.title import extract as jra_race_title
-from arvexq.ingest.race_fields.field_size import extract as jra_race_field_size
+from arvexq.components.item_014.start_time import extract as jra_start_time
+from arvexq.components.item_017.course import extract as jra_course
+from arvexq.components.item_016.distance import extract as jra_distance
+from arvexq.components.item_015.surface import extract as jra_surface
+from arvexq.components.item_019.prize import extract_first_prize as jra_first_prize
+
+from arvexq.components.item_012.title import extract as jra_race_title
+from arvexq.components.item_018.field_size import extract as jra_race_field_size
 
 from arvexq.ingest.jra_official_table import select_runners_table as select_jra_runners_table
 from arvexq.ingest.jra_official_runner_row import extract as jra_runner_row_number
-from arvexq.ingest.race_summary_merge import (
-    index_summaries as _index_race_summaries,
-    merge_refreshed_summaries as _merge_race_summaries,
-    choose_card_identifiers as _choose_race_cards,
-)
+from arvexq.components.item_024.race_summary_merge import index_summaries as _index_race_summaries, merge_refreshed_summaries as _merge_race_summaries, choose_card_identifiers as _choose_race_cards
 
-def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
+def _arvexq_original__jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
     cache_sec=int(os.getenv("JRA_LIVE_ODDS_CACHE_SEC","45")) if date==_today_iso() else 600
     try: html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,cache_sec)
@@ -644,6 +927,12 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
     rid=f"jra-{date}-{track}-{race_no:02d}"
     return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"raceGrade":race_grade,"raceClass":race_class,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":jra_race_field_size(horses),"racePrize1":prize1,"startTime":start,"scheduledStartTime":start,"horses":horses,"withdrawnEntries":withdrawn_entries,"source":"JRA公式","jraCname":cname})
 
+_arvexq_original__jra_parse_race.__name__ = '_jra_parse_race'
+_arvexq_original__jra_parse_race.__qualname__ = '_jra_parse_race'
+@_arvexq_route_wraps(_arvexq_original__jra_parse_race)
+def _jra_parse_race(*args, **kwargs):
+    return _arvexq_box_020__jra_parse_race(_arvexq_original__jra_parse_race, *args, **kwargs)
+
 def _jra_parse_race_summary(cname:str)->dict|None:
     """Fast list-page parser: no horse/profile parsing. Full card loads only when opened."""
     date=_jra_date_from_cname(cname); track=_jra_track_from_cname(cname); race_no=_jra_race_no_from_cname(cname)
@@ -667,7 +956,7 @@ def _jra_parse_race_summary(cname:str)->dict|None:
     rid=f"jra-{date}-{track}-{race_no:02d}"
     return normalize_central_race({"id":rid,"date":date,"track":track,"raceNumber":race_no,"title":title,"raceGrade":race_grade,"raceClass":race_class,"distance":distance,"surface":surface,"condition":condition,"weather":weather,"fieldSize":0,"racePrize1":0,"startTime":start,"scheduledStartTime":start,"horses":[],"source":"JRA公式・高速一覧","jraCname":cname,"_summaryOnly":True})
 
-def fetch_jra_official(iso_date:str, lightweight: bool = False)->list[dict]:
+def _arvexq_original_fetch_jra_official(iso_date:str, lightweight: bool = False)->list[dict]:
     if lightweight:return _jra_program_summaries(iso_date)
     token=iso_date.replace("-","")
     try:
@@ -738,7 +1027,13 @@ def fetch_jra_official(iso_date:str, lightweight: bool = False)->list[dict]:
     races.sort(key=lambda r:(r.get("track") or "",int(r.get("raceNumber") or 0)))
     return races
 
-def fetch_central_feed(iso_date: str, history: bool = False) -> list[dict]:
+_arvexq_original_fetch_jra_official.__name__ = 'fetch_jra_official'
+_arvexq_original_fetch_jra_official.__qualname__ = 'fetch_jra_official'
+@_arvexq_route_wraps(_arvexq_original_fetch_jra_official)
+def fetch_jra_official(*args, **kwargs):
+    return _arvexq_box_020_fetch_jra_official(_arvexq_original_fetch_jra_official, *args, **kwargs)
+
+def _arvexq_original_fetch_central_feed(iso_date: str, history: bool = False) -> list[dict]:
     # Prefer a licensed feed when configured. Otherwise use the official JRA website.
     base = _clean(os.getenv("CENTRAL_HISTORY_FEED_URL", "")) if history else ""
     if not base:
@@ -762,7 +1057,13 @@ def fetch_central_feed(iso_date: str, history: bool = False) -> list[dict]:
     rows = body if isinstance(body, list) else body.get("races", [])
     return [r for r in (normalize_central_race(x) for x in rows) if r]
 
-def iter_months_back(target: dt_date, count: int) -> Iterator[tuple[int, int]]:
+_arvexq_original_fetch_central_feed.__name__ = 'fetch_central_feed'
+_arvexq_original_fetch_central_feed.__qualname__ = 'fetch_central_feed'
+@_arvexq_route_wraps(_arvexq_original_fetch_central_feed)
+def fetch_central_feed(*args, **kwargs):
+    return _arvexq_box_022_fetch_central_feed(_arvexq_original_fetch_central_feed, *args, **kwargs)
+
+def _arvexq_original_iter_months_back(target: dt_date, count: int) -> Iterator[tuple[int, int]]:
     year, month = target.year, target.month
     for _ in range(count):
         month -= 1
@@ -771,14 +1072,26 @@ def iter_months_back(target: dt_date, count: int) -> Iterator[tuple[int, int]]:
             month = 12
         yield year, month
 
+_arvexq_original_iter_months_back.__name__ = 'iter_months_back'
+_arvexq_original_iter_months_back.__qualname__ = 'iter_months_back'
+@_arvexq_route_wraps(_arvexq_original_iter_months_back)
+def iter_months_back(*args, **kwargs):
+    return _arvexq_box_154_iter_months_back(_arvexq_original_iter_months_back, *args, **kwargs)
 
-def sync_recent_history(months: int = 12) -> list[dict]:
+
+def _arvexq_original_sync_recent_history(months: int = 12) -> list[dict]:
     sync = NarSync()
     out = []
     today = datetime.now().date()
     for year, month in reversed(list(iter_months_back(today, months))):
         out.append(sync.sync_month(year, month))
     return out
+
+_arvexq_original_sync_recent_history.__name__ = 'sync_recent_history'
+_arvexq_original_sync_recent_history.__qualname__ = 'sync_recent_history'
+@_arvexq_route_wraps(_arvexq_original_sync_recent_history)
+def sync_recent_history(*args, **kwargs):
+    return _arvexq_box_154_sync_recent_history(_arvexq_original_sync_recent_history, *args, **kwargs)
 
 
 _nar_sync_io_lock = threading.Lock()
@@ -787,7 +1100,7 @@ _history_started = False
 _history_ready = False
 _history_error = ""
 
-def _history_worker(months_back: int | None = None):
+def _arvexq_original__history_worker(months_back: int | None = None):
     global _history_ready, _history_error
     # v43: do not block on-demand history behind an 18-month serial startup crawl.
     # Warm only the latest few months, in parallel. Deeper history is fetched only when needed.
@@ -807,7 +1120,13 @@ def _history_worker(months_back: int | None = None):
         _history_error = str(exc)
     _history_ready = True
 
-def ensure_history_async():
+_arvexq_original__history_worker.__name__ = '_history_worker'
+_arvexq_original__history_worker.__qualname__ = '_history_worker'
+@_arvexq_route_wraps(_arvexq_original__history_worker)
+def _history_worker(*args, **kwargs):
+    return _arvexq_box_154__history_worker(_arvexq_original__history_worker, *args, **kwargs)
+
+def _arvexq_original_ensure_history_async():
     global _history_started
     with _history_lock:
         if _history_started:
@@ -815,22 +1134,45 @@ def ensure_history_async():
         _history_started = True
         threading.Thread(target=_history_worker, daemon=True).start()
 
-def _now_jst():
+_arvexq_original_ensure_history_async.__name__ = 'ensure_history_async'
+_arvexq_original_ensure_history_async.__qualname__ = 'ensure_history_async'
+@_arvexq_route_wraps(_arvexq_original_ensure_history_async)
+def ensure_history_async(*args, **kwargs):
+    return _arvexq_box_154_ensure_history_async(_arvexq_original_ensure_history_async, *args, **kwargs)
+
+def _arvexq_original__now_jst():
     return datetime.now(ZoneInfo("Asia/Tokyo"))
 
-def _today_iso():
+_arvexq_original__now_jst.__name__ = '_now_jst'
+_arvexq_original__now_jst.__qualname__ = '_now_jst'
+@_arvexq_route_wraps(_arvexq_original__now_jst)
+def _now_jst(*args, **kwargs):
+    return _arvexq_box_200__now_jst(_arvexq_original__now_jst, *args, **kwargs)
+
+def _arvexq_original__today_iso():
     return _now_jst().strftime("%Y-%m-%d")
 
+_arvexq_original__today_iso.__name__ = '_today_iso'
+_arvexq_original__today_iso.__qualname__ = '_today_iso'
+@_arvexq_route_wraps(_arvexq_original__today_iso)
+def _today_iso(*args, **kwargs):
+    return _arvexq_box_200__today_iso(_arvexq_original__today_iso, *args, **kwargs)
 
-@app.on_event("startup")
-def _startup_history_backfill():
+
+def _arvexq_original__startup_history_backfill():
     # v43: targeted race prefetch is faster than a competing global crawl.
     if str(os.getenv("NAR_BACKGROUND_WARM", "0")).lower() in {"1","true","yes","on"}:
         ensure_history_async()
 
+_arvexq_original__startup_history_backfill.__name__ = '_startup_history_backfill'
+_arvexq_original__startup_history_backfill.__qualname__ = '_startup_history_backfill'
+@app.on_event("startup")
+@_arvexq_route_wraps(_arvexq_original__startup_history_backfill)
+def _startup_history_backfill(*args, **kwargs):
+    return _arvexq_box_154__startup_history_backfill(_arvexq_original__startup_history_backfill, *args, **kwargs)
 
-@app.get("/api/v1/storage-status")
-def storage_status():
+
+def _arvexq_original_storage_status():
     p=DATA_ROOT
     return {
         "dataRoot":str(p),
@@ -840,9 +1182,15 @@ def storage_status():
         "narDb":str(DB_PATH),
     }
 
+_arvexq_original_storage_status.__name__ = 'storage_status'
+_arvexq_original_storage_status.__qualname__ = 'storage_status'
+@app.get("/api/v1/storage-status")
+@_arvexq_route_wraps(_arvexq_original_storage_status)
+def storage_status(*args, **kwargs):
+    return _arvexq_box_171_storage_status(_arvexq_original_storage_status, *args, **kwargs)
 
-@app.get("/health")
-def health():
+
+def _arvexq_original_health():
     try:
         nar_coverage = NarStore().coverage()
     except Exception:
@@ -859,8 +1207,14 @@ def health():
         "narHistoryMonths": max(2, min(8, int(os.getenv("NAR_HISTORY_WARM_MONTHS", "4")))),
     }
 
-@app.post("/api/v1/history-backfill-one")
-def history_backfill_one(months_ago: int = Query(1, ge=1, le=24)):
+_arvexq_original_health.__name__ = 'health'
+_arvexq_original_health.__qualname__ = 'health'
+@app.get("/health")
+@_arvexq_route_wraps(_arvexq_original_health)
+def health(*args, **kwargs):
+    return _arvexq_box_172_health(_arvexq_original_health, *args, **kwargs)
+
+def _arvexq_original_history_backfill_one(months_ago: int = Query(1, ge=1, le=24)):
     target=datetime.now().date().replace(day=1)
     y,m=target.year,target.month
     for _ in range(months_ago):
@@ -872,12 +1226,24 @@ def history_backfill_one(months_ago: int = Query(1, ge=1, le=24)):
     threading.Thread(target=worker,daemon=True).start()
     return {"status":"started","year":y,"month":m}
 
-@app.get("/api/v1/history-status")
-def history_status():
+_arvexq_original_history_backfill_one.__name__ = 'history_backfill_one'
+_arvexq_original_history_backfill_one.__qualname__ = 'history_backfill_one'
+@app.post("/api/v1/history-backfill-one")
+@_arvexq_route_wraps(_arvexq_original_history_backfill_one)
+def history_backfill_one(*args, **kwargs):
+    return _arvexq_box_154_history_backfill_one(_arvexq_original_history_backfill_one, *args, **kwargs)
+
+def _arvexq_original_history_status():
     return {"started":_history_started,"ready":_history_ready,"error":_history_error}
 
-@app.get("/api/v1/central-status")
-def central_status():
+_arvexq_original_history_status.__name__ = 'history_status'
+_arvexq_original_history_status.__qualname__ = 'history_status'
+@app.get("/api/v1/history-status")
+@_arvexq_route_wraps(_arvexq_original_history_status)
+def history_status(*args, **kwargs):
+    return _arvexq_box_154_history_status(_arvexq_original_history_status, *args, **kwargs)
+
+def _arvexq_original_central_status():
     store = CentralStore()
     try:
         coverage = store.coverage()
@@ -892,8 +1258,14 @@ def central_status():
         "recentRuns": 5,
     }
 
-@app.post("/api/v1/central-ingest")
-async def central_ingest(request: Request):
+_arvexq_original_central_status.__name__ = 'central_status'
+_arvexq_original_central_status.__qualname__ = 'central_status'
+@app.get("/api/v1/central-status")
+@_arvexq_route_wraps(_arvexq_original_central_status)
+def central_status(*args, **kwargs):
+    return _arvexq_box_162_central_status(_arvexq_original_central_status, *args, **kwargs)
+
+async def _arvexq_original_central_ingest(request: Request):
     expected = _clean(os.getenv("CENTRAL_INGEST_TOKEN", ""))
     if not expected:
         raise HTTPException(status_code=503, detail="CENTRAL_INGEST_TOKEN is not configured")
@@ -907,8 +1279,14 @@ async def central_ingest(request: Request):
     count = CentralStore().upsert(rows)
     return {"status":"ok","stored":count}
 
-@app.get("/api/v1/central-schema")
-def central_schema():
+_arvexq_original_central_ingest.__name__ = 'central_ingest'
+_arvexq_original_central_ingest.__qualname__ = 'central_ingest'
+@app.post("/api/v1/central-ingest")
+@_arvexq_route_wraps(_arvexq_original_central_ingest)
+async def central_ingest(*args, **kwargs):
+    return await _arvexq_box_151_central_ingest(_arvexq_original_central_ingest, *args, **kwargs)
+
+def _arvexq_original_central_schema():
     return {
       "description":"中央本番フィードの正規化JSON。JRA-VAN等のライセンス済みデータをこの形式へ変換して送信します。",
       "requiredRaceFields":["date","track","raceNumber","distance","horses"],
@@ -918,11 +1296,18 @@ def central_schema():
       "optionalResult":{"status":"確定","finishers":[{"finish":1,"horseNumber":1,"name":"馬名","timeSeconds":92.3,"cornerPositions":[2,2,1]}]},
     }
 
+_arvexq_original_central_schema.__name__ = 'central_schema'
+_arvexq_original_central_schema.__qualname__ = 'central_schema'
+@app.get("/api/v1/central-schema")
+@_arvexq_route_wraps(_arvexq_original_central_schema)
+def central_schema(*args, **kwargs):
+    return _arvexq_box_162_central_schema(_arvexq_original_central_schema, *args, **kwargs)
+
 _live_refresh_lock = threading.Lock()
 _live_refresh_last: dict[str, int] = {}
 _live_refresh_running: set[str] = set()
 
-def _schedule_live_refresh(iso_date: str, force: bool = False):
+def _arvexq_original__schedule_live_refresh(iso_date: str, force: bool = False):
     key = f"live:{iso_date}"
     now = int(time.time())
     with _live_refresh_lock:
@@ -954,12 +1339,18 @@ def _schedule_live_refresh(iso_date: str, force: bool = False):
                 _live_refresh_last[key] = int(time.time())
     threading.Thread(target=worker, daemon=True).start()
 
+_arvexq_original__schedule_live_refresh.__name__ = '_schedule_live_refresh'
+_arvexq_original__schedule_live_refresh.__qualname__ = '_schedule_live_refresh'
+@_arvexq_route_wraps(_arvexq_original__schedule_live_refresh)
+def _schedule_live_refresh(*args, **kwargs):
+    return _arvexq_box_152__schedule_live_refresh(_arvexq_original__schedule_live_refresh, *args, **kwargs)
+
 
 _central_refresh_lock = threading.Lock()
 _central_refresh_running: set[str] = set()
 _central_refresh_last: dict[str, int] = {}
 
-def _schedule_central_refresh(iso_date: str, force: bool = False):
+def _arvexq_original__schedule_central_refresh(iso_date: str, force: bool = False):
     now=int(time.time())
     with _central_refresh_lock:
         if iso_date in _central_refresh_running:
@@ -993,6 +1384,12 @@ def _schedule_central_refresh(iso_date: str, force: bool = False):
                 _central_refresh_last[iso_date]=int(time.time()) if success else max(0,int(time.time())-85)
     threading.Thread(target=worker,daemon=True).start()
 
+_arvexq_original__schedule_central_refresh.__name__ = '_schedule_central_refresh'
+_arvexq_original__schedule_central_refresh.__qualname__ = '_schedule_central_refresh'
+@_arvexq_route_wraps(_arvexq_original__schedule_central_refresh)
+def _schedule_central_refresh(*args, **kwargs):
+    return _arvexq_box_152__schedule_central_refresh(_arvexq_original__schedule_central_refresh, *args, **kwargs)
+
 
 _commercial_collector_lock=threading.Lock()
 _commercial_collector_state={
@@ -1000,10 +1397,10 @@ _commercial_collector_state={
     "hydrated":0,"diagnosed":0,"cycleSec":0,
 }
 
-from arvexq.pipeline.race_priority import _race_minutes, _commercial_target_rows
+from arvexq.components.item_151.race_priority import _race_minutes, _commercial_target_rows
 
 
-def _commercial_collect_once():
+def _arvexq_original__commercial_collect_once():
     started=time.time()
     with _commercial_collector_lock:
         if _commercial_collector_state["running"]:return
@@ -1043,7 +1440,13 @@ def _commercial_collect_once():
                 "hydrated":ready,"diagnosed":ready,"queued":queued,"cycleSec":round(finished-started,2),
             })
 
-def _commercial_collector_loop():
+_arvexq_original__commercial_collect_once.__name__ = '_commercial_collect_once'
+_arvexq_original__commercial_collect_once.__qualname__ = '_commercial_collect_once'
+@_arvexq_route_wraps(_arvexq_original__commercial_collect_once)
+def _commercial_collect_once(*args, **kwargs):
+    return _arvexq_box_152__commercial_collect_once(_arvexq_original__commercial_collect_once, *args, **kwargs)
+
+def _arvexq_original__commercial_collector_loop():
     first_delay=float(os.getenv("COMMERCIAL_COLLECTOR_START_DELAY_SEC","1.0"))
     interval=max(120,int(os.getenv("COMMERCIAL_COLLECTOR_INTERVAL_SEC","180")))
     time.sleep(first_delay)
@@ -1052,14 +1455,25 @@ def _commercial_collector_loop():
         except Exception as exc:print("commercial collector cycle failed",exc)
         time.sleep(interval)
 
-@app.on_event("startup")
-def _start_commercial_collector():
+_arvexq_original__commercial_collector_loop.__name__ = '_commercial_collector_loop'
+_arvexq_original__commercial_collector_loop.__qualname__ = '_commercial_collector_loop'
+@_arvexq_route_wraps(_arvexq_original__commercial_collector_loop)
+def _commercial_collector_loop(*args, **kwargs):
+    return _arvexq_box_152__commercial_collector_loop(_arvexq_original__commercial_collector_loop, *args, **kwargs)
+
+def _arvexq_original__start_commercial_collector():
     enabled=str(os.getenv("ARVEXQ_COMMERCIAL_COLLECTOR","1")).lower() in {"1","true","yes","on"}
     if enabled:
         threading.Thread(target=_commercial_collector_loop,daemon=True,name="arvexq-commercial-collector").start()
 
-@app.get("/api/v1/runtime-status")
-def runtime_status():
+_arvexq_original__start_commercial_collector.__name__ = '_start_commercial_collector'
+_arvexq_original__start_commercial_collector.__qualname__ = '_start_commercial_collector'
+@app.on_event("startup")
+@_arvexq_route_wraps(_arvexq_original__start_commercial_collector)
+def _start_commercial_collector(*args, **kwargs):
+    return _arvexq_box_152__start_commercial_collector(_arvexq_original__start_commercial_collector, *args, **kwargs)
+
+def _arvexq_original_runtime_status():
     with _fast_card_cv:
         queued=len(_fast_card_queue);running=len(_fast_card_running)
     with _commercial_collector_lock:collector=dict(_commercial_collector_state)
@@ -1070,16 +1484,35 @@ def runtime_status():
         "racedb":RACEDB.status(),
     }
 
-@app.get("/api/v1/collector-status")
-def collector_status():
+_arvexq_original_runtime_status.__name__ = 'runtime_status'
+_arvexq_original_runtime_status.__qualname__ = 'runtime_status'
+@app.get("/api/v1/runtime-status")
+@_arvexq_route_wraps(_arvexq_original_runtime_status)
+def runtime_status(*args, **kwargs):
+    return _arvexq_box_172_runtime_status(_arvexq_original_runtime_status, *args, **kwargs)
+
+def _arvexq_original_collector_status():
     with _commercial_collector_lock:
         return dict(_commercial_collector_state)
 
-def _central_refresh_status(iso_date: str) -> dict:
+_arvexq_original_collector_status.__name__ = 'collector_status'
+_arvexq_original_collector_status.__qualname__ = 'collector_status'
+@app.get("/api/v1/collector-status")
+@_arvexq_route_wraps(_arvexq_original_collector_status)
+def collector_status(*args, **kwargs):
+    return _arvexq_box_162_collector_status(_arvexq_original_collector_status, *args, **kwargs)
+
+def _arvexq_original__central_refresh_status(iso_date: str) -> dict:
     with _central_refresh_lock:
         return {"running": iso_date in _central_refresh_running, "last": _central_refresh_last.get(iso_date,0)}
 
-def _nar_month_needs_fetch(year: int, month: int) -> bool:
+_arvexq_original__central_refresh_status.__name__ = '_central_refresh_status'
+_arvexq_original__central_refresh_status.__qualname__ = '_central_refresh_status'
+@_arvexq_route_wraps(_arvexq_original__central_refresh_status)
+def _central_refresh_status(*args, **kwargs):
+    return _arvexq_box_162__central_refresh_status(_arvexq_original__central_refresh_status, *args, **kwargs)
+
+def _arvexq_original__nar_month_needs_fetch(year: int, month: int) -> bool:
     cache_key = f"month-{year:04d}-{month:02d}"
     store = NarStore()
     try:
@@ -1093,6 +1526,12 @@ def _nar_month_needs_fetch(year: int, month: int) -> bool:
     if year == today.year and month == today.month:
         return int(time.time()) - synced >= int(os.getenv("NAR_CURRENT_MONTH_TTL_SECONDS", "300"))
     return False
+
+_arvexq_original__nar_month_needs_fetch.__name__ = '_nar_month_needs_fetch'
+_arvexq_original__nar_month_needs_fetch.__qualname__ = '_nar_month_needs_fetch'
+@_arvexq_route_wraps(_arvexq_original__nar_month_needs_fetch)
+def _nar_month_needs_fetch(*args, **kwargs):
+    return _arvexq_box_154__nar_month_needs_fetch(_arvexq_original__nar_month_needs_fetch, *args, **kwargs)
 
 
 def _download_nar_month_only(year: int, month: int) -> tuple[int, int, bytes, Path]:
@@ -1116,7 +1555,7 @@ def _download_nar_month_only(year: int, month: int) -> tuple[int, int, bytes, Pa
     return year, month, data, dest
 
 
-def _sync_nar_month_wave(months: list[tuple[int, int]]) -> tuple[list[dict], list[str]]:
+def _arvexq_original__sync_nar_month_wave(months: list[tuple[int, int]]) -> tuple[list[dict], list[str]]:
     # Download network-bound monthly ZIPs concurrently, then import sequentially into SQLite.
     # This keeps DB writes safe while removing the largest source of wait time.
     unique = list(dict.fromkeys(months))
@@ -1152,11 +1591,17 @@ def _sync_nar_month_wave(months: list[tuple[int, int]]) -> tuple[list[dict], lis
         except Exception: pass
     return out, errors
 
+_arvexq_original__sync_nar_month_wave.__name__ = '_sync_nar_month_wave'
+_arvexq_original__sync_nar_month_wave.__qualname__ = '_sync_nar_month_wave'
+@_arvexq_route_wraps(_arvexq_original__sync_nar_month_wave)
+def _sync_nar_month_wave(*args, **kwargs):
+    return _arvexq_box_154__sync_nar_month_wave(_arvexq_original__sync_nar_month_wave, *args, **kwargs)
+
 
 _race_history_lock = threading.Lock()
 _race_history_jobs: dict[str, dict] = {}
 
-def _months_from_race_date(iso_date: str, count: int):
+def _arvexq_original__months_from_race_date(iso_date: str, count: int):
     d = datetime.strptime(iso_date, "%Y-%m-%d").date()
     y, m = d.year, d.month
     for _ in range(max(1, count)):
@@ -1166,7 +1611,13 @@ def _months_from_race_date(iso_date: str, count: int):
             y -= 1
             m = 12
 
-def _history_counts(horse_names: list[str], cutoff: str) -> dict:
+_arvexq_original__months_from_race_date.__name__ = '_months_from_race_date'
+_arvexq_original__months_from_race_date.__qualname__ = '_months_from_race_date'
+@_arvexq_route_wraps(_arvexq_original__months_from_race_date)
+def _months_from_race_date(*args, **kwargs):
+    return _arvexq_box_154__months_from_race_date(_arvexq_original__months_from_race_date, *args, **kwargs)
+
+def _arvexq_original__history_counts(horse_names: list[str], cutoff: str) -> dict:
     names = [x for x in dict.fromkeys(horse_names) if x]
     if not names:
         return {"totalHorses":0,"horsesWithHistory":0,"horsesWith4Plus":0,"horsesWith5Plus":0,"horsesWith6Plus":0,"totalRuns":0,"counts":{},"underFive":[]}
@@ -1194,7 +1645,13 @@ def _history_counts(horse_names: list[str], cutoff: str) -> dict:
         "underFive": [name for name, v in counts.items() if v < 5],
     }
 
-def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[str], force: bool = False) -> dict:
+_arvexq_original__history_counts.__name__ = '_history_counts'
+_arvexq_original__history_counts.__qualname__ = '_history_counts'
+@_arvexq_route_wraps(_arvexq_original__history_counts)
+def _history_counts(*args, **kwargs):
+    return _arvexq_box_154__history_counts(_arvexq_original__history_counts, *args, **kwargs)
+
+def _arvexq_original__start_race_history_search(race_id: str, iso_date: str, horse_names: list[str], force: bool = False) -> dict:
     max_months = max(6, min(36, int(os.getenv("NAR_ON_DEMAND_HISTORY_MONTHS", "36"))))
     # Race-date-bound start counts may already be recorded in the prepared
     # snapshot. They are the lower bound the official local DB must cover.
@@ -1259,12 +1716,24 @@ def _start_race_history_search(race_id: str, iso_date: str, horse_names: list[st
     threading.Thread(target=worker, daemon=True).start()
     return dict(job)
 
-def _race_history_status(race_id: str) -> dict | None:
+_arvexq_original__start_race_history_search.__name__ = '_start_race_history_search'
+_arvexq_original__start_race_history_search.__qualname__ = '_start_race_history_search'
+@_arvexq_route_wraps(_arvexq_original__start_race_history_search)
+def _start_race_history_search(*args, **kwargs):
+    return _arvexq_box_154__start_race_history_search(_arvexq_original__start_race_history_search, *args, **kwargs)
+
+def _arvexq_original__race_history_status(race_id: str) -> dict | None:
     with _race_history_lock:
         x = _race_history_jobs.get(race_id)
         return dict(x) if x else None
 
-def _new_conn(path: Path):
+_arvexq_original__race_history_status.__name__ = '_race_history_status'
+_arvexq_original__race_history_status.__qualname__ = '_race_history_status'
+@_arvexq_route_wraps(_arvexq_original__race_history_status)
+def _race_history_status(*args, **kwargs):
+    return _arvexq_box_154__race_history_status(_arvexq_original__race_history_status, *args, **kwargs)
+
+def _arvexq_original__new_conn(path: Path):
     conn = sqlite3.connect(path, timeout=1.5)
     conn.row_factory = sqlite3.Row
     try:
@@ -1274,8 +1743,14 @@ def _new_conn(path: Path):
         pass
     return conn
 
+_arvexq_original__new_conn.__name__ = '_new_conn'
+_arvexq_original__new_conn.__qualname__ = '_new_conn'
+@_arvexq_route_wraps(_arvexq_original__new_conn)
+def _new_conn(*args, **kwargs):
+    return _arvexq_box_140__new_conn(_arvexq_original__new_conn, *args, **kwargs)
 
-def nar_race_summaries(iso_date: str) -> list[dict]:
+
+def _arvexq_original_nar_race_summaries(iso_date: str) -> list[dict]:
     if not DB_PATH.exists():
         return []
     conn = _new_conn(DB_PATH)
@@ -1331,12 +1806,18 @@ def nar_race_summaries(iso_date: str) -> list[dict]:
     finally:
         conn.close()
 
+_arvexq_original_nar_race_summaries.__name__ = 'nar_race_summaries'
+_arvexq_original_nar_race_summaries.__qualname__ = 'nar_race_summaries'
+@_arvexq_route_wraps(_arvexq_original_nar_race_summaries)
+def nar_race_summaries(*args, **kwargs):
+    return _arvexq_box_163_nar_race_summaries(_arvexq_original_nar_race_summaries, *args, **kwargs)
+
 
 
 NETKEIBA_TRACK_CODES={"01":"札幌","02":"函館","03":"福島","04":"新潟","05":"東京","06":"中山","07":"中京","08":"京都","09":"阪神","10":"小倉"}
 _netkeiba_cache_lock=threading.Lock(); _netkeiba_cache={}
 
-def _netkeiba_get(url:str,timeout:float=4.0,cache_sec:int=45)->str:
+def _arvexq_original__netkeiba_get(url:str,timeout:float=4.0,cache_sec:int=45)->str:
     now=time.time()
     with _netkeiba_cache_lock:
         hit=_netkeiba_cache.get(url)
@@ -1349,7 +1830,13 @@ def _netkeiba_get(url:str,timeout:float=4.0,cache_sec:int=45)->str:
             k=min(_netkeiba_cache.items(),key=lambda kv:kv[1][0])[0];_netkeiba_cache.pop(k,None)
     return txt
 
-def _netkeiba_race_summaries(iso_date:str)->list[dict]:
+_arvexq_original__netkeiba_get.__name__ = '_netkeiba_get'
+_arvexq_original__netkeiba_get.__qualname__ = '_netkeiba_get'
+@_arvexq_route_wraps(_arvexq_original__netkeiba_get)
+def _netkeiba_get(*args, **kwargs):
+    return _arvexq_box_022__netkeiba_get(_arvexq_original__netkeiba_get, *args, **kwargs)
+
+def _arvexq_original__netkeiba_race_summaries(iso_date:str)->list[dict]:
     token=iso_date.replace("-","");url=f"https://race.netkeiba.com/top/race_list_sub.html?kaisai_date={token}"
     try:html=_netkeiba_get(url,float(os.getenv("NETKEIBA_LIST_TIMEOUT_SEC","3.5")),30 if iso_date==_today_iso() else 86400)
     except Exception as exc:
@@ -1383,7 +1870,13 @@ def _netkeiba_race_summaries(iso_date:str)->list[dict]:
     rows=list(out.values());rows.sort(key=lambda x:(str(x.get("track") or ""),int(x.get("raceNumber") or 0)))
     return rows
 
-def _netkeiba_program_race_id(iso_date:str,track:str,race_no:int)->str:
+_arvexq_original__netkeiba_race_summaries.__name__ = '_netkeiba_race_summaries'
+_arvexq_original__netkeiba_race_summaries.__qualname__ = '_netkeiba_race_summaries'
+@_arvexq_route_wraps(_arvexq_original__netkeiba_race_summaries)
+def _netkeiba_race_summaries(*args, **kwargs):
+    return _arvexq_box_022__netkeiba_race_summaries(_arvexq_original__netkeiba_race_summaries, *args, **kwargs)
+
+def _arvexq_original__netkeiba_program_race_id(iso_date:str,track:str,race_no:int)->str:
     try:
         p=_jra_program_lookup(iso_date,track,race_no) or {}
         rid=str(p.get("netkeibaRaceId") or "")
@@ -1395,29 +1888,41 @@ def _netkeiba_program_race_id(iso_date:str,track:str,race_no:int)->str:
     except Exception:pass
     return ""
 
-def _netkeiba_race_id(iso_date:str,track:str,race_no:int)->str:
+_arvexq_original__netkeiba_program_race_id.__name__ = '_netkeiba_program_race_id'
+_arvexq_original__netkeiba_program_race_id.__qualname__ = '_netkeiba_program_race_id'
+@_arvexq_route_wraps(_arvexq_original__netkeiba_program_race_id)
+def _netkeiba_program_race_id(*args, **kwargs):
+    return _arvexq_box_022__netkeiba_program_race_id(_arvexq_original__netkeiba_program_race_id, *args, **kwargs)
+
+def _arvexq_original__netkeiba_race_id(iso_date:str,track:str,race_no:int)->str:
     rid=_netkeiba_program_race_id(iso_date,track,race_no)
     if rid:return rid
     for r in _netkeiba_race_summaries(iso_date):
         if str(r.get("track"))==str(track) and int(r.get("raceNumber") or 0)==int(race_no):return str(r.get("netkeibaRaceId") or "")
     return ""
 
-from arvexq.ingest.recent_result_cell import _parse_recent_cell
+_arvexq_original__netkeiba_race_id.__name__ = '_netkeiba_race_id'
+_arvexq_original__netkeiba_race_id.__qualname__ = '_netkeiba_race_id'
+@_arvexq_route_wraps(_arvexq_original__netkeiba_race_id)
+def _netkeiba_race_id(*args, **kwargs):
+    return _arvexq_box_022__netkeiba_race_id(_arvexq_original__netkeiba_race_id, *args, **kwargs)
+
+from arvexq.components.item_042.recent_result_cell import _parse_recent_cell
 
 
 
-from arvexq.ingest.entry_fields.horse_number import _nk_row_horse_no
+from arvexq.components.item_025.horse_number import _nk_row_horse_no
 
 
-from arvexq.ingest.entry_fields.frame_number import _nk_row_frame
+from arvexq.components.item_026.frame_number import _nk_row_frame
 
 
-from arvexq.ingest.entry_fields.netkeiba import parse_row as _nk_row_horse
+from arvexq.components.item_026.netkeiba import parse_row as _nk_row_horse
 
 
 
 
-def _netkeiba_detail_rows(detail:dict)->list[dict]:
+def _arvexq_original__netkeiba_detail_rows(detail:dict)->list[dict]:
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
     if not rid:return []
     url=f"https://race.netkeiba.com/race/shutuba.html?race_id={rid}";past=f"https://race.netkeiba.com/race/shutuba_past.html?race_id={rid}&rf=shutuba_submenu"
@@ -1453,7 +1958,13 @@ def _netkeiba_detail_rows(detail:dict)->list[dict]:
             if rr:rows[key]["recentRaces"]=rr[:5]
     return list(rows.values())
 
-def central_race_summaries(iso_date: str, allow_network: bool = False, force: bool = False) -> list[dict]:
+_arvexq_original__netkeiba_detail_rows.__name__ = '_netkeiba_detail_rows'
+_arvexq_original__netkeiba_detail_rows.__qualname__ = '_netkeiba_detail_rows'
+@_arvexq_route_wraps(_arvexq_original__netkeiba_detail_rows)
+def _netkeiba_detail_rows(*args, **kwargs):
+    return _arvexq_box_022__netkeiba_detail_rows(_arvexq_original__netkeiba_detail_rows, *args, **kwargs)
+
+def _arvexq_original_central_race_summaries(iso_date: str, allow_network: bool = False, force: bool = False) -> list[dict]:
     db=[]
     if CENTRAL_DB_PATH.exists():
         conn=_new_conn(CENTRAL_DB_PATH)
@@ -1499,16 +2010,28 @@ def central_race_summaries(iso_date: str, allow_network: bool = False, force: bo
     out=list(merged.values());out.sort(key=lambda x:(str(x.get("track") or ""),int(x.get("raceNumber") or 0)))
     return out
 
+_arvexq_original_central_race_summaries.__name__ = 'central_race_summaries'
+_arvexq_original_central_race_summaries.__qualname__ = 'central_race_summaries'
+@_arvexq_route_wraps(_arvexq_original_central_race_summaries)
+def central_race_summaries(*args, **kwargs):
+    return _arvexq_box_163_central_race_summaries(_arvexq_original_central_race_summaries, *args, **kwargs)
+
 NAR_BABA_CODES={"帯広ば":"03","帯広":"03","盛岡":"10","水沢":"11","浦和":"18","船橋":"19","大井":"20","川崎":"21","金沢":"22","笠松":"23","名古屋":"24","園田":"27","姫路":"28","高知":"31","佐賀":"32","門別":"36"}
 NAR_NETKEIBA_CODES={"門別":"30","盛岡":"35","水沢":"36","浦和":"42","船橋":"43","大井":"44","川崎":"45","金沢":"46","笠松":"47","名古屋":"48","園田":"50","姫路":"51","高知":"54","佐賀":"55"}
 
-def _nar_netkeiba_race_id(iso_date:str,track:str,race_no:int)->str:
+def _arvexq_original__nar_netkeiba_race_id(iso_date:str,track:str,race_no:int)->str:
     code=NAR_NETKEIBA_CODES.get(str(track or '').strip())
     m=re.match(r'^(20\d{2})-(\d{2})-(\d{2})$',str(iso_date or ''))
     if not code or not m or int(race_no)<=0:return ''
     return f"{m.group(1)}{code}{m.group(2)}{m.group(3)}{int(race_no):02d}"
 
-def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
+_arvexq_original__nar_netkeiba_race_id.__name__ = '_nar_netkeiba_race_id'
+_arvexq_original__nar_netkeiba_race_id.__qualname__ = '_nar_netkeiba_race_id'
+@_arvexq_route_wraps(_arvexq_original__nar_netkeiba_race_id)
+def _nar_netkeiba_race_id(*args, **kwargs):
+    return _arvexq_box_022__nar_netkeiba_race_id(_arvexq_original__nar_netkeiba_race_id, *args, **kwargs)
+
+def _arvexq_original__nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
     """Fallback before NAR live odds/weights appear: use netkeiba's current NAR card.
     Predicted odds are explicitly tagged and are replaced by official live odds later.
     """
@@ -1600,12 +2123,18 @@ def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
             print('NAR netkeiba odds-page fallback failed',rid,exc)
     return out
 
+_arvexq_original__nar_netkeiba_preview_rows.__name__ = '_nar_netkeiba_preview_rows'
+_arvexq_original__nar_netkeiba_preview_rows.__qualname__ = '_nar_netkeiba_preview_rows'
+@_arvexq_route_wraps(_arvexq_original__nar_netkeiba_preview_rows)
+def _nar_netkeiba_preview_rows(*args, **kwargs):
+    return _arvexq_box_022__nar_netkeiba_preview_rows(_arvexq_original__nar_netkeiba_preview_rows, *args, **kwargs)
+
 _nar_odds_cache_lock=threading.Lock()
 _nar_odds_cache:dict[str,tuple[float,dict]]={}
 
-from arvexq.ingest.place_odds import place_odds_pair
+from arvexq.components.item_060.place_odds import place_odds_pair
 
-def _parse_nar_live_odds_html(html:str)->dict:
+def _arvexq_original__parse_nar_live_odds_html(html:str)->dict:
     """Parse NAR official 単・複 page across header and positional layouts."""
     if not html:return {}
     soup=BeautifulSoup(html,"html.parser")
@@ -1700,8 +2229,14 @@ def _parse_nar_live_odds_html(html:str)->dict:
         last=odd
     return out
 
+_arvexq_original__parse_nar_live_odds_html.__name__ = '_parse_nar_live_odds_html'
+_arvexq_original__parse_nar_live_odds_html.__qualname__ = '_parse_nar_live_odds_html'
+@_arvexq_route_wraps(_arvexq_original__parse_nar_live_odds_html)
+def _parse_nar_live_odds_html(*args, **kwargs):
+    return _arvexq_box_064__parse_nar_live_odds_html(_arvexq_original__parse_nar_live_odds_html, *args, **kwargs)
 
-def _nar_live_odds(track:str,iso_date:str,race_no:int,force:bool=False)->dict:
+
+def _arvexq_original__nar_live_odds(track:str,iso_date:str,race_no:int,force:bool=False)->dict:
     code=NAR_BABA_CODES.get(str(track or "").strip())
     if not code:return {}
     key=f"{code}|{iso_date}|{race_no}";now=time.time();ttl=int(os.getenv("NAR_LIVE_ODDS_CACHE_SEC","20"))
@@ -1735,12 +2270,18 @@ def _nar_live_odds(track:str,iso_date:str,race_no:int,force:bool=False)->dict:
             oldest=min(_nar_odds_cache.items(),key=lambda kv:kv[1][0])[0];_nar_odds_cache.pop(oldest,None)
     return out
 
-from arvexq.ingest.odds_capture_time import odds_observed_at
+_arvexq_original__nar_live_odds.__name__ = '_nar_live_odds'
+_arvexq_original__nar_live_odds.__qualname__ = '_nar_live_odds'
+@_arvexq_route_wraps(_arvexq_original__nar_live_odds)
+def _nar_live_odds(*args, **kwargs):
+    return _arvexq_box_064__nar_live_odds(_arvexq_original__nar_live_odds, *args, **kwargs)
 
-from arvexq.ingest.odds_fields.missing import odds_missing
+from arvexq.components.item_062.odds_capture_time import odds_observed_at
+
+from arvexq.components.item_069.missing import odds_missing
 from arvexq.ingest.odds_fields.delta import win_odds_delta
 
-def _attach_nar_live_odds(detail:dict)->dict:
+def _arvexq_original__attach_nar_live_odds(detail:dict)->dict:
     if not detail:return detail
     odds=_nar_live_odds(str(detail.get("track") or ""),str(detail.get("date") or ""),int(detail.get("raceNumber") or 0))
     if not odds:return detail
@@ -1752,6 +2293,12 @@ def _attach_nar_live_odds(detail:dict)->dict:
             if delta is not None: h["observedWinOddsDelta"]=delta
     detail["oddsSource"]="NAR公式"; detail["oddsType"]="単勝実オッズ"; detail["oddsUpdatedAt"]=odds_observed_at()
     return detail
+
+_arvexq_original__attach_nar_live_odds.__name__ = '_attach_nar_live_odds'
+_arvexq_original__attach_nar_live_odds.__qualname__ = '_attach_nar_live_odds'
+@_arvexq_route_wraps(_arvexq_original__attach_nar_live_odds)
+def _attach_nar_live_odds(*args, **kwargs):
+    return _arvexq_box_064__attach_nar_live_odds(_arvexq_original__attach_nar_live_odds, *args, **kwargs)
 
 def nar_race_detail(race_id: str) -> dict | None:
     m=re.match(r"^nar-(\d{4}-\d{2}-\d{2})-(.+)-(\d{2})$",race_id)
@@ -1863,10 +2410,10 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
     return detail
 
 
-from arvexq.ingest.horse_identity import _horse_key
+from arvexq.components.item_039.horse_identity import _horse_key
 
 
-def _central_find_horse(race: dict, horse_name: str) -> tuple[dict | None, dict | None]:
+def _arvexq_original__central_find_horse(race: dict, horse_name: str) -> tuple[dict | None, dict | None]:
     key = _horse_key(horse_name)
     horse = None
     for h in race.get("horses", []) or []:
@@ -1884,8 +2431,14 @@ def _central_find_horse(race: dict, horse_name: str) -> tuple[dict | None, dict 
             break
     return horse, finisher
 
+_arvexq_original__central_find_horse.__name__ = '_central_find_horse'
+_arvexq_original__central_find_horse.__qualname__ = '_central_find_horse'
+@_arvexq_route_wraps(_arvexq_original__central_find_horse)
+def _central_find_horse(*args, **kwargs):
+    return _arvexq_box_057__central_find_horse(_arvexq_original__central_find_horse, *args, **kwargs)
 
-def _central_run_from_race(race: dict, horse_name: str) -> dict | None:
+
+def _arvexq_original__central_run_from_race(race: dict, horse_name: str) -> dict | None:
     horse, fin = _central_find_horse(race, horse_name)
     if horse is None and fin is None:
         return None
@@ -1931,8 +2484,14 @@ def _central_run_from_race(race: dict, horse_name: str) -> dict | None:
         "source": race.get("source") or "中央フィード",
     }
 
+_arvexq_original__central_run_from_race.__name__ = '_central_run_from_race'
+_arvexq_original__central_run_from_race.__qualname__ = '_central_run_from_race'
+@_arvexq_route_wraps(_arvexq_original__central_run_from_race)
+def _central_run_from_race(*args, **kwargs):
+    return _arvexq_box_057__central_run_from_race(_arvexq_original__central_run_from_race, *args, **kwargs)
 
-def _central_resolve_race_id(run: dict) -> str:
+
+def _arvexq_original__central_resolve_race_id(run: dict) -> str:
     if run.get("raceId"):
         return str(run.get("raceId"))
     d = _clean(str(run.get("date") or ""))
@@ -1950,8 +2509,14 @@ def _central_resolve_race_id(run: dict) -> str:
     finally:
         conn.close()
 
+_arvexq_original__central_resolve_race_id.__name__ = '_central_resolve_race_id'
+_arvexq_original__central_resolve_race_id.__qualname__ = '_central_resolve_race_id'
+@_arvexq_route_wraps(_arvexq_original__central_resolve_race_id)
+def _central_resolve_race_id(*args, **kwargs):
+    return _arvexq_box_057__central_resolve_race_id(_arvexq_original__central_resolve_race_id, *args, **kwargs)
 
-def _central_recent_from_store(horse_name: str, cutoff: str, limit: int = 5) -> list[dict]:
+
+def _arvexq_original__central_recent_from_store(horse_name: str, cutoff: str, limit: int = 5) -> list[dict]:
     if not CENTRAL_DB_PATH.exists() or not horse_name:
         return []
     conn = _new_conn(CENTRAL_DB_PATH)
@@ -1986,8 +2551,14 @@ def _central_recent_from_store(horse_name: str, cutoff: str, limit: int = 5) -> 
     finally:
         conn.close()
 
+_arvexq_original__central_recent_from_store.__name__ = '_central_recent_from_store'
+_arvexq_original__central_recent_from_store.__qualname__ = '_central_recent_from_store'
+@_arvexq_route_wraps(_arvexq_original__central_recent_from_store)
+def _central_recent_from_store(*args, **kwargs):
+    return _arvexq_box_057__central_recent_from_store(_arvexq_original__central_recent_from_store, *args, **kwargs)
 
-def _merge_central_recent(existing: list[dict], stored: list[dict], cutoff: str, limit: int = 5) -> list[dict]:
+
+def _arvexq_original__merge_central_recent(existing: list[dict], stored: list[dict], cutoff: str, limit: int = 5) -> list[dict]:
     all_runs = []
     seen = set()
     for src in (existing or []) + (stored or []):
@@ -2007,8 +2578,14 @@ def _merge_central_recent(existing: list[dict], stored: list[dict], cutoff: str,
     all_runs.sort(key=lambda x: (str(x.get("date") or ""), int(x.get("raceNumber") or 0)), reverse=True)
     return all_runs[:limit]
 
+_arvexq_original__merge_central_recent.__name__ = '_merge_central_recent'
+_arvexq_original__merge_central_recent.__qualname__ = '_merge_central_recent'
+@_arvexq_route_wraps(_arvexq_original__merge_central_recent)
+def _merge_central_recent(*args, **kwargs):
+    return _arvexq_box_057__merge_central_recent(_arvexq_original__merge_central_recent, *args, **kwargs)
 
-def _central_month_dates(year: int, month: int, cutoff: str) -> list[str]:
+
+def _arvexq_original__central_month_dates(year: int, month: int, cutoff: str) -> list[str]:
     last = calendar.monthrange(year, month)[1]
     cutoff_date = datetime.strptime(cutoff, "%Y-%m-%d").date()
     dates = []
@@ -2022,8 +2599,14 @@ def _central_month_dates(year: int, month: int, cutoff: str) -> list[str]:
             dates.append(d.isoformat())
     return dates
 
+_arvexq_original__central_month_dates.__name__ = '_central_month_dates'
+_arvexq_original__central_month_dates.__qualname__ = '_central_month_dates'
+@_arvexq_route_wraps(_arvexq_original__central_month_dates)
+def _central_month_dates(*args, **kwargs):
+    return _arvexq_box_057__central_month_dates(_arvexq_original__central_month_dates, *args, **kwargs)
 
-def _fetch_central_days_parallel(days: list[str]) -> tuple[list[dict], list[str]]:
+
+def _arvexq_original__fetch_central_days_parallel(days: list[str]) -> tuple[list[dict], list[str]]:
     if not days:
         return [], []
     workers = max(2, min(10, int(os.getenv("CENTRAL_HISTORY_WORKERS", "6"))))
@@ -2039,8 +2622,14 @@ def _fetch_central_days_parallel(days: list[str]) -> tuple[list[dict], list[str]
                 errors.append(f"{day}:{exc}")
     return rows, errors
 
+_arvexq_original__fetch_central_days_parallel.__name__ = '_fetch_central_days_parallel'
+_arvexq_original__fetch_central_days_parallel.__qualname__ = '_fetch_central_days_parallel'
+@_arvexq_route_wraps(_arvexq_original__fetch_central_days_parallel)
+def _fetch_central_days_parallel(*args, **kwargs):
+    return _arvexq_box_057__fetch_central_days_parallel(_arvexq_original__fetch_central_days_parallel, *args, **kwargs)
 
-def _start_central_history_search(race_id: str, iso_date: str, force: bool = False) -> dict:
+
+def _arvexq_original__start_central_history_search(race_id: str, iso_date: str, force: bool = False) -> dict:
     max_months = max(12, min(60, int(os.getenv("CENTRAL_ON_DEMAND_HISTORY_MONTHS", "36"))))
     detail = central_race_detail(race_id)
     cov = _central_detail_coverage(detail or {})
@@ -2127,11 +2716,17 @@ def _start_central_history_search(race_id: str, iso_date: str, force: bool = Fal
     threading.Thread(target=worker, daemon=True).start()
     return dict(job)
 
+_arvexq_original__start_central_history_search.__name__ = '_start_central_history_search'
+_arvexq_original__start_central_history_search.__qualname__ = '_start_central_history_search'
+@_arvexq_route_wraps(_arvexq_original__start_central_history_search)
+def _start_central_history_search(*args, **kwargs):
+    return _arvexq_box_154__start_central_history_search(_arvexq_original__start_central_history_search, *args, **kwargs)
 
 
-from arvexq.ingest.netkeiba_odds_parser import _parse_netkeiba_win_odds_payload
 
-def _netkeiba_live_win_odds(detail:dict,force:bool=False)->dict:
+from arvexq.components.item_063.netkeiba_odds_parser import _parse_netkeiba_win_odds_payload
+
+def _arvexq_original__netkeiba_live_win_odds(detail:dict,force:bool=False)->dict:
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
         str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0)
     )
@@ -2150,9 +2745,15 @@ def _netkeiba_live_win_odds(detail:dict,force:bool=False)->dict:
             print("netkeiba odds api failed",rid,exc)
     return {}
 
-from arvexq.ingest.odds_results_merge import _merge_central_odds, _merge_result_fields
+_arvexq_original__netkeiba_live_win_odds.__name__ = '_netkeiba_live_win_odds'
+_arvexq_original__netkeiba_live_win_odds.__qualname__ = '_netkeiba_live_win_odds'
+@_arvexq_route_wraps(_arvexq_original__netkeiba_live_win_odds)
+def _netkeiba_live_win_odds(*args, **kwargs):
+    return _arvexq_box_065__netkeiba_live_win_odds(_arvexq_original__netkeiba_live_win_odds, *args, **kwargs)
 
-def _parse_payouts(soup) -> list[dict]:
+from arvexq.components.item_084.odds_results_merge import _merge_central_odds, _merge_result_fields
+
+def _arvexq_original__parse_payouts(soup) -> list[dict]:
     """Parse official payout tables robustly, including NAR line-break cells."""
     import unicodedata
     aliases={
@@ -2232,8 +2833,14 @@ def _parse_payouts(soup) -> list[dict]:
                 add(kind,combo,amount+"円")
     return out
 
+_arvexq_original__parse_payouts.__name__ = '_parse_payouts'
+_arvexq_original__parse_payouts.__qualname__ = '_parse_payouts'
+@_arvexq_route_wraps(_arvexq_original__parse_payouts)
+def _parse_payouts(*args, **kwargs):
+    return _arvexq_box_076__parse_payouts(_arvexq_original__parse_payouts, *args, **kwargs)
 
-def _fetch_nar_payouts_only(detail: dict) -> tuple[list[dict],str]:
+
+def _arvexq_original__fetch_nar_payouts_only(detail: dict) -> tuple[list[dict],str]:
     code=NAR_BABA_CODES.get(detail.get("track"))
     if not code:return [],"競馬場コード未取得"
     query=urllib.parse.urlencode({
@@ -2261,8 +2868,14 @@ def _fetch_nar_payouts_only(detail: dict) -> tuple[list[dict],str]:
             last=str(exc)
     return [],last or "払い戻し未取得"
 
+_arvexq_original__fetch_nar_payouts_only.__name__ = '_fetch_nar_payouts_only'
+_arvexq_original__fetch_nar_payouts_only.__qualname__ = '_fetch_nar_payouts_only'
+@_arvexq_route_wraps(_arvexq_original__fetch_nar_payouts_only)
+def _fetch_nar_payouts_only(*args, **kwargs):
+    return _arvexq_box_085__fetch_nar_payouts_only(_arvexq_original__fetch_nar_payouts_only, *args, **kwargs)
 
-def _attach_nar_payouts(detail: dict) -> dict:
+
+def _arvexq_original__attach_nar_payouts(detail: dict) -> dict:
     result=detail.get("result")
     if not isinstance(result,dict):
         result={}
@@ -2280,6 +2893,12 @@ def _attach_nar_payouts(detail: dict) -> dict:
         result["payoutDebug"]=source[:240]
     return detail
 
+_arvexq_original__attach_nar_payouts.__name__ = '_attach_nar_payouts'
+_arvexq_original__attach_nar_payouts.__qualname__ = '_attach_nar_payouts'
+@_arvexq_route_wraps(_arvexq_original__attach_nar_payouts)
+def _attach_nar_payouts(*args, **kwargs):
+    return _arvexq_box_085__attach_nar_payouts(_arvexq_original__attach_nar_payouts, *args, **kwargs)
+
 
 from arvexq.ingest.netkeiba_result import parse_current_result_html as _parse_netkeiba_result_html
 
@@ -2295,7 +2914,7 @@ def _netkeiba_current_result(detail:dict)->dict|None:
         parse_payouts=_parse_payouts,
     )
 
-def _jra_result_cname_from_card(cname:str)->str:
+def _arvexq_original__jra_result_cname_from_card(cname:str)->str:
     if not cname:return ""
     try:html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,20)
     except Exception as exc:
@@ -2303,13 +2922,31 @@ def _jra_result_cname_from_card(cname:str)->str:
     vals=[_jra_norm_cname(x) for x in JRA_RESULT_CNAME_RE.findall(html)]
     return vals[0] if vals else ""
 
-def _jra_any_track(cname:str)->str:
+_arvexq_original__jra_result_cname_from_card.__name__ = '_jra_result_cname_from_card'
+_arvexq_original__jra_result_cname_from_card.__qualname__ = '_jra_result_cname_from_card'
+@_arvexq_route_wraps(_arvexq_original__jra_result_cname_from_card)
+def _jra_result_cname_from_card(*args, **kwargs):
+    return _arvexq_box_153__jra_result_cname_from_card(_arvexq_original__jra_result_cname_from_card, *args, **kwargs)
+
+def _arvexq_original__jra_any_track(cname:str)->str:
     m=re.search(r"pw01(?:d|s)de(?:01|10)(\d{2})",cname or "",re.I)
     return JRA_TRACK_CODES.get(m.group(1),"") if m else ""
 
-def _jra_any_race_no(cname:str)->int:
+_arvexq_original__jra_any_track.__name__ = '_jra_any_track'
+_arvexq_original__jra_any_track.__qualname__ = '_jra_any_track'
+@_arvexq_route_wraps(_arvexq_original__jra_any_track)
+def _jra_any_track(*args, **kwargs):
+    return _arvexq_box_020__jra_any_track(_arvexq_original__jra_any_track, *args, **kwargs)
+
+def _arvexq_original__jra_any_race_no(cname:str)->int:
     m=re.search(r"pw01(?:d|s)de(?:01|10)\d{2}\d{4}\d{4}(\d{2})20\d{6}/",cname or "",re.I)
     return int(m.group(1)) if m else 0
+
+_arvexq_original__jra_any_race_no.__name__ = '_jra_any_race_no'
+_arvexq_original__jra_any_race_no.__qualname__ = '_jra_any_race_no'
+@_arvexq_route_wraps(_arvexq_original__jra_any_race_no)
+def _jra_any_race_no(*args, **kwargs):
+    return _arvexq_box_020__jra_any_race_no(_arvexq_original__jra_any_race_no, *args, **kwargs)
 
 # The historical result menu publishes month tokens (objParam) and meeting links.
 # Use those actual official links when D1's original source has no horse cname.
@@ -2320,7 +2957,7 @@ _jra_prior_parsed_cache = {}
 _jra_prior_result_meta = {}
 _jra_prior_result_locks = {}
 
-def _jra_prior_result_cnames(iso_date: str, track: str) -> list[str]:
+def _arvexq_original__jra_prior_result_cnames(iso_date: str, track: str) -> list[str]:
     if track not in JRA_TRACK_CODE_BY_NAME or not re.fullmatch(r"20\d{2}-\d{2}-\d{2}", iso_date):
         return []
     month = iso_date[:7].replace("-", "")
@@ -2364,7 +3001,13 @@ def _jra_prior_result_cnames(iso_date: str, track: str) -> list[str]:
         _jra_prior_meeting_cache[key] = results
         return list(results)
 
-def _jra_resolve_prior_results(horse: dict, run: dict) -> dict | None:
+_arvexq_original__jra_prior_result_cnames.__name__ = '_jra_prior_result_cnames'
+_arvexq_original__jra_prior_result_cnames.__qualname__ = '_jra_prior_result_cnames'
+@_arvexq_route_wraps(_arvexq_original__jra_prior_result_cnames)
+def _jra_prior_result_cnames(*args, **kwargs):
+    return _arvexq_box_153__jra_prior_result_cnames(_arvexq_original__jra_prior_result_cnames, *args, **kwargs)
+
+def _arvexq_original__jra_resolve_prior_results(horse: dict, run: dict) -> dict | None:
     """Resolve a source-less start by observed identity, never by inferred time."""
     import unicodedata
     def clean(value):
@@ -2418,6 +3061,12 @@ def _jra_resolve_prior_results(horse: dict, run: dict) -> dict | None:
             continue
         matches.append(result)
     return matches[0] if len(matches) == 1 else None
+
+_arvexq_original__jra_resolve_prior_results.__name__ = '_jra_resolve_prior_results'
+_arvexq_original__jra_resolve_prior_results.__qualname__ = '_jra_resolve_prior_results'
+@_arvexq_route_wraps(_arvexq_original__jra_resolve_prior_results)
+def _jra_resolve_prior_results(*args, **kwargs):
+    return _arvexq_box_153__jra_resolve_prior_results(_arvexq_original__jra_resolve_prior_results, *args, **kwargs)
 
 
 def _jra_parse_result(result_cname:str,base:dict|None=None, *, strict_errors: bool = False)->dict|None:
@@ -2648,7 +3297,7 @@ _smart_cache_lock=threading.Lock(); _smart_cache:dict[str,tuple[float,dict]]={}
 _enrich_jobs_lock=threading.Lock(); _enrich_jobs:dict[str,dict]={}
 _enrich_data_lock=threading.Lock(); _enrich_data:dict[str,dict]={}
 
-from arvexq.ingest.environment_values import _safe_float, _safe_int
+from arvexq.components.item_001.environment_values import _safe_float, _safe_int
 
 def _smart_normalize_row(x:dict)->dict|None:
     if not isinstance(x,dict):return None
@@ -2660,7 +3309,7 @@ def _smart_normalize_row(x:dict)->dict|None:
     if isinstance(rr,list):out["recentRaces"]=[z for z in rr if isinstance(z,dict)][:5]
     return out
 
-from arvexq.ingest.enrichment_transport import _format_feed_url, _fetch_json_url
+from arvexq.components.item_040.enrichment_transport import _format_feed_url, _fetch_json_url
 
 
 def _extract_smartrc_embedded(html:str)->list[dict]:
@@ -2852,9 +3501,9 @@ _environment_state:dict[str,dict]={}
 _environment_http_lock=threading.Lock()
 _environment_http_cache:dict[str,tuple[float,dict]]={}
 
-from arvexq.ingest.environment_values import _env_clean_weather, _env_clean_condition
+from arvexq.components.item_001.environment_values import _env_clean_weather, _env_clean_condition
 
-from arvexq.ingest.nar_environment_parser import _parse_nar_environment_html
+from arvexq.components.item_002.nar_environment_parser import _parse_nar_environment_html
 
 from arvexq.ingest.jra_environment_parser import _parse_jra_environment_html
 
@@ -2952,7 +3601,7 @@ def _jra_fetch_environment(row:dict)->dict:
         out.update({"source":"JRA公式優先","updatedAtEpoch":int(time.time())})
     return out
 
-from arvexq.pipeline.race_clock import _race_minutes_server
+from arvexq.components.item_157.race_clock import _race_minutes_server
 
 def _upcoming_rows(rows:list[dict])->list[dict]:
     if not rows:return []
@@ -3110,7 +3759,7 @@ def _start_environment_collector():
 # We prepare complete display JSON in the background and serve that snapshot first.
 
 
-from arvexq.ingest.horse_measurements import (_safe_body_weight_value, _safe_carried_weight_value, _sanitize_horse_measurements)
+from arvexq.components.item_034.horse_measurements import _safe_body_weight_value, _safe_carried_weight_value, _sanitize_horse_measurements
 
 
 PRERACE_AUDIT_VERSION = "arvexq-prerace-audit-v317-consensus-rebuild"
@@ -3438,7 +4087,7 @@ def _compact_display_snapshot(detail: dict) -> dict:
     return out
 
 # ARVEXQ_EXTRACTED:install_race_stores
-from arvexq.infra.race_stores import install_race_stores as _arvexq_installer
+from arvexq.components.item_140.race_stores import install_race_stores as _arvexq_installer
 _arvexq_installer(globals())
 del _arvexq_installer
 
@@ -3454,10 +4103,16 @@ _data_core_lock=threading.Lock()
 _data_core_running:set[str]=set()
 _data_core_state={"running":False,"lastStart":0,"lastFinish":0,"checked":0,"refreshed":0,"error":""}
 
-def _data_core_active_horses(detail:dict)->list[dict]:
+def _arvexq_original__data_core_active_horses(detail:dict)->list[dict]:
     return [h for h in (detail.get("horses") or []) if isinstance(h,dict) and not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
 
-def _data_core_result_due(detail:dict)->bool:
+_arvexq_original__data_core_active_horses.__name__ = '_data_core_active_horses'
+_arvexq_original__data_core_active_horses.__qualname__ = '_data_core_active_horses'
+@_arvexq_route_wraps(_arvexq_original__data_core_active_horses)
+def _data_core_active_horses(*args, **kwargs):
+    return _arvexq_box_087__data_core_active_horses(_arvexq_original__data_core_active_horses, *args, **kwargs)
+
+def _arvexq_original__data_core_result_due(detail:dict)->bool:
     try:
         if str(detail.get("date") or "")!=_today_iso():return True
         st=_race_minutes_server(detail)
@@ -3465,7 +4120,13 @@ def _data_core_result_due(detail:dict)->bool:
         now=_now_jst();return now.hour*60+now.minute>=st+2
     except Exception:return False
 
-def _data_core_health(detail:dict|None)->dict:
+_arvexq_original__data_core_result_due.__name__ = '_data_core_result_due'
+_arvexq_original__data_core_result_due.__qualname__ = '_data_core_result_due'
+@_arvexq_route_wraps(_arvexq_original__data_core_result_due)
+def _data_core_result_due(*args, **kwargs):
+    return _arvexq_box_153__data_core_result_due(_arvexq_original__data_core_result_due, *args, **kwargs)
+
+def _arvexq_original__data_core_health(detail:dict|None)->dict:
     d=detail if isinstance(detail,dict) else {}
     horses=_data_core_active_horses(d); total=len(horses)
     field_size=max(total,int(d.get("fieldSize") or 0))
@@ -3532,11 +4193,23 @@ def _data_core_health(detail:dict|None)->dict:
         "analysis":rec("ready" if analysis_ready else "missing",100 if analysis_ready else 0,note=str(pm.get("diagnosisVersion") or "")),
     }
 
-def _data_core_health_hash(field_key:str, item:dict)->str:
+_arvexq_original__data_core_health.__name__ = '_data_core_health'
+_arvexq_original__data_core_health.__qualname__ = '_data_core_health'
+@_arvexq_route_wraps(_arvexq_original__data_core_health)
+def _data_core_health(*args, **kwargs):
+    return _arvexq_box_087__data_core_health(_arvexq_original__data_core_health, *args, **kwargs)
+
+def _arvexq_original__data_core_health_hash(field_key:str, item:dict)->str:
     raw=json.dumps([field_key,item.get("status"),item.get("completeness"),item.get("source"),item.get("note")],ensure_ascii=False,separators=(",",":"))
     return hashlib.sha1(raw.encode("utf-8","ignore")).hexdigest()
 
-def _data_core_store_health(detail:dict|None, attempted:set[str]|None=None, source_hint:str="")->dict:
+_arvexq_original__data_core_health_hash.__name__ = '_data_core_health_hash'
+_arvexq_original__data_core_health_hash.__qualname__ = '_data_core_health_hash'
+@_arvexq_route_wraps(_arvexq_original__data_core_health_hash)
+def _data_core_health_hash(*args, **kwargs):
+    return _arvexq_box_200__data_core_health_hash(_arvexq_original__data_core_health_hash, *args, **kwargs)
+
+def _arvexq_original__data_core_store_health(detail:dict|None, attempted:set[str]|None=None, source_hint:str="")->dict:
     if not isinstance(detail,dict) or not detail.get("id"):return {}
     rid=str(detail.get("id")); health=_data_core_health(detail); now=int(time.time()); attempted=attempted or set()
     conn=sqlite3.connect(RACEDB.path,timeout=3)
@@ -3560,7 +4233,13 @@ def _data_core_store_health(detail:dict|None, attempted:set[str]|None=None, sour
     finally:conn.close()
     return health
 
-def _data_core_record_run(run_id:str,race_id:str,started:int,status:str,attempted:set[str],before:dict,after:dict,note:str=""):
+_arvexq_original__data_core_store_health.__name__ = '_data_core_store_health'
+_arvexq_original__data_core_store_health.__qualname__ = '_data_core_store_health'
+@_arvexq_route_wraps(_arvexq_original__data_core_store_health)
+def _data_core_store_health(*args, **kwargs):
+    return _arvexq_box_087__data_core_store_health(_arvexq_original__data_core_store_health, *args, **kwargs)
+
+def _arvexq_original__data_core_record_run(run_id:str,race_id:str,started:int,status:str,attempted:set[str],before:dict,after:dict,note:str=""):
     conn=sqlite3.connect(RACEDB.path,timeout=3)
     try:
         conn.execute("""INSERT OR REPLACE INTO collector_runs(run_id,race_id,started_at,finished_at,status,attempted_fields,before_json,after_json,note)
@@ -3570,10 +4249,22 @@ def _data_core_record_run(run_id:str,race_id:str,started:int,status:str,attempte
         conn.commit()
     finally:conn.close()
 
-def _data_core_snapshot(race_id:str)->dict|None:
+_arvexq_original__data_core_record_run.__name__ = '_data_core_record_run'
+_arvexq_original__data_core_record_run.__qualname__ = '_data_core_record_run'
+@_arvexq_route_wraps(_arvexq_original__data_core_record_run)
+def _data_core_record_run(*args, **kwargs):
+    return _arvexq_box_200__data_core_record_run(_arvexq_original__data_core_record_run, *args, **kwargs)
+
+def _arvexq_original__data_core_snapshot(race_id:str)->dict|None:
     return _prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
 
-def _data_core_refresh_race(race_id:str,force:bool=False)->dict:
+_arvexq_original__data_core_snapshot.__name__ = '_data_core_snapshot'
+_arvexq_original__data_core_snapshot.__qualname__ = '_data_core_snapshot'
+@_arvexq_route_wraps(_arvexq_original__data_core_snapshot)
+def _data_core_snapshot(*args, **kwargs):
+    return _arvexq_box_142__data_core_snapshot(_arvexq_original__data_core_snapshot, *args, **kwargs)
+
+def _arvexq_original__data_core_refresh_race(race_id:str,force:bool=False)->dict:
     rid=str(race_id or "")
     if not rid:return {"raceId":rid,"ok":False,"error":"empty race id"}
     with _data_core_lock:
@@ -3656,11 +4347,23 @@ def _data_core_refresh_race(race_id:str,force:bool=False)->dict:
     finally:
         with _data_core_lock:_data_core_running.discard(rid)
 
-def _data_core_day_rows(date:str)->list[dict]:
+_arvexq_original__data_core_refresh_race.__name__ = '_data_core_refresh_race'
+_arvexq_original__data_core_refresh_race.__qualname__ = '_data_core_refresh_race'
+@_arvexq_route_wraps(_arvexq_original__data_core_refresh_race)
+def _data_core_refresh_race(*args, **kwargs):
+    return _arvexq_box_038__data_core_refresh_race(_arvexq_original__data_core_refresh_race, *args, **kwargs)
+
+def _arvexq_original__data_core_day_rows(date:str)->list[dict]:
     try:return _bootstrap_rows_local(date)
     except Exception:return []
 
-def _data_core_day_status(date:str,circuit:str="")->dict:
+_arvexq_original__data_core_day_rows.__name__ = '_data_core_day_rows'
+_arvexq_original__data_core_day_rows.__qualname__ = '_data_core_day_rows'
+@_arvexq_route_wraps(_arvexq_original__data_core_day_rows)
+def _data_core_day_rows(*args, **kwargs):
+    return _arvexq_box_151__data_core_day_rows(_arvexq_original__data_core_day_rows, *args, **kwargs)
+
+def _arvexq_original__data_core_day_status(date:str,circuit:str="")->dict:
     rows=[r for r in _data_core_day_rows(date) if not circuit or str(r.get("circuit") or "")==str(circuit)]
     ids=[str(r.get("id") or "") for r in rows if r.get("id")]
     by={rid:{} for rid in ids}
@@ -3689,7 +4392,13 @@ def _data_core_day_status(date:str,circuit:str="")->dict:
         race_rows.append({"id":rid,"track":r.get("track"),"raceNumber":r.get("raceNumber"),"startTime":r.get("startTime"),"ready":ready,"fields":st})
     return {"version":ARVEXQ_DATA_CORE_VERSION,"date":date,"circuit":circuit,"raceCount":len(rows),"readyRaceCount":ready_races,"fields":fields,"races":race_rows}
 
-def _data_core_cycle():
+_arvexq_original__data_core_day_status.__name__ = '_data_core_day_status'
+_arvexq_original__data_core_day_status.__qualname__ = '_data_core_day_status'
+@_arvexq_route_wraps(_arvexq_original__data_core_day_status)
+def _data_core_day_status(*args, **kwargs):
+    return _arvexq_box_151__data_core_day_status(_arvexq_original__data_core_day_status, *args, **kwargs)
+
+def _arvexq_original__data_core_cycle():
     global _data_core_state
     with _data_core_lock:
         if _data_core_state.get("running"):return
@@ -3723,30 +4432,59 @@ def _data_core_cycle():
         with _data_core_lock:
             _data_core_state.update({"running":False,"lastFinish":int(time.time()),"checked":checked,"refreshed":refreshed,"error":" | ".join(errors[-5:])})
 
-def _data_core_loop():
+_arvexq_original__data_core_cycle.__name__ = '_data_core_cycle'
+_arvexq_original__data_core_cycle.__qualname__ = '_data_core_cycle'
+@_arvexq_route_wraps(_arvexq_original__data_core_cycle)
+def _data_core_cycle(*args, **kwargs):
+    return _arvexq_box_152__data_core_cycle(_arvexq_original__data_core_cycle, *args, **kwargs)
+
+def _arvexq_original__data_core_loop():
     time.sleep(float(os.getenv("ARVEXQ_DATA_CORE_START_DELAY_SEC","1.2")))
     while True:
         try:_data_core_cycle()
         except Exception as exc:print("ARVEXQ Data Core cycle failed",exc)
         time.sleep(max(10,int(os.getenv("ARVEXQ_DATA_CORE_LOOP_SEC","12"))))
 
-@app.on_event("startup")
-def _start_data_core_collector():
+_arvexq_original__data_core_loop.__name__ = '_data_core_loop'
+_arvexq_original__data_core_loop.__qualname__ = '_data_core_loop'
+@_arvexq_route_wraps(_arvexq_original__data_core_loop)
+def _data_core_loop(*args, **kwargs):
+    return _arvexq_box_152__data_core_loop(_arvexq_original__data_core_loop, *args, **kwargs)
+
+def _arvexq_original__start_data_core_collector():
     enabled=str(os.getenv("ARVEXQ_DATA_CORE","1")).lower() in {"1","true","yes","on"}
     if enabled:threading.Thread(target=_data_core_loop,daemon=True,name="arvexq-data-core").start()
 
-@app.get("/api/v1/data-core/status")
-def data_core_status(date:str=Query(""),circuit:str=Query("")):
+_arvexq_original__start_data_core_collector.__name__ = '_start_data_core_collector'
+_arvexq_original__start_data_core_collector.__qualname__ = '_start_data_core_collector'
+@app.on_event("startup")
+@_arvexq_route_wraps(_arvexq_original__start_data_core_collector)
+def _start_data_core_collector(*args, **kwargs):
+    return _arvexq_box_152__start_data_core_collector(_arvexq_original__start_data_core_collector, *args, **kwargs)
+
+def _arvexq_original_data_core_status(date:str=Query(""),circuit:str=Query("")):
     ds=date or _today_iso();out=_data_core_day_status(ds,_clean(circuit))
     with _data_core_lock:out["collector"]=dict(_data_core_state)
     return out
 
-@app.post("/api/v1/data-core/refresh/{race_id}")
-def data_core_refresh(race_id:str,force:int=Query(1)):
+_arvexq_original_data_core_status.__name__ = 'data_core_status'
+_arvexq_original_data_core_status.__qualname__ = 'data_core_status'
+@app.get("/api/v1/data-core/status")
+@_arvexq_route_wraps(_arvexq_original_data_core_status)
+def data_core_status(*args, **kwargs):
+    return _arvexq_box_162_data_core_status(_arvexq_original_data_core_status, *args, **kwargs)
+
+def _arvexq_original_data_core_refresh(race_id:str,force:int=Query(1)):
     return _data_core_refresh_race(race_id,bool(force))
 
-@app.post("/api/v1/data-core/refresh-day")
-def data_core_refresh_day(date:str=Query(""),circuit:str=Query("")):
+_arvexq_original_data_core_refresh.__name__ = 'data_core_refresh'
+_arvexq_original_data_core_refresh.__qualname__ = 'data_core_refresh'
+@app.post("/api/v1/data-core/refresh/{race_id}")
+@_arvexq_route_wraps(_arvexq_original_data_core_refresh)
+def data_core_refresh(*args, **kwargs):
+    return _arvexq_box_151_data_core_refresh(_arvexq_original_data_core_refresh, *args, **kwargs)
+
+def _arvexq_original_data_core_refresh_day(date:str=Query(""),circuit:str=Query("")):
     ds=date or _today_iso();rows=[r for r in _data_core_day_rows(ds) if not circuit or str(r.get("circuit") or "")==str(circuit)]
     # Queue the full day without keeping the request open; the status endpoint exposes progress.
     def worker():
@@ -3759,10 +4497,17 @@ def data_core_refresh_day(date:str=Query(""),circuit:str=Query("")):
     threading.Thread(target=worker,daemon=True,name="data-core-day-"+ds).start()
     return {"status":"queued","date":ds,"circuit":circuit,"raceCount":len(rows),"version":ARVEXQ_DATA_CORE_VERSION}
 
+_arvexq_original_data_core_refresh_day.__name__ = 'data_core_refresh_day'
+_arvexq_original_data_core_refresh_day.__qualname__ = 'data_core_refresh_day'
+@app.post("/api/v1/data-core/refresh-day")
+@_arvexq_route_wraps(_arvexq_original_data_core_refresh_day)
+def data_core_refresh_day(*args, **kwargs):
+    return _arvexq_box_151_data_core_refresh_day(_arvexq_original_data_core_refresh_day, *args, **kwargs)
+
 _full_history_lock=threading.Lock()
 _full_history_running:set[str]=set()
 
-def _schedule_full_history_harvest(detail: dict) -> None:
+def _arvexq_original__schedule_full_history_harvest(detail: dict) -> None:
     """Persist every career run exposed by the currently available official source without blocking the race screen."""
     if not bool(int(os.getenv("RACEDB_FULL_HISTORY","1"))) or not isinstance(detail,dict):return
     # Historical/final cards also need pre-race career data for backtests.
@@ -3815,27 +4560,51 @@ def _schedule_full_history_harvest(detail: dict) -> None:
             with _full_history_lock:_full_history_running.discard(race_id)
     threading.Thread(target=worker,daemon=True).start()
 
+_arvexq_original__schedule_full_history_harvest.__name__ = '_schedule_full_history_harvest'
+_arvexq_original__schedule_full_history_harvest.__qualname__ = '_schedule_full_history_harvest'
+@_arvexq_route_wraps(_arvexq_original__schedule_full_history_harvest)
+def _schedule_full_history_harvest(*args, **kwargs):
+    return _arvexq_box_057__schedule_full_history_harvest(_arvexq_original__schedule_full_history_harvest, *args, **kwargs)
+
 PREPARED_STORE = PreparedRaceStore()
 _prewarm_lock = threading.Lock()
 _prewarm_running: set[str] = set()
 _prewarm_state: dict[str, dict] = {}
 
 
-def _pc_clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
+def _arvexq_original__pc_clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, float(v)))
 
+_arvexq_original__pc_clamp.__name__ = '_pc_clamp'
+_arvexq_original__pc_clamp.__qualname__ = '_pc_clamp'
+@_arvexq_route_wraps(_arvexq_original__pc_clamp)
+def _pc_clamp(*args, **kwargs):
+    return _arvexq_box_088__pc_clamp(_arvexq_original__pc_clamp, *args, **kwargs)
 
-def _pc_race_field(rr: dict) -> int:
+
+def _arvexq_original__pc_race_field(rr: dict) -> int:
     return max(4, int(rr.get("fieldSize") or 12))
 
+_arvexq_original__pc_race_field.__name__ = '_pc_race_field'
+_arvexq_original__pc_race_field.__qualname__ = '_pc_race_field'
+@_arvexq_route_wraps(_arvexq_original__pc_race_field)
+def _pc_race_field(*args, **kwargs):
+    return _arvexq_box_088__pc_race_field(_arvexq_original__pc_race_field, *args, **kwargs)
 
-def _pc_finish_quality(rr: dict) -> float:
+
+def _arvexq_original__pc_finish_quality(rr: dict) -> float:
     fin=int(rr.get("finish") or 0); fs=_pc_race_field(rr)
     if fin <= 0:return .45
     return _pc_clamp(1-(fin-1)/max(3,fs-1))
 
+_arvexq_original__pc_finish_quality.__name__ = '_pc_finish_quality'
+_arvexq_original__pc_finish_quality.__qualname__ = '_pc_finish_quality'
+@_arvexq_route_wraps(_arvexq_original__pc_finish_quality)
+def _pc_finish_quality(*args, **kwargs):
+    return _arvexq_box_088__pc_finish_quality(_arvexq_original__pc_finish_quality, *args, **kwargs)
 
-def _pc_list_quality(rows: list[dict], target_dist: int) -> float:
+
+def _arvexq_original__pc_list_quality(rows: list[dict], target_dist: int) -> float:
     if not rows:return .5
     num=den=0.0
     for i,rr in enumerate(rows):
@@ -3846,8 +4615,14 @@ def _pc_list_quality(rows: list[dict], target_dist: int) -> float:
         num+=q*w;den+=w
     return num/den if den else .5
 
+_arvexq_original__pc_list_quality.__name__ = '_pc_list_quality'
+_arvexq_original__pc_list_quality.__qualname__ = '_pc_list_quality'
+@_arvexq_route_wraps(_arvexq_original__pc_list_quality)
+def _pc_list_quality(*args, **kwargs):
+    return _arvexq_box_088__pc_list_quality(_arvexq_original__pc_list_quality, *args, **kwargs)
 
-def _pc_style_metrics(horse: dict, race: dict) -> dict:
+
+def _arvexq_original__pc_style_metrics(horse: dict, race: dict) -> dict:
     rs=list(horse.get("recentRaces") or [])
     c=[0.0,0.0,0.0,0.0];den=early_den=early3=moved3=tempo_num=tempo_den=0.0;samples=0
     target=int(race.get("distance") or 0)
@@ -3882,8 +4657,14 @@ def _pc_style_metrics(horse: dict, race: dict) -> dict:
     name="逃げ" if point<1.65 else ("先行" if point<2.35 else ("差し" if point<3.15 else "追込"))
     return {"front":front,"stalk":stalk,"mid":mid,"close":close,"early3":early3/early_den if early_den else 0,"moved3":moved3/early_den if early_den else 0,"ten":tempo_num/tempo_den if tempo_den else .5,"samples":samples,"stylePoint":round(point,4),"pastStyle":name}
 
+_arvexq_original__pc_style_metrics.__name__ = '_pc_style_metrics'
+_arvexq_original__pc_style_metrics.__qualname__ = '_pc_style_metrics'
+@_arvexq_route_wraps(_arvexq_original__pc_style_metrics)
+def _pc_style_metrics(*args, **kwargs):
+    return _arvexq_box_098__pc_style_metrics(_arvexq_original__pc_style_metrics, *args, **kwargs)
 
-def _pc_sectional_score(horse: dict, race: dict) -> tuple[float | None, int]:
+
+def _arvexq_original__pc_sectional_score(horse: dict, race: dict) -> tuple[float | None, int]:
     """Closing-section evidence from historical 3F times, normalized by each run's own average speed.
 
     This deliberately uses only past-race data. It does not infer missing sectionals and
@@ -3920,8 +4701,14 @@ def _pc_sectional_score(horse: dict, race: dict) -> tuple[float | None, int]:
         num+=q*w;den+=w;used+=1
     return ((num/den) if den else None),used
 
+_arvexq_original__pc_sectional_score.__name__ = '_pc_sectional_score'
+_arvexq_original__pc_sectional_score.__qualname__ = '_pc_sectional_score'
+@_arvexq_route_wraps(_arvexq_original__pc_sectional_score)
+def _pc_sectional_score(*args, **kwargs):
+    return _arvexq_box_097__pc_sectional_score(_arvexq_original__pc_sectional_score, *args, **kwargs)
 
-def _pc_fit_metrics(horse: dict, race: dict) -> dict:
+
+def _arvexq_original__pc_fit_metrics(horse: dict, race: dict) -> dict:
     rs=list(horse.get("recentRaces") or []); target=int(race.get("distance") or 0); target_season=_pc_season(str(race.get("date") or ""))
     groups={"track":[],"distance":[],"condition":[],"weather":[],"season":[],"level":[]}
     for rr in rs:
@@ -3937,17 +4724,35 @@ def _pc_fit_metrics(horse: dict, race: dict) -> dict:
     out["counts"]={k:len(v) for k,v in groups.items()}
     return out
 
+_arvexq_original__pc_fit_metrics.__name__ = '_pc_fit_metrics'
+_arvexq_original__pc_fit_metrics.__qualname__ = '_pc_fit_metrics'
+@_arvexq_route_wraps(_arvexq_original__pc_fit_metrics)
+def _pc_fit_metrics(*args, **kwargs):
+    return _arvexq_box_090__pc_fit_metrics(_arvexq_original__pc_fit_metrics, *args, **kwargs)
 
-def _is_jump_run(run: dict) -> bool:
+
+def _arvexq_original__is_jump_run(run: dict) -> bool:
     return bool(re.search(r"障害|ジャンプ|J[・･.]?G|\bJS\b",str(run.get("surface") or "")+str(run.get("title") or ""),re.I))
 
+_arvexq_original__is_jump_run.__name__ = '_is_jump_run'
+_arvexq_original__is_jump_run.__qualname__ = '_is_jump_run'
+@_arvexq_route_wraps(_arvexq_original__is_jump_run)
+def _is_jump_run(*args, **kwargs):
+    return _arvexq_box_128__is_jump_run(_arvexq_original__is_jump_run, *args, **kwargs)
 
-def _evaluation_number(value):
+
+def _arvexq_original__evaluation_number(value):
     try:
         value = float(value)
         return value if math.isfinite(value) else None
     except (ValueError, TypeError):
         return None
+
+_arvexq_original__evaluation_number.__name__ = '_evaluation_number'
+_arvexq_original__evaluation_number.__qualname__ = '_evaluation_number'
+@_arvexq_route_wraps(_arvexq_original__evaluation_number)
+def _evaluation_number(*args, **kwargs):
+    return _arvexq_box_110__evaluation_number(_arvexq_original__evaluation_number, *args, **kwargs)
 
 
 # ARVEXQ_EXTRACTED:install_evaluation_core
@@ -3956,16 +4761,22 @@ _arvexq_installer(globals())
 del _arvexq_installer
 
 
-def _ensure_race_volatility(detail: dict) -> dict:
+def _arvexq_original__ensure_race_volatility(detail: dict) -> dict:
     if not isinstance(detail,dict):return detail
     v=detail.get("volatility") or {}
     if v.get("version")!=VOLATILITY_ENGINE_VERSION:
         detail["volatility"]=_race_volatility(detail)
     return detail
 
+_arvexq_original__ensure_race_volatility.__name__ = '_ensure_race_volatility'
+_arvexq_original__ensure_race_volatility.__qualname__ = '_ensure_race_volatility'
+@_arvexq_route_wraps(_arvexq_original__ensure_race_volatility)
+def _ensure_race_volatility(*args, **kwargs):
+    return _arvexq_box_129__ensure_race_volatility(_arvexq_original__ensure_race_volatility, *args, **kwargs)
 
 
-def _restore_saved_odds(detail:dict)->dict:
+
+def _arvexq_original__restore_saved_odds(detail:dict)->dict:
     """Display-only odds must survive diagnosis/history/environment snapshot rebuilds."""
     if not isinstance(detail,dict):return detail
     race_id=str(detail.get("id") or "")
@@ -4000,6 +4811,12 @@ def _restore_saved_odds(detail:dict)->dict:
     if latest:
         detail["oddsUpdatedAt"]=datetime.fromtimestamp(latest,ZoneInfo("Asia/Tokyo")).strftime("%H:%M:%S")
     return detail
+
+_arvexq_original__restore_saved_odds.__name__ = '_restore_saved_odds'
+_arvexq_original__restore_saved_odds.__qualname__ = '_restore_saved_odds'
+@_arvexq_route_wraps(_arvexq_original__restore_saved_odds)
+def _restore_saved_odds(*args, **kwargs):
+    return _arvexq_box_067__restore_saved_odds(_arvexq_original__restore_saved_odds, *args, **kwargs)
 
 
 def _precompute_detail_metrics(detail: dict) -> dict:
@@ -4040,17 +4857,29 @@ def _precompute_detail_metrics(detail: dict) -> dict:
     return detail
 
 
-def _prepared_ttl(detail: dict) -> int:
+def _arvexq_original__prepared_ttl(detail: dict) -> int:
     # Today's cards can change (odds/body weight/result). Old races are effectively static.
     return int(os.getenv("PREPARED_TODAY_TTL_SEC","45")) if str(detail.get("date") or "")==_today_iso() else int(os.getenv("PREPARED_ARCHIVE_TTL_SEC","21600"))
 
+_arvexq_original__prepared_ttl.__name__ = '_prepared_ttl'
+_arvexq_original__prepared_ttl.__qualname__ = '_prepared_ttl'
+@_arvexq_route_wraps(_arvexq_original__prepared_ttl)
+def _prepared_ttl(*args, **kwargs):
+    return _arvexq_box_149__prepared_ttl(_arvexq_original__prepared_ttl, *args, **kwargs)
 
-def _snapshot_final(detail: dict) -> bool:
+
+def _arvexq_original__snapshot_final(detail: dict) -> bool:
     result=detail.get("result") or {}
     return result.get("status")=="確定" and bool(result.get("finishers"))
 
+_arvexq_original__snapshot_final.__name__ = '_snapshot_final'
+_arvexq_original__snapshot_final.__qualname__ = '_snapshot_final'
+@_arvexq_route_wraps(_arvexq_original__snapshot_final)
+def _snapshot_final(*args, **kwargs):
+    return _arvexq_box_086__snapshot_final(_arvexq_original__snapshot_final, *args, **kwargs)
 
-def _prepared_get_fresh(race_id: str) -> dict | None:
+
+def _arvexq_original__prepared_get_fresh(race_id: str) -> dict | None:
     detail,updated=PREPARED_STORE.get(race_id)
     if not detail or not updated or not _racedb_snapshot_usable(detail):return None
     # Retired prediction fields must not trigger an analysis refresh.
@@ -4060,16 +4889,28 @@ def _prepared_get_fresh(race_id: str) -> dict | None:
     except Exception:pass
     return detail
 
+_arvexq_original__prepared_get_fresh.__name__ = '_prepared_get_fresh'
+_arvexq_original__prepared_get_fresh.__qualname__ = '_prepared_get_fresh'
+@_arvexq_route_wraps(_arvexq_original__prepared_get_fresh)
+def _prepared_get_fresh(*args, **kwargs):
+    return _arvexq_box_142__prepared_get_fresh(_arvexq_original__prepared_get_fresh, *args, **kwargs)
 
-from arvexq.ingest.result_status.confirmed import official_confirmed
 
-def _result_has_podium(detail: dict | None) -> bool:
+from arvexq.components.item_073.confirmed import official_confirmed
+
+def _arvexq_original__result_has_podium(detail: dict | None) -> bool:
     result=(detail or {}).get("result") or {}
     ranks={int(x.get("finish") or 0) for x in (result.get("finishers") or []) if isinstance(x,dict)}
     return all(i in ranks for i in (1,2,3))
 
+_arvexq_original__result_has_podium.__name__ = '_result_has_podium'
+_arvexq_original__result_has_podium.__qualname__ = '_result_has_podium'
+@_arvexq_route_wraps(_arvexq_original__result_has_podium)
+def _result_has_podium(*args, **kwargs):
+    return _arvexq_box_153__result_has_podium(_arvexq_original__result_has_podium, *args, **kwargs)
 
-def _refresh_result_fast(race_id: str) -> dict | None:
+
+def _arvexq_original__refresh_result_fast(race_id: str) -> dict | None:
     """Refresh only authoritative result data; never rebuild history/diagnosis."""
     detail=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
     if not detail:
@@ -4117,8 +4958,14 @@ def _refresh_result_fast(race_id: str) -> dict | None:
         except Exception as exc:print("result snapshot save failed",race_id,exc)
     return _compact_display_snapshot(detail)
 
+_arvexq_original__refresh_result_fast.__name__ = '_refresh_result_fast'
+_arvexq_original__refresh_result_fast.__qualname__ = '_refresh_result_fast'
+@_arvexq_route_wraps(_arvexq_original__refresh_result_fast)
+def _refresh_result_fast(*args, **kwargs):
+    return _arvexq_box_153__refresh_result_fast(_arvexq_original__refresh_result_fast, *args, **kwargs)
 
-def _prepare_race_snapshot(race_id: str, force: bool = False, manual: bool = False) -> dict | None:
+
+def _arvexq_original__prepare_race_snapshot(race_id: str, force: bool = False, manual: bool = False) -> dict | None:
     hit=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
     if hit and (str(hit.get("date") or "")<_today_iso() or _snapshot_final(hit)) and not force:return hit
     if hit and not force:return hit
@@ -4158,8 +5005,14 @@ def _prepare_race_snapshot(race_id: str, force: bool = False, manual: bool = Fal
     if detail.get("date")==_today_iso() and not _snapshot_final(detail):_schedule_detail_background_jobs(race_id,detail)
     return display
 
+_arvexq_original__prepare_race_snapshot.__name__ = '_prepare_race_snapshot'
+_arvexq_original__prepare_race_snapshot.__qualname__ = '_prepare_race_snapshot'
+@_arvexq_route_wraps(_arvexq_original__prepare_race_snapshot)
+def _prepare_race_snapshot(*args, **kwargs):
+    return _arvexq_box_159__prepare_race_snapshot(_arvexq_original__prepare_race_snapshot, *args, **kwargs)
 
-def _prewarm_sort_key(row: dict, date: str) -> tuple:
+
+def _arvexq_original__prewarm_sort_key(row: dict, date: str) -> tuple:
     t=str(row.get("startTime") or "")
     try:
         hh,mm=t.split(":",1);m=int(hh)*60+int(mm[:2])
@@ -4170,8 +5023,14 @@ def _prewarm_sort_key(row: dict, date: str) -> tuple:
         return (0 if m>=now else 1, m if m>=now else m+1440, str(row.get("track") or ""), int(row.get("raceNumber") or 0))
     return (0,m,str(row.get("track") or ""),int(row.get("raceNumber") or 0))
 
+_arvexq_original__prewarm_sort_key.__name__ = '_prewarm_sort_key'
+_arvexq_original__prewarm_sort_key.__qualname__ = '_prewarm_sort_key'
+@_arvexq_route_wraps(_arvexq_original__prewarm_sort_key)
+def _prewarm_sort_key(*args, **kwargs):
+    return _arvexq_box_151__prewarm_sort_key(_arvexq_original__prewarm_sort_key, *args, **kwargs)
 
-def _schedule_prewarm(rows: list[dict], date: str, circuit: str = "") -> None:
+
+def _arvexq_original__schedule_prewarm(rows: list[dict], date: str, circuit: str = "") -> None:
     ordered=[r for r in sorted(rows,key=lambda x:_prewarm_sort_key(x,date)) if r.get("id") and (not circuit or r.get("circuit")==circuit)]
     max_races=max(1,int(os.getenv("PREWARM_MAX_RACES","36")))
     ordered=ordered[:max_races]
@@ -4208,8 +5067,14 @@ def _schedule_prewarm(rows: list[dict], date: str, circuit: str = "") -> None:
                 _prewarm_running.discard(key);_prewarm_state[key]={"running":False,"done":done,"total":len(ordered),"last":int(time.time()),"errors":errs}
     threading.Thread(target=worker,daemon=True).start()
 
+_arvexq_original__schedule_prewarm.__name__ = '_schedule_prewarm'
+_arvexq_original__schedule_prewarm.__qualname__ = '_schedule_prewarm'
+@_arvexq_route_wraps(_arvexq_original__schedule_prewarm)
+def _schedule_prewarm(*args, **kwargs):
+    return _arvexq_box_151__schedule_prewarm(_arvexq_original__schedule_prewarm, *args, **kwargs)
 
-def _ensure_detail_background_jobs(race_id: str, detail: dict) -> None:
+
+def _arvexq_original__ensure_detail_background_jobs(race_id: str, detail: dict) -> None:
     if detail.get("date")!=_today_iso() or _snapshot_final(detail):return
     try:
         es=_enrichment_status(race_id)
@@ -4227,15 +5092,27 @@ def _ensure_detail_background_jobs(race_id: str, detail: dict) -> None:
     except Exception as exc:
         print("prepared history schedule failed",race_id,exc)
 
+_arvexq_original__ensure_detail_background_jobs.__name__ = '_ensure_detail_background_jobs'
+_arvexq_original__ensure_detail_background_jobs.__qualname__ = '_ensure_detail_background_jobs'
+@_arvexq_route_wraps(_arvexq_original__ensure_detail_background_jobs)
+def _ensure_detail_background_jobs(*args, **kwargs):
+    return _arvexq_box_159__ensure_detail_background_jobs(_arvexq_original__ensure_detail_background_jobs, *args, **kwargs)
 
-def _schedule_detail_background_jobs(race_id: str, detail: dict) -> None:
+
+def _arvexq_original__schedule_detail_background_jobs(race_id: str, detail: dict) -> None:
     threading.Thread(target=_ensure_detail_background_jobs,args=(race_id,detail),daemon=True).start()
+
+_arvexq_original__schedule_detail_background_jobs.__name__ = '_schedule_detail_background_jobs'
+_arvexq_original__schedule_detail_background_jobs.__qualname__ = '_schedule_detail_background_jobs'
+@_arvexq_route_wraps(_arvexq_original__schedule_detail_background_jobs)
+def _schedule_detail_background_jobs(*args, **kwargs):
+    return _arvexq_box_159__schedule_detail_background_jobs(_arvexq_original__schedule_detail_background_jobs, *args, **kwargs)
 
 
 _racedb_refresh_lock=threading.Lock()
 _racedb_refresh_running:set[str]=set()
 
-def _fast_local_race_detail(race_id:str)->dict|None:
+def _arvexq_original__fast_local_race_detail(race_id:str)->dict|None:
     """First paint from local DB only. Never wait on web/history/profile lookups."""
     now=int(time.time())
     if race_id.startswith("nar-"):
@@ -4313,8 +5190,14 @@ def _fast_local_race_detail(race_id:str)->dict|None:
     detail["preparedMeta"]={"prepared":True,"fastPartial":True,"preparedAtEpoch":now,"build":"v93-fast"}
     return detail
 
+_arvexq_original__fast_local_race_detail.__name__ = '_fast_local_race_detail'
+_arvexq_original__fast_local_race_detail.__qualname__ = '_fast_local_race_detail'
+@_arvexq_route_wraps(_arvexq_original__fast_local_race_detail)
+def _fast_local_race_detail(*args, **kwargs):
+    return _arvexq_box_110__fast_local_race_detail(_arvexq_original__fast_local_race_detail, *args, **kwargs)
 
-def _build_fast_diagnosis_snapshot(race_id:str, allow_network:bool=False, deep_context:bool=False)->dict|None:
+
+def _arvexq_original__build_fast_diagnosis_snapshot(race_id:str, allow_network:bool=False, deep_context:bool=False)->dict|None:
     """Recalculate all-horse diagnosis from local data only. Target: sub-second."""
     # Preserve current-card/result fields already hydrated by the fast-card step.
     # v156 rebuilt from the bare local NAR DB here and immediately erased body weights/results.
@@ -4369,14 +5252,26 @@ def _build_fast_diagnosis_snapshot(race_id:str, allow_network:bool=False, deep_c
     except Exception as exc:print("fast diagnosis prepared save failed",race_id,exc)
     return _compact_display_snapshot(detail)
 
+_arvexq_original__build_fast_diagnosis_snapshot.__name__ = '_build_fast_diagnosis_snapshot'
+_arvexq_original__build_fast_diagnosis_snapshot.__qualname__ = '_build_fast_diagnosis_snapshot'
+@_arvexq_route_wraps(_arvexq_original__build_fast_diagnosis_snapshot)
+def _build_fast_diagnosis_snapshot(*args, **kwargs):
+    return _arvexq_box_110__build_fast_diagnosis_snapshot(_arvexq_original__build_fast_diagnosis_snapshot, *args, **kwargs)
 
-def _store_fast_snapshot(detail:dict)->None:
+
+def _arvexq_original__store_fast_snapshot(detail:dict)->None:
     if not detail or not _racedb_snapshot_usable(detail):return
     detail=_restore_saved_odds(detail)
     try:PREPARED_STORE.put(detail,force=True)
     except Exception as exc:print("fast prepared save failed",detail.get("id"),exc)
     try:RACEDB.upsert_race(detail)
     except Exception as exc:print("fast RaceDB save failed",detail.get("id"),exc)
+
+_arvexq_original__store_fast_snapshot.__name__ = '_store_fast_snapshot'
+_arvexq_original__store_fast_snapshot.__qualname__ = '_store_fast_snapshot'
+@_arvexq_route_wraps(_arvexq_original__store_fast_snapshot)
+def _store_fast_snapshot(*args, **kwargs):
+    return _arvexq_box_110__store_fast_snapshot(_arvexq_original__store_fast_snapshot, *args, **kwargs)
 
 
 
@@ -4387,7 +5282,7 @@ _fast_card_queue=[]
 _fast_card_cv=threading.Condition()
 _fast_card_workers_started=False
 
-def _ensure_fast_card_workers():
+def _arvexq_original__ensure_fast_card_workers():
     global _fast_card_workers_started
     with _fast_card_cv:
         if _fast_card_workers_started:return
@@ -4396,7 +5291,13 @@ def _ensure_fast_card_workers():
         for idx in range(workers):
             threading.Thread(target=_fast_card_worker,daemon=True,name=f"fast-card-worker-{idx+1}").start()
 
-def _queue_fast_card(race_id:str,priority:int=50):
+_arvexq_original__ensure_fast_card_workers.__name__ = '_ensure_fast_card_workers'
+_arvexq_original__ensure_fast_card_workers.__qualname__ = '_ensure_fast_card_workers'
+@_arvexq_route_wraps(_arvexq_original__ensure_fast_card_workers)
+def _ensure_fast_card_workers(*args, **kwargs):
+    return _arvexq_box_159__ensure_fast_card_workers(_arvexq_original__ensure_fast_card_workers, *args, **kwargs)
+
+def _arvexq_original__queue_fast_card(race_id:str,priority:int=50):
     if not race_id:return
     _ensure_fast_card_workers()
     with _fast_card_cv:
@@ -4406,7 +5307,13 @@ def _queue_fast_card(race_id:str,priority:int=50):
         _fast_card_queue.sort(key=lambda x:(x[0],x[1]))
         _fast_card_cv.notify()
 
-def _fast_card_worker():
+_arvexq_original__queue_fast_card.__name__ = '_queue_fast_card'
+_arvexq_original__queue_fast_card.__qualname__ = '_queue_fast_card'
+@_arvexq_route_wraps(_arvexq_original__queue_fast_card)
+def _queue_fast_card(*args, **kwargs):
+    return _arvexq_box_159__queue_fast_card(_arvexq_original__queue_fast_card, *args, **kwargs)
+
+def _arvexq_original__fast_card_worker():
     while True:
         with _fast_card_cv:
             while not _fast_card_queue:_fast_card_cv.wait()
@@ -4424,12 +5331,24 @@ def _fast_card_worker():
         finally:
             with _fast_card_cv:_fast_card_running.discard(race_id)
 
-from arvexq.ingest.nar_official_card import parse_card_html as _parse_nar_official_card
+_arvexq_original__fast_card_worker.__name__ = '_fast_card_worker'
+_arvexq_original__fast_card_worker.__qualname__ = '_fast_card_worker'
+@_arvexq_route_wraps(_arvexq_original__fast_card_worker)
+def _fast_card_worker(*args, **kwargs):
+    return _arvexq_box_159__fast_card_worker(_arvexq_original__fast_card_worker, *args, **kwargs)
 
-def _parse_nar_official_card_html(detail:dict, html:str)->list[dict]:
+from arvexq.components.item_156.nar_official_card import parse_card_html as _parse_nar_official_card
+
+def _arvexq_original__parse_nar_official_card_html(detail:dict, html:str)->list[dict]:
     return _parse_nar_official_card(detail, html, _clean)
 
-def _nar_official_card_rows_fast(detail:dict)->list[dict]:
+_arvexq_original__parse_nar_official_card_html.__name__ = '_parse_nar_official_card_html'
+_arvexq_original__parse_nar_official_card_html.__qualname__ = '_parse_nar_official_card_html'
+@_arvexq_route_wraps(_arvexq_original__parse_nar_official_card_html)
+def _parse_nar_official_card_html(*args, **kwargs):
+    return _arvexq_box_021__parse_nar_official_card_html(_arvexq_original__parse_nar_official_card_html, *args, **kwargs)
+
+def _arvexq_original__nar_official_card_rows_fast(detail:dict)->list[dict]:
     """Fetch NAR official current body weight/change from multiple official card layouts."""
     code=NAR_BABA_CODES.get(str(detail.get("track") or ""))
     if not code:return []
@@ -4472,8 +5391,14 @@ def _nar_official_card_rows_fast(detail:dict)->list[dict]:
         if out_by_no and (not target or len(out_by_no)>=target):break
     return [out_by_no[k] for k in sorted(out_by_no)]
 
+_arvexq_original__nar_official_card_rows_fast.__name__ = '_nar_official_card_rows_fast'
+_arvexq_original__nar_official_card_rows_fast.__qualname__ = '_nar_official_card_rows_fast'
+@_arvexq_route_wraps(_arvexq_original__nar_official_card_rows_fast)
+def _nar_official_card_rows_fast(*args, **kwargs):
+    return _arvexq_box_021__nar_official_card_rows_fast(_arvexq_original__nar_official_card_rows_fast, *args, **kwargs)
 
-def _merge_current_card_fields(detail:dict, rows:list[dict])->dict:
+
+def _arvexq_original__merge_current_card_fields(detail:dict, rows:list[dict])->dict:
     if not rows:return detail
     by={int(x.get("horseNumber") or 0):x for x in rows if int(x.get("horseNumber") or 0)>0}
     changed=False
@@ -4488,8 +5413,14 @@ def _merge_current_card_fields(detail:dict, rows:list[dict])->dict:
         detail["bodyWeightUpdatedAt"]=_now_jst().strftime("%H:%M:%S")
     return detail
 
+_arvexq_original__merge_current_card_fields.__name__ = '_merge_current_card_fields'
+_arvexq_original__merge_current_card_fields.__qualname__ = '_merge_current_card_fields'
+@_arvexq_route_wraps(_arvexq_original__merge_current_card_fields)
+def _merge_current_card_fields(*args, **kwargs):
+    return _arvexq_box_038__merge_current_card_fields(_arvexq_original__merge_current_card_fields, *args, **kwargs)
 
-def _nar_result_should_be_available(detail:dict, grace_min:int=1)->bool:
+
+def _arvexq_original__nar_result_should_be_available(detail:dict, grace_min:int=1)->bool:
     date=str(detail.get("date") or "")
     if not date:return False
     if date<_today_iso():return True
@@ -4499,6 +5430,12 @@ def _nar_result_should_be_available(detail:dict, grace_min:int=1)->bool:
     if not m:return False
     nowj=_now_jst();nowm=nowj.hour*60+nowj.minute
     return nowm>=int(m.group(1))*60+int(m.group(2))+int(grace_min)
+
+_arvexq_original__nar_result_should_be_available.__name__ = '_nar_result_should_be_available'
+_arvexq_original__nar_result_should_be_available.__qualname__ = '_nar_result_should_be_available'
+@_arvexq_route_wraps(_arvexq_original__nar_result_should_be_available)
+def _nar_result_should_be_available(*args, **kwargs):
+    return _arvexq_box_153__nar_result_should_be_available(_arvexq_original__nar_result_should_be_available, *args, **kwargs)
 
 
 def _nar_official_result_fast(detail:dict)->dict|None:
@@ -4630,7 +5567,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
     return None
 
 
-def _netkeiba_card_rows_fast(detail:dict)->list[dict]:
+def _arvexq_original__netkeiba_card_rows_fast(detail:dict)->list[dict]:
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
         str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0)
     )
@@ -4649,8 +5586,14 @@ def _netkeiba_card_rows_fast(detail:dict)->list[dict]:
         rows.append(horse)
     return rows
 
+_arvexq_original__netkeiba_card_rows_fast.__name__ = '_netkeiba_card_rows_fast'
+_arvexq_original__netkeiba_card_rows_fast.__qualname__ = '_netkeiba_card_rows_fast'
+@_arvexq_route_wraps(_arvexq_original__netkeiba_card_rows_fast)
+def _netkeiba_card_rows_fast(*args, **kwargs):
+    return _arvexq_box_025__netkeiba_card_rows_fast(_arvexq_original__netkeiba_card_rows_fast, *args, **kwargs)
 
-def _merge_card_rows_preserve(base:dict, fresh_rows:list[dict])->dict:
+
+def _arvexq_original__merge_card_rows_preserve(base:dict, fresh_rows:list[dict])->dict:
     """Refresh today's card fields without deleting history/metrics already collected."""
     old_horses=base.get("horses") or []
     by_no={int(h.get("horseNumber") or 0):h for h in old_horses if int(h.get("horseNumber") or 0)>0}
@@ -4681,8 +5624,14 @@ def _merge_card_rows_preserve(base:dict, fresh_rows:list[dict])->dict:
         base["fieldSize"]=len(merged)
     return base
 
+_arvexq_original__merge_card_rows_preserve.__name__ = '_merge_card_rows_preserve'
+_arvexq_original__merge_card_rows_preserve.__qualname__ = '_merge_card_rows_preserve'
+@_arvexq_route_wraps(_arvexq_original__merge_card_rows_preserve)
+def _merge_card_rows_preserve(*args, **kwargs):
+    return _arvexq_box_038__merge_card_rows_preserve(_arvexq_original__merge_card_rows_preserve, *args, **kwargs)
 
-def _netkeiba_past_rows_fast(detail:dict)->list[dict]:
+
+def _arvexq_original__netkeiba_past_rows_fast(detail:dict)->list[dict]:
     """One cached page gets recent runs for every JRA starter."""
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
         str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0)
@@ -4710,8 +5659,14 @@ def _netkeiba_past_rows_fast(detail:dict)->list[dict]:
         out.append(horse)
     return out
 
+_arvexq_original__netkeiba_past_rows_fast.__name__ = '_netkeiba_past_rows_fast'
+_arvexq_original__netkeiba_past_rows_fast.__qualname__ = '_netkeiba_past_rows_fast'
+@_arvexq_route_wraps(_arvexq_original__netkeiba_past_rows_fast)
+def _netkeiba_past_rows_fast(*args, **kwargs):
+    return _arvexq_box_057__netkeiba_past_rows_fast(_arvexq_original__netkeiba_past_rows_fast, *args, **kwargs)
 
-def _merge_fast_history(detail:dict, history_rows:list[dict])->dict:
+
+def _arvexq_original__merge_fast_history(detail:dict, history_rows:list[dict])->dict:
     by_no={int(h.get("horseNumber") or 0):h for h in detail.get("horses",[]) or []}
     by_name={str(h.get("name") or ""):h for h in detail.get("horses",[]) or [] if h.get("name")}
     for row in history_rows or []:
@@ -4725,8 +5680,14 @@ def _merge_fast_history(detail:dict, history_rows:list[dict])->dict:
             h["allPastRuns"]=merged
     return detail
 
+_arvexq_original__merge_fast_history.__name__ = '_merge_fast_history'
+_arvexq_original__merge_fast_history.__qualname__ = '_merge_fast_history'
+@_arvexq_route_wraps(_arvexq_original__merge_fast_history)
+def _merge_fast_history(*args, **kwargs):
+    return _arvexq_box_057__merge_fast_history(_arvexq_original__merge_fast_history, *args, **kwargs)
 
-def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
+
+def _arvexq_original__hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
     # NAR: hydrate the date once. v117 called a non-existent sync_day(), so selected
     # local races could stay empty until another background job happened to fill the DB.
     if race_id.startswith("nar-"):
@@ -4825,11 +5786,23 @@ def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
             if q:_store_fast_snapshot(q)
     except Exception as exc:print("fast JRA card hydrate failed",race_id,exc)
 
-def _schedule_fast_card_refresh(race_id:str,priority:int=50)->None:
+_arvexq_original__hydrate_fast_card_now.__name__ = '_hydrate_fast_card_now'
+_arvexq_original__hydrate_fast_card_now.__qualname__ = '_hydrate_fast_card_now'
+@_arvexq_route_wraps(_arvexq_original__hydrate_fast_card_now)
+def _hydrate_fast_card_now(*args, **kwargs):
+    return _arvexq_box_038__hydrate_fast_card_now(_arvexq_original__hydrate_fast_card_now, *args, **kwargs)
+
+def _arvexq_original__schedule_fast_card_refresh(race_id:str,priority:int=50)->None:
     _queue_fast_card(race_id,priority)
 
+_arvexq_original__schedule_fast_card_refresh.__name__ = '_schedule_fast_card_refresh'
+_arvexq_original__schedule_fast_card_refresh.__qualname__ = '_schedule_fast_card_refresh'
+@_arvexq_route_wraps(_arvexq_original__schedule_fast_card_refresh)
+def _schedule_fast_card_refresh(*args, **kwargs):
+    return _arvexq_box_038__schedule_fast_card_refresh(_arvexq_original__schedule_fast_card_refresh, *args, **kwargs)
 
-def _schedule_racedb_snapshot_refresh(race_id:str)->None:
+
+def _arvexq_original__schedule_racedb_snapshot_refresh(race_id:str)->None:
     with _racedb_refresh_lock:
         if race_id in _racedb_refresh_running:return
         _racedb_refresh_running.add(race_id)
@@ -4842,7 +5815,13 @@ def _schedule_racedb_snapshot_refresh(race_id:str)->None:
             with _racedb_refresh_lock:_racedb_refresh_running.discard(race_id)
     threading.Thread(target=worker,daemon=True).start()
 
-def _racedb_get_fast(race_id:str)->dict|None:
+_arvexq_original__schedule_racedb_snapshot_refresh.__name__ = '_schedule_racedb_snapshot_refresh'
+_arvexq_original__schedule_racedb_snapshot_refresh.__qualname__ = '_schedule_racedb_snapshot_refresh'
+@_arvexq_route_wraps(_arvexq_original__schedule_racedb_snapshot_refresh)
+def _schedule_racedb_snapshot_refresh(*args, **kwargs):
+    return _arvexq_box_038__schedule_racedb_snapshot_refresh(_arvexq_original__schedule_racedb_snapshot_refresh, *args, **kwargs)
+
+def _arvexq_original__racedb_get_fast(race_id:str)->dict|None:
     try:detail,updated=RACEDB.get_race(race_id)
     except Exception:return None
     if not detail or not _racedb_snapshot_usable(detail):return None
@@ -4854,6 +5833,12 @@ def _racedb_get_fast(race_id:str)->dict|None:
     detail=_restore_saved_odds(detail)
     return detail
 
+_arvexq_original__racedb_get_fast.__name__ = '_racedb_get_fast'
+_arvexq_original__racedb_get_fast.__qualname__ = '_racedb_get_fast'
+@_arvexq_route_wraps(_arvexq_original__racedb_get_fast)
+def _racedb_get_fast(*args, **kwargs):
+    return _arvexq_box_142__racedb_get_fast(_arvexq_original__racedb_get_fast, *args, **kwargs)
+
 _detail_cache_lock=threading.Lock()
 _detail_cache:dict[str,tuple[float,dict]]={}
 
@@ -4861,7 +5846,7 @@ _race_list_cache_lock = threading.Lock()
 _race_list_cache: dict[str, tuple[float, list[dict]]] = {}
 
 
-def _local_starter_bundle(rows:list[dict], limit:int=3)->list[dict]:
+def _arvexq_original__local_starter_bundle(rows:list[dict], limit:int=3)->list[dict]:
     if not rows:return []
     ordered=sorted(
         [r for r in rows if r.get("id")],
@@ -4877,11 +5862,17 @@ def _local_starter_bundle(rows:list[dict], limit:int=3)->list[dict]:
             out.append(_compact_display_snapshot(d))
     return out
 
+_arvexq_original__local_starter_bundle.__name__ = '_local_starter_bundle'
+_arvexq_original__local_starter_bundle.__qualname__ = '_local_starter_bundle'
+@_arvexq_route_wraps(_arvexq_original__local_starter_bundle)
+def _local_starter_bundle(*args, **kwargs):
+    return _arvexq_box_151__local_starter_bundle(_arvexq_original__local_starter_bundle, *args, **kwargs)
+
 
 _volatility_pack_lock=threading.Lock()
 _volatility_pack_cache:dict[str,tuple[float,list[dict]]]={}
 
-def _local_volatility_map(race_ids:list[str])->dict[str,dict]:
+def _arvexq_original__local_volatility_map(race_ids:list[str])->dict[str,dict]:
     ids=[str(x) for x in race_ids if x]
     if not ids:return {}
     out={}
@@ -4934,8 +5925,14 @@ def _local_volatility_map(race_ids:list[str])->dict[str,dict]:
             conn.close()
     return out
 
+_arvexq_original__local_volatility_map.__name__ = '_local_volatility_map'
+_arvexq_original__local_volatility_map.__qualname__ = '_local_volatility_map'
+@_arvexq_route_wraps(_arvexq_original__local_volatility_map)
+def _local_volatility_map(*args, **kwargs):
+    return _arvexq_box_129__local_volatility_map(_arvexq_original__local_volatility_map, *args, **kwargs)
 
-def _attach_local_volatility_to_summaries(rows:list[dict])->list[dict]:
+
+def _arvexq_original__attach_local_volatility_to_summaries(rows:list[dict])->list[dict]:
     if not rows:return rows
     vm=_local_volatility_map([str(r.get("id") or "") for r in rows])
     if not vm:return rows
@@ -4947,8 +5944,14 @@ def _attach_local_volatility_to_summaries(rows:list[dict])->list[dict]:
         out.append(z)
     return out
 
+_arvexq_original__attach_local_volatility_to_summaries.__name__ = '_attach_local_volatility_to_summaries'
+_arvexq_original__attach_local_volatility_to_summaries.__qualname__ = '_attach_local_volatility_to_summaries'
+@_arvexq_route_wraps(_arvexq_original__attach_local_volatility_to_summaries)
+def _attach_local_volatility_to_summaries(*args, **kwargs):
+    return _arvexq_box_129__attach_local_volatility_to_summaries(_arvexq_original__attach_local_volatility_to_summaries, *args, **kwargs)
 
-def _compute_local_volatility_for_race(race_id:str)->dict|None:
+
+def _arvexq_original__compute_local_volatility_for_race(race_id:str)->dict|None:
     # Strictly local: no public-site wait. Used by the selected venue's 12-row pack.
     d=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
     if d:
@@ -4974,9 +5977,14 @@ def _compute_local_volatility_for_race(race_id:str)->dict|None:
         print("local volatility compute failed",race_id,exc)
         return None
 
+_arvexq_original__compute_local_volatility_for_race.__name__ = '_compute_local_volatility_for_race'
+_arvexq_original__compute_local_volatility_for_race.__qualname__ = '_compute_local_volatility_for_race'
+@_arvexq_route_wraps(_arvexq_original__compute_local_volatility_for_race)
+def _compute_local_volatility_for_race(*args, **kwargs):
+    return _arvexq_box_129__compute_local_volatility_for_race(_arvexq_original__compute_local_volatility_for_race, *args, **kwargs)
 
-@app.get("/api/v1/volatility-pack")
-def volatility_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...)):
+
+def _arvexq_original_volatility_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...)):
     """All 1R-12R upset labels from local DB only. Designed for sub-second venue paint."""
     key=f"{date}|{circuit}|{track}"
     now=time.time()
@@ -5016,9 +6024,15 @@ def volatility_pack(date: str = Query(...), circuit: str = Query(...), track: st
             _volatility_pack_cache.pop(oldest,None)
     return {"date":date,"circuit":circuit,"track":track,"races":items,"cached":False}
 
+_arvexq_original_volatility_pack.__name__ = 'volatility_pack'
+_arvexq_original_volatility_pack.__qualname__ = 'volatility_pack'
+@app.get("/api/v1/volatility-pack")
+@_arvexq_route_wraps(_arvexq_original_volatility_pack)
+def volatility_pack(*args, **kwargs):
+    return _arvexq_box_170_volatility_pack(_arvexq_original_volatility_pack, *args, **kwargs)
 
-@app.get("/api/v1/races")
-def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0), bundle: int = Query(0)):
+
+def _arvexq_original_races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0), bundle: int = Query(0)):
     circuit=_clean(circuit)
     now=time.time();ck=f"{date}|{circuit or 'all'}"
     with _race_list_cache_lock:
@@ -5062,10 +6076,16 @@ def races(date: str = Query(...), circuit: str = Query(""), force: int = Query(0
             oldest=min(_race_list_cache.items(),key=lambda kv:kv[1][0])[0];_race_list_cache.pop(oldest,None)
     return {"races":rows,"prepared":_local_starter_bundle(rows)} if bundle else rows
 
+_arvexq_original_races.__name__ = 'races'
+_arvexq_original_races.__qualname__ = 'races'
+@app.get("/api/v1/races")
+@_arvexq_route_wraps(_arvexq_original_races)
+def races(*args, **kwargs):
+    return _arvexq_box_163_races(_arvexq_original_races, *args, **kwargs)
 
 
-@app.get("/api/v1/environment-pack")
-def environment_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...)):
+
+def _arvexq_original_environment_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...)):
     rows=nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False)
     rows=[r for r in rows if str(r.get("track") or "")==str(track)]
     out=[{
@@ -5080,9 +6100,15 @@ def environment_pack(date: str = Query(...), circuit: str = Query(...), track: s
         _schedule_track_environment(date,circuit,track,False)
     return {"date":date,"circuit":circuit,"track":track,"races":out,"count":len(out),"source":"local-only"}
 
+_arvexq_original_environment_pack.__name__ = 'environment_pack'
+_arvexq_original_environment_pack.__qualname__ = 'environment_pack'
+@app.get("/api/v1/environment-pack")
+@_arvexq_route_wraps(_arvexq_original_environment_pack)
+def environment_pack(*args, **kwargs):
+    return _arvexq_box_169_environment_pack(_arvexq_original_environment_pack, *args, **kwargs)
 
-@app.get("/api/v1/track-pack")
-def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...), fill: int = Query(1)):
+
+def _arvexq_original_track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Query(...), fill: int = Query(1)):
     """Return venue snapshots from local DB only; fill local-only gaps for instant taps."""
     out=[]
     seen=set()
@@ -5161,6 +6187,13 @@ def track_pack(date: str = Query(...), circuit: str = Query(...), track: str = Q
     out.sort(key=lambda d:int(d.get("raceNumber") or 0))
     return {"track":track,"date":date,"circuit":circuit,"races":out,"count":len(out),"source":"local-only","filled":bool(fill)}
 
+_arvexq_original_track_pack.__name__ = 'track_pack'
+_arvexq_original_track_pack.__qualname__ = 'track_pack'
+@app.get("/api/v1/track-pack")
+@_arvexq_route_wraps(_arvexq_original_track_pack)
+def track_pack(*args, **kwargs):
+    return _arvexq_box_163_track_pack(_arvexq_original_track_pack, *args, **kwargs)
+
 
 
 
@@ -5223,7 +6256,7 @@ class DayBundleStore:
 
 DAY_BUNDLES=DayBundleStore(DAY_BUNDLE_DB_PATH)
 
-def _bootstrap_rows_local(date:str)->list[dict]:
+def _arvexq_original__bootstrap_rows_local(date:str)->list[dict]:
     raw=races(date,"",0,0)
     rows=raw.get("races",[]) if isinstance(raw,dict) else list(raw or [])
     out=[];seen=set()
@@ -5234,7 +6267,13 @@ def _bootstrap_rows_local(date:str)->list[dict]:
     out.sort(key=lambda r:(str(r.get("circuit") or ""),str(r.get("track") or ""),int(r.get("raceNumber") or 0)))
     return out
 
-def _bootstrap_sources_running(date:str)->bool:
+_arvexq_original__bootstrap_rows_local.__name__ = '_bootstrap_rows_local'
+_arvexq_original__bootstrap_rows_local.__qualname__ = '_bootstrap_rows_local'
+@_arvexq_route_wraps(_arvexq_original__bootstrap_rows_local)
+def _bootstrap_rows_local(*args, **kwargs):
+    return _arvexq_box_141__bootstrap_rows_local(_arvexq_original__bootstrap_rows_local, *args, **kwargs)
+
+def _arvexq_original__bootstrap_sources_running(date:str)->bool:
     running=False
     try:
         with _live_refresh_lock:
@@ -5245,23 +6284,47 @@ def _bootstrap_sources_running(date:str)->bool:
     except Exception:pass
     return bool(running)
 
-def _bootstrap_display_ready(d:dict|None)->bool:
+_arvexq_original__bootstrap_sources_running.__name__ = '_bootstrap_sources_running'
+_arvexq_original__bootstrap_sources_running.__qualname__ = '_bootstrap_sources_running'
+@_arvexq_route_wraps(_arvexq_original__bootstrap_sources_running)
+def _bootstrap_sources_running(*args, **kwargs):
+    return _arvexq_box_141__bootstrap_sources_running(_arvexq_original__bootstrap_sources_running, *args, **kwargs)
+
+def _arvexq_original__bootstrap_display_ready(d:dict|None)->bool:
     """Enough data to open/render the race immediately."""
     if not isinstance(d,dict):return False
     return bool((d.get("horses") or []) or d.get("result"))
 
-def _bootstrap_analysis_ready(d:dict|None)->bool:
+_arvexq_original__bootstrap_display_ready.__name__ = '_bootstrap_display_ready'
+_arvexq_original__bootstrap_display_ready.__qualname__ = '_bootstrap_display_ready'
+@_arvexq_route_wraps(_arvexq_original__bootstrap_display_ready)
+def _bootstrap_display_ready(*args, **kwargs):
+    return _arvexq_box_141__bootstrap_display_ready(_arvexq_original__bootstrap_display_ready, *args, **kwargs)
+
+def _arvexq_original__bootstrap_analysis_ready(d:dict|None)->bool:
     """Diagnosis readiness is tracked separately and must never block site display."""
     if not _bootstrap_display_ready(d):return False
     if _snapshot_final(d):return True
     pm=d.get("preparedMeta") or {}
     return bool(pm.get("diagnosisReady") and pm.get("diagnosisVersion")==PREDICTION_ENGINE_VERSION)
 
+_arvexq_original__bootstrap_analysis_ready.__name__ = '_bootstrap_analysis_ready'
+_arvexq_original__bootstrap_analysis_ready.__qualname__ = '_bootstrap_analysis_ready'
+@_arvexq_route_wraps(_arvexq_original__bootstrap_analysis_ready)
+def _bootstrap_analysis_ready(*args, **kwargs):
+    return _arvexq_box_141__bootstrap_analysis_ready(_arvexq_original__bootstrap_analysis_ready, *args, **kwargs)
+
 # Compatibility for older internal callers: "ready" now means display-ready.
-def _bootstrap_detail_ready(d:dict|None)->bool:
+def _arvexq_original__bootstrap_detail_ready(d:dict|None)->bool:
     return _bootstrap_display_ready(d)
 
-def _bootstrap_detail_local(race_id:str,force_hydrate:bool=False)->dict|None:
+_arvexq_original__bootstrap_detail_ready.__name__ = '_bootstrap_detail_ready'
+_arvexq_original__bootstrap_detail_ready.__qualname__ = '_bootstrap_detail_ready'
+@_arvexq_route_wraps(_arvexq_original__bootstrap_detail_ready)
+def _bootstrap_detail_ready(*args, **kwargs):
+    return _arvexq_box_141__bootstrap_detail_ready(_arvexq_original__bootstrap_detail_ready, *args, **kwargs)
+
+def _arvexq_original__bootstrap_detail_local(race_id:str,force_hydrate:bool=False)->dict|None:
     """Fast local snapshot for day bundles. Heavy diagnosis work is background-only."""
     d=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
     if not d:
@@ -5276,7 +6339,13 @@ def _bootstrap_detail_local(race_id:str,force_hydrate:bool=False)->dict|None:
     if force_hydrate and os.getenv("ARVEXQ_COLLECT_ONLY","0")!="1" and not _bootstrap_analysis_ready(d):_schedule_fast_card_refresh(race_id,8)
     return _compact_display_snapshot(d)
 
-def _assemble_day_bundle(date:str,allow_network_fill:bool=False)->dict:
+_arvexq_original__bootstrap_detail_local.__name__ = '_bootstrap_detail_local'
+_arvexq_original__bootstrap_detail_local.__qualname__ = '_bootstrap_detail_local'
+@_arvexq_route_wraps(_arvexq_original__bootstrap_detail_local)
+def _bootstrap_detail_local(*args, **kwargs):
+    return _arvexq_box_141__bootstrap_detail_local(_arvexq_original__bootstrap_detail_local, *args, **kwargs)
+
+def _arvexq_original__assemble_day_bundle(date:str,allow_network_fill:bool=False)->dict:
     rows=_bootstrap_rows_local(date)
     details=[]
     if rows:
@@ -5312,7 +6381,13 @@ def _assemble_day_bundle(date:str,allow_network_fill:bool=False)->dict:
         "source":"nonblocking-day-bundle"
     }
 
-def _refresh_day_bundle(date:str,force_sources:bool=False,wait_for_complete:bool=False,timeout_sec:float=25.0)->dict:
+_arvexq_original__assemble_day_bundle.__name__ = '_assemble_day_bundle'
+_arvexq_original__assemble_day_bundle.__qualname__ = '_assemble_day_bundle'
+@_arvexq_route_wraps(_arvexq_original__assemble_day_bundle)
+def _assemble_day_bundle(*args, **kwargs):
+    return _arvexq_box_141__assemble_day_bundle(_arvexq_original__assemble_day_bundle, *args, **kwargs)
+
+def _arvexq_original__refresh_day_bundle(date:str,force_sources:bool=False,wait_for_complete:bool=False,timeout_sec:float=25.0)->dict:
     """Single-pass bundle refresh. Missing/outdated races are queued and never block the caller."""
     started=time.time()
     with _site_bootstrap_build_lock:
@@ -5341,7 +6416,13 @@ def _refresh_day_bundle(date:str,force_sources:bool=False,wait_for_complete:bool
             }
         return payload
 
-def _schedule_day_bundle_refresh(date:str,force_sources:bool=False)->None:
+_arvexq_original__refresh_day_bundle.__name__ = '_refresh_day_bundle'
+_arvexq_original__refresh_day_bundle.__qualname__ = '_refresh_day_bundle'
+@_arvexq_route_wraps(_arvexq_original__refresh_day_bundle)
+def _refresh_day_bundle(*args, **kwargs):
+    return _arvexq_box_141__refresh_day_bundle(_arvexq_original__refresh_day_bundle, *args, **kwargs)
+
+def _arvexq_original__schedule_day_bundle_refresh(date:str,force_sources:bool=False)->None:
     with _site_bootstrap_lock:
         st=_site_bootstrap_state.get(date) or {}
         if st.get("running"):return
@@ -5356,7 +6437,13 @@ def _schedule_day_bundle_refresh(date:str,force_sources:bool=False)->None:
                 _site_bootstrap_state[date]=st
     threading.Thread(target=worker,daemon=True,name="day-bundle-"+date).start()
 
-def _site_bootstrap_payload(date:str,force:bool=False,wait:bool=False)->dict:
+_arvexq_original__schedule_day_bundle_refresh.__name__ = '_schedule_day_bundle_refresh'
+_arvexq_original__schedule_day_bundle_refresh.__qualname__ = '_schedule_day_bundle_refresh'
+@_arvexq_route_wraps(_arvexq_original__schedule_day_bundle_refresh)
+def _schedule_day_bundle_refresh(*args, **kwargs):
+    return _arvexq_box_141__schedule_day_bundle_refresh(_arvexq_original__schedule_day_bundle_refresh, *args, **kwargs)
+
+def _arvexq_original__site_bootstrap_payload(date:str,force:bool=False,wait:bool=False)->dict:
     """
     Customer path is strictly non-blocking.
     Return the best local bundle immediately, then continue full preparation in background.
@@ -5405,7 +6492,13 @@ def _site_bootstrap_payload(date:str,force:bool=False,wait:bool=False)->dict:
     current["servedFrom"]="local-immediate"
     return current
 
-def _force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
+_arvexq_original__site_bootstrap_payload.__name__ = '_site_bootstrap_payload'
+_arvexq_original__site_bootstrap_payload.__qualname__ = '_site_bootstrap_payload'
+@_arvexq_route_wraps(_arvexq_original__site_bootstrap_payload)
+def _site_bootstrap_payload(*args, **kwargs):
+    return _arvexq_box_141__site_bootstrap_payload(_arvexq_original__site_bootstrap_payload, *args, **kwargs)
+
+def _arvexq_original__force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
     """GitHub collector path: all-card live fields first, diagnosis second.
 
     v304 refreshed each race as one long job (card -> odds -> result -> diagnosis).
@@ -5548,8 +6641,13 @@ def _force_day_live_snapshot(date:str, timeout_sec:float=23.0)->dict:
         _site_bootstrap_cache[date]=(time.time(),dict(out))
     return out
 
-@app.get("/api/v1/site-bootstrap")
-def site_bootstrap(date: str = Query(...), force: int = Query(0), wait: int = Query(0)):
+_arvexq_original__force_day_live_snapshot.__name__ = '_force_day_live_snapshot'
+_arvexq_original__force_day_live_snapshot.__qualname__ = '_force_day_live_snapshot'
+@_arvexq_route_wraps(_arvexq_original__force_day_live_snapshot)
+def _force_day_live_snapshot(*args, **kwargs):
+    return _arvexq_box_141__force_day_live_snapshot(_arvexq_original__force_day_live_snapshot, *args, **kwargs)
+
+def _arvexq_original_site_bootstrap(date: str = Query(...), force: int = Query(0), wait: int = Query(0)):
     """Fast customer bootstrap; force=1 is the GitHub full-day collector path."""
     if force:
         try:return _force_day_live_snapshot(date,23.0)
@@ -5557,31 +6655,55 @@ def site_bootstrap(date: str = Query(...), force: int = Query(0), wait: int = Qu
             print("force day snapshot failed",date,exc)
     return _site_bootstrap_payload(date,False,False)
 
-def _site_bootstrap_warm_loop():
+_arvexq_original_site_bootstrap.__name__ = 'site_bootstrap'
+_arvexq_original_site_bootstrap.__qualname__ = 'site_bootstrap'
+@app.get("/api/v1/site-bootstrap")
+@_arvexq_route_wraps(_arvexq_original_site_bootstrap)
+def site_bootstrap(*args, **kwargs):
+    return _arvexq_box_141_site_bootstrap(_arvexq_original_site_bootstrap, *args, **kwargs)
+
+def _arvexq_original__site_bootstrap_warm_loop():
     time.sleep(float(os.getenv("BOOTSTRAP_START_DELAY_SEC","2.5")))
     while True:
         try:_schedule_day_bundle_refresh(_today_iso(),False)
         except Exception as exc:print("bundle warmer failed",exc)
         time.sleep(max(20,int(os.getenv("BOOTSTRAP_REFRESH_SEC","30"))))
 
-@app.on_event("startup")
-def _start_site_bootstrap_warmer():
+_arvexq_original__site_bootstrap_warm_loop.__name__ = '_site_bootstrap_warm_loop'
+_arvexq_original__site_bootstrap_warm_loop.__qualname__ = '_site_bootstrap_warm_loop'
+@_arvexq_route_wraps(_arvexq_original__site_bootstrap_warm_loop)
+def _site_bootstrap_warm_loop(*args, **kwargs):
+    return _arvexq_box_141__site_bootstrap_warm_loop(_arvexq_original__site_bootstrap_warm_loop, *args, **kwargs)
+
+def _arvexq_original__start_site_bootstrap_warmer():
     enabled=str(os.getenv("ARVEXQ_BOOTSTRAP_WARM","1")).lower() in {"1","true","yes","on"}
     if enabled:
         threading.Thread(target=_site_bootstrap_warm_loop,daemon=True,name="arvexq-bootstrap").start()
 
+_arvexq_original__start_site_bootstrap_warmer.__name__ = '_start_site_bootstrap_warmer'
+_arvexq_original__start_site_bootstrap_warmer.__qualname__ = '_start_site_bootstrap_warmer'
+@app.on_event("startup")
+@_arvexq_route_wraps(_arvexq_original__start_site_bootstrap_warmer)
+def _start_site_bootstrap_warmer(*args, **kwargs):
+    return _arvexq_box_141__start_site_bootstrap_warmer(_arvexq_original__start_site_bootstrap_warmer, *args, **kwargs)
 
-@app.get("/api/v1/site-bootstrap-status")
-def site_bootstrap_status(date: str = Query(...)):
+
+def _arvexq_original_site_bootstrap_status(date: str = Query(...)):
     with _site_bootstrap_lock:state=dict(_site_bootstrap_state.get(date) or {})
     stored=DAY_BUNDLES.get(date,complete_only=True)
     state["persistedComplete"]=bool(stored)
     state["persistedUpdatedAt"]=int((stored or {}).get("updatedAtEpoch") or 0)
     return state
 
+_arvexq_original_site_bootstrap_status.__name__ = 'site_bootstrap_status'
+_arvexq_original_site_bootstrap_status.__qualname__ = 'site_bootstrap_status'
+@app.get("/api/v1/site-bootstrap-status")
+@_arvexq_route_wraps(_arvexq_original_site_bootstrap_status)
+def site_bootstrap_status(*args, **kwargs):
+    return _arvexq_box_162_site_bootstrap_status(_arvexq_original_site_bootstrap_status, *args, **kwargs)
 
-@app.get("/api/v1/past-pack/{race_id}")
-def past_pack(race_id:str):
+
+def _arvexq_original_past_pack(race_id:str):
     """Return locally available recent-race snapshots only; zero public web calls."""
     current=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
     if not current:return {"raceId":race_id,"races":[]}
@@ -5601,17 +6723,29 @@ def past_pack(race_id:str):
         if d and (d.get("horses") or d.get("result")):out.append(_compact_display_snapshot(d))
     return {"raceId":race_id,"races":out,"count":len(out),"source":"local-only"}
 
+_arvexq_original_past_pack.__name__ = 'past_pack'
+_arvexq_original_past_pack.__qualname__ = 'past_pack'
+@app.get("/api/v1/past-pack/{race_id}")
+@_arvexq_route_wraps(_arvexq_original_past_pack)
+def past_pack(*args, **kwargs):
+    return _arvexq_box_166_past_pack(_arvexq_original_past_pack, *args, **kwargs)
 
 
-@app.post("/api/v1/prepare-race/{race_id}")
-def prepare_race(race_id:str):
+
+def _arvexq_original_prepare_race(race_id:str):
     """Queue the selected race first; customer HTTP request returns immediately."""
     _schedule_fast_card_refresh(race_id,0)
     return {"status":"queued","raceId":race_id,"priority":0}
 
+_arvexq_original_prepare_race.__name__ = 'prepare_race'
+_arvexq_original_prepare_race.__qualname__ = 'prepare_race'
+@app.post("/api/v1/prepare-race/{race_id}")
+@_arvexq_route_wraps(_arvexq_original_prepare_race)
+def prepare_race(*args, **kwargs):
+    return _arvexq_box_159_prepare_race(_arvexq_original_prepare_race, *args, **kwargs)
 
-@app.post("/api/v1/prewarm-track")
-def prewarm_track(date: str = Query(...), circuit: str = Query(...), track: str = Query(...), race_no: int = Query(1)):
+
+def _arvexq_original_prewarm_track(date: str = Query(...), circuit: str = Query(...), track: str = Query(...), race_no: int = Query(1)):
     rows=[]
     try:rows=(nar_race_summaries(date) if circuit=="地方" else central_race_summaries(date,allow_network=False))
     except Exception:rows=[]
@@ -5632,9 +6766,15 @@ def prewarm_track(date: str = Query(...), circuit: str = Query(...), track: str 
             _schedule_fast_card_refresh(rid,priority);queued+=1
     return {"status":"started","count":len(all_targets),"queued":queued,"mode":"nearest-3-plus-background"}
 
+_arvexq_original_prewarm_track.__name__ = 'prewarm_track'
+_arvexq_original_prewarm_track.__qualname__ = 'prewarm_track'
+@app.post("/api/v1/prewarm-track")
+@_arvexq_route_wraps(_arvexq_original_prewarm_track)
+def prewarm_track(*args, **kwargs):
+    return _arvexq_box_151_prewarm_track(_arvexq_original_prewarm_track, *args, **kwargs)
 
-@app.get("/api/v1/local-refresh-status")
-def local_refresh_status(date: str = Query(...)):
+
+def _arvexq_original_local_refresh_status(date: str = Query(...)):
     key=f"live:{date}"
     with _live_refresh_lock:
         running=key in _live_refresh_running
@@ -5645,15 +6785,27 @@ def local_refresh_status(date: str = Query(...)):
         count=0
     return {"running":running,"last":last,"count":count}
 
-@app.get("/api/v1/central-refresh-status")
-def central_refresh_status(date: str = Query(...)):
+_arvexq_original_local_refresh_status.__name__ = 'local_refresh_status'
+_arvexq_original_local_refresh_status.__qualname__ = 'local_refresh_status'
+@app.get("/api/v1/local-refresh-status")
+@_arvexq_route_wraps(_arvexq_original_local_refresh_status)
+def local_refresh_status(*args, **kwargs):
+    return _arvexq_box_162_local_refresh_status(_arvexq_original_local_refresh_status, *args, **kwargs)
+
+def _arvexq_original_central_refresh_status(date: str = Query(...)):
     st=_central_refresh_status(date)
     try: st["count"]=len(central_race_summaries(date,allow_network=False))
     except Exception: st["count"]=0
     return st
 
-@app.get("/api/v1/race/{race_id}")
-def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), prepared: int = Query(1)):
+_arvexq_original_central_refresh_status.__name__ = 'central_refresh_status'
+_arvexq_original_central_refresh_status.__qualname__ = 'central_refresh_status'
+@app.get("/api/v1/central-refresh-status")
+@_arvexq_route_wraps(_arvexq_original_central_refresh_status)
+def central_refresh_status(*args, **kwargs):
+    return _arvexq_box_162_central_refresh_status(_arvexq_original_central_refresh_status, *args, **kwargs)
+
+def _arvexq_original_race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), prepared: int = Query(1)):
     cached=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
     if cached:
         if race_id.startswith("nar-") and str(cached.get("date") or "")==_today_iso():
@@ -5670,10 +6822,16 @@ def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), 
     _schedule_fast_card_refresh(race_id,0)
     return JSONResponse(status_code=202,content={"status":"preparing","raceId":race_id})
 
+_arvexq_original_race_detail.__name__ = 'race_detail'
+_arvexq_original_race_detail.__qualname__ = 'race_detail'
+@app.get("/api/v1/race/{race_id}")
+@_arvexq_route_wraps(_arvexq_original_race_detail)
+def race_detail(*args, **kwargs):
+    return _arvexq_box_164_race_detail(_arvexq_original_race_detail, *args, **kwargs)
 
 
-@app.post("/api/v1/race/{race_id}/diagnosis-refresh")
-def diagnosis_refresh(race_id: str):
+
+def _arvexq_original_diagnosis_refresh(race_id: str):
     """Local-only diagnosis refresh. External history is prepared by the queue."""
     cached=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
     if cached:
@@ -5695,9 +6853,15 @@ def diagnosis_refresh(race_id: str):
         "cached":False,
     }
 
+_arvexq_original_diagnosis_refresh.__name__ = 'diagnosis_refresh'
+_arvexq_original_diagnosis_refresh.__qualname__ = 'diagnosis_refresh'
+@app.post("/api/v1/race/{race_id}/diagnosis-refresh")
+@_arvexq_route_wraps(_arvexq_original_diagnosis_refresh)
+def diagnosis_refresh(*args, **kwargs):
+    return _arvexq_box_170_diagnosis_refresh(_arvexq_original_diagnosis_refresh, *args, **kwargs)
 
-@app.get("/api/v1/race/{race_id}/version")
-def snapshot_version(race_id: str):
+
+def _arvexq_original_snapshot_version(race_id: str):
     conn=sqlite3.connect(PREPARED_STORE.path,timeout=2)
     try:
         row=conn.execute("SELECT json_extract(payload,'$.preparedMeta.revision'),updated_at FROM prepared_races WHERE race_id=?",(race_id,)).fetchone()
@@ -5705,9 +6869,15 @@ def snapshot_version(race_id: str):
         return {"revision":row[0] or "", "updatedAt":row[1]}
     finally:conn.close()
 
+_arvexq_original_snapshot_version.__name__ = 'snapshot_version'
+_arvexq_original_snapshot_version.__qualname__ = 'snapshot_version'
+@app.get("/api/v1/race/{race_id}/version")
+@_arvexq_route_wraps(_arvexq_original_snapshot_version)
+def snapshot_version(*args, **kwargs):
+    return _arvexq_box_171_snapshot_version(_arvexq_original_snapshot_version, *args, **kwargs)
 
-@app.get("/api/v1/race/{race_id}/horse/{horse_no}")
-def horse_snapshot(race_id: str, horse_no: int):
+
+def _arvexq_original_horse_snapshot(race_id: str, horse_no: int):
     conn=sqlite3.connect(PREPARED_STORE.path,timeout=2)
     try:
         row=conn.execute("SELECT payload FROM horse_snapshots WHERE race_id=? AND horse_no=?",(race_id,horse_no)).fetchone()
@@ -5715,18 +6885,30 @@ def horse_snapshot(race_id: str, horse_no: int):
         return json.loads(row[0])
     finally:conn.close()
 
+_arvexq_original_horse_snapshot.__name__ = 'horse_snapshot'
+_arvexq_original_horse_snapshot.__qualname__ = 'horse_snapshot'
+@app.get("/api/v1/race/{race_id}/horse/{horse_no}")
+@_arvexq_route_wraps(_arvexq_original_horse_snapshot)
+def horse_snapshot(*args, **kwargs):
+    return _arvexq_box_165_horse_snapshot(_arvexq_original_horse_snapshot, *args, **kwargs)
 
-@app.get("/api/v1/prewarm-status")
-def prewarm_status(date: str = Query(""), circuit: str = Query("")):
+
+def _arvexq_original_prewarm_status(date: str = Query(""), circuit: str = Query("")):
     key=f"{date}|{_clean(circuit) or 'all'}" if date else ""
     with _prewarm_lock:
         state=dict(_prewarm_state.get(key) or {}) if key else {k:dict(v) for k,v in _prewarm_state.items()}
     db=PREPARED_STORE.status(date,_clean(circuit))
     return {"build": "v107","state":state,"prepared":db}
 
+_arvexq_original_prewarm_status.__name__ = 'prewarm_status'
+_arvexq_original_prewarm_status.__qualname__ = 'prewarm_status'
+@app.get("/api/v1/prewarm-status")
+@_arvexq_route_wraps(_arvexq_original_prewarm_status)
+def prewarm_status(*args, **kwargs):
+    return _arvexq_box_162_prewarm_status(_arvexq_original_prewarm_status, *args, **kwargs)
 
-@app.get("/api/v1/race/{race_id}/collect")
-def collect_race_info(
+
+def _arvexq_original_collect_race_info(
     race_id: str,
     force: int = Query(1),
     horse_no: int | None = Query(None, ge=1, le=99),
@@ -5803,10 +6985,16 @@ def collect_race_info(
         "enrichmentSearch":enrich,
     }
 
+_arvexq_original_collect_race_info.__name__ = 'collect_race_info'
+_arvexq_original_collect_race_info.__qualname__ = 'collect_race_info'
+@app.get("/api/v1/race/{race_id}/collect")
+@_arvexq_route_wraps(_arvexq_original_collect_race_info)
+def collect_race_info(*args, **kwargs):
+    return _arvexq_box_167_collect_race_info(_arvexq_original_collect_race_info, *args, **kwargs)
 
 
-@app.get("/api/v1/payouts/{race_id}")
-def payout_refresh(race_id:str):
+
+def _arvexq_original_payout_refresh(race_id:str):
     """Fetch only payouts; do not rebuild history/AI."""
     saved=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
     if not saved:raise HTTPException(status_code=404,detail="race not found")
@@ -5861,7 +7049,14 @@ def payout_refresh(race_id:str):
                 print("payout snapshot patch failed",race_id,exc)
     return {"raceId":race_id,"payouts":payouts,"source":source,"cached":False,"error":error[:240]}
 
-def _merge_live_market_rows(race_id:str, fresh_rows:list[dict], saved:dict|None=None)->list[dict]:
+_arvexq_original_payout_refresh.__name__ = 'payout_refresh'
+_arvexq_original_payout_refresh.__qualname__ = 'payout_refresh'
+@app.get("/api/v1/payouts/{race_id}")
+@_arvexq_route_wraps(_arvexq_original_payout_refresh)
+def payout_refresh(*args, **kwargs):
+    return _arvexq_box_168_payout_refresh(_arvexq_original_payout_refresh, *args, **kwargs)
+
+def _arvexq_original__merge_live_market_rows(race_id:str, fresh_rows:list[dict], saved:dict|None=None)->list[dict]:
     """Preserve the best known live fields per horse when a source returns a partial table.
 
     A live odds page can briefly omit one or more runners while updating.  Never let
@@ -5903,8 +7098,13 @@ def _merge_live_market_rows(race_id:str, fresh_rows:list[dict], saved:dict|None=
             if v not in (None,""):z[k]=v
     return [by_no[k] for k in sorted(by_no)]
 
-@app.get("/api/v1/odds-refresh/{race_id}")
-def odds_refresh(race_id:str, force: int = Query(0)):
+_arvexq_original__merge_live_market_rows.__name__ = '_merge_live_market_rows'
+_arvexq_original__merge_live_market_rows.__qualname__ = '_merge_live_market_rows'
+@_arvexq_route_wraps(_arvexq_original__merge_live_market_rows)
+def _merge_live_market_rows(*args, **kwargs):
+    return _arvexq_box_066__merge_live_market_rows(_arvexq_original__merge_live_market_rows, *args, **kwargs)
+
+def _arvexq_original_odds_refresh(race_id:str, force: int = Query(0)):
     saved=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
     saved_has_odds=bool(saved and any((h.get("winOdds") not in (None,"") and float(h.get("winOdds") or 0)>0) for h in (saved.get("horses") or [])))
     saved_horses=(saved.get("horses") or []) if saved else []
@@ -6073,12 +7273,19 @@ def odds_refresh(race_id:str, force: int = Query(0)):
             "fieldCount":len(live),"oddsCount":odds_count,
             "oddsComplete":bool(live) and odds_count==len(live)}
 
+_arvexq_original_odds_refresh.__name__ = 'odds_refresh'
+_arvexq_original_odds_refresh.__qualname__ = 'odds_refresh'
+@app.get("/api/v1/odds-refresh/{race_id}")
+@_arvexq_route_wraps(_arvexq_original_odds_refresh)
+def odds_refresh(*args, **kwargs):
+    return _arvexq_box_167_odds_refresh(_arvexq_original_odds_refresh, *args, **kwargs)
+
 
 _auto_odds_lock=threading.Lock()
 _auto_odds_last:dict[str,float]={}
 _auto_odds_state={"running":False,"lastStart":0,"lastFinish":0,"checked":0,"updated":0,"error":""}
 
-def _auto_odds_targets()->list[dict]:
+def _arvexq_original__auto_odds_targets()->list[dict]:
     date=_today_iso();rows=[]
     try:rows.extend(nar_race_summaries(date))
     except Exception:pass
@@ -6097,7 +7304,13 @@ def _auto_odds_targets()->list[dict]:
     out.sort(key=lambda r:_race_minutes_server(r))
     return out
 
-def _auto_odds_cycle():
+_arvexq_original__auto_odds_targets.__name__ = '_auto_odds_targets'
+_arvexq_original__auto_odds_targets.__qualname__ = '_auto_odds_targets'
+@_arvexq_route_wraps(_arvexq_original__auto_odds_targets)
+def _auto_odds_targets(*args, **kwargs):
+    return _arvexq_box_155__auto_odds_targets(_arvexq_original__auto_odds_targets, *args, **kwargs)
+
+def _arvexq_original__auto_odds_cycle():
     global _auto_odds_state
     with _auto_odds_lock:
         if _auto_odds_state.get("running"):return
@@ -6150,26 +7363,49 @@ def _auto_odds_cycle():
                 "updated":updated,"error":" | ".join(errors[-5:])
             })
 
-def _auto_odds_loop():
+_arvexq_original__auto_odds_cycle.__name__ = '_auto_odds_cycle'
+_arvexq_original__auto_odds_cycle.__qualname__ = '_auto_odds_cycle'
+@_arvexq_route_wraps(_arvexq_original__auto_odds_cycle)
+def _auto_odds_cycle(*args, **kwargs):
+    return _arvexq_box_155__auto_odds_cycle(_arvexq_original__auto_odds_cycle, *args, **kwargs)
+
+def _arvexq_original__auto_odds_loop():
     time.sleep(float(os.getenv("AUTO_ODDS_START_DELAY_SEC","0.7")))
     while True:
         try:_auto_odds_cycle()
         except Exception as exc:print("auto odds cycle failed",exc)
         time.sleep(max(8,int(os.getenv("AUTO_ODDS_LOOP_SEC","10"))))
 
-@app.on_event("startup")
-def _start_auto_odds_collector():
+_arvexq_original__auto_odds_loop.__name__ = '_auto_odds_loop'
+_arvexq_original__auto_odds_loop.__qualname__ = '_auto_odds_loop'
+@_arvexq_route_wraps(_arvexq_original__auto_odds_loop)
+def _auto_odds_loop(*args, **kwargs):
+    return _arvexq_box_155__auto_odds_loop(_arvexq_original__auto_odds_loop, *args, **kwargs)
+
+def _arvexq_original__start_auto_odds_collector():
     enabled=str(os.getenv("ARVEXQ_AUTO_ODDS","1")).lower() in {"1","true","yes","on"}
     if enabled:
         threading.Thread(target=_auto_odds_loop,daemon=True,name="arvexq-auto-odds").start()
 
-@app.get("/api/v1/odds-auto-status")
-def odds_auto_status():
+_arvexq_original__start_auto_odds_collector.__name__ = '_start_auto_odds_collector'
+_arvexq_original__start_auto_odds_collector.__qualname__ = '_start_auto_odds_collector'
+@app.on_event("startup")
+@_arvexq_route_wraps(_arvexq_original__start_auto_odds_collector)
+def _start_auto_odds_collector(*args, **kwargs):
+    return _arvexq_box_155__start_auto_odds_collector(_arvexq_original__start_auto_odds_collector, *args, **kwargs)
+
+def _arvexq_original_odds_auto_status():
     with _auto_odds_lock:return dict(_auto_odds_state)
 
+_arvexq_original_odds_auto_status.__name__ = 'odds_auto_status'
+_arvexq_original_odds_auto_status.__qualname__ = 'odds_auto_status'
+@app.get("/api/v1/odds-auto-status")
+@_arvexq_route_wraps(_arvexq_original_odds_auto_status)
+def odds_auto_status(*args, **kwargs):
+    return _arvexq_box_162_odds_auto_status(_arvexq_original_odds_auto_status, *args, **kwargs)
 
-@app.post("/api/v1/racedb/analysis/{race_id}")
-async def racedb_save_analysis(race_id: str, request: Request):
+
+async def _arvexq_original_racedb_save_analysis(race_id: str, request: Request):
     try:
         payload=await request.json()
         if not isinstance(payload,dict):raise ValueError("invalid analysis payload")
@@ -6185,12 +7421,24 @@ async def racedb_save_analysis(race_id: str, request: Request):
     except Exception as exc:
         raise HTTPException(status_code=400,detail=str(exc))
 
-@app.get("/api/v1/racedb/analysis/{race_id}")
-def racedb_get_analysis(race_id: str):
+_arvexq_original_racedb_save_analysis.__name__ = 'racedb_save_analysis'
+_arvexq_original_racedb_save_analysis.__qualname__ = 'racedb_save_analysis'
+@app.post("/api/v1/racedb/analysis/{race_id}")
+@_arvexq_route_wraps(_arvexq_original_racedb_save_analysis)
+async def racedb_save_analysis(*args, **kwargs):
+    return await _arvexq_box_110_racedb_save_analysis(_arvexq_original_racedb_save_analysis, *args, **kwargs)
+
+def _arvexq_original_racedb_get_analysis(race_id: str):
     return {"raceId":race_id,"analysis":RACEDB.get_analysis(race_id)}
 
-@app.get("/api/v1/model-audit")
-def model_audit(date: str = Query(""), days: int = Query(30, ge=1, le=180)):
+_arvexq_original_racedb_get_analysis.__name__ = 'racedb_get_analysis'
+_arvexq_original_racedb_get_analysis.__qualname__ = 'racedb_get_analysis'
+@app.get("/api/v1/racedb/analysis/{race_id}")
+@_arvexq_route_wraps(_arvexq_original_racedb_get_analysis)
+def racedb_get_analysis(*args, **kwargs):
+    return _arvexq_box_170_racedb_get_analysis(_arvexq_original_racedb_get_analysis, *args, **kwargs)
+
+def _arvexq_original_model_audit(date: str = Query(""), days: int = Query(30, ge=1, le=180)):
     end=date or _today_iso()
     try:end_dt=datetime.strptime(end,"%Y-%m-%d").date()
     except Exception:raise HTTPException(status_code=400,detail="date must be YYYY-MM-DD")
@@ -6234,30 +7482,55 @@ def model_audit(date: str = Query(""), days: int = Query(30, ge=1, le=180)):
             "calibration":{"horseSamples":len(cal),"ece":round(ece,6) if cal else None,"bins":bins},"segments":segout,
             "missReasons":dict(sorted(reasons.items(),key=lambda kv:(-kv[1],kv[0]))),"audits":rows[-100:]}
 
+_arvexq_original_model_audit.__name__ = 'model_audit'
+_arvexq_original_model_audit.__qualname__ = 'model_audit'
+@app.get("/api/v1/model-audit")
+@_arvexq_route_wraps(_arvexq_original_model_audit)
+def model_audit(*args, **kwargs):
+    return _arvexq_box_197_model_audit(_arvexq_original_model_audit, *args, **kwargs)
 
-@app.get("/api/v1/model-learning")
-def model_learning(date: str = Query(""), circuit: str = Query("地方")):
+
+def _arvexq_original_model_learning(date: str = Query(""), circuit: str = Query("地方")):
     target=date or _today_iso();c=_clean(circuit) or "地方"
     if c not in {"中央","地方"}:raise HTTPException(status_code=400,detail="circuit must be 中央 or 地方")
     try:datetime.strptime(target,"%Y-%m-%d")
     except Exception:raise HTTPException(status_code=400,detail="date must be YYYY-MM-DD")
     return _winner_learning_profile({"date":target,"circuit":c})
 
+_arvexq_original_model_learning.__name__ = 'model_learning'
+_arvexq_original_model_learning.__qualname__ = 'model_learning'
+@app.get("/api/v1/model-learning")
+@_arvexq_route_wraps(_arvexq_original_model_learning)
+def model_learning(*args, **kwargs):
+    return _arvexq_box_197_model_learning(_arvexq_original_model_learning, *args, **kwargs)
 
-@app.get("/api/v1/racedb-status")
-def racedb_status(date: str = "", circuit: str = ""):
+
+def _arvexq_original_racedb_status(date: str = "", circuit: str = ""):
     return {"build":"v302-fullcard-livefix","status":RACEDB.status(date,_clean(circuit)),"dataCoreVersion":ARVEXQ_DATA_CORE_VERSION,"continuousUpdater":True,"trackSpeed":True,"preRaceAudit":True,"safeWinnerLearning":True,"note":"Data Core + T-5分最終固定 + 日付ブロックTRAIN/TUNE/PROMOTION。SHADOWは選定・昇格に使わず監査専用。市場情報はwinner学習に不使用。"}
 
-@app.get("/api/v1/racedb-race/{race_id}")
-def racedb_race(race_id:str):
+_arvexq_original_racedb_status.__name__ = 'racedb_status'
+_arvexq_original_racedb_status.__qualname__ = 'racedb_status'
+@app.get("/api/v1/racedb-status")
+@_arvexq_route_wraps(_arvexq_original_racedb_status)
+def racedb_status(*args, **kwargs):
+    return _arvexq_box_171_racedb_status(_arvexq_original_racedb_status, *args, **kwargs)
+
+def _arvexq_original_racedb_race(race_id:str):
     detail,updated=RACEDB.get_race(race_id)
     if not detail:raise HTTPException(status_code=404,detail="RaceDB snapshot not found")
     return {"updatedAt":updated,"detail":detail,"oddsLatest":RACEDB.odds_latest(race_id)}
 
+_arvexq_original_racedb_race.__name__ = 'racedb_race'
+_arvexq_original_racedb_race.__qualname__ = 'racedb_race'
+@app.get("/api/v1/racedb-race/{race_id}")
+@_arvexq_route_wraps(_arvexq_original_racedb_race)
+def racedb_race(*args, **kwargs):
+    return _arvexq_box_164_racedb_race(_arvexq_original_racedb_race, *args, **kwargs)
+
 _racedb_daemon_started=False
 _racedb_daemon_lock=threading.Lock()
 
-def _racedb_live_cycle()->None:
+def _arvexq_original__racedb_live_cycle()->None:
     today=_today_iso();rows=[]
     _schedule_live_refresh(today,False)
     _schedule_central_refresh(today,False)
@@ -6282,7 +7555,13 @@ def _racedb_live_cycle()->None:
         try:odds_refresh(str(r.get("id") or ""))
         except Exception as exc:print("RaceDB automatic odds failed",r.get("id"),exc)
 
-def _start_racedb_daemon()->None:
+_arvexq_original__racedb_live_cycle.__name__ = '_racedb_live_cycle'
+_arvexq_original__racedb_live_cycle.__qualname__ = '_racedb_live_cycle'
+@_arvexq_route_wraps(_arvexq_original__racedb_live_cycle)
+def _racedb_live_cycle(*args, **kwargs):
+    return _arvexq_box_152__racedb_live_cycle(_arvexq_original__racedb_live_cycle, *args, **kwargs)
+
+def _arvexq_original__start_racedb_daemon()->None:
     global _racedb_daemon_started
     if str(os.getenv("ARVEXQ_COMMERCIAL_COLLECTOR","1")).lower() in {"1","true","yes","on"}:return
     if not bool(int(os.getenv("RACEDB_AUTO_UPDATE","1"))):return
@@ -6298,16 +7577,33 @@ def _start_racedb_daemon()->None:
             time.sleep(max(30,int(os.getenv("RACEDB_UPDATE_SEC","120"))))
     threading.Thread(target=worker,daemon=True,name="RaceDB-live-updater").start()
 
-@app.get("/api/v1/enrichment-status/{race_id}")
-def enrichment_status(race_id:str):
+_arvexq_original__start_racedb_daemon.__name__ = '_start_racedb_daemon'
+_arvexq_original__start_racedb_daemon.__qualname__ = '_start_racedb_daemon'
+@_arvexq_route_wraps(_arvexq_original__start_racedb_daemon)
+def _start_racedb_daemon(*args, **kwargs):
+    return _arvexq_box_152__start_racedb_daemon(_arvexq_original__start_racedb_daemon, *args, **kwargs)
+
+def _arvexq_original_enrichment_status(race_id:str):
     return _enrichment_status(race_id)
 
-@app.get("/api/v1/enrichment-schema")
-def enrichment_schema():
+_arvexq_original_enrichment_status.__name__ = 'enrichment_status'
+_arvexq_original_enrichment_status.__qualname__ = 'enrichment_status'
+@app.get("/api/v1/enrichment-status/{race_id}")
+@_arvexq_route_wraps(_arvexq_original_enrichment_status)
+def enrichment_status(*args, **kwargs):
+    return _arvexq_box_162_enrichment_status(_arvexq_original_enrichment_status, *args, **kwargs)
+
+def _arvexq_original_enrichment_schema():
     return {"priority":"official-first","builtIn":["JRA公式","NAR公式","netkeiba"],"extraFeeds":{"env":"EXTRA_RACE_FEEDS","format":"NAME=url;NAME2=url2"},"note":"公開ページ/APIのみ。ログイン・CAPTCHA・規約で自動取得不可のサイトは対象外"}
 
-@app.get("/build")
-def build_info():
+_arvexq_original_enrichment_schema.__name__ = 'enrichment_schema'
+_arvexq_original_enrichment_schema.__qualname__ = 'enrichment_schema'
+@app.get("/api/v1/enrichment-schema")
+@_arvexq_route_wraps(_arvexq_original_enrichment_schema)
+def enrichment_schema(*args, **kwargs):
+    return _arvexq_box_162_enrichment_schema(_arvexq_original_enrichment_schema, *args, **kwargs)
+
+def _arvexq_original_build_info():
     return {
         "build":"v324","appVersion":"14.24-v325-home-race-boxes",
         "predictionEngine":"arvexq-prediction-removed",
@@ -6319,11 +7615,15 @@ def build_info():
         "raceDataBank":True,"browserDetailCache":True,"gzip":True,"liveEnvironment":True,"environmentRefreshSec":45,
     }
 
+_arvexq_original_build_info.__name__ = 'build_info'
+_arvexq_original_build_info.__qualname__ = 'build_info'
+@app.get("/build")
+@_arvexq_route_wraps(_arvexq_original_build_info)
+def build_info(*args, **kwargs):
+    return _arvexq_box_200_build_info(_arvexq_original_build_info, *args, **kwargs)
 
-@app.get("/", response_class=HTMLResponse)
-@app.get("/venue", response_class=HTMLResponse)
-@app.get("/race", response_class=HTMLResponse)
-def home():
+
+def _arvexq_original_home():
     # Keep first paint light. Race list/detail data is loaded from Cloudflare/D1
     # by the browser; Render remains the fallback for live/manual refreshes.
     boot='<script>window.__ARVEXQ_BOOTSTRAP__=null;</script>'
@@ -6336,55 +7636,119 @@ def home():
         "Pragma":"no-cache","Expires":"0"
     })
 
+_arvexq_original_home.__name__ = 'home'
+_arvexq_original_home.__qualname__ = 'home'
+@app.get("/", response_class=HTMLResponse)
+@app.get("/venue", response_class=HTMLResponse)
+@app.get("/race", response_class=HTMLResponse)
+@_arvexq_route_wraps(_arvexq_original_home)
+def home(*args, **kwargs):
+    return _arvexq_box_176_home(_arvexq_original_home, *args, **kwargs)
 
 
 
 
-from arvexq.ui.icon_assets import load_icons as _load_arvexq_icons
+
+from arvexq.components.item_193.icon_assets import load_icons as _load_arvexq_icons
 ARVEXQ_ICONS = _load_arvexq_icons()
 
 
 
-@app.get("/arvexq-icon-v175-{size}.png")
-def arvexq_icon(size: int):
+def _arvexq_original_arvexq_icon(size: int):
     if str(size) not in ARVEXQ_ICONS:raise HTTPException(status_code=404,detail="icon not found")
     return Response(base64.b64decode(ARVEXQ_ICONS[str(size)]),media_type="image/png",headers={"Cache-Control":"public,max-age=86400"})
+
+_arvexq_original_arvexq_icon.__name__ = 'arvexq_icon'
+_arvexq_original_arvexq_icon.__qualname__ = 'arvexq_icon'
+@app.get("/arvexq-icon-v175-{size}.png")
+@_arvexq_route_wraps(_arvexq_original_arvexq_icon)
+def arvexq_icon(*args, **kwargs):
+    return _arvexq_box_193_arvexq_icon(_arvexq_original_arvexq_icon, *args, **kwargs)
 
 
 ARVEXQ_TOUCH_ICON_180 = read_binary_asset("arvexq-touch-icon-180.bin")
 
 CINEMATIC_HERO_WEBP = read_binary_asset("cinematic-hero-webp.webp")
 CINEMATIC_DETAIL_WEBP = read_binary_asset("cinematic-detail-webp.webp")
-@app.get("/arvexq-touch-v175.png")
-def arvexq_touch_icon():
+def _arvexq_original_arvexq_touch_icon():
     return Response(ARVEXQ_TOUCH_ICON_180,media_type="image/png",headers={"Cache-Control":"no-store,max-age=0"})
 
+_arvexq_original_arvexq_touch_icon.__name__ = 'arvexq_touch_icon'
+_arvexq_original_arvexq_touch_icon.__qualname__ = 'arvexq_touch_icon'
+@app.get("/arvexq-touch-v175.png")
+@_arvexq_route_wraps(_arvexq_original_arvexq_touch_icon)
+def arvexq_touch_icon(*args, **kwargs):
+    return _arvexq_box_193_arvexq_touch_icon(_arvexq_original_arvexq_touch_icon, *args, **kwargs)
 
-@app.get("/arvexq-racing-detail.webp")
-def cinematic_detail_photo():
+
+def _arvexq_original_cinematic_detail_photo():
     return Response(CINEMATIC_DETAIL_WEBP,media_type="image/webp",headers={"Cache-Control":"public,max-age=86400"})
 
-@app.get("/arvexq-racing-hero.webp")
-def cinematic_hero():
+_arvexq_original_cinematic_detail_photo.__name__ = 'cinematic_detail_photo'
+_arvexq_original_cinematic_detail_photo.__qualname__ = 'cinematic_detail_photo'
+@app.get("/arvexq-racing-detail.webp")
+@_arvexq_route_wraps(_arvexq_original_cinematic_detail_photo)
+def cinematic_detail_photo(*args, **kwargs):
+    return _arvexq_box_195_cinematic_detail_photo(_arvexq_original_cinematic_detail_photo, *args, **kwargs)
+
+def _arvexq_original_cinematic_hero():
     return Response(CINEMATIC_HERO_WEBP,media_type="image/webp",headers={"Cache-Control":"public,max-age=86400"})
 
+_arvexq_original_cinematic_hero.__name__ = 'cinematic_hero'
+_arvexq_original_cinematic_hero.__qualname__ = 'cinematic_hero'
+@app.get("/arvexq-racing-hero.webp")
+@_arvexq_route_wraps(_arvexq_original_cinematic_hero)
+def cinematic_hero(*args, **kwargs):
+    return _arvexq_box_195_cinematic_hero(_arvexq_original_cinematic_hero, *args, **kwargs)
 
-@app.get("/arvexq-logo.webp")
-def arvexq_logo():
+
+def _arvexq_original_arvexq_logo():
     return Response(ARVEXQ_LOGO_WEBP,media_type="image/webp",headers={"Cache-Control":"public,max-age=31536000,immutable"})
 
-@app.get("/hero-horse.webp")
-def hero_horse():
+_arvexq_original_arvexq_logo.__name__ = 'arvexq_logo'
+_arvexq_original_arvexq_logo.__qualname__ = 'arvexq_logo'
+@app.get("/arvexq-logo.webp")
+@_arvexq_route_wraps(_arvexq_original_arvexq_logo)
+def arvexq_logo(*args, **kwargs):
+    return _arvexq_box_195_arvexq_logo(_arvexq_original_arvexq_logo, *args, **kwargs)
+
+def _arvexq_original_hero_horse():
     return Response(HERO_HORSE_WEBP, media_type="image/webp", headers={"Cache-Control":"public, max-age=86400"})
 
-@app.get("/pace-preview.webp")
-def pace_preview():
+_arvexq_original_hero_horse.__name__ = 'hero_horse'
+_arvexq_original_hero_horse.__qualname__ = 'hero_horse'
+@app.get("/hero-horse.webp")
+@_arvexq_route_wraps(_arvexq_original_hero_horse)
+def hero_horse(*args, **kwargs):
+    return _arvexq_box_195_hero_horse(_arvexq_original_hero_horse, *args, **kwargs)
+
+def _arvexq_original_pace_preview():
     return Response(PACE_PREVIEW_WEBP, media_type="image/webp", headers={"Cache-Control":"public, max-age=86400"})
 
-@app.get("/version.json")
-def version_json():
+_arvexq_original_pace_preview.__name__ = 'pace_preview'
+_arvexq_original_pace_preview.__qualname__ = 'pace_preview'
+@app.get("/pace-preview.webp")
+@_arvexq_route_wraps(_arvexq_original_pace_preview)
+def pace_preview(*args, **kwargs):
+    return _arvexq_box_195_pace_preview(_arvexq_original_pace_preview, *args, **kwargs)
+
+def _arvexq_original_version_json():
     return Response('{"build":"v330","shell":"independent-production-boundaries","model":"arvexq-prediction-removed"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
 
+_arvexq_original_version_json.__name__ = 'version_json'
+_arvexq_original_version_json.__qualname__ = 'version_json'
+@app.get("/version.json")
+@_arvexq_route_wraps(_arvexq_original_version_json)
+def version_json(*args, **kwargs):
+    return _arvexq_box_200_version_json(_arvexq_original_version_json, *args, **kwargs)
+
+def _arvexq_original_styles(request: Request):
+    current=request.url.path=="/styles-arvexq-v324.css"
+    cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
+    return Response(CSS, media_type="text/css", headers={"Cache-Control":cache})
+
+_arvexq_original_styles.__name__ = 'styles'
+_arvexq_original_styles.__qualname__ = 'styles'
 @app.get("/styles-arvexq-v324.css")
 @app.get("/styles-arvexq-v321.css")
 @app.get("/styles-arvexq-v320.css")
@@ -6405,11 +7769,17 @@ def version_json():
 @app.get("/styles-arvexq-v91.css")
 @app.get("/styles-arvexq-v88.css")
 @app.get("/styles-v86.css")
-def styles(request: Request):
-    current=request.url.path=="/styles-arvexq-v324.css"
-    cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
-    return Response(CSS, media_type="text/css", headers={"Cache-Control":cache})
+@_arvexq_route_wraps(_arvexq_original_styles)
+def styles(*args, **kwargs):
+    return _arvexq_box_195_styles(_arvexq_original_styles, *args, **kwargs)
 
+def _arvexq_original_appjs(request: Request):
+    current=request.url.path in {"/app-v324.js","/arvexq-app-v324.js"}
+    cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
+    return Response(JS, media_type="application/javascript", headers={"Cache-Control":cache})
+
+_arvexq_original_appjs.__name__ = 'appjs'
+_arvexq_original_appjs.__qualname__ = 'appjs'
 @app.get("/app-v324.js")
 @app.get("/arvexq-app-v324.js")
 @app.get("/app-v321.js")
@@ -6450,27 +7820,38 @@ def styles(request: Request):
 @app.get("/app-v88.js")
 @app.get("/app-v87.js")
 @app.get("/app-v86-fix1.js")
-def appjs(request: Request):
-    current=request.url.path in {"/app-v324.js","/arvexq-app-v324.js"}
-    cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
-    return Response(JS, media_type="application/javascript", headers={"Cache-Control":cache})
+@_arvexq_route_wraps(_arvexq_original_appjs)
+def appjs(*args, **kwargs):
+    return _arvexq_box_198_appjs(_arvexq_original_appjs, *args, **kwargs)
 
+def _arvexq_original_manifest():
+    return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
+
+_arvexq_original_manifest.__name__ = 'manifest'
+_arvexq_original_manifest.__qualname__ = 'manifest'
 @app.get("/manifest-v86.webmanifest")
 @app.get("/manifest-arvexq-v175.webmanifest")
 @app.get("/manifest-arvexq-v173.webmanifest")
 @app.get("/manifest-arvexq-v130.webmanifest")
 @app.get("/manifest-arvexq-v88.webmanifest")
-def manifest():
-    return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
+@_arvexq_route_wraps(_arvexq_original_manifest)
+def manifest(*args, **kwargs):
+    return _arvexq_box_193_manifest(_arvexq_original_manifest, *args, **kwargs)
 
+def _arvexq_original_service_worker():
+    return Response(SW, media_type="application/javascript", headers={"Service-Worker-Allowed":"/", "Cache-Control":"no-store, max-age=0"})
+
+_arvexq_original_service_worker.__name__ = 'service_worker'
+_arvexq_original_service_worker.__qualname__ = 'service_worker'
 @app.get("/sw-v324-reset.js")
 @app.get("/sw-v321-reset.js")
 @app.get("/sw-v320-reset.js")
 @app.get("/sw-v319-reset.js")
 @app.get("/sw-v318-reset.js")
 @app.get("/sw.js")
-def service_worker():
-    return Response(SW, media_type="application/javascript", headers={"Service-Worker-Allowed":"/", "Cache-Control":"no-store, max-age=0"})
+@_arvexq_route_wraps(_arvexq_original_service_worker)
+def service_worker(*args, **kwargs):
+    return _arvexq_box_193_service_worker(_arvexq_original_service_worker, *args, **kwargs)
 
 
 # Start the v86 RaceDB updater after module initialization.

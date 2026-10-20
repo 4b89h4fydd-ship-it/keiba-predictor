@@ -3,7 +3,7 @@
 Never use outcomes dated on or after the target race date, nor merge
 incomparable JRA/NAR denominators.
 """
-from arvexq.ingest.circuit_transfer import race_circuit as _run_circuit
+from arvexq.components.item_056.circuit_transfer import race_circuit as _run_circuit
 
 def _history_rates(horse, race):
     cutoff = str(race.get("date") or "")

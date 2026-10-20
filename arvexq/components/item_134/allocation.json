@@ -1,0 +1,74 @@
+{
+  "id": 134,
+  "name": "レース選定結果保存",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::<module>",
+    "scripts/arvexq_merge_morning_output.py::<module>",
+    "scripts/arvexq_publish_morning_static.py::<module>",
+    "scripts/arvexq_merge_morning_output.py::_by_id",
+    "scripts/arvexq_merge_morning_output.py::merge_row",
+    "scripts/arvexq_merge_morning_output.py::merge",
+    "scripts/arvexq_merge_morning_output.py::main",
+    "scripts/arvexq_publish_morning_static.py::morning_manifest",
+    "scripts/arvexq_publish_morning_static.py::main",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.load",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.load.@anonymous:6:35",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.load.@anonymous:6:35.@anonymous:9:58",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.load.@anonymous:6:35.@anonymous:9:88",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.load.@anonymous:13:12",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.recover",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.recover.@anonymous:27:40",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.recover.@anonymous:28:25",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.recover.@anonymous:29:14"
+  ],
+  "owned_refs": [
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::<module>",
+    "scripts/arvexq_merge_morning_output.py::<module>",
+    "scripts/arvexq_publish_morning_static.py::<module>",
+    "scripts/arvexq_merge_morning_output.py::_by_id",
+    "scripts/arvexq_merge_morning_output.py::merge_row",
+    "scripts/arvexq_merge_morning_output.py::merge",
+    "scripts/arvexq_merge_morning_output.py::main",
+    "scripts/arvexq_publish_morning_static.py::morning_manifest",
+    "scripts/arvexq_publish_morning_static.py::main",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.load",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.load.@anonymous:6:35",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.load.@anonymous:6:35.@anonymous:9:58",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.load.@anonymous:6:35.@anonymous:9:88",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.load.@anonymous:13:12",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.recover",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.recover.@anonymous:27:40",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.recover.@anonymous:28:25",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js::@anonymous:2:1.recover.@anonymous:29:14"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    ".github/workflows/arvexq-prefetch.yml",
+    "arvexq/ui/static/app.js",
+    "arvexq/ui/static/index.html",
+    "tests/test_morning_ticket_publisher.py"
+  ],
+  "callee_files": [
+    "arvexq/ui/static/research/saved_snapshot.js"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/ui/static/morning/saved_ticket_receipt.js"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ui/static/morning/saved_ticket_receipt.js",
+    "scripts/arvexq_merge_morning_output.py",
+    "scripts/arvexq_publish_morning_static.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

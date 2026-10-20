@@ -1,0 +1,22 @@
+{
+  "id": 20,
+  "name": "JRA公式データ解析",
+  "circuits": [
+    "JRA"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/ingest/jra_official_table.py",
+    "arvexq/ingest/jra_official_runner_row.py",
+    "arvexq/ingest/jra_result.py"
+  ],
+  "shared_dependencies": [
+    "app.py:_jra_text"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

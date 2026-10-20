@@ -15,7 +15,7 @@ import urllib.request
 import urllib.error
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from arvexq.ingest.full_snapshot_codec import KEY, pack_raw, unpack_raw
+from arvexq.components.item_148.full_snapshot_codec import KEY, pack_raw, unpack_raw
 
 BASE = 'https://kraiz-api.4b89h4fydd.workers.dev'
 

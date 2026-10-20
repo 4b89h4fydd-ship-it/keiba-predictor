@@ -1,0 +1,122 @@
+{
+  "id": 181,
+  "name": "馬別詳細",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        181
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/diagnosis.py",
+        "line": 10,
+        "imported": "build_horse_detail",
+        "local_name": "build_horse_detail"
+      },
+      "original_source": "arvexq/horse_detail.py",
+      "box_target": "arvexq/components/item_181/horse_detail.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        181
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/services/race_analysis.py",
+        "line": 7,
+        "imported": "build_horse_details",
+        "local_name": "build_horse_details"
+      },
+      "original_source": "arvexq/horse_detail.py",
+      "box_target": "arvexq/components/item_181/horse_detail.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        181
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_daily_archive_audit.py",
+        "line": 20,
+        "imported": "build_horse_review_bank",
+        "local_name": "build_horse_review_bank"
+      },
+      "original_source": "arvexq/databanks/horse_review_bank.py",
+      "box_target": "arvexq/components/item_181/horse_review_bank.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        181
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "sourceCollectionSection",
+        "line": 195
+      },
+      "original_source": "arvexq/ui/static/app.js::sourceCollectionSection",
+      "box_target": "arvexq/components/item_181/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_sourceCollectionSection"
+    },
+    {
+      "items": [
+        181
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "horseByNo",
+        "line": 197
+      },
+      "original_source": "arvexq/ui/static/app.js::horseByNo",
+      "box_target": "arvexq/components/item_181/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_horseByNo"
+    },
+    {
+      "items": [
+        181
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "horseModal",
+        "line": 837
+      },
+      "original_source": "arvexq/ui/static/app.js::horseModal",
+      "box_target": "arvexq/components/item_181/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_horseModal"
+    },
+    {
+      "items": [
+        181
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "horseDetailPage",
+        "line": 2687
+      },
+      "original_source": "arvexq/ui/static/app.js::horseDetailPage",
+      "box_target": "arvexq/components/item_181/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_horseDetailPage"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

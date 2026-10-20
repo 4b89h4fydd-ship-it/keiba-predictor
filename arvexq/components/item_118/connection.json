@@ -1,0 +1,16 @@
+{
+  "id": 118,
+  "name": "◎【軸】判定",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "unconnected-empty",
+  "runtime_verified": false,
+  "connections": [],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": false,
+  "remaining_reason": "第2段階で未割当の空箱。新たな◎【軸】の判断式を作らない。"
+}

@@ -1,7 +1,7 @@
 """Pure weather, condition, and third-party number parsing."""
 from __future__ import annotations
 import re
-from arvexq.ingest.field_normalization import _clean
+from arvexq.components.item_040.field_normalization import _clean
 
 def _env_clean_weather(v:str)->str:
     s=_clean(v)

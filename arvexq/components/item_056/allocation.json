@@ -1,0 +1,44 @@
+{
+  "id": 56,
+  "name": "JRA・NAR転入転出判別",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/circuit_transfer.py::<module>",
+    "arvexq/ingest/transfer_history.py::<module>",
+    "arvexq/ingest/circuit_transfer.py::race_circuit",
+    "arvexq/ingest/circuit_transfer.py::transfer_observations",
+    "arvexq/ingest/transfer_history.py::_history_rates",
+    "arvexq/ingest/transfer_history.py::_history_rates.level"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/circuit_transfer.py::<module>",
+    "arvexq/ingest/transfer_history.py::<module>",
+    "arvexq/ingest/circuit_transfer.py::race_circuit",
+    "arvexq/ingest/circuit_transfer.py::transfer_observations",
+    "arvexq/ingest/transfer_history.py::_history_rates",
+    "arvexq/ingest/transfer_history.py::_history_rates.level"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "arvexq/ingest/transfer_history.py",
+    "tests/test_circuit_transfer_independent.py",
+    "tests/test_transfer_history_rates.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/circuit_transfer.py"
+  ],
+  "static_app_dependency_files": [],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/circuit_transfer.py",
+    "arvexq/ingest/transfer_history.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

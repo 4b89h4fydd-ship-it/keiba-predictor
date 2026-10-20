@@ -1,0 +1,209 @@
+{
+  "id": 151,
+  "name": "Full Prefetch",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        151
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 1003,
+        "imported": "_race_minutes",
+        "local_name": "_race_minutes"
+      },
+      "original_source": "arvexq/pipeline/race_priority.py",
+      "box_target": "arvexq/components/item_151/race_priority.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        151
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 1003,
+        "imported": "_commercial_target_rows",
+        "local_name": "_commercial_target_rows"
+      },
+      "original_source": "arvexq/pipeline/race_priority.py",
+      "box_target": "arvexq/components/item_151/race_priority.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        151
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "central_ingest",
+        "line": 865
+      },
+      "original_source": "app.py::central_ingest",
+      "box_target": "arvexq/components/item_151/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        151
+      ],
+      "original_private_name": "_arvexq_original_central_ingest"
+    },
+    {
+      "items": [
+        151
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_data_core_day_rows",
+        "line": 3628
+      },
+      "original_source": "app.py::_data_core_day_rows",
+      "box_target": "arvexq/components/item_151/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        151
+      ],
+      "original_private_name": "_arvexq_original__data_core_day_rows"
+    },
+    {
+      "items": [
+        151
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_data_core_day_status",
+        "line": 3632
+      },
+      "original_source": "app.py::_data_core_day_status",
+      "box_target": "arvexq/components/item_151/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        151
+      ],
+      "original_private_name": "_arvexq_original__data_core_day_status"
+    },
+    {
+      "items": [
+        151
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "data_core_refresh",
+        "line": 3714
+      },
+      "original_source": "app.py::data_core_refresh",
+      "box_target": "arvexq/components/item_151/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        151
+      ],
+      "original_private_name": "_arvexq_original_data_core_refresh"
+    },
+    {
+      "items": [
+        151
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "data_core_refresh_day",
+        "line": 3718
+      },
+      "original_source": "app.py::data_core_refresh_day",
+      "box_target": "arvexq/components/item_151/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        151
+      ],
+      "original_private_name": "_arvexq_original_data_core_refresh_day"
+    },
+    {
+      "items": [
+        151
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_prewarm_sort_key",
+        "line": 4131
+      },
+      "original_source": "app.py::_prewarm_sort_key",
+      "box_target": "arvexq/components/item_151/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        151
+      ],
+      "original_private_name": "_arvexq_original__prewarm_sort_key"
+    },
+    {
+      "items": [
+        151
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_schedule_prewarm",
+        "line": 4143
+      },
+      "original_source": "app.py::_schedule_prewarm",
+      "box_target": "arvexq/components/item_151/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        151
+      ],
+      "original_private_name": "_arvexq_original__schedule_prewarm"
+    },
+    {
+      "items": [
+        151
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_local_starter_bundle",
+        "line": 4833
+      },
+      "original_source": "app.py::_local_starter_bundle",
+      "box_target": "arvexq/components/item_151/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        151
+      ],
+      "original_private_name": "_arvexq_original__local_starter_bundle"
+    },
+    {
+      "items": [
+        151
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "prewarm_track",
+        "line": 5583
+      },
+      "original_source": "app.py::prewarm_track",
+      "box_target": "arvexq/components/item_151/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        151
+      ],
+      "original_private_name": "_arvexq_original_prewarm_track"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

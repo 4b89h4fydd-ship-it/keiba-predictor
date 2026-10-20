@@ -1,0 +1,63 @@
+{
+  "id": 51,
+  "name": "過去走上がり情報",
+  "circuits": [
+    "JRA"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/past_fields/jra.py::<module>",
+    "arvexq/ingest/past_fields/last3f.py::<module>",
+    "arvexq/ingest/recent_result_cell.py::<module>",
+    "arvexq/ingest/past_fields/jra.py::parse_jra_history_cell",
+    "arvexq/ingest/past_fields/last3f.py::extract_last3f_seconds",
+    "arvexq/ingest/recent_result_cell.py::_parse_recent_cell"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/past_fields/last3f.py::<module>",
+    "arvexq/ingest/past_fields/last3f.py::extract_last3f_seconds"
+  ],
+  "shared_refs": [
+    "arvexq/ingest/past_fields/jra.py::<module>",
+    "arvexq/ingest/recent_result_cell.py::<module>",
+    "arvexq/ingest/past_fields/jra.py::parse_jra_history_cell",
+    "arvexq/ingest/recent_result_cell.py::_parse_recent_cell"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "arvexq/ingest/past_fields/jra.py",
+    "tests/test_jra_past_fields_independent.py",
+    "tests/test_recent_result_cell.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/field_normalization.py",
+    "arvexq/ingest/past_fields/carried_weight.py",
+    "arvexq/ingest/past_fields/clock.py",
+    "arvexq/ingest/past_fields/corners.py",
+    "arvexq/ingest/past_fields/date.py",
+    "arvexq/ingest/past_fields/distance.py",
+    "arvexq/ingest/past_fields/field_size.py",
+    "arvexq/ingest/past_fields/finish.py",
+    "arvexq/ingest/past_fields/going.py",
+    "arvexq/ingest/past_fields/grade.py",
+    "arvexq/ingest/past_fields/jockey.py",
+    "arvexq/ingest/past_fields/last3f.py",
+    "arvexq/ingest/past_fields/margin.py",
+    "arvexq/ingest/past_fields/track.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/ingest/past_fields/jra.py",
+    "arvexq/ingest/past_fields/last3f.py",
+    "arvexq/ingest/recent_result_cell.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/past_fields/jra.py",
+    "arvexq/ingest/past_fields/last3f.py",
+    "arvexq/ingest/recent_result_cell.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

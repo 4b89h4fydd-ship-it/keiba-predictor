@@ -6,7 +6,7 @@ import hashlib
 import json
 from collections import Counter
 from pathlib import Path
-from arvexq.history import normalize_run
+from arvexq.components.item_182.history import normalize_run
 from arvexq.prediction.past_performance import observed_runs
 
 def audit():

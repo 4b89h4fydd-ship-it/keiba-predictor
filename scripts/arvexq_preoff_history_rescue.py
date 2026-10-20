@@ -11,7 +11,7 @@ import json
 import sys
 from datetime import datetime
 
-from arvexq.prediction.prerace_archive import JST, post_at
+from arvexq.components.item_147.prerace_archive import JST, post_at
 
 
 def active_identity(detail):
@@ -78,7 +78,7 @@ def main():
     from arvexq.databanks.authorized_feeds import register_authorized_history_feeds
     from arvexq.databanks.nar_official_csv import register_nar_official_archive
     from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
-    from arvexq.databanks.registry import registry
+    from arvexq.components.item_041.registry import registry
     register_authorized_history_feeds(registry)
     register_nar_official_archive(registry)
     candidate = enrich_race_missing_sync(original, history_limit=100,

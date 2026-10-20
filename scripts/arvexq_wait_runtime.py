@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from arvexq.infra.runtime_readiness import wait_ready
+from arvexq.components.item_152.runtime_readiness import wait_ready
 
 
 def main() -> int:

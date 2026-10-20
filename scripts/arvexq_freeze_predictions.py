@@ -19,7 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock, seal_detail
+from arvexq.components.item_147.prerace_archive import JST, post_at, sealed_lock, seal_detail
 from scripts.arvexq_prerace_bet_integrity import has_valid_original, record_failed_attempt
 
 
@@ -54,7 +54,7 @@ def detail_from(body: dict, rid: str) -> dict | None:
     Failing to unpack it makes a real history appear completely missing.
     Never trust a corrupt or cross-race envelope.
     """
-    from arvexq.ingest.full_snapshot_codec import KEY, unpack_detail
+    from arvexq.components.item_148.full_snapshot_codec import KEY, unpack_detail
     for item in (body.get("detail"), body.get("race"), body):
         if not isinstance(item, dict):
             continue
@@ -272,7 +272,7 @@ def encode_sealed_d1_sync_detail(detail: dict, *, max_row_bytes: int = 1_800_000
     uncompressed record into the D1 race_details row. Repack the full original
     losslessly, preserve its history/locked forecast, and reject oversized rows.
     """
-    from arvexq.ingest.full_snapshot_codec import KEY, pack_detail, unpack_detail
+    from arvexq.components.item_148.full_snapshot_codec import KEY, pack_detail, unpack_detail
     if not isinstance(detail, dict) or not detail.get("id"):
         raise ValueError("race identity required for pre-race sync")
     packed = pack_detail(detail)

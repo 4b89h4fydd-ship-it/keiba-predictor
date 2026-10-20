@@ -1,0 +1,242 @@
+{
+  "id": 188,
+  "name": "結果・払戻表示",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "resultStatus",
+        "line": 198
+      },
+      "original_source": "arvexq/ui/static/app.js::resultStatus",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_resultStatus"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "isFinal",
+        "line": 207
+      },
+      "original_source": "arvexq/ui/static/app.js::isFinal",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_isFinal"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "isFlash",
+        "line": 208
+      },
+      "original_source": "arvexq/ui/static/app.js::isFlash",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_isFlash"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "hasAnyResultData",
+        "line": 209
+      },
+      "original_source": "arvexq/ui/static/app.js::hasAnyResultData",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_hasAnyResultData"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "hasResultData",
+        "line": 210
+      },
+      "original_source": "arvexq/ui/static/app.js::hasResultData",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_hasResultData"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "resultFinish",
+        "line": 2760
+      },
+      "original_source": "arvexq/ui/static/app.js::resultFinish",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_resultFinish"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "actualCornerLeaders",
+        "line": 2761
+      },
+      "original_source": "arvexq/ui/static/app.js::actualCornerLeaders",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_actualCornerLeaders"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "actualCornerCount",
+        "line": 2762
+      },
+      "original_source": "arvexq/ui/static/app.js::actualCornerCount",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_actualCornerCount"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "actualCornerLabel",
+        "line": 2763
+      },
+      "original_source": "arvexq/ui/static/app.js::actualCornerLabel",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_actualCornerLabel"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "actualOrderAt",
+        "line": 2764
+      },
+      "original_source": "arvexq/ui/static/app.js::actualOrderAt",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_actualOrderAt"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "renderResultLink",
+        "line": 2765
+      },
+      "original_source": "arvexq/ui/static/app.js::renderResultLink",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_renderResultLink"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "renderPayouts",
+        "line": 2766
+      },
+      "original_source": "arvexq/ui/static/app.js::renderPayouts",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_renderPayouts"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "resultRowHtml",
+        "line": 2767
+      },
+      "original_source": "arvexq/ui/static/app.js::resultRowHtml",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_resultRowHtml"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "renderResult",
+        "line": 2768
+      },
+      "original_source": "arvexq/ui/static/app.js::renderResult",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_renderResult"
+    },
+    {
+      "items": [
+        188
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "renderActualFlow",
+        "line": 2772
+      },
+      "original_source": "arvexq/ui/static/app.js::renderActualFlow",
+      "box_target": "arvexq/components/item_188/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_renderActualFlow"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

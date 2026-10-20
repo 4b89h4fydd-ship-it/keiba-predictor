@@ -1,0 +1,49 @@
+{
+  "id": 8,
+  "name": "開催日取得",
+  "circuits": [
+    "JRA"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        8
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 406,
+        "imported": "_jra_date_from_cname",
+        "local_name": "_jra_date_from_cname"
+      },
+      "original_source": "arvexq/ingest/jra_identifiers.py",
+      "box_target": "arvexq/components/item_008/jra_identifiers.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        8
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "normalize_central_race",
+        "line": 219
+      },
+      "original_source": "app.py::normalize_central_race",
+      "box_target": "arvexq/components/item_008/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        8
+      ],
+      "original_private_name": "_arvexq_original_normalize_central_race"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

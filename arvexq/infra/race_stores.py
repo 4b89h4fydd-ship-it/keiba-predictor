@@ -540,7 +540,7 @@ SOURCE = (
 )
 
 def install_race_stores(namespace: dict) -> None:
-    from arvexq.prediction.prerace_archive import sealed_lock
+    from arvexq.components.item_147.prerace_archive import sealed_lock
     namespace['_arvexq_sealed_lock'] = sealed_lock
     code = compile(SOURCE, '<arvexq:race_stores>', 'exec')
     exec(code, namespace, namespace)

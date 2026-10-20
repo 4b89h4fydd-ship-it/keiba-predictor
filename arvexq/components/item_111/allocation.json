@@ -1,0 +1,98 @@
+{
+  "id": 111,
+  "name": "予想入力データ",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/forecast/inputs.py::<module>",
+    "arvexq/forecast/preoff_capture.py::<module>",
+    "arvexq/pipeline/fingerprints.py::<module>",
+    "arvexq/pipeline/morning_input_policy.js::<module>",
+    "arvexq/pipeline/persisted_inputs.py::<module>",
+    "arvexq/forecast/inputs.py::prediction_input",
+    "arvexq/forecast/preoff_capture.py::_time_of_post",
+    "arvexq/forecast/preoff_capture.py::capture_preoff_features",
+    "arvexq/pipeline/fingerprints.py::is_inactive_horse",
+    "arvexq/pipeline/fingerprints.py::active_horses",
+    "arvexq/pipeline/fingerprints.py::analysis_input_hash",
+    "arvexq/pipeline/persisted_inputs.py::_runners",
+    "arvexq/pipeline/persisted_inputs.py::_career_rows",
+    "arvexq/pipeline/persisted_inputs.py::_history_observations_retained",
+    "arvexq/pipeline/persisted_inputs.py::verify_persisted_facts",
+    "arvexq/pipeline/persisted_inputs.py::may_create_prerace_prediction",
+    "arvexq/pipeline/morning_input_policy.js::active",
+    "arvexq/pipeline/morning_input_policy.js::hasRunEvidence",
+    "arvexq/pipeline/morning_input_policy.js::status",
+    "arvexq/pipeline/morning_input_policy.js::status.@anonymous:14:35",
+    "arvexq/pipeline/morning_input_policy.js::status.@anonymous:16:14",
+    "arvexq/pipeline/morning_input_policy.js::status.@anonymous:21:30"
+  ],
+  "owned_refs": [
+    "arvexq/forecast/inputs.py::<module>",
+    "arvexq/forecast/inputs.py::prediction_input"
+  ],
+  "shared_refs": [
+    "arvexq/forecast/preoff_capture.py::<module>",
+    "arvexq/pipeline/fingerprints.py::<module>",
+    "arvexq/pipeline/morning_input_policy.js::<module>",
+    "arvexq/pipeline/persisted_inputs.py::<module>",
+    "arvexq/forecast/preoff_capture.py::_time_of_post",
+    "arvexq/forecast/preoff_capture.py::capture_preoff_features",
+    "arvexq/pipeline/fingerprints.py::is_inactive_horse",
+    "arvexq/pipeline/fingerprints.py::active_horses",
+    "arvexq/pipeline/fingerprints.py::analysis_input_hash",
+    "arvexq/pipeline/persisted_inputs.py::_runners",
+    "arvexq/pipeline/persisted_inputs.py::_career_rows",
+    "arvexq/pipeline/persisted_inputs.py::_history_observations_retained",
+    "arvexq/pipeline/persisted_inputs.py::verify_persisted_facts",
+    "arvexq/pipeline/persisted_inputs.py::may_create_prerace_prediction",
+    "arvexq/pipeline/morning_input_policy.js::active",
+    "arvexq/pipeline/morning_input_policy.js::hasRunEvidence",
+    "arvexq/pipeline/morning_input_policy.js::status",
+    "arvexq/pipeline/morning_input_policy.js::status.@anonymous:14:35",
+    "arvexq/pipeline/morning_input_policy.js::status.@anonymous:16:14",
+    "arvexq/pipeline/morning_input_policy.js::status.@anonymous:21:30"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    ".github/workflows/arvexq-validation.yml",
+    "arvexq/prediction/career_readiness.py",
+    "scripts/arvexq_collect_preoff_evidence.py",
+    "scripts/arvexq_history_repair.py",
+    "scripts/arvexq_live_sync.py",
+    "scripts/arvexq_morning_input_policy_smoke.js",
+    "scripts/arvexq_morning_picks.js",
+    "scripts/arvexq_prefetch.py",
+    "scripts/arvexq_select_prefetch_repairs.py",
+    "scripts/arvexq_verify_persisted_inputs.py",
+    "tests/test_career_totals_evidence.py",
+    "tests/test_forecast_production_boundaries.py",
+    "tests/test_observed_runner_metadata.py",
+    "tests/test_persisted_pipeline_stages.py",
+    "tests/test_prediction_input_fingerprint.py",
+    "tests/test_preoff_capture_research.py",
+    "tests/test_preoff_d1_transport.py",
+    "tests/test_preoff_evidence_store.py"
+  ],
+  "callee_files": [
+    "arvexq/forecast/frozen_research_input.py",
+    "arvexq/ingest/career_transport.py",
+    "arvexq/prediction/mass_feature_snapshot.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/pipeline/fingerprints.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/forecast/inputs.py",
+    "arvexq/pipeline/fingerprints.py",
+    "arvexq/pipeline/morning_input_policy.js",
+    "arvexq/pipeline/persisted_inputs.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from arvexq.results.state import result_state
+from arvexq.components.item_073.state import result_state
 
 
 def verify_history(report: dict, day: dict) -> dict:

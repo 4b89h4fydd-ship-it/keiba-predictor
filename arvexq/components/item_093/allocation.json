@@ -1,0 +1,56 @@
+{
+  "id": 93,
+  "name": "コース適性",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/career_analysis.py::<module>",
+    "arvexq/career_analysis.py::_to_float",
+    "arvexq/career_analysis.py::_finish_percentile",
+    "arvexq/career_analysis.py::_distance_bucket",
+    "arvexq/career_analysis.py::_group_stats",
+    "arvexq/career_analysis.py::_aptitude",
+    "arvexq/career_analysis.py::analyze_career"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "arvexq/career_analysis.py::<module>",
+    "arvexq/career_analysis.py::_to_float",
+    "arvexq/career_analysis.py::_finish_percentile",
+    "arvexq/career_analysis.py::_distance_bucket",
+    "arvexq/career_analysis.py::_group_stats",
+    "arvexq/career_analysis.py::_aptitude",
+    "arvexq/career_analysis.py::analyze_career"
+  ],
+  "research_only_refs": [
+    {
+      "item": 93,
+      "path": "arvexq/prediction/learned_scenarios.py",
+      "git_blob_sha": "7d79212d1a22a0884a35664ab70756a505c436c4",
+      "search_term": "same_direction_win_rate",
+      "lines": [
+        30
+      ],
+      "status": "研究/候補の参照のみ。実装割り振り件数から除外。PR #366/#374で撤去対象に含まれ得るため復活・コピー禁止"
+    }
+  ],
+  "missing_old_references": [],
+  "caller_files": [
+    "arvexq/career_missing.py",
+    "tests/test_career_analysis.py"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "arvexq/career_analysis.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/career_analysis.py"
+  ],
+  "legacy_prediction_reserved": true,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。",
+  "qualification": "career_analysis.analyze_careerのcourse_type別既存集計を対応付け。稼働中のコース適性予想・経路採用は認定しない。"
+}

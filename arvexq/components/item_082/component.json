@@ -1,0 +1,24 @@
+{
+  "id": 82,
+  "name": "3連複払戻",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/ingest/payouts.py"
+  ],
+  "shared_dependencies": [
+    "BeautifulSoup",
+    "Python standard library",
+    "arvexq.v3.data.result_facts._result/_observed",
+    "arvexq.components.item_076.payouts shared provider parser"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

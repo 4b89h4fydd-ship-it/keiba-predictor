@@ -49,9 +49,14 @@ def audit(manifest):
             'verdict':'完了' if complete==200 and not errors else '未完了'}
 
 def main():
+    # Resolve the allocated audit boundary for the same existing CLI invocation.
+    import sys
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from arvexq.components.item_196.audit_route import audit as audit_through_box
     parser=argparse.ArgumentParser();parser.add_argument('--require-complete',action='store_true')
     args=parser.parse_args()
-    result=audit(json.loads((ROOT/'docs/independence/requirements.json').read_text()))
+    result=audit_through_box(audit, json.loads((ROOT/'docs/independence/requirements.json').read_text()))
     print(json.dumps(result,ensure_ascii=False,indent=2))
     return 1 if result['errors'] or (args.require_complete and result['complete']!=200) else 0
 

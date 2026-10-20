@@ -18,8 +18,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from arvexq.prediction.prerace_archive import pre_off, restore_seal, sealed_lock
-from arvexq.ingest.full_snapshot_codec import KEY as FULL_PAYLOAD_KEY, pack_detail as pack_full, unpack_detail as unpack_full
+from arvexq.components.item_147.prerace_archive import pre_off, restore_seal, sealed_lock
+from arvexq.components.item_148.full_snapshot_codec import KEY as FULL_PAYLOAD_KEY, pack_detail as pack_full, unpack_detail as unpack_full
 
 
 def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
@@ -140,7 +140,7 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
             # Same immutable historical prefix, plus a newly authenticated
             # pre-off revision justified by a real official source change.
             from datetime import datetime
-            from arvexq.prediction.prerace_archive import JST
+            from arvexq.components.item_147.prerace_archive import JST
             from arvexq.prediction.official_course_revision import pre_off_change
             allow_append = (
                 candidate[:len(previous_revisions)] == previous_revisions
@@ -159,7 +159,7 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     if isinstance(proposed_models, list) and len(proposed_models) == len(previous_models) + 1:
         if proposed_models[:-1] == previous_models:
             from datetime import datetime, timedelta
-            from arvexq.prediction.prerace_archive import JST, post_at
+            from arvexq.components.item_147.prerace_archive import JST, post_at
             from arvexq.prediction.user_approved_model_revision import valid_revision, enabled
             at_now = datetime.now(JST)
             item = proposed_models[-1]
@@ -182,7 +182,7 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     previous_by_no = {int(h.get("horseNumber") or 0): h
                       for h in old.get("horses") or [] if isinstance(h, dict)}
     race_day = str(out.get("date") or old.get("date") or "")
-    from arvexq.ingest.full_career import merge_career
+    from arvexq.components.item_057.full_career import merge_career
     for current in out.get("horses") or []:
         if not isinstance(current, dict):
             continue
@@ -192,7 +192,7 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         for key in ("careerArchive", "careerTransport", "_careerHistoryAudit", "careerStartEvidence"):
             if key in historical and key not in current:
                 current[key] = copy.deepcopy(historical[key])
-        from arvexq.ingest.career_transport import recover_horse, pack_horse
+        from arvexq.components.item_057.career_transport import recover_horse, pack_horse
         old_full = recover_horse(historical, race_day) if historical.get("careerArchive") else historical
         new_full = recover_horse(current, race_day) if current.get("careerArchive") else current
         merged = merge_career(
@@ -220,7 +220,7 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         incoming_lock = out.get("preRacePrediction")
         # Protect the first genuinely pre-off archived opinion after post.
         # A later, unverified "forecast" must never overwrite the prior record.
-        from arvexq.prediction.prerace_archive import post_at, JST
+        from arvexq.components.item_147.prerace_archive import post_at, JST
         from datetime import datetime
         start = post_at(old)
         if start and datetime.now(JST) >= start:
@@ -252,8 +252,8 @@ def _all_original_career_evidence_retained(expected: dict[str, Any],
     A compact five-run display, bad digest, changed original observation or
     removed historical start must still fail closed.
     """
-    from arvexq.ingest.career_transport import recover_horse
-    from arvexq.ingest.full_career import merge_career
+    from arvexq.components.item_057.career_transport import recover_horse
+    from arvexq.components.item_057.full_career import merge_career
     if not (isinstance(expected.get("careerArchive"), dict) and
             isinstance(actual.get("careerArchive"), dict) and race_date):
         return False

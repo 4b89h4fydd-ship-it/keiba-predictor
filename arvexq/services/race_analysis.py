@@ -2,17 +2,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvexq.diagnosis import build_diagnosis
-from arvexq.features.horse_features import attach_race_features
-from arvexq.horse_detail import build_horse_details
-from arvexq.ingest.source_merge import merge_race_sources
-from arvexq.normalize.race import normalize_race
-from arvexq.odds import build_odds_snapshot
-from arvexq.pace_prediction import build_pace_prediction
-from arvexq.prediction.ability import apply_ability_ranking
-from arvexq.prediction.confidence import build_win_confidence_evidence
-from arvexq.race_card import build_race_card
-from arvexq.race_conditions import build_race_conditions
+from arvexq.components.item_110.diagnosis import build_diagnosis
+from arvexq.components.item_088.horse_features import attach_race_features
+from arvexq.components.item_181.horse_detail import build_horse_details
+from arvexq.components.item_040.source_merge import merge_race_sources
+from arvexq.components.item_040.race import normalize_race
+from arvexq.components.item_068.odds import build_odds_snapshot
+from arvexq.components.item_105.pace_prediction import build_pace_prediction
+from arvexq.components.item_089.ability import apply_ability_ranking
+from arvexq.components.item_115.confidence import build_win_confidence_evidence
+from arvexq.components.item_180.race_card import build_race_card
+from arvexq.components.item_017.race_conditions import build_race_conditions
 
 
 def normalize_race_detail(detail: dict[str, Any]) -> dict[str, Any]:

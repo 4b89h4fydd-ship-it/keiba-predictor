@@ -1,0 +1,169 @@
+{
+  "id": 129,
+  "name": "本日の厳選レース",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_ensure_race_volatility",
+        "line": 3928
+      },
+      "original_source": "app.py::_ensure_race_volatility",
+      "box_target": "arvexq/components/item_129/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        129
+      ],
+      "original_private_name": "_arvexq_original__ensure_race_volatility"
+    },
+    {
+      "items": [
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_local_volatility_map",
+        "line": 4853
+      },
+      "original_source": "app.py::_local_volatility_map",
+      "box_target": "arvexq/components/item_129/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        129
+      ],
+      "original_private_name": "_arvexq_original__local_volatility_map"
+    },
+    {
+      "items": [
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_attach_local_volatility_to_summaries",
+        "line": 4907
+      },
+      "original_source": "app.py::_attach_local_volatility_to_summaries",
+      "box_target": "arvexq/components/item_129/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        129
+      ],
+      "original_private_name": "_arvexq_original__attach_local_volatility_to_summaries"
+    },
+    {
+      "items": [
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_compute_local_volatility_for_race",
+        "line": 4920
+      },
+      "original_source": "app.py::_compute_local_volatility_for_race",
+      "box_target": "arvexq/components/item_129/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        129
+      ],
+      "original_private_name": "_arvexq_original__compute_local_volatility_for_race"
+    },
+    {
+      "items": [
+        110,
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "arvexq/domain/legacy_evaluation.py",
+        "symbol": "_strip_excluded",
+        "line": 66
+      },
+      "original_source": "arvexq/domain/legacy_evaluation.py::_strip_excluded",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110,
+        129
+      ],
+      "original_private_name": "_arvexq_original__strip_excluded"
+    },
+    {
+      "items": [
+        110,
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "arvexq/domain/legacy_evaluation.py",
+        "symbol": "_attach_stored_career",
+        "line": 113
+      },
+      "original_source": "arvexq/domain/legacy_evaluation.py::_attach_stored_career",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110,
+        129
+      ],
+      "original_private_name": "_arvexq_original__attach_stored_career"
+    },
+    {
+      "items": [
+        110,
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "arvexq/domain/legacy_evaluation.py",
+        "symbol": "_vol_clamp",
+        "line": 132
+      },
+      "original_source": "arvexq/domain/legacy_evaluation.py::_vol_clamp",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110,
+        129
+      ],
+      "original_private_name": "_arvexq_original__vol_clamp"
+    },
+    {
+      "items": [
+        106,
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "arvexq/domain/legacy_evaluation.py",
+        "symbol": "_race_volatility",
+        "line": 138
+      },
+      "original_source": "arvexq/domain/legacy_evaluation.py::_race_volatility",
+      "box_target": "arvexq/components/item_106/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        106,
+        129
+      ],
+      "original_private_name": "_arvexq_original__race_volatility"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

@@ -88,7 +88,7 @@ def acquire(output, target_date, min_races=30, nar_months=3):
     try:
         races = app.fetch_jra_official(target_date)
         from arvexq.databanks.legacy_bridge import _jra_history_adapter
-        from arvexq.ingest.full_career import merge_career
+        from arvexq.components.item_057.full_career import merge_career
         fetch_history=_jra_history_adapter(vars(app))
         history_errors=[]
         def full_history(pair):

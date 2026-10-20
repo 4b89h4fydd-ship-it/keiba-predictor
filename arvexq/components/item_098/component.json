@@ -1,0 +1,21 @@
+{
+  "id": 98,
+  "name": "逃げ率",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/prediction/pure_diagnostics.py"
+  ],
+  "shared_dependencies": [
+    "Only read existing styleRates/runningStyleRates; rate calculation and forecast integration not implemented"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}
