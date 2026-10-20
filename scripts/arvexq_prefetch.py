@@ -341,7 +341,7 @@ def prepare(
         raise ValueError("unknown prefetch stage")
     bundle = _read(bundle_path)
     rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば") and "-帯広-" not in str(r.get("id")) and "-帯広ば-" not in str(r.get("id"))]
-    initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id")]
+    initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id") and str(d.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in str(d.get("id")) for name in ("帯広", "帯広ば"))]
     by_id: dict[str, dict[str, Any]] = {str(d["id"]): d for d in initial}
     # Replay only validated existing outputs of this SAME canonical prefetch,
     # so a failed upstream HTTP fetch cannot erase a known published roster.
@@ -492,7 +492,7 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
     day = _read(bundle_path)
     rows = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば") and "-帯広-" not in str(r.get("id")) and "-帯広ば-" not in str(r.get("id"))]
     details = {str(d["id"]): d for d in (day.get("details") or [])
-               if isinstance(d, dict) and d.get("id")}
+               if isinstance(d, dict) and d.get("id") and str(d.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in str(d.get("id")) for name in ("帯広", "帯広ば"))}
     saved = {"races": rows, "details": list(details.values())}
     integrity = verify_persisted_facts(
         {"summaries": rows, "details": list(details.values())}, saved
