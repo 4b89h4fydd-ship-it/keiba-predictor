@@ -56,7 +56,13 @@ def run_saved_day(day: str, *, root: Path = SAVED) -> dict:
         original = _restore(envelope, entry)
         # Existing Stage64 prospective feature whitelist: no target result,
         # payouts, odds, saved product marks/bets or future outcome labels.
-        features = clean_input(original)
+        # The immutable *historical* record may already contain official
+        # target outcomes. Remove those top-level labels from a throwaway
+        # projection BEFORE the existing fail-closed clean_input validator.
+        # Never alter or back-write the recovered source original.
+        preoff_only = {k: v for k, v in original.items()
+                       if k not in ("result", "results", "payouts")}
+        features = clean_input(preoff_only)
         if any(k in features for k in ("result", "results", "payouts", "preRaceBet",
                                        "morningMarkSnapshot", "odds", "winOdds")):
             raise ValueError("post-result or product fields in Stage64 input")

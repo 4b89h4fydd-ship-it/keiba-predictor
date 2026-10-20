@@ -90,9 +90,14 @@ class Stage64SavedConnectionTests(unittest.TestCase):
                       morningMarkSnapshot={"horses": [{"mark": "◎"}]})
         for horse in sample["horses"]:
             horse["winOdds"] = 1.1
-        self.assertEqual(clean_input(sample), baseline)
+        # Original prospective guard still rejects result-bearing input.
+        with self.assertRaisesRegex(ValueError, "target outcome present"):
+            clean_input(sample)
+        projected = {k: v for k, v in sample.items()
+                     if k not in ("result", "results", "payouts")}
+        self.assertEqual(clean_input(projected), baseline)
         for arm in ARMS:
-            self.assertEqual(predict(clean_input(sample),
+            self.assertEqual(predict(clean_input(projected),
                                      expected_circuit="nar", ability_method=arm),
                              expected[arm])
 
