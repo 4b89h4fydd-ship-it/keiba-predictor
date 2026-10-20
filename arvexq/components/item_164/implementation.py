@@ -24,7 +24,7 @@ def nar_race_detail(race_id: str) -> dict | None:
                 "jockeyStats":store.stats("jockey",e["jockey"],iso_date),"trainerStats":store.stats("trainer",e["trainer"],iso_date),
                 "jockeyProfile":store.role_profile("jockey",e["jockey"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
                 "trainerProfile":store.role_profile("trainer",e["trainer"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
-                "prizeMoneyAtRace":store.prize_before(e["name"],iso_date),"recentRaces":store.recent_races(e["name"],iso_date,5),
+                "prizeMoneyAtRace":store.prize_before(e["name"],iso_date),"recentRaces":store.recent_races(e["name"],iso_date,5,int(e["age"] or 0),e["sex"] or ""),
             })
         finishers=[]
         for e in entries:

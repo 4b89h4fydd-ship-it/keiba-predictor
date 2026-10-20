@@ -559,6 +559,12 @@ install_component(162, "_enrichment_status", globals())
 
 install_component(40, "_start_enrichment", globals())
 
+def _verified_debut_no_history(horse:dict,detail:dict)->bool:
+    if detail.get("analysisMode")!="新馬":
+        return False
+    from arvexq.career_missing import build_career_analysis
+    return build_career_analysis(horse,detail).get("career_state")=="complete-no-starts"
+
 install_component(40, "_apply_enrichment", globals())
 
 

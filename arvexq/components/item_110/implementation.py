@@ -12,7 +12,10 @@ def _precompute_detail_metrics(detail: dict) -> dict:
     except Exception:detail["trackSpeed"]={"version":"track-speed-v300","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","source":"fallback"}
     for horse in detail.get("horses",[]) or []:
         runs=horse.get("allPastRuns") or horse.get("recentRaces") or []
-        if detail.get("analysisMode")=="新馬" and not runs:horse["debutNoHistory"]=True
+        if _verified_debut_no_history(horse,detail):
+            horse["debutNoHistory"]=True
+        else:
+            horse.pop("debutNoHistory",None)
         horse["collectionState"]={"status":"complete" if runs or horse.get("debutNoHistory") else "basic" if horse.get("name") else "missing", "history":"not_applicable" if horse.get("debutNoHistory") and not runs else "available" if runs else "missing", "pastRunCount":len(runs)}
         metric_horse=dict(horse,recentRaces=[r for r in runs if _is_jump_run(r)]) if detail.get("analysisMode")=="障害" else dict(horse,recentRaces=runs)
         try:

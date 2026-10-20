@@ -129,7 +129,9 @@ def _apply_enrichment(race_id:str,detail:dict)->dict:
     title=str(detail.get("title") or "");surface=str(detail.get("surface") or "")
     mode="障害" if (surface=="障害" or "障害" in title or re.search(r"(?:J[･・.]?G[ⅠⅡⅢ123]|\\bJS\\b|ジャンプ)",title,re.I)) else ("新馬" if re.search(r"(?:新馬|メイクデビュー)",title) else "平地")
     detail["analysisMode"]=mode
-    if mode=="新馬":
-        for h in detail.get("horses",[]) or []:
-            if not (h.get("recentRaces") or []):h["debutNoHistory"]=True
+    for h in detail.get("horses",[]) or []:
+        if _verified_debut_no_history(h,detail):
+            h["debutNoHistory"]=True
+        else:
+            h.pop("debutNoHistory",None)
     return detail

@@ -61,7 +61,7 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
     try:
         ph=",".join("?" for _ in names)
         sql=f"""
-        SELECT e.name,e.date,e.track,e.race_no,e.finish,e.time_seconds,e.corner_positions_json,
+        SELECT e.name,e.date,e.track,e.race_no,e.finish,e.time_seconds,e.corner_positions_json,e.age,e.sex,
                e.carried_weight,e.jockey,e.trainer,
                r.title,r.distance,r.weather,r.condition,r.field_size,r.prize1
         FROM entries e
@@ -80,7 +80,10 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
         if arr is None:continue
         try:cp=json.loads(row["corner_positions_json"] or "[]")
         except Exception:cp=[]
-        arr.append({
+        # The source's race-date age is a birth-year proxy, not a unique ID.
+        # Use it and observed sex to reject obvious same-name collisions.
+        src_birth=int(str(row["date"])[:4])-int(row["age"] or 0) if int(row["age"] or 0)>0 else None
+        arr.append(({
             "date":row["date"],"track":row["track"],"raceNumber":int(row["race_no"] or 0),
             "raceId":f"nar-{row['date']}-{row['track']}-{int(row['race_no'] or 0):02d}",
             "title":row["title"] or f"{int(row['race_no'] or 0)}R",
@@ -91,7 +94,7 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
             "carriedWeight":float(row["carried_weight"] or 0),
             "jockey":row["jockey"] or "","trainer":row["trainer"] or "",
             "source":"NAR公式ローカル履歴",
-        })
+        },src_birth,str(row["sex"] or "").strip()))
     from arvexq.ingest.full_career import merge_career
     from arvexq.ingest.career_transport import recover_horse
     for h in horses:
@@ -106,7 +109,26 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
             previous=h
             h.setdefault("careerHistoryWarnings",[]).append("archive-recovery:"+type(exc).__name__)
         old_runs=[*(previous.get("allPastRuns") or []),*(previous.get("recentRaces") or [])]
-        full=merge_career(old_runs,grouped.get(str(h.get("name") or ""),[]),cutoff)
+        candidate_runs=grouped.get(str(h.get("name") or ""),[])
+        try:
+            age=int(h.get("age") or 0)
+        except (TypeError,ValueError):
+            age=0
+        target_birth=int(cutoff[:4])-age if age>0 and cutoff[:4].isdigit() else None
+        target_sex=str(h.get("sex") or "").strip()
+        known_births={birth for _,birth,_ in candidate_runs if birth}
+        # If the runner lacks an age, mixed birth years cannot be resolved.
+        # Keep the previously verified/archived evidence; reject ambiguous
+        # newly fetched name-only rows instead of grafting a different horse.
+        if target_birth is None and len(known_births)>1:
+            new_runs=[]
+            h.setdefault("careerHistoryWarnings",[]).append("nar-name-birth-year-ambiguous")
+        else:
+            new_runs=[run for run,birth,sex in candidate_runs
+                      if (target_birth is None or birth is None or birth==target_birth)
+                      and (not target_sex or not sex or sex==target_sex)
+                      and (birth is not None or len(known_births)<=1)]
+        full=merge_career(old_runs,new_runs,cutoff)
         h["allPastRuns"]=full
         h["recentRaces"]=full[:max(1,int(limit))]
         # Do not change _careerHistoryAudit.complete: an observed list alone
