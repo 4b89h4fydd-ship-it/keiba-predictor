@@ -333,7 +333,7 @@ def prepare(
         raise ValueError("unknown prefetch stage")
     bundle = _read(bundle_path)
     rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
-    initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id")]
+    initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id") and str(d.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in str(d.get("id")) for name in ("帯広", "帯広ば"))]
     by_id: dict[str, dict[str, Any]] = {str(d["id"]): d for d in initial}
     # Replay only validated existing outputs of this SAME canonical prefetch,
     # so a failed upstream HTTP fetch cannot erase a known published roster.
