@@ -17,7 +17,8 @@ class NarThreadsafeAdaptersTest(unittest.TestCase):
                 self.owner = threading.get_ident()
                 with mutex:
                     created.append(self.owner)
-            def recent_races(self, name, date, limit):
+            def recent_races(self, name, date, limit, expected_age=0, expected_sex=""):
+                self.last_identity=(expected_age,expected_sex)
                 self.conn.execute("SELECT 1").fetchone()
                 return [{"date":"2026-09-01","horse":name}][:limit]
             def prize_before(self, name, date):
@@ -52,6 +53,23 @@ class NarThreadsafeAdaptersTest(unittest.TestCase):
             self.assertEqual(found["allPastRuns"][0]["date"],"2026-09-01")
             self.assertEqual(roles["jockeyStats"]["count"],1)
             self.assertEqual(roles["trainerProfile"]["value"],2)
+
+
+    def test_career_adapter_forwards_same_name_identity(self):
+        calls=[]
+        class IdentityStore:
+            def recent_races(self, name, date, limit, expected_age=0, expected_sex=""):
+                calls.append((name,date,limit,expected_age,expected_sex))
+                return [{"date":"2025-09-03","finish":2}] if expected_age==3 and expected_sex=="牝" else []
+            def prize_before(self,name,date):
+                return 0
+        history,_=_nar_store_adapters({"NarStore":IdentityStore})
+        race={"date":"2026-10-16","track":"園田","circuit":"地方"}
+        horse={"name":"同名馬","age":"牝3","sex":"牝"}
+        result=history(horse,race,100)
+        self.assertEqual(len(result["allPastRuns"]),1)
+        self.assertEqual(calls,[("同名馬","2026-10-16",100,3,"牝")])
+        self.assertEqual(history({"name":"同名馬","age":4,"sex":"牡"},race,100)["allPastRuns"],[])
 
 
 if __name__ == "__main__":
