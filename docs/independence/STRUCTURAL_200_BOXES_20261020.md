@@ -353,3 +353,8 @@ Workerの通常オッズ・最終保存オッズの2つのキー生成を既存 
 `legacy_bridge.audit_nar_store_history(conn,horse,cutoff,official_archive)` は既存接続のSELECTのみで、旧 `NarStore.recent_races` と同じ厳密馬名・対象日前条件を使い、`finish>0` 前後の行数を比較。既存 `NarOfficialArchive.by_name` を使ってレース日・競馬場・R番号・当該レース馬番と公式生年月日を照合し、理由内訳を `official-birth-date-compatible` / `conflicting-official-birth-date` / `unverified-*` / `excluded-by-legacy-finish-filter` として出力する。恒久馬IDの照合完了ではなく、未収録アーカイブは欠落確定としない。
 
 合成公式ZIPと旧SQLiteスキーマによる回帰テストで旧検索が同名・別生年月日馬の陽性着順レコードを返すリスクを再現し、除外理由・アーカイブ未収録の扱い・読取前後の保存行数不変を検証する。実混在件数は元SQLiteと元公式ZIP双方が必要なため未算出。既存の `NarStore.recent_races` / `_nar_store_adapters` の出力・取得経路・DBスキーマ・保存先・UI・予想は不変。個体識別の本番仕様は未承認のため変更しない。
+
+
+### 2026-10-20 P0-1監査SQLの結合条件精密化
+
+読取り監査 `audit_nar_store_history` で、既存 `NarStore.recent_races` の `entries JOIN races` を厳密に計上するよう `LEFT JOIN` で監査対象を抽出する。実際の検索に入らない `entries` の孤立行を `excluded-by-legacy-race-join` として分離。新フィールド `dbNameDateRowsBeforeJoin` は馬名・日付での全行、`dbRowsBeforeLegacyFinishFilter` は親レースに結合できる行、`legacyPositiveRows` は結合可能かつ `finish>0` の行を表す。無効着順と本人不一致は別理由。合成SQLiteの孤立行を追加した回帰テストで旧`recent_races`の検索件数と監査陽性件数の一致、監査前後の保存行数不変を検証する。本番SQLiteや公式原本の実混入件数についての証明には使わない。

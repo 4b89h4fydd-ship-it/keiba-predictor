@@ -166,6 +166,7 @@ def audit_nar_store_history(conn: Any, horse: dict[str, Any], cutoff: str,
         "name": name, "cutoff": end, "targetBirthDate": birth or None,
         "officialArchiveSupplied": official_archive is not None,
         "legacyPositiveRows": 0, "dbRowsBeforeLegacyFinishFilter": 0,
+        "dbNameDateRowsBeforeJoin": 0, "excludedByLegacyRaceJoin": 0,
         "officialBirthCompatiblePositiveRows": 0,
         "conflictingBirthPositiveRows": 0,
         "unverifiedPositiveRows": 0, "excludedByLegacyFinishFilter": 0,
@@ -176,19 +177,24 @@ def audit_nar_store_history(conn: Any, horse: dict[str, Any], cutoff: str,
         receipt["reasonCounts"] = {"missing-name-or-invalid-cutoff": 1}
         return receipt
 
-    # Keep the exact name and prior-date conditions of the production query;
-    # lift finish>0 only for evidence accounting, not for production results.
+    # Production recent_races uses an INNER JOIN and e.finish>0.
+    # A LEFT JOIN exposes orphaned saved entries without counting them as
+    # a production candidate; this diagnostic runs SELECT only.
     cursor = conn.execute(
         """SELECT e.date,e.track,e.race_no,e.horse_no,e.name,e.age,e.sex,
-                  e.finish,e.status
+                  e.finish,e.status, r.track AS joined_track
            FROM entries e
+           LEFT JOIN races r
+             ON r.track=e.track AND r.date=e.date AND r.race_no=e.race_no
            WHERE e.name=? AND e.date<?
            ORDER BY e.date DESC,e.race_no DESC""",
         (name, end),
     )
     columns = [column[0] for column in cursor.description]
     rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
-    receipt["dbRowsBeforeLegacyFinishFilter"] = len(rows)
+    receipt["dbNameDateRowsBeforeJoin"] = len(rows)
+    receipt["dbRowsBeforeLegacyFinishFilter"] = sum(
+        row["joined_track"] is not None for row in rows)
     official_index: dict[tuple[str, str, int, int], set[str]] = {}
     if official_archive is not None:
         for observed, official_birth in official_archive.by_name.get(normalize(name), []):
@@ -203,7 +209,10 @@ def audit_nar_store_history(conn: Any, horse: dict[str, Any], cutoff: str,
         key = (str(row["date"] or ""), str(row["track"] or ""),
                int(row["race_no"] or 0), int(row["horse_no"] or 0))
         finish = int(row["finish"] or 0)
-        if finish <= 0:
+        if row["joined_track"] is None:
+            reason = "excluded-by-legacy-race-join"
+            receipt["excludedByLegacyRaceJoin"] += 1
+        elif finish <= 0:
             reason = "excluded-by-legacy-finish-filter"
             receipt["excludedByLegacyFinishFilter"] += 1
         else:
@@ -231,6 +240,7 @@ def audit_nar_store_history(conn: Any, horse: dict[str, Any], cutoff: str,
             "raceNumber": key[2], "horseNumber": key[3],
             "storedAge": row["age"], "storedSex": row["sex"],
             "storedFinish": finish, "storedStatus": row["status"],
+            "joinedToRace": row["joined_track"] is not None,
             "reason": reason,
         })
     receipt["reasonCounts"] = dict(sorted(reasons.items()))

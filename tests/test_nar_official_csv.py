@@ -182,6 +182,13 @@ class OfficialArchiveObservedFields(unittest.TestCase):
                     " VALUES (?,?,?,?,?,?,?,?)",
                     ("大井","2026-09-20",4,1,"同名馬",8,"牡",2))
                 store.conn.commit()
+                # A stored entry without its parent race must not be counted
+                # as retrievable: production recent_races requires INNER JOIN.
+                store.conn.execute(
+                    "INSERT INTO entries(track,date,race_no,horse_no,name,age,sex,finish)"
+                    " VALUES (?,?,?,?,?,?,?,?)",
+                    ("大井","2026-09-22",5,2,"同名馬",8,"牡",1))
+                store.conn.commit()
                 before=tuple(store.conn.execute(
                     "SELECT COUNT(*),SUM(finish) FROM entries").fetchone())
                 old=store.recent_races("同名馬","2026-10-01",20)
@@ -190,19 +197,26 @@ class OfficialArchiveObservedFields(unittest.TestCase):
                 report=audit_nar_store_history(
                     store.conn,{"name":"同名馬","birthDate":"2018-03-10"},
                     "2026-10-01",index)
+                self.assertEqual(report["dbNameDateRowsBeforeJoin"],5)
                 self.assertEqual(report["dbRowsBeforeLegacyFinishFilter"],4)
+                self.assertEqual(report["excludedByLegacyRaceJoin"],1)
                 self.assertEqual(report["legacyPositiveRows"],3)
                 self.assertEqual(report["officialBirthCompatiblePositiveRows"],1)
                 self.assertEqual(report["conflictingBirthPositiveRows"],1)
                 self.assertEqual(report["unverifiedPositiveRows"],1)
                 self.assertEqual(report["excludedByLegacyFinishFilter"],1)
                 self.assertEqual(report["reasonCounts"],{
+                    "excluded-by-legacy-race-join":1,
                     "conflicting-official-birth-date":1,
                     "excluded-by-legacy-finish-filter":1,
                     "official-birth-date-compatible":1,
                     "unverified-official-row-not-in-supplied-archive":1,
                 })
                 self.assertFalse(report["identityConfirmedByStableHorseId"])
+                orphan=[row for row in report["observations"]
+                        if row["reason"]=="excluded-by-legacy-race-join"]
+                self.assertEqual(len(orphan),1)
+                self.assertFalse(orphan[0]["joinedToRace"])
                 no_archive=audit_nar_store_history(
                     store.conn,{"name":"同名馬"},"2026-10-01")
                 self.assertEqual(no_archive["unverifiedPositiveRows"],3)
