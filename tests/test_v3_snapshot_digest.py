@@ -133,6 +133,9 @@ def test_actual_stage64_nar_gap_archive_vs_saved_snapshot():
 
     direct_count = Counter()
     observed_saved = []
+    saved_debut_flags_without_runs = 0
+    missing_saved_with_fetch_attempts = 0
+    missing_saved_status = Counter()
     for row in observations:
         rid, no, name = row["raceId"], row["horseNumber"], row["name"]
         stored_horses = {h["horseNumber"]: h
@@ -146,7 +149,24 @@ def test_actual_stage64_nar_gap_archive_vs_saved_snapshot():
         saved_recent = horse.get("recentRaces") or []
         saved_all = horse.get("allPastRuns") or []
         direct_count[(len(saved_recent), len(saved_all))] += 1
-        if saved_recent or saved_all:
+        if not saved_recent and not saved_all:
+            from arvexq.v3.audit.runner_gaps import classify_absent_prior
+            from arvexq.ingest.career_transport import recover_horse
+            from arvexq.ingest.full_career import merge_career
+            # A future "debutNoHistory" label is not independent evidence
+            # that the horse had zero official lifetime starts.
+            recovered = recover_horse(horse, day)
+            assert not merge_career(recovered.get("allPastRuns"),
+                                    recovered.get("recentRaces"), day)
+            case = classify_absent_prior(recovered, restored[rid])
+            assert case["debutConfirmed"] is False
+            assert case["completeHistoryVerified"] is False
+            saved_debut_flags_without_runs += horse.get("debutNoHistory") is True
+            audit = horse.get("_careerHistoryAudit")
+            if isinstance(audit, dict):
+                missing_saved_status[str(audit.get("status"))] += 1
+                missing_saved_with_fetch_attempts += audit.get("fetchAttempted") is True
+        else:
             observed_saved.append((rid, no, name, len(saved_recent), len(saved_all)))
     # The Stage64 official-source gap is NOT equivalent to an absent
     # saved history: one race retained three prior runs by another path.
@@ -154,3 +174,28 @@ def test_actual_stage64_nar_gap_archive_vs_saved_snapshot():
     assert observed_saved == [
         ("nar-2026-10-16-川崎-03", 2, "アークブレイブ", 3, 3)
     ]
+    # A saved debutNoHistory flag is only a UI/collection observation;
+    # it must never be promoted to official confirmed debut evidence.
+    assert saved_debut_flags_without_runs == 18
+    assert missing_saved_status == {"missing": 33}
+    assert 0 <= missing_saved_with_fetch_attempts <= 33
+
+
+def test_debut_no_history_flag_does_not_certify_a_debut():
+    from arvexq.v3.audit.runner_gaps import classify_absent_prior
+
+    race = {"id": "nar-2026-10-16-川崎-02",
+            "date": "2026-10-16", "circuit": "地方", "title": "2歳未勝利",
+            "track": "川崎"}
+    horse = {"horseNumber": 1, "name": "履歴未照合馬", "debutNoHistory": True,
+             "recentRaces": [],
+             "_careerHistoryAudit": {"status": "missing",
+                                     "fetchAttempted": True,
+                                     "reportedStarts": None}}
+    original = deepcopy(horse)
+    case = classify_absent_prior(horse, race)
+    assert case["category"] == "no-prior-runs-unverified"
+    assert case["reportedStartsAsOfRace"] is None
+    assert case["debutConfirmed"] is False
+    assert case["completeHistoryVerified"] is False
+    assert horse == original
