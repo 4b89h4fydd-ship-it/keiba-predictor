@@ -58,6 +58,20 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_stage63*.py' -v
           python -m unittest discover -s tests -p 'test_stage64*.py' -v
+      - name: Calculate retrospective saved JRA/NAR research trial
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdir -p shadow-saved
+          python scripts/arvexq_stage64_saved_connection.py \
+            --date 2026-10-17 --output shadow-saved/stage64-saved-2026-10-17.json
+      - name: Archive historical trial separately from frozen forecasts
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-stage64-retrospective-saved-trial
+          path: shadow-saved/stage64-saved-2026-10-17.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Prepare exact preregistration bundles
         if: github.event_name == 'pull_request' || inputs.action == 'preregister'
         run: |
