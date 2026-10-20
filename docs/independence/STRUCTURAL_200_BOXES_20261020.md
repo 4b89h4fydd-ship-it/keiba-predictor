@@ -102,7 +102,7 @@ Workerの通常オッズ・最終保存オッズの2つのキー生成を既存 
 
 ### #038 出馬表更新 — Data Core不明レース区分の遮断（第3段階・限定修正）
 
-既存の `app.py` が `install_component(38, "_data_core_refresh_race", globals())` で取り込む更新入口を検査した。呼出元は既存 `#151` の `/api/v1/data-core/refresh/{race_id}` と日単位更新、`#152` の定期収集。従来、`jra-` 以外のレースIDは環境・履歴の地方経路に到達しうる。既存 `jra-` / `nar-` 接頭辞以外を共有ロック取得・スナップショット読込・取得処理開始より前に拒否する。空IDの既存エラーおよび正規の中央・地方への分岐・取得URL・再試行・保存・キャッシュ・予想条件は不変。レースIDの**全面的妥当性・競走馬本人照合**まで保証するものではない。
+既存の `app.py` が `install_component(38, "_data_core_refresh_race", globals())` で取り込む更新入口を検査した。呼出元は既存 `#151` の `/api/v1/data-core/refresh/{race_id}` と日単位更新、`#152` の定期収集。従来、`jra-` 以外のレースIDは環境・履歴の地方経路に到達しうる。既存 `jra-` / `nar-` 接頭辞以外を共有ロック取得・スナップショット読込・取得処理開始より前に拒否する。空IDの既存エラーおよび正規の中央・地方への分岐・取得URL・再試行・保存・キャッシュ・予想条件は不変。レースIDの**全面的妥当性・競走馬本人照合**まで保証するものではない。移行前の `migration-baseline.json` は保持し、#196構造監査で今回の `_data_core_refresh_race` だけを修正後AST SHA256 `6604b2d7f06fe4a6b2c6105898c4a9a03745e2a6193c6f1ed0ee7242fb2665b7` に固定。ほかの定義の一致監査は維持する。
 
 `tests/test_item_038_data_core_circuit_guard.py` は不明4パターンの非接続、既存JRA/NARそれぞれの継続接続、既存HTTPハンドラ、空ID互換性を検査。実際のD1、外部取得元、本番UI読戻しは未検証。構造上は引き続き `migrated-shared-context`、歴史的進捗台帳 `requirements.json` の `未着手` は昇格しない。29の予想仕様待ち項目は変更しない。
 
