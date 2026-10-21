@@ -3,6 +3,40 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+// Exact production browser merger must preserve partial history without
+// mixing two runners who occupy the same race-scoped horse number.
+const historyWindow={};
+for(const part of ['deduplicate','temporal']){
+  new Function('window',fs.readFileSync('arvexq/ui/static/history/'+part+'.js','utf8'))(historyWindow);
+}
+const horseStart=src.indexOf('function mergeHorseReflection(');
+const horseEnd=src.indexOf('// Result updates can be sparse:',horseStart);
+assert(horseStart>=0&&horseEnd>horseStart,'production horse merge function missing');
+const mergeHorse=new Function('window','reflectUseful','isScratchHorse',
+  src.slice(horseStart,horseEnd)+';return mergeHorseReflection;')(
+  historyWindow,v=>v!==null&&v!==undefined&&v!==''&&!Array.isArray(v),()=>false);
+const oldHorse={horseNumber:1,name:'同じ 馬',
+  allPastRuns:[{date:'2026-09-01',track:'大井',distance:1200,finish:1},
+               {date:'2026-09-03',track:'大井',distance:1200,finish:2}],
+  recentRaces:[{date:'2026-09-03',track:'大井',distance:1200,finish:2}],
+  debutNoHistory:true};
+const freshHorse={horseNumber:1,name:'同じ馬',
+  recentRaces:[{date:'2026-09-02',track:'大井',distance:1200,finish:3},
+               {date:'2026-10-11',track:'大井',distance:1200,finish:2}]};
+const matched=mergeHorse(oldHorse,freshHorse,{},'2026-10-10');
+assert.deepEqual(matched.allPastRuns.map(x=>x.date).sort(),
+  ['2026-09-01','2026-09-02','2026-09-03']);
+assert.equal(matched.recentRaces.length,3);
+assert.equal(matched.debutNoHistory,undefined,'unverified debut status must not persist');
+const different=mergeHorse({...oldHorse,careerArchive:{sha256:'old archive'}},
+  {horseNumber:1,name:'別の馬',recentRaces:[{date:'2026-09-08',finish:4}]}, {},'2026-10-10');
+assert.deepEqual(different.allPastRuns.map(x=>x.date),['2026-09-08']);
+assert.equal(different.careerArchive,undefined,'never inherit a different horses compressed runs');
+const verified=mergeHorse({horseNumber:2,name:'新馬',debutNoHistory:true,
+  _careerHistoryAudit:{complete:true,reportedStarts:0,requestedAtRaceDate:'2026-10-10'}},
+  {horseNumber:2,name:'新馬'}, {},'2026-10-10');
+assert.equal(verified.debutNoHistory,true,'verified zero starts remains a debut');
+assert.equal(oldHorse.allPastRuns.length,2,'never mutate historical input');
 const openName=src.includes('function _arvexq_original_openRace(')?'function _arvexq_original_openRace(':'function openRace(';
 const start=src.indexOf(openName),end=src.indexOf('\n}',start)+2;
 assert(start>=0&&end>start,'missing openRace');
