@@ -1650,7 +1650,27 @@ function diagnosisPanel(r,p){
   return '<section id="section-diagnosis" class="card"><h2>全頭診断</h2><p class="muted diagnosis-tap-note">馬名をタップすると、直近5走・適性・騎手/調教師・血統までまとめて確認できます。</p>'+details+'</section>'
 }
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=window.ARVEXQPastRunView.visible(h,r,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中'),career=careerCoverageLabel(h);if(career)status+='・全キャリア'+career;return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
-function pacePanel(r,p){return '<section id="section-pace" class="card pace-panel-direct">'+paceBoard(r,p)+'</section>'}
+function pacePanel(r,p){
+  var forecast=window.ARVEXQProductionPrediction&&window.ARVEXQProductionPrediction.trial(r);
+  if(forecast){
+    var stages=forecast.stages||{},pace=stages.pace&&stages.pace.value,
+        styles=stages.runningStyle&&stages.runningStyle.value;
+    if(Array.isArray(pace)&&styles){
+      var head='<h2>展開予想</h2><p class="muted">Stage64 研究暫定・展開補正仮説（発生確率は未推定）。中央は中立1シナリオ、地方は4シナリオ。数値は勝率ではありません。</p>';
+      var styleText=Object.keys(styles).sort(function(a,b){return Number(a)-Number(b)}).map(function(no){
+        var v=styles[no];return esc(no)+'番 '+(Array.isArray(v)?v.map(function(x){return (Number(x)*100).toFixed(0)+'%'}).join(' / '):'取得不足');
+      }).join('　');
+      var body=pace.map(function(s,i){
+        var ordered=Object.keys(s).sort(function(a,b){return Number(a)-Number(b)});
+        var vals=ordered.map(function(no){return esc(no)+'番 '+esc(Number(s[no]).toFixed(3))}).join('、');
+        return '<p><b>シナリオ'+(i+1)+'</b>：'+vals+'</p>';
+      }).join('');
+      return '<section id="section-pace" class="card pace-panel-direct">'+head+
+        '<p class="muted">脚質割合（逃げ / 先行 / 差し / 追込）：'+styleText+'</p>'+body+'</section>';
+    }
+  }
+  return '<section id="section-pace" class="card pace-panel-direct">'+paceBoard(r,p)+'</section>';
+}
 function openHorseDetailPage(no){
   no=n(no,0);if(!no||!state.race)return;
   state.detailHorseNo=no;
