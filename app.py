@@ -2307,8 +2307,21 @@ from arvexq.ingest.netkeiba_result import parse_current_result_html as _parse_ne
 
 
 def _netkeiba_current_result(detail:dict)->dict|None:
-    rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
-    if not rid:return None
+    # The same existing result endpoint also serves the established NAR fallback.
+    # Resolve race identity through the correct circuit; JRA's program resolver
+    # never discovers NAR races and silently skipped missing NAR result rows.
+    rid=str(detail.get("netkeibaRaceId") or "")
+    if not rid:
+        date=str(detail.get("date") or "")
+        track=str(detail.get("track") or "")
+        race_no=int(detail.get("raceNumber") or 0)
+        if str(detail.get("id") or "").startswith("nar-") or str(detail.get("circuit") or "") in ("NAR","地方"):
+            rid=_nar_netkeiba_race_id(date,track,race_no)
+        else:
+            rid=_netkeiba_race_id(date,track,race_no)
+    if not rid:
+        print("NETKEIBA_RESULT_ID_UNAVAILABLE",detail.get("id"),detail.get("track"),detail.get("raceNumber"))
+        return None
     try:html=_netkeiba_get(f"https://race.netkeiba.com/race/result.html?race_id={rid}",float(os.getenv("NETKEIBA_RESULT_TIMEOUT_SEC","3.0")),20)
     except Exception as exc:
         print("netkeiba result failed",rid,exc);return None
@@ -4548,6 +4561,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
     ]
     known={_clean(h.get("name")):int(h.get("horseNumber") or 0) for h in detail.get("horses",[]) or [] if h.get("name")}
     last_err=""
+    source_reasons=[]
     for url in urls:
         try:
             req=urllib.request.Request(url,headers={
@@ -4558,11 +4572,17 @@ def _nar_official_result_fast(detail:dict)->dict|None:
             with urllib.request.urlopen(req,timeout=float(os.getenv("NAR_RESULT_TIMEOUT_SEC","4.0"))) as res:
                 html=_jra_decode(res.read())
         except Exception as exc:
-            last_err=str(exc);continue
-        if not html:continue
+            last_err=str(exc)
+            source_reasons.append("fetch_error:"+type(exc).__name__)
+            continue
+        if not html:
+            source_reasons.append("empty_html")
+            continue
         soup=BeautifulSoup(html,"html.parser")
         full=_clean(soup.get_text(" ",strip=True))
-        if "競走成績" not in full and "着順" not in full:continue
+        if "競走成績" not in full and "着順" not in full:
+            source_reasons.append("result_marker_missing")
+            continue
         wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
         cm=re.search(r"馬場(?:状態)?\s*[：:]?\s*(不良|稍重|重|良)",full)
         finishers=[]
@@ -4652,7 +4672,9 @@ def _nar_official_result_fast(detail:dict)->dict|None:
         finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
         # Do not call a partial page final until at least the podium is visible.
         classified=[int(x.get("finish") or 0) for x in finishers if int(x.get("finish") or 0)>0]
-        if 1 not in classified or sum(1 for finish in classified if finish<=3)<3:continue
+        if 1 not in classified or sum(1 for finish in classified if finish<=3)<3:
+            source_reasons.append("podium_incomplete" if classified else "result_table_unrecognized")
+            continue
         payouts=_parse_payouts(soup)
         explicit_final=official_confirmed(full)
         out={"status":"確定" if explicit_final else "速報","finishers":finishers,"source":"NAR公式競走成績","payouts":payouts}
@@ -4660,7 +4682,8 @@ def _nar_official_result_fast(detail:dict)->dict|None:
         if cm:out["condition"]=_env_clean_condition(cm.group(1))
         out["sourceUrl"]=url
         return out
-    if last_err:print("NAR official result unavailable",detail.get("id"),last_err)
+    print("NAR_RESULT_UNRESOLVED",detail.get("id"),"reasons="+",".join(source_reasons or ["not_parsed"]),
+          "last_fetch_error="+last_err[:100] if last_err else "")
     return None
 
 
