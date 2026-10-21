@@ -4,7 +4,19 @@ const {chromium}=require(process.env.ARVEXQ_PLAYWRIGHT_MODULE||'playwright');
 const detail=JSON.parse(fs.readFileSync('tests/fixtures/forecast_revision_transport.json')).detail;
 const before=JSON.stringify(detail.preRacePrediction);
 const originalDetail=structuredClone(detail);delete originalDetail.forecastRevisions;delete originalDetail.currentForecastRevisionId;
-const source=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+function loadActualProductionApp(){
+  const versionPath='dist/version.json';
+  if(fs.existsSync(versionPath)){
+    const version=JSON.parse(fs.readFileSync(versionPath,'utf8')).build;
+    return fs.readFileSync('dist/app-'+version+'.js','utf8');
+  }
+  // Standalone smoke tests must still execute the actual box-composed source.
+  const {execFileSync}=require('node:child_process');
+  return execFileSync('python',['-c',
+    "from pathlib import Path; from arvexq.ui.bundle import compose_app_script; print(compose_app_script(Path('arvexq/ui/static/app.js').read_text(encoding='utf-8')))"
+  ],{encoding:'utf8'});
+}
+const source=loadActualProductionApp();
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 assert(source.includes(boot));
 const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefresh=function(){};scheduleRaceBiasRefresh=function(){};scheduleVenueTrendRefresh=function(){};window.revisionTest={state,openRace};`);
