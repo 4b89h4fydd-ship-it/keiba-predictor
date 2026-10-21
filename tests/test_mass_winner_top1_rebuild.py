@@ -4,6 +4,7 @@ No production prediction, network access or score weighting is activated.
 """
 import unittest
 import json
+import sqlite3
 from copy import deepcopy
 import subprocess
 import sys
@@ -11,7 +12,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from arvexq.prediction.mass_training_dataset import rows_from_frozen_snapshot
-from arvexq.prediction.mass_training_store import frozen_training_rows_from_detail
+from arvexq.prediction.mass_training_store import frozen_training_rows_from_detail, load_frozen_training_rows
 from arvexq.prediction.mass_feature_transport import _feature_hash
 from arvexq.prediction.mass_model_training import _race_winner_top1, _training_circuit, prepare_head_rows
 
@@ -79,6 +80,36 @@ class RebuiltWinnerTop1TrainingTests(unittest.TestCase):
             "originHashVerified": False, "featureHash": good["massFeatureHash"]
         }
         self.assertEqual(frozen_training_rows_from_detail(legacy), [])
+
+    def test_archive_legacy_without_outer_circuit_remains_eligible(self):
+        detail = self.eligible_detail()
+        detail.pop("circuit")
+        self.assertEqual(len(frozen_training_rows_from_detail(detail)), 3)
+
+    def test_sqlite_index_must_match_frozen_id_date_and_circuit(self):
+        detail = self.eligible_detail()
+        with TemporaryDirectory() as tmp:
+            db = Path(tmp) / "races.sqlite3"
+            connection = sqlite3.connect(db)
+            try:
+                connection.execute(
+                    "CREATE TABLE race_snapshots (race_id TEXT, race_date TEXT, circuit TEXT, payload TEXT)"
+                )
+                payload = json.dumps(detail, ensure_ascii=False)
+                for rid, day, circuit in (
+                    (detail["id"], detail["date"], "地方"),
+                    ("nar-2026-10-21-門別-11", detail["date"], "地方"),
+                    (detail["id"], "2026-10-20", "地方"),
+                    (detail["id"], detail["date"], "中央"),
+                ):
+                    connection.execute("INSERT INTO race_snapshots VALUES (?, ?, ?, ?)",
+                                       (rid, day, circuit, payload))
+                connection.commit()
+            finally:
+                connection.close()
+            rows = load_frozen_training_rows(db)
+            self.assertEqual(len(rows), 3)
+            self.assertEqual({r["raceId"] for r in rows}, {detail["id"]})
 
     def test_duplicate_official_finish_record_fails_closed(self):
         snap = self.snapshot()
