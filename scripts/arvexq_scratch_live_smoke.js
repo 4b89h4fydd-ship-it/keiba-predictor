@@ -3,7 +3,11 @@ const fs = require('node:fs');
 const source = fs.readFileSync('arvexq/ui/static/app.js', 'utf8');
 
 function extract(start, end) {
-  const a = source.indexOf('function ' + start + '(');
+  // Some functions are wrapped by the verified 200-box layer; isolate
+  // the real function body AND its forwarder, not only the thin wrapper.
+  const original = '_arvexq_original_' + start;
+  const anchor = source.includes('function ' + original + '(') ? original : start;
+  const a = source.indexOf('function ' + anchor + '(');
   const b = source.indexOf('\nfunction ' + end + '(', a);
   assert.ok(a >= 0 && b > a, 'could not isolate ' + start);
   return source.slice(a, b);
