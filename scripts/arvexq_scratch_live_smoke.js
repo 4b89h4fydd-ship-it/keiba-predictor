@@ -22,6 +22,8 @@ const state = {
   pred: {stale: true}, analysisSaved: {stale: true}
 };
 const impl = [
+  // The production 200-box helper is required when testing the original live-odds wrapper.
+  fs.readFileSync('arvexq/components/item_189/routes.js','utf8'),
   extract('isScratchHorse', 'analysisRace'),
   extract('reflectUseful', 'raceDisplayCoreReady'),
   extract('mergeOddsPayload', 'refreshRaceAfterCollect')
