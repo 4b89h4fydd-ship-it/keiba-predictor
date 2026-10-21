@@ -55,5 +55,16 @@ class ManualArtifactSource(unittest.TestCase):
                 saved_race_rows(source)
 
 
+
+    def test_full_prefetch_matching_id_with_invalid_circuit_or_date_rejected(self):
+        row = race("jra", 1)
+        for detail in (dict(row, circuit="nar"), dict(row, circuit=None),
+                       dict(row, date="2026-10-23")):
+            with self.subTest(detail=detail), self.assertRaisesRegex(
+                ValueError, "detail race identity invalid"
+            ):
+                saved_race_rows({"races": [row], "details": [detail]})
+
+
 if __name__ == "__main__":
     unittest.main()
