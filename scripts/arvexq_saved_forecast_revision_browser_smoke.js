@@ -24,15 +24,19 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
 
   for(const name of fs.readdirSync('arvexq/ui/static/forecast').filter(n=>n.endsWith('.js')))await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/forecast/'+name,'utf8')});
   await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/research/diagnosis_view.js','utf8')});await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/research/live_odds.js','utf8')});await page.addScriptTag({content:code});
-  await page.evaluate(d=>{revisionTest.state.date=d.date;revisionTest.state.circuit=d.circuit;revisionTest.state.races=[d]},originalDetail);
-  await page.evaluate(id=>revisionTest.openRace(id),detail.id);
+  // Surface the actual app bootstrap failure instead of the misleading
+  // ReferenceError thrown by the next page.evaluate when initialization aborts.
+  const initialized=await page.evaluate(()=>Boolean(window.revisionTest));
+  assert.ok(initialized,'app bootstrap did not expose revisionTest: '+errors.join('; '));
+  await page.evaluate(d=>{window.revisionTest.state.date=d.date;window.revisionTest.state.circuit=d.circuit;window.revisionTest.state.races=[d]},originalDetail);
+  await page.evaluate(id=>window.revisionTest.openRace(id),detail.id);
   await page.waitForFunction(()=>document.querySelectorAll('.racecard-row').length===6);
   assert.equal(await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),0);
   for(const id of ['section-prediction','section-aimarks','section-bets'])assert.equal(await page.locator('#'+id).count(),1);
   assert.equal(await page.locator('#section-aimarks .ai-mark-list').innerText(),'');
   assert.match(await page.locator('#section-bets .ai-bet-box').innerText(),/発走前に検証・保存されたおすすめ買い目が未取得/);
   assert.equal(await page.locator('.diagnosis-merged-row').count(),6);
-  assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRacePrediction)),before);
+  assert.equal(await page.evaluate(()=>JSON.stringify(window.revisionTest.state.race.preRacePrediction)),before);
   assert.equal(errors.length,0,errors.join(';'));
   console.log('SAVED_FORECAST_REVISION_MOBILE_BROWSER_PASS');
  }finally{await browser.close()}
