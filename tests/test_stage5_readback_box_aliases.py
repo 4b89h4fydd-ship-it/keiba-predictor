@@ -19,12 +19,15 @@ def test_retry_uses_existing_get_json_once_per_attempt():
     calls = []
 
     class Response:
+        def __init__(self):
+            self.unread = b'{"ok": true}'
         def __enter__(self):
             return self
         def __exit__(self, *args):
             return False
         def read(self, limit):
-            return b'{"ok": true}'
+            chunk, self.unread = self.unread[:limit], self.unread[limit:]
+            return chunk
 
     def opener(request, timeout):
         calls.append(request.full_url)

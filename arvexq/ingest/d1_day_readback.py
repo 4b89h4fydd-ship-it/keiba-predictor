@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date
+import http.client
 import json
 import time
 import urllib.error
@@ -26,7 +27,17 @@ def get_json(url, *, timeout=20, attempts=2, opener=urllib.request.urlopen,
             request = urllib.request.Request(url, headers={
                 "accept": "application/json", "user-agent": "ARVEXQ-FactReadback/1"})
             with opener(request, timeout=timeout) as response:
-                raw = response.read(MAX_RESPONSE_BYTES + 1)
+                chunks = []
+                total = 0
+                # A short read is not EOF; finish this SAME response within
+                # the original 32 MiB cap before attempting JSON decode.
+                while total <= MAX_RESPONSE_BYTES:
+                    chunk = response.read(min(65536, MAX_RESPONSE_BYTES + 1 - total))
+                    if not chunk:
+                        break
+                    total += len(chunk)
+                    chunks.append(chunk)
+                raw = b"".join(chunks)
             if len(raw) > MAX_RESPONSE_BYTES:
                 raise ValueError("D1 JSON response exceeds read budget")
             result = json.loads(raw.decode("utf-8"))
@@ -34,9 +45,12 @@ def get_json(url, *, timeout=20, attempts=2, opener=urllib.request.urlopen,
                 raise ValueError("D1 JSON response must be an object")
             return result
         except urllib.error.HTTPError as exc:
-            if exc.code not in (408, 429, 500, 502, 503, 504) or attempt + 1 == attempts:
+            # 429 is a rate-limit signal, never a reason to intensify requests.
+            if exc.code == 429 or exc.code not in (408, 500, 502, 503, 504) or attempt + 1 == attempts:
                 raise
-        except OSError:
+        except (json.JSONDecodeError, UnicodeDecodeError, http.client.IncompleteRead, OSError):
+            # Edge truncation is retried on exactly the original URL, never
+            # interpreted as missing horses or an empty D1 original.
             if attempt + 1 == attempts:
                 raise
         sleeper(min(2, 0.5 * (attempt + 1)))

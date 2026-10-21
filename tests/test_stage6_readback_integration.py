@@ -140,12 +140,15 @@ def test_corrupt_json_not_accepted_as_success():
     calls = []
 
     class Response:
+        def __init__(self):
+            self.unread = b"not JSON"
         def __enter__(self):
             return self
         def __exit__(self, *_):
             return False
-        def read(self, _limit):
-            return b"not JSON"
+        def read(self, limit):
+            chunk, self.unread = self.unread[:limit], self.unread[limit:]
+            return chunk
 
     def opener(request, timeout):
         calls.append(request.full_url)
@@ -153,5 +156,5 @@ def test_corrupt_json_not_accepted_as_success():
 
     with pytest.raises(json.JSONDecodeError):
         retry_box.get_json(BASE, opener=opener, sleeper=lambda _: None)
-    assert calls == [BASE]
+    assert calls == [BASE, BASE], 'invalid JSON must fail after bounded same-URL retries'
 
