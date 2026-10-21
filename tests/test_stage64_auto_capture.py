@@ -105,4 +105,23 @@ class AutoCapture(unittest.TestCase):
         selected,_=select_future({"details":[row]},"nar",PLAN,NOW)
         self.assertEqual(selected,[row])
 
+
+    def test_saved_prefetch_matched_id_but_invalid_circuit_or_date_is_rejected(self):
+        row = race("jra", 1)
+        corrupt = (dict(row, circuit="nar"), dict(row, circuit="unrecognized"),
+                   dict(row, date="2026-10-23"), dict(row, circuit=None))
+        for detail in corrupt:
+            with self.subTest(detail=detail), self.assertRaisesRegex(
+                ValueError, "detail race identity invalid"
+            ):
+                select_future({"races": [row], "details": [detail]}, "jra", PLAN, NOW)
+
+    def test_legacy_detail_only_invalid_identity_keeps_old_exclusion(self):
+        row = race("jra", 1)
+        bad = dict(race("nar", 2), circuit="wrong")
+        chosen, audit = select_future({"details": [row, bad]}, "jra", PLAN, NOW)
+        self.assertEqual(chosen, [row])
+        self.assertEqual(audit["excluded"],
+                         [{"raceId": bad["id"], "reason": "invalid-race-identity"}])
+
 if __name__=="__main__": unittest.main()
