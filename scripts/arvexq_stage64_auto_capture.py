@@ -21,12 +21,58 @@ INDEX = Path(__file__).resolve().parents[1] / "docs/research/stage64-results/pre
 LEAD = timedelta(minutes=30)
 
 
+def require_complete_saved_details(source, rows):
+    """Check the existing Prefetch race-index/detail contract, without fetching.
+
+    Explicit detail-only research inputs remain supported. A saved Prefetch
+    index, when present, must not be silently reduced to the available details.
+    """
+    if not isinstance(source, dict) or "races" not in source:
+        return
+    listed = source["races"]
+    if not isinstance(listed, list) or any(
+        not isinstance(r, dict) or not isinstance(r.get("id"), str) or not r["id"]
+        for r in listed
+    ):
+        raise ValueError("saved input race index invalid")
+    if not isinstance(rows, list) or any(
+        not isinstance(r, dict) or not isinstance(r.get("id"), str) or not r["id"]
+        for r in rows
+    ):
+        raise ValueError("saved input detail identity invalid")
+    listed_ids = [r["id"] for r in listed]
+    detail_ids = [r["id"] for r in rows]
+    if (len(set(listed_ids)) != len(listed_ids)
+            or len(set(detail_ids)) != len(detail_ids)
+            or set(listed_ids) != set(detail_ids)):
+        raise ValueError("saved input races/details identity mismatch")
+    # A saved Prefetch roster cannot be considered complete if one matched
+    # detail has an unassignable circuit/date/ID. Otherwise select_future
+    # silently excludes that race while freezing the remaining cohort.
+    for row in rows:
+        try:
+            circuit(row)
+        except (ValueError, TypeError, AttributeError) as exc:
+            raise ValueError("saved input detail race identity invalid") from exc
+
+
 def select_future(source, owner, plan, now):
     if now.tzinfo is None or owner not in ("jra", "nar"):
         raise ValueError("invalid circuit or naive current time")
     rows = source.get("details") if isinstance(source, dict) else None
-    if not isinstance(rows, list) or not rows:
-        raise ValueError("saved input details empty")
+    if not isinstance(rows, list):
+        raise ValueError("saved input details missing")
+    require_complete_saved_details(source, rows)
+    if not rows:
+        # Full Prefetch explicitly emits both empty arrays when no races exist.
+        # Missing details with a nonempty/unknown race roster remain a hard error.
+        # Do not invent a zero-race calendar claim from this supplied artifact.
+        if source.get("races") != []:
+            raise ValueError("saved input details empty")
+        return [], {"circuit": owner, "sourceRows": 0, "circuitRaces": 0,
+                    "selected": [], "excluded": [],
+                    "fullCalendarVerified": False,
+                    "independentlyVerifiedPreoff": False}
     chosen, excluded, observed = [], [], set()
     for row in rows:
         rid = row.get("id") if isinstance(row, dict) else None
