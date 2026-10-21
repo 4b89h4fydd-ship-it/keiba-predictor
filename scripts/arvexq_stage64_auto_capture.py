@@ -37,8 +37,11 @@ def select_future(source, owner, plan, now):
             for r in listed
         ):
             raise ValueError("saved input race index invalid")
+        if any(not isinstance(r, dict) or not isinstance(r.get("id"), str)
+               or not r["id"] for r in rows):
+            raise ValueError("saved input detail identity invalid")
         listed_ids = [r["id"] for r in listed]
-        detail_ids = [r.get("id") if isinstance(r, dict) else None for r in rows]
+        detail_ids = [r["id"] for r in rows]
         if (len(set(listed_ids)) != len(listed_ids)
                 or len(set(detail_ids)) != len(detail_ids)
                 or set(listed_ids) != set(detail_ids)):
