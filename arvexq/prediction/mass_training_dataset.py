@@ -35,7 +35,24 @@ def rows_from_frozen_snapshot(snapshot: dict[str, Any], final_result: dict[str, 
     finishes = _finish_map(final_result)
     rows: list[dict[str, Any]] = []
     race_id = str(snapshot.get("raceId") or "")
-    for horse in snapshot.get("rows") or []:
+    frozen_rows = snapshot.get("rows") or []
+    # The saved snapshot is the whole pre-off field. Never train or score a
+    # "winner top-1" target on a partial set of labelled runners: that silently
+    # creates easier races and inflates the measured accuracy.
+    if (not race_id or not isinstance(frozen_rows, list) or len(frozen_rows) < 3
+            or type(snapshot.get("horseCount")) is not int
+            or snapshot["horseCount"] != len(frozen_rows)):
+        return []
+    try:
+        frozen_numbers = [int(h["horseNumber"]) for h in frozen_rows]
+    except (TypeError, ValueError, KeyError):
+        return []
+    if (any(n <= 0 for n in frozen_numbers)
+            or len(set(frozen_numbers)) != len(frozen_numbers)
+            or set(finishes) != set(frozen_numbers)
+            or sum(finishes[n] == 1 for n in frozen_numbers) != 1):
+        return []
+    for horse in frozen_rows:
         if not isinstance(horse, dict):
             continue
         try:
