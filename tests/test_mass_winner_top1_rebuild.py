@@ -14,6 +14,7 @@ from tempfile import TemporaryDirectory
 from arvexq.prediction.mass_training_dataset import rows_from_frozen_snapshot
 from arvexq.prediction.mass_training_store import frozen_training_rows_from_detail, load_frozen_training_rows
 from arvexq.prediction.mass_feature_transport import _feature_hash
+from arvexq.ingest.full_snapshot_codec import pack_detail
 from arvexq.prediction.mass_model_training import _race_winner_top1, _training_circuit, prepare_head_rows
 
 
@@ -80,6 +81,52 @@ class RebuiltWinnerTop1TrainingTests(unittest.TestCase):
             "originHashVerified": False, "featureHash": good["massFeatureHash"]
         }
         self.assertEqual(frozen_training_rows_from_detail(legacy), [])
+
+    def test_existing_full_payload_storage_recovers_frozen_training_rows(self):
+        # The thin D1 display projection omits nested massFeatureSnapshot.
+        # SQLite training must unpack the full original, not interpret the
+        # displayed index as proof that the original snapshot is missing.
+        detail = self.eligible_detail()
+        packed = pack_detail(detail)
+        self.assertNotIn("massFeatureSnapshot", packed)
+        rows = frozen_training_rows_from_detail(packed)
+        self.assertEqual(len(rows), 3)
+        self.assertEqual([r["horseNumber"] for r in rows], [1, 2, 3])
+        self.assertEqual(sum(r["labelWin"] for r in rows), 1)
+
+        with TemporaryDirectory() as tmp:
+            db = Path(tmp) / "races.sqlite3"
+            con = sqlite3.connect(db)
+            try:
+                con.execute(
+                    "CREATE TABLE race_snapshots (race_id TEXT, race_date TEXT, circuit TEXT, payload TEXT)"
+                )
+                con.execute("INSERT INTO race_snapshots VALUES (?, ?, ?, ?)",
+                            (detail["id"], detail["date"], detail["circuit"],
+                             json.dumps(packed, ensure_ascii=False)))
+                con.commit()
+            finally:
+                con.close()
+            original = load_frozen_training_rows(db)
+            self.assertEqual(len(original), 3)
+            self.assertEqual([r["featureHash"] for r in original],
+                             [detail["massFeatureHash"]] * 3)
+
+    def test_corrupt_full_payload_does_not_enter_training(self):
+        packed = pack_detail(self.eligible_detail())
+        bad = deepcopy(packed)
+        bad["arvexqFullPayload"]["sha256"] = "0" * 64
+        self.assertEqual(frozen_training_rows_from_detail(bad), [])
+        bad = deepcopy(packed)
+        bad["arvexqFullPayload"]["gzipBase64"] = "not-base64!"
+        self.assertEqual(frozen_training_rows_from_detail(bad), [])
+
+    def test_display_index_cannot_forge_results_over_original_payload(self):
+        detail = self.eligible_detail()
+        detail["result"]["status"] = "速報"
+        packed = pack_detail(detail)
+        packed["result"]["status"] = "確定"
+        self.assertEqual(frozen_training_rows_from_detail(packed), [])
 
     def test_archive_legacy_without_outer_circuit_remains_eligible(self):
         detail = self.eligible_detail()
