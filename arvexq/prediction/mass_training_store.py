@@ -122,6 +122,15 @@ def iter_frozen_training_rows(
         examples = frozen_training_rows_from_detail(detail)
         if not examples:
             continue
+        # The SQLite index remains a separate authority for race identity and
+        # circuit. This also checks legacy payloads with no top-level circuit.
+        aliases = {"中央": "jra", "jra": "jra", "地方": "nar", "nar": "nar"}
+        source_circuit = aliases.get(str(row["circuit"] or ""))
+        frozen_circuit = aliases.get(str(examples[0].get("circuit") or ""))
+        if (str(row["race_id"]) != str(examples[0]["raceId"])
+                or str(row["race_date"]) != str(examples[0]["date"])
+                or source_circuit is None or source_circuit != frozen_circuit):
+            continue
         seen_hashes.add(feature_hash)
         for example in examples:
             example["storeVersion"] = STORE_VERSION
