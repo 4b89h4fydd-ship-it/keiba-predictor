@@ -4,12 +4,15 @@ No production prediction, network access or score weighting is activated.
 """
 import unittest
 import json
+from copy import deepcopy
 import subprocess
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from arvexq.prediction.mass_training_dataset import rows_from_frozen_snapshot
+from arvexq.prediction.mass_training_store import frozen_training_rows_from_detail
+from arvexq.prediction.mass_feature_transport import _feature_hash
 from arvexq.prediction.mass_model_training import _race_winner_top1, _training_circuit, prepare_head_rows
 
 
@@ -34,6 +37,57 @@ class RebuiltWinnerTop1TrainingTests(unittest.TestCase):
             {"horseNumber": 2, "finish": 1},
             {"horseNumber": 3, "finish": 3},
         ]}
+
+    def eligible_detail(self):
+        snapshot = self.snapshot()
+        snapshot["featureHash"] = _feature_hash(snapshot)
+        return {
+            "id": snapshot["raceId"], "date": snapshot["date"],
+            "circuit": snapshot["circuit"],
+            "massFeatureSnapshot": snapshot,
+            "massFeatureHash": snapshot["featureHash"],
+            "result": {"status": "確定", **self.result()},
+        }
+
+    def test_direct_snapshot_hash_is_actually_recomputed(self):
+        good = self.eligible_detail()
+        self.assertEqual(len(frozen_training_rows_from_detail(good)), 3)
+        tampered = deepcopy(good)
+        tampered["massFeatureSnapshot"]["rows"][0]["features"]["static::age"] = 999.0
+        self.assertEqual(frozen_training_rows_from_detail(tampered), [])
+
+    def test_direct_snapshot_race_identity_and_declared_lock_must_agree(self):
+        good = self.eligible_detail()
+        self.assertEqual(len(frozen_training_rows_from_detail(good)), 3)
+        for key, value in (("id", "nar-2026-10-21-門別-11"),
+                           ("date", "2026-10-20"), ("circuit", "中央"),
+                           ("massFeatureHash", "different-hash")):
+            mismatch = deepcopy(good)
+            mismatch[key] = value
+            self.assertEqual(frozen_training_rows_from_detail(mismatch), [], key)
+        wrong_lock = deepcopy(good)
+        wrong_lock["preRacePrediction"] = {"massFeatureHash": "different-hash"}
+        self.assertEqual(frozen_training_rows_from_detail(wrong_lock), [])
+
+    def test_explicitly_unverified_snapshot_remains_ineligible(self):
+        good = self.eligible_detail()
+        flagged = deepcopy(good)
+        flagged["verifiedForTraining"] = False
+        self.assertEqual(frozen_training_rows_from_detail(flagged), [])
+        legacy = deepcopy(good)
+        legacy["massFeatureArchive"] = {
+            "originHashVerified": False, "featureHash": good["massFeatureHash"]
+        }
+        self.assertEqual(frozen_training_rows_from_detail(legacy), [])
+
+    def test_duplicate_official_finish_record_fails_closed(self):
+        snap = self.snapshot()
+        result = self.result()
+        result["finishers"].append(dict(result["finishers"][1]))
+        self.assertEqual(rows_from_frozen_snapshot(snap, result), [])
+        # A conflicting duplicate is just as invalid as an identical duplicate.
+        result["finishers"][-1]["finish"] = 3
+        self.assertEqual(rows_from_frozen_snapshot(snap, result), [])
 
     def test_complete_frozen_field_yields_exact_labels(self):
         rows = rows_from_frozen_snapshot(self.snapshot(), self.result())
