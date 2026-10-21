@@ -6,8 +6,9 @@ from statistics import median
 from typing import Any, Callable, Iterable
 
 from arvexq.prediction.jra_class_evidence import class_ordinal
+from arvexq.prediction.nar_context_features import build_nar_context_features
 
-FEATURE_SCHEMA_VERSION = "arvexq-mass-features-v2-temporal-and-speed-separation"
+FEATURE_SCHEMA_VERSION = "arvexq-mass-features-v3-nar-provenanced-context"
 
 # This module is intentionally isolated from factor_model.py/final_marks.py.
 # It generates only pre-race features. It does not read the current race result,
@@ -409,6 +410,7 @@ def build_horse_features(horse: dict[str, Any], race: dict[str, Any]) -> dict[st
     ctx = _race_context(race)
     runs = _runs(horse, str(race.get("date") or ""))
     features = _static_features(horse, race)
+    features.update(build_nar_context_features(horse, race, runs))
     subsets = _filter_sets(runs, ctx)
 
     for subset_name, subset in subsets.items():
