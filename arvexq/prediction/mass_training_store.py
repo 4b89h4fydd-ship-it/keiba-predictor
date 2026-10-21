@@ -7,6 +7,7 @@ from typing import Any, Iterable
 
 from arvexq.prediction.mass_training_dataset import rows_from_frozen_snapshot
 from arvexq.prediction.mass_feature_transport import recover_mass_detail, _feature_hash
+from arvexq.ingest.full_snapshot_codec import unpack_detail
 
 STORE_VERSION = "arvexq-mass-training-store-v1"
 
@@ -26,6 +27,14 @@ def frozen_training_rows_from_detail(detail: dict[str, Any]) -> list[dict[str, A
     """Use only the already-frozen feature snapshot; never rebuild from final detail."""
     if not isinstance(detail, dict):
         return []
+    # The existing D1/SQLite storage may contain a losslessly compressed full
+    # detail. Read its authenticated original before inspecting result labels or
+    # frozen feature evidence: the thin display index is NOT a training source.
+    if "arvexqFullPayload" in detail:
+        try:
+            detail = unpack_detail(detail)
+        except (TypeError, ValueError, KeyError, OSError):
+            return []
     result = _confirmed_result(detail)
     if result is None:
         return []
@@ -111,7 +120,9 @@ def iter_frozen_training_rows(
     for row in dbrows:
         try:
             detail = json.loads(row["payload"])
-        except Exception:
+            if isinstance(detail, dict) and "arvexqFullPayload" in detail:
+                detail = unpack_detail(detail)
+        except (TypeError, ValueError, KeyError, OSError):
             continue
         snapshot = detail.get("massFeatureSnapshot") if isinstance(detail, dict) else None
         archive = detail.get("massFeatureArchive") if isinstance(detail, dict) else None
