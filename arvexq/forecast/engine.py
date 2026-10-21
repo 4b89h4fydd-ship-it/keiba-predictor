@@ -22,7 +22,18 @@ def build_prediction(facts, now=None):
     """
     if not isinstance(facts, dict):
         return None
-    if any(facts.get(key) for key in ("result", "results", "payouts")):
+    # A D1 pre-off race often has a placeholder {"status":"未確定",
+    # "finishers":[]}. That is not an outcome; it must not block a forecast.
+    # Actual result, payout or finished-state evidence still fails closed.
+    if facts.get("results") or facts.get("payouts"):
+        return None
+    outcome = facts.get("result")
+    if isinstance(outcome, dict):
+        if (outcome.get("finishers") or outcome.get("payouts")
+                or str(outcome.get("status") or "").strip().lower()
+                in ("確定", "速報", "final", "confirmed", "official")):
+            return None
+    elif outcome:
         return None
     # Lazy import avoids the prediction package initializer's observed_model cycle.
     from arvexq.prediction.prerace_archive import post_at
