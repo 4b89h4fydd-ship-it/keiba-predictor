@@ -902,8 +902,12 @@ jobs:
               required=first if complete_stage64(first,prior.get(rid)) else trial
               if json.dumps(retained,sort_keys=True,ensure_ascii=False)!=json.dumps(required,sort_keys=True,ensure_ascii=False):
                   errors.append((rid,'preoff-stage64-not-retained-identically'))
+          saved_candidates={rid:d for rid,d in returned.items()
+                            if complete_stage64(stage64(d),d)}
           print('STAGE64_D1_READBACK prepared_complete=',len(candidates),
-                'verified_complete=',len(candidates)-len(errors),'mismatches=',len(errors))
+                'verified_complete=',len(candidates)-len(errors),
+                'saved_complete_total=',len(saved_candidates),
+                'mismatches=',len(errors))
           if errors:
               print('STAGE64_D1_READBACK_FAILED',errors[:12])
               raise SystemExit('Complete Stage64 research receipts lost at D1 boundary')
@@ -914,7 +918,7 @@ jobs:
           from urllib.parse import quote
           import os
           selected={}
-          for rid,detail in candidates.items():
+          for rid,detail in saved_candidates.items():
               owner=stage64(detail)['circuit']
               selected.setdefault(owner,rid)
           checked=[]
