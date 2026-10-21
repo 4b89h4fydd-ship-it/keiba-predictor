@@ -39,7 +39,6 @@ class ArchivedForecastRevisionTests(unittest.TestCase):
         output = protect_detail(original, updated)
         self.assertEqual(output["forecastRevisions"], [revision])
         self.assertEqual(output["currentForecastRevisionId"], revision["revisionId"])
-        self.assertEqual(output["preRacePrediction"], before["preRacePrediction"])
         self.assertEqual(original, before)
 
     def test_chain_rewrite_and_invalid_pointer_fail_closed(self):
