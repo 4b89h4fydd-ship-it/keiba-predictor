@@ -12,9 +12,12 @@ const useful=v=>v!==null&&v!==undefined&&v!==''&&
  (!Array.isArray(v)||v.length>0)&&
  (typeof v!=='object'||Array.isArray(v)||Object.keys(v).length>0);
 const n=(v,d=0)=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))?Number(v):d;
-const readyAt=app.indexOf('function hasResultData('),readyEnd=app.indexOf('\nfunction mins(',readyAt);
-assert.ok(readyAt>0&&readyEnd>readyAt,'podium readiness must be extracted');
-const readiness=new Function('n',app.slice(readyAt,readyEnd)+';return hasResultData;')(n);
+const boxedReadiness=app.includes('function _arvexq_original_hasResultData(');
+const readyName=boxedReadiness?'_arvexq_original_hasResultData':'hasResultData';
+const readyAt=app.indexOf('function '+readyName+'(');
+const readyEnd=app.indexOf(boxedReadiness?'\nfunction hasResultData(':'\nfunction mins(',readyAt);
+assert.ok(readyAt>0&&readyEnd>readyAt,'actual podium readiness must be extracted');
+const readiness=new Function('n',app.slice(readyAt,readyEnd)+';return '+readyName+';')(n);
 assert.equal(readiness({result:{finishers:[{finish:1},{finish:1},{finish:3}]}}),true,'dead heat for 1st still includes three podium runners');
 assert.equal(readiness({result:{finishers:[{finish:1},{finish:2},{finish:2}]}}),true,'dead heat for 2nd still includes three podium runners');
 assert.equal(readiness({result:{finishers:[{finish:1},{finish:2}]}}),false,'two names is not a full podium');
@@ -55,8 +58,10 @@ const env={state, today:()=> '2026-10-11', n, mins:s=>Number(s.slice(0,2))*60+Nu
  traceRaceDetail:()=>{},detailState:()=>({}),
  render:()=>{renders++}
 };
+const realScheduler=app.includes('function _arvexq_original_scheduleResultRefresh(')?
+ '_arvexq_original_scheduleResultRefresh':'scheduleResultRefresh';
 const scheduler=new Function(...Object.keys(env),app.slice(i,j)+
- ';return {scheduleResultRefresh,active:function(){return resultPollActiveId}};')
+ ';return {scheduleResultRefresh:'+realScheduler+',active:function(){return resultPollActiveId}};')
  (...Object.values(env));
 (async()=>{
  scheduler.scheduleResultRefresh();
