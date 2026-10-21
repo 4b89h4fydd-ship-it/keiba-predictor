@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+from collections import defaultdict
+from math import isfinite
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
@@ -161,6 +163,56 @@ def _apply_manifest(rows: list[dict[str, Any]], manifest: set[str]) -> list[dict
     return out
 
 
+def _training_circuit(rows: list[dict[str, Any]]) -> str:
+    """A fitted model cannot transfer between JRA and NAR implicitly."""
+    aliases = {"jra": "jra", "中央": "jra", "nar": "nar", "地方": "nar"}
+    owners = {aliases.get(str(row.get("circuit") or "")) for row in rows}
+    if None in owners or len(owners) != 1:
+        raise ValueError("JRA and NAR training must be separate and labelled")
+    return next(iter(owners))
+
+
+def _race_winner_top1(rows: list[dict[str, Any]], scores: Any) -> dict[str, Any]:
+    """Chronological holdout diagnostic, not a prospective prediction claim.
+
+    Call only for a snapshot dataset whose labelled horse field was verified
+    complete before training. Do not resolve tied model scores using hindsight.
+    """
+    if len(rows) != len(scores):
+        raise ValueError("holdout rows and prediction scores have different sizes")
+    grouped: dict[tuple[str, str], list[tuple[dict[str, Any], float]]] = defaultdict(list)
+    for row, raw in zip(rows, scores):
+        grouped[(str(row.get("circuit") or ""), str(row.get("raceId") or ""))].append((row, float(raw)))
+    hit = scored = invalid = tied = 0
+    by_circuit: dict[str, dict[str, int]] = {}
+    for (circuit, race_id), group in grouped.items():
+        numbers = [str(r.get("horseNumber") or "") for r, _ in group]
+        winners = [r for r, _ in group if r.get("labelWin") in (1, 1.0, True)]
+        if (not circuit or not race_id or len(group) < 3 or len(set(numbers)) != len(numbers)
+                or any(not n or n == "0" for n in numbers)
+                or len(winners) != 1 or any(not isfinite(s) for _, s in group)):
+            invalid += 1
+            continue
+        maximum = max(s for _, s in group)
+        leaders = [r for r, s in group if s == maximum]
+        if len(leaders) != 1:
+            tied += 1
+            continue
+        scored += 1
+        winner_hit = int(leaders[0]["horseNumber"] == winners[0]["horseNumber"])
+        hit += winner_hit
+        bucket = by_circuit.setdefault(circuit, {"races": 0, "hits": 0})
+        bucket["races"] += 1
+        bucket["hits"] += winner_hit
+    return {
+        "cohortRaces": len(grouped), "scoredRaces": scored, "winnerTop1Hits": hit,
+        "winnerTop1Rate": hit / scored if scored else None,
+        "incompleteOrInvalidRaces": invalid, "tiedPredictionRaces": tied,
+        "byCircuit": by_circuit,
+        "interpretation": "chronological labelled-race diagnostic; not independently witnessed future accuracy",
+    }
+
+
 def train_head(
     rows: list[dict[str, Any]],
     head: str,
@@ -170,6 +222,7 @@ def train_head(
     """Train one head using chronological race-group splits and train-only feature pruning."""
     if head not in HEAD_SPECS:
         raise KeyError(f"unknown head: {head}")
+    circuit = _training_circuit(rows)
     from catboost import CatBoostClassifier, CatBoostRegressor
     import joblib
     from sklearn.metrics import brier_score_loss, log_loss, mean_squared_error, roc_auc_score
@@ -218,6 +271,8 @@ def train_head(
     if spec.task == "binary":
         valid_prob = model.predict_proba(x_valid)[:, 1]
         test_prob = model.predict_proba(x_test)[:, 1]
+        if head in ("ability", "win"):
+            metrics["testWinnerTop1"] = _race_winner_top1(test_rows, test_prob)
         metrics.update(
             {
                 "validLogLoss": float(log_loss(y_valid, valid_prob, labels=[0, 1])),
@@ -248,6 +303,7 @@ def train_head(
     metadata = {
         "trainerVersion": TRAINER_VERSION,
         "head": head,
+        "circuit": circuit,
         "task": spec.task,
         "label": spec.label,
         "featureLimit": HEAD_FEATURE_LIMITS[head],
