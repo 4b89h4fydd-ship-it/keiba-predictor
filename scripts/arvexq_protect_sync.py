@@ -112,8 +112,8 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     out = copy.deepcopy(incoming)
     if not isinstance(old, dict):
         return out
-    from arvexq.prediction.forecast_revisions import preserve_revisions
-    out = preserve_revisions(old, out)
+    from arvexq.prediction.archived_forecast_revisions import preserve_archived_revisions
+    out = preserve_archived_revisions(old, out)
     # The full morning prediction is a permanent, first-published record.
     # It must survive a later live odds refresh, prefetch or result repair.
     baseline = old.get("morningMarkSnapshot")
