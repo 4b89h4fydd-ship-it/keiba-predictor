@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from arvexq.prediction.mass_training_dataset import rows_from_frozen_snapshot
-from arvexq.prediction.mass_feature_transport import recover_mass_detail
+from arvexq.prediction.mass_feature_transport import recover_mass_detail, _feature_hash
 
 STORE_VERSION = "arvexq-mass-training-store-v1"
 
@@ -42,6 +42,29 @@ def frozen_training_rows_from_detail(detail: dict[str, Any]) -> list[dict[str, A
     if not isinstance(snapshot, dict):
         return []
     if not snapshot.get("featureHash") or not snapshot.get("rows"):
+        return []
+    # Both direct and compressed copies use the SAME origin-content hash.
+    # A direct snapshot used to bypass this guard, while compressed snapshots
+    # were verified during restore_snapshot().
+    expected = str(snapshot["featureHash"])
+    if expected != _feature_hash(snapshot):
+        return []
+    if (str(snapshot.get("raceId") or "") != str(detail.get("id") or detail.get("raceId") or "")
+            or str(snapshot.get("date") or "") != str(detail.get("date") or "")
+            or str(snapshot.get("circuit") or "") != str(detail.get("circuit") or "")):
+        return []
+    if detail.get("massFeatureHash") and str(detail["massFeatureHash"]) != expected:
+        return []
+    lock = detail.get("preRacePrediction")
+    if isinstance(lock, dict) and lock.get("massFeatureHash") and str(lock["massFeatureHash"]) != expected:
+        return []
+    archive = detail.get("massFeatureArchive")
+    if isinstance(archive, dict):
+        if archive.get("originHashVerified") is False or str(archive.get("featureHash") or "") != expected:
+            return []
+    # Explicitly provisional or disqualified captures are never promoted
+    # just because their feature bytes happen to hash correctly.
+    if detail.get("verifiedForTraining") is False or snapshot.get("verifiedForTraining") is False:
         return []
     return rows_from_frozen_snapshot(snapshot, result)
 
