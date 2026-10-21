@@ -6,7 +6,8 @@ from statistics import median
 from typing import Any, Callable, Iterable
 
 from arvexq.prediction.jra_class_evidence import class_ordinal
-from arvexq.prediction.nar_context_features import build_nar_context_features
+from arvexq.prediction.nar_context_features import NAR_CIRCUITS, build_nar_context_features
+from arvexq.core.runner_status import is_inactive_runner
 
 FEATURE_SCHEMA_VERSION = "arvexq-mass-features-v3-nar-provenanced-context"
 
@@ -471,6 +472,23 @@ def build_race_feature_matrix(horses: Iterable[dict[str, Any]], race: dict[str, 
         for horse in horses
         if isinstance(horse, dict)
     ]
+    # Race-relative start-position competition uses only other entered, active
+    # runners' historical first-corner rates. It is a learned feature, not a
+    # declared pace outcome, fixed scenario probability or gate-time sensor.
+    if str(race.get("circuit") or "") in NAR_CIRCUITS and "帯広" not in str(race.get("track") or ""):
+        observed = []
+        for row in rows:
+            feats = row["features"]
+            rate = feats.get("nar::pace::front_rate_w5")
+            count = feats.get("nar::pace::first_corner_samples_w5", 0)
+            if (not is_inactive_runner(row["horse"]) and rate is not None and count >= 2):
+                observed.append((row, float(rate)))
+        if len(observed) >= 2:
+            total = sum(rate for _, rate in observed)
+            for row, rate in observed:
+                row["features"]["nar::scenario::rival_front_rate_sum"] = total - rate
+                row["features"]["nar::scenario::observed_front_profiles"] = float(len(observed))
+
     keys = sorted({k for row in rows for k in row["features"] if not k.startswith("category::")})
 
     for key in keys:
