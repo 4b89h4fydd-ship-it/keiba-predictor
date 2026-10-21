@@ -4,6 +4,7 @@
   // Original receipts remain authoritative. The user-approved Stage64 trial
   // may supply separately labeled, provisional pre-off research roles only.
   var last={active:false,source:'',marks:[]};
+  var latestTrialRace=null;
 
   function stage64Trial(race){
     if(!race||!race.id||!race.date||!Array.isArray(race.horses))return null;
@@ -63,6 +64,8 @@
   }
 
   function build(race){
+    // Clear prior races before any validation to prevent stale ticket display.
+    latestTrialRace=null;
     if(root.ARVEXQProductionTickets)root.ARVEXQProductionTickets.build(race);
     var marks=originalMarks(race),trial=marks?null:stage64Trial(race),
         roles=trial&&trial.stages.marks.value,win=roles&&Number(roles.winRole.horseNumber),
@@ -79,10 +82,14 @@
           predRank:999,winProbability:null,p1Probability:null,p2Probability:null,
           p3Probability:null,overallGrade:'',coverage:0};
       });
+    latestTrialRace=trial?race:null;
     last={active:!!(marks||trial),source:marks?'saved-preoff':(trial?'stage64-provisional':''),
       unavailable:!marks&&!trial,
-      marks:marks?rows.filter(function(r){return !!r.predMark}).map(function(r){
-        return {horseNumber:Number(r.horse.horseNumber),name:String(r.horse.name||''),mark:r.predMark};
+      marks:(marks||trial)?rows.filter(function(r){return !!r.predMark}).map(function(r){
+        return {horseNumber:Number(r.horse.horseNumber),
+          name:String(r.horse.name||''),mark:r.predMark,
+          role:r.stage64Provisional?r.honmeiRole:'',
+          stage64Provisional:!!r.stage64Provisional};
       }):[]};
     return {rows:rows,legacyEngineDisabled:!trial,scenarios:[],plans:{},plan:null,
       suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:0};
@@ -90,5 +97,12 @@
   function current(){
     return {active:last.active,source:last.source||'',unavailable:!!last.unavailable,marks:last.marks.map(function(x){return Object.assign({},x)})};
   }
-  root.ARVEXQProductionPrediction=Object.freeze({build:build,current:current,trial:stage64Trial});
+  function currentTrialRace(){
+    // The existing ticket frame is rendered without arguments by renderRace.
+    // Only return the race whose six-stage preoff candidate passed validation.
+    return latestTrialRace&&stage64Trial(latestTrialRace)?latestTrialRace:null;
+  }
+  root.ARVEXQProductionPrediction=Object.freeze({
+    build:build,current:current,trial:stage64Trial,currentTrialRace:currentTrialRace
+  });
 })(typeof window!=='undefined'?window:globalThis);

@@ -6,6 +6,12 @@ function esc(x){
    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function contents(r,p){
+ // renderRace is locked by the approved UI design and invokes render()
+ // with no arguments. Reuse only the current six-stage preoff adapter input.
+ if(!r){
+   var forecast=root.ARVEXQProductionPrediction;
+   r=forecast&&forecast.currentTrialRace?forecast.currentTrialRace():null;
+ }
  var service=root.ARVEXQProductionTickets;
  var plan=r&&service?service.build(r,p):(service&&service.current?service.current():null);
  if(!plan||!plan.fixedAt||!Array.isArray(plan.items)||!plan.items.length){
