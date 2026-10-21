@@ -81,8 +81,11 @@
       });
     last={active:!!(marks||trial),source:marks?'saved-preoff':(trial?'stage64-provisional':''),
       unavailable:!marks&&!trial,
-      marks:marks?rows.filter(function(r){return !!r.predMark}).map(function(r){
-        return {horseNumber:Number(r.horse.horseNumber),name:String(r.horse.name||''),mark:r.predMark};
+      marks:(marks||trial)?rows.filter(function(r){return !!r.predMark}).map(function(r){
+        return {horseNumber:Number(r.horse.horseNumber),
+          name:String(r.horse.name||''),mark:r.predMark,
+          role:r.stage64Provisional?r.honmeiRole:'',
+          stage64Provisional:!!r.stage64Provisional};
       }):[]};
     return {rows:rows,legacyEngineDisabled:!trial,scenarios:[],plans:{},plan:null,
       suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:0};
