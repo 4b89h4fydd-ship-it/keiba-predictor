@@ -53,6 +53,32 @@ class Stage64ProductionBoundary(unittest.TestCase):
         facts["result"] = {"status": "確定"}
         self.assertIsNone(build_prediction(facts, now=BEFORE))
 
+    def test_real_d1_preoff_result_placeholder_does_not_cancel_forecast(self):
+        for owner in ("nar", "jra"):
+            with self.subTest(owner=owner):
+                detail = race(owner)
+                detail["result"] = {"status": "未確定", "finishers": [],
+                                    "payouts": []}
+                before = deepcopy(detail)
+                forecast = build_prediction(detail, now=BEFORE)
+                self.assertIsNotNone(forecast)
+                self.assertIsNotNone(forecast["stages"]["tickets"]["value"])
+                self.assertEqual(detail, before)
+
+    def test_actual_result_or_payout_never_recomputed(self):
+        for outcome in ({"status": "速報"},
+                        {"status": "確定", "finishers": []},
+                        {"finishers": [{"horseNumber": 2, "finish": 1}]},
+                        {"payouts": [{"type": "3連単", "amount": 1000}]}):
+            with self.subTest(outcome=outcome):
+                detail = race("nar")
+                detail["result"] = outcome
+                self.assertIsNone(build_prediction(detail, now=BEFORE))
+        for key in ("results", "payouts"):
+            detail = race("nar")
+            detail[key] = [{"horseNumber": 1, "finish": 1}]
+            self.assertIsNone(build_prediction(detail, now=BEFORE))
+
     def test_wrong_id_or_unknown_circuit_fails_closed(self):
         facts = race("jra")
         facts["circuit"] = "地方"
