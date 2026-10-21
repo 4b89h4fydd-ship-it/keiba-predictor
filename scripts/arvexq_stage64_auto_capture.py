@@ -46,6 +46,14 @@ def require_complete_saved_details(source, rows):
             or len(set(detail_ids)) != len(detail_ids)
             or set(listed_ids) != set(detail_ids)):
         raise ValueError("saved input races/details identity mismatch")
+    # A saved Prefetch roster cannot be considered complete if one matched
+    # detail has an unassignable circuit/date/ID. Otherwise select_future
+    # silently excludes that race while freezing the remaining cohort.
+    for row in rows:
+        try:
+            circuit(row)
+        except (ValueError, TypeError, AttributeError) as exc:
+            raise ValueError("saved input detail race identity invalid") from exc
 
 
 def select_future(source, owner, plan, now):
