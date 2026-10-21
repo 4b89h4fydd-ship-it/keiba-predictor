@@ -2,7 +2,9 @@ const KEY='arvexqFullPayload',VERSION='arvexq-full-payload-v1';
 export async function restoreBytes(envelope){
   const ref=envelope&&envelope[KEY];
   if(!ref||ref.version!==VERSION||!(ref.bytes>0&&ref.bytes<=100000000))throw Error('invalid full snapshot envelope');
-  const zipped=Uint8Array.from(atob(ref.gzipBase64),c=>c.charCodeAt(0));
+  // Avoid per-byte callback allocation on large archived career snapshots.
+  const binary=atob(ref.gzipBase64),zipped=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)zipped[i]=binary.charCodeAt(i);
   const raw=await new Response(new Blob([zipped]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',raw)),x=>x.toString(16).padStart(2,'0')).join('');
   if(raw.byteLength!==ref.bytes||hash!==ref.sha256)throw Error('full snapshot restore mismatch');
