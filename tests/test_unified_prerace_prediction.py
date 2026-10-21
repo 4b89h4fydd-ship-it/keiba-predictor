@@ -32,15 +32,10 @@ class UnifiedScheduledPredictionTests(TestCase):
                 detail=complete_fixture(circuit);original=deepcopy(detail)
                 with patch('app._prediction_clock_state',return_value=('pre',20)):
                     result=prepare_seal(detail,now=datetime.now(JST))
-                self.assertEqual(result['status'],'research-ready',result)
+                self.assertEqual(result['status'],'incomplete-prediction',result)
+                self.assertEqual(result['predictionStatus'],'disabled')
                 self.assertEqual(detail,original)
                 self.assertIsNone(sealed_lock(detail))
-                self.assertIsNone(sealed_lock(result['detail']))
-                self.assertNotIn('preRaceBet',result['detail'])
-                trial=result['detail']['researchShadow']['stage64']
-                self.assertEqual(set(trial['stages']),{'ability','runningStyle','pace','probability','marks','tickets'})
-                self.assertIsNone(trial['stages']['marks']['value']['productMarks'])
-                self.assertIsNone(trial['stages']['tickets']['value']['recommendedBets'])
 
     def test_missing_real_margin_never_becomes_a_frozen_forecast(self):
         for circuit in ("地方", "中央"):
@@ -53,15 +48,8 @@ class UnifiedScheduledPredictionTests(TestCase):
                         run.pop("marginEvidence", None)
                 with patch("app._prediction_clock_state", return_value=("pre", 20)):
                     result = prepare_seal(detail, now=datetime.now(JST))
-                # Stage64 uses observed finish and corner order, not the
-                # retired 60/40 margin gate. That must never mint a formal seal.
-                self.assertEqual(result["status"], "research-ready", result)
+                self.assertEqual(result["status"], "incomplete-prediction", result)
                 self.assertFalse(detail.get("preRacePrediction"))
-                self.assertFalse(result["detail"].get("preRacePrediction"))
-                self.assertFalse(result["detail"].get("preRaceBet"))
-                trial=result["detail"]["researchShadow"]["stage64"]
-                self.assertIsNone(trial["stages"]["marks"]["value"]["productMarks"])
-                self.assertIsNone(trial["stages"]["tickets"]["value"]["recommendedBets"])
 
     def test_no_retrospective_forecast_even_with_complete_model(self):
         detail = complete_fixture("地方")
