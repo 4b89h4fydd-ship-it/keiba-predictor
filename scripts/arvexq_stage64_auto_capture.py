@@ -25,8 +25,18 @@ def select_future(source, owner, plan, now):
     if now.tzinfo is None or owner not in ("jra", "nar"):
         raise ValueError("invalid circuit or naive current time")
     rows = source.get("details") if isinstance(source, dict) else None
-    if not isinstance(rows, list) or not rows:
-        raise ValueError("saved input details empty")
+    if not isinstance(rows, list):
+        raise ValueError("saved input details missing")
+    if not rows:
+        # Full Prefetch explicitly emits both empty arrays when no races exist.
+        # Missing details with a nonempty/unknown race roster remain a hard error.
+        # Do not invent a zero-race calendar claim from this supplied artifact.
+        if source.get("races") != []:
+            raise ValueError("saved input details empty")
+        return [], {"circuit": owner, "sourceRows": 0, "circuitRaces": 0,
+                    "selected": [], "excluded": [],
+                    "fullCalendarVerified": False,
+                    "independentlyVerifiedPreoff": False}
     chosen, excluded, observed = [], [], set()
     for row in rows:
         rid = row.get("id") if isinstance(row, dict) else None
