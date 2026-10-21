@@ -62,3 +62,26 @@
 - 研究用の1レース1着実測の独立事後テストを、JRA/NAR別に実施。トレーニング日・検証日・テスト日の分離、発走前保存時刻・本人照合・全頭名簿・取消・セクション情報の時点整合を固定する。
 - 既存の各特徴ファミリーを1つずつ除外し、レース単位Top1、logloss/Brier、3着内、全コホートカバレッジ、三連単・払戻付きROIを比較。手法の相関を見ずに同一の成績を多数決で数えない。
 - 既存6系統への統合は学習済みモデル、校正済み確率、想定展開/印/買い目の契約が独立ホールドアウトを通過した時のみ行う。未来レース保存ができない段階では「完成」としない。
+
+## 第2段階：既存の凍結データで中央・地方別実学習する前の整合修正（2026-10-21）
+
+- 基準: 同じDraft PR #401、main `214cafdf050bb001b486f89c59dfbce1145f9b00`。以前の旧Stage64本番エンジンは撤去したまま。
+- GitHubにある `scripts/export_mass_training_dataset.py` は既存 `RaceDataBank` SQLiteの `race_snapshots` → 発走前固定massFeatureSnapshot / final_resultのラベルだけをJSONL化する。新規データ取得経路は追加しない。
+- `scripts/train_mass_models.py` は従来5つの研究用ヘッドを呼び出す同じ入口。区分混在の行を無条件に学習させないため、**`--circuit jra` または `--circuit nar` の必須指定**と中身の全行照合を追加。JRA/NARは独立のJSONL・学習保存ディレクトリを使い、重みを共有しない。
+- `arvexq/prediction/mass_model_training.py::prepare_head_rows`: ability/win/podium向けの特徴量が1頭でも全欠損なら、該当レースの残りの馬も除外。勝者との順位比較に未登録の馬が残る誤計測を防ぐ。価値/危険の市場条件付きヘッドの既存対象抽出は変更しない。
+- 既存 `split_walk_forward` の全日付分離（学習→検証→テスト）、既存40レース最低ゲート、モデルのCatBoost設定、学習原本と保存/表示経路を維持。
+- 研究対象になる実データが今回の実行環境に存在することを**確認できていない**。GitHubにある2026-10-21門別12Rの暫定特徴量artifactは `verifiedForTraining=false`、`independentOfficialRoster=false` であり、実学習母集団へ組み込まない。
+- 既存の別系統研究 `docs/research/2026-10-18-real-sealed-b-holdout.md` はNAR平地の未使用73Rで1着予測24/73=32.88%、3連単完全一致2/73=2.74%。Bモデルの実績であり、今回のmassモデルの実学習・検証結果ではない。
+
+検証用の既存実行形式（必要なRaceDataBankがある環境のみ）:
+
+```bash
+python scripts/export_mass_training_dataset.py /path/to/actual-races.sqlite3 /tmp/jra-frozen.jsonl --circuit 中央
+python scripts/train_mass_models.py /tmp/jra-frozen.jsonl /tmp/arvexq-jra-models /tmp/arvexq-jra-runtime --circuit jra
+
+python scripts/export_mass_training_dataset.py /path/to/actual-races.sqlite3 /tmp/nar-frozen.jsonl --circuit 地方
+python scripts/train_mass_models.py /tmp/nar-frozen.jsonl /tmp/arvexq-nar-models /tmp/arvexq-nar-runtime --circuit nar
+```
+
+`/path/to/actual-races.sqlite3` は利用者が所持する**既存の実データベース**へのプレースホルダーであり、存在確認・実学習実行を意味しない。取り込み元・保存方法を新設したり、欠測データを生成して埋めたりしない。第2段階の本番予想・未来の的中成績は未証明。
+
