@@ -374,6 +374,27 @@ def main() -> int:
                     return {"id": rid, "status": "missing-historical-evidence",
                             "reason": f"{type(exc).__name__}: {exc}"[:250]}
             result = prepare_seal(old, now=datetime.now(JST))
+            if result["status"] == "research-ready":
+                detail = result["detail"]
+                if datetime.now(JST) >= post_at(detail):
+                    return {"id": rid, "status": "started-no-new-lock"}
+                candidate = ((detail.get("researchShadow") or {}).get("stage64"))
+                if not isinstance(candidate, dict) or candidate.get("raceId") != rid:
+                    raise ValueError("Stage64 research identity mismatch")
+                payload = {
+                    "summaries": [], "details": [encode_sealed_d1_sync_detail(detail)],
+                    "meta": {"source": "github-actions-prerace-stage64-research-v1",
+                             "sync_date": day, "stage64_research": True},
+                }
+                request_json(base + "/api/sync", payload=payload, token=token, retries=4)
+                readback = detail_from(request_json(url + "?verify=" + str(time.time_ns())), rid)
+                persisted = ((readback or {}).get("researchShadow") or {}).get("stage64")
+                canon = lambda value: json.dumps(value, ensure_ascii=False, sort_keys=True,
+                                                 separators=(",", ":"), allow_nan=False)
+                if not isinstance(persisted, dict) or canon(persisted) != canon(candidate):
+                    return {"id": rid, "status": "verification-failed",
+                            "reason": "Stage64 D1 readback mismatch"}
+                return {"id": rid, "status": "research-saved"}
             if result["status"] != "sealed":
                 return {"id": rid, **{k: v for k, v in result.items() if k not in ("detail",)}}
             detail = result["detail"]
