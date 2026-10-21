@@ -864,6 +864,86 @@ jobs:
               print('D1_MORNING_METADATA_STRIPPED_STATIC_ARCHIVE_CANONICAL',len(static))
               # Do not fail the race card publication. Static archive is separately
               # deployed and verified by the Cloudflare Web Deploy workflow.
+          # Validate the real live six-stage product-delivery path, not just
+          # that some unrelated diagnosis was saved successfully. The first
+          # prior pre-off Stage64 receipt is immutable; no post-off backfill.
+          prior_file=Path('current-d1.json')
+          prior_day=json.loads(prior_file.read_text(encoding='utf-8')) if prior_file.is_file() else {}
+          prior={str(d.get('id')):d for d in (prior_day.get('details') or [])
+                 if isinstance(d,dict) and d.get('id')}
+          stage_names=('ability','runningStyle','pace','probability','marks','tickets')
+          def stage64(detail):
+              node=detail.get('researchShadow') if isinstance(detail,dict) else None
+              return node.get('stage64') if isinstance(node,dict) else None
+          def complete_stage64(trial,detail):
+              if not isinstance(trial,dict) or not isinstance(detail,dict):return False
+              owner={'地方':'nar','中央':'jra','nar':'nar','jra':'jra'}.get(detail.get('circuit'))
+              if not owner:return False
+              if trial.get('raceId')!=detail.get('id') or trial.get('date')!=detail.get('date'):return False
+              if trial.get('circuit')!=owner or trial.get('modelVersion')!=owner+'-flat-shadow-v1':return False
+              stages=trial.get('stages')
+              if not isinstance(stages,dict) or set(stages)!=set(stage_names):return False
+              return all(isinstance(stages[name],dict) and stages[name].get('value') is not None
+                         for name in stage_names)
+          candidates={}
+          errors=[]
+          for rid,source in expected.items():
+              trial=stage64(source)
+              if not complete_stage64(trial,source):continue
+              candidates[rid]=source
+              stored=returned.get(rid)
+              retained=stage64(stored)
+              if not complete_stage64(retained,stored):
+                  errors.append((rid,'missing-six-stage-d1-archive'))
+                  continue
+              first=stage64(prior.get(rid))
+              # The pipeline is not allowed to replace a previously saved
+              # research model with a more recent race-time re-evaluation.
+              required=first if complete_stage64(first,prior.get(rid)) else trial
+              if json.dumps(retained,sort_keys=True,ensure_ascii=False)!=json.dumps(required,sort_keys=True,ensure_ascii=False):
+                  errors.append((rid,'preoff-stage64-not-retained-identically'))
+          saved_candidates={rid:d for rid,d in returned.items()
+                            if complete_stage64(stage64(d),d)}
+          print('STAGE64_D1_READBACK prepared_complete=',len(candidates),
+                'verified_complete=',len(candidates)-len(errors),
+                'saved_complete_total=',len(saved_candidates),
+                'mismatches=',len(errors))
+          if errors:
+              print('STAGE64_D1_READBACK_FAILED',errors[:12])
+              raise SystemExit('Complete Stage64 research receipts lost at D1 boundary')
+          # The mobile app consumes the lightweight display view, NOT the
+          # full history archive validated above. Check one real race per
+          # circuit through that existing CORS-enabled API endpoint.
+          from urllib.request import Request,urlopen
+          from urllib.parse import quote
+          import os
+          selected={}
+          for rid,detail in saved_candidates.items():
+              owner=stage64(detail)['circuit']
+              selected.setdefault(owner,rid)
+          checked=[]
+          for owner,rid in selected.items():
+              url=(os.environ['CLOUDFLARE_API_BASE'].rstrip('/')+'/api/race/'
+                   +quote(rid,safe='')+'?view=display&stage64_verify='+os.environ.get('GITHUB_RUN_ID',''))
+              request=Request(url,headers={'accept':'application/json',
+                         'origin':'https://kraizweb1.4b89h4fydd.workers.dev',
+                         'cache-control':'no-cache'})
+              with urlopen(request,timeout=25) as response:
+                  cors=response.headers.get('access-control-allow-origin')
+                  body=json.loads(response.read().decode('utf-8'))
+              if cors not in ('*','https://kraizweb1.4b89h4fydd.workers.dev'):
+                  raise SystemExit('Stage64 display CORS not allowed '+rid)
+              visible=body.get('detail') if isinstance(body,dict) else None
+              fresh=stage64(visible)
+              if not complete_stage64(fresh,visible):
+                  raise SystemExit('Stage64 missing from real mobile display API '+rid)
+              ticket=fresh['stages']['tickets']['value']
+              marks=fresh['stages']['marks']['value']
+              if not (isinstance(ticket,dict) and ticket.get('hypotheticalTrifectaTop10') and
+                      isinstance(marks,dict) and marks.get('winRole') and marks.get('axisRole')):
+                  raise SystemExit('Stage64 mark or 3連単 absent from mobile display API '+rid)
+              checked.append((owner,rid))
+          print('STAGE64_PRODUCTION_DISPLAY_API_VERIFIED',checked)
           print('D1_PREFETCH_DETAIL_VERIFY expected=',len(expected),'received=',len(returned),'missing_cards=',len(missing_cards),'missing_analysis=',len(missing_analysis))
           if missing_analysis:
               print('::warning::D1 analysis unavailable for '+str(len(missing_analysis))+' races: '+str(missing_analysis[:20]))
