@@ -78,7 +78,7 @@ class NARContextFeatureTest(unittest.TestCase):
         self.assertEqual(feats["market::preoff_odds_observations"], 2)
         self.assertTrue(snapshot_feature_allowed("nar::trip::wideTrip_rate_w5"))
         self.assertTrue(snapshot_feature_allowed("relative::nar::pace::front_rate_w5::percentile"))
-        self.assertIn("nar-context", FEATURE_SCHEMA_VERSION)
+        self.assertIn("nar-provenanced-context", FEATURE_SCHEMA_VERSION)
         snap = build_mass_feature_snapshot({**race, "horses": [horse]})
         self.assertIn("nar::pace::front_rate_w5", snap["rows"][0]["features"])
         self.assertEqual(snap["schemaVersion"], FEATURE_SCHEMA_VERSION)
