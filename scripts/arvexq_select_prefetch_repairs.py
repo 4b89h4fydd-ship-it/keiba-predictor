@@ -77,39 +77,6 @@ def repair_reason(prepared: Any, existing: Any) -> str:
     old = named_roster(existing)
     if len(new) > len(old) and set(old).issubset(new):
         return "roster_incomplete"
-    # Stage64 is six existing independent stages, distinct from retired
-    # diagnosisReady / learned-forecast metadata. A D1 race can be rich and
-    # still lack every current forecast mark and ticket. Repair that omission
-    # only if a COMPLETE, correctly identified Stage64 candidate already
-    # exists in the pre-off prepared detail. Never generate a retrospective
-    # candidate, replace an immutable first research observation or use a new
-    # data acquisition path.
-    fresh_shadow = prepared.get("researchShadow")
-    old_shadow = existing.get("researchShadow")
-    fresh_trial = fresh_shadow.get("stage64") if isinstance(fresh_shadow, dict) else None
-    old_trial = old_shadow.get("stage64") if isinstance(old_shadow, dict) else None
-    if isinstance(fresh_trial, dict) and not isinstance(old_trial, dict):
-        from datetime import datetime
-        from arvexq.prediction.prerace_archive import JST, post_at
-        from arvexq.research.stage64.circuits import circuit, CONFIGS
-        try:
-            owner = circuit(prepared)
-        except (ValueError, TypeError, AttributeError):
-            owner = None
-        off = post_at(prepared)
-        stages = fresh_trial.get("stages")
-        complete = (
-            bool(owner) and isinstance(stages, dict) and
-            set(stages) == {"ability", "runningStyle", "pace", "probability", "marks", "tickets"} and
-            all(isinstance(stages[k], dict) and stages[k].get("value") is not None
-                for k in ("ability", "runningStyle", "pace", "probability", "marks", "tickets")) and
-            fresh_trial.get("raceId") == prepared.get("id") and
-            fresh_trial.get("date") == prepared.get("date") and
-            fresh_trial.get("circuit") == owner and
-            fresh_trial.get("modelVersion") == CONFIGS[owner]["version"]
-        ) if owner else False
-        if complete and off is not None and datetime.now(JST) < off:
-            return "stage64_preoff_missing"
     # A rich old card is not equivalent to the current learned forecast.
     # Never skip replacement solely because the retired analysis was ready.
     new_version = str(prepared.get("predictionModelVersion") or "")
