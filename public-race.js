@@ -11,19 +11,12 @@ export const RETIRED_KEYS = new Set([
   '_savedPreoffOriginal','legacyPredictionAudit','preRaceAudit','observedModelCoverage'
 ]);
 
-export function publicRace(value, path = '') {
-  if (Array.isArray(value)) return value.map(entry => publicRace(entry, path));
+export function publicRace(value) {
+  if (Array.isArray(value)) return value.map(publicRace);
   if (!value || typeof value !== 'object') return value;
   const result = {};
   for (const [key, entry] of Object.entries(value)) {
-    // Preserve only the Stage64 six-stage tickets node in the existing
-    // researchShadow container; all legacy public bet keys stay retired.
-    // The normal public projection used to delete this stage and consequently
-    // the client suppressed the *entire* current prediction.
-    const stage64Tickets = key === 'tickets' &&
-      path.endsWith('/researchShadow/stage64/stages');
-    if (!RETIRED_KEYS.has(key) || stage64Tickets)
-      result[key] = publicRace(entry, path + '/' + key);
+    if (!RETIRED_KEYS.has(key)) result[key] = publicRace(entry);
   }
   if (Array.isArray(value.horses)) {
     result.predictionStatus = 'disabled';
