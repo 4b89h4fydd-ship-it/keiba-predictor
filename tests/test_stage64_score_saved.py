@@ -88,4 +88,36 @@ class SavedResults(unittest.TestCase):
             confirmed_label(race)
 
 
+
+    def test_incomplete_saved_day_rejected_even_if_frozen_race_result_is_present(self):
+        first=sample()
+        second=sample();second["id"]="nar-2026-10-23-高知-02"
+        batch={"cohort":[first["id"]]}
+        with self.assertRaisesRegex(ValueError,"races/details identity mismatch"):
+            assemble_results(batch,{"races":[first,second],"details":[first]})
+
+    def test_extra_saved_result_detail_rejected_with_full_day_index(self):
+        first=sample()
+        extra=sample();extra["id"]="nar-2026-10-23-高知-02"
+        with self.assertRaisesRegex(ValueError,"races/details identity mismatch"):
+            assemble_results({"cohort":[first["id"]]},
+                             {"races":[first],"details":[first,extra]})
+
+    def test_matched_result_id_with_wrong_circuit_is_rejected(self):
+        first=sample()
+        wrong=dict(first,circuit="中央")
+        with self.assertRaisesRegex(ValueError,"detail race identity invalid"):
+            assemble_results({"cohort":[first["id"]]},
+                             {"races":[first],"details":[wrong]})
+
+    def test_complete_saved_day_reordered_details_scores_only_frozen_race(self):
+        first=sample()
+        other=sample();other["id"]="nar-2026-10-23-高知-02"
+        labels,audit=assemble_results({"cohort":[first["id"]]},
+                                      {"races":[first,other],"details":[other,first]})
+        self.assertEqual(len(labels),1)
+        self.assertEqual(labels[0]["raceId"],first["id"])
+        self.assertTrue(audit["allConfirmed"])
+        self.assertEqual(audit["frozenRaces"],1)
+
 if __name__=="__main__":unittest.main()
