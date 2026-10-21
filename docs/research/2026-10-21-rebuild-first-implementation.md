@@ -99,3 +99,6 @@ python scripts/train_mass_models.py /tmp/nar-frozen.jsonl /tmp/arvexq-nar-models
 
 **限界**: 正しい内容ハッシュは発走前取得時刻の第三者証明にはならない。新massモデルのJRA/NAR別の真正な発走前学習データの母数・実学習・未来レースの実測成績は依然未確認。現行のStage63/64退役本番予想、既存D1・UI・取得経路・200箱、mainは一切変更していない。
 
+
+
+**既存形式との回帰確認**: 新しいcontent-hash検証の初回CI（head `35d1691b`）は既存 `test_mass_feature_transport.py::test_final_training_can_only_read_frozen_preoff_archived_features` が失敗。原因は従来のlossless圧縮データでdetailトップ階層の`circuit`が省略可能なのに、今回のチェックが必須扱いしていたこと。既存の仕様を確認して、detailに`circuit`がある時だけsnapshotと照合するよう修正。欠けているケースは既存SQLiteレース索引`race_snapshots.circuit`とsnapshot側の区分を照合して混入を防ぐ。レースID/日付もSQLite索引とsnapshotが一致しない場合は学習に使わない。テストに従来形式の正常ケース・索引不一致を追加。**最新コミットのCI結果を確認するまでは修正成功と認定しない**。
