@@ -91,6 +91,15 @@ class AutoCapture(unittest.TestCase):
             ):
                 select_future(source, "nar", PLAN, NOW)
 
+    def test_saved_prefetch_invalid_detail_identity_fails_closed(self):
+        target = race("nar", 1)
+        for malformed in (None, {}, {"id": []}, {"id": ""}, {"id": 123}):
+            source = {"races": [target], "details": [malformed]}
+            with self.subTest(detail=malformed), self.assertRaisesRegex(
+                ValueError, "detail identity invalid"
+            ):
+                select_future(source, "nar", PLAN, NOW)
+
     def test_keep_unscorable_preoff_in_forecast_cohort(self):
         row=race("nar",1)  # no horse history: separate research stage records blockers
         selected,_=select_future({"details":[row]},"nar",PLAN,NOW)
