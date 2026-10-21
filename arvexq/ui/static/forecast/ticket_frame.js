@@ -19,8 +19,8 @@ function contents(r,p){
        return '<span class="arv-three-combo">'+esc(combo.join(' - '))+'</span>';
      }).join('');
      return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div>'+
-       '<p class="muted">Stage64 研究暫定の3連単候補です。未校正・未検証のため正式なおすすめ買い目ではありません。</p>'+
-       '<section class="arv-three-section"><h3>3連単研究候補 '+esc(tickets.hypotheticalTrifectaTop10.length)+'点</h3>'+
+       '<p class="muted">最新Stage64の3連単おすすめ候補（検証中）です。的中率・回収率は未検証です。</p>'+
+       '<section class="arv-three-section"><h3>3連単おすすめ候補 '+esc(tickets.hypotheticalTrifectaTop10.length)+'点</h3>'+
        '<strong class="arv-three-combos">'+proposals+'</strong></section></div>';
    }
    return '<div class="ai-bet-box"><p class="muted">発走前に検証・保存されたおすすめ買い目が未取得です。後付けで作りません。</p></div>';
