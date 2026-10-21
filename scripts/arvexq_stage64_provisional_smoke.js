@@ -32,7 +32,7 @@ assert.equal(root.ARVEXQProductionMarks.visible(result.rows[0]),'◎');
 assert.equal(root.ARVEXQProductionMarks.visible(result.rows[1]),'◎');
 assert.equal(root.ARVEXQProductionMarks.visible(result.rows[2]),'');
 let content=root.ARVEXQTicketFrame.contents(nar,result);
-assert.ok(content.includes('研究暫定')&&content.includes('1 - 2 - 3'));
+assert.ok(content.includes('おすすめ候補')&&content.includes('1 - 2 - 3'));
 assert.ok(!content.includes('発走前固定'));
 
 const central=race('中央');
