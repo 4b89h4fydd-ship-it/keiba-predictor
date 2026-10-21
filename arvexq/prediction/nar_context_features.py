@@ -111,6 +111,8 @@ def _bias(race: dict[str, Any]) -> dict[str, float]:
     off = _race_off(race)
     if not isinstance(estimate, dict) or off is None:
         return {}
+    if estimate.get("sourceKind") != "preoff-historical-results" or not estimate.get("sourceRef"):
+        return {}
     captured = _instant(estimate.get("capturedAt"))
     observed = _instant(estimate.get("observedThrough"))
     count = _number(estimate.get("sampleRaces"))
