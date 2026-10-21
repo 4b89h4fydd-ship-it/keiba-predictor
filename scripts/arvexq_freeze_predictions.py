@@ -189,6 +189,22 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
     if not any((h.get("recentRaces") or h.get("allPastRuns"))
                for h in active) and detail.get("analysisMode") not in ("新馬", "障害"):
         return {"status": "missing-historical-evidence"}
+    # Record only a complete user-approved Stage64 pre-off research forecast.
+    # Keep old originals untouched; neither marks grades nor bets are invented.
+    if build is None and assign is None:
+        from arvexq.forecast.engine import build_prediction
+        candidate = build_prediction(detail, now=now)
+        if candidate is not None and all(
+            isinstance(step, dict) and step.get("value") is not None
+            for step in candidate["stages"].values()
+        ):
+            old_shadow = detail.get("researchShadow")
+            if old_shadow is None or isinstance(old_shadow, dict):
+                if isinstance(old_shadow, dict) and "stage64" in old_shadow:
+                    return {"status": "already-research-saved"}
+                copied = copy.deepcopy(detail)
+                copied["researchShadow"] = {**(old_shadow or {}), "stage64": candidate}
+                return {"status": "research-ready", "detail": copied}
     if assign is None:
         from arvexq.prediction.final_marks import apply_core_marks
         assign = apply_core_marks
