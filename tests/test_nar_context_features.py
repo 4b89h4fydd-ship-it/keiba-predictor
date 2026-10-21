@@ -21,6 +21,7 @@ def sample():
         "trackBiasEstimate": {
             "capturedAt": "2026-10-21T20:20:00+09:00",
             "observedThrough": "2026-10-21T20:00:00+09:00",
+            "sourceKind": "preoff-historical-results", "sourceRef": "official-history:20261021-before-11",
             "sampleRaces": 7, "frontBackScore": 0.4,
             "insideOutsideScore": -0.2,
         },
