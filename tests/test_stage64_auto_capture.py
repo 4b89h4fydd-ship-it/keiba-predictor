@@ -40,6 +40,25 @@ class AutoCapture(unittest.TestCase):
         with self.assertRaises(ValueError):
             select_future({"details":[race("nar",1)]},"nar",PLAN,datetime(2026,10,22))
 
+    def test_explicit_zero_race_prefetch_is_not_a_missing_data_failure(self):
+        for owner in ("jra", "nar"):
+            with self.subTest(owner=owner):
+                chosen, audit = select_future({"races": [], "details": []},
+                                              owner, PLAN, NOW)
+                self.assertEqual(chosen, [])
+                self.assertEqual(audit["circuit"], owner)
+                self.assertEqual(audit["sourceRows"], 0)
+                self.assertEqual(audit["selected"], [])
+                self.assertFalse(audit["fullCalendarVerified"])
+                self.assertFalse(audit["independentlyVerifiedPreoff"])
+
+    def test_missing_details_cannot_be_disguised_as_zero_races(self):
+        for source in ({"details": []},
+                       {"races": [race("nar", 1)], "details": []},
+                       {"races": [], "details": None}):
+            with self.subTest(source=source), self.assertRaises(ValueError):
+                select_future(source, "nar", PLAN, NOW)
+
     def test_keep_unscorable_preoff_in_forecast_cohort(self):
         row=race("nar",1)  # no horse history: separate research stage records blockers
         selected,_=select_future({"details":[row]},"nar",PLAN,NOW)
