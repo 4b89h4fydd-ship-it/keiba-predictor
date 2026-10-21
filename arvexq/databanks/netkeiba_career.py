@@ -223,6 +223,11 @@ def fetch_verified_career(get: Callable[[str], str], horse: dict[str, Any],
         candidates = [c for c in candidates if c["birthYear"] == born]
     known = {r["date"] for r in merge_career(
         horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)}
+    # An exact name alone cannot choose between multiple same-name horses.
+    # One superficially complete page must not win just because the other
+    # candidate's listing/total could not be read.
+    if len(candidates) > 1 and born is None and not known:
+        return {}
     matches = []
     for cand in candidates[:4]:
         listing_html = get(f"{BASE}/horse/result/{cand['id']}/")
@@ -259,7 +264,7 @@ def _birth_year(horse: dict[str, Any], cutoff: str) -> int | None:
         age = int(re.sub(r"\D", "", str(horse.get("age") or "")) or 0)
     except ValueError:
         return None
-    # Japanese official age is counted from 1 on January 1 of the birth year.
-    return int(cutoff[:4]) - age + 1 if age and cutoff else None
+    # JRA/NAR racing age is calendar-year based: a 2026 three-year-old was born in 2023.
+    return int(cutoff[:4]) - age if age and cutoff else None
 
 

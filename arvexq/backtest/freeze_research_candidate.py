@@ -6,7 +6,7 @@ from pathlib import Path
 import json
 import os
 
-from arvexq.prediction.prerace_archive import post_at
+from arvexq.components.item_147.prerace_archive import post_at
 
 
 def freeze_research_candidate(detail, plan, directory, *, captured_at=None):

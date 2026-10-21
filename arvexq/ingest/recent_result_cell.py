@@ -1,6 +1,6 @@
 """Independent netkeiba recent race text parser."""
 import re
-from arvexq.ingest.field_normalization import _clean
+from arvexq.components.item_040.field_normalization import _clean
 
 def _parse_recent_cell(txt:str)->dict|None:
     s=_clean(txt)

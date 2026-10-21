@@ -1,0 +1,49 @@
+{
+  "id": 79,
+  "name": "馬連払戻",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_parse_payouts",
+        "line": 2124
+      },
+      "original_source": "app.py::_parse_payouts",
+      "box_target": "arvexq/components/item_076/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83
+      ],
+      "original_private_name": "_arvexq_original__parse_payouts"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

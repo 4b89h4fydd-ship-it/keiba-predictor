@@ -1,0 +1,107 @@
+{
+  "id": 189,
+  "name": "リアルタイム表示",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        189
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "scheduleRaceBiasRefresh",
+        "line": 3076
+      },
+      "original_source": "arvexq/ui/static/app.js::scheduleRaceBiasRefresh",
+      "box_target": "arvexq/components/item_189/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_scheduleRaceBiasRefresh"
+    },
+    {
+      "items": [
+        189
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "refreshRaceBiasData",
+        "line": 3081
+      },
+      "original_source": "arvexq/ui/static/app.js::refreshRaceBiasData",
+      "box_target": "arvexq/components/item_189/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_refreshRaceBiasData"
+    },
+    {
+      "items": [
+        189
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "scheduleResultRefresh",
+        "line": 3106
+      },
+      "original_source": "arvexq/ui/static/app.js::scheduleResultRefresh",
+      "box_target": "arvexq/components/item_189/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_scheduleResultRefresh"
+    },
+    {
+      "items": [
+        189
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "refreshPayoutsOnly",
+        "line": 3144
+      },
+      "original_source": "arvexq/ui/static/app.js::refreshPayoutsOnly",
+      "box_target": "arvexq/components/item_189/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_refreshPayoutsOnly"
+    },
+    {
+      "items": [
+        189
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "mergeOddsPayload",
+        "line": 3262
+      },
+      "original_source": "arvexq/ui/static/app.js::mergeOddsPayload",
+      "box_target": "arvexq/components/item_189/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_mergeOddsPayload"
+    },
+    {
+      "items": [
+        189
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "refreshHomeOfficialStatuses",
+        "line": 3776
+      },
+      "original_source": "arvexq/ui/static/app.js::refreshHomeOfficialStatuses",
+      "box_target": "arvexq/components/item_189/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_refreshHomeOfficialStatuses"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

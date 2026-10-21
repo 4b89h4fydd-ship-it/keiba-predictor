@@ -7,9 +7,13 @@ const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 function take(name){
   const a=src.lastIndexOf('function '+name+'('),b=src.indexOf('\n}',a);
   assert(a>=0&&b>a,'missing '+name);
-  return src.slice(a,b+2);
+  const origin='_arvexq_original_'+name;
+  const first=src.indexOf('function '+origin+'(');
+  const original=first>=0?src.slice(first,src.indexOf('\n}',first)+2)+'\n':'';
+  return original+src.slice(a,b+2);
 }
-const code=['morningPickOf','morningPickReady','morningPublicStatus','selectedRaceCandidates','specialForecastRaceCandidates']
+const code=fs.readFileSync('arvexq/components/item_133/routes.js','utf8')+'\n'+
+  ['morningPickOf','morningPickReady','morningPublicStatus','selectedRaceCandidates','specialForecastRaceCandidates']
   .map(take).join('\n')+'\nreturn {morningPickReady,morningPublicStatus,selectedRaceCandidates,specialForecastRaceCandidates};';
 const win={};
 new Function('window',fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8'))(win);

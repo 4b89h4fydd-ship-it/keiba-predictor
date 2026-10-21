@@ -1,0 +1,50 @@
+{
+  "id": 19,
+  "name": "賞金情報取得",
+  "circuits": [
+    "JRA"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/nar_official_metadata.py::<module>",
+    "arvexq/ingest/race_fields/prize.py::<module>",
+    "arvexq/ingest/nar_official_metadata.py::official_race_metadata",
+    "arvexq/ingest/nar_official_metadata.py::migrate_race_metadata",
+    "arvexq/ingest/nar_official_metadata.py::update_race_metadata",
+    "arvexq/ingest/nar_official_metadata.py::audit_official_race_metadata",
+    "arvexq/ingest/race_fields/prize.py::extract_first_prize"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/race_fields/prize.py::<module>",
+    "arvexq/ingest/race_fields/prize.py::extract_first_prize"
+  ],
+  "shared_refs": [
+    "arvexq/ingest/nar_official_metadata.py::<module>",
+    "arvexq/ingest/nar_official_metadata.py::official_race_metadata",
+    "arvexq/ingest/nar_official_metadata.py::migrate_race_metadata",
+    "arvexq/ingest/nar_official_metadata.py::update_race_metadata",
+    "arvexq/ingest/nar_official_metadata.py::audit_official_race_metadata"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "arvexq/infra/legacy_stores.py",
+    "scripts/arvexq_nar_csv_coverage.py",
+    "tests/test_jra_race_fields_independent.py",
+    "tests/test_jra_race_fields_parity_matrix.py",
+    "tests/test_nar_official_metadata.py"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "arvexq/ingest/nar_official_metadata.py",
+    "arvexq/ingest/race_fields/prize.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/nar_official_metadata.py",
+    "arvexq/ingest/race_fields/prize.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

@@ -1,0 +1,356 @@
+{
+  "baseline": "e6f4f2a0e5d64e13c0c0ca7cb32d8db6aa77d6da",
+  "runtime_source_diff": [],
+  "protected_app_functions": 41,
+  "app_py_unchanged": true,
+  "protected_files": [
+    {
+      "path": "arvexq/prediction/forecast_revisions.py",
+      "sha256": "aa15a14f3313af8ab71a3e363231cc095b16ff23bac379a7b06de38fa8f98bcc"
+    },
+    {
+      "path": "arvexq/prediction/new_forecast.py",
+      "sha256": "29ae8fd7156c6712499642ff0c257bb4956ed90379e6064a5186ff002e00baa4"
+    },
+    {
+      "path": "scripts/arvexq_apply_learned_overlay.py",
+      "sha256": "2a622d37d7f78771f928e6893a7b1e97e2d55d371e1d5a7451cf4a8c29efa0a4"
+    },
+    {
+      "path": "scripts/arvexq_capture_batch_research.py",
+      "sha256": "305b07c020ec8a80d0c68f4e71729ba16c97bc060036a474f936a6346fd67ae6"
+    },
+    {
+      "path": "scripts/arvexq_capture_preoff_research.py",
+      "sha256": "205d0ec82be18cc178495629c85be19bd4c07a0e1a6fa954e2236235cdac2d7f"
+    },
+    {
+      "path": "scripts/arvexq_rebuild_saved_forecasts.py",
+      "sha256": "961f97342cc5bc95457a9bd1d1e36c081da122fdf1092aa78fbb407992c1b59a"
+    },
+    {
+      "path": "tests/test_capture_batch_research.py",
+      "sha256": "fcc509fd846251f7faa510bd42758f1023ac3c297cd163f66071372a74f40970"
+    },
+    {
+      "path": "tests/test_capture_preoff_research.py",
+      "sha256": "812c9eb4150d963cbae2c23565960f713267d8fd0abcab9090bfca9e7a13adcb"
+    },
+    {
+      "path": "tests/test_forecast_revisions.py",
+      "sha256": "8dc4983935ef10a19bf932f67332a7a4017ff1b8addbaff27ceb5f1e30dd4500"
+    },
+    {
+      "path": "tests/test_learned_forecast_overlay.py",
+      "sha256": "3a33fb1600ddb886e17535cb5d7f344865e40834ebea2e87a86940b41bf9753b"
+    },
+    {
+      "path": "tests/test_learned_scenarios.py",
+      "sha256": "84026bf6a7454b6f084268c1da823ecb7368410a1c9028f5907ea4bbcb941f31"
+    },
+    {
+      "path": "tests/test_new_forecast_candidate.py",
+      "sha256": "0ffbd0bffd7715a0794ad7ff1ec1d4c993b0aa11f0d304154865e88dfff31b82"
+    },
+    {
+      "path": "tests/test_new_forecast_one_honmei.py",
+      "sha256": "c47e3e611981ad9abd5b1c1a8df74a1d805d66c6fa60b9c3221dcf00f6b0be4b"
+    },
+    {
+      "path": "tests/test_rebuild_saved_forecasts.py",
+      "sha256": "223c46974b62e2a998919fc3c963a871f6a431e4c5ff015d47ea2ce37213b942"
+    },
+    {
+      "path": "tests/test_research_capture_isolation.py",
+      "sha256": "5974ac443fbd66c4694944d2e1280d1ab38b2a1a55d31f47dce895953c34e58c"
+    },
+    {
+      "path": "app.py",
+      "sha256": "60610306e0049d70650ec66b5307a31cd591f00ea0d33307423da3cc79a4eb89"
+    },
+    {
+      "path": "arvexq/databanks/legacy_bridge.py",
+      "sha256": "ca963d833ed2c06943ae83bb99720cce8501af0e636c336f80b8693d81d145b6"
+    },
+    {
+      "path": "arvexq/databanks/nar_official_csv.py",
+      "sha256": "fd9c1977b2bee138ac24840ab94f13d4b5cf2f2cddf6a2389bf8d3d9893a6fa4"
+    },
+    {
+      "path": "arvexq/databanks/netkeiba_career.py",
+      "sha256": "9115773b5af229eb40e0e6c4bdde12068cf8e7c894f52f10bfac65650e5562ab"
+    },
+    {
+      "path": "arvexq/infra/legacy_stores.py",
+      "sha256": "d8932576474b9b3a3742b3083dab8f8029013b0dbfbffdaeddca2fa8481244da"
+    },
+    {
+      "path": "arvexq/prediction/career_readiness.py",
+      "sha256": "17bf100ec7a4c5235ea172cbba904c71719467c7ef4c907dacde4cf911c64318"
+    },
+    {
+      "path": "arvexq/ui/static/app.js",
+      "sha256": "21ec7075f7afcc8a51a267c543b1ad431652b39f80b355d2fc3831690696dd0d"
+    },
+    {
+      "path": "scripts/arvexq_prefetch.py",
+      "sha256": "ad9411bfe13069622f1ef6c208389ac89f3966e8d8f8063baf5e11e33f02bbf0"
+    },
+    {
+      "path": "scripts/arvexq_race_source_integrity_smoke.js",
+      "sha256": "564a376be9654ea84c9c85dec73cab6b5e1bcc66d60735a7edce011247a9622b"
+    },
+    {
+      "path": "tests/test_career_readiness.py",
+      "sha256": "f9d3fc454d607e2756b2c761001451c868e49f77944bfc250f713430d0e4ea89"
+    },
+    {
+      "path": "tests/test_career_totals_evidence.py",
+      "sha256": "42bb4cfcde2f3b8caa134c94c3afa38ac3e68641e5fc6a4391639b5145993690"
+    },
+    {
+      "path": "tests/test_nar_full_career_batch.py",
+      "sha256": "aac888efcfeb07587d6cd6a2b54e808107ecbc87752565272c4f3a4155915ad6"
+    },
+    {
+      "path": "tests/test_nar_threadsafe_adapters.py",
+      "sha256": "9253bdb5cf81470e7f88e4cab198c72583526c0025b5161cd9eb768e254051e2"
+    },
+    {
+      "path": "tests/test_prefetch_racecard_delivery.py",
+      "sha256": "25dbbd95a43d1c3f494907b5d987c1b81ad125d9f2117e7dde3b6e1883439a63"
+    },
+    {
+      "path": "tests/test_verified_career_prefetch.py",
+      "sha256": "3e4940d45181946507a94531a5c096cf4832ececf2ee943381ae980ae536eeb8"
+    },
+    {
+      "path": "arvexq/ingest/d1_day_readback.py",
+      "sha256": "f77fb1a1e84ad60d17e74cab5aa8708d5b82639cedb8818b2650d6375ff4b215"
+    },
+    {
+      "path": "arvexq/quality/fact_audit.py",
+      "sha256": "0b880c495f7622f22d62b5d7da80402450dd9e76169dc30c41e5200ef3b1b544"
+    },
+    {
+      "path": "scripts/arvexq_fact_data_audit.py",
+      "sha256": "3f0e5f98a548111515e9e66f3349cff01a8d01d224c55a8653302f34875db809"
+    },
+    {
+      "path": "scripts/arvexq_live_sync.py",
+      "sha256": "9b5f2fdcde82ac0e67a903e8a64e129b5f7e9ac225a1bd8e6da679fa2e0ac43c"
+    },
+    {
+      "path": "tests/test_factual_data_audit.py",
+      "sha256": "ccae3e90959fe5c4f4a65b3e140d54305d988be0cf1d62cbd8eb63e0e0acdcbc"
+    },
+    {
+      "path": "tests/test_result_stalled_regressions.py",
+      "sha256": "3962c8740e267b6f4ae6047982a537b1f55651d34809d0702a9cafd2ad689028"
+    },
+    {
+      "path": "arvexq/forecast/marks.py",
+      "sha256": "599793042dbd4571cf6538412a8784ae54d5649448f67184f4b892df0a822344"
+    },
+    {
+      "path": "arvexq/forecast/tickets.py",
+      "sha256": "d013a05c1914569f38a3b17370d250b8af91f84bfa4c2a6716472f9b561753a3"
+    },
+    {
+      "path": "arvexq/prediction/observed_model.py",
+      "sha256": "94dd5c3d724080e44ba9701fa4b96a61d792f293ac33c91c48d38a42a4bc57eb"
+    },
+    {
+      "path": "build_static.py",
+      "sha256": "c9caa7fd7ad2ad3a0dee1f4f1e332252ee9c918f1d1c3e0e87669dcdee4d03a0"
+    },
+    {
+      "path": "scripts/arvexq_capture_jra_6040_smoke.js",
+      "sha256": "2e5e5276d6868dbd7c922de8fe26d78a1b69ce0556f8511456d38a12e4b9891f"
+    },
+    {
+      "path": "scripts/arvexq_capture_nar_6040_smoke.js",
+      "sha256": "a0cf9563cc197fbba35a66e7cebf8cf8df26ee36813e550156aadfadd076abb0"
+    },
+    {
+      "path": "scripts/arvexq_live_mark_refresh_smoke.js",
+      "sha256": "86666fffe5b950f0f6d47f96db5d2528d106e2a9549f9a6e644958161a0170e3"
+    },
+    {
+      "path": "scripts/arvexq_optional_star_smoke.js",
+      "sha256": "2c22a50f01504eba794b37132a41613705f4343a197b3b04116846d736b18f21"
+    },
+    {
+      "path": "tests/test_prepost_mark_consistency.py",
+      "sha256": "2e4d648651cde480976e77d428e7b64ac6a5acf7ed656e36d165d5cf68560b59"
+    },
+    {
+      "path": "tests/test_prerace_partial_career.py",
+      "sha256": "0399d75d3f07a5d63f1337b8c464ee9994780ecfd9252c905c848c50ca01320a"
+    },
+    {
+      "path": "tests/test_static_asset_cache.py",
+      "sha256": "91f6bf52a97a74b9c19cb1410a6c94ca4c539e48ecb64542eebd83114d6220c5"
+    },
+    {
+      "path": "arvexq/prediction/final_marks.py",
+      "sha256": "929830bf66b6e67fc0c07fa445477283808a604ac0275f859ae7f0065e93ebef"
+    },
+    {
+      "path": "scripts/arvexq_capture_prerace_bet.js",
+      "sha256": "a9be614c19b718a27c0d9a637813d7c890b21d0c0ab76ff756e10fb946210ff8"
+    },
+    {
+      "path": "tests/test_horse_brand_assets.py",
+      "sha256": "9446c026bd6e3e30ed397b75a46717b93403253c51edf0584e84105ec133f787"
+    },
+    {
+      "path": "arvexq/prediction/career_profile.py",
+      "sha256": "fd0a556713df60ea9d245885900fb73e89fbac5db9bf0533f56019cbee4bd976"
+    },
+    {
+      "path": "arvexq/prediction/mass_prerace_bridge.py",
+      "sha256": "3ce45ce1a24ec58a708bf1eb79242e4c090daea9261a710c37da5d37f42e06f2"
+    },
+    {
+      "path": "arvexq/prediction/mass_training_store.py",
+      "sha256": "846773cce997b1d420b984ac8818b52410246bfe0ac788cf28b1e1bd49b76cc7"
+    },
+    {
+      "path": "arvexq/prediction/past_performance.py",
+      "sha256": "cb841f5b589f0a6d8d1712b3850dc263d7468a1919aa9ae38f853fe0fdfaf53f"
+    },
+    {
+      "path": "arvexq/research/preoff_coverage_audit.py",
+      "sha256": "1a73c9e128e25d08a4cc18502f3caef3998dc9bcb04b5cfbfc026252f0bcd006"
+    },
+    {
+      "path": "arvexq/ui/static/morning/ticket_lane_classifier.js",
+      "sha256": "d7eee999e599e1668b2244276f2d735af38a00f740cdf821235614c3dc68a1af"
+    },
+    {
+      "path": "scripts/arvexq_empirical_selection_smoke.js",
+      "sha256": "1f6e9d2de3fe2bb2678a15a9f896107be37427e57c10b52d8211de9b2d22d6db"
+    },
+    {
+      "path": "scripts/arvexq_empirical_ticket_calibration.py",
+      "sha256": "f82d6bf7d27ef52e487aef538a9223b9d474590e007096f366048921d522520b"
+    },
+    {
+      "path": "scripts/arvexq_morning_selection_cut_smoke.js",
+      "sha256": "936dfad52d68dbc34f6c8e7e84e0a3ac38912070238d0d539872d222f2fb65e3"
+    },
+    {
+      "path": "scripts/arvexq_retired_ticket_ui_smoke.js",
+      "sha256": "8b233aab5ca66c72f3d4c778416c105c720d152e4de71367c4584dc8b4c6870c"
+    },
+    {
+      "path": "scripts/check_mass_training_store.py",
+      "sha256": "fef6506ebd0f6abc623a6d99333000ca0b72949588f373b6dacb2fc1f3a32e73"
+    },
+    {
+      "path": "tests/test_current_horse_detail_factors.py",
+      "sha256": "3c269e3f8ebc2cdb2aae6428f4de8041447f0d57addf66f3ae1ddab3c8505b50"
+    },
+    {
+      "path": "tests/test_empirical_ticket_calibration.py",
+      "sha256": "60b7cc395b35bc3587c6b63fc5ee63f9cfe10372427bb1a167a8224e0967039a"
+    },
+    {
+      "path": "tests/test_full_career.py",
+      "sha256": "a60262f9904aa22e05025fb27c6c6c147f1b09420de857df0f218ce45f602a52"
+    },
+    {
+      "path": "tests/test_mass_feature_transport.py",
+      "sha256": "efe8a213f30e20b96a5b4494e9c3e139dae76d879e0c4e21c640668345260730"
+    },
+    {
+      "path": "tests/test_observed_metrics_normalization.py",
+      "sha256": "514be9e338fca125b6544bb98058f45a6b97bc9f094cd279605ef207538bf9ec"
+    },
+    {
+      "path": "tests/test_optional_star_marks.py",
+      "sha256": "e1a7f34300ae5f3bed96600d8566366d7ec1f4c2ad6a731b528b8873f5b68591"
+    },
+    {
+      "path": "tests/test_past_performance.py",
+      "sha256": "0e18b9e72cb9d9ee0126db186abcce018069d682af22ee982d392fc85657d464"
+    },
+    {
+      "path": "tests/test_preoff_coverage_audit.py",
+      "sha256": "b6587d5bbf400252807270ae6c98ae9cdcc22956a9c323e55a5a2d71000e70d1"
+    },
+    {
+      "path": "tests/test_preoff_loading_marks.py",
+      "sha256": "84a4d119e75426833ed47fefb31f8f4bd3ec3d2f5a3fb1ac0a1c589cc51bd4e0"
+    },
+    {
+      "path": "tests/test_prerace_archive.py",
+      "sha256": "35ab5492d69e3c0fa2cb21ef79dde14cbb9ad7c3795ee8772862b18c7449b75e"
+    },
+    {
+      "path": "tests/test_removed_legacy_detail_panel.py",
+      "sha256": "abfe3f50ce0cdd1174a0f906b01cd5465a5780d3bfa366f5db2071beab6fb159"
+    },
+    {
+      "path": "tests/test_retired_sameday_correction_v313.py",
+      "sha256": "e8983212bde56237147f3331c9da88d0cfd5ede31bac2309d3ac5fb661bcd6ee"
+    },
+    {
+      "path": "tests/test_retired_v207_winner_model.py",
+      "sha256": "d1b8604674ee4cd1afc367c944fea7564ae884914e82df0f71d56194978fb34c"
+    },
+    {
+      "path": "tests/test_retired_v312_rescue.py",
+      "sha256": "c61e0efbd76de2702e2e52b468c0e53a26ec75b90002a54155dffb5a02b6f193"
+    },
+    {
+      "path": "tests/test_retired_v317_helpers.py",
+      "sha256": "b98c438ffd5cc469ee16995c1e5e3207f1e6dbc806ffa82b601baf8301367de0"
+    },
+    {
+      "path": "tests/test_sectional_storage_roundtrip.py",
+      "sha256": "eebbc1f3f2e5bab7e0ea22c2bcb0eaf811638df8ff74650e7e1dd8b50ec32ebc"
+    },
+    {
+      "path": "tests/test_upstream_sectional_casing.py",
+      "sha256": "1b34236d333ee2278d2d29d6f7d6865a1ca23e58fba924a00134f670ec23f5c5"
+    }
+  ],
+  "protected_file_count": 76,
+  "additional_whole_file_guards": [
+    "app.py",
+    "arvexq/ui/static/app.js"
+  ],
+  "total_hashed_files": 78,
+  "unconnected_boxes_unchanged": [
+    70,
+    71,
+    72,
+    93,
+    112,
+    114,
+    116,
+    117,
+    118,
+    119,
+    120,
+    122,
+    123,
+    124,
+    134,
+    135,
+    137,
+    143,
+    144,
+    150,
+    158,
+    160,
+    175,
+    199
+  ],
+  "saved_originals_changed": [],
+  "ui_source_changed": [],
+  "prediction_logic_changed": false,
+  "acquisition_routes_changed": false
+}

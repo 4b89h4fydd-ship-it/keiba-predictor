@@ -4,9 +4,9 @@ import csv
 import hashlib
 import io
 import zipfile
-from arvexq.ingest.field_normalization import _clean
-from arvexq.ingest.pure_parsers import decode_csv_bytes
-from arvexq.ingest.race_identity import canonical_race_id, same_race
+from arvexq.components.item_040.field_normalization import _clean
+from arvexq.components.item_020.pure_parsers import decode_csv_bytes
+from arvexq.components.item_023.race_identity import canonical_race_id, same_race
 
 # Official CSV fixed-column indexes, based on NAR's published data specification.
 RACE_IDX = {

@@ -1,0 +1,373 @@
+[
+  {
+    "items": [
+      20
+    ],
+    "source": "app.py::_jra_parse_race_summary",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      154
+    ],
+    "source": "app.py::_download_nar_month_only",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      128
+    ]
+  },
+  {
+    "items": [
+      164
+    ],
+    "source": "app.py::nar_race_detail",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      368
+    ]
+  },
+  {
+    "items": [
+      57
+    ],
+    "source": "app.py::_nar_attach_recent_batch",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      368
+    ]
+  },
+  {
+    "items": [
+      22,
+      70,
+      71,
+      72
+    ],
+    "source": "app.py::_netkeiba_current_result",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      369
+    ]
+  },
+  {
+    "items": [
+      20,
+      70,
+      71,
+      72
+    ],
+    "source": "app.py::_jra_parse_result",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      22
+    ],
+    "source": "app.py::_netkeiba_race_meta",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      153
+    ],
+    "source": "app.py::_race_should_have_result",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      164
+    ],
+    "source": "app.py::central_race_detail",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      22
+    ],
+    "source": "app.py::_smart_normalize_row",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      22
+    ],
+    "source": "app.py::_extract_smartrc_embedded",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      22
+    ],
+    "source": "app.py::_fetch_smartrc",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      22
+    ],
+    "source": "app.py::_fetch_extra_sources",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      40
+    ],
+    "source": "app.py::_merge_enrichment",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      162
+    ],
+    "source": "app.py::_enrichment_status",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      40
+    ],
+    "source": "app.py::_start_enrichment",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      40
+    ],
+    "source": "app.py::_apply_enrichment",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      368,
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_environment_http_get",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_nar_fetch_environment",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_jra_fetch_environment",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_upcoming_rows",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_patch_nar_environment",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_patch_central_environment",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_refresh_track_environment",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_schedule_track_environment",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_environment_cycle",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_environment_loop",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      157
+    ],
+    "source": "app.py::_start_environment_collector",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      135
+    ],
+    "source": "app.py::_prediction_clock_state",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      113
+    ],
+    "source": "app.py::_learning_probability",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      127
+    ],
+    "source": "app.py::_prediction_audit_from_lock",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      127
+    ],
+    "source": "app.py::_attach_prerace_audit",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      179
+    ],
+    "source": "app.py::_compact_display_snapshot",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      271
+    ]
+  },
+  {
+    "items": [
+      110
+    ],
+    "source": "app.py::_precompute_detail_metrics",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      368
+    ]
+  },
+  {
+    "items": [
+      21,
+      70,
+      71,
+      72
+    ],
+    "source": "app.py::_nar_official_result_fast",
+    "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+    "prs": [
+      369,
+      155
+    ]
+  },
+  {
+    "items": [
+      183
+    ],
+    "source": "arvexq/ui/static/app.js::runnerStyleSection",
+    "reason": "進行中の個別PRが同じJS関数を変更するため接続保留",
+    "prs": [
+      112
+    ]
+  }
+]

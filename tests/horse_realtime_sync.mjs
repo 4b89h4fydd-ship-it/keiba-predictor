@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import jsSupport from './stage4_js_support.cjs';
 const source=fs.readFileSync('arvexq/ui/static/sports/unified-home.js','utf8');
 const context={window:{},Date,Map,Set,String,Number,Math};
 vm.runInNewContext(source,context,{filename:'unified-home.js'});
@@ -81,7 +82,7 @@ assert.match(ui,/mergePublishedStatuses\(rows,state\.races\)/,
 const statusStart=ui.indexOf('function resultStatus('),
       statusEnd=ui.indexOf('function isFinal(',statusStart);
 assert.ok(statusStart>=0&&statusEnd>statusStart,'production result-status authority exists');
-const resultStatus=new Function(ui.slice(statusStart,statusEnd)+'return resultStatus')();
+const resultStatus=new Function(jsSupport.connectedFunctionSource(ui,'resultStatus')+'return resultStatus')();
 assert.equal(resultStatus({raceStatus:'確定',result:{status:'速報'}}),'確定',
   'newer official D1 final supersedes cached preliminary detail');
 assert.equal(resultStatus({raceStatus:'速報',result:{status:'確定'}}),'確定',

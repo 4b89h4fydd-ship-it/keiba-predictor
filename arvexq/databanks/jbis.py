@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from .registry import DataSource, SourceCapabilities
+from arvexq.components.item_041.registry import DataSource, SourceCapabilities
 
 
 def build_jbis_source(

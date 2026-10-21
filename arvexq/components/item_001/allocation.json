@@ -1,0 +1,67 @@
+{
+  "id": 1,
+  "name": "NAR天候解析",
+  "circuits": [
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/environment_values.py::<module>",
+    "arvexq/ingest/nar_weather.py::<module>",
+    "scripts/arvexq_nar_weather_readback.py::<module>",
+    "arvexq/ingest/environment_values.py::_env_clean_weather",
+    "arvexq/ingest/environment_values.py::_env_clean_condition",
+    "arvexq/ingest/environment_values.py::_safe_float",
+    "arvexq/ingest/environment_values.py::_safe_int",
+    "arvexq/ingest/nar_weather.py::parse_nar_weather",
+    "scripts/arvexq_nar_weather_readback.py::verify",
+    "scripts/arvexq_nar_weather_readback.py::main"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/nar_weather.py::<module>",
+    "scripts/arvexq_nar_weather_readback.py::<module>",
+    "arvexq/ingest/nar_weather.py::parse_nar_weather",
+    "scripts/arvexq_nar_weather_readback.py::verify",
+    "scripts/arvexq_nar_weather_readback.py::main"
+  ],
+  "shared_refs": [
+    "arvexq/ingest/environment_values.py::<module>",
+    "arvexq/ingest/environment_values.py::_env_clean_weather",
+    "arvexq/ingest/environment_values.py::_env_clean_condition",
+    "arvexq/ingest/environment_values.py::_safe_float",
+    "arvexq/ingest/environment_values.py::_safe_int"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    ".github/workflows/arvexq-nar-weather-readback.yml",
+    "app.py",
+    "arvexq/ingest/jra_dirt_going.py",
+    "arvexq/ingest/jra_turf_going.py",
+    "arvexq/ingest/jra_weather.py",
+    "arvexq/ingest/nar_environment_parser.py",
+    "arvexq/ingest/nar_going.py",
+    "arvexq/ingest/nar_weather.py",
+    "tests/test_enrichment_parsing.py",
+    "tests/test_environment_component_split.py",
+    "tests/test_item_001_nar_weather.py",
+    "tests/test_nar_weather_live_readback.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/d1_day_readback.py",
+    "arvexq/ingest/environment_values.py",
+    "arvexq/ingest/field_normalization.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/ingest/environment_values.py",
+    "arvexq/ingest/nar_weather.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/environment_values.py",
+    "arvexq/ingest/nar_weather.py",
+    "scripts/arvexq_nar_weather_readback.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

@@ -4,9 +4,9 @@ Preserve the existing API payload, leaving unavailable observations absent.
 """
 import re
 from bs4 import BeautifulSoup
-from arvexq.ingest.nar_weather import parse_nar_weather
-from arvexq.ingest.nar_going import parse_nar_going, parse_nar_going_moisture
-from arvexq.ingest.nar_scratches import parse_nar_scratches
+from arvexq.components.item_001.nar_weather import parse_nar_weather
+from arvexq.components.item_002.nar_going import parse_nar_going, parse_nar_going_moisture
+from arvexq.components.item_003.nar_scratches import parse_nar_scratches
 
 def _parse_nar_environment_html(html: str) -> dict:
     if not html:

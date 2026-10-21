@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from arvexq.pipeline.persisted_inputs import _career_rows, _history_observations_retained
+from arvexq.components.item_111.persisted_inputs import _career_rows, _history_observations_retained
 
 
 def read(path: str) -> dict[str, Any]:

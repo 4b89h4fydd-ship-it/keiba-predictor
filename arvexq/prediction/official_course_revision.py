@@ -9,7 +9,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 from typing import Any
 
-from arvexq.prediction.prerace_archive import JST, post_at
+from arvexq.components.item_147.prerace_archive import JST, post_at
 
 HOSTS = {"jra.go.jp", "www.jra.go.jp", "jra.jp", "www.jra.jp",
          "nar.netkeiba.com"}  # Do NOT trust aggregators as official feeds.

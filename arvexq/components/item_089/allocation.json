@@ -1,0 +1,45 @@
+{
+  "id": 89,
+  "name": "能力評価",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ability_engine.py::<module>",
+    "arvexq/prediction/ability.py::<module>",
+    "arvexq/prediction/ability.py::horse_evidence",
+    "arvexq/prediction/ability.py::rank_ability",
+    "arvexq/prediction/ability.py::apply_ability_ranking"
+  ],
+  "owned_refs": [
+    "arvexq/ability_engine.py::<module>",
+    "arvexq/prediction/ability.py::<module>",
+    "arvexq/prediction/ability.py::horse_evidence",
+    "arvexq/prediction/ability.py::rank_ability",
+    "arvexq/prediction/ability.py::apply_ability_ranking"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "arvexq/ability_engine.py",
+    "arvexq/prediction/__init__.py",
+    "arvexq/services/race_analysis.py"
+  ],
+  "callee_files": [
+    "arvexq/prediction/ability.py",
+    "arvexq/prediction/observed_model.py",
+    "arvexq/research/margin_abcde_candidate.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/prediction/ability.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/prediction/ability.py"
+  ],
+  "legacy_prediction_reserved": true,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

@@ -15,7 +15,8 @@ assert.equal(label({predMark:'◎',markFrozen:true,honmeiRole:'win'}),'保存印
 assert.equal(label({predMark:'◎',markFrozen:true,honmeiRole:''}),'保存印：◎');
 assert.equal(label({predMark:'',preOffAxisCandidate:true,markFrozen:false}),'');
 assert.equal(label(null),'');
-const card=src.slice(src.indexOf('function racecardEntryRow('),src.indexOf('function morningSavedMarkRows('));
+const cardName=src.includes('function _arvexq_original_racecardEntryRow(')?'_arvexq_original_racecardEntryRow':'racecardEntryRow';
+const card=src.slice(src.indexOf('function '+cardName+'('),src.indexOf('function morningSavedMarkRows('));
 assert(card.includes('rc-honmei-role'),'visible horse-name role must render');
 assert(card.includes('markRoleLabel(x)&&!scratch'),'scratch rows must never get role label beside name');
 const panel=src.slice(src.indexOf('function aiMarksPanel('),src.indexOf('function betPanel('));

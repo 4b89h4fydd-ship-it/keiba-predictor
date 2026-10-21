@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from arvexq.databanks.merge import HorseSourceRecord, merge_horse_records
+from arvexq.components.item_039.merge import HorseSourceRecord, merge_horse_records
 
 SOURCE_PRIORITY = {
     "jra_official": 10,

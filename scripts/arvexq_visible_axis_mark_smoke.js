@@ -33,7 +33,10 @@ const render=new Function('isScratchHorse','n','horseDisplayName','clamp',
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight','esc',
   'markRoleLabel','visiblePredictionMark','honmeiA11yText','racecardMarkDisplay',
   'racecardOddsHtml','carriedWeightText',
-  span('racecardEntryRow','morningSavedMarkRows')+'return racecardEntryRow')(
+  fs.readFileSync('arvexq/components/item_180/routes.js','utf8')+'\n'+
+  span(src.includes('function _arvexq_original_racecardEntryRow(')?
+    '_arvexq_original_racecardEntryRow':'racecardEntryRow','morningSavedMarkRows')+
+  'return racecardEntryRow')(
   isScratchHorse,(n,d=0)=>Number(n)||d,(_,h)=>h.name,(v,a,b)=>Math.max(a,Math.min(b,v)),
   ()=>0,()=>null,()=>0,s=>String(s),markRoleLabel,visiblePredictionMark,honmeiA11yText,
   m=>String(m||'—'),()=>'<em>odds</em>',()=> '55kg');

@@ -2,7 +2,7 @@
 from __future__ import annotations
 import copy
 from typing import Any
-from arvexq.ingest.full_career import merge_career
+from arvexq.components.item_057.full_career import merge_career
 
 
 def merge_full_profile_history(horse:dict[str,Any], official_runs:list[dict[str,Any]],

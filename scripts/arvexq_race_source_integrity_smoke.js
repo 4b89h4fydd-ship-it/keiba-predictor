@@ -3,7 +3,42 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const start=src.indexOf('function openRace('),end=src.indexOf('\n}',start)+2;
+// Exact production browser merger must preserve partial history without
+// mixing two runners who occupy the same race-scoped horse number.
+const historyWindow={};
+for(const part of ['deduplicate','temporal']){
+  new Function('window',fs.readFileSync('arvexq/ui/static/history/'+part+'.js','utf8'))(historyWindow);
+}
+const horseStart=src.indexOf('function mergeHorseReflection(');
+const horseEnd=src.indexOf('// Result updates can be sparse:',horseStart);
+assert(horseStart>=0&&horseEnd>horseStart,'production horse merge function missing');
+const mergeHorse=new Function('window','reflectUseful','isScratchHorse',
+  src.slice(horseStart,horseEnd)+';return mergeHorseReflection;')(
+  historyWindow,v=>v!==null&&v!==undefined&&v!==''&&!Array.isArray(v),()=>false);
+const oldHorse={horseNumber:1,name:'同じ 馬',
+  allPastRuns:[{date:'2026-09-01',track:'大井',distance:1200,finish:1},
+               {date:'2026-09-03',track:'大井',distance:1200,finish:2}],
+  recentRaces:[{date:'2026-09-03',track:'大井',distance:1200,finish:2}],
+  debutNoHistory:true};
+const freshHorse={horseNumber:1,name:'同じ馬',
+  recentRaces:[{date:'2026-09-02',track:'大井',distance:1200,finish:3},
+               {date:'2026-10-11',track:'大井',distance:1200,finish:2}]};
+const matched=mergeHorse(oldHorse,freshHorse,{},'2026-10-10');
+assert.deepEqual(matched.allPastRuns.map(x=>x.date).sort(),
+  ['2026-09-01','2026-09-02','2026-09-03']);
+assert.equal(matched.recentRaces.length,3);
+assert.equal(matched.debutNoHistory,undefined,'unverified debut status must not persist');
+const different=mergeHorse({...oldHorse,careerArchive:{sha256:'old archive'}},
+  {horseNumber:1,name:'別の馬',recentRaces:[{date:'2026-09-08',finish:4}]}, {},'2026-10-10');
+assert.deepEqual(different.allPastRuns.map(x=>x.date),['2026-09-08']);
+assert.equal(different.careerArchive,undefined,'never inherit a different horses compressed runs');
+const verified=mergeHorse({horseNumber:2,name:'新馬',debutNoHistory:true,
+  _careerHistoryAudit:{complete:true,reportedStarts:0,requestedAtRaceDate:'2026-10-10'}},
+  {horseNumber:2,name:'新馬'}, {},'2026-10-10');
+assert.equal(verified.debutNoHistory,true,'verified zero starts remains a debut');
+assert.equal(oldHorse.allPastRuns.length,2,'never mutate historical input');
+const openName=src.includes('function _arvexq_original_openRace(')?'function _arvexq_original_openRace(':'function openRace(';
+const start=src.indexOf(openName),end=src.indexOf('\n}',start)+2;
 assert(start>=0&&end>start,'missing openRace');
 const open=src.slice(start,end);
 assert(open.includes('hydrateStaticRacecardFirst(id,seq,initial)'));
@@ -37,7 +72,7 @@ const countEnd=src.indexOf('\n}',countStart)+2;
 assert(countStart>=0&&countEnd>countStart,'homePickCounts must exist for app boot');
 const countFunction=src.slice(countStart,countEnd);
 assert(src.includes('function renderHome(){')&&
-  src.slice(src.indexOf('function renderHome(){'),src.indexOf('function volatilityBadge(')).includes("homePickCounts('selected')"),
+  src.slice(src.indexOf(src.includes('function _arvexq_original_renderHome(')?'function _arvexq_original_renderHome(':'function renderHome(){'),src.indexOf('function volatilityBadge(')).includes("homePickCounts('selected')"),
   'current home must be able to read its selection counts');
 const counts=new Function('selectedRaceCandidates','specialForecastRaceCandidates',
   countFunction+'; return homePickCounts;')(
@@ -47,8 +82,9 @@ assert.deepEqual(counts('selected'),{central:2,local:1});
 assert.deepEqual(counts('special'),{central:1,local:2});
 // Regression: previous home cleanup accidentally removed the actual runner
 // renderer while leaving the two call sites intact. Execute its real HTML.
-const rowStart=src.indexOf('function racecardEntryRow(');
-const rowEnd=src.indexOf('function morningSavedMarkRows(',rowStart);
+const boxedRunner=src.includes('function _arvexq_original_racecardEntryRow(');
+const rowStart=src.indexOf(boxedRunner?'function _arvexq_original_racecardEntryRow(':'function racecardEntryRow(');
+const rowEnd=src.indexOf(boxedRunner?'function racecardEntryRow(':'function morningSavedMarkRows(',rowStart);
 assert(rowStart>=0&&rowEnd>rowStart,'racecardEntryRow is required to show runners');
 assert.equal((src.match(/function racecardEntryRow\(/g)||[]).length,1,'single renderer authority');
 // The real page defines markRoleLabel in the same script as racecardEntryRow.
@@ -68,7 +104,7 @@ const renderRunner=new Function(
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight',
   'carriedWeightText','esc','racecardOddsHtml','racecardMarkDisplay',
   'honmeiA11yText','honmeiBadgeText','markRoleLabel','visiblePredictionMark',
-  src.slice(rowStart,rowEnd)+';return racecardEntryRow;'
+  src.slice(rowStart,rowEnd)+';return '+(boxedRunner?'_arvexq_original_racecardEntryRow':'racecardEntryRow')+';'
 )(
   ()=>false, (x,d=0)=>Number.isFinite(Number(x))?Number(x):d,
   (_r,h)=>h.name, (x,lo,hi)=>Math.max(lo,Math.min(hi,x)),

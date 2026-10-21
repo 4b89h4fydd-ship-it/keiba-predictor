@@ -4,9 +4,9 @@ import asyncio
 import copy
 from typing import Any
 
-from arvexq.databanks.registry import DataBankRegistry, registry
-from arvexq.ingest.orchestrator import FetchResult, fetch_domain
-from arvexq.ingest.full_career import merge_career, audit_career, date_key
+from arvexq.components.item_041.registry import DataBankRegistry, registry
+from arvexq.components.item_041.orchestrator import FetchResult, fetch_domain
+from arvexq.components.item_057.full_career import merge_career, audit_career, date_key
 
 # Identity-verified career sources provide both observed runs and race-date
 # start-count evidence. Track count-source outages separately for audit parity.

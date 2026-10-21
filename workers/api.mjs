@@ -1,10 +1,12 @@
+import {fetchExisting as _arvexq_fetch_existing} from '../arvexq/components/item_173/api_entry.mjs';
 // The exported production source is preserved byte-for-byte in its own module.
 import original from './api_preserved.mjs';
-import {forecastRevisions} from './api_forecast_revisions.mjs';
-import {storageAudit} from './api_storage_audit.mjs';
-import {snapshotExport} from './api_snapshot_export.mjs';
-import {readCompressedRace,storageEnvironment,compressStoredSnapshot} from './api_full_snapshot.mjs';
-export default {async fetch(request,env,ctx){
+import {forecastRevisions} from '../arvexq/components/item_148/api_forecast_revisions.mjs';
+import {storageAudit} from '../arvexq/components/item_171/api_storage_audit.mjs';
+import {snapshotExport} from '../arvexq/components/item_148/api_snapshot_export.mjs';
+import {readCompressedRace,compressStoredSnapshot} from '../arvexq/components/item_139/api_full_snapshot.mjs';
+import {storageEnvironment} from '../arvexq/components/item_174/api_full_snapshot.mjs';
+const _arvexq_existing_worker = {async fetch(request,env,ctx){
   const url=new URL(request.url);
   // Retire Banei from live traffic without touching archived D1 rows.
   if(request.method==='GET'&&(/^\/api\/(?:race|odds)\//).test(url.pathname)){
@@ -23,4 +25,8 @@ export default {async fetch(request,env,ctx){
     return storageAudit(request,env);
   }
   return original.fetch(request,storageEnvironment(env,url.pathname==='/api/day'&&url.searchParams.get('details')!=='0'),ctx);
+}};
+
+export default {async fetch(request, env, ctx) {
+  return _arvexq_fetch_existing(_arvexq_existing_worker, request, env, ctx);
 }};

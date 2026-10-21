@@ -1,9 +1,9 @@
 """Horse-detail domain with presentation-only recent-five history."""
 from __future__ import annotations
 from typing import Any
-from arvexq.career_missing import build_career_analysis
-from arvexq.history import recent_runs
-from arvexq.race_card import horse_number, sorted_horses
+from arvexq.components.item_057.career_missing import build_career_analysis
+from arvexq.components.item_182.history import recent_runs
+from arvexq.components.item_180.race_card import horse_number, sorted_horses
 
 
 def _pick(source: dict[str, Any], *keys: str) -> Any:

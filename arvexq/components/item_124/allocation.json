@@ -1,0 +1,89 @@
+{
+  "id": 124,
+  "name": "買い目点数・配分",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::<module>",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.num",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:16:30",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:23:33",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:24:25",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:34:20",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:41:16",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:42:35",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:44:33",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:47:17",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.verify",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.verify.@anonymous:80:20",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.verify.@anonymous:84:23",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.verify.@anonymous:85:33",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:91:21",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:91:21.@anonymous:91:72",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:93:28",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:94:55",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:97:39",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:98:29"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::<module>",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.num",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:16:30",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:23:33",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:24:25",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:34:20",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:41:16",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:42:35",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:44:33",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:47:17",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.verify",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.verify.@anonymous:80:20",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.verify.@anonymous:84:23",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.verify.@anonymous:85:33",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:91:21",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:91:21.@anonymous:91:72",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:93:28",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:94:55",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:97:39",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:98:29"
+  ],
+  "research_only_refs": [
+    {
+      "item": 124,
+      "path": "arvexq/prediction/recommendation_engine.py",
+      "git_blob_sha": "bb7e22e37cf6bbd3696033bc1ee4617e5e834b6a",
+      "search_term": "evaluate_tickets",
+      "lines": [
+        89,
+        140
+      ],
+      "status": "研究/候補の参照のみ。実装割り振り件数から除外。PR #366/#374で撤去対象に含まれ得るため復活・コピー禁止"
+    }
+  ],
+  "missing_old_references": [],
+  "caller_files": [
+    "arvexq/ui/static/app.js",
+    "arvexq/ui/static/index.html"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js"
+  ],
+  "legacy_prediction_reserved": true,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。",
+  "qualification": "保存済み本線/3連単区分・点数の検証/表示処理の割り振り。新たな買い目生成ロジックが存在するとの主張ではない。"
+}

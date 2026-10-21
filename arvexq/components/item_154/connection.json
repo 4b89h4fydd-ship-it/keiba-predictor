@@ -1,0 +1,280 @@
+{
+  "id": 154,
+  "name": "History Repair",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "partial-connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "iter_months_back",
+        "line": 734
+      },
+      "original_source": "app.py::iter_months_back",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original_iter_months_back"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "sync_recent_history",
+        "line": 744
+      },
+      "original_source": "app.py::sync_recent_history",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original_sync_recent_history"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_history_worker",
+        "line": 759
+      },
+      "original_source": "app.py::_history_worker",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original__history_worker"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "ensure_history_async",
+        "line": 779
+      },
+      "original_source": "app.py::ensure_history_async",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original_ensure_history_async"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_startup_history_backfill",
+        "line": 795
+      },
+      "original_source": "app.py::_startup_history_backfill",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original__startup_history_backfill"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "history_backfill_one",
+        "line": 832
+      },
+      "original_source": "app.py::history_backfill_one",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original_history_backfill_one"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "history_status",
+        "line": 845
+      },
+      "original_source": "app.py::history_status",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original_history_status"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_nar_month_needs_fetch",
+        "line": 1051
+      },
+      "original_source": "app.py::_nar_month_needs_fetch",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original__nar_month_needs_fetch"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_sync_nar_month_wave",
+        "line": 1088
+      },
+      "original_source": "app.py::_sync_nar_month_wave",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original__sync_nar_month_wave"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_months_from_race_date",
+        "line": 1128
+      },
+      "original_source": "app.py::_months_from_race_date",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original__months_from_race_date"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_history_counts",
+        "line": 1138
+      },
+      "original_source": "app.py::_history_counts",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original__history_counts"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_start_race_history_search",
+        "line": 1166
+      },
+      "original_source": "app.py::_start_race_history_search",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original__start_race_history_search"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_race_history_status",
+        "line": 1231
+      },
+      "original_source": "app.py::_race_history_status",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original__race_history_status"
+    },
+    {
+      "items": [
+        154
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_start_central_history_search",
+        "line": 2012
+      },
+      "original_source": "app.py::_start_central_history_search",
+      "box_target": "arvexq/components/item_154/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        154
+      ],
+      "original_private_name": "_arvexq_original__start_central_history_search"
+    }
+  ],
+  "deferred": [
+    {
+      "items": [
+        154
+      ],
+      "source": "app.py::_download_nar_month_only",
+      "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+      "prs": [
+        128
+      ]
+    }
+  ],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

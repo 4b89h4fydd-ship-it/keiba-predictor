@@ -13,11 +13,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
-from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock, evaluate_frozen_result, summarize_frozen_ticket_metrics
+from arvexq.components.item_147.prerace_archive import JST, post_at, sealed_lock, evaluate_frozen_result, summarize_frozen_ticket_metrics
 from scripts.arvexq_bet_funnel import summarize as summarize_ticket_funnel
 from scripts.arvexq_fetch_d1_bundle import get_json, detail_from_response
-from arvexq.results.auto_recap import build_race_recap
-from arvexq.databanks.horse_review_bank import build_horse_review_bank
+from arvexq.components.item_127.auto_recap import build_race_recap
+from arvexq.components.item_181.horse_review_bank import build_horse_review_bank
 
 
 def inspect(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[str, Any]:

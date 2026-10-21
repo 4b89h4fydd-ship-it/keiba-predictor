@@ -1,6 +1,6 @@
 """frame_number extraction, with no network or other field dependencies."""
 import re
-from arvexq.ingest.field_normalization import _clean
+from arvexq.components.item_040.field_normalization import _clean
 _NK_WAKU_RE = re.compile(r"^Waku(\d)$")
 
 def _nk_row_frame(tr) -> int:

@@ -1,6 +1,6 @@
 """NAR horse scratches and exclusions, independent of weather/going."""
 import re
-from arvexq.ingest.field_normalization import _clean, _scratch_status
+from arvexq.components.item_040.field_normalization import _clean, _scratch_status
 
 def parse_nar_scratches(soup) -> dict[int, str]:
     scratches = {}

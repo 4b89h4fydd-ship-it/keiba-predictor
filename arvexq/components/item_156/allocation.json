@@ -1,0 +1,38 @@
+{
+  "id": 156,
+  "name": "馬体重自動更新",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/nar_official_card.py::<module>",
+    "arvexq/ingest/nar_official_card.py::parse_card_html",
+    "arvexq/ingest/nar_official_card.py::parse_card_html.horse_no_from_row",
+    "arvexq/ingest/nar_official_card.py::parse_card_html.parse_weight_cell"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "arvexq/ingest/nar_official_card.py::<module>",
+    "arvexq/ingest/nar_official_card.py::parse_card_html",
+    "arvexq/ingest/nar_official_card.py::parse_card_html.horse_no_from_row",
+    "arvexq/ingest/nar_official_card.py::parse_card_html.parse_weight_cell"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "tests/test_nar_official_card.py"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "arvexq/ingest/nar_official_card.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/nar_official_card.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

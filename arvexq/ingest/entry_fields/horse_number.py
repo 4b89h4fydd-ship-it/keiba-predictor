@@ -1,6 +1,6 @@
 """horse_number extraction, with no network or other field dependencies."""
 import re
-from arvexq.ingest.field_normalization import _clean
+from arvexq.components.item_040.field_normalization import _clean
 _NK_ODDS_ID_RE = re.compile(r"^odds-1_(\d{1,2})$")
 
 def _nk_row_horse_no(tr, index: int | None = None) -> int:

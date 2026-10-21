@@ -26,7 +26,7 @@ def _runners(detail: dict[str, Any]) -> dict[int, dict[str, Any]]:
 def _career_rows(horse: dict[str, Any], cutoff: str) -> list[dict[str, Any]]:
     """Recover the existing packed career archive without any provider request."""
     if horse.get("careerArchive"):
-        from arvexq.ingest.career_transport import recover_horse
+        from arvexq.components.item_057.career_transport import recover_horse
         horse = recover_horse(horse, cutoff)
     # Full career and the display's latest five deliberately overlap.
     # Deduplicate the observations before comparing stored evidence counts.

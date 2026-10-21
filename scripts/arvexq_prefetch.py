@@ -31,6 +31,7 @@ from arvexq.prediction.observed_model import model_version
 from arvexq.prediction.race_intelligence import attach_evidence
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 from arvexq.ingest.full_career import merge_career
+from arvexq.ingest.horse_identity import _horse_key
 from arvexq.databanks.nar_official_csv import register_nar_official_archive
 from arvexq.databanks.registry import registry as source_registry
 
@@ -74,6 +75,15 @@ def _merge_horses(base: Any, fresh: Any, cutoff: str = "") -> list[dict[str, Any
         if no <= 0:
             continue
         row = by_no.get(no)
+        if row is not None and _horse_key(row.get("name")) and _horse_key(raw.get("name")) and (
+            _horse_key(row.get("name")) != _horse_key(raw.get("name"))
+        ):
+            # A horse number is race-scoped, not an enduring horse ID.
+            # Never inherit another runner's past starts or career archive.
+            replacement = {"horseNumber": no}
+            out[out.index(row)] = replacement
+            row = replacement
+            by_no[no] = row
         if row is None:
             row = {"horseNumber": no}
             out.append(row)
@@ -332,8 +342,8 @@ def prepare(
     if phase != "collect":
         raise ValueError("unknown prefetch stage")
     bundle = _read(bundle_path)
-    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば") and "-帯広-" not in str(r.get("id")) and "-帯広ば-" not in str(r.get("id"))]
-    initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id") and str(d.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in str(d.get("id")) for name in ("帯広", "帯広ば"))]
+    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
+    initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id")]
     by_id: dict[str, dict[str, Any]] = {str(d["id"]): d for d in initial}
     # Replay only validated existing outputs of this SAME canonical prefetch,
     # so a failed upstream HTTP fetch cannot erase a known published roster.
@@ -482,7 +492,7 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
     """
     from arvexq.pipeline.persisted_inputs import verify_persisted_facts, may_create_prerace_prediction
     day = _read(bundle_path)
-    rows = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば") and "-帯広-" not in str(r.get("id")) and "-帯広ば-" not in str(r.get("id"))]
+    rows = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id")]
     details = {str(d["id"]): d for d in (day.get("details") or [])
                if isinstance(d, dict) and d.get("id")}
     saved = {"races": rows, "details": list(details.values())}

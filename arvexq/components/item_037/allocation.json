@@ -1,0 +1,102 @@
+{
+  "id": 37,
+  "name": "競走除外状態",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/core/runner_status.py::<module>",
+    "arvexq/ingest/entry_fields/status.py::<module>",
+    "arvexq/ingest/field_normalization.py::<module>",
+    "arvexq/ingest/runner_exclusion.py::<module>",
+    "arvexq/core/runner_status.py::normalize_runner_status",
+    "arvexq/core/runner_status.py::is_inactive_runner",
+    "arvexq/ingest/entry_fields/status.py::extract",
+    "arvexq/ingest/field_normalization.py::_clean",
+    "arvexq/ingest/field_normalization.py::_int",
+    "arvexq/ingest/field_normalization.py::_float",
+    "arvexq/ingest/field_normalization.py::_carried_weight",
+    "arvexq/ingest/field_normalization.py::_iso_date",
+    "arvexq/ingest/field_normalization.py::_start_time",
+    "arvexq/ingest/field_normalization.py::_time_seconds",
+    "arvexq/ingest/field_normalization.py::_normalize_sex",
+    "arvexq/ingest/field_normalization.py::_scratch_status",
+    "arvexq/ingest/field_normalization.py::_normalize_weather",
+    "arvexq/ingest/field_normalization.py::_normalize_condition",
+    "arvexq/ingest/runner_exclusion.py::extract"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/runner_exclusion.py::<module>",
+    "arvexq/ingest/runner_exclusion.py::extract"
+  ],
+  "shared_refs": [
+    "arvexq/core/runner_status.py::<module>",
+    "arvexq/ingest/entry_fields/status.py::<module>",
+    "arvexq/ingest/field_normalization.py::<module>",
+    "arvexq/core/runner_status.py::normalize_runner_status",
+    "arvexq/core/runner_status.py::is_inactive_runner",
+    "arvexq/ingest/entry_fields/status.py::extract",
+    "arvexq/ingest/field_normalization.py::_clean",
+    "arvexq/ingest/field_normalization.py::_int",
+    "arvexq/ingest/field_normalization.py::_float",
+    "arvexq/ingest/field_normalization.py::_carried_weight",
+    "arvexq/ingest/field_normalization.py::_iso_date",
+    "arvexq/ingest/field_normalization.py::_start_time",
+    "arvexq/ingest/field_normalization.py::_time_seconds",
+    "arvexq/ingest/field_normalization.py::_normalize_sex",
+    "arvexq/ingest/field_normalization.py::_scratch_status",
+    "arvexq/ingest/field_normalization.py::_normalize_weather",
+    "arvexq/ingest/field_normalization.py::_normalize_condition"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "arvexq/betting/scenario_tickets.py",
+    "arvexq/core/__init__.py",
+    "arvexq/features/horse_features.py",
+    "arvexq/ingest/corner_order.py",
+    "arvexq/ingest/entry_fields/dom.py",
+    "arvexq/ingest/entry_fields/frame_number.py",
+    "arvexq/ingest/entry_fields/horse_number.py",
+    "arvexq/ingest/entry_fields/jockey.py",
+    "arvexq/ingest/entry_fields/netkeiba.py",
+    "arvexq/ingest/entry_fields/status.py",
+    "arvexq/ingest/environment_values.py",
+    "arvexq/ingest/field_normalization.py",
+    "arvexq/ingest/horse_identity.py",
+    "arvexq/ingest/nar_csv.py",
+    "arvexq/ingest/nar_scratches.py",
+    "arvexq/ingest/recent_result_cell.py",
+    "arvexq/normalize/race.py",
+    "arvexq/prediction/learned_scenarios.py",
+    "tests/test_entry_field_contracts.py",
+    "tests/test_field_normalization.py",
+    "tests/test_observed_runner_metadata.py",
+    "tests/test_observed_sex_normalization.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/entry_fields/dom.py",
+    "arvexq/ingest/entry_fields/sex.py",
+    "arvexq/ingest/field_normalization.py",
+    "arvexq/ingest/runner_cancellation.py",
+    "arvexq/ingest/runner_exclusion.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/core/runner_status.py",
+    "arvexq/ingest/entry_fields/status.py",
+    "arvexq/ingest/field_normalization.py",
+    "arvexq/ingest/runner_exclusion.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/core/runner_status.py",
+    "arvexq/ingest/entry_fields/status.py",
+    "arvexq/ingest/field_normalization.py",
+    "arvexq/ingest/runner_exclusion.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

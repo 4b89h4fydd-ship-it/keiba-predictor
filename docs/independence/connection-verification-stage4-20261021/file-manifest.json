@@ -1,0 +1,182 @@
+[
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/README.md",
+    "bytes": 5068,
+    "sha256": "56cedbbe0e14edc3bd9ca0b1ad9994e29ba920c2fe46bf8679847d577301ba81"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/RESULTS.md",
+    "bytes": 17924,
+    "sha256": "0b1a47162d72c9b84c7a98a18dcf0020dd71187a903fa2301d90eb4bdee2de45"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/audit.log",
+    "bytes": 98,
+    "sha256": "498a7c398a89ab6b42e2b992fb6c511062631afb948f7e9b6445e146a715d452"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/build-comparison.json",
+    "bytes": 553,
+    "sha256": "96c912a52114862b9227f536412460be573f58cddd4149e0ce7b10eafe7ff702"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/horse-status.log",
+    "bytes": 31,
+    "sha256": "ab2749f8c9a957253d20f3a30c265c00860d4b6258b18aad2e3fba1abd885772"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/item-results.json",
+    "bytes": 125713,
+    "sha256": "d980ee7706f72983814d4972205ec0af800b238e90f6d75dd69f8992dfca67c1"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/node-contracts.log",
+    "bytes": 168,
+    "sha256": "f88dc78889fa2f0d5ea2e92eedda690f4a83c48f58d245d7d232be8a27c2321c"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/open-pr-heads.json",
+    "bytes": 5002,
+    "sha256": "77bda0a05bb8930838d509b19865bd41d44d831ac8e54c853804311b1c8724c8"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/preservation.json",
+    "bytes": 12375,
+    "sha256": "dd7b4485ea511153cdde0716bfcf18348e6abecb42e59835a3267dd088ca89e6"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/pytest.log",
+    "bytes": 1610,
+    "sha256": "82b407296a8f34a14acec4dba854034dc18327f89644759a4c9ed4787c5c01f7"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/pytest.xml.gz",
+    "bytes": 24504,
+    "sha256": "41f8e74caa3bdf0b580d2e880a1a0338d9e90e370fd9f669421069aa6ee8ae77"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/race-loading.log",
+    "bytes": 66,
+    "sha256": "556a460819a3a599da21b0003f95067e413c1de4023242151958b6314b6c6679"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/record-results.json.gz",
+    "bytes": 17426,
+    "sha256": "daf9cb207b5f524f4311c095f124155ff74a8d390dec8e55edc0308109a68e54"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/runtime-fixtures.json.gz",
+    "bytes": 7108,
+    "sha256": "1609b7e87457deb09f41d79a57f574585092de0d78d97d4eaa501d324eec4840"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/shared.log",
+    "bytes": 99,
+    "sha256": "c74c19de78e285981a40b303b0af8c5d3ed4b5d445f18756633f205b82afdb66"
+  },
+  {
+    "path": "docs/independence/connection-verification-stage4-20261021/summary.json",
+    "bytes": 2155,
+    "sha256": "54163a606c6336c9f6a8e0a8f63e26ca5e70e11d792feb050ac1c7cedbd04970"
+  },
+  {
+    "path": "scripts/arvexq_stage4_offline_tests.py",
+    "bytes": 3965,
+    "sha256": "5514e7f5515287d3b07c5dce15fc45a0d15f643aabb68bfbe9f1508997d1626f"
+  },
+  {
+    "path": "tests/horse_realtime_sync.mjs",
+    "bytes": 7182,
+    "sha256": "d2f17ab7eabdbd852f3fff2039339ec43c5f15f2a464c27281259e22d0b1b998"
+  },
+  {
+    "path": "tests/race_loading_smoke.js",
+    "bytes": 1583,
+    "sha256": "5cbf5da8efe3d69f122c384bdee765b5ea301e657174d4fac19e7664d7f43e41"
+  },
+  {
+    "path": "tests/stage4_box_routes.mjs",
+    "bytes": 7331,
+    "sha256": "2e59588969c4066859db1dd6676ad67a6cd2ffc09f76a4b131e091da893eec77"
+  },
+  {
+    "path": "tests/stage4_js_support.cjs",
+    "bytes": 1135,
+    "sha256": "94ece4ebb8c16fd6ace0e3d2124462c8e8f01cabf9819e6f4e19c8edf071f834"
+  },
+  {
+    "path": "tests/stage4_runtime_probe.py",
+    "bytes": 3115,
+    "sha256": "7c4416c256f3d67b821f7f4b3fae277b1662e87acc82180b445348c352baa2cf"
+  },
+  {
+    "path": "tests/stage4_source_support.py",
+    "bytes": 1589,
+    "sha256": "24ad811a2c71b23495179f0c94121421756e03cf529436b7d7b0f006ca76d8fb"
+  },
+  {
+    "path": "tests/test_app_pure_modules.py",
+    "bytes": 4225,
+    "sha256": "a4c7a4dd4dc4b5a679ac0d27dd2673fa27c87c568e4285cff1ead7483541abd3"
+  },
+  {
+    "path": "tests/test_independent_jra_race_identity.py",
+    "bytes": 1837,
+    "sha256": "b7579800ccd28991c611f816b201fa487a574bf5a4df73f1603f84976e892b59"
+  },
+  {
+    "path": "tests/test_independent_odds_facts.py",
+    "bytes": 1289,
+    "sha256": "e0aa14c10cc1a52222e0557d9c5130f1973142ceb106371fe647964ae30c55e8"
+  },
+  {
+    "path": "tests/test_independent_official_result_status.py",
+    "bytes": 771,
+    "sha256": "7a25f47d89ba9aa9df5dcb0e4d8c9cd5fa030b6a3e7df1bfedc75067a9fdf6b9"
+  },
+  {
+    "path": "tests/test_jra_grade_class_independent.py",
+    "bytes": 1000,
+    "sha256": "307f9f719c3f9e1fd19bddec3395f97cfddc7d7b3ecd44c997327b2b0b3be310"
+  },
+  {
+    "path": "tests/test_jra_meeting_schedule_independent.py",
+    "bytes": 990,
+    "sha256": "beafad3af6e9c253e3765b64986a41434063b4c267d40720f045f7ae44e90c51"
+  },
+  {
+    "path": "tests/test_jra_official_table_independent.py",
+    "bytes": 960,
+    "sha256": "01ae21c5890fbc98847e7756221fdde463840b6c7c426cf495439b17ee51f1b6"
+  },
+  {
+    "path": "tests/test_jra_race_fields_independent.py",
+    "bytes": 1636,
+    "sha256": "72605cc1d9d89efa9956ed5fa4337ebd44e9561d40ef83ac6e6e498f0b26420d"
+  },
+  {
+    "path": "tests/test_jra_summary_independent_fields.py",
+    "bytes": 1298,
+    "sha256": "73de99fdd50c5e3004ef5d6353a6268ac47c48d44b75723fa31dddf4b693bcb4"
+  },
+  {
+    "path": "tests/test_odds_capture_time.py",
+    "bytes": 751,
+    "sha256": "6d6486f8d313f5b20f5a7310f9aeecc45415275569f14da4af09a31f39fbcdfc"
+  },
+  {
+    "path": "tests/test_race_summary_merge.py",
+    "bytes": 6303,
+    "sha256": "3cb33d003d7a2ef8a86844daae045c78aa6a69758dabf01579230213ba7daa10"
+  },
+  {
+    "path": "tests/test_stage4_box_connections.py",
+    "bytes": 5667,
+    "sha256": "efab8fe54dd3c9dd06b2b9d5abccca13c0da65fe5599135c0d509c8a25b7dbe3"
+  },
+  {
+    "path": "tests/test_stage4_shared_connections.py",
+    "bytes": 963,
+    "sha256": "e6e542864f137b37eee296bc77efae7e305c9d4c62db769662853eae43705eb4"
+  }
+]

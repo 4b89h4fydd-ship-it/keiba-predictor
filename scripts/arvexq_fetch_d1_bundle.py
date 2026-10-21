@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from arvexq.ingest.full_snapshot_codec import KEY as FULL_PAYLOAD_KEY, unpack_detail
+from arvexq.components.item_148.full_snapshot_codec import KEY as FULL_PAYLOAD_KEY, unpack_detail
 
 
 def get_json(url: str, timeout: float, retries: int) -> dict[str, Any]:

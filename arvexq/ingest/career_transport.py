@@ -11,7 +11,7 @@ import gzip
 import hashlib
 import json
 from typing import Any
-from arvexq.ingest.full_career import merge_career
+from arvexq.components.item_057.full_career import merge_career
 
 SCHEME = "arvexq-career-gzip-json-v2"
 LEGACY_SCHEME = "arvexq-career-gzip-json-v1"

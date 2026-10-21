@@ -1,0 +1,21 @@
+{
+  "id": 144,
+  "name": "過去走キャッシュ",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/storage/cache_keys.py"
+  ],
+  "shared_dependencies": [
+    "Shared cache storage and history persistence remain in original locations"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

@@ -1,0 +1,1250 @@
+[
+  {
+    "path": "app.py",
+    "symbol": "_arvexq_timing",
+    "private_symbol": "_arvexq_original__arvexq_timing",
+    "original_body_ast_sha256": "1eca5b4fab0fe714da05b29aa5f500cfed8f5571ea2adf6b4817570941df8440"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_default_data_root",
+    "private_symbol": "_arvexq_original__default_data_root",
+    "original_body_ast_sha256": "4d7d3af83de475f76be2f8710c3a80458e166e6594553667590525b16ec7e211"
+  },
+  {
+    "path": "app.py",
+    "symbol": "normalize_central_race",
+    "private_symbol": "_arvexq_original_normalize_central_race",
+    "original_body_ast_sha256": "17344c2c415da6d6cd92bc25ec785685701161c95bb77218248e7199a847179c"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_request",
+    "private_symbol": "_arvexq_original__jra_request",
+    "original_body_ast_sha256": "072efb498b07c949c1d93209e62e6feb60e32da9bbd4566aa6b6b6ddff870bd9"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_norm_cname",
+    "private_symbol": "_arvexq_original__jra_norm_cname",
+    "original_body_ast_sha256": "e14639290d15c6ecc1f12cb546dd4fc6dce218fd09b5af96d667f6bf692e5cc5"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_attr_cname",
+    "private_symbol": "_arvexq_original__jra_attr_cname",
+    "original_body_ast_sha256": "7ea82df444a2dc526c638f01f384f8d390cc02160d3e30beb7194fd1bc542588"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_program_title",
+    "private_symbol": "_arvexq_original__jra_program_title",
+    "original_body_ast_sha256": "4557f02033731bdff8dbe7906031621209f35903c103e39b473f89557ce29888"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_program_summaries",
+    "private_symbol": "_arvexq_original__jra_program_summaries",
+    "original_body_ast_sha256": "450ca7ceaa6d054b9c146c0e068607a7170e4bb9f8e566fc4b660bdb86fadf60"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_program_lookup",
+    "private_symbol": "_arvexq_original__jra_program_lookup",
+    "original_body_ast_sha256": "bc4a108475bd039c18dda54e0d3f8801d86d2042270e276a3f02c7971e94d359"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_find_cname",
+    "private_symbol": "_arvexq_original__jra_find_cname",
+    "original_body_ast_sha256": "88d2472ec6d0392df10839c48ad9a3c0af31cf092ef656f3bf28d6ed8fdf82e9"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_text",
+    "private_symbol": "_arvexq_original__jra_text",
+    "original_body_ast_sha256": "9b0def463d373975b73346c516ad719ef21fa37c7b9c16889add37d41882a2d3"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_track_from_cname",
+    "private_symbol": "_arvexq_original__jra_track_from_cname",
+    "original_body_ast_sha256": "c263ff8d5de0150c296c25696b8713c6512501687710165ed75b53981091f11c"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_parse_past_cell",
+    "private_symbol": "_arvexq_original__jra_parse_past_cell",
+    "original_body_ast_sha256": "8a9011c4ded7ae8eb73f0758233c546c65c08ff9765f8ee9a4a902553771dcfa"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_profile_runs",
+    "private_symbol": "_arvexq_original__jra_profile_runs",
+    "original_body_ast_sha256": "91bc270b9632d2c8f3eae4fe54dc8e1bd1bcf02f44193f3bf046d60460bd62a1"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_merge_run_fields",
+    "private_symbol": "_arvexq_original__jra_merge_run_fields",
+    "original_body_ast_sha256": "7fe98e0b6bd20caba586fb4cd6fc0648c3cf3e88b1ac1f8992c635603d9b5b5f"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_run_core_complete",
+    "private_symbol": "_arvexq_original__jra_run_core_complete",
+    "original_body_ast_sha256": "0ca30fd170485eaba2abee43734a7804c9a909304dbf559e910fe9dbd71e51c9"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_history_complete",
+    "private_symbol": "_arvexq_original__jra_history_complete",
+    "original_body_ast_sha256": "0cc58e6cdeac33c2d9f03fd997e37b3f4ea219d2322895723d031ca96026012e"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_merge_runs",
+    "private_symbol": "_arvexq_original__jra_merge_runs",
+    "original_body_ast_sha256": "dc8f5f4da70b96a375f55452f1485acf6c5b4b8bd9ee0739964da89563d20cf0"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_parse_race",
+    "private_symbol": "_arvexq_original__jra_parse_race",
+    "original_body_ast_sha256": "c808964753a67bfd6dc63f4b6c44129627ccc6fd43f935f66445417ba3541353"
+  },
+  {
+    "path": "app.py",
+    "symbol": "fetch_jra_official",
+    "private_symbol": "_arvexq_original_fetch_jra_official",
+    "original_body_ast_sha256": "11369b19b508297f99e435f968016c43fcfa6f43e1d45435f7039c9d9d7d0627"
+  },
+  {
+    "path": "app.py",
+    "symbol": "fetch_central_feed",
+    "private_symbol": "_arvexq_original_fetch_central_feed",
+    "original_body_ast_sha256": "dbf76268fb532c9ed289fb882688e231dae345133a020d9ef1e75110e7ebc4b0"
+  },
+  {
+    "path": "app.py",
+    "symbol": "iter_months_back",
+    "private_symbol": "_arvexq_original_iter_months_back",
+    "original_body_ast_sha256": "856c896af7c2c147c16c0bceca4fb7b24fc4f6803bd0d1a1ab57da9af9a96fae"
+  },
+  {
+    "path": "app.py",
+    "symbol": "sync_recent_history",
+    "private_symbol": "_arvexq_original_sync_recent_history",
+    "original_body_ast_sha256": "25446075d20cbb1c73689715b7c30872ec58ef58b5fc0ece0353c7b581637393"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_history_worker",
+    "private_symbol": "_arvexq_original__history_worker",
+    "original_body_ast_sha256": "0990cec6630fab450006372b645f0d42fca76ede37f3cbcf562e3c5c351f41d9"
+  },
+  {
+    "path": "app.py",
+    "symbol": "ensure_history_async",
+    "private_symbol": "_arvexq_original_ensure_history_async",
+    "original_body_ast_sha256": "189ffcbca4c6f09911f70830ffd45cea582c2f2363c72e0e5fb51a0ae0f1dbfc"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_now_jst",
+    "private_symbol": "_arvexq_original__now_jst",
+    "original_body_ast_sha256": "f0153d68f5c57ce2ada74a67b19973f261067d7de6cec400b2790a3c3b9cdbc3"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_today_iso",
+    "private_symbol": "_arvexq_original__today_iso",
+    "original_body_ast_sha256": "c3414e2a3a7e56e9b5678b453a846612ea2ef78b564d8ced6cc8492b26df4b2b"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_startup_history_backfill",
+    "private_symbol": "_arvexq_original__startup_history_backfill",
+    "original_body_ast_sha256": "2963f859f072bb038e38d93e8841089aa0fafefc47bd588c9f08f064e5c1d698"
+  },
+  {
+    "path": "app.py",
+    "symbol": "storage_status",
+    "private_symbol": "_arvexq_original_storage_status",
+    "original_body_ast_sha256": "2b357acda0304a4416654418329633dd44a453a1c67f70213c3c9d1b7331a776"
+  },
+  {
+    "path": "app.py",
+    "symbol": "health",
+    "private_symbol": "_arvexq_original_health",
+    "original_body_ast_sha256": "a82a8f59cbfe01550d08eb9294eb760a3aa985ebd1f6fea395cb782f5f48e083"
+  },
+  {
+    "path": "app.py",
+    "symbol": "history_backfill_one",
+    "private_symbol": "_arvexq_original_history_backfill_one",
+    "original_body_ast_sha256": "86184422e8f19f66fc7853a008da22e6e3efdc7832d89e85204a9a158199fc99"
+  },
+  {
+    "path": "app.py",
+    "symbol": "history_status",
+    "private_symbol": "_arvexq_original_history_status",
+    "original_body_ast_sha256": "56f7cae609dc68d1afb5c785cc688b0d6ab121f91c969c7b3d4cbf78564e6e1d"
+  },
+  {
+    "path": "app.py",
+    "symbol": "central_status",
+    "private_symbol": "_arvexq_original_central_status",
+    "original_body_ast_sha256": "df2db6025307e4542eadd34ddbd4d164236a74134c953c292add71e942dd854e"
+  },
+  {
+    "path": "app.py",
+    "symbol": "central_ingest",
+    "private_symbol": "_arvexq_original_central_ingest",
+    "original_body_ast_sha256": "bb4438998e989a02eb01dc1ff2a2fce4eb89220380ed3bef5b90de7bab0bf53d"
+  },
+  {
+    "path": "app.py",
+    "symbol": "central_schema",
+    "private_symbol": "_arvexq_original_central_schema",
+    "original_body_ast_sha256": "4e4fa398e039226b57fdcc6396e483386de9a8bd193daed4edcc2a337cbc1373"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_schedule_live_refresh",
+    "private_symbol": "_arvexq_original__schedule_live_refresh",
+    "original_body_ast_sha256": "ed6d6dcc0cac54b1c0e5ea815c91ebdeeb132bb98eba5a4d96731f289477af4f"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_schedule_central_refresh",
+    "private_symbol": "_arvexq_original__schedule_central_refresh",
+    "original_body_ast_sha256": "c1a49eb74de353b929d0f7d1ab7e5d0d45724da2c3a099772d0512af304ea328"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_commercial_collect_once",
+    "private_symbol": "_arvexq_original__commercial_collect_once",
+    "original_body_ast_sha256": "5185849586ecc1b6009a7f5cb77f6b964557272d0c06256d4048fb695d8626de"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_commercial_collector_loop",
+    "private_symbol": "_arvexq_original__commercial_collector_loop",
+    "original_body_ast_sha256": "e0878d5d1f51b58e371cdcc437ec524fc032570de8ccffbfd6113c53f70166cd"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_start_commercial_collector",
+    "private_symbol": "_arvexq_original__start_commercial_collector",
+    "original_body_ast_sha256": "06c6cc1cf80c496d3c6c47f3f4fc0bda55fb7af1d197e93be40f4dffa87be9bd"
+  },
+  {
+    "path": "app.py",
+    "symbol": "runtime_status",
+    "private_symbol": "_arvexq_original_runtime_status",
+    "original_body_ast_sha256": "66ed77f51f5d81d73ce48f928790ed93a3f4dc5529b096dac9046bf9d5592c76"
+  },
+  {
+    "path": "app.py",
+    "symbol": "collector_status",
+    "private_symbol": "_arvexq_original_collector_status",
+    "original_body_ast_sha256": "df9f5871e6128089285cece104d37fd9b889e3f1461201a1cd3faeca7663a8db"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_central_refresh_status",
+    "private_symbol": "_arvexq_original__central_refresh_status",
+    "original_body_ast_sha256": "c5b5b6ebbb0be3043a7b39892199865cab90365a8a64e2e962056fca686bb128"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_nar_month_needs_fetch",
+    "private_symbol": "_arvexq_original__nar_month_needs_fetch",
+    "original_body_ast_sha256": "aa4ca66436b24733c456ca66aad8fcc3f410639883858a68edb162c8248e4b5e"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_sync_nar_month_wave",
+    "private_symbol": "_arvexq_original__sync_nar_month_wave",
+    "original_body_ast_sha256": "dc3872b56eb99f113e88941f3af67f4557aea15872b63bb238c859525ada8ca2"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_months_from_race_date",
+    "private_symbol": "_arvexq_original__months_from_race_date",
+    "original_body_ast_sha256": "de6d315cec8d319514b43d5071e286f597007cc3ef7920f2f541a7deb69ce0cc"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_history_counts",
+    "private_symbol": "_arvexq_original__history_counts",
+    "original_body_ast_sha256": "50332bda102c753c9ee32b4bcebf228c3c274c83ca9ccdbc4bbbdf4a45cf7e76"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_start_race_history_search",
+    "private_symbol": "_arvexq_original__start_race_history_search",
+    "original_body_ast_sha256": "9d2ab21b08ff0ffc7ee0d9cfa34b316a478efe7ee6c7b1f18b71c43a200e258d"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_race_history_status",
+    "private_symbol": "_arvexq_original__race_history_status",
+    "original_body_ast_sha256": "649e5af819091ecdbaff95044b24cde92a184dd0f41137f048f3c207f4da5ae3"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_new_conn",
+    "private_symbol": "_arvexq_original__new_conn",
+    "original_body_ast_sha256": "5bdb561890400a9a8622b04b5014a91a6bb761c74cbe8e6d4828026b95f14ab7"
+  },
+  {
+    "path": "app.py",
+    "symbol": "nar_race_summaries",
+    "private_symbol": "_arvexq_original_nar_race_summaries",
+    "original_body_ast_sha256": "eddb87a68421a664bdba525cbed0b754d13676630b14917ec30771a1f963960a"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_netkeiba_get",
+    "private_symbol": "_arvexq_original__netkeiba_get",
+    "original_body_ast_sha256": "4785dabd312ff2c0254a0856def9ed0945e58c92d6089193b17f4aabb4aca00f"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_netkeiba_race_summaries",
+    "private_symbol": "_arvexq_original__netkeiba_race_summaries",
+    "original_body_ast_sha256": "5ccc53873800225f02c6c62b864ff225de9c00ca0ae01c50d22bae03f8989bab"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_netkeiba_program_race_id",
+    "private_symbol": "_arvexq_original__netkeiba_program_race_id",
+    "original_body_ast_sha256": "e99c5b56970db2a2ce00016de090fa5fb9de624cab70556f98d9cf06a874005d"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_netkeiba_race_id",
+    "private_symbol": "_arvexq_original__netkeiba_race_id",
+    "original_body_ast_sha256": "5c41178e079b22b460714832c0fbb4b33f22506241daf77f1f014c3b04efd885"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_netkeiba_detail_rows",
+    "private_symbol": "_arvexq_original__netkeiba_detail_rows",
+    "original_body_ast_sha256": "485c4c6dace8a4fa74f59044d8e0bb180e0c24fa60035348852a55dd12ec483c"
+  },
+  {
+    "path": "app.py",
+    "symbol": "central_race_summaries",
+    "private_symbol": "_arvexq_original_central_race_summaries",
+    "original_body_ast_sha256": "89feb4d70428e96a46d5055475b39757812da08623bdcf386753f497c1f86d73"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_nar_netkeiba_race_id",
+    "private_symbol": "_arvexq_original__nar_netkeiba_race_id",
+    "original_body_ast_sha256": "9be25c4c7f5a66ea7311c6f36172c81633caedd23984ac80dcc913e635ffd235"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_nar_netkeiba_preview_rows",
+    "private_symbol": "_arvexq_original__nar_netkeiba_preview_rows",
+    "original_body_ast_sha256": "ee8782113f389ee256e7842a4129a355405920fae2e4ab0ad71f2df30fed074a"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_parse_nar_live_odds_html",
+    "private_symbol": "_arvexq_original__parse_nar_live_odds_html",
+    "original_body_ast_sha256": "493e8ff70cf294e1984854b81a80782dd38c7e62e8ce80713b7bbe7af0bdd96d"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_nar_live_odds",
+    "private_symbol": "_arvexq_original__nar_live_odds",
+    "original_body_ast_sha256": "c71a0185e68f76b3d65217dba87bcfffde48bc15ef7228797c1f7ba0e769e015"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_attach_nar_live_odds",
+    "private_symbol": "_arvexq_original__attach_nar_live_odds",
+    "original_body_ast_sha256": "636cde2b1d8baa6846e1b087026f941d4a26c780d57aa9df51abdd24f4cd6de6"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_central_find_horse",
+    "private_symbol": "_arvexq_original__central_find_horse",
+    "original_body_ast_sha256": "95b58ddb1adc96342a8af10559ee104e6f9a2466d97e3fa104dfbf36a8f142d3"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_central_run_from_race",
+    "private_symbol": "_arvexq_original__central_run_from_race",
+    "original_body_ast_sha256": "1cf981275e919baeb0a6db4376825a7e0e4cd09466ad7e3eaa8470dd13d26623"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_central_resolve_race_id",
+    "private_symbol": "_arvexq_original__central_resolve_race_id",
+    "original_body_ast_sha256": "c16795f8236ef6cf5fa006b2e317891507e17646e622dc82b76114a5b02ba72d"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_central_recent_from_store",
+    "private_symbol": "_arvexq_original__central_recent_from_store",
+    "original_body_ast_sha256": "afd2621e4c3f66852c15c9372aeff67c1427e0368b49aa3394f9dd0d8a36adf7"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_merge_central_recent",
+    "private_symbol": "_arvexq_original__merge_central_recent",
+    "original_body_ast_sha256": "c29c672cf63f9a986c88c3b246a9e8d056fa1fde8c56469a9f5fde80e3b900a2"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_central_month_dates",
+    "private_symbol": "_arvexq_original__central_month_dates",
+    "original_body_ast_sha256": "9fd985a9e9024db1fb28a5f98c00c1e727095ccc910013aa3113d894e6d0dfa8"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_fetch_central_days_parallel",
+    "private_symbol": "_arvexq_original__fetch_central_days_parallel",
+    "original_body_ast_sha256": "284a9b0bcdff2a3d7066f0dad934036ee5b70851280bb3df8754e1adc2312909"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_start_central_history_search",
+    "private_symbol": "_arvexq_original__start_central_history_search",
+    "original_body_ast_sha256": "b8fd8c87acc5d75fbf7e4b35ea8063a238627d762c5d52f3cdbb17bac7b19d31"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_netkeiba_live_win_odds",
+    "private_symbol": "_arvexq_original__netkeiba_live_win_odds",
+    "original_body_ast_sha256": "a880a14f3584514b2fd6220911cea7bdd73e99f5d56641c601e996b0d9dcd599"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_parse_payouts",
+    "private_symbol": "_arvexq_original__parse_payouts",
+    "original_body_ast_sha256": "cbd2158e857c3a2b6023fa16ba7bb9040f66cf63b4cf47d7b86baac1c7975b2a"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_fetch_nar_payouts_only",
+    "private_symbol": "_arvexq_original__fetch_nar_payouts_only",
+    "original_body_ast_sha256": "80c252bfbebc1ba635664163287bac3b4a117f21ccc0e38dd24f09c160f86ae0"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_attach_nar_payouts",
+    "private_symbol": "_arvexq_original__attach_nar_payouts",
+    "original_body_ast_sha256": "e7f4a8484e7f42fa36784ce270286aaadada307f535c17f3eb61617031bebcad"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_result_cname_from_card",
+    "private_symbol": "_arvexq_original__jra_result_cname_from_card",
+    "original_body_ast_sha256": "479a947bd200036308442ad660db80a2c000565639fb0c1c47477efbda128677"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_any_track",
+    "private_symbol": "_arvexq_original__jra_any_track",
+    "original_body_ast_sha256": "92e3a24755c1d4d0277a5b075ca4f4ce2604b356f86e26e7cf568a007a3f0cac"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_any_race_no",
+    "private_symbol": "_arvexq_original__jra_any_race_no",
+    "original_body_ast_sha256": "fea6aacd78e1e6fb307c44af2739317642e7243032d82d54deadee01308e82e6"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_prior_result_cnames",
+    "private_symbol": "_arvexq_original__jra_prior_result_cnames",
+    "original_body_ast_sha256": "4b36b37fe176df53a53436f61bb40bb199d65a14ac89674f7641486f7c48b05a"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_jra_resolve_prior_results",
+    "private_symbol": "_arvexq_original__jra_resolve_prior_results",
+    "original_body_ast_sha256": "725e793e013d55e3561fbc7a6da9707ec494116a4de08a3ccaca724ffe36f80c"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_active_horses",
+    "private_symbol": "_arvexq_original__data_core_active_horses",
+    "original_body_ast_sha256": "d9326adc17585b834791028a04efd119f3b328815fd1a81d1d352f845b94fd00"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_result_due",
+    "private_symbol": "_arvexq_original__data_core_result_due",
+    "original_body_ast_sha256": "a620ce5b008ec67209c8f771c8bcd4c41376fc1619e7b87b33cd5c2350660ad6"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_health",
+    "private_symbol": "_arvexq_original__data_core_health",
+    "original_body_ast_sha256": "2c1b4fea2a555b64b92535886b1e2d88dd452cb27225d0dc380792a6e85d1eb0"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_health_hash",
+    "private_symbol": "_arvexq_original__data_core_health_hash",
+    "original_body_ast_sha256": "5b77b1e8e16b14335294e80dce271d192de6170a3315d53864f0af6d51949123"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_store_health",
+    "private_symbol": "_arvexq_original__data_core_store_health",
+    "original_body_ast_sha256": "f6fc5785d371104d994a5959bcdaf076a5e35b06a4f0aafbdf19db04a14ed14a"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_record_run",
+    "private_symbol": "_arvexq_original__data_core_record_run",
+    "original_body_ast_sha256": "f48ee75f5d094b11ed05f661cd906b5c6834158e6ae17026e4a6f81ecf09891e"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_snapshot",
+    "private_symbol": "_arvexq_original__data_core_snapshot",
+    "original_body_ast_sha256": "5624965a5a1dbffca9a2a6ddbe7ad83e0b259cd112f3ec182a3e7ceb6c9db923"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_refresh_race",
+    "private_symbol": "_arvexq_original__data_core_refresh_race",
+    "original_body_ast_sha256": "ab80a8efcb8bfe756a2e72be5c15d89cbdebac4cb8185f37ef30a6915affc7fd"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_day_rows",
+    "private_symbol": "_arvexq_original__data_core_day_rows",
+    "original_body_ast_sha256": "325a465e6d1e2936fff353b85386c312a2eb86ebce903002461f6df2da2e908f"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_day_status",
+    "private_symbol": "_arvexq_original__data_core_day_status",
+    "original_body_ast_sha256": "f2b281aaf8d7c1e39274b0d3b33bf51ef99553c1ecb13b3d891b0ad3adedc8ce"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_cycle",
+    "private_symbol": "_arvexq_original__data_core_cycle",
+    "original_body_ast_sha256": "2946c365340899ae3f1f87c117c26aee3401a32df8088120077182c0615e9438"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_data_core_loop",
+    "private_symbol": "_arvexq_original__data_core_loop",
+    "original_body_ast_sha256": "b6bc8bc313b131110c04414ed0b6c2f5d1f84e72e5b7918d993782753c1e7f7b"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_start_data_core_collector",
+    "private_symbol": "_arvexq_original__start_data_core_collector",
+    "original_body_ast_sha256": "b0c3379ea240035bb001ccc60e5ed1c2b7b4f9b10b3a252d3363879659f0d461"
+  },
+  {
+    "path": "app.py",
+    "symbol": "data_core_status",
+    "private_symbol": "_arvexq_original_data_core_status",
+    "original_body_ast_sha256": "9d637731dcc16eb88d577ae8ec0499f4a71a453937c185cf788a3e56f1c08102"
+  },
+  {
+    "path": "app.py",
+    "symbol": "data_core_refresh",
+    "private_symbol": "_arvexq_original_data_core_refresh",
+    "original_body_ast_sha256": "2f47e88acabf5390c83ea836fa8279259b8847c2b81001138b3f6274824d83c4"
+  },
+  {
+    "path": "app.py",
+    "symbol": "data_core_refresh_day",
+    "private_symbol": "_arvexq_original_data_core_refresh_day",
+    "original_body_ast_sha256": "c2ed3c5aeb9ae852b732e2c021ebc53b1a507d3958f6b81acf3fe613a3833d1b"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_schedule_full_history_harvest",
+    "private_symbol": "_arvexq_original__schedule_full_history_harvest",
+    "original_body_ast_sha256": "a6c130f946d077fd8ca3092445601c9dc519ff886af28e1f4dddfda3d53d1eb4"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_pc_clamp",
+    "private_symbol": "_arvexq_original__pc_clamp",
+    "original_body_ast_sha256": "6862df60aee1cb236154ede1d3894159e24ffddcd1ffa7eadb16e71ceefd35e9"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_pc_race_field",
+    "private_symbol": "_arvexq_original__pc_race_field",
+    "original_body_ast_sha256": "f162df149df35556664b9babc154ee3158166bc03acc1d11b99538b95330e7b8"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_pc_finish_quality",
+    "private_symbol": "_arvexq_original__pc_finish_quality",
+    "original_body_ast_sha256": "93d4552268fd54b13a5d103293792ec683aef7e954812c9b93756dcf200c7f35"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_pc_list_quality",
+    "private_symbol": "_arvexq_original__pc_list_quality",
+    "original_body_ast_sha256": "d172fe4bf23b58bb1023ba27e43597e69140b698174385f9e7ca4eeaaf3acf76"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_pc_style_metrics",
+    "private_symbol": "_arvexq_original__pc_style_metrics",
+    "original_body_ast_sha256": "dc52a329e0b56065236a0499c85a5c7fa91feab8188a8b93f21b2871602575b3"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_pc_sectional_score",
+    "private_symbol": "_arvexq_original__pc_sectional_score",
+    "original_body_ast_sha256": "9663a175a5e567753952917fa935b2f3e4084488e9d92d2b87b8bd3ba15a6d6e"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_pc_fit_metrics",
+    "private_symbol": "_arvexq_original__pc_fit_metrics",
+    "original_body_ast_sha256": "16bc5448bca0b84fc73802739d474ad17c4495f6ef3f49c606ff8540dbd52ae2"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_is_jump_run",
+    "private_symbol": "_arvexq_original__is_jump_run",
+    "original_body_ast_sha256": "050ab95791ad9614e19b0768601e98f18d9e11adfa598aed41b73dc9ce8975be"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_evaluation_number",
+    "private_symbol": "_arvexq_original__evaluation_number",
+    "original_body_ast_sha256": "d7c9df3eea6844a28078e5f25536ef244cd68831183145fd646a21d8bf254a80"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_ensure_race_volatility",
+    "private_symbol": "_arvexq_original__ensure_race_volatility",
+    "original_body_ast_sha256": "f06e40eb012b1853b530ea934f49725b7c3dac4b67cf09659ac9b742ae3798d1"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_restore_saved_odds",
+    "private_symbol": "_arvexq_original__restore_saved_odds",
+    "original_body_ast_sha256": "11b534b1d5735c31c5f83758a201c93dc8bbfa5d61c41181eb1af1960e691338"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_prepared_ttl",
+    "private_symbol": "_arvexq_original__prepared_ttl",
+    "original_body_ast_sha256": "ee6dc426515405fd23b4beb64b2a1bfed066b38791156cf0638719aac127ffda"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_snapshot_final",
+    "private_symbol": "_arvexq_original__snapshot_final",
+    "original_body_ast_sha256": "f8c32221130b82de9a0405ca7ae0655c23eeaf5516034ff9f1eafbd959dbf2b6"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_prepared_get_fresh",
+    "private_symbol": "_arvexq_original__prepared_get_fresh",
+    "original_body_ast_sha256": "cefb33a00bff3fc6e0901662f9bf7236747101a8c5d00235f430750f483ad3d7"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_result_has_podium",
+    "private_symbol": "_arvexq_original__result_has_podium",
+    "original_body_ast_sha256": "9b9f8647a728c319941a224cfa916e188cd47c6d470130bc42bf86f5cad69b0f"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_refresh_result_fast",
+    "private_symbol": "_arvexq_original__refresh_result_fast",
+    "original_body_ast_sha256": "f19612f787ab750bf66ea30f642b250cf78b80c4e9ecf47589bb00af18d2d465"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_prepare_race_snapshot",
+    "private_symbol": "_arvexq_original__prepare_race_snapshot",
+    "original_body_ast_sha256": "a948eb3c855767c06928fc4a50535b9cdea57d8767556bd9d13d0510bf0e70e3"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_prewarm_sort_key",
+    "private_symbol": "_arvexq_original__prewarm_sort_key",
+    "original_body_ast_sha256": "6bf5789654cd1c2a2f5512730d10cc46befd59960177aa58d4e306d1ad8c0c55"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_schedule_prewarm",
+    "private_symbol": "_arvexq_original__schedule_prewarm",
+    "original_body_ast_sha256": "7bfc233b9fc5ecb01494c338b6ed30a49cd6937934ae4c322ac787e2b4b3ace6"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_ensure_detail_background_jobs",
+    "private_symbol": "_arvexq_original__ensure_detail_background_jobs",
+    "original_body_ast_sha256": "cedfb1df60c83b582cc17a1566df9d3ab9ecefe1f3193a97c23ec0469ba5d912"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_schedule_detail_background_jobs",
+    "private_symbol": "_arvexq_original__schedule_detail_background_jobs",
+    "original_body_ast_sha256": "ffd1a41dfd567045765f6c81586af4f8bf8193082040d3bfef3353a3b5ab4ba7"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_fast_local_race_detail",
+    "private_symbol": "_arvexq_original__fast_local_race_detail",
+    "original_body_ast_sha256": "fd98df5930836a951fe1f50547eadd4a3340b8b25a55dad3d6097e9611c22852"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_build_fast_diagnosis_snapshot",
+    "private_symbol": "_arvexq_original__build_fast_diagnosis_snapshot",
+    "original_body_ast_sha256": "eaf6401b76614819e5c5274494a7783239fe78ad319845b86ae3272dc70e49ed"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_store_fast_snapshot",
+    "private_symbol": "_arvexq_original__store_fast_snapshot",
+    "original_body_ast_sha256": "e3a03ac6c881fb742110822f2320f19f516b65807f9975f855acedd2355a2ff0"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_ensure_fast_card_workers",
+    "private_symbol": "_arvexq_original__ensure_fast_card_workers",
+    "original_body_ast_sha256": "d45db39170abd6b2b6ac772187c39a62f3ebd7700a72b7389aaf39c84718410e"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_queue_fast_card",
+    "private_symbol": "_arvexq_original__queue_fast_card",
+    "original_body_ast_sha256": "7f111eb62f10ca412206a9c2dbc6f1f3506ebaf7b295d8a9f7cff4ec196a516e"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_fast_card_worker",
+    "private_symbol": "_arvexq_original__fast_card_worker",
+    "original_body_ast_sha256": "d8e78ca11e8b5cf9acb571259656411699da60a7c85c404894b7068e1490efcd"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_parse_nar_official_card_html",
+    "private_symbol": "_arvexq_original__parse_nar_official_card_html",
+    "original_body_ast_sha256": "daa9c88c9f0edc64a50c9e987672c2737557bc60c7a9f9a4093193ef72e1095c"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_nar_official_card_rows_fast",
+    "private_symbol": "_arvexq_original__nar_official_card_rows_fast",
+    "original_body_ast_sha256": "6696e6f490ccaf54dd67c6208615ac0b593725566227776a7cdb0cd25a1543dd"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_merge_current_card_fields",
+    "private_symbol": "_arvexq_original__merge_current_card_fields",
+    "original_body_ast_sha256": "4de4d05c5eb9d68796c523775845041809b39ccfc777b2d1e11f9a57c8922ab0"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_nar_result_should_be_available",
+    "private_symbol": "_arvexq_original__nar_result_should_be_available",
+    "original_body_ast_sha256": "3973dda9161cfc2cc2a7c148ffa59667faaaef4b55cb33bcf7837a1e3df4ab80"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_netkeiba_card_rows_fast",
+    "private_symbol": "_arvexq_original__netkeiba_card_rows_fast",
+    "original_body_ast_sha256": "bb873813a2f64047fdf92910586e6ca2a4762d8b18a07db6727080879c4fe1aa"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_merge_card_rows_preserve",
+    "private_symbol": "_arvexq_original__merge_card_rows_preserve",
+    "original_body_ast_sha256": "dff97bcd0c0b3f3b819fd0a68b4f1a451b1088a856f1735842601034605aedd1"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_netkeiba_past_rows_fast",
+    "private_symbol": "_arvexq_original__netkeiba_past_rows_fast",
+    "original_body_ast_sha256": "a7db3af58e8bfdf2f082e12910d7d94d03ac438a122089956ff6a9233171ea4e"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_merge_fast_history",
+    "private_symbol": "_arvexq_original__merge_fast_history",
+    "original_body_ast_sha256": "74daa6b3358917f1fb9b37fdeaae30c4b8e5050b8997e26ff920e8feb758a3db"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_hydrate_fast_card_now",
+    "private_symbol": "_arvexq_original__hydrate_fast_card_now",
+    "original_body_ast_sha256": "cff3ba7a15043abd959d6bb670a9d3d0ac9b8aa38aa7fbdc0b10c1077e343bdb"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_schedule_fast_card_refresh",
+    "private_symbol": "_arvexq_original__schedule_fast_card_refresh",
+    "original_body_ast_sha256": "3b2f1fe1b0a4b15ffa1fc244d115042b44b65bbd0affb0971f7dcd696201aac2"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_schedule_racedb_snapshot_refresh",
+    "private_symbol": "_arvexq_original__schedule_racedb_snapshot_refresh",
+    "original_body_ast_sha256": "e82b800e456427dccc721efd901f43bfc03f490150571ac8533f048487ca1026"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_racedb_get_fast",
+    "private_symbol": "_arvexq_original__racedb_get_fast",
+    "original_body_ast_sha256": "280b10509f8e037fc60ec7d21cd22e2549aa64521538b9a3ac375fdc743d68bd"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_local_starter_bundle",
+    "private_symbol": "_arvexq_original__local_starter_bundle",
+    "original_body_ast_sha256": "c4a85b61659453273439d04a98bad57ec998dd239aae168e12c1e48c587348d9"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_local_volatility_map",
+    "private_symbol": "_arvexq_original__local_volatility_map",
+    "original_body_ast_sha256": "ea204e736a70de15b5ab2d5b6f59bdcad9f4fb13afd29778975990ad04dd7b46"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_attach_local_volatility_to_summaries",
+    "private_symbol": "_arvexq_original__attach_local_volatility_to_summaries",
+    "original_body_ast_sha256": "194fe2cd246112323b96c73e733c41b2b0e241425c6777f5b75fb6e5158390a9"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_compute_local_volatility_for_race",
+    "private_symbol": "_arvexq_original__compute_local_volatility_for_race",
+    "original_body_ast_sha256": "d9c349ca4bf3997b808e339cd30d58768369462092a3704b683a9ab8d61a44c9"
+  },
+  {
+    "path": "app.py",
+    "symbol": "volatility_pack",
+    "private_symbol": "_arvexq_original_volatility_pack",
+    "original_body_ast_sha256": "7a884255dde407cdc5dd67a1c0e5e041dbfb84c2248586f27711133f0d07c62d"
+  },
+  {
+    "path": "app.py",
+    "symbol": "races",
+    "private_symbol": "_arvexq_original_races",
+    "original_body_ast_sha256": "71a441e7931cf455c98a92644b14c901c2b23ac81d905e5463a37cbf593d0ff7"
+  },
+  {
+    "path": "app.py",
+    "symbol": "environment_pack",
+    "private_symbol": "_arvexq_original_environment_pack",
+    "original_body_ast_sha256": "91821650b24d6c236ec2f98cabfc3ee20d88cb624bf813140d45296ac8a8c56b"
+  },
+  {
+    "path": "app.py",
+    "symbol": "track_pack",
+    "private_symbol": "_arvexq_original_track_pack",
+    "original_body_ast_sha256": "e82927b2b598d6655d0d29c9c5e01b9927fac1ba67f28235e44fbba46389c285"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_bootstrap_rows_local",
+    "private_symbol": "_arvexq_original__bootstrap_rows_local",
+    "original_body_ast_sha256": "a4722cd9503d739435e075f0f2746f86ea6e924bc32dab9a2fb692bb1ca55b16"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_bootstrap_sources_running",
+    "private_symbol": "_arvexq_original__bootstrap_sources_running",
+    "original_body_ast_sha256": "179b5e6a9db8eb6ef8ee39b607e971aa8bda8da7503aad7814ba689b9615ff56"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_bootstrap_display_ready",
+    "private_symbol": "_arvexq_original__bootstrap_display_ready",
+    "original_body_ast_sha256": "7d896a8639f740662b5f9eeb719504e449d8366226ad1497088fd4dc701abf0c"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_bootstrap_analysis_ready",
+    "private_symbol": "_arvexq_original__bootstrap_analysis_ready",
+    "original_body_ast_sha256": "9de34f94c2f20f4f746eb8b31f903a495078ee5798488e5c9590f1e8283e5f91"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_bootstrap_detail_ready",
+    "private_symbol": "_arvexq_original__bootstrap_detail_ready",
+    "original_body_ast_sha256": "52ef3ffd75f5434049b96f123c81a2dfdde30055789c577aaafce436cc3451a2"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_bootstrap_detail_local",
+    "private_symbol": "_arvexq_original__bootstrap_detail_local",
+    "original_body_ast_sha256": "5997205532e972aedb637e2f7b2b4b7c1c6e3610aaf51221e7d72e63ac1ec6e7"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_assemble_day_bundle",
+    "private_symbol": "_arvexq_original__assemble_day_bundle",
+    "original_body_ast_sha256": "e5f5128fd5f84ae64d370526ee768ceb8281de549f8e226179d99c8303d48d88"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_refresh_day_bundle",
+    "private_symbol": "_arvexq_original__refresh_day_bundle",
+    "original_body_ast_sha256": "df63a46c11c5faf67bfc3659589ab53103cf7993e8ed57d5f69d8b4762ffc132"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_schedule_day_bundle_refresh",
+    "private_symbol": "_arvexq_original__schedule_day_bundle_refresh",
+    "original_body_ast_sha256": "dff4c0602ccb407e7f0ca80158ac67b64309c1b7bb2d1aa2ed715769c61d4805"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_site_bootstrap_payload",
+    "private_symbol": "_arvexq_original__site_bootstrap_payload",
+    "original_body_ast_sha256": "01a2ad0231f642a11b0a9029e0724aeaacf9601c492e4927f7370cb8625020ad"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_force_day_live_snapshot",
+    "private_symbol": "_arvexq_original__force_day_live_snapshot",
+    "original_body_ast_sha256": "50cbbec944026cc94a0f32da230fe83cb7a87024e8bb2a045b426f61a85f6be1"
+  },
+  {
+    "path": "app.py",
+    "symbol": "site_bootstrap",
+    "private_symbol": "_arvexq_original_site_bootstrap",
+    "original_body_ast_sha256": "9cf96bf7e95b574f987d55764fc9659dadd973f2c7824f22acf1f5447fda20a1"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_site_bootstrap_warm_loop",
+    "private_symbol": "_arvexq_original__site_bootstrap_warm_loop",
+    "original_body_ast_sha256": "fee9474e0b9d936a46750948901a203d99cc0e7c6f71d319602a6c88f2b9ca8b"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_start_site_bootstrap_warmer",
+    "private_symbol": "_arvexq_original__start_site_bootstrap_warmer",
+    "original_body_ast_sha256": "167a20086e6bd980ec419246f7cd22e6f1eb31a32fd8705529e29bb36a7fc259"
+  },
+  {
+    "path": "app.py",
+    "symbol": "site_bootstrap_status",
+    "private_symbol": "_arvexq_original_site_bootstrap_status",
+    "original_body_ast_sha256": "779137f84787ad179d8bd21b28ea3aaa3913d14da7cf2edc916e9d947e3fe363"
+  },
+  {
+    "path": "app.py",
+    "symbol": "past_pack",
+    "private_symbol": "_arvexq_original_past_pack",
+    "original_body_ast_sha256": "98e134cbb9ff81fe2ecca839bd9595d5fcfebb320bb93fb21773c704c4251465"
+  },
+  {
+    "path": "app.py",
+    "symbol": "prepare_race",
+    "private_symbol": "_arvexq_original_prepare_race",
+    "original_body_ast_sha256": "917381a3fc210916d27b19ba84685604fa5788702a92e3bf6f49b3cc53e4ab22"
+  },
+  {
+    "path": "app.py",
+    "symbol": "prewarm_track",
+    "private_symbol": "_arvexq_original_prewarm_track",
+    "original_body_ast_sha256": "dbaaa98df054cff397c5fce6ef93039896ce842980f3df367065bdc681514f5f"
+  },
+  {
+    "path": "app.py",
+    "symbol": "local_refresh_status",
+    "private_symbol": "_arvexq_original_local_refresh_status",
+    "original_body_ast_sha256": "0039784873d82dc27a79832f14f9a78054a34ac56fbb4d8e996b460201a17782"
+  },
+  {
+    "path": "app.py",
+    "symbol": "central_refresh_status",
+    "private_symbol": "_arvexq_original_central_refresh_status",
+    "original_body_ast_sha256": "b7063f0ccc3ca9e0fa5d1616261d9b56ea2617d3afebe586d326556f9557523f"
+  },
+  {
+    "path": "app.py",
+    "symbol": "race_detail",
+    "private_symbol": "_arvexq_original_race_detail",
+    "original_body_ast_sha256": "054747c7923a1cc2c4721b8048e7a8624b064b3f660e351e1750281e7344b514"
+  },
+  {
+    "path": "app.py",
+    "symbol": "diagnosis_refresh",
+    "private_symbol": "_arvexq_original_diagnosis_refresh",
+    "original_body_ast_sha256": "c6cc2abd697df6cca0967ceaf424f69162bca7c3ef87e2594a71b17669363eae"
+  },
+  {
+    "path": "app.py",
+    "symbol": "snapshot_version",
+    "private_symbol": "_arvexq_original_snapshot_version",
+    "original_body_ast_sha256": "bfb0ad355ca39ffb060ca0785a285ea0a29ad7b410640d49d74526b3db2d11b0"
+  },
+  {
+    "path": "app.py",
+    "symbol": "horse_snapshot",
+    "private_symbol": "_arvexq_original_horse_snapshot",
+    "original_body_ast_sha256": "67ffc9cbadef72c08310633f219c9a3d2acd5dbbdf2dd30ff04ac68c735a3ef6"
+  },
+  {
+    "path": "app.py",
+    "symbol": "prewarm_status",
+    "private_symbol": "_arvexq_original_prewarm_status",
+    "original_body_ast_sha256": "21fcd51ddee208f4b6872e4304648fabb37536d7e3fda7f9cd271ea2071fbc2d"
+  },
+  {
+    "path": "app.py",
+    "symbol": "collect_race_info",
+    "private_symbol": "_arvexq_original_collect_race_info",
+    "original_body_ast_sha256": "c39f560f1030ba566c62f4a49d2cdeee9f7fbc0fe3e79e445d42f3c9880f86dc"
+  },
+  {
+    "path": "app.py",
+    "symbol": "payout_refresh",
+    "private_symbol": "_arvexq_original_payout_refresh",
+    "original_body_ast_sha256": "7dae046b9a770f340278b815a235ad5d6a8445495bfadff7bc80644d3924e397"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_merge_live_market_rows",
+    "private_symbol": "_arvexq_original__merge_live_market_rows",
+    "original_body_ast_sha256": "fa50610b1344900021674d06a4f07311347312a3edc7aba562046a0a551444a9"
+  },
+  {
+    "path": "app.py",
+    "symbol": "odds_refresh",
+    "private_symbol": "_arvexq_original_odds_refresh",
+    "original_body_ast_sha256": "36f350ef50b90c643a19439d72063b1eae1ab13896fb8ba990d84b795ab355c1"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_auto_odds_targets",
+    "private_symbol": "_arvexq_original__auto_odds_targets",
+    "original_body_ast_sha256": "b643746efeb235d14ec82165129139f08c2e9ab22fd28e9cb13e93ea1f7ebd94"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_auto_odds_cycle",
+    "private_symbol": "_arvexq_original__auto_odds_cycle",
+    "original_body_ast_sha256": "61f4dd77cb66c8c97289a7f9c019a98386082d752cedd0afe59ef036b7f59af7"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_auto_odds_loop",
+    "private_symbol": "_arvexq_original__auto_odds_loop",
+    "original_body_ast_sha256": "c312ecdbb70ead4a57ae6fadea143695deda61c62c297811001bd1f0971ce4c3"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_start_auto_odds_collector",
+    "private_symbol": "_arvexq_original__start_auto_odds_collector",
+    "original_body_ast_sha256": "01f87e5f9e4a14fe1999882369810f1d6cb842d06e7db31c348cabd6d2c0b85f"
+  },
+  {
+    "path": "app.py",
+    "symbol": "odds_auto_status",
+    "private_symbol": "_arvexq_original_odds_auto_status",
+    "original_body_ast_sha256": "554de07ccda2bc532190f2d15d15e3ea15ba6f0fef288f8a565b79c25530175a"
+  },
+  {
+    "path": "app.py",
+    "symbol": "racedb_save_analysis",
+    "private_symbol": "_arvexq_original_racedb_save_analysis",
+    "original_body_ast_sha256": "7d96112be7909d65bff37234d2db6d499a2e49157442b0578f873de093b5bdc6"
+  },
+  {
+    "path": "app.py",
+    "symbol": "racedb_get_analysis",
+    "private_symbol": "_arvexq_original_racedb_get_analysis",
+    "original_body_ast_sha256": "0871a686c7b771c5f4882d150de9b52ba16efd5a59c8a49e643c88fa316e3ddc"
+  },
+  {
+    "path": "app.py",
+    "symbol": "model_audit",
+    "private_symbol": "_arvexq_original_model_audit",
+    "original_body_ast_sha256": "2270c6556abd5223a0013b6f98986357d0942eebe08362d677ec28edf2939c98"
+  },
+  {
+    "path": "app.py",
+    "symbol": "model_learning",
+    "private_symbol": "_arvexq_original_model_learning",
+    "original_body_ast_sha256": "a9bce33b00189343314eb09cd2177ce1c4418916544543a162874906da181b9c"
+  },
+  {
+    "path": "app.py",
+    "symbol": "racedb_status",
+    "private_symbol": "_arvexq_original_racedb_status",
+    "original_body_ast_sha256": "16ed57b1395920945f781a73ce0c082063eaf318980147807a54bf97c82001a9"
+  },
+  {
+    "path": "app.py",
+    "symbol": "racedb_race",
+    "private_symbol": "_arvexq_original_racedb_race",
+    "original_body_ast_sha256": "f53c7e510d8ff5a674fb1a3f223ffc7fdc46127c43e118a2125555ba14fd267c"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_racedb_live_cycle",
+    "private_symbol": "_arvexq_original__racedb_live_cycle",
+    "original_body_ast_sha256": "4e19450a6d756d8e7b735521ab1bfb0f75ba67c045b5bd9f9a4385d82e370614"
+  },
+  {
+    "path": "app.py",
+    "symbol": "_start_racedb_daemon",
+    "private_symbol": "_arvexq_original__start_racedb_daemon",
+    "original_body_ast_sha256": "f4b7d906e55a87f16c94272ea183cb021e39349fd825d14f4a3ec6ba942af100"
+  },
+  {
+    "path": "app.py",
+    "symbol": "enrichment_status",
+    "private_symbol": "_arvexq_original_enrichment_status",
+    "original_body_ast_sha256": "f7ab4b6a67696d30f287860105372eb882818756facde91b81db8165be36d7a7"
+  },
+  {
+    "path": "app.py",
+    "symbol": "enrichment_schema",
+    "private_symbol": "_arvexq_original_enrichment_schema",
+    "original_body_ast_sha256": "6ba4eb5a236a4397906ac5c930e370d6f57bea62e19551118b352d2f9ded27df"
+  },
+  {
+    "path": "app.py",
+    "symbol": "build_info",
+    "private_symbol": "_arvexq_original_build_info",
+    "original_body_ast_sha256": "de162613b3548a81516b113468585c210aa06c16e6933856a8752ba410d7d402"
+  },
+  {
+    "path": "app.py",
+    "symbol": "home",
+    "private_symbol": "_arvexq_original_home",
+    "original_body_ast_sha256": "212a8cbc307f9dac68628177809a5ce196290d145e9555df39fee9428ff52ffa"
+  },
+  {
+    "path": "app.py",
+    "symbol": "arvexq_icon",
+    "private_symbol": "_arvexq_original_arvexq_icon",
+    "original_body_ast_sha256": "033173ee320681e0d957318e87c17244fefb098c565a3e2df4906eec125c6c3b"
+  },
+  {
+    "path": "app.py",
+    "symbol": "arvexq_touch_icon",
+    "private_symbol": "_arvexq_original_arvexq_touch_icon",
+    "original_body_ast_sha256": "f440b65fecb6e516d5785589e192d07ee58021cbaac69f882318cb3bb2f3bb98"
+  },
+  {
+    "path": "app.py",
+    "symbol": "cinematic_detail_photo",
+    "private_symbol": "_arvexq_original_cinematic_detail_photo",
+    "original_body_ast_sha256": "72a153caaef7719e95fa360ac9c4bf6c0eb8a601328049645daa7a00ec9c48dc"
+  },
+  {
+    "path": "app.py",
+    "symbol": "cinematic_hero",
+    "private_symbol": "_arvexq_original_cinematic_hero",
+    "original_body_ast_sha256": "df188cbb8a0cc66151eee894d465d0fc6637a0a32d16bf50bb9cf302d7e58e83"
+  },
+  {
+    "path": "app.py",
+    "symbol": "arvexq_logo",
+    "private_symbol": "_arvexq_original_arvexq_logo",
+    "original_body_ast_sha256": "6d8dcd372c5d54716036cbe38f84be64099d86fcc657c6337ab58ef0088f6ef0"
+  },
+  {
+    "path": "app.py",
+    "symbol": "hero_horse",
+    "private_symbol": "_arvexq_original_hero_horse",
+    "original_body_ast_sha256": "fe89647839f310945ddb8dcb0405e19269f96a75ec888db0022d3328c18b14af"
+  },
+  {
+    "path": "app.py",
+    "symbol": "pace_preview",
+    "private_symbol": "_arvexq_original_pace_preview",
+    "original_body_ast_sha256": "6826a22388cc8eddadf03a3ee9c53bc6cd4436ed8029517b08f87525ec3528b2"
+  },
+  {
+    "path": "app.py",
+    "symbol": "version_json",
+    "private_symbol": "_arvexq_original_version_json",
+    "original_body_ast_sha256": "713a311c28dc8eeb8e50b62c517b4e5b5d2b57a4e7400bd7c3ff93c208f9c9cf"
+  },
+  {
+    "path": "app.py",
+    "symbol": "styles",
+    "private_symbol": "_arvexq_original_styles",
+    "original_body_ast_sha256": "fa510ce54afd385e91f6220b96f167542c7e9ab8e5f9f73c7d5bd157d9758e44"
+  },
+  {
+    "path": "app.py",
+    "symbol": "appjs",
+    "private_symbol": "_arvexq_original_appjs",
+    "original_body_ast_sha256": "32c5a9f28d63e8c8bd235f543631bc45bae2689d660399e0ed91fd4dd34506f1"
+  },
+  {
+    "path": "app.py",
+    "symbol": "manifest",
+    "private_symbol": "_arvexq_original_manifest",
+    "original_body_ast_sha256": "3f57612bf46c4898b3b52ed8b053edbc96545807a214a765a766901cadc1a607"
+  },
+  {
+    "path": "app.py",
+    "symbol": "service_worker",
+    "private_symbol": "_arvexq_original_service_worker",
+    "original_body_ast_sha256": "f0d8cb7ece1d17e5e6d36b89cc96b0d3ee6ab3b64510a36509bd4cfbe46b74fb"
+  },
+  {
+    "path": "arvexq/domain/legacy_evaluation.py",
+    "symbol": "_v215_speed_ratio",
+    "private_symbol": "_arvexq_original__v215_speed_ratio",
+    "original_body_ast_sha256": "1feb0dd927daa8cfe86705ce6281c5d3ace05f4691499919b2ad3fd8a5a9b7d9"
+  },
+  {
+    "path": "arvexq/domain/legacy_evaluation.py",
+    "symbol": "_pc_live_track_speed",
+    "private_symbol": "_arvexq_original__pc_live_track_speed",
+    "original_body_ast_sha256": "1908cc2524db90b1c1ee4d34a310ed55731522f9a26e64e1cfbb58e17ca09d2b"
+  },
+  {
+    "path": "arvexq/domain/legacy_evaluation.py",
+    "symbol": "_strip_excluded",
+    "private_symbol": "_arvexq_original__strip_excluded",
+    "original_body_ast_sha256": "46efa87c55f9a3e1ebbe593682408d6de9bb579ef6da76624296afcd7011b44b"
+  },
+  {
+    "path": "arvexq/domain/legacy_evaluation.py",
+    "symbol": "_attach_evaluation_context",
+    "private_symbol": "_arvexq_original__attach_evaluation_context",
+    "original_body_ast_sha256": "19fb14ce6cbd19388bff8b133b33e372b7cd4962a3fd7ecfd81f193ba044ac90"
+  },
+  {
+    "path": "arvexq/domain/legacy_evaluation.py",
+    "symbol": "_attach_stored_career",
+    "private_symbol": "_arvexq_original__attach_stored_career",
+    "original_body_ast_sha256": "f92a017c2a3d8c83104f8647f99c01beac9812d908a72b6fd3769055d8488b4b"
+  },
+  {
+    "path": "arvexq/domain/legacy_evaluation.py",
+    "symbol": "_vol_clamp",
+    "private_symbol": "_arvexq_original__vol_clamp",
+    "original_body_ast_sha256": "d87bc33081bc2236f48f8d866fce8413ac739ea96ad3b1d22b78f5ee004be32e"
+  },
+  {
+    "path": "arvexq/domain/legacy_evaluation.py",
+    "symbol": "_race_volatility",
+    "private_symbol": "_arvexq_original__race_volatility",
+    "original_body_ast_sha256": "488052c8204caf40cbc292d3529b0908e15f9680a7dbf193901e640f9ebc42c8"
+  }
+]

@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvexq.horse_detail import build_horse_detail
-from arvexq.race_card import sorted_horses
+from arvexq.components.item_181.horse_detail import build_horse_detail
+from arvexq.components.item_180.race_card import sorted_horses
 
 
 def _pick(source: dict[str, Any], *keys: str) -> Any:

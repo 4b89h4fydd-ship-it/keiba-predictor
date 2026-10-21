@@ -128,5 +128,210 @@ class OfficialNarResultParserTests(unittest.TestCase):
         self.assertEqual([x["last3FSeconds"] for x in actual["finishers"]], [37.4, 37.4, 37.4])
 
 
+
+class ResultIdentityRoutingTests(unittest.TestCase):
+    """The existing result fallback must not use a JRA identifier for NAR."""
+
+    def test_nar_uses_existing_nar_race_identity_and_existing_result_url(self):
+        import app
+        detail = {"id": "nar-2026-10-20-盛岡-01", "date": "2026-10-20",
+                  "circuit": "地方", "track": "盛岡", "raceNumber": 1}
+        html = OfficialNarResultParserTests._html(False).decode("cp932")
+        urls = []
+        def supplied_html(url, *args):
+            urls.append(url)
+            return html
+        with patch.object(app, "_netkeiba_get", side_effect=supplied_html), \
+             patch.object(app, "_netkeiba_race_id",
+                          side_effect=AssertionError("JRA identifier used for NAR")):
+            result = app._netkeiba_current_result(detail)
+        self.assertEqual(urls, [
+            "https://race.netkeiba.com/race/result.html?race_id=202635102001"])
+        self.assertIsNotNone(result)
+        self.assertEqual([r["horseNumber"] for r in result["finishers"]], [1, 2, 3])
+
+    def test_explicit_saved_nar_identifier_is_preserved(self):
+        import app
+        detail = {"id": "nar-2026-10-20-盛岡-01",
+                  "netkeibaRaceId": "202635102001",
+                  "date": "2026-10-20", "circuit": "地方",
+                  "track": "盛岡", "raceNumber": 1}
+        with patch.object(app, "_nar_netkeiba_race_id",
+                          side_effect=AssertionError("must use saved ID")), \
+             patch.object(app, "_netkeiba_get", return_value=""):
+            self.assertIsNone(app._netkeiba_current_result(detail))
+
+    def test_jra_still_uses_the_original_jra_resolver(self):
+        import app
+        detail = {"id": "jra-2026-10-18-東京-08", "date": "2026-10-18",
+                  "circuit": "中央", "track": "東京", "raceNumber": 8}
+        urls = []
+        def grab(url, *args):
+            urls.append(url)
+            return ""
+        with patch.object(app, "_netkeiba_race_id", return_value="202605040808") as jra, \
+             patch.object(app, "_nar_netkeiba_race_id",
+                          side_effect=AssertionError("NAR resolver used for JRA")), \
+             patch.object(app, "_netkeiba_get", side_effect=grab):
+            self.assertIsNone(app._netkeiba_current_result(detail))
+        jra.assert_called_once_with("2026-10-18", "東京", 8)
+        self.assertEqual(urls, ["https://race.netkeiba.com/race/result.html?race_id=202605040808"])
+
+
+
+class OfficialNarResultFailureReasonTests(unittest.TestCase):
+    """Track source/parser misses without fabricating a result or switching routes."""
+
+    def test_source_has_no_published_result_marker(self):
+        import app
+        detail = {"id": "nar-2026-10-20-盛岡-01", "date": "2026-10-20",
+                  "track": "盛岡", "raceNumber": 1, "horses": []}
+        calls = []
+        def no_result(_request, timeout=None):
+            calls.append("existing NAR endpoint")
+            return io.BytesIO("<html><body>現在未公開</body></html>".encode("cp932"))
+        with patch.object(app.urllib.request, "urlopen", side_effect=no_result), \
+             patch("builtins.print") as printed:
+            result = app._nar_official_result_fast(detail)
+        self.assertIsNone(result)
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(any("result_marker_missing" in str(c)
+                            for c in printed.call_args_list))
+        self.assertTrue(any("NAR_RESULT_UNRESOLVED" in str(c)
+                            for c in printed.call_args_list))
+
+    def test_unrecognized_official_table_is_not_saved_as_confirmed_result(self):
+        import app
+        detail = {"id": "nar-2026-10-20-盛岡-02", "date": "2026-10-20",
+                  "track": "盛岡", "raceNumber": 2, "horses": []}
+        html = ("<html><body>競走成績<table>"
+                "<tr><th>着順</th><th>馬番</th><th>馬名</th></tr>"
+                "<tr><td>1</td><td>1</td><td>検証馬</td></tr>"
+                "</table></body></html>").encode("cp932")
+        with patch.object(app.urllib.request, "urlopen",
+                          side_effect=lambda *_a, **_k: io.BytesIO(html)), \
+             patch("builtins.print") as printed:
+            result = app._nar_official_result_fast(detail)
+        self.assertIsNone(result)
+        self.assertTrue(any("result_table_unrecognized" in str(c)
+                            for c in printed.call_args_list))
+
+
+class RealtimeResultRetentionTests(unittest.TestCase):
+    def test_live_merge_does_not_shrink_confirmed_placings_or_payouts(self):
+        import copy
+        from scripts.arvexq_live_sync import merge_live
+        saved_result = {
+            "status": "確定",
+            "finishers": [{"horseNumber": 1, "finish": 1},
+                          {"horseNumber": 2, "finish": 2},
+                          {"horseNumber": 3, "finish": 3}],
+            "payouts": [{"type": "単勝", "amount": 200},
+                        {"type": "馬連", "amount": 1100}],
+        }
+        for circuit, race_id in (
+            ("地方", "nar-2026-10-20-盛岡-03"),
+            ("中央", "jra-2026-10-18-東京-08"),
+        ):
+            with self.subTest(circuit=circuit):
+                original = {"id": race_id, "circuit": circuit,
+                            "date": "2026-10-20" if circuit == "地方" else "2026-10-18",
+                            "horses": [{"horseNumber": 1, "name": "馬A"}],
+                            "result": copy.deepcopy(saved_result),
+                            "preRacePrediction": {"frozen": True}}
+                saved = copy.deepcopy(original)
+                sparse_final = {
+                    "id": race_id, "circuit": circuit,
+                    "result": {
+                        "status": "確定",
+                        "finishers": [{"horseNumber": 1, "finish": 1}],
+                        "payouts": [{"type": "単勝", "amount": 200}],
+                    },
+                }
+                merged = merge_live(original, sparse_final, {})
+                self.assertEqual(merged["result"], saved_result)
+                self.assertEqual(merged["horses"], saved["horses"])
+                self.assertEqual(merged["preRacePrediction"], saved["preRacePrediction"])
+                self.assertEqual(original, saved)
+
+    def test_live_merge_accepts_richer_confirmed_result(self):
+        from scripts.arvexq_live_sync import merge_live
+        initial = {"id": "nar-2026-10-20-盛岡-03", "result": {
+            "status": "速報",
+            "finishers": [{"horseNumber": 1, "finish": 1}],
+        }}
+        confirmed = {"result": {
+            "status": "確定",
+            "finishers": [{"horseNumber": 1, "finish": 1},
+                          {"horseNumber": 2, "finish": 2},
+                          {"horseNumber": 3, "finish": 3}],
+            "payouts": [{"type": "単勝", "amount": 180}],
+        }}
+        merged = merge_live(initial, confirmed, {})
+        self.assertEqual(merged["result"], confirmed["result"])
+
+
+class LiveD1BaseReadbackTests(unittest.TestCase):
+    """The existing live fallback must seed verified full data, not a thin shell."""
+
+    def test_packed_d1_race_rehydrates_all_facts_and_frozen_originals(self):
+        import json
+        from arvexq.ingest.full_snapshot_codec import pack_detail
+        from scripts import arvexq_live_sync as live
+        for rid, circuit, track in (
+            ("nar-2026-10-20-盛岡-01", "地方", "盛岡"),
+            ("jra-2026-10-18-東京-08", "中央", "東京"),
+        ):
+            with self.subTest(circuit=circuit):
+                day = "2026-10-20" if circuit == "地方" else "2026-10-18"
+                full = {"id": rid, "date": day, "circuit": circuit,
+                        "track": track, "raceNumber": 1 if circuit == "地方" else 8,
+                        "horses": [{"horseNumber": 1, "name": "検証馬",
+                                    "allPastRuns": [{"date": "2026-09-01", "finish": 2}]}],
+                        "preRaceBet": {"frozen": True, "tickets": [[1, 2, 3]]},
+                        "result": {"status": "確定",
+                                   "finishers": [{"finish": 1, "horseNumber": 1}]}}
+                response = json.dumps({"ok": True, "detail": pack_detail(full)},
+                                      ensure_ascii=False).encode("utf-8")
+                with patch.object(live.urllib.request, "urlopen",
+                                  return_value=io.BytesIO(response)) as opened:
+                    actual = live.fetch_d1_detail(rid, day)
+                self.assertEqual(actual, full)
+                url = opened.call_args.args[0].full_url
+                self.assertIn("/api/race/", url)
+                self.assertNotIn("view=display", url)
+
+    def test_unmatched_race_wrong_day_and_bad_digest_fail_closed(self):
+        import copy
+        import json
+        from arvexq.ingest.full_snapshot_codec import pack_detail
+        from scripts import arvexq_live_sync as live
+        rid = "nar-2026-10-20-盛岡-01"
+        right = {"id": rid, "date": "2026-10-20",
+                 "horses": [{"horseNumber": 1, "name": "検証馬"}]}
+        mismatched = copy.deepcopy(right)
+        mismatched["id"] = "nar-2026-10-20-盛岡-02"
+        wrong_day = copy.deepcopy(right)
+        wrong_day["date"] = "2026-10-19"
+        damaged = pack_detail(right)
+        damaged["arvexqFullPayload"]["sha256"] = "0" * 64
+        cases = (
+            {"ok": False, "detail": right},
+            {"ok": True, "detail": mismatched},
+            {"ok": True, "detail": wrong_day},
+            {"ok": True, "detail": damaged},
+        )
+        for data in cases:
+            with self.subTest(data=data.get("detail", {}).get("id")):
+                response = json.dumps(data, ensure_ascii=False).encode("utf-8")
+                with patch.object(live.urllib.request, "urlopen",
+                                  return_value=io.BytesIO(response)):
+                    with patch("builtins.print") as recorded:
+                        actual = live.fetch_d1_detail(rid, "2026-10-20")
+                self.assertIsNone(actual)
+                self.assertTrue(any("D1_BASE_FETCH_ERROR" in str(call)
+                                    for call in recorded.call_args_list))
+
+
 if __name__ == "__main__":
     unittest.main()

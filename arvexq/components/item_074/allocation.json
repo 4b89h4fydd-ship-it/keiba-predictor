@@ -1,0 +1,54 @@
+{
+  "id": 74,
+  "name": "速報結果判定",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/result_status/confirmed.py::<module>",
+    "arvexq/results/state.py::<module>",
+    "arvexq/ingest/result_status/confirmed.py::official_confirmed",
+    "arvexq/results/state.py::start_minutes",
+    "arvexq/results/state.py::row_date",
+    "arvexq/results/state.py::podium_final",
+    "arvexq/results/state.py::result_state",
+    "arvexq/results/state.py::started",
+    "arvexq/results/state.py::merge_result",
+    "arvexq/results/state.py::merge_detail"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "arvexq/ingest/result_status/confirmed.py::<module>",
+    "arvexq/results/state.py::<module>",
+    "arvexq/ingest/result_status/confirmed.py::official_confirmed",
+    "arvexq/results/state.py::start_minutes",
+    "arvexq/results/state.py::row_date",
+    "arvexq/results/state.py::podium_final",
+    "arvexq/results/state.py::result_state",
+    "arvexq/results/state.py::started",
+    "arvexq/results/state.py::merge_result",
+    "arvexq/results/state.py::merge_detail"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "arvexq/results/__init__.py",
+    "scripts/arvexq_verify_history_bundle.py",
+    "tests/test_independent_official_result_status.py",
+    "tests/test_result_stalled_regressions.py"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "arvexq/ingest/result_status/confirmed.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/result_status/confirmed.py",
+    "arvexq/results/state.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

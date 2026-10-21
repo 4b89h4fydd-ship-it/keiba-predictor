@@ -1,0 +1,117 @@
+{
+  "id": 104,
+  "name": "位置取り評価",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        88,
+        90,
+        91,
+        92,
+        94,
+        95,
+        97,
+        98,
+        99,
+        100,
+        101,
+        103,
+        104
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_pc_clamp",
+        "line": 3793
+      },
+      "original_source": "app.py::_pc_clamp",
+      "box_target": "arvexq/components/item_088/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        88,
+        90,
+        91,
+        92,
+        94,
+        95,
+        97,
+        98,
+        99,
+        100,
+        101,
+        103,
+        104
+      ],
+      "original_private_name": "_arvexq_original__pc_clamp"
+    },
+    {
+      "items": [
+        88,
+        98,
+        99,
+        100,
+        101,
+        103,
+        104
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_pc_race_field",
+        "line": 3797
+      },
+      "original_source": "app.py::_pc_race_field",
+      "box_target": "arvexq/components/item_088/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        88,
+        98,
+        99,
+        100,
+        101,
+        103,
+        104
+      ],
+      "original_private_name": "_arvexq_original__pc_race_field"
+    },
+    {
+      "items": [
+        98,
+        99,
+        100,
+        101,
+        103,
+        104
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_pc_style_metrics",
+        "line": 3819
+      },
+      "original_source": "app.py::_pc_style_metrics",
+      "box_target": "arvexq/components/item_098/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        98,
+        99,
+        100,
+        101,
+        103,
+        104
+      ],
+      "original_private_name": "_arvexq_original__pc_style_metrics"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

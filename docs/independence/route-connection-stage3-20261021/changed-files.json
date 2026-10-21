@@ -1,0 +1,7123 @@
+{
+  "base_main": "6f21f2e595df17f840c785c31a9f1c5a802bb169",
+  "stage2_reference": "a6fbf7390fead86488eaea143411957557d65d36",
+  "counts": {
+    "existing-source-connection-only": 80,
+    "stage1-stage2-boxes-and-records": 616,
+    "stage3-connection-record": 218,
+    "stage3-adapter-code": 271
+  },
+  "changes": [
+    {
+      "status": "M",
+      "path": "app.py",
+      "category": "existing-source-connection-only",
+      "bytes": 432989
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ability_engine.py",
+      "category": "existing-source-connection-only",
+      "bytes": 237
+    },
+    {
+      "status": "M",
+      "path": "arvexq/backtest/freeze_research_candidate.py",
+      "category": "existing-source-connection-only",
+      "bytes": 2862
+    },
+    {
+      "status": "M",
+      "path": "arvexq/betting/scenario_tickets.py",
+      "category": "existing-source-connection-only",
+      "bytes": 11650
+    },
+    {
+      "status": "M",
+      "path": "arvexq/career_missing.py",
+      "category": "existing-source-connection-only",
+      "bytes": 8554
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 75
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_001/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 40
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_001/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2571
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_001/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 596
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_001/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 5264
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_001/environment_values.py",
+      "category": "stage3-adapter-code",
+      "bytes": 192
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_001/nar_weather.py",
+      "category": "stage3-adapter-code",
+      "bytes": 138
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_002/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 46
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_002/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4111
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_002/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 668
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_002/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2065
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_002/nar_environment_parser.py",
+      "category": "stage3-adapter-code",
+      "bytes": 159
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_002/nar_going.py",
+      "category": "stage3-adapter-code",
+      "bytes": 160
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_003/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 55
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_003/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2237
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_003/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 647
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_003/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1136
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_003/nar_scratches.py",
+      "category": "stage3-adapter-code",
+      "bytes": 142
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_004/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 40
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_004/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2529
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_004/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 535
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_004/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1113
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_004/jra_weather.py",
+      "category": "stage3-adapter-code",
+      "bytes": 138
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_005/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 49
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_005/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2048
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_005/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 547
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_005/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1134
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_005/jra_turf_going.py",
+      "category": "stage3-adapter-code",
+      "bytes": 144
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_006/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 55
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_006/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2054
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_006/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 553
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_006/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1140
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_006/jra_dirt_going.py",
+      "category": "stage3-adapter-code",
+      "bytes": 144
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_007/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 61
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_007/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2049
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_007/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 563
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_007/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1162
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_007/jra_obstacle_going.py",
+      "category": "stage3-adapter-code",
+      "bytes": 152
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_008/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 40
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_008/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5264
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_008/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 667
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_008/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1611
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_008/jra_identifiers.py",
+      "category": "stage3-adapter-code",
+      "bytes": 145
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_008/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 194
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_009/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 40
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_009/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4685
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_009/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 629
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_009/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1581
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_009/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 193
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_009/track.py",
+      "category": "stage3-adapter-code",
+      "bytes": 134
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_010/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_010/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4830
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_010/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 816
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_010/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2127
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_010/meeting_schedule.py",
+      "category": "stage3-adapter-code",
+      "bytes": 145
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_010/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 299
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_011/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_011/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1191
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_011/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 609
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_011/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1110
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_011/jra_identifiers.py",
+      "category": "stage3-adapter-code",
+      "bytes": 148
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_012/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_012/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1059
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_012/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 545
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_012/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1074
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_012/title.py",
+      "category": "stage3-adapter-code",
+      "bytes": 134
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_013/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 56
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_013/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1053
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_013/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 563
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_013/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1099
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_013/grade_class.py",
+      "category": "stage3-adapter-code",
+      "bytes": 140
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_014/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_014/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1852
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_014/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 550
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_014/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1948
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_014/jra_time.py",
+      "category": "stage3-adapter-code",
+      "bytes": 156
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_014/start_time.py",
+      "category": "stage3-adapter-code",
+      "bytes": 139
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_015/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 62
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_015/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1183
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_015/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 607
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_015/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1093
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_015/surface.py",
+      "category": "stage3-adapter-code",
+      "bytes": 136
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_016/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_016/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1165
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_016/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 584
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_016/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1072
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_016/distance.py",
+      "category": "stage3-adapter-code",
+      "bytes": 137
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_017/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_017/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2432
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_017/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 549
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_017/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2452
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_017/course.py",
+      "category": "stage3-adapter-code",
+      "bytes": 135
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_017/race_conditions.py",
+      "category": "stage3-adapter-code",
+      "bytes": 139
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_018/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_018/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1037
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_018/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 550
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_018/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1089
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_018/field_size.py",
+      "category": "stage3-adapter-code",
+      "bytes": 139
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_019/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_019/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1974
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_019/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 545
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_019/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1087
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_019/prize.py",
+      "category": "stage3-adapter-code",
+      "bytes": 146
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_020/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 50
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_020/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 7618
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_020/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 661
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_020/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 9552
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_020/pure_parsers.py",
+      "category": "stage3-adapter-code",
+      "bytes": 228
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_020/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 1093
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_021/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 50
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_021/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 10217
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_021/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 630
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_021/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 4604
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_021/nar_csv.py",
+      "category": "stage3-adapter-code",
+      "bytes": 181
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_021/nar_official_metadata.py",
+      "category": "stage3-adapter-code",
+      "bytes": 159
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_021/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 315
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_022/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 62
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_022/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 8254
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_022/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 659
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_022/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 6164
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_022/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 939
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_023/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 43
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_023/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4060
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_023/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 587
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_023/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1557
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_023/race_identity.py",
+      "category": "stage3-adapter-code",
+      "bytes": 151
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_024/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_024/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1420
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_024/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 640
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_024/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2036
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_024/race_summary_merge.py",
+      "category": "stage3-adapter-code",
+      "bytes": 195
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_025/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 32
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_025/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5954
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_025/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 607
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_025/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2083
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_025/horse_number.py",
+      "category": "stage3-adapter-code",
+      "bytes": 151
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_025/module_reference_horse_number.py",
+      "category": "stage3-adapter-code",
+      "bytes": 138
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_025/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 196
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_026/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 32
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_026/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 3413
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_026/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 653
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_026/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1985
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_026/frame_number.py",
+      "category": "stage3-adapter-code",
+      "bytes": 148
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_026/module_reference_frame_number.py",
+      "category": "stage3-adapter-code",
+      "bytes": 138
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_026/netkeiba.py",
+      "category": "stage3-adapter-code",
+      "bytes": 140
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_027/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 32
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_027/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2270
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_027/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 584
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_027/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1085
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_027/module_reference_name.py",
+      "category": "stage3-adapter-code",
+      "bytes": 130
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_028/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 32
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_028/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2460
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_028/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 583
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_028/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1528
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_028/module_reference_sex.py",
+      "category": "stage3-adapter-code",
+      "bytes": 129
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_028/sex.py",
+      "category": "stage3-adapter-code",
+      "bytes": 135
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_029/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 32
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_029/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2264
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_029/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 583
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_029/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1082
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_029/module_reference_age.py",
+      "category": "stage3-adapter-code",
+      "bytes": 129
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_030/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 32
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_030/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 3082
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_030/carried_weight.py",
+      "category": "stage3-adapter-code",
+      "bytes": 163
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_030/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 594
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_030/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1615
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_030/module_reference_carried_weight.py",
+      "category": "stage3-adapter-code",
+      "bytes": 140
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_031/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 32
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_031/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2282
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_031/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 586
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_031/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1091
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_031/module_reference_jockey.py",
+      "category": "stage3-adapter-code",
+      "bytes": 132
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_032/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 35
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_032/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2291
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_032/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 590
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_032/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1097
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_032/module_reference_trainer.py",
+      "category": "stage3-adapter-code",
+      "bytes": 133
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_033/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 32
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_033/affiliation.py",
+      "category": "stage3-adapter-code",
+      "bytes": 143
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_033/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2449
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_033/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 606
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_033/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1549
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_033/module_reference_affiliation.py",
+      "category": "stage3-adapter-code",
+      "bytes": 137
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_034/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 35
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_034/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 3055
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_034/body_weight.py",
+      "category": "stage3-adapter-code",
+      "bytes": 157
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_034/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 594
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_034/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3002
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_034/horse_measurements.py",
+      "category": "stage3-adapter-code",
+      "bytes": 209
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_034/module_reference_body_weight.py",
+      "category": "stage3-adapter-code",
+      "bytes": 137
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_035/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_035/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 3089
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_035/body_weight_change.py",
+      "category": "stage3-adapter-code",
+      "bytes": 150
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_035/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 607
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_035/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1629
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_035/module_reference_body_weight_change.py",
+      "category": "stage3-adapter-code",
+      "bytes": 144
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_036/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_036/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4285
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_036/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 657
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_036/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 13447
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_036/runner_cancellation.py",
+      "category": "stage3-adapter-code",
+      "bytes": 136
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_036/runner_status.py",
+      "category": "stage3-adapter-code",
+      "bytes": 164
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_037/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_037/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4267
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_037/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 654
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_037/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 12040
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_037/runner_exclusion.py",
+      "category": "stage3-adapter-code",
+      "bytes": 133
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_038/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_038/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5729
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_038/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 552
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_038/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3839
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_038/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 758
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_039/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_039/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4784
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_039/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 601
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_039/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1994
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_039/horse_identity.py",
+      "category": "stage3-adapter-code",
+      "bytes": 134
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_039/merge.py",
+      "category": "stage3-adapter-code",
+      "bytes": 156
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_040/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_040/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 12408
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_040/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 555
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_040/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 14062
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_040/enrichment_transport.py",
+      "category": "stage3-adapter-code",
+      "bytes": 163
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_040/field_normalization.py",
+      "category": "stage3-adapter-code",
+      "bytes": 280
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_040/race.py",
+      "category": "stage3-adapter-code",
+      "bytes": 131
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_040/source_merge.py",
+      "category": "stage3-adapter-code",
+      "bytes": 140
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_041/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 50
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_041/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 11128
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_041/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 598
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_041/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 8261
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_041/orchestrator.py",
+      "category": "stage3-adapter-code",
+      "bytes": 147
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_041/registry.py",
+      "category": "stage3-adapter-code",
+      "bytes": 179
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_042/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_042/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5962
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_042/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 772
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_042/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2502
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_042/date.py",
+      "category": "stage3-adapter-code",
+      "bytes": 138
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_042/jra.py",
+      "category": "stage3-adapter-code",
+      "bytes": 147
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_042/recent_result_cell.py",
+      "category": "stage3-adapter-code",
+      "bytes": 146
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_042/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 192
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_043/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_043/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2339
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_043/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 585
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_043/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1103
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_043/track.py",
+      "category": "stage3-adapter-code",
+      "bytes": 140
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_044/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_044/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2484
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_044/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 585
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_044/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1574
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_044/distance.py",
+      "category": "stage3-adapter-code",
+      "bytes": 163
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_045/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_045/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2342
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_045/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 588
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_045/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1107
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_045/going.py",
+      "category": "stage3-adapter-code",
+      "bytes": 140
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_046/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_046/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2339
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_046/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 585
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_046/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1104
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_046/grade.py",
+      "category": "stage3-adapter-code",
+      "bytes": 140
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_047/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_047/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2344
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_047/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 583
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_047/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1105
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_047/finish.py",
+      "category": "stage3-adapter-code",
+      "bytes": 142
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_048/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_048/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2750
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_048/clock.py",
+      "category": "stage3-adapter-code",
+      "bytes": 147
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_048/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 588
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_048/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1121
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_049/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_049/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2360
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_049/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 583
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_049/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1121
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_049/margin.py",
+      "category": "stage3-adapter-code",
+      "bytes": 150
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_050/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_050/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2358
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_050/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 590
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_050/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1115
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_050/corners.py",
+      "category": "stage3-adapter-code",
+      "bytes": 144
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_051/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 50
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_051/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2369
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_051/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 592
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_051/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1130
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_051/last3f.py",
+      "category": "stage3-adapter-code",
+      "bytes": 150
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_052/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_052/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2408
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_052/carried_weight.py",
+      "category": "stage3-adapter-code",
+      "bytes": 158
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_052/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 591
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_052/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1137
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_053/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_053/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2344
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_053/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 583
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_053/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1105
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_053/jockey.py",
+      "category": "stage3-adapter-code",
+      "bytes": 142
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_054/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_054/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2382
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_054/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 593
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_054/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1127
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_054/field_size.py",
+      "category": "stage3-adapter-code",
+      "bytes": 150
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_055/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_055/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 8719
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_055/assets.py",
+      "category": "stage3-adapter-code",
+      "bytes": 207
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_055/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 761
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_055/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2055
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_055/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 294
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_056/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 53
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_056/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1612
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_056/circuit_transfer.py",
+      "category": "stage3-adapter-code",
+      "bytes": 138
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_056/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 645
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_056/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1132
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 56
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 16138
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/career_analysis.py",
+      "category": "stage3-adapter-code",
+      "bytes": 132
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/career_missing.py",
+      "category": "stage3-adapter-code",
+      "bytes": 138
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/career_transport.py",
+      "category": "stage3-adapter-code",
+      "bytes": 164
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1210
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 19965
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/full_career.py",
+      "category": "stage3-adapter-code",
+      "bytes": 157
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/jra_career_merge.py",
+      "category": "stage3-adapter-code",
+      "bytes": 152
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/nar_career_coverage.py",
+      "category": "stage3-adapter-code",
+      "bytes": 204
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_057/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 1497
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_058/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 50
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_058/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4116
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_058/assets.py",
+      "category": "stage3-adapter-code",
+      "bytes": 201
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_058/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 642
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_058/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1056
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_059/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_059/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1106
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_059/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 597
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_059/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1106
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_059/module_reference_win_odds.py",
+      "category": "stage3-adapter-code",
+      "bytes": 134
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_060/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_060/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1076
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_060/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 546
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_060/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1090
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_060/place_odds.py",
+      "category": "stage3-adapter-code",
+      "bytes": 135
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_061/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_061/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1115
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_061/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 596
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_061/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1109
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_061/module_reference_popularity.py",
+      "category": "stage3-adapter-code",
+      "bytes": 136
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_062/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_062/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1027
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_062/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 559
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_062/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1112
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_062/odds_capture_time.py",
+      "category": "stage3-adapter-code",
+      "bytes": 143
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_063/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_063/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1077
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_063/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 644
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_063/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1147
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_063/netkeiba_odds_parser.py",
+      "category": "stage3-adapter-code",
+      "bytes": 162
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_064/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_064/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4720
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_064/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 536
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_064/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2187
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_064/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 404
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_065/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 56
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_065/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4777
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_065/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 571
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_065/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1195
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_065/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 195
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_066/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_066/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5264
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_066/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 559
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_066/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1186
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_066/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 195
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_067/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 50
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_067/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5170
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_067/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 550
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_067/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1544
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_067/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 191
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_067/saved_odds.mjs",
+      "category": "stage3-adapter-code",
+      "bytes": 127
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_068/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_068/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4893
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_068/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 658
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_068/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3012
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_068/odds.py",
+      "category": "stage3-adapter-code",
+      "bytes": 126
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_068/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_068/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_069/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_069/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1198
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_069/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 561
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_069/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1556
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_069/missing.py",
+      "category": "stage3-adapter-code",
+      "bytes": 157
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_070/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_070/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4972
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_070/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 601
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_070/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1393
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_071/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_071/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4972
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_071/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 601
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_071/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1398
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_072/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_072/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5386
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_072/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 607
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_072/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1399
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_073/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_073/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1937
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_073/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 562
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_073/confirmed.py",
+      "category": "stage3-adapter-code",
+      "bytes": 151
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_073/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1569
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_073/state.py",
+      "category": "stage3-adapter-code",
+      "bytes": 128
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_074/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_074/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1937
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_074/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 639
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_074/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1123
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_075/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 56
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_075/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1314
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_075/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 666
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_075/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1552
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_075/corner_order.py",
+      "category": "stage3-adapter-code",
+      "bytes": 159
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_076/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_076/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4829
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_076/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 712
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_076/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1318
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_076/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 186
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_077/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_077/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4829
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_077/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 712
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_077/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1318
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_077/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 141
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_078/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_078/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4829
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_078/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 712
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_078/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1318
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_078/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 141
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_079/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_079/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4829
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_079/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 712
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_079/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1318
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_079/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 141
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_080/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_080/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4832
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_080/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 715
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_080/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1321
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_080/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 141
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_081/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_081/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4829
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_081/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 712
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_081/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1318
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_081/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 141
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_082/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 39
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_082/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4830
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_082/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 713
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_082/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1319
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_082/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 141
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_083/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 39
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_083/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4830
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_083/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 713
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_083/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1319
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_083/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 141
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_084/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_084/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2640
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_084/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 627
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_084/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1574
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_084/odds_results_merge.py",
+      "category": "stage3-adapter-code",
+      "bytes": 169
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_085/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_085/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5229
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_085/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 512
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_085/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1692
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_085/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 300
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_086/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 53
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_086/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6224
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_086/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 566
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_086/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2532
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_086/pure_snapshots.py",
+      "category": "stage3-adapter-code",
+      "bytes": 187
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_086/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 187
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_087/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 50
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_087/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 8107
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_087/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 592
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_087/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 4509
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_087/pure_diagnostics.py",
+      "category": "stage3-adapter-code",
+      "bytes": 319
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_087/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 408
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_088/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_088/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 7501
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_088/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 511
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_088/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3563
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_088/horse_features.py",
+      "category": "stage3-adapter-code",
+      "bytes": 146
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_088/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 487
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_089/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_089/ability.py",
+      "category": "stage3-adapter-code",
+      "bytes": 172
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_089/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1465
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_089/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 505
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_089/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2457
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_090/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_090/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5521
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_090/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 508
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_090/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2027
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_090/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 187
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_090/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 136
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_091/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_091/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5935
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_091/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 505
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_091/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2024
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_091/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 198
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_092/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_092/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5141
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_092/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 508
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_092/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2027
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_092/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 198
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_093/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_093/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2029
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_093/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 508
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_093/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 673
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_094/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_094/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5935
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_094/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 505
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_094/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2024
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_094/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 198
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_095/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 38
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_095/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4801
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_095/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 505
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_095/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2424
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_095/pure_diagnostics.py",
+      "category": "stage3-adapter-code",
+      "bytes": 126
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_095/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 198
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_096/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_096/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1442
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_096/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 511
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_096/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2240
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_096/pure_diagnostics.py",
+      "category": "stage3-adapter-code",
+      "bytes": 130
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_096/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 295
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_097/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 47
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_097/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5828
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_097/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 514
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_097/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1949
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_097/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 191
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_097/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 136
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_098/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 35
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_098/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6132
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_098/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 666
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_098/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3239
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_098/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 189
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_098/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 197
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_099/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 35
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_099/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6132
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_099/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 666
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_099/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3239
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_099/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 261
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_100/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 36
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_100/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6133
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_100/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 667
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_100/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3240
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_100/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 261
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_101/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 36
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_101/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6133
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_101/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 667
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_101/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3240
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_101/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 261
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_102/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 39
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_102/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2371
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_102/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 670
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_102/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1191
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_103/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 36
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_103/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4627
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_103/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 503
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_103/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2706
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_103/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 261
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_104/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_104/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6300
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_104/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 512
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_104/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2715
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_104/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 261
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_105/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 51
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_105/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1096
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_105/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 518
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_105/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1203
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_105/pace_prediction.py",
+      "category": "stage3-adapter-code",
+      "bytes": 139
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_106/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_106/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1374
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_106/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 512
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_106/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1246
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_106/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 188
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_107/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 57
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_107/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1432
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_107/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 524
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_107/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1287
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_107/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 198
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_108/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 57
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_108/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1409
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_108/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 524
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_108/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1094
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_108/pure_diagnostics.py",
+      "category": "stage3-adapter-code",
+      "bytes": 144
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_109/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 57
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_109/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1430
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_109/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 663
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_109/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3757
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_109/course_speed_baselines.py",
+      "category": "stage3-adapter-code",
+      "bytes": 240
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_109/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 211
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_110/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 60
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_110/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 14773
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_110/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 570
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_110/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 6762
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_110/diagnosis.py",
+      "category": "stage3-adapter-code",
+      "bytes": 127
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_110/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 931
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_110/services_package.py",
+      "category": "stage3-adapter-code",
+      "bytes": 130
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_110/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 153
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_111/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_111/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4444
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_111/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 551
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_111/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2599
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_111/fingerprints.py",
+      "category": "stage3-adapter-code",
+      "bytes": 137
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_111/persisted_inputs.py",
+      "category": "stage3-adapter-code",
+      "bytes": 196
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_112/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_112/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2489
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_112/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 612
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_112/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 654
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_113/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_113/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5069
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_113/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 521
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_113/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1308
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_113/pure_diagnostics.py",
+      "category": "stage3-adapter-code",
+      "bytes": 128
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_114/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 57
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_114/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1068
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_114/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 524
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_114/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 624
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_115/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_115/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1320
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_115/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 515
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_115/confidence.py",
+      "category": "stage3-adapter-code",
+      "bytes": 153
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_115/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1154
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_116/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 36
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_116/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 3290
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_116/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 537
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_116/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 623
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_117/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_117/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1035
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_117/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 512
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_117/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 612
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_118/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_118/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1043
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_118/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 512
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_118/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 612
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_119/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_119/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1051
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_119/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 515
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_119/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 618
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_120/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_120/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1050
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_120/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 509
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_120/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 599
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_121/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_121/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2413
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_121/assets.py",
+      "category": "stage3-adapter-code",
+      "bytes": 192
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_121/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 509
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_121/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1049
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_122/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_122/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5587
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_122/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 509
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_122/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 690
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_123/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 49
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_123/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5765
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_123/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 516
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_123/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 670
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_124/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 51
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_124/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5814
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_124/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 518
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_124/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 665
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_125/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 63
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_125/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 10884
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_125/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 678
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_125/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 4546
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_125/preoff_capture.py",
+      "category": "stage3-adapter-code",
+      "bytes": 149
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_125/preoff_evidence_store.py",
+      "category": "stage3-adapter-code",
+      "bytes": 184
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_125/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_125/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_126/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 63
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_126/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 3769
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_126/assets.py",
+      "category": "stage3-adapter-code",
+      "bytes": 260
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_126/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 571
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_126/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1460
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_127/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_127/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5474
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_127/auto_recap.py",
+      "category": "stage3-adapter-code",
+      "bytes": 137
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_127/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 565
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_127/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1598
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_128/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_128/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5124
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_128/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 632
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_128/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1162
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_128/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 184
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_129/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 51
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_129/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 9243
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_129/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 574
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_129/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 5155
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_129/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 545
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_129/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 330
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_130/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_130/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5824
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_130/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 669
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_130/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1657
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_130/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_130/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_131/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_131/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4841
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_131/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 666
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_131/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1142
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_131/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_131/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_132/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_132/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5181
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_132/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 672
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_132/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1154
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_132/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_132/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_133/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_133/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 9665
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_133/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 668
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_133/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2214
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_133/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_133/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_134/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_134/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 3971
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_134/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 744
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_134/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 638
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_135/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 57
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_135/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 9942
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_135/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 585
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_135/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 888
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_136/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 57
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_136/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4478
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_136/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 672
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_136/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1187
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_136/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_136/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_137/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_137/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 12630
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_137/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 726
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_137/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 623
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_138/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_138/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 25360
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_138/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 677
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_138/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 4139
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_138/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_138/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_139/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 35
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_139/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 12906
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_139/api_full_snapshot.mjs",
+      "category": "stage3-adapter-code",
+      "bytes": 166
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_139/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 679
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_139/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1439
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_140/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 39
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_140/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 13240
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_140/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 581
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_140/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2084
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_140/race_stores.py",
+      "category": "stage3-adapter-code",
+      "bytes": 139
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_140/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 285
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_141/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 57
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_141/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6676
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_141/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 563
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_141/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 8000
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_141/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 1613
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_142/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 57
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_142/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 8203
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_142/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 563
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_142/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2251
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_142/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 398
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_143/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 51
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_143/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1324
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_143/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 650
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_143/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 675
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_144/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 51
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_144/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1174
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_144/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 640
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_144/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 675
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_145/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 51
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_145/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2047
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_145/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 774
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_145/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1069
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_145/web_cache.mjs",
+      "category": "stage3-adapter-code",
+      "bytes": 166
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_146/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_146/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4487
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_146/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 667
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_146/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1189
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_146/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 142
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_147/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 60
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_147/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 7081
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_147/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 675
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_147/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 14626
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_147/prerace_archive.py",
+      "category": "stage3-adapter-code",
+      "bytes": 247
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_147/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_147/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_148/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 63
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_148/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6775
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_148/api_forecast_revisions.mjs",
+      "category": "stage3-adapter-code",
+      "bytes": 147
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_148/api_snapshot_export.mjs",
+      "category": "stage3-adapter-code",
+      "bytes": 141
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_148/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 679
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_148/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 8469
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_148/full_snapshot_codec.py",
+      "category": "stage3-adapter-code",
+      "bytes": 182
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_149/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 57
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_149/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4562
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_149/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 563
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_149/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1757
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_149/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 185
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_149/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 146
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_150/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_150/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 919
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_150/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 777
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_150/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 646
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_151/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 40
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_151/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 10722
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_151/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 555
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_151/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 6115
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_151/race_priority.py",
+      "category": "stage3-adapter-code",
+      "bytes": 163
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_151/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 1020
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_152/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 40
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_152/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 10215
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_152/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 704
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_152/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 6309
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_152/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 1165
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_152/runtime_readiness.py",
+      "category": "stage3-adapter-code",
+      "bytes": 136
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_153/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 40
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_153/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6969
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_153/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 560
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_153/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 5034
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_153/day_index.py",
+      "category": "stage3-adapter-code",
+      "bytes": 136
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_153/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 855
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_154/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 41
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_154/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 8546
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_154/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 560
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_154/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 8093
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_154/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 1573
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_155/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_155/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6004
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_155/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 547
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_155/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2707
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_155/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 505
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_156/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_156/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1334
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_156/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 647
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_156/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1121
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_156/nar_official_card.py",
+      "category": "stage3-adapter-code",
+      "bytes": 142
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_157/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_157/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 7497
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_157/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 618
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_157/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3591
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_157/race_clock.py",
+      "category": "stage3-adapter-code",
+      "bytes": 142
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_158/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_158/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1549
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_158/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 657
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_158/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 621
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_159/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_159/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6294
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_159/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 564
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_159/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 4312
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_159/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 842
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_160/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 51
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_160/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1553
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_160/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 789
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_160/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 600
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_161/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_161/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4553
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_161/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 554
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_161/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1748
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_161/shared_routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 206
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_162/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 57
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_162/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 8173
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_162/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 652
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_162/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 6981
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_162/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 1328
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_163/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_163/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4992
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_163/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 538
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_163/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2644
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_163/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 485
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_164/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_164/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4658
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_164/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 547
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_164/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2085
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_164/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 280
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_165/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_165/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4735
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_165/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 535
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_165/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1156
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_165/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 186
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_166/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 39
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_166/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4722
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_166/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 532
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_166/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1138
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_166/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 181
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_167/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_167/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5773
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_167/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 544
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_167/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2025
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_167/live_odds.mjs",
+      "category": "stage3-adapter-code",
+      "bytes": 127
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_167/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 287
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_168/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 36
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_168/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4729
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_168/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 529
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_168/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1150
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_168/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 186
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_169/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_169/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4739
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_169/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 535
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_169/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1162
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_169/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 188
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_170/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_170/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4873
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_170/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 535
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_170/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2175
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_170/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 395
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_171/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_171/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4788
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_171/api_storage_audit.mjs",
+      "category": "stage3-adapter-code",
+      "bytes": 137
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_171/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 549
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_171/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2535
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_171/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 387
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_172/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 51
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_172/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4788
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_172/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 544
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_172/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1636
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_172/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 278
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_173/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 44
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_173/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4828
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_173/api_entry.mjs",
+      "category": "stage3-adapter-code",
+      "bytes": 165
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_173/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 697
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_173/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1449
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_173/web_entry.mjs",
+      "category": "stage3-adapter-code",
+      "bytes": 103
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_174/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 35
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_174/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2789
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_174/api_full_snapshot.mjs",
+      "category": "stage3-adapter-code",
+      "bytes": 143
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_174/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 764
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_174/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1044
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_175/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_175/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1547
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_175/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 815
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_175/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 594
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_176/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_176/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 34462
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_176/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 547
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_176/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 4442
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_176/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_176/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 176
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_176/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_177/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_177/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2591
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_177/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 543
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_177/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1142
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_177/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_177/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_178/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_178/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2603
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_178/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 656
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_178/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1636
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_178/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_178/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_179/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_179/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 7102
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_179/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 543
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_179/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2852
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_179/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_179/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_180/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 36
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_180/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 7154
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_180/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 638
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_180/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 5595
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_180/race_card.py",
+      "category": "stage3-adapter-code",
+      "bytes": 156
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_180/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_180/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_181/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 39
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_181/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 12948
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_181/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 560
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_181/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 4009
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_181/horse_detail.py",
+      "category": "stage3-adapter-code",
+      "bytes": 154
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_181/horse_review_bank.py",
+      "category": "stage3-adapter-code",
+      "bytes": 153
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_181/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_181/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_182/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_182/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2629
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_182/assets.py",
+      "category": "stage3-adapter-code",
+      "bytes": 193
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_182/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 708
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_182/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 2349
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_182/history.py",
+      "category": "stage3-adapter-code",
+      "bytes": 136
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_183/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_183/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 3491
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_183/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 543
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_183/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1403
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_183/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_183/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_184/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_184/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 2928
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_184/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 546
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_184/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3618
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_184/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_184/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_185/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_185/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1263
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_185/assets.py",
+      "category": "stage3-adapter-code",
+      "bytes": 210
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_185/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 643
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_185/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1058
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_186/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 39
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_186/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1526
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_186/assets.py",
+      "category": "stage3-adapter-code",
+      "bytes": 198
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_186/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 634
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_186/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1049
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_187/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 45
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_187/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1869
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_187/assets.py",
+      "category": "stage3-adapter-code",
+      "bytes": 202
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_187/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 642
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_187/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1057
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_188/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_188/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6065
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_188/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 549
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_188/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 7960
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_188/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_188/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_189/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 51
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_189/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 8274
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_189/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 567
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_189/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3717
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_189/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_189/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_190/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 42
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_190/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4001
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_190/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 543
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_190/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3132
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_190/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_190/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_191/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_191/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5193
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_191/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 555
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_191/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 5528
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_191/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_191/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_192/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_192/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 4795
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_192/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 555
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_192/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3151
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_192/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_192/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_193/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_193/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 5108
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_193/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 547
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_193/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 3066
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_193/icon_assets.py",
+      "category": "stage3-adapter-code",
+      "bytes": 127
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_193/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 480
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_194/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 66
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_194/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6618
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_194/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 567
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_194/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 5591
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_194/routes.js",
+      "category": "stage3-adapter-code",
+      "bytes": 205
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_194/ui_route_asset.py",
+      "category": "stage3-adapter-code",
+      "bytes": 208
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_195/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 54
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_195/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 7398
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_195/assets.py",
+      "category": "stage3-adapter-code",
+      "bytes": 140
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_195/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 559
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_195/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 4871
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_195/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 677
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_196/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 61
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_196/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 337738
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_196/audit_route.py",
+      "category": "stage3-adapter-code",
+      "bytes": 172
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_196/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 681
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_196/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1237
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_197/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 72
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_197/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 23861
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_197/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 761
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_197/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1673
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_197/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 283
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_198/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 59
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_198/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 22417
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_198/bundle.py",
+      "category": "stage3-adapter-code",
+      "bytes": 130
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_198/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 658
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_198/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 1571
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_198/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 177
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_199/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 70
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_199/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1864
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_199/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 886
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_199/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 675
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_200/__init__.py",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 48
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_200/allocation.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6674
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_200/component.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 777
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_200/connection.json",
+      "category": "stage3-connection-record",
+      "bytes": 4131
+    },
+    {
+      "status": "A",
+      "path": "arvexq/components/item_200/routes.py",
+      "category": "stage3-adapter-code",
+      "bytes": 785
+    },
+    {
+      "status": "M",
+      "path": "arvexq/databanks/jbis.py",
+      "category": "existing-source-connection-only",
+      "bytes": 745
+    },
+    {
+      "status": "M",
+      "path": "arvexq/databanks/jra.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1459
+    },
+    {
+      "status": "M",
+      "path": "arvexq/databanks/nar.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1459
+    },
+    {
+      "status": "M",
+      "path": "arvexq/databanks/netkeiba.py",
+      "category": "existing-source-connection-only",
+      "bytes": 848
+    },
+    {
+      "status": "M",
+      "path": "arvexq/diagnosis.py",
+      "category": "existing-source-connection-only",
+      "bytes": 2846
+    },
+    {
+      "status": "M",
+      "path": "arvexq/domain/legacy_evaluation.py",
+      "category": "existing-source-connection-only",
+      "bytes": 18317
+    },
+    {
+      "status": "M",
+      "path": "arvexq/features/horse_features.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1873
+    },
+    {
+      "status": "M",
+      "path": "arvexq/forecast/preoff_d1_transport.py",
+      "category": "existing-source-connection-only",
+      "bytes": 3898
+    },
+    {
+      "status": "M",
+      "path": "arvexq/horse_detail.py",
+      "category": "existing-source-connection-only",
+      "bytes": 3217
+    },
+    {
+      "status": "M",
+      "path": "arvexq/infra/race_stores.py",
+      "category": "existing-source-connection-only",
+      "bytes": 39501
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/career_transport.py",
+      "category": "existing-source-connection-only",
+      "bytes": 5915
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/corner_order.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1383
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/entry_fields/dom.py",
+      "category": "existing-source-connection-only",
+      "bytes": 757
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/entry_fields/frame_number.py",
+      "category": "existing-source-connection-only",
+      "bytes": 469
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/entry_fields/horse_number.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1062
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/entry_fields/jockey.py",
+      "category": "existing-source-connection-only",
+      "bytes": 563
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/entry_fields/netkeiba.py",
+      "category": "existing-source-connection-only",
+      "bytes": 2524
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/entry_fields/status.py",
+      "category": "existing-source-connection-only",
+      "bytes": 245
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/environment_values.py",
+      "category": "existing-source-connection-only",
+      "bytes": 851
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/fallback_enrichment.py",
+      "category": "existing-source-connection-only",
+      "bytes": 22594
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/field_normalization.py",
+      "category": "existing-source-connection-only",
+      "bytes": 2334
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/horse_identity.py",
+      "category": "existing-source-connection-only",
+      "bytes": 241
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/horse_measurements.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1157
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/jra_career_merge.py",
+      "category": "existing-source-connection-only",
+      "bytes": 703
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/jra_dirt_going.py",
+      "category": "existing-source-connection-only",
+      "bytes": 330
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/jra_environment_parser.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1210
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/jra_turf_going.py",
+      "category": "existing-source-connection-only",
+      "bytes": 324
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/jra_weather.py",
+      "category": "existing-source-connection-only",
+      "bytes": 350
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/nar_career_coverage.py",
+      "category": "existing-source-connection-only",
+      "bytes": 2503
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/nar_csv.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1863
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/nar_environment_parser.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1006
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/nar_going.py",
+      "category": "existing-source-connection-only",
+      "bytes": 643
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/nar_scratches.py",
+      "category": "existing-source-connection-only",
+      "bytes": 861
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/nar_weather.py",
+      "category": "existing-source-connection-only",
+      "bytes": 355
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/odds_fields/delta.py",
+      "category": "existing-source-connection-only",
+      "bytes": 310
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/orchestrator.py",
+      "category": "existing-source-connection-only",
+      "bytes": 2729
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/past_fields/jra.py",
+      "category": "existing-source-connection-only",
+      "bytes": 2318
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/race_fields/distance.py",
+      "category": "existing-source-connection-only",
+      "bytes": 184
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/race_fields/surface.py",
+      "category": "existing-source-connection-only",
+      "bytes": 317
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/recent_result_cell.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1854
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/source_merge.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1874
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ingest/transfer_history.py",
+      "category": "existing-source-connection-only",
+      "bytes": 2628
+    },
+    {
+      "status": "M",
+      "path": "arvexq/normalize/race.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1942
+    },
+    {
+      "status": "M",
+      "path": "arvexq/odds.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1582
+    },
+    {
+      "status": "M",
+      "path": "arvexq/pace_prediction.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1998
+    },
+    {
+      "status": "M",
+      "path": "arvexq/pipeline/persisted_inputs.py",
+      "category": "existing-source-connection-only",
+      "bytes": 5910
+    },
+    {
+      "status": "M",
+      "path": "arvexq/prediction/official_course_revision.py",
+      "category": "existing-source-connection-only",
+      "bytes": 8122
+    },
+    {
+      "status": "M",
+      "path": "arvexq/prediction/race_intelligence.py",
+      "category": "existing-source-connection-only",
+      "bytes": 3224
+    },
+    {
+      "status": "M",
+      "path": "arvexq/prediction/user_approved_model_revision.py",
+      "category": "existing-source-connection-only",
+      "bytes": 5629
+    },
+    {
+      "status": "M",
+      "path": "arvexq/services/race_analysis.py",
+      "category": "existing-source-connection-only",
+      "bytes": 2188
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ui/bundle.py",
+      "category": "existing-source-connection-only",
+      "bytes": 3675
+    },
+    {
+      "status": "M",
+      "path": "arvexq/ui/static/app.js",
+      "category": "existing-source-connection-only",
+      "bytes": 330549
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/box-sorting-20261021/README.md",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 8645
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/box-sorting-20261021/excluded-changes.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 427228
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/box-sorting-20261021/inventory.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 347329
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/GAPS.md",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 6265
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/README.md",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 22596
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/allocations.json.gz",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 104189
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/call-graph.json.gz",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 463614
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/duplicate-code.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 21990
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/file-manifest.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 37824
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/open-prs.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 286209
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/shared-dependencies.json.gz",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 73073
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/source-files.json.gz",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 92706
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/source-units.json.gz",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 854895
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/summary.json",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 1170
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/code-allocation-stage2-20261021/unassigned-and-gaps.json.gz",
+      "category": "stage1-stage2-boxes-and-records",
+      "bytes": 20739
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/README.md",
+      "category": "stage3-connection-record",
+      "bytes": 6848
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/STATUS.md",
+      "category": "stage3-connection-record",
+      "bytes": 16395
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/body-preservation.json",
+      "category": "stage3-connection-record",
+      "bytes": 47781
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/changed-files.json",
+      "category": "stage3-connection-record",
+      "bytes": 191483
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/conflict-preservation.json",
+      "category": "stage3-connection-record",
+      "bytes": 312
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/conflicts.json",
+      "category": "stage3-connection-record",
+      "bytes": 7502
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/connections.json.gz",
+      "category": "stage3-connection-record",
+      "bytes": 15789
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/coverage.json.gz",
+      "category": "stage3-connection-record",
+      "bytes": 25019
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/deferred.json",
+      "category": "stage3-connection-record",
+      "bytes": 7439
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/file-manifest.json",
+      "category": "stage3-connection-record",
+      "bytes": 38951
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/open-prs.json",
+      "category": "stage3-connection-record",
+      "bytes": 489736
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/shared-bindings.json",
+      "category": "stage3-connection-record",
+      "bytes": 14835
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/static-contracts.json",
+      "category": "stage3-connection-record",
+      "bytes": 695
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/static-js-structure.json",
+      "category": "stage3-connection-record",
+      "bytes": 302
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/static-structure.json",
+      "category": "stage3-connection-record",
+      "bytes": 436
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/summary.json",
+      "category": "stage3-connection-record",
+      "bytes": 1844
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/ui-body-preservation.json",
+      "category": "stage3-connection-record",
+      "bytes": 28138
+    },
+    {
+      "status": "A",
+      "path": "docs/independence/route-connection-stage3-20261021/ui-conflicts.json",
+      "category": "stage3-connection-record",
+      "bytes": 2372
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_collect_preoff_evidence.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1775
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_daily_archive_audit.py",
+      "category": "existing-source-connection-only",
+      "bytes": 7251
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_fetch_d1_bundle.py",
+      "category": "existing-source-connection-only",
+      "bytes": 7651
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_freeze_predictions.py",
+      "category": "existing-source-connection-only",
+      "bytes": 22944
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_history_repair.py",
+      "category": "existing-source-connection-only",
+      "bytes": 15513
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_independence_audit.py",
+      "category": "existing-source-connection-only",
+      "bytes": 3409
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_integrated_research.py",
+      "category": "existing-source-connection-only",
+      "bytes": 16067
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_jra_margin_audit.py",
+      "category": "existing-source-connection-only",
+      "bytes": 4032
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_migrate_full_snapshots.py",
+      "category": "existing-source-connection-only",
+      "bytes": 6631
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_nar_csv_coverage.py",
+      "category": "existing-source-connection-only",
+      "bytes": 7248
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_official_input_acceptance.py",
+      "category": "existing-source-connection-only",
+      "bytes": 9754
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_preoff_history_rescue.py",
+      "category": "existing-source-connection-only",
+      "bytes": 4011
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_protect_sync.py",
+      "category": "existing-source-connection-only",
+      "bytes": 21383
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_restore_result_day.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1305
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_sectional_fix_measurement.py",
+      "category": "existing-source-connection-only",
+      "bytes": 2237
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_select_prefetch_repairs.py",
+      "category": "existing-source-connection-only",
+      "bytes": 10631
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_sync_batches.py",
+      "category": "existing-source-connection-only",
+      "bytes": 8528
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_verified_holdout.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1467
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_verify_history_bundle.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1572
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_verify_persisted_inputs.py",
+      "category": "existing-source-connection-only",
+      "bytes": 1498
+    },
+    {
+      "status": "M",
+      "path": "scripts/arvexq_wait_runtime.py",
+      "category": "existing-source-connection-only",
+      "bytes": 902
+    },
+    {
+      "status": "M",
+      "path": "workers/api.mjs",
+      "category": "existing-source-connection-only",
+      "bytes": 2397
+    },
+    {
+      "status": "M",
+      "path": "workers/web.mjs",
+      "category": "existing-source-connection-only",
+      "bytes": 3139
+    }
+  ],
+  "note": "前2段階は箱識別・定義・参照資料のみ。PR #374のコードは取り込まない。"
+}

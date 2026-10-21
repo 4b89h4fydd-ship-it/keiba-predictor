@@ -1,0 +1,21 @@
+{
+  "id": 58,
+  "name": "未来結果混入防止",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/ui/static/history/temporal.js"
+  ],
+  "shared_dependencies": [
+    "arvexq.ui.assets.read_asset; legacy static asset kept byte-identical"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

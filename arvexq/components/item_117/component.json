@@ -1,0 +1,17 @@
+{
+  "id": 117,
+  "name": "◎【単】判定",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": true,
+  "state": "box-only-unconnected",
+  "existing_sources": [],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

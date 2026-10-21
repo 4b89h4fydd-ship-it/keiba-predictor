@@ -10,11 +10,11 @@ Two independent questions are answered here and must never be conflated:
 
 ``data_limitation == 'complete'`` therefore requires both.
 """
-from arvexq.career_analysis import analyze_career
-from arvexq.history import normalize_run
-from arvexq.ingest.full_career import merge_career, date_key
+from arvexq.components.item_057.career_analysis import analyze_career
+from arvexq.components.item_182.history import normalize_run
+from arvexq.components.item_057.full_career import merge_career, date_key
 from arvexq.prediction.past_performance import observed_runs, _date, _number
-from arvexq.ingest.career_transport import recover_horse
+from arvexq.components.item_057.career_transport import recover_horse
 
 KEYS = ('recentRaces', 'allPastRuns', 'pastRaces', 'history', 'runs')
 AUDIT_VERSION = 'arvexq-career-coverage-v1'

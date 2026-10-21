@@ -1,0 +1,44 @@
+{
+  "id": 75,
+  "name": "コーナー通過順位取得",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/corner_order.py::<module>",
+    "arvexq/ingest/corner_order.py::_top_level_tokens",
+    "arvexq/ingest/corner_order.py::parse_corner_order"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/corner_order.py::<module>",
+    "arvexq/ingest/corner_order.py::_top_level_tokens",
+    "arvexq/ingest/corner_order.py::parse_corner_order"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [],
+  "missing_old_references": [
+    {
+      "item": 75,
+      "reference": "arvexq/v3/data/result_facts.py",
+      "reason": "最新mainに対象コードファイルなし"
+    }
+  ],
+  "caller_files": [
+    "app.py",
+    "tests/test_corner_order.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/field_normalization.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/ingest/corner_order.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/corner_order.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

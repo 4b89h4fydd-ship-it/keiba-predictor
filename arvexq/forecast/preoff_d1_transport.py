@@ -12,7 +12,7 @@ import os
 import base64
 import gzip
 
-from arvexq.forecast.preoff_evidence_store import canonical, read_capture
+from arvexq.components.item_125.preoff_evidence_store import canonical, read_capture
 
 DEFAULT_ENDPOINT = "https://kraiz-api.4b89h4fydd.workers.dev/api/research/preoff-evidence"
 

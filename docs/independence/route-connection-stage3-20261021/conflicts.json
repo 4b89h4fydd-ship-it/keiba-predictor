@@ -1,0 +1,393 @@
+{
+  "focused_pr_blocked_paths": {
+    "arvexq/prediction/forecast_revisions.py": [
+      366
+    ],
+    "arvexq/prediction/new_forecast.py": [
+      366
+    ],
+    "scripts/arvexq_apply_learned_overlay.py": [
+      366
+    ],
+    "scripts/arvexq_capture_batch_research.py": [
+      366
+    ],
+    "scripts/arvexq_capture_preoff_research.py": [
+      366
+    ],
+    "scripts/arvexq_rebuild_saved_forecasts.py": [
+      366
+    ],
+    "tests/test_capture_batch_research.py": [
+      366
+    ],
+    "tests/test_capture_preoff_research.py": [
+      366
+    ],
+    "tests/test_forecast_revisions.py": [
+      366
+    ],
+    "tests/test_learned_forecast_overlay.py": [
+      366
+    ],
+    "tests/test_learned_scenarios.py": [
+      366
+    ],
+    "tests/test_new_forecast_candidate.py": [
+      366
+    ],
+    "tests/test_new_forecast_one_honmei.py": [
+      366
+    ],
+    "tests/test_rebuild_saved_forecasts.py": [
+      366
+    ],
+    "tests/test_research_capture_isolation.py": [
+      366
+    ],
+    "app.py": [
+      368,
+      369,
+      155,
+      213,
+      271,
+      128
+    ],
+    "arvexq/databanks/legacy_bridge.py": [
+      368
+    ],
+    "arvexq/databanks/nar_official_csv.py": [
+      368
+    ],
+    "arvexq/databanks/netkeiba_career.py": [
+      368
+    ],
+    "arvexq/infra/legacy_stores.py": [
+      368
+    ],
+    "arvexq/prediction/career_readiness.py": [
+      368
+    ],
+    "arvexq/ui/static/app.js": [
+      368,
+      213,
+      112
+    ],
+    "scripts/arvexq_prefetch.py": [
+      368
+    ],
+    "scripts/arvexq_race_source_integrity_smoke.js": [
+      368,
+      112
+    ],
+    "tests/test_career_readiness.py": [
+      368
+    ],
+    "tests/test_career_totals_evidence.py": [
+      368
+    ],
+    "tests/test_nar_full_career_batch.py": [
+      368
+    ],
+    "tests/test_nar_threadsafe_adapters.py": [
+      368
+    ],
+    "tests/test_prefetch_racecard_delivery.py": [
+      368
+    ],
+    "tests/test_verified_career_prefetch.py": [
+      368
+    ],
+    "arvexq/ingest/d1_day_readback.py": [
+      369
+    ],
+    "arvexq/quality/fact_audit.py": [
+      369
+    ],
+    "scripts/arvexq_fact_data_audit.py": [
+      369
+    ],
+    "scripts/arvexq_live_sync.py": [
+      369
+    ],
+    "tests/test_factual_data_audit.py": [
+      369
+    ],
+    "tests/test_result_stalled_regressions.py": [
+      369
+    ],
+    "arvexq/forecast/marks.py": [
+      329
+    ],
+    "arvexq/forecast/tickets.py": [
+      330
+    ],
+    "arvexq/prediction/observed_model.py": [
+      213
+    ],
+    "build_static.py": [
+      213
+    ],
+    "scripts/arvexq_capture_jra_6040_smoke.js": [
+      213
+    ],
+    "scripts/arvexq_capture_nar_6040_smoke.js": [
+      213
+    ],
+    "scripts/arvexq_live_mark_refresh_smoke.js": [
+      213,
+      112
+    ],
+    "scripts/arvexq_optional_star_smoke.js": [
+      213,
+      112
+    ],
+    "tests/test_prepost_mark_consistency.py": [
+      213,
+      112
+    ],
+    "tests/test_prerace_partial_career.py": [
+      213
+    ],
+    "tests/test_static_asset_cache.py": [
+      213
+    ],
+    "arvexq/prediction/final_marks.py": [
+      122,
+      119,
+      112
+    ],
+    "scripts/arvexq_capture_prerace_bet.js": [
+      121,
+      112
+    ],
+    "tests/test_horse_brand_assets.py": [
+      119
+    ],
+    "arvexq/prediction/career_profile.py": [
+      112
+    ],
+    "arvexq/prediction/mass_prerace_bridge.py": [
+      112
+    ],
+    "arvexq/prediction/mass_training_store.py": [
+      112
+    ],
+    "arvexq/prediction/past_performance.py": [
+      112
+    ],
+    "arvexq/research/preoff_coverage_audit.py": [
+      112
+    ],
+    "arvexq/ui/static/morning/ticket_lane_classifier.js": [
+      112
+    ],
+    "scripts/arvexq_empirical_selection_smoke.js": [
+      112
+    ],
+    "scripts/arvexq_empirical_ticket_calibration.py": [
+      112
+    ],
+    "scripts/arvexq_morning_selection_cut_smoke.js": [
+      112
+    ],
+    "scripts/arvexq_retired_ticket_ui_smoke.js": [
+      112
+    ],
+    "scripts/check_mass_training_store.py": [
+      112
+    ],
+    "tests/test_current_horse_detail_factors.py": [
+      112
+    ],
+    "tests/test_empirical_ticket_calibration.py": [
+      112
+    ],
+    "tests/test_full_career.py": [
+      112
+    ],
+    "tests/test_mass_feature_transport.py": [
+      112
+    ],
+    "tests/test_observed_metrics_normalization.py": [
+      112
+    ],
+    "tests/test_optional_star_marks.py": [
+      112
+    ],
+    "tests/test_past_performance.py": [
+      112
+    ],
+    "tests/test_preoff_coverage_audit.py": [
+      112
+    ],
+    "tests/test_preoff_loading_marks.py": [
+      112
+    ],
+    "tests/test_prerace_archive.py": [
+      112
+    ],
+    "tests/test_removed_legacy_detail_panel.py": [
+      112
+    ],
+    "tests/test_retired_sameday_correction_v313.py": [
+      112
+    ],
+    "tests/test_retired_v207_winner_model.py": [
+      112
+    ],
+    "tests/test_retired_v312_rescue.py": [
+      112
+    ],
+    "tests/test_retired_v317_helpers.py": [
+      112
+    ],
+    "tests/test_sectional_storage_roundtrip.py": [
+      112
+    ],
+    "tests/test_upstream_sectional_casing.py": [
+      112
+    ]
+  },
+  "focused_pr_blocked_app_definitions": {
+    "_precompute_detail_metrics": [
+      368
+    ],
+    "_nar_attach_recent_batch": [
+      368
+    ],
+    "nar_race_detail": [
+      368
+    ],
+    "_apply_enrichment": [
+      368,
+      271
+    ],
+    "_verified_debut_no_history": [
+      368
+    ],
+    "_netkeiba_current_result": [
+      369
+    ],
+    "_nar_official_result_fast": [
+      369,
+      155
+    ],
+    "_jra_parse_race_summary": [
+      271
+    ],
+    "_jra_parse_result": [
+      271
+    ],
+    "_start_enrichment": [
+      271
+    ],
+    "central_race_detail": [
+      271
+    ],
+    "_compact_display_snapshot": [
+      271
+    ],
+    "_enrichment_status": [
+      271
+    ],
+    "_prediction_clock_state": [
+      271
+    ],
+    "_v312_base_winner_weights": [
+      271
+    ],
+    "_jra_fetch_environment": [
+      271
+    ],
+    "_merge_enrichment": [
+      271
+    ],
+    "_prediction_audit_from_lock": [
+      271
+    ],
+    "_netkeiba_race_meta": [
+      271
+    ],
+    "_learning_races": [
+      271
+    ],
+    "_environment_cycle": [
+      271
+    ],
+    "_attach_prerace_audit": [
+      271
+    ],
+    "_nar_fetch_environment": [
+      271
+    ],
+    "_patch_central_environment": [
+      271
+    ],
+    "_v312_method": [
+      271
+    ],
+    "_start_environment_collector": [
+      271
+    ],
+    "_environment_http_get": [
+      271
+    ],
+    "_smart_normalize_row": [
+      271
+    ],
+    "_winner_learning_profile": [
+      271
+    ],
+    "_learning_metric": [
+      271
+    ],
+    "_race_should_have_result": [
+      271
+    ],
+    "_extract_smartrc_embedded": [
+      271
+    ],
+    "_learning_probability": [
+      271
+    ],
+    "_fetch_smartrc": [
+      271
+    ],
+    "_upcoming_rows": [
+      271
+    ],
+    "_environment_loop": [
+      271
+    ],
+    "_patch_nar_environment": [
+      271
+    ],
+    "_schedule_track_environment": [
+      271
+    ],
+    "_fetch_extra_sources": [
+      271
+    ],
+    "_learning_paired_top1": [
+      271
+    ],
+    "_refresh_track_environment": [
+      271
+    ],
+    "_download_nar_month_only": [
+      128
+    ]
+  },
+  "historical_structural_prs": [
+    13,
+    14,
+    16,
+    367,
+    373,
+    374,
+    375,
+    376
+  ],
+  "policy": "個別PRで変更される元モジュール/関数は接続保留。過去の構造/隔離案は取り込まず、既存枝を上書きしない。同じ原ファイルの構造案との統合競合は別途残る。"
+}

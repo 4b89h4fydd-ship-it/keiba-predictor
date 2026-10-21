@@ -1,0 +1,1090 @@
+{
+  "files": [
+    {
+      "path": "arvexq/components/item_001/connection.json",
+      "sha256": "e9eb8cb9267339f98ced55ee5dfb7ffbba91c5cb40f4f44fd346bc97037bb06e",
+      "bytes": 5264
+    },
+    {
+      "path": "arvexq/components/item_002/connection.json",
+      "sha256": "a3bf2b4ff801a3f3b14c0b0e8d12513c8714edef656dcbbecf64a2bb3836b7dc",
+      "bytes": 2065
+    },
+    {
+      "path": "arvexq/components/item_003/connection.json",
+      "sha256": "4ef914bafd2eb834d847fd5f1eb07d34648f8445a7d1fae5f9e06f85785150fe",
+      "bytes": 1136
+    },
+    {
+      "path": "arvexq/components/item_004/connection.json",
+      "sha256": "832f74746f6eec5c9ba6f667850ec273a7539e0b9a24285c8d420864338a8a0c",
+      "bytes": 1113
+    },
+    {
+      "path": "arvexq/components/item_005/connection.json",
+      "sha256": "d3d0c7e05b59fe6fa36ec47108f7f6d9afd2f03af92e4637b582e018842a9a37",
+      "bytes": 1134
+    },
+    {
+      "path": "arvexq/components/item_006/connection.json",
+      "sha256": "48bb8b1bb5bfd59ec899d774296f6cd55b049d5bb709f9ca48e672e30cd6c4cd",
+      "bytes": 1140
+    },
+    {
+      "path": "arvexq/components/item_007/connection.json",
+      "sha256": "c2f041463864a7681ece6d6847ab0bf4cb87e51594e799951db4daf61cf75ebe",
+      "bytes": 1162
+    },
+    {
+      "path": "arvexq/components/item_008/connection.json",
+      "sha256": "0065f389646177c388904da360cafb8928cc42ea0eac4fd14026904aeee91e8d",
+      "bytes": 1611
+    },
+    {
+      "path": "arvexq/components/item_009/connection.json",
+      "sha256": "c0c5752a10248f5156062cccc812f412ebd429c0e96e93f97e7cdc5b5e880f99",
+      "bytes": 1581
+    },
+    {
+      "path": "arvexq/components/item_010/connection.json",
+      "sha256": "4180780ca79df9c35bf25038a42ec83f0464f27929350ba62926f37910589fb4",
+      "bytes": 2127
+    },
+    {
+      "path": "arvexq/components/item_011/connection.json",
+      "sha256": "a1737cbe9ab99dc2cfcba9a128519ab7d6d0f41a16f87e92b73d2688de92c44b",
+      "bytes": 1110
+    },
+    {
+      "path": "arvexq/components/item_012/connection.json",
+      "sha256": "7c587f0764fdfa1a98f3af9de2a01211c5f7001ad09b3a76552e5856b9d8fbf9",
+      "bytes": 1074
+    },
+    {
+      "path": "arvexq/components/item_013/connection.json",
+      "sha256": "0f9b533293407baab1d152ecd728c559ef77e237f21f40b4cfee46f342d6580c",
+      "bytes": 1099
+    },
+    {
+      "path": "arvexq/components/item_014/connection.json",
+      "sha256": "cf17a9a119a3a9adead8ead6ff471b1119d07ef3ca8ea5f9fcafb20c1f21c281",
+      "bytes": 1948
+    },
+    {
+      "path": "arvexq/components/item_015/connection.json",
+      "sha256": "b8af28efc68442301764d3310248569b9442766f134beb5d567425abf1d57a6b",
+      "bytes": 1093
+    },
+    {
+      "path": "arvexq/components/item_016/connection.json",
+      "sha256": "f1658ef5197683a2f90ede624d1bc95285cf4229b342a9b20a2cb0114973a623",
+      "bytes": 1072
+    },
+    {
+      "path": "arvexq/components/item_017/connection.json",
+      "sha256": "0484b26d17d1ca9c885fd65df2317915a73e84328a02388f0c3d5b58c54feda3",
+      "bytes": 2452
+    },
+    {
+      "path": "arvexq/components/item_018/connection.json",
+      "sha256": "6a9c8db46e0cc344e1a6e6354126578a62ee76ce7903b52eb4d52f17edc3ab4c",
+      "bytes": 1089
+    },
+    {
+      "path": "arvexq/components/item_019/connection.json",
+      "sha256": "cf562653e5be09ecd2983ea69a044613200488604a10a92778d9ff38204700af",
+      "bytes": 1087
+    },
+    {
+      "path": "arvexq/components/item_020/connection.json",
+      "sha256": "2033a5c0f67a81ecd80ebf9fe230b50a8ba9f53776875c690bdc1b1e638332a9",
+      "bytes": 9552
+    },
+    {
+      "path": "arvexq/components/item_021/connection.json",
+      "sha256": "475935cdefe6aefd2c99ab87a24fffff4d48a87bb540c7f8d29bba22b8b50798",
+      "bytes": 4604
+    },
+    {
+      "path": "arvexq/components/item_022/connection.json",
+      "sha256": "0abce3ef9811a5bed0ac9c4c5da83c9a4dc1638b45f4d9cd7332097a46ada382",
+      "bytes": 6164
+    },
+    {
+      "path": "arvexq/components/item_023/connection.json",
+      "sha256": "56ef2dcb502c6415afaa051b98f4ed10c22ea833eefb1ed320ada3b6f716b981",
+      "bytes": 1557
+    },
+    {
+      "path": "arvexq/components/item_024/connection.json",
+      "sha256": "374560f1434e657a9b7d4254ad1033a7b84088795cc79f49a250aa4ab62dd663",
+      "bytes": 2036
+    },
+    {
+      "path": "arvexq/components/item_025/connection.json",
+      "sha256": "7abc9a69dbe69bedf239cbeb844a5e2640c6ed13906d61e5a7b8d5815ffd1b93",
+      "bytes": 2083
+    },
+    {
+      "path": "arvexq/components/item_026/connection.json",
+      "sha256": "73c3f76ad3d020a589a3d1a9b7139da3df0c87ca4c7b059ce7f054e8b72aa88e",
+      "bytes": 1985
+    },
+    {
+      "path": "arvexq/components/item_027/connection.json",
+      "sha256": "a48b2f5641aa2902e496415d0b4d3797b2826a3c257b20f5d2f3fa24342f02ef",
+      "bytes": 1085
+    },
+    {
+      "path": "arvexq/components/item_028/connection.json",
+      "sha256": "e86b671118a1eec300b3ecfb3570f8909b9b6a2b026b3d4d3cea265ba9a5ba8f",
+      "bytes": 1528
+    },
+    {
+      "path": "arvexq/components/item_029/connection.json",
+      "sha256": "33796d5e50fa2e4697ad455bdedc93ab37f549ac6f267b58d04a996bee55451c",
+      "bytes": 1082
+    },
+    {
+      "path": "arvexq/components/item_030/connection.json",
+      "sha256": "44de32727585a0f8a9cb7f262ae727bf4058fe2213b9f706209933fdadb19814",
+      "bytes": 1615
+    },
+    {
+      "path": "arvexq/components/item_031/connection.json",
+      "sha256": "d79e8c4da6d43ff773e09c33a2eb8a3e28df22b650b3f2e83b4b0d11e0078d5c",
+      "bytes": 1091
+    },
+    {
+      "path": "arvexq/components/item_032/connection.json",
+      "sha256": "23e7ff7410242eae5e20772e84ac41ead4ca17889ca4bc83de74ebc520920232",
+      "bytes": 1097
+    },
+    {
+      "path": "arvexq/components/item_033/connection.json",
+      "sha256": "3c0f7a5981277916e4bbfda6c8cf0321d0f34d86008b2f426de271fb248c1d6d",
+      "bytes": 1549
+    },
+    {
+      "path": "arvexq/components/item_034/connection.json",
+      "sha256": "dd842465cb6dbab9182f02e58e1fc92df494a2237fc318ea0088ca9f0b46403d",
+      "bytes": 3002
+    },
+    {
+      "path": "arvexq/components/item_035/connection.json",
+      "sha256": "8e69a120d50cc05a20737f544640548205eee73e3215993120755e7733cb18e9",
+      "bytes": 1629
+    },
+    {
+      "path": "arvexq/components/item_036/connection.json",
+      "sha256": "f3febae4404a44b79e451daecb5a669ff5aa492aa8b41ebca54fb262680e32fd",
+      "bytes": 13447
+    },
+    {
+      "path": "arvexq/components/item_037/connection.json",
+      "sha256": "442ab4e3d7128170e81f42da1a98bf9dc7b84fa0fac7f17dccc664c8545c569b",
+      "bytes": 12040
+    },
+    {
+      "path": "arvexq/components/item_038/connection.json",
+      "sha256": "fa5f5d5add3f371dac65b665d3b4bb07a36de8c75702ee0bff0ac0209c7c1558",
+      "bytes": 3839
+    },
+    {
+      "path": "arvexq/components/item_039/connection.json",
+      "sha256": "b182f81848f0ea2a3ecdd9f48a89a582272437096e9a98ba8f2484dd816387ca",
+      "bytes": 1994
+    },
+    {
+      "path": "arvexq/components/item_040/connection.json",
+      "sha256": "06eacc2a2111fdb34c8700abe4b5375eae2a3abd25553293e81c504be941b859",
+      "bytes": 14062
+    },
+    {
+      "path": "arvexq/components/item_041/connection.json",
+      "sha256": "5d785897f99b88cfd2adf8f678ea01e0e333a246fa5b8b126d55e328f51e4b5d",
+      "bytes": 8261
+    },
+    {
+      "path": "arvexq/components/item_042/connection.json",
+      "sha256": "8d7698ffb176f668811c9ba9832372841f76b75e08f05a6520d7d3634b01ddf2",
+      "bytes": 2502
+    },
+    {
+      "path": "arvexq/components/item_043/connection.json",
+      "sha256": "00b1b6c478b6c995f712db20340ddc2874108d08429fceeab0add8a266bbb828",
+      "bytes": 1103
+    },
+    {
+      "path": "arvexq/components/item_044/connection.json",
+      "sha256": "0a27fc7e7ea131c5cead4d111f3c7cd9337f769ea8e8e41699b1d9d6d6efc4a5",
+      "bytes": 1574
+    },
+    {
+      "path": "arvexq/components/item_045/connection.json",
+      "sha256": "504820a53f73eb9643d6253bb63963db48d21287b3e21dc163ffa042dd8c6f9f",
+      "bytes": 1107
+    },
+    {
+      "path": "arvexq/components/item_046/connection.json",
+      "sha256": "63cb978e5465dcdc9e36e0865463ec0aec8319775a7e934344b331e71a3ad9f6",
+      "bytes": 1104
+    },
+    {
+      "path": "arvexq/components/item_047/connection.json",
+      "sha256": "dd7b69b94d927edbbedca65d97e7deef792e9aa3e63d7267f7e5dd3b73272ad3",
+      "bytes": 1105
+    },
+    {
+      "path": "arvexq/components/item_048/connection.json",
+      "sha256": "32f9fc39aab4f2090eb64408a71d1b716f0974a81176b2dfce58a052729dc7bc",
+      "bytes": 1121
+    },
+    {
+      "path": "arvexq/components/item_049/connection.json",
+      "sha256": "b4f85f4263c188a1fe7f597287329f782f14ac4184345f3585625c6482eca3a8",
+      "bytes": 1121
+    },
+    {
+      "path": "arvexq/components/item_050/connection.json",
+      "sha256": "b2d5ee4abcfcc416cc1fd4a046fb5bd676565d783f9c4d00f1708d716b89998a",
+      "bytes": 1115
+    },
+    {
+      "path": "arvexq/components/item_051/connection.json",
+      "sha256": "684537fc9305b5a936f38a324b13cad2b8fc0dbc8cdf48f2f409dc159e28cae3",
+      "bytes": 1130
+    },
+    {
+      "path": "arvexq/components/item_052/connection.json",
+      "sha256": "10a6eca6b52dfae405713d635074e58443e51a80db7a1ccac06bebec022e3e7f",
+      "bytes": 1137
+    },
+    {
+      "path": "arvexq/components/item_053/connection.json",
+      "sha256": "986243016e2110861a8c48d8fc4c86565782a423013ba8a1d0d083b55841c0ed",
+      "bytes": 1105
+    },
+    {
+      "path": "arvexq/components/item_054/connection.json",
+      "sha256": "af0ec9ebcd7604b7fff9271c384492580df039a59d7b11afe2d1d3d3caa0ccc5",
+      "bytes": 1127
+    },
+    {
+      "path": "arvexq/components/item_055/connection.json",
+      "sha256": "1989f4e5386aa22c0b7ea7af925e0242eaba9ae38f9021c5bca039a0ad6527b3",
+      "bytes": 2055
+    },
+    {
+      "path": "arvexq/components/item_056/connection.json",
+      "sha256": "fa4227fdb4e3b402906d39b1ac9e8cd86fd90ecb3f730869963b755c6ea5b585",
+      "bytes": 1132
+    },
+    {
+      "path": "arvexq/components/item_057/connection.json",
+      "sha256": "0493a2a074ca80fa2eee76642cfa8b368a6ce73f44cd172d2ca3b97a6a8387d8",
+      "bytes": 19965
+    },
+    {
+      "path": "arvexq/components/item_058/connection.json",
+      "sha256": "4e27ee3f7bc6c67fac8e782b14a73ad0563ff7a68102c75881299094f60a02c9",
+      "bytes": 1056
+    },
+    {
+      "path": "arvexq/components/item_059/connection.json",
+      "sha256": "ada0c452e3e4f3408f3992456bb2555fcabdb0624d68612eba80fbc02055a384",
+      "bytes": 1106
+    },
+    {
+      "path": "arvexq/components/item_060/connection.json",
+      "sha256": "13ec43625a3c58c9a53bd3c344f94f5076a11f08761afcde5a1ea0445de273aa",
+      "bytes": 1090
+    },
+    {
+      "path": "arvexq/components/item_061/connection.json",
+      "sha256": "3466fbeac7f2556d6b2bb82ac67d39e771e729c5793ee54e437f0bcb34cd592a",
+      "bytes": 1109
+    },
+    {
+      "path": "arvexq/components/item_062/connection.json",
+      "sha256": "f0639ed0a6789c0a166b0454d5eca915b20d0e8fd609240a58d0dedee21275eb",
+      "bytes": 1112
+    },
+    {
+      "path": "arvexq/components/item_063/connection.json",
+      "sha256": "443fc5d38268827b0d6d6bcb12f5e84ad99e60bc6abf931dbe8fd5c7f1c871ce",
+      "bytes": 1147
+    },
+    {
+      "path": "arvexq/components/item_064/connection.json",
+      "sha256": "33afa799bd62486875cc0020ba60b9573c7d94a76130b4b3f49ced5435bce7ff",
+      "bytes": 2187
+    },
+    {
+      "path": "arvexq/components/item_065/connection.json",
+      "sha256": "48a856095237062b2028ec9d1a8661adfe20c2e5960129d6919570f62ad1e81e",
+      "bytes": 1195
+    },
+    {
+      "path": "arvexq/components/item_066/connection.json",
+      "sha256": "eba1b3e8cbfb0117e15c4ea254c6f2c68494878a283e3d696b365f96f45f6e18",
+      "bytes": 1186
+    },
+    {
+      "path": "arvexq/components/item_067/connection.json",
+      "sha256": "5a213a2ee5a565154196286d310c218617b2c789b077ce8a17ad1f2a849c6d2c",
+      "bytes": 1544
+    },
+    {
+      "path": "arvexq/components/item_068/connection.json",
+      "sha256": "e16e52ef775421d5571de5f4382749446d911cc54bc34410b48f744dbb6b9f4e",
+      "bytes": 3012
+    },
+    {
+      "path": "arvexq/components/item_069/connection.json",
+      "sha256": "30dba7c2ae35bb9c23cde3e850ac038b3bac47daf398db1c4db1d82b00c35ea2",
+      "bytes": 1556
+    },
+    {
+      "path": "arvexq/components/item_070/connection.json",
+      "sha256": "3e37721d1a740d0778e11b811c242597ea01134ccae48808e19e40d10d3ddb3a",
+      "bytes": 1393
+    },
+    {
+      "path": "arvexq/components/item_071/connection.json",
+      "sha256": "dce87828af3384b19dc7fb74721dd633e69efafdb6e274ad26ae613ea240f72f",
+      "bytes": 1398
+    },
+    {
+      "path": "arvexq/components/item_072/connection.json",
+      "sha256": "31429041db28f2bb67a7c21f879d08d7c122ebe32944487565531c32bafbbc4b",
+      "bytes": 1399
+    },
+    {
+      "path": "arvexq/components/item_073/connection.json",
+      "sha256": "cd6c45e3597e920b23eae761374ffc736ad612c0bfc6d56728dcc3a272d4795f",
+      "bytes": 1569
+    },
+    {
+      "path": "arvexq/components/item_074/connection.json",
+      "sha256": "3d2f1a71bc35360a603648d7e6c0e45472210f38c95c7eb8ca5b9790cdb1ee26",
+      "bytes": 1123
+    },
+    {
+      "path": "arvexq/components/item_075/connection.json",
+      "sha256": "504f6cc644f1980673c971622da6511b1e95ebe1bc37383c0089444f42178aa0",
+      "bytes": 1552
+    },
+    {
+      "path": "arvexq/components/item_076/connection.json",
+      "sha256": "0e4feb066476f98742e4a52b0118d60713a6b6b7957506a84c0f17acad4b1fff",
+      "bytes": 1318
+    },
+    {
+      "path": "arvexq/components/item_077/connection.json",
+      "sha256": "19fc86f26541382abdf4cbcc7037fc9a0c18a3790cd378a89d00277c00e338e0",
+      "bytes": 1318
+    },
+    {
+      "path": "arvexq/components/item_078/connection.json",
+      "sha256": "be4e00013a2195634413b90cd1e76ea232f181a1ac54b52b8bde6461c2c1363e",
+      "bytes": 1318
+    },
+    {
+      "path": "arvexq/components/item_079/connection.json",
+      "sha256": "569c31d2cc5e131e395670caa221494c48a92c7774ea9b8b9d4f34254a1b0ef2",
+      "bytes": 1318
+    },
+    {
+      "path": "arvexq/components/item_080/connection.json",
+      "sha256": "d9fc6bcf9dde7eac61e442e9401afbb9c53f234c4c7b060441dae482c8c36e45",
+      "bytes": 1321
+    },
+    {
+      "path": "arvexq/components/item_081/connection.json",
+      "sha256": "a83f948aee3de713951ed751dae003ae5e379e7ca0d56cf3122530694a809f91",
+      "bytes": 1318
+    },
+    {
+      "path": "arvexq/components/item_082/connection.json",
+      "sha256": "976da3da58eb4772e251092d403cbce4f95a70a12376a55573f5bfede88e9b41",
+      "bytes": 1319
+    },
+    {
+      "path": "arvexq/components/item_083/connection.json",
+      "sha256": "0c4b44b78cad5d4e076cc1d352da98c4574acb04013c5e274c6596bed4015b33",
+      "bytes": 1319
+    },
+    {
+      "path": "arvexq/components/item_084/connection.json",
+      "sha256": "8b3fd3660b50dc40ada6781c78d6f9c5050f072550a273a58506c9f05be1f63d",
+      "bytes": 1574
+    },
+    {
+      "path": "arvexq/components/item_085/connection.json",
+      "sha256": "cfe55e5be50013855ada8e8da7f4d44ee63a34a6e1f7137a5a20148763ea2bed",
+      "bytes": 1692
+    },
+    {
+      "path": "arvexq/components/item_086/connection.json",
+      "sha256": "53aa090631524d627af7511ff44d224610de8b23d3a730b34dda77e4ebda9302",
+      "bytes": 2532
+    },
+    {
+      "path": "arvexq/components/item_087/connection.json",
+      "sha256": "f6ee71e92bd2d733dfd6b4c829f74c0b1411a23bd948b134937e4d3daf9b3b83",
+      "bytes": 4509
+    },
+    {
+      "path": "arvexq/components/item_088/connection.json",
+      "sha256": "cbf2dd6f677b15f870988440e89ca2c5e7f11960ed2a1faa84d327ffb858c121",
+      "bytes": 3563
+    },
+    {
+      "path": "arvexq/components/item_089/connection.json",
+      "sha256": "b580383de3094e6fa1f9a63fc93c2b1379a00ee5da4f2fe5d2d987d4aa700b51",
+      "bytes": 2457
+    },
+    {
+      "path": "arvexq/components/item_090/connection.json",
+      "sha256": "eabc8b2abca15271909ccf71072ff90b4008c0081db2d9739c47418f8b62a691",
+      "bytes": 2027
+    },
+    {
+      "path": "arvexq/components/item_091/connection.json",
+      "sha256": "30027f5ebb67dca9793fc177f39e80182917549c288924120518356b9012c46d",
+      "bytes": 2024
+    },
+    {
+      "path": "arvexq/components/item_092/connection.json",
+      "sha256": "cc0e101737456e5186ab2d0f67af87e366244344a56cff3d6551c4844ca3c959",
+      "bytes": 2027
+    },
+    {
+      "path": "arvexq/components/item_093/connection.json",
+      "sha256": "e17bfb7e84a995c8a2fb9c14d8a5e3323e6f7b6addd7f64540da7f1cbc1ebabf",
+      "bytes": 673
+    },
+    {
+      "path": "arvexq/components/item_094/connection.json",
+      "sha256": "8ea472a379a906a95871438ac28f13a2c847186f9b4ce4ad7579c40caa3f140a",
+      "bytes": 2024
+    },
+    {
+      "path": "arvexq/components/item_095/connection.json",
+      "sha256": "d69578436cdcbb2f984e0ed4dc818f59c9a6078d52e913d7ec0b494445cc03ca",
+      "bytes": 2424
+    },
+    {
+      "path": "arvexq/components/item_096/connection.json",
+      "sha256": "18c8abfea12abe296ca735960acaab792702fa095b4bd9cb12c0a47860f13bdc",
+      "bytes": 2240
+    },
+    {
+      "path": "arvexq/components/item_097/connection.json",
+      "sha256": "3a5fdf7169d0dc5d8d65ac6e2a63466d3c85033e99bcb7e308da44abf10d8dfb",
+      "bytes": 1949
+    },
+    {
+      "path": "arvexq/components/item_098/connection.json",
+      "sha256": "c1d8a8d8ecef1861d3a3ffd50b2573b5bb32c9012e8c303decda7f567635828b",
+      "bytes": 3239
+    },
+    {
+      "path": "arvexq/components/item_099/connection.json",
+      "sha256": "aac66b788cb7532edcf4da096ce02e8b2037b5390edbc5a25966b32b1c769800",
+      "bytes": 3239
+    },
+    {
+      "path": "arvexq/components/item_100/connection.json",
+      "sha256": "53c83c01e2aa7fd80641813a08b95c2d7dcc9a4a2c87a19df7092e3067497cf4",
+      "bytes": 3240
+    },
+    {
+      "path": "arvexq/components/item_101/connection.json",
+      "sha256": "b4a55552d153dacfbafc50eaa3a7736609efeba50fa270b3fecab201f93f734f",
+      "bytes": 3240
+    },
+    {
+      "path": "arvexq/components/item_102/connection.json",
+      "sha256": "0ba9b8681bc2952ecda96d56e6a93400f984e02bf6675c54610025439f5cfc8a",
+      "bytes": 1191
+    },
+    {
+      "path": "arvexq/components/item_103/connection.json",
+      "sha256": "42c161ae0e3bfcaeb198bc308631ed29dfc7f5dc45cfd12e801d0f6f5bdf16fc",
+      "bytes": 2706
+    },
+    {
+      "path": "arvexq/components/item_104/connection.json",
+      "sha256": "ff408a353a95703e193db4bd8c41fc66035edd1397f7c4aa2b74b2bf34334895",
+      "bytes": 2715
+    },
+    {
+      "path": "arvexq/components/item_105/connection.json",
+      "sha256": "7ec6bd265bbd7fd540ad1d0def8c1bacd343e10d1e223fd5138b83743cd609f0",
+      "bytes": 1203
+    },
+    {
+      "path": "arvexq/components/item_106/connection.json",
+      "sha256": "2bd8bcb1dafab259b1ea2d871ac62d3c950c497c52696c5018910c8abee42223",
+      "bytes": 1246
+    },
+    {
+      "path": "arvexq/components/item_107/connection.json",
+      "sha256": "33e36d2c45daa2a50d222508324903d19c1db941b155f72b997ff50f3cbd1c4a",
+      "bytes": 1287
+    },
+    {
+      "path": "arvexq/components/item_108/connection.json",
+      "sha256": "4e1942307f12c2d4259769d2c56a11ec2399846e33182f10f9d1c0536cf1a6ff",
+      "bytes": 1094
+    },
+    {
+      "path": "arvexq/components/item_109/connection.json",
+      "sha256": "7453101f61493ca7ce4d688b87d6f28175839849167468b9c5c6ee83092e8131",
+      "bytes": 3757
+    },
+    {
+      "path": "arvexq/components/item_110/connection.json",
+      "sha256": "7cbd0ac253e635c300821ae9ff598072a55b0612357680b12730333ae7f6dbbd",
+      "bytes": 6762
+    },
+    {
+      "path": "arvexq/components/item_111/connection.json",
+      "sha256": "b1509a34e64ca2c36d9bc8aac4a88101bcf3bf728d885c3a4614a84583fc70e0",
+      "bytes": 2599
+    },
+    {
+      "path": "arvexq/components/item_112/connection.json",
+      "sha256": "891428370d46802992f8c7f094efa283f5b50c8d40a36a6742014217818796ae",
+      "bytes": 654
+    },
+    {
+      "path": "arvexq/components/item_113/connection.json",
+      "sha256": "7193eb9bc418906cc75a0d55e3d7bcd2713d01dea6d38d6359fe9ea3642a4358",
+      "bytes": 1308
+    },
+    {
+      "path": "arvexq/components/item_114/connection.json",
+      "sha256": "f30800f95ca51b16c21369c91cdb8422764944f31e7906643ac129db0ce1fcf0",
+      "bytes": 624
+    },
+    {
+      "path": "arvexq/components/item_115/connection.json",
+      "sha256": "2599bbe19500b60a621c13e5a5857cf24569a3a7c631079d4d3a7f6806fbdb7b",
+      "bytes": 1154
+    },
+    {
+      "path": "arvexq/components/item_116/connection.json",
+      "sha256": "587d1f11f57c9e04dbe0b14ac9c11e65435b1abcd2368be1c281a3d19f9f0602",
+      "bytes": 623
+    },
+    {
+      "path": "arvexq/components/item_117/connection.json",
+      "sha256": "d47589aec46f859adb95bd5f12c77dc8dbc79c69fe5900a5a57c3b8dedf4512a",
+      "bytes": 612
+    },
+    {
+      "path": "arvexq/components/item_118/connection.json",
+      "sha256": "c1947963c4b20b571d4a26ad130a07fa9e6d9b5f1fbae014825fc6d96c9f41af",
+      "bytes": 612
+    },
+    {
+      "path": "arvexq/components/item_119/connection.json",
+      "sha256": "3eb0613ab0bb12957802df442a1bb0dccc91a74c727ee1d26f468b31612616ca",
+      "bytes": 618
+    },
+    {
+      "path": "arvexq/components/item_120/connection.json",
+      "sha256": "72a059bec26af8d4c3799f64a19b1df286ae1ed54c60b21b32cbc4c4588d0eb2",
+      "bytes": 599
+    },
+    {
+      "path": "arvexq/components/item_121/connection.json",
+      "sha256": "a9d740bb5a32b8c4419d6c082d5a8dfe88ca21e74468e3827cd82dc888a552e5",
+      "bytes": 1049
+    },
+    {
+      "path": "arvexq/components/item_122/connection.json",
+      "sha256": "e3b7dcfcf20e651d49217b5d7f29f7e80532827d9a92ca61659a4207a7f36410",
+      "bytes": 690
+    },
+    {
+      "path": "arvexq/components/item_123/connection.json",
+      "sha256": "7b3db39dcaa8ab3be9895271f496a8429d17a3e89022f1b6edb4fcdda700664e",
+      "bytes": 670
+    },
+    {
+      "path": "arvexq/components/item_124/connection.json",
+      "sha256": "9207721427d9e1ce55b63c5943daa422c53d8ce12c6aec53f169afe7d0111baf",
+      "bytes": 665
+    },
+    {
+      "path": "arvexq/components/item_125/connection.json",
+      "sha256": "d964240b0a924abd772e5214e97a437fa2a0cf9a7ae85f65fb7e338e03347da1",
+      "bytes": 4546
+    },
+    {
+      "path": "arvexq/components/item_126/connection.json",
+      "sha256": "06ffeb3155ed08ffd7d8dc5f27fbb73d1ed9d366cfa4afec9a4ab3b9d62ff41b",
+      "bytes": 1460
+    },
+    {
+      "path": "arvexq/components/item_127/connection.json",
+      "sha256": "bb200053d37b2e3c176113cea218667caadccf86d1d2929af19e2b7c6540a4e8",
+      "bytes": 1598
+    },
+    {
+      "path": "arvexq/components/item_128/connection.json",
+      "sha256": "dec6af57a70afd293b1136dcd3dcb37f346c2ec9688d4f3bdb3ee2cffe1345c6",
+      "bytes": 1162
+    },
+    {
+      "path": "arvexq/components/item_129/connection.json",
+      "sha256": "aecacb3f14914285dde3014371021a35cc76f82f1bc54caa5ca23313fbff503f",
+      "bytes": 5155
+    },
+    {
+      "path": "arvexq/components/item_130/connection.json",
+      "sha256": "2cc5751ca9e71380529b68100ef80271de8a88cb95b34f72079ca255cb7cfd7f",
+      "bytes": 1657
+    },
+    {
+      "path": "arvexq/components/item_131/connection.json",
+      "sha256": "72b444d0690f229371fecb2e61e445b9c397a76fddd6581cdab8b0663352cc60",
+      "bytes": 1142
+    },
+    {
+      "path": "arvexq/components/item_132/connection.json",
+      "sha256": "2a9c65807d717a049976a1c6f6355e395e1e90576c3a784c1b2074f365bf5cf3",
+      "bytes": 1154
+    },
+    {
+      "path": "arvexq/components/item_133/connection.json",
+      "sha256": "358fbbf92ca63609320afe0bdead1d022aba67bdf5bc8a852b8fef062990c792",
+      "bytes": 2214
+    },
+    {
+      "path": "arvexq/components/item_134/connection.json",
+      "sha256": "dfc11af6c830478e9f6d9bd8e02d1d3674e6654bfe1df846b58749acb9ccd212",
+      "bytes": 638
+    },
+    {
+      "path": "arvexq/components/item_135/connection.json",
+      "sha256": "6742110abc639e64601bf3f0acc6425be7275efd4c8cb81714b47ff9872e7dd3",
+      "bytes": 888
+    },
+    {
+      "path": "arvexq/components/item_136/connection.json",
+      "sha256": "d7da458599d5c225c24dc3699c43409ca0444e04cdd877e166028bab7ac797da",
+      "bytes": 1187
+    },
+    {
+      "path": "arvexq/components/item_137/connection.json",
+      "sha256": "189c54e8f4cd533743e2637622dcb33d1fbb76663ca1d36e6561ec5891d0b790",
+      "bytes": 623
+    },
+    {
+      "path": "arvexq/components/item_138/connection.json",
+      "sha256": "34de4f15de416001937fb0b60b351a1dcde2b8935463ffcd247d1d0bd768142a",
+      "bytes": 4139
+    },
+    {
+      "path": "arvexq/components/item_139/connection.json",
+      "sha256": "39201edc0c6d3f3b2bb8c7774745ea8d485f05939c4ed42a431c063f0994b012",
+      "bytes": 1439
+    },
+    {
+      "path": "arvexq/components/item_140/connection.json",
+      "sha256": "2106949ef9b3471a87d76a7df44a387e28a8ea916a6c5f4c637fa95d649df7a9",
+      "bytes": 2084
+    },
+    {
+      "path": "arvexq/components/item_141/connection.json",
+      "sha256": "85e97f325b3d3f9e598e8b0c3f9a4fdae376abab44216b0046371587bb7bd171",
+      "bytes": 8000
+    },
+    {
+      "path": "arvexq/components/item_142/connection.json",
+      "sha256": "8ddff6ca65e307f4b695675a1a80fc6fe2a68ef40b753f74127af75e6b56a551",
+      "bytes": 2251
+    },
+    {
+      "path": "arvexq/components/item_143/connection.json",
+      "sha256": "5672fb964a20b0f3ffed56c797fffb72924196b65222e75e0beb5e4a7e76edaa",
+      "bytes": 675
+    },
+    {
+      "path": "arvexq/components/item_144/connection.json",
+      "sha256": "7d4ffe39518ae7767cf4122b7c62627ed369c9e8dbeadd8e187daea8ee683afb",
+      "bytes": 675
+    },
+    {
+      "path": "arvexq/components/item_145/connection.json",
+      "sha256": "fcab0e80bd3a505dac50fd55bcb088c82a33ae0c117e6c7b03f2e8a5267445d5",
+      "bytes": 1069
+    },
+    {
+      "path": "arvexq/components/item_146/connection.json",
+      "sha256": "b1f81c32ad9f48cfa33fb8094c95834a1879ec5d75050c55a876043503da63b3",
+      "bytes": 1189
+    },
+    {
+      "path": "arvexq/components/item_147/connection.json",
+      "sha256": "ff2165dd6a2faed3481a4ec8c2830319fe6335fcbedf0e0e61b40ce3280a0763",
+      "bytes": 14626
+    },
+    {
+      "path": "arvexq/components/item_148/connection.json",
+      "sha256": "3f4b34c040c628d7cedc97aa3d6611db131735e1fe940450c0b93687a546c009",
+      "bytes": 8469
+    },
+    {
+      "path": "arvexq/components/item_149/connection.json",
+      "sha256": "be51b68384f6a4cbc0124a4f616c83bf27a40b9c167712a02921393220006046",
+      "bytes": 1757
+    },
+    {
+      "path": "arvexq/components/item_150/connection.json",
+      "sha256": "2ad30250f6fccc714937b82ddf2928f02eb941f234576b66969a1b4e5e5e0e34",
+      "bytes": 646
+    },
+    {
+      "path": "arvexq/components/item_151/connection.json",
+      "sha256": "b92bc0747f754d339db0af0c01d35064ce8b4898ac04a7a51d83513906d56c61",
+      "bytes": 6115
+    },
+    {
+      "path": "arvexq/components/item_152/connection.json",
+      "sha256": "5232e249f1a7ed98da880c417db11e32c547cd14c91069419fb52df8e1a644ee",
+      "bytes": 6309
+    },
+    {
+      "path": "arvexq/components/item_153/connection.json",
+      "sha256": "dc01ad0150aa0a637936a47610e4f8a35acf18e0b56f6828d130be80ea20c13b",
+      "bytes": 5034
+    },
+    {
+      "path": "arvexq/components/item_154/connection.json",
+      "sha256": "5ad033a513dba3ced46acbc9850cb4d76a0d4bb2e002add3e2888d213df23375",
+      "bytes": 8093
+    },
+    {
+      "path": "arvexq/components/item_155/connection.json",
+      "sha256": "673b8ea665925a4f6292dc23f144c6d27a3952d4e277bf91369c570691309aea",
+      "bytes": 2707
+    },
+    {
+      "path": "arvexq/components/item_156/connection.json",
+      "sha256": "aec180fabfd1b603a4fe39debfca02b58eb67b541a96def0d97bd7bac4c2705d",
+      "bytes": 1121
+    },
+    {
+      "path": "arvexq/components/item_157/connection.json",
+      "sha256": "31b08ec4df5d063b16549d02179c1a271fb6691e31a6e23946fbd288f4631438",
+      "bytes": 3591
+    },
+    {
+      "path": "arvexq/components/item_158/connection.json",
+      "sha256": "8d2caf65edd3ec4d671432f890656a3fa2a65155a284ffde973738bff95c749f",
+      "bytes": 621
+    },
+    {
+      "path": "arvexq/components/item_159/connection.json",
+      "sha256": "6eea95c78fa114f36f57ee320b2c64ea89873ce2c369e10309fe0942dc03a2f5",
+      "bytes": 4312
+    },
+    {
+      "path": "arvexq/components/item_160/connection.json",
+      "sha256": "5b2082363859d303f6ecd543a392a0abd108725fdf85344ce1597e832333b720",
+      "bytes": 600
+    },
+    {
+      "path": "arvexq/components/item_161/connection.json",
+      "sha256": "c30a1101da6e61a7ebe216d0b4b7494569fc2ca05ce7af4a89dfaa9254e94082",
+      "bytes": 1748
+    },
+    {
+      "path": "arvexq/components/item_162/connection.json",
+      "sha256": "cd48f87b53766139872a4a93d4490ee22f3eff403f22ca0ef932a0fdca49c047",
+      "bytes": 6981
+    },
+    {
+      "path": "arvexq/components/item_163/connection.json",
+      "sha256": "e09b6f0c9ddfb9a3e04ccdd030d1a0c12fc74979990ef01c255b3849b8f41d9b",
+      "bytes": 2644
+    },
+    {
+      "path": "arvexq/components/item_164/connection.json",
+      "sha256": "c8d53755644961c4c662f1312c9bbe4c459eaa09b99c5d5b8bd60e36f57c8264",
+      "bytes": 2085
+    },
+    {
+      "path": "arvexq/components/item_165/connection.json",
+      "sha256": "d54c23831d9edc13f34920bf5c49bfe09660f2e401e6b3122711e8e94f2ceb75",
+      "bytes": 1156
+    },
+    {
+      "path": "arvexq/components/item_166/connection.json",
+      "sha256": "f49ab240a0d6ec0d26fdb79e7d437ed407454720620185595b6f20313f8655e0",
+      "bytes": 1138
+    },
+    {
+      "path": "arvexq/components/item_167/connection.json",
+      "sha256": "36a879022470d2b3a736abe735c15eacdfa3f105f6ef94ed7c67a2a75cb66bab",
+      "bytes": 2025
+    },
+    {
+      "path": "arvexq/components/item_168/connection.json",
+      "sha256": "aea7258e24e95073fafeb98319dddd1bf80e8fdb5d32f8f2796b535633f48831",
+      "bytes": 1150
+    },
+    {
+      "path": "arvexq/components/item_169/connection.json",
+      "sha256": "23516c1bdae9359333395c0d8e47d69e84f0c4e4cc7e2a1114afe03f117ea7ed",
+      "bytes": 1162
+    },
+    {
+      "path": "arvexq/components/item_170/connection.json",
+      "sha256": "f064c6b3c94eaa87c6d9dd4f8bdbb0830d7232c05a81de35f737fc6258eb74c6",
+      "bytes": 2175
+    },
+    {
+      "path": "arvexq/components/item_171/connection.json",
+      "sha256": "a95cbc7407af57e8ef411decc5fb43791f598f14ab19e792b4f16f7e8ee6bff6",
+      "bytes": 2535
+    },
+    {
+      "path": "arvexq/components/item_172/connection.json",
+      "sha256": "5b9e18055f041ad48b1dfcde9c5ae182c1418776e8ad1476a64def6468cc3f85",
+      "bytes": 1636
+    },
+    {
+      "path": "arvexq/components/item_173/connection.json",
+      "sha256": "bb1eff11163cca92a96e0707c241d4f2085849f783a7dec96232d4e8fc274044",
+      "bytes": 1449
+    },
+    {
+      "path": "arvexq/components/item_174/connection.json",
+      "sha256": "a79390690db40ca327cc1fbab3312c9f723bbf1207e279e9d9f0b3dd4912e46b",
+      "bytes": 1044
+    },
+    {
+      "path": "arvexq/components/item_175/connection.json",
+      "sha256": "60ea29fec8c307b7e4205c77a8412100972e2383779e6e8517a27323c8d9a8cb",
+      "bytes": 594
+    },
+    {
+      "path": "arvexq/components/item_176/connection.json",
+      "sha256": "c6ce21e047abe2a3c3adcc75ac989f845a94be5975e5ffa8bce25ca0542662bd",
+      "bytes": 4442
+    },
+    {
+      "path": "arvexq/components/item_177/connection.json",
+      "sha256": "c82982ae61db3bfce8548da6d0da3f7f25f1fa00c1fe8d882f80efd77e5e30eb",
+      "bytes": 1142
+    },
+    {
+      "path": "arvexq/components/item_178/connection.json",
+      "sha256": "66c213e710275b666f8b7bc0ad8b367bafec6af493be3905fc7d17511c296df6",
+      "bytes": 1636
+    },
+    {
+      "path": "arvexq/components/item_179/connection.json",
+      "sha256": "4ac7f69c58f6e20bd90acdafbdc3b03e9173c24a537e0f562ea5b8307b0ad8ca",
+      "bytes": 2852
+    },
+    {
+      "path": "arvexq/components/item_180/connection.json",
+      "sha256": "6c015ffafa383ad58171fea28620096a670fa1a9b87ae641c774b6f1e1786ad8",
+      "bytes": 5595
+    },
+    {
+      "path": "arvexq/components/item_181/connection.json",
+      "sha256": "f10af7001dafe2a029caa2acb286b7165a9a25f60395e61b0c3e2b4c9dae6bd6",
+      "bytes": 4009
+    },
+    {
+      "path": "arvexq/components/item_182/connection.json",
+      "sha256": "fef90bee95687b6845cd756aec93c02eb9a3db904213458da81c8d2cbaacd247",
+      "bytes": 2349
+    },
+    {
+      "path": "arvexq/components/item_183/connection.json",
+      "sha256": "19a136959a86b9b7178d4fd3fc0a52f7f7d72dc210bfc9558c69ab558abc5d4e",
+      "bytes": 1403
+    },
+    {
+      "path": "arvexq/components/item_184/connection.json",
+      "sha256": "21b45d6042e731d5155a8f56b1bfcf8b3209e5762ff67c0e0837e5535eb4c628",
+      "bytes": 3618
+    },
+    {
+      "path": "arvexq/components/item_185/connection.json",
+      "sha256": "bf69a6800d823e8ff0cc8001c45ac07d3b3dbf40d335249523e03bf5c86db23f",
+      "bytes": 1058
+    },
+    {
+      "path": "arvexq/components/item_186/connection.json",
+      "sha256": "673038d39949f4cbb91694aafccb2af9932e884f0d45398ad4865d05968e918c",
+      "bytes": 1049
+    },
+    {
+      "path": "arvexq/components/item_187/connection.json",
+      "sha256": "ce7168f58954ace799013b2525e6d720a2c4d4c1dfe1c4925d024a9405730f52",
+      "bytes": 1057
+    },
+    {
+      "path": "arvexq/components/item_188/connection.json",
+      "sha256": "ccc794c76dcc27559689e36ecaf36a4d47319c2d97b9d6913e0ca6658a50a7f9",
+      "bytes": 7960
+    },
+    {
+      "path": "arvexq/components/item_189/connection.json",
+      "sha256": "faf7d59e810ba01d0ea1327a2b235e74ee32e2fd79f41ef856be8d2e251a7851",
+      "bytes": 3717
+    },
+    {
+      "path": "arvexq/components/item_190/connection.json",
+      "sha256": "73e804ece3c09ae6689e2ede9f705127ddb60e2de0538a16ce7d5ebab8aec283",
+      "bytes": 3132
+    },
+    {
+      "path": "arvexq/components/item_191/connection.json",
+      "sha256": "2082b38dcbc4f607e7cfff87f552a5f716a33f196ec713d663e82df83882143a",
+      "bytes": 5528
+    },
+    {
+      "path": "arvexq/components/item_192/connection.json",
+      "sha256": "e5eefba2a1d0c95262216e18a34928d2034b08d2334cf6af6527dc01a62620a9",
+      "bytes": 3151
+    },
+    {
+      "path": "arvexq/components/item_193/connection.json",
+      "sha256": "df2d06857b7f50969826cfb734380548f8efa84f3990aa1e6ae9fd3fa8543028",
+      "bytes": 3066
+    },
+    {
+      "path": "arvexq/components/item_194/connection.json",
+      "sha256": "12ad959926778904100b69973d4b43dd11265d90be317a5c6323d4fbd5909210",
+      "bytes": 5591
+    },
+    {
+      "path": "arvexq/components/item_195/connection.json",
+      "sha256": "752b7aa38365d3bd97a39e03551ae191a159d68098507fc28e118d5463deb7ef",
+      "bytes": 4871
+    },
+    {
+      "path": "arvexq/components/item_196/connection.json",
+      "sha256": "1320ffb8e3dc7a265a3f842b5f992c1cc903fafa738a68ed68a2685cb9c251cf",
+      "bytes": 1237
+    },
+    {
+      "path": "arvexq/components/item_197/connection.json",
+      "sha256": "8ce895bfa4e3d480be4a3ee68ed8ca7b3e3938129cac097d8fcb4ddc0919bd38",
+      "bytes": 1673
+    },
+    {
+      "path": "arvexq/components/item_198/connection.json",
+      "sha256": "a726d9ae1b16202dee43adb531b99f850461c8dfeb99f7911c77c64f09b74bdc",
+      "bytes": 1571
+    },
+    {
+      "path": "arvexq/components/item_199/connection.json",
+      "sha256": "11d755e23d077d8d384e73acc4b5b94cfa26650d5152877972edb864d997626d",
+      "bytes": 675
+    },
+    {
+      "path": "arvexq/components/item_200/connection.json",
+      "sha256": "9a5d902b2759c369a5b9185209f0ca55b2ed15a72195526ab238e0f14f5536b5",
+      "bytes": 4131
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/README.md",
+      "sha256": "5aaf2d0ebea0fc191c6417148f0152a0ad57ce2b93518465b9c0ac3406d3468e",
+      "bytes": 6848
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/STATUS.md",
+      "sha256": "1cc3f9f9a0286e456ce37ee7f0d5fca89b2275376a281acaf0403be0144c0bdd",
+      "bytes": 16395
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/body-preservation.json",
+      "sha256": "ed0840cad74e47dc8508568919e7259f4e2914baf0e9dfa18d4c5cab9c9ea78e",
+      "bytes": 47781
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/changed-files.json",
+      "sha256": "b38df5059e708b02a919a999aa7ef9d7a8d278007fe01ff78c5c920e8df4aa29",
+      "bytes": 191483
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/conflict-preservation.json",
+      "sha256": "63a921e4795d210060e1cd955bc1d4ebdf2a7a755103b3287da21cd986d69a29",
+      "bytes": 312
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/conflicts.json",
+      "sha256": "03209c1158f54c7fffd3252714bc2d56d97876d57e6a6f710d927679b62260b4",
+      "bytes": 7502
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/connections.json.gz",
+      "sha256": "be56442fd210302c04c4ce4a3388f19b30607fb984e7e80e7f04e386878fb0bc",
+      "bytes": 15789
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/coverage.json.gz",
+      "sha256": "b1743d2532efc12fc3448ecb36a31c0bedb4c14a9144fb9e8349a9460cfc2e2c",
+      "bytes": 25019
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/deferred.json",
+      "sha256": "e9ee58194a3fbb93b70b0bcdd6b88c1e8e977116065cd93ad1cdc463aadea464",
+      "bytes": 7439
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/open-prs.json",
+      "sha256": "543a878c0861aa6acf543b29bfef289b820e69c06cff9b94b9e9b6772b502648",
+      "bytes": 489736
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/shared-bindings.json",
+      "sha256": "62550f33b34c74d54967ec9b4c009db445f0699e4a861a39126d8533a03a6dba",
+      "bytes": 14835
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/static-contracts.json",
+      "sha256": "f70df5267d418d052eb62921b8923587819cf8996f0b78707221eb2beadf7fb1",
+      "bytes": 695
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/static-js-structure.json",
+      "sha256": "445cefedd8196b1c1ec02e510c68575bc3afb261290e8b257dc6a2ea99968c5f",
+      "bytes": 302
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/static-structure.json",
+      "sha256": "4573d36904f11f1892fc69c544a733713954e1e2d50f072c0dab32b941192511",
+      "bytes": 436
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/summary.json",
+      "sha256": "529d2e41cf0d3b7d4954e5175a6d563b96cb5de6cf954cff653a3da286752e61",
+      "bytes": 1844
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/ui-body-preservation.json",
+      "sha256": "326e9219b3eb42730a09a8023359598a542ebf873d2c5621743ce950149cc062",
+      "bytes": 28138
+    },
+    {
+      "path": "docs/independence/route-connection-stage3-20261021/ui-conflicts.json",
+      "sha256": "c17d4233e4515be3fcf91f53e912d2ee0a0a617f17117c869e9f6da56ea3e474",
+      "bytes": 2372
+    }
+  ],
+  "scope": "接続記録/資料の保存用hash。動作検証ではない。"
+}

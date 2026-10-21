@@ -10,7 +10,7 @@ from threading import BoundedSemaphore
 # Avoid 80 race background workers each spawning up to six official ZIP fetches.
 # Limit network-heavy monthly waves while retaining independent, safe DB I/O.
 nar_history_wave_slots = BoundedSemaphore(2)
-from arvexq.ingest.full_career import date_key
+from arvexq.components.item_057.full_career import date_key
 
 
 def pre_race_reported_starts(detail: dict[str, Any] | None, cutoff: str,

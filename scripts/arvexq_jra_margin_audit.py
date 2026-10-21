@@ -3,7 +3,7 @@ import argparse
 import json
 import math
 from pathlib import Path
-from arvexq.ingest.full_career import merge_career
+from arvexq.components.item_057.full_career import merge_career
 
 def measure(bundle):
     counts={'races':0,'horses':0,'runs':0,'marginRuns':0,'provenRuns':0,'horsesWithMargin':0}

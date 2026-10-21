@@ -1,0 +1,59 @@
+{
+  "id": 3,
+  "name": "NAR出走取消・除外解析",
+  "circuits": [
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/nar_environment_parser.py::<module>",
+    "arvexq/ingest/nar_scratches.py::<module>",
+    "scripts/arvexq_nar_scratches_readback.py::<module>",
+    "arvexq/ingest/nar_environment_parser.py::_parse_nar_environment_html",
+    "arvexq/ingest/nar_scratches.py::parse_nar_scratches",
+    "scripts/arvexq_nar_scratches_readback.py::verify",
+    "scripts/arvexq_nar_scratches_readback.py::main"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/nar_scratches.py::<module>",
+    "scripts/arvexq_nar_scratches_readback.py::<module>",
+    "arvexq/ingest/nar_scratches.py::parse_nar_scratches",
+    "scripts/arvexq_nar_scratches_readback.py::verify",
+    "scripts/arvexq_nar_scratches_readback.py::main"
+  ],
+  "shared_refs": [
+    "arvexq/ingest/nar_environment_parser.py::<module>",
+    "arvexq/ingest/nar_environment_parser.py::_parse_nar_environment_html"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    ".github/workflows/arvexq-nar-scratches-readback.yml",
+    "app.py",
+    "arvexq/ingest/nar_environment_parser.py",
+    "tests/test_environment_component_split.py",
+    "tests/test_item_001_nar_weather.py",
+    "tests/test_item_002_nar_going.py",
+    "tests/test_nar_environment_parser.py",
+    "tests/test_nar_scratches_live_readback.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/d1_day_readback.py",
+    "arvexq/ingest/field_normalization.py",
+    "arvexq/ingest/nar_going.py",
+    "arvexq/ingest/nar_scratches.py",
+    "arvexq/ingest/nar_weather.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/ingest/nar_environment_parser.py",
+    "arvexq/ingest/nar_scratches.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/nar_environment_parser.py",
+    "arvexq/ingest/nar_scratches.py",
+    "scripts/arvexq_nar_scratches_readback.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

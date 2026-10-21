@@ -1,0 +1,667 @@
+{
+  "id": 57,
+  "name": "全競走履歴取得・補修",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "partial-connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 28,
+        "imported": "pre_race_reported_starts",
+        "local_name": "pre_race_reported_starts"
+      },
+      "original_source": "arvexq/ingest/nar_career_coverage.py",
+      "box_target": "arvexq/components/item_057/nar_career_coverage.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 28,
+        "imported": "official_history_complete",
+        "local_name": "official_history_complete"
+      },
+      "original_source": "arvexq/ingest/nar_career_coverage.py",
+      "box_target": "arvexq/components/item_057/nar_career_coverage.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 28,
+        "imported": "nar_history_wave_slots",
+        "local_name": "nar_history_wave_slots"
+      },
+      "original_source": "arvexq/ingest/nar_career_coverage.py",
+      "box_target": "arvexq/components/item_057/nar_career_coverage.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 29,
+        "imported": "merge_full_profile_history",
+        "local_name": "merge_full_profile_history"
+      },
+      "original_source": "arvexq/ingest/jra_career_merge.py",
+      "box_target": "arvexq/components/item_057/jra_career_merge.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/career_missing.py",
+        "line": 13,
+        "imported": "analyze_career",
+        "local_name": "analyze_career"
+      },
+      "original_source": "arvexq/career_analysis.py",
+      "box_target": "arvexq/components/item_057/career_analysis.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/career_missing.py",
+        "line": 15,
+        "imported": "merge_career",
+        "local_name": "merge_career"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/career_missing.py",
+        "line": 15,
+        "imported": "date_key",
+        "local_name": "date_key"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/career_missing.py",
+        "line": 17,
+        "imported": "recover_horse",
+        "local_name": "recover_horse"
+      },
+      "original_source": "arvexq/ingest/career_transport.py",
+      "box_target": "arvexq/components/item_057/career_transport.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/horse_detail.py",
+        "line": 4,
+        "imported": "build_career_analysis",
+        "local_name": "build_career_analysis"
+      },
+      "original_source": "arvexq/career_missing.py",
+      "box_target": "arvexq/components/item_057/career_missing.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/career_transport.py",
+        "line": 14,
+        "imported": "merge_career",
+        "local_name": "merge_career"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/fallback_enrichment.py",
+        "line": 9,
+        "imported": "merge_career",
+        "local_name": "merge_career"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/fallback_enrichment.py",
+        "line": 9,
+        "imported": "audit_career",
+        "local_name": "audit_career"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/fallback_enrichment.py",
+        "line": 9,
+        "imported": "date_key",
+        "local_name": "date_key"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/jra_career_merge.py",
+        "line": 5,
+        "imported": "merge_career",
+        "local_name": "merge_career"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/ingest/nar_career_coverage.py",
+        "line": 13,
+        "imported": "date_key",
+        "local_name": "date_key"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/pipeline/persisted_inputs.py",
+        "line": 29,
+        "imported": "recover_horse",
+        "local_name": "recover_horse"
+      },
+      "original_source": "arvexq/ingest/career_transport.py",
+      "box_target": "arvexq/components/item_057/career_transport.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/prediction/race_intelligence.py",
+        "line": 15,
+        "imported": "build_career_analysis",
+        "local_name": "build_career_analysis"
+      },
+      "original_source": "arvexq/career_missing.py",
+      "box_target": "arvexq/components/item_057/career_missing.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_history_repair.py",
+        "line": 188,
+        "imported": "recover_horse",
+        "local_name": "recover_horse"
+      },
+      "original_source": "arvexq/ingest/career_transport.py",
+      "box_target": "arvexq/components/item_057/career_transport.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_history_repair.py",
+        "line": 94,
+        "imported": "merge_career",
+        "local_name": "merge_career"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_jra_margin_audit.py",
+        "line": 6,
+        "imported": "merge_career",
+        "local_name": "merge_career"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_official_input_acceptance.py",
+        "line": 91,
+        "imported": "merge_career",
+        "local_name": "merge_career"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_protect_sync.py",
+        "line": 185,
+        "imported": "merge_career",
+        "local_name": "merge_career"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_protect_sync.py",
+        "line": 255,
+        "imported": "recover_horse",
+        "local_name": "recover_horse"
+      },
+      "original_source": "arvexq/ingest/career_transport.py",
+      "box_target": "arvexq/components/item_057/career_transport.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_protect_sync.py",
+        "line": 256,
+        "imported": "merge_career",
+        "local_name": "merge_career"
+      },
+      "original_source": "arvexq/ingest/full_career.py",
+      "box_target": "arvexq/components/item_057/full_career.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_protect_sync.py",
+        "line": 195,
+        "imported": "recover_horse",
+        "local_name": "recover_horse"
+      },
+      "original_source": "arvexq/ingest/career_transport.py",
+      "box_target": "arvexq/components/item_057/career_transport.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_protect_sync.py",
+        "line": 195,
+        "imported": "pack_horse",
+        "local_name": "pack_horse"
+      },
+      "original_source": "arvexq/ingest/career_transport.py",
+      "box_target": "arvexq/components/item_057/career_transport.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_sync_batches.py",
+        "line": 21,
+        "imported": "pack_detail",
+        "local_name": "pack_detail"
+      },
+      "original_source": "arvexq/ingest/career_transport.py",
+      "box_target": "arvexq/components/item_057/career_transport.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_profile_runs",
+        "line": 396
+      },
+      "original_source": "app.py::_jra_profile_runs",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__jra_profile_runs"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_run_core_complete",
+        "line": 443
+      },
+      "original_source": "app.py::_jra_run_core_complete",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__jra_run_core_complete"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_jra_history_complete",
+        "line": 449
+      },
+      "original_source": "app.py::_jra_history_complete",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__jra_history_complete"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_central_find_horse",
+        "line": 1838
+      },
+      "original_source": "app.py::_central_find_horse",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__central_find_horse"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_central_run_from_race",
+        "line": 1857
+      },
+      "original_source": "app.py::_central_run_from_race",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__central_run_from_race"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_central_resolve_race_id",
+        "line": 1904
+      },
+      "original_source": "app.py::_central_resolve_race_id",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__central_resolve_race_id"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_central_recent_from_store",
+        "line": 1923
+      },
+      "original_source": "app.py::_central_recent_from_store",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__central_recent_from_store"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_merge_central_recent",
+        "line": 1959
+      },
+      "original_source": "app.py::_merge_central_recent",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__merge_central_recent"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_central_month_dates",
+        "line": 1980
+      },
+      "original_source": "app.py::_central_month_dates",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__central_month_dates"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_fetch_central_days_parallel",
+        "line": 1995
+      },
+      "original_source": "app.py::_fetch_central_days_parallel",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__fetch_central_days_parallel"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_schedule_full_history_harvest",
+        "line": 3734
+      },
+      "original_source": "app.py::_schedule_full_history_harvest",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__schedule_full_history_harvest"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_netkeiba_past_rows_fast",
+        "line": 4654
+      },
+      "original_source": "app.py::_netkeiba_past_rows_fast",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__netkeiba_past_rows_fast"
+    },
+    {
+      "items": [
+        57
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_merge_fast_history",
+        "line": 4683
+      },
+      "original_source": "app.py::_merge_fast_history",
+      "box_target": "arvexq/components/item_057/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        57
+      ],
+      "original_private_name": "_arvexq_original__merge_fast_history"
+    }
+  ],
+  "deferred": [
+    {
+      "items": [
+        57
+      ],
+      "source": "app.py::_nar_attach_recent_batch",
+      "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+      "prs": [
+        368
+      ]
+    }
+  ],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

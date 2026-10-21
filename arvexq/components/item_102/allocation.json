@@ -1,0 +1,57 @@
+{
+  "id": 102,
+  "name": "下がり率",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/pace_prediction.py::<module>",
+    "arvexq/prediction/pure_diagnostics.py::<module>",
+    "arvexq/pace_prediction.py::_stage_value",
+    "arvexq/pace_prediction.py::build_pace_prediction",
+    "arvexq/prediction/pure_diagnostics.py::_central_detail_coverage",
+    "arvexq/prediction/pure_diagnostics.py::_diagnosis_history_quality",
+    "arvexq/prediction/pure_diagnostics.py::_audit_axes_from_eval",
+    "arvexq/prediction/pure_diagnostics.py::_audit_axes_from_eval.u",
+    "arvexq/prediction/pure_diagnostics.py::_learning_date_split",
+    "arvexq/prediction/pure_diagnostics.py::_history_is_enough"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "arvexq/pace_prediction.py::<module>",
+    "arvexq/prediction/pure_diagnostics.py::<module>",
+    "arvexq/pace_prediction.py::_stage_value",
+    "arvexq/pace_prediction.py::build_pace_prediction",
+    "arvexq/prediction/pure_diagnostics.py::_central_detail_coverage",
+    "arvexq/prediction/pure_diagnostics.py::_diagnosis_history_quality",
+    "arvexq/prediction/pure_diagnostics.py::_audit_axes_from_eval",
+    "arvexq/prediction/pure_diagnostics.py::_audit_axes_from_eval.u",
+    "arvexq/prediction/pure_diagnostics.py::_learning_date_split",
+    "arvexq/prediction/pure_diagnostics.py::_history_is_enough"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    ".github/workflows/arvexq-validation.yml",
+    "app.py",
+    "arvexq/services/race_analysis.py",
+    "tests/test_app_pure_modules.py"
+  ],
+  "callee_files": [
+    "arvexq/race_card.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/pace_prediction.py",
+    "arvexq/prediction/pure_diagnostics.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/pace_prediction.py",
+    "arvexq/prediction/pure_diagnostics.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。",
+  "qualification": "styleRatesの消費側・既存情報の対応付け。独立した下がり率計算の存在は確認できず、gap一覧へ記録。"
+}

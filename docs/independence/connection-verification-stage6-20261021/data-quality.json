@@ -1,0 +1,252 @@
+{
+  "source": "GitHub version-controlled snapshot manifest and morning picks, not runtime API/live D1",
+  "head": "d5b5e426ca79218e65e1ef6a384fd6f7563de566",
+  "days": [
+    {
+      "day": "2026-10-10",
+      "JRA": {
+        "races": 24,
+        "prediction": 24,
+        "bet": 0,
+        "selected": 1,
+        "evidence": 0
+      },
+      "NAR": {
+        "races": 35,
+        "prediction": 35,
+        "bet": 2,
+        "selected": 8,
+        "evidence": 0
+      },
+      "morning": true
+    },
+    {
+      "day": "2026-10-11",
+      "JRA": {
+        "races": 24,
+        "prediction": 24,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "NAR": {
+        "races": 56,
+        "prediction": 56,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "morning": true
+    },
+    {
+      "day": "2026-10-12",
+      "JRA": {
+        "races": 24,
+        "prediction": 24,
+        "bet": 0,
+        "selected": 2,
+        "evidence": 2
+      },
+      "NAR": {
+        "races": 47,
+        "prediction": 47,
+        "bet": 0,
+        "selected": 26,
+        "evidence": 26
+      },
+      "morning": true
+    },
+    {
+      "day": "2026-10-13",
+      "JRA": {
+        "races": 0,
+        "prediction": 0,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "NAR": {
+        "races": 58,
+        "prediction": 58,
+        "bet": 0,
+        "selected": 45,
+        "evidence": 45
+      },
+      "morning": true
+    },
+    {
+      "day": "2026-10-14",
+      "JRA": {
+        "races": 0,
+        "prediction": 0,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "NAR": {
+        "races": 48,
+        "prediction": 46,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "morning": true
+    },
+    {
+      "day": "2026-10-15",
+      "JRA": {
+        "races": 0,
+        "prediction": 0,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "NAR": {
+        "races": 48,
+        "prediction": 19,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "morning": true
+    },
+    {
+      "day": "2026-10-16",
+      "JRA": {
+        "races": 0,
+        "prediction": 0,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "NAR": {
+        "races": 36,
+        "prediction": 25,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "morning": true
+    },
+    {
+      "day": "2026-10-17",
+      "JRA": {
+        "races": 36,
+        "prediction": 16,
+        "bet": 12,
+        "selected": null,
+        "evidence": null
+      },
+      "NAR": {
+        "races": 34,
+        "prediction": 15,
+        "bet": 0,
+        "selected": null,
+        "evidence": null
+      },
+      "morning": false
+    },
+    {
+      "day": "2026-10-18",
+      "JRA": {
+        "races": 36,
+        "prediction": 0,
+        "bet": 0,
+        "selected": null,
+        "evidence": null
+      },
+      "NAR": {
+        "races": 56,
+        "prediction": 0,
+        "bet": 0,
+        "selected": null,
+        "evidence": null
+      },
+      "morning": false
+    },
+    {
+      "day": "2026-10-19",
+      "JRA": {
+        "races": 0,
+        "prediction": 0,
+        "bet": 0,
+        "selected": null,
+        "evidence": null
+      },
+      "NAR": {
+        "races": 59,
+        "prediction": 0,
+        "bet": 0,
+        "selected": null,
+        "evidence": null
+      },
+      "morning": false
+    },
+    {
+      "day": "2026-10-20",
+      "JRA": {
+        "races": 0,
+        "prediction": 0,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "NAR": {
+        "races": 48,
+        "prediction": 0,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "morning": true
+    },
+    {
+      "day": "2026-10-21",
+      "JRA": {
+        "races": 0,
+        "prediction": 0,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "NAR": {
+        "races": 48,
+        "prediction": 0,
+        "bet": 0,
+        "selected": 0,
+        "evidence": 0
+      },
+      "morning": true
+    }
+  ],
+  "totals": {
+    "JRA": {
+      "races": 144,
+      "prediction": 88,
+      "bet": 12,
+      "selected": 3,
+      "evidence": 2,
+      "morningDays": 9
+    },
+    "NAR": {
+      "races": 573,
+      "prediction": 301,
+      "bet": 2,
+      "selected": 79,
+      "evidence": 71,
+      "morningDays": 9
+    }
+  },
+  "checks": {
+    "available_day_manifest_days": 12,
+    "available_morning_days": 9,
+    "morning_id_duplicate_count": 0,
+    "morning_to_manifest_orphan_count": 0,
+    "manifest_filenames_differing_from_sha256_count": 0,
+    "selected_without_ticketEvidence": {
+      "JRA": 1,
+      "NAR": 8
+    },
+    "source_scope": "Only saved metadata and morning ticket evidence; horse/odds/results/mark/probability raw payload not decoded; no invented races"
+  }
+}

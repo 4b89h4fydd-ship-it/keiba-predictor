@@ -1,0 +1,11 @@
+{
+  "scope": "静的な構文・依存名・本文保持の照合のみ。アプリimport・関数実行・テスト・ビルド・本番通信は行わない。",
+  "python_parse_files": 927,
+  "import_name_errors": [],
+  "new_box_cycle_components": [],
+  "retained_original_python_bodies": 208,
+  "body_preservation_errors": [],
+  "forbidden_source_changes": [],
+  "embedded_source_import_errors": [],
+  "syntax_compile_errors": []
+}

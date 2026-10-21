@@ -1,0 +1,42 @@
+{
+  "stage": 5,
+  "source_branch": "connect/arvexq-200-existing-routes-stage3-20261021",
+  "baseline_head": "d23cd5e99e27d02baf59cb1f7630dd00273dc615",
+  "main_sha": "6f21f2e595df17f840c785c31a9f1c5a802bb169",
+  "newly_connected": [
+    160,
+    175
+  ],
+  "remaining_unconnected": [
+    70,
+    71,
+    72,
+    93,
+    112,
+    114,
+    116,
+    117,
+    118,
+    119,
+    120,
+    122,
+    123,
+    124,
+    134,
+    135,
+    137,
+    143,
+    144,
+    150,
+    158,
+    199
+  ],
+  "connection_code_items": 178,
+  "new_caller_alias_records": 4,
+  "total_record_count": 625,
+  "readme": "RESULTS.md",
+  "scope": "コード接続箇所の記録。全業務動作・本番検証未認定",
+  "runtime_verified": false,
+  "main_merged": false,
+  "deployed": false
+}

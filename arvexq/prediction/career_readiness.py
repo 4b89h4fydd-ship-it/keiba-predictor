@@ -19,12 +19,11 @@ def assess_career_readiness(detail: dict[str, Any] | None) -> dict[str, Any]:
         analysis = build_career_analysis(horse, race)
         evidence = analysis.get("acquisition_evidence") or {}
         verified = bool(analysis.get("career_complete") and analysis.get("career_state") in _READY_STATES)
-        # An actual observed past start contradicts debut-only eligibility.
-        debut_zero = bool(debut_class and analysis.get("career_state") == "no-history"
-                          and int(evidence.get("currentEligibleRuns") or 0) == 0)
-        if verified or debut_zero:
+        # A new-horse race title is not acquisition evidence: never claim
+        # zero prior starts unless a race-date-bound source proved zero.
+        if verified:
             complete += 1
-            debut_proven += int(debut_zero and not verified)
+            debut_proven += int(debut_class and analysis.get("career_state") == "complete-no-starts")
         else:
             blocked.append({"horseNumber": int(horse.get("horseNumber") or 0), "name": str(horse.get("name") or ""), "state": str(analysis.get("career_state") or "unverified"), "reason": str(evidence.get("reason") or "full-career-unverified"), "reportedStarts": evidence.get("reportedStarts"), "observedRuns": int(evidence.get("currentEligibleRuns") or 0)})
     total = len(horses)

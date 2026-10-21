@@ -12,7 +12,7 @@ import subprocess
 from datetime import datetime
 from typing import Any, Callable
 
-from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock
+from arvexq.components.item_147.prerace_archive import JST, post_at, sealed_lock
 
 REVISION_VERSION = "arvexq-user-model-mark-revision-v1"
 APPROVAL_ID = "user-approved-past-five-from-2026-10-09-20-10-jst"

@@ -1,6 +1,7 @@
 """Dedicated regression checks for app.py's extracted dependency-free modules."""
 from __future__ import annotations
 
+from stage4_source_support import implementation_source
 import ast
 from pathlib import Path
 import unittest
@@ -20,7 +21,7 @@ from arvexq.infra.pure_snapshots import (
 
 class ExtractedPureHelpersTest(unittest.TestCase):
     def test_api_file_imports_without_duplicate_definitions(self):
-        src=Path("app.py").read_text(encoding="utf-8")
+        src=implementation_source()
         tree=ast.parse(src)
         def_names={n.name for n in tree.body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef))}
         extracted={"decode_csv_bytes","_jra_decode","_decode_site","_json_horse_rows",
@@ -34,7 +35,7 @@ class ExtractedPureHelpersTest(unittest.TestCase):
                   and (node.module or "").startswith("arvexq")
                   for alias in node.names}
         self.assertTrue(extracted.issubset(imported))
-        self.assertLess(Path("app.py").stat().st_size,400_000)
+        self.assertLess(len(implementation_source().encode("utf-8")),400_000)
 
     def test_public_outputs_preserved_for_parsers(self):
         self.assertEqual(decode_csv_bytes("東京".encode("cp932")),"東京")

@@ -1,0 +1,4952 @@
+[
+  {
+    "id": 1,
+    "name": "NAR天候解析",
+    "circuits": [
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      77,
+      78,
+      81,
+      82,
+      143,
+      148,
+      149,
+      155,
+      159,
+      162
+    ],
+    "connection_record_count": 10,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 2,
+    "name": "NAR馬場状態解析",
+    "circuits": [
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      83,
+      156,
+      157
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 3,
+    "name": "NAR出走取消・除外解析",
+    "circuits": [
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      158
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 4,
+    "name": "JRA天候解析",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      144
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 5,
+    "name": "JRA芝馬場状態解析",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      145
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 6,
+    "name": "JRAダート馬場状態解析",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      146
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 7,
+    "name": "JRA障害コース馬場状態判定",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      147
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 8,
+    "name": "開催日取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      50,
+      276
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [
+      {
+        "record_index": 276,
+        "symbol": "normalize_central_race"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 9,
+    "name": "開催場取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      52,
+      285
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [
+      {
+        "record_index": 285,
+        "symbol": "_jra_track_from_cname"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 10,
+    "name": "開催日程取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      46,
+      281,
+      282
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 11,
+    "name": "レース番号取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      51
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 12,
+    "name": "レース名取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      59
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 13,
+    "name": "グレード・クラス取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      47
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 14,
+    "name": "発走時刻取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      48,
+      49,
+      54
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 15,
+    "name": "芝・ダート・障害区分取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      57
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 16,
+    "name": "距離取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      56
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 17,
+    "name": "コース情報取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      55,
+      180,
+      181,
+      208
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 18,
+    "name": "出走頭数取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      60
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 19,
+    "name": "賞金情報取得",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      58
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 20,
+    "name": "JRA公式データ解析",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      152,
+      277,
+      278,
+      279,
+      280,
+      283,
+      284,
+      292,
+      293,
+      349,
+      350
+    ],
+    "connection_record_count": 18,
+    "fixture_comparisons": [
+      {
+        "record_index": 278,
+        "symbol": "_jra_norm_cname"
+      }
+    ],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          20
+        ],
+        "source": "app.py::_jra_parse_race_summary",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          20,
+          70,
+          71,
+          72
+        ],
+        "source": "app.py::_jra_parse_result",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 21,
+    "name": "NAR公式データ解析",
+    "circuits": [
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      28,
+      29,
+      30,
+      31,
+      32,
+      242,
+      397,
+      398
+    ],
+    "connection_record_count": 8,
+    "fixture_comparisons": [
+      {
+        "record_index": 397,
+        "symbol": "_parse_nar_official_card_html"
+      }
+    ],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          21,
+          70,
+          71,
+          72
+        ],
+        "source": "app.py::_nar_official_result_fast",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          369,
+          155
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 22,
+    "name": "外部競馬サイトデータ解析",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      294,
+      325,
+      326,
+      327,
+      328,
+      329,
+      331,
+      332
+    ],
+    "connection_record_count": 8,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          22,
+          70,
+          71,
+          72
+        ],
+        "source": "app.py::_netkeiba_current_result",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          369
+        ]
+      },
+      {
+        "items": [
+          22
+        ],
+        "source": "app.py::_netkeiba_race_meta",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          22
+        ],
+        "source": "app.py::_smart_normalize_row",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          22
+        ],
+        "source": "app.py::_extract_smartrc_embedded",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          22
+        ],
+        "source": "app.py::_fetch_smartrc",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          22
+        ],
+        "source": "app.py::_fetch_extra_sources",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 23,
+    "name": "レースID照合",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      153,
+      154
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 24,
+    "name": "重複レース統合",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      61,
+      62,
+      63
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 25,
+    "name": "馬番",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      67,
+      401,
+      499
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 26,
+    "name": "枠番",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      68,
+      69,
+      500
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 27,
+    "name": "馬名",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      501
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 28,
+    "name": "性別",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      137,
+      502
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 29,
+    "name": "年齢",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      503
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 30,
+    "name": "斤量",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      141,
+      504
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 31,
+    "name": "騎手",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      505
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 32,
+    "name": "調教師",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      506
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 33,
+    "name": "所属",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      22,
+      507
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 34,
+    "name": "馬体重",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      85,
+      86,
+      87,
+      140,
+      508
+    ],
+    "connection_record_count": 5,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 35,
+    "name": "馬体重増減",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      139,
+      509
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 36,
+    "name": "出走取消状態",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      96,
+      112,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      135,
+      138,
+      151,
+      160,
+      161,
+      182,
+      186
+    ],
+    "connection_record_count": 27,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 37,
+    "name": "競走除外状態",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      136,
+      138,
+      151,
+      160,
+      161,
+      182
+    ],
+    "connection_record_count": 24,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 38,
+    "name": "出馬表更新",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      360,
+      399,
+      402,
+      405,
+      406,
+      407
+    ],
+    "connection_record_count": 6,
+    "fixture_comparisons": [
+      {
+        "record_index": 402,
+        "symbol": "_merge_card_rows_preserve"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 39,
+    "name": "馬名・馬番照合",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      73,
+      183,
+      184
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 40,
+    "name": "欠損値補完",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      79,
+      80,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      138,
+      151,
+      160,
+      161,
+      182,
+      201,
+      202
+    ],
+    "connection_record_count": 27,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          40
+        ],
+        "source": "app.py::_merge_enrichment",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          40
+        ],
+        "source": "app.py::_start_enrichment",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          40
+        ],
+        "source": "app.py::_apply_enrichment",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          368,
+          271
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 41,
+    "name": "データ取得元照合",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      128,
+      129,
+      130,
+      131,
+      164,
+      165,
+      232,
+      233,
+      246
+    ],
+    "connection_record_count": 17,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 42,
+    "name": "過去走日付",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      53,
+      66,
+      166,
+      286
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [
+      {
+        "record_index": 286,
+        "symbol": "_jra_parse_past_cell"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 43,
+    "name": "過去走競馬場",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      167
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 44,
+    "name": "過去走距離",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      168,
+      169
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 45,
+    "name": "過去走馬場状態",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      170
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 46,
+    "name": "過去走クラス",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      179
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 47,
+    "name": "過去走着順",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      171
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 48,
+    "name": "過去走走破時計",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      172
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 49,
+    "name": "過去走着差",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      173
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 50,
+    "name": "過去走通過順位",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      174
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 51,
+    "name": "過去走上がり情報",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      178
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 52,
+    "name": "過去走斤量",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      175
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 53,
+    "name": "過去走騎手",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      177
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 54,
+    "name": "過去走出走頭数",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      176
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 55,
+    "name": "過去走重複排除",
+    "circuits": [
+      "JRA"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      288,
+      291,
+      482
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 56,
+    "name": "JRA・NAR転入転出判別",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      185
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 57,
+    "name": "全競走履歴取得・補修",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      16,
+      17,
+      18,
+      19,
+      97,
+      99,
+      100,
+      101,
+      115,
+      120,
+      132,
+      133,
+      134,
+      142,
+      150,
+      191,
+      194,
+      234,
+      235,
+      238,
+      243,
+      253,
+      254,
+      255,
+      256,
+      257,
+      267,
+      287,
+      289,
+      290,
+      336,
+      337,
+      338,
+      339,
+      340,
+      341,
+      342,
+      369,
+      403,
+      404
+    ],
+    "connection_record_count": 40,
+    "fixture_comparisons": [
+      {
+        "record_index": 404,
+        "symbol": "_merge_fast_history"
+      }
+    ],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          57
+        ],
+        "source": "app.py::_nar_attach_recent_batch",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          368
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 58,
+    "name": "未来結果混入防止",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      483
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 59,
+    "name": "単勝オッズ",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      510
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 60,
+    "name": "複勝オッズ",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      70
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 61,
+    "name": "人気順位",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      511
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 62,
+    "name": "オッズ取得時刻",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      71
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 63,
+    "name": "JRAオッズ解析",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      74
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 64,
+    "name": "NARオッズ解析",
+    "circuits": [
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      333,
+      334,
+      335
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [
+      {
+        "record_index": 333,
+        "symbol": "_parse_nar_live_odds_html"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 65,
+    "name": "外部サイトオッズ解析",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      344
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 66,
+    "name": "オッズ差分更新",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      444
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 67,
+    "name": "オッズ保存・復元",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      380,
+      498
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [
+      {
+        "record_index": 380,
+        "symbol": "_restore_saved_odds"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 68,
+    "name": "オッズ表示",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      203,
+      532,
+      542,
+      543,
+      544
+    ],
+    "connection_record_count": 5,
+    "fixture_comparisons": [
+      {
+        "record_index": 532,
+        "symbol": "winOddsText"
+      },
+      {
+        "record_index": 542,
+        "symbol": "oddsText"
+      },
+      {
+        "record_index": 543,
+        "symbol": "oddsClass"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 69,
+    "name": "オッズ欠損判定",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      72,
+      163
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 73,
+    "name": "確定結果判定",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      89,
+      271
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 74,
+    "name": "速報結果判定",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      89
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 75,
+    "name": "コーナー通過順位取得",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      44,
+      45
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 76,
+    "name": "単勝払戻",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      345
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 345,
+        "symbol": "_parse_payouts"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 77,
+    "name": "複勝払戻",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      345
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 345,
+        "symbol": "_parse_payouts"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 78,
+    "name": "枠連払戻",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      345
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 345,
+        "symbol": "_parse_payouts"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 79,
+    "name": "馬連払戻",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      345
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 345,
+        "symbol": "_parse_payouts"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 80,
+    "name": "ワイド払戻",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      345
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 345,
+        "symbol": "_parse_payouts"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 81,
+    "name": "馬単払戻",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      345
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 345,
+        "symbol": "_parse_payouts"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 82,
+    "name": "3連複払戻",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      345
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 345,
+        "symbol": "_parse_payouts"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 83,
+    "name": "3連単払戻",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      345
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 345,
+        "symbol": "_parse_payouts"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 84,
+    "name": "結果欠損補修",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      75,
+      76
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 85,
+    "name": "払戻欠損補修",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      346,
+      347
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 86,
+    "name": "確定結果上書き防止",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      13,
+      14,
+      15,
+      382
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [
+      {
+        "record_index": 382,
+        "symbol": "_snapshot_final"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 87,
+    "name": "データ完全性評価",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      353,
+      355,
+      357
+    ],
+    "connection_record_count": 8,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 88,
+    "name": "近走成績評価",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      199,
+      370,
+      371,
+      372,
+      373
+    ],
+    "connection_record_count": 5,
+    "fixture_comparisons": [
+      {
+        "record_index": 371,
+        "symbol": "_pc_race_field"
+      },
+      {
+        "record_index": 372,
+        "symbol": "_pc_finish_quality"
+      },
+      {
+        "record_index": 373,
+        "symbol": "_pc_list_quality"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 89,
+    "name": "能力評価",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      92,
+      93,
+      94,
+      205
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 90,
+    "name": "クラス適性",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      370,
+      376
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [
+      {
+        "record_index": 376,
+        "symbol": "_pc_fit_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 91,
+    "name": "距離適性",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      370,
+      376
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [
+      {
+        "record_index": 376,
+        "symbol": "_pc_fit_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 92,
+    "name": "競馬場適性",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      370,
+      376
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [
+      {
+        "record_index": 376,
+        "symbol": "_pc_fit_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 94,
+    "name": "馬場適性",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      370,
+      376
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [
+      {
+        "record_index": 376,
+        "symbol": "_pc_fit_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 95,
+    "name": "季節適性",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      370,
+      376,
+      514
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [
+      {
+        "record_index": 376,
+        "symbol": "_pc_fit_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 96,
+    "name": "走破時計評価",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      475,
+      476,
+      512
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [
+      {
+        "record_index": 475,
+        "symbol": "_v215_speed_ratio"
+      },
+      {
+        "record_index": 476,
+        "symbol": "_pc_live_track_speed"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 97,
+    "name": "上がり性能評価",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      370,
+      375
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [
+      {
+        "record_index": 375,
+        "symbol": "_pc_sectional_score"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 98,
+    "name": "逃げ率",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      204,
+      370,
+      371,
+      374
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [
+      {
+        "record_index": 371,
+        "symbol": "_pc_race_field"
+      },
+      {
+        "record_index": 374,
+        "symbol": "_pc_style_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 99,
+    "name": "先行率",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      204,
+      370,
+      371,
+      374
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [
+      {
+        "record_index": 371,
+        "symbol": "_pc_race_field"
+      },
+      {
+        "record_index": 374,
+        "symbol": "_pc_style_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 100,
+    "name": "差し率",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      204,
+      370,
+      371,
+      374
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [
+      {
+        "record_index": 371,
+        "symbol": "_pc_race_field"
+      },
+      {
+        "record_index": 374,
+        "symbol": "_pc_style_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 101,
+    "name": "追込率",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      204,
+      370,
+      371,
+      374
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [
+      {
+        "record_index": 371,
+        "symbol": "_pc_race_field"
+      },
+      {
+        "record_index": 374,
+        "symbol": "_pc_style_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 102,
+    "name": "下がり率",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      204
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 103,
+    "name": "脚質点",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      370,
+      371,
+      374
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [
+      {
+        "record_index": 371,
+        "symbol": "_pc_race_field"
+      },
+      {
+        "record_index": 374,
+        "symbol": "_pc_style_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 104,
+    "name": "位置取り評価",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      370,
+      371,
+      374
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [
+      {
+        "record_index": 371,
+        "symbol": "_pc_race_field"
+      },
+      {
+        "record_index": 374,
+        "symbol": "_pc_style_metrics"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 105,
+    "name": "展開・ペース分析",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      204
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 106,
+    "name": "先行争い分析",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      481
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 481,
+        "symbol": "_race_volatility"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 107,
+    "name": "騎手・調教師情報評価",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      478
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 108,
+    "name": "馬体重・斤量影響分析",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      515
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 109,
+    "name": "コース別スピード基準",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      23,
+      24,
+      25,
+      26,
+      475,
+      476
+    ],
+    "connection_record_count": 6,
+    "fixture_comparisons": [
+      {
+        "record_index": 475,
+        "symbol": "_v215_speed_ratio"
+      },
+      {
+        "record_index": 476,
+        "symbol": "_pc_live_track_speed"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 110,
+    "name": "全頭診断結果保存・表示",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      0,
+      198,
+      378,
+      391,
+      392,
+      393,
+      451,
+      477,
+      478,
+      479,
+      480
+    ],
+    "connection_record_count": 11,
+    "fixture_comparisons": [
+      {
+        "record_index": 477,
+        "symbol": "_strip_excluded"
+      }
+    ],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          110
+        ],
+        "source": "app.py::_precompute_detail_metrics",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          368
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 111,
+    "name": "予想入力データ",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      231,
+      265,
+      266,
+      272
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 113,
+    "name": "勝率・順位確率計算",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      513
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          113
+        ],
+        "source": "app.py::_learning_probability",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 115,
+    "name": "予想信頼度判定",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      206
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 121,
+    "name": "買い目生成",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      487
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 125,
+    "name": "発走前の予想・買い目保存",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      113,
+      114,
+      210,
+      211,
+      212,
+      270,
+      548,
+      549
+    ],
+    "connection_record_count": 8,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証",
+      "scripts/arvexq_verified_holdout.pyはmainにもないarvexq.forecast.verified_holdoutに依存。open_store aliasとUI転送境界のみ確認、CLI全体未検証。新しいモデル/モジュールで補完しない。"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 126,
+    "name": "予想・印・買い目画面表示",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      485,
+      486
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 127,
+    "name": "的中判定・成績検証",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      218
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          127
+        ],
+        "source": "app.py::_prediction_audit_from_lock",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          127
+        ],
+        "source": "app.py::_attach_prerace_audit",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 128,
+    "name": "中央・地方開催区分",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      377
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 377,
+        "symbol": "_is_jump_run"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 129,
+    "name": "本日の厳選レース",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      379,
+      410,
+      411,
+      412,
+      477,
+      479,
+      480,
+      481
+    ],
+    "connection_record_count": 8,
+    "fixture_comparisons": [
+      {
+        "record_index": 477,
+        "symbol": "_strip_excluded"
+      },
+      {
+        "record_index": 481,
+        "symbol": "_race_volatility"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 130,
+    "name": "メインレース",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      557,
+      558
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 131,
+    "name": "重賞レース",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      556
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 556,
+        "symbol": "raceIsGraded"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 132,
+    "name": "高知ファイナル",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      559
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 559,
+        "symbol": "kochiFinalRace"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 133,
+    "name": "レース選定条件",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      560,
+      561,
+      562
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 136,
+    "name": "厳選レース買い目表示",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      563
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 138,
+    "name": "当日予想成績",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      553,
+      554,
+      555,
+      564,
+      565,
+      566,
+      567
+    ],
+    "connection_record_count": 7,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 139,
+    "name": "D1保存",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      494,
+      496
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 140,
+    "name": "SQLite保存",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      88,
+      275,
+      323
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 141,
+    "name": "レース一覧キャッシュ",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      417,
+      418,
+      419,
+      420,
+      421,
+      422,
+      423,
+      424,
+      425,
+      426,
+      427,
+      428,
+      429,
+      430
+    ],
+    "connection_record_count": 14,
+    "fixture_comparisons": [
+      {
+        "record_index": 419,
+        "symbol": "_bootstrap_display_ready"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 142,
+    "name": "レース詳細キャッシュ",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      359,
+      383,
+      408
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 145,
+    "name": "オッズキャッシュ",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      517
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 517,
+        "symbol": "default.fetch"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 146,
+    "name": "結果キャッシュ",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      382
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [
+      {
+        "record_index": 382,
+        "symbol": "_snapshot_final"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 147,
+    "name": "発走前スナップショット",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      95,
+      119,
+      192,
+      193,
+      195,
+      196,
+      197,
+      213,
+      214,
+      215,
+      216,
+      217,
+      222,
+      223,
+      224,
+      225,
+      236,
+      237,
+      244,
+      245,
+      247,
+      248,
+      249,
+      258,
+      259,
+      260,
+      261,
+      262,
+      550,
+      551
+    ],
+    "connection_record_count": 30,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 148,
+    "name": "保存データバージョン管理",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      220,
+      221,
+      226,
+      227,
+      228,
+      229,
+      230,
+      239,
+      240,
+      241,
+      250,
+      251,
+      252,
+      268,
+      269,
+      491,
+      493
+    ],
+    "connection_record_count": 17,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 149,
+    "name": "キャッシュ期限・破棄",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      381,
+      383
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 151,
+    "name": "Full Prefetch",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      64,
+      65,
+      307,
+      361,
+      362,
+      367,
+      368,
+      387,
+      388,
+      409,
+      434
+    ],
+    "connection_record_count": 11,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 152,
+    "name": "Realtime Sync",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      273,
+      309,
+      310,
+      311,
+      312,
+      313,
+      363,
+      364,
+      365,
+      457,
+      458
+    ],
+    "connection_record_count": 11,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 153,
+    "name": "Result Repair",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      263,
+      348,
+      351,
+      352,
+      354,
+      384,
+      385,
+      400
+    ],
+    "connection_record_count": 8,
+    "fixture_comparisons": [
+      {
+        "record_index": 384,
+        "symbol": "_result_has_podium"
+      }
+    ],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          153
+        ],
+        "source": "app.py::_race_should_have_result",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 154,
+    "name": "History Repair",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      295,
+      296,
+      297,
+      298,
+      301,
+      304,
+      305,
+      317,
+      318,
+      319,
+      320,
+      321,
+      322,
+      343
+    ],
+    "connection_record_count": 14,
+    "fixture_comparisons": [
+      {
+        "record_index": 295,
+        "symbol": "iter_months_back"
+      },
+      {
+        "record_index": 319,
+        "symbol": "_months_from_race_date"
+      },
+      {
+        "record_index": 320,
+        "symbol": "_history_counts"
+      }
+    ],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          154
+        ],
+        "source": "app.py::_download_nar_month_only",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          128
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 155,
+    "name": "オッズ自動更新",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      446,
+      447,
+      448,
+      449
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 156,
+    "name": "馬体重自動更新",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      90
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 157,
+    "name": "天候・馬場自動更新",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      84
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_environment_http_get",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_nar_fetch_environment",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_jra_fetch_environment",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_upcoming_rows",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_patch_nar_environment",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_patch_central_environment",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_refresh_track_environment",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_schedule_track_environment",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_environment_cycle",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_environment_loop",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      },
+      {
+        "items": [
+          157
+        ],
+        "source": "app.py::_start_environment_collector",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 159,
+    "name": "レース詳細事前生成",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      386,
+      389,
+      390,
+      394,
+      395,
+      396,
+      433
+    ],
+    "connection_record_count": 7,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 161,
+    "name": "データ鮮度判定",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      381,
+      383
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 162,
+    "name": "同期状態・エラー管理",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      306,
+      308,
+      315,
+      316,
+      366,
+      431,
+      435,
+      436,
+      441,
+      450,
+      459,
+      460
+    ],
+    "connection_record_count": 12,
+    "fixture_comparisons": [
+      {
+        "record_index": 308,
+        "symbol": "central_schema"
+      },
+      {
+        "record_index": 460,
+        "symbol": "enrichment_schema"
+      }
+    ],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          162
+        ],
+        "source": "app.py::_enrichment_status",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 163,
+    "name": "レース一覧API",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      324,
+      330,
+      414,
+      416
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 164,
+    "name": "レース詳細API",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      437,
+      456
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          164
+        ],
+        "source": "app.py::nar_race_detail",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          368
+        ]
+      },
+      {
+        "items": [
+          164
+        ],
+        "source": "app.py::central_race_detail",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 165,
+    "name": "馬別情報API",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      440
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 166,
+    "name": "過去走API",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      432
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 167,
+    "name": "オッズ更新API",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      442,
+      445,
+      497
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 168,
+    "name": "払戻API",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      443
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 169,
+    "name": "環境情報API",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      415
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 170,
+    "name": "全頭診断API",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      413,
+      438,
+      452
+    ],
+    "connection_record_count": 3,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 171,
+    "name": "保存状態API",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      302,
+      439,
+      455,
+      492
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 172,
+    "name": "ヘルスチェックAPI",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      303,
+      314
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 173,
+    "name": "Cloudflare Worker",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      516,
+      517
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [
+      {
+        "record_index": 516,
+        "symbol": "default.fetch"
+      },
+      {
+        "record_index": 517,
+        "symbol": "default.fetch"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 174,
+    "name": "D1接続",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      495
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 176,
+    "name": "ホーム画面",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      462,
+      540,
+      568,
+      569,
+      605,
+      614,
+      616,
+      617
+    ],
+    "connection_record_count": 8,
+    "fixture_comparisons": [
+      {
+        "record_index": 462,
+        "symbol": "home"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 177,
+    "name": "開催場一覧",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      552
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 178,
+    "name": "開催場別レース一覧",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      570,
+      571
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 179,
+    "name": "レース詳細",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      572,
+      573,
+      574,
+      576
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          179
+        ],
+        "source": "app.py::_compact_display_snapshot",
+        "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+        "prs": [
+          271
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 180,
+    "name": "出馬表",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      111,
+      117,
+      118,
+      187,
+      188,
+      189,
+      190,
+      207,
+      545,
+      546,
+      547
+    ],
+    "connection_record_count": 11,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 181,
+    "name": "馬別詳細",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      110,
+      200,
+      219,
+      533,
+      534,
+      541,
+      575
+    ],
+    "connection_record_count": 7,
+    "fixture_comparisons": [
+      {
+        "record_index": 534,
+        "symbol": "horseByNo"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 182,
+    "name": "過去走表示",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      98,
+      116,
+      264,
+      484
+    ],
+    "connection_record_count": 4,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 183,
+    "name": "脚質マップ",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      587
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": true,
+    "untested_deferred_segments": [
+      {
+        "items": [
+          183
+        ],
+        "source": "arvexq/ui/static/app.js::runnerStyleSection",
+        "reason": "進行中の個別PRが同じJS関数を変更するため接続保留",
+        "prs": [
+          112
+        ]
+      }
+    ],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 184,
+    "name": "展開予想表示",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      588,
+      589,
+      590,
+      591,
+      592,
+      604
+    ],
+    "connection_record_count": 6,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 185,
+    "name": "予想表示枠",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      488
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 186,
+    "name": "印表示枠",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      489
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 187,
+    "name": "買い目表示枠",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      490
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 188,
+    "name": "結果・払戻表示",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      535,
+      536,
+      537,
+      538,
+      539,
+      577,
+      578,
+      579,
+      580,
+      581,
+      582,
+      583,
+      584,
+      585,
+      586
+    ],
+    "connection_record_count": 15,
+    "fixture_comparisons": [
+      {
+        "record_index": 535,
+        "symbol": "resultStatus"
+      },
+      {
+        "record_index": 536,
+        "symbol": "isFinal"
+      },
+      {
+        "record_index": 537,
+        "symbol": "isFlash"
+      },
+      {
+        "record_index": 538,
+        "symbol": "hasAnyResultData"
+      },
+      {
+        "record_index": 539,
+        "symbol": "hasResultData"
+      },
+      {
+        "record_index": 577,
+        "symbol": "resultFinish"
+      },
+      {
+        "record_index": 579,
+        "symbol": "actualCornerCount"
+      },
+      {
+        "record_index": 580,
+        "symbol": "actualCornerLabel"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 189,
+    "name": "リアルタイム表示",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      593,
+      594,
+      595,
+      596,
+      601,
+      619
+    ],
+    "connection_record_count": 6,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 190,
+    "name": "お気に入り",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      518,
+      519,
+      520,
+      521,
+      522
+    ],
+    "connection_record_count": 5,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 191,
+    "name": "画面遷移・戻る操作",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      597,
+      598,
+      606,
+      607,
+      608,
+      609,
+      610,
+      611,
+      612,
+      613
+    ],
+    "connection_record_count": 10,
+    "fixture_comparisons": [
+      {
+        "record_index": 606,
+        "symbol": "canGoBack"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 192,
+    "name": "手動更新・プル更新",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      599,
+      600,
+      602,
+      603,
+      618
+    ],
+    "connection_record_count": 5,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 193,
+    "name": "PWA・ホーム画面起動",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      91,
+      463,
+      464,
+      473,
+      474
+    ],
+    "connection_record_count": 5,
+    "fixture_comparisons": [
+      {
+        "record_index": 473,
+        "symbol": "manifest"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 194,
+    "name": "オフライン・キャッシュ表示",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      523,
+      524,
+      525,
+      526,
+      527,
+      528,
+      529,
+      530,
+      531,
+      615
+    ],
+    "connection_record_count": 10,
+    "fixture_comparisons": [
+      {
+        "record_index": 523,
+        "symbol": "cacheKey"
+      },
+      {
+        "record_index": 528,
+        "symbol": "detailCacheKey"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 195,
+    "name": "CSS・レイアウト管理",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      20,
+      21,
+      209,
+      465,
+      466,
+      467,
+      468,
+      469,
+      471
+    ],
+    "connection_record_count": 9,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 196,
+    "name": "Python・JavaScript自動テスト",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      620
+    ],
+    "connection_record_count": 1,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 197,
+    "name": "JRA・NARデータ検証とバックテスト",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      453,
+      454
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 198,
+    "name": "GitHub Actions CI・PWAビルド",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      27,
+      472
+    ],
+    "connection_record_count": 2,
+    "fixture_comparisons": [],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  },
+  {
+    "id": 200,
+    "name": "ログ・障害監視",
+    "circuits": [
+      "JRA",
+      "NAR"
+    ],
+    "boundary_result": "pass",
+    "connection_record_indices": [
+      274,
+      299,
+      300,
+      356,
+      358,
+      461,
+      470
+    ],
+    "connection_record_count": 7,
+    "fixture_comparisons": [
+      {
+        "record_index": 470,
+        "symbol": "version_json"
+      }
+    ],
+    "partial_stage3_hold": false,
+    "untested_deferred_segments": [],
+    "remaining_scope": [
+      "元実装内の全条件分岐・全データ集合の網羅は認定しない",
+      "本番/実プロバイダー通信・本番D1読書き・常駐ループの実運用は未検証"
+    ],
+    "full_item_runtime_certified": false
+  }
+]

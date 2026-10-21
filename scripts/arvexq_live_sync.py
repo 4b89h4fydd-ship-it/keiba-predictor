@@ -28,7 +28,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import app
+from scripts.arvexq_fetch_d1_bundle import detail_from_response
 from arvexq.pipeline.fingerprints import analysis_input_hash
+from arvexq.results.state import merge_result as _merge_non_destructive_result
 from arvexq.ingest.official_changes import collect_nar_changes
 from arvexq.ingest.official_course_feeds import fetch_course_events
 from arvexq.prediction.official_course_revision import pre_off_change, official_event
@@ -79,14 +81,23 @@ def snapshot(rid: str) -> dict[str, Any] | None:
         return d
 
 
-def fetch_d1_detail(rid: str) -> dict[str, Any] | None:
+def fetch_d1_detail(rid: str, expected_date: str = "") -> dict[str, Any] | None:
+    """Restore and identity-check the existing D1 race response before seeding."""
     url = f"{D1_BASE}/api/race/{urllib.parse.quote(rid, safe='')}?t={int(time.time())}"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "ARVEXQ-LiveSync/1"})
         with urllib.request.urlopen(req, timeout=8) as res:
             body = json.loads(res.read().decode("utf-8"))
-        detail = body.get("detail") if isinstance(body, dict) else None
-        return detail if isinstance(detail, dict) and detail.get("id") else None
+        if not isinstance(body, dict) or body.get("ok") is False:
+            raise ValueError("D1 base response is not a successful object")
+        # Use the existing D1 bundle decoder; compact envelopes are not the
+        # complete archived race. Its SHA/byte check rejects damaged payloads.
+        detail = detail_from_response(body, rid)
+        if not isinstance(detail, dict):
+            raise ValueError("D1 base race identity mismatch")
+        if expected_date and str(detail.get("date") or "") != expected_date:
+            raise ValueError("D1 base race date mismatch")
+        return detail
     except Exception as exc:
         print("D1_BASE_FETCH_ERROR", rid, type(exc).__name__, exc)
         return None
@@ -160,19 +171,8 @@ def apply_official_scratch_changes(
 
 
 def _merge_result(old: Any, new: Any) -> dict[str, Any]:
-    old_r = copy.deepcopy(old) if isinstance(old, dict) else {}
-    new_r = new if isinstance(new, dict) else {}
-    if not new_r:
-        return old_r
-    old_final = str(old_r.get("status") or "") == "確定" and bool(old_r.get("finishers"))
-    new_final = str(new_r.get("status") or "") == "確定" and bool(new_r.get("finishers"))
-    if old_final and not new_final:
-        return old_r
-    out = old_r
-    for key, value in new_r.items():
-        if value not in (None, "", [], {}):
-            out[key] = copy.deepcopy(value)
-    return out
+    """Use the existing result-repair merge: live ticks cannot shrink results."""
+    return _merge_non_destructive_result(old, new)
 
 
 def merge_live(
@@ -503,7 +503,7 @@ def main() -> int:
     args = p.parse_args()
 
     bundle = read_json(args.bundle, {})
-    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in str(r.get("id")) for name in ("帯広", "帯広ば"))]
+    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
     if not rows:
         raise SystemExit("live sync: no races in bundle")
     bundled_by_id = {
@@ -548,7 +548,10 @@ def main() -> int:
     missing_for_d1 = [rid for rid in targets if rid not in base_by_id]
     if missing_for_d1:
         with ThreadPoolExecutor(max_workers=min(8, len(missing_for_d1))) as ex:
-            futures = {ex.submit(fetch_d1_detail, rid): rid for rid in missing_for_d1}
+            futures = {
+                ex.submit(fetch_d1_detail, rid, str((row_by_id.get(rid) or {}).get("date") or "")): rid
+                for rid in missing_for_d1
+            }
             for fut in as_completed(futures):
                 rid = futures[fut]
                 try:

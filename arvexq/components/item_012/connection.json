@@ -1,0 +1,31 @@
+{
+  "id": 12,
+  "name": "レース名取得",
+  "circuits": [
+    "JRA"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        12
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 501,
+        "imported": "extract",
+        "local_name": "jra_race_title"
+      },
+      "original_source": "arvexq/ingest/race_fields/title.py",
+      "box_target": "arvexq/components/item_012/title.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

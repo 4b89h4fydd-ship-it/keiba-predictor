@@ -85,19 +85,29 @@ class VerifiedCareerTests(unittest.TestCase):
         self.assertNotIn("marginSeconds", rows[0])
 
     def test_japanese_racing_age_birth_year_identity(self):
-        # A 4yo in 2026 was born in 2023, not 2022.
-        self.assertEqual(nk._birth_year({"age": 4}, "2026-10-11"), 2023)
-        self.assertEqual(nk._birth_year({"age": "牡4"}, "2026-10-11"), 2023)
+        # Calendar racing age: a 2026 4yo is born in 2022, and a 3yo in 2023.
+        self.assertEqual(nk._birth_year({"age": 4}, "2026-10-11"), 2022)
+        self.assertEqual(nk._birth_year({"age": "牡4"}, "2026-10-11"), 2022)
+        self.assertEqual(nk._birth_year({"age": 3}, "2026-10-11"), 2023)
+        self.assertEqual(nk._birth_year({"age": 2}, "2026-10-11"), 2024)
 
     def test_partial_listing_with_verified_birth_year_retains_observed_runs(self):
         horse_id = "2023100001"
         actual = nk.fetch_verified_career(
             site(listing(5), 16, search=source(hid=horse_id),
                  pages={horse_id: (listing(5), 16)}),
-            {"name": NAME, "age": 4}, RACE, 200)
+            {"name": NAME, "age": 3}, RACE, 200)
         self.assertEqual(len(actual["recentRaces"]), 5)
         self.assertNotIn("careerStartEvidence", actual)
         self.assertTrue(all(r["date"] < RACE["date"] for r in actual["recentRaces"]))
+
+    def test_racing_age_accepts_correct_horse_birth_year(self):
+        hid = "2023100001"
+        actual = nk.fetch_verified_career(
+            site(listing(), 16, search=source(hid=hid), pages={hid: (listing(), 16)}),
+            {"name": NAME, "age": 3}, RACE, 200)
+        self.assertEqual(len(actual["allPastRuns"]), 16)
+        self.assertEqual(actual["careerStartEvidence"]["sourceHorseId"], hid)
 
     def test_missing_page_row_never_proves_entire_career(self):
         self.assertEqual(nk.fetch_verified_career(site(listing(15),16),
@@ -109,6 +119,15 @@ class VerifiedCareerTests(unittest.TestCase):
                 f'<tr><td><a href="https://db.netkeiba.com/horse/{h}/">{NAME}</a></td></tr>'
                 for h in (HID,second))+"</table>")
         get=site(listing(),16,search=search,pages={HID:(listing(),16),second:(listing(),16)})
+        self.assertEqual(nk.fetch_verified_career(get,{"name":NAME},RACE,200),{})
+
+    def test_ambiguous_name_with_one_unreadable_candidate_is_not_accepted(self):
+        other="2022100002"
+        search=("<table>"+ "".join(
+            f'<tr><td><a href="https://db.netkeiba.com/horse/{hid}/">{NAME}</a></td></tr>'
+            for hid in (HID,other))+"</table>")
+        get=site(listing(),16,search=search,
+                 pages={HID:(listing(),16),other:("<p>unreadable</p>",0)})
         self.assertEqual(nk.fetch_verified_career(get,{"name":NAME},RACE,200),{})
 
     def test_no_measurements_are_fabricated(self):
