@@ -1656,7 +1656,7 @@ function pacePanel(r,p){
     var stages=forecast.stages||{},pace=stages.pace&&stages.pace.value,
         styles=stages.runningStyle&&stages.runningStyle.value;
     if(Array.isArray(pace)&&styles){
-      var head='<h2>展開予想</h2><p class="muted">Stage64 研究暫定・展開補正仮説（発生確率は未推定）。中央は中立1シナリオ、地方は4シナリオ。数値は勝率ではありません。</p>';
+      var head='<h2>展開予想</h2><p class="muted">最新Stage64・展開予想（シナリオ発生確率は未推定）。中央は中立1シナリオ、地方は4シナリオ。数値は勝率ではありません。</p>';
       var styleText=Object.keys(styles).sort(function(a,b){return Number(a)-Number(b)}).map(function(no){
         var v=styles[no];return esc(no)+'番 '+(Array.isArray(v)?v.map(function(x){return (Number(x)*100).toFixed(0)+'%'}).join(' / '):'取得不足');
       }).join('　');
