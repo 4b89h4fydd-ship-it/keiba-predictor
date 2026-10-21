@@ -60,7 +60,20 @@ const jstToday=new Date(now.getTime()+9*3600000).toISOString().slice(0,10);
 const earliestMorning=Date.parse(day+'T06:15:00+09:00');
 if(day===jstToday&&now.getTime()<earliestMorning){save('BEFORE_MORNING_FREEZE_WINDOW');process.exit(0)}
 if(!Number.isFinite(earliest)||now.getTime()>=earliest){save('NOT_RECONSTRUCTED_AFTER_FIRST_OFF');process.exit(0)}
-const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+// Run exactly the 200-box production composition. Raw app.js contains
+// box forwarders without their independently loaded implementations.
+function composeProductionRoot(){
+  if(fs.existsSync('dist/version.json')){
+    const version=JSON.parse(fs.readFileSync('dist/version.json','utf8')).build;
+    const file='dist/app-'+version+'.js';
+    if(fs.existsSync(file))return fs.readFileSync(file,'utf8');
+  }
+  const {execFileSync}=require('node:child_process');
+  return execFileSync('python',['-c',
+    "from pathlib import Path; from arvexq.ui.bundle import compose_app_script; print(compose_app_script(Path('arvexq/ui/static/app.js').read_text(encoding='utf-8')))"
+  ],{encoding:'utf8'});
+}
+const root=composeProductionRoot();
 const selectionModule=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js','utf8');
 const selectedPipeline=fs.readFileSync('arvexq/ui/static/morning/selected_race_pipeline.js','utf8');
 const specialModule=fs.readFileSync('arvexq/ui/static/morning/special_selection.js','utf8');
