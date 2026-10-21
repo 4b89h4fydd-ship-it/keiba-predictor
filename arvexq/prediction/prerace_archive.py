@@ -91,8 +91,9 @@ def restore_seal(
                 and str(old.get("date") or "") == str(out.get("date") or "")):
             newer = out.get("researchShadow")
             if newer is None or isinstance(newer, dict):
-                preserved = copy.deepcopy(newer or {})
-                preserved.setdefault("stage64", copy.deepcopy(older["stage64"]))
+                preserved = copy.deepcopy(older)
+                preserved.update(copy.deepcopy(newer or {}))
+                preserved["stage64"] = copy.deepcopy(older["stage64"])
                 out["researchShadow"] = preserved
         return out
     if str(old.get("id") or "") != str(out.get("id") or ""):
