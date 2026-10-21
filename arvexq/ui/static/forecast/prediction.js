@@ -1,8 +1,8 @@
 /* Present server-produced pre-off provisional marks; NEVER derive predictions here. */
 (function(root){
   'use strict';
-  // Only an immutable user-owned pre-off receipt can supply forecast marks.
-  // All assistant-introduced probabilistic/provisional and post-off models are retired.
+  // Original receipts remain authoritative. The user-approved Stage64 trial
+  // may supply separately labeled, provisional pre-off research roles only.
   var last={active:false,source:'',marks:[]};
 
   function stage64Trial(race){
@@ -11,8 +11,8 @@
     if(!f||f.raceId!==race.id||f.date!==race.date)return null;
     if((race.circuit==='中央'||race.circuit==='jra')?f.circuit!=='jra':
        (race.circuit==='地方'||race.circuit==='nar')?f.circuit!=='nar':true)return null;
-    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(race.date)||
-       !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(race.startTime||'')))return null;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(race.date)||
+       !/^([01]\d|2[0-3]):[0-5]\d$/.test(String(race.startTime||'')))return null;
     var off=Date.parse(race.date+'T'+race.startTime+':00+09:00');
     if(!Number.isFinite(off)||Date.now()>=off||race.result&&race.result.status==='確定')return null;
     var stages=f.stages||{},marks=stages.marks&&stages.marks.value||null,
