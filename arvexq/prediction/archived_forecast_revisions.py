@@ -53,9 +53,15 @@ def preserve_archived_revisions(previous, incoming):
     if proposed[:len(old)] != old:
         if proposed:
             raise ValueError("forecast revision history prefix changed")
+        # Missing history in a thin market update may be restored, but an
+        # explicit different pointer is tampering, not an omitted field.
+        incoming_pointer = out.get("currentForecastRevisionId")
+        original_pointer = previous.get("currentForecastRevisionId")
+        if incoming_pointer and incoming_pointer != original_pointer:
+            raise ValueError("current forecast revision pointer is invalid")
         out["forecastRevisions"] = deepcopy(old)
-        if previous.get("currentForecastRevisionId"):
-            out["currentForecastRevisionId"] = previous["currentForecastRevisionId"]
+        if original_pointer:
+            out["currentForecastRevisionId"] = original_pointer
     if out.get("currentForecastRevisionId") and not _valid_current(out):
         raise ValueError("current forecast revision pointer is invalid")
     return out
