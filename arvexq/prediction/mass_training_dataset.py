@@ -12,14 +12,17 @@ def _finish_map(result: dict[str, Any]) -> dict[int, int]:
     out: dict[int, int] = {}
     for row in finishers:
         if not isinstance(row, dict):
-            continue
+            return {}
         try:
             no = int(row.get("horseNumber") or row.get("number") or 0)
             finish = int(row.get("finish") or row.get("rank") or 0)
         except (TypeError, ValueError):
-            continue
-        if no > 0 and finish > 0:
-            out[no] = finish
+            return {}
+        # Conflicting duplicated runner labels must never be silently
+        # overwritten: doing so could reassign a known winner to another horse.
+        if no <= 0 or finish <= 0 or no in out:
+            return {}
+        out[no] = finish
     return out
 
 
