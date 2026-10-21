@@ -138,6 +138,13 @@ class NARContextFeatureTest(unittest.TestCase):
         race["preRacePrediction"].pop("fixedAt")
         self.assertNotIn("market::preoff_odds_change_ratio", build_horse_features(horse, race))
 
+    def test_bias_after_fixed_at_is_excluded_even_before_start(self):
+        race, horse = sample()
+        race["trackBiasEstimate"]["capturedAt"] = "2026-10-21T20:40:00+09:00"
+        self.assertNotIn("nar::bias::front_back_score", build_horse_features(horse, race))
+        del race["preRacePrediction"]["fixedAt"]
+        self.assertNotIn("nar::bias::front_back_score", build_horse_features(horse, race))
+
     def test_missing_history_does_not_fabricate_pace_or_track_bias(self):
         race, horse = sample()
         race.pop("trackBiasEstimate")
