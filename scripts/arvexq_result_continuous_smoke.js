@@ -61,6 +61,8 @@ const env={state, today:()=> '2026-10-11', n, mins:s=>Number(s.slice(0,2))*60+Nu
 const realScheduler=app.includes('function _arvexq_original_scheduleResultRefresh(')?
  '_arvexq_original_scheduleResultRefresh':'scheduleResultRefresh';
 const scheduler=new Function(...Object.keys(env),app.slice(i,j)+
+ ';if(typeof _arvexq_original_scheduleResultRefresh==="function")'+
+  ' scheduleResultRefresh=_arvexq_original_scheduleResultRefresh;'+
  ';return {scheduleResultRefresh:'+realScheduler+',active:function(){return resultPollActiveId}};')
  (...Object.values(env));
 (async()=>{
