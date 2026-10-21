@@ -112,6 +112,21 @@ def prepare_head_rows(rows: list[dict[str, Any]], head: str) -> list[dict[str, A
         if not features:
             continue
         out.append({**row, "modelFeatures": features, "modelTarget": _target(row, spec)})
+    if head in ("ability", "win", "podium"):
+        # When a runner lacks eligible evidence, omit the WHOLE race. Keeping
+        # just feature-rich horses inflates the winner-top1 hit rate and changes
+        # race-level probability comparisons. Market/value/danger heads are
+        # intentionally conditioned on their own subsets, so leave them alone.
+        original_counts: dict[str, int] = defaultdict(int)
+        kept_counts: dict[str, int] = defaultdict(int)
+        for row in rows:
+            original_counts[str(row.get("raceId") or "")] += 1
+        for row in out:
+            kept_counts[str(row.get("raceId") or "")] += 1
+        out = [
+            row for row in out
+            if row.get("raceId") and kept_counts[str(row["raceId"])] == original_counts[str(row["raceId"])]
+        ]
     return out
 
 
