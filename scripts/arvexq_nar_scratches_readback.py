@@ -3,7 +3,7 @@ import argparse
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from arvexq.ingest.d1_day_readback import read_day
+from arvexq.components.item_175.d1_day_readback import read_day
 
 KNOWN = frozenset(("出走取消", "競走取消", "除外", "競走除外", "欠場"))
 
