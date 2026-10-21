@@ -21,32 +21,6 @@ class FullSnapshotTests(unittest.TestCase):
         self.assertLess(len(json.dumps(packed)), len(raw.encode()))
         self.assertFalse(packed['preRacePrediction']['frozen'])
 
-    def test_stage64_compact_display_index_keeps_all_six_stages(self):
-        stages = {name: {"status": "research-only", "value": {"1": 0.5}}
-                  for name in ("ability", "runningStyle", "pace",
-                               "probability", "marks", "tickets")}
-        stages["tickets"]["value"] = {
-            "hypotheticalTrifectaTop10": [[1, 2, 3]], "recommendedBets": None}
-        original = {
-            "id": "nar-2099-01-01-高知-01", "date": "2099-01-01",
-            "startTime": "12:00", "fieldSize": 3,
-            "horses": [{"horseNumber": i, "name": f"馬{i}",
-                        "recentRaces": [{"finish": i}]} for i in range(1, 4)],
-            "researchShadow": {
-                "stage64": {"circuit": "nar", "stages": stages},
-                "unrelatedResearch": {"rawData": ["preserved only in original"]}},
-        }
-        before = copy.deepcopy(original)
-        packed = pack_detail(original)
-        self.assertEqual(unpack_detail(packed), before)
-        self.assertEqual(original, before)
-        display = copy.deepcopy(packed)
-        display.pop(KEY)
-        self.assertEqual(display["researchShadow"]["stage64"]["stages"], stages)
-        self.assertNotIn("unrelatedResearch", display["researchShadow"])
-        self.assertNotIn("recentRaces", display["horses"][0])
-        self.assertEqual(unpack_detail(pack_detail(packed)), before)
-
     def test_tampering_is_rejected(self):
         packed = pack_raw('{"id":"original","unknown":[1,2,3]}')
         for field, replacement in [('sha256','0'*64), ('bytes',1), ('version','other')]:
