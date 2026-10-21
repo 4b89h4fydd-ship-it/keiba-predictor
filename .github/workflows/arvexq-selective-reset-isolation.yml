@@ -19,7 +19,7 @@ jobs:
       matrix:
         include:
           - lane: retired-forecast-removal
-            checked_commit: "98e299155fa208f04b34cfe0f0fc8f83b6cb2956"
+            checked_commit: "3a42867658bffe9ffbc7c56d2b3c9479960e7c0b"
           - lane: verified-box-boundaries
             checked_commit: "bca981af1f9f0043fce4d3f8f80df54f390bc9a3"
     env:
