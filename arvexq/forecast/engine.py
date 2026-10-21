@@ -7,7 +7,7 @@ candidate is NOT a verified product mark or recommended ticket.
 from __future__ import annotations
 
 from datetime import datetime
-from arvexq.prediction.prerace_archive import JST, post_at
+from datetime import timedelta, timezone
 from arvexq.research.stage64.circuits import circuit
 from arvexq.research.stage64.pipeline import predict
 
@@ -24,9 +24,12 @@ def build_prediction(facts, now=None):
         return None
     if any(facts.get(key) for key in ("result", "results", "payouts")):
         return None
-    stamp = now if now is not None else datetime.now(JST)
+    # Lazy import avoids the prediction package initializer's observed_model cycle.
+    from arvexq.prediction.prerace_archive import post_at
+    jst = timezone(timedelta(hours=9))
+    stamp = now if now is not None else datetime.now(jst)
     off = post_at(facts)
-    if not off or stamp.tzinfo is None or stamp.astimezone(JST) >= off:
+    if not off or stamp.tzinfo is None or stamp.astimezone(jst) >= off:
         return None
     try:
         owner = circuit(facts)
