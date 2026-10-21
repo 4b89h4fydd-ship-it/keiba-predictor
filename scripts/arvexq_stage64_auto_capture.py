@@ -27,6 +27,22 @@ def select_future(source, owner, plan, now):
     rows = source.get("details") if isinstance(source, dict) else None
     if not isinstance(rows, list):
         raise ValueError("saved input details missing")
+    # The existing Prefetch bundle contains a day race index AND full details.
+    # A partial detail fetch must not silently shrink the pre-off cohort.
+    # Keep accepting detail-only test/research inputs without claiming calendar coverage.
+    if "races" in source:
+        listed = source["races"]
+        if not isinstance(listed, list) or any(
+            not isinstance(r, dict) or not isinstance(r.get("id"), str) or not r["id"]
+            for r in listed
+        ):
+            raise ValueError("saved input race index invalid")
+        listed_ids = [r["id"] for r in listed]
+        detail_ids = [r.get("id") if isinstance(r, dict) else None for r in rows]
+        if (len(set(listed_ids)) != len(listed_ids)
+                or len(set(detail_ids)) != len(detail_ids)
+                or set(listed_ids) != set(detail_ids)):
+            raise ValueError("saved input races/details identity mismatch")
     if not rows:
         # Full Prefetch explicitly emits both empty arrays when no races exist.
         # Missing details with a nonempty/unknown race roster remain a hard error.
