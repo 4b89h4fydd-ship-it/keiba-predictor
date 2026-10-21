@@ -40,8 +40,10 @@ const displayedMarks=root.ARVEXQMarkFrame.render();
 assert.ok(displayedMarks.includes('◎【単】')&&displayedMarks.includes('◎【軸】'));
 const appSource=fs.readFileSync(path.join(__dirname,'../arvexq/ui/static/app.js'),'utf8');
 assert.ok(appSource.includes(
-  'content+window.ARVEXQPredictionFrame.render()+window.ARVEXQMarkFrame.render()+window.ARVEXQTicketFrame.render(r,p)'),
-  'race detail must pass current race to the existing buy-list panel');
+  'content+window.ARVEXQPredictionFrame.render()+window.ARVEXQMarkFrame.render()+window.ARVEXQTicketFrame.render()'),
+  'the approved race layout must remain unchanged');
+assert.ok(root.ARVEXQTicketFrame.render().includes('1 - 2 - 3'),
+  'argument-free race layout must show the current validated 3連単');
 
 
 const central=race('中央');
@@ -60,5 +62,7 @@ assert.equal(root.ARVEXQProductionPrediction.build(nar).rows.filter(x=>x.predMar
 assert.equal(root.ARVEXQProductionPrediction.current().marks.length,0);
 assert.ok(!root.ARVEXQMarkFrame.render().includes('◎【単】'));
 assert.ok(!root.ARVEXQTicketFrame.contents(nar,result).includes('1 - 2 - 3'));
+assert.ok(!root.ARVEXQTicketFrame.render().includes('1 - 2 - 3'),
+  'a prior trial must not leak into a postoff or empty race');
 
 console.log('Stage64 preoff JRA/NAR UI role/ticket trial: PASS');
