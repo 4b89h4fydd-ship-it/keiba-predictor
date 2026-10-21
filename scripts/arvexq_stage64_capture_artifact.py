@@ -9,6 +9,21 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from arvexq.research.stage64.witness import GitHubArtifacts, read_witness, instant
 from arvexq.research.stage64.protocol import freeze_batch, check_plan, JST
 from arvexq.research.stage64.circuits import circuit
+from scripts.arvexq_stage64_auto_capture import require_complete_saved_details
+
+
+def saved_race_rows(source):
+    """Retain the original array contract; reject partial saved Prefetch bundles."""
+    if isinstance(source, dict):
+        rows = source.get("details")
+        if not isinstance(rows, list):
+            raise ValueError("saved source must be a race array or details array")
+        require_complete_saved_details(source, rows)
+        return rows
+    if not isinstance(source, list):
+        raise ValueError("saved source must be a race array or details array")
+    return source
+
 
 if __name__=="__main__":
     p=argparse.ArgumentParser()
@@ -27,9 +42,8 @@ if __name__=="__main__":
         raise ValueError("plan was not preregistered")
     source,source_anchor=read_witness(client,a.source_artifact,before=datetime.now(timezone.utc),
                                      source_member=a.source_member)
-    if isinstance(source,dict):source=source.get("details")
-    if not isinstance(source,list):raise ValueError("saved source must be a race array or details array")
-    races=[r for r in source if circuit(r)==a.circuit]
+    rows=saved_race_rows(source)
+    races=[r for r in rows if circuit(r)==a.circuit]
     batch=freeze_batch(a.output,races,plan)
     print(json.dumps({"frozenRaces":len(batch["cohort"]),"source":source_anchor,
                       "provenance":"awaiting immutable forecast artifact upload and completed workflow witness",
