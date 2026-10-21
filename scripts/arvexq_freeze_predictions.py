@@ -355,7 +355,8 @@ def main() -> int:
     report: dict[str, Any] = {
         "version": "v2", "at": now.isoformat(timespec="seconds"), "day": day,
         "races_seen": len(races), "due_count": len(due),
-        "sealed": [], "already_sealed": [], "missing": [],
+        "sealed": [], "already_sealed": [], "research_saved": [],
+        "already_research_saved": [], "missing": [],
         "missed_after_post": [], "missed_bet_after_post": [],
         "urgent_missing": [], "errors": [],
     }
@@ -443,6 +444,10 @@ def main() -> int:
                 row = f.result()
                 if row["status"] == "sealed":
                     report["sealed"].append(row["id"])
+                elif row["status"] == "research-saved":
+                    report["research_saved"].append(row["id"])
+                elif row["status"] == "already-research-saved":
+                    report["already_research_saved"].append(row["id"])
                 elif row["status"] == "already-sealed":
                     report["already_sealed"].append(row["id"])
                 elif row["status"] in ("error", "verification-failed"):
@@ -471,7 +476,7 @@ def main() -> int:
             report["urgent_missing"].append(item)
     Path(args.audit).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print("PRERACE_SEAL_AUDIT", json.dumps({
-        k: report[k] for k in ("races_seen", "due_count", "sealed", "already_sealed", "missing", "urgent_missing", "missed_after_post", "missed_bet_after_post", "errors")
+        k: report[k] for k in ("races_seen", "due_count", "sealed", "already_sealed", "research_saved", "already_research_saved", "missing", "urgent_missing", "missed_after_post", "missed_bet_after_post", "errors")
     }, ensure_ascii=False))
     if report["errors"] or report["urgent_missing"] or report["missed_after_post"] or report["missed_bet_after_post"]:
         return 2
