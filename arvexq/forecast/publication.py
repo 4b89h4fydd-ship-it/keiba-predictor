@@ -42,7 +42,9 @@ def public_race(detail):
             and isinstance(stages, dict)
             and all(isinstance(stages.get(key), dict) and stages[key].get("value") is not None
                     for key in ("ability", "runningStyle", "pace", "probability", "marks", "tickets"))
-            and not detail.get("result", {}).get("finishers") if isinstance(detail.get("result"), dict) else True
+            and not (isinstance(detail.get("result"), dict)
+                     and (detail["result"].get("finishers")
+                          or detail["result"].get("status") == "確定"))
         )
     if authorized:
         projected_shadow = dict(result.get("researchShadow") or {})
