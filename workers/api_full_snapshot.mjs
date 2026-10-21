@@ -54,11 +54,6 @@ export async function compressStoredSnapshot(request,env){
   const keep=new Set(['preRacePrediction','preRaceBet','preRaceBetPlan','morningTicketEvidence','morningPicks','environmentMeta','volatility','preparedMeta','result','modelRevisions','authorizedRevisions','massFeatureArchive','dataReadiness']);
   for(const [key,value] of Object.entries(original))if(key!==KEY&&(keep.has(key)||value===null||typeof value!=='object'))thin[key]=value;
   if(Array.isArray(original.horses))thin.horses=original.horses.filter(h=>h&&typeof h==='object').map(h=>Object.fromEntries(Object.entries(h).filter(([key,value])=>key==='careerTransport'||value===null||typeof value!=='object')));
-  // Keep the same Stage64 display projection as Python pack_detail;
-  // all unrelated research continues to live in the lossless original.
-  if(original.researchShadow&&typeof original.researchShadow==='object'&&
-     original.researchShadow.stage64&&typeof original.researchShadow.stage64==='object')
-    thin.researchShadow={stage64:original.researchShadow.stage64};
   thin[KEY]=body.payload[KEY];
   const packed=JSON.stringify(thin);
   if(new TextEncoder().encode(packed).byteLength>=old.byteLength)return Response.json({ok:true,skipped_no_saving:true});

@@ -25,12 +25,6 @@ def pack_raw(raw):
         thin['horses']=[{key:copy.deepcopy(item) for key,item in horse.items()
                         if key=='careerTransport' or not isinstance(item,(dict,list))}
                        for horse in value['horses'] if isinstance(horse,dict)]
-    # The current display API reads ONLY this compact index. The Stage64
-    # six-stage snapshot must therefore be present here as well as in the
-    # untouched compressed original. Other research stays in the full archive.
-    shadow=value.get('researchShadow')
-    if isinstance(shadow,dict) and isinstance(shadow.get('stage64'),dict):
-        thin['researchShadow']={'stage64':copy.deepcopy(shadow['stage64'])}
     thin[KEY]={'version':VERSION,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),
                'gzipBase64':base64.b64encode(gzip.compress(data,compresslevel=9,mtime=0)).decode('ascii')}
     assert unpack_raw(thin)==raw
