@@ -1085,6 +1085,7 @@ function validatedHonmeiMetadata(source){
 function honmeiBadgeText(x){return x&&x.honmeiGrade?String(x.honmeiGrade):'';}
 function markRoleLabel(x){
   if(!x||x.predMark!=='◎')return '';
+  if(x.stage64Provisional)return x.honmeiRole==='win-axis'?'◎【単】◎【軸】（研究暫定）':(x.honmeiRole==='axis'?'◎【軸】（研究暫定）':'◎【単】（研究暫定）');
   if(x.markFrozen&&x.honmeiRole==='axis')return '保存印：◎（旧軸）';
   if(x.markFrozen&&x.honmeiRole==='win')return '保存印：◎（旧単勝）';
   return x.markFrozen&&x.honmeiRole!=='win-axis'?'保存印：◎':'◎ 本命';
