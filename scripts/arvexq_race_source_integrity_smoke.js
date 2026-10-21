@@ -3,7 +3,8 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const start=src.indexOf('function openRace('),end=src.indexOf('\n}',start)+2;
+const openName=src.includes('function _arvexq_original_openRace(')?'function _arvexq_original_openRace(':'function openRace(';
+const start=src.indexOf(openName),end=src.indexOf('\n}',start)+2;
 assert(start>=0&&end>start,'missing openRace');
 const open=src.slice(start,end);
 assert(open.includes('hydrateStaticRacecardFirst(id,seq,initial)'));
@@ -37,7 +38,7 @@ const countEnd=src.indexOf('\n}',countStart)+2;
 assert(countStart>=0&&countEnd>countStart,'homePickCounts must exist for app boot');
 const countFunction=src.slice(countStart,countEnd);
 assert(src.includes('function renderHome(){')&&
-  src.slice(src.indexOf('function renderHome(){'),src.indexOf('function volatilityBadge(')).includes("homePickCounts('selected')"),
+  src.slice(src.indexOf(src.includes('function _arvexq_original_renderHome(')?'function _arvexq_original_renderHome(':'function renderHome(){'),src.indexOf('function volatilityBadge(')).includes("homePickCounts('selected')"),
   'current home must be able to read its selection counts');
 const counts=new Function('selectedRaceCandidates','specialForecastRaceCandidates',
   countFunction+'; return homePickCounts;')(
@@ -47,8 +48,9 @@ assert.deepEqual(counts('selected'),{central:2,local:1});
 assert.deepEqual(counts('special'),{central:1,local:2});
 // Regression: previous home cleanup accidentally removed the actual runner
 // renderer while leaving the two call sites intact. Execute its real HTML.
-const rowStart=src.indexOf('function racecardEntryRow(');
-const rowEnd=src.indexOf('function morningSavedMarkRows(',rowStart);
+const boxedRunner=src.includes('function _arvexq_original_racecardEntryRow(');
+const rowStart=src.indexOf(boxedRunner?'function _arvexq_original_racecardEntryRow(':'function racecardEntryRow(');
+const rowEnd=src.indexOf(boxedRunner?'function racecardEntryRow(':'function morningSavedMarkRows(',rowStart);
 assert(rowStart>=0&&rowEnd>rowStart,'racecardEntryRow is required to show runners');
 assert.equal((src.match(/function racecardEntryRow\(/g)||[]).length,1,'single renderer authority');
 // The real page defines markRoleLabel in the same script as racecardEntryRow.
@@ -68,7 +70,7 @@ const renderRunner=new Function(
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight',
   'carriedWeightText','esc','racecardOddsHtml','racecardMarkDisplay',
   'honmeiA11yText','honmeiBadgeText','markRoleLabel','visiblePredictionMark',
-  src.slice(rowStart,rowEnd)+';return racecardEntryRow;'
+  src.slice(rowStart,rowEnd)+';return '+(boxedRunner?'_arvexq_original_racecardEntryRow':'racecardEntryRow')+';'
 )(
   ()=>false, (x,d=0)=>Number.isFinite(Number(x))?Number(x):d,
   (_r,h)=>h.name, (x,lo,hi)=>Math.max(lo,Math.min(hi,x)),
