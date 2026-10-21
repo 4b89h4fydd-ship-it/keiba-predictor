@@ -1,6 +1,6 @@
-"""Item 125 CLI fails closed when its deliberately removed research evaluator is absent.
+"""Item 125 CLI retains explicit fail-closed behavior for unavailable dependencies.
 
-No prediction model is revived, and existing append-only storage is untouched.
+Restoration of the historical offline evaluator does not change the SQLite contract.
 """
 import json
 from pathlib import Path
@@ -15,6 +15,20 @@ ROOT = Path(__file__).resolve().parents[1]
 def run_cli(*args):
     return subprocess.run(
         [sys.executable, "-m", "scripts.arvexq_verified_holdout", *map(str, args)],
+        cwd=ROOT, capture_output=True, text=True, check=False,
+    )
+
+
+def run_cli_with_dependency_unavailable(*args):
+    """Exercise the existing fail-closed behavior without removing any source."""
+    snippet = (
+        "import sys;"
+        "sys.modules['arvexq.forecast.verified_holdout']=None;"
+        "from scripts.arvexq_verified_holdout import main;"
+        "main()"
+    )
+    return subprocess.run(
+        [sys.executable, "-c", snippet, *map(str, args)],
         cwd=ROOT, capture_output=True, text=True, check=False,
     )
 
@@ -45,8 +59,8 @@ def test_missing_evaluator_fails_closed_before_touching_existing_store(tmp_path)
     with open_store(store) as db:
         db.execute("SELECT count(*) FROM forecast_preoff_evidence").fetchone()
     raw_before = store.read_bytes()
-    first = run_cli("--store", store, "--results", results, "--report", output)
-    second = run_cli("--store", store, "--results", results, "--report", output)
+    first = run_cli_with_dependency_unavailable("--store", store, "--results", results, "--report", output)
+    second = run_cli_with_dependency_unavailable("--store", store, "--results", results, "--report", output)
     for proc in (first, second):
         assert proc.returncode == 2
         assert "verified holdout evaluator unavailable" in proc.stderr
