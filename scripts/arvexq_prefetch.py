@@ -474,6 +474,32 @@ def prepare(
     return 0
 
 
+def _stage64_from_persisted_detail(detail: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Carry the existing Stage64 engine output into the D1 analysis payload.
+
+    The saved-facts stage is the only input. An unchanged legacy diagnosis
+    fingerprint is not evidence that a Stage64 forecast already exists.
+    Nothing is calculated after the scheduled start or on incomplete inputs.
+    """
+    if not isinstance(detail, dict):
+        return detail
+    shadow = detail.get("researchShadow")
+    if isinstance(shadow, dict) and isinstance(shadow.get("stage64"), dict):
+        return detail
+    from arvexq.forecast.engine import build_prediction
+    candidate = build_prediction(detail)
+    if not candidate or not all(
+        isinstance(stage, dict) and stage.get("value") is not None
+        for stage in candidate.get("stages", {}).values()
+    ) or len(candidate.get("stages", {})) != 6:
+        return detail
+    if shadow is not None and not isinstance(shadow, dict):
+        return detail
+    ready = copy.deepcopy(detail)
+    ready["researchShadow"] = {**(shadow or {}), "stage64": candidate}
+    return ready
+
+
 def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> int:
     """Analyze D1 readback only, via the SAME diagnosis engine as before.
 
@@ -503,7 +529,8 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
                 analyzed[rid] = fact
             continue
         if _analysis_current(fact):
-            analyzed[rid] = fact
+            # Even a cached diagnosis needs the approved six-stage forecast.
+            analyzed[rid] = _stage64_from_persisted_detail(fact)
             skipped.append(rid)
             continue
         if not may_create_prerace_prediction(fact):
@@ -540,11 +567,13 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
                     errors[rid] = "diagnosis modified saved facts: " + ";".join(after[:3])
                     analyzed[rid] = fact
                 else:
-                    analyzed[rid] = final
+                    analyzed[rid] = _stage64_from_persisted_detail(final)
                     if err:
                         print("PERSISTED_DIAGNOSIS_WARN", rid, err)
             else:
-                analyzed[rid] = fact
+                # Diagnosis readiness and Stage64 history sufficiency are
+                # separate facts; the six-stage engine decides its own inputs.
+                analyzed[rid] = _stage64_from_persisted_detail(fact)
                 errors[rid] = err or "stored evidence not adequate for diagnosis"
         except Exception as exc:
             analyzed[rid] = fact
