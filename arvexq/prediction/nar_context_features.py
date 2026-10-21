@@ -118,7 +118,9 @@ def _bias(race: dict[str, Any]) -> dict[str, float]:
     count = _number(estimate.get("sampleRaces"))
     if not captured or not observed or count is None or count < 3:
         return {}
-    if not (observed <= captured < off):
+    lock = race.get("preRacePrediction")
+    fixed = _instant(lock.get("fixedAt")) if isinstance(lock, dict) else None
+    if not fixed or not (observed <= captured <= fixed < off):
         return {}
     out: dict[str, float] = {}
     for raw, name in (("frontBackScore", "front_back_score"), ("insideOutsideScore", "inside_outside_score")):
