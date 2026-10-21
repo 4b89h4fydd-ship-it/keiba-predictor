@@ -102,3 +102,13 @@ python scripts/train_mass_models.py /tmp/nar-frozen.jsonl /tmp/arvexq-nar-models
 
 
 **既存形式との回帰確認**: 新しいcontent-hash検証の初回CI（head `35d1691b`）は既存 `test_mass_feature_transport.py::test_final_training_can_only_read_frozen_preoff_archived_features` が失敗。原因は従来のlossless圧縮データでdetailトップ階層の`circuit`が省略可能なのに、今回のチェックが必須扱いしていたこと。既存の仕様を確認して、detailに`circuit`がある時だけsnapshotと照合するよう修正。欠けているケースは既存SQLiteレース索引`race_snapshots.circuit`とsnapshot側の区分を照合して混入を防ぐ。レースID/日付もSQLite索引とsnapshotが一致しない場合は学習に使わない。テストに従来形式の正常ケース・索引不一致を追加。**最新コミットのCI結果を確認するまでは修正成功と認定しない**。
+
+
+## 第4段階：既存D1保存形式の読み戻し・実データ確認（2026-10-21 夜）
+
+- **実レースの既存GET API読込**（新経路・書込みなし）：`/api/day?date=YYYY-MM-DD&details=0` と `/api/race/<id>` で10月7日・11日・13日・18日・21日を調査。発見レース数：10/7地方47R、10/11中央24R・地方56R、10/13地方58R、10/18中央36R・地方56R、10/21地方48R。これは全日程の**出走済みレース件数であり、訓練適格件数ではない**。
+- 10/21門別12R・園田1R、10/18東京11Rの既存API `arvexqFullPayload`（gzipBase64）を解凍・確認。**全件で `massFeatureSnapshot` / `massFeatureArchive` / `preRacePrediction` は原本にもなし**。確定結果・過去走があっても発走前凍結特徴量を後から創作してはならない。
+- 10/11京都1R・東京12R・高知11Rの表示インデックスに `massFeatureArchive` の保存を確認。京都1Rのarchiveは `originHashVerified=true`、`originStatus=verified`（保存ハッシュと内容の整合）。ただし **`preRacePrediction` がない**ため、原本ハッシュだけで発走前固定の時刻・未来独立検証を証明することはできない。保存全体を訓練適格と誤認しない。
+- **既存保存読込の欠陥**：`arvexqFullPayload` を持つ圧縮済みレースでは、旧 `mass_training_store.iter_frozen_training_rows` が`massFeatureSnapshot` / `massFeatureArchive` を探す前に表示用の小さなindexから欠損と見なしていた。既存 `arvexq.ingest.full_snapshot_codec.unpack_detail` を読み込み、**内容ハッシュで認証された元原本**を復元後に確定結果・凍結特徴量・SQLiteレースID/日付/区分を判定するよう修正した。新しい取得先・データ経路は作らない。元原本が壊れている場合は不適格のまま。
+- 新回帰テストで（1）実際の既存圧縮形式により隠れている凍結特徴量の復元、（2）SQLite内の圧縮原本読戻し、（3）偽造されたハッシュ/壊れたbase64の拒否、（4）表示用結果が本原本と違う時の採用禁止を固定。
+- **実データ学習は未実行**：手元のRaceDataBank SQLiteは取得できず、公開D1の保存原本と新massモデルの訓練適格条件を満たす十分な日時付きレース集合を確定できない。日付一覧・数レースの標本監査を全数検査と呼ばない。旧Bモデルの73R中24Rという数字を新massモデルに流用しない。本番予想エンジンは退役のまま。
