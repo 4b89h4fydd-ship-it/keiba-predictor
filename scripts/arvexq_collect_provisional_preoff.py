@@ -127,6 +127,18 @@ def provisional_capture(detail, *, now):
     return record
 
 
+def _history_coverage(detail):
+    """Count observed histories only; no new data source or synthetic runs."""
+    horses = detail.get("horses")
+    if not isinstance(horses, list):
+        return 0, 0
+    active = [h for h in horses if isinstance(h, dict) and not (
+        any(h.get(key) for key in ("scratched", "withdrawn", "cancelled"))
+        or any(word in str(h.get("status") or "").upper() for word in SCRATCH_WORDS)
+    )]
+    return sum(bool(h.get("recentRaces") or h.get("allPastRuns")) for h in active), len(active)
+
+
 def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
             fetch=None):
     clock = (now or datetime.now(JST)).astimezone(JST)
@@ -161,32 +173,39 @@ def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
         rid = str(row["id"])
         try:
             detail = None
-            errors = []
-            # The legacy endpoint may be absent for a race for which the D1
-            # display endpoint still has the full stored history.
+            best_history = -1
+            # Both routes already belong to the same existing API. Do not
+            # accept a matching but history-empty compact response while the
+            # existing display response can provide the actual past runs.
             for suffix in ("", "?view=display"):
                 path = root + "/api/race/" + quote(rid, safe="") + suffix
                 try:
                     body = fetcher(path)
                 except Exception as exc:
                     if getattr(exc, "code", None) == 404:
-                        errors.append("not-found")
                         continue
                     raise
                 candidate = body.get("detail")
-                if isinstance(candidate, dict) and str(candidate.get("id")) == rid:
-                    detail = candidate
+                if not isinstance(candidate, dict) or str(candidate.get("id")) != rid:
+                    continue
+                history, runners = _history_coverage(candidate)
+                if detail is None or history > best_history:
+                    detail, best_history = candidate, history
+                if runners >= 3 and history == runners:
                     break
-                else:
-                    errors.append("missing-or-wrong-identity")
-            if detail is None:
-                # A same-source day response is the final full-history
-                # fallback. Never reuse a different race's payload.
+            if detail is None or best_history == 0:
+                # Already existing same-API day details provide the final
+                # fallback. Retain the better valid same-race response; never
+                # manufacture histories or mix horses from other races.
                 if fallback is None:
                     fallback = fetcher(root + "/api/day?date=" + day + "&details=1")
                 details = fallback.get("details") or []
-                detail = next((x for x in details if isinstance(x, dict)
-                               and str(x.get("id")) == rid), None)
+                candidate = next((x for x in details if isinstance(x, dict)
+                                  and str(x.get("id")) == rid), None)
+                if candidate is not None:
+                    history, _ = _history_coverage(candidate)
+                    if detail is None or history > best_history:
+                        detail, best_history = candidate, history
             if not isinstance(detail, dict) or str(detail.get("id")) != rid:
                 raise ValueError("no matching full race detail in existing API")
             if str(detail.get("date")) != str(row.get("date")):
