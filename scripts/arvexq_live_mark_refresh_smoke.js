@@ -2,7 +2,19 @@
 'use strict';
 // The retired 60/40 engine must never regenerate marks from raw past runs.\n// Only learned D1 predictions or verified historical originals can appear.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
+function loadActualProductionApp(){
+  const versionPath='dist/version.json';
+  if(fs.existsSync(versionPath)){
+    const version=JSON.parse(fs.readFileSync(versionPath,'utf8')).build;
+    return fs.readFileSync('dist/app-'+version+'.js','utf8');
+  }
+  // Standalone smoke tests must still execute the actual box-composed source.
+  const {execFileSync}=require('node:child_process');
+  return execFileSync('python',['-c',
+    "from pathlib import Path; from arvexq.ui.bundle import compose_app_script; print(compose_app_script(Path('arvexq/ui/static/app.js').read_text(encoding='utf-8')))"
+  ],{encoding:'utf8'});
+}
+const root=loadActualProductionApp();
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 assert(root.includes(boot),'main boot anchor changed');
 const source=root.replace(boot,'window.__arvexqMarkTest={predict,state};');
