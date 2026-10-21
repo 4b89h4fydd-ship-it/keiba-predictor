@@ -50,8 +50,13 @@ def frozen_training_rows_from_detail(detail: dict[str, Any]) -> list[dict[str, A
     if expected != _feature_hash(snapshot):
         return []
     if (str(snapshot.get("raceId") or "") != str(detail.get("id") or detail.get("raceId") or "")
-            or str(snapshot.get("date") or "") != str(detail.get("date") or "")
-            or str(snapshot.get("circuit") or "") != str(detail.get("circuit") or "")):
+            or str(snapshot.get("date") or "") != str(detail.get("date") or "")):
+        return []
+    # Existing lossless archive details can omit the outer circuit; in that
+    # legacy shape the immutable snapshot remains the owner of circuit.
+    # When the outer circuit is present it must agree with the frozen owner.
+    outer_circuit = detail.get("circuit")
+    if outer_circuit not in (None, "") and str(snapshot.get("circuit") or "") != str(outer_circuit):
         return []
     if detail.get("massFeatureHash") and str(detail["massFeatureHash"]) != expected:
         return []
