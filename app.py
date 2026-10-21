@@ -6320,6 +6320,11 @@ def _arvexq_original__bootstrap_rows_local(date:str)->list[dict]:
     for r in rows:
         rid=str(r.get("id") or "")
         if not rid or rid in seen:continue
+        # Only current user-facing bundles exclude retired Banei. Never
+        # mutate saved D1 originals or archival history.
+        if str(r.get("track") or "") in ("帯広", "帯広ば") or any(
+            f"-{name}-" in rid for name in ("帯広", "帯広ば")
+        ):continue
         seen.add(rid);out.append(r)
     out.sort(key=lambda r:(str(r.get("circuit") or ""),str(r.get("track") or ""),int(r.get("raceNumber") or 0)))
     return out
