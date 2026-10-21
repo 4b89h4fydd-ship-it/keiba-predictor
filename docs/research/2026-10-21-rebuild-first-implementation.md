@@ -85,3 +85,17 @@ python scripts/train_mass_models.py /tmp/nar-frozen.jsonl /tmp/arvexq-nar-models
 
 `/path/to/actual-races.sqlite3` は利用者が所持する**既存の実データベース**へのプレースホルダーであり、存在確認・実学習実行を意味しない。取り込み元・保存方法を新設したり、欠測データを生成して埋めたりしない。第2段階の本番予想・未来の的中成績は未証明。
 
+
+## 第3段階：保存済み発走前特徴量の原本ハッシュ検証（2026-10-21）
+
+**実物の原票の照合**:
+- GitHub Actions [run 39109130771](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39109130771) artifact ID `12129925831` をダウンロード。ZIP内 `sealed-b-real-holdout.json` の数値を読み戻した。全396R、B方式の適格198R、不適格159R（発走前原本なし）+39R（結果不備）。地方平地の既存B方式は train47 / validation21（1R採点不能）/ test73で、test勝者Top1=24/73。**既存Bモデルの結果であり、新massモデルの成績と混同しない**。
+- GitHub Actions [run 39591525811](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/39591525811) artifact ID `12342736799` をダウンロード。2026-10-21門別12Rの発走前特徴量は `verifiedForTraining=false`。原本の検査に留め、学習対象に追加しない。モデル評価用に未検証データを無理に埋めない。
+
+**今回の既存学習経路の修正**:
+- `mass_training_store.py::frozen_training_rows_from_detail` は、圧縮されていない`massFeatureSnapshot`も、圧縮アーカイブと同じ既存の`_feature_hash`で保存内容を再計算して照合。今までは `featureHash` が単に存在するだけで通過できた。レースID・日付・中央/地方・外側の保存ハッシュ・存在する場合の発走前lockハッシュ・原本アーカイブの明示不整合も照合し、不一致なら学習行を作らない。明示`verifiedForTraining=false`も除外。
+- `mass_training_dataset.py::_finish_map` は着順表に同じ馬番が重複した場合、最後の行で上書きする挙動を廃止。不正馬番・着順・曖昧な行の存在時はレースを採点不可とする。既存の全頭一致・1着馬一頭ゲートは維持。
+- `tests/test_mass_winner_top1_rebuild.py` に原本ハッシュ改ざん、競馬区分と日付、外側のハッシュ、明示学習不可、重複結果の回帰検証を追加。
+
+**限界**: 正しい内容ハッシュは発走前取得時刻の第三者証明にはならない。新massモデルのJRA/NAR別の真正な発走前学習データの母数・実学習・未来レースの実測成績は依然未確認。現行のStage63/64退役本番予想、既存D1・UI・取得経路・200箱、mainは一切変更していない。
+
