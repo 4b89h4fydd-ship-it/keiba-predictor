@@ -189,6 +189,22 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
     if not any((h.get("recentRaces") or h.get("allPastRuns"))
                for h in active) and detail.get("analysisMode") not in ("新馬", "障害"):
         return {"status": "missing-historical-evidence"}
+    # Record only a complete user-approved Stage64 pre-off research forecast.
+    # Keep old originals untouched; neither marks grades nor bets are invented.
+    if build is None and assign is None:
+        from arvexq.forecast.engine import build_prediction
+        candidate = build_prediction(detail, now=now)
+        if candidate is not None and all(
+            isinstance(step, dict) and step.get("value") is not None
+            for step in candidate["stages"].values()
+        ):
+            old_shadow = detail.get("researchShadow")
+            if old_shadow is None or isinstance(old_shadow, dict):
+                if isinstance(old_shadow, dict) and "stage64" in old_shadow:
+                    return {"status": "already-research-saved"}
+                copied = copy.deepcopy(detail)
+                copied["researchShadow"] = {**(old_shadow or {}), "stage64": candidate}
+                return {"status": "research-ready", "detail": copied}
     if assign is None:
         from arvexq.prediction.final_marks import apply_core_marks
         assign = apply_core_marks
@@ -339,7 +355,8 @@ def main() -> int:
     report: dict[str, Any] = {
         "version": "v2", "at": now.isoformat(timespec="seconds"), "day": day,
         "races_seen": len(races), "due_count": len(due),
-        "sealed": [], "already_sealed": [], "missing": [],
+        "sealed": [], "already_sealed": [], "research_saved": [],
+        "already_research_saved": [], "missing": [],
         "missed_after_post": [], "missed_bet_after_post": [],
         "urgent_missing": [], "errors": [],
     }
@@ -358,6 +375,27 @@ def main() -> int:
                     return {"id": rid, "status": "missing-historical-evidence",
                             "reason": f"{type(exc).__name__}: {exc}"[:250]}
             result = prepare_seal(old, now=datetime.now(JST))
+            if result["status"] == "research-ready":
+                detail = result["detail"]
+                if datetime.now(JST) >= post_at(detail):
+                    return {"id": rid, "status": "started-no-new-lock"}
+                candidate = ((detail.get("researchShadow") or {}).get("stage64"))
+                if not isinstance(candidate, dict) or candidate.get("raceId") != rid:
+                    raise ValueError("Stage64 research identity mismatch")
+                payload = {
+                    "summaries": [], "details": [encode_sealed_d1_sync_detail(detail)],
+                    "meta": {"source": "github-actions-prerace-stage64-research-v1",
+                             "sync_date": day, "stage64_research": True},
+                }
+                request_json(base + "/api/sync", payload=payload, token=token, retries=4)
+                readback = detail_from(request_json(url + "?verify=" + str(time.time_ns())), rid)
+                persisted = ((readback or {}).get("researchShadow") or {}).get("stage64")
+                canon = lambda value: json.dumps(value, ensure_ascii=False, sort_keys=True,
+                                                 separators=(",", ":"), allow_nan=False)
+                if not isinstance(persisted, dict) or canon(persisted) != canon(candidate):
+                    return {"id": rid, "status": "verification-failed",
+                            "reason": "Stage64 D1 readback mismatch"}
+                return {"id": rid, "status": "research-saved"}
             if result["status"] != "sealed":
                 return {"id": rid, **{k: v for k, v in result.items() if k not in ("detail",)}}
             detail = result["detail"]
@@ -406,6 +444,10 @@ def main() -> int:
                 row = f.result()
                 if row["status"] == "sealed":
                     report["sealed"].append(row["id"])
+                elif row["status"] == "research-saved":
+                    report["research_saved"].append(row["id"])
+                elif row["status"] == "already-research-saved":
+                    report["already_research_saved"].append(row["id"])
                 elif row["status"] == "already-sealed":
                     report["already_sealed"].append(row["id"])
                 elif row["status"] in ("error", "verification-failed"):
@@ -434,7 +476,7 @@ def main() -> int:
             report["urgent_missing"].append(item)
     Path(args.audit).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print("PRERACE_SEAL_AUDIT", json.dumps({
-        k: report[k] for k in ("races_seen", "due_count", "sealed", "already_sealed", "missing", "urgent_missing", "missed_after_post", "missed_bet_after_post", "errors")
+        k: report[k] for k in ("races_seen", "due_count", "sealed", "already_sealed", "research_saved", "already_research_saved", "missing", "urgent_missing", "missed_after_post", "missed_bet_after_post", "errors")
     }, ensure_ascii=False))
     if report["errors"] or report["urgent_missing"] or report["missed_after_post"] or report["missed_bet_after_post"]:
         return 2

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from arvexq.diagnosis import build_diagnosis
+from arvexq.forecast.engine import build_prediction
 from arvexq.features.horse_features import attach_race_features
 from arvexq.horse_detail import build_horse_details
 from arvexq.ingest.source_merge import merge_race_sources
@@ -43,4 +44,16 @@ def prepare_race_detail(detail: dict[str, Any]) -> dict[str, Any]:
     detail["horseDetailView"] = build_horse_details(detail)
     detail["diagnosisView"] = build_diagnosis(detail)
     detail["pacePredictionView"] = build_pace_prediction(detail)
+
+    # Route the user-approved Stage64 trial through the sole existing forecast
+    # engine. Keep any earlier research evidence and immutable originals intact.
+    # This is a provisional six-stage observation, NOT a sealed result or a
+    # calibrated betting recommendation. The engine excludes post-off input.
+    forecast = build_prediction(detail)
+    if forecast is not None:
+        shadow = detail.get("researchShadow")
+        if shadow is None or isinstance(shadow, dict):
+            copy_shadow = dict(shadow or {})
+            copy_shadow.setdefault("stage64", forecast)
+            detail["researchShadow"] = copy_shadow
     return detail
