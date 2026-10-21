@@ -153,6 +153,13 @@ class NARContextFeatureTest(unittest.TestCase):
         other["recentRaces"][0]["cornerPositions"] = [9, 9, 9, 9]
         rows = build_race_feature_matrix([horse, other], race)
         self.assertTrue(any(k.startswith("relative::nar::pace") for k in rows[0]["features"]))
+        self.assertAlmostEqual(rows[0]["features"]["nar::scenario::rival_front_rate_sum"], 0.5)
+        self.assertAlmostEqual(rows[1]["features"]["nar::scenario::rival_front_rate_sum"], 1.0)
+        self.assertEqual(rows[0]["features"]["nar::scenario::observed_front_profiles"], 2)
+        scratched = deepcopy(other)
+        scratched["scratched"] = True
+        without_rival = build_race_feature_matrix([horse, scratched], race)
+        self.assertNotIn("nar::scenario::rival_front_rate_sum", without_rival[0]["features"])
         jra = build_race_feature_matrix([horse, other], {**race, "circuit": "中央"})
         self.assertFalse(any("nar::" in k for row in jra for k in row["features"]))
 
