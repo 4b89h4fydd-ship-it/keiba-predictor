@@ -59,6 +59,38 @@ class AutoCapture(unittest.TestCase):
             with self.subTest(source=source), self.assertRaises(ValueError):
                 select_future(source, "nar", PLAN, NOW)
 
+    def test_saved_prefetch_index_and_details_must_match_before_freeze(self):
+        first = race("jra", 1)
+        second = race("nar", 2)
+        extra = race("jra", 3)
+        complete = {"races": [first, second], "details": [second, first]}
+        chosen, audit = select_future(complete, "jra", PLAN, NOW)
+        self.assertEqual([r["id"] for r in chosen], [first["id"]])
+        self.assertFalse(audit["fullCalendarVerified"])
+        self.assertFalse(audit["independentlyVerifiedPreoff"])
+        # An incomplete D1 detail readback must never become a partial cohort.
+        invalid_pairs = [
+            {"races": [first, second], "details": [first]},
+            {"races": [first], "details": [first, extra]},
+            {"races": [first, first], "details": [first]},
+            {"races": [first], "details": [first, first]},
+            {"races": [], "details": [first]},
+        ]
+        for source in invalid_pairs:
+            with self.subTest(source=source), self.assertRaisesRegex(
+                ValueError, "races/details identity mismatch"
+            ):
+                select_future(source, "jra", PLAN, NOW)
+
+    def test_saved_prefetch_invalid_race_index_fails_closed(self):
+        target = race("nar", 1)
+        for malformed in (None, {}, [None], [{"id": ""}], [{"id": 1}]):
+            source = {"races": malformed, "details": [target]}
+            with self.subTest(index=malformed), self.assertRaisesRegex(
+                ValueError, "race index invalid"
+            ):
+                select_future(source, "nar", PLAN, NOW)
+
     def test_keep_unscorable_preoff_in_forecast_cohort(self):
         row=race("nar",1)  # no horse history: separate research stage records blockers
         selected,_=select_future({"details":[row]},"nar",PLAN,NOW)
