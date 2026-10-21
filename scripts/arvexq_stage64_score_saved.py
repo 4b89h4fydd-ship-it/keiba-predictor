@@ -17,6 +17,7 @@ from arvexq.research.stage64.circuits import circuit
 from arvexq.research.stage64.evaluation import evaluate
 from arvexq.research.stage64.protocol import post_at
 from arvexq.research.stage64.witness import GitHubArtifacts, read_witness, verify_batch, instant
+from scripts.arvexq_stage64_auto_capture import require_complete_saved_details
 
 
 def settled(detail):
@@ -101,6 +102,9 @@ def assemble_results(batch, saved):
     """Require one confirmed saved detail per frozen race, no result cherry-picking."""
     if not isinstance(saved, dict) or not isinstance(saved.get("details"), list):
         raise ValueError("saved result details missing")
+    # A completed D1 result readback must not hide missing unrelated details:
+    # scoring only the frozen IDs would otherwise mark a partial day complete.
+    require_complete_saved_details(saved, saved["details"])
     wanted = set(batch["cohort"])
     found = {}
     for row in saved["details"]:
