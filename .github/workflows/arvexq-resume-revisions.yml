@@ -126,21 +126,33 @@ jobs:
       - name: Verify every live race still equals the complete calculation source
         run: |
           python - <<'PY'
-          import sqlite3,hashlib
-          def digest(path):
-              db=sqlite3.connect('file:'+path+'?mode=ro',uri=True)
-              h=hashlib.sha256();count=0
-              for rid,payload in db.execute('SELECT race_id,payload FROM race_details ORDER BY race_id'):
-                  h.update(len(rid).to_bytes(4,'big'));h.update(rid.encode())
-                  h.update(len(payload).to_bytes(8,'big'));h.update(payload.encode())
-                  count+=1
-              db.close()
-              return count,h.hexdigest()
+          import json,sqlite3,hashlib
+          from arvexq.ingest.full_snapshot_codec import unpack_detail
+          from arvexq.prediction.forecast_revisions import input_hash,originals_hash
+          def source_rows(path):
+              with sqlite3.connect('file:'+path+'?mode=ro',uri=True) as db:
+                  return dict(db.execute('SELECT race_id,payload FROM race_details'))
+          old=source_rows('/tmp/revision-original-source.sqlite3')
+          current=source_rows('/tmp/arvexq-complete-d1.sqlite3')
+          missing=sorted(set(old)-set(current));changed=[];refresh_only=[]
+          def forecast_inputs(raw):
+              d=unpack_detail(json.loads(raw))
+              # The existing engine input digest plus the exact ticket/status fields.
+              # Result/odds refreshes do not change an already-computed forecast.
+              extra={k:d.get(k) for k in ('id','date','startTime','scheduledStartTime','availableBetTypes','placePlaces','preOffMarket')}
+              extra['runners']=[{k:h.get(k) for k in ('horseNumber','scratched','withdrawn','cancelled','status','frameNumber')} for h in d.get('horses',[])]
+              return input_hash(d),originals_hash(d),json.dumps(extra,sort_keys=True,ensure_ascii=False)
+          for rid in sorted(set(old)&set(current)):
+              if old[rid]==current[rid]:continue
+              if forecast_inputs(old[rid])!=forecast_inputs(current[rid]):changed.append(rid)
+              else:refresh_only.append(rid)
+          report={'rebuiltRaces':len(old),'liveRaces':len(current),'addedRaceIds':sorted(set(current)-set(old)),
+                  'missingRaceIds':missing,'changedForecastInputRaceIds':changed,'resultOrMetadataRefreshRaceIds':refresh_only}
           from pathlib import Path
-          old=digest('/tmp/revision-original-source.sqlite3')
-          current=digest('/tmp/arvexq-complete-d1.sqlite3')
-          assert old==current,('LIVE_RACE_DETAILS_CHANGED_NO_STALE_FORECAST_PUBLICATION',old[0],current[0])
-          print('ALL_LIVE_FORECAST_INPUTS_MATCH_REBUILT_ORIGINALS',old)
+          Path('/tmp/forecast-revisions/source-comparison.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          print('EXISTING_FORECAST_SOURCE_COMPARISON',json.dumps({k:len(v) if isinstance(v,list) else v for k,v in report.items()}),flush=True)
+          assert not missing and not changed,'EXISTING_FORECAST_INPUTS_CHANGED_REFUSING_STALE_PUBLICATION'
+          print('ALL_REBUILT_FORECAST_INPUTS_MATCH_LIVE_ORIGINALS',len(old),'additional live races',len(report['addedRaceIds']))
           PY
       - name: Measure D1 capacity on a disposable copy before any production writes
         run: |
@@ -181,4 +193,5 @@ jobs:
           path: |
             /tmp/forecast-revisions/rebuild-summary.json
             /tmp/forecast-revisions/revisions.sqlite3.publish.json
+            /tmp/forecast-revisions/source-comparison.json
           retention-days: 30
