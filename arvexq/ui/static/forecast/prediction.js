@@ -61,7 +61,7 @@
     var verifiedPreoff=rev.analysisType==='preoff-candidate'&&
       Number.isFinite(expectedPost)&&Number.isFinite(createdAt)&&createdAt<expectedPost;
     return {marks:marks,kind:verifiedPreoff?'preoff-candidate':'retrospective',scenarios:rev.scenarioSummaries||[],
-            modelVersion:rev.modelVersion||'',uncalibrated:rev.probabilityModelStatus!=='calibrated'};
+            forecastText:String(rev.forecastText||''),modelVersion:rev.modelVersion||'',uncalibrated:rev.probabilityModelStatus!=='calibrated'};
   }
 
   function build(race){
@@ -78,7 +78,7 @@
           p3Probability:null,overallGrade:'',coverage:0};
       });
     last={active:!!marks,source:originals?'saved-preoff':(revision?'learned-revision-'+revision.kind:''),
-      scenarios:revision?revision.scenarios:[],modelVersion:revision?revision.modelVersion:'',
+      scenarios:revision?revision.scenarios:[],forecastText:revision?revision.forecastText:'',modelVersion:revision?revision.modelVersion:'',
       uncalibrated:!!revision&&revision.uncalibrated,unavailable:!marks,
       marks:marks?rows.filter(function(r){return !!r.predMark}).map(function(r){
         return {horseNumber:Number(r.horse.horseNumber),name:String(r.horse.name||''),mark:r.predMark};
@@ -88,7 +88,7 @@
   }
   function current(){
     return {active:last.active,source:last.source||'',unavailable:!!last.unavailable,
-      scenarios:(last.scenarios||[]).slice(),modelVersion:last.modelVersion||'',uncalibrated:!!last.uncalibrated,
+      scenarios:(last.scenarios||[]).slice(),forecastText:last.forecastText||'',modelVersion:last.modelVersion||'',uncalibrated:!!last.uncalibrated,
       marks:last.marks.map(function(x){return Object.assign({},x)})};
   }
   root.ARVEXQProductionPrediction=Object.freeze({build:build,current:current});
