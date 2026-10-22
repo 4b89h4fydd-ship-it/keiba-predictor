@@ -110,7 +110,13 @@ class LearnedScenariosTests(TestCase):
         no_history = deepcopy(good)
         no_history['id'] = 'missing-prerace-history'
         no_history['horses'][0]['recentRaces'] = []
-        for corrupt in (partial, duplicate, no_history):
+        invalid_finish = deepcopy(good)
+        invalid_finish['id'] = 'non-numeric-result'
+        invalid_finish['result']['finishers'][0]['finish'] = 'not-a-rank'
+        missing_finish = deepcopy(good)
+        missing_finish['id'] = 'missing-result-position'
+        missing_finish['result']['finishers'][0].pop('finish')
+        for corrupt in (partial, duplicate, no_history, invalid_finish, missing_finish):
             with self.subTest(race_id=corrupt['id']):
                 with self.assertRaisesRegex(ValueError, 'no observed, labelled training races'):
                     fit_model([corrupt], circuit='地方')
