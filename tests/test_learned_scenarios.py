@@ -130,6 +130,16 @@ class LearnedScenariosTests(TestCase):
                 model = fit_model([good, corrupt], circuit='地方')
                 self.assertEqual(model['training']['raceIds'], [good['id']])
 
+        # The same rejection rule applies independently to JRA; there is no
+        # cross-circuit fallback to rescue an incomplete field.
+        jra = training_race('中央')
+        incomplete_jra = deepcopy(jra)
+        incomplete_jra['result']['finishers'].pop()
+        with self.assertRaisesRegex(ValueError, 'no observed, labelled training races'):
+            fit_model([incomplete_jra], circuit='中央')
+        with self.assertRaisesRegex(ValueError, 'no observed, labelled training races'):
+            fit_model([good], circuit='中央')
+
     def test_training_determinism_and_empty_bad_artifacts(self):
         model = fit_model([training_race('地方')], circuit='地方')
         self.assertEqual(model,self.models['地方'])
