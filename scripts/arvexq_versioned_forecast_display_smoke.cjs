@@ -23,7 +23,7 @@ const historical={...race,_forecastRevisionView:{...revision,analysisType:'retro
 predicted=root.ARVEXQProductionPrediction.build(historical);
 assert.equal(root.ARVEXQProductionPrediction.current().source,'learned-revision-retrospective');
 assert.match(root.ARVEXQMarkFrame.render(),/事後再分析/);
-assert.match(root.ARVEXQPredictionFrame.render(),/当時/);
+assert.match(root.ARVEXQPredictionFrame.render(),/事後再分析/);
 const invalid={...race,_forecastRevisionView:{...revision,horses:revision.horses.slice(1)}};
 predicted=root.ARVEXQProductionPrediction.build(invalid);
 assert.equal(root.ARVEXQProductionPrediction.current().active,false);
