@@ -1,0 +1,23 @@
+{
+  "id": 199,
+  "name": "Cloudflareデプロイ・本番動作確認",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    ".github/workflows/arvexq-api-storage-deploy.yml",
+    ".github/workflows/arvexq-web-deploy.yml"
+  ],
+  "shared_dependencies": [
+    "Original deployment workflows remain authoritative in .github/workflows; production deployment is forbidden without approval",
+    "Contract validates workflow presence and safety invariants only; does not certify production execution"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

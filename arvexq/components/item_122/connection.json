@@ -1,0 +1,16 @@
+{
+  "id": 122,
+  "name": "本線買い目",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "unconnected-deferred",
+  "runtime_verified": false,
+  "connections": [],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": false,
+  "remaining_reason": "保存済み本線区分を扱う独立JS asset。既存ビルドPR #213と選定assetのPR #112の競合があり、ロード順/重複実行を変更しない。"
+}

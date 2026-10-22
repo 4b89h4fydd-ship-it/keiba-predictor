@@ -1,0 +1,137 @@
+{
+  "id": 125,
+  "name": "発走前の予想・買い目保存",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        125
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/forecast/preoff_d1_transport.py",
+        "line": 15,
+        "imported": "canonical",
+        "local_name": "canonical"
+      },
+      "original_source": "arvexq/forecast/preoff_evidence_store.py",
+      "box_target": "arvexq/components/item_125/preoff_evidence_store.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        125
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/forecast/preoff_d1_transport.py",
+        "line": 15,
+        "imported": "read_capture",
+        "local_name": "read_capture"
+      },
+      "original_source": "arvexq/forecast/preoff_evidence_store.py",
+      "box_target": "arvexq/components/item_125/preoff_evidence_store.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        125
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_collect_preoff_evidence.py",
+        "line": 14,
+        "imported": "capture_preoff_features",
+        "local_name": "capture_preoff_features"
+      },
+      "original_source": "arvexq/forecast/preoff_capture.py",
+      "box_target": "arvexq/components/item_125/preoff_capture.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        125
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_collect_preoff_evidence.py",
+        "line": 15,
+        "imported": "open_store",
+        "local_name": "open_store"
+      },
+      "original_source": "arvexq/forecast/preoff_evidence_store.py",
+      "box_target": "arvexq/components/item_125/preoff_evidence_store.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        125
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_collect_preoff_evidence.py",
+        "line": 15,
+        "imported": "append_capture",
+        "local_name": "append_capture"
+      },
+      "original_source": "arvexq/forecast/preoff_evidence_store.py",
+      "box_target": "arvexq/components/item_125/preoff_evidence_store.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        125
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "scripts/arvexq_verified_holdout.py",
+        "line": 13,
+        "imported": "open_store",
+        "local_name": "open_store"
+      },
+      "original_source": "arvexq/forecast/preoff_evidence_store.py",
+      "box_target": "arvexq/components/item_125/preoff_evidence_store.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        125
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "loadStoredAiBet",
+        "line": 1390
+      },
+      "original_source": "arvexq/ui/static/app.js::loadStoredAiBet",
+      "box_target": "arvexq/components/item_125/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_loadStoredAiBet"
+    },
+    {
+      "items": [
+        125
+      ],
+      "kind": "existing-ui-function-forward",
+      "caller": {
+        "path": "arvexq/ui/static/app.js",
+        "symbol": "saveStoredAiBet",
+        "line": 1398
+      },
+      "original_source": "arvexq/ui/static/app.js::saveStoredAiBet",
+      "box_target": "arvexq/components/item_125/routes.js",
+      "verification": "接続コード記述のみ・実行未検証",
+      "original_private_name": "_arvexq_original_saveStoredAiBet"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

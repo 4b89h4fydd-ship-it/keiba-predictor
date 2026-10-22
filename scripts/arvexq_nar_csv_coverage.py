@@ -10,7 +10,7 @@ import json
 from collections import Counter
 
 from arvexq.databanks.nar_official_csv import rows_from_archive, race_key, item, NarOfficialArchive, number, date
-from arvexq.ingest.nar_official_metadata import audit_official_race_metadata
+from arvexq.components.item_021.nar_official_metadata import audit_official_race_metadata
 
 
 def audit(paths, target_date=None):

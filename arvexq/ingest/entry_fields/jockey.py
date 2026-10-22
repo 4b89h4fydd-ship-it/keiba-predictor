@@ -1,7 +1,7 @@
 """Extract and normalize only jockey from a provider row. Missing values remain absent."""
 import re
 from .dom import horse_info, text
-from arvexq.ingest.field_normalization import _clean
+from arvexq.components.item_040.field_normalization import _clean
 
 def extract(row):
     info = horse_info(row)

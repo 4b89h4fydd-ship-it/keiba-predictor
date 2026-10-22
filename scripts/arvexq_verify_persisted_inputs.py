@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from arvexq.pipeline.persisted_inputs import verify_persisted_facts
+from arvexq.components.item_111.persisted_inputs import verify_persisted_facts
 
 
 def main() -> int:

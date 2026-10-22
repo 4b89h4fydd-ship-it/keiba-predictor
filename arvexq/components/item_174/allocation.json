@@ -1,0 +1,60 @@
+{
+  "id": 174,
+  "name": "D1接続",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "workers/api_full_snapshot.mjs::<module>",
+    "workers/api_full_snapshot.mjs::restoreBytes",
+    "workers/api_full_snapshot.mjs::restoreBytes.@anonymous:5:52",
+    "workers/api_full_snapshot.mjs::restoreBytes.@anonymous:7:82",
+    "workers/api_full_snapshot.mjs::readCompressedRace",
+    "workers/api_full_snapshot.mjs::readCompressedRace.start",
+    "workers/api_full_snapshot.mjs::rewriteDetailSQL",
+    "workers/api_full_snapshot.mjs::storageEnvironment",
+    "workers/api_full_snapshot.mjs::storageEnvironment.get",
+    "workers/api_full_snapshot.mjs::storageEnvironment.get.@anonymous:33:76",
+    "workers/api_full_snapshot.mjs::compressStoredSnapshot",
+    "workers/api_full_snapshot.mjs::compressStoredSnapshot.@anonymous:47:85",
+    "workers/api_full_snapshot.mjs::compressStoredSnapshot.@anonymous:56:71",
+    "workers/api_full_snapshot.mjs::compressStoredSnapshot.@anonymous:56:102",
+    "workers/api_full_snapshot.mjs::compressStoredSnapshot.@anonymous:56:102.@anonymous:56:149"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "workers/api_full_snapshot.mjs::<module>",
+    "workers/api_full_snapshot.mjs::restoreBytes",
+    "workers/api_full_snapshot.mjs::restoreBytes.@anonymous:5:52",
+    "workers/api_full_snapshot.mjs::restoreBytes.@anonymous:7:82",
+    "workers/api_full_snapshot.mjs::readCompressedRace",
+    "workers/api_full_snapshot.mjs::readCompressedRace.start",
+    "workers/api_full_snapshot.mjs::rewriteDetailSQL",
+    "workers/api_full_snapshot.mjs::storageEnvironment",
+    "workers/api_full_snapshot.mjs::storageEnvironment.get",
+    "workers/api_full_snapshot.mjs::storageEnvironment.get.@anonymous:33:76",
+    "workers/api_full_snapshot.mjs::compressStoredSnapshot",
+    "workers/api_full_snapshot.mjs::compressStoredSnapshot.@anonymous:47:85",
+    "workers/api_full_snapshot.mjs::compressStoredSnapshot.@anonymous:56:71",
+    "workers/api_full_snapshot.mjs::compressStoredSnapshot.@anonymous:56:102",
+    "workers/api_full_snapshot.mjs::compressStoredSnapshot.@anonymous:56:102.@anonymous:56:149"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "scripts/arvexq_full_snapshot_smoke.mjs",
+    "workers/api.mjs"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "workers/api_full_snapshot.mjs"
+  ],
+  "static_workflow_dependency_files": [
+    "workers/api_full_snapshot.mjs"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

@@ -1,0 +1,9 @@
+{
+  "scope": "JavaScript/ESMの構文とimport名、元本文の静的照合のみ。UI・Worker・テストは実行しない。",
+  "parsed_files": 144,
+  "syntax_errors": [],
+  "relative_import_errors": [],
+  "preserved_ui_bodies": 102,
+  "ui_body_errors": [],
+  "worker_original_body_errors": []
+}

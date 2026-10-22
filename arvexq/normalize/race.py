@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from arvexq.core.runner_status import normalize_runner_status
+from arvexq.components.item_036.runner_status import normalize_runner_status
 
 
 def _number(value: Any) -> int | float | None:

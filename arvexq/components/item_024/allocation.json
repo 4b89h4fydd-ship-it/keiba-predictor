@@ -1,0 +1,40 @@
+{
+  "id": 24,
+  "name": "重複レース統合",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/race_summary_merge.py::<module>",
+    "arvexq/ingest/race_summary_merge.py::summary_key",
+    "arvexq/ingest/race_summary_merge.py::index_summaries",
+    "arvexq/ingest/race_summary_merge.py::merge_refreshed_summaries",
+    "arvexq/ingest/race_summary_merge.py::choose_card_identifiers"
+  ],
+  "owned_refs": [
+    "arvexq/ingest/race_summary_merge.py::<module>",
+    "arvexq/ingest/race_summary_merge.py::summary_key",
+    "arvexq/ingest/race_summary_merge.py::index_summaries",
+    "arvexq/ingest/race_summary_merge.py::merge_refreshed_summaries",
+    "arvexq/ingest/race_summary_merge.py::choose_card_identifiers"
+  ],
+  "shared_refs": [],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "app.py",
+    "tests/test_race_summary_merge.py"
+  ],
+  "callee_files": [],
+  "static_app_dependency_files": [
+    "arvexq/ingest/race_summary_merge.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/race_summary_merge.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

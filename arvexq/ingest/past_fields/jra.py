@@ -4,19 +4,19 @@ This adapter does not calculate forecasts or persist sources. Individual fields
 may be replaced and unit-tested without reimplementing the race-card parser.
 """
 import re
-from .date import extract_date
-from .track import extract_track
-from .distance import extract_distance, extract_surface
-from .going import extract_going
-from .finish import extract_finish
-from .clock import extract_time_seconds
-from .margin import extract_margin_seconds
-from .corners import extract_corners
-from .carried_weight import extract_carried_weight
-from .field_size import extract_field_size
-from .jockey import extract_jockey
-from .last3f import extract_last3f_seconds
-from .grade import extract_class
+from arvexq.components.item_042.date import extract_date
+from arvexq.components.item_043.track import extract_track
+from arvexq.components.item_044.distance import extract_distance, extract_surface
+from arvexq.components.item_045.going import extract_going
+from arvexq.components.item_047.finish import extract_finish
+from arvexq.components.item_048.clock import extract_time_seconds
+from arvexq.components.item_049.margin import extract_margin_seconds
+from arvexq.components.item_050.corners import extract_corners
+from arvexq.components.item_052.carried_weight import extract_carried_weight
+from arvexq.components.item_054.field_size import extract_field_size
+from arvexq.components.item_053.jockey import extract_jockey
+from arvexq.components.item_051.last3f import extract_last3f_seconds
+from arvexq.components.item_046.grade import extract_class
 
 def parse_jra_history_cell(cell, cutoff, tracks, race_id=""):
     text=re.sub(r"\s+"," ",cell.get_text(" ",strip=True)).strip()

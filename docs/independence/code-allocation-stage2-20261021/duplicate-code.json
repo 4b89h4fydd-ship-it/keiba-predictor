@@ -1,0 +1,463 @@
+{
+  "exact_source_groups": [
+    {
+      "sha256": "d6a401243ff87dc95105e75f101796dcbe593f89cba1a4a6112e7b9132935874",
+      "refs": [
+        "app.py::_jra_parse_result.hidx",
+        "arvexq/ingest/netkeiba_result.py::parse_current_result_html.hidx"
+      ]
+    },
+    {
+      "sha256": "defd4cffb6440f0ce9bc878565b4b6e1e89fa36e0d70800497be74bf748806f2",
+      "refs": [
+        "arvexq/diagnosis.py::_pick",
+        "arvexq/history.py::_pick",
+        "arvexq/horse_detail.py::_pick",
+        "arvexq/race_conditions.py::_pick"
+      ]
+    },
+    {
+      "sha256": "8461ac2507c85b516fae822ad3767371561051d7fb6b296f2e4ffd3098af54dd",
+      "refs": [
+        "arvexq/prediction/contextual_evidence.py::_f",
+        "arvexq/prediction/jra_sectional_evidence.py::_f",
+        "arvexq/prediction/mass_feature_factory.py::_f",
+        "arvexq/selection/race_selectability.py::_f"
+      ]
+    },
+    {
+      "sha256": "9814331f3d515392e4f9a9c720e9fa16d0999cf406765953edcd5b079fb4b27d",
+      "refs": [
+        "arvexq/selection/race_selectability.py::_i",
+        "arvexq/selection/race_selectability_training.py::_i"
+      ]
+    },
+    {
+      "sha256": "259cab84b8c06e1a681ca0dbbd1e68ff9460908bfae7bcf2e9154e976cceaff1",
+      "refs": [
+        "scripts/arvexq_current_prediction_audit.py::iv",
+        "scripts/arvexq_history_dedupe_challenger.py::iv"
+      ]
+    },
+    {
+      "sha256": "9bc8e58d520af62f0de2ba0deb174d20440afd12aa6d64bdf7c40edc4cbfa696",
+      "refs": [
+        "tests/test_d1_capacity_guard.py::DummyResponse.__enter__",
+        "tests/test_d1_seal_guard_display.py::Response.__enter__",
+        "tests/test_preoff_d1_transport.py::FakeResponse.__enter__"
+      ]
+    },
+    {
+      "sha256": "aee28f476e220589c81189084a0c38d683ef31848b48d270c4d324dadd7eead3",
+      "refs": [
+        "tests/test_nar_official_card.py::clean",
+        "tests/test_netkeiba_result_parser.py::clean"
+      ]
+    },
+    {
+      "sha256": "d72bd268d4b902cd7da232ed10cdff1672a489b967d532cd5d0c6410af566eae",
+      "refs": [
+        "arvexq/pipeline/morning_input_policy.js::status.@anonymous:14:35",
+        "scripts/arvexq_morning_picks.js::@anonymous:9:42"
+      ]
+    },
+    {
+      "sha256": "ed2eed09fd795caccea80c9ac11822d229ad81b7e27b887f2b94fb42b721fb78",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.n",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.n"
+      ]
+    },
+    {
+      "sha256": "dd85fedb4e4db0a14dbd692953e21555e3b77f32d28a7e36694cbc25e459256b",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.raceLiveBias.@anonymous:334:28.@anonymous:337:121",
+        "arvexq/ui/static/app.js::@anonymous:4:1.aiBetPlanHit.@anonymous:1612:172",
+        "arvexq/ui/static/app.js::@anonymous:4:1.aiDailyOne.@anonymous:1773:92",
+        "arvexq/ui/static/app.js::@anonymous:4:1.scheduleDailyAiStats.worker.@anonymous:1807:44.@anonymous:1812:100",
+        "arvexq/ui/static/app.js::@anonymous:4:1.schedulePreviousAiStats.@anonymous:1859:10.worker.@anonymous:1876:16.@anonymous:1880:108",
+        "arvexq/ui/static/app.js::@anonymous:4:1.venueTodayTrend.@anonymous:2559:15.@anonymous:2560:115",
+        "arvexq/ui/static/app.js::@anonymous:4:1.smartInlineResult.@anonymous:2631:133",
+        "arvexq/ui/static/app.js::@anonymous:4:1.renderActualFlow.@anonymous:2772:486",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.rowFromDetail.@anonymous:17:596"
+      ]
+    },
+    {
+      "sha256": "39ada707292500aabaeb1211fb8d4b424009c7215a941b12850e1e72484d58b5",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.latestSavedForecastRevision.@anonymous:766:29",
+        "arvexq/ui/static/research/saved_snapshot.js::@anonymous:2:1.marks.@anonymous:50:82"
+      ]
+    },
+    {
+      "sha256": "9a1e937c99d9d09b3b9e155d54b996da7c9fc96728ad66b476d436eea5983284",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.aiBetPlanHit.@anonymous:1612:132",
+        "arvexq/ui/static/app.js::@anonymous:4:1.aiDailyOne.@anonymous:1773:52",
+        "arvexq/ui/static/app.js::@anonymous:4:1.scheduleDailyAiStats.worker.@anonymous:1807:44.@anonymous:1812:60",
+        "arvexq/ui/static/app.js::@anonymous:4:1.schedulePreviousAiStats.@anonymous:1859:10.worker.@anonymous:1876:16.@anonymous:1880:68",
+        "arvexq/ui/static/app.js::@anonymous:4:1.venueTodayTrend.@anonymous:2559:15.@anonymous:2560:75",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.rowFromDetail.@anonymous:17:556"
+      ]
+    },
+    {
+      "sha256": "41a24d95584cb5a72f62dd7bb271f0efbb3e1db4daf2aa8a4c0accc2441a6e8b",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.aiBetPlanHit.@anonymous:1612:232",
+        "arvexq/ui/static/app.js::@anonymous:4:1.aiDailyOne.@anonymous:1774:18",
+        "arvexq/ui/static/app.js::@anonymous:4:1.scheduleDailyAiStats.worker.@anonymous:1807:44.@anonymous:1813:553",
+        "arvexq/ui/static/app.js::@anonymous:4:1.schedulePreviousAiStats.@anonymous:1859:10.worker.@anonymous:1876:16.@anonymous:1882:60",
+        "arvexq/ui/static/app.js::@anonymous:4:1.smartInlineResult.@anonymous:2631:218",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.rowFromDetail.@anonymous:17:703"
+      ]
+    },
+    {
+      "sha256": "6eff7200812bfac0c698acfcc3b4dc5aec4e0a857d1f4b0ba1066cf50d896539",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.cinematicContext.@anonymous:1677:638",
+        "arvexq/ui/static/app.js::@anonymous:4:1.smartRaceTopBar.@anonymous:1712:109",
+        "arvexq/ui/static/app.js::@anonymous:4:1.smartVenueGroup.@anonymous:1738:32.@anonymous:1739:69",
+        "arvexq/ui/static/app.js::@anonymous:4:1.mainRaceForTrack.@anonymous:1965:67",
+        "arvexq/ui/static/app.js::@anonymous:4:1.kochiFinalRace.@anonymous:1979:102",
+        "arvexq/ui/static/app.js::@anonymous:4:1.venueRows.@anonymous:2483:122",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.venueGroups.@anonymous:22:245.@anonymous:22:282"
+      ]
+    },
+    {
+      "sha256": "441f41af9948bb32595858c1b0ea511c679b6907587f096662ab3b0c5c8c2476",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.scheduleDailyAiStats.@anonymous:1798:62",
+        "arvexq/ui/static/app.js::@anonymous:4:1.schedulePreviousAiStats.@anonymous:1859:10.@anonymous:1862:23",
+        "arvexq/ui/static/app.js::@anonymous:4:1.selectedRaceLoadStatus.@anonymous:1944:80",
+        "arvexq/ui/static/app.js::@anonymous:4:1.mainRaceForTrack.@anonymous:1965:25",
+        "arvexq/ui/static/app.js::@anonymous:4:1.smartDailyAiStats.@anonymous:2142:40",
+        "arvexq/ui/static/app.js::@anonymous:4:1.load.requestDetails.@anonymous:3700:37",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.load.@anonymous:27:442.@anonymous:27:533"
+      ]
+    },
+    {
+      "sha256": "91093f84680e4c697b9635c2e0b5e7d4ee42069dae03a5513e7f0426fa551d66",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.scheduleDailyAiStats.worker.@anonymous:1807:44.@anonymous:1813:598",
+        "arvexq/ui/static/app.js::@anonymous:4:1.schedulePreviousAiStats.@anonymous:1859:10.worker.@anonymous:1876:16.@anonymous:1882:105",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.rowFromDetail.@anonymous:17:748"
+      ]
+    },
+    {
+      "sha256": "7eb88657ee130e009570b5d0cc04dcd3fa5a99ff8ccbe6f3b93733f57fe78950",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.scheduleDailyAiStats.@anonymous:1819:40.@anonymous:1826:40",
+        "arvexq/ui/static/app.js::@anonymous:4:1.schedulePreviousAiStats.@anonymous:1899:10.@anonymous:1903:45",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.aggregate.@anonymous:19:159"
+      ]
+    },
+    {
+      "sha256": "c09a2a5551a8173e2070d0e546d99b34f3feb75869caaf9a940e561edccb0bf9",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.scheduleDailyAiStats.@anonymous:1819:40.@anonymous:1827:41",
+        "arvexq/ui/static/app.js::@anonymous:4:1.schedulePreviousAiStats.@anonymous:1899:10.@anonymous:1904:46",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.aggregate.@anonymous:19:101"
+      ]
+    },
+    {
+      "sha256": "f22cb9b3cae052844ae3d0a50efdbb81b36416672165346f92bb837d66c937f0",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.scheduleDailyAiStats.@anonymous:1819:40.@anonymous:1828:47",
+        "arvexq/ui/static/app.js::@anonymous:4:1.schedulePreviousAiStats.@anonymous:1899:10.@anonymous:1905:52",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.aggregate.@anonymous:19:217"
+      ]
+    },
+    {
+      "sha256": "3b10ad70b1e6c75697cc155d3a536f5629ff5b64eeb4070130a3c3bd50dd34c9",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.schedulePreviousAiStats.@anonymous:1859:10.worker.@anonymous:1892:17",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.load.@anonymous:27:442.worker.@anonymous:27:866"
+      ]
+    },
+    {
+      "sha256": "54819bbba82d8679d7f2e4c18babc50be27b8a8eb116d6ac73cfc55c7d6cfee7",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.schedulePreviousAiStats.@anonymous:1859:10.@anonymous:1897:39",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.load.@anonymous:27:442.@anonymous:27:965"
+      ]
+    },
+    {
+      "sha256": "c6df4d0b5e2beabe45ea71edbfa30585588c8a55388bf1248aedc6b4b935fee9",
+      "refs": [
+        "arvexq/ui/static/app.js::@anonymous:4:1.smartPreviousAiStats.markText.@anonymous:1921:201",
+        "arvexq/ui/static/app.js::@anonymous:4:1.aiStatsMarkText.@anonymous:2270:122",
+        "arvexq/ui/static/previous_ai_results.js::@anonymous:1:1.markText.@anonymous:21:213"
+      ]
+    },
+    {
+      "sha256": "fbba00c351ff484434b1badf6451e5c9b9f45b08546f75bf76d422d48bf1236c",
+      "refs": [
+        "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:24:25",
+        "scripts/arvexq_honmei_dom_contract.js::verifyHonmeiRoles.@anonymous:4:83"
+      ]
+    },
+    {
+      "sha256": "492e994869dfc4be8782f563389a232b4bb16c7407098e8db64bbe6c46f728b3",
+      "refs": [
+        "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:41:16",
+        "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.sealedPlan.@anonymous:93:28",
+        "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.requireMorningTickets.@anonymous:47:64"
+      ]
+    },
+    {
+      "sha256": "43358f12af874d69c4855ce358d868aa774abb8235014b693d6234e354d3ca6d",
+      "refs": [
+        "arvexq/ui/static/morning/frozen_ticket_evidence.js::@anonymous:4:1.capture.@anonymous:42:35",
+        "arvexq/ui/static/morning/ticket_lane_classifier.js::@anonymous:3:1.ticketKinds.@anonymous:43:51"
+      ]
+    },
+    {
+      "sha256": "08b57fd3ecb404be3741078c926ab65ff3067d1d6220fdf6f60645a69abb761c",
+      "refs": [
+        "arvexq/ui/static/morning/special_selection.js::@anonymous:4:1.graded.@anonymous:12:43",
+        "arvexq/ui/static/sports/unified-home.js::@anonymous:2:1.mergePublishedStatuses.@anonymous:58:73"
+      ]
+    },
+    {
+      "sha256": "afad541a68650e96dde2e7a11a4d4fcbb77d057ca153ed76f7c85476cccfb2a0",
+      "refs": [
+        "arvexq/ui/static/research/diagnosis_view.js::@anonymous:2:1.render.@anonymous:6:72",
+        "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:16:27"
+      ]
+    },
+    {
+      "sha256": "5731931fbf1bc5d7e25e434dd6eb4ebd8483245c18cf14856586e426b1ba9fb2",
+      "refs": [
+        "arvexq/ui/static/research/saved_snapshot.js::@anonymous:2:1.available.@anonymous:30:13",
+        "arvexq/ui/static/research/static_racecard.js::@anonymous:5:1.available.@anonymous:18:15"
+      ]
+    },
+    {
+      "sha256": "b2687e24954eb63ff1c1de7c411cc093e9e4662c4fd6eff34e4a1e5926908801",
+      "refs": [
+        "arvexq/ui/static/sports/horse-portal.js::@anonymous:3:1.n",
+        "scripts/arvexq_bet_role_guide_smoke.js::n"
+      ]
+    },
+    {
+      "sha256": "8a8bc919597b16e824b1a43c646eb576c70ff62d6359d5621fd81a72385544e1",
+      "refs": [
+        "arvexq/ui/static/sports/horse-portal.js::@anonymous:3:1.allRaces.group.@anonymous:36:35",
+        "scripts/arvexq_recovery_production_smoke.js::@anonymous:19:1.@anonymous:174:46"
+      ]
+    },
+    {
+      "sha256": "b98f800a1ab3854786aae276327b990ec4c1a2f77da404a4eb7e51f6e13c2fe2",
+      "refs": [
+        "scripts/arvexq_bet_mobile_layout_smoke.js::@anonymous:28:29",
+        "scripts/arvexq_bet_role_guide_smoke.js::aiBetExplanationHtml",
+        "scripts/arvexq_bet_role_guide_smoke.js::betComboText",
+        "scripts/arvexq_race_source_integrity_smoke.js::@anonymous:76:43",
+        "scripts/arvexq_race_source_integrity_smoke.js::@anonymous:76:50",
+        "scripts/arvexq_retired_ticket_ui_smoke.js::aiBetExplanationHtml",
+        "scripts/arvexq_retired_ticket_ui_smoke.js::betComboText",
+        "scripts/arvexq_three_way_bet_smoke.js::aiBetExplanationHtml",
+        "scripts/arvexq_three_way_bet_smoke.js::betComboText"
+      ]
+    },
+    {
+      "sha256": "851b085c6cb3d1450eabf54c1be19a0c82b92273b0b22a42c652882d2f9850b7",
+      "refs": [
+        "scripts/arvexq_bet_mobile_layout_smoke.js::@anonymous:51:30.@anonymous:54:6",
+        "scripts/arvexq_visible_axis_mark_smoke.js::@anonymous:37:53"
+      ]
+    },
+    {
+      "sha256": "c75af6b3e9908a41315202c1cf43de17d4f7d7d779b0bd2f8b3b69d9dc0a7d09",
+      "refs": [
+        "scripts/arvexq_bet_role_guide_smoke.js::isFinal",
+        "scripts/arvexq_race_source_integrity_smoke.js::@anonymous:65:121",
+        "scripts/arvexq_race_source_integrity_smoke.js::@anonymous:73:2",
+        "scripts/arvexq_retired_ticket_ui_smoke.js::isFinal"
+      ]
+    },
+    {
+      "sha256": "e0c831065ac55e72b7aa8e9314ec4e19051ebcac216c3e055b8bb1d99276db32",
+      "refs": [
+        "scripts/arvexq_bet_role_guide_smoke.js::raceMarkClock",
+        "scripts/arvexq_retired_ticket_ui_smoke.js::raceMarkClock"
+      ]
+    },
+    {
+      "sha256": "9717c1301c84862d2db159e5e204ad5520dc342de5ae8595036d79b29bf0f50c",
+      "refs": [
+        "scripts/arvexq_bet_selection_independence_smoke.js::@anonymous:18:44",
+        "scripts/arvexq_capture_course_revised_marks.js::querySelector",
+        "scripts/arvexq_live_mark_refresh_smoke.js::querySelector",
+        "scripts/arvexq_morning_picks.js::querySelector",
+        "scripts/arvexq_recovery_production_smoke.js::@anonymous:19:1.@anonymous:119:113",
+        "scripts/arvexq_recovery_production_smoke.js::@anonymous:19:1.@anonymous:147:137",
+        "scripts/arvexq_saved_diagnosis_smoke.js::original",
+        "scripts/arvexq_visible_axis_mark_smoke.js::@anonymous:38:8"
+      ]
+    },
+    {
+      "sha256": "2f5cc1bc7df8796338987f67dc3e36a7f607bc6f8f674878b712787e395694e6",
+      "refs": [
+        "scripts/arvexq_capture_course_revised_marks.js::getElementById",
+        "scripts/arvexq_live_mark_refresh_smoke.js::getElementById",
+        "scripts/arvexq_morning_picks.js::getElementById"
+      ]
+    },
+    {
+      "sha256": "dec7a076dec41531da7f2d40bd4b896e27d45dd09ecd541190941bf88e6de894",
+      "refs": [
+        "scripts/arvexq_capture_course_revised_marks.js::addEventListener",
+        "scripts/arvexq_capture_course_revised_marks.js::clearTimeout",
+        "scripts/arvexq_capture_course_revised_marks.js::clearInterval",
+        "scripts/arvexq_live_mark_refresh_smoke.js::addEventListener",
+        "scripts/arvexq_live_mark_refresh_smoke.js::clearTimeout",
+        "scripts/arvexq_live_mark_refresh_smoke.js::clearInterval",
+        "scripts/arvexq_morning_picks.js::addEventListener",
+        "scripts/arvexq_morning_picks.js::clearTimeout",
+        "scripts/arvexq_morning_picks.js::clearInterval",
+        "scripts/arvexq_result_continuous_smoke.js::saveDetailCache",
+        "scripts/arvexq_result_continuous_smoke.js::updateDetailSections",
+        "scripts/arvexq_result_continuous_smoke.js::traceRaceDetail",
+        "scripts/arvexq_static_first_toyko11_smoke.js::saveDetailCache",
+        "scripts/arvexq_static_first_toyko11_smoke.js::updateDetailSections"
+      ]
+    },
+    {
+      "sha256": "720370c0b979dd42ba629c4bf29bc2888e9ef1752186506bca10b0da42a297c2",
+      "refs": [
+        "scripts/arvexq_capture_course_revised_marks.js::querySelectorAll",
+        "scripts/arvexq_live_mark_refresh_smoke.js::querySelectorAll",
+        "scripts/arvexq_morning_picks.js::querySelectorAll"
+      ]
+    },
+    {
+      "sha256": "7224eeebda4478f630710b84788dd1527e5c371c664457735cc8ac374d9afcd7",
+      "refs": [
+        "scripts/arvexq_capture_course_revised_marks.js::setTimeout",
+        "scripts/arvexq_capture_course_revised_marks.js::setInterval",
+        "scripts/arvexq_empirical_selection_smoke.js::chronological",
+        "scripts/arvexq_live_mark_refresh_smoke.js::setTimeout",
+        "scripts/arvexq_live_mark_refresh_smoke.js::setInterval",
+        "scripts/arvexq_morning_picks.js::setTimeout",
+        "scripts/arvexq_morning_picks.js::setInterval",
+        "scripts/arvexq_race_source_integrity_smoke.js::@anonymous:75:18",
+        "scripts/arvexq_visible_axis_mark_smoke.js::@anonymous:38:2",
+        "scripts/arvexq_visible_axis_mark_smoke.js::@anonymous:38:17"
+      ]
+    },
+    {
+      "sha256": "6a71751a26f6e0d06f0fac95cdb21880a03461d16fa99465141334bae82458f1",
+      "refs": [
+        "scripts/arvexq_capture_course_revised_marks.js::@anonymous:38:32",
+        "scripts/arvexq_morning_picks.js::@anonymous:168:65"
+      ]
+    },
+    {
+      "sha256": "c1492b4624befd6c352da54202db96cc9ddcdb52b7c6dd0beecc61b7b139c55a",
+      "refs": [
+        "scripts/arvexq_detail_resilience_smoke.js::@anonymous:25:1.setup.@anonymous:43:87",
+        "scripts/arvexq_saved_forecast_revision_browser_smoke.js::@anonymous:11:1.@anonymous:25:71",
+        "scripts/test_support/production_ui.cjs::@anonymous:5:69"
+      ]
+    },
+    {
+      "sha256": "6d0fe61f21d66881b0d07985a75762463e7ad14114d3fb042216fcd924a8a1ae",
+      "refs": [
+        "scripts/arvexq_detail_resilience_smoke.js::@anonymous:143:11",
+        "scripts/arvexq_paper_palette_smoke.js::@anonymous:82:79",
+        "scripts/arvexq_pull_to_refresh_smoke.js::@anonymous:69:83",
+        "scripts/arvexq_realtime_navigation_smoke.js::@anonymous:140:7",
+        "scripts/arvexq_recovery_production_smoke.js::@anonymous:192:11"
+      ]
+    },
+    {
+      "sha256": "8713c93e91c838bd5ce55678d7da09e323b5829b508a2516d2187c9b1440b1e5",
+      "refs": [
+        "scripts/arvexq_live_mark_refresh_smoke.js::@anonymous:24:69",
+        "scripts/arvexq_production_boundaries_smoke.cjs::@anonymous:4:46"
+      ]
+    },
+    {
+      "sha256": "f08e4f9eb265ad5670ce27ab25ab26814e46470064a4f986e11ee078636d7bca",
+      "refs": [
+        "scripts/arvexq_live_odds_smoke.js::@anonymous:25:11",
+        "scripts/arvexq_saved_snapshot_smoke.js::@anonymous:33:11",
+        "scripts/arvexq_static_first_toyko11_smoke.js::@anonymous:51:11",
+        "scripts/arvexq_static_racecard_open_smoke.js::@anonymous:40:11"
+      ]
+    },
+    {
+      "sha256": "e7cd2af273bcf8afd044f4ad94bf0804396527eb07fd4e521c85d31b926ede7e",
+      "refs": [
+        "scripts/arvexq_morning_picks_smoke.js::@anonymous:33:23",
+        "scripts/arvexq_odds_popularity_consistency_smoke.js::n"
+      ]
+    },
+    {
+      "sha256": "450e9d6a2c738abc11742d01b26c326c33a01b0ee9f1ed3ffd72d8b94b0d3bca",
+      "refs": [
+        "scripts/arvexq_morning_picks_smoke.js::@anonymous:35:50",
+        "scripts/arvexq_morning_picks_smoke.js::@anonymous:48:50",
+        "scripts/arvexq_morning_picks_smoke.js::@anonymous:51:50",
+        "scripts/arvexq_morning_selection_cut_smoke.js::@anonymous:16:76",
+        "scripts/arvexq_morning_selection_cut_smoke.js::@anonymous:18:76",
+        "scripts/arvexq_morning_selection_cut_smoke.js::@anonymous:21:76"
+      ]
+    },
+    {
+      "sha256": "74447192be9158ada52b692cfe394bcfaea7b05aff458bb178d3462aea9d79f6",
+      "refs": [
+        "scripts/arvexq_pace_transition_smoke.js::clamp",
+        "scripts/arvexq_three_way_bet_smoke.js::policy.clamp",
+        "scripts/arvexq_three_way_bet_smoke.js::clamp"
+      ]
+    },
+    {
+      "sha256": "8bfe7dbe9b6b35d536cbd8acedec8cd4012fc82ccb54adc5b3b25bf4b708825d",
+      "refs": [
+        "scripts/arvexq_pull_to_refresh_smoke.js::check.@anonymous:43:26",
+        "scripts/arvexq_realtime_navigation_smoke.js::verify.@anonymous:22:38"
+      ]
+    },
+    {
+      "sha256": "8cf61a5e875df10b3d9dd4a0a04c79704289d1172feb85539e16041aac45447e",
+      "refs": [
+        "scripts/arvexq_result_continuous_smoke.js::render",
+        "scripts/arvexq_static_first_toyko11_smoke.js::render"
+      ]
+    },
+    {
+      "sha256": "5964273a0c5cca18e84c31d23706e13f29eb87f04245edcd2ea5d34256a963c3",
+      "refs": [
+        "scripts/arvexq_saved_diagnosis_smoke.js::started",
+        "scripts/arvexq_three_way_bet_smoke.js::isFinal"
+      ]
+    },
+    {
+      "sha256": "ad0061a86bdab38627cee8f9f65d98ab21527b51855b466a1e453b405212f57a",
+      "refs": [
+        "scripts/arvexq_saved_diagnosis_smoke.js::scratch",
+        "scripts/arvexq_saved_forecast_revision_smoke.js::@anonymous:8:91",
+        "scripts/arvexq_three_way_bet_smoke.js::policy.isScratchHorse"
+      ]
+    },
+    {
+      "sha256": "4f888e090430fea81ed3e2f31a2824445a98e2877f0048502d57d8ead350cb5b",
+      "refs": [
+        "scripts/arvexq_saved_odds_smoke.mjs::waitUntil",
+        "scripts/arvexq_web_odds_fallback_smoke.mjs::waitUntil"
+      ]
+    },
+    {
+      "sha256": "eb08938678cf3d48700b4bd27f25f980a7522bbf4c4bd5cbd463283ff836115a",
+      "refs": [
+        "workers/api_forecast_revisions.mjs::forecastRevisions.@anonymous:60:115",
+        "workers/api_full_snapshot.mjs::restoreBytes.@anonymous:7:82",
+        "workers/api_full_snapshot.mjs::compressStoredSnapshot.@anonymous:47:85"
+      ]
+    }
+  ],
+  "python_same_ast_ignoring_function_name": [],
+  "qualification": "同一ソース/同形AST候補の列挙のみ。短いヘルパー・テスト・互換関数を含む。意味的な重複や削除可否は判定せず、何も削除しない。"
+}

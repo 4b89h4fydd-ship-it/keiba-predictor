@@ -1,0 +1,998 @@
+[
+  {
+    "symbol": "readFavoriteRaces",
+    "private_symbol": "_arvexq_original_readFavoriteRaces",
+    "body_sha256": "c4043fbc681327aebb070e75ca4b9cce6bd4ffb8a1a9f9bf7fadffc47e28e28f",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 54
+  },
+  {
+    "symbol": "isFavoriteRace",
+    "private_symbol": "_arvexq_original_isFavoriteRace",
+    "body_sha256": "e63692f35096f140f1d8636ef1ea16ca2a7a734a80242602376d658b454442ef",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 67
+  },
+  {
+    "symbol": "favoriteStarHtml",
+    "private_symbol": "_arvexq_original_favoriteStarHtml",
+    "body_sha256": "a656881dc5cbc3e9817b110c9b9ad658cf72c783c8a888e1ef6a3c8c48a77390",
+    "parameter_names": [
+      "r",
+      "extraClass"
+    ],
+    "async": false,
+    "original_line": 70
+  },
+  {
+    "symbol": "toggleFavoriteRace",
+    "private_symbol": "_arvexq_original_toggleFavoriteRace",
+    "body_sha256": "dfbc2170c0bca6c38d13a0e5202e972a098a822dc83a8b6a38f630972107bff6",
+    "parameter_names": [
+      "id",
+      "date"
+    ],
+    "async": false,
+    "original_line": 74
+  },
+  {
+    "symbol": "favoriteHomeSection",
+    "private_symbol": "_arvexq_original_favoriteHomeSection",
+    "body_sha256": "48730b90e700ccdd497f20a07bd240122ba38021dc436be456510fc24aa2f94c",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 89
+  },
+  {
+    "symbol": "cacheKey",
+    "private_symbol": "_arvexq_original_cacheKey",
+    "body_sha256": "2fc716d37104f3e172c2cb9bf6a620cdb6fb9803ef0c20bf3ca4aaf84ab87e56",
+    "parameter_names": [
+      "d",
+      "c"
+    ],
+    "async": false,
+    "original_line": 112
+  },
+  {
+    "symbol": "loadRaceCache",
+    "private_symbol": "_arvexq_original_loadRaceCache",
+    "body_sha256": "62c388a6351e4c2c0527b7c2713a4a2612015324d698577d1d4741e79c297fc1",
+    "parameter_names": [
+      "d",
+      "c"
+    ],
+    "async": false,
+    "original_line": 113
+  },
+  {
+    "symbol": "saveRaceCache",
+    "private_symbol": "_arvexq_original_saveRaceCache",
+    "body_sha256": "18ee874929014bf97fa51463ebe69a9d99aa96cc07ebe9046a90f5e0ea0c8bd6",
+    "parameter_names": [
+      "d",
+      "c",
+      "rows"
+    ],
+    "async": false,
+    "original_line": 114
+  },
+  {
+    "symbol": "saveFullBundle",
+    "private_symbol": "_arvexq_original_saveFullBundle",
+    "body_sha256": "1182f128942119a5c88abb60b64fa2f8ccf897b13785f5e63aac79fe1d8e469d",
+    "parameter_names": [
+      "d",
+      "body"
+    ],
+    "async": false,
+    "original_line": 116
+  },
+  {
+    "symbol": "loadFullBundle",
+    "private_symbol": "_arvexq_original_loadFullBundle",
+    "body_sha256": "75b62bedc3af6df6de554880b431ecefb28a95f090378f62dfc1e5d6e39992a2",
+    "parameter_names": [
+      "d"
+    ],
+    "async": false,
+    "original_line": 122
+  },
+  {
+    "symbol": "detailCacheKey",
+    "private_symbol": "_arvexq_original_detailCacheKey",
+    "body_sha256": "aa66a845035ac0417beeb8b6e0978a1a85ec0498b7d4744a0ce232af0cddc2d7",
+    "parameter_names": [
+      "id"
+    ],
+    "async": false,
+    "original_line": 131
+  },
+  {
+    "symbol": "loadDetailCache",
+    "private_symbol": "_arvexq_original_loadDetailCache",
+    "body_sha256": "bfa228d293afe764a0f39b298d2b04efc50c7b1e8cb1a3e5c15f506e925db0a4",
+    "parameter_names": [
+      "id",
+      "allowStale"
+    ],
+    "async": false,
+    "original_line": 132
+  },
+  {
+    "symbol": "saveDetailCache",
+    "private_symbol": "_arvexq_original_saveDetailCache",
+    "body_sha256": "42acc26370e14d05d46919a94b1fc115b447a87e2ce4288a7342be47e76c2ce5",
+    "parameter_names": [
+      "id",
+      "row"
+    ],
+    "async": false,
+    "original_line": 133
+  },
+  {
+    "symbol": "evictRetiredRaceCaches",
+    "private_symbol": "_arvexq_original_evictRetiredRaceCaches",
+    "body_sha256": "85100ef7cbf99b291050c30feeefe163202d9faa03f2a9c99b8ae000270aee02",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 135
+  },
+  {
+    "symbol": "winOddsText",
+    "private_symbol": "_arvexq_original_winOddsText",
+    "body_sha256": "51c8e22ff7d8e6fa294f2f5d25aa66c0e6450058a0d65367f4b759b64ce2f036",
+    "parameter_names": [
+      "h"
+    ],
+    "async": false,
+    "original_line": 177
+  },
+  {
+    "symbol": "sourceCollectionSection",
+    "private_symbol": "_arvexq_original_sourceCollectionSection",
+    "body_sha256": "5b588eb6fcfb1043e3a574f7432fc472e98f321a67eef24ea5a1881a5642ef43",
+    "parameter_names": [
+      "h",
+      "r"
+    ],
+    "async": false,
+    "original_line": 195
+  },
+  {
+    "symbol": "horseByNo",
+    "private_symbol": "_arvexq_original_horseByNo",
+    "body_sha256": "1993184bf91d17a1f16acb7d4ba7a3b55cf897facf9827a1951e59a9e5fdf062",
+    "parameter_names": [
+      "r",
+      "no"
+    ],
+    "async": false,
+    "original_line": 197
+  },
+  {
+    "symbol": "resultStatus",
+    "private_symbol": "_arvexq_original_resultStatus",
+    "body_sha256": "35c7030f1822ea95654aee188573666754bd8fb29096df3452c908e9c6c78962",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 198
+  },
+  {
+    "symbol": "isFinal",
+    "private_symbol": "_arvexq_original_isFinal",
+    "body_sha256": "f5869e3c7d23962dd4e1fdb04f2ed08b9f52316b2f5a76bb0a442e8ae16e463e",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 207
+  },
+  {
+    "symbol": "isFlash",
+    "private_symbol": "_arvexq_original_isFlash",
+    "body_sha256": "2b55f25b7c492a05025887bd9890cec85f2b26a58cd75ae3c40e03830f227fe7",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 208
+  },
+  {
+    "symbol": "hasAnyResultData",
+    "private_symbol": "_arvexq_original_hasAnyResultData",
+    "body_sha256": "2d2c3626b1551b5d5abcd1feb8a1b8d4bfec82c863cc23d18054ca288e4a6f12",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 209
+  },
+  {
+    "symbol": "hasResultData",
+    "private_symbol": "_arvexq_original_hasResultData",
+    "body_sha256": "3a038b44a82fad7a2a2c8374c5e8442743b701e15b567e0424cca6b4e103ac33",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 210
+  },
+  {
+    "symbol": "header",
+    "private_symbol": "_arvexq_original_header",
+    "body_sha256": "6b5f03d697248a2642c5411da3ba26609d276f60d001319b225ca705e1d0803b",
+    "parameter_names": [
+      "title",
+      "back",
+      "sub"
+    ],
+    "async": false,
+    "original_line": 214
+  },
+  {
+    "symbol": "horseModal",
+    "private_symbol": "_arvexq_original_horseModal",
+    "body_sha256": "4c957087a19a93b557a0e5d5e762b1595a8fed4df3654ee00a57ec4661062624",
+    "parameter_names": [
+      "r",
+      "p"
+    ],
+    "async": false,
+    "original_line": 837
+  },
+  {
+    "symbol": "oddsText",
+    "private_symbol": "_arvexq_original_oddsText",
+    "body_sha256": "41bbaf264509df426cd5bab3ed5b4e5a43d7b1032513a37f177fb0b371bd9377",
+    "parameter_names": [
+      "h"
+    ],
+    "async": false,
+    "original_line": 841
+  },
+  {
+    "symbol": "oddsClass",
+    "private_symbol": "_arvexq_original_oddsClass",
+    "body_sha256": "a0631c3a7377e94f610dda9082a27555103465f1b580a47b3d9a724480287536",
+    "parameter_names": [
+      "h"
+    ],
+    "async": false,
+    "original_line": 842
+  },
+  {
+    "symbol": "racecardOddsHtml",
+    "private_symbol": "_arvexq_original_racecardOddsHtml",
+    "body_sha256": "7eadffb329fd9dd9cf468e9df88cdcab4fb59b7f1e505d55f257fba0e9e5383d",
+    "parameter_names": [
+      "h",
+      "r"
+    ],
+    "async": false,
+    "original_line": 1063
+  },
+  {
+    "symbol": "racecardEntryRow",
+    "private_symbol": "_arvexq_original_racecardEntryRow",
+    "body_sha256": "539dcf82f66be31084cd631960aeb6c71bb5e52516aa4bd9befe304a1f4f1132",
+    "parameter_names": [
+      "r",
+      "h",
+      "x"
+    ],
+    "async": false,
+    "original_line": 1096
+  },
+  {
+    "symbol": "minimalRacecardPanel",
+    "private_symbol": "_arvexq_original_minimalRacecardPanel",
+    "body_sha256": "0ad3510e3ea7ccfa58766e8279d4bb46b472790740295cdecaf8903a2c3fbaed",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 1133
+  },
+  {
+    "symbol": "safeEntryPanel",
+    "private_symbol": "_arvexq_original_safeEntryPanel",
+    "body_sha256": "02866c5275cc3bf3ed307bf35e145ab2d7c0037db4bb0b7257d9c93783d9284a",
+    "parameter_names": [
+      "r",
+      "p"
+    ],
+    "async": false,
+    "original_line": 1139
+  },
+  {
+    "symbol": "loadStoredAiBet",
+    "private_symbol": "_arvexq_original_loadStoredAiBet",
+    "body_sha256": "1cc08f6cea2e4f066d3d0d8b2947917b6a2e28ef1bc58ed37f2e865d930ba5de",
+    "parameter_names": [
+      "id"
+    ],
+    "async": false,
+    "original_line": 1390
+  },
+  {
+    "symbol": "saveStoredAiBet",
+    "private_symbol": "_arvexq_original_saveStoredAiBet",
+    "body_sha256": "a3a6ae271c20dcff652d76ff93ed110f20d71510a8da3ce8f7916fbbe5b55849",
+    "parameter_names": [
+      "r",
+      "plan"
+    ],
+    "async": false,
+    "original_line": 1398
+  },
+  {
+    "symbol": "immutableStoredAiBetView",
+    "private_symbol": "_arvexq_original_immutableStoredAiBetView",
+    "body_sha256": "897e4ee139b2ae64faef752993a463edec6d60f4c68132be31e8a83e65d151b3",
+    "parameter_names": [
+      "r",
+      "plan"
+    ],
+    "async": false,
+    "original_line": 1431
+  },
+  {
+    "symbol": "verifiedSavedAiBet",
+    "private_symbol": "_arvexq_original_verifiedSavedAiBet",
+    "body_sha256": "8afd11edfc6d1809effff7fa0eabb99ddbc5c7988151ad2c66f76a5d8c75844c",
+    "parameter_names": [
+      "r",
+      "plan"
+    ],
+    "async": false,
+    "original_line": 1442
+  },
+  {
+    "symbol": "renderPicker",
+    "private_symbol": "_arvexq_original_renderPicker",
+    "body_sha256": "61eb0730450bced42d60c4ed7589283591308c39021963398dba18421575285e",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 1675
+  },
+  {
+    "symbol": "resetDailyAiStats",
+    "private_symbol": "_arvexq_original_resetDailyAiStats",
+    "body_sha256": "6151b0bc0f0a640e75f82e5addfa76304d04bf58577f97c703b15f08fcc07460",
+    "parameter_names": [
+      "date"
+    ],
+    "async": false,
+    "original_line": 1794
+  },
+  {
+    "symbol": "scheduleDailyAiStats",
+    "private_symbol": "_arvexq_original_scheduleDailyAiStats",
+    "body_sha256": "a87b22194419211ad79ee4b74637295e604346a6100668470fe382e33fae5d0e",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 1795
+  },
+  {
+    "symbol": "aiStatsDayTitle",
+    "private_symbol": "_arvexq_original_aiStatsDayTitle",
+    "body_sha256": "7600cba2a50944683c983b77eb2fcfc8edc5577effbecd11e1453f2d30b91ea3",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 1936
+  },
+  {
+    "symbol": "raceIsGraded",
+    "private_symbol": "_arvexq_original_raceIsGraded",
+    "body_sha256": "81f25882e3e489fe217f14a6c3ec1489a3e4227722c6f9723183cfe7eb2c4cc1",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 1947
+  },
+  {
+    "symbol": "mainRaceForTrack",
+    "private_symbol": "_arvexq_original_mainRaceForTrack",
+    "body_sha256": "7c6ca0bff899fa58bf30b9ee0876ec0d1d05931d00a07779526ac79eed997427",
+    "parameter_names": [
+      "rows"
+    ],
+    "async": false,
+    "original_line": 1964
+  },
+  {
+    "symbol": "isMainForecastRace",
+    "private_symbol": "_arvexq_original_isMainForecastRace",
+    "body_sha256": "29c66629f1e50e5d34b7179df783f9174e4d239997db18d0b30fef917523c082",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 1971
+  },
+  {
+    "symbol": "kochiFinalRace",
+    "private_symbol": "_arvexq_original_kochiFinalRace",
+    "body_sha256": "8a2e1b69d2b0783ef989d7b6ec3b02780e88c75655d86a5c859a4f6eca2a6be5",
+    "parameter_names": [
+      "rows"
+    ],
+    "async": false,
+    "original_line": 1979
+  },
+  {
+    "symbol": "eliteSelectedRaceCut",
+    "private_symbol": "_arvexq_original_eliteSelectedRaceCut",
+    "body_sha256": "ddb465d22f8b21fd6599898bd22e43f00d842e0b51c3353895a672fa3ef226c2",
+    "parameter_names": [
+      "rows"
+    ],
+    "async": false,
+    "original_line": 1987
+  },
+  {
+    "symbol": "computeMorningRaceCandidates",
+    "private_symbol": "_arvexq_original_computeMorningRaceCandidates",
+    "body_sha256": "c628ca5c15ef60f3c961623f060d966bf5bb718bdd1804d613d4949077372134",
+    "parameter_names": [
+      "circuit"
+    ],
+    "async": false,
+    "original_line": 1992
+  },
+  {
+    "symbol": "selectedRaceCandidates",
+    "private_symbol": "_arvexq_original_selectedRaceCandidates",
+    "body_sha256": "36e46ca7d8e7766ba4cc1eef547bc8250ff7e40e5e9819cb2046fd488580cf76",
+    "parameter_names": [
+      "circuit"
+    ],
+    "async": false,
+    "original_line": 2037
+  },
+  {
+    "symbol": "selectedRaceBetPreview",
+    "private_symbol": "_arvexq_original_selectedRaceBetPreview",
+    "body_sha256": "a2d2bb9bf98e2321f247d2625361549c12600676f63956c1eddad2e2aa1be067",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 2087
+  },
+  {
+    "symbol": "smartDailyAiStats",
+    "private_symbol": "_arvexq_original_smartDailyAiStats",
+    "body_sha256": "f38f1c99b61f9fad62f0d79ecd25e37f8fa409b84d6f645897252a035b40be69",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 2141
+  },
+  {
+    "symbol": "aiStatsMetrics",
+    "private_symbol": "_arvexq_original_aiStatsMetrics",
+    "body_sha256": "df600f23c34c26cd4cb17cac1731df01f62dd9c732f328ad74218a761b12b3ca",
+    "parameter_names": [
+      "rows"
+    ],
+    "async": false,
+    "original_line": 2276
+  },
+  {
+    "symbol": "aiStatsRaceRow",
+    "private_symbol": "_arvexq_original_aiStatsRaceRow",
+    "body_sha256": "687760b06b03e45f3d27be7497068306ee6b619476f9b5936d3c7254a991ab92",
+    "parameter_names": [
+      "x"
+    ],
+    "async": false,
+    "original_line": 2285
+  },
+  {
+    "symbol": "smartDailyAiStatsPage",
+    "private_symbol": "_arvexq_original_smartDailyAiStatsPage",
+    "body_sha256": "ad49433639b2e6a23f27914fec8da9fd09e68ba7bc1d3042978548a1f715b6a0",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 2292
+  },
+  {
+    "symbol": "renderHomeSectionPage",
+    "private_symbol": "_arvexq_original_renderHomeSectionPage",
+    "body_sha256": "6bfe1ecfcb14bdac59cf01aa4450d35870d347500721ee30e2e00dd8c102d3e8",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 2338
+  },
+  {
+    "symbol": "renderHome",
+    "private_symbol": "_arvexq_original_renderHome",
+    "body_sha256": "3f362a05659dfe0a94229cb4c1d328568b1674ceb4cea25a99775bafac2eb493",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 2346
+  },
+  {
+    "symbol": "venueRaceRows",
+    "private_symbol": "_arvexq_original_venueRaceRows",
+    "body_sha256": "259117831af0fd86eb3cc36c48bc59fa46178dbd81c7d6c44fa30d57b7ebeee4",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 2586
+  },
+  {
+    "symbol": "renderVenue",
+    "private_symbol": "_arvexq_original_renderVenue",
+    "body_sha256": "f12b173111a25b4f3cb41412068ff534bb6258c334315722b2268164f87d4178",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 2619
+  },
+  {
+    "symbol": "smartInlineResult",
+    "private_symbol": "_arvexq_original_smartInlineResult",
+    "body_sha256": "6a8ee38b15c31c9d0cce0552dc0b51ff2bf5ce8f677058fedc0b87893330ed73",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 2630
+  },
+  {
+    "symbol": "smartRaceHead",
+    "private_symbol": "_arvexq_original_smartRaceHead",
+    "body_sha256": "ed14c20c06355918964239a46e900508a779c4b41c5e4bf98e3eb80e6bb2d6e5",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 2649
+  },
+  {
+    "symbol": "renderRaceLoading",
+    "private_symbol": "_arvexq_original_renderRaceLoading",
+    "body_sha256": "1af814c32d5ab8178cad3cd6d695b1b9b818ad57ccc4a35415ac9a644a5b0777",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 2662
+  },
+  {
+    "symbol": "horseDetailPage",
+    "private_symbol": "_arvexq_original_horseDetailPage",
+    "body_sha256": "6c1ce7a8915f175893231313ae061460425b545669675b6111be0b0d935b3156",
+    "parameter_names": [
+      "r",
+      "p"
+    ],
+    "async": false,
+    "original_line": 2687
+  },
+  {
+    "symbol": "renderRace",
+    "private_symbol": "_arvexq_original_renderRace",
+    "body_sha256": "0d8d25c1f16ca4e29b09fb6bd54ed3d306f84c957a59a2d78d24a2d051903193",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 2710
+  },
+  {
+    "symbol": "resultFinish",
+    "private_symbol": "_arvexq_original_resultFinish",
+    "body_sha256": "8c62ed18a51d53b733312f8d05065824fd37472af0004380c7cb74b3e5c656b4",
+    "parameter_names": [
+      "r",
+      "no"
+    ],
+    "async": false,
+    "original_line": 2760
+  },
+  {
+    "symbol": "actualCornerLeaders",
+    "private_symbol": "_arvexq_original_actualCornerLeaders",
+    "body_sha256": "789e42e3d14cf2f5e4e6dd959e0f85c2a3d11b45ece470494cfd01ae267dd51c",
+    "parameter_names": [
+      "r",
+      "idx"
+    ],
+    "async": false,
+    "original_line": 2761
+  },
+  {
+    "symbol": "actualCornerCount",
+    "private_symbol": "_arvexq_original_actualCornerCount",
+    "body_sha256": "39193658c8357a8bea6a6f4b36a95404ff98e61ddb05b9c8d7c083d40186ca48",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 2762
+  },
+  {
+    "symbol": "actualCornerLabel",
+    "private_symbol": "_arvexq_original_actualCornerLabel",
+    "body_sha256": "5e1f8108ff8d2fa57bbf74e880cdde9c7da644d2fcc300b74fcb9235f62186dd",
+    "parameter_names": [
+      "i",
+      "count"
+    ],
+    "async": false,
+    "original_line": 2763
+  },
+  {
+    "symbol": "actualOrderAt",
+    "private_symbol": "_arvexq_original_actualOrderAt",
+    "body_sha256": "0ba12590d07fbb9efc3db50b5dd0baaef61d3891b75157768aed19badae0bebb",
+    "parameter_names": [
+      "r",
+      "idx"
+    ],
+    "async": false,
+    "original_line": 2764
+  },
+  {
+    "symbol": "renderResultLink",
+    "private_symbol": "_arvexq_original_renderResultLink",
+    "body_sha256": "12421cb381865adbc05f2401f19651cbcb31e77cb9461e8985ea650e46338fc8",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 2765
+  },
+  {
+    "symbol": "renderPayouts",
+    "private_symbol": "_arvexq_original_renderPayouts",
+    "body_sha256": "32c21ca3b3859e70f2c69afeb801d83d16d090ebf5aec8e1695f733bddd0f97c",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 2766
+  },
+  {
+    "symbol": "resultRowHtml",
+    "private_symbol": "_arvexq_original_resultRowHtml",
+    "body_sha256": "23ce8a7b66bf99650ba09fa6469af96e93e251a5cf2966331875aefd8b72b0e6",
+    "parameter_names": [
+      "r",
+      "x"
+    ],
+    "async": false,
+    "original_line": 2767
+  },
+  {
+    "symbol": "renderResult",
+    "private_symbol": "_arvexq_original_renderResult",
+    "body_sha256": "4a2a35396d6ba3e8302cad4edc9c6e3c41c5baa891ec15890d0ea5e5c2e734cd",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 2768
+  },
+  {
+    "symbol": "renderActualFlow",
+    "private_symbol": "_arvexq_original_renderActualFlow",
+    "body_sha256": "7839c25c592777978c5ca0bc6dd759f2dfe879c718ef71da44546942779686dc",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 2772
+  },
+  {
+    "symbol": "stylePositionMap",
+    "private_symbol": "_arvexq_original_stylePositionMap",
+    "body_sha256": "5de793f1058f75e7e01071ab80c91f89151a8911cb6c60596999ca7145632938",
+    "parameter_names": [
+      "r",
+      "p"
+    ],
+    "async": false,
+    "original_line": 2777
+  },
+  {
+    "symbol": "paceStructureSection",
+    "private_symbol": "_arvexq_original_paceStructureSection",
+    "body_sha256": "762eb09dde02aa8c8229cd48acdf77ced628ed94b684dc8618b1a5df43534836",
+    "parameter_names": [
+      "r",
+      "p"
+    ],
+    "async": false,
+    "original_line": 2880
+  },
+  {
+    "symbol": "paceNarrativeCards",
+    "private_symbol": "_arvexq_original_paceNarrativeCards",
+    "body_sha256": "899c132aa4d205014e4dda97da60939a1b3e0cf098381f11b5a30fbca6ad4667",
+    "parameter_names": [
+      "r",
+      "p"
+    ],
+    "async": false,
+    "original_line": 2888
+  },
+  {
+    "symbol": "paceStagePage",
+    "private_symbol": "_arvexq_original_paceStagePage",
+    "body_sha256": "45a37a3a2e99eff0aa7d55f5fa507c61fb1f3262584f27261e8a585e3d6f62e7",
+    "parameter_names": [
+      "r",
+      "p"
+    ],
+    "async": false,
+    "original_line": 2976
+  },
+  {
+    "symbol": "paceStagePendingPage",
+    "private_symbol": "_arvexq_original_paceStagePendingPage",
+    "body_sha256": "8a29a5e05f0b9eaa5e03205e1956e467fe0d0f4aac181e80f0a88381e32f17f8",
+    "parameter_names": [
+      "r"
+    ],
+    "async": false,
+    "original_line": 2983
+  },
+  {
+    "symbol": "paceBoard",
+    "private_symbol": "_arvexq_original_paceBoard",
+    "body_sha256": "97d9930b80af9ff4cff68e391b7a885721482c5d65a60b4b0dab3c3050202e4b",
+    "parameter_names": [
+      "r",
+      "p"
+    ],
+    "async": false,
+    "original_line": 3040
+  },
+  {
+    "symbol": "scheduleRaceBiasRefresh",
+    "private_symbol": "_arvexq_original_scheduleRaceBiasRefresh",
+    "body_sha256": "12095b6220134aca1fe64a9586130aa316a31c01c2f3c62b17cbd8e3b3daed91",
+    "parameter_names": [
+      "delay"
+    ],
+    "async": false,
+    "original_line": 3076
+  },
+  {
+    "symbol": "refreshRaceBiasData",
+    "private_symbol": "_arvexq_original_refreshRaceBiasData",
+    "body_sha256": "ddbbc0752da98b52017cb9e5ce45293f9c1c0fb95d9e4eadf61c41464f9f87d4",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3081
+  },
+  {
+    "symbol": "scheduleResultRefresh",
+    "private_symbol": "_arvexq_original_scheduleResultRefresh",
+    "body_sha256": "c6a63cb6069e2f83c341dab09d44198881586fd77e13f1e01998214fe8335ab6",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3106
+  },
+  {
+    "symbol": "refreshPayoutsOnly",
+    "private_symbol": "_arvexq_original_refreshPayoutsOnly",
+    "body_sha256": "0e1c0c03c45fcf0c1b7811585e0467da88c7608574632cc7f532f354e4945f45",
+    "parameter_names": [
+      "attempt"
+    ],
+    "async": false,
+    "original_line": 3144
+  },
+  {
+    "symbol": "openRace",
+    "private_symbol": "_arvexq_original_openRace",
+    "body_sha256": "04390eaac85196161d345c74d7b6cb871ca637d4702d1d79fbdd8e7d0fea7c94",
+    "parameter_names": [
+      "id",
+      "keepStack",
+      "skipHistory",
+      "preservePanel"
+    ],
+    "async": false,
+    "original_line": 3171
+  },
+  {
+    "symbol": "openPastRace",
+    "private_symbol": "_arvexq_original_openPastRace",
+    "body_sha256": "b01d921f3355ad2fb136d8338e3da5ef3bf5ffc1d5e0f710ceba7421e6820720",
+    "parameter_names": [
+      "id"
+    ],
+    "async": false,
+    "original_line": 3247
+  },
+  {
+    "symbol": "installPullRefresh",
+    "private_symbol": "_arvexq_original_installPullRefresh",
+    "body_sha256": "21c784a5b29352375e2ceea4c82cb39667b0ae1e0dd98316bd3053e4bf18bcc5",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3248
+  },
+  {
+    "symbol": "reloadCurrent",
+    "private_symbol": "_arvexq_original_reloadCurrent",
+    "body_sha256": "e33e4a387ca303eee3ec09b1c3307011256c55a4b1f0c7e36b217fd3d08e2b94",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3252
+  },
+  {
+    "symbol": "mergeOddsPayload",
+    "private_symbol": "_arvexq_original_mergeOddsPayload",
+    "body_sha256": "708e106cf04acf11cadd596490efae2285a1cda89c14f02835986195de923746",
+    "parameter_names": [
+      "body"
+    ],
+    "async": false,
+    "original_line": 3262
+  },
+  {
+    "symbol": "refreshRaceAfterCollect",
+    "private_symbol": "_arvexq_original_refreshRaceAfterCollect",
+    "body_sha256": "241b497d3cd5299b4479c8c5b8a06322fb38075ad610262e05c14fdac93e232f",
+    "parameter_names": [
+      "id",
+      "attempt"
+    ],
+    "async": false,
+    "original_line": 3319
+  },
+  {
+    "symbol": "collectRaceInfo",
+    "private_symbol": "_arvexq_original_collectRaceInfo",
+    "body_sha256": "241b497d3cd5299b4479c8c5b8a06322fb38075ad610262e05c14fdac93e232f",
+    "parameter_names": [
+      "no"
+    ],
+    "async": false,
+    "original_line": 3320
+  },
+  {
+    "symbol": "drawPaceStage",
+    "private_symbol": "_arvexq_original_drawPaceStage",
+    "body_sha256": "9aeb9e7081d6c8c9a3ac973b28297ae1e6ba0794a90c8ceb782dd4df2db5a168",
+    "parameter_names": [
+      "idx"
+    ],
+    "async": false,
+    "original_line": 3322
+  },
+  {
+    "symbol": "render",
+    "private_symbol": "_arvexq_original_render",
+    "body_sha256": "dcb46415017a7ab450255a7cd44a18008117480400592f95e0866e8bbdfacf81",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3323
+  },
+  {
+    "symbol": "canGoBack",
+    "private_symbol": "_arvexq_original_canGoBack",
+    "body_sha256": "4b7bea441c2a342b305a21ea6d0200adc814b28d0d6f266383679ef28a0e5b56",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3353
+  },
+  {
+    "symbol": "goBack",
+    "private_symbol": "_arvexq_original_goBack",
+    "body_sha256": "b4e0456845dcb46b0ff596ba2a52c90c11115ed39d033de4e6201d6edad492e0",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3354
+  },
+  {
+    "symbol": "locationState",
+    "private_symbol": "_arvexq_original_locationState",
+    "body_sha256": "8726c77a26fa3da56ff5fad3251acddf250503c53d56f67465ccefbc92dd7d1f",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3413
+  },
+  {
+    "symbol": "syncLocation",
+    "private_symbol": "_arvexq_original_syncLocation",
+    "body_sha256": "0644e4f4b8bf88d71872dad9dd57032639b79c086371f3c35cf6eaaffc5589a2",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3414
+  },
+  {
+    "symbol": "normalizeInitialAppLaunch",
+    "private_symbol": "_arvexq_original_normalizeInitialAppLaunch",
+    "body_sha256": "9939a13711eb2531d1a3538f97bea3f025a688d352ebe0cfe037ade3369ebb47",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3415
+  },
+  {
+    "symbol": "restoreLocation",
+    "private_symbol": "_arvexq_original_restoreLocation",
+    "body_sha256": "96838cdc0d7c77aaccfd1495b8156a6cc54165053e6132ca274cc78fe96cc2d4",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3429
+  },
+  {
+    "symbol": "installNavigation",
+    "private_symbol": "_arvexq_original_installNavigation",
+    "body_sha256": "3e5a696b49640c201de917d187435f11a38d975bce1ea332bbe9f36a286f7711",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3430
+  },
+  {
+    "symbol": "installEdgeBack",
+    "private_symbol": "_arvexq_original_installEdgeBack",
+    "body_sha256": "629426fd5fcba73130d6d46332b38809a75b3a62801552275919bf35feb7bf18",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3431
+  },
+  {
+    "symbol": "bind",
+    "private_symbol": "_arvexq_original_bind",
+    "body_sha256": "eca3cf90812141c0143135b9993fa92cedf531888eb3bc14cc279c14feafcb33",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3468
+  },
+  {
+    "symbol": "hydrateInstantFromDevice",
+    "private_symbol": "_arvexq_original_hydrateInstantFromDevice",
+    "body_sha256": "52de7e2385aee393410af1f935e8d0b3820da56b04002e0b41894fe7cc90cdd9",
+    "parameter_names": [
+      "rows"
+    ],
+    "async": false,
+    "original_line": 3471
+  },
+  {
+    "symbol": "mergeBootstrap",
+    "private_symbol": "_arvexq_original_mergeBootstrap",
+    "body_sha256": "be72eac3f5a4ecc098cddd883bc726e67a8287b1aed63506f33979239fa4f904",
+    "parameter_names": [
+      "body"
+    ],
+    "async": false,
+    "original_line": 3516
+  },
+  {
+    "symbol": "load",
+    "private_symbol": "_arvexq_original_load",
+    "body_sha256": "4f5354c3804df9110ae2bdadabd7cb4dd99e77f3bc4e74ad9379a99b8a1bbc14",
+    "parameter_names": [
+      "force"
+    ],
+    "async": false,
+    "original_line": 3544
+  },
+  {
+    "symbol": "fastReflectNow",
+    "private_symbol": "_arvexq_original_fastReflectNow",
+    "body_sha256": "b5ba7b6bb17822f23e61f44aa955a1980ad2fe806f1f7de3dcf1e1aca830fcd8",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3761
+  },
+  {
+    "symbol": "refreshHomeOfficialStatuses",
+    "private_symbol": "_arvexq_original_refreshHomeOfficialStatuses",
+    "body_sha256": "dccf931520a05e4ec930eb16fb38f535986c32dd0e2fb806ab4b31ffa61b6b41",
+    "parameter_names": [],
+    "async": false,
+    "original_line": 3776
+  }
+]

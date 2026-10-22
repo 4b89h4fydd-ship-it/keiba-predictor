@@ -1,0 +1,18 @@
+{
+  "baseline_sha": "6f21f2e595df17f840c785c31a9f1c5a802bb169",
+  "same_file_count": 849,
+  "different_files": [
+    "404.html",
+    "app-v330.js",
+    "arvexq-app-v330.js",
+    "index.html",
+    "keiba/index.html",
+    "race/index.html",
+    "venue/index.html"
+  ],
+  "html_difference": "existing app cache hash only",
+  "html_layout_difference": false,
+  "app_js_difference": "Stage 3 connection helpers and original-body forwarding only; Stage 4 runtime source unchanged",
+  "all_css_binary_and_archives_equal": true,
+  "candidate_file_count": 856
+}

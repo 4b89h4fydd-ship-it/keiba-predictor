@@ -1,0 +1,71 @@
+{
+  "id": 170,
+  "name": "全頭診断API",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        170
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "volatility_pack",
+        "line": 4948
+      },
+      "original_source": "app.py::volatility_pack",
+      "box_target": "arvexq/components/item_170/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        170
+      ],
+      "original_private_name": "_arvexq_original_volatility_pack"
+    },
+    {
+      "items": [
+        170
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "diagnosis_refresh",
+        "line": 5645
+      },
+      "original_source": "app.py::diagnosis_refresh",
+      "box_target": "arvexq/components/item_170/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        170
+      ],
+      "original_private_name": "_arvexq_original_diagnosis_refresh"
+    },
+    {
+      "items": [
+        170
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "racedb_get_analysis",
+        "line": 6158
+      },
+      "original_source": "app.py::racedb_get_analysis",
+      "box_target": "arvexq/components/item_170/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        170
+      ],
+      "original_private_name": "_arvexq_original_racedb_get_analysis"
+    }
+  ],
+  "deferred": [],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

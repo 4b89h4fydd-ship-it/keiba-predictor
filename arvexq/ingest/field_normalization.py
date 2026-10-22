@@ -1,8 +1,8 @@
 """Pure field normalization for JRA/NAR ingestion; no UI or predictions."""
 from __future__ import annotations
 import re
-from arvexq.ingest.runner_cancellation import extract as cancellation_status
-from arvexq.ingest.runner_exclusion import extract as exclusion_status
+from arvexq.components.item_036.runner_cancellation import extract as cancellation_status
+from arvexq.components.item_037.runner_exclusion import extract as exclusion_status
 
 def _clean(value: str | None) -> str:
     return (value or "").strip().replace("\u3000", " ")
@@ -60,7 +60,7 @@ def _time_seconds(raw: str) -> float:
     return int(s[:-3]) * 60 + int(s[-3:]) / 10.0
 
 def _normalize_sex(value: str) -> str:
-    from arvexq.ingest.entry_fields.sex import normalize
+    from arvexq.components.item_028.sex import normalize
     return normalize(value)
 
 def _scratch_status(value: str) -> str:

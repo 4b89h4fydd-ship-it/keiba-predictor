@@ -1,5 +1,5 @@
 """Shared DOM access only; field interpretation belongs to the field modules."""
-from arvexq.ingest.field_normalization import _clean
+from arvexq.components.item_040.field_normalization import _clean
 
 def text(node):
     return _clean(node.get_text(" ", strip=True)) if node is not None else ""

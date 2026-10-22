@@ -1,0 +1,84 @@
+{
+  "id": 23,
+  "name": "レースID照合",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/ingest/race_identity.py::<module>",
+    "arvexq/quality/fact_audit.py::<module>",
+    "arvexq/ui/static/research/race_identity.js::<module>",
+    "arvexq/ingest/race_identity.py::canonical_race_id",
+    "arvexq/ingest/race_identity.py::same_race",
+    "arvexq/ingest/race_identity.py::observed_detail_identity_error",
+    "arvexq/quality/fact_audit.py::observed",
+    "arvexq/quality/fact_audit.py::audit_day",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.name",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.remember",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.remember.@anonymous:8:51",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:16:27",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:17:31",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:25:38",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:28:23",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:49:29"
+  ],
+  "owned_refs": [],
+  "shared_refs": [
+    "arvexq/ingest/race_identity.py::<module>",
+    "arvexq/quality/fact_audit.py::<module>",
+    "arvexq/ui/static/research/race_identity.js::<module>",
+    "arvexq/ingest/race_identity.py::canonical_race_id",
+    "arvexq/ingest/race_identity.py::same_race",
+    "arvexq/ingest/race_identity.py::observed_detail_identity_error",
+    "arvexq/quality/fact_audit.py::observed",
+    "arvexq/quality/fact_audit.py::audit_day",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.name",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.remember",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.remember.@anonymous:8:51",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:16:27",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:17:31",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:25:38",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:28:23",
+    "arvexq/ui/static/research/race_identity.js::@anonymous:2:1.sanitize.@anonymous:49:29"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    "arvexq/ingest/nar_csv.py",
+    "arvexq/quality/fact_audit.py",
+    "arvexq/ui/static/app.js",
+    "arvexq/ui/static/index.html",
+    "arvexq/ui/static/research/saved_snapshot.js",
+    "arvexq/ui/static/research/static_racecard.js",
+    "scripts/arvexq_fact_data_audit.py",
+    "scripts/arvexq_race_identity_smoke.js",
+    "tests/test_factual_data_audit.py",
+    "tests/test_observed_detail_identity.py",
+    "tests/test_observed_source_provenance.py"
+  ],
+  "callee_files": [
+    "arvexq/ingest/career_transport.py",
+    "arvexq/ingest/full_career.py",
+    "arvexq/ingest/race_identity.py",
+    "arvexq/ingest/runner_identity_compare.py",
+    "arvexq/ingest/source_provenance.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/ingest/race_identity.py",
+    "arvexq/ui/static/research/race_identity.js"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/ingest/race_identity.py",
+    "arvexq/quality/fact_audit.py",
+    "arvexq/ui/static/research/race_identity.js"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

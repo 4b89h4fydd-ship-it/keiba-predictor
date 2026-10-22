@@ -1,6 +1,7 @@
-import {sourceOdds} from './live_odds.mjs';
-import {savedOdds} from './saved_odds.mjs';
-export default {
+import {fetchExisting as _arvexq_fetch_existing} from '../arvexq/components/item_173/web_entry.mjs';
+import {sourceOdds} from '../arvexq/components/item_167/live_odds.mjs';
+import {savedOdds} from '../arvexq/components/item_067/saved_odds.mjs';
+const _arvexq_existing_worker = {
   async fetch(request,env,ctx){
     const url=new URL(request.url);
     // Retired boat-racing paths must not be served by the SPA fallback.
@@ -40,3 +41,7 @@ export default {
     }
   }
 };
+
+export default {async fetch(request, env, ctx) {
+  return _arvexq_fetch_existing(_arvexq_existing_worker, request, env, ctx);
+}};

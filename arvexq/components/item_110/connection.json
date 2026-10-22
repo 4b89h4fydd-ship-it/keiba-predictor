@@ -1,0 +1,228 @@
+{
+  "id": 110,
+  "name": "全頭診断結果保存・表示",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "state": "partial-connection-code-written-unverified",
+  "runtime_verified": false,
+  "connections": [
+    {
+      "items": [
+        110
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "app.py",
+        "line": 1,
+        "imported": "prepare_race_detail",
+        "local_name": "prepare_race_detail"
+      },
+      "original_source": "arvexq/services/__init__.py",
+      "box_target": "arvexq/components/item_110/services_package.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        110
+      ],
+      "kind": "python-object-alias",
+      "caller": {
+        "path": "arvexq/services/race_analysis.py",
+        "line": 5,
+        "imported": "build_diagnosis",
+        "local_name": "build_diagnosis"
+      },
+      "original_source": "arvexq/diagnosis.py",
+      "box_target": "arvexq/components/item_110/diagnosis.py",
+      "verification": "接続コード記述のみ・実行未検証"
+    },
+    {
+      "items": [
+        110
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_evaluation_number",
+        "line": 3914
+      },
+      "original_source": "app.py::_evaluation_number",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110
+      ],
+      "original_private_name": "_arvexq_original__evaluation_number"
+    },
+    {
+      "items": [
+        110
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_fast_local_race_detail",
+        "line": 4207
+      },
+      "original_source": "app.py::_fast_local_race_detail",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110
+      ],
+      "original_private_name": "_arvexq_original__fast_local_race_detail"
+    },
+    {
+      "items": [
+        110
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_build_fast_diagnosis_snapshot",
+        "line": 4286
+      },
+      "original_source": "app.py::_build_fast_diagnosis_snapshot",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110
+      ],
+      "original_private_name": "_arvexq_original__build_fast_diagnosis_snapshot"
+    },
+    {
+      "items": [
+        110
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "_store_fast_snapshot",
+        "line": 4342
+      },
+      "original_source": "app.py::_store_fast_snapshot",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110
+      ],
+      "original_private_name": "_arvexq_original__store_fast_snapshot"
+    },
+    {
+      "items": [
+        110
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "app.py",
+        "symbol": "racedb_save_analysis",
+        "line": 6141
+      },
+      "original_source": "app.py::racedb_save_analysis",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110
+      ],
+      "original_private_name": "_arvexq_original_racedb_save_analysis"
+    },
+    {
+      "items": [
+        110,
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "arvexq/domain/legacy_evaluation.py",
+        "symbol": "_strip_excluded",
+        "line": 66
+      },
+      "original_source": "arvexq/domain/legacy_evaluation.py::_strip_excluded",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110,
+        129
+      ],
+      "original_private_name": "_arvexq_original__strip_excluded"
+    },
+    {
+      "items": [
+        107,
+        110
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "arvexq/domain/legacy_evaluation.py",
+        "symbol": "_attach_evaluation_context",
+        "line": 74
+      },
+      "original_source": "arvexq/domain/legacy_evaluation.py::_attach_evaluation_context",
+      "box_target": "arvexq/components/item_107/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        107,
+        110
+      ],
+      "original_private_name": "_arvexq_original__attach_evaluation_context"
+    },
+    {
+      "items": [
+        110,
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "arvexq/domain/legacy_evaluation.py",
+        "symbol": "_attach_stored_career",
+        "line": 113
+      },
+      "original_source": "arvexq/domain/legacy_evaluation.py::_attach_stored_career",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110,
+        129
+      ],
+      "original_private_name": "_arvexq_original__attach_stored_career"
+    },
+    {
+      "items": [
+        110,
+        129
+      ],
+      "kind": "existing-callable-forward",
+      "caller": {
+        "path": "arvexq/domain/legacy_evaluation.py",
+        "symbol": "_vol_clamp",
+        "line": 132
+      },
+      "original_source": "arvexq/domain/legacy_evaluation.py::_vol_clamp",
+      "box_target": "arvexq/components/item_110/routes.py",
+      "verification": "接続コード記述のみ・実行未検証",
+      "shared_items": [
+        110,
+        129
+      ],
+      "original_private_name": "_arvexq_original__vol_clamp"
+    }
+  ],
+  "deferred": [
+    {
+      "items": [
+        110
+      ],
+      "source": "app.py::_precompute_detail_metrics",
+      "reason": "進行中の個別PRが同じ関数を変更するため接続保留",
+      "prs": [
+        368
+      ]
+    }
+  ],
+  "allocation_reference": "allocation.json",
+  "remaining_allocated_refs": "全allocationsの接続完了を意味しない。実際に書き換えた入口だけconnectionsに記録。未移設・UI内関数・workflow/テスト・動的経路は第3段階資料参照。",
+  "connection_code_present": true,
+  "remaining_reason": "接続コードのある経路だけを記録。全割当ソース/全動的分岐の接続完了は認定しない。"
+}

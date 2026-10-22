@@ -18,8 +18,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from arvexq.ingest.career_transport import pack_detail
-from arvexq.ingest.full_snapshot_codec import pack_detail as pack_full_snapshot,unpack_detail as unpack_full_snapshot
+from arvexq.components.item_057.career_transport import pack_detail
+from arvexq.components.item_148.full_snapshot_codec import pack_detail as pack_full_snapshot, unpack_detail as unpack_full_snapshot
 from scripts.arvexq_detail_size_audit import print_size_audit
 
 

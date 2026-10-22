@@ -1,0 +1,21 @@
+{
+  "id": 147,
+  "name": "発走前スナップショット",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/prediction/prerace_archive.py"
+  ],
+  "shared_dependencies": [
+    "existing app.js global state and order-dependent shared UI; same-byte source migration only"
+  ],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

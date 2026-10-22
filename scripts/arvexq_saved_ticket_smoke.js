@@ -25,7 +25,21 @@ for(const [id,kind,combos] of [['nar-2026-10-10-高知-01','馬単',[[5,8]]],['n
 const app=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const from=app.indexOf('function verifiedSavedAiBet('),to=app.indexOf('function frozenAiBetForRace(',from);
 assert.ok(from>=0&&to>from);
-const verify=new Function(app.slice(from,to)+';return verifiedSavedAiBet;')();
+// Execute the actual public entrypoint through its existing box adapter.
+// In Stage 3 the unchanged implementation is stored under a private name.
+const privateName='function _arvexq_original_verifiedSavedAiBet(';
+const privateFrom=app.indexOf(privateName);
+let verify;
+if(privateFrom>=0){
+ const privateTo=app.indexOf('\nfunction ',privateFrom+privateName.length);
+ assert(privateTo>privateFrom,'missing preserved original boundary');
+ assert.match(app.slice(from,to),/_arvexq_box_147_call\(_arvexq_original_verifiedSavedAiBet,this,arguments\)/);
+ const route=fs.readFileSync('arvexq/components/item_147/routes.js','utf8');
+ assert.match(route,/function _arvexq_box_147_call\(/);
+ verify=new Function(route+'\n'+app.slice(privateFrom,privateTo)+'\n'+app.slice(from,to)+';return verifiedSavedAiBet;')();
+}else{
+ verify=new Function(app.slice(from,to)+';return verifiedSavedAiBet;')();
+}
 const race={id:'nar-2026-10-12-高知-04',date:'2026-10-12',startTime:'18:00'};
 const valid={raceId:race.id,raceDate:race.date,fixedAt:'2026-10-12T17:35:00+09:00',
  decision:'通常買い',items:[{kind:'馬連',combos:[[1,2]]}]};

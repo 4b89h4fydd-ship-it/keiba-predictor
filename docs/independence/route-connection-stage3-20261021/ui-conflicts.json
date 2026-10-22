@@ -1,0 +1,157 @@
+{
+  "focused_prs": [
+    368,
+    213,
+    112
+  ],
+  "blocked_symbols": [
+    {
+      "symbol": "mergeHorseReflection",
+      "prs": [
+        368
+      ]
+    },
+    {
+      "symbol": "mergeRaceReflection",
+      "prs": [
+        368
+      ]
+    },
+    {
+      "symbol": "historicalWindow",
+      "prs": [
+        213
+      ]
+    },
+    {
+      "symbol": "observedHistory",
+      "prs": [
+        213
+      ]
+    },
+    {
+      "symbol": "narMarginParts",
+      "prs": [
+        213
+      ]
+    },
+    {
+      "symbol": "observedHistoryRateEvidence",
+      "prs": [
+        213
+      ]
+    },
+    {
+      "symbol": "narScoreRows",
+      "prs": [
+        213
+      ]
+    },
+    {
+      "symbol": "observedSelectedRaceProfile",
+      "prs": [
+        213
+      ]
+    },
+    {
+      "symbol": "assignObservedPredictionMarks",
+      "prs": [
+        213
+      ]
+    },
+    {
+      "symbol": "buildObservedBetPlan",
+      "prs": [
+        213
+      ]
+    },
+    {
+      "symbol": "integratedGrades",
+      "prs": [
+        213,
+        112
+      ]
+    },
+    {
+      "symbol": "predict",
+      "prs": [
+        213,
+        112
+      ]
+    },
+    {
+      "symbol": "buildAiBetPlan",
+      "prs": [
+        213,
+        112
+      ]
+    },
+    {
+      "symbol": "arvexqFactorValues",
+      "prs": [
+        112
+      ]
+    },
+    {
+      "symbol": "arvexqRacePolicy",
+      "prs": [
+        112
+      ]
+    },
+    {
+      "symbol": "strictSelectedRaceProfile",
+      "prs": [
+        112
+      ]
+    },
+    {
+      "symbol": "eligibleOptionalStar",
+      "prs": [
+        112
+      ]
+    },
+    {
+      "symbol": "assignPredictionMarks",
+      "prs": [
+        112
+      ]
+    },
+    {
+      "symbol": "threeFactorMarkInputSignature",
+      "prs": [
+        112
+      ]
+    },
+    {
+      "symbol": "runnerDetailBody",
+      "prs": [
+        112
+      ]
+    },
+    {
+      "symbol": "currentBetEnginePlan",
+      "prs": [
+        112
+      ]
+    },
+    {
+      "symbol": "frozenAiBetForRace",
+      "prs": [
+        112
+      ]
+    },
+    {
+      "symbol": "item",
+      "prs": [
+        112
+      ]
+    },
+    {
+      "symbol": "runnerStyleSection",
+      "prs": [
+        112
+      ]
+    }
+  ],
+  "policy": "変更されるUI関数には接続wrapperを追加しない。元の関数本文・パラメーター・this/argumentsは保持する。画面動作は次段階。"
+}

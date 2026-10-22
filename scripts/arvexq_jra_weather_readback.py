@@ -3,7 +3,7 @@ import argparse
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from arvexq.ingest.d1_day_readback import read_day
+from arvexq.components.item_160.d1_day_readback import read_day
 
 KNOWN = frozenset(("晴", "曇", "小雨", "雨", "小雪", "雪"))
 

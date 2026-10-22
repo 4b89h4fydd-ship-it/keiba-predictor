@@ -1,0 +1,43 @@
+{
+  "id": 109,
+  "name": "コース別スピード基準",
+  "circuits": [
+    "JRA",
+    "NAR"
+  ],
+  "status": "assigned-existing-code",
+  "meaning": "静的な既存ソースの対応付けのみ。接続・稼働・評価機能完成の判定ではない。",
+  "code_refs": [
+    "arvexq/prediction/course_speed_baselines.py::<module>",
+    "arvexq/domain/legacy_evaluation.py::SOURCE._v215_speed_ratio",
+    "arvexq/domain/legacy_evaluation.py::SOURCE._pc_live_track_speed"
+  ],
+  "owned_refs": [
+    "arvexq/prediction/course_speed_baselines.py::<module>"
+  ],
+  "shared_refs": [
+    "arvexq/domain/legacy_evaluation.py::SOURCE._v215_speed_ratio",
+    "arvexq/domain/legacy_evaluation.py::SOURCE._pc_live_track_speed"
+  ],
+  "research_only_refs": [],
+  "missing_old_references": [],
+  "caller_files": [
+    ".github/workflows/arvexq-validation.yml",
+    "app.py",
+    "tests/test_no_retired_ranker_execution.py"
+  ],
+  "callee_files": [
+    "app.py",
+    "arvexq/prediction/final_marks.py"
+  ],
+  "static_app_dependency_files": [
+    "arvexq/domain/legacy_evaluation.py",
+    "arvexq/prediction/course_speed_baselines.py"
+  ],
+  "static_workflow_dependency_files": [
+    "arvexq/domain/legacy_evaluation.py",
+    "arvexq/prediction/course_speed_baselines.py"
+  ],
+  "legacy_prediction_reserved": false,
+  "physical_implementation": "元mainの位置に1つだけ保持。移動・複写・削除・経路接続なし。"
+}

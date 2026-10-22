@@ -1,0 +1,365 @@
+{
+  "aliases": [
+    {
+      "from_item": 77,
+      "to_item": 76,
+      "symbol": "_parse_payouts",
+      "source": "app.py::_parse_payouts",
+      "module": "arvexq.components.item_076.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 78,
+      "to_item": 76,
+      "symbol": "_parse_payouts",
+      "source": "app.py::_parse_payouts",
+      "module": "arvexq.components.item_076.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 79,
+      "to_item": 76,
+      "symbol": "_parse_payouts",
+      "source": "app.py::_parse_payouts",
+      "module": "arvexq.components.item_076.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 80,
+      "to_item": 76,
+      "symbol": "_parse_payouts",
+      "source": "app.py::_parse_payouts",
+      "module": "arvexq.components.item_076.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 81,
+      "to_item": 76,
+      "symbol": "_parse_payouts",
+      "source": "app.py::_parse_payouts",
+      "module": "arvexq.components.item_076.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 82,
+      "to_item": 76,
+      "symbol": "_parse_payouts",
+      "source": "app.py::_parse_payouts",
+      "module": "arvexq.components.item_076.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 83,
+      "to_item": 76,
+      "symbol": "_parse_payouts",
+      "source": "app.py::_parse_payouts",
+      "module": "arvexq.components.item_076.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 90,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 91,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 92,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 94,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 95,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 97,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 98,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 99,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 100,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 101,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 103,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 104,
+      "to_item": 88,
+      "symbol": "_pc_clamp",
+      "source": "app.py::_pc_clamp",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 98,
+      "to_item": 88,
+      "symbol": "_pc_race_field",
+      "source": "app.py::_pc_race_field",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 99,
+      "to_item": 88,
+      "symbol": "_pc_race_field",
+      "source": "app.py::_pc_race_field",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 100,
+      "to_item": 88,
+      "symbol": "_pc_race_field",
+      "source": "app.py::_pc_race_field",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 101,
+      "to_item": 88,
+      "symbol": "_pc_race_field",
+      "source": "app.py::_pc_race_field",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 103,
+      "to_item": 88,
+      "symbol": "_pc_race_field",
+      "source": "app.py::_pc_race_field",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 104,
+      "to_item": 88,
+      "symbol": "_pc_race_field",
+      "source": "app.py::_pc_race_field",
+      "module": "arvexq.components.item_088.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 99,
+      "to_item": 98,
+      "symbol": "_pc_style_metrics",
+      "source": "app.py::_pc_style_metrics",
+      "module": "arvexq.components.item_098.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 100,
+      "to_item": 98,
+      "symbol": "_pc_style_metrics",
+      "source": "app.py::_pc_style_metrics",
+      "module": "arvexq.components.item_098.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 101,
+      "to_item": 98,
+      "symbol": "_pc_style_metrics",
+      "source": "app.py::_pc_style_metrics",
+      "module": "arvexq.components.item_098.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 103,
+      "to_item": 98,
+      "symbol": "_pc_style_metrics",
+      "source": "app.py::_pc_style_metrics",
+      "module": "arvexq.components.item_098.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 104,
+      "to_item": 98,
+      "symbol": "_pc_style_metrics",
+      "source": "app.py::_pc_style_metrics",
+      "module": "arvexq.components.item_098.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 91,
+      "to_item": 90,
+      "symbol": "_pc_fit_metrics",
+      "source": "app.py::_pc_fit_metrics",
+      "module": "arvexq.components.item_090.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 92,
+      "to_item": 90,
+      "symbol": "_pc_fit_metrics",
+      "source": "app.py::_pc_fit_metrics",
+      "module": "arvexq.components.item_090.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 94,
+      "to_item": 90,
+      "symbol": "_pc_fit_metrics",
+      "source": "app.py::_pc_fit_metrics",
+      "module": "arvexq.components.item_090.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 95,
+      "to_item": 90,
+      "symbol": "_pc_fit_metrics",
+      "source": "app.py::_pc_fit_metrics",
+      "module": "arvexq.components.item_090.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 161,
+      "to_item": 149,
+      "symbol": "_prepared_ttl",
+      "source": "app.py::_prepared_ttl",
+      "module": "arvexq.components.item_149.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 146,
+      "to_item": 86,
+      "symbol": "_snapshot_final",
+      "source": "app.py::_snapshot_final",
+      "module": "arvexq.components.item_086.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 149,
+      "to_item": 142,
+      "symbol": "_prepared_get_fresh",
+      "source": "app.py::_prepared_get_fresh",
+      "module": "arvexq.components.item_142.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 161,
+      "to_item": 142,
+      "symbol": "_prepared_get_fresh",
+      "source": "app.py::_prepared_get_fresh",
+      "module": "arvexq.components.item_142.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 109,
+      "to_item": 96,
+      "symbol": "_v215_speed_ratio",
+      "source": "arvexq/domain/legacy_evaluation.py::_v215_speed_ratio",
+      "module": "arvexq.components.item_096.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 109,
+      "to_item": 96,
+      "symbol": "_pc_live_track_speed",
+      "source": "arvexq/domain/legacy_evaluation.py::_pc_live_track_speed",
+      "module": "arvexq.components.item_096.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 129,
+      "to_item": 110,
+      "symbol": "_strip_excluded",
+      "source": "arvexq/domain/legacy_evaluation.py::_strip_excluded",
+      "module": "arvexq.components.item_110.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 110,
+      "to_item": 107,
+      "symbol": "_attach_evaluation_context",
+      "source": "arvexq/domain/legacy_evaluation.py::_attach_evaluation_context",
+      "module": "arvexq.components.item_107.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 129,
+      "to_item": 110,
+      "symbol": "_attach_stored_career",
+      "source": "arvexq/domain/legacy_evaluation.py::_attach_stored_career",
+      "module": "arvexq.components.item_110.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 129,
+      "to_item": 110,
+      "symbol": "_vol_clamp",
+      "source": "arvexq/domain/legacy_evaluation.py::_vol_clamp",
+      "module": "arvexq.components.item_110.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    },
+    {
+      "from_item": 129,
+      "to_item": 106,
+      "symbol": "_race_volatility",
+      "source": "arvexq/domain/legacy_evaluation.py::_race_volatility",
+      "module": "arvexq.components.item_106.routes",
+      "execution": "元の共有処理は主担当の接続点で一度呼ぶ。他箱は同じ関数を参照し再計算しない。"
+    }
+  ],
+  "note": "参照共有の宣言。箱ごとの独立実装完了や動作成功とは扱わない。"
+}

@@ -1,0 +1,21 @@
+{
+  "id": 2,
+  "name": "NAR馬場状態解析",
+  "circuits": [
+    "NAR"
+  ],
+  "prediction_reserved": false,
+  "state": "box-only-unconnected",
+  "existing_sources": [
+    "arvexq/ingest/nar_going.py",
+    "arvexq/ingest/nar_environment_parser.py",
+    "workers/nar_going_moisture.mjs",
+    "scripts/arvexq_nar_going_readback.py"
+  ],
+  "shared_dependencies": [],
+  "owned_definitions": [],
+  "owned_modules": [],
+  "assets": [],
+  "data_policy": "Read existing circuit-scoped sources in place; never copy, mix, fabricate, rewrite or delete historical observations during allocation.",
+  "source_inventory": "docs/independence/box-sorting-20261021/inventory.json"
+}

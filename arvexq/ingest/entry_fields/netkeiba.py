@@ -1,5 +1,18 @@
 """Provider row composition. Field policies can be replaced independently."""
-from . import horse_number, frame_number, name, sex, age, carried_weight, jockey, trainer, affiliation, body_weight, body_weight_change, win_odds, popularity, status
+from arvexq.components.item_025.module_reference_horse_number import original as horse_number
+from arvexq.components.item_026.module_reference_frame_number import original as frame_number
+from arvexq.components.item_027.module_reference_name import original as name
+from arvexq.components.item_028.module_reference_sex import original as sex
+from arvexq.components.item_029.module_reference_age import original as age
+from arvexq.components.item_030.module_reference_carried_weight import original as carried_weight
+from arvexq.components.item_031.module_reference_jockey import original as jockey
+from arvexq.components.item_032.module_reference_trainer import original as trainer
+from arvexq.components.item_033.module_reference_affiliation import original as affiliation
+from arvexq.components.item_034.module_reference_body_weight import original as body_weight
+from arvexq.components.item_035.module_reference_body_weight_change import original as body_weight_change
+from arvexq.components.item_059.module_reference_win_odds import original as win_odds
+from arvexq.components.item_061.module_reference_popularity import original as popularity
+from . import status
 from .dom import horse_info
 
 FIELDS = {"name": name.extract, "sex": sex.extract, "age": age.extract,

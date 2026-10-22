@@ -23,7 +23,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import app
-from arvexq.pipeline.fingerprints import active_horses
+from arvexq.components.item_111.fingerprints import active_horses
 from scripts.arvexq_result_repair import _merge_detail, _result_state, _seed_base
 
 
@@ -91,7 +91,7 @@ def merge_history(old: dict[str, Any] | None, new: dict[str, Any] | None) -> dic
         source_horses = {int(h.get("horseNumber") or 0):h
                          for h in old.get("horses") or [] if isinstance(h,dict)}
         roster = copy.deepcopy(new.get("horses") or [])
-        from arvexq.ingest.full_career import merge_career
+        from arvexq.components.item_057.full_career import merge_career
         cutoff = str(out.get("date") or "")
         for horse in roster:
             if not isinstance(horse,dict):
@@ -184,8 +184,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int, 
     # margin evidence permanently untouched.
     from arvexq.ingest.fallback_enrichment import enrich_race_missing
     from arvexq.prediction.past_performance import observed_runs
-    from arvexq.databanks.registry import DataBankRegistry, registry
-    from arvexq.ingest.career_transport import recover_horse
+    from arvexq.components.item_041.registry import DataBankRegistry, registry
+    from arvexq.components.item_057.career_transport import recover_horse
     selected_bank = registry
     if central_margins_only:
         selected_bank = DataBankRegistry()

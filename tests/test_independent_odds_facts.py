@@ -1,4 +1,5 @@
 """Factual-only odds evidence guards and production wiring."""
+from stage4_source_support import implementation_source
 from pathlib import Path
 import math
 from arvexq.ingest.odds_fields.missing import odds_missing,valid_win_odds
@@ -19,7 +20,7 @@ def test_market_delta_requires_two_observed_prices():
     assert win_odds_delta(None,None) is None
 
 def test_live_nar_uses_delta_and_restore_checks_missing():
-    source=Path("app.py").read_text()
+    source=implementation_source()
     live=source.split("def _attach_nar_live_odds(",1)[1].split("\ndef ",1)[0]
     restore=source.split("def _restore_saved_odds(",1)[1].split("\ndef ",1)[0]
     assert 'win_odds_delta(h.get("winOdds"),z.get("winOdds"))' in live

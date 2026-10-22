@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from arvexq.core.runner_status import is_inactive_runner
+from arvexq.components.item_036.runner_status import is_inactive_runner
 from arvexq.prediction.past_performance import observed_runs, analyze_past_performance
 
 
