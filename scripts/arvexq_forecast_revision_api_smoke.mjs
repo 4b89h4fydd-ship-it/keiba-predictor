@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {webcrypto} from 'node:crypto';
-import {forecastRevisions} from '../workers/api_forecast_revisions.mjs';
+import {forecastRevisions,restoreStoredJSON,compressStoredJSON} from '../workers/api_forecast_revisions.mjs';
 globalThis.crypto??=webcrypto;
 const fixture=JSON.parse(fs.readFileSync('tests/fixtures/forecast_revision_transport.json'));
 const revision=fixture.detail.forecastRevisions[0],store=new Map();let pointer=null;const writes=[];
@@ -26,5 +26,15 @@ const changed=JSON.stringify({...revision,forecastText:'mutated immutable record
 response=await call('/api/admin/forecast-revisions',{revisionRawJson:changed,payloadSha256:await hash(changed)});assert.equal(response.status,409);
 const bad=structuredClone(revision);bad.horses[0].probabilities={win:.9,top2:.2,top3:.1};const badraw=JSON.stringify(bad);
 response=await call('/api/admin/forecast-revisions',{revisionRawJson:badraw,payloadSha256:await hash(badraw)});assert.equal(response.status,400);
-assert.equal(store.get(pointer).payload_json,raw);
+assert.equal(await restoreStoredJSON(store.get(pointer).payload_json),raw);
+assert.ok(new TextEncoder().encode(store.get(pointer).payload_json).length<new TextEncoder().encode(raw).length);
+const packed=await compressStoredJSON(raw);
+assert.equal(await restoreStoredJSON(packed),raw);
+response=await call('/api/admin/forecast-revisions',{revisionStorageJson:packed,payloadSha256:await hash(raw)});
+assert.equal(response.status,200,'compressed-only transport retains original hash and validation');
+assert.equal(await restoreStoredJSON(raw),raw,'legacy uncompressed rows stay readable');
+const broken=JSON.parse(packed);broken.sha256='0'.repeat(64);
+response=await call('/api/admin/forecast-revisions',{revisionRawJson:raw,revisionStorageJson:JSON.stringify(broken),payloadSha256:await hash(raw)});
+assert.equal(response.status,400);
+await assert.rejects(restoreStoredJSON(JSON.stringify({...broken,bytes:1})),/storage/);
 console.log('FORECAST_REVISION_AUTH_IMMUTABILITY_PROBABILITY_READBACK_PASS');

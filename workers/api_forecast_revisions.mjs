@@ -5,6 +5,28 @@ const TABLE_SQL=[
 ];
 const headers={'content-type':'application/json; charset=utf-8','cache-control':'no-store','access-control-allow-origin':'*','access-control-allow-headers':'content-type,authorization,x-sync-token'};
 const response=(value,status=200)=>new Response(JSON.stringify(value),{status,headers});
+const STORAGE='arvexq-storage-gzip-v1';
+const utf8=new TextEncoder();
+const sha=async bytes=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),x=>x.toString(16).padStart(2,'0')).join('');
+export async function restoreStoredJSON(stored){
+ const value=JSON.parse(stored);
+ if(value?.storageEncoding!==STORAGE)return stored;
+ if(!Number.isInteger(value.bytes)||value.bytes<=0||value.bytes>1000000)throw Error('invalid storage length');
+ const bytes=Uint8Array.from(atob(value.gzipBase64),x=>x.charCodeAt(0));
+ const reader=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')).getReader();
+ const chunks=[];let size=0;
+ while(true){const {done,value:chunk}=await reader.read();if(done)break;size+=chunk.length;
+  if(size>value.bytes){await reader.cancel();throw Error('storage expansion limit')};chunks.push(chunk)}
+ const raw=new Uint8Array(size);let offset=0;for(const chunk of chunks){raw.set(chunk,offset);offset+=chunk.length}
+ if(size!==value.bytes||await sha(raw)!==value.sha256)throw Error('storage checksum mismatch');
+ return new TextDecoder('utf-8',{fatal:true}).decode(raw);
+}
+export async function compressStoredJSON(raw){
+ const bytes=utf8.encode(raw),compressed=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
+ let binary='';for(let i=0;i<compressed.length;i+=8192)binary+=String.fromCharCode(...compressed.subarray(i,i+8192));
+ const stored=JSON.stringify({storageEncoding:STORAGE,bytes:bytes.length,sha256:await sha(bytes),gzipBase64:btoa(binary)});
+ return utf8.encode(stored).length<bytes.length?stored:raw;
+}
 function authorized(request,env){const token=String(env.SYNC_TOKEN||'');return token.length>0&&(
  request.headers.get('x-sync-token')===token||request.headers.get('authorization')==='Bearer '+token);}
 export async function forecastRevisions(request,env){
@@ -21,20 +43,25 @@ export async function forecastRevisions(request,env){
   const id=decodeURIComponent(path.slice('/api/forecast-revisions/'.length));
   try{
    const current=await env.DB.prepare(`SELECT r.payload_json FROM forecast_revisions r JOIN forecast_revision_current c ON c.race_id=r.race_id AND c.revision_id=r.revision_id WHERE r.race_id=?`).bind(id).first();
-   if(!current)return response({ok:true,raceId:id,currentForecastRevisionId:null,forecastRevisions:[]});
+   if(!current)return response({ok:true,raceId:id,storageEncoding:STORAGE,currentForecastRevisionId:null,forecastRevisions:[]});
    const rows=await env.DB.prepare('SELECT payload_json FROM forecast_revisions WHERE race_id=? ORDER BY created_at,revision_id').bind(id).all();
-   const selected=JSON.parse(current.payload_json);
+   const selected=JSON.parse(await restoreStoredJSON(current.payload_json));
+   const restored=await Promise.all((rows.results||[]).map(r=>restoreStoredJSON(r.payload_json)));
    // Keep raw numeric spellings used by Python's immutable revision checksum.
-   return new Response('{"ok":true,"raceId":'+JSON.stringify(id)+',"currentForecastRevisionId":'+JSON.stringify(selected.revisionId)+',"forecastRevisions":['+(rows.results||[]).map(r=>r.payload_json).join(',')+']}',{headers});
+   return new Response('{"ok":true,"storageEncoding":'+JSON.stringify(STORAGE)+',"raceId":'+JSON.stringify(id)+',"currentForecastRevisionId":'+JSON.stringify(selected.revisionId)+',"forecastRevisions":['+restored.join(',')+']}',{headers});
   }catch(error){
-   if(/no such table.*forecast_revision/.test(String(error)))return response({ok:true,raceId:id,schemaReady:false,currentForecastRevisionId:null,forecastRevisions:[]});
+   if(/no such table.*forecast_revision/.test(String(error)))return response({ok:true,raceId:id,storageEncoding:STORAGE,schemaReady:false,currentForecastRevisionId:null,forecastRevisions:[]});
    throw error;
   }
  }
  if(path==='/api/admin/forecast-revisions'){
   if(request.method!=='POST')return response({ok:false,error:'method not allowed'},405);
   if(!authorized(request,env))return response({ok:false,error:'unauthorized'},401);
-  const body=await request.json(),raw=body.revisionRawJson;
+  const body=await request.json();let raw=body.revisionRawJson;
+  if(raw===undefined&&typeof body.revisionStorageJson==='string'){
+   try{if(utf8.encode(body.revisionStorageJson).length>1000000)throw Error('storage size');raw=await restoreStoredJSON(body.revisionStorageJson)}
+   catch{return response({ok:false,error:'invalid compressed revision'},400)}
+  }
   if(typeof raw!=='string'||new TextEncoder().encode(raw).length>1000000)return response({ok:false,error:'invalid revision size'},400);
   let revision;try{revision=JSON.parse(raw)}catch{return response({ok:false,error:'invalid revision JSON'},400)}
   const {raceId,revisionId,raceDate,modelVersion,createdAt}=revision||{};
@@ -59,10 +86,15 @@ export async function forecastRevisions(request,env){
   if(!source||source.race_date!==raceDate)return response({ok:false,error:'source race mismatch'},409);
   const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw)))).map(x=>x.toString(16).padStart(2,'0')).join('');
   if(body.payloadSha256!==digest)return response({ok:false,error:'revision checksum mismatch'},400);
+  let stored;
+  if(body.revisionStorageJson!==undefined){
+   try{if(typeof body.revisionStorageJson!=='string'||utf8.encode(body.revisionStorageJson).length>utf8.encode(raw).length||await restoreStoredJSON(body.revisionStorageJson)!==raw)throw Error('storage mismatch');stored=body.revisionStorageJson}
+   catch{return response({ok:false,error:'invalid compressed revision'},400)}
+  }else stored=await compressStoredJSON(raw);
   const previous=await env.DB.prepare('SELECT payload_sha256 FROM forecast_revisions WHERE race_id=? AND revision_id=?').bind(raceId,revisionId).first();
   if(previous&&previous.payload_sha256!==digest)return response({ok:false,error:'immutable revision conflict'},409);
   await env.DB.batch([
-   env.DB.prepare('INSERT INTO forecast_revisions(race_id,revision_id,race_date,model_version,created_at,payload_json,payload_sha256) VALUES(?,?,?,?,?,?,?) ON CONFLICT(race_id,revision_id) DO NOTHING').bind(raceId,revisionId,raceDate,modelVersion,createdAt,raw,digest),
+   env.DB.prepare('INSERT INTO forecast_revisions(race_id,revision_id,race_date,model_version,created_at,payload_json,payload_sha256) VALUES(?,?,?,?,?,?,?) ON CONFLICT(race_id,revision_id) DO NOTHING').bind(raceId,revisionId,raceDate,modelVersion,createdAt,stored,digest),
    env.DB.prepare('INSERT INTO forecast_revision_current(race_id,revision_id,updated_at) VALUES(?,?,?) ON CONFLICT(race_id) DO UPDATE SET revision_id=excluded.revision_id,updated_at=excluded.updated_at').bind(raceId,revisionId,new Date().toISOString())
   ]);
   return response({ok:true,raceId,revisionId,original_tables_modified:false});

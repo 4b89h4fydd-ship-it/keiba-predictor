@@ -22,6 +22,7 @@ from arvexq.databanks.nar_official_csv import NarOfficialArchive,normalize,item,
 from arvexq.prediction.past_performance import observed_runs
 from arvexq.prediction.forecast_revisions import append_revision, latest_revision, originals_hash
 from arvexq.prediction.learned_scenarios import fit_model, race_family
+from arvexq.ingest.storage_json_codec import encode as encode_storage, decode as decode_storage
 
 
 def encoded(value):
@@ -169,7 +170,9 @@ def capacity_preview(source_path, ledger_path, destination):
         count=0
         for rid,raw,digest in ledger.execute('SELECT race_id,payload_json,payload_sha256 FROM revisions'):
             r=json.loads(raw)
-            shadow.execute('INSERT OR IGNORE INTO forecast_revisions VALUES(?,?,?,?,?,?,?)',(rid,r['revisionId'],r['raceDate'],r['modelVersion'],r['createdAt'],raw,digest))
+            stored=encode_storage(raw)
+            assert decode_storage(stored)==raw
+            shadow.execute('INSERT OR IGNORE INTO forecast_revisions VALUES(?,?,?,?,?,?,?)',(rid,r['revisionId'],r['raceDate'],r['modelVersion'],r['createdAt'],stored,digest))
             shadow.execute('INSERT INTO forecast_revision_current VALUES(?,?,?) ON CONFLICT(race_id) DO UPDATE SET revision_id=excluded.revision_id,updated_at=excluded.updated_at',(rid,r['revisionId'],r['createdAt']))
             count+=1
         shadow.commit()
@@ -182,7 +185,8 @@ def capacity_preview(source_path, ledger_path, destination):
 
 def publish(ledger_path,base,token, *, only_ids=None):
     db=sqlite3.connect(ledger_path);failures=[];verified=0
-    headers={'Content-Type':'application/json','Authorization':'Bearer '+token}
+    headers={'Content-Type':'application/json','Authorization':'Bearer '+token,
+             'User-Agent':'Mozilla/5.0 ARVEXQ-LosslessPublish/1.0','Accept':'application/json'}
     def request(path,value=None):
         data=encoded(value).encode() if value is not None else None
         req=urllib.request.Request(base.rstrip('/')+path,data=data,headers=headers)
@@ -198,7 +202,7 @@ def publish(ledger_path,base,token, *, only_ids=None):
                 assert {k:v for k,v in existing.items() if k!='createdAt'}=={k:v for k,v in json.loads(raw).items() if k!='createdAt'}
                 if before.get('currentForecastRevisionId')!=revision_id:raise ValueError('known revision is not current; refusing rollback of newer display')
             else:
-                result=request('/api/admin/forecast-revisions',{'revisionRawJson':raw,'payloadSha256':digest})
+                result=request('/api/admin/forecast-revisions',{'revisionStorageJson':encode_storage(raw),'payloadSha256':digest})
                 assert result.get('ok') and result.get('original_tables_modified') is False
             after=request(path)
             assert after.get('currentForecastRevisionId')==revision_id
