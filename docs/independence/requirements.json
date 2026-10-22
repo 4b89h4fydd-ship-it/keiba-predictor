@@ -650,7 +650,10 @@
       "status": "解析済",
       "module": "arvexq.ingest.nar_official_card",
       "files": [
-        "arvexq/ingest/nar_official_card.py"
+        "arvexq/ingest/nar_official_card.py",
+        "arvexq/ingest/nar_fields/body_weight.py",
+        "arvexq/ingest/nar_fields/body_weight_change.py",
+        "arvexq/ingest/nar_fields/carried_weight.py"
       ],
       "callers": [
         "app.py:_parse_nar_official_card_html",
@@ -664,9 +667,10 @@
       "output": "per-horse observed carriedWeight, bodyWeight, bodyWeightChange, and source; unavailable values remain null or absent",
       "storage": null,
       "tests": [
-        "tests/test_nar_official_card.py"
+        "tests/test_nar_official_card.py",
+        "tests/test_nar_official_fields_independent.py"
       ],
-      "implementation_scope": "NAR公式カードHTMLからの斤量・馬体重・増減抽出を責務分離して既存取得経路に接続。公式結果・払戻・月次CSVなどNAR公式全データ解析の独立化と本番検証は未実施",
+      "implementation_scope": "NAR公式カードHTMLからの斤量・馬体重・増減抽出を責務分離して既存取得経路に接続。公式結果・払戻・月次CSVなどNAR公式全データ解析の独立化と本番検証は未実施 NAR official HTML now delegates to independent carried-weight, body-weight and weight-change extractors; their original interpretations and output schema are preserved. Other provider paths and production verification still require independent evidence.",
       "evidence": {
         "commit_sha": "6a41e4b5265804d7e39bceaaf2f3e8339782a33d",
         "unit": "tests/test_nar_official_card.py: 4 parser contracts; contracts CI passed",
@@ -956,7 +960,9 @@
       "status": "解析済",
       "module": "arvexq.ingest.entry_fields.carried_weight",
       "files": [
-        "arvexq/ingest/entry_fields/carried_weight.py"
+        "arvexq/ingest/entry_fields/carried_weight.py",
+        "arvexq/ingest/nar_fields/carried_weight.py",
+        "arvexq/ingest/nar_official_card.py"
       ],
       "callers": [
         "arvexq/ingest/entry_fields/netkeiba.py",
@@ -969,9 +975,10 @@
       "output": "scalar / provider-compatible missing value",
       "storage": null,
       "tests": [
-        "tests/test_entry_field_contracts.py"
+        "tests/test_entry_field_contracts.py",
+        "tests/test_nar_official_fields_independent.py"
       ],
-      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る NAR official HTML now delegates to independent carried-weight, body-weight and weight-change extractors; their original interpretations and output schema are preserved. Other provider paths and production verification still require independent evidence.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1091,7 +1098,9 @@
       "status": "解析済",
       "module": "arvexq.ingest.entry_fields.body_weight",
       "files": [
-        "arvexq/ingest/entry_fields/body_weight.py"
+        "arvexq/ingest/entry_fields/body_weight.py",
+        "arvexq/ingest/nar_fields/body_weight.py",
+        "arvexq/ingest/nar_official_card.py"
       ],
       "callers": [
         "arvexq/ingest/entry_fields/netkeiba.py",
@@ -1104,9 +1113,10 @@
       "output": "scalar / provider-compatible missing value",
       "storage": null,
       "tests": [
-        "tests/test_entry_field_contracts.py"
+        "tests/test_entry_field_contracts.py",
+        "tests/test_nar_official_fields_independent.py"
       ],
-      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る NAR official HTML now delegates to independent carried-weight, body-weight and weight-change extractors; their original interpretations and output schema are preserved. Other provider paths and production verification still require independent evidence.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1124,7 +1134,9 @@
       "status": "解析済",
       "module": "arvexq.ingest.entry_fields.body_weight_change",
       "files": [
-        "arvexq/ingest/entry_fields/body_weight_change.py"
+        "arvexq/ingest/entry_fields/body_weight_change.py",
+        "arvexq/ingest/nar_fields/body_weight_change.py",
+        "arvexq/ingest/nar_official_card.py"
       ],
       "callers": [
         "arvexq/ingest/entry_fields/netkeiba.py",
@@ -1137,9 +1149,10 @@
       "output": "scalar / provider-compatible missing value",
       "storage": null,
       "tests": [
-        "tests/test_entry_field_contracts.py"
+        "tests/test_entry_field_contracts.py",
+        "tests/test_nar_official_fields_independent.py"
       ],
-      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る NAR official HTML now delegates to independent carried-weight, body-weight and weight-change extractors; their original interpretations and output schema are preserved. Other provider paths and production verification still require independent evidence.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
