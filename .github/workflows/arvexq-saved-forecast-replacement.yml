@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths: ['.github/workflows/arvexq-saved-forecast-replacement.yml']
   workflow_run:
-    workflows: ['ARVEXQ API Private Storage Audit Deploy']
+    workflows: ['ARVEXQ API Private Storage Audit Deploy', 'ARVEXQ Web Deploy']
     types: [completed]
     branches: [main]
 permissions:

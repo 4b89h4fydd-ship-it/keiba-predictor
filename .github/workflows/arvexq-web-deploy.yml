@@ -12,6 +12,7 @@ on:
       - 'workers/**'
       - 'scripts/arvexq_build_odds_sources.py'
       - '.github/workflows/arvexq-web-deploy.yml'
+      - '.github/workflows/arvexq-saved-forecast-replacement.yml'
       - '.github/workflows/arvexq-webapp-race-smoke.yml'
   workflow_dispatch:
 
