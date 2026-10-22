@@ -1957,7 +1957,9 @@
       "status": "解析済",
       "module": "arvexq.ingest.entry_fields.popularity",
       "files": [
-        "arvexq/ingest/entry_fields/popularity.py"
+        "arvexq/ingest/entry_fields/popularity.py",
+        "arvexq/ingest/odds_fields/nar_popularity.py",
+        "arvexq/ingest/odds_fields/nar_official.py"
       ],
       "callers": [
         "arvexq/ingest/entry_fields/netkeiba.py",
@@ -1970,9 +1972,10 @@
       "output": "scalar / provider-compatible missing value",
       "storage": null,
       "tests": [
-        "tests/test_entry_field_contracts.py"
+        "tests/test_entry_field_contracts.py",
+        "tests/test_nar_official_odds_independent.py"
       ],
-      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る",
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る NAR final observed odds competition-ranking (including ties and missing odds) moved unchanged into independent parser; other popularity sources and production proof remain pending.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
