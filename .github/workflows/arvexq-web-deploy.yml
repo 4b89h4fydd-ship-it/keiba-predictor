@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'arvexq/ui/static/**'
+      - '.github/workflows/arvexq-api-storage-deploy.yml'
       - 'build_static.py'
       - 'wrangler.toml'
       - 'workers/**'

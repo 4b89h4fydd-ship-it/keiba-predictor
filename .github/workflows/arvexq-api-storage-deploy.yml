@@ -37,6 +37,29 @@ jobs:
           node scripts/arvexq_full_snapshot_smoke.mjs
           node scripts/arvexq_api_chunk_export_smoke.mjs
           python -m unittest tests.test_full_snapshot_codec
+      - name: Reuse verified existing forecast revisions interface
+        if: ${{ !inputs.verify_only }}
+        run: |
+          python - <<'PY'
+          import os,json,urllib.request
+          base='https://kraiz-api.4b89h4fydd.workers.dev'
+          try:
+              req=urllib.request.Request(base+'/api/forecast-revisions/__readiness__')
+              with urllib.request.urlopen(req,timeout=20) as r:forecast=json.load(r)
+              private=urllib.request.Request(base+'/api/admin/storage-audit',
+                  headers={'Authorization':'Bearer '+os.environ['SYNC_TOKEN']})
+              with urllib.request.urlopen(private,timeout=30) as r:audit=json.load(r)
+          except (OSError,ValueError) as exc:
+              print('PREEXISTING_REVISION_API_NOT_READY',type(exc).__name__)
+          else:
+              if (forecast.get('ok') is True and
+                  forecast.get('raceId')=='__readiness__' and
+                  isinstance(forecast.get('forecastRevisions'),list) and
+                  audit.get('ok') is True and audit.get('sql_writes')==0):
+                  with open(os.environ['GITHUB_ENV'],'a') as file:
+                      file.write('ARVEXQ_API_ALREADY_READY=1\\n'.replace('\\n','\n'))
+                  print('PREEXISTING_REVISION_API_READBACK_VERIFIED_SKIP_REDEPLOY')
+          PY
       - name: Discover authorized account without logging credentials
         run: |
           if [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then exit 0; fi
@@ -49,7 +72,7 @@ jobs:
           with open(os.environ['GITHUB_ENV'],'a') as f:f.write('CLOUDFLARE_ACCOUNT_ID='+account+'\n')
           PY
       - name: Guard production source and preserve original compatibility settings
-        if: ${{ !inputs.verify_only }}
+        if: ${{ !inputs.verify_only && env.ARVEXQ_API_ALREADY_READY != '1' }}
         run: |
           python - <<'PY'
           import os,json,hashlib,urllib.request,re
@@ -175,7 +198,7 @@ jobs:
           print('API_ORIGINAL_SOURCE_GUARD_PASS',hashlib.sha256(source).hexdigest(),'DB_BINDING_PRESERVED')
           PY
       - name: Check syntax of exact live-preserving API overlay
-        if: ${{ !inputs.verify_only }}
+        if: ${{ !inputs.verify_only && env.ARVEXQ_API_ALREADY_READY != '1' }}
         run: |
           if [ -f .arvexq-production-overlay/worker-entry-overlay.mjs ]; then
             node --check .arvexq-production-overlay/worker-entry-overlay.mjs
@@ -189,7 +212,7 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
       - name: Deploy preserved API with private fixed-SQL metrics route
-        if: ${{ !inputs.verify_only }}
+        if: ${{ !inputs.verify_only && env.ARVEXQ_API_ALREADY_READY != '1' }}
         run: npx --yes wrangler@4 deploy --config wrangler-api.toml
       - name: Verify original API and read private storage metrics
         run: |
