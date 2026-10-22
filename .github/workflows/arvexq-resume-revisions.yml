@@ -70,30 +70,16 @@ jobs:
               with urllib.request.urlopen(req,timeout=30) as response:return json.load(response)
           sha=os.environ['GITHUB_SHA']
           assert read('/branches/main')['commit']['sha']==sha,'MAIN_MOVED_REFUSING_PUBLICATION'
-          # Runtime was last changed at this exact CI-verified release. The only
-          # intervening edits must be the audited API overlay and resume workflow.
-          baseline='58fe22a56f4246a2953c01b855071e9daf2090d6'
-          comparison=read('/compare/'+baseline+'...'+sha)
-          assert comparison['status']=='ahead' and comparison['behind_by']==0,'UNVERIFIED_RELEASE_ANCESTRY'
-          allowed={'.github/workflows/arvexq-api-storage-deploy.yml',
-                   '.github/workflows/arvexq-resume-revisions.yml',
-                   '.github/workflows/arvexq-saved-forecast-replacement.yml'}
-          changed={f['filename'] for f in comparison['files']}
-          assert changed<=allowed,('RUNTIME_CHANGED_REQUIRES_FRESH_CI',changed-allowed)
-          def passed(commit):
-              runs=read('/actions/runs?head_sha='+commit+'&per_page=100')['workflow_runs']
-              return {r['name'] for r in runs if r['conclusion']=='success' and r['head_branch']=='main'}
-          base_passed=passed(baseline)
-          assert {'ARVEXQ Validation','ARVEXQ Recovery Regression','ARVEXQ Web Deploy'}<=base_passed,('BASE_RELEASE_CI_NOT_READY',base_passed)
-          current_passed=passed(sha)
-          for _ in range(120):
-              if 'ARVEXQ Validation' in current_passed:break
-              import time
+          import time
+          required={'ARVEXQ Validation','ARVEXQ Recovery Regression','ARVEXQ Web Deploy','ARVEXQ API Private Storage Audit Deploy'}
+          for _ in range(240):
+              runs=read('/actions/runs?head_sha='+sha+'&per_page=100')['workflow_runs']
+              passed={r['name'] for r in runs if r['conclusion']=='success' and r['head_branch']=='main'}
+              if required<=passed:break
               time.sleep(5)
-              current_passed=passed(sha)
-          assert 'ARVEXQ Validation' in current_passed,('CURRENT_WORKFLOW_CI_NOT_READY',current_passed)
+          else:raise SystemExit('EXACT_MAIN_CI_OR_COMPRESSION_API_NOT_READY')
           assert read('/branches/main')['commit']['sha']==sha,'MAIN_MOVED_REFUSING_PUBLICATION'
-          print('EXACT_MAIN_AND_VERIFIED_ANCESTOR_CI_PASSED',baseline,sorted(changed))
+          print('EXACT_MAIN_ALL_CI_AND_COMPRESSION_API_PASSED',sha)
           PY
       - name: Download already rebuilt official-history revisions and its source backup
         env:
@@ -123,37 +109,23 @@ jobs:
           PY
       - name: Fresh live D1 logical backup, with independent restore verification
         run: python -u scripts/arvexq_backup_live_d1.py
-      - name: Verify every live race still equals the complete calculation source
+      - name: Preserve verified fresh rollback backup before any compression writes
         run: |
-          python - <<'PY'
-          import json,sqlite3,hashlib
-          from arvexq.ingest.full_snapshot_codec import unpack_detail
-          from arvexq.prediction.forecast_revisions import input_hash,originals_hash
-          def source_rows(path):
-              with sqlite3.connect('file:'+path+'?mode=ro',uri=True) as db:
-                  return dict(db.execute('SELECT race_id,payload FROM race_details'))
-          old=source_rows('/tmp/revision-original-source.sqlite3')
-          current=source_rows('/tmp/arvexq-complete-d1.sqlite3')
-          missing=sorted(set(old)-set(current));changed=[];refresh_only=[]
-          def forecast_inputs(raw):
-              d=unpack_detail(json.loads(raw))
-              # The existing engine input digest plus the exact ticket/status fields.
-              # Result/odds refreshes do not change an already-computed forecast.
-              extra={k:d.get(k) for k in ('id','date','startTime','scheduledStartTime','availableBetTypes','placePlaces','preOffMarket')}
-              extra['runners']=[{k:h.get(k) for k in ('horseNumber','scratched','withdrawn','cancelled','status','frameNumber')} for h in d.get('horses',[])]
-              return input_hash(d),originals_hash(d),json.dumps(extra,sort_keys=True,ensure_ascii=False)
-          for rid in sorted(set(old)&set(current)):
-              if old[rid]==current[rid]:continue
-              if forecast_inputs(old[rid])!=forecast_inputs(current[rid]):changed.append(rid)
-              else:refresh_only.append(rid)
-          report={'rebuiltRaces':len(old),'liveRaces':len(current),'addedRaceIds':sorted(set(current)-set(old)),
-                  'missingRaceIds':missing,'changedForecastInputRaceIds':changed,'resultOrMetadataRefreshRaceIds':refresh_only}
-          from pathlib import Path
-          Path('/tmp/forecast-revisions/source-comparison.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
-          print('EXISTING_FORECAST_SOURCE_COMPARISON',json.dumps({k:len(v) if isinstance(v,list) else v for k,v in report.items()}),flush=True)
-          assert not missing and not changed,'EXISTING_FORECAST_INPUTS_CHANGED_REFUSING_STALE_PUBLICATION'
-          print('ALL_REBUILT_FORECAST_INPUTS_MATCH_LIVE_ORIGINALS',len(old),'additional live races',len(report['addedRaceIds']))
-          PY
+          python - <<'PYBACKUP'
+          import gzip,shutil,json
+          summary=json.load(open('/tmp/arvexq-complete-d1-summary.json'))
+          assert summary['restore_verified'] and summary['original_sql_writes']==0
+          with open('/tmp/arvexq-complete-d1.sqlite3','rb') as src,gzip.open('/tmp/arvexq-complete-d1.sqlite3.gz','wb',compresslevel=9) as dst:shutil.copyfileobj(src,dst)
+          PYBACKUP
+      - uses: actions/upload-artifact@v4
+        with:
+          name: original-before-lossless-compression-${{ github.run_id }}
+          path: |
+            /tmp/arvexq-complete-d1.sqlite3.gz
+            /tmp/arvexq-complete-d1-summary.json
+          retention-days: 30
+      - name: Recalculate changed and added inputs with the existing verified model and official archives
+        run: python -u scripts/arvexq_resume_forecast_inputs.py
       - name: Measure D1 capacity on a disposable copy before any production writes
         run: |
           python - <<'PY'
@@ -163,6 +135,8 @@ jobs:
           def request(path,data=None):
               req=urllib.request.Request(base+path,data=data,headers={'Authorization':'Bearer '+os.environ['SYNC_TOKEN'],'Content-Type':'application/json'})
               with urllib.request.urlopen(req,timeout=60) as res:return json.load(res)
+          ready=request('/api/forecast-revisions/__readiness__')
+          assert ready.get('storageEncoding')=='arvexq-storage-gzip-v1','COMPRESSED_API_REQUIRED'
           audit=request('/api/admin/storage-audit')
           assert audit['ok'] and audit['sql_writes']==0
           d=audit['queries'];page_size=d['page_size'];size=page_size['results'][0]['page_size']
@@ -177,6 +151,8 @@ jobs:
           assert result.get('ok') and result.get('original_tables_modified') is False
           print('EXISTING_REVISION_SCHEMA_MIGRATED_WITH_ORIGINALS_UNCHANGED')
           PY
+      - name: Compress every eligible remaining original through the existing guarded interface and restore each one
+        run: python -u scripts/arvexq_compress_saved_snapshots.py
       - name: Publish existing revisions and read every one back
         run: |
           python - <<'PY'
@@ -186,6 +162,21 @@ jobs:
           print(report,flush=True)
           assert report['allPublished'] and not report['failures'],'REVISION_PUBLISH_READBACK_FAILED'
           PY
+      - name: Verify complete current saved roster has published revisions
+        run: |
+          python - <<'PYROSTER'
+          import json,os,sqlite3,urllib.request
+          from pathlib import Path
+          request=urllib.request.Request('https://kraiz-api.4b89h4fydd.workers.dev/api/admin/snapshot-export',headers={'Authorization':'Bearer '+os.environ['SYNC_TOKEN'],'User-Agent':'Mozilla/5.0 ARVEXQ-ReadOnlyAudit/1.0'})
+          with urllib.request.urlopen(request,timeout=60) as response:manifest=json.load(response)
+          assert manifest['ok'] and manifest['sql_writes']==0
+          current={row['race_id'] for row in manifest['races']}
+          with sqlite3.connect('/tmp/forecast-revisions/revisions.sqlite3') as db:known={row[0] for row in db.execute('SELECT race_id FROM revisions')}
+          report={'allCurrentSavedRacesUpdated':current<=known,'currentSavedRaces':len(current),'missingRaceIds':sorted(current-known)}
+          Path('/tmp/forecast-revisions/all-current-saved-verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          print('COMPLETE_CURRENT_ROSTER_VERIFICATION',report)
+          assert report['allCurrentSavedRacesUpdated'],'NEW_RACES_REQUIRE_EXISTING_REBUILD_CATCHUP'
+          PYROSTER
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -194,4 +185,10 @@ jobs:
             /tmp/forecast-revisions/rebuild-summary.json
             /tmp/forecast-revisions/revisions.sqlite3.publish.json
             /tmp/forecast-revisions/source-comparison.json
+            /tmp/forecast-revisions/all-current-saved-verification.json
+            /tmp/forecast-revisions/original-compression-report.json
+            /tmp/forecast-revisions/revisions.sqlite3
+            /tmp/forecast-revisions/revisions-original.sqlite3
+            /tmp/forecast-revisions/rebuild-original-summary.json
+            /tmp/arvexq-complete-d1-summary.json
           retention-days: 30

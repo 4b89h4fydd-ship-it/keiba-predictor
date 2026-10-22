@@ -165,6 +165,8 @@ jobs:
           node scripts/arvexq_visible_axis_mark_smoke.js
           node scripts/arvexq_saved_forecast_revision_smoke.js
           node scripts/arvexq_forecast_revision_api_smoke.mjs
+          python -m unittest discover -s tests -p 'test_storage_json_codec.py' -v
+          python -m unittest discover -s tests -p 'test_resume_forecast_inputs.py' -v
           node scripts/arvexq_unified_honmei_frontend_smoke.js
           node scripts/arvexq_honmei_dom_contract_test.js
 

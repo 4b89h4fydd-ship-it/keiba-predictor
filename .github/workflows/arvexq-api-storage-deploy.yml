@@ -53,7 +53,8 @@ jobs:
           else:
               if (forecast.get('ok') is True and
                   forecast.get('raceId')=='__readiness__' and
-                  isinstance(forecast.get('forecastRevisions'),list)):
+                  isinstance(forecast.get('forecastRevisions'),list) and
+                  forecast.get('storageEncoding')=='arvexq-storage-gzip-v1'):
                   with open(os.environ['GITHUB_ENV'],'a') as file:
                       file.write('ARVEXQ_API_ALREADY_READY=1'+chr(10))
                   print('PREEXISTING_REVISION_API_READBACK_VERIFIED_SKIP_REDEPLOY')
@@ -77,7 +78,7 @@ jobs:
           from pathlib import Path
           base='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/kraiz-api'
           def read(suffix):
-              req=urllib.request.Request(base+suffix,headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']})
+              req=urllib.request.Request(base+suffix,headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'],'User-Agent':'Mozilla/5.0 ARVEXQ-Deploy/1.0'})
               with urllib.request.urlopen(req,timeout=30) as response:
                   content=response.read()
                   if not suffix:
@@ -262,6 +263,8 @@ jobs:
           health=load(urllib.request.Request(base+'/api/health',headers=headers))
           assert health.get('ok') and health.get('service')=='KRAIZ API'
           req=urllib.request.Request(base+'/api/admin/storage-audit',headers={**headers,'Authorization':'Bearer '+os.environ['SYNC_TOKEN']})
+          ready=load(urllib.request.Request(base+'/api/forecast-revisions/__readiness__',headers=headers))
+          assert ready.get('storageEncoding')=='arvexq-storage-gzip-v1','COMPRESSED_REVISION_API_NOT_DEPLOYED'
           metrics=load(req)
           assert metrics.get('ok') and metrics.get('sql_writes')==0
           with open('api-private-storage-audit.json','w') as f:json.dump(metrics,f,indent=2)
