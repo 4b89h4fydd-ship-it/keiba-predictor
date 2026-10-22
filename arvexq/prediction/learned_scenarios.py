@@ -207,7 +207,13 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
                    or int(r['horseNumber']) <= 0 or int(r['finish']) <= 0
                    for r in finishers):
                 continue
-            labels = {int(r['horseNumber']): int(r['finish']) for r in finishers}
+            # An integer-looking float (or truncated fractional rank) is not
+            # an authoritative horse number / finishing position.
+            parsed = [(int(r['horseNumber']), int(r['finish'])) for r in finishers]
+            if any(str(r[key]).strip() != str(int(r[key]))
+                   for r in finishers for key in ('horseNumber', 'finish')):
+                continue
+            labels = dict(parsed)
         except (TypeError, ValueError, OverflowError):
             continue
         # Train only against the complete active field. Partial results or missing
