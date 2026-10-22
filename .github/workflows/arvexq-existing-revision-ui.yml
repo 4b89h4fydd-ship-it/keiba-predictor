@@ -1,0 +1,35 @@
+name: ARVEXQ Existing Forecast Revision UI
+"on":
+  push:
+    branches: [fix/display-existing-forecast-revisions-20261022]
+  pull_request:
+    branches: [main]
+    paths:
+      - arvexq/ui/static/app.js
+      - arvexq/ui/static/forecast/**
+      - scripts/arvexq_versioned_forecast_display_smoke.cjs
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check current JS and provenance-aware display
+        run: |
+          node --check arvexq/ui/static/app.js
+          node --check arvexq/ui/static/forecast/prediction.js
+          node scripts/arvexq_versioned_forecast_display_smoke.cjs
+      - name: Build static application without UI changes
+        run: |
+          python build_static.py
+          test -s dist/keiba/index.html
+          test -s dist/version.json

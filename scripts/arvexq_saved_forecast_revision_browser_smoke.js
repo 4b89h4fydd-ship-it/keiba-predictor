@@ -27,9 +27,12 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
   await page.evaluate(d=>{revisionTest.state.date=d.date;revisionTest.state.circuit=d.circuit;revisionTest.state.races=[d]},originalDetail);
   await page.evaluate(id=>revisionTest.openRace(id),detail.id);
   await page.waitForFunction(()=>document.querySelectorAll('.racecard-row').length===6);
-  assert.equal(await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),0);
+  await page.waitForFunction(()=>document.querySelector('#section-aimarks .ai-mark-list')?.textContent.includes('◎'));
+  assert.equal(await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),1);
   for(const id of ['section-prediction','section-aimarks','section-bets'])assert.equal(await page.locator('#'+id).count(),1);
-  assert.equal(await page.locator('#section-aimarks .ai-mark-list').innerText(),'');
+  assert.match(await page.locator('#section-aimarks .ai-mark-list').innerText(),/◎/);
+  assert.match(await page.locator('#section-aimarks').innerText(),/事後再分析/);
+  assert.match(await page.locator('#section-prediction').innerText(),/事後再分析/);
   assert.match(await page.locator('#section-bets .ai-bet-box').innerText(),/発走前に検証・保存されたおすすめ買い目が未取得/);
   assert.equal(await page.locator('.diagnosis-merged-row').count(),6);
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRacePrediction)),before);
