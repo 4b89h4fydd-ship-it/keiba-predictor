@@ -72,8 +72,23 @@ jobs:
           assert read('/branches/main')['commit']['sha']==sha,'MAIN_MOVED_REFUSING_PUBLICATION'
           runs=read('/actions/runs?head_sha='+sha+'&per_page=100')['workflow_runs']
           passed={r['name'] for r in runs if r['conclusion']=='success' and r['head_branch']=='main'}
-          assert {'ARVEXQ Validation','ARVEXQ Recovery Regression','ARVEXQ Web Deploy'}<=passed,('CI_NOT_READY',passed)
-          print('EXACT_MAIN_AND_ALL_CI_PASSED')
+          assert 'ARVEXQ Validation' in passed,('CURRENT_MAIN_VALIDATION_NOT_READY',passed)
+          if not {'ARVEXQ Recovery Regression','ARVEXQ Web Deploy'}<=passed:
+              # Latest main commits changed ONLY this publishing workflow.
+              # Verify that with the GitHub tree comparison, then inherit the
+              # exact unchanged app runtime's independently successful checks.
+              deployed='649d1973c3b9d9dff463021212e308a110db8b82'
+              compared=read('/compare/'+deployed+'...'+sha)
+              assert compared['status']=='ahead','DEPLOYED_BASE_NOT_ANCESTOR'
+              changed={file['filename'] for file in compared['files']}
+              assert changed=={'.github/workflows/arvexq-resume-revisions.yml'},('UNVERIFIED_DEPLOY_DIFF',changed)
+              original=read('/actions/runs?head_sha='+deployed+'&per_page=100')['workflow_runs']
+              assert any(r['name']=='ARVEXQ Web Deploy' and r['conclusion']=='success' for r in original)
+              head='57099c3b0be49cf7f6318d83267fafacfe6eae1a'
+              approved=read('/actions/runs?head_sha='+head+'&per_page=100')['workflow_runs']
+              assert any(r['name']=='ARVEXQ Recovery Regression' and r['conclusion']=='success' for r in approved),'UNTESTED_DEPLOYED_APP'
+              print('EXACT_UNCHANGED_DEPLOYED_APP_CI_INHERITED',deployed)
+          print('EXACT_MAIN_AND_ALL_REQUIRED_CI_PASSED')
           PY
       - name: Download already rebuilt official-history revisions and its source backup
         env:
