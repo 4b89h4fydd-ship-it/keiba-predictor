@@ -72,7 +72,8 @@ def scrub_for_replay(detail: dict[str, Any], target_date: str) -> dict[str, Any]
             horse[key] = [
                 run for run in history
                 if isinstance(run, dict)
-                and target_date not in str(run.get("date") or run.get("raceDate") or run.get("day") or "")
+                and isinstance(run.get("date") or run.get("raceDate") or run.get("day"), str)
+                and str(run.get("date") or run.get("raceDate") or run.get("day"))[:10] < target_date
             ]
     return d
 
