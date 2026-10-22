@@ -83,7 +83,7 @@ jobs:
           const actions=w.ARVEXQUnifiedHome.buttons();
           assert.equal((actions.match(/class="arv-unified-alert"/g)||[]).length,2);
           assert.match(actions,/厳選/);assert.match(actions,/特別/);
-          assert.match(actions,/AI成績/);
+          assert.doesNotMatch(actions,/AI成績/);
           assert(!fs.readFileSync('arvexq/ui/static/app.js','utf8').includes('function smartHomeHub('));
           console.log('UNIFIED_HORSE_TOP_ALERTS_OK');
           NODE
@@ -162,7 +162,7 @@ jobs:
             assert.ok(html.includes(ref),'missing '+ref);
           for(const removed of ['kyotei','boat-app','arvexq-sport-nav'])
             assert.ok(!html.includes(removed),'retired sport reference '+removed);
-          for(const item of ['厳選','特別','AI成績','data-home-page','dateBar'])
+          for(const item of ['厳選','特別','お気に入り','data-home-page','dateBar'])
             assert.ok(shared.includes(item),'missing top control '+item);
           assert.ok(portal.includes('各会場の全レース'));
           assert.ok(portal.includes('group("中央")')&&portal.includes('group("地方")'));
