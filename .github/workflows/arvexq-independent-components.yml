@@ -28,7 +28,7 @@ jobs:
       - name: Individual fields, production boundaries, observation readiness and evidence ledger
         run: python -m pytest -q tests/test_entry_field_contracts.py tests/test_forecast_production_boundaries.py tests/test_diagnosis_readiness.py tests/test_independence_evidence.py tests/test_environment_component_split.py
       - name: JRA date, venue, race number, title and runner count identity
-        run: python -m pytest -q tests/test_independent_jra_race_identity.py
+        run: python -m pytest -q tests/test_independent_jra_race_identity.py tests/test_jra_identifiers.py
       - name: JRA schedule, surface, course, distance and purse field contracts
         run: python -m pytest -q tests/test_jra_race_fields_independent.py tests/test_jra_official_table_independent.py tests/test_jra_race_fields_parity_matrix.py tests/test_jra_meeting_schedule_independent.py tests/test_jra_grade_class_independent.py
       - name: JRA official runner horse-number extraction
@@ -42,7 +42,7 @@ jobs:
       - name: External netkeiba result parser contracts
         run: python -m pytest -q tests/test_netkeiba_result_parser.py
       - name: NAR official card fact parser contracts
-        run: python -m pytest -q tests/test_nar_official_card.py tests/test_environment_component_split.py
+        run: python -m pytest -q tests/test_nar_official_card.py tests/test_nar_official_fields_independent.py tests/test_environment_component_split.py
       - name: Observed runner identity, affiliation and withdrawal facts
         run: python -m pytest -q tests/test_observed_runner_metadata.py tests/test_entry_field_contracts.py tests/test_jra_withdrawn_roster.py
       - name: Observed odds missingness and market delta independence
