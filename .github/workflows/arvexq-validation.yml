@@ -14,7 +14,7 @@ name: ARVEXQ Validation
       - .github/workflows/arvexq-*.yml
       - requirements.txt
   push:
-    branches: [main, feature/forecast-reset-20261016]
+    branches: [main, feature/forecast-reset-20261016, fix/arvexq-new-engine-complete-field-20261022]
     paths:
       - app.py
       - build_static.py

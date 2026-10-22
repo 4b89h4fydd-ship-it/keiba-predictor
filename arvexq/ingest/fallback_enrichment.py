@@ -99,6 +99,12 @@ def _merge_runs(existing: Any, incoming: Any, *, cutoff: str = "", limit: int = 
                         positions.append(old if valid_old else (new if valid_new else old))
                     if positions != old_positions:
                         row[field] = positions
+            elif (field == "finish" and row.get("finish") in (None, "", 0, "0")
+                  and raw.get("researchOfficialPriorFinishVerified") is True
+                  and type(value) is int and value >= 1
+                  and (not row.get("track") or row.get("track") == raw.get("track"))
+                  and (not row.get("raceNumber") or str(row.get("raceNumber")) == str(raw.get("raceNumber")))):
+                row[field] = value
             elif not _present(row.get(field)) and _present(value):
                 row[field] = copy.deepcopy(value)
     rows = [merged[k] for k in order]
@@ -163,6 +169,11 @@ def _needs_nar_margins(horse: dict[str, Any], cutoff: str) -> bool:
     runs = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)[:5]
     if not runs:
         return False
+    # An unknown finishing position must be reconciled with the existing
+    # official historical result even when another run already has a margin.
+    if any(row.get("finish") in (None, "", 0, "0") and row.get("track")
+           and row.get("raceNumber") for row in runs):
+        return True
     def measured(row: dict[str, Any]) -> bool:
         for key in ("marginSeconds", "timeBehindWinner"):
             value = row.get(key)

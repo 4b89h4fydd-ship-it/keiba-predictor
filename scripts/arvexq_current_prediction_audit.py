@@ -72,7 +72,8 @@ def scrub_for_replay(detail: dict[str, Any], target_date: str) -> dict[str, Any]
             horse[key] = [
                 run for run in history
                 if isinstance(run, dict)
-                and target_date not in str(run.get("date") or run.get("raceDate") or run.get("day") or "")
+                and isinstance(run.get("date") or run.get("raceDate") or run.get("day"), str)
+                and str(run.get("date") or run.get("raceDate") or run.get("day"))[:10] < target_date
             ]
     return d
 
@@ -275,6 +276,95 @@ def resolved_end_date() -> date:
     return date.today() - timedelta(days=1)
 
 
+def evaluate_provisional_predictions(details: list[dict[str, Any]]) -> dict[str, Any]:
+    """Chronological research replay using the EXISTING learned forecast logic.
+
+    Train separately on strictly earlier days, generate marks without current
+    outcomes, then score against final results. Do not persist race copies.
+    """
+    from arvexq.prediction.learned_scenarios import fit_model
+    from arvexq.prediction.new_forecast import build_forecast
+
+    grouped: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
+    for detail in details:
+        if not isinstance(detail, dict):
+            continue
+        circuit, ds = detail.get("circuit"), detail.get("date")
+        if circuit not in ("中央", "地方") or not isinstance(ds, str):
+            continue
+        if (detail.get("result") or {}).get("status") != "確定":
+            continue
+        grouped[circuit][ds].append(detail)
+
+    output: dict[str, Any] = {}
+    for circuit in ("中央", "地方"):
+        history: list[dict[str, Any]] = []
+        scored = hits = missing = no_model = 0
+        misses = []
+        per_race = []
+        for ds, day in sorted(grouped[circuit].items()):
+            model = None
+            if history:
+                try:
+                    model = fit_model(history, circuit=circuit)
+                except ValueError:
+                    pass
+            for original in day:
+                order = finish_order(original)
+                if not order:
+                    missing += 1
+                    continue
+                if model is None:
+                    no_model += 1
+                    continue
+                clean = scrub_for_replay(original, ds)
+                try:
+                    forecast = build_forecast(clean, model)
+                except (ValueError, KeyError, TypeError, OverflowError):
+                    missing += 1
+                    continue
+                if forecast.get("predictionStatus") != "candidate-analysis":
+                    missing += 1
+                    continue
+                horses = forecast.get("horses") or []
+                marks = {int(h["horseNumber"]): (h.get("integratedEvaluation") or {}).get("mark")
+                         for h in horses if isinstance(h, dict) and h.get("horseNumber")}
+                head = next((n for n, mark in marks.items() if mark == "◎"), None)
+                if head is None or len(set(marks)) != len(marks):
+                    missing += 1
+                    continue
+                winner = order[0]
+                scored += 1
+                hits += int(head == winner)
+                item = {"raceId": original.get("id"), "date": ds,
+                        "honmei": head, "winner": winner,
+                        "hit": head == winner, "marks": marks}
+                per_race.append(item)
+                if head != winner:
+                    reports = (forecast.get("scenarioAnalysis") or {}).get("reports") or []
+                    by_number = {r["horseNumber"]: r for r in reports}
+                    chosen, actual = by_number.get(head, {}), by_number.get(winner, {})
+                    metrics = ("win_rate", "recent_finish_mean", "same_track_finish",
+                               "same_distance_finish", "early_position", "closing_gain")
+                    item["diagnostics"] = {
+                        "honmeiStarts": chosen.get("observedStarts"),
+                        "winnerStarts": actual.get("observedStarts"),
+                        "observedFeatureDifference": {
+                            key: {"honmei": (chosen.get("featureValues") or {}).get(key),
+                                  "winner": (actual.get("featureValues") or {}).get(key)}
+                            for key in metrics
+                        },
+                    }
+                    misses.append(item)
+            history.extend(day)
+        output[circuit] = {"scoredRaces": scored, "winnerTop1Hits": hits,
+                           "winnerTop1Rate": hits/scored if scored else None,
+                           "missingPrediction": missing, "noEarlierTrainedModel": no_model,
+                           "misses": misses, "races": per_race,
+                           "analysisType": "retrospective-not-preoff-record"}
+    return output
+
+
 def main() -> None:
     end = resolved_end_date()
     dates = [(end - timedelta(days=i)).isoformat() for i in range(DAYS - 1, -1, -1)]
@@ -288,6 +378,7 @@ def main() -> None:
     heads_by_circuit: dict[str, dict[str, int]] = defaultdict(init_head_metrics)
     misses_by_circuit: dict[str, dict[str, int]] = defaultdict(init_pillar_miss)
     per_day: list[dict[str, Any]] = []
+    research_details: list[dict[str, Any]] = []
     changed = improved = worsened = equal = 0
     details_seen = finals_seen = exact_locks = replayed = 0
 
@@ -295,6 +386,8 @@ def main() -> None:
         url = API_BASE + "/api/day?" + urllib.parse.urlencode({"date": ds, "details": "1"})
         payload = api_json(url)
         details = payload.get("details") or []
+        if os.environ.get("ARVEXQ_RESEARCH_EVAL") == "1":
+            research_details.extend(details)
         details_seen += len(details)
         day_exact = init_metrics()
         day_replay = init_metrics()
@@ -382,6 +475,8 @@ def main() -> None:
         "perDay": per_day,
         "warning": "exactLocked is the only exact contemporaneous pre-race evaluation. currentFourPillarReplay and decision-head diagnostics are retrospective: result/payout and target-day history are scrubbed, but saved detail may contain later-mutated non-result fields.",
     }
+    if os.environ.get("ARVEXQ_RESEARCH_EVAL") == "1":
+        result["provisionalResearchReplay"] = evaluate_provisional_predictions(research_details)
     print("ARVEXQ_UNIFIED_AUDIT_JSON=" + json.dumps(result, ensure_ascii=False, separators=(",", ":")))
 
 

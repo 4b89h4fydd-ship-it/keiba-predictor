@@ -51,6 +51,21 @@ class RebuiltWinnerTop1TrainingTests(unittest.TestCase):
             "result": {"status": "確定", **self.result()},
         }
 
+    def test_snapshot_with_post_off_capture_time_is_rejected(self):
+        for capture in (100, 101, "bad-time"):
+            bad = self.eligible_detail()
+            bad["massFeatureSnapshot"]["capturedAtEpoch"] = capture
+            bad["massFeatureSnapshot"]["postAtEpoch"] = 100
+            bad["massFeatureSnapshot"]["featureHash"] = _feature_hash(bad["massFeatureSnapshot"])
+            bad["massFeatureHash"] = bad["massFeatureSnapshot"]["featureHash"]
+            self.assertEqual(frozen_training_rows_from_detail(bad), [])
+        good = self.eligible_detail()
+        good["massFeatureSnapshot"]["capturedAtEpoch"] = 99
+        good["massFeatureSnapshot"]["postAtEpoch"] = 100
+        good["massFeatureSnapshot"]["featureHash"] = _feature_hash(good["massFeatureSnapshot"])
+        good["massFeatureHash"] = good["massFeatureSnapshot"]["featureHash"]
+        self.assertEqual(len(frozen_training_rows_from_detail(good)), 3)
+
     def test_direct_snapshot_hash_is_actually_recomputed(self):
         good = self.eligible_detail()
         self.assertEqual(len(frozen_training_rows_from_detail(good)), 3)
@@ -166,6 +181,17 @@ class RebuiltWinnerTop1TrainingTests(unittest.TestCase):
         # A conflicting duplicate is just as invalid as an identical duplicate.
         result["finishers"][-1]["finish"] = 3
         self.assertEqual(rows_from_frozen_snapshot(snap, result), [])
+
+    def test_current_race_outcome_feature_leakage_rejected(self):
+        # Only the outcome joined after freezing may contain race labels.
+        for key in ("finish", "rank", "result", "winner", "labelWin",
+                    "labelTop2", "labelTop3", "payouts"):
+            snap = self.snapshot()
+            snap["rows"][1]["features"][key] = 1
+            self.assertEqual(rows_from_frozen_snapshot(snap, self.result()), [], key)
+        historical = self.snapshot()
+        historical["rows"][1]["features"]["history::2026-10-01::finish_quality"] = 0.7
+        self.assertEqual(len(rows_from_frozen_snapshot(historical, self.result())), 3)
 
     def test_complete_frozen_field_yields_exact_labels(self):
         rows = rows_from_frozen_snapshot(self.snapshot(), self.result())

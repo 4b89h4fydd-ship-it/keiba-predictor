@@ -1,0 +1,39 @@
+name: ARVEXQ Scenario Aggregation Cycle
+"on":
+  push:
+    branches: [fix/arvexq-new-engine-complete-field-20261022]
+    paths:
+      - scripts/arvexq_scenario_aggregation_cycle.py
+      - .github/workflows/arvexq-scenario-aggregation-cycle.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      ARVEXQ_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q -r requirements.txt pytest==9.1.1
+      - name: Existing chronology guard
+        run: PYTHONPATH=. python -m pytest -q tests/test_research_provisional_replay.py
+      - name: Existing three-scenario aggregation walk forward and holdout
+        run: |
+          set -o pipefail
+          PYTHONPATH=. python -u scripts/arvexq_scenario_aggregation_cycle.py | tee scenario-aggregation.log
+      - name: Preserve diagnostic outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scenario-aggregation-${{ github.run_id }}
+          path: scenario-aggregation.log
+          retention-days: 14
+          if-no-files-found: warn

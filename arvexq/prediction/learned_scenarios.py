@@ -181,7 +181,7 @@ def _vector(report, centers, scales):
     return [(float(v)-c)/s if v is not None else 0. for v,c,s in zip(values,centers,scales)] + [float(v is None) for v in values]
 
 
-def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03, l2=.01):
+def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03, l2=.01, winner_pair_weight=1.0, research_max_unknown_history=0):
     """Pairwise logistic ranking. Fixed optimizer settings are not ability weights.
 
     This is training code, not validation: fit only on a prespecified earlier
@@ -189,6 +189,11 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
     """
     if circuit not in ('中央', '地方'):
         raise ValueError('explicit circuit required')
+    if not 1.0 <= float(winner_pair_weight) <= 5.0:
+        raise ValueError('winner pair weight outside research range')
+    if (not isinstance(research_max_unknown_history, int) or isinstance(research_max_unknown_history, bool)
+            or not 0 <= research_max_unknown_history <= 2):
+        raise ValueError('unknown history allowance outside research range')
     samples, ids, dates = [], [], []
     for detail in sorted(details, key=lambda d: (d.get('date',''), d.get('id',''))):
         if detail.get('circuit') != circuit or race_family(detail) != family:
@@ -198,10 +203,38 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
             raise ValueError('duplicate or missing training race ID')
         if (detail.get('result') or {}).get('status') != '確定':
             continue
-        labels = {int(r['horseNumber']): int(r['finish']) for r in detail['result'].get('finishers', [])
-                  if r.get('horseNumber') and r.get('finish') and int(r['finish']) > 0}
-        rows = [r for r in race_evidence(detail) if r['observedStarts'] and r['horseNumber'] in labels]
-        if len(rows) < 2:
+        finishers = detail['result'].get('finishers', [])
+        if not isinstance(finishers, list) or not finishers:
+            continue
+        try:
+            if any(not isinstance(r, dict) or not r.get('horseNumber') or not r.get('finish')
+                   or isinstance(r['horseNumber'], bool) or isinstance(r['finish'], bool)
+                   or int(r['horseNumber']) <= 0 or int(r['finish']) <= 0
+                   for r in finishers):
+                continue
+            # An integer-looking float (or truncated fractional rank) is not
+            # an authoritative horse number / finishing position.
+            parsed = [(int(r['horseNumber']), int(r['finish'])) for r in finishers]
+            if any(float(r[key]) != int(r[key])
+                   for r in finishers for key in ('horseNumber', 'finish')):
+                continue
+            labels = dict(parsed)
+        except (TypeError, ValueError, OverflowError):
+            continue
+        # Train only against the complete active field. Partial results or missing
+        # pre-race history must not silently bias winner ranking toward covered horses.
+        rows = race_evidence(detail)
+        numbers = [r['horseNumber'] for r in rows]
+        finishers = [r for r in detail['result'].get('finishers', [])
+                     if isinstance(r, dict) and r.get('horseNumber') and r.get('finish')]
+        finish_numbers = [int(r['horseNumber']) for r in finishers]
+        if (len(rows) < 3 or len(set(numbers)) != len(numbers)
+                or len(finishers) != len(labels)
+                or set(numbers) != set(labels)
+                or len(set(finish_numbers)) != len(finish_numbers)
+                or sum(rank == 1 for rank in labels.values()) != 1
+                or any(rank > len(rows) for rank in labels.values())
+                or sum(not r['observedStarts'] for r in rows) > research_max_unknown_history):
             continue
         samples.append((rows, labels))
         ids.append(rid); dates.append(detail['date'])
@@ -221,7 +254,8 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
             for j in range(i+1,len(rows)):
                 a,b = labels[rows[i]['horseNumber']], labels[rows[j]['horseNumber']]
                 if a != b:
-                    race_pairs.append(([x-y for x,y in zip(vectors[i],vectors[j])], float(a < b)))
+                    race_pairs.append(([x-y for x,y in zip(vectors[i],vectors[j])], float(a < b),
+                                       float(winner_pair_weight) if a == 1 or b == 1 else 1.0))
         if race_pairs:
             pairs.append(race_pairs)
     if not pairs:
@@ -230,10 +264,11 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
     for _ in range(epochs):
         gradient = [l2*w for w in weights]
         for race_pairs in pairs:
-            for vector,label in race_pairs:
+            race_mass = sum(pair_weight for _,_,pair_weight in race_pairs)
+            for vector,label,pair_weight in race_pairs:
                 error = _sigmoid(sum(w*x for w,x in zip(weights,vector)))-label
                 for k,x in enumerate(vector):
-                    gradient[k] += error*x/(len(pairs)*len(race_pairs))
+                    gradient[k] += pair_weight*error*x/(len(pairs)*race_mass)
         weights = [w-learning_rate*g for w,g in zip(weights,gradient)]
     input_hash = sha256(json.dumps(samples, sort_keys=True, ensure_ascii=False,
                                    separators=(',', ':')).encode()).hexdigest()
@@ -242,6 +277,10 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
     artifact = {'version': VERSION, 'features': list(FEATURES), 'centers': centers, 'scales': scales,
                 'weights': weights, 'training': training, 'calibrationStatus': 'unvalidated',
                 'optimizer': {'epochs': epochs, 'learningRate': learning_rate, 'l2': l2}}
+    if winner_pair_weight != 1.0:
+        artifact['optimizer']['researchWinnerPairWeight'] = float(winner_pair_weight)
+    if research_max_unknown_history:
+        artifact['optimizer']['researchMaxUnknownHistory'] = research_max_unknown_history
     artifact['modelHash'] = sha256(json.dumps(artifact,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
     return artifact
 
@@ -260,7 +299,7 @@ def _orders(rows, utilities):
     return orders
 
 
-def predict_model(detail, model):
+def predict_model(detail, model, *, research_max_unknown_history=0):
     if model.get('version') != VERSION or model.get('features') != list(FEATURES):
         raise ValueError('model feature/version mismatch')
     training = model['training']
@@ -282,7 +321,11 @@ def predict_model(detail, model):
         raise ValueError('model artifact hash mismatch')
     scenarios = []
     base = race_evidence(detail)
-    if len(base) < 3 or any(not r['observedStarts'] for r in base):
+    unknown = sum(not r['observedStarts'] for r in base)
+    if (len(base) < 3 or unknown > research_max_unknown_history
+            or not isinstance(research_max_unknown_history, int)
+            or isinstance(research_max_unknown_history, bool)
+            or not 0 <= research_max_unknown_history <= 2):
         return {'version': VERSION, 'status': 'insufficient-history', 'reports': base, 'scenarios': []}
     for name,label in [('usual','通常の隊列'),('forward','前の位置を取り合う場合'),('held-up','想定より後ろに控える場合')]:
         rows = race_evidence(detail,scenario=name)

@@ -99,6 +99,57 @@ class LearnedScenariosTests(TestCase):
         self.assertEqual(result['honmeiDecision']['horseNumber'],0)
         self.assertFalse(any(h['integratedEvaluation']['mark'] for h in result['horses']))
 
+    def test_training_refuses_partial_fields_and_duplicate_result_rows(self):
+        good = training_race('地方')
+        partial = deepcopy(good)
+        partial['id'] = 'partial-field'
+        partial['result']['finishers'] = partial['result']['finishers'][:-1]
+        duplicate = deepcopy(good)
+        duplicate['id'] = 'duplicate-finishers'
+        duplicate['result']['finishers'][1]['horseNumber'] = 1
+        no_history = deepcopy(good)
+        no_history['id'] = 'missing-prerace-history'
+        no_history['horses'][0]['recentRaces'] = []
+        invalid_finish = deepcopy(good)
+        invalid_finish['id'] = 'non-numeric-result'
+        invalid_finish['result']['finishers'][0]['finish'] = 'not-a-rank'
+        missing_finish = deepcopy(good)
+        missing_finish['id'] = 'missing-result-position'
+        missing_finish['result']['finishers'][0].pop('finish')
+        fractional_rank = deepcopy(good)
+        fractional_rank['id'] = 'fractional-finish'
+        fractional_rank['result']['finishers'][1]['finish'] = 2.5
+        fractional_number = deepcopy(good)
+        fractional_number['id'] = 'fractional-horse-number'
+        fractional_number['result']['finishers'][1]['horseNumber'] = 2.5
+        multiple_winners = deepcopy(good)
+        multiple_winners['id'] = 'multiple-winners'
+        multiple_winners['result']['finishers'][1]['finish'] = 1
+        empty_finishers = deepcopy(good)
+        empty_finishers['id'] = 'empty-finishers'
+        empty_finishers['result']['finishers'] = []
+        out_of_field_rank = deepcopy(good)
+        out_of_field_rank['id'] = 'out-of-field-rank'
+        out_of_field_rank['result']['finishers'][-1]['finish'] = 999
+        for corrupt in (partial, duplicate, no_history, invalid_finish, missing_finish,
+                        fractional_rank, fractional_number, multiple_winners, empty_finishers,
+                        out_of_field_rank):
+            with self.subTest(race_id=corrupt['id']):
+                with self.assertRaisesRegex(ValueError, 'no observed, labelled training races'):
+                    fit_model([corrupt], circuit='地方')
+                model = fit_model([good, corrupt], circuit='地方')
+                self.assertEqual(model['training']['raceIds'], [good['id']])
+
+        # The same rejection rule applies independently to JRA; there is no
+        # cross-circuit fallback to rescue an incomplete field.
+        jra = training_race('中央')
+        incomplete_jra = deepcopy(jra)
+        incomplete_jra['result']['finishers'].pop()
+        with self.assertRaisesRegex(ValueError, 'no observed, labelled training races'):
+            fit_model([incomplete_jra], circuit='中央')
+        with self.assertRaisesRegex(ValueError, 'no observed, labelled training races'):
+            fit_model([good], circuit='中央')
+
     def test_training_determinism_and_empty_bad_artifacts(self):
         model = fit_model([training_race('地方')], circuit='地方')
         self.assertEqual(model,self.models['地方'])

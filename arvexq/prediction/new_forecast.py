@@ -76,7 +76,7 @@ def _decide(analysis):
     return marks, ranges, reasons
 
 
-def build_forecast(detail, model=None):
+def build_forecast(detail, model=None, *, research_max_unknown_history=0):
     result = deepcopy(detail)
     start = post_at(detail)
     now = datetime.now(JST)
@@ -91,7 +91,7 @@ def build_forecast(detail, model=None):
     if model is None:
         analysis = {'reports': race_evidence(detail), 'scenarios': [], 'status': 'missing-trained-model'}
     else:
-        analysis = predict_model(detail, model)
+        analysis = predict_model(detail, model, research_max_unknown_history=research_max_unknown_history)
     result['scenarioAnalysis'] = analysis
     reports = {r['horseNumber']: r for r in analysis['reports']}
     marks, ranges, reasons = _decide(analysis)

@@ -1,0 +1,38 @@
+name: ARVEXQ Matched Missing Train Cycle
+"on":
+  push:
+    branches: [fix/arvexq-new-engine-complete-field-20261022]
+    paths:
+      - scripts/arvexq_matched_missing_train_cycle.py
+      - .github/workflows/arvexq-matched-missing-train-cycle.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      ARVEXQ_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q -r requirements.txt pytest==9.1.1
+      - name: Original time split regression
+        run: PYTHONPATH=. python -m pytest -q tests/test_research_provisional_replay.py
+      - name: Compare strict and matched history completeness train/predict using untouched holdout
+        run: |
+          set -o pipefail
+          PYTHONPATH=. python -u scripts/arvexq_matched_missing_train_cycle.py | tee matched-history.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matched-history-${{ github.run_id }}
+          path: matched-history.log
+          retention-days: 14
+          if-no-files-found: warn

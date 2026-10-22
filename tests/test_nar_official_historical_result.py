@@ -35,5 +35,30 @@ class NarOfficialHistoryTests(unittest.TestCase):
         h["recentRaces"][0]["date"]="2026-09-01"
         self.assertEqual(fetch(h,{"date":"2026-09-15"}),{})
 
+    def test_restore_only_official_unique_zero_finish(self):
+        fetch = _nar_official_past_result_adapter({"_nar_official_result_fast":
+            lambda r: {"finishers":[{"name":"対象馬","finish":1},{"name":"他馬","finish":2}]}})
+        horse={"name":"対象馬","recentRaces":[{"date":"2026-10-04","track":"高知","raceNumber":1,"fieldSize":5,"finish":0}]}
+        observed=fetch(horse,{"date":"2026-10-17"})["recentRaces"][0]
+        self.assertEqual(observed["finish"],1)
+        self.assertTrue(observed["researchOfficialPriorFinishVerified"])
+
+    def test_ambiguous_official_result_does_not_restore(self):
+        fetch=_nar_official_past_result_adapter({"_nar_official_result_fast":
+            lambda r: {"finishers":[{"name":"対象馬","finish":1},{"name":"対象馬","finish":2}]}})
+        horse={"name":"対象馬","recentRaces":[{"date":"2026-10-04","track":"高知","raceNumber":1,"fieldSize":5,"finish":0}]}
+        self.assertEqual(fetch(horse,{"date":"2026-10-17"}),{})
+
+    def test_existing_history_merges_require_verification_for_zero(self):
+        from arvexq.ingest.full_career import merge_career
+        from arvexq.ingest.fallback_enrichment import _merge_runs
+        base={"date":"2026-10-04","track":"高知","raceNumber":1,"fieldSize":5,"finish":0}
+        verified={**base,"finish":1,"researchOfficialPriorFinishVerified":True}
+        unverified={**base,"finish":1}
+        self.assertEqual(merge_career([base],[verified],"2026-10-17")[0]["finish"],1)
+        self.assertEqual(merge_career([base],[unverified],"2026-10-17")[0]["finish"],0)
+        self.assertEqual(_merge_runs([base],[verified],cutoff="2026-10-17")[0]["finish"],1)
+        self.assertEqual(_merge_runs([base],[unverified],cutoff="2026-10-17")[0]["finish"],0)
+
 if __name__=="__main__":
     unittest.main()
