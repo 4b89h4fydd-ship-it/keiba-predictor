@@ -15,7 +15,8 @@ permissions:
   actions: read
 concurrency:
   group: arvexq-saved-forecast-production
-  cancel-in-progress: false
+  # Explicit release updates replace a stalled pre-write rebuild; scheduled runs never cancel writers.
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 jobs:
   replace:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
