@@ -70,10 +70,23 @@ jobs:
               with urllib.request.urlopen(req,timeout=30) as response:return json.load(response)
           sha=os.environ['GITHUB_SHA']
           assert read('/branches/main')['commit']['sha']==sha,'MAIN_MOVED_REFUSING_PUBLICATION'
-          runs=read('/actions/runs?head_sha='+sha+'&per_page=100')['workflow_runs']
-          passed={r['name'] for r in runs if r['conclusion']=='success' and r['head_branch']=='main'}
-          assert {'ARVEXQ Validation','ARVEXQ Recovery Regression','ARVEXQ Web Deploy'}<=passed,('CI_NOT_READY',passed)
-          print('EXACT_MAIN_AND_ALL_CI_PASSED')
+          # Runtime was last changed at this exact CI-verified release. The only
+          # intervening edits must be the audited API overlay and resume workflow.
+          baseline='58fe22a56f4246a2953c01b855071e9daf2090d6'
+          comparison=read('/compare/'+baseline+'...'+sha)
+          assert comparison['status']=='ahead' and comparison['behind_by']==0,'UNVERIFIED_RELEASE_ANCESTRY'
+          allowed={'.github/workflows/arvexq-api-storage-deploy.yml',
+                   '.github/workflows/arvexq-resume-revisions.yml'}
+          changed={f['filename'] for f in comparison['files']}
+          assert changed<=allowed,('RUNTIME_CHANGED_REQUIRES_FRESH_CI',changed-allowed)
+          def passed(commit):
+              runs=read('/actions/runs?head_sha='+commit+'&per_page=100')['workflow_runs']
+              return {r['name'] for r in runs if r['conclusion']=='success' and r['head_branch']=='main'}
+          base_passed=passed(baseline)
+          assert {'ARVEXQ Validation','ARVEXQ Recovery Regression','ARVEXQ Web Deploy'}<=base_passed,('BASE_RELEASE_CI_NOT_READY',base_passed)
+          current_passed=passed(sha)
+          assert 'ARVEXQ Validation' in current_passed,('CURRENT_WORKFLOW_CI_NOT_READY',current_passed)
+          print('EXACT_MAIN_AND_VERIFIED_ANCESTOR_CI_PASSED',baseline,sorted(changed))
           PY
       - name: Download already rebuilt official-history revisions and its source backup
         env:
