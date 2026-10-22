@@ -116,7 +116,14 @@ class LearnedScenariosTests(TestCase):
         missing_finish = deepcopy(good)
         missing_finish['id'] = 'missing-result-position'
         missing_finish['result']['finishers'][0].pop('finish')
-        for corrupt in (partial, duplicate, no_history, invalid_finish, missing_finish):
+        fractional_rank = deepcopy(good)
+        fractional_rank['id'] = 'fractional-finish'
+        fractional_rank['result']['finishers'][1]['finish'] = 2.5
+        fractional_number = deepcopy(good)
+        fractional_number['id'] = 'fractional-horse-number'
+        fractional_number['result']['finishers'][1]['horseNumber'] = 2.5
+        for corrupt in (partial, duplicate, no_history, invalid_finish, missing_finish,
+                        fractional_rank, fractional_number):
             with self.subTest(race_id=corrupt['id']):
                 with self.assertRaisesRegex(ValueError, 'no observed, labelled training races'):
                     fit_model([corrupt], circuit='地方')
