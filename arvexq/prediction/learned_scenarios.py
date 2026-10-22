@@ -198,8 +198,18 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
             raise ValueError('duplicate or missing training race ID')
         if (detail.get('result') or {}).get('status') != '確定':
             continue
-        labels = {int(r['horseNumber']): int(r['finish']) for r in detail['result'].get('finishers', [])
-                  if r.get('horseNumber') and r.get('finish') and int(r['finish']) > 0}
+        finishers = detail['result'].get('finishers', [])
+        if not isinstance(finishers, list) or not finishers:
+            continue
+        try:
+            if any(not isinstance(r, dict) or not r.get('horseNumber') or not r.get('finish')
+                   or isinstance(r['horseNumber'], bool) or isinstance(r['finish'], bool)
+                   or int(r['horseNumber']) <= 0 or int(r['finish']) <= 0
+                   for r in finishers):
+                continue
+            labels = {int(r['horseNumber']): int(r['finish']) for r in finishers}
+        except (TypeError, ValueError, OverflowError):
+            continue
         # Train only against the complete active field. Partial results or missing
         # pre-race history must not silently bias winner ranking toward covered horses.
         rows = race_evidence(detail)
