@@ -53,21 +53,37 @@ def official_training_races(archive, cutoff, family, limit):
     if not hasattr(archive,'revision_entries_by_race'):
         archive.revision_entries_by_race={}
         for (key,_),row in archive.entry_rows.items():archive.revision_entries_by_race.setdefault(key,[]).append(row)
+    # Race archive rows and prior-run enrichment do not change between target
+    # dates. Keep their identity and cutoff, but do not rebuild the same 60
+    # labelled historical races for every successive prediction date.
+    if not hasattr(archive,'revision_ordered_races'):
+        archive.revision_ordered_races=sorted(
+            archive.race_rows.items(),
+            key=lambda pair:(pair[0][1],pair[0][0],pair[0][2]),reverse=True)
+    if not hasattr(archive,'revision_training_cache'):
+        archive.revision_training_cache={}
     training=[]
-    for key,row in sorted(archive.race_rows.items(),key=lambda pair:(pair[0][1],pair[0][0],pair[0][2]),reverse=True):
+    for key,row in archive.revision_ordered_races:
         if not key[1] or key[1]>=cutoff:continue
-        detail={'id':f'nar-{key[1]}-{item(row,0)}-{key[2]:02d}','date':key[1],'track':item(row,0),
-                'raceNumber':key[2],'circuit':'地方','surface':item(row,21),'direction':item(row,22),
-                'distance':number(item(row,23)),'condition':item(row,25),'class':item(row,27),'title':item(row,5)}
-        if race_family(detail)!=family:continue
-        entries=archive.revision_entries_by_race.get(key,[])
-        # Exclude unresolved/withdrawn fields instead of inventing starters or labels.
-        if len(entries)<3 or len(entries)!=number(item(row,26)) or any(number(item(h,31))<1 for h in entries):continue
-        detail['horses']=[{'horseNumber':number(item(h,5)),'frameNumber':number(item(h,3)),
-                           'name':item(h,6),'birthDate':date(item(h,10)),'jockey':item(h,14),
-                           'carriedWeight':carried_weight(item(h,16)),'trainer':item(h,18)} for h in entries]
-        detail['result']={'status':'確定','finishers':[{'horseNumber':number(item(h,5)),'finish':number(item(h,31))} for h in entries]}
-        training.append(enrich_official_history(detail,archive))
+        cached=archive.revision_training_cache.get(key)
+        if cached is None:
+            detail={'id':f'nar-{key[1]}-{item(row,0)}-{key[2]:02d}','date':key[1],'track':item(row,0),
+                    'raceNumber':key[2],'circuit':'地方','surface':item(row,21),'direction':item(row,22),
+                    'distance':number(item(row,23)),'condition':item(row,25),'class':item(row,27),'title':item(row,5)}
+            entries=archive.revision_entries_by_race.get(key,[])
+            valid=(len(entries)>=3 and len(entries)==number(item(row,26))
+                   and not any(number(item(h,31))<1 for h in entries))
+            if valid:
+                detail['horses']=[{'horseNumber':number(item(h,5)),'frameNumber':number(item(h,3)),
+                                  'name':item(h,6),'birthDate':date(item(h,10)),'jockey':item(h,14),
+                                  'carriedWeight':carried_weight(item(h,16)),'trainer':item(h,18)} for h in entries]
+                detail['result']={'status':'確定','finishers':[{'horseNumber':number(item(h,5)),'finish':number(item(h,31))} for h in entries]}
+                cached=enrich_official_history(detail,archive)
+            else:
+                cached=False
+            archive.revision_training_cache[key]=cached
+        if not cached or race_family(cached)!=family:continue
+        training.append(cached)
         if len(training)>=limit:break
     return training
 
