@@ -35,3 +35,21 @@ def test_existing_application_entrypoint_uses_independent_nar_parser():
     assert _parse_nar_live_odds_html("") == {}
     source = Path("app.py").read_text()
     assert "from arvexq.ingest.odds_fields.nar_official import _parse_nar_live_odds_html" in source
+
+def test_nar_popularity_isolated_and_preserves_equal_odds_ties():
+    from arvexq.ingest.odds_fields.nar_popularity import apply_observed_win_popularity
+    facts = {
+        4: {"winOdds": 6.0, "popularity": 1},
+        3: {"winOdds": 3.0, "popularity": 4},
+        2: {"winOdds": 3.0, "popularity": 5},
+        1: {"winOdds": None, "popularity": None},
+    }
+    result = apply_observed_win_popularity(facts)
+    assert result is facts
+    assert result[2]["popularity"] == 1
+    assert result[3]["popularity"] == 1
+    assert result[4]["popularity"] == 3
+    assert result[1]["popularity"] is None
+    assert "return apply_observed_win_popularity(out)" in Path(
+        "arvexq/ingest/odds_fields/nar_official.py"
+    ).read_text()
