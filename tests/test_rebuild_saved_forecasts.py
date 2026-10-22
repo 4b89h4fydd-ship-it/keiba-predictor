@@ -39,8 +39,10 @@ class SavedForecastRebuildTests(TestCase):
         def transport(request,timeout):
             if request.data:
                 body=json.loads(request.data);state['posts']+=1
-                self.assertEqual(body['payloadSha256'],sha256(body['revisionRawJson'].encode()).hexdigest())
-                state['revision']=json.loads(body['revisionRawJson'])
+                from arvexq.ingest.storage_json_codec import decode
+                raw=decode(body['revisionStorageJson'])
+                self.assertEqual(body['payloadSha256'],sha256(raw.encode()).hexdigest())
+                state['revision']=json.loads(raw)
                 result={'ok':True,'original_tables_modified':False}
             else:
                 stored=state['revision'];pointer=stored['revisionId'] if stored else None

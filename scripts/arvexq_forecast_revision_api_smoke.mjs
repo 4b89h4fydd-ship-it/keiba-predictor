@@ -30,6 +30,8 @@ assert.equal(await restoreStoredJSON(store.get(pointer).payload_json),raw);
 assert.ok(new TextEncoder().encode(store.get(pointer).payload_json).length<new TextEncoder().encode(raw).length);
 const packed=await compressStoredJSON(raw);
 assert.equal(await restoreStoredJSON(packed),raw);
+response=await call('/api/admin/forecast-revisions',{revisionStorageJson:packed,payloadSha256:await hash(raw)});
+assert.equal(response.status,200,'compressed-only transport retains original hash and validation');
 assert.equal(await restoreStoredJSON(raw),raw,'legacy uncompressed rows stay readable');
 const broken=JSON.parse(packed);broken.sha256='0'.repeat(64);
 response=await call('/api/admin/forecast-revisions',{revisionRawJson:raw,revisionStorageJson:JSON.stringify(broken),payloadSha256:await hash(raw)});

@@ -57,7 +57,11 @@ export async function forecastRevisions(request,env){
  if(path==='/api/admin/forecast-revisions'){
   if(request.method!=='POST')return response({ok:false,error:'method not allowed'},405);
   if(!authorized(request,env))return response({ok:false,error:'unauthorized'},401);
-  const body=await request.json(),raw=body.revisionRawJson;
+  const body=await request.json();let raw=body.revisionRawJson;
+  if(raw===undefined&&typeof body.revisionStorageJson==='string'){
+   try{if(utf8.encode(body.revisionStorageJson).length>1000000)throw Error('storage size');raw=await restoreStoredJSON(body.revisionStorageJson)}
+   catch{return response({ok:false,error:'invalid compressed revision'},400)}
+  }
   if(typeof raw!=='string'||new TextEncoder().encode(raw).length>1000000)return response({ok:false,error:'invalid revision size'},400);
   let revision;try{revision=JSON.parse(raw)}catch{return response({ok:false,error:'invalid revision JSON'},400)}
   const {raceId,revisionId,raceDate,modelVersion,createdAt}=revision||{};

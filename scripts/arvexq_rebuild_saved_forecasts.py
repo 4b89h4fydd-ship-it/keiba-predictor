@@ -185,7 +185,8 @@ def capacity_preview(source_path, ledger_path, destination):
 
 def publish(ledger_path,base,token, *, only_ids=None):
     db=sqlite3.connect(ledger_path);failures=[];verified=0
-    headers={'Content-Type':'application/json','Authorization':'Bearer '+token}
+    headers={'Content-Type':'application/json','Authorization':'Bearer '+token,
+             'User-Agent':'Mozilla/5.0 ARVEXQ-LosslessPublish/1.0','Accept':'application/json'}
     def request(path,value=None):
         data=encoded(value).encode() if value is not None else None
         req=urllib.request.Request(base.rstrip('/')+path,data=data,headers=headers)
@@ -201,7 +202,7 @@ def publish(ledger_path,base,token, *, only_ids=None):
                 assert {k:v for k,v in existing.items() if k!='createdAt'}=={k:v for k,v in json.loads(raw).items() if k!='createdAt'}
                 if before.get('currentForecastRevisionId')!=revision_id:raise ValueError('known revision is not current; refusing rollback of newer display')
             else:
-                result=request('/api/admin/forecast-revisions',{'revisionRawJson':raw,'revisionStorageJson':encode_storage(raw),'payloadSha256':digest})
+                result=request('/api/admin/forecast-revisions',{'revisionStorageJson':encode_storage(raw),'payloadSha256':digest})
                 assert result.get('ok') and result.get('original_tables_modified') is False
             after=request(path)
             assert after.get('currentForecastRevisionId')==revision_id
