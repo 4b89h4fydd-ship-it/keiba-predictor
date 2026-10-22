@@ -8,7 +8,7 @@ import json,os
 from collections import Counter
 from scripts.arvexq_provisional_real_pilot import day
 from scripts.arvexq_current_prediction_audit import scrub_for_replay,finish_order
-from arvexq.prediction.learned_scenarios import fit_model
+from arvexq.prediction.learned_scenarios import fit_model,race_family
 from arvexq.prediction.new_forecast import build_forecast
 
 # The pilot's imported original two-day experiment also executes (auditable).
@@ -19,6 +19,8 @@ def evaluate(races,model,label):
  res=Counter(); misses=[]
  for original in races:
   if original.get("circuit")!="地方" or (original.get("result") or {}).get("status")!="確定":continue
+  if race_family(original)!="flat":
+   res["not_flat_family"]+=1;continue
   order=finish_order(original)
   if not order:continue
   candidate=scrub_for_replay(original,original["date"])
@@ -49,14 +51,14 @@ for label,l2 in (("existing_l2_001",0.01),("candidate_l2_003",0.03)):
  models[label]=fit_model(train,circuit="地方",l2=l2)
 validation_scores={name:evaluate(validation,model,name) for name,model in models.items()}
 # Tune against the earlier validation date only. Unseen holdout is not used to choose.
-choices=sorted(validation_scores,key=lambda name:(-validation_scores[name]["hits"]/max(1,validation_scores[name]["scored"]),name))
+choices=sorted(validation_scores,key=lambda name:(-validation_scores[name]["hits"]/max(1,validation_scores[name]["scored"]),0 if name=="existing_l2_001" else 1))
 chosen=choices[0]
 print("MODEL_SELECTION_ON_VALIDATION_ONLY",json.dumps({"selected":chosen,"scores":{k:dict(v) for k,v in validation_scores.items()}},ensure_ascii=False),flush=True)
 baseline=fit_model(train+validation,circuit="地方",l2=0.01)
-modified=fit_model(train+validation,circuit="地方",l2=(0.03 if chosen=="candidate_l2_003" else 0.01))
+modified=fit_model(train+validation,circuit="地方",l2=0.03)
 b=evaluate(holdout,baseline,"holdout_existing_l2_001")
-m=evaluate(holdout,modified,"holdout_selected_"+chosen)
+m=evaluate(holdout,modified,"holdout_candidate_l2_003")
 print("UNSEEN_HOLDOUT_COMPARISON",json.dumps({"holdout_date":"2026-10-17","selection":chosen,"baseline":dict(b),"candidate":dict(m),
  "better":m["hits"]>b["hits"] if b["scored"]==m["scored"] else None,
- "candidate_is_unmodified":chosen=="existing_l2_001"},ensure_ascii=False),flush=True)
+ "promotion_recommended":bool(chosen=="candidate_l2_003" and m["scored"]==b["scored"] and m["hits"]>b["hits"]),"selected_from_validation":chosen},ensure_ascii=False),flush=True)
 if not b["scored"] or not m["scored"]:raise SystemExit("No real-race holdout scoring; invalid experiment")
