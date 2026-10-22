@@ -1,0 +1,63 @@
+name: ARVEXQ Provisional Replay Research Run
+
+"on":
+  push:
+    branches: [fix/arvexq-new-engine-complete-field-20261022]
+    paths: [.github/workflows/arvexq-research-replay-run.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  provisional-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      ARVEXQ_RESEARCH_EVAL: "1"
+      ARVEXQ_DAYS: "7"
+      ARVEXQ_END_DATE: "2026-10-21"
+      ARVEXQ_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install existing project requirements
+        run: python -m pip install -q -r requirements.txt pytest==9.1.1
+      - name: Run existing chronology and replay unit test
+        run: PYTHONPATH=. python -m pytest -q tests/test_research_provisional_replay.py
+      - name: Run existing provisional model on real earlier-race histories, then evaluate
+        run: |
+          set -o pipefail
+          PYTHONPATH=. python -m scripts.arvexq_current_prediction_audit > provisional-replay-raw.log 2>&1
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          lines=Path('provisional-replay-raw.log').read_text(errors='replace').splitlines()
+          reports=[x.split('=',1)[1] for x in lines if x.startswith('ARVEXQ_UNIFIED_AUDIT_JSON=')]
+          if not reports: raise SystemExit('Missing real-race replay output')
+          result=json.loads(reports[-1])
+          research=result.get('provisionalResearchReplay') or {}
+          for circuit in ('中央','地方'):
+              r=research.get(circuit) or {}
+              n=r.get('scoredRaces') or 0
+              hits=r.get('winnerTop1Hits') or 0
+              print('REAL_RACE_PROVISIONAL_REPLAY',json.dumps({'circuit':circuit,'scored':n,'hits':hits,'rate':hits/n if n else None,'misses':len(r.get('misses') or []),'noEarlierTrainedModel':r.get('noEarlierTrainedModel'),'missingPrediction':r.get('missingPrediction')},ensure_ascii=False))
+          Path('provisional-replay-research.json').write_text(json.dumps({'source':'retrospective-postrace-scrubbed-unverified-input-timing','circuits':research},ensure_ascii=False,indent=2))
+          if not any((research.get(c) or {}).get('scoredRaces') for c in ('中央','地方')):
+              raise SystemExit('No scored real-race predictions; cannot claim validation')
+          PY
+      - name: Preserve diagnostic results without production changes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-provisional-replay-research-${{ github.run_id }}
+          path: |
+            provisional-replay-research.json
+            provisional-replay-raw.log
+          retention-days: 14
+          if-no-files-found: warn
