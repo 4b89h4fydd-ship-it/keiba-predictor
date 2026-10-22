@@ -75,11 +75,15 @@ def main() -> None:
                   ingested_at=CURRENT_TIMESTAMP
                   WHERE arvexq_analytics.race_snapshots.sha256 IS DISTINCT FROM excluded.sha256
                 """,[id,day,digest,raw])
+            for rid,day,digest,raw in rows:
+                observed=db.execute("SELECT sha256 FROM arvexq_analytics.race_snapshots WHERE race_id=?",[rid]).fetchone()
+                if observed is None or observed[0] != digest:
+                    raise RuntimeError("analytics readback mismatch")
             db.execute("COMMIT")
         except Exception:
             db.execute("ROLLBACK")
             raise
-        print("ANALYTICS_MOTHERDUCK_SYNC_OK","races="+str(len(rows)),"cloudflare_writes=0")
+        print("ANALYTICS_MOTHERDUCK_SYNC_OK","verified_races="+str(len(rows)),"cloudflare_writes=0")
     finally:
         db.close()
 
