@@ -68,7 +68,15 @@ def validate_scenarios(scenarios, runners):
         seen.add(name)
         orders = []
         for row in scenario.get('orders') or []:
-            order = tuple(int(n) for n in row['order'])
+            raw_order = row['order']
+            if any(isinstance(n, bool) for n in raw_order):
+                raise ValueError('non-integer horse identity in finishing order')
+            try:
+                order = tuple(int(n) for n in raw_order)
+                if any(float(n) != value for n, value in zip(raw_order, order)):
+                    raise ValueError('non-integer horse identity in finishing order')
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError('non-integer horse identity in finishing order') from exc
             p = float(row['probability'])
             if len(order) != len(runner_set) or set(order) != runner_set:
                 raise ValueError('all active runners required in each order')
