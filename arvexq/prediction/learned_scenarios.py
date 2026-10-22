@@ -228,6 +228,7 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
                 or set(numbers) != set(labels)
                 or len(set(finish_numbers)) != len(finish_numbers)
                 or sum(rank == 1 for rank in labels.values()) != 1
+                or any(rank > len(rows) for rank in labels.values())
                 or any(not r['observedStarts'] for r in rows)):
             continue
         samples.append((rows, labels))
