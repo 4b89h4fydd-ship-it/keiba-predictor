@@ -378,6 +378,7 @@ def main() -> None:
     heads_by_circuit: dict[str, dict[str, int]] = defaultdict(init_head_metrics)
     misses_by_circuit: dict[str, dict[str, int]] = defaultdict(init_pillar_miss)
     per_day: list[dict[str, Any]] = []
+    research_details: list[dict[str, Any]] = []
     changed = improved = worsened = equal = 0
     details_seen = finals_seen = exact_locks = replayed = 0
 
@@ -385,6 +386,8 @@ def main() -> None:
         url = API_BASE + "/api/day?" + urllib.parse.urlencode({"date": ds, "details": "1"})
         payload = api_json(url)
         details = payload.get("details") or []
+        if os.environ.get("ARVEXQ_RESEARCH_EVAL") == "1":
+            research_details.extend(details)
         details_seen += len(details)
         day_exact = init_metrics()
         day_replay = init_metrics()
@@ -472,6 +475,8 @@ def main() -> None:
         "perDay": per_day,
         "warning": "exactLocked is the only exact contemporaneous pre-race evaluation. currentFourPillarReplay and decision-head diagnostics are retrospective: result/payout and target-day history are scrubbed, but saved detail may contain later-mutated non-result fields.",
     }
+    if os.environ.get("ARVEXQ_RESEARCH_EVAL") == "1":
+        result["provisionalResearchReplay"] = evaluate_provisional_predictions(research_details)
     print("ARVEXQ_UNIFIED_AUDIT_JSON=" + json.dumps(result, ensure_ascii=False, separators=(",", ":")))
 
 
