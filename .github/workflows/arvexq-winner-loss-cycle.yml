@@ -1,0 +1,39 @@
+name: ARVEXQ Winner-focused Same-Model Cycle
+"on":
+  push:
+    branches: [fix/arvexq-new-engine-complete-field-20261022]
+    paths:
+      - scripts/arvexq_winner_loss_cycle.py
+      - .github/workflows/arvexq-winner-loss-cycle.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      ARVEXQ_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q -r requirements.txt pytest==9.1.1
+      - name: Guard regression checks
+        run: PYTHONPATH=. python -m pytest -q tests/test_research_provisional_replay.py
+      - name: Winner pair weighting walk forward, separate JRA and NAR
+        run: |
+          set -o pipefail
+          PYTHONPATH=. python -u scripts/arvexq_winner_loss_cycle.py | tee winner-loss-research.log
+      - name: Save full diagnostic log as research artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-winner-loss-${{ github.run_id }}
+          path: winner-loss-research.log
+          retention-days: 14
+          if-no-files-found: warn
