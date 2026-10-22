@@ -2,6 +2,11 @@ name: ARVEXQ Analytics Connection Test
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - arvexq-data-integration-test
+    paths:
+      - .github/workflows/arvexq-analytics-test.yml
 
 permissions:
   contents: read
@@ -10,11 +15,11 @@ jobs:
   check-secrets:
     runs-on: ubuntu-latest
     steps:
-      - name: Check credentials
+      - name: Check credentials without exposing values
         env:
           FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
           MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: |
-          test -n "$FIRECRAWL_API_KEY"
-          test -n "$MOTHERDUCK_TOKEN"
-          echo "Credentials are configured"
+          if [ -z "$FIRECRAWL_API_KEY" ]; then echo "::error::FIRECRAWL_API_KEY missing"; exit 1; fi
+          if [ -z "$MOTHERDUCK_TOKEN" ]; then echo "::error::MOTHERDUCK_TOKEN missing"; exit 1; fi
+          echo "Both credentials are configured (remote authentication not yet tested)"
