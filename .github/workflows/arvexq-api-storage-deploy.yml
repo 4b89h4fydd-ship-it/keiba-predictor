@@ -263,8 +263,11 @@ jobs:
           health=load(urllib.request.Request(base+'/api/health',headers=headers))
           assert health.get('ok') and health.get('service')=='KRAIZ API'
           req=urllib.request.Request(base+'/api/admin/storage-audit',headers={**headers,'Authorization':'Bearer '+os.environ['SYNC_TOKEN']})
-          ready=load(urllib.request.Request(base+'/api/forecast-revisions/__readiness__',headers=headers))
-          assert ready.get('storageEncoding')=='arvexq-storage-gzip-v1','COMPRESSED_REVISION_API_NOT_DEPLOYED'
+          for attempt in range(15):
+              ready=load(urllib.request.Request(base+'/api/forecast-revisions/__readiness__?deployment='+os.environ['GITHUB_SHA']+'&attempt='+str(attempt),headers={**headers,'Cache-Control':'no-cache'}))
+              if ready.get('storageEncoding')=='arvexq-storage-gzip-v1':break
+              time.sleep(2)
+          else:raise SystemExit('COMPRESSED_REVISION_API_NOT_DEPLOYED')
           metrics=load(req)
           assert metrics.get('ok') and metrics.get('sql_writes')==0
           with open('api-private-storage-audit.json','w') as f:json.dump(metrics,f,indent=2)

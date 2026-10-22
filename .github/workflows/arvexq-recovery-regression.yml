@@ -24,6 +24,14 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright@1.56.1
+      - name: Bound dependency download retries and prefer IPv4
+        run: |
+          sudo tee /etc/apt/apt.conf.d/99arvexq-ci-network >/dev/null <<'APT'
+          Acquire::Retries "1";
+          Acquire::http::Timeout "15";
+          Acquire::https::Timeout "15";
+          Acquire::ForceIPv4 "true";
+          APT
       - run: npx playwright install --with-deps chromium webkit
       - name: Build and start exact candidate assets
         run: |
@@ -50,6 +58,14 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright@1.56.1
+      - name: Bound dependency download retries and prefer IPv4
+        run: |
+          sudo tee /etc/apt/apt.conf.d/99arvexq-ci-network >/dev/null <<'APT'
+          Acquire::Retries "1";
+          Acquire::http::Timeout "15";
+          Acquire::https::Timeout "15";
+          Acquire::ForceIPv4 "true";
+          APT
       - run: npx playwright install --with-deps chromium webkit
       - name: Independent win and axis role DOM contract
         run: node scripts/arvexq_honmei_dom_contract_test.js
