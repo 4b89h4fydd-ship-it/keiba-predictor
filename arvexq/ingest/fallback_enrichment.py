@@ -169,6 +169,11 @@ def _needs_nar_margins(horse: dict[str, Any], cutoff: str) -> bool:
     runs = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)[:5]
     if not runs:
         return False
+    # An unknown finishing position must be reconciled with the existing
+    # official historical result even when another run already has a margin.
+    if any(row.get("finish") in (None, "", 0, "0") and row.get("track")
+           and row.get("raceNumber") for row in runs):
+        return True
     def measured(row: dict[str, Any]) -> bool:
         for key in ("marginSeconds", "timeBehindWinner"):
             value = row.get(key)
