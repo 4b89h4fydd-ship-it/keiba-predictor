@@ -51,6 +51,21 @@ class RebuiltWinnerTop1TrainingTests(unittest.TestCase):
             "result": {"status": "確定", **self.result()},
         }
 
+    def test_snapshot_with_post_off_capture_time_is_rejected(self):
+        for capture in (100, 101, "bad-time", float("inf")):
+            bad = self.eligible_detail()
+            bad["massFeatureSnapshot"]["capturedAtEpoch"] = capture
+            bad["massFeatureSnapshot"]["postAtEpoch"] = 100
+            bad["massFeatureSnapshot"]["featureHash"] = _feature_hash(bad["massFeatureSnapshot"])
+            bad["massFeatureHash"] = bad["massFeatureSnapshot"]["featureHash"]
+            self.assertEqual(frozen_training_rows_from_detail(bad), [])
+        good = self.eligible_detail()
+        good["massFeatureSnapshot"]["capturedAtEpoch"] = 99
+        good["massFeatureSnapshot"]["postAtEpoch"] = 100
+        good["massFeatureSnapshot"]["featureHash"] = _feature_hash(good["massFeatureSnapshot"])
+        good["massFeatureHash"] = good["massFeatureSnapshot"]["featureHash"]
+        self.assertEqual(len(frozen_training_rows_from_detail(good)), 3)
+
     def test_direct_snapshot_hash_is_actually_recomputed(self):
         good = self.eligible_detail()
         self.assertEqual(len(frozen_training_rows_from_detail(good)), 3)
