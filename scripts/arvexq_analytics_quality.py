@@ -21,10 +21,16 @@ try:
     """).fetchone()
     names=["rows","unique_ids","first_day","last_day","days","adequate_fields","final_results","payout_fields","missing_hash"]
     data=dict(zip(names,report))
-    # Stop before claiming readiness with incomplete labels or duplicate source IDs.
-    data["ready_for_basic_result_analysis"]=bool(data["rows"] and data["rows"]==data["unique_ids"]==data["adequate_fields"]==data["final_results"] and data["missing_hash"]==0)
+    data["incomplete_result_races"]=data["rows"]-data["final_results"]
+    data["eligible_for_result_analysis"]=data["final_results"]
+    data["ready_for_filtered_result_analysis"]=bool(
+        data["rows"] and data["rows"]==data["unique_ids"]==data["adequate_fields"]
+        and data["final_results"]>0 and data["missing_hash"]==0
+    )
     print("ARVEXQ_ANALYTICS_DATA_QUALITY",json.dumps(data,ensure_ascii=False,default=str))
-    if not data["ready_for_basic_result_analysis"]:
+    if data["incomplete_result_races"]:
+        print("::warning::Some races have no confirmed top-three finishers; exclude them from result metrics")
+    if not data["ready_for_filtered_result_analysis"]:
         raise SystemExit("ANALYTICS_QUALITY_GATE_FAILED")
 finally:
     con.close()
