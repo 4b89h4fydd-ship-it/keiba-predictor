@@ -2,6 +2,8 @@
 import re
 
 from bs4 import BeautifulSoup
+from arvexq.ingest.nar_fields.body_weight import extract as observed_body_weight
+from arvexq.ingest.nar_fields.carried_weight import extract as observed_carried_weight
 
 
 def parse_card_html(detail: dict, html: str, clean) -> list[dict]:
@@ -28,19 +30,6 @@ def parse_card_html(detail: dict, html: str, clean) -> list[dict]:
                 if 1 <= number <= 18:
                     nums.append(number)
         return nums[-1] if nums else 0
-
-    def parse_weight_cell(value):
-        match = re.search(
-            r"(?<!\d)(\d{3})(?:\s*(?:kg)?)?(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?(?!\d)",
-            value, re.I,
-        )
-        if not match:
-            return None, None
-        weight = int(match.group(1))
-        if not 250 <= weight <= 800:
-            return None, None
-        change = int(match.group(2)) if match.group(2) is not None else None
-        return weight, change
 
     for table in soup.find_all("table"):
         rows = table.find_all("tr")
@@ -77,46 +66,8 @@ def parse_card_html(detail: dict, html: str, clean) -> list[dict]:
             if not horse_number:
                 continue
 
-            weight = change = carried = None
-            if 0 <= carried_weight_idx < len(values):
-                match = re.search(r"(?<!\d)(\d{2}(?:\.\d)?)(?!\d)", values[carried_weight_idx])
-                if match:
-                    try:
-                        observed = float(match.group(1))
-                        if 35 <= observed <= 80:
-                            carried = round(observed, 1)
-                    except Exception:
-                        pass
-
-            if 0 <= body_weight_idx < len(values):
-                weight, change = parse_weight_cell(values[body_weight_idx])
-                if weight and change is None and 0 <= change_idx < len(values):
-                    match = re.search(r"([+\-]?\d{1,3})", values[change_idx])
-                    if match:
-                        observed = int(match.group(1))
-                        if -99 <= observed <= 99:
-                            change = observed
-
-            if not weight:
-                match = re.search(r"(?<!\d)(\d{3})\s*(?:kg)?\s*[（(]\s*([+\-]?\d+)\s*[）)]", row_text, re.I)
-                if match:
-                    observed = int(match.group(1))
-                    if 250 <= observed <= 800:
-                        weight, change = observed, int(match.group(2))
-
-            if not weight:
-                for index, value in enumerate(values[:24]):
-                    if not re.fullmatch(r"\d{3}", value):
-                        continue
-                    observed = int(value)
-                    if not 250 <= observed <= 800:
-                        continue
-                    weight = observed
-                    if index + 1 < len(values):
-                        match = re.fullmatch(r"\s*([+\-]?\d{1,2})\s*", values[index + 1])
-                        if match:
-                            change = int(match.group(1))
-                    break
+            weight, change = observed_body_weight(values, row_text, body_weight_idx, change_idx)
+            carried = observed_carried_weight(values, carried_weight_idx)
 
             if not weight and carried is None:
                 continue
