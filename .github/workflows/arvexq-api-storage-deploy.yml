@@ -1,3 +1,4 @@
+# Explicit rollout attempt for existing forecast-revisions API, source SHA guard enforced (2026-10-22).
 name: ARVEXQ API Private Storage Audit Deploy
 on:
   push:
