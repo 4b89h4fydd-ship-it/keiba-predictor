@@ -276,6 +276,95 @@ def resolved_end_date() -> date:
     return date.today() - timedelta(days=1)
 
 
+def evaluate_provisional_predictions(details: list[dict[str, Any]]) -> dict[str, Any]:
+    """Chronological research replay using the EXISTING learned forecast logic.
+
+    Train separately on strictly earlier days, generate marks without current
+    outcomes, then score against final results. Do not persist race copies.
+    """
+    from arvexq.prediction.learned_scenarios import fit_model
+    from arvexq.prediction.new_forecast import build_forecast
+
+    grouped: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
+    for detail in details:
+        if not isinstance(detail, dict):
+            continue
+        circuit, ds = detail.get("circuit"), detail.get("date")
+        if circuit not in ("中央", "地方") or not isinstance(ds, str):
+            continue
+        if (detail.get("result") or {}).get("status") != "確定":
+            continue
+        grouped[circuit][ds].append(detail)
+
+    output: dict[str, Any] = {}
+    for circuit in ("中央", "地方"):
+        history: list[dict[str, Any]] = []
+        scored = hits = missing = no_model = 0
+        misses = []
+        per_race = []
+        for ds, day in sorted(grouped[circuit].items()):
+            model = None
+            if history:
+                try:
+                    model = fit_model(history, circuit=circuit)
+                except ValueError:
+                    pass
+            for original in day:
+                order = finish_order(original)
+                if not order:
+                    missing += 1
+                    continue
+                if model is None:
+                    no_model += 1
+                    continue
+                clean = scrub_for_replay(original, ds)
+                try:
+                    forecast = build_forecast(clean, model)
+                except (ValueError, KeyError, TypeError, OverflowError):
+                    missing += 1
+                    continue
+                if forecast.get("predictionStatus") != "candidate-analysis":
+                    missing += 1
+                    continue
+                horses = forecast.get("horses") or []
+                marks = {int(h["horseNumber"]): (h.get("integratedEvaluation") or {}).get("mark")
+                         for h in horses if isinstance(h, dict) and h.get("horseNumber")}
+                head = next((n for n, mark in marks.items() if mark == "◎"), None)
+                if head is None or len(set(marks)) != len(marks):
+                    missing += 1
+                    continue
+                winner = order[0]
+                scored += 1
+                hits += int(head == winner)
+                item = {"raceId": original.get("id"), "date": ds,
+                        "honmei": head, "winner": winner,
+                        "hit": head == winner, "marks": marks}
+                per_race.append(item)
+                if head != winner:
+                    reports = (forecast.get("scenarioAnalysis") or {}).get("reports") or []
+                    by_number = {r["horseNumber"]: r for r in reports}
+                    chosen, actual = by_number.get(head, {}), by_number.get(winner, {})
+                    metrics = ("win_rate", "recent_finish_mean", "same_track_finish",
+                               "same_distance_finish", "early_position", "closing_gain")
+                    item["diagnostics"] = {
+                        "honmeiStarts": chosen.get("observedStarts"),
+                        "winnerStarts": actual.get("observedStarts"),
+                        "observedFeatureDifference": {
+                            key: {"honmei": (chosen.get("featureValues") or {}).get(key),
+                                  "winner": (actual.get("featureValues") or {}).get(key)}
+                            for key in metrics
+                        },
+                    }
+                    misses.append(item)
+            history.extend(day)
+        output[circuit] = {"scoredRaces": scored, "winnerTop1Hits": hits,
+                           "winnerTop1Rate": hits/scored if scored else None,
+                           "missingPrediction": missing, "noEarlierTrainedModel": no_model,
+                           "misses": misses, "races": per_race,
+                           "analysisType": "retrospective-not-preoff-record"}
+    return output
+
+
 def main() -> None:
     end = resolved_end_date()
     dates = [(end - timedelta(days=i)).isoformat() for i in range(DAYS - 1, -1, -1)]
