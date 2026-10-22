@@ -66,7 +66,7 @@ assert.notEqual(home.liveSignature('horse',rows,day,at('09:59')),
                 home.liveSignature('horse',rows,day,at('10:01')));
 assert.match(home.buttons('horse'),/data-home-page="selected"/);
 assert.match(home.buttons('horse'),/data-home-page="special"/);
-assert.match(home.buttons('horse'),/data-home-page="ai-stats"/);
+assert.doesNotMatch(home.buttons('horse'),/data-home-page="ai-stats"/);
 assert.doesNotMatch(source,/kyotei|boat|競艇/i);
 const ui=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 assert.match(ui,/ARVEXQHorsePortal\.home/);
