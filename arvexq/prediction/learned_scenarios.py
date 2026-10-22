@@ -294,7 +294,7 @@ def _orders(rows, utilities):
     return orders
 
 
-def predict_model(detail, model):
+def predict_model(detail, model, *, research_max_unknown_history=0):
     if model.get('version') != VERSION or model.get('features') != list(FEATURES):
         raise ValueError('model feature/version mismatch')
     training = model['training']
@@ -316,7 +316,11 @@ def predict_model(detail, model):
         raise ValueError('model artifact hash mismatch')
     scenarios = []
     base = race_evidence(detail)
-    if len(base) < 3 or any(not r['observedStarts'] for r in base):
+    unknown = sum(not r['observedStarts'] for r in base)
+    if (len(base) < 3 or unknown > research_max_unknown_history
+            or not isinstance(research_max_unknown_history, int)
+            or isinstance(research_max_unknown_history, bool)
+            or not 0 <= research_max_unknown_history <= 2):
         return {'version': VERSION, 'status': 'insufficient-history', 'reports': base, 'scenarios': []}
     for name,label in [('usual','通常の隊列'),('forward','前の位置を取り合う場合'),('held-up','想定より後ろに控える場合')]:
         rows = race_evidence(detail,scenario=name)
