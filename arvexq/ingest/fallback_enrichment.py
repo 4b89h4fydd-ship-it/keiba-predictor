@@ -99,6 +99,12 @@ def _merge_runs(existing: Any, incoming: Any, *, cutoff: str = "", limit: int = 
                         positions.append(old if valid_old else (new if valid_new else old))
                     if positions != old_positions:
                         row[field] = positions
+            elif (field == "finish" and row.get("finish") in (None, "", 0, "0")
+                  and raw.get("researchOfficialPriorFinishVerified") is True
+                  and type(value) is int and value >= 1
+                  and (not row.get("track") or row.get("track") == raw.get("track"))
+                  and (not row.get("raceNumber") or str(row.get("raceNumber")) == str(raw.get("raceNumber")))):
+                row[field] = value
             elif not _present(row.get(field)) and _present(value):
                 row[field] = copy.deepcopy(value)
     rows = [merged[k] for k in order]
