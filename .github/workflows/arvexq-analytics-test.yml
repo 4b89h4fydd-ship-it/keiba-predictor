@@ -1,0 +1,20 @@
+name: ARVEXQ Analytics Connection Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check credentials
+        env:
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: |
+          test -n "$FIRECRAWL_API_KEY"
+          test -n "$MOTHERDUCK_TOKEN"
+          echo "Credentials are configured"
