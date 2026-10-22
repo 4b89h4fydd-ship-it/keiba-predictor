@@ -104,13 +104,22 @@ jobs:
               with urllib.request.urlopen(urllib.request.Request(base+path,data=data,headers=headers),timeout=60) as r:return json.load(r)
           summary=json.load(open('/tmp/forecast-revisions/rebuild-summary.json'));assert summary['allSavedRebuilt']
           audit=read('/api/admin/storage-audit')['queries']
-          pages=audit['page_count']['results'][0]['page_count'];size=audit['page_size']['results'][0]['page_size']
+          page_size=audit['page_size']
+          size=page_size['results'][0]['page_size']
+          counted=audit.get('page_count') or {}
+          if counted.get('results'):
+              used=counted['results'][0]['page_count']*size
+          else:
+              # Cloudflare D1 rejects PRAGMA page_count (SQLITE_AUTH). Use its
+              # own exact reported SQLite file size, never an assumed free capacity.
+              used=(page_size.get('meta') or {}).get('size_after')
+              assert type(used) is int and used>0,'Cannot verify D1 size before any write'
           preview=capacity_preview('/tmp/arvexq-complete-d1.sqlite3','/tmp/forecast-revisions/revisions.sqlite3','/tmp/revision-capacity-preview.sqlite3')
           with open('/tmp/forecast-revisions/capacity-preview.json','w') as f:json.dump(preview,f,indent=2)
           assert preview['originalsUnchanged'] and preview['revisionRows']==summary['revisions']
           required=preview['additionalBytes']
           # Conservative free-plan limit; fail before writes rather than guess paid quota.
-          assert pages*size+required*1.2+20000000<500000000,'Insufficient verified D1 headroom'
+          assert used+required*1.2+20000000<500000000,'Insufficient verified D1 headroom'
           response=read('/api/admin/forecast-revisions/migrate',b'{}')
           assert response['ok'] and response['original_tables_modified'] is False
           print('ADDITIVE_SCHEMA_READY_ORIGINAL_TABLES_UNCHANGED')
