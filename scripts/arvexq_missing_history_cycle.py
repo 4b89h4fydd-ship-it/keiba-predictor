@@ -68,16 +68,16 @@ for circuit in ("地方","中央"):
    if r["phase"]==phase:c.update(r["outcomes"][name])
   return {key:c[key] for key in ("scored","hits","top3","no_mark","error","picked_missing_history")}
  base=totals("validation","original")
- better=[name for name in ("allow_one_unknown","allow_two_unknown") if totals("validation",name)["hits"]>base["hits"] and totals("validation",name)["error"]==base["error"]]
+ better=[name for name in ("allow_one_unknown","allow_two_unknown") if totals("validation",name)["scored"] and base["scored"] and totals("validation",name)["hits"] * base["scored"] > base["hits"] * totals("validation",name)["scored"] and totals("validation",name)["error"]==base["error"]]
  chosen=sorted(better,key=lambda n:(-totals("validation",n)["hits"],n))[0] if better else None
  val=[r for r in each if r["phase"]=="validation"];hold=[r for r in each if r["phase"]=="holdout"]
  hbase=totals("holdout","original");hcand=totals("holdout",chosen) if chosen else None
- improved=bool(chosen and hold and hcand["hits"]>hbase["hits"] and hcand["error"]==hbase["error"])
+ improved=bool(chosen and hold and hbase["scored"] and hcand["scored"] and hcand["hits"]*hbase["scored"]>hbase["hits"]*hcand["scored"] and hcand["error"]==hbase["error"])
  causes=Counter()
  for r in each:causes.update(r["causes"])
  print("MISSING_HISTORY_FINAL",json.dumps({"circuit":circuit,"validation_days":[r["day"] for r in val],"holdout_days":[r["day"] for r in hold],
   "outcomes":{n:{"validation":totals("validation",n),"holdout":totals("holdout",n)} for n in options},
   "missing_histogram":{k:v for k,v in causes.items() if k.startswith("unknown_")},
   "actual_winner_unknown_history":causes["actual_winner_unknown_history"],"selected_on_validation":chosen,
-  "holdout_improvement":improved,"decision":"research_only_further_proof_needed" if improved else "no_confirmed_improvement",
+  "holdout_accuracy_improvement":improved,"metric":"first-place hit rate on all scored races, not absolute hits","decision":"research_only_further_proof_needed" if improved else "no_confirmed_improvement",
   "data_integrity":"Retrospective as-of feature timestamps not verified; no production adoption."},ensure_ascii=False),flush=True)
