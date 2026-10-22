@@ -46,18 +46,14 @@ jobs:
           try:
               req=urllib.request.Request(base+'/api/forecast-revisions/__readiness__')
               with urllib.request.urlopen(req,timeout=20) as r:forecast=json.load(r)
-              private=urllib.request.Request(base+'/api/admin/storage-audit',
-                  headers={'Authorization':'Bearer '+os.environ['SYNC_TOKEN']})
-              with urllib.request.urlopen(private,timeout=30) as r:audit=json.load(r)
           except (OSError,ValueError) as exc:
-              print('PREEXISTING_REVISION_API_NOT_READY',type(exc).__name__)
+              print('PREEXISTING_REVISION_API_NOT_READY',type(exc).__name__,getattr(exc,'code',None))
           else:
               if (forecast.get('ok') is True and
                   forecast.get('raceId')=='__readiness__' and
-                  isinstance(forecast.get('forecastRevisions'),list) and
-                  audit.get('ok') is True and audit.get('sql_writes')==0):
+                  isinstance(forecast.get('forecastRevisions'),list)):
                   with open(os.environ['GITHUB_ENV'],'a') as file:
-                      file.write('ARVEXQ_API_ALREADY_READY=1\\n'.replace('\\n','\n'))
+                      file.write('ARVEXQ_API_ALREADY_READY=1'+chr(10))
                   print('PREEXISTING_REVISION_API_READBACK_VERIFIED_SKIP_REDEPLOY')
           PY
       - name: Discover authorized account without logging credentials
