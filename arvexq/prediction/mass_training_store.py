@@ -80,6 +80,20 @@ def frozen_training_rows_from_detail(detail: dict[str, Any]) -> list[dict[str, A
     # just because their feature bytes happen to hash correctly.
     if detail.get("verifiedForTraining") is False or snapshot.get("verifiedForTraining") is False:
         return []
+    # Explicit timestamps may independently disqualify a stored observation.
+    # Missing timestamps are not proof of pre-off provenance; eligibility still
+    # requires a separate externally verified capture audit before model use.
+    captured = snapshot.get("capturedAtEpoch")
+    post = snapshot.get("postAtEpoch")
+    if captured is not None and post is not None:
+        try:
+            from math import isfinite
+            if (isinstance(captured, bool) or isinstance(post, bool)
+                    or not isfinite(float(captured)) or not isfinite(float(post))
+                    or float(captured) >= float(post)):
+                return []
+        except (TypeError, ValueError, OverflowError):
+            return []
     return rows_from_frozen_snapshot(snapshot, result)
 
 
