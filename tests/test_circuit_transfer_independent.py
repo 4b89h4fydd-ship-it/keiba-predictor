@@ -18,3 +18,50 @@ def test_transfer_evidence_is_observational_and_unrelated_to_bets():
                    "unknownCircuitStarts":1,"hasCrossCircuitHistory":True,
                    "latestReportedCircuit":"NAR"}
     assert _history_rates(horse,{"date":"2026-10-18","circuit":"中央"})["transferEvidence"] is True
+
+
+def test_transfer_observations_exclude_future_and_same_day_on_dated_target():
+    horse = {"allPastRuns": [
+        {"track":"東京", "date":"2026-10-24", "finish":1},
+        {"track":"大井", "date":"2026-10-23", "finish":2},
+        {"track":"東京", "date":"2026/10/22", "finish":3},
+        {"track":"大井", "date":"2026-10-21", "finish":4},
+        {"track":"東京", "date":"unknown", "finish":5},
+    ]}
+    out = transfer_observations(horse, {"track":"東京", "date":"2026-10-23"})
+    assert out["knownCircuitStarts"] == 2
+    assert out["unknownCircuitStarts"] == 0
+    assert out["targetCircuit"] == "JRA"
+    assert out["hasCrossCircuitHistory"] is True
+    assert len(horse["allPastRuns"]) == 5
+
+
+def test_history_rates_do_not_assume_unknown_target_is_nar():
+    horse = {"allPastRuns": [{"track":"大井", "date":"2026-10-21", "finish":1}]}
+    result = _history_rates(horse, {"date":"2026-10-23", "track":"未知場"})
+    assert result["targetCircuit"] is None
+    assert result["sameCircuitStarts"] == 0
+    assert result["winRate"] is None
+    assert result["transferEvidence"] is False
+
+
+def test_history_rates_use_valid_chronological_dates_only_and_keep_jra_nar_separate():
+    horse = {"allPastRuns": [
+        {"track":"東京", "date":"2026-10-24", "finish":1},
+        {"track":"東京", "date":"2026-10-23", "finish":1},
+        {"track":"大井", "date":"2026-10-22", "finish":1},
+        {"track":"東京", "date":"2026/10/20", "finish":"2.0"},
+        {"track":"東京", "date":"invalid", "finish":1},
+        {"track":"東京", "date":"2026-10-19", "finish":"unknown"},
+    ]}
+    central = _history_rates(horse, {"date":"2026-10-23", "circuit":"中央"})
+    local = _history_rates(horse, {"date":"2026-10-23", "circuit":"地方"})
+    assert central["starts"] == 1
+    assert central["top2Rate"] == 1.0
+    assert central["winRate"] == 0.0
+    assert central["otherCircuitStarts"] == 1
+    assert local["starts"] == 1
+    assert local["winRate"] == 1.0
+    assert local["otherCircuitStarts"] == 1
+    assert horse["allPastRuns"][3]["finish"] == "2.0"
+    assert _history_rates(horse, {"circuit":"中央"})["starts"] == 0
