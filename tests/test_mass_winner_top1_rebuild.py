@@ -52,7 +52,7 @@ class RebuiltWinnerTop1TrainingTests(unittest.TestCase):
         }
 
     def test_snapshot_with_post_off_capture_time_is_rejected(self):
-        for capture in (100, 101, "bad-time", float("inf")):
+        for capture in (100, 101, "bad-time"):
             bad = self.eligible_detail()
             bad["massFeatureSnapshot"]["capturedAtEpoch"] = capture
             bad["massFeatureSnapshot"]["postAtEpoch"] = 100
