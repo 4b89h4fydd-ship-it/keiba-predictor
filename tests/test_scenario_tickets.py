@@ -90,6 +90,14 @@ class ScenarioTicketsTests(TestCase):
                 with self.assertRaises(ValueError):
                     compare_tickets(race(), scenarios, model_version='candidate')
 
+    def test_joint_orders_reject_fractional_and_boolean_horse_ids(self):
+        for bad in (1.5, True, float('nan'), float('inf')):
+            with self.subTest(bad=bad):
+                scenarios = distribution()
+                scenarios[0]['orders'][0]['order'][0] = bad
+                with self.assertRaises(ValueError):
+                    compare_tickets(race(), scenarios, model_version='candidate')
+
     def test_one_axis_and_budget_enforced(self):
         d = race()
         d['horses'][1]['integratedEvaluation']['mark'] = '◎'
