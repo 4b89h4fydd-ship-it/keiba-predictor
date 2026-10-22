@@ -210,7 +210,7 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
             # An integer-looking float (or truncated fractional rank) is not
             # an authoritative horse number / finishing position.
             parsed = [(int(r['horseNumber']), int(r['finish'])) for r in finishers]
-            if any(str(r[key]).strip() != str(int(r[key]))
+            if any(float(r[key]) != int(r[key])
                    for r in finishers for key in ('horseNumber', 'finish')):
                 continue
             labels = dict(parsed)
