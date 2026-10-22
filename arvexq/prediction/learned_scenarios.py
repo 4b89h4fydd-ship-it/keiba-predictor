@@ -200,8 +200,19 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
             continue
         labels = {int(r['horseNumber']): int(r['finish']) for r in detail['result'].get('finishers', [])
                   if r.get('horseNumber') and r.get('finish') and int(r['finish']) > 0}
-        rows = [r for r in race_evidence(detail) if r['observedStarts'] and r['horseNumber'] in labels]
-        if len(rows) < 2:
+        # Train only against the complete active field. Partial results or missing
+        # pre-race history must not silently bias winner ranking toward covered horses.
+        rows = race_evidence(detail)
+        numbers = [r['horseNumber'] for r in rows]
+        finishers = [r for r in detail['result'].get('finishers', [])
+                     if isinstance(r, dict) and r.get('horseNumber') and r.get('finish')]
+        finish_numbers = [int(r['horseNumber']) for r in finishers]
+        if (len(rows) < 3 or len(set(numbers)) != len(numbers)
+                or len(finishers) != len(labels)
+                or set(numbers) != set(labels)
+                or len(set(finish_numbers)) != len(finish_numbers)
+                or sum(rank == 1 for rank in labels.values()) != 1
+                or any(not r['observedStarts'] for r in rows)):
             continue
         samples.append((rows, labels))
         ids.append(rid); dates.append(detail['date'])
