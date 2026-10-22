@@ -614,13 +614,8 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
         career_complete=(len(past_cells)>=4 and len(past)<4)
         win_odds, popularity = jra_observed_win_odds(infot, name)
         body_weight=0; body_change=None
-        bwm=re.search(r"(\d{3})\s*kg\s*[（(]\s*([+\-]?\d+)\s*[）)]",infot)
-        if bwm:
-            try: body_weight=int(bwm.group(1)); body_change=int(bwm.group(2))
-            except: pass
-        elif re.search(r"(\d{3})\s*kg",infot):
-            try: body_weight=int(re.search(r"(\d{3})\s*kg",infot).group(1))
-            except: pass
+        body_weight=jra_observed_body_weight(infot)
+        body_change=jra_observed_body_weight_change(infot)
         scratch_status=_scratch_status(_jra_text(tr))
         horses.append({"horseNumber":no,"frameNumber":frame_no,"name":name,"age":age,"sex":sex,"carriedWeight":cw,"jockey":jockey,"trainer":trainer,"affiliation":affiliation,"prizeMoneyAtRace":prize,"recentRaces":past,"winOdds":win_odds or None,"popularity":popularity or None,"bodyWeight":body_weight or None,"bodyWeightChange":body_change,"oddsSource":"JRA公式" if win_odds else "","status":scratch_status,"scratched":bool(scratch_status),"_jraHorseCname":horse_cname,"_jraCareerComplete":career_complete,"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{}})
     if not horses:return None
@@ -1601,6 +1596,8 @@ _nar_odds_cache:dict[str,tuple[float,dict]]={}
 
 from arvexq.ingest.place_odds import place_odds_pair
 from arvexq.ingest.odds_fields.jra_official import parse_win_odds as jra_observed_win_odds
+from arvexq.ingest.jra_fields.body_weight import extract as jra_observed_body_weight
+from arvexq.ingest.jra_fields.body_weight_change import extract as jra_observed_body_weight_change
 
 from arvexq.ingest.odds_fields.nar_official import _parse_nar_live_odds_html
 
