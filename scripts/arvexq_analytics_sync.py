@@ -72,7 +72,7 @@ def main() -> None:
                   ON CONFLICT(race_id) DO UPDATE SET
                   race_date=excluded.race_date,sha256=excluded.sha256,
                   snapshot_json=excluded.snapshot_json,
-                  ingested_at=CURRENT_TIMESTAMP
+                  ingested_at=now()
                   WHERE arvexq_analytics.race_snapshots.sha256 IS DISTINCT FROM excluded.sha256
                 """,[id,day,digest,raw])
             for rid,day,digest,raw in rows:
