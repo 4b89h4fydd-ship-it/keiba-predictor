@@ -3126,7 +3126,9 @@ function scheduleResultRefresh(){
     resultPollBusy=true;
     fetchEdgeRace(id,true,1).then(function(body){
       if(!body||seq!==state.detailSeq||!state.race||String(state.race.id)!==id)return;
+      var previousRevision=state.race._forecastRevisionView;
       state.race=applySummaryEnvironment(mergeRaceReflection(state.race,body,null,null));
+      if(previousRevision)state.race._forecastRevisionView=previousRevision;
       instantTrackDetails[id]=state.race;saveDetailCache(id,state.race);
       updateDetailSections(id,state.race,true);
       // Keep the opened tab, historical predictions and tickets unchanged.
@@ -3168,6 +3170,27 @@ function diagnosisCurrent(r){
   var pm=r&&r.preparedMeta||{};
   return pm.diagnosisReady===true&&pm.diagnosisVersion==='arvexq-edge-2026.10-v53-consensus-rebuild'
 }
+// Read an existing versioned forecast; never derive a forecast from results in browser.
+function fetchExistingForecastRevision(id,seq){
+  var url='https://kraiz-api.4b89h4fydd.workers.dev/api/forecast-revisions/'+encodeURIComponent(id);
+  fetch(url,{cache:'no-store'}).then(function(response){
+    if(!response.ok)throw Error('forecast revision unavailable');
+    return response.json()
+  }).then(function(body){
+    if(seq!==state.detailSeq||!state.race||String(state.race.id)!==String(id))return;
+    if(!body||body.ok!==true||body.raceId!==id||
+       !Array.isArray(body.forecastRevisions)||!body.currentForecastRevisionId)return;
+    var matches=body.forecastRevisions.filter(function(x){
+      return x&&x.revisionId===body.currentForecastRevisionId&&
+        x.raceId===id&&x.raceDate===state.race.date&&
+        x.version==='arvexq-forecast-revision-v1';
+    });
+    if(matches.length!==1)return;
+    state.race._forecastRevisionView=matches[0];
+    render();
+  }).catch(function(){/* A missing versioned model is not a reason to blank the racecard. */});
+}
+
 function openRace(id,keepStack,skipHistory,preservePanel){
   if(!id)return;
   if(previousAiStats.loading){
@@ -3199,6 +3222,7 @@ function openRace(id,keepStack,skipHistory,preservePanel){
   state.raceLoading=null;
   state.race=applySummaryEnvironment(initial);
   render();
+  fetchExistingForecastRevision(String(id),seq);
   // Start the verified local roster without waiting for the slower D1/full-history path.
   hydrateStaticRacecardFirst(id,seq,initial);
   if(entryDataAvailable(initial))fetchSelectedRaceOdds(id,seq);
