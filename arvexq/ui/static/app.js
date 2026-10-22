@@ -3360,7 +3360,6 @@ function load(force){
   if(state.morningArchive&&state.morningArchive.date!==d)state.morningArchive=null;
   requestMorningArchive();
   // No retrospective forecast fetching: user withdrew the generated model.
-    setTimeout(scheduleDailyAiStats,900);
   function startDetails(){if(detailsStarted)return;detailsStarted=true;setTimeout(function(){requestDetails(0)},80)}
   // If summaries were already painted from cache, allow selection preload after first paint.
   setTimeout(function(){if(state.races.length)startDetails()},450);
@@ -3438,7 +3437,6 @@ function load(force){
         state.loading=false;
         render();
         startDetails();
-        setTimeout(scheduleDailyAiStats,500)
       }else if(!state.races.length&&attempt<8){
         setTimeout(function(){requestList(attempt+1)},700)
       }
