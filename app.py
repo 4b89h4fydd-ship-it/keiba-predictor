@@ -1773,7 +1773,7 @@ def nar_race_detail(race_id: str) -> dict | None:
                 "jockeyStats":store.stats("jockey",e["jockey"],iso_date),"trainerStats":store.stats("trainer",e["trainer"],iso_date),
                 "jockeyProfile":store.role_profile("jockey",e["jockey"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
                 "trainerProfile":store.role_profile("trainer",e["trainer"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
-                "prizeMoneyAtRace":store.prize_before(e["name"],iso_date),"recentRaces":store.recent_races(e["name"],iso_date,5),
+                "prizeMoneyAtRace":store.prize_before(e["name"],iso_date),"recentRaces":store.recent_races(e["name"],iso_date,5,int(e["age"] or 0),e["sex"] or ""),
             })
         finishers=[]
         for e in entries:
@@ -1810,7 +1810,7 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
     try:
         ph=",".join("?" for _ in names)
         sql=f"""
-        SELECT e.name,e.date,e.track,e.race_no,e.finish,e.time_seconds,e.corner_positions_json,
+        SELECT e.name,e.date,e.track,e.race_no,e.finish,e.time_seconds,e.corner_positions_json,e.age,e.sex,
                e.carried_weight,e.jockey,e.trainer,
                r.title,r.distance,r.weather,r.condition,r.field_size,r.prize1
         FROM entries e
@@ -1829,7 +1829,10 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
         if arr is None:continue
         try:cp=json.loads(row["corner_positions_json"] or "[]")
         except Exception:cp=[]
-        arr.append({
+        # The source's race-date age is a birth-year proxy, not a unique ID.
+        # Use it and observed sex to reject obvious same-name collisions.
+        src_birth=int(str(row["date"])[:4])-int(row["age"] or 0) if int(row["age"] or 0)>0 else None
+        arr.append(({
             "date":row["date"],"track":row["track"],"raceNumber":int(row["race_no"] or 0),
             "raceId":f"nar-{row['date']}-{row['track']}-{int(row['race_no'] or 0):02d}",
             "title":row["title"] or f"{int(row['race_no'] or 0)}R",
@@ -1840,7 +1843,7 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
             "carriedWeight":float(row["carried_weight"] or 0),
             "jockey":row["jockey"] or "","trainer":row["trainer"] or "",
             "source":"NAR公式ローカル履歴",
-        })
+        },src_birth,str(row["sex"] or "").strip()))
     from arvexq.ingest.full_career import merge_career
     from arvexq.ingest.career_transport import recover_horse
     for h in horses:
@@ -1855,7 +1858,26 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
             previous=h
             h.setdefault("careerHistoryWarnings",[]).append("archive-recovery:"+type(exc).__name__)
         old_runs=[*(previous.get("allPastRuns") or []),*(previous.get("recentRaces") or [])]
-        full=merge_career(old_runs,grouped.get(str(h.get("name") or ""),[]),cutoff)
+        candidate_runs=grouped.get(str(h.get("name") or ""),[])
+        try:
+            age=int(h.get("age") or 0)
+        except (TypeError,ValueError):
+            age=0
+        target_birth=int(cutoff[:4])-age if age>0 and cutoff[:4].isdigit() else None
+        target_sex=str(h.get("sex") or "").strip()
+        known_births={birth for _,birth,_ in candidate_runs if birth}
+        # If the runner lacks an age, mixed birth years cannot be resolved.
+        # Keep the previously verified/archived evidence; reject ambiguous
+        # newly fetched name-only rows instead of grafting a different horse.
+        if target_birth is None and len(known_births)>1:
+            new_runs=[]
+            h.setdefault("careerHistoryWarnings",[]).append("nar-name-birth-year-ambiguous")
+        else:
+            new_runs=[run for run,birth,sex in candidate_runs
+                      if (target_birth is None or birth is None or birth==target_birth)
+                      and (not target_sex or not sex or sex==target_sex)
+                      and (birth is not None or len(known_births)<=1)]
+        full=merge_career(old_runs,new_runs,cutoff)
         h["allPastRuns"]=full
         h["recentRaces"]=full[:max(1,int(limit))]
         # Do not change _careerHistoryAudit.complete: an observed list alone
@@ -2831,6 +2853,13 @@ def _start_enrichment(race_id:str,detail:dict,force:bool=False,horse_no:int|None
         with _detail_cache_lock:_detail_cache.pop(race_id,None)
     threading.Thread(target=worker,daemon=True).start();return _enrichment_status(race_id)
 
+def _verified_debut_no_history(horse:dict,detail:dict)->bool:
+    if detail.get("analysisMode")!="新馬":
+        return False
+    from arvexq.career_missing import build_career_analysis
+    return build_career_analysis(horse,detail).get("career_state")=="complete-no-starts"
+
+
 def _apply_enrichment(race_id:str,detail:dict)->dict:
     with _enrich_data_lock:data=_enrich_data.get(race_id)
     if data:_merge_enrichment(detail,data)
@@ -2838,9 +2867,11 @@ def _apply_enrichment(race_id:str,detail:dict)->dict:
     title=str(detail.get("title") or "");surface=str(detail.get("surface") or "")
     mode="障害" if (surface=="障害" or "障害" in title or re.search(r"(?:J[･・.]?G[ⅠⅡⅢ123]|\\bJS\\b|ジャンプ)",title,re.I)) else ("新馬" if re.search(r"(?:新馬|メイクデビュー)",title) else "平地")
     detail["analysisMode"]=mode
-    if mode=="新馬":
-        for h in detail.get("horses",[]) or []:
-            if not (h.get("recentRaces") or []):h["debutNoHistory"]=True
+    for h in detail.get("horses",[]) or []:
+        if _verified_debut_no_history(h,detail):
+            h["debutNoHistory"]=True
+        else:
+            h.pop("debutNoHistory",None)
     return detail
 
 
@@ -4010,7 +4041,10 @@ def _precompute_detail_metrics(detail: dict) -> dict:
     except Exception:detail["trackSpeed"]={"version":"track-speed-v300","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","source":"fallback"}
     for horse in detail.get("horses",[]) or []:
         runs=horse.get("allPastRuns") or horse.get("recentRaces") or []
-        if detail.get("analysisMode")=="新馬" and not runs:horse["debutNoHistory"]=True
+        if _verified_debut_no_history(horse,detail):
+            horse["debutNoHistory"]=True
+        else:
+            horse.pop("debutNoHistory",None)
         horse["collectionState"]={"status":"complete" if runs or horse.get("debutNoHistory") else "basic" if horse.get("name") else "missing", "history":"not_applicable" if horse.get("debutNoHistory") and not runs else "available" if runs else "missing", "pastRunCount":len(runs)}
         metric_horse=dict(horse,recentRaces=[r for r in runs if _is_jump_run(r)]) if detail.get("analysisMode")=="障害" else dict(horse,recentRaces=runs)
         try:

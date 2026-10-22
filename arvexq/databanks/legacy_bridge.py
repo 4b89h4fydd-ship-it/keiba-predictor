@@ -174,7 +174,13 @@ def _nar_store_adapters(namespace: dict[str, Any]):
         if not name or not date:
             return {}
         db = store()
-        runs = db.recent_races(name, date, int(limit or 5))
+        # Pass the target horse's observed identity into the existing NAR
+        # SQLite filter. Name-only queries can mix same-name horses.
+        import re
+        age_value = re.search(r"\d+", str(horse.get("age") or ""))
+        expected_age = int(age_value.group()) if age_value else 0
+        expected_sex = str(horse.get("sex") or "").strip()
+        runs = db.recent_races(name, date, int(limit or 5), expected_age, expected_sex)
         return {
             "recentRaces": runs[:5],
             "allPastRuns": runs if int(limit or 5) > 5 else [],
