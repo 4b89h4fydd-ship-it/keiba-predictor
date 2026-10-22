@@ -114,4 +114,4 @@ jobs:
         run: python scripts/arvexq_frozen_miss_attribution.py
 
       - name: Compare original pre-off predictions directly with live API outcomes without saving race data
-        run: python scripts/arvexq_live_direct_compare.py --days 2
+        run: python scripts/arvexq_live_direct_compare.py --days 7
