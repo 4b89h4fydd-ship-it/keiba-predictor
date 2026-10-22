@@ -13,7 +13,7 @@ from scripts.arvexq_provisional_real_pilot import day
 from scripts.arvexq_current_prediction_audit import finish_order,scrub_for_replay
 
 dates=[(date(2026,10,15)+timedelta(days=i)).isoformat() for i in range(7)]
-byc=defaultdict(Counter);samples=defaultdict(list)
+byc=defaultdict(Counter);samples=defaultdict(list);specials=defaultdict(list)
 for daystr in dates:
  for race in day(daystr):
   circuit=race.get("circuit")
@@ -52,14 +52,18 @@ for daystr in dates:
      "dropped_during_normalization_or_family")
    out["reason_"+reason]+=1
    if int(horse["horseNumber"])==winner:out["winner_reason_"+reason]+=1
-   if len(samples[circuit])<22:
-    samples[circuit].append({"date":daystr,"race":race.get("id"),"horseNo":horse["horseNumber"],
+   sink=specials[circuit] if reason=="missing_fieldsize_or_finish" else samples[circuit]
+   if len(sink)<22:
+    sink.append({"date":daystr,"race":race.get("id"),"horseNo":horse["horseNumber"],
      "is_winner":horse["horseNumber"]==winner,"reason":reason,"raw_counts":raw_counts,
      "counts":{"raw":len(raw_items),"dated":valid_date,"prior":prior_date,"fieldsize":fieldsize,"finish":finish,"eligible":eligible},
      "has_archive":isinstance(horse.get("careerArchive"),dict),
      "archive_stored_runs":(horse.get("careerArchive") or {}).get("storedRunCount") if isinstance(horse.get("careerArchive"),dict) else None,
      "career_audit":(horse.get("_careerHistoryAudit") or {}).get("status"),
-     "debut_flag":bool(horse.get("debutNoHistory"))})
+     "debut_flag":bool(horse.get("debutNoHistory")),
+     "prior_raw_keys":[sorted(list(x.keys()))[:40] for x in raw_items[:2]],
+     "prior_raw_example":[{k:x.get(k) for k in ("date","raceDate","fieldSize","runners","頭数","finish","finishPosition","着順","rank","status","取消","競走中止") if k in x} for x in raw_items[:2]]})
 for circuit in ("中央","地方"):
  print("HISTORY_CAUSE_SUMMARY",json.dumps({"circuit":circuit,**dict(byc[circuit])},ensure_ascii=False),flush=True)
  print("HISTORY_CAUSE_EXAMPLES",json.dumps({"circuit":circuit,"examples":samples[circuit]},ensure_ascii=False),flush=True)
+ print("HISTORY_CAUSE_MALFORMED",json.dumps({"circuit":circuit,"examples":specials[circuit]},ensure_ascii=False),flush=True)
