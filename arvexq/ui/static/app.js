@@ -3003,6 +3003,8 @@ function paceStageConfig(idx){
   return Object.assign({index:idx},PACE_STAGE_PAGES[idx])
 }
 function paceStageMenu(r,p){
+  if(!p||!p.plan||!Array.isArray(p.plan.stages)||!p.plan.stages.length
+      ||!Array.isArray(p.scenarios)||!p.scenarios.length)return '';
   return '<div class="pace-stage-menu pace-stage-entry" role="navigation" aria-label="4局面展開">'
     +'<button type="button" class="pace-stage-entry-btn" data-pace-open="0">'
       +'<span class="pace-stage-entry-copy"><b>4局面展開</b><small>スタート → 3C → 4C → ラスト</small></span>'
@@ -3066,6 +3068,10 @@ function paceStageEvidence(p,cfg){
     +'</section>'
 }
 function _arvexq_original_paceStagePage(r,p){
+  if(!p||!p.plan||!Array.isArray(p.plan.stages)||!p.plan.stages.length
+      ||!Array.isArray(p.scenarios)||!p.scenarios.length){
+    return paceStagePendingPage(r);
+  }
   var cfg=paceStageConfig(state.paceStage);
   return '<div class="smart-shell pace-stage-shell">'+paceStageTopBar(r,cfg)
     +'<main class="smart-main smart-race-page pace-stage-page">'+paceStageJumpNav(cfg.index)
@@ -3077,13 +3083,17 @@ function _arvexq_original_paceStagePendingPage(r){
   var cfg=paceStageConfig(state.paceStage);
   return '<div class="smart-shell pace-stage-shell">'+paceStageTopBar(r,cfg)
     +'<main class="smart-main smart-race-page pace-stage-page">'+paceStageJumpNav(cfg.index)
-    +'<section class="card"><div class="empty">展開データを計算中です。</div></section></main>'+cinematicFooter()+'</div>'
+    +'<section class="card"><div class="empty">展開予想は未生成です。検証済みの発走前モデルと展開データがありません。</div></section></main>'+cinematicFooter()+'</div>'
 }
 function paceStagePendingPage(r){return _arvexq_box_184_call(_arvexq_original_paceStagePendingPage,this,arguments);}
 function activeScenarioPlan(p){return p&&p.plan?p.plan:null}
 function visiblePaceStages(plan){var wanted={start:1,turn3:1,turn4:1,straight:1};return ((plan&&plan.stages)||[]).filter(function(s){return !!wanted[String(s&&s.key||'')]})}
 function scenarioProbabilitySection(p){return''}
 function paceOutcomeModel(r,p){
+  // Never infer a pace winner from racecard order or default .5 scores.
+  // A verified scenario and its staged plan must already exist.
+  if(!p||!p.plan||!Array.isArray(p.plan.stages)||!p.plan.stages.length
+      ||!Array.isArray(p.scenarios)||!p.scenarios.length)return null;
   var rows=(p&&p.rows||[]).slice(),plan=activeScenarioPlan(p)||p.plan||{},stages=visiblePaceStages(plan),
       straight=stages.find(function(s){return s&&s.key==='straight'})||stages[stages.length-1]||{},pack=straight.pack||[],byNo={},i;
   rows.forEach(function(x){byNo[n(x.horse&&x.horse.horseNumber)]=x});
@@ -3132,6 +3142,13 @@ function paceOutcomeSection(r,p){
     +'</div>'
 }
 function _arvexq_original_paceBoard(r,p){
+  if(!p||!p.plan||!Array.isArray(p.plan.stages)||!p.plan.stages.length
+      ||!Array.isArray(p.scenarios)||!p.scenarios.length){
+    return '<section class="card ai-flow-card pace-stage-menu-card">'
+      +'<h2>AI展開予想</h2><p class="muted" data-forecast-status="unavailable">'
+      +'展開予想は未生成です。発走前の検証済み展開モデルが稼働していないため、'
+      +'想定隊列・勝ち筋・4局面を表示しません。</p></section>';
+  }
   return '<section class="card ai-flow-card pace-stage-menu-card">'
     +'<div class="ai-flow-head"><span class="ai-flow-bars"><i></i><i></i><i></i></span><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div><div class="ai-flow-sub">展開結論を確認し、4局面から直接開けます。</div></div></div>'
     +paceOutcomeSection(r,p)
