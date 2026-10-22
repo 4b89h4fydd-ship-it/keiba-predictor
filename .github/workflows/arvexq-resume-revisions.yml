@@ -76,7 +76,8 @@ jobs:
           comparison=read('/compare/'+baseline+'...'+sha)
           assert comparison['status']=='ahead' and comparison['behind_by']==0,'UNVERIFIED_RELEASE_ANCESTRY'
           allowed={'.github/workflows/arvexq-api-storage-deploy.yml',
-                   '.github/workflows/arvexq-resume-revisions.yml'}
+                   '.github/workflows/arvexq-resume-revisions.yml',
+                   '.github/workflows/arvexq-saved-forecast-replacement.yml'}
           changed={f['filename'] for f in comparison['files']}
           assert changed<=allowed,('RUNTIME_CHANGED_REQUIRES_FRESH_CI',changed-allowed)
           def passed(commit):
