@@ -27,13 +27,14 @@ def day(date):
  print("RESEARCH_SOURCE_DAY",json.dumps({"date":date,"full_races":len(out),"circuits":{c:sum(d.get("circuit")==c for d in out) for c in ("中央","地方")}},ensure_ascii=False),flush=True)
  return out
 
-data=day("2026-10-15")+day("2026-10-16")
-report=evaluate_provisional_predictions(data)
-for circuit in ("中央","地方"):
- r=report[circuit]
- summary={k:r[k] for k in ("scoredRaces","winnerTop1Hits","winnerTop1Rate","noEarlierTrainedModel","missingPrediction","analysisType")}
- summary["misses"]=len(r["misses"])
- summary["first_miss"]=r["misses"][0] if r["misses"] else None
- print("REAL_PROVISIONAL_RESULT",json.dumps({"circuit":circuit,**summary},ensure_ascii=False,default=str),flush=True)
-if not report["地方"]["scoredRaces"]:
- raise SystemExit("No actual provisional predictions: inspect existing output and gates")
+if __name__ == '__main__':
+    data=day("2026-10-15")+day("2026-10-16")
+    report=evaluate_provisional_predictions(data)
+    for circuit in ("中央","地方"):
+     r=report[circuit]
+     summary={k:r[k] for k in ("scoredRaces","winnerTop1Hits","winnerTop1Rate","noEarlierTrainedModel","missingPrediction","analysisType")}
+     summary["misses"]=len(r["misses"])
+     summary["first_miss"]=r["misses"][0] if r["misses"] else None
+     print("REAL_PROVISIONAL_RESULT",json.dumps({"circuit":circuit,**summary},ensure_ascii=False,default=str),flush=True)
+    if not report["地方"]["scoredRaces"]:
+     raise SystemExit("No actual provisional predictions: inspect existing output and gates")
