@@ -3090,6 +3090,23 @@ function activeScenarioPlan(p){return p&&p.plan?p.plan:null}
 function visiblePaceStages(plan){var wanted={start:1,turn3:1,turn4:1,straight:1};return ((plan&&plan.stages)||[]).filter(function(s){return !!wanted[String(s&&s.key||'')]})}
 function scenarioProbabilitySection(p){return''}
 function paceOutcomeModel(r,p){
+  if(p&&p.approvedForecast){
+    var model=p.approvedForecast, byNo={};
+    (p.rows||[]).forEach(function(x){byNo[n(x.horse.horseNumber)]=x});
+    var likely=model.scenarios.slice().sort(function(a,b){return b.probability-a.probability})[0],
+        leading=model.pace.stages.find(function(x){return x.key==='start'}),
+        leadingNo=leading&&leading.pack&&leading.pack[0]&&leading.pack[0].no,
+        top=likely.horses.map(function(no){return byNo[no]}).filter(Boolean);
+    if(top.length!==3)return null;
+    return {verdict:'学習モデルの最頻3着順候補',
+      leader:byNo[leadingNo]||null,winner:top[0],
+      first:[top[0]],second:[top[1]],third:[top[2]],
+      day:{active:false,flowLabel:'発走前データ'},
+      scenario:{code:'calibrated-joint'},
+      reason:'学習済み同時確率の最頻候補 '+(likely.probability*100).toFixed(2)+
+        '%。実際の結果や的中を保証しません。',
+      order:top};
+  }
   // Never infer a pace winner from racecard order or default .5 scores.
   // A verified scenario and its staged plan must already exist.
   if(!p||!p.plan||!Array.isArray(p.plan.stages)||!p.plan.stages.length
