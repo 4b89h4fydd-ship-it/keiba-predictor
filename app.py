@@ -612,12 +612,8 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
         # JRA card exposes 前走〜4走前. If all four slots were inspected and fewer
         # than four real runs exist, that is the horse's full career to date.
         career_complete=(len(past_cells)>=4 and len(past)<4)
-        win_odds=0.0; popularity=0; body_weight=0; body_change=None
-        tail=infot.split(name,1)[1] if name in infot else infot
-        om=re.search(r"([0-9]+(?:\.[0-9]+)?)\s*\((\d+)番人気\)",tail)
-        if om:
-            try: win_odds=float(om.group(1)); popularity=int(om.group(2))
-            except: pass
+        win_odds, popularity = jra_observed_win_odds(infot, name)
+        body_weight=0; body_change=None
         bwm=re.search(r"(\d{3})\s*kg\s*[（(]\s*([+\-]?\d+)\s*[）)]",infot)
         if bwm:
             try: body_weight=int(bwm.group(1)); body_change=int(bwm.group(2))
@@ -1604,6 +1600,7 @@ _nar_odds_cache_lock=threading.Lock()
 _nar_odds_cache:dict[str,tuple[float,dict]]={}
 
 from arvexq.ingest.place_odds import place_odds_pair
+from arvexq.ingest.odds_fields.jra_official import parse_win_odds as jra_observed_win_odds
 
 from arvexq.ingest.odds_fields.nar_official import _parse_nar_live_odds_html
 
