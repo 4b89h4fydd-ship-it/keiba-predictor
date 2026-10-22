@@ -231,9 +231,10 @@
     {
       "id": 8,
       "name": "開催日取得",
-      "status": "解析済",
-      "module": "arvexq.ingest.jra_identifiers",
+      "status": "分離済",
+      "module": "arvexq.ingest.race_fields.date",
       "files": [
+        "arvexq/ingest/race_fields/date.py",
         "arvexq/ingest/jra_identifiers.py",
         "app.py"
       ],
@@ -245,9 +246,10 @@
       "output": "observed race identity or race-card field",
       "storage": null,
       "tests": [
-        "tests/test_independent_jra_race_identity.py"
+        "tests/test_independent_jra_race_identity.py",
+        "tests/test_jra_identifiers.py"
       ],
-      "implementation_scope": "JRA pathway wired, NAR and other input sources not all separated; production not verified",
+      "implementation_scope": "JRA identifier extraction moved into a dedicated fact parser. Existing adapter and app call sites preserved; new unit/integration contracts added. NAR/other source parity and main/production verification remain open.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -323,9 +325,10 @@
     {
       "id": 11,
       "name": "レース番号取得",
-      "status": "解析済",
-      "module": "arvexq.ingest.jra_identifiers",
+      "status": "分離済",
+      "module": "arvexq.ingest.race_fields.race_number",
       "files": [
+        "arvexq/ingest/race_fields/race_number.py",
         "arvexq/ingest/jra_identifiers.py",
         "app.py"
       ],
@@ -337,9 +340,10 @@
       "output": "observed race identity or race-card field",
       "storage": null,
       "tests": [
-        "tests/test_independent_jra_race_identity.py"
+        "tests/test_independent_jra_race_identity.py",
+        "tests/test_jra_identifiers.py"
       ],
-      "implementation_scope": "JRA pathway wired, NAR and other input sources not all separated; production not verified",
+      "implementation_scope": "JRA identifier extraction moved into a dedicated fact parser. Existing adapter and app call sites preserved; new unit/integration contracts added. NAR/other source parity and main/production verification remain open.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
