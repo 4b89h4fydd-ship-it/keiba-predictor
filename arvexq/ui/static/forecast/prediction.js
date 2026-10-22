@@ -1,7 +1,7 @@
 /* Present server-produced pre-off provisional marks; NEVER derive predictions here. */
 (function(root){
   'use strict';
-  // Only an immutable user-owned pre-off receipt can supply forecast marks.
+  // Original sealed marks take priority. An existing model revision is clearly labelled provisional/retrospective.
   // All assistant-introduced probabilistic/provisional and post-off models are retired.
   var last={active:false,source:'',marks:[]};
 
@@ -31,18 +31,51 @@
     return marks;
   }
 
+  function revisionMarks(race){
+    var rev=race&&race._forecastRevisionView;
+    if(!rev||rev.version!=='arvexq-forecast-revision-v1'||
+       rev.raceId!==race.id||rev.raceDate!==race.date||
+       !['candidate-analysis'].includes(rev.predictionStatus)||
+       !['retrospective','preoff-candidate'].includes(rev.analysisType)||
+       !Array.isArray(rev.horses)||!Array.isArray(race.horses))return null;
+    var active=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0&&!h.scratched&&!h.withdrawn;});
+    if(active.length<3||active.length!==rev.horses.length)return null;
+    var allowed={'':1,'◎':1,'○':1,'▲':1,'△':1,'☆':1,'注':1};
+    var known={},marks={},count=0;
+    for(var i=0;i<active.length;i++){
+      var n=Number(active[i].horseNumber);
+      if(!Number.isInteger(n)||n<=0||known[n])return null;
+      known[n]=true;
+    }
+    for(var j=0;j<rev.horses.length;j++){
+      var row=rev.horses[j],no=Number(row&&row.horseNumber),mark=String(row&&row.mark||'');
+      if(!known[no]||Object.prototype.hasOwnProperty.call(marks,no)||
+         !Object.prototype.hasOwnProperty.call(allowed,mark))return null;
+      marks[no]=mark;
+      if(mark==='◎')count++;
+    }
+    if(count!==1)return null;
+    // Revision models are research-only; a preoff-candidate is NOT a saved original.
+    return {marks:marks,kind:rev.analysisType,scenarios:rev.scenarioSummaries||[],
+            modelVersion:rev.modelVersion||'',uncalibrated:rev.probabilityModelStatus!=='calibrated'};
+  }
+
   function build(race){
     if(root.ARVEXQProductionTickets)root.ARVEXQProductionTickets.build(race);
-    var marks=originalMarks(race),rows=((race&&race.horses)||[])
+    var originals=originalMarks(race),revision=originals?null:revisionMarks(race),
+        marks=originals||(revision&&revision.marks),rows=((race&&race.horses)||[])
       .filter(function(h){return h&&Number(h.horseNumber)>0})
       .map(function(h){
         var id=String(Number(h.horseNumber)),mark=marks&&marks[id]||'';
         return {horse:h,predMark:mark,serverPreoffMark:false,
-          originalPreoffMark:!!mark&&!!marks,referencePostoffMark:false,
+          originalPreoffMark:!!mark&&!!originals,referencePostoffMark:!!mark&&!!revision&&revision.kind==='retrospective',
+          revisionCandidateMark:!!mark&&!!revision&&revision.kind==='preoff-candidate',
           predRank:999,winProbability:null,p1Probability:null,p2Probability:null,
           p3Probability:null,overallGrade:'',coverage:0};
       });
-    last={active:!!marks,source:marks?'saved-preoff':'',unavailable:!marks,
+    last={active:!!marks,source:originals?'saved-preoff':(revision?'learned-revision-'+revision.kind:''),
+      scenarios:revision?revision.scenarios:[],modelVersion:revision?revision.modelVersion:'',
+      uncalibrated:!!revision&&revision.uncalibrated,unavailable:!marks,
       marks:marks?rows.filter(function(r){return !!r.predMark}).map(function(r){
         return {horseNumber:Number(r.horse.horseNumber),name:String(r.horse.name||''),mark:r.predMark};
       }):[]};
@@ -50,7 +83,9 @@
       suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:0};
   }
   function current(){
-    return {active:last.active,source:last.source||'',unavailable:!!last.unavailable,marks:last.marks.map(function(x){return Object.assign({},x)})};
+    return {active:last.active,source:last.source||'',unavailable:!!last.unavailable,
+      scenarios:(last.scenarios||[]).slice(),modelVersion:last.modelVersion||'',uncalibrated:!!last.uncalibrated,
+      marks:last.marks.map(function(x){return Object.assign({},x)})};
   }
   root.ARVEXQProductionPrediction=Object.freeze({build:build,current:current});
 })(typeof window!=='undefined'?window:globalThis);
