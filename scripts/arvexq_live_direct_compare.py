@@ -11,6 +11,7 @@ import json
 import sys
 import urllib.parse
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -38,23 +39,24 @@ def scan_day(day,base=API):
     daily=get_json(base+"/api/day?"+urllib.parse.urlencode({"date":day,"details":0}),30,3)
     if not isinstance(daily.get("races"),list):raise ValueError("missing race list")
     count=Counter(); wins=0
-    for row in daily["races"]:
-        if not isinstance(row,dict) or not row.get("id"):continue
-        rid=str(row["id"])
+    ids=[str(row["id"]) for row in daily["races"] if isinstance(row,dict) and row.get("id")]
+    def fetch_one(rid):
         try:
             raw=get_json(base+"/api/race/"+urllib.parse.quote(rid,safe=""),30,3)
             detail=detail_from_response(raw,rid)
             if detail is None:raise ValueError("race detail mismatch")
-            status,hit=evaluate(detail)
+            return evaluate(detail)
         except Exception:
-            status,hit="read_error",None
-        count[status]+=1
-        if hit is not None:wins+=hit
+            return "read_error",None
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        for status,hit in pool.map(fetch_one,ids):
+            count[status]+=1
+            if hit is not None:wins+=hit
     return {"date":day,"races":sum(count.values()),"status":dict(count),"wins":wins}
 
 def main():
     p=argparse.ArgumentParser()
-    p.add_argument("--days",type=int,default=2)
+    p.add_argument("--days",type=int,default=7)
     args=p.parse_args()
     if not 1<=args.days<=14:p.error("--days must be 1..14")
     today=datetime.now(JST).date()
