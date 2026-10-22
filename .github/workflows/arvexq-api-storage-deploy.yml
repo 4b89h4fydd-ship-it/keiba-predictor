@@ -103,6 +103,10 @@ jobs:
                       'inRepo':local is not None,'repoSHA':hashlib.sha256(local).hexdigest() if local else None,
                       'exactMatch':local is not None and local==str(contents).encode()})
               print('LIVE_API_SOURCEMAP_COMPARISON',json.dumps(report))
+              for source_name,contents in zip(source_map.get('sources') or [],source_map.get('sourcesContent') or []):
+                  statements=[line[:200] for line in str(contents).splitlines()
+                              if any(q in line for q in ('import ', 'export ', 'async fetch(', 'fetch(request', 'new URL(', 'url.pathname', 'api/'))]
+                  print('LIVE_API_MODULE_ENTRY_POINTS',json.dumps({'name':source_name,'lines':statements[:32]}))
           expected=os.environ['EXPECTED_SOURCE_SHA256'];assert re.fullmatch('[a-f0-9]{64}',expected)
           actual=hashlib.sha256(source).hexdigest()
           assert actual==expected,f'API_SOURCE_CHANGED_REFUSING_OVERWRITE actual={actual} expected={expected}'
