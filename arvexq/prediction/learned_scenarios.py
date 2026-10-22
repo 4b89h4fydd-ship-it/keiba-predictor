@@ -181,7 +181,7 @@ def _vector(report, centers, scales):
     return [(float(v)-c)/s if v is not None else 0. for v,c,s in zip(values,centers,scales)] + [float(v is None) for v in values]
 
 
-def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03, l2=.01):
+def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03, l2=.01, winner_pair_weight=1.0):
     """Pairwise logistic ranking. Fixed optimizer settings are not ability weights.
 
     This is training code, not validation: fit only on a prespecified earlier
@@ -189,6 +189,8 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
     """
     if circuit not in ('中央', '地方'):
         raise ValueError('explicit circuit required')
+    if not 1.0 <= float(winner_pair_weight) <= 5.0:
+        raise ValueError('winner pair weight outside research range')
     samples, ids, dates = [], [], []
     for detail in sorted(details, key=lambda d: (d.get('date',''), d.get('id',''))):
         if detail.get('circuit') != circuit or race_family(detail) != family:
@@ -249,7 +251,8 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
             for j in range(i+1,len(rows)):
                 a,b = labels[rows[i]['horseNumber']], labels[rows[j]['horseNumber']]
                 if a != b:
-                    race_pairs.append(([x-y for x,y in zip(vectors[i],vectors[j])], float(a < b)))
+                    race_pairs.append(([x-y for x,y in zip(vectors[i],vectors[j])], float(a < b),
+                                       float(winner_pair_weight) if a == 1 or b == 1 else 1.0))
         if race_pairs:
             pairs.append(race_pairs)
     if not pairs:
@@ -258,10 +261,11 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
     for _ in range(epochs):
         gradient = [l2*w for w in weights]
         for race_pairs in pairs:
-            for vector,label in race_pairs:
+            race_mass = sum(pair_weight for _,_,pair_weight in race_pairs)
+            for vector,label,pair_weight in race_pairs:
                 error = _sigmoid(sum(w*x for w,x in zip(weights,vector)))-label
                 for k,x in enumerate(vector):
-                    gradient[k] += error*x/(len(pairs)*len(race_pairs))
+                    gradient[k] += pair_weight*error*x/(len(pairs)*race_mass)
         weights = [w-learning_rate*g for w,g in zip(weights,gradient)]
     input_hash = sha256(json.dumps(samples, sort_keys=True, ensure_ascii=False,
                                    separators=(',', ':')).encode()).hexdigest()
@@ -270,6 +274,8 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
     artifact = {'version': VERSION, 'features': list(FEATURES), 'centers': centers, 'scales': scales,
                 'weights': weights, 'training': training, 'calibrationStatus': 'unvalidated',
                 'optimizer': {'epochs': epochs, 'learningRate': learning_rate, 'l2': l2}}
+    if winner_pair_weight != 1.0:
+        artifact['optimizer']['researchWinnerPairWeight'] = float(winner_pair_weight)
     artifact['modelHash'] = sha256(json.dumps(artifact,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
     return artifact
 
