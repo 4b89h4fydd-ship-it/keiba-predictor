@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""Read-only D1 -> analytics source smoke test. Never prints race records or tokens."""
+"""Read-only existing public day API probe. Never logs raw race data."""
 import json
 import os
-import urllib.error
 import urllib.request
+import urllib.error
+from datetime import datetime, timedelta, timezone
+from urllib.parse import urlencode
 
-BASE = os.environ.get("ARVEXQ_API_URL", "https://kraiz-api.4b89h4fydd.workers.dev").rstrip("/")
-TOKEN = os.environ.get("SYNC_TOKEN", "")
-if not TOKEN:
-    raise SystemExit("D1_SOURCE_PROBE_MISSING_SYNC_TOKEN")
-url = BASE + "/api/admin/snapshot-export?table=race_summaries&limit=1&offset=0"
-req = urllib.request.Request(url, headers={"Authorization": "Bearer " + TOKEN, "Accept": "application/json"}, method="GET")
+base=os.environ.get("ARVEXQ_API_URL","https://kraiz-api.4b89h4fydd.workers.dev").rstrip("/")
+yesterday=(datetime.now(timezone(timedelta(hours=9))).date()-timedelta(days=1)).isoformat()
+url=base+"/api/day?"+urlencode({"date":yesterday,"details":"1"})
+req=urllib.request.Request(url,headers={"User-Agent":"ARVEXQ-Analytics-ReadOnly/1.0","Accept":"application/json"},method="GET")
 try:
-    with urllib.request.urlopen(req, timeout=30) as response:
-        obj = json.loads(response.read(2_000_000))
+    with urllib.request.urlopen(req,timeout=45) as response:
+        obj=json.loads(response.read(20_000_000))
 except urllib.error.HTTPError as exc:
-    raise SystemExit("D1_SOURCE_PROBE_HTTP_" + str(exc.code)) from None
+    raise SystemExit("D1_DAY_PROBE_HTTP_"+str(exc.code)) from None
 except Exception as exc:
-    raise SystemExit("D1_SOURCE_PROBE_ERROR_" + type(exc).__name__) from None
-if obj.get("ok") is not True or obj.get("table") != "race_summaries" or not isinstance(obj.get("rows"), list):
-    raise SystemExit("D1_SOURCE_PROBE_UNEXPECTED_SCHEMA")
-print("D1_SNAPSHOT_EXPORT_READ_OK", "sample_row_count=" + str(len(obj["rows"])), "source_read_only=true")
+    raise SystemExit("D1_DAY_PROBE_"+type(exc).__name__) from None
+if not isinstance(obj,dict) or not isinstance(obj.get("details"),list):
+    raise SystemExit("D1_DAY_PROBE_UNEXPECTED_SCHEMA")
+print("D1_PUBLIC_DAY_READ_OK", "date="+yesterday, "detail_count="+str(len(obj["details"])), "no_writes=true")
