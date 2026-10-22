@@ -84,6 +84,11 @@ jobs:
               # Keep the exact SHA guard below; never accept an API error as source.
               assert len(raw)>1000 and (b'export default' in raw or b'addEventListener(' in raw), 'API_JAVASCRIPT_MODULES_NOT_FOUND'
               source=raw
+          print('LIVE_API_MODULE_AUDIT',json.dumps([
+              {'header':header[:140].decode('latin1','replace'),
+               'length':len(body),'sha256':hashlib.sha256(body).hexdigest()}
+              for header,body in modules
+          ]))
           expected=os.environ['EXPECTED_SOURCE_SHA256'];assert re.fullmatch('[a-f0-9]{64}',expected)
           actual=hashlib.sha256(source).hexdigest()
           assert actual==expected,f'API_SOURCE_CHANGED_REFUSING_OVERWRITE actual={actual} expected={expected}'
