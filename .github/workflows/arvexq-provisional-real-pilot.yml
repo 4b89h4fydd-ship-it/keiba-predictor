@@ -5,6 +5,7 @@ name: ARVEXQ Provisional Real-Race Pilot
     paths:
       - scripts/arvexq_provisional_real_pilot.py
       - scripts/arvexq_existing_model_tuning_pilot.py
+      - scripts/arvexq_provisional_miss_rootcause.py
       - .github/workflows/arvexq-provisional-real-pilot.yml
   workflow_dispatch:
 permissions:
@@ -31,3 +32,6 @@ jobs:
 
       - name: Same model regularization comparison on unseen next-day races
         run: PYTHONPATH=. python -u scripts/arvexq_existing_model_tuning_pilot.py
+
+      - name: Diagnose every missed winner using existing fitted feature contributions
+        run: PYTHONPATH=. python -u scripts/arvexq_provisional_miss_rootcause.py
