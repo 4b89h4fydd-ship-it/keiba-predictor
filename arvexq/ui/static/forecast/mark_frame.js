@@ -15,7 +15,9 @@
     }).join('　'):'';
     return '<section id="section-aimarks" class="card"><h2>予想印</h2>'+
       (historical?'<p class="muted">発走前の保存原本（事後再計算なし）</p>':'')+
-      (insufficient?'<p class="muted">未承認の予想印は削除済みです。</p>':'')+
+      (live&&live.source==='learned-revision-preoff-candidate'?'<p class="muted">検証中の仮印（発走前原本とは別）</p>':'')+
+      (live&&live.source==='learned-revision-retrospective'?'<p class="muted">事後再分析の参考印・当時の予想ではありません</p>':'')+
+      (insufficient?'<p class="muted">このレースの予想印は未取得です。</p>':'')+
       '<div class="ai-mark-list">'+html+'</div></section>';
   }
   root.ARVEXQMarkFrame=Object.freeze({render:render});
