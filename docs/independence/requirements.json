@@ -2036,16 +2036,27 @@
     {
       "id": 64,
       "name": "NARオッズ解析",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "分離済",
+      "module": "arvexq.ingest.odds_fields.nar_official",
+      "files": [
+        "arvexq/ingest/odds_fields/nar_official.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_nar_live_odds"
+      ],
+      "dependencies": [
+        "arvexq.ingest.place_odds.place_odds_pair",
+        "arvexq.ingest.field_normalization._clean"
+      ],
+      "input": "Observed NAR official OddsTanFuku HTML from the existing app.py fetch path",
+      "output": "NAR factual win/place odds, popularity, scratch and observed weight fields",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_nar_official_odds_independent.py",
+        "tests/test_independent_place_odds.py"
+      ],
+      "implementation_scope": "Original NAR official odds HTML parser moved verbatim into isolated source module with production import alias and dedicated CI contracts. Does not create any retrieval route or new prediction logic. main integration and production readback unverified.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
