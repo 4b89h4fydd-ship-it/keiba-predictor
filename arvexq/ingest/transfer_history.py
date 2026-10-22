@@ -37,8 +37,14 @@ def _history_rates(horse, race):
             return v if 0 <= v <= 1 else None
         except (ValueError, TypeError): return None
     tl = level(race)
+    def field_size(run):
+        try:
+            n = int(run.get("fieldSize") or 0)
+            return n if n > 1 and int(run["finish"]) <= n else None
+        except (TypeError, ValueError, OverflowError):
+            return None
     comparable = [r for r in other if tl is not None and level(r) is not None
-                  and int(r.get("fieldSize") or 0) > 1]
+                  and field_size(r) is not None]
     quality = [((int(r["fieldSize"])-int(r["finish"]))/(int(r["fieldSize"])-1))*
                (0.5 + 0.5 * level(r)) for r in comparable]
     signal = ((sum(quality)/len(quality)-0.5) * len(quality)/(len(quality)+8)) if quality else 0.0
