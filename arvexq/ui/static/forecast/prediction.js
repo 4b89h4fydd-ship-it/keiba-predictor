@@ -33,7 +33,33 @@
 
   function build(race){
     if(root.ARVEXQProductionTickets)root.ARVEXQProductionTickets.build(race);
-    var marks=originalMarks(race),rows=((race&&race.horses)||[])
+    var model=root.ARVEXQProductionTickets&&root.ARVEXQProductionTickets.approvedForecast&&
+      root.ARVEXQProductionTickets.approvedForecast(race);
+    // Preserve immutable user-owned historical receipt ahead of a new model.
+    var stored=originalMarks(race);
+    if(model&&!stored){
+      var byNo={};
+      model.probabilities.forEach(function(x){byNo[x.horseNumber]=x});
+      var modelRows=(race.horses||[]).filter(function(h){return h&&Number(h.horseNumber)>0})
+        .map(function(h){
+          var x=byNo[Number(h.horseNumber)];
+          return {horse:h,predMark:x.mark,serverPreoffMark:true,
+            originalPreoffMark:!!x.mark,referencePostoffMark:false,
+            predRank:999,winProbability:x.win,p1Probability:x.win,
+            p2Probability:x.top2,p3Probability:x.top3,
+            overallGrade:'',coverage:1};
+        });
+      last={active:true,source:'approved-model',status:'model-approved',
+        unavailable:false,marks:modelRows.filter(function(x){return !!x.predMark})
+          .map(function(x){return {horseNumber:Number(x.horse.horseNumber),
+            name:String(x.horse.name||''),mark:x.predMark};})};
+      return {rows:modelRows,legacyEngineDisabled:true,approvedForecast:model,
+        scenarios:model.scenarios.map(function(x,i){return {code:'trained-'+i,
+          prob:x.probability,order:x.horses};}),
+        plans:{verified:model.pace},plan:model.pace,
+        suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:1};
+    }
+    var marks=stored,rows=((race&&race.horses)||[])
       .filter(function(h){return h&&Number(h.horseNumber)>0})
       .map(function(h){
         var id=String(Number(h.horseNumber)),mark=marks&&marks[id]||'';
