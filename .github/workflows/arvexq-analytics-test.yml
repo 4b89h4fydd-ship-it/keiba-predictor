@@ -14,6 +14,7 @@ on:
       - scripts/arvexq_frozen_prediction_eval.py
       - scripts/arvexq_frozen_diagnostics.py
       - scripts/arvexq_frozen_miss_attribution.py
+      - scripts/arvexq_live_direct_compare.py
 
 permissions:
   contents: read
@@ -111,3 +112,6 @@ jobs:
         env:
           motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: python scripts/arvexq_frozen_miss_attribution.py
+
+      - name: Compare original pre-off predictions directly with live API outcomes without saving race data
+        run: python scripts/arvexq_live_direct_compare.py --days 2
