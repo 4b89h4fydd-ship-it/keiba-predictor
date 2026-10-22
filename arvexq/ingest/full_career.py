@@ -47,6 +47,12 @@ def merge_career(existing: Any, incoming: Any, cutoff: str) -> list[dict[str, An
                         v if v not in (None, "", 0) else (value[i] if i < len(value) else v)
                         for i, v in enumerate(previous + [None] * max(0, len(value) - len(previous)))
                     ]
+            elif (name == "finish" and saved.get("finish") in (None, "", 0, "0")
+                  and item.get("researchOfficialPriorFinishVerified") is True
+                  and type(value) is int and value >= 1
+                  and (not saved.get("track") or saved.get("track") == item.get("track"))
+                  and (not saved.get("raceNumber") or str(saved.get("raceNumber")) == str(item.get("raceNumber")))):
+                saved[name] = value
             elif saved.get(name) in (None, "", [], {}) and value not in (None, "", [], {}):
                 saved[name] = copy.deepcopy(value)
     return sorted(found.values(), key=lambda x: x["date"], reverse=True)
