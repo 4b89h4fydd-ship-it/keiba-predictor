@@ -40,7 +40,8 @@ const layoutBaseline={
   "smartRaceTopBar": "6f0925af17890feb",
   "smartRaceHead": "d99dff533e6b1bb3",
   "renderPicker": "8b81f0479683023d",
-  "favoriteHomeSection": "d75a1fb75e926061",
+  // Approved removal of adjacent AI stats globals; favoriteHomeSection body is unchanged.
+  "favoriteHomeSection": "d85550a902ac987f",
   "horseDetailPage": "acb13e0e1920774a",
   "renderRace": "14e7f4c710086edc"
 };
