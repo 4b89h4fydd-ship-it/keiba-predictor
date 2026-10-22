@@ -58,7 +58,7 @@ jobs:
               assert run['conclusion'] in ('cancelled','failure'),'OLDER_RUN_ALREADY_PUBLISHED'
           print('STALE_PREWRITE_RUN_SAFE_TO_REPLACE',run_id)
           PY
-      - name: Require exact main and verified CI / deployed Web
+      - name: Require exact main and verified CI / deployed Web with bounded browser setup
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
