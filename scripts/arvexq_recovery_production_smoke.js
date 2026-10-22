@@ -12,9 +12,12 @@ const records=Object.entries(manifest.races).map(([id,ref])=>{
   const e=JSON.parse(fs.readFileSync(path.join(directory,ref.file)));
   return JSON.parse(zlib.gunzipSync(Buffer.from(e.gzipBase64,'base64')));
 });
-// WebKit checks real venues for this date, not a hardcoded historical card list.
+// Preserve every historical snapshot in records, but the live API intentionally
+// no longer serves NAR Banei/Obihiro. Never test retired archived races as live.
+const supportedRecords=records.filter(r=>!(r.circuit==='地方'&&['帯広','帯広ば'].includes(r.track)));
+// WebKit checks real currently supported venues, not a hardcoded card list.
 const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
-  [...new Set(records.map(r=>r.track))].map(track=>records.find(r=>r.track===track)).filter(Boolean):records;
+  [...new Set(supportedRecords.map(r=>r.track))].map(track=>supportedRecords.find(r=>r.track===track)).filter(Boolean):supportedRecords;
 assert.ok(chosen.length>0,'No verified current-day race data available');
 (async()=>{
   const browser=await type.launch({headless:true,...(process.env.CHROMIUM_PATH&&type===chromium?{executablePath:process.env.CHROMIUM_PATH}:{})});
@@ -152,7 +155,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     await page.close();
     await Promise.all([worker(),worker(),worker()]);
     // Archived opinions cannot reappear on a fresh device, including API outage.
-    for(const archived of records.filter(r=>r.preRaceBet).slice(0,2)){
+    for(const archived of supportedRecords.filter(r=>r.preRaceBet).slice(0,2)){
       const ticketPage=await context.newPage();
       ticketPage._arvexqIntentionalApiOutage=true;
       await ticketPage.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
@@ -171,7 +174,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     // An inactive venue (e.g. 高知 on 2026-10-12) must never be fabricated
     // to satisfy a stale UI test.
     for(const circuit of ['中央','地方']){
-      const tracks=[...new Set(records.filter(r=>r.circuit===circuit).map(r=>r.track))];
+      const tracks=[...new Set(supportedRecords.filter(r=>r.circuit===circuit).map(r=>r.track))];
       // Some calendar days have NAR only (or JRA only). Verify exactly the
       // venues present rather than inventing events to satisfy the fixture.
       if(!tracks.length){console.log('PRODUCTION_NO_SCHEDULED_CIRCUIT',circuit,day);continue;}
