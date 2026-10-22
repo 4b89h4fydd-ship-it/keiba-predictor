@@ -15,7 +15,7 @@ try:
     rows=con.execute("""SELECT race_id, CAST(snapshot_json AS VARCHAR) FROM
       my_db.arvexq_analytics.race_snapshots
       WHERE json_array_length(json_extract(snapshot_json,'$.result.finishers')) >= 3
-      ORDER BY race_date DESC, race_id LIMIT 60""").fetchall()
+      ORDER BY race_date DESC, race_id""").fetchall()
 finally:
     con.close()
 top=collections.Counter()
@@ -28,6 +28,12 @@ pace_keys=collections.Counter()
 status_values=collections.Counter()
 plan_types=collections.Counter()
 marks_keys=collections.Counter()
+verified_cutoff=0
+fixed_at_seen=0
+selected_true=0
+plan_nonempty=0
+plan_horse_pick=0
+frozen_true=0
 bad=0
 valid=0
 for rid,txt in rows:
@@ -44,6 +50,13 @@ for rid,txt in rows:
         bad+=1
         continue
     top.update(full.keys())
+    selected_true += full.get("morningSelected") is True
+    fixed_at_seen += bool(full.get("morningPickFixedAt"))
+    pr=full.get("preRacePrediction")
+    frozen_true += bool(isinstance(pr,dict) and pr.get("frozen") is True)
+    betplan=full.get("recommendedBetPlan")
+    plan_nonempty += bool(isinstance(betplan,dict) and betplan.get("items"))
+    plan_horse_pick += bool(isinstance(betplan,dict) and betplan.get("honmeiHorseNumber"))
     plan=full.get("recommendedBetPlan")
     plan_types[type(plan).__name__]+=1
     if isinstance(plan,dict):plan_keys.update(plan.keys())
@@ -67,3 +80,5 @@ print("ORIGINAL_PREDICTION_SCHEMA",json.dumps({"preRacePrediction_types":predtyp
 if bad:raise SystemExit("Snapshot integrity errors")
 
 print("ORIGINAL_PREDICTION_ALTERNATES",json.dumps({"recommendedBetPlan_types":plan_types,"recommendedBetPlan_keys":plan_keys,"pacePredictionView_keys":pace_keys,"predictionStatus_values":status_values,"horse_prediction_like_keys":marks_keys},ensure_ascii=False,default=dict))
+
+print("PREDICTION_EVIDENCE_COVERAGE",json.dumps({"finalized_sample":len(rows),"verified_originals":valid,"morningSelected_true":selected_true,"morningPickFixedAt_present":fixed_at_seen,"preRacePrediction_frozen":frozen_true,"recommendedBetPlan_nonempty_items":plan_nonempty,"recommendedBetPlan_honmeiNumber_present":plan_horse_pick},ensure_ascii=False))
