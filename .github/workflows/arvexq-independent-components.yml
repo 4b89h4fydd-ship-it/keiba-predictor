@@ -50,7 +50,7 @@ jobs:
       - name: JST-aware observed odds acquisition clock
         run: python -m pytest -q tests/test_odds_capture_time.py
       - name: Independent NAR place odds fields
-        run: python -m pytest -q tests/test_independent_place_odds.py tests/test_nar_official_odds_independent.py tests/test_jra_official_odds_independent.py
+        run: python -m pytest -q tests/test_independent_place_odds.py tests/test_nar_official_odds_independent.py tests/test_jra_official_odds_independent.py tests/test_jra_official_weight_independent.py
       - name: Independent JRA/NAR circuit transfer observations
         run: python -m pytest -q tests/test_circuit_transfer_independent.py
       - name: JRA day summary shares official independent field parsers
