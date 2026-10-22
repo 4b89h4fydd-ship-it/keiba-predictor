@@ -89,6 +89,20 @@ jobs:
                'length':len(body),'sha256':hashlib.sha256(body).hexdigest()}
               for header,body in modules
           ]))
+          from pathlib import Path
+          for header,body in modules:
+              if b'.js.map' not in header:continue
+              try:source_map=json.loads(body)
+              except Exception:continue
+              report=[]
+              for source_name,contents in zip(source_map.get('sources') or [],source_map.get('sourcesContent') or []):
+                  name=str(source_name).replace('webpack:///','').replace('../','')
+                  path=Path(name)
+                  local=path.read_bytes() if path.is_file() else None
+                  report.append({'name':name,'sourceSHA':hashlib.sha256(str(contents).encode()).hexdigest(),
+                      'inRepo':local is not None,'repoSHA':hashlib.sha256(local).hexdigest() if local else None,
+                      'exactMatch':local is not None and local==str(contents).encode()})
+              print('LIVE_API_SOURCEMAP_COMPARISON',json.dumps(report))
           expected=os.environ['EXPECTED_SOURCE_SHA256'];assert re.fullmatch('[a-f0-9]{64}',expected)
           actual=hashlib.sha256(source).hexdigest()
           assert actual==expected,f'API_SOURCE_CHANGED_REFUSING_OVERWRITE actual={actual} expected={expected}'
