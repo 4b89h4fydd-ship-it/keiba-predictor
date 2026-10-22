@@ -167,6 +167,17 @@ class RebuiltWinnerTop1TrainingTests(unittest.TestCase):
         result["finishers"][-1]["finish"] = 3
         self.assertEqual(rows_from_frozen_snapshot(snap, result), [])
 
+    def test_current_race_outcome_feature_leakage_rejected(self):
+        # Only the outcome joined after freezing may contain race labels.
+        for key in ("finish", "rank", "result", "winner", "labelWin",
+                    "labelTop2", "labelTop3", "payouts"):
+            snap = self.snapshot()
+            snap["rows"][1]["features"][key] = 1
+            self.assertEqual(rows_from_frozen_snapshot(snap, self.result()), [], key)
+        historical = self.snapshot()
+        historical["rows"][1]["features"]["history::2026-10-01::finish_quality"] = 0.7
+        self.assertEqual(len(rows_from_frozen_snapshot(historical, self.result())), 3)
+
     def test_complete_frozen_field_yields_exact_labels(self):
         rows = rows_from_frozen_snapshot(self.snapshot(), self.result())
         self.assertEqual(len(rows), 3)
