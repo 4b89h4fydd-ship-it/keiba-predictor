@@ -99,6 +99,24 @@ class LearnedScenariosTests(TestCase):
         self.assertEqual(result['honmeiDecision']['horseNumber'],0)
         self.assertFalse(any(h['integratedEvaluation']['mark'] for h in result['horses']))
 
+    def test_training_refuses_partial_fields_and_duplicate_result_rows(self):
+        good = training_race('地方')
+        partial = deepcopy(good)
+        partial['id'] = 'partial-field'
+        partial['result']['finishers'] = partial['result']['finishers'][:-1]
+        duplicate = deepcopy(good)
+        duplicate['id'] = 'duplicate-finishers'
+        duplicate['result']['finishers'][1]['horseNumber'] = 1
+        no_history = deepcopy(good)
+        no_history['id'] = 'missing-prerace-history'
+        no_history['horses'][0]['recentRaces'] = []
+        for corrupt in (partial, duplicate, no_history):
+            with self.subTest(race_id=corrupt['id']):
+                with self.assertRaisesRegex(ValueError, 'no observed, labelled training races'):
+                    fit_model([corrupt], circuit='地方')
+                model = fit_model([good, corrupt], circuit='地方')
+                self.assertEqual(model['training']['raceIds'], [good['id']])
+
     def test_training_determinism_and_empty_bad_artifacts(self):
         model = fit_model([training_race('地方')], circuit='地方')
         self.assertEqual(model,self.models['地方'])
