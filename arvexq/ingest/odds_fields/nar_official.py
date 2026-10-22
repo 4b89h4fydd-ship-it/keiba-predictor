@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 
 from arvexq.ingest.field_normalization import _clean, _scratch_status
 from arvexq.ingest.place_odds import place_odds_pair
+from arvexq.ingest.odds_fields.nar_popularity import apply_observed_win_popularity
 
 
 def _parse_nar_live_odds_html(html:str)->dict:
@@ -96,12 +97,4 @@ def _parse_nar_live_odds_html(html:str)->dict:
             else:
                 z.setdefault("status","");z.setdefault("scratched",False)
 
-    ranked=sorted((float(v["winOdds"]),no) for no,v in out.items() if v.get("winOdds"))
-    rank=0;last=None
-    for ix,(odd,no) in enumerate(ranked,1):
-        if last is None or odd!=last:rank=ix
-        # Both parse passes can update the official odds after reading a
-        # popularity cell. Never keep a rank from the earlier odds snapshot.
-        out[no]["popularity"]=rank
-        last=odd
-    return out
+    return apply_observed_win_popularity(out)
