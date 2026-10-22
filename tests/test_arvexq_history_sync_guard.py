@@ -38,24 +38,13 @@ class SqliteHistorySyncTests(unittest.TestCase):
         install_app_compat(obj)
         self.assertEqual(obj.last3f, "existing")
 
-    def test_history_workflow_uses_separate_writers_and_protected_batches(self):
-        wf = (ROOT / ".github/workflows/arvexq-history-sync.yml").read_text(encoding="utf-8")
-        self.assertIn('KEIBA_DATA_DIR="$RUNNER_TEMP/arvexq-history-bootstrap"', wf)
-        self.assertIn("from scripts.arvexq_sqlite_runtime_guard import install", wf)
-        self.assertIn("'--workers', '1'", wf)
-        self.assertIn("scripts/arvexq_fetch_d1_bundle.py", wf)
-        self.assertIn("scripts/arvexq_sync_batches.py", wf)
-        self.assertIn("scripts/arvexq_protect_sync.py", wf)
-        self.assertIn("--verify-post", wf)
-        self.assertNotIn("--data-binary @history-payload.json", wf)
-        self.assertNotIn('api/day?date=$HISTORY_DATE&details=1', wf)
-        self.assertIn("HISTORY_NO_CHANGES", wf)
-        self.assertIn("HISTORY_CHANGED_ONLY", wf)
-        self.assertIn("CHANGED=$(jq '.meta.repaired_count // 0'", wf)
+    def test_unused_hourly_history_workflow_is_removed(self):
+        self.assertFalse((ROOT / ".github/workflows/arvexq-history-sync.yml").exists())
+        # Preserve the standalone repair logic and race protection for research.
         repair = (ROOT / "scripts/arvexq_history_repair.py").read_text(encoding="utf-8")
         self.assertIn("changed_ids: set[str] = set()", repair)
         self.assertIn("if merged != original:", repair)
-        self.assertIn('if rid in changed_ids', repair)
+        self.assertIn("if rid in changed_ids", repair)
         self.assertIn('"repaired_count": len(changed_ids)', repair)
 
     def test_changed_history_sync_preserves_original_preoff_prediction(self):
