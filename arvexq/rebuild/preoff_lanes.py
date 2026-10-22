@@ -42,6 +42,8 @@ def _digest(data: dict[str, Any]) -> str:
 def _checked_receipt(snapshot: dict[str, Any], receipt: dict[str, Any]) -> None:
     if not isinstance(snapshot, dict) or not isinstance(receipt, dict):
         raise ValueError("frozen snapshot and separate receipt required")
+    if receipt.get("version") != "arvexq-preoff-raw-evidence-v1":
+        raise ValueError("unknown preoff capture receipt version")
     digest = receipt.get("receiptHash")
     if not isinstance(digest, str) or len(digest) != 64:
         raise ValueError("retained capture receipt hash required")
