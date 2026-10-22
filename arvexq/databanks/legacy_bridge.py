@@ -254,6 +254,12 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             row = matched[0]
             observed = dict(run)
             observed["date"], observed["track"], observed["raceNumber"] = at, track, no
+            official_finish = row.get("finish")
+            if (observed.get("finish") in (None, "", 0, "0")
+                    and type(official_finish) is int
+                    and 1 <= official_finish <= len(finishers)):
+                observed["finish"] = official_finish
+                observed["researchOfficialPriorFinishVerified"] = True
             seconds = row.get("last3FSeconds")
             if seconds is not None and 15 <= float(seconds) <= 90:
                 observed["last3f"] = float(seconds)
@@ -270,7 +276,9 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
                   "gap=", observed.get("timeBehindWinner"),
                   "3F=", observed.get("last3fSeconds"),
                   "marginText=", bool(observed.get("marginText")))
-            if observed.get("timeBehindWinner") not in (None, "") or observed.get("marginSeconds") not in (None, ""):
+            if (observed.get("researchOfficialPriorFinishVerified") is True
+                    or observed.get("timeBehindWinner") not in (None, "")
+                    or observed.get("marginSeconds") not in (None, "")):
                 observed["source"] = "NAR official historical results"
                 return {"recentRaces": [observed], "allPastRuns": [observed]}
             if (fallback_sectional is None
