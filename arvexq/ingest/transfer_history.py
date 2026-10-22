@@ -3,18 +3,32 @@
 Never use outcomes dated on or after the target race date, nor merge
 incomparable JRA/NAR denominators.
 """
-from arvexq.ingest.circuit_transfer import race_circuit as _run_circuit
+from arvexq.ingest.circuit_transfer import race_circuit as _run_circuit, _observed_day
 
 def _history_rates(horse, race):
-    cutoff = str(race.get("date") or "")
-    target = "JRA" if str(race.get("circuit") or "") in ("中央", "JRA") else "NAR"
+    cutoff = _observed_day(race.get("date") or race.get("raceDate"))
+    target = _run_circuit(race)
     source = horse.get("allPastRuns") or horse.get("recentRaces") or []
-    runs = [r for r in source if isinstance(r, dict) and
-            r.get("finish") is not None and str(r.get("date") or "") and
-            (not cutoff or str(r.get("date")) < cutoff)]
-    runs.sort(key=lambda x: str(x.get("date")), reverse=True)
-    same = [r for r in runs if _run_circuit(r) == target]
-    other = [r for r in runs if _run_circuit(r) not in (target, None)]
+    # Invalid or future-dated records cannot be compared in a pre-race evaluation.
+    runs = []
+    if cutoff is not None:
+        for run in source:
+            if not isinstance(run, dict):
+                continue
+            day = _observed_day(run.get("date") or run.get("raceDate"))
+            if day is None or day >= cutoff:
+                continue
+            try:
+                finish = float(run.get("finish"))
+            except (TypeError, ValueError):
+                continue
+            if not (finish.is_integer() and 1 <= finish <= 100):
+                continue
+            runs.append(run)
+    runs.sort(key=lambda x: _observed_day(x.get("date") or x.get("raceDate")), reverse=True)
+    # An unknown target must never silently become a local/NAR race.
+    same = [r for r in runs if _run_circuit(r) == target] if target else []
+    other = [r for r in runs if _run_circuit(r) not in (target, None)] if target else []
     unknown = [r for r in runs if _run_circuit(r) is None]
     def level(run):
         try:
