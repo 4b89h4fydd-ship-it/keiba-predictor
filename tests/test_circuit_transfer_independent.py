@@ -65,3 +65,19 @@ def test_history_rates_use_valid_chronological_dates_only_and_keep_jra_nar_separ
     assert local["otherCircuitStarts"] == 1
     assert horse["allPastRuns"][3]["finish"] == "2.0"
     assert _history_rates(horse, {"circuit":"中央"})["starts"] == 0
+
+def test_transfer_class_proxy_rejects_malformed_field_size_without_changing_valid_quality():
+    horse = {"allPastRuns": [
+        {"track": "大井", "date": "2026-10-20", "finish": 1,
+         "fieldSize": "not-a-number", "opponentLevel": 0.6},
+        {"track": "大井", "date": "2026-10-19", "finish": 6,
+         "fieldSize": 5, "opponentLevel": 0.6},
+        {"track": "大井", "date": "2026-10-18", "finish": 2,
+         "fieldSize": 8, "opponentLevel": 0.6},
+    ]}
+    race = {"track": "東京", "date": "2026-10-23", "opponentLevel": 0.7}
+    outcome = _history_rates(horse, race)
+    assert outcome["otherCircuitStarts"] == 3
+    assert outcome["transferClassEvidenceStarts"] == 1
+    assert outcome["transferClassSignal"] > 0
+    assert horse["allPastRuns"][0]["fieldSize"] == "not-a-number"
