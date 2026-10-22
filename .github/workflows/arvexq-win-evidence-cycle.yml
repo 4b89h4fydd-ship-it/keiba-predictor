@@ -1,0 +1,39 @@
+name: ARVEXQ Win Evidence Research Cycle
+"on":
+  push:
+    branches: [fix/arvexq-new-engine-complete-field-20261022]
+    paths:
+      - scripts/arvexq_win_evidence_blend_cycle.py
+      - .github/workflows/arvexq-win-evidence-cycle.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      ARVEXQ_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q -r requirements.txt pytest==9.1.1
+      - name: Original chronology tests
+        run: PYTHONPATH=. python -m pytest -q tests/test_research_provisional_replay.py
+      - name: Walk-forward same-forecaster win evidence correction cycle
+        run: |
+          set -o pipefail
+          PYTHONPATH=. python -u scripts/arvexq_win_evidence_blend_cycle.py | tee research-win-evidence.log
+      - name: Attach full research cycle logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-win-evidence-cycle-${{ github.run_id }}
+          path: research-win-evidence.log
+          retention-days: 14
+          if-no-files-found: warn
