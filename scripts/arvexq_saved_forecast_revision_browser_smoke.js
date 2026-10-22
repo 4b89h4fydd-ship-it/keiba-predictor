@@ -42,7 +42,7 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
   assert.equal(await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),0);
   for(const id of ['section-prediction','section-aimarks','section-bets'])assert.equal(await page.locator('#'+id).count(),1);
   assert.equal(await page.locator('#section-aimarks .ai-mark-list').innerText(),'');
-  assert.match(await page.locator('#section-bets .ai-bet-box').innerText(),/発走前に検証・保存されたおすすめ買い目が未取得/);
+  assert.match(await page.locator('#section-bets .ai-bet-box').innerText(),/買い目は未生成です。検証済みの発走前買い目がなく/);
   assert.equal(await page.locator('.diagnosis-merged-row').count(),6);
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRacePrediction)),before);
   assert.equal(errors.length,0,errors.join(';'));

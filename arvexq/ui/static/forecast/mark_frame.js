@@ -15,7 +15,7 @@
     }).join('　'):'';
     return '<section id="section-aimarks" class="card"><h2>予想印</h2>'+
       (historical?'<p class="muted">発走前の保存原本（事後再計算なし）</p>':'')+
-      (insufficient?'<p class="muted">未承認の予想印は削除済みです。</p>':'')+
+      (insufficient?'<p class="muted" data-forecast-status="unavailable">予想印は未生成です。発走前の検証済み保存印がありません。</p>':'')+
       '<div class="ai-mark-list">'+html+'</div></section>';
   }
   root.ARVEXQMarkFrame=Object.freeze({render:render});

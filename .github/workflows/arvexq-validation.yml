@@ -467,6 +467,9 @@ jobs:
           print('pipeline invariants OK')
           PY
 
+      - name: Verify honest pace marks and ticket availability in production adapters
+        run: node scripts/arvexq_forecast_unavailable_ui_smoke.js
+
       - name: Validate workflow YAML files
         run: |
           python - <<'PY'

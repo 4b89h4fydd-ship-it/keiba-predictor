@@ -9,7 +9,7 @@ function contents(r,p){
  var service=root.ARVEXQProductionTickets;
  var plan=r&&service?service.build(r,p):(service&&service.current?service.current():null);
  if(!plan||!plan.fixedAt||!Array.isArray(plan.items)||!plan.items.length){
-   return '<div class="ai-bet-box"><p class="muted">発走前に検証・保存されたおすすめ買い目が未取得です。後付けで作りません。</p></div>';
+   return '<div class="ai-bet-box"><p class="muted" data-forecast-status="unavailable">買い目は未生成です。検証済みの発走前買い目がなく、予想モデルも停止中です。事後の後付けは行いません。</p></div>';
  }
  var list=plan.items.map(function(item){
    var combos=(item.combos||[]).map(function(combo){
