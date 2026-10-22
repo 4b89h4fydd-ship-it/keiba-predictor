@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-  actions: read
+  actions: write
 concurrency:
-  group: arvexq-saved-forecast-production
+  group: arvexq-verified-artifact-resume
   cancel-in-progress: false
 jobs:
   resume:
@@ -27,6 +27,37 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Stop only the known stale pre-write rebuild before independent resumption
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json,os,subprocess,time,urllib.request
+          repo=os.environ['GITHUB_REPOSITORY'];run_id=39754938100
+          base='https://api.github.com/repos/'+repo
+          def read(path):
+              req=urllib.request.Request(base+path,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN']})
+              with urllib.request.urlopen(req,timeout=30) as response:return json.load(response)
+          run=read('/actions/runs/'+str(run_id))
+          assert run.get('head_sha')=='58fe22a56f4246a2953c01b855071e9daf2090d6','UNRECOGNIZED_STALE_RUN'
+          jobs=read('/actions/runs/'+str(run_id)+'/jobs').get('jobs') or []
+          unsafe={'Check D1 capacity and add only new revision tables',
+                  'Publish all revisions and verify every saved revision by reloading API',
+                  'Catch up races saved during recalculation and verify the complete current roster'}
+          assert not any(step['name'] in unsafe and step['status']!='pending'
+                         for job in jobs for step in job.get('steps') or []),'STALE_RUN_MAY_HAVE_WRITTEN_DB'
+          if run['status']!='completed':
+              subprocess.run(['gh','run','cancel',str(run_id)],check=True)
+              for _ in range(45):
+                  status=read('/actions/runs/'+str(run_id))
+                  if status['status']=='completed':break
+                  time.sleep(2)
+              else:raise SystemExit('STALE_RUN_NOT_CANCELLED')
+              assert status['conclusion']=='cancelled','STALE_RUN_NOT_SAFELY_CANCELLED'
+          else:
+              assert run['conclusion'] in ('cancelled','failure'),'OLDER_RUN_ALREADY_PUBLISHED'
+          print('STALE_PREWRITE_RUN_SAFE_TO_REPLACE',run_id)
+          PY
       - name: Require exact main and verified CI / deployed Web
         env:
           GH_TOKEN: ${{ github.token }}
